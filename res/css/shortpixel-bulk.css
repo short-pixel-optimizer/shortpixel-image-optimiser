@@ -120,6 +120,9 @@
 .wrap.is-shortpixel-bulk-page .shortpixel-icon.file {
   background-image: url("../images/icon/file.svg");
 }
+.wrap.is-shortpixel-bulk-page .shortpixel-icon.fix {
+  background-image: url("../images/icon/fix.svg");
+}
 .wrap.is-shortpixel-bulk-page .shortpixel-icon.feedback {
   background-image: url("../images/icon/feedback.svg");
 }
@@ -218,16 +221,14 @@
   border-radius: 6px;
   width: 250px;
   height: 65px;
-  transition: all 0.5s linear;
   font-weight: 700;
   letter-spacing: 0.3px;
-  border: 1px solid #1ABDCA;
+  border: none;
+  transition: all 0.1s ease-in-out;
 }
 .wrap.is-shortpixel-bulk-page section.panel.dashboard .bulk-wrapper button:hover {
-  background: #0f6a7d;
-  height: 70px;
-  width: 270px;
-  transition: all 1s linear;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
+  transform: scale(1.02);
 }
 .wrap.is-shortpixel-bulk-page section.panel.dashboard .bulk-wrapper button:disabled {
   color: #ccc;
@@ -237,8 +238,8 @@
   margin-right: 16px;
 }
 .wrap.is-shortpixel-bulk-page section.panel.dashboard .bulk-welcome {
-  background-color: #C7EDF4;
-  border-radius: 16px 16px 0px 0px;
+  background-color: #d1f5fd;
+  border-radius: 16px 16px 0 0;
 }
 .wrap.is-shortpixel-bulk-page section.panel.dashboard .bulk-welcome h3 {
   font-size: 28px;
@@ -324,17 +325,16 @@
   letter-spacing: 0.3px;
   font-weight: 700;
   font-size: 14px;
-  transition: 300ms all linear;
-  border: 1px solid #0f6a7d;
+  border-radius: 6px;
+  border: none;
+  transition: all 0.1s ease-in-out;
   min-height: 44px;
 }
 .wrap.is-shortpixel-bulk-page .button:hover {
   background: #1cbecb;
   color: #fff;
-  border: 1px solid #1cbecb;
 }
 .wrap.is-shortpixel-bulk-page .button:focus {
-  border-color: #1cbecb;
   background: #1cbecb;
 }
 .wrap.is-shortpixel-bulk-page .button .dashicons {
@@ -349,11 +349,15 @@
   vertical-align: bottom;
 }
 .wrap.is-shortpixel-bulk-page .button-primary {
-  background: #0f6a7d;
+  background: #1ABDCA;
   color: #fff;
-  border: 1px solid #0f6a7d;
-  border-radius: 3px;
-  box-shadow: 0px 1px 1px rgba(171, 170, 170, 0.3);
+  border-radius: 6px;
+  border: none;
+  transition: all 0.1s ease-in-out;
+}
+.wrap.is-shortpixel-bulk-page .button-primary:hover {
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
+  transform: scale(1.02);
 }
 .wrap.is-shortpixel-bulk-page nav {
   margin: 45px auto;

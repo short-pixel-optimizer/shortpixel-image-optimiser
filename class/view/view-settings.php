@@ -134,7 +134,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                   <p><?php _e('SmartCompress ', 'shortpixel-image-optimiser'); ?></p>
               </div>
               <div class='banner-upgrade-button'>
-                  <button type="button" class="upgrade" id="upgrade" onclick="window.open('https://shortpixel.com/ms/af/KZYK08Q28044', '_blank');">
+                  <button type="button" class="button button-primary" id="upgrade" onclick="window.open('https://shortpixel.com/ms/af/KZYK08Q28044', '_blank');">
                       <i class="shortpixel-icon cart"></i>
                       <?php _e('Upgrade Now', 'shortpixel-image-optimizer'); ?>
                   </button>

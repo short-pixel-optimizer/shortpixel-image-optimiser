@@ -11,6 +11,12 @@
 		font-weight: 700;
 		border-radius: 6px;
 		text-decoration: none;
+		transition: all 0.1s ease-in-out;
+		&:hover {
+			background: lighten($blue_default, 10%);
+			transform: scale(1.02);
+		}
+
 		i.switch {
 			 width: 18px;
 			 height: 12px;
@@ -154,6 +160,18 @@
 								font-weight: 700;
 						}
 					} // settinglist
+				 i.shortpixel-icon.save, i.shortpixel-icon.bulk {
+					 width: 15px;
+					 height: 15px;
+					 //margin-bottom: 5px;
+					 vertical-align: text-top;
+				 }
+				 div.save button.save-bulk, div.save button.save {
+					 padding: 10px 12px;
+					 font-size: 14px;
+					 height: 40px;
+				 }
+
 				div.save button.save-bulk i.bulk {
 					filter: brightness(0%) invert(1);
 				}

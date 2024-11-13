@@ -33,25 +33,17 @@
                border-radius: 6px;
                width: 250px;
                height: 65px;
-               transition: all 0.5s linear;
 							 font-weight: 700;
 						//	 font-size: 16px;
 							 letter-spacing: 0.3px;
-							 border: 1px solid $blue_default;
+							 border: none;
+              transition: all 0.1s ease-in-out;
 
-               &:hover
-               {
-                //  background: linear-gradient(to left, #3b9ea5, #50d9e2);
-								background:  $color-darkest;
-								//	  background: linear-gradient(to left, $color-dark, $color-darkest);
-									height: 70px;
-									width: 270px;
+              &:hover {
+                background: lighten($blue_default, 10%);
+                transform: scale(1.02);
+              }
 
-                  transition: all 1s linear;
-
-								//	color: #000;
-				//	transition: all 0.5s linear;
-               }
                &:disabled {
                  color: #ccc;
                  background: #0e5358;
@@ -67,8 +59,8 @@
 			 .bulk-welcome
 			 {
 
-					background-color: #C7EDF4;
-					border-radius: 16px 16px 0px 0px;
+					background-color:  $color-light;
+					border-radius: 16px 16px 0 0;
           h3 {
             font-size: 28px;
             font-weight: 700;

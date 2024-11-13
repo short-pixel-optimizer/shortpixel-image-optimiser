@@ -194,6 +194,9 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page .shortpixel-icon.file {
   background-image: url("../images/icon/file.svg");
 }
+.wrap.is-shortpixel-settings-page .shortpixel-icon.fix {
+  background-image: url("../images/icon/fix.svg");
+}
 .wrap.is-shortpixel-settings-page .shortpixel-icon.feedback {
   background-image: url("../images/icon/feedback.svg");
 }
@@ -296,6 +299,11 @@ div.spio-modal-title {
   font-weight: 700;
   border-radius: 6px;
   text-decoration: none;
+  transition: all 0.1s ease-in-out;
+}
+.wrap.is-shortpixel-settings-page .shortpixel-settings button:hover, .wrap.is-shortpixel-settings-page .shortpixel-settings .button-setting:hover {
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
+  transform: scale(1.02);
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings button i.switch, .wrap.is-shortpixel-settings-page .shortpixel-settings .button-setting i.switch {
   width: 18px;
@@ -376,6 +384,16 @@ div.spio-modal-title {
   font-size: 18px;
   font-family: "Roboto";
   font-weight: 700;
+}
+.wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab i.shortpixel-icon.save, .wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab i.shortpixel-icon.bulk {
+  width: 15px;
+  height: 15px;
+  vertical-align: text-top;
+}
+.wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab div.save button.save-bulk, .wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab div.save button.save {
+  padding: 10px 12px;
+  font-size: 14px;
+  height: 40px;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab div.save button.save-bulk i.bulk {
   filter: brightness(0%) invert(1);
@@ -647,19 +665,25 @@ div.spio-modal-title {
   margin-right: 8px;
   margin-left: 10px;
 }
-.wrap.is-shortpixel-settings-page .upgrade-banner button.upgrade {
+.wrap.is-shortpixel-settings-page .upgrade-banner .button {
+  padding: 10px 12px;
   display: flex;
   flex-direction: row;
   align-items: center;
-  width: 130px;
-  height: 30px;
+  width: max-content;
+  height: 40px;
+  font-size: 14px;
   margin-left: 13px;
   margin-top: 13px;
   background: #ED332B;
 }
+.wrap.is-shortpixel-settings-page .upgrade-banner .button:hover {
+  background: rgb(240.9913043478, 96.2347826087, 90.0086956522);
+}
 .wrap.is-shortpixel-settings-page .upgrade-banner .shortpixel-icon.cart {
   height: 18px;
   width: 18px;
+  margin-right: 8px;
 }
 .wrap.is-shortpixel-settings-page .red {
   color: #ff0000;
@@ -898,6 +922,11 @@ div.spio-modal-title {
   font-weight: 700;
   border-radius: 6px;
   text-decoration: none;
+  transition: all 0.1s ease-in-out;
+}
+.wrap.is-shortpixel-settings-page #tab-overview .wrapper .dashboard-button:hover {
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
+  transform: scale(1.02);
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper .dashboard-button i.switch {
   width: 18px;
@@ -1012,7 +1041,7 @@ div.spio-modal-title {
   float: left;
   width: 12px;
   height: 12px;
-  margin-right: 4px;
+  margin-right: 1px;
   margin-bottom: 1px;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel.warning i {
@@ -1027,16 +1056,19 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel button, .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel .dashboard-button {
   height: 40px;
+  width: max-content;
   padding: 10px 12px;
   box-sizing: border-box;
+  font-size: 14px;
+  align-items: center;
 }
-.wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel button i.arrow-right, .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel .dashboard-button i.arrow-right {
-  width: 10px;
-  height: 10px;
+.wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel button i.arrow-right, .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel button i.fix, .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel .dashboard-button i.arrow-right, .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel .dashboard-button i.fix {
+  width: 15px;
+  height: 15px;
   margin-left: 4px;
-  margin-right: 4px;
+  margin-right: 8px;
   filter: brightness(0) saturate(100%) invert(100%) sepia(100%) saturate(20%) hue-rotate(283deg) brightness(105%) contrast(105%);
-  vertical-align: baseline;
+  vertical-align: text-top;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper div {
   background: #F4FBFC;
@@ -1113,18 +1145,15 @@ div.spio-modal-title {
   background-color: #fff;
   padding-left: 30px;
   height: 36px;
+  width: 240px;
 }
 .wrap.is-shortpixel-settings-page #tab-overview content button {
-  padding: 4px 16px;
-  color: #fff;
-  background: #1ABDCA;
-  box-sizing: border-box;
+  padding: 4px 12px;
+  width: max-content;
   margin: 0 0 0 10px;
 }
-.wrap.is-shortpixel-settings-page #tab-overview content button i {
-  width: 12px;
-  height: 12px;
-  margin-left: 12px;
+.wrap.is-shortpixel-settings-page #tab-overview content .save-button-text {
+  font-size: 14px;
 }
 .wrap.is-shortpixel-settings-page #tab-overview content .apifield {
   position: relative;

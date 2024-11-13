@@ -60,19 +60,20 @@
 			letter-spacing: 0.3px;
 			font-weight: 700;
 			font-size: 14px;
-			transition: 300ms all linear;
-			border: 1px solid $color-darkest;
+            border-radius: 6px;
+            border: none;
+            transition: all 0.1s ease-in-out;
 			min-height: 44px;
 
 			&:hover {
 
 				background: $color-dark;
 				color: #fff;
-				border: 1px solid $color-dark;
+
 
 			}
 			&:focus {
-				border-color: $color-dark;
+
 				background: $color-dark;
 			}
 			.dashicons
@@ -92,11 +93,17 @@
 
     .button-primary
     {
-      background: $color-darkest;
+      background: $blue_default;
       color: #fff;
-      border: 1px solid $color-darkest;
-      border-radius: 3px;
-      box-shadow: 0px 1px 1px rgba(171, 170, 170, 0.3);
+      border-radius: 6px;
+      border: none;
+      transition: all 0.1s ease-in-out;
+      &:hover {
+
+        background: lighten($blue_default, 10%);
+        transform: scale(1.02);
+
+      }
     }
 
 		nav {

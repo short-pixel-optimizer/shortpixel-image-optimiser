@@ -90,9 +90,9 @@ $bulkblock = $dashboard->bulkblock;
 
         <?php echo $this->settingLink([
            'part' => 'processing',
-           'title' => __("Take Action", "shortpixel-image-optimiser"),
-           'icon' => 'shortpixel-icon arrow-right',
-           'icon_position' => 'right',
+           'title' => __("Fix now", "shortpixel-image-optimiser"),
+           'icon' => 'shortpixel-icon fix',
+           'icon_position' => 'left',
            'class' => 'dashboard-button'
          ]);
          ?>
@@ -123,9 +123,9 @@ $bulkblock = $dashboard->bulkblock;
 
    <?php echo $this->settingLink([
       'part' => 'webp',
-      'title' => __("Take Action", "shortpixel-image-optimiser"),
-      'icon' => 'shortpixel-icon arrow-right',
-      'icon_position' => 'right',
+      'title' => __("Fix now", "shortpixel-image-optimiser"),
+      'icon' => 'shortpixel-icon fix',
+      'icon_position' => 'left',
       'class' => 'dashboard-button'
     ]);
     ?>
@@ -166,7 +166,7 @@ $bulkblock = $dashboard->bulkblock;
             <button type="button" id="validate" class="button button-primary" title="<?php esc_html_e('Validate the provided API key','shortpixel-image-optimiser');?>"
                     onclick="ShortPixel.validateKey(this)" <?php echo $view->key->is_editable ? '' : 'disabled' ?>>
                 <i class='shortpixel-icon save'></i>
-                <?php esc_html_e('Save settings & validate', 'shortpixel-image-optimiser'); ?>
+                <span class ="save-button-text"> <?php esc_html_e('Save settings & validate', 'shortpixel-image-optimiser'); ?></span>
             </button>
         </content>
     </settinglist>

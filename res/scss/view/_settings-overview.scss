@@ -154,7 +154,7 @@
                float: left;
                width: 12px;
                height: 12px;
-               margin-right: 4px;
+               margin-right: 1px;
                margin-bottom: 1px;
              }
             }
@@ -176,16 +176,20 @@
 
             button, .dashboard-button {
                height: 40px;
+               width: max-content;
                padding: 10px 12px;
                box-sizing: border-box;
-               i.arrow-right
+               font-size: 14px;
+               align-items: center;
+
+               i.arrow-right, i.fix
                {
-                  width: 10px;
-                  height: 10px;
+                  width: 15px;
+                  height: 15px;
                   margin-left: 4px;
-                  margin-right: 4px;
+                  margin-right: 8px;
                   filter: $filter_white;
-                  vertical-align: baseline;
+                  vertical-align: text-top;
                }
             }
           } // PANEL
@@ -284,20 +288,18 @@
         background-color: #fff;
         padding-left: 30px;
         height: 36px;
+        width: 240px;
       }
 
       content button {
-        padding: 4px 16px;
-        color: #fff;
-        background: $blue_default;
-        box-sizing: border-box;
+        padding: 4px 12px;
+        width: max-content;
+        //background: #EC2C25; //only for tracing changes
         margin: 0 0 0 10px;
-      }
 
-      content button i {
-        width: 12px;
-        height: 12px;
-        margin-left: 12px;
+      }
+      content .save-button-text {
+        font-size: 14px;
       }
 
       content .apifield {
