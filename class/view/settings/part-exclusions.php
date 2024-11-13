@@ -255,13 +255,13 @@ if ( ! defined( 'ABSPATH' ) ) {
                                  <div class='size-option-range'>
                                    <div class='width'>
                                        <label><?php _e('Width between:', 'shortpixel-image-optimiser'); ?></label>
-                                       <input type="number" class='small' name="exclusion-minwidth" value="">px -
-                                       <input type="number" class='small' name="exclusion-maxwidth" value="">px
+                                       <input type="number" class='small' name="exclusion-minwidth" value="" min="0">px -
+                                       <input type="number" class='small' name="exclusion-maxwidth" value="" min="0">px
                                    </div>
                                    <div class='height'>
                                        <label><?php _e('Height between:', 'shortpixel-image-optimiser'); ?></label>
-                                       <input type="number" class='small' name="exclusion-minheight" value="">px -
-                                       <input type="number" class='small' name="exclusion-maxheight" value="">px
+                                       <input type="number" class='small' name="exclusion-minheight" value="" min="0">px -
+                                       <input type="number" class='small' name="exclusion-maxheight" value="" min="0">px
                                    </div>
                                  </div>
 
@@ -269,8 +269,8 @@ if ( ! defined( 'ABSPATH' ) ) {
                                    <div class='exact'>
                                      <label>
                                        <?php _e('Exact size:', 'shortpixel-image-optimiser'); ?></label>
-                                       <input type="number" class='small' name="exclusion-width" value="">px x
-                                       <input type="number" class='small' name="exclusion-height" value="">px
+                                       <input type="number" class='small' name="exclusion-width" value="" min="0">px -
+                                       <input type="number" class='small' name="exclusion-height" value="" min="0">px
                                     </div>
                                  </div>
                              </div>

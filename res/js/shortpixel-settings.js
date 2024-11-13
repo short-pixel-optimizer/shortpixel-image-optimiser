@@ -1125,7 +1125,7 @@ ReadWriteExclusionForm(setting)
 				 {
 						setting.value = width.value + 'x' + height.value;
 
-						validateInput.push(width.value, height.value);
+						validateInput.push(width, height);
 				 }
 				 else {
 					 setting.value = minwidth.value + '-' + maxwidth.value + 'x' + minheight.value + '-' + maxheight.value;
@@ -1156,8 +1156,10 @@ ReadWriteExclusionForm(setting)
 					}
 
 					this.NewExclusionUpdateType(typeOption)
-					this.NewExclusionToggleSizeOption(exactOption);
+			//		this.NewExclusionToggleSizeOption(exactOption);
 			 }
+			 this.NewExclusionToggleSizeOption(exactOption);
+
 		 }
 		 else
 		 {
@@ -1179,13 +1181,12 @@ DoValidateInputs(inputs)
 		var validated = true;
 	  for (let i = 0; i < inputs.length; i++)
 		{
-
 			 let item = inputs[i];
-
 			 let type = item.type;
 			 let value = item.value;
 
-			 if (type == 'number' && isNaN(value))
+			 console.log(isNaN(value));
+			 if (type == 'number' && (value.length <= 0 || isNaN(value)))
 			 {
 				  item.classList.add('not-validated');
 				 	validated = false;
@@ -1208,12 +1209,10 @@ DoValidateInputs(inputs)
 		if (false === validated)
 		{
 			 validationMessage.classList.remove('not-visible');
-			 return;
 		}
 		else {
 			validationMessage.classList.add('not-visible');
 		}
-
 
 		return validated;
 }
@@ -1226,6 +1225,11 @@ NewExclusionButtonAdd(target, update)
 
 		 var setting = result[0];
 		 var strings = result[1];
+
+		 if (false == setting.validated)
+		 {
+			  return false;
+		 }
 
 		 var listElement = this.root.querySelector('.exclude-list');
 
@@ -1285,6 +1289,8 @@ NewExclusionButtonAdd(target, update)
 
 		 var editButton = newElement.querySelector('i.edit');
 		 editButton.addEventListener('click', this.NewExclusionShowInterfaceEvent.bind(this));
+
+		 newElement.addEventListener('click', this.NewExclusionShowInterfaceEvent.bind(this));
 
 		 var removeButton = newElement.querySelector('i.remove');
 		 removeButton.addEventListener('click', this.RemoveExclusion.bind(this));
@@ -1368,6 +1374,8 @@ ResetExclusionInputs()
 
 	var exactOption = this.root.querySelector('.new-exclusion input[name="exclusion-exactsize"]');
 	exactOption.checked = false
+
+	this.NewExclusionToggleSizeOption(exactOption);
 
 }
 
