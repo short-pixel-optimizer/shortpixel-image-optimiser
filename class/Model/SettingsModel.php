@@ -23,6 +23,7 @@ class SettingsModel extends \ShortPixel\Model
         'resizeHeight' => ['s' => 'int', 'default' => 0], // int
         'processThumbnails' => ['s' => 'boolean', 'default' => true], // checkbox
 				'useSmartcrop' => ['s' => 'boolean', 'default' => false],
+        'smartCropIgnoreSizes' => ['s' => 'boolean', 'default' => false],
         'backupImages' => ['s' => 'boolean', 'default' => true], // checkbox
         'keepExif' => ['s' => 'int', 'default' => 0], // checkbox
         'resizeImages' => ['s' => 'boolean', 'default' => false],
