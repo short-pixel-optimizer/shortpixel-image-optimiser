@@ -576,6 +576,8 @@ class ApiController
 				 'status' => self::STATUS_SKIP,
 			 		),
 			);
+Log::addTemp('Api HandleSuccess Item', $item);
+Log::addTemp('Api HandleSuccess FileData', $fileData);
 
 			$fileType = ($compressionType > 0) ? 'LossyURL' : 'LosslessURL';
 			$fileSize = ($compressionType > 0) ? 'LossySize' : 'LosslessSize';

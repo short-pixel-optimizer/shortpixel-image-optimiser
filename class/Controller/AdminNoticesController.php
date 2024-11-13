@@ -39,6 +39,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 		//		'HeicFeatureNotice',
         'NewExclusionFormat',
         'LitespeedCache',
+        'SpaiCDN', 
     );
     protected $adminNotices; // Models
 
