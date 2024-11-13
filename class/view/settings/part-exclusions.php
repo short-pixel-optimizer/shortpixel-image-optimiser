@@ -301,7 +301,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 
                          <div class='thumbnail-select'>
-                           <h4>Selected Thumbnails <hr></h4>
+                           <h4><?php _e('Selected Thumbnails', 'shortpixel-image-optimiser'); ?><hr></h4>
                            <div class='grid-thumbnails'>
                                <?php foreach($view->allThumbSizes as $key => $data)
                                {
@@ -312,14 +312,14 @@ if ( ! defined( 'ABSPATH' ) ) {
                                    $name = isset($data['nice-name']) ? $data['nice-name'] : ucfirst($key);
                                    $label = $name . " ( $width &times $height )";
 
-
-                                   //$checked = in_array($sizeKey, $thumbnailselect) ? 'checked' : '';
-
-                              //     echo "<option value='$name'>$nice_name</option>";
                                 printf('<span><label><input type="checkbox" name="thumbnail-select[]" value="%s" > %s </label></span>', $key, $label);
                                } ?>
                           </div>
                          </div>
+                         <div class='validation-message not-visible'>
+                            <?php _e('Fields with a red border are required', 'shortpixel-image-optimiser'); ?>
+                         </div>
+
                          <div class='button-actions'>
 
                            <button type="button" class="button button-primary not-visible" name="addExclusion">

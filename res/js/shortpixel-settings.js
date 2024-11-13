@@ -705,7 +705,7 @@ DashBoardWarningEvent(warning, matches)
 		  console.error('dash button not found');
 			return;
 	 }
-	 
+
 	 if ('ok' === status)
 	 {
 			if (false === button.classList.contains('shortpixel-hide'))
@@ -903,8 +903,20 @@ CompressionTypeChangeEvent(event)
 
 HideExclusionInterface()
 {
-	var element = this.root.querySelector('.new-exclusion');
+	let element = this.root.querySelector('.new-exclusion');
 	element.classList.add('not-visible');
+
+	let notValidated = element.querySelectorAll('.not-validated');
+	for (let i = 0; i < notValidated.length; i++)
+	{
+		 notValidated[i].classList.remove('not-validated');
+	}
+
+	if (notValidated.length  > 0)
+	{
+		let message = element.querySelector('.validation-message');
+		message.classList.add('not-visible');
+	}
 
 }
 
@@ -912,7 +924,12 @@ HideExclusionInterface()
 NewExclusionUpdateEvent(event)
 {
 	var target = event.target;
-	var inputName = event.target.name;
+	if (typeof target.name === 'undefined')
+	{
+		 	var target = target.parentElement;
+	}
+	var inputName = target.name;
+
 
 	switch(inputName)
 	{
@@ -1028,6 +1045,7 @@ ReadWriteExclusionForm(setting)
 		 	setting.type = typeOption.value;
 		 	setting.value = valueOption.value;
 		 	setting.apply = applyOption.value;
+			setting.validated = true;
 
 			strings.type = typeOption.options[typeOption.selectedIndex].innerText;
 			strings.apply = applyOption.options[applyOption.selectedIndex].innerText;
@@ -1086,6 +1104,7 @@ ReadWriteExclusionForm(setting)
 				 }
 		 }
 
+		 var validateInput = [];
 
 		 // Options for size setting
 		 if ('size' === setting.type)
@@ -1100,15 +1119,18 @@ ReadWriteExclusionForm(setting)
 			 var minheight = this.root.querySelector('.new-exclusion input[name="exclusion-minheight"]');
 			 var maxheight = this.root.querySelector('.new-exclusion input[name="exclusion-maxheight"]');
 
-
 			 if ('read' === mode)
 			 {
 				 if (true === exactOption.checked)
 				 {
-						 setting.value = width.value + 'x' + height.value;
+						setting.value = width.value + 'x' + height.value;
+
+						validateInput.push(width.value, height.value);
 				 }
 				 else {
 					 setting.value = minwidth.value + '-' + maxwidth.value + 'x' + minheight.value + '-' + maxheight.value;
+					 validateInput.push(minwidth, maxwidth, minheight, maxheight);
+
 				 }
 			 }
 			 else if ('write' === mode)
@@ -1137,10 +1159,63 @@ ReadWriteExclusionForm(setting)
 					this.NewExclusionToggleSizeOption(exactOption);
 			 }
 		 }
+		 else
+		 {
+			 	validateInput.push(valueOption);
+		 }
+
+
+		 // // Problem - with validatation, must note which field is not validated (1) and secondly value must be valited as string, while the sizes should be numbers.
+		 setting.validated = this.DoValidateInputs(validateInput);
+
 		 if ('read' === mode)
 		 {
 		 	 return [setting, strings];
 		 }
+}
+
+DoValidateInputs(inputs)
+{
+		var validated = true;
+	  for (let i = 0; i < inputs.length; i++)
+		{
+
+			 let item = inputs[i];
+
+			 let type = item.type;
+			 let value = item.value;
+
+			 if (type == 'number' && isNaN(value))
+			 {
+				  item.classList.add('not-validated');
+				 	validated = false;
+				 // break;
+			 }
+			 else if (value.length <= 0) {
+				 	item.classList.add('not-validated');
+
+				  validated = false;
+				//	break;
+			 }
+			 else if (item.classList.contains('not-validated')) {
+			 	 	item.classList.remove('not-validated');
+			 }
+	  };
+
+		// Validate.
+
+		let validationMessage = this.root.querySelector('.validation-message');
+		if (false === validated)
+		{
+			 validationMessage.classList.remove('not-visible');
+			 return;
+		}
+		else {
+			validationMessage.classList.add('not-visible');
+		}
+
+
+		return validated;
 }
 
 

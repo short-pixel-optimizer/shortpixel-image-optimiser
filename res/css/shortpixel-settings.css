@@ -1255,28 +1255,6 @@ div.spio-modal-title {
   position: relative;
   width: 100%;
   box-sizing: border-box;
-  /*
-          .thumbnail-select
-          {
-             .thumbnail-options
-             {
-               column-count: 3;
-               column-width: 220px;
-             > span {
-                margin-right: 20px;
-                white-space:nowrap;
-                line-height: 24px;
-               // float: left;
-             //   clear: both;
-                font-size: 12px;
-                color: $blue_dark;
-                input { margin-right: 8px; }
-
-
-             }
-           }
-          }
-  */
 }
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion .grid {
   display: grid;
@@ -1309,8 +1287,16 @@ div.spio-modal-title {
   width: 80px;
   min-width: 0;
 }
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div input.not-validated, .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div select.not-validated {
+  border: 1px solid #ff0000;
+}
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div.button-actions {
   margin-left: 114px;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div.validation-message {
+  color: #ff0000;
+  margin-left: 120px;
+  transition: all 500ms;
 }
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div button {
   min-width: 75px;

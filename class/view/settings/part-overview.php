@@ -36,9 +36,11 @@ $bulkblock = $dashboard->bulkblock;
         </div>
          <hr>
          <div class="second-line">
+        <?php if (property_exists($mainblock, 'optimized')): ?>
          <div class="optimized"><?php echo $mainblock->optimized ?></div>
              <i class='shortpixel-icon file'></i>
              <div class="optimized-message"><?php esc_html_e('Optimized items from the Media Library and Custom Media', 'shortpixel-image-optimiser'); ?></div>
+        <?php endif; ?>
          </div>
 
 
@@ -87,7 +89,7 @@ $bulkblock = $dashboard->bulkblock;
         <span class='status-wrapper'><i class='shortpixel-icon status-icon ok'></i><span class='status-line'></span></span>
 
         <?php echo $this->settingLink([
-           'part' => 'optimisation',
+           'part' => 'processing',
            'title' => __("Take Action", "shortpixel-image-optimiser"),
            'icon' => 'shortpixel-icon arrow-right',
            'icon_position' => 'right',

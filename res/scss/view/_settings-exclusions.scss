@@ -162,28 +162,6 @@
               display: block;
            }
         }
-/*
-        .thumbnail-select
-        {
-           .thumbnail-options
-           {
-             column-count: 3;
-             column-width: 220px;
-           > span {
-              margin-right: 20px;
-              white-space:nowrap;
-              line-height: 24px;
-             // float: left;
-           //   clear: both;
-              font-size: 12px;
-              color: $blue_dark;
-              input { margin-right: 8px; }
-
-
-           }
-         }
-        }
-*/
 
          div
         {
@@ -200,10 +178,19 @@
                 width: 80px;
                 min-width: 0;
               }
+              &.not-validated {
+                 border: 1px solid #ff0000;
+              }
            }
            &.button-actions
            {
               margin-left: 114px;
+           }
+           &.validation-message
+           {
+              color: #ff0000;
+              margin-left: 120px;
+              transition: all 500ms;
            }
            button {
             // margin-left: 104px;
@@ -250,6 +237,7 @@
               color: #000;
            }
         }
+
 
     }
   } // setting
