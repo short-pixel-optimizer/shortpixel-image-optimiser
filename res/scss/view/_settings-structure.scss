@@ -4,7 +4,7 @@
 @mixin shortpixel-button {
 		color: #fff;
 		background: $blue_default;
-		padding: 8px 6px;
+		padding: 10px 12px;
 		border: 0;
 		margin: 4px; // see if this works.
 		font-family: 'Roboto';
@@ -14,7 +14,7 @@
 		transition: all 0.1s ease-in-out;
 		&:hover {
 			background: lighten($blue_default, 10%);
-			transform: scale(1.02);
+			//transform: scale(1.02);
 		}
 
 		i.switch {

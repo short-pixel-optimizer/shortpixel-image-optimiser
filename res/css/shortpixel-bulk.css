@@ -228,7 +228,6 @@
 }
 .wrap.is-shortpixel-bulk-page section.panel.dashboard .bulk-wrapper button:hover {
   background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
-  transform: scale(1.02);
 }
 .wrap.is-shortpixel-bulk-page section.panel.dashboard .bulk-wrapper button:disabled {
   color: #ccc;
@@ -357,7 +356,6 @@
 }
 .wrap.is-shortpixel-bulk-page .button-primary:hover {
   background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
-  transform: scale(1.02);
 }
 .wrap.is-shortpixel-bulk-page nav {
   margin: 45px auto;

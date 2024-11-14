@@ -173,10 +173,10 @@
 			//top: 160px;
 			margin-left: 13px;
 			margin-top: 13px;
-			background: #ED332B;
+			background: darken(#ff0000, 10%);
 			//background: #ED3; // just for check ctrl+shift reload worked :)
 			&:hover {
-				background: lighten(#ED332B, 10%);
+				background: #ff0000;
 				//transform: scale(1.05);
 			}
 

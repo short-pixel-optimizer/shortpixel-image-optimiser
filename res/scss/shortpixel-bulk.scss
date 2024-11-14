@@ -66,10 +66,8 @@
 			min-height: 44px;
 
 			&:hover {
-
 				background: $color-dark;
 				color: #fff;
-
 
 			}
 			&:focus {
@@ -101,7 +99,7 @@
       &:hover {
 
         background: lighten($blue_default, 10%);
-        transform: scale(1.02);
+        //transform: scale(1.02);
 
       }
     }
