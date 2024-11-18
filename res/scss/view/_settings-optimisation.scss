@@ -23,7 +23,7 @@
 					display: inline-block;
 			}
 			label {
-					width:158px;
+					width: 30%;
 			//		margin: 0 -2px;
 					font-weight: bold;
 					display: inline-block;
@@ -142,6 +142,17 @@
 		.resize-type-wrap label {
 				display: inline-block;
 				padding: 15px 0 0 0;
+		}
+
+		@include breakpoint(0, 1100px)
+		{
+				 gridbox {
+						display: block;
+				 }
+				 .smart-compression-explainer {
+						width: auto;
+						margin: 20px 0 12px;
+				 }
 		}
 
 } //setting-tab

@@ -671,7 +671,6 @@ class SettingsViewController extends \ShortPixel\ViewController
                $title = $icon . $title;
              else
                $title = $title . $icon;
-
           }
 
           $html = sprintf('<a href="%s" class="%s" data-link="%s" %s >%s</a>', $link, $class, $args['part'], $active, $title);

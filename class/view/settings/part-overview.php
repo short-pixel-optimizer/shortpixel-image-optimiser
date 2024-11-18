@@ -48,7 +48,6 @@ $bulkblock = $dashboard->bulkblock;
      </div>
 
      <div class='panel second-panel'>
-       <div class='average-optimization '>
            <h4><?php esc_html_e('Average Optimization','shortpixel-image-optimiser'); ?></h4>
            <svg class="opt-circle-average" viewBox="-10 0 150 140">
                          <path class="trail" d="
@@ -70,7 +69,7 @@ $bulkblock = $dashboard->bulkblock;
                           ?> %</text>
              </svg>
 
-       </div>
+       
        <?php if ($view->averageCompression > 30): ?>
          <div class='rating'>
           <?php echo UiHelper::getIcon('res/images/icon/7stars.svg'); ?>

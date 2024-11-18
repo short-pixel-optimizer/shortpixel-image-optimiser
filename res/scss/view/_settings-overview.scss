@@ -1,6 +1,3 @@
-
-
-
 #tab-overview
 {
 
@@ -87,9 +84,17 @@
           }
           .second-panel
           {
-             display: flex;
-             flex-direction: column;
-             width: 30%;
+            // display: flex;
+             //flex-direction: column;
+            // width: 30%;
+            //  margin: 0 auto;
+              width: 30%;
+              display: block;
+              text-align: center;
+              h4 {
+                font-size: 1.2em;
+              }
+
           }
        }
        // Specific layout for top row boxes.
@@ -108,9 +113,10 @@
            }
 
            .rating {
-              display: flex;
-              justify-content: space-between;
-              width: 70%;
+              //display: flex;
+              //justify-content: space-between;
+              //width: 70%;
+              display: block;
               margin: 0 0 10px 0;
               img {
                 width: 90px;
@@ -334,7 +340,36 @@
         transform: rotate(180deg);
       }
 
+      // Everything needs to change.
+      /*
+      @include breakpoint(0, 1050px)
+      {
+              .wrapper.top-row {
+                 flex-direction: column;
+                 .first-panel.panel {
+                   width: 100%;
+                   i.cocktail { display: none; }
+                 }
+                 .second-panel.panel {
+                   width: 100%;
+                   margin-top: 8px;
+                   display: block;
+                   .rating {
+                     float: left;
+                   }
+                 }
+              }
+              .wrapper.middle-row {
+                 flex-direction: column;
+                 > .panel {
+                   margin-top: 12px;
+                   width: 100%;
+                   flex-direction: row;
+                   i { float: left; }
+                   .dashboard-button { display: none; }
+                 }
+              }
 
+      } */
 
-
-}
+} // #tab-overview.

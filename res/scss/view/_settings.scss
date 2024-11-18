@@ -187,6 +187,13 @@
 			margin-right: 8px;
 		}
 
+		@include breakpoint(0, 1200px)
+		{
+			max-width: 200px;
+			width: 100%;
+			margin: 0;
+		}
+
   }
 
 
@@ -457,26 +464,36 @@
 				{
 						background: $blue_background;
 						border-radius: 8px;
-						padding: 18px;
+						width: 100%;
+					//	padding: 18px;
 					  display: flex;
+					//	flex-wrap: wrap;
+						//margin-top: 16px;
+
 						> div {
+							//	background: $blue_background;
 								border-right: 2px solid $blue_light;
-								margin: 0 10px;
+								margin: 16px 10px;
 								display: flex;
+								padding: 0 4px;
+
 								flex-direction: column;
 								align-items: center;
 								width: 33%;
+							//	min-width: 250px;
 								text-align: center;
 								justify-content: flex-end;
 								.main-icon .icon {
 									 width: 40px;
 
 								}
-								//p { font-size: 10px; }
+								p { min-height: 60px; }
 								&:last-child
 								{
 									 border: 0;
 								}
 						}
 				}
-	}
+
+
+	} // tab-help

@@ -63,7 +63,6 @@
 
 		// Items for whole page
 
-
 		button, .button-setting
 		{
 			 @include shortpixel-button;
@@ -72,8 +71,9 @@
 
 		menu { // left-hand menu.
 			 width: 25%;
-			 max-width: 200px;
+			 max-width: 220px;
 			 padding-left: 25px;
+			 box-sizing: border-box;
 
 			 ul {
 				  list-style: none;
@@ -180,7 +180,6 @@
 		settinglist
 		{
 			 display: block;
-
 		}
 
 		flexbox {
@@ -214,6 +213,80 @@
 				  grid-template-columns:  70% 30%;
 					column-gap: 50px;
 			 }
+			 &.width_60
+			 {
+					grid-template-columns:  60% 40%;
+					column-gap: 5%;
+			 }
 
 		}
 } // shortpixel-settings
+
+
+// Responsive
+@include breakpoint(0, 1200px)
+{
+		.shortpixel-settings {
+			 width: 100%;
+
+			 menu
+			 {
+					div.adv_switcher
+					{
+						 font-size: 14px;
+					}
+			 }
+			 section.wrapper {
+					width: 85%;
+					margin-left: 3%;
+			 }
+		}
+}
+
+@include breakpoint(0, 768px)
+{
+		header {
+				position: fixed;
+				top: 46px;
+				width: 100%;
+				height: 65px;
+				margin-top: 0;
+				left: 0;
+				h1 img
+				{
+						height: 35px;
+						margin-left: 45px;
+				}
+		}
+		// make space for the header
+		.wp-header-end {
+			 margin-top: 65px;
+		}
+		.shortpixel-settings
+		{
+			 .mobile-menu input:checked + menu {
+					display: block;
+			 }
+			 .mobile-menu input:checked {
+					border: 1px solid #000;
+			 }
+			 menu {
+				 position: absolute;
+				 //display: none;
+				 left: 0;
+				 top: 65px;
+				 z-index: 10;
+				 background: #fff;
+				 padding: 8px;
+				 max-width: none;
+				 width: auto;
+				 margin-top: 0;
+			 }
+
+			 section.wrapper
+			 {
+					width: 95%;
+			 }
+
+		}
+}

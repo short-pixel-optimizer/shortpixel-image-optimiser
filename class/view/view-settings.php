@@ -14,8 +14,6 @@ if ( ! defined( 'ABSPATH' ) ) {
   <h1>
       <?php echo UIHelper::getIcon('res/images/illustration/logo_settings.svg'); ?>
   </h1>
-
-
 </header>
 
 <?php //$this->loadView('settings/part-header'); ?>
@@ -33,9 +31,9 @@ if ( ! defined( 'ABSPATH' ) ) {
     $this->loadView('settings/part-quicktour');
   }
 
-
   ?>
 
+  <label class='mobile-menu'><?php echo UIHelper::getIcon('res/images/icon/accordion.svg'); ?><input type='checkbox'></label>
   <menu>
 			<ul>
 				<li>

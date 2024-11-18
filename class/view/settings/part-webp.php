@@ -118,7 +118,7 @@ if( $this->is_nginx ){
           'checked' =>  ($view->data->deliverWebp > 0) ? 1 : 0,
           'label' => esc_html__('Serve WebP/AVIF images from locally hosted files (without using a CDN):','shortpixel-image-optimiser'),
           'disabled' => $disabled,
-          'data' => ['data-toggle="deliverTypes"', 'data-dashboard="' . __('Next-gen format not being deliverd', 'shortpixel-image-optimiser') . '"', 'data-exclude="useCDN"'],
+          'data' => ['data-toggle="deliverTypes"', 'data-dashboard="' . __('Next-gen format not being delivered', 'shortpixel-image-optimiser') . '"', 'data-exclude="useCDN"'],
          ]);
    ?>
 

@@ -43,7 +43,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                 <?php esc_html_e('Compression type:','shortpixel-image-optimiser');?>
             </name>
 
-            <gridbox class='width_70'>
+            <gridbox class='width_60'>
               <content class='shortpixel-compression'>
                 <input type="hidden" id="compressionType-database" value="<?php echo esc_attr($view->data->compressionType) ?>">
 
