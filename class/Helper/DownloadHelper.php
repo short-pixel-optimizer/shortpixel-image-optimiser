@@ -144,7 +144,9 @@ class DownloadHelper
       {
             //get_temp_dir
             $tmpfname = tempnam(get_temp_dir(), 'spiotmp');
-            $downloadTimeout = max(ini_get('max_execution_time') - 10, 15);
+            $max_exec = ini_get('max_execution_time'); // Like everything, can't be trusted to be a int.
+            $max_exec =  (! is_numeric($max_exec) || $max_exec <= 0) ? 30 : $max_exec;
+            $downloadTimeout = max($max_exec - 10, 15);
 
             $args_for_get = array(
               'stream' => true,

@@ -70,6 +70,12 @@
 		}
 
 
+		.mobile-menu
+		{
+			 display: none;
+			 input { display: none; }
+
+		}
 		menu { // left-hand menu.
 			 width: 25%;
 			 max-width: 220px;
@@ -241,7 +247,9 @@
 			 }
 		}
 }
-@include breakpoint(0, 768px)
+
+// 782px is when WordPress breaks to mobile menu's.
+@include breakpoint(0, 782px)
 {
 		header {
 				position: fixed;
@@ -250,9 +258,11 @@
 				height: 65px;
 				margin-top: 0;
 				left: 0;
+				z-index: 10;
+				box-sizing: border-box;
 				h1 img
 				{
-						height: 35px;
+						//height: 35px;
 						margin-left: 45px;
 				}
 		}
@@ -262,17 +272,41 @@
 		}
 		.shortpixel-settings
 		{
-			 .mobile-menu input:checked + menu {
+			 .mobile-menu {
+					display: block;
+					position: fixed;
+					cursor: pointer;
+					z-index: 11;
+					img {
+						width: 32px;
+						height: 32px;
+					}
+					&.closed
+					{
+						 span.close {
+								display: none;
+						 }
+					}
+					&.opened {
+						 span.open {
+							 display: none;
+						 }
+					}
+
+					top: 60px;
+					left: 5px;
+			 }
+			 .mobile-menu.opened + menu {
 					display: block;
 			 }
-			 .mobile-menu input:checked {
+			 /*.mobile-menu input:checked {
 					border: 1px solid #000;
-			 }
+			 } */
 			 menu {
-				 position: absolute;
-				 //display: none;
+				 position: fixed;
+				 display: none;
 				 left: 0;
-				 top: 65px;
+				 top: 111px;
 				 z-index: 10;
 				 background: #fff;
 				 padding: 8px;

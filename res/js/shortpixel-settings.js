@@ -310,6 +310,10 @@ class ShortPixelSettings
 			// Discover current tab
 			var displayPartEl = this.root.querySelector('input[name="display_part"]');
 			this.current_tab = displayPartEl.value;
+
+			// responsive menu
+			var mobileToggle = this.root.querySelector('.mobile-menu input');
+			mobileToggle.addEventListener('change', this.ShowMobileMenuEvent.bind(this));
 	}
 
 	InitModeSwitcher()
@@ -361,7 +365,11 @@ class ShortPixelSettings
 		 var params = new URLSearchParams(uri);
 		 var new_tab = params.get('part');
 
-
+		 var mobileToggle = this.root.querySelector('.mobile-menu input');
+		 mobileToggle.checked = false;
+		 var changeEv = new CustomEvent('change');
+		 mobileToggle.dispatchEvent(changeEv);
+		 
 		 // If same, do nothing.
 		 if (current_tab == new_tab)
 		 {
@@ -410,6 +418,22 @@ class ShortPixelSettings
 		 var event = new CustomEvent('shortpixel.ui.settingsTabLoad', { detail : {tabName: new_tab, section: section }});
 		 window.dispatchEvent(event);
 
+	}
+
+	ShowMobileMenuEvent(event)
+	{
+		 event.preventDefault(); // target is checkbox.
+
+		 var mobileMenu = this.root.querySelector('label.mobile-menu');
+		 if (event.target.checked)
+		 {
+				mobileMenu.classList.add('opened');
+				mobileMenu.classList.remove('closed')
+		 }
+		 else {
+				mobileMenu.classList.add('closed');
+				mobileMenu.classList.remove('opened')
+		 }
 	}
 
 	// Elements with data-toggle active

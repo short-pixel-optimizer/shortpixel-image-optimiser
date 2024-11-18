@@ -39,7 +39,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 
   ?>
 
-  <label class='mobile-menu'><?php echo UIHelper::getIcon('res/images/icon/accordion.svg'); ?><input type='checkbox'></label>
+  <label class='mobile-menu closed'>
+    <span class='open'><?php echo UIHelper::getIcon('res/images/icon/accordion.svg'); ?></span>
+    <span class='close'><?php echo UIHelper::getIcon('res/images/icon/close.svg'); ?></span>
+    <input type='checkbox'></label>
   <menu>
 			<ul>
 				<li>

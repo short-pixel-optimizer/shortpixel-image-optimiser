@@ -317,7 +317,7 @@ div.spio-modal-title {
   transition: all 0.1s ease-in-out;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings button:hover, .wrap.is-shortpixel-settings-page .shortpixel-settings .button-setting:hover {
-  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
+  background: #32d7e5;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings button i.switch, .wrap.is-shortpixel-settings-page .shortpixel-settings .button-setting i.switch {
   width: 18px;
@@ -327,6 +327,12 @@ div.spio-modal-title {
   width: 14px;
   height: 14px;
   filter: brightness(0) saturate(100%) invert(100%) sepia(100%) saturate(0%) hue-rotate(251deg) brightness(108%) contrast(108%);
+}
+.wrap.is-shortpixel-settings-page .shortpixel-settings .mobile-menu {
+  display: none;
+}
+.wrap.is-shortpixel-settings-page .shortpixel-settings .mobile-menu input {
+  display: none;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings menu {
   width: 25%;
@@ -453,7 +459,7 @@ div.spio-modal-title {
     margin-left: 3%;
   }
 }
-@media (max-width: 768px) {
+@media (max-width: 782px) {
   .wrap.is-shortpixel-settings-page header {
     position: fixed;
     top: 46px;
@@ -461,24 +467,46 @@ div.spio-modal-title {
     height: 65px;
     margin-top: 0;
     left: 0;
+    z-index: 10;
+    box-sizing: border-box;
   }
   .wrap.is-shortpixel-settings-page header h1 img {
-    height: 35px;
     margin-left: 45px;
   }
   .wrap.is-shortpixel-settings-page .wp-header-end {
     margin-top: 65px;
   }
-  .wrap.is-shortpixel-settings-page .shortpixel-settings .mobile-menu input:checked + menu {
+  .wrap.is-shortpixel-settings-page .shortpixel-settings {
+    /*.mobile-menu input:checked {
+    	border: 1px solid #000;
+    } */
+  }
+  .wrap.is-shortpixel-settings-page .shortpixel-settings .mobile-menu {
+    display: block;
+    position: fixed;
+    cursor: pointer;
+    z-index: 11;
+    top: 60px;
+    left: 5px;
+  }
+  .wrap.is-shortpixel-settings-page .shortpixel-settings .mobile-menu img {
+    width: 32px;
+    height: 32px;
+  }
+  .wrap.is-shortpixel-settings-page .shortpixel-settings .mobile-menu.closed span.close {
+    display: none;
+  }
+  .wrap.is-shortpixel-settings-page .shortpixel-settings .mobile-menu.opened span.open {
+    display: none;
+  }
+  .wrap.is-shortpixel-settings-page .shortpixel-settings .mobile-menu.opened + menu {
     display: block;
   }
-  .wrap.is-shortpixel-settings-page .shortpixel-settings .mobile-menu input:checked {
-    border: 1px solid #000;
-  }
   .wrap.is-shortpixel-settings-page .shortpixel-settings menu {
-    position: absolute;
+    position: fixed;
+    display: none;
     left: 0;
-    top: 65px;
+    top: 111px;
     z-index: 10;
     background: #fff;
     padding: 8px;
@@ -1043,7 +1071,7 @@ div.spio-modal-title {
   transition: all 0.1s ease-in-out;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper .dashboard-button:hover {
-  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
+  background: #32d7e5;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper .dashboard-button i.switch {
   width: 18px;
@@ -1644,7 +1672,7 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page #tab-tools .button {
   min-height: 44px;
   color: #1ABDCA;
-  background-color: rgb(232.25, 232.25, 232.25);
+  background-color: #e8e8e8;
   border-radius: 6px;
   font-weight: 700;
   letter-spacing: 0.3px;
@@ -1652,7 +1680,7 @@ div.spio-modal-title {
   transition: all 0.1s ease-in-out;
 }
 .wrap.is-shortpixel-settings-page #tab-tools .button:hover {
-  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
+  background: #32d7e5;
   color: #fff;
 }
 .wrap.is-shortpixel-settings-page #tab-tools .option, .wrap.is-shortpixel-settings-page #tab-tools setting {
