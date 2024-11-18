@@ -9,16 +9,23 @@
 
       column-count: 3;
       column-width: 220px;
-    > span {
-       margin-right: 20px;
-       white-space:nowrap;
-       line-height: 24px;
+      max-width: 100%;
+      box-sizing: border-box;
+      > span {
+         margin-right: 20px;
+         white-space:nowrap;
+         line-height: 24px;
 
-       font-size: 12px;
-       color: $blue_dark;
-       input { margin-right: 8px; }
-    }
+         font-size: 12px;
+         color: $blue_dark;
+         input { margin-right: 8px; }
 
+      }
+
+      @include breakpoint(0, 1400px)
+      {
+         column-count: 2;
+      }
     }
 
   } // setting
