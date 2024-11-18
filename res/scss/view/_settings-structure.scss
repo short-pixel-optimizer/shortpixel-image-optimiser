@@ -60,6 +60,7 @@
 		background: #fff;
 		border-radius: 16px;
 		margin: 10px auto;
+		box-shadow: 1px 0px 4px 0px rgba(0, 0, 0, 0.12);
 
 		// Items for whole page
 
@@ -73,7 +74,6 @@
 			 width: 25%;
 			 max-width: 220px;
 			 padding-left: 25px;
-			 box-sizing: border-box;
 
 			 ul {
 				  list-style: none;
@@ -228,7 +228,6 @@
 {
 		.shortpixel-settings {
 			 width: 100%;
-
 			 menu
 			 {
 					div.adv_switcher
@@ -242,7 +241,6 @@
 			 }
 		}
 }
-
 @include breakpoint(0, 768px)
 {
 		header {
@@ -282,11 +280,9 @@
 				 width: auto;
 				 margin-top: 0;
 			 }
-
 			 section.wrapper
 			 {
 					width: 95%;
 			 }
-
 		}
 }

@@ -1,7 +1,5 @@
 #tab-overview
 {
-
-
     .wrapper {
        display: flex;
 
@@ -73,7 +71,7 @@
              i.mainblock-status {
                &.ok {
                  width: 70px;
-                 height: 70px;
+                 height: 75px;
                }
                &.alert {
                   width: 70px;
@@ -119,11 +117,11 @@
               display: block;
               margin: 0 0 10px 0;
               img {
-                width: 90px;
+                width: 110px;
               }
               .button
               {
-                 padding: 2px 8px;
+                 padding: 6px 12px;
               }
 
            }
@@ -147,8 +145,8 @@
                border: 0;
             }
             > i:first-child {
-              width: 50px;
-              height: 40px;
+              width: 46px;
+              height: 46px;
               filter: $filter_green;
             //  &.switch { width: 60px; }
             }
@@ -159,8 +157,8 @@
               i {
                float: left;
                width: 12px;
-               height: 12px;
-               margin-right: 1px;
+               height: 13px;
+               margin-right: 3px;
                margin-bottom: 1px;
              }
             }
@@ -181,7 +179,7 @@
             }
 
             button, .dashboard-button {
-               height: 40px;
+               //height: 40px;
                width: max-content;
                padding: 10px 12px;
                box-sizing: border-box;
@@ -237,9 +235,10 @@
         }
 
         .shortpixel-icon.ok{
-          width: 15px;
-          height: 15px;
+          width: 14px;
+          height: 16px;
           margin-left: 10px;
+	  vertical-align: text-top;
         }
 
         .shortpixel-icon.chevron {
@@ -290,9 +289,9 @@
 
       content input {
         border: 1px solid $blue_default;
-        background: url('../images/icon/key.svg') 1% center no-repeat;
+        background: url('../images/icon/key.svg') 5% center no-repeat;
         background-color: #fff;
-        padding-left: 30px;
+        padding-left: 35px;
         height: 36px;
         width: 240px;
       }
@@ -369,7 +368,6 @@
                    .dashboard-button { display: none; }
                  }
               }
-
       } */
 
 } // #tab-overview.

@@ -107,6 +107,24 @@ if( $this->is_nginx ){
   </setting>
   <!-- // avif -->
 
+  <setting class='switch step-highlight-3'>
+    <content>
+  <?php $this->printSwitchButton(
+        ['name' => 'useCDN',
+         'checked' =>  ($view->data->useCDN > 0) ? 1 : 0,
+         'label' => esc_html__('Deliver the next generation images using the ShortPixel CDN:','shortpixel-image-optimiser'),
+
+         'data' => ['data-toggle="useCDN"', 'data-exclude="deliverWebp"'],
+        ]);
+  ?>
+  </content>
+  <name class='useCDN toggleTarget'><?php esc_html_e('CDN Domain', 'shortpixel-image-optimiser'); ?></name>
+  <content class='useCDN toggleTarget'>
+      <input type="text" name="CDNDomain" class='regular-text' value="<?php echo esc_attr($view->data->CDNDomain) ?>">
+      <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain/"></i>
+    </content>
+</setting>
+
 
 <setting class='switch step-highlight-3'>
 
@@ -187,24 +205,6 @@ if( $this->is_nginx ){
     </warning>
   <?php endif; ?>
   </setting>
-
-  <setting class='switch step-highlight-3'>
-    <content>
-  <?php $this->printSwitchButton(
-        ['name' => 'useCDN',
-         'checked' =>  ($view->data->useCDN > 0) ? 1 : 0,
-         'label' => esc_html__('Deliver the next generation images using the ShortPixel CDN:','shortpixel-image-optimiser'),
-
-         'data' => ['data-toggle="useCDN"', 'data-exclude="deliverWebp"'],
-        ]);
-  ?>
-  </content>
-  <name class='useCDN toggleTarget'><?php esc_html_e('CDN Domain', 'shortpixel-image-optimiser'); ?></name>
-  <content class='useCDN toggleTarget'>
-      <input type="text" name="CDNDomain" class='regular-text' value="<?php echo esc_attr($view->data->CDNDomain) ?>">
-      <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain/"></i>
-    </content>
-</setting>
 
 </settinglist>
 

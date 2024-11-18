@@ -103,6 +103,12 @@ div.spio-modal-title {
   justify-content: space-between;
   align-items: center;
   margin: 10px auto;
+  margin-left: -22px;
+  margin-top: -10px;
+  margin-right: -22px;
+  margin-bottom: 10px;
+  padding: 8px 16px;
+  box-shadow: 0px 1px 4px 0px rgba(0, 0, 0, 0.1);
 }
 .wrap.is-shortpixel-settings-page header h1 {
   line-height: 50px;
@@ -111,6 +117,7 @@ div.spio-modal-title {
   vertical-align: bottom;
   padding-bottom: 5px;
   margin-right: 8px;
+  margin-left: 1.1em;
 }
 .wrap.is-shortpixel-settings-page header .top-buttons {
   margin-right: 4em;
@@ -118,12 +125,18 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page header .top-buttons button {
   color: #fff;
   background: #1ABDCA;
-  padding: 8px 6px;
+  padding: 10px 12px;
   border: 0;
   margin: 4px;
   font-family: "Roboto";
   font-weight: 700;
   border-radius: 6px;
+}
+.wrap.is-shortpixel-settings-page header .top-buttons button i.user {
+  width: 15px;
+  height: 15px;
+  vertical-align: text-top;
+  filter: brightness(0) saturate(100%) invert(100%) sepia(100%) saturate(20%) hue-rotate(283deg) brightness(105%) contrast(105%);
 }
 .wrap.is-shortpixel-settings-page header .top-buttons button i.switch {
   width: 18px;
@@ -249,6 +262,9 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page .shortpixel-icon.help-circle {
   background-image: url("../images/icon/help-circle.svg");
 }
+.wrap.is-shortpixel-settings-page .shortpixel-icon.user {
+  background-image: url("../images/icon/user.svg");
+}
 .wrap.is-shortpixel-settings-page .shortpixel-illustration {
   display: inline-block;
   background-repeat: no-repeat;
@@ -286,6 +302,7 @@ div.spio-modal-title {
   background: #fff;
   border-radius: 16px;
   margin: 10px auto;
+  box-shadow: 1px 0px 4px 0px rgba(0, 0, 0, 0.12);
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings button, .wrap.is-shortpixel-settings-page .shortpixel-settings .button-setting {
   color: #fff;
@@ -300,7 +317,7 @@ div.spio-modal-title {
   transition: all 0.1s ease-in-out;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings button:hover, .wrap.is-shortpixel-settings-page .shortpixel-settings .button-setting:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings button i.switch, .wrap.is-shortpixel-settings-page .shortpixel-settings .button-setting i.switch {
   width: 18px;
@@ -315,7 +332,6 @@ div.spio-modal-title {
   width: 25%;
   max-width: 220px;
   padding-left: 25px;
-  box-sizing: border-box;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings menu ul {
   list-style: none;
@@ -1003,7 +1019,6 @@ div.spio-modal-title {
                .dashboard-button { display: none; }
              }
           }
-
   } */
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper {
@@ -1028,7 +1043,7 @@ div.spio-modal-title {
   transition: all 0.1s ease-in-out;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper .dashboard-button:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper .dashboard-button i.switch {
   width: 18px;
@@ -1088,7 +1103,7 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .first-panel i.mainblock-status.ok {
   width: 70px;
-  height: 70px;
+  height: 75px;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .first-panel i.mainblock-status.alert {
   width: 70px;
@@ -1114,10 +1129,10 @@ div.spio-modal-title {
   margin: 0 0 10px 0;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .rating img {
-  width: 90px;
+  width: 110px;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .rating .button {
-  padding: 2px 8px;
+  padding: 6px 12px;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row {
   margin: 20px 0;
@@ -1132,8 +1147,8 @@ div.spio-modal-title {
   border: 0;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel > i:first-child {
-  width: 50px;
-  height: 40px;
+  width: 46px;
+  height: 46px;
   filter: brightness(0) saturate(100%) invert(58%) sepia(24%) saturate(4079%) hue-rotate(125deg) brightness(97%) contrast(101%);
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel span {
@@ -1143,8 +1158,8 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel span i {
   float: left;
   width: 12px;
-  height: 12px;
-  margin-right: 1px;
+  height: 13px;
+  margin-right: 3px;
   margin-bottom: 1px;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel.warning i {
@@ -1158,7 +1173,6 @@ div.spio-modal-title {
   display: inline-block;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel button, .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel .dashboard-button {
-  height: 40px;
   width: max-content;
   padding: 10px 12px;
   box-sizing: border-box;
@@ -1203,9 +1217,10 @@ div.spio-modal-title {
   font-family: Roboto, sans-serif;
 }
 .wrap.is-shortpixel-settings-page #tab-overview closed-apikey-dropdown .shortpixel-icon.ok {
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 16px;
   margin-left: 10px;
+  vertical-align: text-top;
 }
 .wrap.is-shortpixel-settings-page #tab-overview closed-apikey-dropdown .shortpixel-icon.chevron {
   height: 8px;
@@ -1244,9 +1259,9 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page #tab-overview content input {
   border: 1px solid #1ABDCA;
-  background: url("../images/icon/key.svg") 1% center no-repeat;
+  background: url("../images/icon/key.svg") 5% center no-repeat;
   background-color: #fff;
-  padding-left: 30px;
+  padding-left: 35px;
   height: 36px;
   width: 240px;
 }
@@ -1629,7 +1644,7 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page #tab-tools .button {
   min-height: 44px;
   color: #1ABDCA;
-  background-color: #e8e8e8;
+  background-color: rgb(232.25, 232.25, 232.25);
   border-radius: 6px;
   font-weight: 700;
   letter-spacing: 0.3px;
@@ -1637,7 +1652,7 @@ div.spio-modal-title {
   transition: all 0.1s ease-in-out;
 }
 .wrap.is-shortpixel-settings-page #tab-tools .button:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
   color: #fff;
 }
 .wrap.is-shortpixel-settings-page #tab-tools .option, .wrap.is-shortpixel-settings-page #tab-tools setting {

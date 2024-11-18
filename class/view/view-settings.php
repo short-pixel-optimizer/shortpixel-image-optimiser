@@ -14,6 +14,14 @@ if ( ! defined( 'ABSPATH' ) ) {
   <h1>
       <?php echo UIHelper::getIcon('res/images/illustration/logo_settings.svg'); ?>
   </h1>
+  <div class='top-buttons'>
+    <button><i class='shortpixel-icon user'></i><?php _e('ShortPixel Account','shortpixel-image-optimiser'); ?></button>
+    <!--<button><i class='shortpixel-icon notifications'></i><?php _e('Notifications','shortpixel-image-optimiser'); ?></button>
+    <button id="viewmode-toggle"><i class='shortpixel-icon switch'></i>
+      <span class='advanced'><?php _e('Advanced', 'shortpixel-image-optimiser'); ?></span>
+      <span class='simple'><?php _e('Simple', 'shortpixel-image-optimiser'); ?></span>
+    </button>-->
+  </div>
 </header>
 
 <?php //$this->loadView('settings/part-header'); ?>
@@ -22,8 +30,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 
 <hr class='wp-header-end'>
-
-
 
 <article class='shortpixel-settings'>
   <?php if ($this->view->data->redirectedSettings < 3 && $view->key->is_verifiedkey)
@@ -71,7 +77,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 				<li class='is-advanced'>
 					<?php echo $this->settingLink([
-            'part' => 'cdn',
+            'part' => 'integrations',
             'title' => __("Integrations", "shortpixel-image-optimiser"),
             'icon' => 'shortpixel-icon integrations']); ?>
         </li>
@@ -154,7 +160,7 @@ if ( ! defined( 'ABSPATH' ) ) {
           <?php $this->loadView('settings/part-optimisation'); ?>
           <?php $this->loadView('settings/part-processing'); ?>
           <?php $this->loadView('settings/part-webp'); ?>
-          <?php $this->loadView('settings/part-cdn'); ?>
+          <?php $this->loadView('settings/part-integrations'); ?>
           <?php $this->loadView('settings/part-exclusions'); ?>
           <?php $this->loadView('settings/part-help'); ?>
 

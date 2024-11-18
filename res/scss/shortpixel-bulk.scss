@@ -203,6 +203,7 @@
         width: 100%;
         min-height: 80vh;
         position: relative;
+	margin-top: 20px;
       //  overflow: hidden;
 
         .shortpixel-bulk-loader
@@ -261,7 +262,8 @@
         margin: 15px 0;
 	padding-bottom: 35px;
 	background: #fff;
-	border-radius: 16px 16px 0px 0px;
+	border-radius: 16px;
+	box-shadow: 1px 0px 4px 0px rgba(0, 0, 0, 0.12);
 
         &.active
         {
