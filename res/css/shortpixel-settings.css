@@ -1700,24 +1700,38 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page.active-step-0 .step-highlight-0 {
   border-width: 3px;
+  border-radius: 8px;
+  border-style: dashed;
 }
 .wrap.is-shortpixel-settings-page.active-step-1 .step-highlight-1 {
   border-width: 3px;
+  border-radius: 8px;
+  border-style: dashed;
 }
 .wrap.is-shortpixel-settings-page.active-step-2 .step-highlight-2 {
   border-width: 3px;
+  border-radius: 8px;
+  border-style: dashed;
 }
 .wrap.is-shortpixel-settings-page.active-step-3 .step-highlight-3 {
   border-width: 3px;
+  border-radius: 8px;
+  border-style: dashed;
 }
 .wrap.is-shortpixel-settings-page.active-step-4 .step-highlight-4 {
   border-width: 3px;
+  border-radius: 8px;
+  border-style: dashed;
 }
 .wrap.is-shortpixel-settings-page.active-step-5 .step-highlight-5 {
   border-width: 3px;
+  border-radius: 8px;
+  border-style: dashed;
 }
 .wrap.is-shortpixel-settings-page.active-step-6 .step-highlight-6 {
   border-width: 3px;
+  border-radius: 8px;
+  border-style: dashed;
 }
 .wrap.is-shortpixel-settings-page .quick-tour {
   position: absolute;
@@ -1732,6 +1746,7 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page .quick-tour .ufo img {
   width: 110px;
+  filter: drop-shadow(0 0 0.75rem #333);
 }
 .wrap.is-shortpixel-settings-page .quick-tour .content-wrapper {
   border: 3px solid #00C898;
@@ -1741,6 +1756,7 @@ div.spio-modal-title {
   margin-left: 8px;
   position: relative;
   padding: 8px 12px 8px;
+  box-shadow: rgba(0, 0, 0, 0.5) 0px 0px 24px;
 }
 .wrap.is-shortpixel-settings-page .quick-tour .content-wrapper .step {
   display: none;
@@ -1784,6 +1800,14 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page .quick-tour .navigation button.show-next .start {
   display: none;
+}
+.wrap.is-shortpixel-settings-page .quick-tour .navigation button.close i {
+  vertical-align: text-top;
+}
+.wrap.is-shortpixel-settings-page .quick-tour .navigation span.next i {
+  margin-left: 4px;
+  margin-right: 0px;
+  vertical-align: text-top;
 }
 .wrap.is-shortpixel-settings-page .quick-tour .navigation .shortpixel-icon {
   width: 14px;
