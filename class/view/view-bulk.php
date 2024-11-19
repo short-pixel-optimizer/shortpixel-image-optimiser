@@ -8,6 +8,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 ?>
 
+<hr class="wp-header-end">
+
 <div class="wrap is-shortpixel-bulk-page">
 <header>
   <h1>
@@ -22,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
   </div>
 -->
 </header>
-
+		<hr class="wp-header-end">
 <div class="shortpixel-bulk-wrapper">
 
   <div id="processPaused" class="processor-paused" data-action="ResumeBulk"><span class='dashicons dashicons-controls-pause' data-action="ResumeBulk"></span>
