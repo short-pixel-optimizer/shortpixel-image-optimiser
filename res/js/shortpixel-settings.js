@@ -369,7 +369,7 @@ class ShortPixelSettings
 		 mobileToggle.checked = false;
 		 var changeEv = new CustomEvent('change');
 		 mobileToggle.dispatchEvent(changeEv);
-		 
+
 		 // If same, do nothing.
 		 if (current_tab == new_tab)
 		 {
@@ -708,7 +708,10 @@ DashBoardWarningEvent(warning, matches)
 				}
 
 				statusWrapper.appendChild(statusLine).appendChild(statusIcon.cloneNode());
-//				statusWrapper.;
+				//statusLine.appendChild(statusIcon);
+				//console.log(statusLine);
+			//	statusWrapper.appendChild(statusLine);
+//				statusWrapper.appendChild(statusLine);
 			}
 		 	// Add Not ok status.
 	}

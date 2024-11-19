@@ -172,15 +172,27 @@
 					 //margin-bottom: 5px;
 					 vertical-align: text-top;
 				 }
-				 div.save button.save-bulk, div.save button.save {
+				 div.save button {
 					 padding: 10px 12px;
 					 font-size: 14px;
 					 height: 40px;
+						 i.bulk {
+		 					filter: brightness(0%) invert(1);
+		 				}
 				 }
-
-				div.save button.save-bulk i.bulk {
-					filter: brightness(0%) invert(1);
-				}
+				 @include breakpoint(0, $wordpress-mobile)
+				 {
+						 div.save{
+								text-align: center;
+								button
+								{
+									width: 80%;
+									display: inline-block;
+									margin: 10px auto;
+						 		}
+							}
+				 }
+				//div.save button.save-bulk
 			}
 		} // section.wrapper
 		settinglist
@@ -249,7 +261,7 @@
 }
 
 // 782px is when WordPress breaks to mobile menu's.
-@include breakpoint(0, 782px)
+@include breakpoint(0, $wordpress-mobile)
 {
 		header {
 				position: fixed;

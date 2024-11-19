@@ -14,6 +14,42 @@
        .dashboard-button
        {
           @include shortpixel-button;
+          &.not-visible
+          {
+            visibility: hidden;
+          //  height: 0;
+          }
+       }
+
+       // Everybody's flex.
+       .status-wrapper
+       {
+          display: flex;
+          justify-content: flex-start;
+        //  width: 100%;
+          padding: 0 8px;
+          box-sizing: border-box;
+          flex-direction: column;
+          margin: 4px 0;
+          min-height: 75px;
+
+          .status-line
+          {
+             display: flex;
+             box-sizing: border-box;
+             margin: 0px 0 4px 0;
+             align-content: center;
+             align-items: center;
+             flex-direction: row-reverse;
+             justify-content: start;
+             i {
+                width: 16px;
+                height: 17px;
+                margin-right: 6px;
+             }
+
+          }
+
        }
 
        &.top-row
@@ -42,6 +78,7 @@
               width: 20px;
               height: 25px;
               margin: 0 10px 0 5px;
+              min-width: 20px;
               }
             .second-line .optimized{
                 font-weight: 700;
@@ -79,7 +116,13 @@
                }
              }
              margin-right: 20px;
-          }
+             @include breakpoint(0, 786px)
+             {
+                width: 60%;
+                padding: 20px 10px 5px 10px;
+                i.cocktail { display: none; }
+             }
+          } // first-panel
           .second-panel
           {
             // display: flex;
@@ -93,38 +136,54 @@
                 font-size: 1.2em;
               }
 
+              @include breakpoint(0, 786px)
+              {
+                width: 40%;
+              }
           }
-       }
+          .average-optimization
+          {
+            .opt-circle-average
+            {
+               width: 150px;
+               height: 160px;
+               text {
+                  dominant-baseline: central;
+               }
+            }
+          }
+
+          .rating {
+             //display: flex;
+             //justify-content: space-between;
+             //width: 70%;
+             display: block;
+             margin: 0 0 10px 0;
+             img {
+               width: 110px;
+             }
+             .button
+             {
+                padding: 6px 12px;
+             }
+
+          }
+
+          @include breakpoint(0, 560px)
+          {
+             flex-direction: column;
+             .first-panel, .second-panel
+             {
+                width: auto;
+                margin: 10px 0;
+             }
+
+          }
+       } // top-row
        // Specific layout for top row boxes.
        &.top-row
        {
-           .average-optimization
-           {
-             .opt-circle-average
-             {
-                width: 150px;
-                height: 160px;
-                text {
-                   dominant-baseline: central;
-                }
-             }
-           }
 
-           .rating {
-              //display: flex;
-              //justify-content: space-between;
-              //width: 70%;
-              display: block;
-              margin: 0 0 10px 0;
-              img {
-                width: 110px;
-              }
-              .button
-              {
-                 padding: 6px 12px;
-              }
-
-           }
        }
 
        // Specific layout for second row boxes
@@ -132,6 +191,7 @@
        {
           margin: 20px 0;
         //  height: 200px;
+
 
           > .panel {
             width: 33.333%;
@@ -148,20 +208,8 @@
               width: 46px;
               height: 46px;
               filter: $filter_green;
-            //  &.switch { width: 60px; }
             }
-            span
-            {
-              line-height: 14px;
-              margin: 16px 0 24px;
-              i {
-               float: left;
-               width: 12px;
-               height: 13px;
-               margin-right: 3px;
-               margin-bottom: 1px;
-             }
-            }
+
 
             &.warning {
                i {
@@ -173,18 +221,13 @@
                  filter: $filter_red;
               }
             }
-            .status-line {
-              margin: 4px 4px 4px 15px;
-              display: inline-block;
-            }
+
 
             button, .dashboard-button {
                //height: 40px;
                width: max-content;
-               padding: 10px 12px;
                box-sizing: border-box;
                font-size: 14px;
-               align-items: center;
 
                i.arrow-right, i.fix
                {
@@ -197,7 +240,34 @@
                }
             }
           } // PANEL
-       }
+          @include breakpoint(768px, 1100px)
+          {
+              flex-wrap: wrap;
+              .panel {
+                 min-width: 250px;
+                 border: 0;
+                 margin: 10px;
+              }
+          }
+          @include breakpoint(0, 768px)
+          {
+              flex-direction: column;
+              .panel
+              {
+                 margin-bottom: 20px;
+                 width: 100%;
+                 border: 0;
+                 position: relative;
+                 padding-left: 20%;
+                 align-items: flex-start;
+                 > i {
+                    position: absolute;
+                    top: calc(50% - 30px);
+                    left: 5%;
+                 }
+              }
+          }
+       } // middle-row
        div {
          background: $blue_background;
          border-radius: 6px;
@@ -213,6 +283,18 @@
     transition: all;
     max-height: 125px;
     margin-bottom: 10px;
+    @include breakpoint(0, $wordpress-mobile)
+    {
+       max-height: none;
+       content {
+          flex-direction: column;
+          align-items: center;
+          button {
+              margin: 10px 0;
+              width: 240px;
+        }
+       }
+    }
   }
 
       closed-apikey-dropdown{
@@ -221,6 +303,7 @@
             align-items: flex-start;
             font-weight: 600;
             margin-bottom: 8px;
+
 
             name {
               margin: 20px 20px 0 15px ;
@@ -247,8 +330,19 @@
           transition: transform 0.3s ease;
           margin-left: 5px;
         }
+        @include breakpoint(0, $wordpress-mobile)
+        {
+           flex-direction: column;
+           info {
+              margin-left: 15px;
 
-      }
+           }
+
+        }
+
+      }  // closed-apikey-dropdown
+
+
       .toggle-link {
         margin-left: auto;
         display: flex;

@@ -410,13 +410,23 @@ div.spio-modal-title {
   height: 15px;
   vertical-align: text-top;
 }
-.wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab div.save button.save-bulk, .wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab div.save button.save {
+.wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab div.save button {
   padding: 10px 12px;
   font-size: 14px;
   height: 40px;
 }
-.wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab div.save button.save-bulk i.bulk {
+.wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab div.save button i.bulk {
   filter: brightness(0%) invert(1);
+}
+@media (max-width: 782px) {
+  .wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab div.save {
+    text-align: center;
+  }
+  .wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab div.save button {
+    width: 80%;
+    display: inline-block;
+    margin: 10px auto;
+  }
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings settinglist {
   display: block;
@@ -1082,6 +1092,32 @@ div.spio-modal-title {
   height: 14px;
   filter: brightness(0) saturate(100%) invert(100%) sepia(100%) saturate(0%) hue-rotate(251deg) brightness(108%) contrast(108%);
 }
+.wrap.is-shortpixel-settings-page #tab-overview .wrapper .dashboard-button.not-visible {
+  visibility: hidden;
+}
+.wrap.is-shortpixel-settings-page #tab-overview .wrapper .status-wrapper {
+  display: flex;
+  justify-content: flex-start;
+  padding: 0 8px;
+  box-sizing: border-box;
+  flex-direction: column;
+  margin: 4px 0;
+  min-height: 75px;
+}
+.wrap.is-shortpixel-settings-page #tab-overview .wrapper .status-wrapper .status-line {
+  display: flex;
+  box-sizing: border-box;
+  margin: 0px 0 4px 0;
+  align-content: center;
+  align-items: center;
+  flex-direction: row-reverse;
+  justify-content: start;
+}
+.wrap.is-shortpixel-settings-page #tab-overview .wrapper .status-wrapper .status-line i {
+  width: 16px;
+  height: 17px;
+  margin-right: 6px;
+}
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row {
   display: flex;
 }
@@ -1108,6 +1144,7 @@ div.spio-modal-title {
   width: 20px;
   height: 25px;
   margin: 0 10px 0 5px;
+  min-width: 20px;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .first-panel .second-line .optimized {
   font-weight: 700;
@@ -1137,6 +1174,15 @@ div.spio-modal-title {
   width: 70px;
   height: 75px;
 }
+@media (max-width: 786px) {
+  .wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .first-panel {
+    width: 60%;
+    padding: 20px 10px 5px 10px;
+  }
+  .wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .first-panel i.cocktail {
+    display: none;
+  }
+}
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .second-panel {
   width: 30%;
   display: block;
@@ -1144,6 +1190,11 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .second-panel h4 {
   font-size: 1.2em;
+}
+@media (max-width: 786px) {
+  .wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .second-panel {
+    width: 40%;
+  }
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .average-optimization .opt-circle-average {
   width: 150px;
@@ -1162,6 +1213,15 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .rating .button {
   padding: 6px 12px;
 }
+@media (max-width: 560px) {
+  .wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row {
+    flex-direction: column;
+  }
+  .wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .first-panel, .wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .second-panel {
+    width: auto;
+    margin: 10px 0;
+  }
+}
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row {
   margin: 20px 0;
 }
@@ -1179,33 +1239,16 @@ div.spio-modal-title {
   height: 46px;
   filter: brightness(0) saturate(100%) invert(58%) sepia(24%) saturate(4079%) hue-rotate(125deg) brightness(97%) contrast(101%);
 }
-.wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel span {
-  line-height: 14px;
-  margin: 16px 0 24px;
-}
-.wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel span i {
-  float: left;
-  width: 12px;
-  height: 13px;
-  margin-right: 3px;
-  margin-bottom: 1px;
-}
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel.warning i {
   filter: brightness(0) saturate(100%) invert(72%) sepia(57%) saturate(456%) hue-rotate(353deg) brightness(105%) contrast(95%);
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel.alert i {
   filter: brightness(0) saturate(100%) invert(20%) sepia(95%) saturate(6009%) hue-rotate(360deg) brightness(99%) contrast(125%);
 }
-.wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel .status-line {
-  margin: 4px 4px 4px 15px;
-  display: inline-block;
-}
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel button, .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel .dashboard-button {
   width: max-content;
-  padding: 10px 12px;
   box-sizing: border-box;
   font-size: 14px;
-  align-items: center;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel button i.arrow-right, .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel button i.fix, .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel .dashboard-button i.arrow-right, .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel .dashboard-button i.fix {
   width: 15px;
@@ -1214,6 +1257,34 @@ div.spio-modal-title {
   margin-right: 8px;
   filter: brightness(0) saturate(100%) invert(100%) sepia(100%) saturate(20%) hue-rotate(283deg) brightness(105%) contrast(105%);
   vertical-align: text-top;
+}
+@media (min-width: 768px) and (max-width: 1100px) {
+  .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row {
+    flex-wrap: wrap;
+  }
+  .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row .panel {
+    min-width: 250px;
+    border: 0;
+    margin: 10px;
+  }
+}
+@media (max-width: 768px) {
+  .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row {
+    flex-direction: column;
+  }
+  .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row .panel {
+    margin-bottom: 20px;
+    width: 100%;
+    border: 0;
+    position: relative;
+    padding-left: 20%;
+    align-items: flex-start;
+  }
+  .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row .panel > i {
+    position: absolute;
+    top: calc(50% - 30px);
+    left: 5%;
+  }
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper div {
   background: #F4FBFC;
@@ -1227,6 +1298,19 @@ div.spio-modal-title {
   transition: all;
   max-height: 125px;
   margin-bottom: 10px;
+}
+@media (max-width: 782px) {
+  .wrap.is-shortpixel-settings-page #tab-overview settinglist {
+    max-height: none;
+  }
+  .wrap.is-shortpixel-settings-page #tab-overview settinglist content {
+    flex-direction: column;
+    align-items: center;
+  }
+  .wrap.is-shortpixel-settings-page #tab-overview settinglist content button {
+    margin: 10px 0;
+    width: 240px;
+  }
 }
 .wrap.is-shortpixel-settings-page #tab-overview closed-apikey-dropdown {
   display: flex;
@@ -1255,6 +1339,14 @@ div.spio-modal-title {
   width: 12px;
   transition: transform 0.3s ease;
   margin-left: 5px;
+}
+@media (max-width: 782px) {
+  .wrap.is-shortpixel-settings-page #tab-overview closed-apikey-dropdown {
+    flex-direction: column;
+  }
+  .wrap.is-shortpixel-settings-page #tab-overview closed-apikey-dropdown info {
+    margin-left: 15px;
+  }
 }
 .wrap.is-shortpixel-settings-page #tab-overview .toggle-link {
   margin-left: auto;

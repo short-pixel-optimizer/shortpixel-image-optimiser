@@ -69,7 +69,7 @@ $bulkblock = $dashboard->bulkblock;
                           ?> %</text>
              </svg>
 
-       
+
        <?php if ($view->averageCompression > 30): ?>
          <div class='rating'>
           <?php echo UiHelper::getIcon('res/images/icon/7stars.svg'); ?>
@@ -103,12 +103,19 @@ $bulkblock = $dashboard->bulkblock;
        <h4><?php _e('Bulk Actions', 'shortpixel-image-optimizer'); ?></h4>
 
 
-        <span class='status-wrapper'><i class='shortpixel-icon status-icon <?php echo $bulkblock->icon ?>'></i><span class='status-line'><?php echo $bulkblock->message ?></span></span>
+        <span class='status-wrapper'>
+          <span class='status-line'>
+
+            <?php echo $bulkblock->message ?>
+            <i class='shortpixel-icon status-icon <?php echo $bulkblock->icon ?>'></i>
+          </span>
+      </span>
 
       <?php if (true == $bulkblock->show_button): ?>
 
         <a class="dashboard-button" href="<?php echo $bulkblock->link ?>"><?php _e('Go to Bulk Processing', 'shortpixel-image-optimiser'); ?><i class='shortpixel-icon arrow-right'></i></a>
-
+     <?php else : ?>
+        <a class='dashboard-button not-visible'>&nbsp;</a>
      <?php endif; ?>
 
      </div>
