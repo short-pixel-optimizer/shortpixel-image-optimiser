@@ -29,7 +29,14 @@
     }
 
   } // setting
-
+  .thumbnail-select {
+       border-bottom: 1px solid $blue_default;
+       & hr {
+               border-top: 1px solid $blue_default;
+               margin-top: 10px;
+               margin-bottom: -10px;
+       }
+  }
   .grid-thumbnails
   {
 
@@ -74,7 +81,10 @@
       background: #fff;
       color: $blue_light;
     }
-
+    select, input {
+       border: 1px solid $blue_default;
+       color: $blue_dark;
+    }
     ul.exclude-list {
        // min-height: 30px;
          li {
@@ -82,17 +92,17 @@
           //  justify-content: space-between;
             display: grid;
             grid-template-columns: 1fr 1fr 1fr auto;
-						color: $blue_dark;
-						b {
-							margin-bottom: 4px;
-						}
+	    color: $blue_dark;
+		b {
+			margin-bottom: 4px;
+		}
 
             div {
             }
             width: 100%;
             box-sizing: border-box;
-            border: 1px solid $blue_dark;
-						padding: 8px 12px;
+            border: 1px solid $blue_default;
+	    padding: 8px 12px;
             background: #fff;
             border-radius: 8px;
             margin: 8px 8px 0 0;
@@ -121,11 +131,11 @@
                 display: inline;
               }
             }
-						.shortpixel-icon
-						{
-								width: 30px;
-								height: 30px;
-						}
+	    .shortpixel-icon
+		{
+			width: 30px;
+			height: 30px;
+		}
 
          }
          margin: 20px 0;
@@ -136,7 +146,8 @@
 
     .new-exclusion
     {
-        border: 1px solid $blue_dark;
+        border: 1px solid $blue_default;
+	border-radius: 8px;
         padding: 16px;
         display: inline-block;
         background: #fff;
@@ -172,26 +183,32 @@
 
          div
         {
-           margin: 8px 0;
+           margin: 5px 0;
            height: auto;
+	   color: $blue_dark;
            label
            {
               min-width: 110px;
               display: inline-block;
+	      color: $blue_dark;
            }
+	   .width input {
+		background: url("../images/icon/arrows-left-right.svg") 4px center no-repeat #fff;
+		padding-left: 20px;
+	   }
+	   .height input {
+		background: url("../images/icon/arrows-up-down.svg") 4px center no-repeat #fff;
+		padding-left: 20px;
+	   }
            input, select {
               //min-width: 250px;
               &.small {
-                width: 80px;
+                width: 100px;
                 min-width: 0;
               }
               &.not-validated {
                  border: 1px solid #ff0000;
               }
-           }
-           &.button-actions
-           {
-              margin-left: 114px;
            }
            &.validation-message
            {
@@ -202,7 +219,7 @@
            button {
             // margin-left: 104px;
              min-width: 75px;
-             padding: 8px 6px;
+             padding: 5px 6px;
              i {
                width: 15px;
                height: 15px;
@@ -216,8 +233,15 @@
                 top: 10px;
                 right: 10px;
              }
+             &[name="cancelEditExclusion"] i
+            {
+               filter: brightness(0%) invert(1);
+            }
+            &[name="updateExclusion"]
+            {
+               padding: 5px 12px;
+            }
            }
-
         }
 
         .not-visible
@@ -235,6 +259,7 @@
            div label
            {
               min-width: 110px;
+	      color: $blue_dark;
            }
         }
         .thumbnail-option:not(.not-visible) {

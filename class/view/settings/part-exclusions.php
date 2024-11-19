@@ -219,7 +219,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                      <div class='new-exclusion not-visible'>
                          <!-- HEADER -->
                          <input type="hidden" name="edit-exclusion" value="">
-                         <h3 class='new-title not-visible'><?php _e('New Exclusion' ,'shortpixel-image-optimiser'); ?></h3>
+                         <h3 class='new-title not-visible'><?php _e('Add New Exclusion' ,'shortpixel-image-optimiser'); ?></h3>
                          <h3 class='edit-title not-visible'><?php _e('Edit Exclusion' ,'shortpixel-image-optimiser'); ?></h3>
 
 
@@ -324,16 +324,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 
                            <button type="button" class="button button-primary not-visible" name="addExclusion">
                              <i class="shortpixel-icon save"> </i>
-                             <?php _e('Save', 'shortpixel-image-optimiser'); ?></button>
+                             <?php _e('Save', 'shortpixel-image-optimiser'); ?>
+			   </button>
 
-                             <button type="button" class="button button-primary not-visible" name="updateExclusion">
-                                 <?php _e("Update", 'shortpixel-image-optimiser');  ?>
-                             </button>
+                           <button type="button" class="button button-primary not-visible" name="updateExclusion">
+			     <i class="shortpixel-icon save"> </i>
+                             <?php _e("Update", 'shortpixel-image-optimiser');  ?>
+                           </button>
 
-                           <button type="button" class="button" name='cancelEditExclusion'><?php _e('Close', 'shortpixel-image-optimiser'); ?></button>
+                           <button type="button" class="button" name='cancelEditExclusion'>
+			     <i class="shortpixel-icon close"> </i>
+			     <?php _e('Close', 'shortpixel-image-optimiser'); ?>
+			   </button>
 
                            <button type="button" class="button button-primary not-visible" name="removeExclusion">
-                               <?php _e("Remove", 'shortpixel-image-optimiser');  ?>
+			     <i class="shortpixel-icon close"> </i>
+                             <?php _e("Remove", 'shortpixel-image-optimiser');  ?>
                            </button>
 
                          </div>

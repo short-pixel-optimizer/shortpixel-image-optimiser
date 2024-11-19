@@ -317,7 +317,7 @@ div.spio-modal-title {
   transition: all 0.1s ease-in-out;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings button:hover, .wrap.is-shortpixel-settings-page .shortpixel-settings .button-setting:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings button i.switch, .wrap.is-shortpixel-settings-page .shortpixel-settings .button-setting i.switch {
   width: 18px;
@@ -848,7 +848,7 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page .ajax-save-done .shortpixel-icon.ok {
   width: 27px;
-  height: 27px;
+  height: 29px;
   margin: 15px 6px 15px 12px;
 }
 .wrap.is-shortpixel-settings-page .ajax-save-done .text-container {
@@ -1081,7 +1081,7 @@ div.spio-modal-title {
   transition: all 0.1s ease-in-out;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper .dashboard-button:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper .dashboard-button i.switch {
   width: 18px;
@@ -1114,8 +1114,8 @@ div.spio-modal-title {
   justify-content: start;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper .status-wrapper .status-line i {
-  width: 16px;
-  height: 17px;
+  width: 13px;
+  height: 14px;
   margin-right: 6px;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row {
@@ -1329,8 +1329,8 @@ div.spio-modal-title {
   font-family: Roboto, sans-serif;
 }
 .wrap.is-shortpixel-settings-page #tab-overview closed-apikey-dropdown .shortpixel-icon.ok {
-  width: 14px;
-  height: 16px;
+  width: 13px;
+  height: 14px;
   margin-left: 10px;
   vertical-align: text-top;
 }
@@ -1450,6 +1450,14 @@ div.spio-modal-title {
     column-count: 2;
   }
 }
+.wrap.is-shortpixel-settings-page #tab-exclusions .thumbnail-select {
+  border-bottom: 1px solid #1ABDCA;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .thumbnail-select hr {
+  border-top: 1px solid #1ABDCA;
+  margin-top: 10px;
+  margin-bottom: -10px;
+}
 .wrap.is-shortpixel-settings-page #tab-exclusions .grid-thumbnails {
   column-count: 3;
   column-width: 220px;
@@ -1480,6 +1488,10 @@ div.spio-modal-title {
   background: #fff;
   color: #92D5E3;
 }
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting select, .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting input {
+  border: 1px solid #1ABDCA;
+  color: #116C7E;
+}
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting ul.exclude-list {
   margin: 20px 0;
 }
@@ -1489,7 +1501,7 @@ div.spio-modal-title {
   color: #116C7E;
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid #116C7E;
+  border: 1px solid #1ABDCA;
   padding: 8px 12px;
   background: #fff;
   border-radius: 8px;
@@ -1522,7 +1534,8 @@ div.spio-modal-title {
   display: none;
 }
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion {
-  border: 1px solid #116C7E;
+  border: 1px solid #1ABDCA;
+  border-radius: 8px;
   padding: 16px;
   display: inline-block;
   background: #fff;
@@ -1550,22 +1563,29 @@ div.spio-modal-title {
   display: block;
 }
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div {
-  margin: 8px 0;
+  margin: 5px 0;
   height: auto;
+  color: #116C7E;
 }
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div label {
   min-width: 110px;
   display: inline-block;
+  color: #116C7E;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div .width input {
+  background: url("../images/icon/arrows-left-right.svg") 4px center no-repeat #fff;
+  padding-left: 20px;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div .height input {
+  background: url("../images/icon/arrows-up-down.svg") 4px center no-repeat #fff;
+  padding-left: 20px;
 }
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div input.small, .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div select.small {
-  width: 80px;
+  width: 100px;
   min-width: 0;
 }
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div input.not-validated, .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div select.not-validated {
   border: 1px solid #ff0000;
-}
-.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div.button-actions {
-  margin-left: 114px;
 }
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div.validation-message {
   color: #ff0000;
@@ -1574,7 +1594,7 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div button {
   min-width: 75px;
-  padding: 8px 6px;
+  padding: 5px 6px;
 }
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div button i {
   width: 15px;
@@ -1588,6 +1608,12 @@ div.spio-modal-title {
   top: 10px;
   right: 10px;
 }
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div button[name=cancelEditExclusion] i {
+  filter: brightness(0%) invert(1);
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div button[name=updateExclusion] {
+  padding: 5px 12px;
+}
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion .not-visible {
   visibility: hidden;
   height: 0;
@@ -1598,6 +1624,7 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion .size-option div label {
   min-width: 110px;
+  color: #116C7E;
 }
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion .thumbnail-option:not(.not-visible) {
   height: 150px;
@@ -1771,7 +1798,7 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page #tab-tools .button {
   min-height: 44px;
   color: #1ABDCA;
-  background-color: #e8e8e8;
+  background-color: rgb(232.25, 232.25, 232.25);
   border-radius: 6px;
   font-weight: 700;
   letter-spacing: 0.3px;
@@ -1779,7 +1806,7 @@ div.spio-modal-title {
   transition: all 0.1s ease-in-out;
 }
 .wrap.is-shortpixel-settings-page #tab-tools .button:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
   color: #fff;
 }
 .wrap.is-shortpixel-settings-page #tab-tools .option, .wrap.is-shortpixel-settings-page #tab-tools setting {
