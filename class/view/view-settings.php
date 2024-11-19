@@ -15,7 +15,12 @@ if ( ! defined( 'ABSPATH' ) ) {
       <?php echo UIHelper::getIcon('res/images/illustration/logo_settings.svg'); ?>
   </h1>
   <div class='top-buttons'>
-    <button><i class='shortpixel-icon user'></i><?php _e('ShortPixel Account','shortpixel-image-optimiser'); ?></button>
+
+    <a class='header-button' href="https://shortpixel.com/<?php
+            echo esc_attr(($view->key->apiKey ? "login/". $view->key->apiKey . "/dashboard" : "login"));
+        ?>" target="_blank">
+          <i class='shortpixel-icon user'></i><?php _e('ShortPixel Account','shortpixel-image-optimiser'); ?>
+        </a>
     <!--<button><i class='shortpixel-icon notifications'></i><?php _e('Notifications','shortpixel-image-optimiser'); ?></button>
     <button id="viewmode-toggle"><i class='shortpixel-icon switch'></i>
       <span class='advanced'><?php _e('Advanced', 'shortpixel-image-optimiser'); ?></span>

@@ -155,7 +155,7 @@ $bulkblock = $dashboard->bulkblock;
             </span>
             </info>
             <label for="toggle-content" class="toggle-link">
-                <span class="toggle-text">Show API Key</span>
+                <span class="toggle-text"><?php _e('Show API Key', 'shortpixel-image-optimiser'); ?></span>
                 <span class="shortpixel-icon chevron"></span>
             </label>
         </closed-apikey-dropdown>
