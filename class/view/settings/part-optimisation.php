@@ -102,7 +102,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 
 					<h3><?php _e('What to Optimize', 'shortpixel-image-optimiser'); ?></h3>
 
-          <gridbox class='width_half'>
+          <gridbox class='width_half step-highlight-2'>
 
           <!-- Thumbnail compression -->
           <setting class='switch' class="step-highlight-2">
@@ -212,7 +212,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 
           <h3><?php _e('Conversions', 'shortpixel-image-optimiser'); ?></h3>
 
-          <gridbox class='width_half'>
+          <gridbox class='width_half step-highlight-2'>
           <!-- convert png2jpg -->
           <setting class='switch'>
             <content>

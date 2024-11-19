@@ -115,8 +115,9 @@
 {
   &.active-step-#{$i} .step-highlight-#{$i} { // highlight each step
         border-width: 3px;
+	border-radius: 8px;
+	border-style: dashed;
   }
-
 }
 
 
@@ -135,6 +136,7 @@
    .ufo  {
         img {
           width: 110px;
+	  filter: drop-shadow(0 0 .75rem #333);
         }
    }
    .content-wrapper
@@ -147,6 +149,7 @@
       margin-left: 8px;
       position: relative;
       padding: 8px 12px 8px;
+      box-shadow: rgba(0, 0, 0, 0.5) 0px 0px 24px;
 
       // default state.
       .step
@@ -199,6 +202,14 @@
        }
        button.show-next .start {
             display: none;
+       }
+       button.close i {
+	 vertical-align: text-top;
+       }
+       span.next i {
+	 margin-left: 4px;
+	 margin-right: 0px;
+	 vertical-align: text-top;
        }
        .shortpixel-icon
        {
