@@ -161,6 +161,10 @@
              margin: 0 0 10px 0;
              img {
                width: 110px;
+               margin-top: 10px;
+               &:hover {
+                 content: url("../images/icon/7stars.svg");
+               }
              }
              .button
              {

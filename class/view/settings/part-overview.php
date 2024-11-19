@@ -72,7 +72,7 @@ $bulkblock = $dashboard->bulkblock;
 
        <?php if ($view->averageCompression > 30): ?>
          <div class='rating'>
-          <?php echo UiHelper::getIcon('res/images/icon/7stars.svg'); ?>
+          <?php echo UiHelper::getIcon('res/images/icon/7stars-empty.svg'); ?>
           <a class='button button-setting' href='https://wordpress.org/support/plugin/shortpixel-image-optimiser/reviews/?filter=5' target="_blank"><?php esc_html_e('Rate us', 'shortpixel-image-optimiser'); ?></a>
         </div>
        <?php endif; ?>

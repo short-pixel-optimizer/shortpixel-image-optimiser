@@ -7,6 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 ?>
+<hr class='wp-header-end'>
 
 <div class="wrap is-shortpixel-settings-page <?php echo esc_attr($this->view_mode); ?> ">
 
@@ -32,9 +33,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 <?php //$this->loadView('settings/part-header'); ?>
 
   <input type='checkbox' name='heavy_features' value='1' <?php echo ($this->disable_heavy_features) ? 'checked' : '' ?> class='shortpixel-hide' />
-
-
-<hr class='wp-header-end'>
 
 <article class='shortpixel-settings'>
   <?php if ($this->view->data->redirectedSettings < 3 && $view->key->is_verifiedkey)

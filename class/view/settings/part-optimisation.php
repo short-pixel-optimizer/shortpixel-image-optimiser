@@ -116,7 +116,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 
                 <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-optimize-thumbnails/"></i>
 		<name>
-                    <?php printf(esc_html__('Apply compression to %s image thumbnails.%s ','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
+                    <?php printf(esc_html__('Apply compression to image thumbnails','shortpixel-image-optimiser') ); ?>
 		</name>
                 <info>
                       <?php printf(esc_html__('It is highly recommended to optimize thumbnails, as they are often the images most viewed by end users and can generate the most traffic. %s Please note that thumbnails count toward your total quota.','shortpixel-image-optimiser'), '<br>'); ?>
