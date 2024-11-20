@@ -199,7 +199,7 @@ div.spio-modal-title {
   transition: all 0.1s ease-in-out;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings button:hover, .wrap.is-shortpixel-settings-page .shortpixel-settings .button-setting:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings button i.switch, .wrap.is-shortpixel-settings-page .shortpixel-settings .button-setting i.switch {
   width: 18px;
@@ -328,7 +328,7 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page .shortpixel-settings gridbox.width_half {
   grid-template-columns: repeat(2, 50%);
 }
-.wrap.is-shortpixel-settings-page .shortpixel-settings gridbox.width_half setting:nth-child(1n) {
+.wrap.is-shortpixel-settings-page .shortpixel-settings gridbox.width_half setting:nth-child(odd) {
   margin-right: 15px;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings gridbox.width_70 {
@@ -449,7 +449,7 @@ div.spio-modal-title {
   transition: all 0.1s ease-in-out;
 }
 .wrap.is-shortpixel-settings-page header .top-buttons a:hover, .wrap.is-shortpixel-settings-page header .top-buttons button:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
 }
 .wrap.is-shortpixel-settings-page header .top-buttons a i.switch, .wrap.is-shortpixel-settings-page header .top-buttons button i.switch {
   width: 18px;
@@ -617,6 +617,7 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page .setting-tab .shortpixel-compression-options label {
   width: 30%;
+  max-width: 180px;
   font-weight: bold;
   display: inline-block;
   margin-right: 1px;
@@ -639,8 +640,10 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page .setting-tab .smart-compression-explainer {
   display: flex;
   background-color: #fff;
+  border-radius: 0.4rem;
   flex-direction: column;
   width: 200px;
+  float: right;
 }
 .wrap.is-shortpixel-settings-page .setting-tab .smart-compression-explainer h4 {
   margin: 6px 0;
@@ -1089,7 +1092,7 @@ div.spio-modal-title {
   transition: all 0.1s ease-in-out;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper .dashboard-button:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper .dashboard-button i.switch {
   width: 18px;
@@ -1770,6 +1773,27 @@ div.spio-modal-title {
   padding: 8px 12px 8px;
   box-shadow: rgba(0, 0, 0, 0.5) 0px 0px 24px;
 }
+.wrap.is-shortpixel-settings-page .quick-tour .content-wrapper:after {
+  content: "";
+  position: absolute;
+  left: 13px;
+  top: 0px;
+  border-top: 0px solid transparent;
+  border-right: 10px solid #00C898;
+  border-bottom: 13px solid transparent;
+  margin: 13px 0 0 -25px;
+}
+.wrap.is-shortpixel-settings-page .quick-tour .content-wrapper:before {
+  content: "";
+  position: absolute;
+  left: 18px;
+  top: 40px;
+  border-top: 0px solid transparent;
+  border-right: 7px solid white;
+  border-bottom: 10px solid transparent;
+  margin: -25px;
+  z-index: 1;
+}
 .wrap.is-shortpixel-settings-page .quick-tour .content-wrapper .step {
   display: none;
 }
@@ -1834,7 +1858,7 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page #tab-tools .button {
   min-height: 44px;
   color: #1ABDCA;
-  background-color: #e8e8e8;
+  background-color: rgb(232.25, 232.25, 232.25);
   border-radius: 6px;
   font-weight: 700;
   letter-spacing: 0.3px;
@@ -1842,7 +1866,7 @@ div.spio-modal-title {
   transition: all 0.1s ease-in-out;
 }
 .wrap.is-shortpixel-settings-page #tab-tools .button:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
   color: #fff;
 }
 .wrap.is-shortpixel-settings-page #tab-tools .option, .wrap.is-shortpixel-settings-page #tab-tools setting {
@@ -1896,12 +1920,16 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page setting {
   padding: 12px;
   background-color: #F4FBFC;
+  border-radius: 0.7rem;
   margin: 10px 0;
   display: block;
   /*  &.toggleTarget.is-visible
     {
        //display: flex !important;
     } */
+}
+.wrap.is-shortpixel-settings-page setting#compression-type {
+  margin-bottom: 30px;
 }
 .wrap.is-shortpixel-settings-page setting name {
   font-size: 14px;
@@ -1916,6 +1944,9 @@ div.spio-modal-title {
   flex-basis: calc(100% - 250px);
   font-size: 14px;
   display: inline-block;
+}
+.wrap.is-shortpixel-settings-page setting content.shortpixel-compression {
+  max-width: calc(100% - 260px);
 }
 .wrap.is-shortpixel-settings-page setting content inputlabel {
   min-width: 100px;

@@ -39,30 +39,34 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 
          <!-- compression type -->
           <setting id='compression-type' class="step-highlight-2">
-            <name>
-                <?php esc_html_e('Compression type:','shortpixel-image-optimiser');?>
-            </name>
 
-            <gridbox class='width_60'>
-              <content class='shortpixel-compression'>
-                <input type="hidden" id="compressionType-database" value="<?php echo esc_attr($view->data->compressionType) ?>">
+            <div style='overflow:auto'>
+                <content class='smart-compression-explainer' >
+                    <?php echo UIHelper::getIcon('res/images/illustration/robo_info.svg'); ?>
+                    <h4><?php esc_html_e('What is SmartCompression?', 'shortpixel-image-optimiser'); ?></h4>
 
-                    <div class="shortpixel-compression-options">
-                        <label class="lossy" title="<?php esc_html_e('This is the recommended option in most cases, producing results that look the same as the original to the human eye.','shortpixel-image-optimiser');?>">
-                            <input type="radio" class="shortpixel-radio-lossy" name="compressionType" value="1"  <?php echo( $view->data->compressionType == 1 ? "checked" : "" );?>><span><?php esc_html_e('Lossy','shortpixel-image-optimiser');?></span>
-                        </label><label class="glossy" title="<?php esc_html_e('Best option for photographers and other professionals that use very high quality images on their sites and want best compression while keeping the quality untouched.','shortpixel-image-optimiser');?>">
-                            <input type="radio" class="shortpixel-radio-glossy" name="compressionType" value="2" <?php echo( $view->data->compressionType == 2 ? "checked" : "" );?>><span><?php esc_html_e('Glossy','shortpixel-image-optimiser');?></span>
-                        </label><label class="lossless" title="<?php esc_html_e('Make sure not a single pixel looks different in the optimized image compared with the original. In some rare cases you will need to use this type of compression. Some technical drawings or images from vector graphics are possible situations.','shortpixel-image-optimiser');?>">
-                            <input type="radio" class="shortpixel-radio-lossless" name="compressionType" value="0" <?php echo( $view->data->compressionType == 0 ? "checked" : "" );?>><span><?php esc_html_e('Lossless','shortpixel-image-optimiser');?></span>
-                        </label>
-                  <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/11-lossy-glossy-or-lossless-which-one-is-the-best-for-me"></i>
+                    <?php _e('Images that look just good as the original, but with the smallest possible file size', 'shortpixel-image-optimiser'); ?>
+                    <a href="https://shortpixel.com/blog/introducing-smartcompress/" target="_blank" class="shortpixel-help-link"><?php _e('Learn more', 'shortpixel-image-optimiser'); ?></a>
+                </content>
 
+                <content class='shortpixel-compression'>
+                  <name>
+                      <?php esc_html_e('Compression type:','shortpixel-image-optimiser');?>
+                  </name>
+                  <input type="hidden" id="compressionType-database" value="<?php echo esc_attr($view->data->compressionType) ?>">
+
+                  <div class="shortpixel-compression-options">
+                    <label class="lossy" title="<?php esc_html_e('This is the recommended option in most cases, producing results that look the same as the original to the human eye.','shortpixel-image-optimiser');?>">
+                        <input type="radio" class="shortpixel-radio-lossy" name="compressionType" value="1"  <?php echo( $view->data->compressionType == 1 ? "checked" : "" );?>><span><?php esc_html_e('Lossy','shortpixel-image-optimiser');?></span>
+                    </label><label class="glossy" title="<?php esc_html_e('Best option for photographers and other professionals that use very high quality images on their sites and want best compression while keeping the quality untouched.','shortpixel-image-optimiser');?>">
+                        <input type="radio" class="shortpixel-radio-glossy" name="compressionType" value="2" <?php echo( $view->data->compressionType == 2 ? "checked" : "" );?>><span><?php esc_html_e('Glossy','shortpixel-image-optimiser');?></span>
+                    </label><label class="lossless" title="<?php esc_html_e('Make sure not a single pixel looks different in the optimized image compared with the original. In some rare cases you will need to use this type of compression. Some technical drawings or images from vector graphics are possible situations.','shortpixel-image-optimiser');?>">
+                        <input type="radio" class="shortpixel-radio-lossless" name="compressionType" value="0" <?php echo( $view->data->compressionType == 0 ? "checked" : "" );?>><span><?php esc_html_e('Lossless','shortpixel-image-optimiser');?></span>
+                    </label>
+                    <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/11-lossy-glossy-or-lossless-which-one-is-the-best-for-me"></i>
                 </div>
 
-
                 <info>
-
-
                     <p class="settings-info shortpixel-radio-info shortpixel-radio-lossy" <?php echo( $view->data->compressionType == 1 ? "" : 'style="display:none"' );?>>
                         <?php printf(esc_html__('%sLossy SmartCompression (recommended): %s offers the best compression rate.  This option is recommended for most users, as it produces results that appear identical to the original to the human eye.','shortpixel-image-optimiser'),'<b>','</b>');?>
                     </p>
@@ -76,19 +80,9 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                     </p>
 
                     <?php printf(esc_html__('%s Run a few tests%s to help you decide.', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/online-image-compression" target="_blank">', '</a>'); ?>
-                  </info>
-
+                </info>
               </content>
-
-              <content class='smart-compression-explainer' >
-                <?php echo UIHelper::getIcon('res/images/illustration/robo_info.svg'); ?>
-                  <h4><?php esc_html_e('What is SmartCompression?', 'shortpixel-image-optimiser'); ?></h4>
-
-                  <?php _e('Images that look just good as the original, but with the smallest possible file size', 'shortpixel-image-optimiser'); ?>
-                  <a href="https://shortpixel.com/blog/introducing-smartcompress/" target="_blank" class="shortpixel-help-link"><?php _e('Learn more', 'shortpixel-image-optimiser'); ?></a>
-
-              </content>
-            </gridbox>
+            </div>
 
               <warning id='compression-notice'>
                     <h4><?php _e('Changing compression type', 'shortpixel-image-optimiser'); ?></h4>
