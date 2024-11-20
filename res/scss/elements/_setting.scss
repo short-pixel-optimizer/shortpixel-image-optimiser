@@ -4,6 +4,7 @@ setting{
 
   padding: 12px;
 	background-color: $blue_background;
+    border-radius: 0.7rem;
 	margin: 10px 0;
 	display: block;
   //display: flex;
@@ -16,6 +17,10 @@ setting{
   {
      //display: flex !important;
   } */
+
+  &#compression-type {
+    margin-bottom: 30px;
+  }
 
   // main title of setting
   name {
@@ -35,6 +40,10 @@ setting{
      flex-basis: calc(100% - 250px);
      font-size: 14px;
      display: inline-block;
+
+     &.shortpixel-compression {
+       max-width: calc(100% - 260px);
+     }
 
      // Label for text input next to the input box.
      inputlabel

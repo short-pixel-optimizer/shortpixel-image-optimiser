@@ -191,7 +191,7 @@
 			 &.width_half
 			 {
 				 grid-template-columns: repeat(2, 50%);
-				 setting:nth-child(1n) {
+				 setting:nth-child(odd) {
 					 margin-right: 15px;
 				 }
 
