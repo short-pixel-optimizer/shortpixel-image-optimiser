@@ -92,18 +92,6 @@ class StatsController extends \ShortPixel\Controller
           }
       }
 
-
-    /*  $totalOptimized = $this->model->get('totalOptimized');
-      $totalOriginal = $this->model->get('totalOriginal');
-
-			$average = 0;
-
-			if ($totalOptimized > 0 && $totalOriginal > 0)
-			{
-				 $average = round(( 1 -  ( $totalOptimized / $totalOriginal ) ) * 100, 2);
-			}
-
-      return $average; */
     }
 
     // This is not functional @todo

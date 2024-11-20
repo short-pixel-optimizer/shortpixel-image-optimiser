@@ -87,6 +87,7 @@ if( $this->is_nginx ){
                'checked' => $createAvifChecked,
                'label' => esc_html__('Create AVIF Images','shortpixel-image-optimiser'),
                'disabled' => $disabled,
+               'data' => ['data-dashboard="' . __('Recommend adding Avif', 'shortpixel-image-optimiser') . '"'],
               ]);
         ?>
 
@@ -114,7 +115,7 @@ if( $this->is_nginx ){
          'checked' =>  ($view->data->useCDN > 0) ? 1 : 0,
          'label' => esc_html__('Deliver the next generation images using the ShortPixel CDN:','shortpixel-image-optimiser'),
 
-         'data' => ['data-toggle="useCDN"', 'data-exclude="deliverWebp"'],
+         'data' => ['data-toggle="useCDN"', 'data-exclude="deliverWebp"', 'data-dashboard="' . __('CDN not enabled', 'shortpixel-image-optimiser') . '"', ],
         ]);
   ?>
   </content>

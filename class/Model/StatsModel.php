@@ -159,7 +159,9 @@ class StatsModel
       $this->currentStat = null;
       if (isset($this->stats[$type]))
       {
-         $this->currentStat = $this->stats[$type];
+         $stat = $this->stats[$type];
+
+         $this->currentStat = $this->checkInt($stat);
          $this->path = [$type];
       }
 
@@ -173,16 +175,17 @@ class StatsModel
 
        if (is_array($this->currentStat) && array_key_exists($data, $this->currentStat))
        {
-          $this->currentStat = $this->currentStat[$data];
+          $this->currentStat = $this->checkInt($this->currentStat[$data]);
           $this->path[] = $data;
        }
 
 
        if (! is_array($this->currentStat))
        {
+
          if ($this->currentStat === -1)
          {
-            $this->currentStat = $this->fetchStatdata();  // if -1 stat might not be loaded, load.
+            $this->currentStat = $this->checkInt($this->fetchStatdata());  // if -1 stat might not be loaded, load.
          }
 
         return $this->currentStat;
@@ -197,8 +200,6 @@ class StatsModel
   {
       $path = $this->path;
       $data = -1;
-
-      Log::addTemp('Fetching stat data');
 
       if ($path[0] == 'period' && $path[1] == 'months' && isset($path[2]))
       {
@@ -304,6 +305,16 @@ class StatsModel
       }
 
       return $data;
+
+  }
+
+  private function checkInt($var)
+  {
+    if (is_numeric($var) && gettype($var) !== 'integer')
+    {
+       $var = intval($var);
+    }
+    return $var;
 
   }
 

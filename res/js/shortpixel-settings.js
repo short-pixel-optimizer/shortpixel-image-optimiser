@@ -208,20 +208,20 @@ class ShortPixelSettings
 
 						 if (true === matches.allMatches)
 						 {
-							args.functions.onTrue.call(this, args.warnings, matches);
+							args.functions.onTrue.call(this, args.warnings, matches, args.elements);
 						 }
 						 else if (false === matches.someMatch)
 						 {
-						  args.functions.onFalse.call(this, args.warnings, matches);
+							args.functions.onFalse.call(this, args.warnings, matches, args.elements);
 						 }
 						 else
 						 {
 							  if (typeof args.functions.onAny !== 'undefined')
 								{
-									 args.functions.onAny.call(this, args.warnings, matches);
+									 args.functions.onAny.call(this, args.warnings, matches, args.elements);
 								}
 								else {
-									 args.functions.onFalse.call(this, args.warnings, matches);
+									 args.functions.onFalse.call(this, args.warnings, matches, args.elements);
 								}
 						 }
 					 }.bind(this));
@@ -230,11 +230,11 @@ class ShortPixelSettings
 				var matches = checkMatches(args.elements, args.checks);
 				if (true == matches.allMatches)
 				{
-					args.functions.onTrue.call(this, args.warnings, matches);
+					args.functions.onTrue.call(this, args.warnings, matches, args.elements);
 				}
 				else if (typeof args.functions.onAny !== 'undefined')
 				{
-					 args.functions.onAny.call(this, args.warnings, matches);
+					 args.functions.onAny.call(this, args.warnings, matches, args.elements);
 				}
 
 		}
@@ -286,12 +286,15 @@ class ShortPixelSettings
 
 		var elements = root.querySelectorAll('input[name="createWebp"],input[name="createAvif"],input[name="deliverWebp"],input[name="useCDN"]');
 		var warnings = root.querySelectorAll('.panel.dashboard-webp');
-		var checks = [':not(:checked)', ':not(:checked)', ':not(:checked)', ':not(:checked)'];
+		var checks = [':checked', ':checked', ':checked', ':checked'];
 
-		let cdnCheckFunctions = dashboardFunctions;
-		cdnCheckFunctions.onAny = this.CDNCheckWarningEvent;
+		var CDNFunctions = {
+				'onTrue' : this.CDNCheckWarningEvent,
+				'onFalse' : this.CDNCheckWarningEvent,
+				'onAny': this.CDNCheckWarningEvent,
+		};
 
-		updateShowWarning({elements: elements, warnings: warnings, checks: checks, functions: cdnCheckFunctions});
+		updateShowWarning({elements: elements, warnings: warnings, checks: checks, functions: CDNFunctions});
 
 	}
 
@@ -692,7 +695,7 @@ FormResponseEvent(json)
 
 
 
-DashBoardWarningEvent(warning, matches, status)
+DashBoardWarningEvent(warning, matches)
 {
 
 	 var dashBox = warning[0];
@@ -768,24 +771,68 @@ DashBoardWarningEvent(warning, matches, status)
 
 }
 
-CDNCheckWarningEvent(warning, matches)
+CDNCheckWarningEvent(warning, matches, elements)
 {
-	 console.log(warning);
-	 console.log(matches);
-
 	 // If useCDN, or the other one is selected, pass this off as ok.
 	 // Matches are the ones, who are -NOT- selected, ie not-preferable status.
 	 var matchinputs = matches.matches;
 
+	 var hasCreate = false;
+	 var hasDelivery = false;
+
 	 for ( var i = 0; i < matchinputs.length; i++)
 	 {
-			 if (matchinputs[i].name == 'deliverWebp' || matchinputs[i].name == 'useCDN')
+			 switch(matchinputs[i].name)
 			 {
-						matches.allMatches = false;
-						matches.someMatches = false;
-						break;
+				 case 'createWebp':
+				 case 'createAvif':
+						 hasCreate = true;
+					break;
+				 case 'useCDN':
+						 hasCreate = true;
+						 hasDelivery = true;
+					break;
+				 case 'deliverWebp':
+						 hasDelivery = true;
+					break;
 			 }
 	 }
+
+	 // All fine, but dashboardevent expects a 'negative', so any, all match should be false.
+	 if (true == hasCreate && true == hasDelivery)
+	 {
+				matches.someMatch = false;
+				matches.allMatches = false;
+				matches.matches;
+				matchinputs = Array.from(elements); // equal matchinput to elements, not to trigger too much texts
+	 }
+	 else if (false == hasCreate && false == hasDelivery ) // Boo alert, allMatch should true.
+	 {
+				matches.allMatches = true;
+	 }
+	 else
+	 { // one of the other is true.
+				matches.someMatch = true;
+	 }
+
+	 // Now we have to go through all the elements, to find the ones unselected, because they rule the message being send on the dashboard. So those are the matches we must put to dashboard event.
+	 var elements = Array.from(elements);
+	 var to_splice = [];
+	 for (var i = 0; i <  elements.length; i++)
+	 {
+			var el = elements[i];
+			var res = matchinputs.find(node => node.isEqualNode(el));
+			if (typeof res !== 'undefined')
+			{
+				to_splice.push(i); // no live splicing, because it messed the indexes
+			}
+
+	 }
+
+	 // Funky function I found online to filter the splicers from the elements.
+	 elements = elements.filter((value, index) => to_splice.indexOf(index) == -1);
+
+	 matches.matches = elements;
 
 	 this.DashBoardWarningEvent(warning, matches);
 }
