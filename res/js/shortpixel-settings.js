@@ -165,9 +165,7 @@ class ShortPixelSettings
 				}
 
 				return { allMatches : allMatches, someMatch: someMatch, matches: matches}
-
 		}
-
 
 		var showHideFunctions = {
 				'onTrue' : this.ShowElement,
@@ -286,11 +284,14 @@ class ShortPixelSettings
 		var checks = [':not(:checked)', ':not(:checked)', ':not(:checked)'];
 		updateShowWarning({elements: elements, warnings: warnings, checks: checks, functions: dashboardFunctions});
 
-		var elements = root.querySelectorAll('input[name="createWebp"],input[name="deliverWebp"],input[name="useCDN"]');
+		var elements = root.querySelectorAll('input[name="createWebp"],input[name="createAvif"],input[name="deliverWebp"],input[name="useCDN"]');
 		var warnings = root.querySelectorAll('.panel.dashboard-webp');
-		var checks = [':not(:checked)', ':not(:checked)', ':not(:checked)'];
+		var checks = [':not(:checked)', ':not(:checked)', ':not(:checked)', ':not(:checked)'];
 
-		updateShowWarning({elements: elements, warnings: warnings, checks: checks, functions: dashboardFunctions});
+		let cdnCheckFunctions = dashboardFunctions;
+		cdnCheckFunctions.onAny = this.CDNCheckWarningEvent;
+
+		updateShowWarning({elements: elements, warnings: warnings, checks: checks, functions: cdnCheckFunctions});
 
 	}
 
@@ -691,7 +692,7 @@ FormResponseEvent(json)
 
 
 
-DashBoardWarningEvent(warning, matches)
+DashBoardWarningEvent(warning, matches, status)
 {
 
 	 var dashBox = warning[0];
@@ -767,6 +768,27 @@ DashBoardWarningEvent(warning, matches)
 
 }
 
+CDNCheckWarningEvent(warning, matches)
+{
+	 console.log(warning);
+	 console.log(matches);
+
+	 // If useCDN, or the other one is selected, pass this off as ok.
+	 // Matches are the ones, who are -NOT- selected, ie not-preferable status.
+	 var matchinputs = matches.matches;
+
+	 for ( var i = 0; i < matchinputs.length; i++)
+	 {
+			 if (matchinputs[i].name == 'deliverWebp' || matchinputs[i].name == 'useCDN')
+			 {
+						matches.allMatches = false;
+						matches.someMatches = false;
+						break;
+			 }
+	 }
+
+	 this.DashBoardWarningEvent(warning, matches);
+}
 
 OpenModalEvent(elem)
 {
@@ -1428,48 +1450,8 @@ ResetExclusionInputs()
 UpdateExclusion()
 {
 	var id = this.root.querySelector('.new-exclusion input[name="edit-exclusion"]');
-//	var result = this.ReadWriteExclusionForm();
-//	var setting = result[0];
-//	var strings = result[1];
 
 	this.NewExclusionButtonAdd(null, id.value);
-	return;
-
-	if (id)
-	{
-			var element = this.root.querySelector('.exclude-list #' +id.value + ' input');
-			var liElement = this.root.querySelector('.exclude-list #' +id.value);
-
-			var removeChildren = [];
-			if (null !== element)
-			{
-				 element.value = JSON.stringify(setting);
-
-				 // Can't directly remove children, because it messes with the collection index.
-				 Array.from(liElement.children).forEach ( function (child, index){
-				 if (child.tagName == 'SPAN')
-					 {
-						 removeChildren.push(child)
-						}
-				 });
-
-				 for(var i = 0; i < removeChildren.length; i++ )
-				 {
-					  removeChildren[i].remove();
-				 }
-
-				 var spans = [strings.type, setting.value, strings.apply];
-				 for (var j = 0; j < spans.length; j++)
-				 {
-						 var spanElement = document.createElement('span');
-						 spanElement.textContent = spans[j];
-						 liElement.appendChild(spanElement);
-				 }
-			}
-	}
-
-	this.HideExclusionInterface();
-	this.ShowExclusionSaveWarning();
 
 }
 
