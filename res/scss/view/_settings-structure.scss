@@ -244,8 +244,18 @@
 				box-sizing: border-box;
 				h1 img
 				{
-						//height: 35px;
-						margin-left: 45px;
+					height: 40px;
+					margin-top: 15px;
+					margin-left: 45px;
+				}
+				.top-buttons {
+					margin-top: 10px;
+					& a.header-button i {
+						margin-right: 0px;
+					}
+					& a.header-button name {
+						display: none;
+					}
 				}
 		}
 		// make space for the header
@@ -273,6 +283,12 @@
 						 span.open {
 							 display: none;
 						 }
+						 span.close img {
+						 	width: 22px;
+						 	height: 22px;
+							margin-left: 5px;
+							margin-top: 5px;
+						}
 					}
 
 					top: 60px;
@@ -300,5 +316,14 @@
 			 {
 					width: 95%;
 			 }
+		}
+		info {
+			max-width: 290px;
+		}
+		.ajax-save-done {
+			left: 10%;
+			& .shortpixel-icon.ok {
+				margin: 15px 6px;
+			}
 		}
 }

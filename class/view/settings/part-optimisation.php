@@ -373,7 +373,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 							</switch>
                 					<i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/208-can-shortpixel-automatically-resize-new-image-uploads"></i>
 
-            <p>
+            <info>
             <?php esc_html_e('Resize to maximum','shortpixel-image-optimiser') ?>
 
 						<input type="number" min="1" max="20000" name="resizeWidth" id="width" class="resize-sizes"
@@ -383,7 +383,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 						<input type="number" min="1" max="20000" name="resizeHeight" id="height" class="resize-sizes"
 									 value="<?php echo esc_attr( $view->data->resizeHeight > 0 ? $view->data->resizeHeight : min(1200, $view->minSizes['height']) );?>" <?php echo esc_attr( $resizeDisabled );?>/> <?php
 									 esc_html_e('pixels high ','shortpixel-image-optimiser');?>
-            </p>
+            </info>
 							<info>
 
 								<?php esc_html_e('Preserves the original aspect ratio without cropping the image. Recommended for large photos, such as those taken with a smartphone. This can save up to 80% or more in storage space after resizing. Please note that this option does not prevent thumbnails from being created at dimensions larger than the selected size; however, these thumbnails will also be resized to match the dimensions chosen here.','shortpixel-image-optimiser');?>

@@ -75,7 +75,9 @@
 .wrap.is-shortpixel-bulk-page header .top-buttons .header-button i {
   filter: brightness(0) saturate(100%) invert(100%) sepia(100%) saturate(20%) hue-rotate(283deg) brightness(105%) contrast(105%);
   margin-right: 4px;
-  height: 25px;
+  height: 15px;
+  width: 15px;
+  vertical-align: text-top;
 }
 .wrap.is-shortpixel-bulk-page .shortpixel-icon {
   width: 25px;

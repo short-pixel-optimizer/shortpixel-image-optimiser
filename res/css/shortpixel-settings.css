@@ -363,7 +363,18 @@ div.spio-modal-title {
     box-sizing: border-box;
   }
   .wrap.is-shortpixel-settings-page header h1 img {
+    height: 40px;
+    margin-top: 15px;
     margin-left: 45px;
+  }
+  .wrap.is-shortpixel-settings-page header .top-buttons {
+    margin-top: 10px;
+  }
+  .wrap.is-shortpixel-settings-page header .top-buttons a.header-button i {
+    margin-right: 0px;
+  }
+  .wrap.is-shortpixel-settings-page header .top-buttons a.header-button name {
+    display: none;
   }
   .wrap.is-shortpixel-settings-page .wp-header-end {
     margin-top: 65px;
@@ -391,6 +402,12 @@ div.spio-modal-title {
   .wrap.is-shortpixel-settings-page .shortpixel-settings .mobile-menu.opened span.open {
     display: none;
   }
+  .wrap.is-shortpixel-settings-page .shortpixel-settings .mobile-menu.opened span.close img {
+    width: 22px;
+    height: 22px;
+    margin-left: 5px;
+    margin-top: 5px;
+  }
   .wrap.is-shortpixel-settings-page .shortpixel-settings .mobile-menu.opened + menu {
     display: block;
   }
@@ -408,6 +425,15 @@ div.spio-modal-title {
   }
   .wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper {
     width: 95%;
+  }
+  .wrap.is-shortpixel-settings-page info {
+    max-width: 290px;
+  }
+  .wrap.is-shortpixel-settings-page .ajax-save-done {
+    left: 10%;
+  }
+  .wrap.is-shortpixel-settings-page .ajax-save-done .shortpixel-icon.ok {
+    margin: 15px 6px;
   }
 }
 .wrap.is-shortpixel-settings-page header {
@@ -463,7 +489,9 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page header .top-buttons .header-button i {
   filter: brightness(0) saturate(100%) invert(100%) sepia(100%) saturate(20%) hue-rotate(283deg) brightness(105%) contrast(105%);
   margin-right: 4px;
-  height: 25px;
+  height: 15px;
+  width: 15px;
+  vertical-align: text-top;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-icon {
   width: 25px;
@@ -1026,6 +1054,11 @@ div.spio-modal-title {
   width: 100%;
   display: flex;
 }
+@media (max-width: 768px) {
+  .wrap.is-shortpixel-settings-page #tab-help .help-center {
+    flex-direction: column;
+  }
+}
 .wrap.is-shortpixel-settings-page #tab-help .help-center > div {
   border-right: 2px solid #92D5E3;
   margin: 16px 10px;
@@ -1045,6 +1078,16 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page #tab-help .help-center > div:last-child {
   border: 0;
+}
+@media (max-width: 768px) {
+  .wrap.is-shortpixel-settings-page #tab-help .help-center > div {
+    width: 98%;
+    margin: 20px 0;
+    padding-bottom: 20px;
+    border-right: 0;
+    border-bottom: 2px solid #92D5E3;
+    position: relative;
+  }
 }
 .wrap.is-shortpixel-settings-page #tab-overview {
   /*
@@ -1861,6 +1904,12 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page .quick-tour .close {
   cursor: pointer;
+}
+.wrap.is-shortpixel-settings-page #tab-integrations content input {
+  border: 1px solid #1ABDCA;
+  background-color: #fff;
+  height: 36px;
+  width: 290px;
 }
 .wrap.is-shortpixel-settings-page #tab-tools .button {
   min-height: 44px;

@@ -358,6 +358,9 @@
      margin-bottom: 45px;
      position: relative;
 
+     @include breakpoint(0, 768px) {
+//	flex-direction: column;
+     }
 
      span {
        text-align: center;
@@ -460,13 +463,17 @@
 	{
 		  	.help-center
 				{
-						background: $blue_background;
-						border-radius: 8px;
-						width: 100%;
-					//	padding: 18px;
-					  display: flex;
-					//	flex-wrap: wrap;
-						//margin-top: 16px;
+					background: $blue_background;
+					border-radius: 8px;
+					width: 100%;
+					//padding: 18px;
+					display: flex;
+					//flex-wrap: wrap;
+					//margin-top: 16px;
+
+					@include breakpoint(0, 768px) {
+						flex-direction: column;
+					}
 
 						> div {
 							//	background: $blue_background;
@@ -490,6 +497,14 @@
 								{
 									 border: 0;
 								}
+							@include breakpoint(0, 768px) {
+								width: 98%;
+								margin: 20px 0;
+								padding-bottom: 20px;
+								border-right: 0;
+								border-bottom: 2px solid $blue_light;
+								position: relative;
+							}
 						}
 				}
 

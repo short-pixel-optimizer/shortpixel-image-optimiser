@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     <a class='header-button' href="https://shortpixel.com/<?php
             echo esc_attr(($view->key->apiKey ? "login/". $view->key->apiKey . "/dashboard" : "login"));
         ?>" target="_blank">
-          <i class='shortpixel-icon user'></i><?php _e('ShortPixel Account','shortpixel-image-optimiser'); ?>
+          <i class='shortpixel-icon user'></i><name><?php _e('ShortPixel Account','shortpixel-image-optimiser'); ?></name>
         </a>
     <!--<button><i class='shortpixel-icon notifications'></i><?php _e('Notifications','shortpixel-image-optimiser'); ?></button>
     <button id="viewmode-toggle"><i class='shortpixel-icon switch'></i>
