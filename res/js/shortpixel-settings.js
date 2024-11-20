@@ -55,11 +55,20 @@ class ShortPixelSettings
 				toggle.dispatchEvent(evInit);
 		});
 
+		// This is all super unflexible, and would probably need to be changed with a new warning system, which could take multiple inputs.
 		toggles = this.root.querySelectorAll('[data-exclude]');
 		toggles.forEach(function(toggle,index)
 		{
 			  toggle.addEventListener('change', self.DoToggleExcludeEvent.bind(self));
 		});
+
+
+		let hideWarnings = this.root.querySelectorAll('[data-hidewarnings]');
+		hideWarnings.forEach(function(hide, index)
+		{
+			 hide.addEventListener('change', self.DoToggleHideWarningEvent.bind(self));
+		});
+
 
 		// ApiKeyField toggle
 		var keyField = this.root.querySelector('.apifield i.eye');
@@ -277,9 +286,9 @@ class ShortPixelSettings
 		var checks = [':not(:checked)', ':not(:checked)', ':not(:checked)'];
 		updateShowWarning({elements: elements, warnings: warnings, checks: checks, functions: dashboardFunctions});
 
-		var elements = root.querySelectorAll('input[name="createWebp"],input[name="deliverWebp"]');
+		var elements = root.querySelectorAll('input[name="createWebp"],input[name="deliverWebp"],input[name="useCDN"]');
 		var warnings = root.querySelectorAll('.panel.dashboard-webp');
-		var checks = [':not(:checked)', ':not(:checked)'];
+		var checks = [':not(:checked)', ':not(:checked)', ':not(:checked)'];
 
 		updateShowWarning({elements: elements, warnings: warnings, checks: checks, functions: dashboardFunctions});
 
@@ -466,11 +475,9 @@ class ShortPixelSettings
 					var field_id = checkbox.getAttribute('data-toggle');
 					var target = document.getElementById(field_id);
 
-
 					// Allow multiple elements to be toggled, which will not work with id. In due time all should be transferred to use class-based toggle
 					// This can return null, in case of radio buttons where only one has a data-toggle set.
 					var targetClasses = this.root.querySelectorAll('.' + field_id);
-
 
 				  if (typeof checkbox.dataset.toggleReverse !== 'undefined')
 					{
@@ -524,6 +531,21 @@ class ShortPixelSettings
 		 }
 	}
 
+	DoToggleHideWarningEvent(event)
+	{
+		 var checkbox = event.target;
+		 var setting = checkbox.closest('setting');
+
+		 if (false == checkbox.checked)
+		 {
+				 var warnings = setting.querySelectorAll('warning');
+				 if (null !== warnings)
+				 {
+						 this.HideElement(warnings);
+				 }
+		 }
+	}
+
 	ShowElement(elems) {
 
 		for (var i = 0; i < elems.length; i++)
@@ -534,6 +556,7 @@ class ShortPixelSettings
 
 			// Once the transition is complete, remove the inline max-height so the content can scale responsively
 			window.setTimeout(function () {
+				//console.log('set timeout');
 					element.style.opacity = 1;
 			}, 150);
 
@@ -547,13 +570,13 @@ HideElement(elems) {
 	for (var i = 0; i < elems.length; i++)
 	{
 		var element = elems[i];
+
 		element.style.opacity = 0;
 			// When the transition is complete, hide it
-			window.setTimeout(function () {
-				element.classList.remove('is-visible');
-				//element.style.display = 'none';
+			window.setTimeout(function (el) {
+				el.classList.remove('is-visible');
 
-			}, 300);
+			}, 300, element);
 	}
 
 };
@@ -708,10 +731,7 @@ DashBoardWarningEvent(warning, matches)
 				}
 
 				statusWrapper.appendChild(statusLine).appendChild(statusIcon.cloneNode());
-				//statusLine.appendChild(statusIcon);
-				//console.log(statusLine);
-			//	statusWrapper.appendChild(statusLine);
-//				statusWrapper.appendChild(statusLine);
+
 			}
 		 	// Add Not ok status.
 	}
@@ -1212,7 +1232,6 @@ DoValidateInputs(inputs)
 			 let type = item.type;
 			 let value = item.value;
 
-			 console.log(isNaN(value));
 			 if (type == 'number' && (value.length <= 0 || isNaN(value)))
 			 {
 				  item.classList.add('not-validated');

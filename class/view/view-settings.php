@@ -179,10 +179,9 @@ if ( ! defined( 'ABSPATH' ) ) {
               $this->loadView('settings/part-debug');
             }
             ?>
-
 		</section>
 </article>
-</form>
+
 
     <section class='ajax-save-done'>
         <div class="icon-container">
@@ -193,10 +192,6 @@ if ( ! defined( 'ABSPATH' ) ) {
             <h3 class='after-save-notices'><span class='notice_count'>X</span> <?php _e('new notices', 'shortpixel-image-optimiser'); ?></h3>
         </div>
     </section>
-
-<div class='debug'><PRE>
-  <?php print_r($this->view->data); ?>
-</PRE></div>
 
 <article id="shortpixel-settings-tabs" class="sp-tabs">
     <?php if (! $view->key->is_verifiedkey)
