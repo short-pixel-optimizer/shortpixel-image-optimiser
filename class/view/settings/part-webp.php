@@ -127,36 +127,36 @@ if( $this->is_nginx ){
 
 
 <setting class='switch step-highlight-3'>
-
   <content>
-
 
    <?php $this->printSwitchButton(
          ['name' => 'deliverWebp',
           'checked' =>  ($view->data->deliverWebp > 0) ? 1 : 0,
           'label' => esc_html__('Serve WebP/AVIF images from locally hosted files (without using a CDN):','shortpixel-image-optimiser'),
           'disabled' => $disabled,
-          'data' => ['data-toggle="deliverTypes"', 'data-dashboard="' . __('Next-gen format not being delivered', 'shortpixel-image-optimiser') . '"', 'data-exclude="useCDN"'],
+          'data' => ['data-toggle="deliverTypes"', 'data-dashboard="' . __('Next-gen format not being delivered', 'shortpixel-image-optimiser') . '"', 'data-exclude="useCDN" data-hidewarnings'],
          ]);
    ?>
 
    <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/126-which-webp-files-delivery-method-is-the-best-for-me"></i>
 
-      <ul id="deliverTypes" class="deliverTypes deliverWebpTypes toggleTarget">
+      <ul  class="deliverTypes deliverWebpTypes toggleTarget">
           <li>
               <input type="radio" name="deliverWebpType" id="deliverWebpAltered" <?php checked( ($view->data->deliverWebp >= 1 && $view->data->deliverWebp <= 2), true); ?> <?php echo esc_attr( $deliverWebpAlteredDisabled );?> value="deliverWebpAltered" data-toggle="deliverAlteringTypesPicture">
-              <label for="deliverWebpAltered">
+
+            <label for="deliverWebpAltered">
                   <?php esc_html_e('Using the &lt;PICTURE&gt; tag syntax','shortpixel-image-optimiser');?>
               </label>
-		<ul class="toggleTarget deliverAlteringTypesPicture" >
+
+              <ul class="toggleTarget deliverAlteringTypesPicture picture-option-list" >
                   <li>
                       <input type="radio" name="deliverWebpAlteringType" id="deliverWebpAlteredWP" <?php checked(($view->data->deliverWebp == 2), true);?> value="deliverWebpAlteredWP">
-                      <label for="deliverWebpAlteredWP">
+                      <label for="deliverWebpAlteredWP" >
                           <?php esc_html_e('Only via Wordpress hooks (like the_content, the_excerpt, etc)');?>
                       </label>
                   </li>
                   <li>
-                      <input type="radio" name="deliverWebpAlteringType" id="deliverWebpAlteredGlobal" <?php checked(($view->data->deliverWebp == 1),true)?>  value="deliverWebpAlteredGlobal" data-toggle="deliverAlteringTypesHtaccess">
+                      <input type="radio" name="deliverWebpAlteringType" id="deliverWebpAlteredGlobal" <?php checked(($view->data->deliverWebp == 1),true)?>  value="deliverWebpAlteredGlobal" >
                       <label for="deliverWebpAlteredGlobal">
                           <?php esc_html_e('Global (processes the whole output buffer before sending the HTML to the browser)','shortpixel-image-optimiser');?>
                       </label>
@@ -171,7 +171,7 @@ if( $this->is_nginx ){
           </li>
           <li>
               <hr>
-              <input type="radio" name="deliverWebpType" id="deliverWebpUnaltered" <?php checked(($view->data->deliverWebp == 3), true);?> <?php echo esc_attr( $deliverWebpUnalteredDisabled );?> value="deliverWebpUnaltered">
+              <input type="radio" name="deliverWebpType" id="deliverWebpUnaltered" <?php checked(($view->data->deliverWebp == 3), true);?> <?php echo esc_attr( $deliverWebpUnalteredDisabled );?> value="deliverWebpUnaltered" data-toggle="deliverAlteringTypesHtaccess">
 
               <label for="deliverWebpUnaltered">
                   <?php esc_html_e('Without altering the page code (via .htaccess)','shortpixel-image-optimiser')?>
@@ -186,12 +186,12 @@ if( $this->is_nginx ){
           </li>
       </ul>
     </content>
-    <warning id="deliverAlteringTypesPicture">
+    <warning id="deliverAlteringTypesPicture" class="deliverAlteringTypesPicture">
        <message>
 <?php _e( "Warning: Enabling this method changes the structure of the rendered HTML by wrapping &lt;img&gt; tags inside &lt;picture&gt; tags. In rare cases, this may lead to CSS or JavaScript inconsistencies.\n\nPlease test thoroughly after activating!\n\nIf you notice any issues, simply deactivat the option, flush any cache that may be active and the HTML will will revert to its original state.", 'shortpixel-image-optimiser' ); ?>
         </message>
     </warning>
-    <warning class="deliverAlteringTypesHtaccess" >
+    <warning  class="deliverAlteringTypesHtaccess" >
       <message>
         <?php _e( 'This option will serve both WebP/AVIF and the original image from the same URL, depending on the web browser\'s capabilities. Make sure the images are served directly from your server, not through a CDN that may cache them. If you make any changes, remember to flush your cache to ensure the updates are properly applied.', 'shortpixel-image-optimiser' ) ?>
       </message>
