@@ -5,6 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
+use \ShortPixel\Helper\UiHelper as UiHelper;
 
 ?>
 
@@ -119,11 +120,18 @@ if( $this->is_nginx ){
         ]);
   ?>
   </content>
+  <?php echo UiHelper::getIcon('res/images/icon/new.svg'); ?>
+  <info>
+         <?php printf(esc_html__('When this option is enabled, the plugin will replace the existing images with CDN URLs, delivering automatically next-generation images (like WebP and AVIF) when these are enabled in the settings above. %sRead more%s.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain/" target="_blank">', '</a>' );?>
+  </info>
   <name class='useCDN toggleTarget'><?php esc_html_e('CDN Domain', 'shortpixel-image-optimiser'); ?></name>
   <content class='useCDN toggleTarget'>
       <input type="text" name="CDNDomain" class='regular-text' value="<?php echo esc_attr($view->data->CDNDomain) ?>">
       <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain/"></i>
-    </content>
+  </content>
+  <info class='useCDN toggleTarget'>
+         <?php printf(esc_html__('Change this only if you want to set up your %scustom domain%s.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain/" target="_blank">', '</a>' );?>
+  </info>
 </setting>
 
 
@@ -141,6 +149,9 @@ if( $this->is_nginx ){
 
    <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/126-which-webp-files-delivery-method-is-the-best-for-me"></i>
 
+   <info>
+         <?php printf(esc_html__('Local delivery does not use a CDN and delivers the next generation files from your webserver, either by using the PICTURE tag method, or with .htaccess/nginx rules. %sRead more%s.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/which-webp-files-delivery-method-is-the-best-for-me/" target="_blank">', '</a>' );?>
+   </info>
       <ul  class="deliverTypes deliverWebpTypes toggleTarget">
           <li>
               <input type="radio" name="deliverWebpType" id="deliverWebpAltered" <?php checked( ($view->data->deliverWebp >= 1 && $view->data->deliverWebp <= 2), true); ?> <?php echo esc_attr( $deliverWebpAlteredDisabled );?> value="deliverWebpAltered" data-toggle="deliverAlteringTypesPicture">

@@ -802,8 +802,7 @@ div.spio-modal-title {
   align-items: center;
 }
 .wrap.is-shortpixel-settings-page .upgrade-banner .robo-from-banner {
-  margin-right: 8px;
-  margin-left: 10px;
+  margin: 0 16px;
 }
 .wrap.is-shortpixel-settings-page .upgrade-banner h2 {
   font-family: Roboto, serif;
@@ -820,7 +819,7 @@ div.spio-modal-title {
   color: #116C7E;
 }
 .wrap.is-shortpixel-settings-page .upgrade-banner .shortpixel-icon.ok {
-  width: 18px;
+  width: 17px;
   height: 18px;
   margin-right: 8px;
   margin-left: 10px;
@@ -833,8 +832,7 @@ div.spio-modal-title {
   width: max-content;
   height: 40px;
   font-size: 14px;
-  margin-left: 13px;
-  margin-top: 13px;
+  margin: 13px auto;
   background: #cc0000;
 }
 .wrap.is-shortpixel-settings-page .upgrade-banner .button:hover {
@@ -931,6 +929,25 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page section.setting-tab .toggleTarget.is-visible {
   display: block;
   height: auto;
+}
+.wrap.is-shortpixel-settings-page section#tab-webp img.icon {
+  height: 40px;
+  margin-bottom: -20px;
+  margin-left: 30px;
+}
+@media (max-width: 768px) {
+  .wrap.is-shortpixel-settings-page section#tab-webp img.icon {
+    height: 30px;
+    float: right;
+    margin-top: -30px;
+    margin-right: -5px;
+  }
+}
+.wrap.is-shortpixel-settings-page section#tab-webp content input[name=CDNDomain] {
+  border: 1px solid #1ABDCA;
+  background-color: #fff;
+  height: 36px;
+  width: 290px;
 }
 .wrap.is-shortpixel-settings-page section#tab-debug h2 {
   left: 738px;

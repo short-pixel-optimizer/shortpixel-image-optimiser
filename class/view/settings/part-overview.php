@@ -115,7 +115,7 @@ $bulkblock = $dashboard->bulkblock;
 
         <a class="dashboard-button" href="<?php echo $bulkblock->link ?>"><?php _e('Go to Bulk Processing', 'shortpixel-image-optimiser'); ?><i class='shortpixel-icon arrow-right'></i></a>
      <?php else : ?>
-        <a class='dashboard-button not-visible'>&nbsp;</a>
+        <a class='dashboard-button shortpixel-hide'>&nbsp;</a>
      <?php endif; ?>
 
      </div>
@@ -151,7 +151,7 @@ $bulkblock = $dashboard->bulkblock;
                     esc_html_e('Key defined in wp-config.php.', 'shortpixel-image-optimiser');
                 } ?>
                 <span class="shortpixel-key-valid" <?php echo $view->key->is_verifiedkey ? '' : 'style="display:none;"' ?>>
-                <?php esc_html_e('Yey! Your API Key is Valid ', 'shortpixel-image-optimiser'); ?><i class="shortpixel-icon ok"></i>
+                <?php esc_html_e('Yay! Your API Key is Valid ', 'shortpixel-image-optimiser'); ?><i class="shortpixel-icon ok"></i>
             </span>
             </info>
             <label for="toggle-content" class="toggle-link">

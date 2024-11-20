@@ -132,8 +132,7 @@
 
 	  }
 	  	.robo-from-banner{
-			margin-right: 8px;
-			margin-left: 10px;
+			margin: 0 16px;
 		}
 
 	  	h2{
@@ -154,7 +153,7 @@
 	  }
 
 		  .shortpixel-icon.ok {
-			  width: 18px;
+			  width: 17px;
 			  height: 18px;
 			  margin-right: 8px;
 			  margin-left: 10px;
@@ -169,8 +168,7 @@
 			height: 40px;
 			font-size: 14px;
 			//top: 160px;
-			margin-left: 13px;
-			margin-top: 13px;
+			margin: 13px auto;
 			background: darken(#ff0000, 10%);
 			//background: #ED3; // just for check ctrl+shift reload worked :)
 			&:hover {
@@ -312,6 +310,27 @@
 
   }
 
+  section#tab-webp
+  {
+	img.icon {
+		height: 40px;
+		margin-bottom: -20px;
+		margin-left: 30px;
+
+		@include breakpoint(0, 768px) {
+			height: 30px;
+			float: right;
+			margin-top: -30px;
+			margin-right: -5px;
+		}
+	}
+	content input[name="CDNDomain"] {
+		border: 1px solid $blue_default;
+		background-color: #fff;
+		height: 36px;
+		width: 290px;
+	}
+  }
   section#tab-debug
   {
 			h2 { left: 738px; }
