@@ -151,6 +151,29 @@
       padding: 8px 12px 8px;
       box-shadow: rgba(0, 0, 0, 0.5) 0px 0px 24px;
 
+     &:after {
+       content:"";
+       position: absolute;
+       left:13px;
+       top:0px;
+       border-top: 0px solid transparent;
+       border-right: 10px solid #00C898;
+       border-bottom: 13px solid transparent;
+       margin: 13px 0 0 -25px;
+
+     }
+     &:before {
+       content:"";
+       position: absolute;
+       left:18px;
+       top:40px;
+       border-top: 0px solid transparent;
+       border-right: 7px solid white;
+       border-bottom: 10px solid transparent;
+       margin: -25px;
+       z-index:1
+     }
+
       // default state.
       .step
       {
