@@ -40,15 +40,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
          <!-- compression type -->
           <setting id='compression-type' class="step-highlight-2">
 
-            <div style='overflow:auto'>
-                <content class='smart-compression-explainer' >
-                    <?php echo UIHelper::getIcon('res/images/illustration/robo_info.svg'); ?>
-                    <h4><?php esc_html_e('What is SmartCompression?', 'shortpixel-image-optimiser'); ?></h4>
-
-                    <?php _e('Images that look just good as the original, but with the smallest possible file size', 'shortpixel-image-optimiser'); ?>
-                    <a href="https://shortpixel.com/blog/introducing-smartcompress/" target="_blank" class="shortpixel-help-link"><?php _e('Learn more', 'shortpixel-image-optimiser'); ?></a>
-                </content>
-
+            <div class='wp-clearfix'>
                 <content class='shortpixel-compression'>
                   <name>
                       <?php esc_html_e('Compression type:','shortpixel-image-optimiser');?>
@@ -81,6 +73,13 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 
                     <?php printf(esc_html__('%s Run a few tests%s to help you decide.', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/online-image-compression" target="_blank">', '</a>'); ?>
                 </info>
+              </content>
+              <content class='smart-compression-explainer' >
+                    <?php echo UIHelper::getIcon('res/images/illustration/robo_info.svg'); ?>
+                    <h4><?php esc_html_e('What is SmartCompression?', 'shortpixel-image-optimiser'); ?></h4>
+
+                    <?php _e('Images that look just good as the original, but with the smallest possible file size', 'shortpixel-image-optimiser'); ?>
+                    <a href="https://shortpixel.com/blog/introducing-smartcompress/" target="_blank" class="shortpixel-help-link"><?php _e('Learn more', 'shortpixel-image-optimiser'); ?></a>
               </content>
             </div>
 

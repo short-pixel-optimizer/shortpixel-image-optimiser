@@ -599,6 +599,9 @@ div.spio-modal-title {
   background-image: url("../images/illustration/cocktail.svg");
   height: 104px;
 }
+.wrap.is-shortpixel-settings-page .setting-tab .shortpixel-compression name {
+  margin-bottom: 10px;
+}
 .wrap.is-shortpixel-settings-page .setting-tab .shortpixel-compression-options label.lossy span {
   border-top-left-radius: 6px;
   border-bottom-left-radius: 6px;
@@ -731,6 +734,10 @@ div.spio-modal-title {
   .wrap.is-shortpixel-settings-page .setting-tab .smart-compression-explainer {
     width: auto;
     margin: 20px 0 12px;
+    float: none;
+  }
+  .wrap.is-shortpixel-settings-page .setting-tab .shortpixel-compression {
+    max-width: none;
   }
 }
 .wrap.is-shortpixel-settings-page a {

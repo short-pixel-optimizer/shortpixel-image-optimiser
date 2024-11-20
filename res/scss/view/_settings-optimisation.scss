@@ -1,6 +1,11 @@
 // Optimisation tab
 .setting-tab
 {
+	.shortpixel-compression {
+		name {
+			margin-bottom: 10px;
+		}
+	}
 	 	.shortpixel-compression-options
 		{
 			  label.lossy span{
@@ -149,13 +154,17 @@
 
 		@include breakpoint(0, 1100px)
 		{
-				 gridbox {
-						display: block;
-				 }
-				 .smart-compression-explainer {
-						width: auto;
-						margin: 20px 0 12px;
-				 }
+			 gridbox {
+					display: block;
+			 }
+			 .smart-compression-explainer {
+					width: auto;
+					margin: 20px 0 12px;
+					float: none;
+			 }
+			.shortpixel-compression {
+				max-width: none;
+			}
 		}
 
 } //setting-tab
