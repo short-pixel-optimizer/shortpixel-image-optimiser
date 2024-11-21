@@ -301,7 +301,7 @@ class ShortPixelSettings
 	InitMenu()
 	{
 		  //var menu_elements = this.root.querySelectorAll('menu ul li a');
-			var menu_elements = this.root.querySelectorAll('[data-link]');
+			var menu_elements = this.root.querySelectorAll('menu [data-link]');
 			this.menu_elements = menu_elements;
 
 			// Bind change event to all menu items.
@@ -377,6 +377,12 @@ class ShortPixelSettings
 				targetLink = targetLink.closest('.anchor-link');
 		 }
 		 var uri = targetLink.href;
+
+		 // If nothing is provided here.
+		 if (typeof uri === 'undefined')
+		 {
+					return;
+		 }
 
 		 var current_tab = this.current_tab;
 		 var params = new URLSearchParams(uri);
