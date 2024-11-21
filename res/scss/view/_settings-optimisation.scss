@@ -1,0 +1,170 @@
+// Optimisation tab
+.setting-tab
+{
+	.shortpixel-compression {
+		name {
+			margin-bottom: 10px;
+		}
+	}
+	 	.shortpixel-compression-options
+		{
+			  label.lossy span{
+					 border-top-left-radius: 6px;
+					 border-bottom-left-radius: 6px;
+					 border: 0px solid;
+				}
+				label.lossless span {
+					border-top-right-radius: 6px;
+					border-bottom-right-radius: 6px;
+					border: 0px solid;
+
+				}
+
+				strong
+				{
+					 line-height: 22px;
+				}
+				.shortpixel-compression-options {
+					display: inline-block;
+			}
+			label {
+					width: 30%;
+					max-width: 180px;
+			//		margin: 0 -2px;
+					font-weight: bold;
+					display: inline-block;
+					margin-right: 1px;
+					cursor: pointer;
+			//		border-right: 1px solid #fff;
+					span {
+							text-align:center;
+							font-size: 16px;
+							padding:8px 0px;
+							display:block;
+							background-color: $blue_default;
+							color:#FFF;
+					}
+					input {
+							display: none;
+							&:checked + span {
+									background-color:$blue_dark;
+							}
+					}
+
+			}
+
+		}
+
+		.smart-compression-explainer
+		{
+			 display: flex;
+			 background-color: #fff;
+			 border-radius: .4rem;
+			 flex-direction: column;
+			 width: 200px;
+			 float: right;
+
+			 h4 { margin: 6px 0; color: #727272; }
+
+			 img {
+				 width: 80px;
+			 }
+			 .shortpixel-help-link { margin-top: 6px; font-weight: 700; }
+		}
+
+		// Resize inputs
+		input[name="resizeWidth"], input[name="resizeHeight"]
+		{
+			 width: 100px;
+			 background: url('../images/icon/arrows-left-right.svg') 4px center no-repeat  #fff;
+			 padding-left: 25px;
+			 border: 1px solid $blue_default;
+
+		}
+
+		input[name="resizeHeight"]
+		{
+			 background-image: url('../images/icon/arrows-up-down.svg')
+		}
+
+		// Visual OR in the resize settings.
+		.cross-border
+		{
+
+			 hr {
+				  border: 2px solid $blue_light;
+					position: absolute;
+					left: 0;
+					right: 0;
+					margin-top: -10px;
+					z-index: 1;
+			 }
+			 .text {
+				  text-align: center;
+					background: #fff;
+					padding: 6px;
+					display: inline-block;
+					z-index: 2;
+					padding: 0 6px;
+					font-size: 16px;
+					position: relative;
+					margin-left: 40%;
+			 }
+		}
+
+
+		.presentation-wrap {
+				padding: 10px;
+				text-align: center;
+				display: flex;
+				justify-content: center;
+				width: 600px;
+				img {
+						margin: auto;
+				}
+				@include breakpoint(0, 1280px)
+				{
+						width: 460px;
+				}
+				@include breakpoint(0, 1140px)
+				{
+							width: 320px;
+				}
+		}
+		.spai-resize-frame {
+				position: absolute;
+				border: 2px dashed #fd1d1d;
+				&:after {
+						font-size: 10px;
+						font-weight: bold;
+						position: absolute;
+						bottom: -15px;
+						right: 0;
+						color: red;
+				}
+		}
+		.resize-options-wrap {
+				margin: 10px 20px 0 20px;
+				float: left;
+		}
+		.resize-type-wrap label {
+				display: inline-block;
+				padding: 15px 0 0 0;
+		}
+
+		@include breakpoint(0, 1100px)
+		{
+			 gridbox {
+					display: block;
+			 }
+			 .smart-compression-explainer {
+					width: auto;
+					margin: 20px 0 12px;
+					float: none;
+			 }
+			.shortpixel-compression {
+				max-width: none;
+			}
+		}
+
+} //setting-tab

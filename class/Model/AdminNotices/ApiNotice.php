@@ -5,9 +5,15 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+use ShortPixel\Controller\ApiKeyController as ApiKeyController;
+
+
 class ApiNotice extends \ShortPixel\Model\AdminNoticeModel
 {
 	protected $key = 'MSG_NO_APIKEY';
+
+  protected $exclude_screens = ['settings_page_wp-shortpixel-settings'];
 
 	public function load()
 	{
@@ -23,7 +29,8 @@ class ApiNotice extends \ShortPixel\Model\AdminNoticeModel
 
 	protected function checkTrigger()
 	{
-			if (\wpSPIO()->settings()->verifiedKey)
+			$keyControl = ApiKeyController::getInstance();
+			if ($keyControl->keyIsVerified())
 			{
 				return false;
 			}
@@ -31,6 +38,17 @@ class ApiNotice extends \ShortPixel\Model\AdminNoticeModel
 			// If not key is verified.
 			return true;
 	}
+
+  protected function checkReset()
+  {
+
+		$keyControl = ApiKeyController::getInstance();
+		if ($keyControl->keyIsVerified())
+		{
+      return true;
+    }
+    return false;
+  }
 
 	protected function getMessage()
 	{

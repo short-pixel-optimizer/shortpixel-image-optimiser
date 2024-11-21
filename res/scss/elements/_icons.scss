@@ -1,0 +1,54 @@
+
+$icon-path: '../images/icon/';
+$illustration-path: '../images/illustration';
+
+$default:  'default.svg';
+$disabled:  'disabled.svg';
+$selected: 'selected.svg';
+
+
+$icons: alert, arrow-right, arrows-left-right, arrows-up-down, box-archive, bulk, chevron, close, cart, dashboard, debug, delivery, exclusions, edit, eye, file, fix, feedback, help, integrations, optimization, processing, notifications, robo, rocket, tools, trash, webp_avif, photo, ok, warning, key, save, switch, help-circle, user;
+
+.shortpixel-icon
+{
+  width: 25px;
+  height: 25px;
+  display: inline-block;
+  background-repeat: no-repeat;
+  background-size: cover;
+  //https://angel-rs.github.io/css-color-filter-generator/
+//  filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(199deg) brightness(105%) contrast(101%);
+  line-height: 25px;
+  vertical-align: middle;
+  margin-right: 4px;
+
+}
+
+@each $icon in $icons {
+
+  .shortpixel-icon.#{$icon} {
+    background-image: url($icon-path + $icon + '.svg');
+  }
+}
+
+.shortpixel-illustration
+{
+
+  display: inline-block;
+  background-repeat: no-repeat;
+  background-size: cover;
+  width: 50px;
+  height: 50px;
+
+  &.wizzard-done
+  {
+      background-image: url($illustration-path + '/wizzard-done.svg');
+      width: 70px;
+      height: 70px;
+
+  }
+  &.cocktail {
+    background-image: url($illustration-path + '/cocktail.svg');
+    height: 104px;
+  }
+}

@@ -40,6 +40,15 @@ class FrontImage
 				$this->loadImageDom();
 		}
 
+		public function __get($attr)
+		{
+				if (property_exists($this, $attr) && ! is_null($attr))
+				{
+							return $this->$attr;
+				}
+				return null;
+		}
+
 		public function loadImageDom()
     {
         if (function_exists("mb_convert_encoding")) {
@@ -161,6 +170,7 @@ class FrontImage
 			 return $data;
 		}
 
+
 		public function getImageBase()
 		{
 				 if (! is_null($this->imageBase))
@@ -278,18 +288,18 @@ class FrontImage
 			{
 				if (! is_null($this->{$attr}))
         {
-					$output .= $attr . '="' . $this->{$attr} . '" ';
+					$output .= $attr . '="' . \esc_attr($this->{$attr}) . '" ';
         }
 			}
 
       // Always output alt tag, because it's important to screen readers and otherwise.
-      $output .= 'alt="' . $this->alt . '" ';
+      $output .= 'alt="' . \esc_attr($this->alt) . '" ';
 
 			// Left over attributes that should be harmless, ie extra image data or other custom tags.
 			$leftAttrs = $this->getImageAttributes();
 			foreach($leftAttrs as $name => $value)
 			{
-	 				$output .= $name . '="' . $value . '" ';
+	 				$output .= $name . '="' . \esc_attr($value) . '" ';
 			}
 
 			$output .= ' > '; // ending image.
@@ -308,7 +318,7 @@ class FrontImage
 			$dontuse = array_merge($dontuse, array('id', 'alt', 'height', 'width', 'srcset', 'sizes', 'class'));
 
 			$attributes = $this->attributes;
-
+Log::addTemp('attributes', $attributes);
 			$leftAttrs = array();
 			foreach($attributes as $name => $value)
 			{

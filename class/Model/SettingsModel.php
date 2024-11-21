@@ -7,80 +7,86 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
-class SettingsModel
+class SettingsModel extends \ShortPixel\Model
 {
-		protected static $instance;
+		private static $instance;
 
 		private $option_name = 'spio_settings';
-		private $state_name = 'spio_states';
+
+		private $updated = false;
 
 		protected $model = array(
-        'apiKey' => array('s' => 'string'), // string
-        'verifiedKey' => array('s' => 'int'), // string
-        'compressionType' => array('s' => 'int'), // int
-        'resizeWidth' => array('s' => 'int'), // int
-        'resizeHeight' => array('s' => 'int'), // int
-        'processThumbnails' => array('s' => 'boolean'), // checkbox
-				'useSmartcrop' => array('s' => 'boolean'),
-        'backupImages' => array('s' => 'boolean'), // checkbox
-        'keepExif' => array('s' => 'int'), // checkbox
-        'resizeImages' => array('s' => 'boolean'),
-        'resizeType' => array('s' => 'string'),
-        'includeNextGen' => array('s' => 'boolean'), // checkbox
-        'png2jpg' => array('s' => 'int'), // checkbox
-        'CMYKtoRGBconversion' => array('s' => 'boolean'), //checkbox
-        'createWebp' => array('s' => 'boolean'), // checkbox
-        'createAvif' => array('s' => 'boolean'),  // checkbox
-        'deliverWebp' => array('s' => 'int'), // checkbox
-        'optimizeRetina' => array('s' => 'boolean'), // checkbox
-        'optimizeUnlisted' => array('s' => 'boolean'), // $checkbox
-        'optimizePdfs' => array('s' => 'boolean'), //checkbox
-        'excludePatterns' => array('s' => 'exception'), //  - processed, multi-layer, so skip
-        'siteAuthUser' => array('s' => 'string'), // string
-        'siteAuthPass' => array('s' => 'string'), // string
-        'frontBootstrap' => array('s' =>'boolean'), // checkbox
-        'autoMediaLibrary' => array('s' => 'boolean'), // checkbox
-        'excludeSizes' => array('s' => 'array'), // Array
-        'cloudflareEmail' => array('s' => 'string'), // string
-        'cloudflareAuthKey' => array('s' => 'string'), // string
-        'cloudflareZoneID' => array('s' => 'string'), // string
-        'cloudflareToken' => array('s' => 'string'),
-        'savedSpace' => array('s' => 'skip'),
-        'fileCount' => array('s' => 'skip'), // int
-        'under5Percent' => array('s' => 'skip'), // int
+//        'apiKey' => array('s' => 'string'), // string
+//        'verifiedKey' => array('s' => 'int'), // string
+        'compressionType' => ['s' => 'int', 'default' => 1], // int
+        'resizeWidth' => ['s' => 'int' , 'default' => 0], // int
+        'resizeHeight' => ['s' => 'int', 'default' => 0], // int
+        'processThumbnails' => ['s' => 'boolean', 'default' => true], // checkbox
+				'useSmartcrop' => ['s' => 'boolean', 'default' => false],
+        'smartCropIgnoreSizes' => ['s' => 'boolean', 'default' => false],
+        'backupImages' => ['s' => 'boolean', 'default' => true], // checkbox
+        'keepExif' => ['s' => 'int', 'default' => 0], // checkbox
+        'resizeImages' => ['s' => 'boolean', 'default' => false],
+        'resizeType' => ['s' => 'string', 'default' => null],
+        'includeNextGen' => ['s' => 'boolean', 'default' =>  false ], // checkbox
+        'png2jpg' => ['s' => 'int', 'default' => 0], // checkbox
+        'CMYKtoRGBconversion' => ['s' => 'boolean', 'default' => true], //checkbox
+        'createWebp' => ['s' => 'boolean', 'default' => false], // checkbox
+        'createAvif' => ['s' => 'boolean', 'default' => false],  // checkbox
+        'deliverWebp' => ['s' => 'int', 'default' => 0], // checkbox
+        'optimizeRetina' => ['s' => 'boolean', 'default' => false], // checkbox
+        'optimizeUnlisted' => ['s' => 'boolean', 'default' => false], // checkbox
+        'optimizePdfs' => ['s' => 'boolean', 'default' => true], //checkbox
+        'excludePatterns' => ['s' => 'exception', 'default' => array()], //  - processed, multi-layer, so skip
+        'siteAuthUser' => ['s' => 'string', 'default' => ''], // string
+        'siteAuthPass' => ['s' => 'string', 'default' => ''], // string
+        'autoMediaLibrary' => ['s' => 'boolean', 'default' => true], // checkbox
+        'excludeSizes' => ['s' => 'array', 'default' => array()], // Array
+        'cloudflareZoneID' => ['s' => 'string', 'default' => ''], // string
+        'cloudflareToken' => ['s' => 'string', 'default' => ''],
+				'doBackgroundProcess' => ['s' => 'boolean', 'default' => false], // checkbox
+				'showCustomMedia' => ['s' => 'boolean', 'default' => true], // checkbox
+				'mediaLibraryViewMode' => ['s' => 'int', 'default' => false], // set in installhelper
+				'currentVersion' => ['s' => 'string', 'default' => null], // last known version of plugin. Used for updating
+				'hasCustomFolders' => ['s' => 'int', 'default' => false], // timestamp used for custom folders
+				'quotaExceeded' => ['s' => 'int', 'default' => 0], // indicator for quota
+				'httpProto' => ['s' => 'string', 'default' => 'https'], // Less than optimal setting for using http(s)
+				'downloadProto' => ['s' => 'string', 'default' => 'https'], // Less than optimal setting for using http(s) when Downloading
+				'activationDate' => ['s' => 'int', 'default' => null], // date of activation
+				'unlistedCounter' => ['s' => 'int', 'default' => 0], // counter to prevent checking unlisted files too much
+				'currentStats' => ['s' => 'array', 'default' => array()], // whatever the current stats are.
+        'currentVersion' => ['s' => 'string', 'default' => ''],
+				'useCDN' => ['s' => 'boolean', 'default' => false],
+				'CDNDomain' => ['s' => 'string', 'default' => 'https://cdn.shortpixel.ai/spio'],
+        'redirectedSettings' => ['s' => 'int', 'default' => 0],
+
     );
 
-		protected $state = array(
-
-		);
-
-		protected $settings;
-		protected $states;
+		private $settings;
 
 		public function __construct()
 		{
-			 $this->checkLegacy();
 			 $this->load();
-
 		}
 
 		public static function getInstance()
 		{
 			 if (is_null(self::$instance))
 			 {
-					self::$instance = new SettingsModel;
+					self::$instance = new static();
 			 }
 			 return self::$instance;
 		}
 
 		protected function load()
 		{
-			 $settings = get_option($this->option_name);
+			 $this->settings = get_option($this->option_name, array());
+			 register_shutdown_function(array($this, 'onShutdown'));
 		}
 
 		protected function save()
 		{
-				update_option($this->option_name, $this->settings);
+				$res = update_option($this->option_name, $this->settings);
 		}
 
 		public function __get($name)
@@ -89,128 +95,77 @@ class SettingsModel
 			 {
 				  return $this->sanitize($name, $this->settings[$name]);
 			 }
+       elseif (isset($this->model[$name]))
+       {
+          return $this->model[$name]['default'];
+       }
+			 else {
+			 	Log::addWarn('Call for non-existing setting: ' . $name);
+			 }
 		}
 
-		protected function checkLegacy()
+    public function __set($name, $value)
+    {
+      $this->set($name, $value);
+    }
+
+    protected function set($name, $value)
+    {
+      if (isset($this->model[$name]))
+      {
+        $this->settings[$name] =  $this->sanitize($name, $value);
+				$this->updated = true;
+      }
+      else {
+         Log::addWarn('Setting ' . $name . ' not defined in settingsModel');
+      }
+    }
+
+    public function setIfEmpty($name, $value)
+    {
+        if (true === $this->exists($name) && false === $this->isset($name))
+        {
+           $this->set($name, $value);
+					 return true;
+        }
+
+				return false;
+    }
+
+		// Simple function which can be expanded.
+		public function exists($name)
 		{
-				$this->deleteLegacy(); // very legacy, unused
-			//	$this->convertLegacy(); // legacy, move to new format.
+			  return (isset($this->model[$name])) ? true : false;
 		}
 
-		public function convertLegacy()
+		public function isset($name)
 		{
-				$options = array(
-		        //optimization options
-		        'apiKey' => array('key' => 'wp-short-pixel-apiKey'),
-		        'verifiedKey' => array('key' => 'wp-short-pixel-verifiedKey'),
-		        'compressionType' => array('key' => 'wp-short-pixel-compression'),
-		        'processThumbnails' => array('key' => 'wp-short-process_thumbnails'),
-						'useSmartcrop' => array('key' => 'wpspio-usesmartcrop'),
-		        'keepExif' => array('key' => 'wp-short-pixel-keep-exif'),
-		        'CMYKtoRGBconversion' => array('key' => 'wp-short-pixel_cmyk2rgb'),
-		        'createWebp' => array('key' => 'wp-short-create-webp'),
-		        'createAvif' => array('key' => 'wp-short-create-avif'),
-		        'deliverWebp' => array('key' => 'wp-short-pixel-create-webp-markup'),
-		        'optimizeRetina' => array('key' => 'wp-short-pixel-optimize-retina'),
-		        'optimizeUnlisted' => array('key' => 'wp-short-pixel-optimize-unlisted'),
-		        'backupImages' => array('key' => 'wp-short-backup_images'),
-		        'resizeImages' => array('key' => 'wp-short-pixel-resize-images'),
-		        'resizeType' => array('key' => 'wp-short-pixel-resize-type'),
-		        'resizeWidth' => array('key' => 'wp-short-pixel-resize-width'),
-		        'resizeHeight' => array('key' => 'wp-short-pixel-resize-height'),
-		        'siteAuthUser' => array('key' => 'wp-short-pixel-site-auth-user'),
-		        'siteAuthPass' => array('key' => 'wp-short-pixel-site-auth-pass'),
-		        'autoMediaLibrary' => array('key' => 'wp-short-pixel-auto-media-library'),
-		        'optimizePdfs' => array('key' => 'wp-short-pixel-optimize-pdfs'),
-		        'excludePatterns' => array('key' => 'wp-short-pixel-exclude-patterns'),
-		        'png2jpg' => array('key' => 'wp-short-pixel-png2jpg'),
-		        'excludeSizes' => array('key' => 'wp-short-pixel-excludeSizes'),
-						'currentVersion' => array('key' => 'wp-short-pixel-currentVersion'),
+			return (isset($this->settings[$name])) ? true : false;
 
-		        //CloudFlare
-		        'cloudflareEmail'   => array( 'key' => 'wp-short-pixel-cloudflareAPIEmail'),
-		        'cloudflareAuthKey' => array( 'key' => 'wp-short-pixel-cloudflareAuthKey'),
-		        'cloudflareZoneID'  => array( 'key' => 'wp-short-pixel-cloudflareAPIZoneID'),
-		        'cloudflareToken'   => array( 'key' => 'wp-short-pixel-cloudflareToken'),
-
-		        //optimize other images than the ones in Media Library
-		        'includeNextGen' => array('key' => 'wp-short-pixel-include-next-gen'),
-		        'hasCustomFolders' => array('key' => 'wp-short-pixel-has-custom-folders'),
-		        'customBulkPaused' => array('key' => 'wp-short-pixel-custom-bulk-paused'),
-
-		        //stats, notices, etc.
-						// @todo Most of this can go. See state machine comment.
-
-		        'currentStats' => array('key' => 'wp-short-pixel-current-total-files'),
-		        'fileCount' => array('key' => 'wp-short-pixel-fileCount'),
-		        'thumbsCount' => array('key' => 'wp-short-pixel-thumbnail-count'),
-		        'under5Percent' => array('key' => 'wp-short-pixel-files-under-5-percent'),
-		        'savedSpace' => array('key' => 'wp-short-pixel-savedSpace'),
-		        'apiRetries' => array('key' => 'wp-short-pixel-api-retries'),
-		        'totalOptimized' => array('key' => 'wp-short-pixel-total-optimized'),
-		        'totalOriginal' => array('key' => 'wp-short-pixel-total-original'),
-		        'quotaExceeded' => array('key' => 'wp-short-pixel-quota-exceeded'),
-		        'httpProto' => array('key' => 'wp-short-pixel-protocol'),
-		        'downloadProto' => array('key' => 'wp-short-pixel-download-protocol'),
-
-						'downloadArchive' => array('key' => 'wp-short-pixel-download-archive'),
-
-		        'activationDate' => array('key' => 'wp-short-pixel-activation-date'),
-		        'mediaLibraryViewMode' => array('key' => 'wp-short-pixel-view-mode'),
-		        'redirectedSettings' => array('key' => 'wp-short-pixel-redirected-settings'),
-		        'convertedPng2Jpg' => array('key' => 'wp-short-pixel-converted-png2jpg'),
-		    );
 		}
 
-		private function deleteLegacy()
+		public function deleteOption($name)
 		{
-			delete_option('wp-short-pixel-activation-notice');
-			delete_option('wp-short-pixel-bulk-last-status'); // legacy shizzle
-			delete_option('wp-short-pixel-current-total-files');
-			delete_option('wp-short-pixel-remove-settings-on-delete-plugin');
+				if ($this->exists($name) && $this->isset($name))
+				{
+					 unset($this->settings[$name]);
+					 $this->save();
+				}
+		}
 
-			// Bulk State machine legacy
-			$bulkLegacyOptions = array(
-					'wp-short-pixel-bulk-type',
-					'wp-short-pixel-bulk-last-status',
-					'wp-short-pixel-query-id-start',
-					'wp-short-pixel-query-id-stop',
-					'wp-short-pixel-bulk-count',
-					'wp-short-pixel-bulk-previous-percent',
-					'wp-short-pixel-bulk-processed-items',
-					'wp-short-pixel-bulk-done-count',
-					'wp-short-pixel-last-bulk-start-time',
-					'wp-short-pixel-last-bulk-success-time',
-					'wp-short-pixel-bulk-running-time',
-					'wp-short-pixel-cancel-pointer',
-					'wp-short-pixel-skip-to-custom',
-					'wp-short-pixel-bulk-ever-ran',
-					'wp-short-pixel-flag-id',
-					'wp-short-pixel-failed-imgs',
-					'bulkProcessingStatus',
-					'wp-short-pixel-prioritySkip',
-			);
 
-			$removedStats = array(
-					'wp-short-pixel-helpscout-optin',
-					'wp-short-pixel-activation-notice',
-					'wp-short-pixel-dismissed-notices',
-					'wp-short-pixel-media-alert',
-			);
-
-			$removedOptions = array(
-					'wp-short-pixel-remove-settings-on-delete-plugin',
-					'wp-short-pixel-custom-bulk-paused',
-					'wp-short-pixel-last-back-action',
-					'wp-short-pixel-front-bootstrap',
-			);
-
-			$toRemove = array_merge($bulkLegacyOptions, $removedStats, $removedOptions);
-
-			foreach($toRemove as $option)
-			{
-				 delete_option($option);
-			}
+    /**
+     * PHP shutdown function, check if settings are updated and save on closing time.
+     * @return null
+     *
+     *  Note: This is public instead of protected /private because of bug in PHP 7.4 not liking that.
+     */
+		public function onShutdown()
+		{
+				if (true === $this->updated)
+				{
+						$this->save();
+				}
 		}
 
 } // class

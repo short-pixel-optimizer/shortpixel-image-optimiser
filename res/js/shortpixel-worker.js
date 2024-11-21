@@ -24,12 +24,12 @@ onmessage = function(e)
      case 'process':
        SpWorker.Process(data);
      break;
-     case 'getItemView':
-       SpWorker.GetItemView(data);
-     break;
      case 'ajaxRequest':
       SpWorker.AjaxRequest(data);
      break;
+		case 'settingsRequest':
+			SpWorker.SettingsRequest(data);
+		break;
 		 case 'updateLocalSecret':
 		  var key = e.data.key;
 		  SpWorker.UpdateLocalSecret(key);
@@ -85,19 +85,27 @@ var SpWorker = {
 					 		console.error('Worker.js reporting issue on catch', error);
 					 }
 					 else {
-					 	console.log('stopped but not complaining!', error);
+						console.log('stopped but not complaining!', error);
+            // This could be a network error ( or user moving away ). Still send response in case of temporary network issues.
+            postMessage({'status' : false, message: error});
+
 					 }
 					return false;
 				});
 
+			if (false === response)
+			{
+				postMessage({'status' : false, response: 'Response is false / network error'});
+				return;
+			}
       if (response.ok)
       {
           var json = await response.json();
-
           postMessage({'status' : true, response: json});
       }
       else if(this && ! this.stopped)
       {
+
 				var text = await response.text();
 				if ( typeof text === 'undefined') // if no, try json
 				{
@@ -107,6 +115,7 @@ var SpWorker = {
 				{
 					  var text = response.status + ' ' + response.statusText;
 				}
+
 				var message = {status: false, http_status: response.status, http_text: text, status_text: response.statusText };
 
 				 if (response.status == 500) // fatal error
@@ -139,16 +148,16 @@ var SpWorker = {
 	 {
 		  this.secret = key;
 	 },
-   GetItemView: function(data)
-   {
-      this.action = 'shortpixel_get_item_view';
-      this.Fetch(data);
-   },
    AjaxRequest: function(data)
    {
       this.action = 'shortpixel_ajaxRequest';
       this.Fetch(data);
    },
+	 SettingsRequest: function(data)
+	 {
+			this.action = 'shortpixel_settingsRequest';
+			this.Fetch(data);
+	 },
    Process: function(data)
    {
       this.action = 'shortpixel_image_processing';

@@ -282,9 +282,10 @@ class DirectoryOtherMediaModel extends DirectoryModel
       $stats = $this->getStats();
       $total_before = $stats['total'];
 
-			if (! $this->checkDirectory(true))
+			if (false === $this->checkDirectory(true))
 			{
-				Log::addWarn('Refreshing directory, something wrong in checkDirectory ' . $this->getPath());
+				Log::addWarn('Refreshing directory, something wrong in checkDirectory ' . $this->getPath(), $this->last_message);
+
 				return false;
 			}
 

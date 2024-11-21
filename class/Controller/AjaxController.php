@@ -20,6 +20,8 @@ use ShortPixel\Helper\InstallHelper as InstallHelper;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Model\AccessModel as AccessModel;
 
+// @todo This should probably become settingscontroller, for saving
+use ShortPixel\Controller\View\SettingsViewController as SettingsViewController;
 
 
 // Class for containing all Ajax Related Actions.
@@ -38,7 +40,7 @@ class AjaxController
     public static function getInstance()
     {
        if (is_null(self::$instance))
-         self::$instance = new AjaxController();
+				 self::$instance = new static();
 
       return self::$instance;
     }
@@ -101,9 +103,8 @@ class AjaxController
       }
     }
 
-    public function ajax_getItemView()
+		protected function getItemView()
     {
-        $this->checkNonce('item_view');
 				// phpcs:ignore -- Nonce is checked
           $type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
 				// phpcs:ignore -- Nonce is checked
@@ -145,7 +146,8 @@ class AjaxController
           $json->$type->is_error = false;
           $json->status = true;
 
-          $this->send($json);
+					return $json;
+				 // $this->send($json);
     }
 
     public function ajax_processQueue()
@@ -224,6 +226,12 @@ class AjaxController
 					break;
 					case 'getItemEditWarning': // Has to do with image editor
 						 $json = $this->getItemEditWarning($json, $data);
+					break;
+					case 'getComparerData':
+							$json = $this->getComparerData($json, $data);
+					break;
+					case 'getItemView':
+							$json = $this->getItemView($json, $data);
 					break;
 					case 'markCompleted':
 						$json = $this->markCompleted($json, $data);
@@ -318,6 +326,10 @@ class AjaxController
 					 		$this->checkActionAccess($action, 'is_editor');
 					 		$json = $this->recheckActive($json, $data);
 					 break;
+					 case 'settings/changemode':
+
+					 		$this->handleChangeMode($data);
+					 break;
            default:
               $json->$type->message = __('Ajaxrequest - no action found', 'shorpixel-image-optimiser');
               $json->error = self::NO_ACTION;
@@ -326,6 +338,58 @@ class AjaxController
         }
         $this->send($json);
     }
+
+		public function settingsRequest()
+		{
+			Log::addTemp('Ajax settings request');
+			$this->checkNonce('settings_request');
+			ErrorController::start(); // Capture fatal errors for us.
+
+			$action = isset($_POST['screen_action']) ? sanitize_text_field($_POST['screen_action']) : false;
+
+			$this->checkActionAccess($action, 'is_admin_user');
+
+			switch($action)
+			{
+					case 'form_submit':
+					case 'action_addkey':
+					case 'action_debug_redirectBulk':
+					case 'action_debug_removePrevented':
+					case 'action_debug_removeProcessorKey':
+					case 'action_debug_resetNotices':
+					case 'action_debug_resetQueue':
+					case 'action_debug_resetquota':
+					case 'action_debug_resetStats':
+					case 'action_debug_triggerNotice':
+					case 'action_request_new_key':
+					case 'action_debug_editSetting':
+					case 'action_end_quick_tour':
+						 $this->settingsFormSubmit($action);
+					break;
+					default:
+
+						Log::addError('Issue with settingsRequest, not valid action');
+						exit('0');
+					break;
+			}
+
+		}
+
+		protected function settingsFormSubmit($action)
+		{
+				 $viewController =  new SettingsViewController();
+				 $viewController->indicateAjaxSave(); // set ajax save method
+				 Log::addTemp('Settings Form Submit Action ' . $action);
+				 if (method_exists($viewController, $action))
+				 {
+						$viewController->$action();
+				 }
+				 else {
+				 		$viewController->load();
+				 }
+
+				 exit('ajaxcontroller - formsubmit');
+		}
 
 		protected function getMediaItem($id, $type)
     {
@@ -461,7 +525,6 @@ class AjaxController
 
     /* Integration for WP /LR Sync plugin  - https://meowapps.com/plugin/wplr-sync/
 		* @integration WP / LR Sync
-    * @todo Test if it works with plugin intergration
     *
     */
     public function onWpLrUpdateMedia($imageId)
@@ -535,6 +598,11 @@ class AjaxController
     protected function finishBulk($json, $data)
     {
        $bulkControl = BulkController::getInstance();
+
+ 			 if ( false !== $bulkControl->getAnyCustomOperation())
+ 			 {
+ 				  $json->redirect = add_query_arg(['page' => 'wp-shortpixel-settings', 'part' => 'tools'], admin_url('options-general.php'));
+ 			 }
 
        $bulkControl->finishBulk('media');
        $bulkControl->finishBulk('custom');
@@ -688,10 +756,22 @@ class AjaxController
 			$this->send($json);
 		}
 
-    /** Data for the compare function */
-    public function ajax_getComparerData() {
+		public function handleChangeMode($data)
+		{
+				$user_id = get_current_user_id();
+				$new_mode = isset($_POST['new_mode']) ? sanitize_text_field($_POST['new_mode']) : false;
 
-        $this->checkNonce('ajax_request');
+				if(false === $new_mode)
+				{
+					 return false;
+				}
+
+				update_user_option($user_id, 'shortpixel-settings-mode', $new_mode);
+
+		}
+
+    /** Data for the compare function */
+		protected function getComparerData($json, $data) {
 
 
         $type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
@@ -845,8 +925,6 @@ class AjaxController
 				// Result is a folder object
 				$result = $otherMedia->addDirectory($path);
 
-
-				// @todo Formulate some response here that can be used on the row thingie.
 				if (false === $result)
 				{
 					 $json->folder->is_error = true;
@@ -1130,7 +1208,7 @@ class AjaxController
 
 		private function removeAllData($json, $data)
 		{
-				if (wp_verify_nonce($_POST['tools-nonce'], 'remove-all'))
+				if (1 === wp_verify_nonce($_POST['tools-nonce'], 'remove-all'))
 				{
 			 		InstallHelper::hardUninstall();
 					$json->settings->results = __('All Data has been removed. The plugin has been deactivated', 'shortpixel-image-optimiser');

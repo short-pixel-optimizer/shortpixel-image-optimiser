@@ -4,6 +4,8 @@ namespace ShortPixel;
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
+
+//return;
 ?>
 
 <div id="spioHelpShade" class="spio-modal-shade" style="display:none;">
@@ -25,6 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 				 	}
 
 				 	$.spioHelpOpen = function(evt) {
+console.log('help open');
 				         //$("#shortPixelProposeUpgrade .spio-modal-body").html("");
 				         $("#spioHelpShade").css("display", "block");
 				         $("#spioHelp .spio-modal-body iframe").attr('src',  evt.target.dataset.link);

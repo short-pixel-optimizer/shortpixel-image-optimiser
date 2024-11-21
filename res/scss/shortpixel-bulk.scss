@@ -1,19 +1,30 @@
-.shortpixel-bulk-wrapper
+// Font family not working in wraps
+@import 'elements/fonts';
+
+
+// Root element
+.wrap.is-shortpixel-bulk-page
 {
 	@import 'elements/colors';
 	@import 'elements/animation';
+	@import 'elements/mixins';
+	@import 'elements/header';
+	@import 'elements/icons';
+
+	@import 'bulk/dashboard';
 
   /** GENERAL STYLES **/
-    h1 {
+  /*  h1 {
       font-size: 23px;
       font-weight: 400;
       line-height: 30px;
       margin: 30px 0;
-    }
+    } */
 
     h3.heading {
       margin: 15px 0 15px 0px;
-      padding-left: 10px;
+      padding-left: 15px;
+      padding-bottom: 12px;
       font-size: 20px;
       font-weight: 400;
       line-height: 42px;
@@ -50,19 +61,18 @@
 			letter-spacing: 0.3px;
 			font-weight: 700;
 			font-size: 14px;
-			transition: 300ms all linear;
-			border: 1px solid $color-darkest;
+            border-radius: 6px;
+            border: none;
+            transition: all 0.1s ease-in-out;
 			min-height: 44px;
 
 			&:hover {
-
 				background: $color-dark;
 				color: #fff;
-				border: 1px solid $color-dark;
 
 			}
 			&:focus {
-				border-color: $color-dark;
+
 				background: $color-dark;
 			}
 			.dashicons
@@ -82,11 +92,17 @@
 
     .button-primary
     {
-      background: $color-darkest;
+      background: $blue_default;
       color: #fff;
-      border: 1px solid $color-darkest;
-      border-radius: 3px;
-      box-shadow: 0px 1px 1px rgba(171, 170, 170, 0.3);
+      border-radius: 6px;
+      border: none;
+      transition: all 0.1s ease-in-out;
+      &:hover {
+
+        background: lighten($blue_default, 10%);
+        //transform: scale(1.02);
+
+      }
     }
 
 		nav {
@@ -184,10 +200,11 @@
 
     .screen-wrapper
     {
-        background: #fff;
-        width: 90%;
+  //      background: #fff;
+        width: 100%;
         min-height: 80vh;
         position: relative;
+	margin-top: 20px;
       //  overflow: hidden;
 
         .shortpixel-bulk-loader
@@ -244,9 +261,10 @@
         opacity: 0;
         transition: opacity 500ms ease-in;
         margin: 15px 0;
-
-				padding-bottom: 35px;
-
+	padding-bottom: 35px;
+	background: #fff;
+	border-radius: 16px;
+	box-shadow: 1px 0px 4px 0px rgba(0, 0, 0, 0.12);
 
         &.active
         {
@@ -254,6 +272,8 @@
             opacity: 1;
             z-index: 5;
             position: relative;
+            width: 95%;
+            margin: auto;
           //  box-shadow: 4px 4px 8px #116C7D;
         }
         .panel-container
@@ -303,8 +323,8 @@
        display: none;
        //top: 0;
     //   height: 50px;
-			 margin: 25px 0;
-       width: 90%;
+       margin: 25px auto;
+       width: 95%;
        background: rgba(31, 190,201, 1);
        border: 1px solid #ccc;
        font-size: 26px;
@@ -312,7 +332,7 @@
        padding: 26px 0;
        text-align: center;
        z-index: 10;
-       border-radius: 3px;
+       border-radius: 16px;
        cursor: pointer;
        transition: all 900ms;
        &:hover {
@@ -340,9 +360,9 @@
 			//	 border: 1px solid #ccc;
 				 line-height: 26px;
 				 padding: 20px 0;
-				 border-radius: 3px;
-				 margin: 25px 0;
-				 width: 90%;
+				 border-radius: 16px;
+				 margin: 25px auto;
+				 width: 95%;
 				 text-align: center;
 				 h3 {
 					font-size: 26px;
@@ -359,118 +379,7 @@
 
 		 }
 
-/**** DASHBOARD ***/
-    section.panel.dashboard
-    {
-       h3.heading { border:0 ;
-        }
 
-
-       .bulk-wrapper
-       {
-            background: url('../img/bulk/dashboard-background.svg') no-repeat;
-            background-size: cover;
-            background-position: center;
-            background-color: #116C7D;
-            text-align: center;
-            height: 150px;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            .dashboard-image {
-
-              z-index: 1;
-              position: absolute;
-              left: 0; right: 0;
-
-            }
-            button
-            {
-               color: #ffffff;
-               //background: linear-gradient(to left, $color-darkest, $color-dark);
-               border-radius: 3px;
-               width: 250px;
-               height: 65px;
-               transition: all 0.5s linear;
-							 font-weight: 700;
-						//	 font-size: 16px;
-							 letter-spacing: 0.3px;
-							 border: 1px solid #ccc;
-
-               &:hover
-               {
-                //  background: linear-gradient(to left, #3b9ea5, #50d9e2);
-								background:  $color-darkest;
-								//	  background: linear-gradient(to left, $color-dark, $color-darkest);
-									height: 80px;
-									width: 300px;
-
-                  transition: all 1s linear;
-
-								//	color: #000;
-				//	transition: all 0.5s linear;
-               }
-               &:disabled {
-                 color: #ccc;
-                 background: #0e5358;
-               }
-               span
-               {
-								 margin-right: 16px;
-                 // vertical-align: middle;
-               }
-            }
-       } // bulk wrapper
-
-			 .dashboard-text {
-				  margin: 0 auto;
-					width: 50%;
-					p {
-						line-height: 25px;
-					}
-			 }
-
-       .dashboard-log
-       {
-          display: table;
-          width: 80%;
-          margin: 0 auto;
-          h3 { display: table-caption; text-align: center;}
-          > div {
-            display: table-row;
-            > span { display: table-cell; padding: 8px 8px 8px 0; }
-          }
-          .head
-          {
-            span {
-              font-weight: 700;
-              padding-left: 15px;
-            }
-          }
-          .data
-          {
-            span {
-              border-bottom: 1px solid #EBF5FF;
-              border-top: 1px solid #EBF5FF;
-              &:first-child { border-left: 1px solid #EBF5FF; }
-              &:last-child {  border-right: 1px solid #EBF5FF; }
-              font-size: 15px;
-              padding-left: 10px;
-              &.date {
-                 color: #1FBEC9;
-                 background: url('../img/bulk/checkmark.svg') left center no-repeat;
-                 padding-left: 29px;
-              }
-            }
-						&.custom
-						{
-
-						}
-          }
-       }
-
-    } // Section
 
     section.spio-progressbar
     {
@@ -816,7 +725,7 @@
            .red { color: #ff0000; }
          }
          button {
-           background: #F5F5F5;
+           background: $color-brokenwhite;
            color: #1FBEC9;
            border: 1px solid #1FBEC9;
            border-radius: 3px;
@@ -912,6 +821,10 @@
         .heading {
            background: #F6F9FF;
            border: 1px solid #EBF5FF;
+					 .special-op
+					 {
+						  color: #EC2C25;
+					 }
         }
 
         .line-progressbar

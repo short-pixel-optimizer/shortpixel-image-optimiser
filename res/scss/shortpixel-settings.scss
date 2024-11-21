@@ -1,7 +1,30 @@
 
-@import 'view/settings';
-@import 'view/settings-advanced';
-@import 'view/settings-cloudflare';
-@import 'view/settings-tools';
+
+// Font family not working in wraps
+@import 'elements/fonts';
+
+// This one loads at end of body, so needs global as well
 @import 'view/inline-help';
-@import 'view/settings-multi'; 
+
+.wrap.is-shortpixel-settings-page
+{
+
+  @import 'elements/colors';
+  @import 'elements/breakpoints';
+  @import 'elements/mixins';
+  @import 'view/settings-structure';
+  @import 'elements/header';
+  @import 'elements/icons';
+  @import 'view/settings-optimisation';
+  @import 'view/settings';
+  @import 'view/settings-overview';
+  @import 'view/settings-advanced';
+  @import 'view/settings-exclusions';
+  @import 'view/settings-onboarding';
+  @import 'view/settings-integrations';
+  @import 'view/settings-tools';
+
+
+  @import 'elements/setting';
+
+}

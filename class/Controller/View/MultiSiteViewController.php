@@ -10,19 +10,23 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Helper\UiHelper as UiHelper;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
-
-
+use ShortPixel\Model\MultiSettingsModel as MultiSettingsModel;
 
 class MultiSiteViewController extends \ShortPixel\ViewController
 {
 
       protected $template = 'view-network-settings'; // template name to include when loading.
-      protected $form_action = 'save-settings';
+      protected $form_action = 'save-multi-settings';
 
+
+      public function __construct()
+      {
+         $this->model = new MultiSettingsModel();
+      }
 
       public function load()
       {
-          $this->view->settings = $this->loadSettings();
+        //  $this->view->settings = $this->loadSettings();
 
           $this->loadView();
       }

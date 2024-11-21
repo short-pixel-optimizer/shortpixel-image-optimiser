@@ -23,7 +23,7 @@ class InstallHelper
   public static function activatePlugin()
   {
       self::deactivatePlugin();
-      $settings = \wpSPIO()->settings();
+
 
       $env = wpSPIO()->env();
 
@@ -40,13 +40,13 @@ class InstallHelper
       $q = $optimizeController->getQueue('media');
       $q->getShortQ()->install(); // create table.
 
+      $settings = \wpSPIO()->settings();
 			$settings->currentVersion = SHORTPIXEL_IMAGE_OPTIMISER_VERSION;
   }
 
   public static function deactivatePlugin()
   {
-
-    $settings = \wpSPIO()->settings();
+    $settings = new \WPShortPixelSettings(); // \wpSPIO()->settings();
 		$settings::onDeactivate();
 
     $env = wpSPIO()->env();
@@ -64,7 +64,7 @@ class InstallHelper
      $log->delete();
 
     global $wpdb;
-    $sql = "delete from " . $wpdb->options . " where option_name like '%_transient_shortpixel%'";
+    $sql = "delete from " . $wpdb->options . " where option_name like '%_transient_shortpixel%' or option_name like '%_transient_timeout_shortpixel%'";
     $wpdb->query($sql); // remove transients.
 
 		// saved in settings object, reset all stats.
@@ -82,14 +82,14 @@ class InstallHelper
 		delete_transient('avif_server_check');
 		delete_transient('quotaData');
 
+
   }
 
  // Removes everything  of SPIO 5.x .  Not recommended.
 	public static function hardUninstall()
 	{
 		$env = \wpSPIO()->env();
-		$settings = \wpSPIO()->settings();
-
+    $settings = new \WPShortPixelSettings(); // \wpSPIO()->settings();
 
 		$nonce = (isset($_POST['tools-nonce'])) ? sanitize_key($_POST['tools-nonce']) : null;
 		if ( ! wp_verify_nonce( $nonce, 'remove-all' ) ) {
@@ -103,6 +103,8 @@ class InstallHelper
 		BulkController::uninstallPlugin();
 
 		$settings::resetOptions();
+    // new settings
+    delete_option('spio_settings');
 
 		if (! $env->is_nginx)
 		{
@@ -232,7 +234,6 @@ class InstallHelper
 			if (self::checkTableExists('shortpixel_postmeta') === true)
 			{
 					$sql = 'DROP TABLE  ' . $wpdb->prefix . 'shortpixel_postmeta';
-					error_log('Dropping postmeta' . $sql);
 					$wpdb->query($sql);
 			}
 	}

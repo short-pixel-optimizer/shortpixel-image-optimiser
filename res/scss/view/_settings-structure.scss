@@ -1,0 +1,329 @@
+
+
+
+	&.simple, &.page-quick-tour
+	{
+		 .is-advanced
+		 {
+			  display: none;
+		 }
+		 #viewmode-toggle .advanced { display: none; }
+	}
+
+	&.advanced
+	{
+		 #viewmode-toggle .simple { display: none; }
+	}
+
+	&.onboarding
+	{
+		 menu { display: none } // remove the menu
+		 .shortpixel-settings section.wrapper { margin: 0 auto; } // center the wrapper.
+	}
+
+
+.shortpixel-settings // main article wrapper. Items for settings minus header.
+{
+
+	  width: 95%;
+		display: flex;
+		background: #fff;
+		border-radius: 16px;
+		margin: 10px auto;
+		box-shadow: 1px 0px 4px 0px rgba(0, 0, 0, 0.12);
+
+		// Items for whole page
+
+		button, .button-setting
+		{
+			 @include shortpixel-button;
+		}
+
+
+		.mobile-menu
+		{
+			 display: none;
+			 input { display: none; }
+
+		}
+		menu { // left-hand menu.
+			 width: 25%;
+			 max-width: 220px;
+			 padding-left: 25px;
+
+			 ul {
+				  list-style: none;
+				  border-bottom: 2px solid;
+  				  border-color: $blue_light;
+				  padding-bottom: 4px;
+					li {
+					//	border: 1px solid #ccc;
+						margin: 6px 0;
+						text-align: left;
+
+							a {
+								padding: 6px 4px;
+
+								font-size: 1rem;
+								font-weight: 700;
+								color: $blue_dark;
+								text-decoration: none;
+								display: inline-block;
+								width: 100%;
+								//box-sizing: border-box;
+
+								i {
+									margin-right: 8px;
+									width: 16px;
+									height: 16px;
+									filter: none;
+								}
+								&.active {
+									// background: $color-darkest;
+							 	  	color: $blue_default;
+									i {
+									//	filter: $filter_black;
+									}
+								}
+								&:focus {
+									box-shadow: none;
+								}
+							}
+
+					}
+
+			 }
+			 div.adv_switcher {
+				padding-top: 20px;
+				padding-left: 5px;
+				padding-bottom: 20px;
+				font-size: 1rem;
+				font-weight: bold;
+				border-bottom: 2px solid;
+				border-color: $blue_light;
+			}
+		}
+		section.wrapper // wrapper of the settings tab.
+		{
+			 width: calc(100% - 25% - 5%);
+//			 margin-left: 5%;
+//			 margin-top: 25px;
+			 margin: 25px 0 25px 5%;
+
+			 .setting-tab
+			 {
+					color: #333;
+					z-index: 2;
+					display: none;
+					&.active {
+							position: relative;
+							display: block;
+			 		}
+
+					settinglist
+					{
+						h2 { // title
+							 font-size: 24px;
+							 font-family: 'Roboto';
+							 font-weight: 700;
+							 outline: 0;
+							 text-decoration: none;
+							 color: $color-darkest;
+						}
+						h3 {
+							  font-size: 18px;
+								font-family: 'Roboto';
+								font-weight: 700;
+						}
+					} // settinglist
+				 i.shortpixel-icon.save, i.shortpixel-icon.bulk {
+					 width: 15px;
+					 height: 15px;
+					 //margin-bottom: 5px;
+					 vertical-align: text-top;
+				 }
+				 div.save button {
+					 padding: 10px 12px;
+					 font-size: 14px;
+					 height: 40px;
+						 i.bulk {
+		 					filter: brightness(0%) invert(1);
+		 				}
+				 }
+				 @include breakpoint(0, $wordpress-mobile)
+				 {
+						 div.save{
+								text-align: center;
+								button
+								{
+									width: 80%;
+									display: inline-block;
+									margin: 10px auto;
+						 		}
+							}
+				 }
+				//div.save button.save-bulk
+			}
+		} // section.wrapper
+		settinglist
+		{
+			 display: block;
+		}
+
+		flexbox {
+			 display: flex;
+
+			 &.width_half {
+				 > *
+				 {
+					 width: 50%;
+				 }
+			 }
+
+			 &.column
+			 {
+				  flex-direction: column;
+			 }
+		}
+		gridbox
+		{
+			 display: grid;
+			 &.width_half
+			 {
+				 grid-template-columns: repeat(2, 50%);
+				 setting:nth-child(odd) {
+					 margin-right: 15px;
+				 }
+
+			 }
+			 &.width_70
+			 {
+				  grid-template-columns:  70% 30%;
+					column-gap: 50px;
+			 }
+			 &.width_60
+			 {
+					grid-template-columns:  60% 40%;
+					column-gap: 5%;
+			 }
+
+		}
+} // shortpixel-settings
+
+
+// Responsive
+@include breakpoint(0, 1200px)
+{
+		.shortpixel-settings {
+			 width: 100%;
+			 menu
+			 {
+					div.adv_switcher
+					{
+						 font-size: 14px;
+					}
+			 }
+			 section.wrapper {
+					width: 85%;
+					margin-left: 3%;
+			 }
+		}
+}
+
+// 782px is when WordPress breaks to mobile menu's.
+@include breakpoint(0, $wordpress-mobile)
+{
+		header {
+				position: fixed;
+				top: 46px;
+				width: 100%;
+				height: 65px;
+				margin-top: 0;
+				left: 0;
+				z-index: 10;
+				box-sizing: border-box;
+				h1 img
+				{
+					height: 40px;
+					margin-top: 15px;
+					margin-left: 45px;
+				}
+				.top-buttons {
+					margin-top: 10px;
+					& a.header-button i {
+						margin-right: 0px;
+					}
+					& a.header-button name {
+						display: none;
+					}
+				}
+		}
+		// make space for the header
+		.wp-header-end {
+			 margin-top: 65px;
+		}
+		.shortpixel-settings
+		{
+			 .mobile-menu {
+					display: block;
+					position: fixed;
+					cursor: pointer;
+					z-index: 11;
+					img {
+						width: 32px;
+						height: 32px;
+					}
+					&.closed
+					{
+						 span.close {
+								display: none;
+						 }
+					}
+					&.opened {
+						 span.open {
+							 display: none;
+						 }
+						 span.close img {
+						 	width: 22px;
+						 	height: 22px;
+							margin-left: 5px;
+							margin-top: 5px;
+						}
+					}
+
+					top: 60px;
+					left: 5px;
+			 }
+			 .mobile-menu.opened + menu {
+					display: block;
+			 }
+			 /*.mobile-menu input:checked {
+					border: 1px solid #000;
+			 } */
+			 menu {
+				 position: fixed;
+				 display: none;
+				 left: 0;
+				 top: 111px;
+				 z-index: 10;
+				 background: #fff;
+				 padding: 8px;
+				 max-width: none;
+				 width: auto;
+				 margin-top: 0;
+			 }
+			 section.wrapper
+			 {
+					width: 95%;
+			 }
+		}
+		info {
+			max-width: 290px;
+		}
+		.ajax-save-done {
+			left: 10%;
+			& .shortpixel-icon.ok {
+				margin: 15px 6px;
+			}
+		}
+}

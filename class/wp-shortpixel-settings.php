@@ -1,9 +1,12 @@
 <?php
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
+use ShortPixel\Model\SettingsModel as SettingsModel;
+
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
+
 
 /** Settings Model **/
 class WPShortPixelSettings extends \ShortPixel\Model {
@@ -21,7 +24,7 @@ class WPShortPixelSettings extends \ShortPixel\Model {
 
     private static $_optionsMap = array(
         //This one is accessed also directly via get_option
-        'frontBootstrap' => array('key' => 'wp-short-pixel-front-bootstrap', 'default' => null, 'group' => 'options'), //set to 1 when need the plugin active for logged in user in the front-end
+    //    'frontBootstrap' => array('key' => 'wp-short-pixel-front-bootstrap', 'default' => null, 'group' => 'options'), //set to 1 when need the plugin active for logged in user in the front-end
       //  'lastBackAction' => array('key' => 'wp-short-pixel-last-back-action', 'default' => null, 'group' => 'state'), //when less than 10 min. passed from this timestamp, the front-bootstrap is ineffective.
 
         //optimization options
@@ -54,15 +57,15 @@ class WPShortPixelSettings extends \ShortPixel\Model {
 				'showCustomMedia' => array('key' => 'wp-short-pixel-show-custom-media', 'default' => 1, 'group' => 'options'),
 
         //CloudFlare
-        'cloudflareEmail'   => array( 'key' => 'wp-short-pixel-cloudflareAPIEmail', 'default' => '', 'group' => 'options'),
-        'cloudflareAuthKey' => array( 'key' => 'wp-short-pixel-cloudflareAuthKey', 'default' => '', 'group' => 'options'),
+        /*'cloudflareEmail'   => array( 'key' => 'wp-short-pixel-cloudflareAPIEmail', 'default' => '', 'group' => 'options'),
+        'cloudflareAuthKey' => array( 'key' => 'wp-short-pixel-cloudflareAuthKey', 'default' => '', 'group' => 'options'), */
         'cloudflareZoneID'  => array( 'key' => 'wp-short-pixel-cloudflareAPIZoneID', 'default' => '', 'group' => 'options'),
         'cloudflareToken'   => array( 'key' => 'wp-short-pixel-cloudflareToken', 'default' => '', 'group' => 'options'),
 
         //optimize other images than the ones in Media Library
         'includeNextGen' => array('key' => 'wp-short-pixel-include-next-gen', 'default' => null, 'group' => 'options'),
         'hasCustomFolders' => array('key' => 'wp-short-pixel-has-custom-folders', 'default' => false, 'group' => 'options'),
-        'customBulkPaused' => array('key' => 'wp-short-pixel-custom-bulk-paused', 'default' => false, 'group' => 'options'),
+        //'customBulkPaused' => array('key' => 'wp-short-pixel-custom-bulk-paused', 'default' => false, 'group' => 'options'),
 
         //uninstall
   //      'removeSettingsOnDeletePlugin' => array('key' => 'wp-short-pixel-remove-settings-on-delete-plugin', 'default' => false, 'group' => 'options'),
@@ -70,13 +73,13 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         //stats, notices, etc.
 				// @todo Most of this can go. See state machine comment.
         'currentStats' => array('key' => 'wp-short-pixel-current-total-files', 'default' => null, 'group' => 'state'),
-        'fileCount' => array('key' => 'wp-short-pixel-fileCount', 'default' => 0, 'group' => 'state'),
+      //  'fileCount' => array('key' => 'wp-short-pixel-fileCount', 'default' => 0, 'group' => 'state'),
         'thumbsCount' => array('key' => 'wp-short-pixel-thumbnail-count', 'default' => 0, 'group' => 'state'),
-        'under5Percent' => array('key' => 'wp-short-pixel-files-under-5-percent', 'default' => 0, 'group' => 'state'),
-        'savedSpace' => array('key' => 'wp-short-pixel-savedSpace', 'default' => 0, 'group' => 'state'),
-        'apiRetries' => array('key' => 'wp-short-pixel-api-retries', 'default' => 0, 'group' => 'state'),
-        'totalOptimized' => array('key' => 'wp-short-pixel-total-optimized', 'default' => 0, 'group' => 'state'),
-        'totalOriginal' => array('key' => 'wp-short-pixel-total-original', 'default' => 0, 'group' => 'state'),
+        //'under5Percent' => array('key' => 'wp-short-pixel-files-under-5-percent', 'default' => 0, 'group' => 'state'),
+    //    'savedSpace' => array('key' => 'wp-short-pixel-savedSpace', 'default' => 0, 'group' => 'state'),
+       // 'apiRetries' => array('key' => 'wp-short-pixel-api-retries', 'default' => 0, 'group' => 'state'),
+      //  'totalOptimized' => array('key' => 'wp-short-pixel-total-optimized', 'default' => 0, 'group' => 'state'),
+      //  'totalOriginal' => array('key' => 'wp-short-pixel-total-original', 'default' => 0, 'group' => 'state'),
         'quotaExceeded' => array('key' => 'wp-short-pixel-quota-exceeded', 'default' => 0, 'group' => 'state'),
         'httpProto' => array('key' => 'wp-short-pixel-protocol', 'default' => 'https', 'group' => 'state'),
         'downloadProto' => array('key' => 'wp-short-pixel-download-protocol', 'default' => null, 'group' => 'state'),
@@ -86,9 +89,11 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         'activationDate' => array('key' => 'wp-short-pixel-activation-date', 'default' => null, 'group' => 'state'),
         'mediaLibraryViewMode' => array('key' => 'wp-short-pixel-view-mode', 'default' => false, 'group' => 'state'),
         'redirectedSettings' => array('key' => 'wp-short-pixel-redirected-settings', 'default' => null, 'group' => 'state'),
-        'convertedPng2Jpg' => array('key' => 'wp-short-pixel-converted-png2jpg', 'default' => array(), 'group' => 'state'),
+      //  'convertedPng2Jpg' => array('key' => 'wp-short-pixel-converted-png2jpg', 'default' => array(), 'group' => 'state'),
 				'unlistedCounter' => array('key' => 'wp-short-pixel-unlisted-counter', 'default' => 0, 'group' => 'state'),
     );
+
+
 
     // This  array --  field_name -> (s)anitize mask
     protected $model = array(
@@ -115,18 +120,17 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         'excludePatterns' => array('s' => 'exception'), //  - processed, multi-layer, so skip
         'siteAuthUser' => array('s' => 'string'), // string
         'siteAuthPass' => array('s' => 'string'), // string
-        'frontBootstrap' => array('s' =>'boolean'), // checkbox
+      //  'frontBootstrap' => array('s' =>'boolean'), // checkbox
         'autoMediaLibrary' => array('s' => 'boolean'), // checkbox
         'doBackgroundProcess' => array('s' => 'boolean'), // checkbox
         'excludeSizes' => array('s' => 'array'), // Array
-        'cloudflareEmail' => array('s' => 'string'), // string
-        'cloudflareAuthKey' => array('s' => 'string'), // string
+      //  'cloudflareEmail' => array('s' => 'string'), // string
+      //  'cloudflareAuthKey' => array('s' => 'string'), // string
         'cloudflareZoneID' => array('s' => 'string'), // string
         'cloudflareToken' => array('s' => 'string'),
-        'savedSpace' => array('s' => 'skip'),
-        'fileCount' => array('s' => 'skip'), // int
-        'under5Percent' => array('s' => 'skip'), // int
+
 				'showCustomMedia' => array('s' => 'boolean'),
+        'currentStats' => array('s' => 'array')
     );
 
       public static function resetOptions() {
@@ -137,20 +141,36 @@ class WPShortPixelSettings extends \ShortPixel\Model {
     }
 
     public static function onActivate() {
-        if(!self::getOpt('wp-short-pixel-verifiedKey', false)) {
+        /*if(!self::getOpt('wp-short-pixel-verifiedKey', false)) {
             update_option('wp-short-pixel-activation-notice', true, 'no');
-        }
+        } */
         update_option( 'wp-short-pixel-activation-date', time(), 'no');
 
-			  delete_option( 'wp-short-pixel-bulk-last-status'); // legacy shizzle
         delete_option( 'wp-short-pixel-current-total-files');
-				delete_option('wp-short-pixel-remove-settings-on-delete-plugin');
+				//delete_option('wp-short-pixel-remove-settings-on-delete-plugin');
 
+        /*
 				if (isset(self::$_optionsMap['removeSettingsOnDeletePlugin']) && isset(self::$_optionsMap['removeSettingsOnDeletePlugin']['key']))
 				{
         	delete_option(self::$_optionsMap['removeSettingsOnDeletePlugin']['key']);
-				}
+				} */
 
+        $settingsModel = SettingsModel::getInstance();
+				$updated = false;
+
+				foreach(self::$_optionsMap as $option_name => $data)
+				{
+					 $value = self::getOpt($data['key'], $data['default']);
+					 $bool = $settingsModel->setIfEmpty($option_name, $value);
+
+					 // Remove setting if set, or if it doesn't exist in model anymore
+					 if (true === $bool || false === $settingsModel->exists($option_name))
+					 {
+              Log::AddTrace('Would delete non-existing? setting ' . $option_name);
+						 // delete_option($data['key']);
+					 		$updated = true;
+					 }
+				}
 
 
     }
@@ -198,14 +218,28 @@ class WPShortPixelSettings extends \ShortPixel\Model {
 						'wp-short-pixel-front-bootstrap',
 				);
 
-				$toRemove = array_merge($bulkLegacyOptions, $removedStats, $removedOptions);
+        // Settings completely removed during the settings redo
+        $settingsRevamp = [
+          'wp-short-pixel-cloudflareAPIEmail',
+          'wp-short-pixel-cloudflareAuthKey',
+          'wp-short-pixel-front-bootstrap',
+					'wp-short-pixel-api-retries',
+					'wp-short-pixel-total-optimized',
+					'wp-short-pixel-total-original',
+					'wp-short-pixel-download-archive',
+					'wp-short-pixel-converted-png2jpg',
+          'wp-short-pixel-savedSpace',
+          'wp-short-pixel-fileCount',
+          'wp-short-pixel-files-under-5-percent',
+        ];
+
+				$toRemove = array_merge($bulkLegacyOptions, $removedStats, $removedOptions, $settingsRevamp);
 
 				foreach($toRemove as $option)
 				{
 					 delete_option($option);
 				}
     }
-
 
     public function __get($name)
     {

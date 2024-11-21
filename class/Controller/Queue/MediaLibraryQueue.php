@@ -8,6 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ShortPixel\ShortQ\ShortQ as ShortQ;
 use ShortPixel\Controller\CacheController as CacheController;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+use ShortPixel\Model\Image\ImageModel as ImageModel;
 
 
 class MediaLibraryQueue extends Queue
@@ -45,11 +46,17 @@ class MediaLibraryQueue extends Queue
 
    protected function prepare()
    {
-
       $items = $this->queryPostMeta();
       return $this->prepareItems($items);
-
    }
+
+   protected function prepareBulkRestore()
+   {
+      $items = $this->queryOptimizedItems();
+      return $this->prepareItems($items);
+   }
+
+
 
    private function queryPostMeta()
    {
@@ -74,12 +81,10 @@ class MediaLibraryQueue extends Queue
      $sqlmeta = $wpdb->prepare($sqlmeta, $prepare);
      $results = $wpdb->get_col($sqlmeta);
 
-     $fs = \wpSPIO()->filesystem();
      $items = array();
-
      foreach($results as $item_id)
      {
-          $items[] = $item_id; 
+          $items[] = $item_id;
      }
 
      // Remove failed object, ie if getImage returned false.
@@ -87,10 +92,38 @@ class MediaLibraryQueue extends Queue
 
    }
 
-  /* public function queueToMediaItem($queueItem)
+   private function queryOptimizedItems()
    {
-      $id = $queueItem->id;
-      return $fs->getMediaImage($id);
-   } */
+     $last_id = $this->getStatus('last_item_id');
+     $limit = $this->q->getOption('enqueue_limit');
+     $prepare = array();
+     global $wpdb;
+
+     $sql = 'SELECT distinct attach_id from ' . $wpdb->prefix . 'shortpixel_postmeta where status = %d ';
+     $prepare[] = ImageModel::FILE_STATUS_SUCCESS;
+
+     if ($last_id > 0)
+     {
+        $sql .= " and attach_id < %d ";
+        $prepare [] = intval($last_id);
+     }
+
+     $sql .= ' order by attach_id DESC LIMIT %d ';
+     $prepare[] = $limit;
+
+     $sql = $wpdb->prepare($sql, $prepare);
+
+     $results = $wpdb->get_col($sql);
+
+     $items = array();
+
+     foreach($results as $item_id)
+     {
+        $items[] = $item_id;
+     }
+
+     return array_filter($items);
+
+   }
 
 }

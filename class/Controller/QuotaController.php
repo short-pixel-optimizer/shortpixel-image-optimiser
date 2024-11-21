@@ -52,7 +52,6 @@ class QuotaController
           return $this->quotaData;
 
         $cache = new CacheController();
-
         $cacheData = $cache->getItem(self::CACHE_NAME);
 
         if (! $cacheData->exists() )
@@ -102,6 +101,7 @@ class QuotaController
                 'remaining' => $quotaData['APICallsQuotaOneTimeNumeric'] - $quotaData['APICallsMadeOneTimeNumeric'],
               ],
           ];
+
 
           $quota->total = (object) [
               'total' => $quota->monthly->total + $quota->onetime->total,
@@ -192,7 +192,6 @@ class QuotaController
           $apiKey = $keyControl->forceGetApiKey();
         }
 
-
         $settings = \wpSPIO()->settings();
 
           if($settings->httpProto != 'https' && $settings->httpProto != 'http') {
@@ -200,6 +199,7 @@ class QuotaController
           }
 
           $requestURL = $settings->httpProto . '://' . SHORTPIXEL_API . '/v2/api-status.php';
+
           $args = array(
               'timeout'=> 15, // wait for 15 secs.
               'body' => array('key' => $apiKey)
@@ -240,9 +240,11 @@ class QuotaController
               $args['body']['pass'] = stripslashes($settings->siteAuthPass);
               $argsStr .= '&user=' . urlencode($args['body']['user']) . '&pass=' . urlencode($args['body']['pass']);
           }
+          /* TF?
           if($settings !== false) {
+
               $args['body']['Settings'] = $settings;
-          }
+          } */
 
           $time = microtime(true);
           $comm = array();

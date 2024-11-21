@@ -1,13 +1,30 @@
 <?php
 namespace ShortPixel;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+use ShortPixel\Helper\UiHelper as UiHelper;
 
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 ?>
 
+<hr class="wp-header-end">
+
+<div class="wrap is-shortpixel-bulk-page">
+<header>
+  <h1>
+      <?php echo UIHelper::getIcon('res/images/illustration/logo_settings.svg'); ?>
+      <?php //esc_html_e('ShortPixel Plugin Settings','shortpixel-image-optimiser');?>
+  </h1>
+
+<!--
+  <div class='top-buttons'>
+    <button><i class='shortpixel-icon notifications'></i><?php _e('Notifications','shortpixel-image-optimiser'); ?></button>
+
+  </div>
+-->
+</header>
 <div class="shortpixel-bulk-wrapper">
-  <h1><?php esc_html_e('ShortPixel Bulk Processing', 'shortpixel-image-optimiser'); ?></h1>
 
   <div id="processPaused" class="processor-paused" data-action="ResumeBulk"><span class='dashicons dashicons-controls-pause' data-action="ResumeBulk"></span>
 		<?php esc_html_e('The Bulk Processing is paused, please click to resume','shortpixel-image-optimiser'); ?>

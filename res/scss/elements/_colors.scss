@@ -4,3 +4,22 @@ $color-dark: #1cbecb;
 $color-light: #d1f5fd;
 
 $color-brokenwhite: #F5F5F5;
+$color-grey: #D7D7D7;
+
+$blue_default: #1ABDCA;
+$blue_dark : #116C7E;
+$blue_light :  #92D5E3;
+$blue_background: #F4FBFC;
+
+$black_default: #001E24;
+
+$green_highlight: #00C898;
+
+
+
+// https://angel-rs.github.io/css-color-filter-generator/
+$filter_black: brightness(0) saturate(100%);
+$filter_orange: brightness(0) saturate(100%) invert(72%) sepia(57%) saturate(456%) hue-rotate(353deg) brightness(105%) contrast(95%);
+$filter_red:  brightness(0) saturate(100%) invert(20%) sepia(95%) saturate(6009%) hue-rotate(360deg) brightness(99%) contrast(125%);
+$filter_green: brightness(0) saturate(100%) invert(58%) sepia(24%) saturate(4079%) hue-rotate(125deg) brightness(97%) contrast(101%);
+$filter_white: brightness(0) saturate(100%) invert(100%) sepia(100%) saturate(20%) hue-rotate(283deg) brightness(105%) contrast(105%);

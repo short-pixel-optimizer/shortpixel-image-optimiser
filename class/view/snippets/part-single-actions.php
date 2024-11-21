@@ -14,7 +14,7 @@ foreach($this->view->actions as $actionName => $action):
            $classes = " button-smaller button-primary $actionName ";
          break;
          case 'button-secondary':
-            $classes = " button-smaller button $actionName ";
+            $classes = " button-smaller button button-secondary $actionName ";
          break;
      }
   }

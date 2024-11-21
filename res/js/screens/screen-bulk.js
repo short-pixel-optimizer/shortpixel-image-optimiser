@@ -200,7 +200,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
   }
   SwitchPanel(targetName)
   {
-     console.debug('Switching Panel ' + targetName);
+     console.trace('Switching Panel ' + targetName);
 
       this.ToggleLoading(false);
       if (! this.panels[targetName])
@@ -739,11 +739,18 @@ class ShortPixelScreen extends ShortPixelScreenBase
 
 	ReloadScreen(event)
 	{
-		 	//window.trigger('shortpixel.process.stop');
-			var url = shortPixelScreen.reloadURL;
-			location.href = url;
+      var data = event.detail;
 
-//			this.SwitchPanel('dashboard');
+      // Redirect operations back to settings page for clarity.
+      if (typeof data.redirect !== 'undefined')
+      {
+         var url = data.redirect;
+      }
+      else {
+          var url = shortPixelScreen.reloadURL;
+      }
+
+			location.href = url;
 
 	}
 
@@ -953,6 +960,9 @@ class ShortPixelScreen extends ShortPixelScreenBase
 		}
     var data = {screen_action: 'startRestoreAll', callback: 'shortpixel.startRestoreAll', queues: queues}; //
 
+    this.RemovePanelFromURL(shortPixelScreen.panel);
+
+
     this.UpdatePanelStatus('loading', 'selection');
     this.SwitchPanel('selection');
 
@@ -971,6 +981,8 @@ class ShortPixelScreen extends ShortPixelScreenBase
 		this.SwitchPanel('selection');
 
   	//this.SwitchPanel('process');
+    this.RemovePanelFromURL(shortPixelScreen.panel);
+
 
     // Prepare should happen after selecting what the optimize.
     window.addEventListener('shortpixel.startMigrateAll', this.PrepareBulk.bind(this), {'once': true} );
@@ -984,20 +996,40 @@ class ShortPixelScreen extends ShortPixelScreenBase
 
     this.SwitchPanel('selection');
     this.UpdatePanelStatus('loading', 'selection');
-  	//this.SwitchPanel('process');
+
+
+    this.RemovePanelFromURL(shortPixelScreen.panel);
 
     // Prepare should happen after selecting what the optimize.
     window.addEventListener('shortpixel.startRemoveLegacy', this.PrepareBulk.bind(this), {'once': true} );
     window.addEventListener('shortpixel.bulk.onSwitchPanel', this.StartBulk.bind(this), {'once': true});
     this.processor.AjaxRequest(data);
   }
+
+
+  // This is used for bulk custom operations, which have the panel in the URL and upon refresh will show the 'I agree' screen instead of ongoing process.
+  RemovePanelFromURL(panel)
+  {
+
+      if (typeof panel === 'undefined' || panel === '' )
+      {
+         return;
+      }
+
+      var uri = new URL(window.location.href);
+      var params = new URLSearchParams(uri.search);
+      params.delete('panel');
+      window.history.replaceState({}, document.title, uri.origin + uri.pathname + '?' + params.toString() );
+
+
+  }
+
 	StartBulkOperation(event)
 	{
 		this.PrepareBulk();
 
 		this.UpdatePanelStatus('loading', 'selection');
 		this.SwitchPanel('selection');
-
 
 	}
 

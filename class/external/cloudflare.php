@@ -6,12 +6,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-use ShortPixel\Notices\NoticeController as Notices;
 
 // @todo Clean up unused lines in this file. (cloudflare)
 class CloudFlareAPI {
-    private $email; // $_cloudflareEmail
-    private $authkey; // $_cloudflareAuthKey
     private $zone_id; // $_cloudflareZoneID
     private $token;
 
@@ -23,11 +20,6 @@ class CloudFlareAPI {
 
     private $api_url = 'https://api.cloudflare.com/client/v4/zones/';
 
-    /*public function __construct($cloudflareEmail, $cloudflareAuthKey, $cloudflareZoneID) {
-        $this->set_up($cloudflareEmail, $cloudflareAuthKey, $cloudflareZoneID);
-        $this->set_up_required_hooks();
-    } */
-
     public function __construct()
     {
         add_action('shortpixel/image/optimised', array( $this, 'check_cloudflare' ), 10 );
@@ -37,8 +29,7 @@ class CloudFlareAPI {
 
     public function setup()
     {
-        $this->email =   \wpSPIO()->settings()->cloudflareEmail;
-        $this->authkey = \wpSPIO()->settings()->cloudflareAuthKey;
+
         $this->zone_id =  (defined('SHORTPIXEL_CFZONE') ) ? SHORTPIXEL_CFZONE : \wpSPIO()->settings()->cloudflareZoneID;
 
         $this->token = (defined('SHORTPIXEL_CFTOKEN') ) ? SHORTPIXEL_CFTOKEN : \wpSPIO()->settings()->cloudflareToken;
@@ -47,15 +38,6 @@ class CloudFlareAPI {
         {
           $this->use_token = true;
           $this->config_ok = true;
-        }
-        elseif(! empty($this->email) && ! empty($this->authkey) && ! empty($this->zone_id))
-        {
-          $this->config_ok = true;
-        }
-
-        if (empty($this->zone_id))
-        {
-          //Log::addWarn('CF - ZoneID setting is obligatory');
         }
 
         $this->setup_done = true;
@@ -85,11 +67,7 @@ class CloudFlareAPI {
      */
     private function start_cloudflare_cache_purge_process( $imageItem ) {
 
-
         // Fetch CloudFlare API credentials
-        /*$cloudflare_auth_email = $this->_cloudflareEmail;
-        $cloudflare_auth_key   = $this->_cloudflareAuthKey;
-        $cloudflare_zone_id    = $this->_cloudflareZoneID; */
 
             // Fetch all WordPress install possible thumbnail sizes ( this will not return the full size option )
             $fetch_images_sizes   = get_intermediate_image_sizes();
@@ -101,23 +79,6 @@ class CloudFlareAPI {
                 $fetch_images_sizes[] = 'full';
             }
 
-/*
-            if ( $imageItem->getType() == 'media' ) {
-                // The item is a Media Library item, fetch the URL for each image size
-                foreach ( $fetch_images_sizes as $size ) {
-                    // 0 - url; 1 - width; 2 - height
-                    $image_attributes = wp_get_attachment_image_src( $image_id, $size );
-                    // Append to the list
-                    array_push( $purge_array, $image_attributes[0] );
-                }
-            } else {
-                // The item is a Custom Media item
-                $fs = \wpSPIO()->filesystem();
-                $item = $fs->getImage( $image_id, 'custom' );
-                $item_url = $fs->pathToUrl( $item );
-                array_push( $purge_array, $item_url );
-            }
-			*/
 						$fs = \wpSPIO()->filesystem();
 
 						$image_paths[] = $imageItem->getURL();
@@ -161,12 +122,6 @@ class CloudFlareAPI {
                 // Encode the data into JSON before send
                 $dispatch_purge_info = function_exists('wp_json_encode') ? wp_json_encode( $prepare_request_info ) : json_encode( $prepare_request_info );
 
-                // Set headers for remote API to authenticate for the request
-      /*          $dispatch_header = array(
-                    'X-Auth-Email: ' . $cloudflare_auth_email,
-                    'X-Auth-Key: ' . $cloudflare_auth_key,
-                    'Content-Type: application/json'
-                ); */
 
                 $response = $this->delete_url_cache_request_action($image_paths);
 

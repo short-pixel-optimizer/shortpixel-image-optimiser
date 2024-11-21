@@ -102,7 +102,8 @@
   .content .button-primary
   { // gets overwritten in NGG.
     background-color: $color-darkest;
-		border-color: $color-darkest;
+    border-color: $color-darkest;
+    color: #fff;
 
 		&:hover { background-color: $color-dark; }
   }

@@ -10,7 +10,7 @@ $settings = \wpSPIO()->settings();
 <section class="panel process" data-panel="process" >
   <div class="panel-container">
 
-    <h3 class="heading"><span><img src="<?php echo esc_url(\wpSPIO()->plugin_url('res/img/robo-slider.png')); ?>"></span>
+    <h3 class="heading">
       <?php esc_html_e('ShortPixel Bulk Process is in progress','shortpixel-image-optimiser'); ?>
 
       <div class='average-optimization'>
@@ -56,7 +56,11 @@ $settings = \wpSPIO()->settings();
 		<span class='hidden' data-check-media-total data-stats-media="total">0</span>
     <div class='bulk-summary' data-check-visibility data-control="data-check-media-total">
       <div class='heading'>
-        <span><i class='dashicons dashicons-images-alt2'>&nbsp;</i> <?php esc_html_e('Media Library' ,'shortpixel-image-optimiser'); ?></span>
+        <span><i class='dashicons dashicons-images-alt2'>&nbsp;</i> <?php esc_html_e('Media Library' ,'shortpixel-image-optimiser'); ?>
+         <?php if (false !== $this->view->customOperationMedia) {
+            echo " - <span class='special-op'>" . $this->view->customOperationMedia . "</span>";
+         } ?>
+        </span>
         <span>
               <span class='line-progressbar'>
                 <span class='done-text'><i data-stats-media="percentage_done"></i> %</span>
@@ -99,7 +103,11 @@ $settings = \wpSPIO()->settings();
 
     <div class='bulk-summary' data-check-visibility data-control="data-check-custom-total">
       <div class='heading'>
-        <span><i class='dashicons dashicons-open-folder'>&nbsp;</i> <?php esc_html_e('Custom Media', 'shortpixel-image-optimiser'); ?> </span>
+        <span><i class='dashicons dashicons-open-folder'>&nbsp;</i> <?php esc_html_e('Custom Media', 'shortpixel-image-optimiser'); ?>
+          <?php if (false !== $this->view->customOperationCustom) {
+             echo " - <span class='special-op'>" . $this->view->customOperationCustom . "</span>";
+          } ?>
+        </span>
         <span>
               <span class='line-progressbar'>
                 <span class='done-text'><i data-stats-custom="percentage_done"></i> %</span>

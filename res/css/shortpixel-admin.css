@@ -170,7 +170,7 @@
   background: #d6d8d9;
 }
 .sp-column-info .thumbnails.optimized .thumb-wrapper .thumb .optimize-bar .point.checked {
-  background: #1abdca;
+  background: #1ABDCA;
 }
 .sp-column-info .thumbnails.optimized .thumb-wrapper .thumb .cutoff {
   float: right;
@@ -316,13 +316,14 @@ div.shortpixel-modal {
   max-height: 90%;
   overflow-y: auto;
 }
-div.shortpixel-modal .sp-close-button, div.shortpixel-modal button.sp-close-upgrade-button {
+div.shortpixel-modal button.sp-close-button, div.shortpixel-modal button.sp-close-upgrade-button {
   float: right;
   margin-top: 0px;
   background: transparent !important;
   border: none;
   font-size: 22px;
   line-height: 10px;
+  color: #000 !important;
   cursor: pointer;
 }
 div.shortpixel-modal .sptw-modal-spinner {
@@ -333,10 +334,26 @@ div.shortpixel-modal .sptw-modal-spinner {
 
 div.sp-modal-title {
   font-size: 22px;
+  color: #3c434a;
+  text-transform: none;
+  font-weight: 400;
 }
 
 div.sp-modal-body {
   margin-top: 10px;
+}
+
+#ngg_page_content .sp-modal-title button {
+  float: right;
+  margin-top: 0px;
+  background: transparent !important;
+  border: none;
+  font-size: 22px;
+  line-height: 10px;
+  color: #000 !important;
+  cursor: pointer;
+  height: auto !important;
+  padding: 0 !important;
 }
 
 body.debug-model-active {
@@ -438,35 +455,35 @@ body.debug-model-active {
   margin-bottom: 16px;
 }
 
-.switch_button {
+.switch_button, switch {
   line-height: 12px;
   margin: 2px -5px 10px -5px;
   display: inline-block;
 }
-.switch_button label {
+.switch_button label, switch label {
   padding: 8px 5px;
 }
-.switch_button label:focus {
+.switch_button label:focus, switch label:focus {
   outline: none;
 }
-.switch_button input {
+.switch_button input[type=checkbox], switch input[type=checkbox] {
   display: none;
 }
-.switch_button input:checked ~ .the_switch {
+.switch_button input[type=checkbox]:checked ~ .the_switch, switch input[type=checkbox]:checked ~ .the_switch {
   background: #7cdce4;
 }
-.switch_button input:checked ~ .the_switch:after {
+.switch_button input[type=checkbox]:checked ~ .the_switch:after, switch input[type=checkbox]:checked ~ .the_switch:after {
   left: 20px;
   background: #1caecb;
 }
-.switch_button input:disabled ~ .the_switch {
+.switch_button input[type=checkbox]:disabled ~ .the_switch, switch input[type=checkbox]:disabled ~ .the_switch {
   background: #d5d5d5;
   pointer-events: none;
 }
-.switch_button input:disabled ~ .the_switch:after {
+.switch_button input[type=checkbox]:disabled ~ .the_switch:after, switch input[type=checkbox]:disabled ~ .the_switch:after {
   background: #bcbdbc;
 }
-.switch_button .the_switch {
+.switch_button .the_switch, switch .the_switch {
   margin: 8px 15px 8px 0;
   position: relative;
   display: inline-block;
@@ -477,7 +494,7 @@ body.debug-model-active {
   cursor: pointer;
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.25) !important;
 }
-.switch_button .the_switch:after {
+.switch_button .the_switch:after, switch .the_switch:after {
   position: absolute;
   left: -2px;
   top: -5px;
@@ -492,11 +509,72 @@ body.debug-model-active {
   -o-transition: left 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), padding 0.5s ease, margin 0.5s ease !important;
   transition: left 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), padding 0.5s ease, margin 0.5s ease !important;
 }
-.switch_button .the_switch:active:after {
+.switch_button .the_switch:active:after, switch .the_switch:active:after {
   transform: scale(0.9, 0.85);
 }
-.switch_button .the_switch:focus {
+.switch_button .the_switch:focus, switch .the_switch:focus {
   outline: none;
+}
+
+.adv_switch {
+  position: relative;
+  display: inline-block;
+  width: 45px;
+  height: 19px;
+  bottom: 2px;
+  left: 20px;
+}
+.adv_switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.adv_switch .adv_slider {
+  position: absolute;
+  cursor: pointer;
+  background-color: #D7D7D7;
+  border-radius: 34px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transition: 0.4s;
+}
+.adv_switch .adv_slider::before {
+  position: absolute;
+  content: "";
+  height: 13px;
+  width: 13px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #A9A9A9;
+  border-radius: 50%;
+  transition: 0.4s;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+}
+.adv_switch .adv_slider::after {
+  position: absolute;
+  content: "OFF";
+  color: white;
+  font-size: 10px;
+  top: 9px;
+  transform: translateY(-50%);
+  right: 5px;
+  transition: 0.4s;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  font-weight: bold;
+}
+.adv_switch input:checked + .adv_slider {
+  background-color: #00C898;
+}
+.adv_switch input:checked + .adv_slider::before {
+  transform: translateX(26px);
+  background-color: #fff;
+}
+.adv_switch input:checked + .adv_slider::after {
+  content: "ON";
+  left: 8px;
+  right: auto;
 }
 
 /*# sourceMappingURL=shortpixel-admin.css.map */

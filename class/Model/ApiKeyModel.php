@@ -18,7 +18,6 @@ class ApiKeyModel extends \ShortPixel\Model
   protected $apiKey;
   protected $apiKeyTried;  // stop retrying the same key over and over if not valid.
   protected $verifiedKey;
-  protected $redirectedSettings;
 
   // states
   // key is verified is set by checkKey *after* checks and validation
@@ -29,7 +28,8 @@ class ApiKeyModel extends \ShortPixel\Model
 
   protected static $notified = array();
 
-  protected $model = array(
+
+  protected $legacy_model = array(
        'apiKey' => array('s' => 'string',
                           'key' => 'wp-short-pixel-apiKey',
                         ),
@@ -39,18 +39,25 @@ class ApiKeyModel extends \ShortPixel\Model
        'verifiedKey' => array('s' => 'boolean',
                           'key' => 'wp-short-pixel-verifiedKey',
                        ),
-       'redirectedSettings' => array('s' => 'int',
-                            'key' => 'wp-short-pixel-redirected-settings',
-                        ),
+
   );
 
-  public $shortPixel;
+	protected $model = array(
+       'apiKey' => array('s' => 'string',
+       ),
+       'apiKeyTried' => array('s' => 'string',
+       ),
+       'verifiedKey' => array('s' => 'boolean',
+       ),
+  );
+
+	private $option_name =  'spio_key';
 
   /** Constructor. Check for constants, load the key */
   public function __construct()
   {
     $this->key_is_constant = (defined("SHORTPIXEL_API_KEY")) ? true : false;
-    $this->key_is_hidden = (defined("SHORTPIXEL_HIDE_API_KEY")) ? SHORTPIXEL_HIDE_API_KEY : false;
+    $this->key_is_hidden = (defined("SHORTPIXEL_HIDE_API_KEY")) ? (bool) SHORTPIXEL_HIDE_API_KEY : false;
 
   }
 
@@ -59,32 +66,59 @@ class ApiKeyModel extends \ShortPixel\Model
   */
   public function loadKey()
   {
-    $this->apiKey = get_option($this->model['apiKey']['key'], false);
-    $this->verifiedKey = get_option($this->model['verifiedKey']['key'], false);
-    $this->redirectedSettings = get_option($this->model['redirectedSettings']['key'], false);
-    $this->apiKeyTried = get_option($this->model['apiKeyTried']['key'], false);
+ 		$apikeySettings = get_option($this->option_name, null);
+
+		if (is_null($apikeySettings))
+		{
+			$this->apiKey = get_option($this->legacy_model['apiKey']['key'], false);
+	    $this->verifiedKey = get_option($this->legacy_model['verifiedKey']['key'], false);
+	    $this->apiKeyTried = get_option($this->legacy_model['apiKeyTried']['key'], false);
+
+				$apikeySettings = [
+						'apiKey' => $this->apiKey,
+						'verifiedKey' => $this->verifiedKey,
+						'apiKeyTried' => $this->apiKeyTried,
+				];
+			 delete_option($this->legacy_model['apiKey']['key']);
+			 delete_option($this->legacy_model['verifiedKey']['key']);
+			 delete_option($this->legacy_model['apiKeyTried']['key']);
+
+			 $this->update();
+		}
+
+		$this->apiKey = isset($apikeySettings['apiKey']) ? $apikeySettings['apiKey'] : '';
+		$this->verifiedKey = $apikeySettings['verifiedKey'];
+		$this->apiKeyTried = $apikeySettings['apiKeyTried'];
+
 
     if ($this->key_is_constant)
     {
         $key = SHORTPIXEL_API_KEY;
-    }
-    else
-    {
-        $key = $this->apiKey;
+        if (isset($apikeySettings['apiKey']))
+        {
+            $this->apiKey = '';
+            $this->update();
+        }
+        $this->apiKey = $key;
     }
 
-    $valid = $this->checkKey($key);
+
+    $valid = $this->checkKey($this->apiKey);
 
     return $valid;
   }
 
   protected function update()
   {
-      update_option($this->model['apiKey']['key'], trim($this->apiKey));
-      update_option($this->model['verifiedKey']['key'], $this->verifiedKey);
-      update_option($this->model['redirectedSettings']['key'], $this->redirectedSettings);
-      update_option($this->model['apiKeyTried']['key'], $this->apiKeyTried);
+			$apikeySettings = [
+					'apiKey' => trim($this->apiKey),
+					'verifiedKey' => $this->verifiedKey,
+					'apiKeyTried' => $this->apiKeyTried,
+			];
 
+
+			$res = update_option($this->option_name, $apikeySettings, true);
+			return $res;
   }
 
   /** Resets the last APIkey that was attempted with validation
@@ -112,10 +146,8 @@ class ApiKeyModel extends \ShortPixel\Model
   */
   public function checkKey($key)
   {
-
 			$valid = false;
-
-      if (strlen($key) == 0)
+      if (is_null($key) || strlen($key) == 0)
       {
         // first-timers, redirect to nokey screen
         $this->checkRedirect(); // this should be a one-time thing.
@@ -136,8 +168,13 @@ class ApiKeyModel extends \ShortPixel\Model
       elseif (strlen($key) <> 20 && $key != $this->apiKeyTried)
       {
         $this->NoticeApiKeyLength($key);
-        Log::addDebug('Key Wrong Length');
-        $valid = $this->verifiedKey; // if we already had a verified key, and a wrong new one is giving keep status.
+        Log::addDebug('Key Wrong Length: ' . $key);
+
+				// Don't validate is wrong key is constant.
+				if (false === $this->key_is_constant)
+				{
+        	$valid = $this->verifiedKey; // if we already had a verified key, and a wrong new one is giving keep status.
+				}
       }
       elseif( ($key != $this->apiKey || ! $this->verifiedKey) && $key != $this->apiKeyTried)
       {
@@ -150,7 +187,7 @@ class ApiKeyModel extends \ShortPixel\Model
       }
 
       // if key is not valid on load, means not valid at all
-      if (! $valid)
+      if (false === $valid)
       {
         $this->verifiedKey = false;
         $this->key_is_verified = false;
@@ -202,12 +239,11 @@ class ApiKeyModel extends \ShortPixel\Model
     AdminNoticesController::resetIntegrationNotices();
 
 		// Remove them all
-		delete_option($this->model['apiKey']['key']);
-		delete_option($this->model['verifiedKey']['key']);
-		delete_option($this->model['redirectedSettings']['key']);
-		delete_option($this->model['apiKeyTried']['key']);
+		delete_option($this->legacy_model['apiKey']['key']);
+		delete_option($this->legacy_model['verifiedKey']['key']);
+		delete_option($this->legacy_model['apiKeyTried']['key']);
 
-   // $this->update();
+    delete_option($this->option_name);
 
   }
 
@@ -220,14 +256,16 @@ class ApiKeyModel extends \ShortPixel\Model
 
     $checked_key = ($quotaData['APIKeyValid']) ? true : false;
 
-
      if (! $checked_key)
      {
 			  Log::addError('Key is not validated', $quotaData['Message']);
         Notice::addError(sprintf(__('Error during verifying API key: %s','shortpixel-image-optimiser'), $quotaData['Message'] ));
      }
      elseif ($checked_key) {
-        $this->apiKey = $key;
+        if (false === $this->is_constant())
+        {
+          $this->apiKey = $key;
+        }
         $this->verifiedKey = $checked_key;
         $this->processNewKey($quotaData);
         $this->update();
@@ -235,10 +273,10 @@ class ApiKeyModel extends \ShortPixel\Model
      return $this->verifiedKey;
   }
 
-
   /** Process some things when key has been added. This is from original wp-short-pixel.php */
   protected function processNewKey($quotaData)
   {
+
     //display notification
     $urlParts = explode("/", get_site_url());
     if( $quotaData['DomainCheck'] == 'NOT Accessible'){
@@ -264,7 +302,6 @@ class ApiKeyModel extends \ShortPixel\Model
     AdminNoticesController::resetAPINotices();
   }
 
-
   protected function NoticeApiKeyLength($key)
   {
       // repress double warning.
@@ -272,9 +309,9 @@ class ApiKeyModel extends \ShortPixel\Model
       return;
 
     $KeyLength = strlen($key);
-    $notice =  sprintf(__("The key you provided has %s characters. The API key should have 20 characters, letters and numbers only.",'shortpixel-image-optimiser'), $KeyLength)
+    $notice =  sprintf(__("The API Key you provided has %s characters, but it should contain exactly 20 characters, using only letters and numbers.",'shortpixel-image-optimiser'), $KeyLength)
                . "<BR> <b>"
-               . __('Please check that the API key is the same as the one you received in your confirmation email.','shortpixel-image-optimiser')
+               . __('Please check that the API Key is the same as the one you received in your sign-up email.','shortpixel-image-optimiser')
                . "</b><BR> "
                . __('If this problem persists, please contact us at ','shortpixel-image-optimiser')
                . "<a href='mailto:help@shortpixel.com?Subject=API Key issues' target='_top'>help@shortpixel.com</a>"
@@ -292,15 +329,15 @@ class ApiKeyModel extends \ShortPixel\Model
 
    return $quotaData;
 
-
   }
 
   protected function checkRedirect()
   {
-
-    if(! \wpSPIO()->env()->is_ajaxcall && !$this->redirectedSettings && !$this->verifiedKey && (!function_exists("is_multisite") || ! is_multisite())) {
-      $this->redirectedSettings = 1;
-      $this->update();
+    Log::addTemp('Check Redirect');
+    $redirectedSettings =  \wpSPIO()->settings()->redirectedSettings;
+    if(! \wpSPIO()->env()->is_ajaxcall && !$redirectedSettings && !$this->verifiedKey && (!function_exists("is_multisite") || ! is_multisite())) {
+      \wpSPIO()->settings()->redirectedSettings = 1;
+  //    $this->update();
       wp_safe_redirect(admin_url("options-general.php?page=wp-shortpixel-settings"));
       exit();
     }

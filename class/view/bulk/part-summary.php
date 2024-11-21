@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 <section class="panel summary" data-panel="summary">
   <div class="panel-container">
 
-    <h3 class="heading"><span><img src="<?php echo esc_url(\wpSPIO()->plugin_url('res/img/robo-slider.png')); ?>"></span>
+    <h3 class="heading"><span>
       <?php esc_html_e('ShortPixel Bulk Optimization - Summary','shortpixel-image-optimiser'); ?>
     </h3>
 

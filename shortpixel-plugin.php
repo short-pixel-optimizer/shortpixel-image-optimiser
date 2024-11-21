@@ -12,6 +12,7 @@ use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Controller\AjaxController as AjaxController;
 use ShortPixel\Controller\AdminController as AdminController;
 use ShortPixel\Controller\ImageEditorController as ImageEditorController;
+use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 use ShortPixel\NextGenController as NextGenController;
@@ -23,7 +24,7 @@ use ShortPixel\Helper\InstallHelper as InstallHelper;
 use ShortPixel\Helper\UiHelper as UiHelper;
 
 use ShortPixel\Model\AccessModel as AccessModel;
-
+use ShortPixel\Model\SettingsModel as SettingsModel;
 
 /** Plugin class
  * This class is meant for: WP Hooks, init of runtime and Controller Routing.
@@ -41,7 +42,6 @@ class ShortPixelPlugin {
 	protected $plugin_url;
 
 	protected $shortPixel; // shortpixel megaclass
-	protected $settings; // settings object.
 
 	protected $admin_pages = array();  // admin page hooks.
 
@@ -71,10 +71,9 @@ class ShortPixelPlugin {
 			return;
 		}
 
-
 		$cron = Controller\CronController::getInstance();  // cron jobs - must be low init to function!
 
-		$front        = new Controller\FrontController();
+		$front        = new Controller\FrontController(); // init front checkers
 		$admin        = Controller\AdminController::getInstance();
 		$adminNotices = Controller\AdminNoticesController::getInstance(); // Hook in the admin notices.
 
@@ -107,11 +106,7 @@ class ShortPixelPlugin {
      * @return SettingsModel The settings model object.
      */
 	public function settings() {
-		if ( is_null( $this->settings ) ) {
-			$this->settings = new \WPShortPixelSettings();
-		}
-
-		return $this->settings;
+			return SettingsModel::getInstance();
 	}
 
 	/** Function to get all enviromental variables
@@ -227,7 +222,10 @@ class ShortPixelPlugin {
 			$settings     = $this->settings();
 			$stats        = $settings->currentStats;
 			$totalCredits = isset( $stats['APICallsQuotaNumeric'] ) ? $stats['APICallsQuotaNumeric'] + $stats['APICallsQuotaOneTimeNumeric'] : 0;
-			if ( true || ! $settings->verifiedKey || $totalCredits < 4000 ) {
+			$keyControl = ApiKeyController::getInstance();
+
+
+			if ( true || false === $keyControl->keyIsVerified() || $totalCredits < 4000 ) {
 				require_once 'class/view/shortpixel-feedback.php';
 				new ShortPixelFeedback( SHORTPIXEL_PLUGIN_FILE, 'shortpixel-image-optimiser' );
 			}
@@ -251,16 +249,15 @@ class ShortPixelPlugin {
 		add_action( 'wp_ajax_shortpixel_image_processing', array( AjaxController::getInstance(), 'ajax_processQueue' ) );
 
 		// Custom Media
-	//	add_action( 'wp_ajax_shortpixel_browse_content', array( OtherMediaController::getInstance(), 'ajaxBrowseContent' ) );
+
 		add_action( 'wp_ajax_shortpixel_get_backup_size', array( AjaxController::getInstance(), 'ajax_getBackupFolderSize' ) );
 
 		add_action( 'wp_ajax_shortpixel_propose_upgrade', array( AjaxController::getInstance(), 'ajax_proposeQuotaUpgrade' ) );
 		add_action( 'wp_ajax_shortpixel_check_quota', array( AjaxController::getInstance(), 'ajax_checkquota' ) );
 
-		// @todo should probably go through ajaxrequest.
-		add_action( 'wp_ajax_shortpixel_get_comparer_data', array( AjaxController::getInstance(), 'ajax_getComparerData' ) );
 
 		add_action( 'wp_ajax_shortpixel_ajaxRequest', array( AjaxController::getInstance(), 'ajaxRequest' ) );
+		add_action( 'wp_ajax_shortpixel_settingsRequest', array( AjaxController::getInstance(), 'settingsRequest'));
 
 		// Used by processor
 		 add_action( 'wp_ajax_shortpixel_get_item_view', array( AjaxController::getInstance(), 'ajax_getItemView' ) );
@@ -313,10 +310,6 @@ class ShortPixelPlugin {
 		$quotaController = QuotaController::getInstance();
 
 
-		// FileTree in Settings
-	/*	wp_register_script( 'sp-file-tree', plugins_url( '/res/js/sp-file-tree.min.js', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
-*/
-
 	 wp_register_script('shortpixel-folderbrowser', plugins_url('/res/js/shortpixel-folderbrowser.js', SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
 	 wp_localize_script('shortpixel-folderbrowser', 'spio_folderbrowser', array(
@@ -346,13 +339,18 @@ class ShortPixelPlugin {
 
 		wp_localize_script( 'shortpixel-tooltip', 'spio_tooltipStrings', $tooltip_localize);
 
-		wp_register_script( 'shortpixel-settings', plugins_url( 'res/js/shortpixel-settings.js', SHORTPIXEL_PLUGIN_FILE ), array('shortpixel-shiftselect'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
+		wp_register_script( 'shortpixel-settings', plugins_url( 'res/js/shortpixel-settings.js', SHORTPIXEL_PLUGIN_FILE ), array('shortpixel-shiftselect', 'shortpixel-inline-help'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
 		wp_register_script('shortpixel-shiftselect', plugins_url('res/js/shift-select.js', SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
 		wp_localize_script('shortpixel-settings', 'settings_strings', UiHelper::getSettingsStrings(false));
 
+
+		wp_register_script( 'shortpixel-onboarding', plugins_url( 'res/js/shortpixel-onboarding.js', SHORTPIXEL_PLUGIN_FILE ), array('shortpixel-settings'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
+
 		wp_register_script('shortpixel-media', plugins_url('res/js/shortpixel-media.js',  SHORTPIXEL_PLUGIN_FILE), array('jquery'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
+
+		wp_register_script('shortpixel-inline-help', plugins_url('res/js/shortpixel-inline-help.js',  SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
 		// This filter is from ListMediaViewController for the media library grid display, executive script in shortpixel-media.js.
 
@@ -385,8 +383,8 @@ class ShortPixelPlugin {
 				'workerURL'         => plugins_url( 'res/js/shortpixel-worker.js', SHORTPIXEL_PLUGIN_FILE ),
 				'nonce_process'     => wp_create_nonce( 'processing' ),
 				'nonce_exit'        => wp_create_nonce( 'exit_process' ),
-				'nonce_itemview'    => wp_create_nonce( 'item_view' ),
 				'nonce_ajaxrequest' => wp_create_nonce( 'ajax_request' ),
+				'nonce_settingsrequest' => wp_create_nonce('settings_request'),
 				'startData'         => ( \wpSPIO()->env()->is_screen_to_use ) ? $optimizeController->getStartupData() : false,
 				'interval'          => $interval,
 				'deferInterval'     => $deferInterval,
@@ -426,10 +424,10 @@ class ShortPixelPlugin {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
 		$panel = isset( $_GET['panel'] ) ? sanitize_text_field( wp_unslash($_GET['panel']) ) : false;
 
-		$bulkLocalize = array(
+		$bulkLocalize = [
 			'endBulk'   => __( 'This will stop the bulk processing and take you back to the start. Are you sure you want to do this?', 'shortpixel-image-optimiser' ),
-			'reloadURL' => admin_url( 'upload.php?page=wp-short-pixel-bulk' ),
-		);
+			'reloadURL' => admin_url( 'upload.php?page=wp-short-pixel-bulk'),
+		];
 		if ( $panel ) {
 			$bulkLocalize['panel'] = $panel;
         }
@@ -555,7 +553,6 @@ class ShortPixelPlugin {
 
 		$load_processor = array( 'shortpixel', 'shortpixel-processor' );  // a whole suit needed for processing, not more. Always needs a screen as well!
 		$load_bulk      = array();  // the whole suit needed for bulking.
-
 		if ( \wpSPIO()->env()->is_screen_to_use ) {
 			$this->load_script( $load_processor );
 			$this->load_style( 'shortpixel-toolbar' );
@@ -564,12 +561,13 @@ class ShortPixelPlugin {
 		if ( $plugin_page == 'wp-shortpixel-settings' || $plugin_page == 'shortpixel-network-settings' ) {
 
 			$this->load_script( 'shortpixel-screen-nolist' ); // screen
-	//		$this->load_script( 'sp-file-tree' );
 			$this->load_script( 'shortpixel-settings' );
 
+			// @todo Load onboarding only when no api key / onboarding required
+			$this->load_script('shortpixel-onboarding');
+
 			$this->load_style( 'shortpixel-admin' );
-			//$this->load_style( 'shortpixel' );
-			//$this->load_style( 'sp-file-tree' );
+
 			$this->load_style( 'shortpixel-settings' );
 
 		} elseif ( $plugin_page == 'wp-short-pixel-bulk' ) {
@@ -648,11 +646,11 @@ class ShortPixelPlugin {
 
         switch ( $plugin_page ) {
             case 'wp-shortpixel-settings': // settings
-						$controller = 'ShortPixel\Controller\SettingsController';
+						$controller = 'ShortPixel\Controller\View\SettingsViewController';
         	break;
-				/*	 case 'shortpixel-network-settings':
+					 case 'shortpixel-network-settings':
 					 	$controller = 'ShortPixel\Controller\View\MultiSiteViewController';
-					break; */
+					break;
           case 'wp-short-pixel-custom': // other media
 						if ('folders'  === $template_part )
 						{
@@ -724,13 +722,14 @@ class ShortPixelPlugin {
 	}
 
 	protected function check_plugin_version() {
-           $version     = SHORTPIXEL_IMAGE_OPTIMISER_VERSION;
+      $version     = SHORTPIXEL_IMAGE_OPTIMISER_VERSION;
 			$db_version = $this->settings()->currentVersion;
 
 		if ( $version !== $db_version ) {
 			InstallHelper::activatePlugin();
-		}
 			$this->settings()->currentVersion = $version;
+
+		}
 	}
 
 

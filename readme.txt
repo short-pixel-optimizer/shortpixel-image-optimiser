@@ -1,10 +1,10 @@
 === ShortPixel Image Optimizer - Optimize Images, Convert WebP & AVIF ===
 Contributors: ShortPixel
-Tags: convert webp, optimize images, image optimization, resize, compressor
+Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 4.8.0
-Tested up to: 6.6
-Requires PHP: 5.6
-Stable tag: 5.6.4
+Tested up to: 6.7
+Requires PHP: 7.4
+Stable tag: 6.0.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,82 +12,114 @@ Optimize images & PDFs smartly. Create and compress next-gen WebP and AVIF forma
 
 == Description ==
 
-**Optimize images and create WebP/AVIF versions with an easy-to-use, comprehensive, lightweight, stable and frequently updated freemium image compression plugin supported by the friendly team that created it.**
+###The Ultimate Image Optimization Plugin for WordPress###
+
+**Boost your site’s speed instantly! Optimize images and PDFs with one click, bulk compress to WebP and AVIF, use lazy loading, and resize images.**
 
 Increase your website's SEO ranking, number of visitors, and ultimately your sales by optimising any image or PDF document on your website.
-ShortPixel is an easy to use, lightweight, install-and-forget-about-it <a href="https://shortpixel.com" target="_blank">image optimization</a> plugin that can compress all your past images and PDF documents with a single click. New images are automatically resized/rescaled and optimized on the fly, in the background. It's also compatible with any gallery, slider or eCommerce plugin.
 
-**Ready for a quick DEMO? Test our plugin <a href="https://demo.tastewp.com/shortpixel-image-optimiser" target="_blank">here</a> and <a href="https://wpsandbox.net/" target="_blank">here</a>.**
-Or you can create a staging copy of your site using <a href="https://wp-staging.com/" target="_blank">WP Staging</a> and test it there.
+The <a href="https://shortpixel.com" target="_blank">ShortPixel</a> plugin is a lightweight, user-friendly, install-and-forget solution for image optimization.
+It is designed to work with any website type, whether it's a small blog or a large WooCommerce-powered online store with tens of thousands of products.
+Additionally, it's an excellent choice for agencies, offering unlimited image optimization credits for a flat monthly fee.
 
-Short Pixel uses minimal resources and works well with any shared, cloud, VPS or dedicated web hosting. It can optimize any image you have on your website even the images that aren't listed in Media Library like those in galleries like <a href="https://wordpress.org/plugins/nextgen-gallery/" target="_blank">NextGEN</a>, <a href="https://wordpress.org/plugins/modula-best-grid-gallery/" target="_blank">Modula</a> or added directly via FTP!
-
-Both lossy and lossless image compression are available for the most common image types (JPG, PNG, GIF, WebP, and AVIF) plus PDF files.
-We also offer **glossy** JPEG compression which is a very high-quality lossy optimization algorithm. Specially designed for photographers!
-Optimized images mean better user experience, better PageSpeed Insights or GTmetrix results, better Google PageRank, and more visitors.
-
+= Ready for a Quick DEMO of our Top Image Optimization Tool? = 
+Test our plugin <a href="https://demo.tastewp.com/shortpixel-image-optimiser" target="_blank">here</a>.
 Make an instant <a href="https://shortpixel.com/image-compression-test" target="_blank">image compression test</a> of your site or <a href="https://shortpixel.com/online-image-compression" target="_blank">compress some images</a> to test our optimization algorithms.
 
-**<a href="https://shortpixel.com/spio-unlimited/" target="_blank">New Plan: ShortPixel Unlimited</a>**
+== Why is ShortPixel the best choice for image optimization or PDF compression? ==
 
-This is the perfect monthly plan for single website owners.
-It allows you to optimize an unlimited number of images with ShortPixel Image Optimizer on your website.
+### New! Faster Websites for Global Audiences ###
+
+The ShortPixel plugin now includes a built-in global Content Delivery Network (CDN). This powerful feature ensures that ShortPixel-optimized WebP and AVIF images are delivered quickly and efficiently to any location worldwide, minimizing delays and improving load times.
+
+By leveraging this built-in solution, you enhance the user experience, reduce server strain, boost SEO performance, and simplify website management — all with minimal effort.
+
+### Resize and Compress Images Without Losing Quality ###
+
+* Popular plugin with over 300,000 active installations – according to WordPress
+* Compress JPG (and its variations: JPEG, JPEG 2000, JPEG XR), PNG, GIF (still or animated) images, and also PDF documents.
+* Option to automatically convert PNG to JPG if that results in smaller images (ideal for large PNG pictures).
+* CMYK to RGB conversion.
+* Progressive JPEG is used whenever it leads to a smaller image.
+
+### Lossy and Lossless image compression ###
+
+Both **Lossy and Lossless image compression** are available for the most common image types (JPG, PNG, GIF, WebP, and AVIF) plus PDF files.
+We also offer **Glossy** JPEG compression which is a very high-quality lossy optimization algorithm. Especially designed for photographers or for high-quality product pictures.
+Optimized images lead to a better user experience, improved PageSpeed Insights or GTmetrix results, higher Google PageRank, and more visitors.
+
+### Convert WebP and AVIF Formats ###
+
+* Option to automatically convert JPEG, PNG, or GIF to WebP and AVIF for better performance and improved Google ranking.
+* Animated GIFs can be automatically converted to much smaller animated WebP or AVIF files.
+* Option to include next-gen images (WebP and AVIF) in front-end pages with a single click using the <picture> tag.
+
+### Bulk Image Optimization and Background Image Processing ###
+
+* New! With 'Background mode,' images can now be optimized without needing to keep a browser tab open.
+* Easily add recurring cron jobs for background optimization, ideal for sites where users upload images via the front end.
+* Bulk-optimize all images in the Media Library or any gallery with a single click.
+* Full WP-CLI support for background processing, especially useful for large Media Libraries.
+
+### Performance and Automatic Image Optimization ###
+
+ShortPixel uses minimal resources and works well with any shared, cloud, VPS, or dedicated web hosting. It can optimize any image on your website, including those not listed in the Media Library, such as images in galleries or those added directly via FTP.
+All optimization is performed using ShortPixel's Image Optimization Cloud, so your hosting resources remain unaffected.
+
+* New! Automatic scan of Custom media folders for new images using cron jobs.
+* Skip already optimized images to avoid redundant processing.
+
+
+### Compatibility with Popular Themes, Page Builders, and Media Library Plugins ###
+
+* Works great for eCommerce websites using WooCommerce and other plugins.
+* Compatible with NextGEN Gallery, Modula, Foo Gallery, and other galleries or sliders.
+* Fully compatible with WP Retina 2x, including automatic compression of retina images.
+* Works seamlessly with WordPress multisite installs (sub-folders or sub-domains) using a single API key.
+* Compatible with WPML and WPML Media plugins.
+* Fully compatible with WP Offload Media plugin.
+* Supports both HTTPS and HTTP websites.
+* Compatible with virtually all hosting providers.
+* Integrates with Gravity Forms' post_image field type to optimize images upon upload.
+* Works with watermarking plugins.
+* Integrates directly with Cloudflare via a Cloudflare Token, automatically synchronizing updates with Cloudflare cache.
+* **New! HEIC file support**
+With ShortPixel, you can now add images in Apple's HEIC format directly from your iPhone. They will be automatically converted to JPG and optimized according to your settings. Easy!
+ <a href="https://shortpixel.com/knowledge-base/article/566-heic-apple-images-support-in-shortpixel-image-optimizer" target="_blank">Read more</a>.
+
+### Advanced Image Optimization Features ###
+
+* NEW Smart Cropping: Generate <a href="https://shortpixel.com/knowledge-base/article/what-is-smart-cropping/">subject-centered</a> thumbnails using AI, ideal for eCommerce websites.
+* Optimize thumbnails and featured images, with options to exclude individual thumbnails from optimization.
+* Advanced exclusion options (exclude images based on filename, path, size, or complex regex).
+* Ability to optimize any image, including those in NextGEN Gallery and other image galleries or sliders.
+* Option to scale images down, with two automatic resizing options for large images (applicable to featured images).
+* Option to deactivate auto-optimization of images on upload.
+* Keep or remove EXIF data from images, which is especially useful for photographers or for enhanced privacy.
+* Easily test lossy, glossy, or lossless versions of images with a single click in the Media Library.
+* 100MB filesize limit
+
+### Backup and Safety ###
+
+* Safe to test and use: original images are backed up locally and can be restored with a single click (either individually or in bulk).
+* No credits are used for images optimized by less than 5%
+
+### Reporting, Analytics, Compliance and Customer Support ###
+
+* 30-day optimization report with detailed image statistics and overall site performance improvements.
+* 24/7 stellar support.
+* We are fully GDPR compliant.
+
+**<a href="https://shortpixel.com/pricing" target="_blank">New Plan: ShortPixel Unlimited</a>**
+This is the ideal monthly plan for web agencies or website owners with multiple sites and frequent image uploads.
+It allows you to optimize an unlimited number of images with ShortPixel Image Optimizer or use <a href=”https://wordpress.org/plugins/shortpixel-adaptive-images/”>ShortPixel Adaptive Images</a> without worrying about CDN traffic limits.
 Read more details on our <a href="https://shortpixel.com/knowledge-base/article/555-how-does-the-unlimited-plan-work" target="_blank">dedicated page</a>.
 
-**New! HEIC file support**
-With ShortPixel you can now add images in Apple format (HEIC) directly from your iPhone. They will be automatically converted to JPG and then optimized according to your settings. Easy! <a href="https://shortpixel.com/knowledge-base/article/566-heic-apple-images-support-in-shortpixel-image-optimizer" target="_blank">Read more</a>.
-
-**Smart Cropping**
-
-With this new feature, all thumbnails used on your website are not only optimized, but also regenerated to fully display the subject of the image.
-All thumbnails fully display the subject and look consistent as well. The new thumbnails look sharper (and can be slightly bigger) than the ones created by WordPress. Ideal for e-commerce and other websites where the images are paramount to selling the products or to support the content. See <a href="https://shortpixel.com/knowledge-base/article/182-what-is-smart-cropping" target="_blank">an example</a>.
-
-
-**Why is ShortPixel the best choice when it comes to image optimization or PDF compression?**
-
-* popular plugin with over 300,000 active installations - according to WordPress
-* compress JPG (and its variations JPEG, JPEG 2000, JPEG XR), PNG, GIF (still or animated) images and also PDF documents
-* option to convert any JPEG, PNG or GIF (even animated ones!) to **WebP** and **AVIF** for more Google love. <a href="https://shortpixel.com/blog/how-webp-images-can-speed-up-your-site/" target="_blank">How to enable WebP?</a>. <a href="https://shortpixel.com/blog/what-is-avif-and-why-is-it-good/" target="_blank">What is AVIF and why is it good?</a>.
-* **New!:** <a href="https://shortpixel.com/knowledge-base/article/584-background-processing-using-cron-jobs-in-shortpixel-image-optimizer" target="_blank">Background mode</a> now runs automatic cron jobs to continue the image processing when the browser window is closed
-* **New!:** Automatic scan of Custom media folders for new images using cron jobs
-* full <a href="https://shortpixel.com/knowledge-base/article/537-wp-cli-support-for-shortpixel-image-optimizer" target="_blank">WP-CLI support</a> for background processing, useful especially for websites with a very large Media Library
-* easily add <a href="https://shortpixel.com/knowledge-base/article/543-how-to-schedule-a-cron-event-to-run-shortpixel-image-optimizer" target="_blank">recurrent cron jobs</a> for background optimization. Useful if you have users uploading images via the front end of your website
-* Smart Cropping. Generate subject-centered thumbnails using ShortPixel's AI engine
-* option to automatically convert PNG to JPG if that will result in smaller images. Ideal for large images in PNG format
-* option to include the next generation images (WebP and AVIF) into the front-end pages by using the `<picture>` tag instead of `<img>`, independent from generating them through the plugin
-* compatible with WP Retina 2x - all **retina images** are automatically compressed. <a href="https://shortpixel.com/blog/how-to-use-optimized-retina-images-on-your-wordpress-site-for-best-user-experience-on-apple-devices/" target="_blank">How to benefit from Retina displays?</a>
-* optimize thumbnails as well as featured images. You can also **select individual thumbnails to exclude** from optimization
-* advanced exclusion options that allow excluding images based on filename, path, size or complex regex exclusions
-* ability to optimize any image on your site including images in **NextGEN Gallery** and any other image galleries or sliders
-* option to scale images down, with 2 different options, which is very useful to automatically resize large images. This applies to the featured images and there is no need for additional plugins like Imsanity
-* CMYK to RGB conversion
-* skip already optimized images
-* **24h <a href="https://wordpress.org/support/plugin/shortpixel-image-optimiser/reviews/?filter=5" target="_blank">stellar support</a>** (24/7) directly from developers.
-* easily **test lossy/glossy/lossless** versions of the images with a single click in your Media Library
-* **great for photographers**: <a href="https://shortpixel.com/blog/how-much-smaller-can-be-images-without-exif-icc/" target="_blank">keep or remove EXIF</a> data from your images, compress photos with lossless option
-* works well with both HTTPS and HTTP websites
-* fully compatible with any WordPress multisite install (either with sub-folders or sub-domains)
-* uses progressive JPEG for larger images in order to speed up the image display
-* you can run ShortPixel plugin on **multiple websites** or on a **multisite** with a **single API Key**
-* it is **safe to test** and use the plugin: all the original images are by default saved in a local backup that can be restored with a click, either one by one or in bulk
-* 'Bulk' optimize all the existing images in Media Library or in any gallery with one click
-* works great for **eCommerce websites using WooCommerce** or other plugins
-* works great with NextGEN gallery, Foo Gallery and any other galleries and sliders
-* fully compatible with the <a href="https://wordpress.org/plugins/amazon-s3-and-cloudfront/" target="_blank">WP Offload Media</a> plugin
-* compatible with WP Engine hosted websites and all the major hosting providers
-* compatible with WPML and WPML Media plugins
-* no file size limit
-* integrates with Gravity Forms post_image field type optimizing the images upon upload
-* compatible with watermarking plugins
-* option to deactivate auto-optimizing images on upload
-* no credits are used for the images that are optimised less that 5%
-* direct integration with Cloudflare by using a Cloudflare Token
-* 30 days optimization report with all image details and overall statistics
-* We are GDPR compliant! <a href="https://shortpixel.com/privacy#gdpr" target="_blank">Read more.</a>
 * **free optimization credits for non-profits**, <a href="https://shortpixel.com/contact" target="_blank">contact us</a> for details
 
 **How much does it cost?**
-ShortPixel comes with 100 free credits/month and additional credits can be bought for as little as $4.99 for 5,000 image credits.
+ShortPixel comes with 100 free credits per month, and additional unlimited monthly credits can be purchased for $9.99.
+One-time credit packages that never expire are available starting at $19.99.
 Check out <a href="https://shortpixel.com/pricing" target="_blank">our prices</a>.
 
 > **Testimonials:**
@@ -258,6 +290,24 @@ Please report security bugs found in the source code of the ShortPixel Image Opt
 
 The ShortPixel team is here to help. <a href="https://shortpixel.com/contact">Contact us</a>!
 
+= How do I compress images without losing quality in WordPress? =
+The best way to compress images without losing quality in WordPress is by using the ShortPixel plugin. ShortPixel automatically compresses images with lossless compression, ensuring the visual quality remains intact while significantly reducing file sizes. Once installed, it optimizes your images in just one click, improving your website's loading speed and SEO performance. You can bulk optimize existing images or compress new ones as you upload them, all without sacrificing quality, making it an ideal solution for maintaining high-quality visuals and fast site performance.
+
+= What is image optimization? =
+
+Image optimization is reducing the file size of images without compromising their quality, to improve website performance. This can be done using tools like ShortPixel, which compresses images, converts them to more efficient formats like WebP, and ensures they are properly sized for faster loading times. Optimized images help improve website speed, enhance user experience, and boost SEO rankings by reducing page load time and bandwidth usage.
+
+= How to optimize a WordPress image? =
+
+The best way to optimize a WordPress image is by using the ShortPixel plugin. ShortPixel automatically optimizes images with both lossless and lossy compression options, reducing file size while keeping high visual quality. Once installed, it optimizes your images in one click, improving your site's load speed and SEO. You can bulk optimize existing images or new uploads, ensuring fast site performance without sacrificing image quality, making it the ideal solution for WordPress image optimization.
+
+= How to SEO optimize images? =
+
+To SEO optimize images in wordpress, use the ShortPixel plugin to compress and convert them without losing quality, reducing load times—a key SEO factor. Add descriptive file names and alt text with relevant keywords to help search engines understand your images. Additionally, resize images to appropriate dimensions and consider converting them to WebP for faster performance. ShortPixel makes this entire process easy, helping improve both your SEO rankings and site speed.
+
+= How do you optimize images for performance? =
+
+To optimize images for performance in WordPress, use the ShortPixel plugin to compress images without sacrificing quality, reducing file sizes for faster load times. Convert images to efficient formats like WebP and ensure they are properly resized to fit your site’s design. ShortPixel automates this process in one click, boosting your website's speed, improving user experience, and enhancing SEO—all key elements for optimal performance.
 
 == Actions and Filters for Developers ==
 
@@ -392,6 +442,18 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 6.0.0 =
+Release date: November 21, 2024
+* New: The plugin now also delivers next generation images such as WebP and AVIF via the ShortPixel CDN;
+* New: Complete redesign of the plugin settings and layout;
+* New: Overview page with image status in a single view;
+* New: Simple and advanced settings modes are now available;
+* Tweak: Plugin processing is no longer started for users without appropriate rights (such as Authors);
+* Fix: The filter "optimized/not optimized" from the Media Library now works correctly when the main image is excluded;
+* Fix: The comparator in the NextGen Gallery now looks better;
+* Fix: When using WPML, random optimization errors occurred with some images;
+* Language: Many of the plugin strings have been updated or changed and we thank the translation teams for their efforts..
 
 = 5.6.4 =
 Release date: October 9, 2024
@@ -716,3 +778,4 @@ Release date October 20th, 2022
 = 4.22.9 =
 
 * This version contains a fix for the WP Offload Media plugin version 2.6.0 and above. Please ensure you're running the latest WP Offload Media plugin and check that everything works correctly after upgrading.
+

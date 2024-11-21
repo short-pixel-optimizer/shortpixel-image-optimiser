@@ -1010,8 +1010,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 
           // If anything changed during load, and this is stored ( ie optimized ) images, update changes.
-          if (true === $this->didAnyRecordChange() && ! is_null($this->getMeta('databaseID')))
+          if (true === $this->didAnyRecordChange() && ! is_null($this->getMeta('databaseID')) && $this->imageType !== self::IMAGE_TYPE_DUPLICATE)
           {
+
               $this->saveMeta();
               $this->resetRecordChanges();
           }
@@ -1041,6 +1042,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				$duplicate_id = (int) $meta[0]->parent;
 				$sqlPrep = $wpdb->prepare($sqlQuery, $duplicate_id);
 				$meta = $wpdb->get_results($sqlPrep);
+        // This is an error state if the parent also seems duplicate (bug - should be fixed). Dump and reacquire
+        if (count($meta) == 1 && $meta[0]->image_type == self::IMAGE_TYPE_DUPLICATE)
+        {
+            $this->deleteMeta();
+        }
 				$this->parent =  $duplicate_id;
 
 		 }
@@ -1050,6 +1056,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			 $duplicates = $this->getWPMLDuplicates();
 			 if (count($duplicates) > 0) //duplicates found, but not saved.
 			 {
+
 				 $in_str_arr = array_fill( 0, count( $duplicates ), '%s' );
 				 $in_str = join( ',', $in_str_arr );
 
@@ -1259,6 +1266,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				switch($imageType)
 				{
 					 case self::IMAGE_TYPE_MAIN:
+           case self::IMAGE_TYPE_DUPLICATE:
 					 		$this->setMeta('databaseID', $database_id);
 					 break;
 					 case self::IMAGE_TYPE_THUMB:
@@ -1304,6 +1312,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 			$this->parent = $data->parent;
 
+      $this->imageType = self::IMAGE_TYPE_DUPLICATE;
 		  $this->createRecord($data, $imageType);
 	}
 
@@ -1372,7 +1381,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				 if ($this->hasBackup($args))
 				 {
 					  $file = $this->getBackupFile($args);
-
 						if ($file->exists())
 							$file->delete();
 				 }

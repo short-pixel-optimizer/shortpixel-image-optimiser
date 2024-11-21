@@ -15,7 +15,7 @@ abstract class AdminNoticeModel
 	 protected $key; // abstract
 	 protected $notice;
 
-	 protected $errorLevel = 'normal';
+	 protected $errorLevel = 'normal';  // normal, warning, error
 	 protected $suppress_delay = YEAR_IN_SECONDS;
 	 protected $callback;
 
@@ -110,6 +110,9 @@ abstract class AdminNoticeModel
 			 case 'warning':
 			 	$notice = Notices::addWarning($this->getMessage());
 			 break;
+       case 'error':
+        $notice = Notices::addError($this->getMessage());
+       break;
 			 case 'normal';
 			 default:
 			 	$notice = Notices::addNormal($this->getMessage());

@@ -1,0 +1,254 @@
+#tab-nokey
+{
+
+ h1 {
+	  font-size: 36px;
+		text-align: center;
+		margin: 20px 0;
+ }
+  .onboarding-logo
+  {
+		 text-align: center;
+      img {
+        width: 400px;
+      }
+
+
+  }
+
+	.onboarding-join-wrapper
+	{
+		 display: flex;
+//		 flex: 1;
+		 justify-content: space-between;
+
+		 settinglist {
+			 //flex: 0 0 50%;
+       background-color: #fff; //$blue_background;
+       width: 50%;
+       padding: 12px;
+       margin-top: 30px;
+       border: 0;
+       setting {
+         background-color: #fff ;
+       }
+       &:first-child {
+        //  border-right: 8px solid #fff;
+        margin-right: 8px;
+       }
+       &.now-active
+       {
+         background-color: $blue_background;
+      //   transition: all ease-out 0.5s;
+         border: 1px solid #000;
+
+         setting {
+           background-color: $blue_background ;
+
+         }
+       }
+       &.new-customer
+       {
+           #tos {
+              &.invalid
+              {
+                 border: 2px solid #ff0000;
+              }
+           }
+           .shortpixel-settings-error
+           {
+              color: #ff0000;
+           }
+       }
+     }
+
+	}
+
+  .submit-errors
+  {
+
+        button.notice-dismiss {
+          display: none;
+        }
+
+  }
+  .onboard-submit
+  {
+     margin: 25px 0;
+     text-align: center;
+     button {
+        width: 250px;
+     }
+
+     setting {
+        background: #fff;
+        error
+        {
+           width: 100%;
+        }
+     }
+
+  }
+
+} // tab-nokey
+
+
+// Quicktour highlight syste
+&.page-quick-tour  // quick tour active on root element
+{
+
+}
+/*
+&.step-1-active { // highlight each step
+   .step-1-highlight {
+      border: 3px solid $green_highlight;
+   }
+}
+*/
+[class*='step-highlight-']
+{
+    border: 0px solid $green_highlight;
+    transition: 0.2s border linear;
+}
+
+@for $i from 0 through 6
+{
+  &.active-step-#{$i} .step-highlight-#{$i} { // highlight each step
+        border-width: 3px;
+	border-radius: 8px;
+	border-style: dashed;
+  }
+}
+
+
+.quick-tour
+{
+   position: absolute;
+   z-index: 9;
+   width: 60%;
+   display: flex;
+   left: 30%;
+   top: 50px;
+   text-align: center;
+   padding: 8px;
+   filter: unset;
+
+   .ufo  {
+        img {
+          width: 110px;
+	  filter: drop-shadow(0 0 .75rem #333);
+        }
+   }
+   .content-wrapper
+   {
+      border: 3px solid $green_highlight;
+      border-radius: 6px;
+      width: 500px;
+    //  height: 140px;
+      background: #fff;
+      margin-left: 8px;
+      position: relative;
+      padding: 8px 12px 8px;
+      box-shadow: rgba(0, 0, 0, 0.5) 0px 0px 24px;
+
+     &:after {
+       content:"";
+       position: absolute;
+       left:13px;
+       top:0px;
+       border-top: 0px solid transparent;
+       border-right: 10px solid #00C898;
+       border-bottom: 13px solid transparent;
+       margin: 13px 0 0 -25px;
+
+     }
+     &:before {
+       content:"";
+       position: absolute;
+       left:18px;
+       top:40px;
+       border-top: 0px solid transparent;
+       border-right: 7px solid white;
+       border-bottom: 10px solid transparent;
+       margin: -25px;
+       z-index:1
+     }
+
+      // default state.
+      .step
+      {
+         h4 {
+            font-size: 14px;
+         }
+         display: none;
+         &.active
+         {
+            display: inline-block;
+         }
+      }
+      div.close
+      {
+         position: absolute;
+         right: 4px;
+         top: 4px;
+      //   width: 14px;
+        // height: 14px;
+         .shortpixel-icon
+         {
+            width:  14px;
+            height: 14px;
+
+         }
+      }
+
+   } // content wrapper
+   .navigation
+   {
+       text-align: center;
+       .step_count { display: none; }
+       .stepdot
+       {
+          width: 10px;
+          height: 11px;
+          border: 0;
+          background: $color-grey;
+          border-radius: 50%;
+          display: inline-block;
+          margin-right: 4px;
+          cursor: pointer;
+          &.active {
+             background: $blue_default;
+          }
+       }
+       button.show-start .next {
+            display: none;
+       }
+       button.show-next .start {
+            display: none;
+       }
+       button.close i {
+	 vertical-align: text-top;
+       }
+       span.next i {
+	 margin-left: 4px;
+	 margin-right: 0px;
+	 vertical-align: text-top;
+       }
+       .shortpixel-icon
+       {
+          width: 14px;
+          height: 14px;
+       }
+       .hide { display: none; }
+
+   }
+   .close {
+    cursor: pointer;
+  //    float: right;
+
+  //    svg { fill: $blue_default; }
+//      margin-right: 4px;
+//      margin-top: 4px;
+//      color: $blue_default;
+   }
+}

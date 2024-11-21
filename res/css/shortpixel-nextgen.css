@@ -1,3 +1,71 @@
+div.sp-modal-shade {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 10000; /* Sit on top - blame WP-admin for the z-index battle . */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background: rgb(0, 0, 0); /* Fallback color */
+  background: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+  opacity: 0.4;
+}
+
+div.shortpixel-modal {
+  background-color: #fefefe;
+  /*margin: 8% auto;  15% from the top and centered */
+  padding: 20px;
+  border: 1px solid #888;
+  width: 30%; /* Could be more or less, depending on screen size */
+  min-width: 300px; /* Could be more or less, depending on screen size */
+  z-index: 999999; /* Z-index wars :/ */
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  max-height: 90%;
+  overflow-y: auto;
+}
+div.shortpixel-modal button.sp-close-button, div.shortpixel-modal button.sp-close-upgrade-button {
+  float: right;
+  margin-top: 0px;
+  background: transparent !important;
+  border: none;
+  font-size: 22px;
+  line-height: 10px;
+  color: #000 !important;
+  cursor: pointer;
+}
+div.shortpixel-modal .sptw-modal-spinner {
+  background-image: url("../img/spinner2.gif");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+div.sp-modal-title {
+  font-size: 22px;
+  color: #3c434a;
+  text-transform: none;
+  font-weight: 400;
+}
+
+div.sp-modal-body {
+  margin-top: 10px;
+}
+
+#ngg_page_content .sp-modal-title button {
+  float: right;
+  margin-top: 0px;
+  background: transparent !important;
+  border: none;
+  font-size: 22px;
+  line-height: 10px;
+  color: #000 !important;
+  cursor: pointer;
+  height: auto !important;
+  padding: 0 !important;
+}
+
 #ngg_page_content .sp-column-info {
   position: relative;
 }
@@ -5,14 +73,22 @@
   min-width: 150px;
   margin-bottom: 5px;
 }
+#ngg_page_content .sp-column-info .button-smaller.button-primary {
+  font-weight: 700;
+}
 #ngg_page_content .sp-column-info .sp-column-actions {
   float: right;
   position: absolute;
   right: 10px;
   top: 0;
+  margin-top: 0;
+}
+#ngg_page_content .sp-column-info .sp-column-actions button.button {
+  padding: 0 8px !important;
 }
 #ngg_page_content .sp-column-info .button {
   background-color: black;
+  color: #fff;
 }
 #ngg_page_content .sp-column-info .dashicons::before {
   font-family: dashicons;

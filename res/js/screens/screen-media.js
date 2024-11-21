@@ -205,7 +205,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
               var data = {};
               data.id =  id;
               data.type = self.type;
-              data.action = 'getItemView';
               data.callback = 'shortpixel.MediaRenderView';
 
               window.addEventListener('shortpixel.MediaRenderView', this.renderSPIOView.bind(this), {'once':true});

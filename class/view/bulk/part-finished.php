@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 <section class="panel finished" data-panel="finished">
   <div class="panel-container">
 
-    <h3 class="heading"><span><img src="<?php echo \wpSPIO()->plugin_url('res/img/robo-slider.png'); ?>"></span>
+    <h3 class="heading">
       <?php esc_html_e('The ShortPixel Bulk Processing is finished' ,'shortpixel-image-optimiser'); ?>
 
       <div class='average-optimization'>
@@ -56,7 +56,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 
     <div class='bulk-summary' data-check-visibility data-control="data-check-media-total">
       <div class='heading'>
-        <span><i class='dashicons dashicons-images-alt2'>&nbsp;</i> <?php esc_html_e('Media Library','shortpixel-image-optimiser'); ?></span>
+        <span><i class='dashicons dashicons-images-alt2'>&nbsp;</i> <?php esc_html_e('Media Library','shortpixel-image-optimiser'); ?>
+          <?php if (false !== $this->view->customOperationMedia) {
+             echo " - <span class='special-op'>" . $this->view->customOperationMedia . "</span>";
+          } ?>
+        </span>
+
         <span>
               <span class='line-progressbar'>
                 <span class='done-text'><i data-stats-media="percentage_done"></i> %</span>
@@ -96,7 +101,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 
     <div class='bulk-summary' data-check-visibility data-control="data-check-custom-total">
       <div class='heading'>
-        <span><i class='dashicons dashicons-open-folder'>&nbsp;</i> <?php esc_html_e('Custom Media','shortpixel-image-optimiser'); ?></span>
+        <span><i class='dashicons dashicons-open-folder'>&nbsp;</i> <?php esc_html_e('Custom Media','shortpixel-image-optimiser'); ?>
+          <?php if (false !== $this->view->customOperationCustom) {
+             echo " - <span class='special-op'>" . $this->view->customOperationCustom . "</span>";
+          } ?>
+        </span>
         <span>
               <span class='line-progressbar'>
                 <span class='done-text'><i data-stats-custom="percentage_done"></i> %</span>

@@ -1,11 +1,13 @@
 @import 'elements/animation';
 @import 'elements/actionbar';
+@import 'elements/colors';
 
 @import 'view/edit-media';
 //@import 'view/other-media';
 @import 'view/list-item';
 @import 'view/modal';
 @import 'view/debug';
+
 
 
 // General Styles ( mostly from style.css )
@@ -21,7 +23,7 @@
 	 margin-bottom: 16px;
 }
 
-.switch_button
+.switch_button, switch
 {
 //	margin-left: -5px;
 	line-height: 12px;
@@ -35,7 +37,7 @@
 			outline: none;
 		}
 	}
-	input { display: none;
+	input[type="checkbox"] { display: none;
 		&:checked ~ .the_switch { background: #7cdce4; } // background of bar when active
 		&:checked ~ .the_switch:after {
 			left: 20px;
@@ -81,4 +83,80 @@ transition         : left 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), padding 
 		}
 	}
 
+}
+
+// The advanced switch
+.adv_switch {
+  position: relative;
+  display: inline-block;
+  width: 45px;
+  height: 19px;
+  bottom: 2px;
+  left: 20px;
+
+  // Hide the default checkbox
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  // The slider
+  .adv_slider {
+    position: absolute;
+    cursor: pointer;
+    background-color: $color-grey; // Unchecked background color
+    border-radius: 34px;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transition: 0.4s;
+
+    // The circle inside the slider
+    &::before {
+      position: absolute;
+      content: "";
+      height: 13px;
+      width: 13px;
+      left: 3px;
+      bottom: 3px;
+      background-color: #A9A9A9; // Unchecked ball color
+      border-radius: 50%;
+      transition: 0.4s;
+      box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+    }
+
+    // The label
+    &::after {
+      position: absolute;
+      content: "OFF";
+      color: white;
+      font-size: 10px;
+      top: 9px;
+      transform: translateY(-50%);
+      right: 5px;
+      transition: 0.4s;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+      font-weight: bold;
+    }
+  }
+
+  // Change background color when checked
+  input:checked + .adv_slider {
+    background-color: $green_highlight; // Checked background color
+
+    // Move the circle to the right and change its color when checked
+    &::before {
+      transform: translateX(26px);
+      background-color: #fff; // Checked ball color
+    }
+
+    // Change label when checked
+    &::after {
+      content: "ON";
+      left: 8px;
+      right: auto;
+    }
+  }
 }

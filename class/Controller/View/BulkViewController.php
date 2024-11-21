@@ -6,7 +6,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-use ShortPixel\Notices\NoticeController as Notices;
 
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
@@ -37,6 +36,8 @@ class BulkViewController extends \ShortPixel\ViewController
   {
     $quota = QuotaController::getInstance();
     $optimizeController = new OptimizeController();
+    $bulkController = BulkController::getInstance();
+
 
     $this->view->quotaData = $quota->getQuota();
 
@@ -73,9 +74,33 @@ class BulkViewController extends \ShortPixel\ViewController
 		$this->view->buyMoreHref = 'https://shortpixel.com/' . ($keyControl->getKeyForDisplay() ? 'login/' . $keyControl->getKeyForDisplay() . '/spio-unlimited' : 'pricing');
 
 
+    $custom_operation_media = $bulkController->getCustomOperation('media');
+    $custom_operation_custom = $bulkController->getCustomOperation('custom');
+
+    $this->view->customOperationMedia = (false !== $custom_operation_media) ? $this->getCustomLabel($custom_operation_media) : false;
+    $this->view->customOperationCustom = (false !== $custom_operation_custom) ? $this->getCustomLabel($custom_operation_custom) : false;
+
 
     $this->loadView();
 
+  }
+
+  private function getCustomLabel($operation)
+  {
+      switch($operation)
+      {
+          case 'bulk-restore';
+            $label = __('Bulk Restore', 'shortpixel-image-optimiser');
+          break;
+          case 'migrate':
+            $label = __('Migrate data', 'shortpixel-image-optimiser');
+          break;
+          case 'removeLegacy':
+            $label = __('Remove Legacy Data', 'shortpixel-image-optimiser');
+          break;
+      }
+
+      return $label;
   }
 
 	// Double with ApiNotice . @todo Fix.
@@ -200,8 +225,6 @@ class BulkViewController extends \ShortPixel\ViewController
 
       foreach($logs as $logData)
       {
-
-
           $logFile = $fs->getFile($backupDir->getPath() . 'bulk_' . $logData['type'] . '_' . $logData['date'] . '.log');
           $errors = $logData['fatal_errors'];
 
@@ -247,7 +270,6 @@ class BulkViewController extends \ShortPixel\ViewController
 					$images = isset($logData['total_images']) ? $logData['total_images'] : $logData['processed'];
 
           $view[] = array('type' => $logData['type'], 'images' => $images, 'errors' => $errors, 'date' => UiHelper::formatTS($logData['date']), 'operation' => $op, 'bulkName' => $bulkName);
-
       }
 
       krsort($view);

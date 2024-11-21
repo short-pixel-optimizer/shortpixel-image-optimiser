@@ -83,8 +83,8 @@ window.ShortPixelProcessor =
 
         this.nonce['process'] = ShortPixelProcessorData.nonce_process;
         this.nonce['exit'] = ShortPixelProcessorData.nonce_exit;
-        this.nonce['itemview'] = ShortPixelProcessorData.nonce_itemview;
         this.nonce['ajaxRequest'] = ShortPixelProcessorData.nonce_ajaxrequest;
+				this.nonce['settingsRequest'] = ShortPixelProcessorData.nonce_settingsrequest;
 
 				this.autoMediaLibrary = (ShortPixelProcessorData.autoMediaLibrary == 'true') ? true : false;
 
@@ -636,7 +636,7 @@ window.ShortPixelProcessor =
         {
            data.callback = 'shortpixel.RenderItemView';
         }
-      	this.worker.postMessage({action: 'getItemView', 'nonce' : this.nonce['itemview'], 'data': { 'id' : data.id, 'type' : data.type, 'callback' : data.callback }});
+				this.worker.postMessage({action: 'ajaxRequest', 'nonce' : this.nonce['ajaxRequest'], 'data': { 'id' : data.id, 'type' : data.type, 'callback' : data.callback, 'screen_action' : 'getItemView' }});
 			}
     },
 
@@ -650,6 +650,17 @@ window.ShortPixelProcessor =
        var localWorker = false;
        this.worker.postMessage({action: 'ajaxRequest', 'nonce' : this.nonce['ajaxRequest'], 'data': data });
     },
+		SettingsRequest: function(data)
+		{
+			if (this.worker === null)
+			{
+				 this.LoadWorker(); // JIT worker loading
+			}
+
+			 var localWorker = false;
+			 this.worker.postMessage({action: 'settingsRequest', 'nonce' : this.nonce['settingsRequest'], 'data': data });
+		},
+
 		GetPluginUrl: function()
 		{
 			 return ShortPixelConstants[0].WP_PLUGIN_URL;

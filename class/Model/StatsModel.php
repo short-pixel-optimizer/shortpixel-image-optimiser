@@ -20,8 +20,8 @@ class StatsModel
 {
 
   // Below are counted and saved in settings
-  protected $totalOptimized; // combined filesize of optimized images
-  protected $totalOriginal;  // combined filesize of original images
+  //protected $totalOptimized; // combined filesize of optimized images
+  //protected $totalOriginal;  // combined filesize of original images
 
   // There are gotten via SQL and saved in stats
   //protected $totalImages;
@@ -90,14 +90,21 @@ class StatsModel
   {
     $settings = \wpSPIO()->settings();
 
-    $this->totalOptimized = $settings->totalOptimized;
-    $this->totalOriginal = $settings->totalOriginal;
-
     $stats = $settings->currentStats;
+		if (! is_array($stats))
+		{
+			 $stats = $this->defaults;
+		}
+
+		$stats = array_filter($stats);
 
     // Legacy. Stats from < 5.0 are loaded somehow. Don't load them.
     if (isset($stats['APIKeyValid']))
+		{
       $stats = $this->defaults;
+		}
+
+		$stats = array_merge($this->defaults, $stats); // merge like args to ensure full structure present.
 
     $this->lastUpdate = (isset($stats['time'])) ? $stats['time'] : 0;
 
@@ -106,7 +113,9 @@ class StatsModel
        $this->stats = $stats;
     }
     else
+		{
       $this->stats = $this->defaults;
+		}
 
   }
 
@@ -115,7 +124,6 @@ class StatsModel
      $settings = \wpSPIO()->settings();
      $stats = $this->stats;
      $stats['time'] = time();
-
      $settings->currentStats = $stats;
   }
 
@@ -149,10 +157,11 @@ class StatsModel
   public function getStat($type)
   {
       $this->currentStat = null;
-
       if (isset($this->stats[$type]))
       {
-         $this->currentStat = $this->stats[$type];
+         $stat = $this->stats[$type];
+
+         $this->currentStat = $this->checkInt($stat);
          $this->path = [$type];
       }
 
@@ -161,22 +170,22 @@ class StatsModel
 
   public function grab($data)
   {
-
      if (is_null($this->currentStat))
           return null;
 
-       if (array_key_exists($data, $this->currentStat))
+       if (is_array($this->currentStat) && array_key_exists($data, $this->currentStat))
        {
-          $this->currentStat = $this->currentStat[$data];
+          $this->currentStat = $this->checkInt($this->currentStat[$data]);
           $this->path[] = $data;
        }
 
 
        if (! is_array($this->currentStat))
        {
+
          if ($this->currentStat === -1)
          {
-            $this->currentStat = $this->fetchStatdata();  // if -1 stat might not be loaded, load.
+            $this->currentStat = $this->checkInt($this->fetchStatdata());  // if -1 stat might not be loaded, load.
          }
 
         return $this->currentStat;
@@ -299,6 +308,16 @@ class StatsModel
 
   }
 
+  private function checkInt($var)
+  {
+    if (is_numeric($var) && gettype($var) !== 'integer')
+    {
+       $var = intval($var);
+    }
+    return $var;
+
+  }
+
 
   // suboptimal over full stats implementation, but faster.
   private function countMediaThumbnails($args = array())
@@ -386,6 +405,7 @@ class StatsModel
 			if (is_null($count) && strpos($wpdb->last_error, 'exist') !== false)
 			{
 				 InstallHelper::checkTables();
+         Log::addError('StatsModel WPDB error', $wpdb->last_error);
 				 return 0;
 			}
 

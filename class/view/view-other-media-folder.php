@@ -2,7 +2,6 @@
 
 namespace ShortPixel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-use ShortPixel\Notices\NoticeController as Notices;
 
 use ShortPixel\Helper\UiHelper as UiHelper;
 

@@ -9,6 +9,8 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Model\StatsModel as StatsModel;
 use ShortPixel\Controller\Queue\StatsQueue as StatsQueue;
+use ShortPixel\Model\Image\ImageModel as ImageModel;
+
 
 class StatsController extends \ShortPixel\Controller
 {
@@ -46,7 +48,6 @@ class StatsController extends \ShortPixel\Controller
         }
 
         $stat = $this->model->getStat(array_shift($params));
-
         for($i = 0; $i < count($params); $i++)
         {
             $stat = $stat->grab($params[$i]);
@@ -69,17 +70,30 @@ class StatsController extends \ShortPixel\Controller
 
     public function getAverageCompression()
     {
-      $totalOptimized = $this->model->get('totalOptimized');
-      $totalOriginal = $this->model->get('totalOriginal');
+      $cacheControl = new CacheController();
 
-			$average = 0;
+      $item = $cacheControl->getItem('average_compression');
+      if ($item->exists())
+      {
+         return $item->getValue();
+      }
+      else {
 
-			if ($totalOptimized > 0 && $totalOriginal > 0)
-			{
-				 $average = round(( 1 -  ( $totalOptimized / $totalOriginal ) ) * 100, 2);
-			}
+          global $wpdb;
+          $sql = 'select round(AVG(100-(compressed_size / original_size * 100))) from ' . $wpdb->prefix  . 'shortpixel_postmeta where status = %d  order by id desc limit 1000';
+          $sql = $wpdb->prepare($sql, ImageModel::FILE_STATUS_SUCCESS);
 
-      return $average;
+          $result = $wpdb->get_var($sql);
+
+          if (is_numeric($result) && $result > 0)
+          {
+             $cacheControl->storeItem('average_compression', $result);
+             return $result;
+          }
+      }
+
+      return 0;
+
     }
 
     // This is not functional @todo

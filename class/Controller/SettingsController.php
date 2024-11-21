@@ -11,89 +11,57 @@ use ShortPixel\Helper\UiHelper as UiHelper;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
 use ShortPixel\Helper\InstallHelper as InstallHelper;
 
-use ShortPixel\Model\ApiKeyModel as ApiKeyModel;
 use ShortPixel\Model\AccessModel as AccessModel;
+use ShortPixel\Model\SettingsModel as SettingsModel;
 
 use ShortPixel\NextGenController as NextGenController;
 
-class SettingsController extends \ShortPixel\ViewController
+class SettingsController extends \ShortPixel\Controller
 {
 
-     //env
-     protected $is_nginx;
-     protected $is_verifiedkey;
-     protected $is_htaccess_writable;
-		 protected $is_gd_installed;
-		 protected $is_curl_installed;
-     protected $is_multisite;
-     protected $is_mainsite;
-     protected $is_constant_key;
-     protected $hide_api_key;
-     protected $has_nextgen;
-     protected $do_redirect = false;
-     protected $disable_heavy_features = false; // if virtual and stateless, might disable heavy file ops.
-
-     protected $quotaData = null;
-
-     protected $keyModel;
-
-     protected $mapper = array(
-       'key' => 'apiKey',
-       'cmyk2rgb' => 'CMYKtoRGBconversion',
-     );
-
-     protected $display_part = 'settings';
-		 protected $all_display_parts = array('settings', 'adv-settings', 'cloudflare', 'debug', 'tools');
-     protected $form_action = 'save-settings';
-
 		 protected static $instance;
+     protected $model;
 
       public function __construct()
       {
           $this->model = \wpSPIO()->settings();
-
-
-					//@todo Streamline this mess. Should run through controller mostly. Risk of desync otherwise.
 					$keyControl = ApiKeyController::getInstance();
-          $this->keyModel = $keyControl->getKeyModel(); //new ApiKeyModel();
-
-         // $this->keyModel->loadKey();
-          $this->is_verifiedkey = $this->keyModel->is_verified();
-          $this->is_constant_key = $this->keyModel->is_constant();
-          $this->hide_api_key = $this->keyModel->is_hidden();
-
+          $this->keyModel = $keyControl->getKeyModel();
 
           parent::__construct();
+
+					$this->load();
       }
 
-      // default action of controller
-      public function load()
-      {
+			/* Loads the view data and the view */
+			public function load()
+			{
+			 if (false === $this->keyModel->is_verified()) // supress quotaData alerts when handing unset API's.
+			 {
+				InstallHelper::checkTables();
+			 }
 
-        $this->loadEnv();
-        $this->checkPost(); // sets up post data
+			}
 
-        $this->model->redirectedSettings = 2; // Prevents any redirects after loading settings
+			public function getInstance()
+			{
+				if (is_null(self::$instance))
+				 self::$instance = new static();
 
-        if ($this->is_form_submit)
-        {
-          $this->processSave();
-        }
-
-        $this->load_settings();
-      }
+			 return self::$instance;
+			}
 
 
       // this is the nokey form, submitting api key
       public function action_addkey()
       {
         $this->loadEnv();
+
         $this->checkPost();
 
-        Log::addDebug('Settings Action - addkey ', array($this->is_form_submit, $this->postData) );
-        if ($this->is_form_submit && isset($this->postData['apiKey']))
+        if ($this->is_form_submit && isset($_POST['apiKey']))
         {
-            $apiKey = $this->postData['apiKey'];
+            $apiKey = sanitize_text_field($_POST['apiKey']);
             if (strlen(trim($apiKey)) == 0) // display notice when submitting empty API key
             {
               Notice::addError(sprintf(__("The key you provided has %s characters. The API key should have 20 characters, letters and numbers only.",'shortpixel-image-optimiser'), strlen($apiKey) ));
@@ -101,7 +69,7 @@ class SettingsController extends \ShortPixel\ViewController
             else
             {
               $this->keyModel->resetTried();
-              $this->keyModel->checkKey($this->postData['apiKey']);
+              $this->keyModel->checkKey($apiKey);
             }
         }
 
@@ -194,7 +162,6 @@ class SettingsController extends \ShortPixel\ViewController
 
 			}
 
-
 			public function action_debug_redirectBulk()
 			{
 				$this->checkPost();
@@ -216,7 +183,6 @@ class SettingsController extends \ShortPixel\ViewController
 				{
 					 $this->doRedirect('bulk-removeLegacy');
 				}
-
 			}
 
       /** Button in part-debug, routed via custom Action */
@@ -226,7 +192,6 @@ class SettingsController extends \ShortPixel\ViewController
 					$this->checkPost();
           $statsController = StatsController::getInstance();
           $statsController->reset();
-
 					$this->doRedirect();
       }
 
@@ -237,19 +202,15 @@ class SettingsController extends \ShortPixel\ViewController
 					$this->checkPost();
           $quotaController = QuotaController::getInstance();
           $quotaController->forceCheckRemoteQuota();
-
           $this->doRedirect();
       }
 
       public function action_debug_resetNotices()
       {
-
           $this->loadEnv();
 					$this->checkPost();
           Notice::resetNotices();
           $nControl = new Notice(); // trigger reload.
-
-
           $this->doRedirect();
       }
 
@@ -278,7 +239,6 @@ class SettingsController extends \ShortPixel\ViewController
 					}
 				}
 				$this->doRedirect();
-
 			}
 
 			public function action_debug_resetQueue()
@@ -306,7 +266,6 @@ class SettingsController extends \ShortPixel\ViewController
 								{
 										$q->resetQueue();
 								}
-
 						 }
 						 else
 						 {
@@ -322,10 +281,8 @@ class SettingsController extends \ShortPixel\ViewController
 								 $message = sprintf(__('All items in the %s queue have been removed and the process is stopped', 'shortpixel-image-optimiser'), $queue);
  						 }
 
-
 						 Notice::addSuccess($message);
 			 }
-
 
 				$this->doRedirect();
 			}
@@ -358,9 +315,7 @@ class SettingsController extends \ShortPixel\ViewController
 				exit('reloading settings would cause processorKey to be set again');
 			}
 
-
-
-      public function processSave()
+      protected function processSave()
       {
           // Split this in the several screens. I.e. settings, advanced, Key Request IF etc.
           if (isset($this->postData['includeNextGen']) && $this->postData['includeNextGen'] == 1)
@@ -373,30 +328,25 @@ class SettingsController extends \ShortPixel\ViewController
               AdminNoticesController::resetIntegrationNotices();
           }
 
-          $check_key = false;
-          if (isset($this->postData['apiKey']))
-          {
-              $check_key = $this->postData['apiKey'];
-              unset($this->postData['apiKey']); // unset, since keyModel does the saving.
-          }
-
+Log::addTemp('PostData', $this->postData);
 					// If the compression type setting changes, remove all queued items to prevent further optimizing with a wrong type.
 					if (intval($this->postData['compressionType']) !== intval($this->model->compressionType))
 					{
 						 OptimizeController::resetQueues();
 					}
 
+          if (isset($_POST['apiKey']) && false === $this->keyModel->is_constant())
+          // first save all other settings ( like http credentials etc ), then check
+          {
+              $check_key = sanitize_text_field($_POST['apiKey']);
+              $this->keyModel->resetTried(); // reset the tried api keys on a specific post request.
+              $this->keyModel->checkKey($check_key);
+          }
+
           // write checked and verified post data to model. With normal models, this should just be call to update() function
           foreach($this->postData as $name => $value)
           {
             $this->model->{$name} = $value;
-          }
-
-          // first save all other settings ( like http credentials etc ), then check
-          if (! $this->keyModel->is_constant() && $check_key !== false) // don't allow settings key if there is a constant
-          {
-            $this->keyModel->resetTried(); // reset the tried api keys on a specific post request.
-            $this->keyModel->checkKey($check_key);
           }
 
 					// Every save, force load the quota. One reason, because of the HTTP Auth settings refresh.
@@ -416,219 +366,89 @@ class SettingsController extends \ShortPixel\ViewController
           }
       }
 
-      /* Loads the view data and the view */
-      public function load_settings()
-      {
-         if ($this->is_verifiedkey) // supress quotaData alerts when handing unset API's.
-          $this->loadQuotaData();
-        else
-          InstallHelper::checkTables();
-
-				 $keyController = ApiKeyController::getInstance();
-
-         $this->view->data = (Object) $this->model->getData();
-
-         $this->view->data->apiKey = $keyController->getKeyForDisplay();
-
-         $this->loadStatistics();
-				 $this->checkCloudFlare();
-
-         $statsControl = StatsController::getInstance();
-
-         $this->view->minSizes = $this->getMaxIntermediateImageSize();
-
-				 $excludeOptions = UtilHelper::getWordPressImageSizes();
-				 $mainOptions = array(
-					 'shortpixel_main_donotuse' =>  array('nice-name' => __('Main (scaled) Image', 'shortpixel-image-optimiser')),
-					 'shortpixel_original_donotuse' => array('nice-name' => __('Original Image', 'shortpixel-image-optimiser')),
-				 );
-
-				 $excludeOptions = array_merge($mainOptions, $excludeOptions);
-
-         $this->view->allThumbSizes = $excludeOptions;
-         $this->view->averageCompression = $statsControl->getAverageCompression();
-         $this->view->savedBandwidth = UiHelper::formatBytes( intval($this->view->data->savedSpace) * 10000,2);
-
-         $this->view->cloudflare_constant = defined('SHORTPIXEL_CFTOKEN') ? true : false;
-
-         $settings = \wpSPIO()->settings();
-
-				 if ($this->view->data->createAvif == 1)
-           $this->avifServerCheck();
-
-         $this->loadView('view-settings');
-      }
-
-			protected function avifServerCheck()
-      {
-    			$noticeControl = AdminNoticesController::getInstance();
-					$notice = $noticeControl->getNoticeByKey('MSG_AVIF_ERROR');
-
-          if (is_object($notice))
-          {
-					     $notice->check();
-          }
-      }
-
-      protected function loadStatistics()
-      {
-				/*
-        $statsControl = StatsController::getInstance();
-        $stats = new \stdClass;
-
-        $stats->totalOptimized = $statsControl->find('totalOptimized');
-        $stats->totalOriginal = $statsControl->find('totalOriginal');
-        $stats->mainOptimized = $statsControl->find('media', 'images');
-
-
-        // used in part-g eneral
-        $stats->thumbnailsToProcess =  $statsControl->thumbNailsToOptimize(); // $totalImages - $totalOptimized;
-
-//        $stats->totalFiles = $statsControl->find('media', '')
-
-
-        $this->view->stats = $stats;
-				*/
-      }
-
-			/** @todo Remove this check in Version 5.1 including all data on the old CF token */
-			protected function checkCloudFlare()
-			{
-          $settings = \wpSPIO()->settings();
-
-
-				 $authkey = $settings->cloudflareAuthKey;
-				 $this->view->hide_cf_global = true;
-
-				 if (strlen($authkey) > 0)
-				 {
-					 $message = '<h3> ' . __('Cloudflare', 'shortpixel-image-optimiser') . '</h3>';
-					 $message .= '<p>' . __('It appears that you are using the Cloudflare Global API key. As it is not as safe as the Cloudflare Token, it will be removed in the next version. Please, switch to the token.', 'shortpixel-image-optimiser') . '</p>';
-				 	 $message .= '<p>' . sprintf(__('%s How to set up the Cloudflare Token %s', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/325-using-shortpixel-image-optimizer-with-cloudflare-api-token" target="_blank">', '</a>') . '</p>';
-
-					  Notice::addNormal($message);
-						$this->view->hide_cf_global = false;
-				 }
-
-			}
-
-      /** Checks on things and set them for information. */
-      protected function loadEnv()
-      {
-          $env = wpSPIO()->env();
-
-          $this->is_nginx = $env->is_nginx;
-          $this->is_gd_installed = $env->is_gd_installed;
-          $this->is_curl_installed = $env->is_curl_installed;
-
-          $this->is_htaccess_writable = $this->HTisWritable();
-
-          $this->is_multisite = $env->is_multisite;
-          $this->is_mainsite = $env->is_mainsite;
-          $this->has_nextgen = $env->has_nextgen;
-
-          $this->disable_heavy_features = (\wpSPIO()->env()->hasOffload() && false === \wpSPIO()->env()->useVirtualHeavyFunctions()) ? true : false;
-
-          $this->display_part = (isset($_GET['part']) && in_array($_GET['part'], $this->all_display_parts) ) ? sanitize_text_field($_GET['part']) : 'settings';
-      }
-
-      /* Temporary function to check if HTaccess is writable.
-      * HTaccess is writable if it exists *and* is_writable, or can be written if directory is writable.
-      */
-      private function HTisWritable()
-      {
-          if ($this->is_nginx)
-            return false;
-
-					$file = \wpSPIO()->filesystem()->getFile(get_home_path() . '.htaccess');
-					if ($file->is_writable())
-					{
-						 return true;
-					}
-
-          return false;
-      }
-
-      protected function getMaxIntermediateImageSize() {
-          global $_wp_additional_image_sizes;
-
-          $width = 0;
-          $height = 0;
-          $get_intermediate_image_sizes = get_intermediate_image_sizes();
-
-          // Create the full array with sizes and crop info
-          if(is_array($get_intermediate_image_sizes)) foreach( $get_intermediate_image_sizes as $_size ) {
-              if ( in_array( $_size, array( 'thumbnail', 'medium', 'large' ) ) ) {
-                  $width = max($width, get_option( $_size . '_size_w' ));
-                  $height = max($height, get_option( $_size . '_size_h' ));
-                  //$sizes[ $_size ]['crop'] = (bool) get_option( $_size . '_crop' );
-              } elseif ( isset( $_wp_additional_image_sizes[ $_size ] ) ) {
-                  $width = max($width, $_wp_additional_image_sizes[ $_size ]['width']);
-                  $height = max($height, $_wp_additional_image_sizes[ $_size ]['height']);
-                  //'crop' =>  $_wp_additional_image_sizes[ $_size ]['crop']
-              }
-          }
-          return array('width' => max(100, $width), 'height' => max(100, $height));
-      }
-
-			// @param Force.  needed on settings save because it sends off the HTTP Auth
-      protected function loadQuotaData($force = false)
-      {
-        $quotaController = QuotaController::getInstance();
-
-				if ($force === true)
-				{
-					 $quotaController->forceCheckRemoteQuota();
-					 $this->quotaData = null;
-				}
-
-        if (is_null($this->quotaData))
-          $this->quotaData = $quotaController->getQuota(); //$this->shortPixel->checkQuotaAndAlert();
-
-
-        $quotaData = $this->quotaData;
-
-        $remainingImages = $quotaData->total->remaining; // $quotaData['APICallsRemaining'];
-        $remainingImages = ( $remainingImages < 0 ) ? 0 : $this->formatNumber($remainingImages, 0);
-
-        $this->view->remainingImages = $remainingImages;
-
-      }
 
       // This is done before handing it off to the parent controller, to sanitize and check against model.
-      protected function processPostData($post)
+      protected function processPostData($post, $model = null)
       {
-
           if (isset($post['display_part']) && strlen($post['display_part']) > 0)
           {
               $this->display_part = sanitize_text_field($post['display_part']);
           }
-          unset($post['display_part']);
 
           // analyse the save button
           if (isset($post['save_bulk']))
           {
             $this->do_redirect = true;
           }
-          unset($post['save_bulk']);
-          unset($post['save']);
 
           // handle 'reverse' checkbox.
           $keepExif = isset($post['removeExif']) ? 0 : 1;
           $post['keepExif'] = $keepExif;
-          unset($post['removeExif']);
 
           // checkbox overloading
           $png2jpg = (isset($post['png2jpg']) ? (isset($post['png2jpgForce']) ? 2 : 1): 0);
           $post['png2jpg'] = $png2jpg;
-          unset($post['png2jpgForce']);
 
           // must be an array
           $post['excludeSizes'] = (isset($post['excludeSizes']) && is_array($post['excludeSizes']) ? $post['excludeSizes']: array());
 
           $post = $this->processWebp($post);
           $post = $this->processExcludeFolders($post);
-          $post = $this->processCloudFlare($post);
+        //  $post = $this->processCloudFlare($post);
+
+					$check_key = false;
+
+					/*   This can't be here, no actions in the data check, because of actions
+          if (isset($post['apiKey']))
+
+					{
+							$check_key = sanitize_text_field($post['apiKey']);
+							unset($post['apiKey']); // unset, since keyModel does the saving.
+					}
+
+					// first save all other settings ( like http credentials etc ), then check
+          if (false === $this->keyModel->is_constant() && $check_key !== false) // don't allow settings key if there is a constant
+          {
+            $this->keyModel->resetTried(); // reset the tried api keys on a specific post request.
+            $this->keyModel->checkKey($check_key);
+          } */
+
+				// Field that are in form for other purpososes, but are not part of model and should not be saved.
+					$ignore_fields = array(
+							'display_part',
+							'save_bulk',
+							'save',
+							'removeExif',
+							'png2jpgForce',
+							'sp-nonce',
+							'_wp_http_referer',
+							'validate', // validate button from nokey part
+							'new-index',
+							'edit-exclusion',
+							'exclusion-type',
+							'exclusion-value',
+							'exclusion-minwidth',
+							'exclusion-maxwidth',
+							'exclusion-minheight',
+							'exclusion-maxheight',
+							'exclusion-width',
+							'exclusion-height',
+							'apply-select',
+							'screen_action',
+							'tools-nonce',
+							'confirm',
+							'tos',  // toss checkbox in nokey
+							'pluginemail'
+
+					);
+
+					foreach($ignore_fields as $ignore)
+					{
+						 if (isset($post[$ignore]))
+						 {
+						 		unset($post[$ignore]);
+						 }
+					}
 
           parent::processPostData($post);
 
@@ -693,8 +513,6 @@ class SettingsController extends \ShortPixel\ViewController
         foreach($exclusions as $index => $exclusions)
         {
             $accepted[] = json_decode(html_entity_decode( stripslashes($exclusions)), true);
-
-
         }
 
         foreach($accepted as $index => $pair)
@@ -756,57 +574,9 @@ class SettingsController extends \ShortPixel\ViewController
         return $post;
       }
 
-      protected function processCloudFlare($post)
-      {
-        if (isset($post['cf_auth_switch']) && $post['cf_auth_switch'] == 'token')
-        {
-            if (isset($post['cloudflareAuthKey']))
-              unset($post['cloudflareAuthKey']);
-
-            if (isset($post['cloudflareEmail']))
-              unset($post['cloudflareEmail']);
-
-        }
-        elseif (isset($post['cloudflareAuthKey']) && $post['cf_auth_switch'] == 'global')
-        {
-            if (isset($post['cloudflareToken']))
-               unset($post['cloudflareToken']);
-        }
-
-        return $post;
-      }
 
 
-      protected function doRedirect($redirect = 'self')
-      {
-        if ($redirect == 'self')
-        {
-
-          $url = esc_url_raw(add_query_arg('part', $this->display_part));
-          $url = remove_query_arg('noheader', $url); // has url
-          $url = remove_query_arg('sp-action', $url); // has url
-
-        }
-        elseif($redirect == 'bulk')
-        {
-          $url = admin_url("upload.php?page=wp-short-pixel-bulk");
-        }
-				elseif($redirect == 'bulk-migrate')
-				{
-					 $url = admin_url('upload.php?page=wp-short-pixel-bulk&panel=bulk-migrate');
-				}
-				elseif ($redirect == 'bulk-restore')
-				{
-						$url = admin_url('upload.php?page=wp-short-pixel-bulk&panel=bulk-restore');
-				}
-				elseif ($redirect == 'bulk-removeLegacy')
-				{
-						$url = admin_url('upload.php?page=wp-short-pixel-bulk&panel=bulk-removeLegacy');
-				}
-
-        wp_redirect($url);
-        exit();
-      }
 
 
-}
+
+} // class

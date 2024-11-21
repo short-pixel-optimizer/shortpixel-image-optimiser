@@ -1,0 +1,45 @@
+// The Header
+header
+{
+
+    background: #fff;
+    text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+//    width: 95%;
+    margin: 10px auto;
+//    border-radius: 16px;
+    margin-left: -22px;
+    margin-top: -10px;
+    margin-right: -22px;
+    margin-bottom: 10px;
+    padding: 8px 16px;
+    box-shadow: 0px 1px 4px 0px rgba(0, 0, 0, 0.1);
+
+    h1 {
+      line-height: 50px;
+    }
+    img {
+      vertical-align: bottom;
+      padding-bottom: 5px;
+      margin-right: 8px;
+      margin-left: 1.1em;
+    }
+    .top-buttons {
+	margin-right: 4em;
+	// Items for whole page, including header.
+      	a, button {
+		@include shortpixel-button;
+      	}
+      	.header-button {
+          i {
+            filter: $filter_white;
+            margin-right: 4px;
+            height: 15px;
+	    width: 15px;
+	    vertical-align: text-top;
+          }
+      	}
+    }
+}
