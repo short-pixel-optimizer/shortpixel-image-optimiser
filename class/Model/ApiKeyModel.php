@@ -241,7 +241,6 @@ class ApiKeyModel extends \ShortPixel\Model
 		// Remove them all
 		delete_option($this->legacy_model['apiKey']['key']);
 		delete_option($this->legacy_model['verifiedKey']['key']);
-		delete_option($this->legacy_model['redirectedSettings']['key']);
 		delete_option($this->legacy_model['apiKeyTried']['key']);
 
     delete_option($this->option_name);

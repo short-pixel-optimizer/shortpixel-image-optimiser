@@ -70,7 +70,6 @@ class SettingsViewController extends \ShortPixel\ViewController
       // default action of controller
       public function load()
       {
-
         $this->loadEnv();
         $this->checkPost(); // sets up post data
 
@@ -126,9 +125,11 @@ class SettingsViewController extends \ShortPixel\ViewController
 
         if (true === $this->keyModel->is_verified())
         {
+          Log::addtemp('Key OK, reload');
           $this->doRedirect('reload');
         }
         else {
+          Log::addtemp('Key NOT OK, no reload');
           $this->doRedirect();
         }
       }
@@ -215,7 +216,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 
       public function action_debug_editSetting()
       {
-        Log::addTEmp("ActioN: Edit Settings", $_POST);
+
         $this->loadEnv();
         $this->checkPost(false);
 
@@ -479,7 +480,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 
          $this->view->cloudflare_constant = defined('SHORTPIXEL_CFTOKEN') ? true : false;
 
-				 $this->view->is_unlimited= (!is_null($this->quotaData) && $this->quotaData->unlimited) ? true : false;
+         $this->view->is_unlimited=  (!is_null($this->quotaData) && $this->quotaData->unlimited) ? true : false;
 
 
          $settings = \wpSPIO()->settings();
@@ -789,6 +790,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 
           }
 
+
 				// Field that are in form for other purpososes, but are not part of model and should not be saved.
 					$ignore_fields = array(
 							'display_part',
@@ -962,14 +964,13 @@ class SettingsViewController extends \ShortPixel\ViewController
       protected function doRedirect($redirect = 'self')
       {
 
+        $url = null;
 
         if ($redirect == 'self')
         {
-
-          $url = esc_url_raw(add_query_arg('part', $this->display_part));
+          $url = esc_url_raw(add_query_arg('part', $this->display_part, $this->url));
           $url = remove_query_arg('noheader', $url); // has url
           $url = remove_query_arg('sp-action', $url); // has url
-
         }
         elseif($redirect == 'bulk')
         {
@@ -999,7 +1000,6 @@ class SettingsViewController extends \ShortPixel\ViewController
 
 			protected function handleAjaxSave($redirect, $url = false)
 			{
-				Log::addTemp('AJAX SAve' . $redirect);
 						// Intercept new notices and add them
 						// Return JSON object with status of save action
 						$json = new \stdClass;
@@ -1018,11 +1018,9 @@ class SettingsViewController extends \ShortPixel\ViewController
 						}
 						if ($redirect !== 'self')
 						{
-
-							$json->redirect = ($url !== false) ? $url : $redirect;
+              $json->redirect = ($url !== false && ! is_null($url) ) ? $url : $redirect;
 						}
 
-Log::addTemp('Json Response', $json);
 						$noticeController->update(); // dismiss one-time ponies
 						wp_send_json($json);
 						exit();

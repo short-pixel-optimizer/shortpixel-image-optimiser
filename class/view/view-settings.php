@@ -6,6 +6,7 @@ use ShortPixel\Helper\UiHelper as UiHelper;
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
+
 ?>
 <hr class='wp-header-end'>
 
@@ -29,6 +30,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     </button>-->
   </div>
 </header>
+
 
 <?php //$this->loadView('settings/part-header'); ?>
 
@@ -122,6 +124,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             		    	</label>
 			</div>
 
+<?php if (false == $view->is_unlimited): ?>
           <div class='upgrade-banner'>
               <div class="robo-container">
                   <div class="robo-from-banner"> <?php echo UIHelper::getIcon('res/img/robo-slider.png'); ?></div>
@@ -151,7 +154,7 @@ if ( ! defined( 'ABSPATH' ) ) {
               </div>
 
           </div>
-
+<?php endif; ?>
 
 
 

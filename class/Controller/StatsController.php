@@ -92,6 +92,8 @@ class StatsController extends \ShortPixel\Controller
           }
       }
 
+      return 0;
+
     }
 
     // This is not functional @todo

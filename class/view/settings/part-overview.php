@@ -48,6 +48,7 @@ $bulkblock = $dashboard->bulkblock;
      </div>
 
      <div class='panel second-panel'>
+
            <h4><?php esc_html_e('Average Optimization','shortpixel-image-optimiser'); ?></h4>
            <svg class="opt-circle-average" viewBox="-10 0 150 140">
                          <path class="trail" d="
@@ -68,7 +69,6 @@ $bulkblock = $dashboard->bulkblock;
                          echo $view->averageCompression;
                           ?> %</text>
              </svg>
-
 
        <?php if ($view->averageCompression > 30): ?>
          <div class='rating'>
@@ -169,8 +169,8 @@ $bulkblock = $dashboard->bulkblock;
                 <i class="shortpixel-icon eye"></i>
             </div>
 
-            <button type="button" id="validate" class="button button-primary" title="<?php esc_html_e('Validate the provided API key','shortpixel-image-optimiser');?>"
-                    onclick="ShortPixel.validateKey(this)" <?php echo $view->key->is_editable ? '' : 'disabled' ?>>
+            <button type="submit" id="validate" class="button button-primary" title="<?php esc_html_e('Validate the provided API key','shortpixel-image-optimiser');?>"
+                     <?php echo $view->key->is_editable ? '' : 'disabled' ?>>
                 <i class='shortpixel-icon save'></i>
                 <span class ="save-button-text"> <?php esc_html_e('Save settings & validate', 'shortpixel-image-optimiser'); ?></span>
             </button>
