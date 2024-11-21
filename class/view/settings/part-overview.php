@@ -48,8 +48,14 @@ $bulkblock = $dashboard->bulkblock;
      </div>
 
      <div class='panel second-panel'>
-
            <h4><?php esc_html_e('Average Optimization','shortpixel-image-optimiser'); ?></h4>
+      <?php if ( $view->averageCompression <= 0 ):
+      ?>
+
+      <p class='small'><?php _e('The average optimization is calculated based on the last 1000 optimized images. Please optimize some images to see the statistics here.', 'shortpixel-image-optimiser'); ?></p>
+
+      <?php else: ?>
+
            <svg class="opt-circle-average" viewBox="-10 0 150 140">
                          <path class="trail" d="
                              M 50,50
@@ -69,6 +75,8 @@ $bulkblock = $dashboard->bulkblock;
                          echo $view->averageCompression;
                           ?> %</text>
              </svg>
+       <?php endif; ?>
+
 
        <?php if ($view->averageCompression > 30): ?>
          <div class='rating'>

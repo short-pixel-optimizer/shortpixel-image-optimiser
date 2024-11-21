@@ -56,7 +56,7 @@ if( $this->is_nginx ){
             ['name' => 'createWebp',
              'checked' => $view->data->createWebp,
              'label' => esc_html__('Create WebP Images','shortpixel-image-optimiser'),
-             'data' => ['data-dashboard="' . __('Recommend adding WebP', 'shortpixel-image-optimiser') . '"'],
+             'data' => ['data-dashboard="' . __('Enable Webp/Avif creation', 'shortpixel-image-optimiser') . '"'],
             ]);
       ?>
         <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/286-how-to-serve-webp-files-using-spio"></i>
@@ -88,7 +88,7 @@ if( $this->is_nginx ){
                'checked' => $createAvifChecked,
                'label' => esc_html__('Create AVIF Images','shortpixel-image-optimiser'),
                'disabled' => $disabled,
-               'data' => ['data-dashboard="' . __('Recommend adding Avif', 'shortpixel-image-optimiser') . '"'],
+               'data' => ['data-dashboard="' . __('Enable Webp/Avif creation', 'shortpixel-image-optimiser') . '"'],
               ]);
         ?>
 
@@ -116,7 +116,7 @@ if( $this->is_nginx ){
          'checked' =>  ($view->data->useCDN > 0) ? 1 : 0,
          'label' => esc_html__('Deliver the next generation images using the ShortPixel CDN:','shortpixel-image-optimiser'),
 
-         'data' => ['data-toggle="useCDN"', 'data-exclude="deliverWebp"', 'data-dashboard="' . __('CDN not enabled', 'shortpixel-image-optimiser') . '"', ],
+         'data' => ['data-toggle="useCDN"', 'data-exclude="deliverWebp"', 'data-dashboard="' . __('Next-gen format not being delivered', 'shortpixel-image-optimiser') . '"', ],
         ]);
   ?>
   </content>

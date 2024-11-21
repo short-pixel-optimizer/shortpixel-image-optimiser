@@ -372,6 +372,10 @@ class ShortPixelSettings
 		 event.preventDefault();
 
 		 var targetLink = event.target;
+		 if (typeof targetLink.href === 'undefined');
+		 {
+				targetLink = targetLink.closest('.anchor-link');
+		 }
 		 var uri = targetLink.href;
 
 		 var current_tab = this.current_tab;
@@ -713,8 +717,12 @@ DashBoardWarningEvent(warning, matches)
 	 }
  	 Array.from(statusWrapper.children).forEach(e => e.remove());
 
+
 	 var statusIcon = document.createElement('i');
+	 var linesAdded = [];
+
 	 statusIcon.classList.add('shortpixel-icon', 'static-icon', status);
+
 
   if (matches.matches.length > 0)
 	{
@@ -722,19 +730,27 @@ DashBoardWarningEvent(warning, matches)
 			{
 				var input = matches.matches[i];
 				var statusLine = document.createElement('span');
+				var duplicate = false;
 				statusLine.classList.add('status-line');
 
 				if (input.dataset.dashboard)
 				{
-
-			 		statusLine.textContent = input.dataset.dashboard;
+					let line = input.dataset.dashboard;
+					if (linesAdded.indexOf(line) == -1)
+					{
+						statusLine.textContent = line;
+						linesAdded.push(line);
+					}
+					else {
+						continue; // skip this one.
+					}
 				}
 				else {
 				  var linestring = this.strings.dashboard_strings[status];
 		 		  statusLine.textContent = linestring;
 				}
 
-				statusWrapper.appendChild(statusLine).appendChild(statusIcon.cloneNode());
+					statusWrapper.appendChild(statusLine).appendChild(statusIcon.cloneNode());
 
 			}
 		 	// Add Not ok status.
@@ -822,11 +838,12 @@ CDNCheckWarningEvent(warning, matches, elements)
 	 {
 			var el = elements[i];
 			var res = matchinputs.find(node => node.isEqualNode(el));
-			if (typeof res !== 'undefined')
+
+			// Dirty exceptions
+			if (typeof res !== 'undefined' || elements[i].name == 'useCDN' || (true == hasCreate &&  (elements[i].name == 'createAvif' || elements[i].name == 'createWebp' )))
 			{
 				to_splice.push(i); // no live splicing, because it messed the indexes
 			}
-
 	 }
 
 	 // Funky function I found online to filter the splicers from the elements.
