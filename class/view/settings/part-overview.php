@@ -115,7 +115,7 @@ $bulkblock = $dashboard->bulkblock;
 
         <a class="dashboard-button" href="<?php echo $bulkblock->link ?>"><?php _e('Go to Bulk Processing', 'shortpixel-image-optimiser'); ?><i class='shortpixel-icon arrow-right'></i></a>
      <?php else : ?>
-        <a class='dashboard-button shortpixel-hide'>&nbsp;</a>
+        <a class='dashboard-button not-visible'>&nbsp;</a>
      <?php endif; ?>
 
      </div>

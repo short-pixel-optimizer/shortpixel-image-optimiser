@@ -759,14 +759,14 @@ DashBoardWarningEvent(warning, matches)
 
 	 if ('ok' === status)
 	 {
-			if (false === button.classList.contains('shortpixel-hide'))
+			if (false === button.classList.contains('not-visible'))
 			{
-					button.classList.add('shortpixel-hide');
+					button.classList.add('not-visible');
 			}
 	 }
-	 else if (true === button.classList.contains('shortpixel-hide'))
+	 else if (true === button.classList.contains('not-visible'))
 	 {
-		 		button.classList.remove('shortpixel-hide');
+		 		button.classList.remove('not-visible');
 	 }
 
 }

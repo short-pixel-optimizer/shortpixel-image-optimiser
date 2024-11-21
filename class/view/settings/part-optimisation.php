@@ -248,7 +248,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
             <label>
               <input type="checkbox" class="switch" name="png2jpgForce" value="1" <?php checked(($view->data->png2jpg > 1), true);?> <?php echo($this->is_gd_installed ? '' : 'disabled') ?>>
               <div class="the_switch">&nbsp; </div>
-              <?php esc_html_e('Force conversion of images when transparent', 'shortpixel-image-optimiser'); ?>
+              <?php esc_html_e('Force conversion of transparent images', 'shortpixel-image-optimiser'); ?>
             </label>
           </switch>
           <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-force-conversion-of-images-when-transparent/"></i>
@@ -290,7 +290,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
               </switch>
               <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/483-spai-remove-exif"></i>
               <name>
-                <?php esc_html_e('Remove the EXIF data of the image (recommended).','shortpixel-image-optimiser');?>
+                <?php esc_html_e('Remove the EXIF data of the images (recommended).','shortpixel-image-optimiser');?>
 
               </name>
             </content>
