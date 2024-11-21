@@ -307,7 +307,7 @@ console.log('newstep', new_step, this.steps.length-1);
        if (typeof this.steps[item_number].dataset.screen !== 'undefined')
        {
            var ev = new CustomEvent('click');
-           var menuItem = this.root.querySelector('menu ul [data-link="' + this.steps[item_number].dataset.screen + '"]');
+					 var menuItem = this.root.querySelector('menu ul [menu-link="' + this.steps[item_number].dataset.screen + '"]');
            if (menuItem !== null)
            {
               menuItem.dispatchEvent(ev);
