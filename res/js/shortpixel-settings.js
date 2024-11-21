@@ -10,6 +10,7 @@ class ShortPixelSettings
 	 current_mode = 'simple';
 	 root; // top of settings page.
 	 strings;
+	 dashboard_status = {};
 
 	 Init()
 	 {
@@ -301,7 +302,7 @@ class ShortPixelSettings
 	InitMenu()
 	{
 		  //var menu_elements = this.root.querySelectorAll('menu ul li a');
-			var menu_elements = this.root.querySelectorAll('menu [data-link]');
+			var menu_elements = this.root.querySelectorAll('[menu-link]');
 			this.menu_elements = menu_elements;
 
 			// Bind change event to all menu items.
@@ -374,7 +375,7 @@ class ShortPixelSettings
 		 var targetLink = event.target;
 		 if (typeof targetLink.href === 'undefined');
 		 {
-				targetLink = targetLink.closest('.anchor-link');
+				targetLink = targetLink.closest('a');
 		 }
 		 var uri = targetLink.href;
 
@@ -711,6 +712,16 @@ DashBoardWarningEvent(warning, matches)
 	 var dashBox = warning[0];
 	 var status = (true === matches.allMatches) ? 'alert' : (true === matches.someMatch) ? 'warning' : 'ok';
 
+	 let panelName;
+	 if (dashBox.classList.contains('dashboard-optimize'))
+	 {
+			panelName = 'optimize';
+	 }
+	 else
+			panelName = 'webp';
+
+	 this.dashboard_status[panelName] = status;
+
 	 dashBox.classList.remove('ok', 'alert', 'warning');
 	 dashBox.classList.add(status)
 
@@ -791,6 +802,7 @@ DashBoardWarningEvent(warning, matches)
 		 		button.classList.remove('not-visible');
 	 }
 
+	 this.UpdateDashBoardMainBlock();
 }
 
 CDNCheckWarningEvent(warning, matches, elements)
@@ -859,6 +871,34 @@ CDNCheckWarningEvent(warning, matches, elements)
 	 matches.matches = elements;
 
 	 this.DashBoardWarningEvent(warning, matches);
+}
+
+UpdateDashBoardMainBlock()
+{
+		var ok = true;
+
+		for (const [key, value] of Object.entries(this.dashboard_status))
+		{
+					if (value !== 'ok')
+						{
+							 ok = false;
+						}
+		}
+
+		var mainBlock = this.root.querySelector('.panel.first-panel .first-line');
+
+
+		if (ok && false == mainBlock.classList.contains('ok'))
+		{
+				mainBlock.classList.remove('warning');
+				mainBlock.classList.add('ok');
+		}
+		else if (false == ok && false == mainBlock.classList.contains('warning'))
+		{
+				mainBlock.classList.add('warning');
+				mainBlock.classList.remove('ok');
+		}
+
 }
 
 OpenModalEvent(elem)

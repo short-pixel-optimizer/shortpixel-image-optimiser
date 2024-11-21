@@ -191,6 +191,8 @@ class SettingsViewController extends \ShortPixel\ViewController
 	                \ShortPixel\Controller\AdminNoticesController::resetAPINotices();
 
 	            }
+							$this->doRedirect('reload');
+
 	        }
 					elseif($body->Status == 'existing')
 					{
@@ -199,8 +201,9 @@ class SettingsViewController extends \ShortPixel\ViewController
 					else
 					{
 						 Notice::addError( __('Unexpected error obtaining the ShortPixel key. Please contact support about this:', 'shortpixel-image-optimiser') . '  ' . json_encode($body) );
+
 					}
-					$this->doRedirect('reload');
+					$this->doRedirect();
 
 			}
 
@@ -530,12 +533,13 @@ class SettingsViewController extends \ShortPixel\ViewController
 
         if (false === $this->view->key->is_verifiedkey)
         {
-            $mainblock->ok = false;
+						/*
+						$mainblock->ok = false;
             $mainblock->header = __('Issue with API Key', 'shortpixel-image-optimiser');
             $mainblock->message = __('Add your API Key to start optimizing', 'shortpixel-image-optimiser');
             $mainblock->cocktail = false;
             $mainblock->icon = 'alert';
-
+						*/
         }
 				else { // If not errors
 						 $statsController = StatsController::getInstance();
@@ -549,8 +553,8 @@ class SettingsViewController extends \ShortPixel\ViewController
              if ($media_total > 0)
              {
 						         $mainblock->message = sprintf(esc_html__('%s media items %s optimized', 'shortpixel-image-optimiser'), $media_total, $custom_text);
-                                 $total_sum = intval($media_total) + intval($custom_text);
-                                 $mainblock->optimized = sprintf(esc_html__('%s', 'shortpixel-image-optimiser'), $total_sum);
+                     $total_sum = intval($media_total) + intval($custom_text);
+                     $mainblock->optimized = sprintf(esc_html__('%s', 'shortpixel-image-optimiser'), $total_sum);
              }
 
 				}
@@ -674,7 +678,7 @@ class SettingsViewController extends \ShortPixel\ViewController
                $title = $title . $icon;
           }
 
-          $html = sprintf('<a href="%s" class="%s" data-link="%s" %s >%s</a>', $link, $class, $args['part'], $active, $title);
+					$html = sprintf('<a href="%s" class="%s" menu-link="%s" %s >%s</a>', $link, $class, $args['part'], $active, $title);
 
           return $html;
       }

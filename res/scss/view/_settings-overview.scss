@@ -65,6 +65,29 @@
               display: flex;
               flex-direction: row;
               align-items: center;
+							.status-ok, .status-warning {
+								 display: none;
+							}
+							h4 { font-size: 16px; }
+							&.ok
+							{
+									.mainblock-status {
+										 background-image:  url('../images/icon/ok.svg');
+									}
+									.status-ok {
+										 display: block;
+									}
+							}
+							&.warning
+							{
+								.mainblock-status {
+										background-image:  url('../images/icon/warning.svg');
+								}
+								.status-warning {
+									 display: block;
+								}
+								.cocktail  { display: none; }
+							}
             }
             .second-line{
               display: flex;
@@ -105,15 +128,11 @@
                margin: 0 20px;
 
              }
+
+
              i.mainblock-status {
-               &.ok {
-                 width: 70px;
-                 height: 75px;
-               }
-               &.alert {
-                  width: 70px;
-                  height: 75px;
-               }
+							 width: 70px;
+							 height: 75px;
              }
              margin-right: 20px;
              @include breakpoint(0, 786px)
@@ -184,11 +203,7 @@
 
           }
        } // top-row
-       // Specific layout for top row boxes.
-       &.top-row
-       {
 
-       }
 
        // Specific layout for second row boxes
        &.middle-row

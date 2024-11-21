@@ -26,12 +26,21 @@ $bulkblock = $dashboard->bulkblock;
   <div class='wrapper top-row step-highlight-1'>
      <div class='panel first-panel'>
 
-       <div class="first-line">
-         <i class='shortpixel-icon mainblock-status <?php echo $mainblock->icon ?>'></i>
-            <h4><?php echo $mainblock->header ?></h4>
-            <?php if (true === $mainblock->cocktail) : ?>
+       <div class="first-line <?php echo $mainblock->icon ?>">
+         <i class='shortpixel-icon mainblock-status '></i>
+
+					<div class='status-ok'>
+						<h4><?php  _e('Everything running smoothly.', 'shortpixel-image-optimiser'); ?></h4>
+						<p><?php  _e('Stay calm and carry on ', 'shortpixel-image-optimiser'); ?></p>
+					</div>
+					<div class='status-warning'>
+						<h4><?php  _e('There are a few alerts you need to fix', 'shortpixel-image-optimiser'); ?></h4>
+						<p><?php  _e('Check the alerts below. Don\'t worry, there is an easy fix for each one. ', 'shortpixel-image-optimiser'); ?></p>
+					</div>
+
+						<?php //if (true === $mainblock->cocktail) : ?>
                <i class='shortpixel-illustration cocktail'></i>
-           <?php endif; ?>
+					 <?php //endif; ?>
 
         </div>
          <hr>
