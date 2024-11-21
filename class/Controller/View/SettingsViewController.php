@@ -200,7 +200,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 					{
 						 Notice::addError( __('Unexpected error obtaining the ShortPixel key. Please contact support about this:', 'shortpixel-image-optimiser') . '  ' . json_encode($body) );
 					}
-					$this->doRedirect();
+					$this->doRedirect('reload');
 
 			}
 

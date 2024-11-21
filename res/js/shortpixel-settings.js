@@ -811,10 +811,7 @@ CDNCheckWarningEvent(warning, matches, elements)
 						 hasCreate = true;
 					break;
 				 case 'useCDN':
-						 hasCreate = true;
-						 hasDelivery = true;
-					break;
-				 case 'deliverWebp':
+ 				 case 'deliverWebp':
 						 hasDelivery = true;
 					break;
 			 }
@@ -844,9 +841,13 @@ CDNCheckWarningEvent(warning, matches, elements)
 	 {
 			var el = elements[i];
 			var res = matchinputs.find(node => node.isEqualNode(el));
+			var name = elements[i].name;
 
 			// Dirty exceptions
-			if (typeof res !== 'undefined' || elements[i].name == 'useCDN' || (true == hasCreate &&  (elements[i].name == 'createAvif' || elements[i].name == 'createWebp' )))
+			if (typeof res !== 'undefined' ||
+					(true == hasCreate &&  (name == 'createAvif' || name == 'createWebp' )) ||
+					(true == hasDelivery && (name == 'useCDN' || name == 'deliverWebp') )
+			)
 			{
 				to_splice.push(i); // no live splicing, because it messed the indexes
 			}
