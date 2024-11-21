@@ -48,7 +48,7 @@ $bulkblock = $dashboard->bulkblock;
         <?php if (property_exists($mainblock, 'optimized')): ?>
          <div class="optimized"><?php echo $mainblock->optimized ?></div>
              <i class='shortpixel-icon file'></i>
-             <div class="optimized-message"><?php esc_html_e('Optimized items from the Media Library and Custom Media', 'shortpixel-image-optimiser'); ?></div>
+             <div class="optimized-message"><?php esc_html_e('Optimized images and thumbnails from the Media Library and Custom Media', 'shortpixel-image-optimiser'); ?></div>
         <?php endif; ?>
          </div>
 

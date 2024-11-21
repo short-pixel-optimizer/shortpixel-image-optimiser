@@ -22,24 +22,24 @@ if ( ! defined( 'ABSPATH' ) ) {
         <div class='step step-0 active' data-screen='overview'>
 						<h4><?php _e('Welcome aboard', 'shortpixel-image-optimiser') ?></h4>
             <p>
-							<?php _e('Welcome to the Settings page of ShortPixel Image Optimizer! Click below to start a quick tour of the plugin features and settings.', 'shortpixel-image-optimiser'); ?>
+							<?php _e('Welcome to the settings page! Click below to start a quick tour of the plugin\'s features and settings.', 'shortpixel-image-optimiser'); ?>
             </p>
         </div>
         <div class='step step-1' data-screen='overview'>
-						<p><?php _e('This is the Overview page, where you will see from a quick look the status of your site\'s media files. Besides statistics you will also have actionable points to improve the performance of your website','shortpixel-image-optimiser'); ?>
+						<p><?php _e('This is the overview page where you can take a quick look at the status of the media files on your website. In addition to the statistics, you\'ll also get recommended actions to improve your website\'s performance.','shortpixel-image-optimiser'); ?>
           </p>
         </div>
         <div class='step step-2' data-screen='optimisation'>
-						<p><?php _e('This is where you can choose what type of files to optimize, as well as conversions and resize/Smart Cropping settings', 'shortpixel-image-optimiser'); ?></p>
+						<p><?php _e('Here you can select which type of files should be optimized, as well as the settings for conversions and resizing/Smart Cropping.', 'shortpixel-image-optimiser'); ?></p>
         </div>
         <div class='step step-3' data-screen='webp'>
-						<p><?php _e('On this page you can choose the type of next-generation images to create, as well as to choose a delivery method, either directly from your website, or frum our CDN', 'shortpixel-image-optimiser'); ?></p>
+						<p><?php _e('On this page you can select the type of next generation images to be created and choose a delivery method, either directly from your website or via our CDN.', 'shortpixel-image-optimiser'); ?></p>
         </div>
       <!--  <div class='step step-4'>
             switch to the upper right part and display a bubble with the text "This is where you will see most of the notifications from now on. You can also toggle between a simple and advanced mode of the settings, which will just hide or show some of the more advanced settings
         </div> -->
         <div class='step step-4' data-screen='help'>
-						<p><?php _e('This is where you can get access to our knowledge base as well as to our 24/7 support team. Feel free to suggest new features or leave a review, it will help us improve our products!', 'shortpixel-image-optimiser'); ?>
+						<p><?php _e('Here you get access to our knowledge base and our 24/7 support team. Feel free to suggest new features or leave a review - it helps us to improve our products!', 'shortpixel-image-optimiser'); ?>
             </p>
         </div>
       </div>

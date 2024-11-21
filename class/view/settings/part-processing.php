@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             ['name' => 'autoMediaLibrary',
              'checked' => $view->data->autoMediaLibrary,
              'label' => esc_html__('Optimize media on upload','shortpixel-image-optimiser'),
-             'data' => ['data-dashboard="' . __('Not automatically optimizing', 'shortpixel-image-optimiser') . '"'],
+             'data' => ['data-dashboard="' . __('New images are not optimized', 'shortpixel-image-optimiser') . '"'],
             ]);
       ?>
 
@@ -45,7 +45,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             ['name' => 'doBackgroundProcess',
              'checked' => $view->data->doBackgroundProcess,
              'label' => esc_html__('Background mode','shortpixel-image-optimiser'),
-             'data' => ['data-toggle="background_warning"', 'data-dashboard="' . __('Recommended background mode', 'shortpixel-image-optimser') . '"'],
+             'data' => ['data-toggle="background_warning"', 'data-dashboard="' . __('Background mode is recommended', 'shortpixel-image-optimser') . '"'],
             ]);
       ?>
 
@@ -71,7 +71,7 @@ if ( ! defined( 'ABSPATH' ) ) {
               ['name' => 'backupImages',
                'checked' => $view->data->backupImages,
                'label' => esc_html__('Backup Originals','shortpixel-image-optimiser'),
-               'data' => ['data-dashboard="' . __('Strongly recommend turning on backups', 'shortpixel-image-optimiser') . '"'],
+               'data' => ['data-dashboard="' . __('Backups are strongly recommended!', 'shortpixel-image-optimiser') . '"'],
               ]);
         ?>
 

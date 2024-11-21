@@ -56,13 +56,13 @@ if( $this->is_nginx ){
             ['name' => 'createWebp',
              'checked' => $view->data->createWebp,
              'label' => esc_html__('Create WebP Images','shortpixel-image-optimiser'),
-             'data' => ['data-dashboard="' . __('Enable Webp/Avif creation', 'shortpixel-image-optimiser') . '"'],
+             'data' => ['data-dashboard="' . __('WebP or AVIF files are not generated', 'shortpixel-image-optimiser') . '"'],
             ]);
       ?>
         <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/286-how-to-serve-webp-files-using-spio"></i>
 
       </content>
-      <info>           <?php printf(esc_html__('Generate %s WebP versions %s of images. Each image or thumbnail will use an additional credit unless you are on the %sUnlimited plan.%s','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/how-webp-images-can-speed-up-your-site/" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/555-how-does-the-unlimited-plan-work" target="_blank">', '</a>' );?></info>
+      <info>           <?php printf(esc_html__('Generate %sWebP versions%s of images. Each image or thumbnail will use an additional credit unless you are on the %sUnlimited plan.%s','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/how-webp-images-can-speed-up-your-site/" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/555-how-does-the-unlimited-plan-work" target="_blank">', '</a>' );?></info>
   </setting>
   <!-- /next generation -->
 
@@ -77,7 +77,7 @@ if( $this->is_nginx ){
           $avifEnabledNotice = false;
           if ($avifEnabled == false)
           {
-             $avifEnabledNotice = '<div class="sp-notice sp-notice-warning  avifNoticeDisabled">';
+             $avifEnabledNotice = '<div class="sp-notice sp-notice-warning avifNoticeDisabled">';
              $avifEnabledNotice .=  __('The creation of AVIF files is not possible with this license type.', 'shortpixel-image-optimiser') ;
              $avifEnabledNotice .=  '<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/555-how-does-the-unlimited-plan-work"></span></div>';
              $avifEnabledNotice .= '</div>';
@@ -88,7 +88,7 @@ if( $this->is_nginx ){
                'checked' => $createAvifChecked,
                'label' => esc_html__('Create AVIF Images','shortpixel-image-optimiser'),
                'disabled' => $disabled,
-               'data' => ['data-dashboard="' . __('Enable Webp/Avif creation', 'shortpixel-image-optimiser') . '"'],
+               'data' => ['data-dashboard="' . __('WebP or AVIF files are not generated', 'shortpixel-image-optimiser') . '"'],
               ]);
         ?>
 
@@ -104,7 +104,7 @@ if( $this->is_nginx ){
 
       </content>
       <info>
-         <?php printf(esc_html__('Generate %s AVIF versions %s of images. Each image or thumbnail will use an additional credit unless you are on the %sUnlimited plan.%s','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/what-is-avif-and-why-is-it-good/" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/555-how-does-the-unlimited-plan-work" target="_blank">', '</a>' );?>
+         <?php printf(esc_html__('Generate %sAVIF versions%s of images. Each image or thumbnail will use an additional credit unless you are on the %sUnlimited plan.%s','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/what-is-avif-and-why-is-it-good/" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/555-how-does-the-unlimited-plan-work" target="_blank">', '</a>' );?>
       </info>
   </setting>
   <!-- // avif -->
@@ -116,13 +116,16 @@ if( $this->is_nginx ){
          'checked' =>  ($view->data->useCDN > 0) ? 1 : 0,
          'label' => esc_html__('Deliver the next generation images using the ShortPixel CDN:','shortpixel-image-optimiser'),
 
-         'data' => ['data-toggle="useCDN"', 'data-exclude="deliverWebp"', 'data-dashboard="' . __('Next-gen format not being delivered', 'shortpixel-image-optimiser') . '"', ],
+         'data' => ['data-toggle="useCDN"', 'data-exclude="deliverWebp"', 'data-dashboard="' . __('Next generation images not delivered', 'shortpixel-image-optimiser') . '"', ],
         ]);
   ?>
+
+  <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/deliver-webp-avif-images-using-the-shortpixel-cdn-in-spio/"></i>
+
   </content>
   <?php echo UiHelper::getIcon('res/images/icon/new.svg'); ?>
   <info>
-         <?php printf(esc_html__('When this option is enabled, the plugin will replace the existing images with CDN URLs, delivering automatically next-generation images (like WebP and AVIF) when these are enabled in the settings above. %sRead more%s.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain/" target="_blank">', '</a>' );?>
+         <?php printf(esc_html__('When enabled, the plugin replaces images with CDN URLs and delivers next-generation formats (e.g. WebP, AVIF, if enabled above). Otherwise, images are served locally, as usual. %sRead more%s.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/deliver-webp-avif-images-using-the-shortpixel-cdn-in-spio/" target="_blank">', '</a>' );?>
   </info>
   <name class='useCDN toggleTarget'><?php esc_html_e('CDN Domain', 'shortpixel-image-optimiser'); ?></name>
   <content class='useCDN toggleTarget'>
@@ -143,14 +146,14 @@ if( $this->is_nginx ){
           'checked' =>  ($view->data->deliverWebp > 0) ? 1 : 0,
           'label' => esc_html__('Serve WebP/AVIF images from locally hosted files (without using a CDN):','shortpixel-image-optimiser'),
           'disabled' => $disabled,
-          'data' => ['data-toggle="deliverTypes"', 'data-dashboard="' . __('Next-gen format not being delivered', 'shortpixel-image-optimiser') . '"', 'data-exclude="useCDN" data-hidewarnings'],
+          'data' => ['data-toggle="deliverTypes"', 'data-dashboard="' . __('Next generation images not delivered', 'shortpixel-image-optimiser') . '"', 'data-exclude="useCDN" data-hidewarnings'],
          ]);
    ?>
 
    <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/126-which-webp-files-delivery-method-is-the-best-for-me"></i>
 
    <info>
-         <?php printf(esc_html__('Local delivery does not use a CDN and delivers the next generation files from your webserver, either by using the PICTURE tag method, or with .htaccess/nginx rules. %sRead more%s.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/which-webp-files-delivery-method-is-the-best-for-me/" target="_blank">', '</a>' );?>
+         <?php printf(esc_html__('Local delivery skips the CDN and serves next-generation files directly from your website using either the PICTURE tag method or .htaccess/nginx rules. %sRead more%s.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/which-webp-files-delivery-method-is-the-best-for-me/" target="_blank">', '</a>' );?>
    </info>
       <ul  class="deliverTypes deliverWebpTypes toggleTarget">
           <li>
