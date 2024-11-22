@@ -256,7 +256,7 @@ class AdminController extends \ShortPixel\Controller
 				}
 		}
 
-    public function scanCustomFoldersHook($args = array() )
+    public function scanCustomFoldersHook($args = array())
     {
       $defaults = array(
         'force' => false,
