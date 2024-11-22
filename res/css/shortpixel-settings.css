@@ -24,6 +24,11 @@ i.documentation.down {
   top: 10px;
 }
 
+.update-nag {
+  position: absolute;
+  margin-top: 0;
+}
+
 div.spio-modal-shade {
   position: fixed; /* Stay in place */
   z-index: 10; /* Sit on top - zindex wars  */

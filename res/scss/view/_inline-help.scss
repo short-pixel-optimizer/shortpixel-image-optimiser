@@ -16,6 +16,11 @@ i.documentation {
   }
 } // question
 
+.update-nag {
+  //make sure that we don't let the nag push down the header, better if it overlaps
+  position: absolute;
+  margin-top: 0;
+}
 
 
 div.spio-modal-shade {
