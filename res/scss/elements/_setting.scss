@@ -7,6 +7,9 @@ setting{
     border-radius: 0.7rem;
 	margin: 10px 0;
 	display: block;
+  width: auto;
+  height: auto;
+  position: relative;
   //display: flex;
  // align-items: center;
   //flex-wrap: wrap;
@@ -34,7 +37,7 @@ setting{
     color: $blue_dark;
 
   }
- 
+
   content {
      padding: 5px 10px;
      flex-basis: calc(100% - 250px);

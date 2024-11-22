@@ -55,7 +55,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                     </label><label class="lossless" title="<?php esc_html_e('Make sure not a single pixel looks different in the optimized image compared with the original. In some rare cases you will need to use this type of compression. Some technical drawings or images from vector graphics are possible situations.','shortpixel-image-optimiser');?>">
                         <input type="radio" class="shortpixel-radio-lossless" name="compressionType" value="0" <?php echo( $view->data->compressionType == 0 ? "checked" : "" );?>><span><?php esc_html_e('Lossless','shortpixel-image-optimiser');?></span>
                     </label>
-                    <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/11-lossy-glossy-or-lossless-which-one-is-the-best-for-me"></i>
+                    <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/11-lossy-glossy-or-lossless-which-one-is-the-best-for-me?target=iframe"></i>
                 </div>
 
                 <info>
@@ -107,7 +107,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                     ]);
               ?>
 
-                <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-optimize-thumbnails/"></i>
+                <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-optimize-thumbnails/?target=iframe"></i>
 		<name>
                     <?php printf(esc_html__('Apply compression to image thumbnails','shortpixel-image-optimiser') ); ?>
 		</name>
@@ -128,7 +128,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                       ]);
                 ?>
 
-                <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/519-settings---optimize-other-thumbs"></i>
+                <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/519-settings---optimize-other-thumbs?target=iframe"></i>
                 <name>
                   <?php esc_html_e('Optimize unlisted thumbnails, if found.','shortpixel-image-optimiser');?>
                 </name>
@@ -150,7 +150,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                      'label' => esc_html__('Optimize PDFs','shortpixel-image-optimiser')
                     ]);
               ?>
-               <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/520-settings-optimize-pdfs"></i>
+               <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/520-settings-optimize-pdfs?target=iframe"></i>
                <name>
                  <?php esc_html_e('Also optimize PDF documents.','shortpixel-image-optimiser');?>
                </name>
@@ -167,7 +167,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                      ]);
                ?>
 
-              <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/518-settings-optimize-retina-images"></i>
+              <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/518-settings-optimize-retina-images?target=iframe"></i>
               <name>
                   <?php esc_html_e('Also optimize the Retina images (@2x) if they exist.','shortpixel-image-optimiser');?>
               </name>
@@ -218,7 +218,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                 </label>
               </switch>
 
-              <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/516-settings-convert-png-images-to-jpeg"></i>
+              <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/516-settings-convert-png-images-to-jpeg?target=iframe"></i>
               <name>
                   <?php esc_html_e('Automatically convert the PNG images to JPEG, if possible.','shortpixel-image-optimiser'); ?>
               </name>
@@ -251,7 +251,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
               <?php esc_html_e('Force conversion of transparent images', 'shortpixel-image-optimiser'); ?>
             </label>
           </switch>
-          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-force-conversion-of-images-when-transparent/"></i>
+          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-force-conversion-of-images-when-transparent/?target=iframe"></i>
           <name>
             <?php esc_html_e('The transparency will be lost.','shortpixel-image-optimiser'); ?>
           </name>
@@ -268,7 +268,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                      'label' => esc_html__('CMYK to RGB conversion','shortpixel-image-optimiser')
                     ]);
               ?>
-              <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/517-settings---cmyk-to-rgb-conversion"></i>
+              <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/517-settings---cmyk-to-rgb-conversion?target=iframe"></i>
               <name>
                   <?php esc_html_e('Adjust your images\' colors for computer and mobile displays.','shortpixel-image-optimiser');?>
               </name>
@@ -288,7 +288,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 
                 </label>
               </switch>
-              <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/483-spai-remove-exif"></i>
+              <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/483-spai-remove-exif?target=iframe"></i>
               <name>
                 <?php esc_html_e('Remove the EXIF data of the images (recommended).','shortpixel-image-optimiser');?>
 
@@ -324,7 +324,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 
                   </label>
                 </switch>
-                <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/182-what-is-smart-cropping"></i>
+                <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/182-what-is-smart-cropping?target=iframe"></i>
                 <name>
                     <?php printf(esc_html__('%s Smart crop %s images where applicable.','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
                 </name>
@@ -371,7 +371,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                   <?php esc_html_e('Resize large images','shortpixel-image-optimiser');?>
 								</label>
 							</switch>
-                					<i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/208-can-shortpixel-automatically-resize-new-image-uploads"></i>
+                					<i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/208-can-shortpixel-automatically-resize-new-image-uploads?target=iframe"></i>
 
             <info>
             <?php esc_html_e('Resize to maximum','shortpixel-image-optimiser') ?>

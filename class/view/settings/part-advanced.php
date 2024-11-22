@@ -47,7 +47,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
           <?php } // exclude sizes ?>
 
-          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/113-how-can-i-optimize-only-certain-thumbnail-sizes"></i>
+          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/113-how-can-i-optimize-only-certain-thumbnail-sizes?target=iframe"></i>
         </content>
      </setting>
     <!-- // Exclude thumbnails -->

@@ -139,9 +139,9 @@ class CronController
   protected function custom_scheduler($unschedule = false)
   {
       $name = 'spio-refresh-dir';
-      $args = array( 'args' => [
+      $args = ['args' => [
           'amount' => 10]
-      );
+      ];
 
       $scheduled = wp_next_scheduled($name, $args);
       $add_cron = apply_filters('shortpixel/othermedia/add_cron', true);

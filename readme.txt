@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 4.8.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 6.0.0
+Stable tag: 6.0.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -442,6 +442,13 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 6.0.1 =
+Release date: November 22, 2024
+* Fix: Some PHP warnings were displayed for certain images when they were optimized;
+* Fix: The plugin settings are loaded correctly even if the Google Reviews & Ratings plugin is active;
+* Fix: Help icon pop-ups now look better;
+* Language: 0 new strings added, 0 updated, 0 fuzzed and 0 deprecated.
 
 = 6.0.0 =
 Release date: November 21, 2024

@@ -16,6 +16,11 @@ i.documentation {
   }
 } // question
 
+.update-nag {
+  //make sure that we don't let the nag push down the header, better if it overlaps
+  position: absolute;
+  margin-top: 0;
+}
 
 
 div.spio-modal-shade {
@@ -37,7 +42,7 @@ div.spio-modal {
     background-repeat: no-repeat;
     background-position: center;
 
-    padding: 20px 16px 16px;
+    padding: 20px 16px 6px 16px;
     border: 1px solid #888;
     width: 40%; /* Could be more or less, depending on screen size */
     max-width: 100%;
