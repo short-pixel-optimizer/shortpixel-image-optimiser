@@ -47,7 +47,7 @@ if(! $this->is_curl_installed) {
 
 <p>
   <?php esc_html_e("If you are using Cloudflare on your site, we recommend filling in the details below. This allows ShortPixel to work seamlessly with Cloudflare, ensuring that any images optimized or restored by ShortPixel are automatically updated on Cloudflare as well.",'shortpixel-image-optimiser');?>
-  <i class="documentation up dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/160-cloudlfare"></i>
+  <i class="documentation up dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/160-cloudlfare?target=iframe"></i>
 </p>
 
 <settinglist>
@@ -56,7 +56,7 @@ if(! $this->is_curl_installed) {
       <inputlabel>Zone ID  </inputlabel> <input name="cloudflareZoneID" type="text" id="cloudflare-zone-id" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>
                value="<?php echo( esc_attr(wp_unslash($view->data->cloudflareZoneID))); ?>"
                class="regular-text">
-        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/160-cloudlfare"></i>
+        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/160-cloudlfare?target=iframe"></i>
 
         <info>
             <?php esc_html_e('You can find this in your Cloudflare account in the "Overview" section for your domain.','shortpixel-image-optimiser');?>
