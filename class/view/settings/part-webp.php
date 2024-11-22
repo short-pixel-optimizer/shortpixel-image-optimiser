@@ -59,7 +59,7 @@ if( $this->is_nginx ){
              'data' => ['data-dashboard="' . __('WebP or AVIF files are not generated', 'shortpixel-image-optimiser') . '"'],
             ]);
       ?>
-        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/286-how-to-serve-webp-files-using-spio"></i>
+        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/286-how-to-serve-webp-files-using-spio?target=iframe"></i>
 
       </content>
       <info>           <?php printf(esc_html__('Generate %sWebP versions%s of images. Each image or thumbnail will use an additional credit unless you are on the %sUnlimited plan.%s','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/how-webp-images-can-speed-up-your-site/" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/555-how-does-the-unlimited-plan-work" target="_blank">', '</a>' );?></info>
@@ -92,7 +92,7 @@ if( $this->is_nginx ){
               ]);
         ?>
 
-       <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/467-how-to-create-and-serve-avif-files-using-shortpixel-image-optimizer"></i>
+       <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/467-how-to-create-and-serve-avif-files-using-shortpixel-image-optimizer?target=iframe"></i>
 
 
        <?php if(strlen($deliverAVIFLabel)){ ?>
@@ -120,7 +120,7 @@ if( $this->is_nginx ){
         ]);
   ?>
 
-  <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/deliver-webp-avif-images-using-the-shortpixel-cdn-in-spio/"></i>
+  <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/deliver-webp-avif-images-using-the-shortpixel-cdn-in-spio?target=iframe"></i>
 
   </content>
   <?php echo UiHelper::getIcon('res/images/icon/new.svg'); ?>
@@ -130,7 +130,7 @@ if( $this->is_nginx ){
   <name class='useCDN toggleTarget'><?php esc_html_e('CDN Domain', 'shortpixel-image-optimiser'); ?></name>
   <content class='useCDN toggleTarget'>
       <input type="text" name="CDNDomain" class='regular-text' value="<?php echo esc_attr($view->data->CDNDomain) ?>">
-      <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain/"></i>
+      <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain?target=iframe"></i>
   </content>
   <info class='useCDN toggleTarget'>
          <?php printf(esc_html__('Change this only if you want to set up your %scustom domain%s.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain/" target="_blank">', '</a>' );?>
@@ -150,7 +150,7 @@ if( $this->is_nginx ){
          ]);
    ?>
 
-   <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/126-which-webp-files-delivery-method-is-the-best-for-me"></i>
+   <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/126-which-webp-files-delivery-method-is-the-best-for-me?target=iframe"></i>
 
    <info>
          <?php printf(esc_html__('Local delivery skips the CDN and serves next-generation files directly from your website using either the PICTURE tag method or .htaccess/nginx rules. %sRead more%s.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/which-webp-files-delivery-method-is-the-best-for-me/" target="_blank">', '</a>' );?>
