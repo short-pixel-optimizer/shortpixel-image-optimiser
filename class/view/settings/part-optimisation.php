@@ -107,7 +107,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                     ]);
               ?>
 
-                <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-optimize-thumbnails?target=iframe"></i>
+                <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-optimize-thumbnails/?target=iframe"></i>
 		<name>
                     <?php printf(esc_html__('Apply compression to image thumbnails','shortpixel-image-optimiser') ); ?>
 		</name>
@@ -251,7 +251,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
               <?php esc_html_e('Force conversion of transparent images', 'shortpixel-image-optimiser'); ?>
             </label>
           </switch>
-          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-force-conversion-of-images-when-transparent?target=iframe"></i>
+          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-force-conversion-of-images-when-transparent/?target=iframe"></i>
           <name>
             <?php esc_html_e('The transparency will be lost.','shortpixel-image-optimiser'); ?>
           </name>

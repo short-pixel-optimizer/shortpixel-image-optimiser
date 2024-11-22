@@ -120,7 +120,7 @@ if( $this->is_nginx ){
         ]);
   ?>
 
-  <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/deliver-webp-avif-images-using-the-shortpixel-cdn-in-spio?target=iframe"></i>
+  <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/deliver-webp-avif-images-using-the-shortpixel-cdn-in-spio/?target=iframe"></i>
 
   </content>
   <?php echo UiHelper::getIcon('res/images/icon/new.svg'); ?>
@@ -130,7 +130,7 @@ if( $this->is_nginx ){
   <name class='useCDN toggleTarget'><?php esc_html_e('CDN Domain', 'shortpixel-image-optimiser'); ?></name>
   <content class='useCDN toggleTarget'>
       <input type="text" name="CDNDomain" class='regular-text' value="<?php echo esc_attr($view->data->CDNDomain) ?>">
-      <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain?target=iframe"></i>
+      <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain/?target=iframe"></i>
   </content>
   <info class='useCDN toggleTarget'>
          <?php printf(esc_html__('Change this only if you want to set up your %scustom domain%s.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain/" target="_blank">', '</a>' );?>
