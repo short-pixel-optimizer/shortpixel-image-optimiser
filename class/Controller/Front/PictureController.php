@@ -30,6 +30,7 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
   {
     $webp_option = \wpSPIO()->settings()->deliverWebp;
 
+
 		if ($webp_option ) {  // @tood Replace this function with the one in ENV.
         if(UtilHelper::shortPixelIsPluginActive('shortpixel-adaptive-images/short-pixel-ai.php')) {
             Notices::addWarning(__('Please deactivate the ShortPixel Image Optimizer\'s
@@ -197,8 +198,7 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
       $fs = \wpSPIO()->filesystem();
 
       $raw_image = $match[0];
-      Log::addTemp('Match', $match);
-//Log::addTemp('raw_image', $raw_image);
+
       // Raw Image HTML
       $image = new FrontImage($raw_image);
 

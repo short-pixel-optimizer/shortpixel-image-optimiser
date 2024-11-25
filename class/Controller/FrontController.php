@@ -24,7 +24,7 @@ class FrontController extends \ShortPixel\Controller
 					{
 						 $this->controller = new Front\CDNController();
 					}
-					elseif($settings->deliverWebp > 0)
+          elseif(1 == $settings->deliverWebp || 2 == $settings->deliverWebp)
 					{
 							$this->controller = new Front\PictureController();
 					}
