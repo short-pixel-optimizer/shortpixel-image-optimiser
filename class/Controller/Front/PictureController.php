@@ -34,7 +34,7 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
 		if ($webp_option ) {  // @tood Replace this function with the one in ENV.
         if(UtilHelper::shortPixelIsPluginActive('shortpixel-adaptive-images/short-pixel-ai.php')) {
             Notices::addWarning(__('Please deactivate the ShortPixel Image Optimizer\'s
-                <a href="options-general.php?page=wp-shortpixel-settings&part=adv-settings">Deliver the next generation versions of the images in the front-end</a>
+                <a href="options-general.php?page=wp-shortpixel-settings&part=webp">Serve WebP/AVIF images from locally hosted files (without using a CDN)</a>
                 option when the ShortPixel Adaptive Images plugin is active.','shortpixel-image-optimiser'), true);
         }
         elseif( $webp_option == self::WEBP_GLOBAL ){

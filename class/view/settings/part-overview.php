@@ -34,8 +34,8 @@ $bulkblock = $dashboard->bulkblock;
 						<p><?php  _e('Stay calm and carry on ', 'shortpixel-image-optimiser'); ?></p>
 					</div>
 					<div class='status-warning'>
-						<h4><?php  _e('There are a few alerts you need to fix', 'shortpixel-image-optimiser'); ?></h4>
-						<p><?php  _e('Check the alerts below. Don\'t worry, there is an easy fix for each one. ', 'shortpixel-image-optimiser'); ?></p>
+						<h4><?php  _e('There are a few warnings you could fix', 'shortpixel-image-optimiser'); ?></h4>
+						<p><?php  _e('Check the warnings below. Don\'t worry, there is a simple solution for each one.', 'shortpixel-image-optimiser'); ?></p>
 					</div>
 
 						<?php //if (true === $mainblock->cocktail) : ?>

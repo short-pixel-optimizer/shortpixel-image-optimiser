@@ -116,7 +116,7 @@ if( $this->is_nginx ){
          'checked' =>  ($view->data->useCDN > 0) ? 1 : 0,
          'label' => esc_html__('Deliver the next generation images using the ShortPixel CDN:','shortpixel-image-optimiser'),
 
-         'data' => ['data-toggle="useCDN"', 'data-exclude="deliverWebp"', 'data-dashboard="' . __('Next generation images not delivered', 'shortpixel-image-optimiser') . '"', ],
+         'data' => ['data-toggle="useCDN"', 'data-exclude="deliverWebp"', 'data-dashboard="' . __('Next generation images are not delivered', 'shortpixel-image-optimiser') . '"', ],
         ]);
   ?>
 
@@ -146,7 +146,7 @@ if( $this->is_nginx ){
           'checked' =>  ($view->data->deliverWebp > 0) ? 1 : 0,
           'label' => esc_html__('Serve WebP/AVIF images from locally hosted files (without using a CDN):','shortpixel-image-optimiser'),
           'disabled' => $disabled,
-          'data' => ['data-toggle="deliverTypes"', 'data-dashboard="' . __('Next generation images not delivered', 'shortpixel-image-optimiser') . '"', 'data-exclude="useCDN" data-hidewarnings'],
+          'data' => ['data-toggle="deliverTypes"', 'data-dashboard="' . __('Next generation images are not delivered', 'shortpixel-image-optimiser') . '"', 'data-exclude="useCDN" data-hidewarnings'],
          ]);
    ?>
 

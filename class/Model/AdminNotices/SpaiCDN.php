@@ -40,10 +40,10 @@ class SpaiCDN extends \ShortPixel\Model\AdminNoticeModel
 		$unlisted_name = $this->getData('name');
 		$unlistedFiles = (is_array($this->getData('filelist'))) ? $this->getData('filelist') : array();
 
-		$admin_url = esc_url(admin_url('options-general.php?page=wp-shortpixel-settings&part=adv-settings'));
+		$admin_url = esc_url(admin_url('options-general.php?page=wp-shortpixel-settings&part=webp'));
 
 
-		$message = __("Please deactivate the ShortPixel Adaptive Images plugin when the CDN delivery is enabled in ShortPixel Image Optimization active. If both are enabled, over-optimization and errors could appear on your website", 'shortpixel-image-optimiser');
+		$message = __("Please deactivate the ShortPixel Adaptive Images plugin if CDN delivery is enabled in ShortPixel Image Optimization. If both are activated, this can lead to over-optimization and errors on your website.", 'shortpixel-image-optimiser');
 
 
     $action = 'Deactivate';

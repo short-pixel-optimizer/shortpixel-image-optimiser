@@ -167,7 +167,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                      ]);
                ?>
 
-              <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/518-settings-optimize-retina-images?target=iframe"></i>
+              <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-optimize-retina-images/?target=iframe"></i>
               <name>
                   <?php esc_html_e('Also optimize the Retina images (@2x) if they exist.','shortpixel-image-optimiser');?>
               </name>
@@ -194,6 +194,10 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                      'label' => esc_html__('Optimize NextGen galleries','shortpixel-image-optimiser')
                     ]);
               ?>
+              <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/how-to-optimize-your-nextgen-galleries-with-shortpixel-image-optimizer/?target=iframe"></i>
+              <name>
+                  <?php esc_html_e('Enable this option to optimize automatically the NextGen galleries.','shortpixel-image-optimiser');?>
+              </name>
             </content>
          </setting>
          <?php endif; ?>
