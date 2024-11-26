@@ -139,7 +139,7 @@ class CronController
   protected function custom_scheduler($unschedule = false)
   {
       $name = 'spio-refresh-dir';
-      $args = ['args' => [
+      $args = [0 => [
           'amount' => 10]
       ];
 
