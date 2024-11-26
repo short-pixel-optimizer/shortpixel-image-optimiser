@@ -11,6 +11,7 @@ class ShortPixelSettings
 	 root; // top of settings page.
 	 strings;
 	 dashboard_status = {};
+	 save_in_progress = false;
 
 	 Init()
 	 {
@@ -603,6 +604,17 @@ FormSendEvent(event)
 	 var form = event.target;
 	 var formData = new FormData(event.target, event.submitter);
 
+	 if (this.save_in_progress)
+	 {
+					console.log('Already saving');
+					return false;
+	 }
+
+	 this.save_in_progress = true;
+
+	 var saveButtons = this.root.querySelector('.setting-tab.active .save-buttons');
+	 saveButtons.classList.add('saving');
+
 	 formData.append('screen_action', 'form_submit');
 	 formData.append('form-nonce', formData.get('nonce'));
 
@@ -612,8 +624,6 @@ FormSendEvent(event)
 	 {
 				formData.set('screen_action', formaction_parsed.searchParams.get('sp-action'));
 	 }
-	 //const url = new URL(window.location.href);
-
 
 	 this.DoAjaxRequest(formData, this.FormResponseEvent).then( (json) => {
 			 this.FormResponseEvent(json);
@@ -648,7 +658,7 @@ async DoAjaxRequest(formData, responseOkCallBack, responseErrorCallback)
 	var response = await fetch(url, {
 	 method: 'POST',
 	 body: formData
- })
+ });
 
 
 json = null;
@@ -667,6 +677,10 @@ FormResponseEvent(json)
 {
 		let saveDialog = document.querySelector('.ajax-save-done');
 		var noticeLine = saveDialog.querySelector('.after-save-notices');
+		this.save_in_progress = false;
+
+		var saveButtons = this.root.querySelector('.setting-tab.active .save-buttons');
+	 	saveButtons.classList.remove('saving');
 
 			if (json.redirect)
 			{

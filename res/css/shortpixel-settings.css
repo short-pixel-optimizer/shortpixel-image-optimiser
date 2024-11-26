@@ -204,7 +204,7 @@ div.spio-modal-title {
   transition: all 0.1s ease-in-out;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings button:hover, .wrap.is-shortpixel-settings-page .shortpixel-settings .button-setting:hover {
-  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
+  background: #32d7e5;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings button i.switch, .wrap.is-shortpixel-settings-page .shortpixel-settings .button-setting i.switch {
   width: 18px;
@@ -298,13 +298,55 @@ div.spio-modal-title {
   height: 15px;
   vertical-align: text-top;
 }
-.wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab div.save button {
-  padding: 10px 12px;
+.wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab .save-buttons button {
+  padding: 10px 20px;
   font-size: 14px;
-  height: 40px;
+  height: 50px;
 }
-.wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab div.save button i.bulk {
+.wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab .save-buttons button i.bulk {
   filter: brightness(0%) invert(1);
+}
+.wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab .save-buttons.saving button.save {
+  background-color: #0e6870;
+}
+.wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab .save-buttons.saving button.save i {
+  animation: cssload-spin 5000ms infinite linear;
+  -o-animation: cssload-spin 5000ms infinite linear;
+  -ms-animation: cssload-spin 5000ms infinite linear;
+  -webkit-animation: cssload-spin 5000ms infinite linear;
+  -moz-animation: cssload-spin 5000ms infinite linear;
+  width: 20px;
+  height: 20px;
+}
+@keyframes loading-spin {
+  100% {
+    transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@-o-keyframes loading-spin {
+  100% {
+    -o-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@-ms-keyframes loading-spin {
+  100% {
+    -ms-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@-webkit-keyframes loading-spin {
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@-moz-keyframes loading-spin {
+  100% {
+    -moz-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
 }
 @media (max-width: 782px) {
   .wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab div.save {
@@ -481,7 +523,7 @@ div.spio-modal-title {
   transition: all 0.1s ease-in-out;
 }
 .wrap.is-shortpixel-settings-page header .top-buttons a:hover, .wrap.is-shortpixel-settings-page header .top-buttons button:hover {
-  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
+  background: #32d7e5;
 }
 .wrap.is-shortpixel-settings-page header .top-buttons a i.switch, .wrap.is-shortpixel-settings-page header .top-buttons button i.switch {
   width: 18px;
@@ -882,11 +924,11 @@ div.spio-modal-title {
   padding: 5px;
   z-index: 10;
   transition: all 1s ease-out;
-  margin-bottom: -1000px;
+  margin-bottom: -100px;
 }
 .wrap.is-shortpixel-settings-page .ajax-save-done.show {
   margin: 0;
-  transition: all 1s ease-in;
+  transition: all 200ms ease-in;
 }
 .wrap.is-shortpixel-settings-page .ajax-save-done .icon-container {
   display: flex;
@@ -1162,7 +1204,7 @@ div.spio-modal-title {
   transition: all 0.1s ease-in-out;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper .dashboard-button:hover {
-  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
+  background: #32d7e5;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper .dashboard-button i.switch {
   width: 18px;
@@ -1951,7 +1993,7 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page #tab-tools .button {
   min-height: 44px;
   color: #1ABDCA;
-  background-color: rgb(232.25, 232.25, 232.25);
+  background-color: #e8e8e8;
   border-radius: 6px;
   font-weight: 700;
   letter-spacing: 0.3px;
@@ -1959,7 +2001,7 @@ div.spio-modal-title {
   transition: all 0.1s ease-in-out;
 }
 .wrap.is-shortpixel-settings-page #tab-tools .button:hover {
-  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
+  background: #32d7e5;
   color: #fff;
 }
 .wrap.is-shortpixel-settings-page #tab-tools .option, .wrap.is-shortpixel-settings-page #tab-tools setting {

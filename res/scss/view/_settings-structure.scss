@@ -1,6 +1,3 @@
-
-
-
 	&.simple, &.page-quick-tour
 	{
 		 .is-advanced
@@ -20,7 +17,6 @@
 		 menu { display: none } // remove the menu
 		 .shortpixel-settings section.wrapper { margin: 0 auto; } // center the wrapper.
 	}
-
 
 .shortpixel-settings // main article wrapper. Items for settings minus header.
 {
@@ -143,14 +139,30 @@
 					 //margin-bottom: 5px;
 					 vertical-align: text-top;
 				 }
-				 div.save button {
-					 padding: 10px 12px;
-					 font-size: 14px;
-					 height: 40px;
-						 i.bulk {
-		 					filter: brightness(0%) invert(1);
-		 				}
+				 .save-buttons {
+					 	button {
+						 padding: 10px 20px;
+						 font-size: 14px;
+						 height: 50px;
+
+							 i.bulk {
+								filter: brightness(0%) invert(1);
+							}
+					 }
+					 &.saving
+					 {
+							button.save
+							{
+								background-color: darken(#1ABDCA, 20%);
+								i {
+								@include loadspinner;
+								width: 20px;
+								height: 20px;
+								}
+							}
+					 }
 				 }
+
 				 @include breakpoint(0, $wordpress-mobile)
 				 {
 						 div.save{
