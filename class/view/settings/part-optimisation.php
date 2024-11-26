@@ -322,7 +322,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                 <switch>
                   <label>
                     <!-- @todo Should use the switch method as others -->
-                    <input type="checkbox" class="switch" name="useSmartcrop" value="1" <?php checked($view->data->useSmartcrop, '1');?> data-exclude="resizeImages">
+                    <input type="checkbox" class="switch" name="useSmartcrop" value="1" <?php checked($view->data->useSmartcrop, '1');?>>
                     <div class="the_switch">&nbsp; </div>
                     <?php esc_html_e('Enable SmartCrop','shortpixel-image-optimiser');?>
 
@@ -369,7 +369,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 							<switch>
 								<label>
 									<input type="checkbox" class="switch" name="resizeImages" id='resize' value="1"
-                  data-exclude="useSmartcrop"
+
                   <?php checked($view->data->resizeImages, true);?>>
               		<div class="the_switch">&nbsp; </div>
                   <?php esc_html_e('Resize large images','shortpixel-image-optimiser');?>
