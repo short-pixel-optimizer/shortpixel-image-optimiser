@@ -127,13 +127,23 @@ if( $this->is_nginx ){
   <info>
          <?php printf(esc_html__('When enabled, the plugin replaces images with CDN URLs and delivers next-generation formats (e.g. WebP, AVIF, if enabled above). Otherwise, images are served locally, as usual. %sRead more%s.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/deliver-webp-avif-images-using-the-shortpixel-cdn-in-spio/" target="_blank">', '</a>' );?>
   </info>
+
+  <?php
+  $cdnDomain = $view->data->CDNDomain;
+  // in 6.0 original release, the other domain was used. This was changed. At some point this can be removed.
+  if ('https://cdn.shortpixel.ai/spio' == $cdnDomain)
+  {
+     $cdnDomain = 'https://spcdn.shortpixel.ai/spio';
+  }
+  ?>
+
   <name class='useCDN toggleTarget'><?php esc_html_e('CDN Domain', 'shortpixel-image-optimiser'); ?></name>
   <content class='useCDN toggleTarget'>
-      <input type="text" name="CDNDomain" class='regular-text' value="<?php echo esc_attr($view->data->CDNDomain) ?>">
+      <input type="text" name="CDNDomain" class='regular-text' value="<?php echo esc_attr($cdnDomain) ?>" >
       <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain/?target=iframe"></i>
   </content>
   <info class='useCDN toggleTarget'>
-         <?php printf(esc_html__('Change this only if you want to set up your %scustom domain%s.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain/" target="_blank">', '</a>' );?>
+         <?php printf(esc_html__('Change this only if you want to set up your %scustom domain%s.  ShortPixel CDN: %s','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain/" target="_blank">', '</a>', 'https://spcdn.shortpixel.ai/spio');?>
   </info>
 </setting>
 

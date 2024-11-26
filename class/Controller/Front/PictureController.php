@@ -29,6 +29,10 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
 	public function initWebpHooks()
   {
     $webp_option = \wpSPIO()->settings()->deliverWebp;
+    if (false === $this->shouldConvert())
+    {
+       return false;
+    }
 
 
 		if ($webp_option ) {  // @tood Replace this function with the one in ENV.
@@ -67,6 +71,8 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
 					// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
           return $content . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG is AMP -->' : '');
       }
+
+      Log::addTemp('Doing picutre Convert');
       $content = $this->convert($content);
       return $content;
   }

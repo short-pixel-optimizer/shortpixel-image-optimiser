@@ -27,9 +27,12 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 					 return false;
 				}
 
+        Log::addTemp('Conversion started');
+
 				$settings = wpSPIO()->settings();
 				$this->setDefaultCDNArgs();
 				$this->loadCDNDomain();
+
 
 				$this->startOutputBuffer('processFront');
 
@@ -102,7 +105,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 				{
 					 return $content;
 				}
-				Log::addTemp('Processing Front', $_SERVER['REQUEST_URI']);
 
 			//	Log::addTemp('Server URL', get_site_url());
 				$args = [];
@@ -127,7 +129,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		{
 
 			$number = preg_match_all('/<img[^>]*>/i', $content, $matches);
-				Log::addTEmp('matches', $matches);
 
 			$matches = $matches[0];
 
