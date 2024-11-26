@@ -87,23 +87,6 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
  <pre><?php var_export($this->keyModel->getData()); ?></pre>
 
 
-<!--    <form method="POST" action="<?php echo esc_url(add_query_arg(['sp-action' => 'action_debug_editSetting'],$debugUrl)) ?>">
-
-      <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
-      <input type='hidden' name="apikeySettings" value="true">
-
-      <select name="edit_setting">
-          <option value="">&nbsp;</option>
-      <?php foreach($this->keyModel->getData() as $name => $value): ?>
-        <option value="<?php echo $name ?>"><?php echo $name  ?></option>
-      <?php endforeach; ?>
-    </select>
-      New Value <input name="new_value" value="">
-
-    <button class='button' type='submit'>Update</button>
-</form>
-
--->
     <?php $settings = (array) $this->view->data;
      ksort($settings);
     ?>
@@ -175,7 +158,7 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
 
   <div class='debug-stats'>
     <form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_resetStats'), $debugUrl)) ?>"
-      id="shortpixel-form-debug-stats">
+      >
 			<?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
       <button class='button' type='submit'>Clear statistics cache</button>
       </form>
@@ -217,7 +200,7 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
 
   <div class='debug-notices'>
     <form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_resetNotices'), $debugUrl)) ?>"
-      id="shortpixel-form-debug-stats">
+      >
 			<?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
       <button class='button' type='submit'>Reset Notices</button>
       </form>
@@ -225,7 +208,7 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
 
 	<div class='trigger-notices'>
 		<form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_triggerNotice'), $debugUrl)) ?>"
-      id="shortpixel-form-debug-stats">
+      >
 			<?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
 			<?php
 				$controller = AdminNoticesController::getInstance();
@@ -315,7 +298,7 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
 
 <div class='debug-key'>
 	<form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_removeProcessorKey'),$debugUrl)) ?>"
-		id="shortpixel-form-debug-stats">
+		>
 		<?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
 		<button class='button' type='submit'>Reset Processor Key</button>
 		</form>

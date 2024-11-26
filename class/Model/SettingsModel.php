@@ -57,7 +57,7 @@ class SettingsModel extends \ShortPixel\Model
 				'currentStats' => ['s' => 'array', 'default' => array()], // whatever the current stats are.
         'currentVersion' => ['s' => 'string', 'default' => ''],
 				'useCDN' => ['s' => 'boolean', 'default' => false],
-				'CDNDomain' => ['s' => 'string', 'default' => 'https://cdn.shortpixel.ai/spio'],
+				'CDNDomain' => ['s' => 'string', 'default' => 'https://spcdn.shortpixel.ai/spio'],
         'redirectedSettings' => ['s' => 'int', 'default' => 0],
 
     );

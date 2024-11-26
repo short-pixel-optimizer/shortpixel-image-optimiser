@@ -318,7 +318,7 @@ class FrontImage
 			$dontuse = array_merge($dontuse, array('id', 'alt', 'height', 'width', 'srcset', 'sizes', 'class'));
 
 			$attributes = $this->attributes;
-Log::addTemp('attributes', $attributes);
+
 			$leftAttrs = array();
 			foreach($attributes as $name => $value)
 			{
