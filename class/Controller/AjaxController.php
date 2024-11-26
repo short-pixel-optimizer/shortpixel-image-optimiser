@@ -341,7 +341,6 @@ class AjaxController
 
 		public function settingsRequest()
 		{
-			Log::addTemp('Ajax settings request');
 			$this->checkNonce('settings_request');
 			ErrorController::start(); // Capture fatal errors for us.
 
@@ -379,7 +378,6 @@ class AjaxController
 		{
 				 $viewController =  new SettingsViewController();
 				 $viewController->indicateAjaxSave(); // set ajax save method
-				 Log::addTemp('Settings Form Submit Action ' . $action);
 				 if (method_exists($viewController, $action))
 				 {
 						$viewController->$action();

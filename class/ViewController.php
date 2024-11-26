@@ -80,7 +80,7 @@ class ViewController extends Controller
       check_admin_referer( $this->form_action, 'sp-nonce' ); // extra check, when we are wrong here, it dies.
 
       $this->is_form_submit = true;
-      if (true === $processPostData) // only processData on form save. 
+      if (true === $processPostData) // only processData on form save.
       {
           $this->processPostData($_POST);
       }
@@ -128,7 +128,7 @@ class ViewController extends Controller
 				self::$viewsLoaded[] = $template;
       }
       else {
-        Log::addTemp("Not loading $template ? ");
+        
       }
 
   }

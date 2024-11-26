@@ -27,8 +27,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 					 return false;
 				}
 
-        Log::addTemp('Conversion started');
-
 				$settings = wpSPIO()->settings();
 				$this->setDefaultCDNArgs();
 				$this->loadCDNDomain();
@@ -106,7 +104,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 					 return $content;
 				}
 
-			//	Log::addTemp('Server URL', get_site_url());
 				$args = [];
 				$matches = $this->fetchMatches($content, $args);
 
@@ -165,7 +162,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 		protected function getUpdatedUrls($urls)
 		{
-		//	Log::addTemp('URLS', $urls);
 			for ($i = 0; $i < count($urls); $i++)
 			{
 				 $src = $urls[$i];

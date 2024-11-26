@@ -72,7 +72,6 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
           return $content . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG is AMP -->' : '');
       }
 
-      Log::addTemp('Doing picutre Convert');
       $content = $this->convert($content);
       return $content;
   }

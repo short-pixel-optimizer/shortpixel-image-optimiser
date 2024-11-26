@@ -32,7 +32,6 @@ class PageConverter extends \ShortPixel\Controller
 
 		if ($env->is_admin || $env->is_ajaxcall || $env->is_jsoncall || $env->is_croncall )
 		{
-      Log::addTemp('Should not convert!');
 			return false;
 		}
 

@@ -303,7 +303,7 @@ class ShortPixelSettings
 	InitMenu()
 	{
 		  //var menu_elements = this.root.querySelectorAll('menu ul li a');
-			var menu_elements = this.root.querySelectorAll('[menu-link]');
+			var menu_elements = this.root.querySelectorAll('[data-menu-link]');
 			this.menu_elements = menu_elements;
 
 			// Bind change event to all menu items.
@@ -421,7 +421,7 @@ class ShortPixelSettings
 			  	this.menu_elements[i].classList.remove('active');
 				}
 
-				if (this.menu_elements[i].dataset.link == new_tab)
+				if (this.menu_elements[i].dataset.menuLink == new_tab)
 				{
 					 this.menu_elements[i].classList.add('active');
 				}
@@ -568,11 +568,9 @@ class ShortPixelSettings
 		{
 			var element = elems[i];
 			element.classList.add('is-visible'); // Make the element visible
-			//element.style.display = 'block';
 
 			// Once the transition is complete, remove the inline max-height so the content can scale responsively
 			window.setTimeout(function () {
-				//console.log('set timeout');
 					element.style.opacity = 1;
 			}, 150);
 
@@ -606,14 +604,16 @@ FormSendEvent(event)
 
 	 if (this.save_in_progress)
 	 {
-					console.log('Already saving');
 					return false;
 	 }
 
 	 this.save_in_progress = true;
 
 	 var saveButtons = this.root.querySelector('.setting-tab.active .save-buttons');
-	 saveButtons.classList.add('saving');
+	 if (saveButtons !== null)
+	 {
+	 	saveButtons.classList.add('saving');
+	 }
 
 	 formData.append('screen_action', 'form_submit');
 	 formData.append('form-nonce', formData.get('nonce'));
@@ -680,7 +680,11 @@ FormResponseEvent(json)
 		this.save_in_progress = false;
 
 		var saveButtons = this.root.querySelector('.setting-tab.active .save-buttons');
-	 	saveButtons.classList.remove('saving');
+		if (saveButtons !== null)
+		{
+	 		saveButtons.classList.remove('saving');
+		}
+
 
 			if (json.redirect)
 			{
