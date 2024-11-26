@@ -212,6 +212,7 @@
 .wrap.is-shortpixel-bulk-page .shortpixel-illustration.cocktail {
   background-image: url("../images/illustration/cocktail.svg");
   height: 104px;
+  width: 60px;
 }
 .wrap.is-shortpixel-bulk-page section.panel.dashboard {
   max-width: 95%;
