@@ -128,7 +128,7 @@ class ViewController extends Controller
 				self::$viewsLoaded[] = $template;
       }
       else {
-        
+
       }
 
   }
@@ -160,7 +160,9 @@ class ViewController extends Controller
     $label = esc_attr($args['label']);
 
     $data = implode(' ', $args['data']);
-    $disabled = (true === $args['disabled']) ? 'disabled' : '';
+    
+    $disabled = $args['disabled'];
+    $disabled = (true === $disabled) ? 'disabled' : '';
 
     $output = sprintf('<switch %s>
       <label>
