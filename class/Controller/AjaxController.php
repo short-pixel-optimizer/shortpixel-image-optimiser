@@ -1212,6 +1212,7 @@ class AjaxController
 					$json->settings->results = __('All Data has been removed. The plugin has been deactivated', 'shortpixel-image-optimiser');
 				}
 				else {
+					 Log::addError('RemoveAll detected with wrong nonce');
 				}
 
 				$json->settings->redirect = admin_url('plugins.php');

@@ -87,6 +87,7 @@ class SettingsModel extends \ShortPixel\Model
 		protected function save()
 		{
 				$res = update_option($this->option_name, $this->settings);
+
 		}
 
 		public function __get($name)
@@ -153,6 +154,11 @@ class SettingsModel extends \ShortPixel\Model
 				}
 		}
 
+
+    public function deleteAll()
+    {
+        delete_option($this->option_name);
+    }
 
     /**
      * PHP shutdown function, check if settings are updated and save on closing time.
