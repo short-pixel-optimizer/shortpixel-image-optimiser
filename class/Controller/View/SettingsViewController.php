@@ -319,12 +319,22 @@ class SettingsViewController extends \ShortPixel\ViewController
 			public function action_debug_resetQueue()
 			{
 				 $queue = isset($_REQUEST['queue']) ? sanitize_text_field($_REQUEST['queue']) : null;
+
 				 $this->loadEnv();
 				 $this->checkPost(false);
+
+         $uninstall = isset($_REQUEST['use_uninstall']) ? true : false;
 
 				 if (! is_null($queue))
 				 {
 					 	 	$opt = new OptimizeController();
+
+              if (true === $uninstall)
+              {
+                  Log::addDebug("Using Debug UnInstall");
+                  OptimizeController::uninstallPlugin();
+                  $this->doRedirect('');
+              }
 				 		 	$statsMedia = $opt->getQueue('media');
 				 			$statsCustom = $opt->getQueue('custom');
 

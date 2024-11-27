@@ -1411,8 +1411,7 @@ class OptimizeController
 
     public static function uninstallPlugin()
     {
-      //$mediaQ = MediaLibraryQueue::getInstance();
-      //$queue = new MediaLibraryQueue($queueName);
+
       $queues = array('media', 'mediaSingle', 'custom', 'customSingle');
       foreach($queues as $qName)
       {

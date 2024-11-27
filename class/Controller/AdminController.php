@@ -268,6 +268,12 @@ class AdminController extends \ShortPixel\Controller
       $args = wp_parse_args($args, $defaults);
 
       $otherMediaController = OtherMediaController::getInstance();
+      if (false === $otherMediaController->hasCustomImages())
+      {
+         return false; 
+      }
+
+
 
       $args = apply_filters('shortpixel/othermedia/scan_custom_folder', $args);
 

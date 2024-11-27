@@ -288,6 +288,7 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
 					}
 					?>
 			</select>
+      <label><input type="checkbox" name="use_uninstall">Uninstall</label>
       </form>
   </div>
 </div> <!--- stats -->

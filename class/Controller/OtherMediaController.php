@@ -143,6 +143,7 @@ class OtherMediaController extends \ShortPixel\Controller
        if (! is_null(self::$hasCustomImages)) // prevent repeat
          return self::$hasCustomImages;
 
+ Log::addTrace("Has Custom Images function called");
 			if (InstallHelper::checkTableExists('shortpixel_meta') === false)
 				$count = 0;
 			else
@@ -150,7 +151,7 @@ class OtherMediaController extends \ShortPixel\Controller
 				global $wpdb;
 
 				$sql = 'SELECT count(id) as count from ' . $wpdb->prefix . 'shortpixel_meta';
-        $count = $wpdb->get_var($sql); //$this->getFolders(['only_count' => true, 'remove_hidden' => true]);
+        $count = $wpdb->get_var($sql);
 			 }
        if ($count == 0)
         $result = false;

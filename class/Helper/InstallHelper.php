@@ -89,7 +89,7 @@ class InstallHelper
 	public static function hardUninstall()
 	{
 		$env = \wpSPIO()->env();
-    $settings = new \WPShortPixelSettings(); 
+    $settings = new \WPShortPixelSettings();
 
 		$nonce = (isset($_POST['tools-nonce'])) ? sanitize_key($_POST['tools-nonce']) : null;
 		if ( ! wp_verify_nonce( $nonce, 'remove-all' ) ) {
@@ -104,9 +104,7 @@ class InstallHelper
 
 		$settings::resetOptions();
 
-    \wpSPIO()->settings()->deleteAll();
-
-    // new settings
+      // new settings
     delete_option('spio_settings');
 
 		if (! $env->is_nginx)
