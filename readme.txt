@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 4.8.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 6.0.1
+Stable tag: 6.0.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -442,6 +442,23 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 6.0.2 =
+Release date: November 28, 2024
+* Fix: Resizing and SmartCropping can now both be enabled;
+* Fix: Beaver Builder now works when CDN delivery is enabled;
+* Fix: In some cases the picture tag was generated even if it was disabled;
+* Fix: Some notifications still had links pointing to the old settings structure;
+* Fix: The custom media cron generated an error under very specific conditions in PHP 8.2.x;
+* Fix: More CSS changes to make the settings usable when other plugins insert their own CSS in wrong places;
+* Fix: All database options are now removed from the tools section after uninstalling the plugin;
+* Fix: Added a possible fix if the execution of the installation scripts hangs after upgrading to version 6;
+* Fix: Some JavaScript errors were displayed in the Theme Customizer section;
+* Tweak: Added filter to hide the new CDN delivery method;
+* Tweak: Removed a database query for custom media that was no longer needed in wp-admin;
+* Tweak: The save settings button function has been improved and prevents multiple saves at once;
+* Tweak: The default CDN URL has been updated;
+* Language: 1 new strings added, 10 updated, 0 fuzzed and 0 deprecated.
 
 = 6.0.1 =
 Release date: November 22, 2024

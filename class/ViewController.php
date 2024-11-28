@@ -80,7 +80,7 @@ class ViewController extends Controller
       check_admin_referer( $this->form_action, 'sp-nonce' ); // extra check, when we are wrong here, it dies.
 
       $this->is_form_submit = true;
-      if (true === $processPostData) // only processData on form save. 
+      if (true === $processPostData) // only processData on form save.
       {
           $this->processPostData($_POST);
       }
@@ -128,7 +128,7 @@ class ViewController extends Controller
 				self::$viewsLoaded[] = $template;
       }
       else {
-        Log::addTemp("Not loading $template ? ");
+
       }
 
   }
@@ -160,7 +160,9 @@ class ViewController extends Controller
     $label = esc_attr($args['label']);
 
     $data = implode(' ', $args['data']);
-    $disabled = (true === $args['disabled']) ? 'disabled' : '';
+    
+    $disabled = $args['disabled'];
+    $disabled = (true === $disabled) ? 'disabled' : '';
 
     $output = sprintf('<switch %s>
       <label>

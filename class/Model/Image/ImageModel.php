@@ -325,7 +325,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
             $message = __('Image Extension not processable', 'shortpixel-image-optimiser');
          break;
          case self::P_EXCLUDE_EXTENSION_PDF:
-            $message = sprintf(__('PDF processing is not enabled in the %ssettings%s', 'shortpixel-image-optimiser'), '<a href="' .  esc_url(admin_url('options-general.php?page=wp-shortpixel-settings&part=adv-settings')) . '">', '</a>');
+            $message = sprintf(__('PDF processing is not enabled in the %ssettings%s', 'shortpixel-image-optimiser'), '<a href="' .  esc_url(admin_url('options-general.php?page=wp-shortpixel-settings&part=optimisation')) . '">', '</a>');
          break;
          case self::P_EXCLUDE_SIZE:
             $message = __('Image Size Excluded', 'shortpixel-image-optimiser');

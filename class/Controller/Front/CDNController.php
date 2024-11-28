@@ -31,6 +31,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 				$this->setDefaultCDNArgs();
 				$this->loadCDNDomain();
 
+
 				$this->startOutputBuffer('processFront');
 
 		}
@@ -102,9 +103,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 				{
 					 return $content;
 				}
-				Log::addTemp('Processing Front', $_SERVER['REQUEST_URI']);
 
-			//	Log::addTemp('Server URL', get_site_url());
 				$args = [];
 				$matches = $this->fetchMatches($content, $args);
 
@@ -127,7 +126,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		{
 
 			$number = preg_match_all('/<img[^>]*>/i', $content, $matches);
-				Log::addTEmp('matches', $matches);
 
 			$matches = $matches[0];
 
@@ -164,7 +162,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 		protected function getUpdatedUrls($urls)
 		{
-		//	Log::addTemp('URLS', $urls);
 			for ($i = 0; $i < count($urls); $i++)
 			{
 				 $src = $urls[$i];

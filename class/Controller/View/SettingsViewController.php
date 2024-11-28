@@ -50,7 +50,7 @@ class SettingsViewController extends \ShortPixel\ViewController
      );
 
      protected $display_part = 'overview';
-		 protected $all_display_parts = array('overview', 'optimisation','webp', 'cdn','exclusions', 'debug', 'tools', 'help');
+     protected $all_display_parts = array('overview', 'optimisation','exclusions', 'processing', 'webp', 'integrations', 'debug', 'tools', 'help');
      protected $form_action = 'save-settings';
      protected $view_mode = 'simple'; // advanced or simple
 		 protected $is_ajax_save = false; // checker if saved via ajax ( aka no redirect / json return )
@@ -102,7 +102,6 @@ class SettingsViewController extends \ShortPixel\ViewController
       public function action_addkey()
       {
         $this->loadEnv();
-        Log::addTemp('Action addkey start' . $this->is_form_submit);
 
         $this->checkPost(false);
 
@@ -119,17 +118,14 @@ class SettingsViewController extends \ShortPixel\ViewController
 
             $this->keyModel->resetTried();
             $this->keyModel->checkKey($apiKey);
-            Log::addTemp('Checked key');
             }
         }
 
         if (true === $this->keyModel->is_verified())
         {
-          Log::addtemp('Key OK, reload');
           $this->doRedirect('reload');
         }
         else {
-          Log::addtemp('Key NOT OK, no reload');
           $this->doRedirect();
         }
       }
@@ -213,7 +209,7 @@ class SettingsViewController extends \ShortPixel\ViewController
           $this->checkPost(false);
 
           $this->model->redirectedSettings = 3;
-          Log::addTemp('Set RedirectedSe');
+
           $this->doRedirect('reload');
       }
 
@@ -267,7 +263,6 @@ class SettingsViewController extends \ShortPixel\ViewController
       /** Button in part-debug, routed via custom Action */
       public function action_debug_resetStats()
       {
-					Log::addTemp('Action reset Stats');
           $this->loadEnv();
 					$this->checkPost(false);
           $statsController = StatsController::getInstance();
@@ -324,12 +319,22 @@ class SettingsViewController extends \ShortPixel\ViewController
 			public function action_debug_resetQueue()
 			{
 				 $queue = isset($_REQUEST['queue']) ? sanitize_text_field($_REQUEST['queue']) : null;
+
 				 $this->loadEnv();
 				 $this->checkPost(false);
+
+         $uninstall = isset($_REQUEST['use_uninstall']) ? true : false;
 
 				 if (! is_null($queue))
 				 {
 					 	 	$opt = new OptimizeController();
+
+              if (true === $uninstall)
+              {
+                  Log::addDebug("Using Debug UnInstall");
+                  OptimizeController::uninstallPlugin();
+                  $this->doRedirect('');
+              }
 				 		 	$statsMedia = $opt->getQueue('media');
 				 			$statsCustom = $opt->getQueue('custom');
 
@@ -570,7 +575,7 @@ class SettingsViewController extends \ShortPixel\ViewController
            $date = $latest['date'];
         }
 
-        $message = (count($logs) == 0) ? esc_html__('No bulk was ran', 'shortpixel-image-optimiser') : sprintf(__(' Last bulk ran on:  %s','shortpixel-image-optimiser'), '<br>' . $date );
+        $message = (count($logs) == 0) ? esc_html__('No bulk processing has been performed yet', 'shortpixel-image-optimiser') : sprintf(__('The last bulk processing ran on:  %s','shortpixel-image-optimiser'), '<br>' . $date );
 
         $bulkblock = new \stdClass;
         $bulkblock->icon = 'ok';
@@ -678,7 +683,7 @@ class SettingsViewController extends \ShortPixel\ViewController
                $title = $title . $icon;
           }
 
-					$html = sprintf('<a href="%s" class="%s" menu-link="%s" %s >%s</a>', $link, $class, $args['part'], $active, $title);
+          $html = sprintf('<a href="%s" class="%s" data-menu-link="%s" %s >%s</a>', $link, $class, $args['part'], $active, $title);
 
           return $html;
       }

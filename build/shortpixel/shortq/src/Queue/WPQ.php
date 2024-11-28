@@ -528,7 +528,17 @@ class WPQ implements Queue
 			 }
 			 $status['queues'][$this->qName]  = $currentStatus;
 		 }
-     $res = update_option($this->statusName, $status);
+
+     if (count($status['queues']) == 0)
+     {
+
+       $res = delete_option($this->statusName);
+     }
+     else {
+        $res = update_option($this->statusName, $status);
+     }
+
+
      wp_cache_delete($this->statusName, 'options');
   }
 
@@ -661,18 +671,11 @@ class WPQ implements Queue
   public function unInstall()
   {
       // Remove the Queued Items
-
       $this->DataProvider->removeRecords(array('all' => true, 'check_safe' => true));
 
       // Unset the WP Option queue
-      //unset($this->status
-      unset($this->status['queues'][$this->qName]);
-
-      if (count($this->status['queues']) == 0)
-        delete_option($this->statusName);
-      else
-        $this->saveStatus();
-
+      $this->currentStatus = false;
+      $this->saveStatus();
 
       // Signal to DataProvider to check if the whole thing can be removed. Won't happen when there are still records.
       $this->DataProvider->uninstall();

@@ -333,7 +333,6 @@ class ApiKeyModel extends \ShortPixel\Model
 
   protected function checkRedirect()
   {
-    Log::addTemp('Check Redirect');
     $redirectedSettings =  \wpSPIO()->settings()->redirectedSettings;
     if(! \wpSPIO()->env()->is_ajaxcall && !$redirectedSettings && !$this->verifiedKey && (!function_exists("is_multisite") || ! is_multisite())) {
       \wpSPIO()->settings()->redirectedSettings = 1;

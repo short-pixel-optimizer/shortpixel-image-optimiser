@@ -23,16 +23,29 @@ class PageConverter extends \ShortPixel\Controller
 	protected function shouldConvert()
 	{
 		$env = wpSPIO()->env();
+
+    $checks = [ $env->is_admin,
+       $env->is_ajaxcall,
+       $env->is_jsoncall,
+       $env->is_croncall,
+    ];
+
 		if ($env->is_admin || $env->is_ajaxcall || $env->is_jsoncall || $env->is_croncall )
 		{
-	//		Log::addTemp('DENIED PAGE' . $_SERVER['REQUEST_URI']);
 			return false;
 		}
 
-//		 $env->detectImage404()
+
+    if (isset($_GET['fl_builder']))
+    {
+       return false;
+    }
+
+
 	 add_filter('status_header', [$this, 'status_header_sent'], 10, 2);
 
-		return true;
+   $bool = apply_filters('shortpixel/front/convert_this_page', true);
+   return $bool ;
 	}
 
 	protected function startOutputBuffer($callback) {
@@ -56,15 +69,6 @@ class PageConverter extends \ShortPixel\Controller
 	{
 		$this->status_header = $code;
 		 return $status;
-	}
-
-	// Try to detect if WP is redirect /serving an image 404 . In that case don't convert since this page will not be shown (?)
-	protected function detectImage404()
-	{
-			$url = (isset($_SERVER['REDIRECT_URL'])) ? $_SERVER['REDIRECT_URL'] : false;
-			if (false === $url)
-			{ return false;
-			}
 	}
 
 

@@ -341,7 +341,6 @@ class AjaxController
 
 		public function settingsRequest()
 		{
-			Log::addTemp('Ajax settings request');
 			$this->checkNonce('settings_request');
 			ErrorController::start(); // Capture fatal errors for us.
 
@@ -379,7 +378,6 @@ class AjaxController
 		{
 				 $viewController =  new SettingsViewController();
 				 $viewController->indicateAjaxSave(); // set ajax save method
-				 Log::addTemp('Settings Form Submit Action ' . $action);
 				 if (method_exists($viewController, $action))
 				 {
 						$viewController->$action();
@@ -1214,6 +1212,7 @@ class AjaxController
 					$json->settings->results = __('All Data has been removed. The plugin has been deactivated', 'shortpixel-image-optimiser');
 				}
 				else {
+					 Log::addError('RemoveAll detected with wrong nonce');
 				}
 
 				$json->settings->redirect = admin_url('plugins.php');

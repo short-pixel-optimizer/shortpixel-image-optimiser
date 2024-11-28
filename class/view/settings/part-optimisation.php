@@ -167,7 +167,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                      ]);
                ?>
 
-              <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/518-settings-optimize-retina-images?target=iframe"></i>
+              <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-optimize-retina-images/?target=iframe"></i>
               <name>
                   <?php esc_html_e('Also optimize the Retina images (@2x) if they exist.','shortpixel-image-optimiser');?>
               </name>
@@ -194,6 +194,10 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                      'label' => esc_html__('Optimize NextGen galleries','shortpixel-image-optimiser')
                     ]);
               ?>
+              <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/how-to-optimize-your-nextgen-galleries-with-shortpixel-image-optimizer/?target=iframe"></i>
+              <name>
+                  <?php esc_html_e('Enable this option to optimize automatically the NextGen galleries.','shortpixel-image-optimiser');?>
+              </name>
             </content>
          </setting>
          <?php endif; ?>
@@ -318,7 +322,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                 <switch>
                   <label>
                     <!-- @todo Should use the switch method as others -->
-                    <input type="checkbox" class="switch" name="useSmartcrop" value="1" <?php checked($view->data->useSmartcrop, '1');?> data-exclude="resizeImages">
+                    <input type="checkbox" class="switch" name="useSmartcrop" value="1" <?php checked($view->data->useSmartcrop, '1');?>>
                     <div class="the_switch">&nbsp; </div>
                     <?php esc_html_e('Enable SmartCrop','shortpixel-image-optimiser');?>
 
@@ -365,7 +369,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 							<switch>
 								<label>
 									<input type="checkbox" class="switch" name="resizeImages" id='resize' value="1"
-                  data-exclude="useSmartcrop"
+
                   <?php checked($view->data->resizeImages, true);?>>
               		<div class="the_switch">&nbsp; </div>
                   <?php esc_html_e('Resize large images','shortpixel-image-optimiser');?>

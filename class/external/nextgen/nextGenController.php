@@ -133,7 +133,6 @@ The screen IDS seem to be have changed, trying a more definitive solution
 
 	 $screen_pos = ['ngg', 'nggallery', 'nextgen-gallery'];
 
-
 	 if (property_exists($screen, 'ngg'))
 	 {
 		 	$use_screens[] = $screen->id;
@@ -145,16 +144,14 @@ The screen IDS seem to be have changed, trying a more definitive solution
 		 	foreach($screen_pos as $pos)
 			{
 				  $index = strpos($screen->id, $pos);
-					if ($index !== -1)
+
+          if ($index !== false)
 					{
 						 $use_screens[]= $screen->id;
 						 $this->is_ngg_screen = true;
 					}
 			}
 	 }
-
-
-
     return $use_screens;
   }
 

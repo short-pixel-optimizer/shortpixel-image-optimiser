@@ -24,7 +24,6 @@ class InstallHelper
   {
       self::deactivatePlugin();
 
-
       $env = wpSPIO()->env();
 
       if(\WPShortPixelSettings::getOpt('deliverWebp') == 3 && ! $env->is_nginx) {
@@ -42,6 +41,8 @@ class InstallHelper
 
       $settings = \wpSPIO()->settings();
 			$settings->currentVersion = SHORTPIXEL_IMAGE_OPTIMISER_VERSION;
+
+      wp_cache_flush();
   }
 
   public static function deactivatePlugin()
@@ -89,7 +90,7 @@ class InstallHelper
 	public static function hardUninstall()
 	{
 		$env = \wpSPIO()->env();
-    $settings = new \WPShortPixelSettings(); // \wpSPIO()->settings();
+    $settings = new \WPShortPixelSettings();
 
 		$nonce = (isset($_POST['tools-nonce'])) ? sanitize_key($_POST['tools-nonce']) : null;
 		if ( ! wp_verify_nonce( $nonce, 'remove-all' ) ) {
@@ -103,7 +104,8 @@ class InstallHelper
 		BulkController::uninstallPlugin();
 
 		$settings::resetOptions();
-    // new settings
+
+      // new settings
     delete_option('spio_settings');
 
 		if (! $env->is_nginx)

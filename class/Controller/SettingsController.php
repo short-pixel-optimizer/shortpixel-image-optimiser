@@ -328,7 +328,7 @@ class SettingsController extends \ShortPixel\Controller
               AdminNoticesController::resetIntegrationNotices();
           }
 
-Log::addTemp('PostData', $this->postData);
+
 					// If the compression type setting changes, remove all queued items to prevent further optimizing with a wrong type.
 					if (intval($this->postData['compressionType']) !== intval($this->model->compressionType))
 					{

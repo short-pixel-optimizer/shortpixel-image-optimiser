@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
          <?php esc_html_e('Exclude thumbnail sizes','shortpixel-image-optimiser');?>
                 <i class='documentation up dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/113-how-can-i-optimize-only-certain-thumbnail-sizes?target=iframe"></i>
      </name>
-     <content>
+     <div class="grid-thumbnails">
 
        <?php
        foreach($view->allThumbSizes as $sizeKey => $sizeVal) {
@@ -47,7 +47,7 @@ if ( ! defined( 'ABSPATH' ) ) {
        <?php } // exclude sizes ?>
 
 
-     </content>
+     </div>
   </setting>
  <!-- // Exclude thumbnails -->
 

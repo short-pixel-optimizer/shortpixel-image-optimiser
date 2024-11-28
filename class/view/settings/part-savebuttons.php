@@ -1,7 +1,7 @@
 
 
-<div class='save'>
-    <button type="submit" class='save' id="save">
+<div class='save-buttons'>
+    <button type="submit" class='save'>
         <i class='shortpixel-icon save'></i>
         <?php _e('Save', 'shortpixel-image-optimizer'); ?>
     </button>

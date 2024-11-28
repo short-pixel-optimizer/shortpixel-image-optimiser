@@ -109,33 +109,49 @@ if( $this->is_nginx ){
   </setting>
   <!-- // avif -->
 
-  <setting class='switch step-highlight-3'>
-    <content>
-  <?php $this->printSwitchButton(
-        ['name' => 'useCDN',
-         'checked' =>  ($view->data->useCDN > 0) ? 1 : 0,
-         'label' => esc_html__('Deliver the next generation images using the ShortPixel CDN:','shortpixel-image-optimiser'),
 
-         'data' => ['data-toggle="useCDN"', 'data-exclude="deliverWebp"', 'data-dashboard="' . __('Next generation images not delivered', 'shortpixel-image-optimiser') . '"', ],
-        ]);
-  ?>
+<?php
 
-  <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/deliver-webp-avif-images-using-the-shortpixel-cdn-in-spio/?target=iframe"></i>
+  if (true === apply_filters('shortpixel/settings/allow_cdn', true)): ?>
+    <setting class='switch step-highlight-3'>
+      <content>
+    <?php $this->printSwitchButton(
+          ['name' => 'useCDN',
+           'checked' =>  ($view->data->useCDN > 0) ? 1 : 0,
+           'label' => esc_html__('Deliver the next generation images using the ShortPixel CDN:','shortpixel-image-optimiser'),
 
-  </content>
-  <?php echo UiHelper::getIcon('res/images/icon/new.svg'); ?>
-  <info>
-         <?php printf(esc_html__('When enabled, the plugin replaces images with CDN URLs and delivers next-generation formats (e.g. WebP, AVIF, if enabled above). Otherwise, images are served locally, as usual. %sRead more%s.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/deliver-webp-avif-images-using-the-shortpixel-cdn-in-spio/" target="_blank">', '</a>' );?>
-  </info>
-  <name class='useCDN toggleTarget'><?php esc_html_e('CDN Domain', 'shortpixel-image-optimiser'); ?></name>
-  <content class='useCDN toggleTarget'>
-      <input type="text" name="CDNDomain" class='regular-text' value="<?php echo esc_attr($view->data->CDNDomain) ?>">
-      <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain/?target=iframe"></i>
-  </content>
-  <info class='useCDN toggleTarget'>
-         <?php printf(esc_html__('Change this only if you want to set up your %scustom domain%s.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain/" target="_blank">', '</a>' );?>
-  </info>
-</setting>
+           'data' => ['data-toggle="useCDN"', 'data-exclude="deliverWebp"', 'data-dashboard="' . __('Next generation images are not delivered', 'shortpixel-image-optimiser') . '"', ],
+          ]);
+    ?>
+
+    <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/deliver-webp-avif-images-using-the-shortpixel-cdn-in-spio/?target=iframe"></i>
+
+    </content>
+    <?php echo UiHelper::getIcon('res/images/icon/new.svg'); ?>
+    <info>
+           <?php printf(esc_html__('When enabled, the plugin replaces images with CDN URLs and delivers next-generation formats (e.g. WebP, AVIF, if enabled above). Otherwise, images are served locally, as usual. %sRead more%s.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/deliver-webp-avif-images-using-the-shortpixel-cdn-in-spio/" target="_blank">', '</a>' );?>
+    </info>
+
+    <?php
+    $cdnDomain = $view->data->CDNDomain;
+    // in 6.0 original release, the other domain was used. This was changed. At some point this can be removed.
+    if ('https://cdn.shortpixel.ai/spio' == $cdnDomain)
+    {
+       $cdnDomain = 'https://spcdn.shortpixel.ai/spio';
+    }
+    ?>
+
+    <name class='useCDN toggleTarget'><?php esc_html_e('CDN Domain', 'shortpixel-image-optimiser'); ?></name>
+    <content class='useCDN toggleTarget'>
+        <input type="text" name="CDNDomain" class='regular-text' value="<?php echo esc_attr($cdnDomain) ?>" >
+        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain/?target=iframe"></i>
+    </content>
+    <info class='useCDN toggleTarget'>
+           <?php printf(esc_html__('Change this only if you want to set up your %scustom domain%s.  ShortPixel CDN: %s','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain/" target="_blank">', '</a>', 'https://spcdn.shortpixel.ai/spio');?>
+    </info>
+  </setting>
+<?php endif; ?>
+
 
 
 <setting class='switch step-highlight-3'>
@@ -146,7 +162,7 @@ if( $this->is_nginx ){
           'checked' =>  ($view->data->deliverWebp > 0) ? 1 : 0,
           'label' => esc_html__('Serve WebP/AVIF images from locally hosted files (without using a CDN):','shortpixel-image-optimiser'),
           'disabled' => $disabled,
-          'data' => ['data-toggle="deliverTypes"', 'data-dashboard="' . __('Next generation images not delivered', 'shortpixel-image-optimiser') . '"', 'data-exclude="useCDN" data-hidewarnings'],
+          'data' => ['data-toggle="deliverTypes"', 'data-dashboard="' . __('Next generation images are not delivered', 'shortpixel-image-optimiser') . '"', 'data-exclude="useCDN" data-hidewarnings'],
          ]);
    ?>
 

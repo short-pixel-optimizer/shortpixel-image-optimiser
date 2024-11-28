@@ -50,5 +50,6 @@ $icons: alert, arrow-right, arrows-left-right, arrows-up-down, box-archive, bulk
   &.cocktail {
     background-image: url($illustration-path + '/cocktail.svg');
     height: 104px;
+    width: 60px;
   }
 }

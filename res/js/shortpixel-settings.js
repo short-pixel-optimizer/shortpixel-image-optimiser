@@ -11,6 +11,7 @@ class ShortPixelSettings
 	 root; // top of settings page.
 	 strings;
 	 dashboard_status = {};
+	 save_in_progress = false;
 
 	 Init()
 	 {
@@ -302,7 +303,7 @@ class ShortPixelSettings
 	InitMenu()
 	{
 		  //var menu_elements = this.root.querySelectorAll('menu ul li a');
-			var menu_elements = this.root.querySelectorAll('[menu-link]');
+			var menu_elements = this.root.querySelectorAll('[data-menu-link]');
 			this.menu_elements = menu_elements;
 
 			// Bind change event to all menu items.
@@ -420,7 +421,7 @@ class ShortPixelSettings
 			  	this.menu_elements[i].classList.remove('active');
 				}
 
-				if (this.menu_elements[i].dataset.link == new_tab)
+				if (this.menu_elements[i].dataset.menuLink == new_tab)
 				{
 					 this.menu_elements[i].classList.add('active');
 				}
@@ -567,11 +568,9 @@ class ShortPixelSettings
 		{
 			var element = elems[i];
 			element.classList.add('is-visible'); // Make the element visible
-			//element.style.display = 'block';
 
 			// Once the transition is complete, remove the inline max-height so the content can scale responsively
 			window.setTimeout(function () {
-				//console.log('set timeout');
 					element.style.opacity = 1;
 			}, 150);
 
@@ -603,6 +602,19 @@ FormSendEvent(event)
 	 var form = event.target;
 	 var formData = new FormData(event.target, event.submitter);
 
+	 if (this.save_in_progress)
+	 {
+					return false;
+	 }
+
+	 this.save_in_progress = true;
+
+	 var saveButtons = this.root.querySelector('.setting-tab.active .save-buttons');
+	 if (saveButtons !== null)
+	 {
+	 	saveButtons.classList.add('saving');
+	 }
+
 	 formData.append('screen_action', 'form_submit');
 	 formData.append('form-nonce', formData.get('nonce'));
 
@@ -612,8 +624,6 @@ FormSendEvent(event)
 	 {
 				formData.set('screen_action', formaction_parsed.searchParams.get('sp-action'));
 	 }
-	 //const url = new URL(window.location.href);
-
 
 	 this.DoAjaxRequest(formData, this.FormResponseEvent).then( (json) => {
 			 this.FormResponseEvent(json);
@@ -648,7 +658,7 @@ async DoAjaxRequest(formData, responseOkCallBack, responseErrorCallback)
 	var response = await fetch(url, {
 	 method: 'POST',
 	 body: formData
- })
+ });
 
 
 json = null;
@@ -667,6 +677,14 @@ FormResponseEvent(json)
 {
 		let saveDialog = document.querySelector('.ajax-save-done');
 		var noticeLine = saveDialog.querySelector('.after-save-notices');
+		this.save_in_progress = false;
+
+		var saveButtons = this.root.querySelector('.setting-tab.active .save-buttons');
+		if (saveButtons !== null)
+		{
+	 		saveButtons.classList.remove('saving');
+		}
+
 
 			if (json.redirect)
 			{
