@@ -24,7 +24,6 @@ class InstallHelper
   {
       self::deactivatePlugin();
 
-
       $env = wpSPIO()->env();
 
       if(\WPShortPixelSettings::getOpt('deliverWebp') == 3 && ! $env->is_nginx) {
@@ -42,6 +41,8 @@ class InstallHelper
 
       $settings = \wpSPIO()->settings();
 			$settings->currentVersion = SHORTPIXEL_IMAGE_OPTIMISER_VERSION;
+
+      wp_cache_flush();
   }
 
   public static function deactivatePlugin()
