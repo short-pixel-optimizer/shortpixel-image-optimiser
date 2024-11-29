@@ -144,7 +144,7 @@ class ShortPixelOnboarding
           anchor.classList.add('is-visible');
         }
 
-        /*if (json.redirect)
+        if (json.redirect)
         {
            if (json.redirect == 'reload')
            {
@@ -153,7 +153,7 @@ class ShortPixelOnboarding
            else {
                window.location.href = json.redirect;
            }
-        } */
+        } 
 
     }
 
