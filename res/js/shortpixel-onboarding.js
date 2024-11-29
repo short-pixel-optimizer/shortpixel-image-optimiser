@@ -144,17 +144,19 @@ class ShortPixelOnboarding
           anchor.classList.add('is-visible');
         }
 
-        if (json.redirect)
-        {
-           if (json.redirect == 'reload')
-           {
-                window.location.reload();
-           }
-           else {
-               window.location.href = json.redirect;
-           }
-        } 
+        window.setTimeout(function () {
 
+          if (json.redirect)
+          {
+             if (json.redirect == 'reload')
+             {
+                  window.location.reload();
+             }
+             else {
+                 window.location.href = json.redirect;
+             }
+          }
+        },500);
     }
 
     IsEmailValid(email) {
