@@ -1050,11 +1050,7 @@ class AjaxController
 
     }
 
-/*
-		public function ajax_addImageEditorData($data)
-		{
 
-		} */
 
 		protected function loadLogFile($json, $data)
 		{
