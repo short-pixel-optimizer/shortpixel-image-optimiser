@@ -42,11 +42,11 @@ class PageConverter extends \ShortPixel\Controller
     }
 
     // Divi Builder
-    if (isset($_GET['et_fb'))
+    if (isset($_GET['et_fb']))
     {
        return false;
     }
-    
+
 
 
 	 add_filter('status_header', [$this, 'status_header_sent'], 10, 2);
