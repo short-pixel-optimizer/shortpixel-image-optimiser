@@ -1,5 +1,6 @@
 <?php
 namespace ShortPixel\Notices;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 class NoticeModel //extends ShortPixelModel
 {
@@ -256,7 +257,6 @@ class NoticeModel //extends ShortPixelModel
       break;
     }
 
-
     if ($this->is_removable)
     {
       $class .= 'is-dismissible ';
@@ -268,8 +268,9 @@ class NoticeModel //extends ShortPixelModel
     }
 
     $id = ! is_null($this->id) ?  $this->id : uniqid();
-    //'id="' . $this->id . '"'
-    $output = "<div id='$id' class='$class'><span class='icon'> " . $icon . "</span> <span class='content'>" . $this->message;
+
+    $output = sprintf('<div id="%s" class="%s"><span class="icon">%s</span><span class="content">%s', $id, $class, $icon,$this->message);
+
     if ($this->hasDetails())
     {
       $output .= '<div class="details-wrapper">

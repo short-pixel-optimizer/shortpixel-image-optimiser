@@ -39,7 +39,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 		//		'HeicFeatureNotice',
         'NewExclusionFormat',
         'LitespeedCache',
-        'SpaiCDN', 
+        'SpaiCDN',
     );
     protected $adminNotices; // Models
 
@@ -135,12 +135,7 @@ class AdminNoticesController extends \ShortPixel\Controller
         $screen_id = \wpSPIO()->env()->screen_id;
 
         $noticeControl = Notices::getInstance();
-        $noticeControl->loadIcons(array(
-            'normal' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/slider.png', SHORTPIXEL_PLUGIN_FILE) . '">',
-            'success' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/robo-cool.png', SHORTPIXEL_PLUGIN_FILE) . '">',
-            'warning' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/robo-scared.png', SHORTPIXEL_PLUGIN_FILE) . '">',
-            'error' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/robo-scared.png', SHORTPIXEL_PLUGIN_FILE) . '">',
-        ));
+
 
         if ($noticeControl->countNotices() > 0)
         {
@@ -197,11 +192,21 @@ class AdminNoticesController extends \ShortPixel\Controller
     {
         foreach($this->definedNotices as $className)
         {
-
             $ns = '\ShortPixel\Model\AdminNotices\\' . $className;
             $class = new $ns();
+
             $this->adminNotices[$class->getKey()] = $class;
         }
+
+        // Init the notice icons
+        $noticeControl = Notices::getInstance();
+        $noticeControl->loadIcons(array(
+            'normal' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/slider.png', SHORTPIXEL_PLUGIN_FILE) . '">',
+            'success' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/robo-cool.png', SHORTPIXEL_PLUGIN_FILE) . '">',
+            'warning' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/robo-scared.png', SHORTPIXEL_PLUGIN_FILE) . '">',
+            'error' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/robo-scared.png', SHORTPIXEL_PLUGIN_FILE) . '">',
+        ));
+
     }
 
 		protected function loadNotices()

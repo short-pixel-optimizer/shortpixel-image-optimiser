@@ -461,6 +461,8 @@ class SettingsViewController extends \ShortPixel\ViewController
       {
          $this->view->data = (Object) $this->model->getData();
 
+
+
 				 $this->loadAPiKeyData();
          $this->loadDashBoardInfo();
 
@@ -1022,6 +1024,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 							$json->display_notices = [];
 							foreach($json->notices as $notice)
 							{
+              //  Log::addTemp('Notice for Dpl', $notice->getForDisplay());
 								$json->display_notices[] = $notice->getForDisplay();
 							}
 						}

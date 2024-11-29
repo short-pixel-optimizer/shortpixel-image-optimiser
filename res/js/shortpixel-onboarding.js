@@ -131,7 +131,6 @@ class ShortPixelOnboarding
 
     FormAddKeyResponse(json)
     {
-        console.trace(json);
         var anchor = this.root.querySelector('.submit-errors');
         anchor.innerHTML = '';
 
@@ -139,15 +138,13 @@ class ShortPixelOnboarding
         {
           for (let i = 0; i < json.display_notices.length; i++)
           {
-            console.log(json.display_notices[i]);
             anchor.innerHTML += json.display_notices[i];
-            //anchor.insertAdjacentHTML('afterend', json.display_notices[i]);
           }
 
           anchor.classList.add('is-visible');
         }
 
-        if (json.redirect)
+        /*if (json.redirect)
         {
            if (json.redirect == 'reload')
            {
@@ -156,7 +153,7 @@ class ShortPixelOnboarding
            else {
                window.location.href = json.redirect;
            }
-        }
+        } */
 
     }
 
