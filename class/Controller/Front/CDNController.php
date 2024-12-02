@@ -177,10 +177,21 @@ Log::addTemp('New URLS', $new_urls);
 		{
       //	$site_url = $this->site_url;
 				$domain = $this->cdn_domain;
-				$new_src = $src;
+			//	$new_src = $src;
       //	$parsedUrl = parse_url($src);
 
+			 // Check for slashes
+				if (strpos($src, '\/') !== false)
+				{
+					 $src = stripslashes($src);
+				}
+
+				$remove = ['"'];
+				$src = str_replace($remove, [], $src);
+
         $src = str_replace(['http://', 'https://'], '', $src);
+
+
         $src = apply_filters('shortpixel/front/cdn/url', $src);
 
 				$cdn_prefix = trailingslashit($domain) . trailingslashit($this->findCDNArguments($src));

@@ -167,7 +167,7 @@ class WPShortPixelSettings extends \ShortPixel\Model {
 					 if (true === $bool || false === $settingsModel->exists($option_name))
 					 {
             //  Log::AddTrace('Would delete non-existing? setting ' . $option_name);
-						 // delete_option($data['key']);
+					//	  delete_option($data['key']);
 					 		$updated = true;
 					 }
 				}
