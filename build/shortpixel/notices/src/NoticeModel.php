@@ -1,6 +1,5 @@
 <?php
 namespace ShortPixel\Notices;
-use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 class NoticeModel //extends ShortPixelModel
 {
@@ -146,7 +145,6 @@ class NoticeModel //extends ShortPixelModel
 	}
 
 
-
   /** Set a notice persistent. Meaning it shows every page load until dismissed.
   * @param $key Unique Key of this message. Required
   * @param $suppress When dismissed do not show this message again for X amount of time. When -1 it will just be dropped from the Notices and not suppressed
@@ -257,6 +255,7 @@ class NoticeModel //extends ShortPixelModel
       break;
     }
 
+
     if ($this->is_removable)
     {
       $class .= 'is-dismissible ';
@@ -273,22 +272,23 @@ class NoticeModel //extends ShortPixelModel
 
     if ($this->hasDetails())
     {
-      $output .= '<div class="details-wrapper">
-      <input type="checkbox" name="detailhider" id="check-' . $id .'">
-      <label for="check-' . $id . '"  class="show-details"><span>' . __('See Details', 'shortpixel-image-optimiser')   . '</span>
-      </label>';
 
-      $output .= "<div class='detail-content-wrapper'><p class='detail-content'>" . $this->parseDetails() . "</p></div>";
-      $output .= '<label for="check-' . $id . '" class="hide-details"><span>' . __('Hide Details', 'shortpixel-image-optimiser') . '</span></label>';
+      $details = sprintf('<div class="details-wrapper">
+            <input type="checkbox" name="detailhider" id="check-%s">
+            <label for="check-%s"  class="show-details"><span>%s</span>
+            </label>
+             <div class="detail-content-wrapper"><p class="detail-content">%s</p></div>
+          <label for="check-%s" class="hide-details"><span>%s</span></label>
+            </div>', $id, $id, __('See Details', 'shortpixel-image-optimiser'), $this->parseDetails(), $id, __('Hide Details', 'shortpixel-image-optimiser') );
 
-      $output .= '</div>'; // detail wrapper
+      $output .= $details;
 
     }
     $output .= "</span>";
 
     if ($this->is_removable)
     {
-			      $output .= '<button type="button" id="button-' . $id . '" class="notice-dismiss" data-dismiss="' . $this->suppress_period . '" ><span class="screen-reader-text">' . __('Dismiss this notice', 'shortpixel-image-optimiser') . '</span></button>';
+        $output .= sprintf('<button type="button" id="button-%s" class="notice-dismiss" data-dismiss="%s" ><span class="screen-reader-text">%s</span></button>', $id,  $this->suppress_period, __('Dismiss this notice', 'shortpixel-image-optimiser') );
 
        if (! $this->is_persistent)
        {
@@ -312,7 +312,6 @@ class NoticeModel //extends ShortPixelModel
         $output .= "<script type='text/javascript'>\n" . $this->getDismissJS() . "\n</script>";
     }
     return $output;
-
   }
 
   protected function hasDetails()

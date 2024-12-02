@@ -295,15 +295,12 @@ class NoticeController //extends ShortPixelController
     $noticeController = self::getInstance();
     $notice = $noticeController->addNotice($message, NoticeModel::NOTICE_SUCCESS, $unique);
     return $notice;
-
   }
 
   public static function addDetail($notice, $detail)
   {
     $noticeController = self::getInstance();
     $notice->addDetail($detail);
-
-//   $notice_id = spl_object_id($notice);
 
     $noticeController->update();
   }

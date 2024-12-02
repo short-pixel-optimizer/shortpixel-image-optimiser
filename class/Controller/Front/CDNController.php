@@ -125,11 +125,8 @@ Log::addTemp('New URLS', $new_urls);
 
 		protected function fetchMatches($content, $args = [])
 		{
-
 			$number = preg_match_all('/<img[^>]*>/i', $content, $matches);
-
 			$matches = $matches[0];
-
 			return $matches;
 		}
 
@@ -180,14 +177,18 @@ Log::addTemp('New URLS', $new_urls);
 			//	$new_src = $src;
       //	$parsedUrl = parse_url($src);
 
-			 // Check for slashes
+       // Check for slashes ( stored via js etc escaped slashed)
 				if (strpos($src, '\/') !== false)
 				{
 					 $src = stripslashes($src);
 				}
 
+        // Remove " . Some themes put this for some reason.
 				$remove = ['"'];
 				$src = str_replace($remove, [], $src);
+
+        // If there is a trailing-slash, remove it.
+        $src = rtrim($src, '/');
 
         $src = str_replace(['http://', 'https://'], '', $src);
 
