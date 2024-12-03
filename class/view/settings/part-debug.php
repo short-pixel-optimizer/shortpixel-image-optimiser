@@ -17,6 +17,7 @@ $env = \wpSPIO()->env();
 $fs = \wpSPIO()->filesystem();
 
 $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->url);
+
 ?>
 
 <section id="tab-debug" class="<?php echo esc_attr(($this->display_part == 'debug') ? 'active setting-tab' :'setting-tab'); ?>" data-part="debug">

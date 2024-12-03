@@ -202,6 +202,7 @@ div.spio-modal-title {
   border-radius: 6px;
   text-decoration: none;
   transition: all 0.1s ease-in-out;
+  box-shadow: none;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings button:hover, .wrap.is-shortpixel-settings-page .shortpixel-settings .button-setting:hover {
   background: #32d7e5;
@@ -524,6 +525,7 @@ div.spio-modal-title {
   border-radius: 6px;
   text-decoration: none;
   transition: all 0.1s ease-in-out;
+  box-shadow: none;
 }
 .wrap.is-shortpixel-settings-page header .top-buttons a:hover, .wrap.is-shortpixel-settings-page header .top-buttons button:hover {
   background: #32d7e5;
@@ -1211,6 +1213,7 @@ div.spio-modal-title {
   border-radius: 6px;
   text-decoration: none;
   transition: all 0.1s ease-in-out;
+  box-shadow: none;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper .dashboard-button:hover {
   background: #32d7e5;

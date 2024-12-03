@@ -150,6 +150,23 @@ if( $this->is_nginx ){
            <?php printf(esc_html__('Change this only if you want to set up your %scustom domain%s.  ShortPixel CDN: %s','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain/" target="_blank">', '</a>', 'https://spcdn.shortpixel.ai/spio');?>
     </info>
   </setting>
+
+<?php
+// sadly this field need to be present, because of field checks
+else:
+
+ $this->printSwitchButton(
+        ['name' => 'useCDN',
+         'checked' =>  ($view->data->useCDN > 0) ? 1 : 0,
+         'label' => esc_html__('Deliver the next generation images using the ShortPixel CDN:','shortpixel-image-optimiser'),
+
+         'data' => ['data-toggle="useCDN"', 'data-exclude="deliverWebp"', 'data-dashboard="' . __('Next generation images are not delivered', 'shortpixel-image-optimiser') . '"', ],
+         'disabled' => true,
+         'switch_class' => 'hidden',
+        ]);
+
+   ?>
+
 <?php endif; ?>
 
 

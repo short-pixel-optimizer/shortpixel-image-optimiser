@@ -110,6 +110,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 				$urls = $this->extractMatches($matches);
 				$new_urls = $this->getUpdatedUrls($urls);
 
+Log::addTemp('New URLS', $new_urls);
 				$content = $this->replaceContent($content, $urls, $new_urls);
 				return $content;
 		}
@@ -119,16 +120,13 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			$settings = \wpSPIO()->settings();
 			$cdn_domain = $settings->CDNDomain;
 
-			$this->cdn_domain = $cdn_domain;
+      $this->cdn_domain = trailingslashit($cdn_domain);
 		}
 
 		protected function fetchMatches($content, $args = [])
 		{
-
 			$number = preg_match_all('/<img[^>]*>/i', $content, $matches);
-
 			$matches = $matches[0];
-
 			return $matches;
 		}
 
@@ -143,14 +141,15 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 				 if (! is_null($src))
 				 {
-					 $imageData[] = strtok($src, ' ');
+           $imageData[] = $this->trimURL($src);
 				 }
 				 // Additional sources.
-				 $moreData = array_map([$this, 'trimURL'],$imageObj->getImageData());
+         $moreData = array_map([$this, 'trimURL'],$imageObj->getImageData());
 				 // Merge and remove doubles.
-				 $imageData = array_unique(array_merge($imageData, $moreData)); // pick out uniques.
 
-				 $imageData = array_values($this->addEscapedUrls($imageData)); // reset indexes
+         $imageData = array_unique(array_merge($imageData, $moreData)); // pick out uniques.
+
+         $imageData = array_filter(array_values($this->addEscapedUrls($imageData))); // reset indexes
 
 			}
 
@@ -173,11 +172,28 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 		protected function replaceImage($src)
 		{
-				$site_url = $this->site_url;
+      //	$site_url = $this->site_url;
 				$domain = $this->cdn_domain;
-				$new_src = $src;
+			//	$new_src = $src;
+      //	$parsedUrl = parse_url($src);
 
-				$parsedUrl = parse_url($src);
+       // Check for slashes ( stored via js etc escaped slashed)
+				if (strpos($src, '\/') !== false)
+				{
+					 $src = stripslashes($src);
+				}
+
+        // Remove " . Some themes put this for some reason.
+				$remove = ['"'];
+				$src = str_replace($remove, [], $src);
+
+        // If there is a trailing-slash, remove it.
+        $src = rtrim($src, '/');
+
+        $src = str_replace(['http://', 'https://'], '', $src);
+
+
+        $src = apply_filters('shortpixel/front/cdn/url', $src);
 
 				$cdn_prefix = trailingslashit($domain) . trailingslashit($this->findCDNArguments($src));
 				$new_src = $cdn_prefix . trim($src);
@@ -206,10 +222,12 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 				return  $string;
 		}
 
-		// Function not only to trim, but also remove extra stuff like '200w' declarations in srcset.
-		private function trimURL($url)
+    // Function not only to trim, but also remove extra stuff like '200w' declarations in srcset.
+    // This should not alter URL, because it's used as the search in search / replace, so should point to full original URL
+    private function trimURL($url)
 		{
 				$url = trim(strtok($url, ' '));
+
 				return $url;
 		}
 

@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 4.8.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 6.0.2
+Stable tag: 6.0.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -442,6 +442,14 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 6.0.3 =
+Release date: December 3, 2024
+* Fix: With certain WooCommerce themes and CDN delivery enabled, some images were not loaded on the cart and checkout pages
+* Fix: Removed an unused hook that was triggering errors in some cases;
+* Fix: A JavaScript error was displayed in the browser console when CDN delivery was hidden in the settings;
+* Fix: Divi frontend builder now works when CDN delivery is enabled;
+* Language: 2 new strings added, 0 updated, 0 fuzzed and 0 deprecated.
 
 = 6.0.2 =
 Release date: November 28, 2024

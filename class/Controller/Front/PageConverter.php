@@ -35,11 +35,18 @@ class PageConverter extends \ShortPixel\Controller
 			return false;
 		}
 
-
+    // Beaver Builder
     if (isset($_GET['fl_builder']))
     {
        return false;
     }
+
+    // Divi Builder
+    if (isset($_GET['et_fb']))
+    {
+       return false;
+    }
+
 
 
 	 add_filter('status_header', [$this, 'status_header_sent'], 10, 2);

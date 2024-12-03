@@ -10,10 +10,12 @@
 		border-radius: 6px;
 		text-decoration: none;
 		transition: all 0.1s ease-in-out;
+		box-shadow: none;  // standard WP adds some on focus.
 		&:hover {
 			background: lighten($blue_default, 10%);
 			//transform: scale(1.02);
 		}
+
 
 		i.switch {
 			 width: 18px;
