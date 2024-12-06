@@ -97,7 +97,7 @@ class ShortPixelPlugin {
 			$quotaController = QuotaController::getInstance();
 			$quotaController->getQuota();
 
-			load_plugin_textdomain( 'shortpixel-image-optimiser', false, plugin_basename( dirname( SHORTPIXEL_PLUGIN_FILE ) ) . '/lang' );
+			/* load_plugin_textdomain( 'shortpixel-image-optimiser', false, plugin_basename( dirname( SHORTPIXEL_PLUGIN_FILE ) ) . '/lang' ); */
 
 	}
 
@@ -629,7 +629,6 @@ class ShortPixelPlugin {
 	public function route() {
 		global $plugin_page;
 
-		// $this->initPluginRunTime(); // Not in use currently.
 		$default_action = 'load'; // generic action on controller.
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
 		$action         = isset( $_REQUEST['sp-action'] ) ? sanitize_text_field( wp_unslash($_REQUEST['sp-action']) ) : $default_action;
