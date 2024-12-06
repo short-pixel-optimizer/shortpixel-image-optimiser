@@ -35,12 +35,6 @@
 			 @include shortpixel-button;
 		}
 
-		// This declaration to prevent issues with other plugins invading our space :/
-		input {
-			opacity: 1;
-		}
-
-
 		.mobile-menu
 		{
 			 display: none;
