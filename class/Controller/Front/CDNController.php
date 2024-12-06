@@ -92,7 +92,8 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 				$this->cdn_arguments = $args;
 
         $this->regex_exclusions = apply_filters('shortpixel/front/cdn/regex_exclude',[
-            '*gravatar.com*'
+            '*gravatar.com*',
+            '/data:image\/.*;base64/',
         ]);
 
 		}
@@ -110,7 +111,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 				$urls = $this->extractMatches($matches);
 				$new_urls = $this->getUpdatedUrls($urls);
 
-Log::addTemp('New URLS', $new_urls);
 				$content = $this->replaceContent($content, $urls, $new_urls);
 				return $content;
 		}
