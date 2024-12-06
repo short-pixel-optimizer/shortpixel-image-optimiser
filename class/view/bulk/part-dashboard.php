@@ -30,7 +30,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<div class='dashboard-text'>
 	      <p class='description'><?php esc_html_e('Here you can (re)optimize your Media Library or Custom Media folders from your website.', 'shortpixel-image-optimiser'); ?></p>
 
-<!--
 				<p class='description'><?php
 					printf(__('If you have any question don\'t hesitate to %s contact us %s %s, we are friendly and helpful, 24/7. %s
 	Also, if you have a minute please leave a %s review %s for us, it always brings joy to our team! %s','shortpixel-image-optimiser'),
@@ -43,7 +42,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 					'&#x1F913');
 				?>
 
-      </p> -->
+      </p>
 			</div>
  </div>
 
@@ -78,7 +77,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	 <div id="LogModal-Shade" class='sp-modal-shade'></div>
    <div class='dashboard-log'>
 
-      <h3><?php esc_html_e('Previous Bulks', 'shortpixel_image_optimizer'); ?></h3>
+      <h3><?php esc_html_e('Previous Bulk Operations', 'shortpixel_image_optimizer'); ?></h3>
       <?php
         echo "<div class='head'>";
         foreach($this->view->logHeaders as $header)
