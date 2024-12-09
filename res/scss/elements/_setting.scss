@@ -109,4 +109,10 @@ setting{
 		}
 	}
 
+  &.disabled
+  {
+     filter: blur(1px);
+     opacity: 0.4;
+  }
+
 } // setting

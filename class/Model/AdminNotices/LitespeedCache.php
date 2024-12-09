@@ -35,7 +35,7 @@ class LitespeedCache extends \ShortPixel\Model\AdminNoticeModel
     }
 
     // We already have this.
-    if (defined('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION') &&  SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION)
+    if (true === \wpSPIO()->env()->useDoubleWebpExtension())
     {
       return false;
     }

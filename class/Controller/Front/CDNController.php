@@ -94,7 +94,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
         $this->regex_exclusions = apply_filters('shortpixel/front/cdn/regex_exclude',[
             '*gravatar.com*',
             '/data:image\/.*/',
-            // '/data:image\/.*',
         ]);
 
 		}
