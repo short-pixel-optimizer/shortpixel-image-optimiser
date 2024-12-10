@@ -1056,6 +1056,7 @@ class AjaxController
 		{
 			 $logFile = $data['logFile'];
 			 $type = $data['type'];
+			 $fs = \wpSPIO()->filesystem();
 
 			 if (is_null($logFile))
 			 {
@@ -1073,6 +1074,7 @@ class AjaxController
 			 $json->$type->logType = $logType;
 
 
+
 			 if (! $log )
 			 {
 				  $json->$type->is_error = true;
@@ -1086,10 +1088,16 @@ class AjaxController
 			 $content = $log->getContents();
 			 $lines = explode(';', $content);
 
-			 $headers = array(
+			 $headers = [
 				 __('Time', 'shortpixel-image-optimiser'),
 				 __('Filename', 'shortpixel-image-optimiser'),
-			   __('Error', 'shortpixel-image-optimiser'));
+				 __('Error', 'shortpixel-image-optimiser'),
+			 	 ];
+
+			 if ('custom' == $logType)
+			 {
+		//			array_splice($headers, 2, 0, __('Info', 'shortpixel-image-optimiser') );
+			 }
 
 			 foreach($lines as $index => $line)
 			 {

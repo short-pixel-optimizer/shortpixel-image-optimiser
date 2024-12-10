@@ -1073,7 +1073,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
          $target = $fs->getFile( (string) $fileDir . $this->getFileBase() . '.webp');
 
             // only copy when this constant is set.
-            if( (defined('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION') && SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION) == true ) {
+            if( true === \wpSPIO()->env()->useDoubleWebpExtension() ) {
                  $target = $fs->getFile((string) $fileDir . $this->getFileName() . '.webp'); // double extension, if exists.
             }
 
@@ -1115,7 +1115,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
             $target = $fs->getFile( (string) $fileDir . $this->getFileBase() . '.avif');
 
 						// only copy when this constant is set.
-            if( (defined('SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION') && SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION) == true ) {
+            if( true === \wpSPIO()->env()->useDoubleAvifExtension() ) {
                  $target = $fs->getFile((string) $fileDir . $this->getFileName() . '.avif'); // double extension, if exists.
             }
 

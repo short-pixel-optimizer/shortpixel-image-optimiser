@@ -80,14 +80,13 @@ class SettingsModel extends \ShortPixel\Model
 
 		protected function load()
 		{
-			 $this->settings = get_option($this->option_name, array());
+       $this->settings = get_option($this->option_name, []);
 			 register_shutdown_function(array($this, 'onShutdown'));
 		}
 
 		protected function save()
 		{
 				$res = update_option($this->option_name, $this->settings);
-
 		}
 
 		public function __get($name)

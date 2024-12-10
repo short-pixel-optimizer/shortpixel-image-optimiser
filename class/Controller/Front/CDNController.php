@@ -92,7 +92,8 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 				$this->cdn_arguments = $args;
 
         $this->regex_exclusions = apply_filters('shortpixel/front/cdn/regex_exclude',[
-            '*gravatar.com*'
+            '*gravatar.com*',
+            '/data:image\/.*/',
         ]);
 
 		}
@@ -110,7 +111,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 				$urls = $this->extractMatches($matches);
 				$new_urls = $this->getUpdatedUrls($urls);
 
-Log::addTemp('New URLS', $new_urls);
 				$content = $this->replaceContent($content, $urls, $new_urls);
 				return $content;
 		}
@@ -172,10 +172,7 @@ Log::addTemp('New URLS', $new_urls);
 
 		protected function replaceImage($src)
 		{
-      //	$site_url = $this->site_url;
 				$domain = $this->cdn_domain;
-			//	$new_src = $src;
-      //	$parsedUrl = parse_url($src);
 
        // Check for slashes ( stored via js etc escaped slashed)
 				if (strpos($src, '\/') !== false)
@@ -190,8 +187,8 @@ Log::addTemp('New URLS', $new_urls);
         // If there is a trailing-slash, remove it.
         $src = rtrim($src, '/');
 
+        // Remove the protocol.
         $src = str_replace(['http://', 'https://'], '', $src);
-
 
         $src = apply_filters('shortpixel/front/cdn/url', $src);
 

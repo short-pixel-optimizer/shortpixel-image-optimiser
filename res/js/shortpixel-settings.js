@@ -53,7 +53,7 @@ class ShortPixelSettings
 		{
 				toggle.addEventListener('change', self.DoToggleActionEvent.bind(self));
 
-				var evInit = new CustomEvent('change',  {detail : { init: true }} );
+				let evInit = new CustomEvent('change',  {detail : { init: true }} );
 				toggle.dispatchEvent(evInit);
 		});
 
@@ -62,6 +62,15 @@ class ShortPixelSettings
 		toggles.forEach(function(toggle,index)
 		{
 			  toggle.addEventListener('change', self.DoToggleExcludeEvent.bind(self));
+		});
+
+		toggles = this.root.querySelectorAll('[data-disable]');
+		toggles.forEach(function (toggle, index)
+		{
+				toggle.addEventListener('change', self.DoToggleDisableEvent.bind(self));
+
+				let evInit = new CustomEvent('change',  {detail : { init: true }} );
+				toggle.dispatchEvent(evInit);
 		});
 
 
@@ -545,6 +554,31 @@ class ShortPixelSettings
 				 excludeInput.checked = false;
 				 excludeInput.dispatchEvent(ev);
 		 }
+	}
+
+	DoToggleDisableEvent(event)
+	{
+		let checkbox = event.target;
+		let disableTarget = this.root.querySelector('input[name="' + checkbox.dataset.disable + '"]');
+
+
+		if (null !== disableTarget)
+		{
+				let settingParent = disableTarget.closest('setting');
+
+				 //disableTarget.classList.add('disabled');
+				 if (false == checkbox.checked)
+				 {
+						 	 disableTarget.disabled = true;
+							 settingParent.classList.add('disabled');
+				 }
+				 else {
+							disableTarget.disabled = false;
+							settingParent.classList.remove('disabled');
+				 }
+
+		}
+
 	}
 
 	DoToggleHideWarningEvent(event)

@@ -216,7 +216,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 
               <switch class='option-png2jpg'>
                 <label>
-                  <input type="checkbox" class="switch" name="png2jpg" value="1" <?php checked( ($view->data->png2jpg > 0), true);?> <?php echo($this->is_gd_installed ? '' : 'disabled') ?> >
+                  <input type="checkbox" class="switch" name="png2jpg" data-disable="png2jpgForce" value="1" <?php checked( ($view->data->png2jpg > 0), true);?> <?php echo($this->is_gd_installed ? '' : 'disabled') ?> >
                   <div class="the_switch">&nbsp; </div>
                 <?php esc_html_e('Convert PNG images to JPEG','shortpixel-image-optimiser');?>
                 </label>

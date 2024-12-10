@@ -216,9 +216,6 @@ div.spio-modal-title {
   height: 14px;
   filter: brightness(0) saturate(100%) invert(100%) sepia(100%) saturate(0%) hue-rotate(251deg) brightness(108%) contrast(108%);
 }
-.wrap.is-shortpixel-settings-page .shortpixel-settings input {
-  opacity: 1;
-}
 .wrap.is-shortpixel-settings-page .shortpixel-settings .mobile-menu {
   display: none;
 }
@@ -2074,6 +2071,7 @@ div.spio-modal-title {
   width: auto;
   height: auto;
   position: relative;
+  transition: all 0.5s ease-in;
   /*  &.toggleTarget.is-visible
     {
        //display: flex !important;
@@ -2138,6 +2136,11 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page setting switch label {
   font-weight: 700;
+}
+.wrap.is-shortpixel-settings-page setting.disabled {
+  filter: blur(1px);
+  opacity: 0.4;
+  transition: all 0.5s ease-out;
 }
 
 /*# sourceMappingURL=shortpixel-settings.css.map */

@@ -10,6 +10,8 @@ setting{
   width: auto;
   height: auto;
   position: relative;
+  transition: all 0.5s ease-in;
+
   //display: flex;
  // align-items: center;
   //flex-wrap: wrap;
@@ -108,5 +110,12 @@ setting{
 		//	 margin-left: 70px;
 		}
 	}
+
+  &.disabled
+  {
+     filter: blur(1px);
+     opacity: 0.4;
+     transition: all 0.5s ease-out;
+  }
 
 } // setting

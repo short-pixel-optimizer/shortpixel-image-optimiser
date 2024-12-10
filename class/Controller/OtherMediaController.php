@@ -143,7 +143,6 @@ class OtherMediaController extends \ShortPixel\Controller
        if (! is_null(self::$hasCustomImages)) // prevent repeat
          return self::$hasCustomImages;
 
- Log::addTrace("Has Custom Images function called");
 			if (InstallHelper::checkTableExists('shortpixel_meta') === false)
 				$count = 0;
 			else

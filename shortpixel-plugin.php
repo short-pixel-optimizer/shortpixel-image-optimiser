@@ -34,8 +34,6 @@ class ShortPixelPlugin {
 	private static $instance;
 	protected static $modelsLoaded = array(); // don't require twice, limit amount of require looksups..
 
-	// private $paths = array('class', 'class/controller', 'class/external', 'class/controller/views'); // classes that are autoloaded
-
 	protected $is_noheaders = false;
 
 	protected $plugin_path;
@@ -47,9 +45,8 @@ class ShortPixelPlugin {
 
 	public function __construct() {
 		// $this->initHooks();
-		add_action( 'plugins_loaded', array( $this, 'lowInit' ), 5 ); // early as possible init.
+		add_action( 'plugins_loaded', [$this, 'lowInit'], 5 ); // early as possible init.
 	}
-
 
 	/** LowInit after all Plugins are loaded. Core WP function can still be missing. This should mostly add hooks */
 	public function lowInit() {
@@ -67,7 +64,7 @@ class ShortPixelPlugin {
 		* Hook into plugins_loaded with priority lower than 5 */
 		$init = apply_filters( 'shortpixel/plugin/init', true );
 
-		if ( ! $init ) {
+		if (false === $init ) {
 			return;
 		}
 
@@ -84,7 +81,7 @@ class ShortPixelPlugin {
 			WPCliController::getInstance();
 		}
 
-		add_action( 'admin_init', array( $this, 'init' ) );
+		add_action( 'admin_init', [ $this, 'init' ] );
 	}
 
 
@@ -97,8 +94,7 @@ class ShortPixelPlugin {
 			$quotaController = QuotaController::getInstance();
 			$quotaController->getQuota();
 
-			load_plugin_textdomain( 'shortpixel-image-optimiser', false, plugin_basename( dirname( SHORTPIXEL_PLUGIN_FILE ) ) . '/lang' );
-
+			/* load_plugin_textdomain( 'shortpixel-image-optimiser', false, plugin_basename( dirname( SHORTPIXEL_PLUGIN_FILE ) ) . '/lang' ); */
 	}
 
 	/** Function to get plugin settings
@@ -259,7 +255,6 @@ class ShortPixelPlugin {
 		add_action( 'wp_ajax_shortpixel_ajaxRequest', array( AjaxController::getInstance(), 'ajaxRequest' ) );
 		add_action( 'wp_ajax_shortpixel_settingsRequest', array( AjaxController::getInstance(), 'settingsRequest'));
 
-
 	}
 
 	/** Hook in our admin pages */
@@ -283,7 +278,6 @@ class ShortPixelPlugin {
 	{
 		  	add_menu_page(__('Shortpixel MU', 'shortpixel-image-optimiser'), __('Shortpixel', 'shortpixel_image_optimiser'), 'manage_sites', 'shortpixel-network-settings', [$this, 'route'], $this->plugin_url('res/img/shortpixel.png') );
 	}
-
 
 	/** All scripts should be registed, not enqueued here (unless global wp-admin is needed )
      *
@@ -629,7 +623,6 @@ class ShortPixelPlugin {
 	public function route() {
 		global $plugin_page;
 
-		// $this->initPluginRunTime(); // Not in use currently.
 		$default_action = 'load'; // generic action on controller.
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
 		$action         = isset( $_REQUEST['sp-action'] ) ? sanitize_text_field( wp_unslash($_REQUEST['sp-action']) ) : $default_action;

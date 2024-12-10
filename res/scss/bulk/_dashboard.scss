@@ -1,9 +1,9 @@
-/**** DASHBOARD ***/
+/**** DASHBOARD ***/	
     section.panel.dashboard
     {
        max-width: 95%;
        margin: 20px auto;
-       border-radius: 16px 16px 0px 0px;
+       border-radius: 16px;
 
        h3.heading { border:0 ;
         }
@@ -73,7 +73,10 @@
 
 			 .dashboard-text {
 				  margin: 0 auto;
-					width: 50%;
+					width: 600px;
+					@include breakpoint(0, 768px) {
+						width: 90%;
+					}
 					p {
 						line-height: 25px;
 					}
