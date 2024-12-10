@@ -977,7 +977,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 
         $url = null;
 
-        if ($redirect == 'self')
+        if ($redirect == 'self'  || $redirect == 'reload')
         {
           $url = esc_url_raw(add_query_arg('part', $this->display_part, $this->url));
           $url = remove_query_arg('noheader', $url); // has url

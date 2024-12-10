@@ -2071,6 +2071,7 @@ div.spio-modal-title {
   width: auto;
   height: auto;
   position: relative;
+  transition: all 0.5s ease-in;
   /*  &.toggleTarget.is-visible
     {
        //display: flex !important;
@@ -2139,6 +2140,7 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page setting.disabled {
   filter: blur(1px);
   opacity: 0.4;
+  transition: all 0.5s ease-out;
 }
 
 /*# sourceMappingURL=shortpixel-settings.css.map */
