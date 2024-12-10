@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 4.8.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 6.0.3
+Stable tag: 6.0.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -442,6 +442,16 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 6.0.4 =
+Release date: December 10, 2024
+* Fix: Inline images and SVGs are no longer replaced by CDN links;
+* Fix: The text domain load has been removed from the plugin code to avoid future errors;
+* Fix: When trying to clear the queue, the settings page was not loaded correctly;
+* Fix: Forced generation for PNGs could be enabled even if the PNG2JPG option was disabled;
+* Tweak: Several minor CSS and wording improvements have been added;
+* Tweak: Bulk preparation now runs faster when no images are optimized;
+* Language: 0 new strings added, 2 updated, 0 fuzzed and 0 deprecated.
 
 = 6.0.3 =
 Release date: December 3, 2024
