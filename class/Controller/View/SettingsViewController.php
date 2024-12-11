@@ -1016,6 +1016,8 @@ class SettingsViewController extends \ShortPixel\ViewController
 						$json = new \stdClass;
 						$json->result = true;
 
+            Notice::addNormal('hello');
+
 						$noticeController = Notice::getInstance();
 
 						$json->notices = $noticeController->getNewNotices();

@@ -53,6 +53,36 @@ class ShortPixelScreenBase
 
 	}
 
+	// Add notices that are coming for ajax responses to the place required.
+	AppendNotices(notices,element)
+	{
+			if (null === element)
+			{
+						console.error('Element is null, cannot display notices');
+						return;
+			}
+
+			for (let i = 0; i < notices.length; i++)
+			{
+				let notice = notices[i];
+
+				// Attempt to remove js
+				/* notice = notice.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script\s*>/gim, '');
+				notice.replace('/\/g', '');
+				console.log(notice); */
+
+			//	node.innnerHTML = notice;
+				//let parsed = node.outerHTML;
+
+//				console.log(node.querySelector('.icon'));
+
+//				console.log(node, node.innerHTML);
+
+				element.insertAdjacentHTML('afterend', notices[i]);
+			}
+
+	}
+
 	HandleErrorStop()
 	{
 		if (this.processor.debugIsActive == 'false')
@@ -147,31 +177,13 @@ class ShortPixelScreenBase
 			el.style.opacity = 0;
 			el.style.display = 'none';
 
-			/*
-			el.style.opacity = 1;
-			(function fade() {
-					if ((el.style.opacity -= .1) < 0) {
-							el.style.display = "none";
-							el.style.opacity = 0;
-
-					} else {
-							requestAnimationFrame(fade);
-					}
-			})(); */
 	};
 
 	// ** FADE IN FUNCTION **
 	 FadeIn(el, display) {
 			el.style.opacity = 1;
 			el.style.display = "block";
-			/*
-			(function fade() {
-					var val = parseFloat(el.style.opacity);
-					if (!((val += .1) > 1)) {
-							el.style.opacity = val;
-							requestAnimationFrame(fade);
-					}
-			})(); */
+
 	};
 
 	Show(el)
