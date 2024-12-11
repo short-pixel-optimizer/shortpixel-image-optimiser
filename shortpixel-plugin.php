@@ -547,6 +547,8 @@ class ShortPixelPlugin {
 		if ( \wpSPIO()->env()->is_screen_to_use ) {
 			$this->load_script( $load_processor );
 			$this->load_style( 'shortpixel-toolbar' );
+			$this->load_style('shortpixel-notices');
+			$this->load_style('notices-module');
 		}
 
 		if ( $plugin_page == 'wp-shortpixel-settings' || $plugin_page == 'shortpixel-network-settings' ) {
@@ -604,7 +606,7 @@ class ShortPixelPlugin {
 			$this->load_script( 'shortpixel-media' );
 
 			$this->load_style( 'shortpixel-admin' );
-			$this->load_style( 'notices-module');
+		//	$this->load_style( 'notices-module');
 
 		}
 		elseif (true === \wpSPIO()->env()->is_screen_to_use  )
