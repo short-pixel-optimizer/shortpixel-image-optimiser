@@ -135,7 +135,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
                  else {
                    console.error('Row Element not found for '  + folder_id);
                  }
-
              }
           }
 

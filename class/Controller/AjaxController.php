@@ -959,6 +959,8 @@ class AjaxController
 						$json->display_notices[] = $notice->getForDisplay(['class' => 'is_ajax', 'is_removable' => false]);
 					}
 				}
+				$noticeController->update(); // dismiss one-time ponies
+
 
 				return $json;
 		}
