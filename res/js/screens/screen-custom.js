@@ -338,6 +338,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
            }
       }
 
+
       window.addEventListener('shortpixel.folder.AddNewDirectory', this.UpdateFolderViewEvent.bind(this), {'once':true});
 
       this.processor.AjaxRequest(data);
@@ -381,6 +382,11 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
            {
                messageEl.textContent = data.folder.message;
                messageEl.classList.remove('hidden');
+           }
+           if (data.display_notices)
+           {
+                 //var element = document.querySelector('.modal-folder-picker .description');
+                 this.AppendNotices(data.display_notices, messageEl);
            }
         }
 
