@@ -1107,38 +1107,56 @@ class ShortPixelScreen extends ShortPixelScreenBase
 			var content = modalData[2];
 			var wrapper = modalData[3];
 
+      if (null === wrapper)
+      {
+        wrapper = content;
+      }
+
 			title.textContent = log.title;
 
-			var logType = log.logType;
+      let logType = log.logType;
+      let logData = log.results;
+      let headers = logData.shift();
 
-			for (var i = 0; i < log.results.length; i++)
+      var html = '<div class="heading">';
+      for(let i = 0; i < headers.length; i++)
+      {
+         html += '<span>' + headers[i] + '</span>';
+      }
+      wrapper.innerHTML += html;
+
+      for (var i = 0; i < logData.length; i++)
 			{
-				  if (i === 0)
-						var html = '<div class="heading">';
-					else
-						var html = '<div>';
+					var html = '<div>';
+          let line = logData[i];
 
-					if (i == 0)
-					{
-						for (var j = 0; j < log.results[i].length; j++ )
-						{
-							html += '<span>' + log.results[i][j] + '</span>';
-						}
-					}
-					else if (log.results[i].length >= 3)
-					{
-						html += '<span>' + log.results[i][0] + '</span>';
-						if (logType == 'custom')
-							html += '<span>' + log.results[i][1] + '</span>';
-						else
-							html += '<span><a href="' + log.results[i][2] + '" target="_blank">' + log.results[i][1] + '</a></span>';
+          html += '<span>' + line.date + '</span>';
+          if (line.link)
+          {
+              html += '<span><a href="' + line.link + '" target="_blank">' + line.filename + '</a></span>';
+          }
+          else {
+              html += '<span>' + line.filename + '</span>';
+          }
 
-						if (log.results[i][4])
-							var info = '<span class="kbinfo"><a href="' + log.results[i][4] + '" target="_blank" ><span class="dashicons dashicons-editor-help">&nbsp;</span></a></span>';
-						else
-							var info = '';
-							html += '<span>' + log.results[i][3] + info + '</span>';
-					}
+          if (line.id)
+          {
+             html += '<span>' + line.id + '</span>';
+          }
+
+          if (line.path)
+          {
+              html += '<span>' + line.path + '</span>';
+          }
+
+          let kblink;
+          if (line.kblink)
+          {
+              kblink = '<span class="kbinfo"><a href="' + line.kblink + '" target="_blank" ><span class="dashicons dashicons-editor-help">&nbsp;</span></a></span>';
+          }
+
+          html += '<span>' + line.error + kblink + '<span>';
+
 
 					html += '</div>';
 
