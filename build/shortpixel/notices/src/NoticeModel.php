@@ -194,10 +194,20 @@ class NoticeModel //extends ShortPixelModel
      return ($var instanceof \__PHP_Incomplete_Class);
   }
 
-  public function getForDisplay()
+	public function getForDisplay($args = [])
   {
+
+		$defaults = [
+				'is_removable' => $this->is_removable,
+				'class' => '', // extra classes.
+		];
+
+		$args = wp_parse_args($args, $defaults);
+
+		$is_removable = $args['is_removable'];
+
     $this->viewed = true;
-    $class = 'shortpixel shortpixel-notice ';
+		$class = $args['class'] . ' shortpixel shortpixel-notice ';
 
     $icon = '';
 
@@ -256,7 +266,7 @@ class NoticeModel //extends ShortPixelModel
     }
 
 
-    if ($this->is_removable)
+    if ($is_removable)
     {
       $class .= 'is-dismissible ';
     }
@@ -286,7 +296,7 @@ class NoticeModel //extends ShortPixelModel
     }
     $output .= "</span>";
 
-    if ($this->is_removable)
+		if ($is_removable)
     {
         $output .= sprintf('<button type="button" id="button-%s" class="notice-dismiss" data-dismiss="%s" ><span class="screen-reader-text">%s</span></button>', $id,  $this->suppress_period, __('Dismiss this notice', 'shortpixel-image-optimiser') );
 
@@ -307,7 +317,7 @@ class NoticeModel //extends ShortPixelModel
 
     $output .= "</div>";
 
-    if ($this->is_persistent && $this->is_removable)
+    if ($this->is_persistent && $is_removable)
     {
         $output .= "<script type='text/javascript'>\n" . $this->getDismissJS() . "\n</script>";
     }

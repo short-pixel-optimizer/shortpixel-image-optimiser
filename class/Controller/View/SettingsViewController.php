@@ -1023,8 +1023,6 @@ class SettingsViewController extends \ShortPixel\ViewController
 						$json = new \stdClass;
 						$json->result = true;
 
-            Notice::addNormal('hello');
-
 						$noticeController = Notice::getInstance();
 
 						$json->notices = $noticeController->getNewNotices();
@@ -1033,7 +1031,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 							$json->display_notices = [];
 							foreach($json->notices as $notice)
 							{
-								$json->display_notices[] = $notice->getForDisplay();
+								$json->display_notices[] = $notice->getForDisplay(['class' => 'is_ajax', 'is_removable' => false]);
 							}
 						}
 						if ($redirect !== 'self')
