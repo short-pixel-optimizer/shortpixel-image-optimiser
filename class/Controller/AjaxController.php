@@ -879,6 +879,7 @@ class AjaxController
 			$json->status = true;
 			$json->folder->fileCount = $folderObj->get('fileCount');
 			$json->folder->action = 'refresh';
+			$json->folder->updated = UiHelper::formatTS($folderObj->get('updated'));
 
 			return $json;
 		}
@@ -942,13 +943,13 @@ class AjaxController
 				$noticeController = Notices::getInstance();
 
 				$json->notices = $noticeController->getNewNotices();
-				
+
 				if(count($json->notices) > 0)
 				{
 					$json->display_notices = [];
 					foreach($json->notices as $notice)
 					{
-						$json->display_notices[] = $notice->getForDisplay();
+						$json->display_notices[] = $notice->getForDisplay(['class' => 'is_ajax', 'is_removable' => false]);
 					}
 				}
 

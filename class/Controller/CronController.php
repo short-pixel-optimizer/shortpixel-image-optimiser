@@ -144,16 +144,13 @@ class CronController
       ];
 
       $scheduled = wp_next_scheduled($name, $args);
-      $add_cron = apply_filters('shortpixel/othermedia/add_cron', true);
+
+			$add_cron = (false == \wpSPIO()->settings()->showCustomMedia) ? false : true;
+			$add_cron = apply_filters('shortpixel/othermedia/add_cron', $add_cron);
 
       if (false == $scheduled && true === $add_cron && false === $unschedule)
       {
-        //$otherMediaController = OtherMediaController::getInstance();
-      //  if (true === $otherMediaController->hasCustomImages())
-        //{
                 wp_schedule_event(time(), 'spio_interval_30min', $name, $args);
-      //  }
-
       }
       elseif(false !== $scheduled && (false === $add_cron || true == $unschedule) )
       {
