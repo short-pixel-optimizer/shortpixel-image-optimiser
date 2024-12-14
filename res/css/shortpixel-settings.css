@@ -294,6 +294,9 @@ div.spio-modal-title {
   font-family: "Roboto";
   font-weight: 700;
 }
+.wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab settinglist input:not(.switch) {
+  opacity: 1;
+}
 .wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab i.shortpixel-icon.save, .wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab i.shortpixel-icon.bulk {
   width: 15px;
   height: 15px;

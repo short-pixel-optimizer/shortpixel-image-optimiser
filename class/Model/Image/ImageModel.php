@@ -13,6 +13,8 @@ use ShortPixel\Controller\ApiController as API;
 
 use ShortPixel\Model\File\FileModel as FileModel;
 use ShortPixel\Model\AccessModel as AccessModel;
+use ShortPixel\Helper\UtilHelper as UtilHelper;
+
 
 use ShortPixel\Model\Converter\Converter as Converter;
 
@@ -768,7 +770,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
              $this->setMeta('originalSize', $originalSize);
 
              if ($this->hasMeta('did_keepExif'))
-              $this->setMeta('did_keepExif', $settings->keepExif);
+              $this->setMeta('did_keepExif', UtilHelper::getExifParameter());
              if ($this->hasMeta('did_cmyk2rgb'))
               $this->setMeta('did_cmyk2rgb', $settings->CMYKtoRGBconversion);
 

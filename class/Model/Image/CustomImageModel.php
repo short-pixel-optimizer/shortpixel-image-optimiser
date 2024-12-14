@@ -390,7 +390,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
       if (! is_numeric($imagerow->message) && ! is_null($imagerow->message))
         $metaObj->errorMessage = $imagerow->message;
 
-      $metaObj->did_keepExif = (intval($imagerow->keep_exif) == 1)  ? true : false;
+      $metaObj->did_keepExif = intval($imagerow->keep_exif);
 
       $metaObj->did_cmyk2rgb = (intval($imagerow->cmyk2rgb) == 1) ? true : false;
 
@@ -560,7 +560,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
             'folder_id' => $this->folder_id,
             'compressed_size' => $metaObj->compressedSize,
             'compression_type' => $metaObj->compressionType,
-            'keep_exif' =>  ($metaObj->did_keepExif) ? 1 : 0,
+            'keep_exif' =>  intval($metaObj->did_keepExif),
             'cmyk2rgb' =>  ($metaObj->did_cmyk2rgb) ? 1 : 0,
             'resize' =>  ($metaObj->resize) ? 1 : 0,
             'resize_width' => $metaObj->resizeWidth,

@@ -207,7 +207,8 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 
         </gridbox>
 
-          <h3><?php _e('Conversions', 'shortpixel-image-optimiser'); ?></h3>
+        <!--- ####### CONVERSIONS ---->
+        <h3><?php _e('Conversions', 'shortpixel-image-optimiser'); ?></h3>
 
           <gridbox class='width_half step-highlight-2'>
           <!-- convert png2jpg -->
@@ -280,13 +281,18 @@ if (true === \wpSPIO()->env()->useTrustedMode())
          </setting>
          <!-- // Cmyk to rgb -->
 
+        </gridbox>
+
+        <!--- ####### EXIF  ---->
+          <h3><?php _e('Exif Management', 'shortpixel-image-optimiser'); ?></h3>
+
           <!-- Remove Exif -->
           <setting class='switch'>
             <content>
 
               <switch>
                 <label>
-                  <input type="checkbox" class="switch" name="removeExif" value="1" <?php checked($view->data->keepExif, 0);?>>
+                  <input type="checkbox" class="switch" name="exif" value="1" <?php checked($view->data->exif, 0);?>>
                   <div class="the_switch">&nbsp; </div>
                   <?php esc_html_e('Remove EXIF','shortpixel-image-optimiser');?>
 
@@ -312,8 +318,35 @@ if (true === \wpSPIO()->env()->useTrustedMode())
           </setting>
           <!-- // Remove Exif -->
 
-        </gridbox>
+          <setting>
+            <name><?php __('Exif Ai', 'shortpixel-image-optiniser'); ?></name>
+            <content>
 
+              <?php
+                $ai_options = [
+                    '0' => __('No Data Mining Flag', 'shortpixel-image-optimiser'),
+                    '2' => __('Allow Data Mining', 'shortpixel-image-optimiser'),
+                    '4' => __('No Data Mining, Allow SEO', 'shortpixel-image-optimiser'),
+                    '6' => __('No data Mining, No SEO', 'shortpixel-image-optimiser')
+                    ];
+              ?>
+
+                <select name="exif_ai">
+                  <?php foreach($ai_options as $value => $name)
+                  {
+                      $checked = ($value == $view->data->exif_ai) ? 'selected' : '';
+                      printf('<option value="%s" %s>%s</option>', $value, $checked,  $name);
+                  }
+                  ?>
+
+                </select>
+
+
+            </content>
+
+          </setting>
+
+          <!--- ####### SMARTCROP + RESIZE ---->
           <h3><?php _e('SmartCrop & Resize', 'shortpixel-image-optimiser'); ?></h3>
 
           <!-- Enable Smartcrop -->
