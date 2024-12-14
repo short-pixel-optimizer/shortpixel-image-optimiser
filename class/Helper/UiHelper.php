@@ -564,6 +564,45 @@ class UiHelper
     return $text;
   }
 
+  public static function getExifDisplayValues($exif)
+  {
+      if (! is_numeric($exif) || $exif < 0 ||$exif > 7 )
+      {
+         return false;
+      }
+
+      $removed = ($exif % 2 == 0) ? true : false;
+      $seo = ($exif >= 2 && $exif <= 5) ? true : false;
+      $ai = ($exif >= 2 & $exif <= 3) ? true : false;
+
+      // 0 and 1 options are classic, without ai settings
+      if ($exif <= 1)
+      {
+        $ai = $seo = null;
+      }
+
+
+      $status = [
+        'removed' => $removed,
+        'ai' => $seo,
+        'seo' => $ai,
+      ];
+
+
+      $mainline =  sprintf(__('Exif: %s'), ($removed) ? __('Removed', 'shortpixel-image-optimiser') : __('Kept', 'shortpixel-image-optimiser'));
+
+      if (! is_null($ai))
+      {
+         $mainline .=  sprintf(__(', AI %s '), ($ai) ? __('Allowed', 'shortpixel-image-optimiser') : __('Denied', 'shortpixel-image-optimiser'));
+         $mainline .=  sprintf(__(', SEO %s'), ($seo) ? __('Allowed', 'shortpixel-image-optimiser') : __('Denied', 'shortpixel-image-optimiser'));
+      }
+
+      $status['line']  = $mainline;
+
+      return $status;
+
+  }
+
   // Defines all possible actions in the Ui
   public static function getAction($name, $id, $args = array())
   {

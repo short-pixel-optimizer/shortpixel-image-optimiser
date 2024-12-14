@@ -771,8 +771,8 @@ class SettingsViewController extends \ShortPixel\ViewController
           }
 
           // handle 'reverse' checkbox.
-          $keepExif = isset($post['removeExif']) ? 0 : 1;
-          $post['keepExif'] = $keepExif;
+          $exif = isset($post['exif']) ? 0 : 1;
+          $post['exif'] = $exif;
 
           // checkbox overloading
           $png2jpg = (isset($post['png2jpg']) ? (isset($post['png2jpgForce']) ? 2 : 1): 0);

@@ -131,6 +131,11 @@
 								font-family: 'Roboto';
 								font-weight: 700;
 						}
+						// Some plugins like to mess with our settings
+						input:not(.switch)
+						{
+							 opacity: 1;
+						}
 					} // settinglist
 				 i.shortpixel-icon.save, i.shortpixel-icon.bulk {
 					 width: 15px;

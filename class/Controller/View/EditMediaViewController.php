@@ -129,11 +129,14 @@ class EditMediaViewController extends \ShortPixel\ViewController
 				if (! $imageObj->isOptimized())
 					return array();
 
-        if ($did_keepExif)
-          $stats[] = array(__('EXIF kept', 'shortpixel-image-optimiser'), '');
-        elseif ( $did_keepExif === false) {
-          $stats[] = array(__('EXIF removed', 'shortpixel-image-optimiser'), '');
+
+        $exifData = UIHelper::getExifDisplayValues($did_keepExif);
+      
+        if (is_array($exifData) && isset($exifData['line']))
+        {
+           $stats[] = [$exifData['line'], ''];
         }
+
 
         if (true === $did_convert )
         {
