@@ -126,6 +126,7 @@ class SettingsModel extends \ShortPixel\Model
            unset($settings['keepExif']);
         }
 
+        $settings = apply_filter('shortpixel/settings/check', $settings);
         return $settings;
     }
 
