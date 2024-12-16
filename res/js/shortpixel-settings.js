@@ -251,8 +251,8 @@ class ShortPixelSettings
 
 		var root = this.root;
 
-	 	var el = root.querySelector('input[name="removeExif"]');
-		var remove_elements = root.querySelectorAll('input[name="removeExif"], input[name="png2jpg"]');
+		var el = root.querySelector('input[name="exif"]');
+		var remove_elements = root.querySelectorAll('input[name="exif"], input[name="png2jpg"]');
 		var checks = [':checked', ':not(:checked)'];
 
 

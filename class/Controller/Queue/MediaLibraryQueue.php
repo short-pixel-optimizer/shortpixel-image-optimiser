@@ -110,6 +110,7 @@ class MediaLibraryQueue extends Queue
    private function queryOptimizedItems()
    {
      $last_id = $this->getStatus('last_item_id');
+
      $limit = $this->q->getOption('enqueue_limit');
      $prepare = array();
      global $wpdb;
