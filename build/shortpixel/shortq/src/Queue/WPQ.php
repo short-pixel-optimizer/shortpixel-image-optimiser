@@ -95,7 +95,6 @@ class WPQ implements Queue
         if (isset($item['item_count']))
           $itemObj->item_count = intval($item['item_count']);
 
-
         if (isset($item['order']))
             $itemObj->list_order = $item['order'];
 
