@@ -37,6 +37,7 @@ class CronController
 
        $this->custom_scheduler();
      }
+
   }
 
   public static function getInstance()
@@ -116,6 +117,7 @@ class CronController
   {
       $this->bulkRemoveAll();
       $this->custom_scheduler(true);
+      $this->removeLegacyCron();
   }
 
   protected function bulk_scheduler()
@@ -157,6 +159,16 @@ class CronController
            wp_unschedule_event(wp_next_scheduled($name, $args), $name, $args);
       }
 
+  }
+
+  protected function removeLegacyCron()
+  {
+      $name = 'spio-refresh-dir';
+      $args = ['args' => [
+        'amount' => 10]
+      ];
+
+      wp_unschedule_event(wp_next_scheduled($name, $args), $name, $args);
   }
 
   protected function bulkScheduleEvent($queue_type, $options, $args)
