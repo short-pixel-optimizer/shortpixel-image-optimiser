@@ -977,11 +977,18 @@ class SettingsViewController extends \ShortPixel\ViewController
 
         $url = null;
 
+
         if ($redirect == 'self'  || $redirect == 'reload')
         {
-          $url = esc_url_raw(add_query_arg('part', $this->display_part, $this->url));
-          $url = remove_query_arg('noheader', $url); // has url
-          $url = remove_query_arg('sp-action', $url); // has url
+          if (true === $this->is_ajax_save)
+          {
+              $url = $this->url;
+          }
+          else {
+            $url = esc_url_raw(add_query_arg('part', $this->display_part, $this->url));
+            $url = remove_query_arg('noheader', $url); // has url
+            $url = remove_query_arg('sp-action', $url); // has url
+          }
         }
         elseif($redirect == 'bulk')
         {
