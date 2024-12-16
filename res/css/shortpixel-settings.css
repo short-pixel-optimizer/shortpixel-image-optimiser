@@ -1845,6 +1845,32 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page #tab-nokey .onboard-submit button {
   width: 250px;
 }
+.wrap.is-shortpixel-settings-page #tab-nokey .onboard-submit button .dots {
+  animation: dots 2s steps(3, end) infinite;
+  animation-play-state: paused;
+  display: none;
+  margin-left: 2px;
+}
+@keyframes dots {
+  0%, 20% {
+    color: rgba(0, 0, 0, 0);
+    text-shadow: 0.25em 0 0 rgba(0, 0, 0, 0), 0.5em 0 0 rgba(0, 0, 0, 0);
+  }
+  40% {
+    color: white;
+    text-shadow: 0.25em 0 0 rgba(0, 0, 0, 0), 0.5em 0 0 rgba(0, 0, 0, 0);
+  }
+  60% {
+    text-shadow: 0.25em 0 0 white, 0.5em 0 0 rgba(0, 0, 0, 0);
+  }
+  80%, 100% {
+    text-shadow: 0.25em 0 0 white, 0.5em 0 0 white;
+  }
+}
+.wrap.is-shortpixel-settings-page #tab-nokey .onboard-submit button.submitting .dots {
+  animation-play-state: running;
+  display: inline;
+}
 .wrap.is-shortpixel-settings-page #tab-nokey .onboard-submit setting {
   background: #fff;
 }

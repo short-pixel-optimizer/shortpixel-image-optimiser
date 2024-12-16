@@ -76,8 +76,6 @@ class ShortPixelOnboarding
     {
        event.preventDefault();
 
-       console.log(event);
-
        var activePanel = this.root.querySelector('settinglist.now-active');
        var formData = new FormData();
        var submit = true;
@@ -121,6 +119,8 @@ class ShortPixelOnboarding
 
        if (true === submit)
        {
+          let button = this.root.querySelector('.onboard-submit button');
+          button.classList.add('submitting');
           this.settings.DoAjaxRequest(formData, this.FormAddKeyResponse, this.FormAddKeyResponse).then( (json) => {
               this.FormAddKeyResponse(json);
           }) ;
@@ -133,6 +133,9 @@ class ShortPixelOnboarding
     {
         var anchor = this.root.querySelector('.submit-errors');
         anchor.innerHTML = '';
+
+        let button = this.root.querySelector('.onboard-submit button');
+        button.classList.remove('submitting');
 
         if (json.display_notices)
         {

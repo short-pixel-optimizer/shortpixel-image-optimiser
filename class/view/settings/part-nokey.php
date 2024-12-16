@@ -81,16 +81,21 @@ $disabled = ($view->key->is_editable) ? '' : 'disabled';
                     } else {
                         esc_html_e('Please input your e-mail address and press the Request Key button.','shortpixel-image-optimiser');
                     }
-                    ?><p><span style="position:relative;">
+                    ?>
+                </p>
+                <p>
                     <label for='tos'>
+                      <span style="position:relative;">
+
                         <input name="tos" type="checkbox" id="tos">
                         <img class="tos-robo" alt="<?php esc_html_e('ShortPixel logo', 'shortpixel-image-optimiser'); ?>"
                              src="<?php echo esc_url(wpSPIO()->plugin_url('res/img/slider.png' ));?>" style="position: absolute;left: -95px;bottom: -26px;display:none;">
                         <img class="tos-hand" alt="<?php esc_html_e('Hand pointing', 'shortpixel-image-optimiser'); ?>"
                              src="<?php echo esc_url(wpSPIO()->plugin_url('res/img/point.png' ));?>" style="position: absolute;left: -39px;bottom: -9px;display:none;">
+
                     </span>
                     <?php printf(esc_html__('I have read and I agree to the %s Terms of Service %s and the %s Privacy Policy %s (%s GDPR compliant %s).','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/tos" target="_blank">', '</a>', '<a href="https://shortpixel.com/privacy" target="_blank">', '</a>', '<a href="https://shortpixel.com/privacy#gdpr" target="_blank">', '</a>');
-                    ?> </label></p>
+                    ?></label> </p>
               </info>
       </content>
   </setting>
@@ -125,7 +130,7 @@ $disabled = ($view->key->is_editable) ? '' : 'disabled';
   </setting>
 
 </settinglist>
-</label>
+
 
 
 
@@ -138,7 +143,7 @@ $disabled = ($view->key->is_editable) ? '' : 'disabled';
   </div>
 <settinglist class='onboard-submit'>
 
-  <button type="button" name="add-key"><?php esc_html_e('Continue', 'shortpixel-image-optimiser'); ?></button>
+  <button type="button" name="add-key"><?php esc_html_e('Continue', 'shortpixel-image-optimiser'); ?><span class='dots'>.</span></button>
 
 </settinglist>
 
