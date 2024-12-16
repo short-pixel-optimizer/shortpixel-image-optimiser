@@ -378,6 +378,13 @@ class AjaxController
 		{
 				 $viewController =  new SettingsViewController();
 				 $viewController->indicateAjaxSave(); // set ajax save method
+
+				 $url = isset($_POST['request_url']) ? sanitize_text_field($_POST['request_url']) : null;
+				 if (is_null($url))
+				 {
+						Log::addError('Ajax : redirect URL not set!');
+				 }
+				 $viewController->setControllerURL($url); // set url for redirects, otherwise set by route / plugin
 				 if (method_exists($viewController, $action))
 				 {
 						$viewController->$action();
