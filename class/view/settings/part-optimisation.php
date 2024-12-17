@@ -366,7 +366,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                     <?php printf(esc_html__('%s Smart crop %s images where applicable.','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
                 </name>
                 <info>
-                  <?php printf(esc_html__('Generate subject-centered thumbnails using ShortPixel\'s AI engine (%ssee sexample%s). These new thumbnails appear sharper and may be slightly larger than those created by WordPress, making them ideal for e-commerce websites and blogs where images are key to showcasing products and content.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/182-what-is-smart-cropping" target="_blank">', '</a>'); ?>
+                  <?php printf(esc_html__('Generate subject-centered thumbnails using ShortPixel\'s AI engine (%ssee example%s). These new thumbnails appear sharper and may be slightly larger than those created by WordPress, making them ideal for e-commerce websites and blogs where images are key to showcasing products and content.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/182-what-is-smart-cropping" target="_blank">', '</a>'); ?>
                 </info>
                 <?php
                 $smartcrop = (
