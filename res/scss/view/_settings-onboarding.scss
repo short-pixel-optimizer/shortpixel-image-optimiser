@@ -78,6 +78,19 @@
      text-align: center;
      button {
         width: 250px;
+        .dots {
+          animation: dots 2s steps(3, end) infinite;
+          @include loadDots;
+          animation-play-state:paused;
+          display: none;
+          margin-left: 2px;
+
+        }
+        &.submitting .dots {
+          animation-play-state:running;
+          display: inline;
+
+        }
      }
 
      setting {

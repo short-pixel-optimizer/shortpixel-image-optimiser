@@ -22,6 +22,7 @@ class Status
   protected $last_update = 0; // internal
   protected $times_ran = 0; // internal
   protected $average_ask = 0; // internal
+  protected $last_count_time = 0;
 
   protected $last_item_id = 0;
 
