@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             ]);
       ?>
 
-      <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/521-settings-optimize-media-on-upload?target=iframe"></i>
+      <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-optimize-media-on-upload/?target=iframe"></i>
       <name>
 
         <?php esc_html_e('Automatically optimize images after they are uploaded (recommended).','shortpixel-image-optimiser');?>
@@ -49,7 +49,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             ]);
       ?>
 
-     <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/584-background-processing-using-cron-jobs-in-shortpixel-image-optimizer?target=iframe"></i>
+     <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/background-processing-using-cron-jobs-in-shortpixel-image-optimizer/?target=iframe"></i>
 
      <name>
             <?php esc_html_e('Utilize this feature to optimize images without the need to keep a browser window open, using cron jobs.','shortpixel-image-optimiser');?>
@@ -75,7 +75,7 @@ if ( ! defined( 'ABSPATH' ) ) {
               ]);
         ?>
 
-        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/515-settings-image-backup?target=iframe"></i>
+        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-image-backup/?target=iframe"></i>
         <name>
           <?php esc_html_e('Create a backup of the original images, saved on your server in /wp-content/uploads/ShortpixelBackups/.','shortpixel-image-optimiser');?>
         </name>

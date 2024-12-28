@@ -159,7 +159,7 @@ $approx = $this->view->approx;
 				<div class="option"><?php esc_html_e('The total number of AVIF images will be calculated in the next step.','shortpixel-image-optimiser'); ?></div>
 		     </div>
 			<?php else : ?>
-				<div class="option warning"><?php printf(esc_html__('The creation of AVIF files is not possible with this license type. %s Read more %s ','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/555-how-does-the-unlimited-plan-work" target="_blank">', '</a>'); ?>
+				<div class="option warning"><?php printf(esc_html__('The creation of AVIF files is not possible with this license type. %s Read more %s ','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/how-does-the-unlimited-plan-work/" target="_blank">', '</a>'); ?>
 				</div>
 			<?php endif;  ?>
 
@@ -178,7 +178,7 @@ $approx = $this->view->approx;
             <?php printf(esc_html__('Background Mode' ,'shortpixel-image-optimiser') ); ?>
               <span class='new'><?php _e('New!', 'shortpixel-image-optimiser'); ?></span>
           </label></h4>
-            <?php $link = 'https://shortpixel.com/knowledge-base/article/584-background-processing-using-cron-jobs-in-shortpixel-image-optimizer'; ?>
+            <?php $link = 'https://shortpixel.com/knowledge-base/article/background-processing-using-cron-jobs-in-shortpixel-image-optimizer/'; ?>
          <div class="option"><?php printf(esc_html__('Utilize this feature to optimize images without the need to keep a browser window open. Please be aware that on websites with low traffic or shared hosting, this method of optimization might be considerably slower. If you observe a significant increase in server resource usage or processing time, consider switching to browser-based optimization. %sRead more%s.','shortpixel-image-optimiser'), '<strong><a href="' . esc_attr($link) . '" target="_blank">', '</a></strong>'); ?>
          </div>
          <div class='option warning

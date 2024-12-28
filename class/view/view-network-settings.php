@@ -39,7 +39,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                      'label' => esc_html__('Enable site-wide settings','shortpixel-image-optimiser')
                     ]);
               ?>
-              <?php $this->printInlineHelp("https://shortpixel.com/knowledge-base/article/126-which-webp-files-delivery-method-is-the-best-for-me");
+              <?php $this->printInlineHelp("https://shortpixel.com/knowledge-base/article/which-webp-files-delivery-method-is-the-best-for-me/");
               ?>
             </content>
           </setting>

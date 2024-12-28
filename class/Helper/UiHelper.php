@@ -19,7 +19,7 @@ class UiHelper
 
 	private static $outputMode = 'admin';
 
-	private static $knowledge_url = 'https://shortpixel.com/knowledge-base/search?query='; // the URL of all knowledge.
+	private static $knowledge_url = 'https://shortpixel.com/knowledge-base/article/common-shortpixel-bulk-processing-errors/'; // the URL of all knowledge.
 
 	public static function setOutputHandler($name)
 	{
@@ -771,7 +771,7 @@ class UiHelper
 
 	public static function getKBSearchLink($subject)
 	{
-			return esc_url(self::$knowledge_url . sanitize_text_field($subject));
+			return esc_url(self::$knowledge_url); // . sanitize_text_field($subject)); //the KB search doesn't work anymore
 	}
 
 	// @param MediaLibraryModel Object $imageItem

@@ -85,7 +85,7 @@ All optimization is performed using ShortPixel's Image Optimization Cloud, so yo
 * Integrates directly with Cloudflare via a Cloudflare Token, automatically synchronizing updates with Cloudflare cache.
 * **New! HEIC file support**
 With ShortPixel, you can now add images in Apple's HEIC format directly from your iPhone. They will be automatically converted to JPG and optimized according to your settings. Easy!
- <a href="https://shortpixel.com/knowledge-base/article/566-heic-apple-images-support-in-shortpixel-image-optimizer" target="_blank">Read more</a>.
+ <a href="https://shortpixel.com/knowledge-base/article/heic-apple-images-support-in-shortpixel-image-optimizer/" target="_blank">Read more</a>.
 
 ### Advanced Image Optimization Features ###
 
@@ -113,7 +113,7 @@ With ShortPixel, you can now add images in Apple's HEIC format directly from you
 **<a href="https://shortpixel.com/pricing" target="_blank">New Plan: ShortPixel Unlimited</a>**
 This is the ideal monthly plan for web agencies or website owners with multiple sites and frequent image uploads.
 It allows you to optimize an unlimited number of images with ShortPixel Image Optimizer or use <a href=”https://wordpress.org/plugins/shortpixel-adaptive-images/”>ShortPixel Adaptive Images</a> without worrying about CDN traffic limits.
-Read more details on our <a href="https://shortpixel.com/knowledge-base/article/555-how-does-the-unlimited-plan-work" target="_blank">dedicated page</a>.
+Read more details on our <a href="https://shortpixel.com/knowledge-base/article/how-does-the-unlimited-plan-work/" target="_blank">dedicated page</a>.
 
 * **free optimization credits for non-profits**, <a href="https://shortpixel.com/contact" target="_blank">contact us</a> for details
 
@@ -177,7 +177,7 @@ Let's get the ShortPixel plugin running on your WordPress website:
     As long as you have available credits, you can use a single API Key on as many websites as you wish!
 
 = What plan is better for me? What do you recommend? =
-	Everyone has different needs, but generally, we recommend getting a One-Time plan to optimize your whole Media Library and then get a Monthly plan to optimize your future uploads. To learn more, have a look at <a href="https://help.shortpixel.com/article/30-monthly-plans-vs-one-time-plans" target="_blank">this comparison</a>
+	Everyone has different needs, but generally, we recommend getting a One-Time plan to optimize your whole Media Library and then get a Monthly plan to optimize your future uploads. To learn more, have a look at <a href="https://shortpixel.com/knowledge-base/article/monthly-plans-vs-one-time-plans/" target="_blank">this comparison</a>
 
 = I don't know how many thumbnails do I have, what plan should I take?
 	To know how many thumbnails you have, just install the plugin and go to Media > Bulk ShortPixel. The plugin will tell you how many thumbnails you've got. Based on this, have a look at <a href="https://shortpixel.com/pricing" target="_blank">our plans</a>
@@ -365,7 +365,7 @@ filters the list of parameters sent to the API so that resizing can be performed
 `apply_filters('shortpixel/api/request', $requestParameters, $item_id);`
 filters the parameters sent to the optimization API (through `$requestParameters`), described in detail here: <a href="https://shortpixel.com/api-docs" target="_blank">ShortPixel Reducer API</a>; `$item_id` contains the ID of the Media Library item, or the ID of the Custom Media item (when used). In short, this filter can be used to alter any parameters sent to the API, depending on the needs. For example, you can set different resize parameters for different post types, different compression levels, remove EXIF or not, covert WebP/AVIF, and basically any other parameter that is sent to the API for a specific image (together with all its thumbnails).
 
-This filter enables the background ShortPixel processing in additional pages (see <a href="https://shortpixel.com/knowledge-base/article/334-on-what-pages-does-spio-optimize-images" target="_blank">here</a> the original list). Here's an example of this filter that enables the processing on the Comments screen (to be placed in your functions.php file):
+This filter enables the background ShortPixel processing in additional pages (see <a href="https://shortpixel.com/knowledge-base/article/on-what-pages-does-spio-optimize-images/" target="_blank">here</a> the original list). Here's an example of this filter that enables the processing on the Comments screen (to be placed in your functions.php file):
 
 `
 add_filter('shortpixel/init/optimize_on_screens', function ($screens) {
@@ -686,7 +686,7 @@ Release date: June 27, 2023
 * New: Added an option in the plugin tools to reset the optimization errors;
 * Compat: Added integration with WordPress image editing features (crop, flip, rotate etc.);
 * Compat: Added integration for <a target="_blank" href="https://github.com/humanmade/S3-Uploads">S3 Uploads by HumanMade</a>;
-* Compat: Fixed integration with LiteSpeed Cache version 5.4 and older. Read more about it in our <a target="_blank" href="https://shortpixel.com/knowledge-base/article/264-how-to-deliver-the-webps-generated-with-shortpixel-with-the-litespeed-cache-plugin">knowledge base article</a>;
+* Compat: Fixed integration with LiteSpeed Cache version 5.4 and older. Read more about it in our <a target="_blank" href="https://shortpixel.com/knowledge-base/article/how-to-deliver-the-webps-generated-with-shortpixel-with-the-litespeed-cache-plugin/">knowledge base article</a>;
 * Compat: Fixed bulk processing when WP Media Recovery plugin is active;
 * Fix: ABSPATH die statement added to each file, for increased security;
 * Fix: Improved bulk processing statistics for large installations;

@@ -68,7 +68,7 @@ if ( isset($_GET['noheader']) ) {
 
   <div class='scan-help'>
     <p><?php printf(__('If new images are regularly added to your Custom Media folders from outside WordPress (e.g. via (S)FTP or SSH), you must manually click on "Refresh all folders" so that the new images are recognized and optimized. Alternatively, you can also set up a regular cron job as described in our %s Knowledge Base %s.', 'shortpixel-image-optimiser'),
-    '<a href="https://shortpixel.com/knowledge-base/article/543-how-to-schedule-a-cron-event-to-run-shortpixel-image-optimizer" target="_blank">', '</a>'
+    '<a href="https://shortpixel.com/knowledge-base/article/how-to-schedule-a-cron-event-to-run-shortpixel-image-optimizer/" target="_blank">', '</a>'
     ); ?></p>
   </div>
 

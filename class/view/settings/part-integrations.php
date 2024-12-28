@@ -47,7 +47,7 @@ if(! $this->is_curl_installed) {
 
 <p>
   <?php esc_html_e("If you are using Cloudflare on your site, we recommend filling in the details below. This allows ShortPixel to work seamlessly with Cloudflare, ensuring that any images optimized or restored by ShortPixel are automatically updated on Cloudflare as well.",'shortpixel-image-optimiser');?>
-  <i class="documentation up dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/160-cloudlfare?target=iframe"></i>
+  <i class="documentation up dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/cloudlfare/?target=iframe"></i>
 </p>
 
 <settinglist>
@@ -56,7 +56,7 @@ if(! $this->is_curl_installed) {
       <inputlabel>Zone ID  </inputlabel> <input name="cloudflareZoneID" type="text" id="cloudflare-zone-id" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>
                value="<?php echo( esc_attr(wp_unslash($view->data->cloudflareZoneID))); ?>"
                class="regular-text">
-        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/160-cloudlfare?target=iframe"></i>
+        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/cloudlfare/?target=iframe"></i>
 
         <info>
             <?php esc_html_e('You can find this in your Cloudflare account in the "Overview" section for your domain.','shortpixel-image-optimiser');?>
@@ -64,8 +64,8 @@ if(! $this->is_curl_installed) {
 
         <inputlabel>Token</inputlabel> <input name="cloudflareToken" type="text"  id="cloudflare-token" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>  value="<?php echo esc_attr($view->data->cloudflareToken) ?>" class='regular-text' autocomplete="off">
         <info>
-            <?php printf(esc_html__('Enter your %s site token %s for authentication. This token must have %s Cache Purge permission %s! ', 'shortpixel-image-optimiser'), '<a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/using-shortpixel-image-optimizer-with-cloudflare-api-token" target="_blank">', '</a>'); ?>
-        <a href="https://shortpixel.com/knowledge-base/article/325-using-shortpixel-image-optimizer-with-cloudflare-api-token" target="_blank" class="shortpixel-help-link">
+            <?php printf(esc_html__('Enter your %s site token %s for authentication. This token must have %s Cache Purge permission %s! ', 'shortpixel-image-optimiser'), '<a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/using-shortpixel-image-optimizer-with-cloudflare-api-token/" target="_blank">', '</a>'); ?>
+        <a href="https://shortpixel.com/knowledge-base/article/using-shortpixel-image-optimizer-with-cloudflare-api-token/" target="_blank" class="shortpixel-help-link">
               <?php esc_html_e('How to set it up','shortpixel-image-optimiser');?>
           </a>
         </info>
@@ -80,8 +80,8 @@ if(! $this->is_curl_installed) {
       <content>
         <input name="cloudflareToken" type="text"  id="cloudflare-token" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>  value="<?php echo esc_attr($view->data->cloudflareToken) ?>" class='regular-text' autocomplete="off">
         <info>
-            <?php printf(esc_html__('Enter your %s site token %s for authentication. This token needs %s Cache Purge permission %s! ', 'shortpixel-image-optimiser'), '<a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/325-using-shortpixel-image-optimizer-with-cloudflare-api-token" target="_blank">', '</a>'); ?>
-        <a href="https://shortpixel.com/knowledge-base/article/325-using-shortpixel-image-optimizer-with-cloudflare-api-token" target="_blank" class="shortpixel-help-link">
+            <?php printf(esc_html__('Enter your %s site token %s for authentication. This token needs %s Cache Purge permission %s! ', 'shortpixel-image-optimiser'), '<a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/using-shortpixel-image-optimizer-with-cloudflare-api-token/" target="_blank">', '</a>'); ?>
+        <a href="https://shortpixel.com/knowledge-base/article/using-shortpixel-image-optimizer-with-cloudflare-api-token/" target="_blank" class="shortpixel-help-link">
               <?php esc_html_e('How to set it up','shortpixel-image-optimiser');?>
           </a>
         </info>

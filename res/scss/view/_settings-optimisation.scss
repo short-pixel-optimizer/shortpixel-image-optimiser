@@ -54,7 +54,17 @@
 			}
 
 		}
-
+		// EXIF Selector
+		select[name="exif_ai"]
+		{
+			border: 1px solid #1ABDCA;
+			color: #116C7E;
+			margin-top: 15px;
+		}
+		i.exif-ai
+		{
+			top: 17px;
+		}
 		.smart-compression-explainer
 		{
 			 display: flex;
