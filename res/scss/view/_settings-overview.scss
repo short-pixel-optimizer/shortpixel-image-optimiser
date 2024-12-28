@@ -131,8 +131,9 @@
 
 
              i.mainblock-status {
-							 width: 70px;
-							 height: 75px;
+		width: 70px;
+		height: 75px;
+		background-size: contain;
              }
              margin-right: 20px;
              @include breakpoint(0, 786px)
