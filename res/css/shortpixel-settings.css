@@ -1333,6 +1333,7 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .first-panel i.mainblock-status {
   width: 70px;
   height: 75px;
+  background-size: contain;
 }
 @media (max-width: 786px) {
   .wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .first-panel {
