@@ -403,9 +403,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$this->height = $height;
 
     $thumbnails = array();
+
     if (isset($wpmeta['sizes']))
     {
-          foreach($wpmeta['sizes'] as $name => $data)
+          $meta_sizes = $wpmeta['sizes'];
+          $missingDefinitions = [];
+
+          foreach($meta_sizes as $name => $data)
           {
              if (isset($data['file']))
              {
@@ -425,12 +429,39 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
                {
                   $thumbObj->setSizeDefinition($wpImageSizes[$name]);
                }
+               else {
+                  $missingDefinitions[] = $name;
+               }
 
 							 if (isset($data['filesize']))
 							 	$thumbObj->filesize = $data['filesize'];
 
                $thumbnails[$name] = $thumbObj;
              }
+          }
+
+          // Something went astray, check if a duplicate can be found. This is a fix for when images are a duplicate, but the counter part is not registered in WordPress and SmartCrop is enabled. This then can cause an exception where both duplicates are entered into optimization and causing backup issue.
+          if (count($missingDefinitions) > 0)
+          {
+              foreach($missingDefinitions as $thumbName)
+              {
+                 $targetObj = $thumbnails[$thumbName];
+                 $width = $targetObj->width;
+                 $height = $targetObj->height;
+
+                 foreach($meta_sizes as $size_name => $size_data)
+                 {
+                     if ($size_name == $thumbName) // skip self.
+                     {
+                        continue;
+                     }
+
+                     if ($size_data['width'] == $width && $size_data['height'] == $height && isset($wpImageSizes[$size_name]))
+                     {
+                        $targetObj->setSizeDefinition($wpImageSizes[$size_name]);
+                     }
+                 }
+              }
           }
     }
 
@@ -2577,8 +2608,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        }
        else
            $did_jpg2png = false;
-    //   $this->image_meta->did_cmyk2rgb = $exifkept;
-      // $this->image_meta->tsOptimized =
+
 
        foreach($this->thumbnails as $thumbname => $thumbnailObj) // ThumbnailModel
        {
