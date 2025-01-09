@@ -12,6 +12,9 @@ use ShortPixel\Helper\UtilHelper as UtilHelper;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Controller\ErrorController as ErrorController;
 
+use ShortPixel\Controller\Queue\QueueItems as QueueItems;
+//use ShortPixel\Model\QueueItem as QueueItem;
+
 use ShortPixel\Model\File\FileModel as FileModel;
 
 use ShortPixel\Helper\DownloadHelper as DownloadHelper;
@@ -131,7 +134,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
 
         $exifData = UIHelper::getExifDisplayValues($did_keepExif);
-      
+
         if (is_array($exifData) && isset($exifData['line']))
         {
            $stats[] = [$exifData['line'], ''];
@@ -245,9 +248,15 @@ class EditMediaViewController extends \ShortPixel\ViewController
 						 $debugInfo[] = array(__('Optimize Data'), $optimizeData);
 
 						 $optControl = new optimizeController();
+
 						 $q = $optControl->getQueue($imageObj->get('type'));
 
+             $item = QueueItems::getImageItem($imageObj);
+             $item->setDebug();
+             $item->newOptimizeAction();
+
 						 $debugInfo[] = array(__('Image to Queue'), $q->_debug_imageModelToQueue($imageObj) );
+             $debugInfo[] = array(__('Image to Queue V2'), $item->returnEnqueue() );
 					}
 
           $debugInfo['imagemetadata'] = array(__('ImageModel Metadata (ShortPixel)'), $imageObj);
@@ -255,8 +264,6 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
           $debugInfo['wpmetadata'] = array(__('WordPress Get Attachment Metadata'), $meta );
 					$debugInfo[] = array('', '<hr>');
-
-
 
 						if ($imageObj->hasBackup())
             	$backupFile = $imageObj->getBackupFile();

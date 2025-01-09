@@ -49,6 +49,12 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
   {
   }
 
+  // Implementing this because it's abstract. Should not really be used.
+  public function getParent()
+  {
+      return $this->getMainFile()->getParent();
+  }
+
   public function __debugInfo() {
      return array(
       'image_meta' => $this->image_meta,
@@ -171,8 +177,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
   {
     return $this->image_meta;
   }
-
-
 
 	// get_path param see MediaLibraryModel
 	// This should be unused at the moment!

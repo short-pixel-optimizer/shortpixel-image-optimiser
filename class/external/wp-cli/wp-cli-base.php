@@ -15,6 +15,9 @@ use ShortPixel\Controller\ResponseController as ResponseController;
 
 use ShortPixel\Helper\UiHelper as UiHelper;
 
+use ShortPixel\Controller\Queue\QueueItems as QueueItems;
+
+
 
 class WpCliController
 {
@@ -316,7 +319,7 @@ class SpioCommandBase
 	        	}
 						if (property_exists($qresult, 'result') && is_object($qresult->result))
 						{
-								$this->displayResult($qresult->result);
+                $this->displayResult($qresult->result, $qname);
 						}
 
 				}
@@ -547,6 +550,44 @@ class SpioCommandBase
 
 				\WP_CLI::Success(__('Queue(s) cleared', 'shortpixel-image-optimiser'));
 		}
+
+    /**
+     * Add an Alt Tag to Item
+     *
+     *  <id>
+     *   : Media Library ID
+     *
+     *
+     */
+    public function addAlt($args, $assoc)
+    {
+      $optimizeController = $this->getOptimizeController();
+      $fs = \wpSPIO()->filesystem();
+
+      $id = intval($args[0]);
+
+      $imageObj = $fs->getMediaImage($id);
+
+      if ($imageObj === false)
+      {
+         \WP_CLI::Error(__('Image object not found / non-existing in database by this ID', 'shortpixel-image-optimiser'));
+      }
+
+      $item = QueueItems::getImageItem($imageObj);
+      $item->newAltAction();
+
+      $qItem = $item->returnEnqueue();
+
+      $api = $optimizeController->getApi('alttext');
+
+      $item = QueueItems::getEmptyItem($qItem['id'], 'media');
+      $item->setFromData($qItem['value']);
+
+      $item = $api->processItem($item);
+
+      $this->displayResult($item->result, 'alttext');
+
+    }
 
     //  Colored is buggy, so off for now -> https://github.com/wp-cli/php-cli-tools/issues/134
 		private function textBoolean($bool, $colored = false)

@@ -10,6 +10,8 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\CacheController as CacheController;
 use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\Model\Converter\Converter as Converter;
+use ShortPixel\Controller\Queue\QueueItems as QueueItems;
+
 
 use ShortPixel\Helper\UiHelper as UiHelper;
 
@@ -83,35 +85,56 @@ abstract class Queue
 
        $defaults = array(
           'forceExclusion' => false,
+          'action' => 'optimize',
        );
        $args = wp_parse_args($args, $defaults);
 
-       $qItem = $this->imageModelToQueue($imageModel);
-       $counts = $qItem->counts;
 
-			 $media_id = $imageModel->get('id');
-			 // Check if this is a duplicate existing.
-			 if ($imageModel->getParent() !== false)
+       // Check if this is a duplicate existing.
+      /* Added to QueueItem
+       if (->getParent() !== false)
+
 			 {
 				  $media_id = $imageModel->getParent();
-			 }
+          $imageModel = \wpSPIO()->filesystem()
+       } */
 
-       if (count($args) > 0)
+
+       $qItem = QueueItems::getImageItem($imageModel);
+
+       switch($args['action'])
+       {
+          case 'optimize':
+            Log::addTemp('Single action, create new optimize action');
+             $qItem->newOptimizeAction();
+          break;
+          case 'alttext':
+              $qItem->newAltAction();
+          break;
+       }
+
+       //$qItem =  $this->imageModelToQueue($imageModel);
+       //$counts = $qItem->counts;
+
+      // $media_id = $imageModel->get('id');
+
+
+       /*if (count($args) > 0)
        {
           $qItem->options = $args;
-       }
+       } */
 
 			 $result = new \stdClass;
 
-       $item = array('id' => $media_id, 'value' => $qItem, 'item_count' => $counts->creditCount);
+       //$item = ['id' => $media_id, 'value' => $qItem, 'item_count' => $counts->creditCount];
 
-
-       $this->q->addItems(array($item), false);
+       $this->q->addItems([$qItem->returnEnqueue()], false);
        $numitems = $this->q->withRemoveDuplicates()->enqueue(); // enqueue returns numitems
 
        $result = $this->getQStatus($result, $numitems);
        $result->numitems = $numitems;
 
+Log::addTEmp('Single Action, return result', $result);
        do_action('shortpixel_start_image_optimisation', $imageModel->get('id'), $imageModel);
        return $result;
     }
@@ -197,9 +220,11 @@ abstract class Queue
 
     protected function prepareItems($items)
     {
-        do_action('shortpixel/queue/prepare_items');
+        do_action('shortpixel/queue/prepare_items', $items);
+
         $return = array('items' => 0, 'images' => 0, 'results' => 0,
       'overlimit' => false);
+
 				$settings = \wpSPIO()->settings();
         $env = \wpSPIO()->env();
 
@@ -229,14 +254,25 @@ abstract class Queue
 							// Migrate shouldn't load image object at all since that would trigger the conversion.
 							  if ($operation == 'migrate' || $operation == 'removeLegacy')
 								{
-                    $qObject = new \stdClass;
-                    $qObject->action = $operation;
-                    $queue[] = array('id' => $item_id, 'value' => $qObject, 'item_count' => 1);
+                    //$qObject = new \stdClass;
+                    //$qObject->action = $operation;
+                    $item = QueueItems::getEmptyItem($item_id, $this->getType());
+                    if ('migrate' == $operation)
+                    {
+                        $item->newMigrateAction();
+                    }
+                    if ('removeLegacy' == $operation)
+                    {
+                       $item->newRemoveLegacyAction();
+                    }
+                    $queue[] = $item->returnEnqueue(); //array('id' => $item_id, 'value' => $qObject, 'item_count' => 1);
 
 										continue;
 								}
 
-								$mediaItem = $fs->getImage($item_id, $this->getType() );
+
+                $mediaItem = $fs->getImage($item_id, $this->getType() );
+
 
             //checking if the $mediaItem actually exists
             if ( is_object($mediaItem) ) {
@@ -253,28 +289,31 @@ abstract class Queue
 											 continue;
 										}
 
-                    $qObject = $this->imageModelToQueue($mediaItem);
+                    $qItem = QueueItems::getImageItem($mediaItem);
+                    $qItem->newOptimizeAction();
 
-                    $counts = $qObject->counts;
+                    //$qObject = $this->imageModelToQueue($mediaItem);
 
-									 $media_id = $mediaItem->get('id');
+                  //  $counts = $qObject->counts;
+
+                   //$media_id = $mediaItem->get('id');
 									 if ($mediaItem->getParent() !== false)
 						 			 {
 						 				  $media_id = $mediaItem->getParent();
 						 			 }
 
-                    $queue[] = array('id' => $media_id, 'value' => $qObject, 'item_count' => $counts->creditCount);
-
+                    $queue[] = $qItem->returnEnqueue(); //array('id' => $media_id, 'value' => $qObject, 'item_count' => $counts->creditCount);
+// @todo Get this from the QueueItem -
                     $imageCount += $counts->creditCount;
                     $webpCount += $counts->webpCount;
                     $avifCount += $counts->avifCount;
 										$baseCount += $counts->baseCount; // base images (all minus webp/avif)
 
-                    do_action('shortpixel_start_image_optimisation', $media_id, $mediaItem);
+                    do_action('shortpixel_start_image_optimisation', $mediaItem);
 
                 }
                 else
-                {
+                { // @todo Incorporate these actions here.  . Perhaps operations should all be on top?
                    if($operation !== false)
                    {
                       if ($operation == 'bulk-restore')
@@ -504,15 +543,21 @@ abstract class Queue
 
     protected function queueToMediaItem($qItem)
     {
-        $item = new \stdClass;
+        /* $item = new \stdClass;
         $item = $qItem->value;
-        $item->_queueItem = $qItem;
+        $item->_queueItem = $qItem; */
+        Log::addTemp('QueueItem', $qItem);
 
-        $item->item_id = $qItem->item_id;
-        $item->tries = $qItem->tries;
+//        $item->item_id = $qItem->item_id;
+//        $item->tries = $qItem->tries;
+
+        $item = QueueItems::getEmptyItem($qItem->item_id, $this->getType());
+        $item->setFromData($qItem->value);
+        $item->setData('tries', $qItem->tries);
+        $item->set('queueItem', $qItem);
 
 				if (property_exists($item, 'files'))
-				{ // This must be array & shite.
+				{ // This must be array.
 					$item->files = json_decode(json_encode($item->files), true);
 				}
 
@@ -521,6 +566,10 @@ abstract class Queue
 
     protected function mediaItemToQueue($item)
     {
+        // @todo Test this assumption
+        return $item->getQueueItem();
+
+/*
         $mediaItem = clone $item;  // clone here, not to loose referenced data.
         unset($mediaItem->item_id);
         unset($mediaItem->tries);
@@ -530,7 +579,7 @@ abstract class Queue
         unset($mediaItem->_queueItem);
 
         $qItem->value = $mediaItem;
-        return $qItem;
+        return $qItem; */
     }
 
     // This is a general implementation - This should be done only once!

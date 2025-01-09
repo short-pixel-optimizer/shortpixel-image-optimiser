@@ -7,6 +7,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use ShortPixel\Helper\UtilHelper as UtilHelper;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+use ShortPixel\Model\QueueItem as QueueItem;
+
 
 class ApiController
 {
@@ -72,7 +74,7 @@ class ApiController
   * @param Object $item Item of stdClass
   * @return Returns same Item with Result of request
   */
-  public function processMediaItem($item, $imageObj)
+  public function processMediaItem(QueueItem $item, $imageObj)
   {
 		 	if (! is_object($imageObj))
 			{
@@ -112,7 +114,7 @@ class ApiController
 			}
 
       $requestArgs = array('urls' => $item->urls); // obligatory
-      if (property_exists($item, 'compressionType'))
+      if (! is_null($item->compressionType))
         $requestArgs['compressionType'] = $item->compressionType;
       $requestArgs['blocking'] =  ($item->tries == 0) ? false : true;
       $requestArgs['item_id'] = $item->item_id;
@@ -139,12 +141,12 @@ class ApiController
 	/* Ask to remove the items from the remote cache.
 	  @param $item Must be object, with URLS set as array of urllist. - Secretly not a mediaItem - shame
 	*/
-	public function dumpMediaItem($item)
+  public function dumpMediaItem(QueueItem $item)
 	{
      $settings = \wpSPIO()->settings();
      $keyControl = ApiKeyController::getInstance();
 
-		 if (property_exists($item, 'urls') === false || ! is_array($item->urls) || count($item->urls) == 0)
+     if ($item->urls === null || ! is_array($item->urls) || count($item->urls) == 0)
 		 {
 			  Log::addWarn('Media Item without URLS cannnot be dumped ', $item);
 				return false;
@@ -326,22 +328,6 @@ class ApiController
 		elseif(is_array($APIresponse) && isset($APIresponse[0]) && property_exists($APIresponse[0], 'Status'))
 		{
 			$status = $APIresponse[0]->Status;
-		}
-		elseif ( is_array($APIresponse)) // This is a workaround for some obscure PHP 5.6 bug. @todo Remove when dropping support PHP < 7.
-		{
-			 foreach($APIresponse as $key => $data)
-			 {
-				 // Running the whole array, because handleSuccess enums on key index as well :/
-				 // we are not just looking for status here, but also replacing the whole array, because of obscure bug.
-				  if (property_exists($data, 'Status'))
-					{
-						 if ($status === false)
-						 {
-						 	$status = $data->Status;
-						 }
-						 $APIresponse[$key] = $data; // reset it, so it can read the index.  This should be 0.
-					}
-			 }
 		}
 
 			if (isset($APIresponse['returndatalist']))
@@ -648,70 +634,6 @@ class ApiController
 			return $image;
 	}
 
-  private function getResultObject()
-  {
-        $result = new \stdClass;
-        $result->apiStatus = null;
-        $result->message = '';
-        $result->is_error = false;
-        $result->is_done = false;
-        //$result->errors = array();
-
-        return $result;
-  }
-
-  private function returnFailure($status, $message)
-  {
-        $result = $this->getResultObject();
-        $result->apiStatus = $status;
-        $result->message = $message;
-        $result->is_error = true;
-        $result->is_done = true;
-
-        return $result;  // fatal.
-  }
-
-  // Temporary Error, retry.
-  private function returnRetry($status, $message)
-  {
-
-    $result = $this->getResultObject();
-    $result->apiStatus = $status;
-    $result->message = $message;
-
-    //$result->errors[] = array('status' => $status, 'message' => $message);
-    $result->is_error = true;
-
-    return $result;
-  }
-
-  private function returnOK($status = self::STATUS_UNCHANGED, $message = false)
-  {
-      $result = $this->getResultObject();
-      $result->apiStatus = $status;
-      $result->is_error = false;
-      $result->message = $message;
-
-      return $result;
-  }
-
-  /** Returns a success status. This is succeseption, each file gives it's own status, bundled. */
-  private function returnSuccess($file, $status = self::STATUS_SUCCESS, $message = false)
-  {
-      $result = $this->getResultObject();
-      $result->apiStatus = $status;
-      $result->message = $message;
-
-			if (self::STATUS_SUCCESS === $status)
-      	$result->is_done = true;
-
-			if (is_array($file))
-        $result->files = $file;
-      else
-        $result->file = $file; // this file is being used in imageModel
-
-      return $result;
-  }
 
 	/**
    *  Function to check if the filesize of the imagetype (webp/avif) is smaller, or within bounds of size to be stored. If not, the webp is not downloaded and uses.

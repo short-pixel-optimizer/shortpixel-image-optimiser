@@ -130,6 +130,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     abstract protected function preventNextTry($reason = '');
     abstract public function isOptimizePrevented();
     abstract public function resetPrevent(); // to get going.
+    abstract public function getParent();
 
     // Construct
     public function __construct($path)

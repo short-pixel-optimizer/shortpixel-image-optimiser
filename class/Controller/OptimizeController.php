@@ -14,10 +14,15 @@ use ShortPixel\Controller\AjaxController as AjaxController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Controller\StatsController as StatsController;
 
+use ShortPixel\Controller\Api\ApiController as ApiController;
+use ShortPixel\Controller\Api\AiController as AiController;
+
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\ResponseController as ResponseController;
 
 use ShortPixel\Model\Image\ImageModel as ImageModel;
+use ShortPixel\Model\QueueItem as QueueItem;
+
 use ShortPixel\Helper\UiHelper as UiHelper;
 
 use ShortPixel\Helper\DownloadHelper as DownloadHelper;
@@ -69,17 +74,17 @@ class OptimizeController
         return $queue;
     }
 
-
     // Queuing Part
     /* Add Item to Queue should be used for starting manual Optimization
     * Enqueue a single item, put it to front, remove duplicates.
 		* @param Object $mediaItem
     @return int Number of Items added
     */
-    public function addItemToQueue($mediaItem, $args = array())
+    public function addItemToQueue(ImageModel $mediaItem, $args = array())
     {
         $defaults = array(
             'forceExclusion' => false,
+            'action' => 'optimize',
         );
         $args = wp_parse_args($args, $defaults);
 
@@ -91,7 +96,6 @@ class OptimizeController
 
 				if (! is_object($mediaItem))  // something wrong
 				{
-
 					$json->result = new \stdClass;
 					$json->result->message = __("File Error. File could not be loaded with this ID ", 'shortpixel-image-optimiser');
 					$json->result->apiStatus = ApiController::STATUS_NOT_API;
@@ -260,9 +264,11 @@ class OptimizeController
 				// Dump this item from server if optimized in the last hour, since it can still be server-side cached.
 				if ( ( $now   - $optimized) < HOUR_IN_SECONDS )
 				{
-					 $api = $this->getAPI();
-					 $item = new \stdClass;
-					 $item->urls = $mediaItem->getOptimizeUrls();
+           $api = $this->getAPI('restore');
+           //$item = new \stdClass;
+           //$item->urls = $mediaItem->getOptimizeUrls();
+           $qItem = QueueItems::getImageItem($imageModel);
+           $qItem->newDumpAction();
 					 $api->dumpMediaItem($item);
 				}
 
@@ -419,7 +425,6 @@ class OptimizeController
       $result = $Q->run();
       $results = array();
 
-
 			ResponseController::setQ($Q);
 
       // Items is array in case of a dequeue items.
@@ -435,7 +440,7 @@ class OptimizeController
 						$item = $this->sendToProcessing($item, $Q);
 
             $item = $this->handleAPIResult($item, $Q);
-            $result->items[$mainIndex] = $item; // replace processed item, should have result now.
+            $result->items[$mainIndex] = $item->returnArray(); // replace processed item, should have result now.
       }
 
       $result->stats = $Q->getStats();
@@ -450,9 +455,8 @@ class OptimizeController
     * @param Object $item Item is a stdClass object from Queue. This is not a model, nor a ShortQ Item.
     * @param Object $q  Queue Object
 		*/
-    public function sendToProcessing($item, $q)
+    public function sendToProcessing(QueueItem $item, $q)
     {
-      $api = $this->getAPI();
 			$this->setLastID($item->item_id);
 
 			$fs = \wpSPIO()->filesystem();
@@ -461,7 +465,11 @@ class OptimizeController
 
       // Options contained in the queue item for extra uh options
       $options = (property_exists($item, 'options')) ? $item->options : array();
+      $action = (property_exists($item, 'action')) ? $item->action : false;
+      $api = $this->getAPI($action);
 
+
+      // @todo See if we can do without this after first try.
 			$imageObj = $fs->getImage($item->item_id, $qtype);
 
 			if (is_object($imageObj))
@@ -473,12 +481,13 @@ class OptimizeController
          return $this->handleAPIResult($item, $q);
       }
 
+      // @todo SendToProcessing - Update the blocked checks
 			// If item is blocked (handling success), skip over. This can happen if internet is slow or process too fast.
 			if (property_exists($item, 'blocked') && true === $item->blocked )
 			{
 					$item = $this->handleAPIResult($item, $q);
 			}
-      elseif (property_exists($item, 'action')) // ResultMessages in ResponseController
+      elseif (false === $api) // ResultMessages in ResponseController
       {
             $item->result = new \stdClass;
             $item->result->is_done = true; // always done
@@ -509,7 +518,8 @@ class OptimizeController
       }
       else // as normal
       {
-        $is_processable = $imageObj->isProcessable();
+        $is_processable = $imageObj->isProcessable(); // @todo Probably check this against api / AiController
+
         // Allow processable to be overridden when using the manual optimize button - ignore when this happens already to be in queue.
 
         if (false === $is_processable )
@@ -688,10 +698,7 @@ class OptimizeController
 
 					 if (count($result->files) > 0 )
            {
-              //$optimizeResult = $imageItem->handleOptimized($result->files); // returns boolean or null
-
 							$status = $this->handleOptimizedItem($q, $item, $imageItem, $result->files);
-
               $item->result->improvements = $imageItem->getImprovements();
 
               if (ApiController::STATUS_SUCCESS == $status)
@@ -752,7 +759,6 @@ class OptimizeController
 							}
 
 							// Dump Stats, Dump Quota. Refresh
-							//$quotaController->forceCheckRemoteQuota();
 							$statsController->reset();
 
 							$this->deleteTempFiles($item);
@@ -789,7 +795,7 @@ class OptimizeController
            {
               Log::addDebug('Item with ID' . $imageItem->item_id . ' still has processables (with dump)', $imageItem->getOptimizeUrls());
 
- 						  $api = $this->getAPI();
+              $api = $this->getAPI('optimize');
 							$newItem = new \stdClass;
 							$newItem->urls = $imageItem->getOptimizeUrls();
 
@@ -820,7 +826,6 @@ class OptimizeController
 							{
 									if (count($result->files) > 0 )
 									{
-										 //$optimizeResult = $imageItem->handleOptimized($result->files); // returns boolean or null
 										 $this->handleOptimizedItem($q, $item, $imageItem, $result->files);
 									}
 									else {
@@ -1168,9 +1173,21 @@ class OptimizeController
         }
     }
 
-    protected function getAPI()
+    public function getAPI($action)
     {
-       return ApiController::getInstance();
+       $api = false;
+       switch($action)
+       {
+          case 'optimize':
+          case 'restore':
+            $api = ApiController::getInstance();
+          break;
+          case 'alttext': // @todo Check if this is correct action name,
+            $api = AiController::getInstance();
+          break;
+       }
+
+       return $api;
     }
 
     /** Convert a result Queue Stdclass to a JSON send Object */
@@ -1213,11 +1230,6 @@ class OptimizeController
 
         if (property_exists($result, 'stats'))
           $json->stats = $result->stats;
-
-      /*  Log::addDebug('JSON RETURN', $json);
-        if (property_exists($result,'items'))
-          Log::addDebug('Result Items', $result->items); */
-
 
         return $json;
     }

@@ -6,29 +6,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+use ShortPixel\Controller\ApiKeyController as ApiKeyController;
+use ShortPixel\Controller\ResponseController as ResponseController;
+use ShortPixel\Controller\QuotaController as QuotaController;
+use ShortPixel\Model\QueueItem as QueueItem;
+use ShortPixel\Model\Image\ImageModel as ImageModel;
+
+use ShortPixel\Helper\UtilHelper as UtilHelper;
 
 class ApiController extends RequestManager
 {
-    const STATUS_ENQUEUED = 10;
-		const STATUS_PARTIAL_SUCCESS = 3;
-		const STATUS_SUCCESS = 2;
-		const STATUS_WAITING = 1;
-    const STATUS_UNCHANGED = 0;
-    const STATUS_ERROR = -1;
-    const STATUS_FAIL = -2;
-    const STATUS_QUOTA_EXCEEDED = -3;
-    const STATUS_SKIP = -4;
-    const STATUS_NOT_FOUND = -5;
-    const STATUS_NO_KEY = -6;
-   // const STATUS_RETRY = -7;
-   // const STATUS_SEARCHING = -8; // when the Queue is looping over images, but in batch none were   found.
-	 const STATUS_OPTIMIZED_BIGGER = -9;
-	 const STATUS_CONVERTED = -10;
 
-    const STATUS_QUEUE_FULL = -404;
-    const STATUS_MAINTENANCE = -500;
-		const STATUS_CONNECTION_ERROR = -503; // Not official, error connection in WP.
-    const STATUS_NOT_API = -1000; // Not an API process, i.e restore / migrate. Don't handle as optimized
 
 		// Moved these numbers higher to prevent conflict with STATUS
     const ERR_FILE_NOT_FOUND = -902;
@@ -43,9 +31,7 @@ class ApiController extends RequestManager
 
     const DOWNLOAD_ARCHIVE = 7;
 
-    private static $instance;
-
-    private $apiEndPoint;
+    //private $apiEndPoint;
     private $apiDumpEndPoint;
 
     protected static $temporaryFiles = array();
@@ -58,65 +44,87 @@ class ApiController extends RequestManager
       $this->apiDumpEndPoint = $settings->httpProto . '://' . SHORTPIXEL_API . '/v2/cleanup.php';
     }
 
-
   /*
   * @param Object $item Item of stdClass
   * @return Returns same Item with Result of request
   */
-  public function processMediaItem($item, $imageObj)
+  public function processMediaItem(QueueItem $item, ImageModel $imageObj)
   {
 		 	if (! is_object($imageObj))
 			{
-				$item->result = $this->returnFailure(self::STATUS_FAIL, __('Item seems invalid, removed or corrupted.', 'shortpixel-image-optimiser'));
+        $item->setResult($this->returnFailure(self::STATUS_FAIL, __('Item seems invalid, removed or corrupted.', 'shortpixel-image-optimiser')));
 				return $item;
 			}
 		 	elseif (false === $imageObj->isProcessable() || $imageObj->isOptimizePrevented() == true)
 			{
 					if ($imageObj->isOptimized()) // This only looks at main item
 					{
-						 $item->result = $this->returnFailure(self::STATUS_FAIL, __('Item is already optimized', 'shortpixel-image-optimiser'));
+             $item->setResult($this->returnFailure(self::STATUS_FAIL, __('Item is already optimized', 'shortpixel-image-optimiser')));
 						 return $item;
 					}
 					else {
-						 $item->result = $this->returnFailure(self::STATUS_FAIL, __('Item is not processable and not optimized', 'shortpixel-image-optimiser'));
+             $item->setResult($this->returnFailure(self::STATUS_FAIL, __('Item is not processable and not optimized', 'shortpixel-image-optimiser')));
 						 return $item;
 					}
 			}
 
       if (! is_array($item->urls) || count($item->urls) == 0)
       {
-          $item->result = $this->returnFailure(self::STATUS_FAIL, __('No Urls given for this Item', 'shortpixel-image-optimiser'));
+          $item->setResult($this->returnFailure(self::STATUS_FAIL, __('No Urls given for this Item', 'shortpixel-image-optimiser')));
           return $item;
       }
-			else { // if ok, urlencode them.
-					$list = array();
-				  foreach($item->urls as $url)
-					{
-							$parsed_url = parse_url($url);
 
-							$list[] = $url;
-					}
-					$item->urls = $list;
-			}
+      $settings = \wpSPIO()->settings();
+      $keyControl = ApiKeyController::getInstance();
+      $convertTo = (property_exists($item, 'flags')) ? implode("|", $item->flags) : '';
 
-      $requestArgs = array('urls' => $item->urls); // obligatory
-      if (property_exists($item, 'compressionType'))
-        $requestArgs['compressionType'] = $item->compressionType;
-      $requestArgs['blocking'] =  ($item->tries == 0) ? false : true;
-      $requestArgs['item_id'] = $item->item_id;
-      $requestArgs['refresh'] = (property_exists($item, 'refresh') && $item->refresh) || $item->tries == 0 ? true : false;
-      $requestArgs['flags'] = (property_exists($item, 'flags')) ? $item->flags : array();
+      $requestBody = [
+        'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
+        'key' => $keyControl->forceGetApiKey(),
+        'urllist' => $item->urls,
+        'compressionType' => $item->compressionType,
+        'item_id' => $item->item_id,
+        'refresh' => (property_exists($item, 'refresh') && $item->refresh) || $item->tries == 0 ? true : false,
+        'cmyk2rgb' => $settings->CMYKtoRGBconversion,
+        'keep_exif' => UtilHelper::getExifParameter(),
+        'convertto' => $convertTo,
+        'resize' => $settings->resizeImages ? 1 + 2 * ($settings->resizeType == 'inner' ? 1 : 0) : 0,
+        'resize_width' => $settings->resizeWidth,
+        'resize_height' => $settings->resizeHeight,
+      ];
 
-			$requestArgs['paramlist']  = property_exists($item, 'paramlist') ? $item->paramlist : null;
-			$requestArgs['returndatalist']  = property_exists($item, 'returndatalist') ? $item->returndatalist : null;
+      if (! is_null($item->paramlist))
+      {
+         $requestBody['paramlist'] = $item->paramlist;
+      }
 
-      $request = $this->getRequest($requestArgs);
+      if (! is_null($item->returndatalist))
+      {
+         $requestBody['returndatalist'] = $item->returndatalist;
+      }
+
+      $requestParameters = [
+        'blocking' => (0 == $item->tries) ? false : true
+      ];
+
+    //  $requestArgs = array('urls' => $item->urls); // obligatory
+    //  if (property_exists($item, 'compressionType'))
+  //      $requestArgs['compressionType'] = $item->compressionType;
+    //  $requestArgs['blocking'] =  ($item->tries == 0) ? false : true;
+    //  $requestArgs['item_id'] = $item->item_id;
+    //  $requestArgs['refresh'] = (property_exists($item, 'refresh') && $item->refresh) || $item->tries == 0 ? true : false;
+  //    $requestArgs['flags'] = (property_exists($item, 'flags')) ? $item->flags : [];
+
+    //	$requestArgs['paramlist']  = property_exists($item, 'paramlist') ? $item->paramlist : null;
+    //	$requestArgs['returndatalist']  = property_exists($item, 'returndatalist') ? $item->returndatalist : null;
+
+      $request = $this->getRequest($requestBody, $requestParameters);
       $item = $this->doRequest($item, $request);
 
 			ResponseController::addData($item->item_id, 'images_total', count($item->urls));
 
 			// If error has occured, but it's not related to connection.
-			if ($item->result->is_error === true && $item->result->is_done === true)
+			if ($item->is_error === true && $item->is_done === true)
 			{
 				 $this->dumpMediaItem($item); // item failed, directly dump anything from server.
 			}
@@ -127,24 +135,23 @@ class ApiController extends RequestManager
 	/* Ask to remove the items from the remote cache.
 	  @param $item Must be object, with URLS set as array of urllist. - Secretly not a mediaItem - shame
 	*/
-	public function dumpMediaItem($item)
+  public function dumpMediaItem(QueueItem $item)
 	{
      $settings = \wpSPIO()->settings();
      $keyControl = ApiKeyController::getInstance();
 
-		 if (property_exists($item, 'urls') === false || ! is_array($item->urls) || count($item->urls) == 0)
+     if (is_null($item->urls)  || ! is_array($item->urls) || count($item->urls) == 0)
 		 {
 			  Log::addWarn('Media Item without URLS cannnot be dumped ', $item);
 				return false;
 		 }
 
-		 $request = $this->getRequest();
-
-		 $request['body'] = json_encode(
-			 			array(
+     $requestBody = [
                 'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
                 'key' => $keyControl->forceGetApiKey(),
-                'urllist' => $item->urls	)	, JSON_UNESCAPED_UNICODE);
+                'urllist' => $item->urls	];
+
+     $request = $this->getRequest($requestBody, []);
 
 		 Log::addDebug('Dumping Media Item ', $item->urls);
 
@@ -154,75 +161,8 @@ class ApiController extends RequestManager
 
 	}
 
-  /** Former, prepare Request in API */
-  private function getRequest($args = array())
-  {
-    $settings = \wpSPIO()->settings();
-    $keyControl = ApiKeyController::getInstance();
 
-    $defaults = array(
-          'urls' => null,
-					'paramlist' => null,
-					'returndatalist' => null,
-          'compressionType' => $settings->compressionType,
-          'blocking' => true,
-          'item_id' => null,
-          'refresh' => false,
-          'flags' => array(),
-    );
-
-    $args = wp_parse_args($args, $defaults);
-    $convertTo = implode("|", $args['flags']);
-
-    $requestParameters = array(
-        'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
-        'key' => $keyControl->forceGetApiKey(),
-        'lossy' => $args['compressionType'],
-        'cmyk2rgb' => $settings->CMYKtoRGBconversion,
-        'keep_exif' => ($settings->keepExif ? "1" : "0"),
-        'convertto' => $convertTo,
-        'resize' => $settings->resizeImages ? 1 + 2 * ($settings->resizeType == 'inner' ? 1 : 0) : 0,
-        'resize_width' => $settings->resizeWidth,
-        'resize_height' => $settings->resizeHeight,
-        'urllist' => $args['urls'],
-    );
-
-		if (! is_null($args['paramlist']))
-		{
-			 $requestParameters['paramlist'] = $args['paramlist'];
-		}
-
-		if (! is_null($args['returndatalist']))
-		{
-			 $requestParameters['returndatalist'] = $args['returndatalist'];
-		}
-
-    if($args['refresh']) { // @todo if previous status was ShortPixelAPI::ERR_INCORRECT_FILE_SIZE; then refresh.
-        $requestParameters['refresh'] = 1;
-    }
-
-		$requestParameters = apply_filters('shortpixel/api/request', $requestParameters, $args['item_id']);
-
-    $arguments = array(
-        'method' => 'POST',
-        'timeout' => 15,
-        'redirection' => 3,
-        'sslverify' => apply_filters('shortpixel/system/sslverify', true),
-        'httpversion' => '1.0',
-        'blocking' => $args['blocking'],
-        'headers' => array(),
-        'body' => json_encode($requestParameters, JSON_UNESCAPED_UNICODE),
-        'cookies' => array()
-    );
-    //add this explicitely only for https, otherwise (for http) it slows down the request
-    if($settings->httpProto !== 'https') {
-        unset($arguments['sslverify']);
-    }
-
-    return $arguments;
-  }
-
-  private function parseResponse($response)
+  protected function parseResponse($response)
   {
     $data = $response['body'];
 
@@ -233,7 +173,7 @@ class ApiController extends RequestManager
 	/**
 	*
 	**/
-  private function handleResponse($item, $response)
+  protected function handleResponse(QueueItem $item, $response)
   {
 
     $APIresponse = $this->parseResponse($response);//get the actual response from API, its an array
@@ -248,22 +188,6 @@ class ApiController extends RequestManager
 		elseif(is_array($APIresponse) && isset($APIresponse[0]) && property_exists($APIresponse[0], 'Status'))
 		{
 			$status = $APIresponse[0]->Status;
-		}
-		elseif ( is_array($APIresponse)) // This is a workaround for some obscure PHP 5.6 bug. @todo Remove when dropping support PHP < 7.
-		{
-			 foreach($APIresponse as $key => $data)
-			 {
-				 // Running the whole array, because handleSuccess enums on key index as well :/
-				 // we are not just looking for status here, but also replacing the whole array, because of obscure bug.
-				  if (property_exists($data, 'Status'))
-					{
-						 if ($status === false)
-						 {
-						 	$status = $data->Status;
-						 }
-						 $APIresponse[$key] = $data; // reset it, so it can read the index.  This should be 0.
-					}
-			 }
 		}
 
 			if (isset($APIresponse['returndatalist']))
@@ -458,7 +382,7 @@ class ApiController extends RequestManager
    * @param  Array $data                   Data is filename, imagename, filesize (optionally) from returnDataList
    * @return Array           Array with processed image data (url, size, webp, avif)
    */
-	private function handleNewSuccess($item, $fileData, $data)
+  protected function handleNewSuccess($item, $fileData, $data)
 	{
 			$compressionType = property_exists($item, 'compressionType') ? $item->compressionType : $settings->compressionType;
 			//$savedSpace =  $originalSpace =  $optimizedSpace = $fileCount  = 0;
@@ -570,70 +494,6 @@ class ApiController extends RequestManager
 			return $image;
 	}
 
-  private function getResultObject()
-  {
-        $result = new \stdClass;
-        $result->apiStatus = null;
-        $result->message = '';
-        $result->is_error = false;
-        $result->is_done = false;
-        //$result->errors = array();
-
-        return $result;
-  }
-
-  private function returnFailure($status, $message)
-  {
-        $result = $this->getResultObject();
-        $result->apiStatus = $status;
-        $result->message = $message;
-        $result->is_error = true;
-        $result->is_done = true;
-
-        return $result;  // fatal.
-  }
-
-  // Temporary Error, retry.
-  private function returnRetry($status, $message)
-  {
-
-    $result = $this->getResultObject();
-    $result->apiStatus = $status;
-    $result->message = $message;
-
-    //$result->errors[] = array('status' => $status, 'message' => $message);
-    $result->is_error = true;
-
-    return $result;
-  }
-
-  private function returnOK($status = self::STATUS_UNCHANGED, $message = false)
-  {
-      $result = $this->getResultObject();
-      $result->apiStatus = $status;
-      $result->is_error = false;
-      $result->message = $message;
-
-      return $result;
-  }
-
-  /** Returns a success status. This is succeseption, each file gives it's own status, bundled. */
-  private function returnSuccess($file, $status = self::STATUS_SUCCESS, $message = false)
-  {
-      $result = $this->getResultObject();
-      $result->apiStatus = $status;
-      $result->message = $message;
-
-			if (self::STATUS_SUCCESS === $status)
-      	$result->is_done = true;
-
-			if (is_array($file))
-        $result->files = $file;
-      else
-        $result->file = $file; // this file is being used in imageModel
-
-      return $result;
-  }
 
 	/**
    *  Function to check if the filesize of the imagetype (webp/avif) is smaller, or within bounds of size to be stored. If not, the webp is not downloaded and uses.
