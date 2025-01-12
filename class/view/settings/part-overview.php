@@ -164,17 +164,19 @@ $bulkblock = $dashboard->bulkblock;
                 <?php esc_html_e('API Key & Account Information ', 'shortpixel-image-optimiser'); ?>
             </name>
             <info>
-                <?php if ($view->key->is_constant_key) {
+                <?php if ($view->key->is_constant_key && !$view->key->hide_api_key ) {
                     esc_html_e('Key defined in wp-config.php.', 'shortpixel-image-optimiser');
                 } ?>
                 <span class="shortpixel-key-valid" <?php echo $view->key->is_verifiedkey ? '' : 'style="display:none;"' ?>>
                 <?php esc_html_e('Yay! Your API Key is Valid ', 'shortpixel-image-optimiser'); ?><i class="shortpixel-icon ok"></i>
             </span>
             </info>
+	    <?php if ( !$view->key->hide_api_key ) { ?>
             <label for="toggle-content" class="toggle-link">
                 <span class="toggle-text"><?php _e('Show API Key', 'shortpixel-image-optimiser'); ?></span>
                 <span class="shortpixel-icon chevron"></span>
             </label>
+	    <?php } ?>
         </closed-apikey-dropdown>
 
         <hr>
