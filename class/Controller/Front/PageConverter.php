@@ -47,6 +47,17 @@ class PageConverter extends \ShortPixel\Controller
        return false;
     }
 
+    // Bricks Builder
+    if (isset($_GET['bricks']))
+    {
+       return false;
+    }
+
+    // Breakdance Builder
+    if (isset($_GET['breakdance']) || isset($_GET['breakdance_browser']))
+    {
+       return false;
+    }
 
 
 	 add_filter('status_header', [$this, 'status_header_sent'], 10, 2);
