@@ -10,6 +10,8 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Model\File\DirectoryModel as DirectoryModel;
 use ShortPixel\Model\File\FileModel as FileModel;
 use ShortPixel\Controller\ResponseController as ResponseController;
+use ShortPixel\Model\QueueItem as QueueItem;
+
 
 /* ShortPixel Image Optimiser Converters. Unified interface for handling conversion between file types */
 abstract class Converter
@@ -38,7 +40,7 @@ abstract class Converter
 		abstract protected function setTarget($file);
 
     // Prepare item for adding to queue, adding data, doing backup perhaps.
-    abstract public function filterQueue($item, $args = array());
+    abstract public function filterQueue(QueueItem $item, $args = array());
 
 		public function __construct($imageModel)
 		{
@@ -96,7 +98,7 @@ abstract class Converter
         {
            return false;
         }
-        
+
 			  $extension = $imageModel->getExtension();
 
 				$converter = false;

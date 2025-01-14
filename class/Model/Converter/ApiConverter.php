@@ -43,7 +43,7 @@ class ApiConverter extends MediaLibraryConverter
 		}
 
 
-		public function filterQueue(QueueItem $item, $args = array())
+    public function filterQueue(QueueItem $item, $args = [])
     {
 			foreach($item->data()->paramlist as $index => $data)
       {
