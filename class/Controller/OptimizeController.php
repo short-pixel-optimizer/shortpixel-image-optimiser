@@ -437,9 +437,10 @@ class OptimizeController
       foreach($items as $mainIndex => $item)
       {
              //continue; // conversion done one way or another, item will be need requeuing, because new urls / flag.
-						$item = $this->sendToProcessing($item, $Q);
+						// Note, all these functions change content of QueueItem
+						$this->sendToProcessing($item, $Q);
 
-            $item = $this->handleAPIResult($item, $Q);
+            $this->handleAPIResult($item, $Q);
             $result->items[$mainIndex] = $item->returnArray(); // replace processed item, should have result now.
       }
 
@@ -464,8 +465,8 @@ class OptimizeController
 			$qtype = strtolower($qtype);
 
       // Options contained in the queue item for extra uh options
-      $options = (property_exists($item, 'options')) ? $item->options : array();
-      $action = (property_exists($item, 'action')) ? $item->action : false;
+			$options = (false === is_null($item->options)) ? $item->options : [];
+			$action = (false === is_null($item->action)) ? $item->action : false; // This one is obligatory
       $api = $this->getAPI($action);
 
 
@@ -483,33 +484,41 @@ class OptimizeController
 
       // @todo SendToProcessing - Update the blocked checks
 			// If item is blocked (handling success), skip over. This can happen if internet is slow or process too fast.
-			if (property_exists($item, 'blocked') && true === $item->blocked )
+			if (true === $item->block() )
 			{
 					$item = $this->handleAPIResult($item, $q);
 			}
       elseif (false === $api) // ResultMessages in ResponseController
       {
-            $item->result = new \stdClass;
-            $item->result->is_done = true; // always done
-            $item->result->is_error = false; // for now
-            $item->result->apiStatus = ApiController::STATUS_NOT_API;
+//            $item->result = new \stdClass;
+						$item->setResult([
+								'apiStatus' => ApiController::STATUS_NOT_API,
+								'is_done' => true,
+								'is_error' => false,
+						]);
+//            $item->result->is_done = true; // always done
+//            $item->result->is_error = false; // for now
+//            $item->result->apiStatus = ApiController::STATUS_NOT_API;
             ResponseController::addData($item->item_id, 'action', $item->action);
 
 					 if ($imageObj === false) // not exist error.
 					 {
-					 	 return $this->handleAPIResult($item, $q);
+					  	$this->handleAPIResult($item, $q);
 					 }
            switch($item->action)
            {
               case 'restore';
-                 $imageObj->restore(array('keep_in_queue' => true));
+								 $imageObj->restore(['keep_in_queue' => true]);
               break;
               case 'migrate':
 									$imageObj->migrate(); // hard migrate in bulk, to check if all is there / resync on problems.
               break;
 							case 'png2jpg':
 								$item = $this->convertPNG($item, $q);
-								$item->result->is_done = false;  // if not, finished to newly enqueued
+								$item->setResult([
+										'is_done' => false,
+								]);
+//								$item->result->is_done = false;  // if not, finished to newly enqueued
 							break;
 							case 'removeLegacy':
 									 $imageObj->removeLegacyShortPixel();
@@ -531,10 +540,10 @@ class OptimizeController
 
         }
 
-				$item = $api->processMediaItem($item, $imageObj);
+				$api->processMediaItem($item, $imageObj);
 
       }
-      return $item;
+
     }
 
     /**
@@ -543,9 +552,10 @@ class OptimizeController
      * @param  Object $mediaQ               Queue object
      * @return Object         Returns queue item
      */
-    protected function convertPNG($item, $mediaQ)
+		protected function convertPNG(QueueItem $item, $mediaQ)
     {
-			$item->blocked = true;
+//			$item->blocked = true;
+			$item->block(true);
 			$mediaQ->updateItem($item);
 
       $settings = \wpSPIO()->settings();
@@ -555,10 +565,10 @@ class OptimizeController
 
 			 if ($imageObj === false) // not exist error.
 			 {
-				 $item->blocked = false;
+				 $item->block(false);
 				 $q->updateItem($item);
 
-			 	 return $item; //$this->handleAPIResult($item, $mediaQ);
+			 	 return $item;
 			 }
 
 				$converter = Converter::getConverter($imageObj, true);
@@ -587,7 +597,7 @@ class OptimizeController
 			// Keep compressiontype from object, set in queue, imageModelToQueue
 			$imageObj->setMeta('compressionType', $item->compressionType);
 
-			$item->blocked = false;
+			$item->block(false);
 			$mediaQ->updateItem($item);
 
       // Add converted items to the queue for the process
@@ -600,7 +610,7 @@ class OptimizeController
     // This is everything sub-efficient.
     /* Handles the Queue Item API result .
     */
-    protected function handleAPIResult($item, $q)
+		protected function handleAPIResult(QueueItem $item, $q)
     {
       $fs = \wpSPIO()->filesystem();
 
@@ -612,69 +622,91 @@ class OptimizeController
       // If something is in the queue for long, but somebody decides to trash the file in the meanwhile.
       if ($imageItem === false)
       {
-				$item->result = new \stdClass;
-        $item->result->message = __("File Error. File could not be loaded with this ID ", 'shortpixel-image-optimiser');
+//				$item->result = new \stdClass;
+				$item->setResult([
+						'apiStatus' => ApiController::STATUS_NOT_API,
+						'message' => __("File Error. File could not be loaded with this ID ", 'shortpixel-image-optimiser'),
+						'fileStatus' => ImageModel::FILE_STATUS_ERROR,
+						'is_done' => true,
+						'is_error' => true,
+				]);
+
+/*        $item->result->message = __("File Error. File could not be loaded with this ID ", 'shortpixel-image-optimiser');
         $item->result->apiStatus = ApiController::STATUS_NOT_API;
         $item->fileStatus = ImageModel::FILE_STATUS_ERROR;
         $item->result->is_done = true;
         $item->result->is_error = true;
-
+*/
 				ResponseController::addData($item->item_id, 'message', $item->result->message);
       }
-			elseif(property_exists($item, 'blocked') && true === $item->blocked)
+			elseif(true === $item->block())
 			{
-				$item->result = new \stdClass;
-				$item->result->apiStatus = ApiController::STATUS_UNCHANGED;
+				Log::addTemp('Item Blocked');
+//				$item->result = new \stdClass;
+				$item->setResult([
+						'apiStatus' => ApiController::STATUS_UNCHANGED,
+						'message' => __('Item is waiting (blocked)', 'shortpixel-image-optimiser'),
+				]);
+/*				$item->result->apiStatus = ApiController::STATUS_UNCHANGED;
 				$item->result->message = __('Item is waiting (blocked)', 'shortpixel-image-optimiser');
 				$item->result->is_done = false;
-				$item->result->is_error = false;
+				$item->result->is_error = false; */
 				Log::addWarn('Encountered blocked item, processing success? ', $item->item_id);
 			}
       else
 			{
 				// This used in bulk preview for formatting filename.
-        $item->result->filename = $imageItem->getFileName();
+				$item->setResult(
+						['filename' => $imageItem->getFileName()]
+				);
+
 				// Used in WP-CLI
 				ResponseController::addData($item->item_id, 'fileName', $imageItem->getFileName());
 			}
 
-      $result = $item->result;
+//      $result = $item->result;
 
 			$quotaController = QuotaController::getInstance();
 			$statsController = StatsController::getInstance();
 
-      if ($result->is_error)
+			if (true === $item->result()->is_error)
       {
           // Check ApiStatus, and see what is what for error
           // https://shortpixel.com/api-docs
-          $apistatus = $result->apiStatus;
+					$apistatus = $item->result()->apiStatus;
 
           if ($apistatus == ApiController::STATUS_ERROR ) // File Error - between -100 and -300
           {
-              $item->fileStatus = ImageModel::FILE_STATUS_ERROR;
+							$item->setResult(['fileStatus' => ImageModel::FILE_STATUS_ERROR]);
           }
           // Out of Quota (partial / full)
           elseif ($apistatus == ApiController::STATUS_QUOTA_EXCEEDED)
           {
-              $item->result->error = AjaxController::NOQUOTA;
+							$error_code = AjaxController::NOQUOTA;
 							$quotaController->setQuotaExceeded();
           }
           elseif ($apistatus == ApiController::STATUS_NO_KEY)
           {
-              $item->result->error = AjaxController::APIKEY_FAILED;
+							$error_code = AjaxController::APIKEY_FAILED;
           }
           elseif($apistatus == ApiController::STATUS_QUEUE_FULL || $apistatus == ApiController::STATUS_MAINTENANCE ) // Full Queue / Maintenance mode
           {
-              $item->result->error = AjaxController::SERVER_ERROR;
+							$error_code = AjaxController::SERVER_ERROR;
           }
+
+					if (isset($error_code))
+					{
+						 $item->setResult(['error' => $error_code, 'is_error' => true]);
+					}
+
 
 					$response = array(
 						 'is_error' => true,
-						 'message' => $item->result->message, // These mostly come from API
+						 'message' => $item->result()->message, // These mostly come from API
 					);
 					ResponseController::addData($item->item_id, $response);
 
-          if ($result->is_done )
+					if ($item->result()->is_done )
           {
              $q->itemFailed($item, true);
              $this->HandleItemError($item, $qtype);
@@ -683,80 +715,99 @@ class OptimizeController
           }
 
       }
-      elseif ($result->is_done)
+			elseif (true === $item->result()->is_done)
       {
-         if ($result->apiStatus == ApiController::STATUS_SUCCESS ) // Is done and with success
+				 if ($item->result()->apiStatus == ApiController::STATUS_SUCCESS ) // Is done and with success
          {
 
-           $tempFiles = array();
+					 $tempFiles = [];
 
            // Set the metadata decided on APItime.
-           if (isset($item->compressionType))
+					 if (isset($item->data()->compressionType))
            {
-             $imageItem->setMeta('compressionType', $item->compressionType);
+						 $imageItem->setMeta('compressionType', $item->data()->compressionType);
            }
 
-					 if (count($result->files) > 0 )
+					 if (is_array($item->result()->files) && count($item->result()->files) > 0 )
            {
-							$status = $this->handleOptimizedItem($q, $item, $imageItem, $result->files);
-              $item->result->improvements = $imageItem->getImprovements();
+							$status = $this->handleOptimizedItem($q, $item, $imageItem, $item->result()->files);
+							$item->setResult(['improvements' => $imageItem->getImprovements()]);
 
               if (ApiController::STATUS_SUCCESS == $status)
               {
-                 $item->result->apiStatus = ApiController::STATUS_SUCCESS;
-                 $item->fileStatus = ImageModel::FILE_STATUS_SUCCESS;
+//                 $item->result->apiStatus = ApiController::STATUS_SUCCESS;
+//                 $item->fileStatus = ImageModel::FILE_STATUS_SUCCESS;
+
+								 $item->setResult(['apiStatus' => ApiController::STATUS_SUCCESS, 'fileStatus' => ImageModel::FILE_STATUS_SUCCESS]);
 
                  do_action('shortpixel_image_optimised', $imageItem->get('id'));
 								 do_action('shortpixel/image/optimised', $imageItem);
                }
 							 elseif(ApiController::STATUS_CONVERTED == $status)
 							 {
-								 $item->result->apiStatus = ApiController::STATUS_CONVERTED;
-								 $item->fileStatus = ImageModel::FILE_STATUS_SUCCESS;
+//								 $item->result->apiStatus = ApiController::STATUS_CONVERTED;
+//								 $item->fileStatus = ImageModel::FILE_STATUS_SUCCESS;
+
+								 $item->setResult(['apiStatus' => ApiController::STATUS_CONVERTED, 'fileStatus' => ImageModel::FILE_STATUS_SUCCESS]);
+
 
 								 $fs = \wpSPIO()->filesystem();
 		 						 $imageItem = $fs->getMediaImage($item->item_id);
 
-								 if (property_exists($item, 'compressionTypeRequested'))
+								 if (property_exists($item->data(), 'compressionTypeRequested'))
 								 {
-										$item->compressionType = $item->compressionTypeRequested;
+										$item->setData('compressionType',$item->data()->compressionTypeRequested);
 								 }
 								 // Keep compressiontype from object, set in queue, imageModelToQueue
-								 $imageItem->setMeta('compressionType', $item->compressionType);
+								 $imageItem->setMeta('compressionType', $item->data()->compressionType);
 							 }
                else
                {
+								 /*
                  $item->result->apiStatus = ApiController::STATUS_ERROR;
                  $item->fileStatus = ImageModel::FILE_STATUS_ERROR;
               //   $item->result->message = sprintf(__('Image not optimized with errors', 'shortpixel-image-optimiser'), $item->item_id);
               //   $item->result->message = $imageItem->getLastErrorMessage();
                  $item->result->is_error = true;
+								 */
+								 $item->setResult([
+										'apiStatus' => ApiController::STATUS_ERROR,
+										'fileStatus' => ImageModel::FILE_STATUS_ERROR,
+										'is_error' => true,
+								 ]);
 
                }
 
+							// @todo SHoudl this be in results, if unset like this?
               unset($item->result->files);
 
               $item->result->queuetype = $qtype;
 
 							$showItem = UiHelper::findBestPreview($imageItem); // find smaller / better preview
+							$original = $optimized = false;
 
 							if ($showItem->getExtension() == 'pdf') // non-showable formats here
 							{
-								 $item->result->original = false;
-								 $item->result->optimized = false;
+//								 $item->result->original = false;
+//								 $item->result->optimized = false;
 							}
 							elseif ($showItem->hasBackup())
               {
                 $backupFile = $showItem->getBackupFile(); // attach backup for compare in bulk
                 $backup_url = $fs->pathToUrl($backupFile);
-                $item->result->original = $backup_url;
-								$item->result->optimized = $fs->pathToUrl($showItem);
+								$original = $backup_url;
+								$optimized = $fs->pathToUrl($showItem);
               }
               else
 							{
-                $item->result->original = false;
-								$item->result->optimized = $fs->pathToUrl($showItem);
+                $original = false;
+								$optimized = $fs->pathToUrl($showItem);
 							}
+
+							$item->setResult([
+									'original' => $original,
+									'optimized' => $optimized,
+							]);
 
 							// Dump Stats, Dump Quota. Refresh
 							$statsController->reset();
@@ -912,7 +963,7 @@ class OptimizeController
     /**
      * [Handles one optimized image and extra filetypes]
      * @param  [object] $q                         [queue object]
-     * @param  [object] $item                      [item stdclass object. The whole optimize data item]
+		 * @param  [object] $item                      [item QueueItem object. The data item]
      * @param  [object] $mediaObj                  [imageModel of the optimized collection]
      * @param  [array] $successData               [all successdata received so far]
      * @return [int]              [status integer, one of apicontroller status constants]
@@ -924,22 +975,28 @@ class OptimizeController
 				$downloadHelper = DownloadHelper::getInstance();
 				$converter = Converter::getConverter($mediaObj, true);
 
-				$item->blocked = true;
+				$item->block(true);
 				$q->updateItem($item);
 
-				if (! property_exists($item, 'files'))
+				// @todo Here check if these item_files are persistent ( probablY ) and if so add them to data(), not result();
+				if (property_exists($item->data(), $files))
+				{
+					$item_files = $item->data()->files;
+				}
+
+/*				if (! property_exists($item, 'files'))
 				{
 					$item->files = array();
 				}
-
+*/
 				foreach($imageArray as $imageName => $image)
 				{
-					 if (! isset($item->files[$imageName]))
+					 if (! isset($item_files[$imageName]))
 					 {
-						 $item->files[$imageName]  = array();
+						 $item_files[$imageName]  = [];
 					 }
 
-					 if (isset($item->files[$imageName]['image']) && file_exists($item->files[$imageName]['image']))
+					 if (isset($item_files[$imageName]['image']) && file_exists($item_files[$imageName]['image']))
 					 {
 						  // All good.
 					 }
@@ -951,41 +1008,42 @@ class OptimizeController
 						  $tempFile = $downloadHelper->downloadFile($image['image']['url']);
 							if (is_object($tempFile))
 							{
-								$item->files[$imageName]['image'] = $tempFile->getFullPath();
+								$item_files[$imageName]['image'] = $tempFile->getFullPath();
 								$imageArray[$imageName]['image']['file'] = $tempFile->getFullPath();
 							}
 					 }
 
 
-					 if (! isset($item->files[$imageName]['webp']) &&  $image['webp']['status'] == ApiController::STATUS_SUCCESS)
+					 if (! isset($item_files[$imageName]['webp']) &&  $image['webp']['status'] == ApiController::STATUS_SUCCESS)
 					 {
 						 $tempFile = $downloadHelper->downloadFile($image['webp']['url']);
 						 if (is_object($tempFile))
 						 {
-						 		$item->files[$imageName]['webp'] = $tempFile->getFullPath();
+								$item_files[$imageName]['webp'] = $tempFile->getFullPath();
 						 		$imageArray[$imageName]['webp']['file'] = $tempFile->getFullPath();
 					 		}
 				 	 }
 					 elseif ($image['webp']['status'] == ApiController::STATUS_OPTIMIZED_BIGGER) {
-					 		$item->files[$imageName]['webp'] = ApiController::STATUS_OPTIMIZED_BIGGER;
+							$item_files[$imageName]['webp'] = ApiController::STATUS_OPTIMIZED_BIGGER;
 					 }
 
-					 if (! isset($item->files[$imageName]['avif']) && $image['avif']['status'] == ApiController::STATUS_SUCCESS)
+					 if (! isset($item_files[$imageName]['avif']) && $image['avif']['status'] == ApiController::STATUS_SUCCESS)
 					 {
 						 $tempFile = $downloadHelper->downloadFile($image['avif']['url']);
 						 if (is_object($tempFile))
 						 {
-						 		$item->files[$imageName]['avif'] = $tempFile->getFullPath();
+								$item_files[$imageName]['avif'] = $tempFile->getFullPath();
 						 		$imageArray[$imageName]['avif']['file'] = $tempFile->getFullPath();
 						 }
 					 }
 					 elseif ($image['avif']['status'] == ApiController::STATUS_OPTIMIZED_BIGGER) {
-					 		$item->files[$imageName]['avif'] = ApiController::STATUS_OPTIMIZED_BIGGER;
+							$item_files[$imageName]['avif'] = ApiController::STATUS_OPTIMIZED_BIGGER;
 
 					 }
 				}
 
 				$successData['files']  = $imageArray;
+				$item->setData('files', $item_files);
 
 				$converter = Converter::getConverter($mediaObj, true);
 				$optimizedArgs = array();
@@ -1021,7 +1079,7 @@ class OptimizeController
 					}
 				}
 
-				$item->blocked = false;
+				$item->block(false);
 				$q->updateItem($item);
 
 				return $status;

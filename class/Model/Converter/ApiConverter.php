@@ -9,7 +9,7 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Helper\UtilHelper as UtilHelper;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
-
+use ShortPixel\Model\QueueItem as QueueItem;
 
 class ApiConverter extends MediaLibraryConverter
 {
@@ -43,13 +43,13 @@ class ApiConverter extends MediaLibraryConverter
 		}
 
 
-    public function filterQueue($item, $args = array())
+		public function filterQueue(QueueItem $item, $args = array())
     {
-      foreach($item->paramlist as $index => $data)
+			foreach($item->data()->paramlist as $index => $data)
       {
-        if (isset($item->paramlist[$index]['convertto']))
+				if (isset($item->data()->paramlist[$index]['convertto']))
         {
-          $item->paramlist[$index]['convertto'] = 'jpg';
+					$item->data()->paramlist[$index]['convertto'] = 'jpg';
         }
       }
 
@@ -61,20 +61,22 @@ class ApiConverter extends MediaLibraryConverter
        }
 
       //Lossless because thumbnails will otherwise be derived of compressed image, leaving to double compression.
-      if (property_exists($item, 'compressionType'))
+			if (property_exists($item->data(), 'compressionType'))
       {
-         $item->compressionTypeRequested = $item->compressionType;
+				 $item->setData('compressionTypeRequested',$item->compressionType);
       }
       // Process Heic as Lossless so we don't have double opts.
       $item->compressionType = ImageModel::COMPRESSION_LOSSLESS;
 
       // Reset counts
-      $item->counts->baseCount = 1; // count the base images.
-      $item->counts->avifCount = 0;
-      $item->counts->webpCount = 0;
-      $item->counts->creditCount = 1;
+			$counts = new \stdClass;
+      $counts->baseCount = 1; // count the base images.
+      $counts->avifCount = 0;
+      $counts->webpCount = 0;
+      $counts->creditCount = 1;
 
-      return $item;
+			$item->setData('counts', $counts);
+
     }
 
   	/**

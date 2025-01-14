@@ -53,38 +53,34 @@ class ApiController extends RequestManager
 		 	if (! is_object($imageObj))
 			{
         $item->setResult($this->returnFailure(self::STATUS_FAIL, __('Item seems invalid, removed or corrupted.', 'shortpixel-image-optimiser')));
-				return $item;
 			}
 		 	elseif (false === $imageObj->isProcessable() || $imageObj->isOptimizePrevented() == true)
 			{
 					if ($imageObj->isOptimized()) // This only looks at main item
 					{
              $item->setResult($this->returnFailure(self::STATUS_FAIL, __('Item is already optimized', 'shortpixel-image-optimiser')));
-						 return $item;
 					}
 					else {
              $item->setResult($this->returnFailure(self::STATUS_FAIL, __('Item is not processable and not optimized', 'shortpixel-image-optimiser')));
-						 return $item;
 					}
 			}
 
-      if (! is_array($item->urls) || count($item->urls) == 0)
+			if (! is_array($item->data()->urls) || count($item->data()->urls) == 0)
       {
           $item->setResult($this->returnFailure(self::STATUS_FAIL, __('No Urls given for this Item', 'shortpixel-image-optimiser')));
-          return $item;
       }
 
       $settings = \wpSPIO()->settings();
       $keyControl = ApiKeyController::getInstance();
-      $convertTo = (property_exists($item, 'flags')) ? implode("|", $item->flags) : '';
+			$convertTo = (property_exists($item->data(), 'flags')) ? implode("|", $item->data()->flags) : '';
 
       $requestBody = [
         'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
         'key' => $keyControl->forceGetApiKey(),
-        'urllist' => $item->urls,
-        'compressionType' => $item->compressionType,
+				'urllist' => $item->data()->urls,
+				'compressionType' => $item->data()->compressionType,
         'item_id' => $item->item_id,
-        'refresh' => (property_exists($item, 'refresh') && $item->refresh) || $item->tries == 0 ? true : false,
+        'refresh' => $item->tries == 0 ? true : false,
         'cmyk2rgb' => $settings->CMYKtoRGBconversion,
         'keep_exif' => UtilHelper::getExifParameter(),
         'convertto' => $convertTo,
@@ -95,12 +91,12 @@ class ApiController extends RequestManager
 
       if (! is_null($item->paramlist))
       {
-         $requestBody['paramlist'] = $item->paramlist;
+				 $requestBody['paramlist'] = $item->data()->paramlist;
       }
 
       if (! is_null($item->returndatalist))
       {
-         $requestBody['returndatalist'] = $item->returndatalist;
+				 $requestBody['returndatalist'] = $item->data()->returndatalist;
       }
 
       $requestParameters = [
@@ -119,17 +115,16 @@ class ApiController extends RequestManager
     //	$requestArgs['returndatalist']  = property_exists($item, 'returndatalist') ? $item->returndatalist : null;
 
       $request = $this->getRequest($requestBody, $requestParameters);
-      $item = $this->doRequest($item, $request);
+      $this->doRequest($item, $request);
 
-			ResponseController::addData($item->item_id, 'images_total', count($item->urls));
+			ResponseController::addData($item->item_id, 'images_total', count($item->data()->urls));
 
 			// If error has occured, but it's not related to connection.
-			if ($item->is_error === true && $item->is_done === true)
+			if ($item->result()->is_error === true && $item->result()->is_done === true)
 			{
 				 $this->dumpMediaItem($item); // item failed, directly dump anything from server.
 			}
 
-      return $item;
   }
 
 	/* Ask to remove the items from the remote cache.
@@ -140,7 +135,7 @@ class ApiController extends RequestManager
      $settings = \wpSPIO()->settings();
      $keyControl = ApiKeyController::getInstance();
 
-     if (is_null($item->urls)  || ! is_array($item->urls) || count($item->urls) == 0)
+		 if (is_null($item->data()->urls)  || ! is_array($item->data()->urls) || count($item->data()->urls) == 0)
 		 {
 			  Log::addWarn('Media Item without URLS cannnot be dumped ', $item);
 				return false;
@@ -149,11 +144,11 @@ class ApiController extends RequestManager
      $requestBody = [
                 'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
                 'key' => $keyControl->forceGetApiKey(),
-                'urllist' => $item->urls	];
+								'urllist' => $item->data()->urls	];
 
      $request = $this->getRequest($requestBody, []);
 
-		 Log::addDebug('Dumping Media Item ', $item->urls);
+		 Log::addDebug('Dumping Media Item ', $item->data()->urls);
 
 		 $ret = wp_remote_post($this->apiDumpEndPoint, $request);
 

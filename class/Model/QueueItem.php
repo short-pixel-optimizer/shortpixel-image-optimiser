@@ -23,7 +23,7 @@ class QueueItem
 
     protected $result;
 
-    protected $data; // something savable to dbase, for now object.
+		protected $data; // something savable to dbase, for now object. This is the only thing persistent!
 
     protected $item_count; // counted images for the table.
 
@@ -67,6 +67,27 @@ class QueueItem
     {
            $this->data->$name = $value;
     }
+
+		public function block($block = null)
+		{
+				if (is_null($block))
+				{
+						return $this->data-> block;
+				}
+				else {
+						$this->data->block = (bool) $block;
+				}
+		}
+
+		public function data()
+		{
+				return $this->data;
+		}
+
+		public function result()
+		{
+			 return $this->result;
+		}
 
     public function set($name, $value)
     {
@@ -143,18 +164,33 @@ class QueueItem
     {
         // Should list every possible item, arrayfilter out.
        $defaults = [
-          'apiStatus' => RequestManager::STATUS_UNCHANGED,
-          'message' => '',
-          'is_error' => false,
-          'is_done' => false,
-          'file' => null,  // should probably be merged these two.
-          'files' => null,
-
+					'apiStatus' =>  RequestManager::STATUS_UNCHANGED,
+					'message' =>  '',
+					'is_error' => false,
+					'is_done' =>  false,
+					'file' =>  null,  // should probably be merged these two.
+					'files' =>  null,
+					'fileStatus' => null,
+					'error' => null,  // might in time better be called error_code or so
+					'improvements' => null,
+					'original' => null,
+					'optimized' => null,
        ];
+
+			 foreach($defaults as $name => $default_value)
+			 {
+					if (propery_exists($this->result, $name))
+					{
+						 $defaults[$name] = $this->result->$name;
+					}
+					else {
+						 $defaults[$name]  = $default_value;
+					}
+			 }
 
        $args = wp_parse_args($args, $defaults);
 
-       $result = (object) $args;
+			 $result = (object) array_filter($args);
 
        $this->result = $result;
 

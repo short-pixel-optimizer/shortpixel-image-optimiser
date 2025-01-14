@@ -93,8 +93,6 @@ abstract class RequestManager
 		$response = wp_remote_post($this->apiEndPoint, $requestParameters );
     Log::addDebug('ShortPixel API Request sent to ' . $this->apiEndPoint , $requestParameters['body']);
 
-
-
 		//only if $Blocking is true analyze the response
 		if ( $requestParameters['blocking'] )
 		{
@@ -123,12 +121,12 @@ abstract class RequestManager
 					Log::addWarn('DOREQUEST sent item non-blocking with multiple tries!', $item);
 			 }
 
-       $urls = (property_exists($item, 'urls')) ? count($item->urls) : 0;
+			 $urls = (property_exists($item->data(), 'urls')) ? count($item->data()->urls) : 0;
 
-       if ($urls == 0 && property_exists($item, 'url'))
-        $urls = count($item->url);
+			 if ($urls == 0 && property_exists($item->data(), 'url'))
+				$urls = count($item->data()->url);
 
-			 $flags = property_exists($item, 'flags') ? $item->flags : array();
+			 $flags = property_exists($item->data(), 'flags') ? $item->data()->flags : [];
 			 $flags = implode("|", $flags);
 			 $text = sprintf(__('New item #%d sent for processing ( %d URLS %s)  ', 'shortpixel-image-optimiser'), $item->item_id, $urls, $flags );
 

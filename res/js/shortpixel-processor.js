@@ -624,7 +624,6 @@ window.ShortPixelProcessor =
 
         this.screen.HandleItemError(result, type);
 
-
     },
     LoadItemView: function(data)
     {
