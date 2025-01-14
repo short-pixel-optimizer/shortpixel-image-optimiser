@@ -27,8 +27,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 <div class="shortpixel-bulk-wrapper">
 
   <div id="processPaused" class="processor-paused" data-action="ResumeBulk"><span class='dashicons dashicons-controls-pause' data-action="ResumeBulk"></span>
-		<?php esc_html_e('The Bulk Processing is paused, please click to resume','shortpixel-image-optimiser'); ?>
-    <p class='small'><?php _e('If you have activated background mode, please note that this process will continue', 'shortpixel-image-optimiser'); ?></p>
+    <?php if (true === \wpSPIO()->settings()->doBackgroundProcess)
+    {
+        $title = esc_html__('Bulk Processing is paused in this browser and continues to run in the background as long as visitors are on the website','shortpixel-image-optimiser');
+        $alt = __('Click here to continue processing in this browser, which may be faster', 'shortpixel-image-optimiser');
+    }
+    else {
+        $title = esc_html__('The Bulk Processing is paused, please click to resume','shortpixel-image-optimiser');
+        $alt = '';
+    }
+    ?>
+    <?php echo $title ?>
+    <p class='small'><?php echo $alt ?></p>
   </div>
 
   <div id="processorOverQuota" class="processor-overquota">
