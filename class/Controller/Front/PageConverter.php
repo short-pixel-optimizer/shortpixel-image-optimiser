@@ -20,6 +20,7 @@ class PageConverter extends \ShortPixel\Controller
 			$this->site_url =  get_site_url();
 	}
 
+  /** Check if the converters should run on this request.  This is mainly used to filter out frontend pagebuilder where changing images could result in crashing builders and such cases */
 	protected function shouldConvert()
 	{
 		$env = wpSPIO()->env();
@@ -57,6 +58,12 @@ class PageConverter extends \ShortPixel\Controller
     if (isset($_GET['breakdance']) || isset($_GET['breakdance_browser']))
     {
        return false;
+    }
+
+    // Oxygen Builder
+    if (isset($_GET['ct_builder']))
+    {
+      return false;
     }
 
 
