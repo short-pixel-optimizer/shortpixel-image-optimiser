@@ -170,6 +170,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 $paramListArgs['smartcrop'] = $isSmartCrop;
      $paramListArgs['url'] = $url;
      $paramListArgs['main_url'] = $main_url;
+     // Add main Image Sizes here for checking ratio / smartcrop.
+     $paramListArgs['main_width'] = $this->get('width');
+     $paramListArgs['main_height'] = $this->get('height');
 
 		 $doubles = array(); // check via hash if same command / result is there.
 

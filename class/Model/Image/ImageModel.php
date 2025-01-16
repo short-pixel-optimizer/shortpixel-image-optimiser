@@ -1446,8 +1446,23 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         else {
             if (true == $size['crop'])
             {
+
               $useResize = false;
               $useSmartCrop = true;
+
+              if ($args['main_width'] !== false && $args['main_height'] !== false)
+              {
+                 $ratio_check = round(($args['main_width'] / $args['main_height']),2) - round($this->get('width') / $this->get('height'), 2);
+
+
+                 if ($ratio_check == 0)
+                 {
+                    $useSmartCrop = false;
+                    $useResize = true;
+                    Log::addTemp('Ratio Check Succes, no smartcroppies' . $ratio_check, $args);
+                 }
+
+              }
             }
             else {
               $useResize = true;
