@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 4.8.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 6.0.4
+Stable tag: 6.0.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -442,6 +442,32 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 6.0.5 =
+Release Date: January 16, 2025
+
+🛠️ Fixes
+
+* Resolved an issue where WebP or AVIF formats were not added to bulk processing for Custom Media items.
+* Fixed a deprecation warning that appeared when using PHP 8.3.
+* Corrected a redirect error after saving the API Key, which previously led to the general WordPress settings.
+* Fixed a misleading message displayed when a converted image was restored from backup.
+* Added a proper link to Custom Media images when displaying errors after the bulk processing.
+
+🔧 Compatibility Updates
+
+* CDN Replacer Disabled: Now automatically disabled when using Bricks, Breakdance, or Oxygen builders to avoid conflicts.
+
+✨ Tweaks & Improvements
+
+* Updated Texts: Improved clarity in messages when bulk processing is paused and background mode is active.
+* API Key Box Hidden: Completely hide the API Key box when the SHORTPIXEL_HIDE_API_KEY constant is used.
+
+🌍 Language Updates
+
+* Added 4 new strings, updated 2 strings, and deprecated 4 strings to improve translation coverage.
+
+Update now to enjoy these enhancements and fixes for a smoother experience! 🚀
 
 = 6.0.4 =
 Release date: December 10, 2024

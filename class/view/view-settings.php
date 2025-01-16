@@ -17,17 +17,14 @@ if ( ! defined( 'ABSPATH' ) ) {
       <?php echo UIHelper::getIcon('res/images/illustration/logo_settings.svg'); ?>
   </h1>
   <div class='top-buttons'>
-
-    <a class='header-button' href="https://shortpixel.com/<?php
-            echo esc_attr(($view->key->apiKey ? "login/". $view->key->apiKey . "/dashboard" : "login"));
+    <?php if ( !$view->key->hide_api_key ) { ?>
+      <a class='header-button' href="https://shortpixel.com/<?php
+        echo esc_attr(($view->key->apiKey ? "login/". $view->key->apiKey . "/dashboard" : "login"));
         ?>" target="_blank">
           <i class='shortpixel-icon user'></i><name><?php _e('ShortPixel Account','shortpixel-image-optimiser'); ?></name>
-        </a>
-    <!--<button><i class='shortpixel-icon notifications'></i><?php _e('Notifications','shortpixel-image-optimiser'); ?></button>
-    <button id="viewmode-toggle"><i class='shortpixel-icon switch'></i>
-      <span class='advanced'><?php _e('Advanced', 'shortpixel-image-optimiser'); ?></span>
-      <span class='simple'><?php _e('Simple', 'shortpixel-image-optimiser'); ?></span>
-    </button>-->
+      </a>
+    <?php } ?>
+    <!--<button><i class='shortpixel-icon notifications'></i><?php _e('Notifications','shortpixel-image-optimiser'); ?></button>-->
   </div>
 </header>
 
@@ -152,7 +149,6 @@ if ( ! defined( 'ABSPATH' ) ) {
                       <?php _e('Upgrade Now', 'shortpixel-image-optimizer'); ?>
                   </button>
               </div>
-
           </div>
 <?php endif; ?>
 

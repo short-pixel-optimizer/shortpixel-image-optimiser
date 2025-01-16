@@ -456,7 +456,8 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 							$convertMeta = clone $this->getMeta()->convertMeta();
 							$imageMeta = new ImageMeta();
 							$imageMeta->convertMeta()->fromClass($convertMeta);
-							$bool = false; // Prevent cleanRestore from deleting the metadata.
+              // This removed, because interfering with messaging / other functions
+        //			$bool = false; // Prevent cleanRestore from deleting the metadata.
 					}
 					else {
 							$imageMeta = new ImageMeta();

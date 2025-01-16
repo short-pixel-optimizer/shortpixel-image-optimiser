@@ -378,6 +378,13 @@ class AjaxController
 		{
 				 $viewController =  new SettingsViewController();
 				 $viewController->indicateAjaxSave(); // set ajax save method
+
+				 $url = isset($_POST['request_url']) ? sanitize_text_field($_POST['request_url']) : null;
+				 if (is_null($url))
+				 {
+						Log::addError('Ajax : redirect URL not set!');
+				 }
+				 $viewController->setControllerURL($url); // set url for redirects, otherwise set by route / plugin
 				 if (method_exists($viewController, $action))
 				 {
 						$viewController->$action();
@@ -939,6 +946,19 @@ class AjaxController
 
 				}
 
+				$noticeController = Notices::getInstance();
+
+				$json->notices = $noticeController->getNewNotices();
+
+				if(count($json->notices) > 0)
+				{
+					$json->display_notices = [];
+					foreach($json->notices as $notice)
+					{
+						$json->display_notices[] = $notice->getForDisplay();
+					}
+				}
+
 				return $json;
 		}
 
@@ -1073,8 +1093,6 @@ class AjaxController
 
 			 $json->$type->logType = $logType;
 
-
-
 			 if (! $log )
 			 {
 				  $json->$type->is_error = true;
@@ -1085,35 +1103,64 @@ class AjaxController
 	 	 //	$date = UiHelper::formatTS($log->date);
 		 	 //$logData = $bulkController->getLogData($logFile); // starts from options.
 			 $date = (isset($logData['date'])) ? UiHelper::formatTS($logData['date']) : false;
-			 $content = $log->getContents();
-			 $lines = explode(';', $content);
+			 $content = trim($log->getContents());
+			 $lines = array_filter(explode(';', $content));
 
 			 $headers = [
 				 __('Time', 'shortpixel-image-optimiser'),
 				 __('Filename', 'shortpixel-image-optimiser'),
+				 __('ID', 'shortpixel-image-optimiser'),
 				 __('Error', 'shortpixel-image-optimiser'),
 			 	 ];
 
 			 if ('custom' == $logType)
 			 {
-		//			array_splice($headers, 2, 0, __('Info', 'shortpixel-image-optimiser') );
+					array_splice($headers, 3, 0, __('Info', 'shortpixel-image-optimiser') );
 			 }
 
 			 foreach($lines as $index => $line)
 			 {
-				  $cells = explode('|', $line);
-					if (isset($cells[2]) && $type !== 'custom')
+					$cells = array_filter(explode('|', $line));
+
+					$date = $cells[0];
+					$filename = $cells[1];
+					$id = isset($cells[2]) ? $cells[2] : false;
+					$error = isset($cells[3]) ? $cells[3] : false;
+
+					$line = ['date' => $date, 'filename' => $filename, 'id' => $id, 'error' => $error];
+
+					if ($id !== false && $logType !== 'custom')
 					{
-						 $id = $cells[2]; // replaces the image id with a link to image.
-						 $cells[2] = esc_url(admin_url('post.php?post=' . trim($id) . '&action=edit'));
-				//		 unset($cells[3]);
+						// replaces the image id with a link to image.
+						$line['link'] = esc_url(admin_url('post.php?post=' . trim($id) . '&action=edit'));
 					}
-					if (isset($cells[3]))
+					elseif ($logType === 'custom')
 					{
-						 $error_message = $cells[3];
-						 $cells[4] = UiHelper::getKBSearchLink($error_message);
+						 $base = esc_url(admin_url('upload.php?page=wp-short-pixel-custom'));
+						 $line['link'] = add_query_arg('s', sanitize_text_field($filename), $base);
 					}
-					$lines[$index] = (array) $cells;
+
+					if ($error !== false)
+					{
+						 $line['kblink'] = UiHelper::getKBSearchLink($error);
+					}
+
+					if ('custom' == $logType && $id !== false)
+					{
+						 $imageObj = $fs->getImage($id, 'custom');
+						 if (is_object($imageObj))
+						 {
+								$dir = $imageObj->getFileDir();
+								if (is_object($dir))
+								{
+										$path = $dir->getRelativePath();
+										$line['path'] = $path;
+								}
+
+						 }
+					}
+
+					$lines[$index] = $line;
 			 }
 			 $lines = array_values(array_filter($lines));
 			 array_unshift($lines, $headers);

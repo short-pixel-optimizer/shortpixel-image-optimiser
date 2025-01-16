@@ -66,6 +66,16 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 			return false;
 	}
 
+	AppendNotices(notices,element)
+	{
+
+				for (let i = 0; i < notices.length; i++)
+				{
+					element.insertAdjacentHTML('afterend', notices[i]);
+				}
+
+	}
+
 	UpdateMessage(id, message, isError)
 	{
 

@@ -464,19 +464,6 @@ class OtherMediaController extends \ShortPixel\Controller
 
           $subdirs = $fs->sortFiles($dirObj->getSubDirectories()); // runs through FS sort.
 
-
-        /*  foreach($subdirs as $index => $dir) // weed out the media library subdirectories.
-          {
-             $dirname = $dir->getName();
-          //   $status = $this->checkifMediaLibrary($dir);
-
-						// @todo This should probably be checked via getBackupDirectory or so, not hardcoded ShortipxelBackups
-            if($dirname == 'ShortpixelBackups' || $this->checkifMediaLibrary($dir) )
-            {
-              // unset($subdirs[$index]);
-            }
-          } */
-
           if( count($subdirs) > 0 ) {
               $i = 0;
 

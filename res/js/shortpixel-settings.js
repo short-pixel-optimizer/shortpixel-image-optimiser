@@ -671,6 +671,7 @@ async DoAjaxRequest(formData, responseOkCallBack, responseErrorCallback)
 	formData.append('action', 'shortpixel_settingsRequest');
 	formData.append('ajaxSave', 'true');
 
+	formData.append('request_url', window.location.toString());
 
 	if (false === formData.has('nonce'))
 	{

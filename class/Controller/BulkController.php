@@ -210,7 +210,9 @@ class BulkController
 				foreach($logs as $log)
 				{
 					 if (isset($log['logfile']) && $log['logfile'] == $fileName)
+           {
 					 	 return $log;
+           }
 				}
 
 				return false;
