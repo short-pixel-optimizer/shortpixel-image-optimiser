@@ -408,6 +408,11 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
                  //var element = document.querySelector('.modal-folder-picker .description');
                  this.AppendNotices(data.display_notices, messageEl);
            }
+           if (data.display_notices)
+           {
+                 //var element = document.querySelector('.modal-folder-picker .description');
+                 this.AppendNotices(data.display_notices, messageEl);
+           }
         }
 
     }
