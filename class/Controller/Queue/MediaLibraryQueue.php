@@ -57,7 +57,6 @@ class MediaLibraryQueue extends Queue
    }
 
 
-
    private function queryPostMeta()
    {
      $last_id = $this->getStatus('last_item_id');

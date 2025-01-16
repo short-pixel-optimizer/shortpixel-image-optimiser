@@ -961,7 +961,6 @@ class AjaxController
 				}
 				$noticeController->update(); // dismiss one-time ponies
 
-
 				return $json;
 		}
 
@@ -1136,6 +1135,11 @@ class AjaxController
 					{
 						// replaces the image id with a link to image.
 						$line['link'] = esc_url(admin_url('post.php?post=' . trim($id) . '&action=edit'));
+					}
+					elseif ($logType === 'custom')
+					{
+						 $base = esc_url(admin_url('upload.php?page=wp-short-pixel-custom'));
+						 $line['link'] = add_query_arg('s', sanitize_text_field($filename), $base);
 					}
 
 					if ($error !== false)

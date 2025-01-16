@@ -232,7 +232,7 @@ class OptimizeController
 
           Log::addWarn('Item with id ' . $item_id . ' is not restorable,');
 
-           return $json;
+          return $json;
         }
 
 				$data = array(
@@ -257,6 +257,7 @@ class OptimizeController
 					 $json->result->message = ResponseController::formatItem($mediaItem->get('id')); // $mediaItem->getReason('restorable');
 				}
 
+        
 				// Compat for ancient WP
 				$now = function_exists('wp_date') ? wp_date( 'U', time() ) : time();
 

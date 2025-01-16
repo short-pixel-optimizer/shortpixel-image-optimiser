@@ -1986,6 +1986,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
     do_action('shortpixel_before_restore_image', $this->get('id'));
     do_action('shortpixel/image/before_restore', $this);
 
+
     $cleanRestore = true;
 		$wpmeta = wp_get_attachment_metadata($this->get('id'));
 
@@ -2001,6 +2002,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		// ** Warning - This will also reset metadata ****
     $bool = parent::restore();
 
+    // From ThumbnailModel, prevent cleaning all metadata if there is converted item. 
+    if (true === $this->getMeta()->convertMeta()->isConverted() && false === $this->getMeta()->convertMeta()->omitBackup() )
+    {
+       $cleanRestore = false;
+    }
 
 		if ($is_resized)
 		{
@@ -2018,12 +2024,14 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			 if ($bool)
 			 {
 			 	$bool = $this->restoreConversion($convertMeta, $converter);
+
 				$wpmeta = wp_get_attachment_metadata($this->get('id')); // png2jpg resets WP metadata.
 				$this->resetStatus();
 				$this->setFileInfo();
 			 }
 			 else
 			 {
+        Log::addWarn('Restoring with conversion, but parent was not restored correctly');
 		 	 	return $bool;
 			 }
 		}
@@ -2062,7 +2070,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						}
 					}
 					else {
-						Log::addWarn('Thumbnail not restorable ' . $size,  $this->getReason('restorable'));
+              // Normal occurence when thumbnails have no backup / not optimized.
+            //Log::addWarn('Thumbnail not restorable ' . $size,  $this->getReason('restorable'));
 					}
 
 					if ($unlisted_file === null)
@@ -2305,8 +2314,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				// Fullpath now will still be .jpg
 				// PNGconvert is first, because some plugins check for _attached_file metadata and prevent deleting files if still connected to media library. Exmaple: polylang.
 				$converter->restore();
-
-
 
 				$this->wp_metadata = null;  // restore changes the metadata.
 				$this->thumbnails = $this->loadThumbnailsFromWP();

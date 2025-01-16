@@ -18,8 +18,7 @@
     "require-dev": {
 	"phpunit/phpunit": "^9",
 	"mikey179/vfsstream": "^1",
-	"10up/wp_mock": "@dev",
-        "phpunitgen/console": "^6.0"
+	"10up/wp_mock": "@dev"
 
     },
    "autoload": {
