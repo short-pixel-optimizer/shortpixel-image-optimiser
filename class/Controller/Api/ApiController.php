@@ -293,7 +293,7 @@ class ApiController extends RequestManager
 								  $data['fileSize'] = $returnDataList['fileSizes'][$imageName];
 							 }
 
-							 if (! isset($item->files[$imageName]))
+               if (property_exists($item->data(), $imageName))
 							 {
 							 	  $imageList[$imageName] = $this->handleNewSuccess($item, $imageObject, $data);
 							 }

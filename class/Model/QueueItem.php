@@ -177,9 +177,14 @@ class QueueItem
 					'optimized' => null,
        ];
 
+       if (is_null($this->result))
+       {
+          $this->result = new \stdClass;
+       }
+
 			 foreach($defaults as $name => $default_value)
 			 {
-					if (propery_exists($this->result, $name))
+          if (property_exists($this->result, $name))
 					{
 						 $defaults[$name] = $this->result->$name;
 					}

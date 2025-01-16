@@ -22,6 +22,8 @@ use ShortPixel\Controller\ResponseController as ResponseController;
 
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Model\QueueItem as QueueItem;
+use ShortPixel\Controller\Queue\QueueItems as QueueItems;
+
 
 use ShortPixel\Helper\UiHelper as UiHelper;
 
@@ -267,7 +269,7 @@ class OptimizeController
            $api = $this->getAPI('restore');
            //$item = new \stdClass;
            //$item->urls = $mediaItem->getOptimizeUrls();
-           $qItem = QueueItems::getImageItem($imageModel);
+           $qItem = QueueItems::getImageItem($mediaItem);
            $qItem->newDumpAction();
 					 $api->dumpMediaItem($item);
 				}
@@ -847,16 +849,15 @@ class OptimizeController
               Log::addDebug('Item with ID' . $imageItem->item_id . ' still has processables (with dump)', $imageItem->getOptimizeUrls());
 
               $api = $this->getAPI('optimize');
-							$newItem = new \stdClass;
-							$newItem->urls = $imageItem->getOptimizeUrls();
+              // Create a copy of this for dumping, so doesn't influence the adding to queue.
+            //  $newItem = clone $imageItem;
+            //	$newItem->urls = $imageItem->getOptimizeUrls();
+
 
 							// Add to URLs also the possiblity of images with only webp / avif needs. Otherwise URLs would end up emtpy.
 
 							// It can happen that only webp /avifs are left for this image. This can't influence the API cache, so dump is not needed. Just don't send empty URLs for processing here.
-							if (count($newItem->urls) > 0)
-							{
-								$api->dumpMediaItem($newItem);
-							}
+              $api->dumpMediaItem($item);
 
               $this->addItemToQueue($imageItem); // requeue for further processing.
            }
