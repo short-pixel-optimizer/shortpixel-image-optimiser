@@ -74,10 +74,10 @@ class CustomQueue extends Queue
      // List of prepared (%d) for the folders.
      $query_arr = join( ',', array_fill( 0, count( $folderRow ), '%d' ) );
 
-     $sql = 'SELECT id FROM ' . $wpdb->prefix . 'shortpixel_meta WHERE status <> %d AND folder_id in ( ';
+     $sql = 'SELECT id FROM ' . $wpdb->prefix . 'shortpixel_meta WHERE folder_id in ( ';
 
      $sql .= $query_arr . ') ';
-     $prepare[] = ImageModel::FILE_STATUS_SUCCESS; // Query anything else than success, since that is done.
+      // Query anything else than success, since that is done.
      $prepare = array_merge($prepare, $folderRow);
 
      if ($last_id > 0)
