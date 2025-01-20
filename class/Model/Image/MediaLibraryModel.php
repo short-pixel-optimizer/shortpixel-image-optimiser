@@ -467,7 +467,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
               }
           }
     }
-
     return $thumbnails;
   }
 
@@ -943,7 +942,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       {
           // Thumbnails is a an array of ThumbnailModels
           $this->thumbnails = $this->loadThumbnailsFromWP();
-
           $result = $this->checkLegacy();
           if ($result)
           {
@@ -998,6 +996,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
              }
           }
+
           $this->thumbnails = $thumbnails;
 
           if (property_exists($metadata, 'retinas') && count($metadata->retinas) > 0 )
@@ -1051,7 +1050,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
               $this->resetRecordChanges();
           }
 
-      }
+      } // Elseif metadata object.
 
 				$this->loadLooseItems();
   }
@@ -1567,8 +1566,16 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				 return false;
 			}
 
+
+
       if (! $bool) // if parent is not processable, check if thumbnails are, can still have a work to do.
       {
+
+          // This is an extra check for a specific bug. If the metadata is mismatched and there is a processable thumbnails (ie jpeg), but the main file is of a non-processable type ( ie webp ), it shows as processable but will not build an URL list because of the convert rule in getOptimizeData
+          if (false === in_array($this->getExtension(), ImageModel::PROCESSABLE_EXTENSIONS))
+          {
+                return false;
+          }
 
 					$thumbObjs = $this->getThumbObjects();
 
@@ -2002,7 +2009,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		// ** Warning - This will also reset metadata ****
     $bool = parent::restore();
 
-    // From ThumbnailModel, prevent cleaning all metadata if there is converted item. 
+    // From ThumbnailModel, prevent cleaning all metadata if there is converted item.
     if (true === $this->getMeta()->convertMeta()->isConverted() && false === $this->getMeta()->convertMeta()->omitBackup() )
     {
        $cleanRestore = false;
@@ -2375,7 +2382,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			{
 				 $objects[$this->originalImageKey] = $this->getOriginalFile();
 			}
-
 			return $objects;
 	}
 
