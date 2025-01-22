@@ -989,6 +989,19 @@ div.spio-modal-title {
   display: block;
   height: auto;
 }
+.wrap.is-shortpixel-settings-page section#tab-optimisation content.exif-ai img.icon {
+  height: 40px;
+  margin-bottom: -25px;
+  margin-left: 20px;
+}
+@media (max-width: 768px) {
+  .wrap.is-shortpixel-settings-page section#tab-optimisation content.exif-ai img.icon {
+    height: 25px;
+    float: right;
+    margin-top: -70px;
+    margin-right: -5px;
+  }
+}
 .wrap.is-shortpixel-settings-page section#tab-webp img.icon {
   height: 40px;
   margin-bottom: -20px;
