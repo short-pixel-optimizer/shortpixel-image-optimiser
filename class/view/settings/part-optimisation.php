@@ -320,7 +320,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
           <setting>
             <content>
 		<name>
-		    <?php printf(esc_html__('Allow or prevent your images from being used for AI/ML training. %sRead more%s.','shortpixel-image-optimiser'), '<a href="" target="_blank">', '</a>'); ?>
+		    <?php printf(esc_html__('Allow or prevent your images from being used for AI/ML training. %sRead more%s.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/prevent-ai-data-mining-on-images/" target="_blank">', '</a>'); ?>
 		</name>
               <?php
                 $ai_options = [
