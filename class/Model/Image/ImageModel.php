@@ -1459,7 +1459,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                  {
                     $useSmartCrop = false;
                     $useResize = true;
-                    Log::addTemp('Ratio Check Succes, no smartcroppies' . $ratio_check, $args);
                  }
 
               }

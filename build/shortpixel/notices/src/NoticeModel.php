@@ -194,20 +194,10 @@ class NoticeModel //extends ShortPixelModel
      return ($var instanceof \__PHP_Incomplete_Class);
   }
 
-	public function getForDisplay($args = [])
+  public function getForDisplay()
   {
-
-		$defaults = [
-				'is_removable' => $this->is_removable,
-				'class' => '', // extra classes.
-		];
-
-		$args = wp_parse_args($args, $defaults);
-
-		$is_removable = $args['is_removable'];
-
     $this->viewed = true;
-		$class = $args['class'] . ' shortpixel shortpixel-notice ';
+    $class = 'shortpixel shortpixel-notice ';
 
     $icon = '';
 
@@ -266,7 +256,7 @@ class NoticeModel //extends ShortPixelModel
     }
 
 
-    if ($is_removable)
+    if ($this->is_removable)
     {
       $class .= 'is-dismissible ';
     }
@@ -296,7 +286,7 @@ class NoticeModel //extends ShortPixelModel
     }
     $output .= "</span>";
 
-		if ($is_removable)
+    if ($this->is_removable)
     {
         $output .= sprintf('<button type="button" id="button-%s" class="notice-dismiss" data-dismiss="%s" ><span class="screen-reader-text">%s</span></button>', $id,  $this->suppress_period, __('Dismiss this notice', 'shortpixel-image-optimiser') );
 
@@ -317,7 +307,7 @@ class NoticeModel //extends ShortPixelModel
 
     $output .= "</div>";
 
-    if ($this->is_persistent && $is_removable)
+    if ($this->is_persistent && $this->is_removable)
     {
         $output .= "<script type='text/javascript'>\n" . $this->getDismissJS() . "\n</script>";
     }
@@ -347,14 +337,26 @@ class NoticeModel //extends ShortPixelModel
           $url = wp_json_encode(admin_url('admin-ajax.php'));
           $js = "function shortpixel_notice_dismiss(event) {
                     event.preventDefault();
-                    var ev = event.detail;
                     var target = event.target;
-                    var parent = target.parentElement;
+                    if (target.tagName !== 'button') // tricky this
+                    {
+                        target = target.closest('button');
+                    }
+                    var parent = target.closest('.shortpixel-notice');
+
+                    if (target.hasAttribute('data-dismisstype'))
+                    {
+                       var type = target.getAttribute('data-dismisstype');
+                    }
+                    else {
+                       var type = 'dismiss';
+                    }
 
                     var data = {
                       'plugin_action': 'dismiss',
                       'action' : '$this->notice_action',
                       'nonce' : '$nonce',
+                      'dismisstype' : type,
                     }
                     data.time = target.getAttribute('data-dismiss');
                     data.id = parent.getAttribute('id');
@@ -368,7 +370,8 @@ class NoticeModel //extends ShortPixelModel
           }";
       }
 
-      $js .=  ' jQuery("#' . $this->id . '").find(".notice-dismiss").on("click", shortpixel_notice_dismiss); ';
+      // This all needs to be formalized in a better script, regardless of class, also in proper scope.
+      $js .=  ' jQuery("#' . $this->id . '").find(".notice-dismiss, .notice-dismiss-action").on("click", shortpixel_notice_dismiss); ';
 
       return "\n jQuery(document).ready(function(){ \n" . $js . "\n});";
   }

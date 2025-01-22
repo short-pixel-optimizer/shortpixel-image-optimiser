@@ -94,7 +94,7 @@ class MediaLibraryQueue extends Queue
      $prepare[] = $limit;
 
      $sqlmeta = $wpdb->prepare($sqlmeta, $prepare);
-     Log::addTemp('SQLPrepare', $sqlmeta);
+     
      $results = $wpdb->get_col($sqlmeta);
 
      $items = [];
