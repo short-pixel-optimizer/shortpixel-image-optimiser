@@ -72,7 +72,7 @@ class QueueItem
 		{
 				if (is_null($block))
 				{
-						return $this->data-> block;
+						return $this->data->block;
 				}
 				else {
 						$this->data->block = (bool) $block;
@@ -175,6 +175,7 @@ class QueueItem
 					'improvements' => null,
 					'original' => null,
 					'optimized' => null,
+          'queueType' => null, // OptimizeController but (?) usage
        ];
 
        if (is_null($this->result))

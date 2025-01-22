@@ -257,7 +257,7 @@ class OptimizeController
 					 $json->result->message = ResponseController::formatItem($mediaItem->get('id')); // $mediaItem->getReason('restorable');
 				}
 
-        
+
 				// Compat for ancient WP
 				$now = function_exists('wp_date') ? wp_date( 'U', time() ) : time();
 
@@ -674,6 +674,7 @@ class OptimizeController
 
 			if (true === $item->result()->is_error)
       {
+          Log::addWarn('OptimizeControl - Item has Error', $item->result());
           // Check ApiStatus, and see what is what for error
           // https://shortpixel.com/api-docs
 					$apistatus = $item->result()->apiStatus;
@@ -781,10 +782,12 @@ class OptimizeController
 
                }
 
-							// @todo SHoudl this be in results, if unset like this?
-              unset($item->result->files);
+              // @todo SHoudl this be in results, if unset like this? This can't be unset like this!
 
-              $item->result->queuetype = $qtype;
+              unset($item->result()->files);
+
+
+              $item->setResult(['queuetype' => $qtype]);
 
 							$showItem = UiHelper::findBestPreview($imageItem); // find smaller / better preview
 							$original = $optimized = false;
@@ -826,18 +829,16 @@ class OptimizeController
            else
            {
               Log::addWarn('Api returns Success, but result has no files', $result);
-              $item->result->is_error = true;
               $message = sprintf(__('Image API returned succes, but without images', 'shortpixel-image-optimiser'), $item->item_id);
 							ResponseController::addData($item->item_id, 'message', $message );
-
-              $item->result->apiStatus = ApiController::STATUS_FAIL;
+              $item->setResult(['is_error' => true, 'apiStatus' => ApiController::STATUS_FAIL]);
            }
 
 
          }  // Is Done / Handle Success
 
 				 // This is_error can happen not from api, but from handleOptimized
-         if ($item->result->is_error)
+         if ($item->result()->is_error)
          {
 					 Log::addDebug('Item failed, has error on done ', $item);
           $q->itemFailed($item, true);
@@ -870,7 +871,7 @@ class OptimizeController
       }
       else
       {
-          if ($result->apiStatus == ApiController::STATUS_UNCHANGED || $result->apiStatus === Apicontroller::STATUS_PARTIAL_SUCCESS)
+          if ($item->result()->apiStatus == ApiController::STATUS_UNCHANGED || $item->result()->apiStatus === Apicontroller::STATUS_PARTIAL_SUCCESS)
           {
               $item->fileStatus = ImageModel::FILE_STATUS_PENDING;
 							$retry_limit = $q->getShortQ()->getOption('retry_limit');
@@ -890,26 +891,26 @@ class OptimizeController
 
 							}
 
-							if ($retry_limit == $item->tries || $retry_limit == ($item->tries -1))
+              if ($retry_limit == $item->data()->tries || $retry_limit == ($item->data()->tries -1))
 							{
-
-									$item->result->apiStatus = ApiController::ERR_TIMEOUT;
 									$message = __('Retry Limit reached. Image might be too large, limit too low or network issues.  ', 'shortpixel-image-optimiser');
-									$item->result->message = $message;
 
 									ResponseController::addData($item->item_id, 'message', $message);
 									ResponseController::addData($item->item_id, 'is_error', true);
 									ResponseController::addData($item->item_id, 'is_done', true);
 
-									$item->result->is_error = true;
-									$item->result->is_done = true;
+                  $item->setResult(['apiStatus' => ApiController::ERR_TIMEOUT,
+                            'message' => $message,
+                            'is_error' => true,
+                            'is_done' => true,
+                ]);
 
 									$this->HandleItemError($item, $qtype);
 
 									// @todo Remove temp files here
 							}
 							else {
-									ResponseController::addData($item->item_id, 'message', $item->result->message); // item is waiting base line here.
+                  ResponseController::addData($item->item_id, 'message', $item->result()->message); // item is waiting base line here.
 							}
 						/* Item is not failing here:  Failed items come on the bottom of the queue, after all others so might cause multiple credit eating if the time is long. checkQueue is only done at the end of the queue.
 						* Secondly, failing it, would prevent it going to TIMEOUT on the PROCESS in WPQ - which would mess with correct timings on that.
@@ -939,10 +940,10 @@ class OptimizeController
       }
 
 			ResponseController::addData($item->item_id, array(
-				'is_error' => $item->result->is_error,
-				'is_done' => $item->result->is_done,
-				'apiStatus' => $item->result->apiStatus,
-				'tries' => $item->tries,
+        'is_error' => $item->result()->is_error,
+        'is_done' => $item->result()->is_done,
+        'apiStatus' => $item->result()->apiStatus,
+        'tries' => $item->data()->tries,
 
 			));
 

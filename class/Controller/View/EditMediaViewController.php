@@ -297,6 +297,14 @@ class EditMediaViewController extends \ShortPixel\ViewController
              $original = $imageObj->getOriginalFile();
              $debugInfo[] = array(__('Has Original File: '), $original->getFullPath()  . '(' . UiHelper::formatBytes($original->getFileSize()) . ')');
              $orbackup = $original->getBackupFile();
+
+             $processable = ($original->isProcessable()) ? '<span class="green">Yes</span>' : '<span class="red">No</span> (' . $original->getReason('processable') . ')';
+             $restorable = ($original->isRestorable()) ? '<span class="green">Yes</span>' : '<span class="red">No</span> (' . 		$original->getReason('restorable') . ')';
+
+             $debugInfo[] = ['Original Processable:', $processable];
+             $debugInfo[] = ['Original Restorable:', $restorable]; 
+
+
              if ($orbackup)
               $debugInfo[] = array(__('Has Backup Original Image'), $orbackup->getFullPath() . '(' . UiHelper::formatBytes($orbackup->getFileSize()) . ')');
 						$debugInfo[] = array('', '<hr>');

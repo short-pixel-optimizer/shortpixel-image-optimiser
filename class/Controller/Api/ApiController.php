@@ -246,7 +246,7 @@ class ApiController extends RequestManager
           }
     }
 
-    $neededURLS = $item->urls; // URLS we are waiting for.
+    $neededURLS = $item->data()->urls; // URLS we are waiting for.
 
     if ( is_array($APIresponse) && isset($APIresponse[0]) ) //API returned image details
     {
@@ -255,12 +255,11 @@ class ApiController extends RequestManager
 				{
 					   return $this->returnFailure(self::STATUS_FAIL,  __('Item did not return image size information. This might be a failed queue item. Reset the queue if this persists or contact support','shortpixel-image-optimiser'));
 				}
-			//        return $this->returnFailure(self::STATUS_FAIL,  __('Unrecognized API response. Please contact support.','shortpixel-image-optimiser'));
 
-				$analyze = array('total' => count($item->urls), 'ready' => 0, 'waiting' => 0);
+        $analyze = array('total' => count($neededURLS), 'ready' => 0, 'waiting' => 0);
 				$waitingDebug = array();
 
-				$imageList = array();
+        $imageList = [];
 				$partialSuccess = false;
 				$imageNames = array_keys($returnDataList['sizes']);
 				$fileNames = array_values($returnDataList['sizes']);
@@ -308,7 +307,7 @@ class ApiController extends RequestManager
 						'images_waiting' => $analyze['waiting'],
 						'images_total' => $analyze['total']
 				);
-				ResponseController::addData($item->item_id, $imageData);
+        ResponseController::addData($item->item_id, $imageData);
 
 				if (count($imageList) > 0)
 				{
@@ -325,11 +324,12 @@ class ApiController extends RequestManager
 						}
 				}
 				elseif ($analyze['waiting'] > 0) {
+
 					return $this->returnOK(self::STATUS_UNCHANGED, sprintf(__('Item is waiting', 'shortpixel-image-optimiser')));
 				}
 				else {
 					// Theoretically this should not be needed.
-					Log::addWarn('ApiController Response not handled before default case');
+          Log::addWarn('ApiController Response not handled before default case', $imageList);
 					if ( isset($APIresponse[0]->Status->Message) ) {
 
 							$err = array("Status" => self::STATUS_FAIL, "Code" => (isset($APIresponse[0]->Status->Code) ? $APIresponse[0]->Status->Code : self::ERR_UNKNOWN),
@@ -377,16 +377,16 @@ class ApiController extends RequestManager
    * @param  Array $data                   Data is filename, imagename, filesize (optionally) from returnDataList
    * @return Array           Array with processed image data (url, size, webp, avif)
    */
-  protected function handleNewSuccess($item, $fileData, $data)
+  protected function handleNewSuccess(QueueItem $item, $fileData, $data)
 	{
-			$compressionType = property_exists($item, 'compressionType') ? $item->compressionType : $settings->compressionType;
+      $compressionType = property_exists($item->data(), 'compressionType') ? $item->data()->compressionType : $settings->compressionType;
 			//$savedSpace =  $originalSpace =  $optimizedSpace = $fileCount  = 0;
 
-			$defaults = array(
+      $defaults = [
 					'fileName' => false,
 					'imageName' => false,
 					'fileSize' => false,
-			);
+      ];
 
 			$data = wp_parse_args($data, $defaults);
 

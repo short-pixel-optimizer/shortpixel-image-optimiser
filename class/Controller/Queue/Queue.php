@@ -105,7 +105,6 @@ abstract class Queue
        switch($args['action'])
        {
           case 'optimize':
-            Log::addTemp('Single action, create new optimize action');
              $qItem->newOptimizeAction();
           break;
           case 'alttext':
@@ -134,7 +133,6 @@ abstract class Queue
        $result = $this->getQStatus($result, $numitems);
        $result->numitems = $numitems;
 
-Log::addTEmp('Single Action, return result', $result);
        do_action('shortpixel_start_image_optimisation', $imageModel->get('id'), $imageModel);
        return $result;
     }
@@ -546,7 +544,6 @@ Log::addTEmp('Single Action, return result', $result);
         /* $item = new \stdClass;
         $item = $qItem->value;
         $item->_queueItem = $qItem; */
-        Log::addTemp('QueueItem', $qItem);
 
 //        $item->item_id = $qItem->item_id;
 //        $item->tries = $qItem->tries;
@@ -560,7 +557,7 @@ Log::addTEmp('Single Action, return result', $result);
 				{ // This must be array.
 					$item->files = json_decode(json_encode($item->files), true);
 				}
-
+Log::addTemp('QueueItem End', $item);
         return $item;
     }
 
