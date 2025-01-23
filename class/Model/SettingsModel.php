@@ -25,7 +25,7 @@ class SettingsModel extends \ShortPixel\Model
 				'useSmartcrop' => ['s' => 'boolean', 'default' => false],
         'smartCropIgnoreSizes' => ['s' => 'boolean', 'default' => false],
         'backupImages' => ['s' => 'boolean', 'default' => true], // checkbox
-        'keepExif' => ['s' => 'int', 'default' => 0], // checkbox
+    //    'keepExif' => ['s' => 'int', 'default' => 0], // checkbox
         'resizeImages' => ['s' => 'boolean', 'default' => false],
         'resizeType' => ['s' => 'string', 'default' => null],
         'includeNextGen' => ['s' => 'boolean', 'default' =>  false ], // checkbox
@@ -59,8 +59,19 @@ class SettingsModel extends \ShortPixel\Model
 				'useCDN' => ['s' => 'boolean', 'default' => false],
 				'CDNDomain' => ['s' => 'string', 'default' => 'https://spcdn.shortpixel.ai/spio'],
         'redirectedSettings' => ['s' => 'int', 'default' => 0],
+        'exif' => ['s' => 'int', 'default' => 1],
+        'exif_ai' => ['s' => 'int', 'default' => 0],
 
     );
+
+  //  const EXIF_REMOVE = 0;
+  //  const EXIF_KEEP = 1;
+
+  //  const ALLOW_AI = 2;
+  //  const DENY_AI = 2;
+
+
+
 
 		private $settings;
 
@@ -80,7 +91,8 @@ class SettingsModel extends \ShortPixel\Model
 
 		protected function load()
 		{
-       $this->settings = get_option($this->option_name, []);
+       $this->settings = $this->check(get_option($this->option_name, []));
+
 			 register_shutdown_function(array($this, 'onShutdown'));
 		}
 
@@ -103,6 +115,20 @@ class SettingsModel extends \ShortPixel\Model
 			 	Log::addWarn('Call for non-existing setting: ' . $name);
 			 }
 		}
+
+    // This function is meant for version checks ( settings removed / added ) and filter overrides for specific use-cases.
+    protected function check($settings)
+    {
+        if (isset($settings['keepExif']))
+        {
+          //Notices::addNormal('Dont forget about keepexif');
+           $this->set('exif',$settings['keepExif'] );
+           unset($settings['keepExif']);
+        }
+
+        $settings = apply_filters('shortpixel/settings/check', $settings);
+        return $settings;
+    }
 
     public function __set($name, $value)
     {

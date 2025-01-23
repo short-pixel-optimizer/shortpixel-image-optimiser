@@ -21,31 +21,7 @@ $stat = $item->getStats();
 $fullstatus = esc_html__("Optimized",'shortpixel-image-optimiser') . ": " . $stat['optimized'] . "\n"
       . "" . esc_html__("Unoptimized",'shortpixel-image-optimiser') . ": " . $stat['waiting'] . "\n"
       ;
-//$fullstatus .= ($item->get('is_nextgen') ) ? __('Nextgen', 'shortpixel-image-optimiser') : "";
 
-
-/*
-if ($stat['total'] == 0)
-{
-  $optimize_status = __("Empty",'shortpixel-image-optimiser');
-  $fullstatus = '';
-}
-elseif ($stat['total'] == $stat['optimized'])
-{
-  $optimize_status = __("Optimized",'shortpixel-image-optimiser');
-}
-elseif ($stat['optimized'] > 0)
-{
-   $optimize_status = __("Pending",'shortpixel-image-optimiser');
-}
-else
-{
-  $optimize_status = __("Waiting",'shortpixel-image-optimiser');
-}
-*/
-
-
-//	$action =  __("Stop monitoring",'shortpixel-image-optimiser');
 
 $err = ''; // unused since failed is gone.
 if (! $item->exists() && ! $err)
@@ -105,7 +81,7 @@ if ($item->get('is_nextgen') && $view->settings->includeNextGen == 1)
           echo esc_html($stat['total']); ?>
         </span> <?php _e('Files', 'shortpixel-image-optimiser'); ?>
     </span>
-    <span>
+		<span class='updated'>
         <?php echo esc_html(UiHelper::formatTS($item->get('updated'))) ?>
     </span>
     <span class='status'>

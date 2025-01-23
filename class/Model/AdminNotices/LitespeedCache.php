@@ -60,7 +60,7 @@ class LitespeedCache extends \ShortPixel\Model\AdminNoticeModel
   protected function getMessage()
   {
 
-      $linkurl = 'https://shortpixel.com/knowledge-base/article/264-how-to-deliver-the-webps-generated-with-shortpixel-with-the-litespeed-cache-plugin';
+      $linkurl = 'https://shortpixel.com/knowledge-base/article/how-to-deliver-the-webps-generated-with-shortpixel-with-the-litespeed-cache-plugin/';
 
       $message = '<p>' . sprintf(__("ShortPixel has detected that you are using the Litespeed cache with WebP Image Replacement enabled. You must %s enable the double WebP extension constant %s for WebP delivery to work correctly in this case.", 'shortpixel-image-optimiser'), '<a href="' . $linkurl . '" target="_blank">', '</a>') . '</p>';
 

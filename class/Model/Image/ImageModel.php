@@ -13,6 +13,8 @@ use ShortPixel\Controller\ApiController as API;
 
 use ShortPixel\Model\File\FileModel as FileModel;
 use ShortPixel\Model\AccessModel as AccessModel;
+use ShortPixel\Helper\UtilHelper as UtilHelper;
+
 
 use ShortPixel\Model\Converter\Converter as Converter;
 
@@ -768,7 +770,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
              $this->setMeta('originalSize', $originalSize);
 
              if ($this->hasMeta('did_keepExif'))
-              $this->setMeta('did_keepExif', $settings->keepExif);
+              $this->setMeta('did_keepExif', UtilHelper::getExifParameter());
              if ($this->hasMeta('did_cmyk2rgb'))
               $this->setMeta('did_cmyk2rgb', $settings->CMYKtoRGBconversion);
 
@@ -780,8 +782,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
              if ($settings->resizeImages)
              {
-               $resizeWidth = $settings->resizeWidth;
-               $resizeHeight = $settings->resizeHeight;
 
 							 $originalWidth = $this->getMeta('originalWidth');
 							 $originalHeight = $this->getMeta('originalHeight');
@@ -789,7 +789,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 							 $width = $this->get('width'); // image width
 							 $height = $this->get('height');
 
-               if ( ($resizeWidth == $width && $width != $originalWidth)  || ($resizeHeight == $height && $height != $originalHeight ) ) // resized.
+               if ($width != $originalWidth  || $height != $originalHeight ) // resized.
                {
                    $this->setMeta('resizeWidth', $width );
                    $this->setMeta('resizeHeight', $height );
@@ -1444,8 +1444,22 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         else {
             if (true == $size['crop'])
             {
+
               $useResize = false;
               $useSmartCrop = true;
+
+              if ($args['main_width'] !== false && $args['main_height'] !== false)
+              {
+                 $ratio_check = round(($args['main_width'] / $args['main_height']),2) - round($this->get('width') / $this->get('height'), 2);
+
+
+                 if ($ratio_check == 0)
+                 {
+                    $useSmartCrop = false;
+                    $useResize = true;
+                 }
+
+              }
             }
             else {
               $useResize = true;

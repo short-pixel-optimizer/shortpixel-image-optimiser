@@ -38,7 +38,7 @@ $queueRunning = $bulk->isAnyBulkRunning();
                   <?php esc_html_e('Search and Migrate All', 'shortpixel-image-optimiser'); ?>
               </a>
 
-                <i class='documentation down dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/539-spio-5-tells-me-to-convert-legacy-data-what-is-this?target=iframe"></i>
+                <i class='documentation down dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/spio-5-tells-me-to-convert-legacy-data-what-is-this/?target=iframe"></i>
 
                 <info>
                   <?php printf(esc_html__('ShortPixel Image Optimizer version 5.0 brings a new format for saving the image optimization information. If you have upgraded from a version prior to version 5.0, you may want to convert all your image data to the new format. This conversion will speed up the plugin and ensure that all data is preserved. %sThis process is also useful for resolving errors that may occur during optimization due to leftover metadata.%s', 'shortpixel-image-optimiser'), '<br><b>', '</b>') ?>
@@ -95,7 +95,7 @@ $queueRunning = $bulk->isAnyBulkRunning();
          <content>
            <a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'restore', 'noheader' => true), $url)) ?>" class="button danger"><?php _e('Bulk Restore', 'shortpixel-image-optimiser'); ?></a>
 
-             <i class='documentation down dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/14-can-i-restore-my-images-what-happens-with-the-originals?target=iframe"></i>
+             <i class='documentation down dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/can-i-restore-my-images-what-happens-with-the-originals/?target=iframe"></i>
            <info>
              <?php printf(esc_html__('%sUndoes%s all optimizations and restores all your backed-up images to their original state. Credits used will not be refunded and you will have to optimize your images again.', 'shortpixel-image-optimiser'), '<b>','</b>'); ?>
            </info>
@@ -125,7 +125,7 @@ $queueRunning = $bulk->isAnyBulkRunning();
          <button type="button" class='button danger' data-action="open-modal" data-target="ToolsRemoveAll">
                        <?php esc_html_e('Remove all ShortPixel Data', 'shortpixel-image-optimiser'); ?></button>
 
-           <i class='documentation down dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/81-remove-all-the-shortpixel-related-data-on-a-wp-website?target=iframe"></i>
+           <i class='documentation down dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/remove-all-the-shortpixel-related-data-on-a-wp-website/?target=iframe"></i>
          <info>
             <?php printf(esc_html__('%sRemoves all ShortPixel data (including backups) %s and deactivates the plugin. Your images will not be changed (the optimized images will remain), but the next time ShortPixel is activated, it will no longer recognize previous optimizations.', 'shortpixel-image-optimiser'), '<b>','</b>'); ?>
          </info>
@@ -157,7 +157,7 @@ $queueRunning = $bulk->isAnyBulkRunning();
         <button type="button" class='button danger' data-action="open-modal" data-target="ToolsRemoveBackup">
                       <?php esc_html_e('Remove backups', 'shortpixel-image-optimiser'); ?></button>
 
-          <i class='documentation down dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/83-how-to-remove-the-backed-up-images-in-wordpress?target=iframe"></i>
+          <i class='documentation down dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/how-to-remove-the-backed-up-images-in-wordpress/?target=iframe"></i>
         <info>
             <?php esc_html_e('When backups are enabled, original images are stored in a backup folder. If you remove the backup folder, you will not be able to restore or reoptimize the images. We strongly recommend that you keep a copy of the backup folder (/wp-content/uploads/ShortpixelBackups/) somewhere safe.','shortpixel-image-optimiser');?>
         </info>

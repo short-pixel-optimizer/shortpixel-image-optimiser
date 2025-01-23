@@ -205,7 +205,7 @@ div.spio-modal-title {
   box-shadow: none;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings button:hover, .wrap.is-shortpixel-settings-page .shortpixel-settings .button-setting:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings button i.switch, .wrap.is-shortpixel-settings-page .shortpixel-settings .button-setting i.switch {
   width: 18px;
@@ -260,7 +260,7 @@ div.spio-modal-title {
   box-shadow: none;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings menu div.adv_switcher {
-  padding-top: 20px;
+  padding-top: 10px;
   padding-left: 5px;
   padding-bottom: 20px;
   font-size: 1rem;
@@ -294,6 +294,9 @@ div.spio-modal-title {
   font-family: "Roboto";
   font-weight: 700;
 }
+.wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab settinglist input:not(.switch) {
+  opacity: 1;
+}
 .wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab i.shortpixel-icon.save, .wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab i.shortpixel-icon.bulk {
   width: 15px;
   height: 15px;
@@ -308,7 +311,7 @@ div.spio-modal-title {
   filter: brightness(0%) invert(1);
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab .save-buttons.saving button.save {
-  background-color: #0e6870;
+  background-color: rgb(14.3684210526, 104.4473684211, 111.6315789474);
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab .save-buttons.saving button.save i {
   animation: cssload-spin 5000ms infinite linear;
@@ -494,7 +497,7 @@ div.spio-modal-title {
   margin: 10px auto;
   margin-left: -22px;
   margin-top: -10px;
-  margin-right: -22px;
+  margin-right: -20px;
   margin-bottom: 10px;
   padding: 8px 16px;
   box-shadow: 0px 1px 4px 0px rgba(0, 0, 0, 0.1);
@@ -525,7 +528,7 @@ div.spio-modal-title {
   box-shadow: none;
 }
 .wrap.is-shortpixel-settings-page header .top-buttons a:hover, .wrap.is-shortpixel-settings-page header .top-buttons button:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
 }
 .wrap.is-shortpixel-settings-page header .top-buttons a i.switch, .wrap.is-shortpixel-settings-page header .top-buttons button i.switch {
   width: 18px;
@@ -718,6 +721,14 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page .setting-tab .shortpixel-compression-options label input:checked + span {
   background-color: #116C7E;
+}
+.wrap.is-shortpixel-settings-page .setting-tab select[name=exif_ai] {
+  border: 1px solid #1ABDCA;
+  color: #116C7E;
+  margin-top: 15px;
+}
+.wrap.is-shortpixel-settings-page .setting-tab i.exif-ai {
+  top: 17px;
 }
 .wrap.is-shortpixel-settings-page .setting-tab .smart-compression-explainer {
   display: flex;
@@ -978,6 +989,19 @@ div.spio-modal-title {
   display: block;
   height: auto;
 }
+.wrap.is-shortpixel-settings-page section#tab-optimisation content.exif-ai img.icon {
+  height: 40px;
+  margin-bottom: -25px;
+  margin-left: 20px;
+}
+@media (max-width: 768px) {
+  .wrap.is-shortpixel-settings-page section#tab-optimisation content.exif-ai img.icon {
+    height: 25px;
+    float: right;
+    margin-top: -70px;
+    margin-right: -5px;
+  }
+}
 .wrap.is-shortpixel-settings-page section#tab-webp img.icon {
   height: 40px;
   margin-bottom: -20px;
@@ -1001,6 +1025,9 @@ div.spio-modal-title {
   width: 1rem;
   height: 1rem;
   opacity: 1;
+}
+.wrap.is-shortpixel-settings-page section#tab-webp img#exifviewer-img-1 {
+  margin-bottom: -7px;
 }
 .wrap.is-shortpixel-settings-page section#tab-debug h2 {
   left: 738px;
@@ -1213,7 +1240,7 @@ div.spio-modal-title {
   box-shadow: none;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper .dashboard-button:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper .dashboard-button i.switch {
   width: 18px;
@@ -1322,6 +1349,7 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .first-panel i.mainblock-status {
   width: 70px;
   height: 75px;
+  background-size: contain;
 }
 @media (max-width: 786px) {
   .wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .first-panel {
@@ -1842,6 +1870,32 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page #tab-nokey .onboard-submit button {
   width: 250px;
 }
+.wrap.is-shortpixel-settings-page #tab-nokey .onboard-submit button .dots {
+  animation: dots 2s steps(3, end) infinite;
+  animation-play-state: paused;
+  display: none;
+  margin-left: 2px;
+}
+@keyframes dots {
+  0%, 20% {
+    color: rgba(0, 0, 0, 0);
+    text-shadow: 0.25em 0 0 rgba(0, 0, 0, 0), 0.5em 0 0 rgba(0, 0, 0, 0);
+  }
+  40% {
+    color: white;
+    text-shadow: 0.25em 0 0 rgba(0, 0, 0, 0), 0.5em 0 0 rgba(0, 0, 0, 0);
+  }
+  60% {
+    text-shadow: 0.25em 0 0 white, 0.5em 0 0 rgba(0, 0, 0, 0);
+  }
+  80%, 100% {
+    text-shadow: 0.25em 0 0 white, 0.5em 0 0 white;
+  }
+}
+.wrap.is-shortpixel-settings-page #tab-nokey .onboard-submit button.submitting .dots {
+  animation-play-state: running;
+  display: inline;
+}
 .wrap.is-shortpixel-settings-page #tab-nokey .onboard-submit setting {
   background: #fff;
 }
@@ -2003,7 +2057,7 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page #tab-tools .button {
   min-height: 44px;
   color: #1ABDCA;
-  background-color: #e8e8e8;
+  background-color: rgb(232.25, 232.25, 232.25);
   border-radius: 6px;
   font-weight: 700;
   letter-spacing: 0.3px;
@@ -2011,7 +2065,7 @@ div.spio-modal-title {
   transition: all 0.1s ease-in-out;
 }
 .wrap.is-shortpixel-settings-page #tab-tools .button:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
   color: #fff;
 }
 .wrap.is-shortpixel-settings-page #tab-tools .option, .wrap.is-shortpixel-settings-page #tab-tools setting {
@@ -2118,7 +2172,6 @@ div.spio-modal-title {
   opacity: 0;
   transition: opacity 300ms;
   background: #fff;
-  max-width: 700px;
 }
 .wrap.is-shortpixel-settings-page setting warning h4, .wrap.is-shortpixel-settings-page setting error h4 {
   margin: 0;

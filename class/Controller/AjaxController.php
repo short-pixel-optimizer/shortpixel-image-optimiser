@@ -886,6 +886,7 @@ class AjaxController
 			$json->status = true;
 			$json->folder->fileCount = $folderObj->get('fileCount');
 			$json->folder->action = 'refresh';
+			$json->folder->updated = UiHelper::formatTS($folderObj->get('updated'));
 
 			return $json;
 		}
@@ -955,9 +956,11 @@ class AjaxController
 					$json->display_notices = [];
 					foreach($json->notices as $notice)
 					{
-						$json->display_notices[] = $notice->getForDisplay();
+						$json->display_notices[] = $notice->getForDisplay(['class' => 'is_ajax', 'is_removable' => false]);
 					}
 				}
+				$noticeController->update(); // dismiss one-time ponies
+
 
 				return $json;
 		}
@@ -1043,7 +1046,8 @@ class AjaxController
     public function ajax_checkquota()
     {
          $this->checkNonce('ajax_request');
-				 $this->checkActionAccess($action, 'is_editor');
+				 $action = 'check_quota';
+				 $this->checkActionAccess($action, 'is_author');
 
          $quotaController = QuotaController::getInstance();
          $quotaController->forceCheckRemoteQuota();

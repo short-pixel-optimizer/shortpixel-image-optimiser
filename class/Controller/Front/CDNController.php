@@ -17,6 +17,8 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		protected $cdn_arguments = [];
 
     protected $skip_rules = [];
+    protected $replace_method = 'preg';
+
 
 		public function __construct()
 		{
@@ -96,6 +98,11 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
             '/data:image\/.*/',
         ]);
 
+
+        // string || preg
+        $this->replace_method = apply_filters('shortpixel/front/cdn/replace_method', 'preg');
+
+
 		}
 
 		protected function processFront($content)
@@ -111,8 +118,12 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 				$urls = $this->extractMatches($matches);
 				$new_urls = $this->getUpdatedUrls($urls);
 
-				$content = $this->replaceContent($content, $urls, $new_urls);
-				return $content;
+        Log::addTemp('CDN Result ', [$urls, $new_urls]);
+      //  $replace_function = ($this->replace_method == 'preg') ? 'pregReplaceContent' : 'stringReplaceContent';
+        $replace_function = 'stringReplaceContent'; // undercooked, will defer to next version
+
+        $content = $this->$replace_function($content, $urls, $new_urls);
+        return $content;
 		}
 
 		protected function loadCDNDomain()
@@ -130,6 +141,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			return $matches;
 		}
 
+    /** Extract matches from the document.  This are the source images and should not be altered, since the string replace would fail doing that */
 		protected function extractMatches($matches)
 		{
 
@@ -159,16 +171,55 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			return $imageData;
 		}
 
+
+    /** @param $urls Array Source URLS
+    * @return Updated URLs - The string that the original values should be replaced with
+    */
 		protected function getUpdatedUrls($urls)
 		{
 			for ($i = 0; $i < count($urls); $i++)
 			{
 				 $src = $urls[$i];
-				 $urls[$i] = $this->replaceImage($urls[$i]);
+         $src = $this->processUrl($src);
+         $urls[$i] = $this->replaceImage($src);
+
 			}
 
 			return $urls;
 		}
+
+
+    // Special checks / operations because the URL is replaced. Data check.
+    protected function processUrl($url)
+    {
+         $original_url = $url; // debug poruposes.
+        $parsedUrl = parse_url($url);
+        if (! isset($parsedUrl['host']))
+        {
+            $site_url  = get_site_url();
+            if (substr($parsedUrl['path'], 0, 1) !== '/')
+            {
+                $site_url .= '/';
+            }
+
+            $url = $site_url . $url;
+            Log::addTemp("URL from $original_url changed to $url");
+        }
+
+        // @todo This CDN stuff should probably be wrapped in set / unset CDN Arguments.  Once for the whole batch, one per url ?
+        $ph_key = array_search('p_h', $this->cdn_arguments);
+        if (isset($parsedUrl['scheme']) && 'http' == $parsedUrl['scheme'])
+        {
+          if ($ph_key === false)
+            $this->cdn_arguments[] = 'p_h';
+        }
+        elseif ($ph_key !== false) {
+            unset($this->cdn_arguments[$ph_key]);
+        }
+
+        return $url;
+
+    }
 
 		protected function replaceImage($src)
 		{
@@ -187,8 +238,8 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
         // If there is a trailing-slash, remove it.
         $src = rtrim($src, '/');
 
-        // Remove the protocol.
-        $src = str_replace(['http://', 'https://'], '', $src);
+        // Remove the protocol
+      //  $src = str_replace(['http://', 'https://'], '', $src);
 
         $src = apply_filters('shortpixel/front/cdn/url', $src);
 
@@ -198,7 +249,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 				return $new_src;
 		}
 
-		protected function replaceContent($content, $urls, $new_urls)
+    protected function stringReplaceContent($content, $urls, $new_urls)
 		{
 
 			$count = 0;
@@ -206,6 +257,29 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 			return $content;
 		}
+
+    protected function pregReplaceContent($content, $urls, $new_urls)
+    {
+       $count = 0;
+       $patterns = [];
+
+       // Create pattern for each URL to search.
+       foreach($urls as $index => $url)
+       {
+          //$replacement = $new_urls[$index];
+          $patterns[] = '/("|\'| )(' . preg_quote($url, '/') . ')("|\'| )/mi';
+
+       }
+
+       foreach($new_urls as $index => $url)
+       {
+          $new_urls[$index] = '$1' . $url . '$1';
+       }
+
+        $content = preg_replace($patterns, $new_urls, $content, -1, $count );
+        return $content;
+
+    }
 
 		//maybe Shortpixel CDn specific?
 		// @param src string for future (?)

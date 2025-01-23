@@ -31,7 +31,7 @@
   margin: 10px auto;
   margin-left: -22px;
   margin-top: -10px;
-  margin-right: -22px;
+  margin-right: -20px;
   margin-bottom: 10px;
   padding: 8px 16px;
   box-shadow: 0px 1px 4px 0px rgba(0, 0, 0, 0.1);
@@ -62,7 +62,7 @@
   box-shadow: none;
 }
 .wrap.is-shortpixel-bulk-page header .top-buttons a:hover, .wrap.is-shortpixel-bulk-page header .top-buttons button:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
 }
 .wrap.is-shortpixel-bulk-page header .top-buttons a i.switch, .wrap.is-shortpixel-bulk-page header .top-buttons button i.switch {
   width: 18px;
@@ -249,7 +249,7 @@
   transition: all 0.1s ease-in-out;
 }
 .wrap.is-shortpixel-bulk-page section.panel.dashboard .bulk-wrapper button:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
 }
 .wrap.is-shortpixel-bulk-page section.panel.dashboard .bulk-wrapper button:disabled {
   color: #ccc;
@@ -382,7 +382,7 @@
   transition: all 0.1s ease-in-out;
 }
 .wrap.is-shortpixel-bulk-page .button-primary:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
 }
 .wrap.is-shortpixel-bulk-page nav {
   margin: 45px auto;
@@ -589,7 +589,7 @@
   transition: all 900ms;
 }
 .wrap.is-shortpixel-bulk-page .processor-paused:hover {
-  background: #1ca9b3;
+  background: rgb(27.5926724138, 169.1163793103, 178.9073275862);
 }
 .wrap.is-shortpixel-bulk-page .processor-paused .dashicons {
   margin-right: 6px;
@@ -1226,7 +1226,7 @@
   transition: all 0.5s ease;
 }
 .wrap.is-shortpixel-bulk-page section.panel.finished nav button.finish:hover {
-  background: #24d1dd;
+  background: rgb(36.2392241379, 209.2887931034, 221.2607758621);
 }
 .wrap.is-shortpixel-bulk-page .part-debug {
   background: #000;

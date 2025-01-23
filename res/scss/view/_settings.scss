@@ -310,6 +310,22 @@
 
   }
 
+  section#tab-optimisation
+  {
+	content.exif-ai img.icon {
+		height: 40px;
+		margin-bottom: -25px;
+		margin-left: 20px;
+
+		@include breakpoint(0, 768px) {
+			height: 25px;
+			float: right;
+			margin-top: -70px;
+			margin-right: -5px;
+		}
+	}
+  }
+
   section#tab-webp
   {
 	img.icon {
@@ -334,6 +350,9 @@
 		width: 1rem;
 		height: 1rem;
 		opacity: 1;
+	}
+	img#exifviewer-img-1 {
+		margin-bottom: -7px;
 	}
   }
   section#tab-debug

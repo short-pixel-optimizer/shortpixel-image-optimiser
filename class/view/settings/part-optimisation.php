@@ -55,7 +55,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                     </label><label class="lossless" title="<?php esc_html_e('Make sure not a single pixel looks different in the optimized image compared with the original. In some rare cases you will need to use this type of compression. Some technical drawings or images from vector graphics are possible situations.','shortpixel-image-optimiser');?>">
                         <input type="radio" class="shortpixel-radio-lossless" name="compressionType" value="0" <?php echo( $view->data->compressionType == 0 ? "checked" : "" );?>><span><?php esc_html_e('Lossless','shortpixel-image-optimiser');?></span>
                     </label>
-                    <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/11-lossy-glossy-or-lossless-which-one-is-the-best-for-me?target=iframe"></i>
+                    <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/lossy-glossy-or-lossless-which-one-is-the-best-for-me/?target=iframe"></i>
                 </div>
 
                 <info>
@@ -128,7 +128,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                       ]);
                 ?>
 
-                <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/519-settings---optimize-other-thumbs?target=iframe"></i>
+                <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings---optimize-other-thumbs/?target=iframe"></i>
                 <name>
                   <?php esc_html_e('Optimize unlisted thumbnails, if found.','shortpixel-image-optimiser');?>
                 </name>
@@ -136,7 +136,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
               </content>
               <warning class="heavy-feature-virtual unlisted">
                   <message>
-                    <?php printf(esc_html__('This feature has been disabled in offload mode for performance reasons. You can enable it again with a %s filter hook %s ', 'shortpixel-image-optimiser' ),'<a target="_blank" href="https://shortpixel.com/knowledge-base/article/577-performance-improvement-shortpixel-image-optimization-media-offload-plugin">', '</a>'); ?>
+                    <?php printf(esc_html__('This feature has been disabled in offload mode for performance reasons. You can enable it again with a %s filter hook %s ', 'shortpixel-image-optimiser' ),'<a target="_blank" href="https://shortpixel.com/knowledge-base/article/performance-improvement-shortpixel-image-optimization-media-offload-plugin/">', '</a>'); ?>
                   </message>
               </warning>
           </setting>
@@ -150,7 +150,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                      'label' => esc_html__('Optimize PDFs','shortpixel-image-optimiser')
                     ]);
               ?>
-               <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/520-settings-optimize-pdfs?target=iframe"></i>
+               <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-optimize-pdfs/?target=iframe"></i>
                <name>
                  <?php esc_html_e('Also optimize PDF documents.','shortpixel-image-optimiser');?>
                </name>
@@ -175,7 +175,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 
              <warning class='heavy-feature-virtual retina'>
                <message>
-                   <?php printf(esc_html__('This feature has been disabled in offload mode for performance reasons. You can enable it again with a %s filter hook %s ', 'shortpixel-image-optimiser' ),'<a target="_blank" href="https://shortpixel.com/knowledge-base/article/577-performance-improvement-shortpixel-image-optimization-media-offload-plugin">', '</a>'); ?>
+                   <?php printf(esc_html__('This feature has been disabled in offload mode for performance reasons. You can enable it again with a %s filter hook %s ', 'shortpixel-image-optimiser' ),'<a target="_blank" href="https://shortpixel.com/knowledge-base/article/performance-improvement-shortpixel-image-optimization-media-offload-plugin/">', '</a>'); ?>
                </message>
              </warning>
          </setting>
@@ -207,7 +207,8 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 
         </gridbox>
 
-          <h3><?php _e('Conversions', 'shortpixel-image-optimiser'); ?></h3>
+        <!--- ####### CONVERSIONS ---->
+        <h3><?php _e('Conversions', 'shortpixel-image-optimiser'); ?></h3>
 
           <gridbox class='width_half step-highlight-2'>
           <!-- convert png2jpg -->
@@ -222,7 +223,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                 </label>
               </switch>
 
-              <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/516-settings-convert-png-images-to-jpeg?target=iframe"></i>
+              <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-convert-png-images-to-jpeg/?target=iframe"></i>
               <name>
                   <?php esc_html_e('Automatically convert the PNG images to JPEG, if possible.','shortpixel-image-optimiser'); ?>
               </name>
@@ -272,7 +273,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                      'label' => esc_html__('CMYK to RGB conversion','shortpixel-image-optimiser')
                     ]);
               ?>
-              <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/517-settings---cmyk-to-rgb-conversion?target=iframe"></i>
+              <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings---cmyk-to-rgb-conversion/?target=iframe"></i>
               <name>
                   <?php esc_html_e('Adjust your images\' colors for computer and mobile displays.','shortpixel-image-optimiser');?>
               </name>
@@ -280,40 +281,72 @@ if (true === \wpSPIO()->env()->useTrustedMode())
          </setting>
          <!-- // Cmyk to rgb -->
 
+        </gridbox>
+
+        <!--- ####### EXIF  ---->
+          <h3><?php _e('EXIF Management', 'shortpixel-image-optimiser'); ?></h3>
+
           <!-- Remove Exif -->
           <setting class='switch'>
             <content>
 
               <switch>
                 <label>
-                  <input type="checkbox" class="switch" name="removeExif" value="1" <?php checked($view->data->keepExif, 0);?>>
+                  <input type="checkbox" class="switch" name="exif" value="1" <?php checked($view->data->exif, 0);?>>
                   <div class="the_switch">&nbsp; </div>
                   <?php esc_html_e('Remove EXIF','shortpixel-image-optimiser');?>
 
                 </label>
               </switch>
-              <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/483-spai-remove-exif?target=iframe"></i>
+              <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/spai-remove-exif/?target=iframe"></i>
               <name>
                 <?php esc_html_e('Remove the EXIF data of the images (recommended).','shortpixel-image-optimiser');?>
-
               </name>
             </content>
             <warning class="exif-warning">
               <message>
-                <?php printf(esc_html__('Warning - Converting from PNG to JPG will %s not %s keep the EXIF information!'), "<strong>","</strong>"); ?>
+                <?php printf(esc_html__('Warning - Converting from PNG to JPG will %s not %s keep the EXIF information!','shortpixel-image-optimiser'), "<strong>","</strong>"); ?>
               </message>
             </warning>
             <?php $imagick = (\wpSPIO()->env()->hasImagick()) ? 1 : 0; ?>
             <warning id="exif-imagick-warning" data-imagick="<?php echo esc_attr($imagick) ?>">
                 <message>
-                  <?php printf(esc_html__('Warning - Imagick library not detected on server. WordPress will use another library to resize images, which may result in loss of EXIF information'), "<strong>","</strong>"); ?>
+                  <?php printf(esc_html__('Warning - Imagick library not detected on server. WordPress will use another library to resize images, which may result in loss of EXIF information','shortpixel-image-optimiser'), "<strong>","</strong>"); ?>
                 </message>
             </warning>
           </setting>
           <!-- // Remove Exif -->
 
-        </gridbox>
+          <setting>
+            <content class="exif-ai">
+		<name>
+		    <?php printf(esc_html__('Allow or prevent your images from being used for AI/ML training. %sRead more%s.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/prevent-ai-data-mining-on-images/" target="_blank">', '</a>'); ?>
+		</name>
+              <?php
+                $ai_options = [
+                    '0' => __('No AI Training Flag', 'shortpixel-image-optimiser'),
+                    '2' => __('Allow AI Training', 'shortpixel-image-optimiser'),
+                    '4' => __('No AI Training, Allow SEO indexing', 'shortpixel-image-optimiser'),
+                    '6' => __('No AI Training and no SEO indexing', 'shortpixel-image-optimiser')
+                    ];
+              ?>
 
+                <select name="exif_ai">
+                  <?php foreach($ai_options as $value => $name)
+                  {
+                      $checked = ($value == $view->data->exif_ai) ? 'selected' : '';
+                      printf('<option value="%s" %s>%s</option>', $value, $checked,  $name);
+                  }
+                  ?>
+
+                </select>
+              <i class='documentation dashicons dashicons-editor-help exif-ai' data-link="https://shortpixel.com/knowledge-base/article/settings-ai-ml-training-usage-control/?target=iframe"></i>
+              <?php echo UiHelper::getIcon('res/images/icon/new.svg'); ?>
+            </content>
+
+          </setting>
+
+          <!--- ####### SMARTCROP + RESIZE ---->
           <h3><?php _e('SmartCrop & Resize', 'shortpixel-image-optimiser'); ?></h3>
 
           <!-- Enable Smartcrop -->
@@ -328,12 +361,12 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 
                   </label>
                 </switch>
-                <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/182-what-is-smart-cropping?target=iframe"></i>
+                <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/what-is-smart-cropping/?target=iframe"></i>
                 <name>
-                    <?php printf(esc_html__('%s Smart crop %s images where applicable.','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
+                    <?php printf(esc_html__('Smart crop images where applicable.','shortpixel-image-optimiser')); ?>
                 </name>
                 <info>
-                  <?php printf(esc_html__('Generate subject-centered thumbnails using ShortPixel\'s AI engine (%ssee sexample%s). These new thumbnails appear sharper and may be slightly larger than those created by WordPress, making them ideal for e-commerce websites and blogs where images are key to showcasing products and content.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/182-what-is-smart-cropping" target="_blank">', '</a>'); ?>
+                  <?php printf(esc_html__('Generate subject-centered thumbnails using ShortPixel\'s AI engine (%ssee example%s). These new thumbnails appear sharper and may be slightly larger than those created by WordPress, making them ideal for e-commerce websites and blogs where images are key to showcasing products and content.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/what-is-smart-cropping/" target="_blank">', '</a>'); ?>
                 </info>
                 <?php
                 $smartcrop = (
@@ -375,7 +408,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                   <?php esc_html_e('Resize large images','shortpixel-image-optimiser');?>
 								</label>
 							</switch>
-                					<i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/208-can-shortpixel-automatically-resize-new-image-uploads?target=iframe"></i>
+                					<i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/can-shortpixel-automatically-resize-new-image-uploads/?target=iframe"></i>
 
             <info>
             <?php esc_html_e('Resize to maximum','shortpixel-image-optimiser') ?>

@@ -17,24 +17,11 @@ class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 	protected $error_message;
 	protected $error_detail;
 
-	// Remove this.
-	public function __construct()
-	{
-		$this->callback = array($this, 'function_crash');
 
-		 parent::__construct();
-	}
-
-/*
-	public function function_crash()
-	{
-		echo 'Yall';
-		  return false;
-	}
-*/
 	protected function checkTrigger()
 	{
-			// No Automatic Trigger.
+      // No Automatic Trigger.
+      $this->check(); // @todo Hacky solution to have this retry functionality available. @todo Fix into better structure with auto-check.
 		 return false;
 	}
 
@@ -73,7 +60,7 @@ class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 							}
 					}
 
-					// http not ok, redirect etc. Shouldn't happen.
+ 					 // http not ok, redirect etc. Shouldn't happen.
 					 if (is_null($response) || strpos($response, '200') === false)
 					 {
 						 $this->error_detail = sprintf(__('AVIF check could not be completed because the plugin could not retrieve %s %s %s. %s Please check the security/firewall settings and try again', 'shortpixel-image-optimiser'), '<a href="' . $url . '">', $url, '</a>', '<br>');
@@ -112,7 +99,14 @@ class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 	protected function getMessage()
 	{
 			$headers = $this->getData('headers');
+
+
 			$message = '<h4>' . $this->error_message . '</h4><p>' . $this->error_detail . '</p><p class="small">' . __('Returned headers for:<br>', 'shortpixel-image-optimiser') . print_r($headers, true) .  '</p>';
+
+      $message .= '<div>
+        <button class="button button-primary notice-dismiss-action" data-dismisstype="remove" type="button" id="shortpixel-upgrade-advice" style="margin-right:10px;"><strong>' .  __('Dismiss and try again on next page load', 'shortpixel-image-optimiser') . '</strong></button>
+        </div>';
+
 			return $message;
 	}
 }

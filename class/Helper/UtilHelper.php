@@ -66,6 +66,11 @@ class UtilHelper
 				return $path;
 		}
 
+    public static function getExifParameter()
+    {
+        return (\wpSPIO()->settings()->exif + \wpSPIO()->settings()->exif_ai);
+    }
+
 		// Copy of private https://developer.wordpress.org/reference/functions/_wp_relative_upload_path/
 		public static function getRelativeUploadPath($path)
 		{
@@ -149,7 +154,6 @@ class UtilHelper
       }
       return $bool;
     }
-
 
 		public static function alterHtaccess($webp = false, $avif = false)
 		{

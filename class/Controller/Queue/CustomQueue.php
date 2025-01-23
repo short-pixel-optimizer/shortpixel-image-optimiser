@@ -61,6 +61,8 @@ class CustomQueue extends Queue
      $limit = $this->q->getOption('enqueue_limit');
      $prepare = array();
      $items = array();
+     $fastmode = apply_filters('shortpixel/queue/fastmode', false);
+
 
      global $wpdb;
 
@@ -79,6 +81,12 @@ class CustomQueue extends Queue
      $sql .= $query_arr . ') ';
       // Query anything else than success, since that is done.
      $prepare = array_merge($prepare, $folderRow);
+
+      if (true === $fastmode)
+      {
+         $sql .= ' AND status <> %d';
+         $prepare[] = ImageModel::FILE_STATUS_SUCCESS;
+      }
 
      if ($last_id > 0)
      {

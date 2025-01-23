@@ -445,8 +445,6 @@ body.debug-model-active {
 }
 
 .switch_button, switch {
-  line-height: 12px;
-  margin: 2px -5px 10px -5px;
   display: inline-block;
 }
 .switch_button label, switch label {
@@ -459,11 +457,11 @@ body.debug-model-active {
   display: none;
 }
 .switch_button input[type=checkbox]:checked ~ .the_switch, switch input[type=checkbox]:checked ~ .the_switch {
-  background: #7cdce4;
+  background: #1ABDCA;
 }
 .switch_button input[type=checkbox]:checked ~ .the_switch:after, switch input[type=checkbox]:checked ~ .the_switch:after {
-  left: 20px;
-  background: #1caecb;
+  transform: translateX(19px);
+  background-color: #116C7E;
 }
 .switch_button input[type=checkbox]:disabled ~ .the_switch, switch input[type=checkbox]:disabled ~ .the_switch {
   background: #d5d5d5;
@@ -476,30 +474,23 @@ body.debug-model-active {
   margin: 8px 15px 8px 0;
   position: relative;
   display: inline-block;
-  height: 10px;
+  height: 20px;
   width: 40px;
-  background: #cccccc;
-  border-radius: 100px;
+  background-color: #D7D7D7;
+  border-radius: 30px;
   cursor: pointer;
-  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.25) !important;
+  transition: background-color 0.4s;
 }
 .switch_button .the_switch:after, switch .the_switch:after {
   position: absolute;
-  left: -2px;
-  top: -5px;
-  display: block;
-  width: 20px;
-  height: 20px;
-  border-radius: 100px;
-  background: #aaa;
-  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.31);
+  left: 2px;
+  bottom: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #A9A9A9;
+  transition: transform 0.4s;
   content: "";
-  -webkit-transition: left 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), padding 0.5s ease, margin 0.5s ease !important;
-  -o-transition: left 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), padding 0.5s ease, margin 0.5s ease !important;
-  transition: left 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), padding 0.5s ease, margin 0.5s ease !important;
-}
-.switch_button .the_switch:active:after, switch .the_switch:active:after {
-  transform: scale(0.9, 0.85);
 }
 .switch_button .the_switch:focus, switch .the_switch:focus {
   outline: none;

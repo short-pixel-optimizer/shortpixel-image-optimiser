@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 4.8.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 6.0.5
+Stable tag: 6.1.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -28,7 +28,11 @@ Make an instant <a href="https://shortpixel.com/image-compression-test" target="
 
 == Why is ShortPixel the best choice for image optimization or PDF compression? ==
 
-### New! Faster Websites for Global Audiences ###
+### New! Prevent AI Data Mining ###
+
+Decide whether AI bots can use your images for machine learning (ML) training, or block them entirely.
+
+### Faster Websites for Global Audiences ###
 
 The ShortPixel plugin now includes a built-in global Content Delivery Network (CDN). This powerful feature ensures that ShortPixel-optimized WebP and AVIF images are delivered quickly and efficiently to any location worldwide, minimizing delays and improving load times.
 
@@ -69,7 +73,6 @@ All optimization is performed using ShortPixel's Image Optimization Cloud, so yo
 * New! Automatic scan of Custom media folders for new images using cron jobs.
 * Skip already optimized images to avoid redundant processing.
 
-
 ### Compatibility with Popular Themes, Page Builders, and Media Library Plugins ###
 
 * Works great for eCommerce websites using WooCommerce and other plugins.
@@ -85,7 +88,7 @@ All optimization is performed using ShortPixel's Image Optimization Cloud, so yo
 * Integrates directly with Cloudflare via a Cloudflare Token, automatically synchronizing updates with Cloudflare cache.
 * **New! HEIC file support**
 With ShortPixel, you can now add images in Apple's HEIC format directly from your iPhone. They will be automatically converted to JPG and optimized according to your settings. Easy!
- <a href="https://shortpixel.com/knowledge-base/article/566-heic-apple-images-support-in-shortpixel-image-optimizer" target="_blank">Read more</a>.
+ <a href="https://shortpixel.com/knowledge-base/article/heic-apple-images-support-in-shortpixel-image-optimizer/" target="_blank">Read more</a>.
 
 ### Advanced Image Optimization Features ###
 
@@ -113,7 +116,7 @@ With ShortPixel, you can now add images in Apple's HEIC format directly from you
 **<a href="https://shortpixel.com/pricing" target="_blank">New Plan: ShortPixel Unlimited</a>**
 This is the ideal monthly plan for web agencies or website owners with multiple sites and frequent image uploads.
 It allows you to optimize an unlimited number of images with ShortPixel Image Optimizer or use <a href=”https://wordpress.org/plugins/shortpixel-adaptive-images/”>ShortPixel Adaptive Images</a> without worrying about CDN traffic limits.
-Read more details on our <a href="https://shortpixel.com/knowledge-base/article/555-how-does-the-unlimited-plan-work" target="_blank">dedicated page</a>.
+Read more details on our <a href="https://shortpixel.com/knowledge-base/article/how-does-the-unlimited-plan-work/" target="_blank">dedicated page</a>.
 
 * **free optimization credits for non-profits**, <a href="https://shortpixel.com/contact" target="_blank">contact us</a> for details
 
@@ -177,7 +180,7 @@ Let's get the ShortPixel plugin running on your WordPress website:
     As long as you have available credits, you can use a single API Key on as many websites as you wish!
 
 = What plan is better for me? What do you recommend? =
-	Everyone has different needs, but generally, we recommend getting a One-Time plan to optimize your whole Media Library and then get a Monthly plan to optimize your future uploads. To learn more, have a look at <a href="https://help.shortpixel.com/article/30-monthly-plans-vs-one-time-plans" target="_blank">this comparison</a>
+	Everyone has different needs, but generally, we recommend getting a One-Time plan to optimize your whole Media Library and then get a Monthly plan to optimize your future uploads. To learn more, have a look at <a href="https://shortpixel.com/knowledge-base/article/monthly-plans-vs-one-time-plans/" target="_blank">this comparison</a>
 
 = I don't know how many thumbnails do I have, what plan should I take?
 	To know how many thumbnails you have, just install the plugin and go to Media > Bulk ShortPixel. The plugin will tell you how many thumbnails you've got. Based on this, have a look at <a href="https://shortpixel.com/pricing" target="_blank">our plans</a>
@@ -365,7 +368,7 @@ filters the list of parameters sent to the API so that resizing can be performed
 `apply_filters('shortpixel/api/request', $requestParameters, $item_id);`
 filters the parameters sent to the optimization API (through `$requestParameters`), described in detail here: <a href="https://shortpixel.com/api-docs" target="_blank">ShortPixel Reducer API</a>; `$item_id` contains the ID of the Media Library item, or the ID of the Custom Media item (when used). In short, this filter can be used to alter any parameters sent to the API, depending on the needs. For example, you can set different resize parameters for different post types, different compression levels, remove EXIF or not, covert WebP/AVIF, and basically any other parameter that is sent to the API for a specific image (together with all its thumbnails).
 
-This filter enables the background ShortPixel processing in additional pages (see <a href="https://shortpixel.com/knowledge-base/article/334-on-what-pages-does-spio-optimize-images" target="_blank">here</a> the original list). Here's an example of this filter that enables the processing on the Comments screen (to be placed in your functions.php file):
+This filter enables the background ShortPixel processing in additional pages (see <a href="https://shortpixel.com/knowledge-base/article/on-what-pages-does-spio-optimize-images/" target="_blank">here</a> the original list). Here's an example of this filter that enables the processing on the Comments screen (to be placed in your functions.php file):
 
 `
 add_filter('shortpixel/init/optimize_on_screens', function ($screens) {
@@ -442,6 +445,45 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 6.1.0 =
+
+🚀 The Data-mining Update
+
+Release Date: January 23, 2025
+
+🎉 New Features
+
+* AI Training Control: Added data-mining options in the EXIF management settings. You can now decide whether your images can be used for AI training.
+* Improved Switchers Design: Enjoy a cleaner and more user-friendly design for the switchers in settings and bulk processing.
+* AVIF Recheck Option: Added a handy recheck option to notifications about AVIF issues for better troubleshooting.
+
+🛠️ Fixes
+
+* Resolved "Could not save backup" errors caused by specific combinations of thumbnail sizes and SmartCropping.
+* Fixed missing icons or images in certain notifications.
+* Custom Media folders "Last change" timestamps are now updated correctly when changes occur.
+* Proper detection of Custom Media images missing WebP or AVIF formats in all scenarios.
+* Fixed display issues with Custom Media notices when selecting new folders.
+* Removed old Custom Media cron formats when the plugin is deactivated.
+* Prevented errors by ensuring thumbnails aren’t added to the optimization queue when the main image isn’t processable.
+* Resized images through filters get their metadata updated correctly.
+
+✨ Tweaks & Improvements
+
+* WP-CLI Processes: Updated process stats every 3 minutes for accurate numbers.
+* Custom Media Cron: Cron jobs for new file detection won’t run if the Custom Media option is disabled.
+* Added a filter for settings to enable programmatic changes when needed.
+* Updated all plugin links to avoid unnecessary redirects.
+* Added support for CDN on http-only websites.
+* Polished CSS, texts, and layouts for a smoother experience.
+* Old, unused code has been cleaned up.
+
+🌍 Language Updates
+
+* Added 16 new strings, updated 7, and deprecated 67 to enhance global translation support.
+
+Update now to take full advantage of these enhancements and new features! 🌟
 
 = 6.0.5 =
 Release Date: January 16, 2025
@@ -686,7 +728,7 @@ Release date: June 27, 2023
 * New: Added an option in the plugin tools to reset the optimization errors;
 * Compat: Added integration with WordPress image editing features (crop, flip, rotate etc.);
 * Compat: Added integration for <a target="_blank" href="https://github.com/humanmade/S3-Uploads">S3 Uploads by HumanMade</a>;
-* Compat: Fixed integration with LiteSpeed Cache version 5.4 and older. Read more about it in our <a target="_blank" href="https://shortpixel.com/knowledge-base/article/264-how-to-deliver-the-webps-generated-with-shortpixel-with-the-litespeed-cache-plugin">knowledge base article</a>;
+* Compat: Fixed integration with LiteSpeed Cache version 5.4 and older. Read more about it in our <a target="_blank" href="https://shortpixel.com/knowledge-base/article/how-to-deliver-the-webps-generated-with-shortpixel-with-the-litespeed-cache-plugin/">knowledge base article</a>;
 * Compat: Fixed bulk processing when WP Media Recovery plugin is active;
 * Fix: ABSPATH die statement added to each file, for increased security;
 * Fix: Improved bulk processing statistics for large installations;
