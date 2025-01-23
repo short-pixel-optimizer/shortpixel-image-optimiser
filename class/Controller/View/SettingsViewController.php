@@ -461,8 +461,6 @@ class SettingsViewController extends \ShortPixel\ViewController
       {
          $this->view->data = (Object) $this->model->getData();
 
-
-
 				 $this->loadAPiKeyData();
          $this->loadDashBoardInfo();
 
@@ -627,13 +625,17 @@ class SettingsViewController extends \ShortPixel\ViewController
 
 			protected function avifServerCheck()
       {
+           return;
+           /*
+
+            This has been superseeded in hacky solution in the Model tiself.
     			$noticeControl = AdminNoticesController::getInstance();
 					$notice = $noticeControl->getNoticeByKey('MSG_AVIF_ERROR');
 
           if (is_object($notice))
           {
 					     $notice->check();
-          }
+          } */
       }
 
       /** Checks on things and set them for information. */

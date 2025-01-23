@@ -225,10 +225,10 @@ class NoticeController //extends ShortPixelController
        if (isset($_POST['plugin_action']) && 'dismiss' == $_POST['plugin_action'] )
        {
           $id = (isset($_POST['id'])) ? sanitize_text_field( wp_unslash($_POST['id'])) : null;
+          $type = (isset($_POST['dismisstype'])) ? sanitize_text_field($_POST['dismisstype']) : 'dismiss';
 
 					if (! is_null($id))
 					{
-
           	$notice = $this->getNoticeByID($id);
 					}
 					else
@@ -238,9 +238,18 @@ class NoticeController //extends ShortPixelController
 
           if(false !== $notice)
           {
-            $notice->dismiss();
-            $this->update();
+            if ($type == 'remove')
+            {
+                  self::removeNoticeByID($id);
+                  $response['removed'] = true;
+            }
+            else {
+              $notice->dismiss();
+              $this->update();
+              $response['dismissed'] = true;
+            }
             $response['result'] = true;
+
           }
           else
           {
@@ -309,7 +318,7 @@ class NoticeController //extends ShortPixelController
   * @param $notice NoticeModel The Notice to make Persistent
   * @param $key String Identifier of the persistent notice.
   * @param $suppress Int  When dismissed, time to stay dismissed
-  * @param $callback Function Callable function
+  * @param $callback Function Callable function - Seems not implemented atm ?
   */
   public static function makePersistent($notice, $key, $suppress = -1, $callback = null)
   {

@@ -57,7 +57,8 @@ var ShortPixel = function() {
 
 				// Move footer notices to the top, where it should be.
 				$headerEnd = jQuery( '.wp-header-end' );
-				jQuery( 'div.shortpixel-notice' ).not( '.inline, .below-h2' ).insertAfter( $headerEnd );
+
+      	jQuery( 'div.shortpixel-notice' ).not( '.inline, .below-h2' ).insertAfter( $headerEnd );
 
 				var settingsPage = document.querySelector('.is-shortpixel-settings-page');
 				if (settingsPage !== null)

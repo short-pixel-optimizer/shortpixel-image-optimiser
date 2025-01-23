@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 4.8.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 6.0.5
+Stable tag: 6.1.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -28,7 +28,11 @@ Make an instant <a href="https://shortpixel.com/image-compression-test" target="
 
 == Why is ShortPixel the best choice for image optimization or PDF compression? ==
 
-### New! Faster Websites for Global Audiences ###
+### New! Prevent AI Data Mining ###
+
+Decide whether AI bots can use your images for machine learning (ML) training, or block them entirely.
+
+### Faster Websites for Global Audiences ###
 
 The ShortPixel plugin now includes a built-in global Content Delivery Network (CDN). This powerful feature ensures that ShortPixel-optimized WebP and AVIF images are delivered quickly and efficiently to any location worldwide, minimizing delays and improving load times.
 
@@ -68,7 +72,6 @@ All optimization is performed using ShortPixel's Image Optimization Cloud, so yo
 
 * New! Automatic scan of Custom media folders for new images using cron jobs.
 * Skip already optimized images to avoid redundant processing.
-
 
 ### Compatibility with Popular Themes, Page Builders, and Media Library Plugins ###
 
@@ -442,6 +445,45 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 6.1.0 =
+
+🚀 The Data-mining Update
+
+Release Date: January 23, 2025
+
+🎉 New Features
+
+* AI Training Control: Added data-mining options in the EXIF management settings. You can now decide whether your images can be used for AI training.
+* Improved Switchers Design: Enjoy a cleaner and more user-friendly design for the switchers in settings and bulk processing.
+* AVIF Recheck Option: Added a handy recheck option to notifications about AVIF issues for better troubleshooting.
+
+🛠️ Fixes
+
+* Resolved "Could not save backup" errors caused by specific combinations of thumbnail sizes and SmartCropping.
+* Fixed missing icons or images in certain notifications.
+* Custom Media folders "Last change" timestamps are now updated correctly when changes occur.
+* Proper detection of Custom Media images missing WebP or AVIF formats in all scenarios.
+* Fixed display issues with Custom Media notices when selecting new folders.
+* Removed old Custom Media cron formats when the plugin is deactivated.
+* Prevented errors by ensuring thumbnails aren’t added to the optimization queue when the main image isn’t processable.
+* Resized images through filters get their metadata updated correctly.
+
+✨ Tweaks & Improvements
+
+* WP-CLI Processes: Updated process stats every 3 minutes for accurate numbers.
+* Custom Media Cron: Cron jobs for new file detection won’t run if the Custom Media option is disabled.
+* Added a filter for settings to enable programmatic changes when needed.
+* Updated all plugin links to avoid unnecessary redirects.
+* Added support for CDN on http-only websites.
+* Polished CSS, texts, and layouts for a smoother experience.
+* Old, unused code has been cleaned up.
+
+🌍 Language Updates
+
+* Added 16 new strings, updated 7, and deprecated 67 to enhance global translation support.
+
+Update now to take full advantage of these enhancements and new features! 🌟
 
 = 6.0.5 =
 Release Date: January 16, 2025

@@ -294,9 +294,6 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 				 $this->setMeta('compressedSize', 0);
 				 $this->setMeta('compressionType', null);
 
-
-        $this->saveMeta();
-
         $webps = $this->getWebps();
         foreach($webps as $webpFile)
             $webpFile->delete();
@@ -304,6 +301,11 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         $avifs = $this->getAvifs();
         foreach($avifs as $avifFile)
             $avifFile->delete();
+
+
+        $this->setMeta('webp', null);
+        $this->setMeta('avif', null);
+        $this->saveMeta();
 			 }
 			 else
 			 {

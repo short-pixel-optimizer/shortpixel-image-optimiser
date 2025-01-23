@@ -1045,7 +1045,8 @@ class AjaxController
     public function ajax_checkquota()
     {
          $this->checkNonce('ajax_request');
-				 $this->checkActionAccess($action, 'is_editor');
+				 $action = 'check_quota';
+				 $this->checkActionAccess($action, 'is_author');
 
          $quotaController = QuotaController::getInstance();
          $quotaController->forceCheckRemoteQuota();

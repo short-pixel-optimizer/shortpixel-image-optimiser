@@ -260,7 +260,7 @@ div.spio-modal-title {
   box-shadow: none;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings menu div.adv_switcher {
-  padding-top: 20px;
+  padding-top: 10px;
   padding-left: 5px;
   padding-bottom: 20px;
   font-size: 1rem;
@@ -497,7 +497,7 @@ div.spio-modal-title {
   margin: 10px auto;
   margin-left: -22px;
   margin-top: -10px;
-  margin-right: -22px;
+  margin-right: -20px;
   margin-bottom: 10px;
   padding: 8px 16px;
   box-shadow: 0px 1px 4px 0px rgba(0, 0, 0, 0.1);
@@ -989,6 +989,19 @@ div.spio-modal-title {
   display: block;
   height: auto;
 }
+.wrap.is-shortpixel-settings-page section#tab-optimisation content.exif-ai img.icon {
+  height: 40px;
+  margin-bottom: -25px;
+  margin-left: 20px;
+}
+@media (max-width: 768px) {
+  .wrap.is-shortpixel-settings-page section#tab-optimisation content.exif-ai img.icon {
+    height: 25px;
+    float: right;
+    margin-top: -70px;
+    margin-right: -5px;
+  }
+}
 .wrap.is-shortpixel-settings-page section#tab-webp img.icon {
   height: 40px;
   margin-bottom: -20px;
@@ -1012,6 +1025,9 @@ div.spio-modal-title {
   width: 1rem;
   height: 1rem;
   opacity: 1;
+}
+.wrap.is-shortpixel-settings-page section#tab-webp img#exifviewer-img-1 {
+  margin-bottom: -7px;
 }
 .wrap.is-shortpixel-settings-page section#tab-debug h2 {
   left: 738px;
@@ -2156,7 +2172,6 @@ div.spio-modal-title {
   opacity: 0;
   transition: opacity 300ms;
   background: #fff;
-  max-width: 700px;
 }
 .wrap.is-shortpixel-settings-page setting warning h4, .wrap.is-shortpixel-settings-page setting error h4 {
   margin: 0;

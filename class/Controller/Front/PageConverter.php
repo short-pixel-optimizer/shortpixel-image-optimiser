@@ -15,6 +15,7 @@ class PageConverter extends \ShortPixel\Controller
 	protected $status_header = -1;
   protected $regex_exclusions = [];
 
+
 	public function __construct()
 	{
 			$this->site_url =  get_site_url();
