@@ -782,8 +782,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
              if ($settings->resizeImages)
              {
-               $resizeWidth = $settings->resizeWidth;
-               $resizeHeight = $settings->resizeHeight;
 
 							 $originalWidth = $this->getMeta('originalWidth');
 							 $originalHeight = $this->getMeta('originalHeight');
@@ -791,7 +789,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 							 $width = $this->get('width'); // image width
 							 $height = $this->get('height');
 
-               if ( ($resizeWidth == $width && $width != $originalWidth)  || ($resizeHeight == $height && $height != $originalHeight ) ) // resized.
+               if ($width != $originalWidth  || $height != $originalHeight ) // resized.
                {
                    $this->setMeta('resizeWidth', $width );
                    $this->setMeta('resizeHeight', $height );

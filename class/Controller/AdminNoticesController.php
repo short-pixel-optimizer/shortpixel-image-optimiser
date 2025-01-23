@@ -211,8 +211,10 @@ class AdminNoticesController extends \ShortPixel\Controller
 			 foreach($this->adminNotices as $key => $class)
 			 {
 				  $class->load();
-					$this->doRemoteNotices();
 			 }
+
+       $this->doRemoteNotices();
+
 		}
 
     public function getNoticeByKey($key)
@@ -245,6 +247,12 @@ class AdminNoticesController extends \ShortPixel\Controller
 
     protected function doRemoteNotices()
     {
+         // Don't load on ajax, or other complicated things
+        if (! \wpSPIO()->env()->is_screen_to_use)
+        {
+           return;
+        }
+
         $notices = $this->get_remote_notices();
 
         if ($notices == false)
