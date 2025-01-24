@@ -83,7 +83,8 @@ class AdminNoticesController extends \ShortPixel\Controller
 		public static function resetOldNotices()
 		{
 			Notices::removeNoticeByID('MSG_FEATURE_SMARTCROP');
-      Notices::removeNoticeByID('MSG_FEATURE_HEIC');
+			Notices::removeNoticeByID('MSG_FEATURE_HEIC');
+			Notices::removeNoticeByID('MSG_AVIF_ERROR');
 
 		}
 
