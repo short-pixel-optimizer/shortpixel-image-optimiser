@@ -20,9 +20,10 @@ class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 
 	protected function checkTrigger()
 	{
-      // No Automatic Trigger.
-      $this->check(); // @todo Hacky solution to have this retry functionality available. @todo Fix into better structure with auto-check.
-		 return false;
+		// No Automatic Trigger.
+		// Disabled the notification and this check mechanism
+		//$this->check(); // @todo Hacky solution to have this retry functionality available. @todo Fix into better structure with auto-check.
+		return false;
 	}
 
 	public function check()
