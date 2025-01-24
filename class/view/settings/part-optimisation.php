@@ -318,9 +318,9 @@ if (true === \wpSPIO()->env()->useTrustedMode())
           <!-- // Remove Exif -->
 
           <setting>
-            <content>
+            <content class="exif-ai">
 		<name>
-		    <?php printf(esc_html__('Allow or prevent your images from being used for AI/ML training. %sRead more%s.','shortpixel-image-optimiser'), '<a href="" target="_blank">', '</a>'); ?>
+		    <?php printf(esc_html__('Allow or prevent your images from being used for AI/ML training. %sRead more%s.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/prevent-ai-data-mining-on-images/" target="_blank">', '</a>'); ?>
 		</name>
               <?php
                 $ai_options = [
@@ -341,6 +341,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 
                 </select>
               <i class='documentation dashicons dashicons-editor-help exif-ai' data-link="https://shortpixel.com/knowledge-base/article/settings-ai-ml-training-usage-control/?target=iframe"></i>
+              <?php echo UiHelper::getIcon('res/images/icon/new.svg'); ?>
             </content>
 
           </setting>

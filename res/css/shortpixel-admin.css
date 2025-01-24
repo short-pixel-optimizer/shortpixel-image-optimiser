@@ -492,10 +492,11 @@ body.debug-model-active {
   transition: transform 0.4s;
   content: "";
 }
-.switch_button .the_switch:active:after:focus, switch .the_switch:active:after:focus {
+.switch_button .the_switch:focus, switch .the_switch:focus {
   outline: none;
 }
-.switch_button .adv_switch, switch .adv_switch {
+
+.adv_switch {
   position: relative;
   display: inline-block;
   width: 45px;
@@ -503,12 +504,12 @@ body.debug-model-active {
   bottom: 2px;
   left: 20px;
 }
-.switch_button .adv_switch input, switch .adv_switch input {
+.adv_switch input {
   opacity: 0;
   width: 0;
   height: 0;
 }
-.switch_button .adv_switch .adv_slider, switch .adv_switch .adv_slider {
+.adv_switch .adv_slider {
   position: absolute;
   cursor: pointer;
   background-color: #D7D7D7;
@@ -519,7 +520,7 @@ body.debug-model-active {
   bottom: 0;
   transition: 0.4s;
 }
-.switch_button .adv_switch .adv_slider::before, switch .adv_switch .adv_slider::before {
+.adv_switch .adv_slider::before {
   position: absolute;
   content: "";
   height: 13px;
@@ -531,7 +532,7 @@ body.debug-model-active {
   transition: 0.4s;
   box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
 }
-.switch_button .adv_switch .adv_slider::after, switch .adv_switch .adv_slider::after {
+.adv_switch .adv_slider::after {
   position: absolute;
   content: "OFF";
   color: white;
@@ -543,14 +544,14 @@ body.debug-model-active {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
   font-weight: bold;
 }
-.switch_button .adv_switch input:checked + .adv_slider, switch .adv_switch input:checked + .adv_slider {
+.adv_switch input:checked + .adv_slider {
   background-color: #00C898;
 }
-.switch_button .adv_switch input:checked + .adv_slider::before, switch .adv_switch input:checked + .adv_slider::before {
+.adv_switch input:checked + .adv_slider::before {
   transform: translateX(26px);
   background-color: #fff;
 }
-.switch_button .adv_switch input:checked + .adv_slider::after, switch .adv_switch input:checked + .adv_slider::after {
+.adv_switch input:checked + .adv_slider::after {
   content: "ON";
   left: 8px;
   right: auto;

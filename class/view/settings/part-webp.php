@@ -236,19 +236,19 @@ else:
     </content>
     <warning id="deliverAlteringTypesPicture" class="deliverAlteringTypesPicture">
        <message>
-<?php _e( "Warning: Enabling this method changes the structure of the rendered HTML by wrapping &lt;img&gt; tags inside &lt;picture&gt; tags. In rare cases, this may lead to CSS or JavaScript inconsistencies.\n\nPlease test thoroughly after activating!\n\nIf you notice any issues, simply deactivat the option, flush any cache that may be active and the HTML will will revert to its original state.", 'shortpixel-image-optimiser' ); ?>
+<?php _e( "Warning: Enabling this method will change the structure of the rendered HTML by enclosing &lt;img&gt; tags inside &lt;picture&gt; tags. In rare cases, this can lead to CSS or JavaScript inconsistencies. Please test thoroughly after activation! If you notice any problems, simply deactivate the option, clear the cache and the HTML code will return to its original state.", 'shortpixel-image-optimiser' ); ?>
         </message>
     </warning>
     <warning  class="deliverAlteringTypesHtaccess" >
       <message>
-        <?php _e( 'This option will serve both WebP/AVIF and the original image from the same URL, depending on the web browser\'s capabilities. Make sure the images are served directly from your server, not through a CDN that may cache them. If you make any changes, remember to flush your cache to ensure the updates are properly applied.', 'shortpixel-image-optimiser' ) ?>
+        <?php _e( 'With this option, depending on the capabilities of the web browser, both WebP/AVIF and the original image are delivered from the same URL. Make sure that the images are delivered directly from your server and not via a CDN which may cache them incorrectly, especially if you are using Cloudflare\'s free plan. Read the article above for more details. When making changes, remember to clear your caches to ensure the updates are applied correctly.', 'shortpixel-image-optimiser' ) ?>
       </message>
     </warning>
 
     <?php if($deliverWebpAlteredDisabledNotice): ?>
     <warning class='is-visible'>
         <message>
-            <?php esc_html_e('After the option to work on .htaccess was selected, the .htaccess file has become unaccessible / read-only. Please make the .htaccess file writeable again to be able to further set this option up.','shortpixel-image-optimiser')?>
+            <?php esc_html_e('After you selected the option to deliver the images via .htaccess, the .htaccess file has become inaccessible / read-only. Please make the .htaccess file writable again so that you can continue to set up this option.','shortpixel-image-optimiser')?>
         </message>
     </warning>
   <?php endif; ?>
