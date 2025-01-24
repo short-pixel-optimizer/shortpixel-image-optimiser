@@ -20,9 +20,10 @@ class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 
 	protected function checkTrigger()
 	{
-      // No Automatic Trigger.
-      $this->check(); // @todo Hacky solution to have this retry functionality available. @todo Fix into better structure with auto-check.
-		 return false;
+		// No Automatic Trigger.
+		// Disabled the notification and this check mechanism
+		//$this->check(); // @todo Hacky solution to have this retry functionality available. @todo Fix into better structure with auto-check.
+		return false;
 	}
 
 	public function check()
@@ -43,7 +44,6 @@ class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 			 $this->error_message = __('AVIF server test failed. Your server may not be configured to display AVIF files correctly. Serving AVIF might cause your images not to load. Check your images, disable the AVIF option, or update your web server configuration.', 'shortpixel-image-optimiser');
 			 $this->error_detail = __('The request did not return valid HTTP headers. Check if the plugin is allowed to access ' . $url, 'shortpixel-image-optimiser');
 
-			 $contentType = null;
 			 $response = $headers[0];
 
 			 if (is_array($headers) )
