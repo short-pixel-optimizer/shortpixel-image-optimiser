@@ -50,7 +50,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 				$compressionArg = 'q_orig';
 
         // Perhaps later if need to override in webp/avif check
-        $args[] = $compressionArg;
+        $args['compression'] = $compressionArg;
 
 				$use_webp = $settings->createWebp;
 				$use_avif =  $settings->createAvif;
@@ -60,14 +60,14 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 				if ($use_webp && $use_avif)
 				{
-					 $args[] = 'to_auto';
+           $args['webp'] = 'to_auto';
 				}
 				elseif ($use_webp && ! $use_avif)
 				{
-					 $args[] = 'to_webp';
+           $args['webp'] = 'to_webp';
 				}
 				elseif ($use_avif && ! $use_webp) {
-					 $args[] = 'to_avif';
+           $args['avif'] = 'to_avif';
 				}
 
         $webpArg = '';
@@ -87,7 +87,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
         if (strlen($webpArg) > 0)
         {
-           $args[] = $webpArg;
+           $args['webarg'] = $webpArg;
         }
 
 
