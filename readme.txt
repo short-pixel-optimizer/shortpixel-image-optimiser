@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 4.8.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 6.1.0
+Stable tag: 6.1.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -445,6 +445,18 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 6.1.1 =
+
+🔧 The needed Friday release
+
+Release Date: January 24, 2025
+
+🛠️ Fixes
+
+AVIF Notification Disabled: The AVIF notification got a little crazy and started appearing where it shouldn’t. We’ve completely disabled it to avoid any further confusion. Apologies for the inconvenience!
+
+Thank you for your patience and understanding! Update now for a smoother experience. 🚀
 
 = 6.1.0 =
 
