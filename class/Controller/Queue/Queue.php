@@ -553,10 +553,11 @@ abstract class Queue
         $item->setData('tries', $qItem->tries);
         $item->set('queueItem', $qItem);
 
-				if (property_exists($item, 'files'))
+				/* Dunno about this, the decode should handle arrays properly
+				if (property_exists($item->data(), 'files'))
 				{ // This must be array.
 					$item->files = json_decode(json_encode($item->files), true);
-				}
+				} */
 Log::addTemp('QueueItem End', $item);
         return $item;
     }

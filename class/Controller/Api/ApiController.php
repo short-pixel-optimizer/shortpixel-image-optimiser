@@ -292,11 +292,16 @@ class ApiController extends RequestManager
 								  $data['fileSize'] = $returnDataList['fileSizes'][$imageName];
 							 }
 
-               if (property_exists($item->data(), $imageName))
+							 $fileData = (property_exists($item->data(), 'files')) ? $item->data()->files : [];
+
+							 // Previous check here was for Item->files[$imageName] , not sure if currently needed.
+							 // Check if image is not already in fileData. 
+							 if (false === isset($fileData[$imageName]))
 							 {
 							 	  $imageList[$imageName] = $this->handleNewSuccess($item, $imageObject, $data);
 							 }
 							 else {
+								 Log::addTEmp("Property $imageName  existing in files ", $item->data());
 							 }
 						}
 
@@ -330,6 +335,7 @@ class ApiController extends RequestManager
 				else {
 					// Theoretically this should not be needed.
           Log::addWarn('ApiController Response not handled before default case', $imageList);
+					Log::addTemp('ApiREsponse with that ', $APIresponse);
 					if ( isset($APIresponse[0]->Status->Message) ) {
 
 							$err = array("Status" => self::STATUS_FAIL, "Code" => (isset($APIresponse[0]->Status->Code) ? $APIresponse[0]->Status->Code : self::ERR_UNKNOWN),

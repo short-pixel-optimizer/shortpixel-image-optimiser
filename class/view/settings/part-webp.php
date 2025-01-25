@@ -124,6 +124,9 @@ if( $this->is_nginx ){
           ]);
     ?>
 
+
+
+
     <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/deliver-webp-avif-images-using-the-shortpixel-cdn-in-spio/?target=iframe"></i>
 
     </content>
@@ -141,6 +144,7 @@ if( $this->is_nginx ){
     }
     ?>
 
+
     <name class='useCDN toggleTarget'><?php esc_html_e('CDN Domain', 'shortpixel-image-optimiser'); ?></name>
     <content class='useCDN toggleTarget'>
         <input type="text" name="CDNDomain" class='regular-text' value="<?php echo esc_attr($cdnDomain) ?>" >
@@ -150,6 +154,43 @@ if( $this->is_nginx ){
            <?php printf(esc_html__('Change this only if you want to set up your %scustom domain%s.  ShortPixel CDN: %s','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain/" target="_blank">', '</a>', 'https://spcdn.shortpixel.ai/spio');?>
     </info>
   </setting>
+
+<gridbox class="width_half">
+
+	<setting class="useCDN toggleTarget">
+			<content>
+	<?php
+	$this->printSwitchButton(
+				 ['name' => 'cdn-add-css',
+					'checked' =>  ($view->data->cdn_css > 0) ? 1 : 0,
+					'label' => esc_html__('Minify the CSS, replace  background image URLs and serve the CSS files from the CDN, as well as all the locally referred fonts.','shortpixel-image-optimiser'),
+
+			//		'data' => ['data-toggle="useCDN"' ],
+					'disabled' => false,
+					'switch_class' => '',
+				 ]);
+
+		?>
+
+		</content>
+	</setting>
+	<setting class="useCDN toggleTarget">
+		<content>
+		<?php
+		$this->printSwitchButton(
+					 ['name' => 'cdn-add-css',
+						'checked' =>  ($view->data->cdn_js > 0) ? 1 : 0,
+						'label' => esc_html__('Minify and serve the JavaScript files from the CDN. The JS files from other domains are not affected by this option.','shortpixel-image-optimiser'),
+
+	//s					'data' => ['data-toggle="useCDN"'],
+						'disabled' => false,
+						'switch_class' => '',
+					 ]);
+
+			?>
+		</content>
+		</setting>
+</gridbox>
 
 <?php
 // sadly this field need to be present, because of field checks

@@ -30,12 +30,14 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 				}
 
 				$settings = wpSPIO()->settings();
-				$this->setDefaultCDNArgs();
+		//		$this->setDefaultCDNArgs();
 				$this->loadCDNDomain();
 
+				// Add hooks for easier conversion / checking
+				$this->addWPHooks();
 
+				// Starts buffer of whole page, with callback .
 				$this->startOutputBuffer('processFront');
-
 		}
 
 		protected function setDefaultCDNArgs()
@@ -90,7 +92,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
            $args['webarg'] = $webpArg;
         }
 
-
 				$this->cdn_arguments = $args;
 
         $this->regex_exclusions = apply_filters('shortpixel/front/cdn/regex_exclude',[
@@ -101,8 +102,37 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
         // string || preg
         $this->replace_method = apply_filters('shortpixel/front/cdn/replace_method', 'preg');
+		}
 
+		protected function addWPHooks()
+		{
+				$settings = \wpSPIO()->settings;
 
+				if (true === $settings->cdn_js)
+				{
+					add_filter('script_loader_src', [$this, 'processScripts'], 10, 2);
+				}
+				if (true === $settings->cdn_css)
+				{
+					add_filter('style_loader_src', [$this, 'processScripts'] , 10, 2);
+				}
+		}
+
+		public function processScripts($src, $handle)
+		{
+			//	Log::addTemp('Script: ' . $src);
+
+				//Prefix the SRC with the API Loader info .
+					// 1. Check if scheme is http and add
+					// 2. Check if there domain and if not, prepend.
+					// 3 Probably check if Src is from local domain, otherwise not replace (?)
+					$this->setCDNArgument('retauto', 'ret_auto'); // for each of this type.
+
+					$src = $this->processUrl($src);
+					$src = $this->replaceImage($src); // @todo function must be renamed if this works
+
+					$this->setCDNArgument('retauto', null);
+				return $src;
 		}
 
 		protected function processFront($content)
@@ -113,9 +143,12 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 				}
 
 				$args = [];
-				$matches = $this->fetchMatches($content, $args);
+				$image_matches = $this->fetchImageMatches($content, $args);
+				$urls = $this->extractImageMatches($image_matches);
 
-				$urls = $this->extractMatches($matches);
+			//	$document_matches = $this->fetchDocumentMatches($content, $args);
+			//	$urls = array_merge($url, $this->extraDocumentMatches($document_matches));
+
 				$new_urls = $this->getUpdatedUrls($urls);
 
         Log::addTemp('CDN Result ', [$urls, $new_urls]);
@@ -134,15 +167,20 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
       $this->cdn_domain = trailingslashit($cdn_domain);
 		}
 
-		protected function fetchMatches($content, $args = [])
+		protected function fetchImageMatches($content, $args = [])
 		{
 			$number = preg_match_all('/<img[^>]*>/i', $content, $matches);
 			$matches = $matches[0];
 			return $matches;
 		}
 
+		protected function fetchDocumentMatches($content, $args = [])
+		{
+		//		$number = preg_match_all('')
+		}
+
     /** Extract matches from the document.  This are the source images and should not be altered, since the string replace would fail doing that */
-		protected function extractMatches($matches)
+		protected function extractImageMatches($matches)
 		{
 
 			$imageData= [];
@@ -196,7 +234,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
         $parsedUrl = parse_url($url);
         if (! isset($parsedUrl['host']))
         {
-            $site_url  = get_site_url();
+						$site_url  = $this->site_url;
             if (substr($parsedUrl['path'], 0, 1) !== '/')
             {
                 $site_url .= '/';
@@ -206,15 +244,10 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
             Log::addTemp("URL from $original_url changed to $url");
         }
 
-        // @todo This CDN stuff should probably be wrapped in set / unset CDN Arguments.  Once for the whole batch, one per url ?
-        $ph_key = array_search('p_h', $this->cdn_arguments);
+				$this->setCDNArgument('scheme', null);
         if (isset($parsedUrl['scheme']) && 'http' == $parsedUrl['scheme'])
         {
-          if ($ph_key === false)
-            $this->cdn_arguments[] = 'p_h';
-        }
-        elseif ($ph_key !== false) {
-            unset($this->cdn_arguments[$ph_key]);
+						$this->setCDNArgument('scheme', 'p_h');
         }
 
         return $url;
@@ -243,7 +276,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
         $src = apply_filters('shortpixel/front/cdn/url', $src);
 
-				$cdn_prefix = trailingslashit($domain) . trailingslashit($this->findCDNArguments($src));
+				$cdn_prefix = trailingslashit($domain) . trailingslashit($this->getCDNArguments($src));
 				$new_src = $cdn_prefix . trim($src);
 
 				return $new_src;
@@ -284,13 +317,32 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		//maybe Shortpixel CDn specific?
 		// @param src string for future (?)
 		// @return Space separated list of settings for SPIO CDN.
-		protected function findCDNArguments($src)
+		protected function getCDNArguments($src)
 		{
 				$arguments = $this->cdn_arguments;
 
 				$string = implode(',', $arguments);
 
 				return  $string;
+		}
+
+		/* Sets an CDN Argument in a controlled way.  Pass null as value to unset it
+		*
+		*	 @param $name Name of the argument (internal)
+		*	 @param $value Value of the argument to be passed to API , null is unset.
+		*/
+		protected function setCDNArgument($name, $value)
+		{
+				if (is_null($value))
+				{
+						if (isset($this->cdn_arguments[$name]))
+						{
+							unset($this->cdn_arguments[$name]);
+						}
+				}
+				else {
+						$this->cdn_arguments[$name] = $value;
+				}
 		}
 
     // Function not only to trim, but also remove extra stuff like '200w' declarations in srcset.

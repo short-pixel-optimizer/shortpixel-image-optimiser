@@ -255,8 +255,11 @@ class EditMediaViewController extends \ShortPixel\ViewController
              $item->setDebug();
              $item->newOptimizeAction();
 
+						 $returnEnqueue = $item->returnEnqueue();
+
 						 $debugInfo[] = array(__('Image to Queue'), $q->_debug_imageModelToQueue($imageObj) );
-             $debugInfo[] = array(__('Image to Queue V2'), $item->returnEnqueue() );
+						 $debugInfo[] = array(__('Image to Queue V2'), $returnEnqueue );
+
 					}
 
           $debugInfo['imagemetadata'] = array(__('ImageModel Metadata (ShortPixel)'), $imageObj);
@@ -302,7 +305,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
              $restorable = ($original->isRestorable()) ? '<span class="green">Yes</span>' : '<span class="red">No</span> (' . 		$original->getReason('restorable') . ')';
 
              $debugInfo[] = ['Original Processable:', $processable];
-             $debugInfo[] = ['Original Restorable:', $restorable]; 
+             $debugInfo[] = ['Original Restorable:', $restorable];
 
 
              if ($orbackup)

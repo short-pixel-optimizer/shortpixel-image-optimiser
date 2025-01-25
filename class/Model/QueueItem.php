@@ -95,6 +95,9 @@ class QueueItem
         {
            $this->$name = $value;
         }
+				else {
+					 // @todo Throw here some php error
+				}
     }
 
     // Return Data that need's storing in Queue Table
