@@ -104,6 +104,7 @@ class PageConverter extends \ShortPixel\Controller
        $patterns = $this->regex_exclusions;
        if (! is_array($patterns) || count($patterns) == 0 )
        {
+				 Log::addWarn('No Patterns for exclusions');
           return $imageData;
        }
 
@@ -117,7 +118,7 @@ class PageConverter extends \ShortPixel\Controller
          }
 
        }
-
+			 Log::addTEmp('RegexExclusions: ', $allMatches);
        $imageData = array_diff($imageData, $allMatches);
        return array_values($imageData); // reset indexes
   }

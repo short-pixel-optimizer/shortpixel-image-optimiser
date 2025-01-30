@@ -30,11 +30,11 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 				}
 
 				$settings = wpSPIO()->settings();
-		//		$this->setDefaultCDNArgs();
+				$this->setDefaultCDNArgs();
 				$this->loadCDNDomain();
 
 				// Add hooks for easier conversion / checking
-				$this->addWPHooks();
+			//	$this->addWPHooks();
 
 				// Starts buffer of whole page, with callback .
 				$this->startOutputBuffer('processFront');
@@ -99,13 +99,13 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
             '/data:image\/.*/',
         ]);
 
-
         // string || preg
         $this->replace_method = apply_filters('shortpixel/front/cdn/replace_method', 'preg');
 		}
 
 		protected function addWPHooks()
 		{
+
 				$settings = \wpSPIO()->settings;
 
 				if (true === $settings->cdn_js)
@@ -206,6 +206,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
       // Apply exlusions on URL's here.
       $imageData = $this->applyRegexExclusions($imageData);
 
+
 			return $imageData;
 		}
 
@@ -240,7 +241,8 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
                 $site_url .= '/';
             }
 
-            $url = $site_url . $url;
+					  $url = $site_url . $url;
+						$parsedUrl = parse_url($url); // parse the new URL 
             Log::addTemp("URL from $original_url changed to $url");
         }
 
@@ -271,8 +273,8 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
         // If there is a trailing-slash, remove it.
         $src = rtrim($src, '/');
 
-        // Remove the protocol
-      //  $src = str_replace(['http://', 'https://'], '', $src);
+				// Remove the protocol - always
+       	$src = str_replace(['http://', 'https://'], '', $src);
 
         $src = apply_filters('shortpixel/front/cdn/url', $src);
 
