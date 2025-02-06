@@ -141,18 +141,20 @@ class PageConverter extends \ShortPixel\Controller
 	{
 			$block = new \stdClass;
 			// Trim to limit area of search / replace, but URL should NOT be alterated here!
-			$raw_url = $this->trimURL($url);
-			$raw_url = $this->addEscapedUrl($url);
-			$block->raw_url = $this->trimURL($url);  // raw URL is the base for replacement and should match what's in document.
+  //	$raw_url = $this->trimURL($url);
+  //    $raw_url = $this->addEscapedUrl($raw_url);
+      $block->raw_url = $this->trimURL($url);  // raw URL is the base for replacement and should match what's in document.
 
 			// Pre-parse checks
 //			$url = $this->addEscapedUrls($url); // @todo Find out if these options (escape and stripslashes) are mutually exclusive
-			$url = $this->stripSlashesUrl($url);
-			$url = $this->removeCharactersUrl($url);
+
+      $url = $this->addEscapedUrl($block->raw_url);
+      $url = $this->stripSlashesUrl($url);
+      $url = $this->removeCharactersUrl($url);
 
 			if (filter_var($url, FILTER_VALIDATE_URL) === false)
 			{
-				 Log::addWarn('Replacement String still not URL - ', $url);
+         Log::addWarn('Replacement String still not URL - ', $url);
 			}
 
 			$block->url = $url;

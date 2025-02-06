@@ -8,6 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Model\FrontImage as FrontImage;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
+use ShortPixel\Replacer\Replacer as Replacer;
 
 
 class CDNController extends \ShortPixel\Controller\Front\PageConverter
@@ -18,6 +19,8 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
     protected $skip_rules = [];
     protected $replace_method = 'preg';
+
+    private $content_is_json = false;
 
 
 		public function __construct()
@@ -143,6 +146,13 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 					 return $content;
 				}
 
+
+        /*** @TODO TEST DATAAAA! **/
+    /*    $content = '{"fragments":{"div.widget_shopping_cart_content":"<div class=\"widget_shopping_cart_content\">\n<div class=\"shopping-cart-widget-body wd-scroll\">\n\t<div class=\"wd-scroll-content\">\n\n\t\t\t\t\t\n\t\t\t<ul class=\"cart_list product_list_widget woocommerce-mini-cart \">\n\n\t\t\t\t\t\t\t\t\t\t\t<li class=\"woocommerce-mini-cart-item mini_cart_item\" data-key=\"5dd9db5e033da9c6fb5ba83c7a7ebea9\">\n\t\t\t\t\t\t\t\t<a href=\"https:\/\/catalin.shortpixel.com\/product\/test-product-1\/\" class=\"cart-item-link wd-fill\">Show<\/a>\n\t\t\t\t\t\t\t\t<a href=\"https:\/\/catalin.shortpixel.com\/cart\/?remove_item=5dd9db5e033da9c6fb5ba83c7a7ebea9&#038;_wpnonce=d7b14c4c6b\" class=\"remove remove_from_cart_button\" aria-label=\"Remove Test product 1 from cart\" data-product_id=\"671\" data-cart_item_key=\"5dd9db5e033da9c6fb5ba83c7a7ebea9\" data-product_sku=\"\" data-success_message=\"&ldquo;Test product 1&rdquo; has been removed from your cart\">&times;<\/a>\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<a href=\"https:\/\/catalin.shortpixel.com\/product\/test-product-1\/\" class=\"cart-item-image\">\n\t\t\t\t\t\t\t\t\t\t<img width=\"300\" height=\"300\" src=\"https:\/\/catalin.shortpixel.com\/wp-content\/uploads\/2024\/11\/file_example_PNG_500kB-324x324.jpg\" class=\"attachment-woocommerce_thumbnail size-woocommerce_thumbnail\" alt=\"\" decoding=\"async\" loading=\"lazy\" srcset=\"https:\/\/catalin.shortpixel.com\/wp-content\/uploads\/2024\/11\/file_example_PNG_500kB-324x324.jpg 324w, https:\/\/catalin.shortpixel.com\/wp-content\/uploads\/2024\/11\/file_example_PNG_500kB-150x150.jpg 150w\" sizes=\"auto, (max-width: 300px) 100vw, 300px\" \/>\t\t\t\t\t\t\t\t\t<\/a>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t<div class=\"cart-info\">\n\t\t\t\t\t\t\t\t\t<span class=\"wd-entities-title\">\n\t\t\t\t\t\t\t\t\t\tTest product 1\t\t\t\t\t\t\t\t\t<\/span>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\t<span class=\"quantity\">1 &times; <span class=\"woocommerce-Price-amount amount\"><bdi>99,00&nbsp;<span class=\"woocommerce-Price-currencySymbol\">lei<\/span><\/bdi><\/span><\/span>\t\t\t\t\t\t\t\t<\/div>\n\n\t\t\t\t\t\t\t<\/li>\n\t\t\t\t\t\t\t\t\t\t<\/ul>\n\t\t\n\t<\/div>\n<\/div>\n\n<div class=\"shopping-cart-widget-footer\">\n\t\n\t\t\t\t\t<p class=\"woocommerce-mini-cart__total total\">\n\t\t\t\t<strong>Subtotal:<\/strong> <span class=\"woocommerce-Price-amount amount\"><bdi>99,00&nbsp;<span class=\"woocommerce-Price-currencySymbol\">lei<\/span><\/bdi><\/span>\t\t\t<\/p>\n\t\t\n\t\t\n\t\t<p class=\"woocommerce-mini-cart__buttons buttons\"><a href=\"https:\/\/catalin.shortpixel.com\/cart\/\" class=\"button btn-cart wc-forward\">View cart<\/a><a href=\"https:\/\/catalin.shortpixel.com\/checkout\/\" class=\"button checkout wc-forward\">Checkout<\/a><\/p>\n\n\t\t\n\t\n\t<\/div>\n<\/div>","span.wd-cart-number_wd":"\t\t<span class=\"wd-cart-number wd-tools-count\">1 <span>item<\/span><\/span>\n\t\t","span.wd-cart-subtotal_wd":"\t\t<span class=\"wd-cart-subtotal\"><span class=\"woocommerce-Price-amount amount\"><bdi>99,00&nbsp;<span class=\"woocommerce-Price-currencySymbol\">lei<\/span><\/bdi><\/span><\/span>\n\t\t"},"cart_hash":"aa33c6348ef950ec8b922ebe9a3705a5"}'; */
+
+        $original_content = $content;
+        $content = $this->checkContent($content);
+
 				$args = [];
 				$image_matches = $this->fetchImageMatches($content, $args);
 				$replaceBlocks = $this->extractImageMatches($image_matches);
@@ -152,18 +162,22 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 				$replaceBlocks = $this->filterRegexExclusions($replaceBlocks);
 
-Log::addTemp('ReplaceBlocks before', $replaceBlocks);
 				$this->createReplacements($replaceBlocks);
-//				$new_urls = $this->getUpdatedUrls($urls);
 
-				Log::addTemp('CDN Result ', $replaceBlocks);
       //  $replace_function = ($this->replace_method == 'preg') ? 'pregReplaceContent' : 'stringReplaceContent';
         $replace_function = 'stringReplaceContent'; // undercooked, will defer to next version
 
-				$urls = array_column($replaceBlocks, 'url');
+        $urls = array_column($replaceBlocks, 'raw_url');
 				$replace_urls = array_column($replaceBlocks, 'replace_url');
 
-				$content = $this->$replace_function($content, $urls, $replace_urls);
+Log::addTemp('Array result', [$urls, $replace_urls]);
+
+        $content = $this->$replace_function($original_content, $urls, $replace_urls);
+
+      /*  if (true === $this->content_is_json)
+        {
+           $content = addslashes($content);
+        } */
         return $content;
 		}
 
@@ -201,12 +215,12 @@ Log::addTemp('ReplaceBlocks before', $replaceBlocks);
 				 {
 					 $imageBlock = $this->getReplaceBlock($src);
 					 $blockData[] = $imageBlock;
-					 $imageData[] = $imageBlock->url; //$this->trimURL($src);
+					 $imageData[] = $imageBlock->url;
 				 }
 
 				 // Additional sources.
-				 //$moreData = array_map([$this, 'trimURL'],$imageObj->getImageData());
 				 $images = $imageObj->getImageData();
+         echo "IMAGEDATA"; print_r($images);
 				 foreach($images as $image)
 				 {
 						$imageBlock = $this->getReplaceBlock($image);
@@ -216,16 +230,7 @@ Log::addTemp('ReplaceBlocks before', $replaceBlocks);
 							$imageData[] = $imageBlock->url;
 						}
 				 }
-				 // Merge and remove doubles.
-
-//         $imageData = array_unique(array_merge($imageData, $moreData)); // pick out uniques.
-
-			 //  $imageData = array_filter(array_values($this->addEscapedUrls($imageData))); // reset indexes
-
 			}
-
-      // Apply exlusions on URL's here.
-//      $imageData = $this->applyRegexExclusions($imageData);
 
 
 			return $blockData;
@@ -255,20 +260,8 @@ Log::addTemp('ReplaceBlocks before', $replaceBlocks);
 						$cdn_prefix = trailingslashit($cdn_domain) . trailingslashit($this->getCDNArguments($url));
 						$replaceBlock->replace_url = $cdn_prefix . trim($url);
 
-
-
 				}
 
-			/*for ($i = 0; $i < count($urls); $i++)
-			{
-				 $src = $urls[$i];
-		 //    $src = $this->processUrl($src);
-
-         $urls[$i] = $this->replaceImage($src);
-
-			} */
-
-		//	return $urls;
 		}
 
 
@@ -279,6 +272,7 @@ Log::addTemp('ReplaceBlocks before', $replaceBlocks);
     {
 				$original_url = $replaceBlock->url; // debug poruposes.
 
+//Log::addTemp('Check Domain - Parsed', $replaceBlock->parsed);
 				//$parsedUrl = parse_url($url);
 				if (! isset($replaceBlock->parsed['host']))
         {
@@ -290,6 +284,7 @@ Log::addTemp('ReplaceBlocks before', $replaceBlocks);
 
 						$url = $site_url . $original_url;
 						$replaceBlock->parsed = parse_url($url); // parse the new URL
+            $replaceBlock->url = $url;
             Log::addTemp("URL from $original_url changed to $url");
         }
 
@@ -298,7 +293,7 @@ Log::addTemp('ReplaceBlocks before', $replaceBlocks);
 		private function checkScheme($replaceBlock)
 		{
 				$this->setCDNArgument('scheme', null);
-				if (isset($parsedUrl['scheme']) && 'http' == $parsedUrl['scheme'])
+        if (isset($replaceBlock->parsed['scheme']) && 'http' == $replaceBlock->parsed['scheme'])
 				{
 						$this->setCDNArgument('scheme', 'p_h');
 				}
@@ -307,8 +302,12 @@ Log::addTemp('ReplaceBlocks before', $replaceBlocks);
     protected function stringReplaceContent($content, $urls, $new_urls)
 		{
 
-			$count = 0;
-			$content = str_replace($urls, $new_urls, $content, $count);
+    //	$count = 0;
+    //	$content = str_replace($urls, $new_urls, $content, $count);
+
+      $replacer = new Replacer();
+      $content = $replacer->replaceContent($content, $urls, $new_urls);
+
 
 			return $content;
 		}
@@ -365,6 +364,35 @@ Log::addTemp('ReplaceBlocks before', $replaceBlocks);
 						$this->cdn_arguments[$name] = $value;
 				}
 		}
+
+    protected function checkContent($content)
+    {
+
+       if (true === $this->checkJson($content))
+       {
+          // Slashes in json content can interfere with detection of images and formats. Set flag to re-add slashes on the result so it hopefully doesn't break.
+           $content = stripslashes($content);
+           $this->content_is_json = true;
+       }
+       return $content;
+    }
+
+//https://www.php.net/manual/en/function.json-validate.php ( comments )
+// Could in time be replaced by json_validate proper. (PHP 8.3)
+    protected function checkJson($json, $depth = 512, $flags = 0)
+    {
+          if (!is_string($json)) {
+            return false;
+        }
+
+        try {
+            json_decode($json, false, $depth, $flags | JSON_THROW_ON_ERROR);
+            return true;
+        } catch (\JsonException $e) {
+            return false;
+        }
+    }
+
 
 
 
