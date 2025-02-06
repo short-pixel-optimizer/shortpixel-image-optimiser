@@ -87,12 +87,8 @@ class FrontImage
 						  $this->{$attr->nodeName} = $attr->nodeValue;
 					 }
 
-           echo $attr->nodeName . "--"; var_dump($attr->nodeValue); echo "<BR><BR>";
 					 $this->attributes[$attr->nodeName] = $attr->nodeValue;
         }
-
-
-
 
         // Parse the directory path and other sources
 				$result = $this->setupSource();

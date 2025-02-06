@@ -100,6 +100,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
         $this->regex_exclusions = apply_filters('shortpixel/front/cdn/regex_exclude',[
             '*gravatar.com*',
             '/data:image\/.*/',
+
         ]);
 
         // string || preg
@@ -113,15 +114,15 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 				if (true === $settings->cdn_js)
 				{
-					add_filter('script_loader_src', [$this, 'processScripts'], 10, 2);
+					add_filter('script_loader_src', [$this, 'processScript'], 10, 2);
 				}
 				if (true === $settings->cdn_css)
 				{
-					add_filter('style_loader_src', [$this, 'processScripts'] , 10, 2);
+					add_filter('style_loader_src', [$this, 'processScript'] , 10, 2);
 				}
 		}
 
-		public function processScripts($src, $handle)
+		public function processScript($src, $handle)
 		{
 			//	Log::addTemp('Script: ' . $src);
 
@@ -132,6 +133,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 					$this->setCDNArgument('retauto', 'ret_auto'); // for each of this type.
 
 					$src = $this->processUrl($src);
+
 					$src = $this->replaceImage($src); // @todo function must be renamed if this works
 
 					$this->setCDNArgument('retauto', null);
@@ -212,7 +214,7 @@ Log::addTemp('Array result', [$urls, $replace_urls]);
 
 				 // Additional sources.
 				 $images = $imageObj->getImageData();
-         echo "IMAGEDATA"; print_r($images);
+
 				 foreach($images as $image)
 				 {
 						$imageBlock = $this->getReplaceBlock($image);
@@ -278,6 +280,7 @@ Log::addTemp('Array result', [$urls, $replace_urls]);
             $replaceBlock->url = $url;
             Log::addTemp("URL from $original_url changed to $url");
         }
+
 
     }
 
