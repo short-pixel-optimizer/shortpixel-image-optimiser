@@ -12,6 +12,7 @@ class PageConverter extends \ShortPixel\Controller
 {
 
 	protected $site_url;
+  protected $site_domain; // domain checks
 	protected $status_header = -1;
   protected $regex_exclusions = [];
 
@@ -19,6 +20,7 @@ class PageConverter extends \ShortPixel\Controller
 	public function __construct()
 	{
 			$this->site_url =  get_site_url();
+      $this->site_domain = $this->getDomain($this->site_url);
 	}
 
   /** Check if the converters should run on this request.  This is mainly used to filter out frontend pagebuilder where changing images could result in crashing builders and such cases */
@@ -120,9 +122,12 @@ class PageConverter extends \ShortPixel\Controller
          }
 
        }
-			 Log::addTEmp('RegexExclusions: ', $allMatches);
 
-//       $imageData = array_diff($imageData, $allMatches);
+       if (count($allMatches) > 0)
+       {
+         Log::addTEmp('RegexExclusions: ', $allMatches);
+       }
+
 			 $replaceBlocks = array_filter($replaceBlocks, function ($replaceBlock) use ($allMatches) {
 							if (in_array($replaceBlock->raw_url, $allMatches))
 							{
@@ -132,7 +137,22 @@ class PageConverter extends \ShortPixel\Controller
 			 }); // Filter function
 
 			return $replaceBlocks;
-			// return array_values($imageData); // reset indexes
+  }
+
+  protected function filterOtherDomains($replaceBlocks)
+  {
+     $imageData = array_column($replaceBlocks, 'raw_url');
+
+     $replaceBlocks = array_filter($replaceBlocks, function ($replaceBlock)
+     {
+          if (strpos($replaceBlock->url, $this->site_domain) === false)
+          {
+             return false;
+          }
+          return true;
+     });
+
+     return $replaceBlocks;
   }
 
 
@@ -141,12 +161,10 @@ class PageConverter extends \ShortPixel\Controller
 	{
 			$block = new \stdClass;
 			// Trim to limit area of search / replace, but URL should NOT be alterated here!
-  //	$raw_url = $this->trimURL($url);
-  //    $raw_url = $this->addEscapedUrl($raw_url);
+
       $block->raw_url = $this->trimURL($url);  // raw URL is the base for replacement and should match what's in document.
 
 			// Pre-parse checks
-//			$url = $this->addEscapedUrls($url); // @todo Find out if these options (escape and stripslashes) are mutually exclusive
 
       $url = $this->addEscapedUrl($block->raw_url);
       $url = $this->stripSlashesUrl($url);
@@ -154,11 +172,11 @@ class PageConverter extends \ShortPixel\Controller
 
 			if (filter_var($url, FILTER_VALIDATE_URL) === false)
 			{
-         Log::addWarn('Replacement String still not URL - ', $url);
+        // Log::addInfo('Replacement String still not URL - ', $url);
 			}
 
 			$block->url = $url;
-			//$block->parsed = parse_url($url);
+			$block->parsed = parse_url($url);
 
 			return $block;
 	}
@@ -196,6 +214,13 @@ class PageConverter extends \ShortPixel\Controller
 
 			return $url;
 	}
+
+// https://stackoverflow.com/questions/276516/parsing-domain-from-a-url
+private function getDomain($url)
+{
+    preg_match("/[a-z0-9\-]{1,63}\.[a-z\.]{2,6}$/", parse_url($url, PHP_URL_HOST), $_domain_tld);
+    return $_domain_tld[0];
+}
 
 
 } // class PageConverter

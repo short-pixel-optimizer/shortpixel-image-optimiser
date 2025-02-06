@@ -32,9 +32,8 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 					 return false;
 				}
 
-				$settings = wpSPIO()->settings();
+        $this->loadCDNDomain();
 				$this->setDefaultCDNArgs();
-				$this->loadCDNDomain();
 
 				// Add hooks for easier conversion / checking
 				$this->addWPHooks();
@@ -100,6 +99,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
         $this->regex_exclusions = apply_filters('shortpixel/front/cdn/regex_exclude',[
             '*gravatar.com*',
             '/data:image\/.*/',
+            '*' . $this->cdn_domain . '*'
 
         ]);
 
@@ -124,7 +124,11 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 		public function processScript($src, $handle)
 		{
-			//	Log::addTemp('Script: ' . $src);
+        if (! is_string($src) || strlen($src) == 0)
+        {
+           Log::addTemp('Empty Src: ', $handle);
+           return $src;
+        }
 
 				//Prefix the SRC with the API Loader info .
 					// 1. Check if scheme is http and add
@@ -132,12 +136,33 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 					// 3 Probably check if Src is from local domain, otherwise not replace (?)
 					$this->setCDNArgument('retauto', 'ret_auto'); // for each of this type.
 
-					$src = $this->processUrl($src);
+          $replaceBlocks = [];
+          $replaceBlocks[] = $this->getReplaceBlock($src);
 
-					$src = $this->replaceImage($src); // @todo function must be renamed if this works
+          $replaceBlocks = $this->filterRegexExclusions($replaceBlocks);
+
+          // When filtered out.
+          if (count($replaceBlocks) == 0)
+          {
+             return $src;
+          }
+
+          $replaceBlocks = $this->filterOtherDomains($replaceBlocks);
+
+          if (count($replaceBlocks) == 0)
+          {
+             return $src;
+          }
+
+          $this->createReplacements($replaceBlocks);
+
+          if (count($replaceBlocks) > 0)
+          {
+             $src = $replaceBlocks[0]->replace_url;
+          }
 
 					$this->setCDNArgument('retauto', null);
-					Log::addTemp('Return Script: ', $src);
+        //	Log::addTemp('Return Script: ', $src);
 				return $src;
 		}
 
@@ -159,6 +184,13 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			//	$urls = array_merge($url, $this->extraDocumentMatches($document_matches));
 
 				$replaceBlocks = $this->filterRegexExclusions($replaceBlocks);
+        $replaceBlocks = $this->filterOtherDomains($replaceBlocks);
+
+        // If the items didn't survive the filters.
+        if (count($replaceBlocks) == 0)
+        {
+           return $content;
+        }
 
 				$this->createReplacements($replaceBlocks);
 
@@ -226,7 +258,6 @@ Log::addTemp('Array result', [$urls, $replace_urls]);
 				 }
 			}
 
-
 			return $blockData;
 		}
 
@@ -240,8 +271,8 @@ Log::addTemp('Array result', [$urls, $replace_urls]);
 
 				foreach($replaceBlocks as $replaceBlock)
 				{
-						$parsed = parse_url($replaceBlock->url);
-						$replaceBlock->parsed = $parsed;
+            //$parsed = parse_url($replaceBlock->url);
+            //$replaceBlock->parsed = $parsed;
 
 						$this->checkDomain($replaceBlock);
 						$this->checkScheme($replaceBlock);
@@ -265,7 +296,6 @@ Log::addTemp('Array result', [$urls, $replace_urls]);
 		protected function checkDomain($replaceBlock)
     {
 				$original_url = $replaceBlock->url; // debug poruposes.
-
 
 				if (! isset($replaceBlock->parsed['host']))
         {
