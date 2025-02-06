@@ -161,7 +161,7 @@ if( $this->is_nginx ){
 			<content>
 	<?php
 	$this->printSwitchButton(
-				 ['name' => 'cdn-add-css',
+				 ['name' => 'cdn_css',
 					'checked' =>  ($view->data->cdn_css > 0) ? 1 : 0,
 					'label' => esc_html__('Minify the CSS, replace  background image URLs and serve the CSS files from the CDN, as well as all the locally referred fonts.','shortpixel-image-optimiser'),
 
@@ -178,7 +178,7 @@ if( $this->is_nginx ){
 		<content>
 		<?php
 		$this->printSwitchButton(
-					 ['name' => 'cdn-add-css',
+					 ['name' => 'cdn_js',
 						'checked' =>  ($view->data->cdn_js > 0) ? 1 : 0,
 						'label' => esc_html__('Minify and serve the JavaScript files from the CDN. The JS files from other domains are not affected by this option.','shortpixel-image-optimiser'),
 

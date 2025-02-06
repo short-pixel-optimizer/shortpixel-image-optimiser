@@ -34,7 +34,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 				$this->loadCDNDomain();
 
 				// Add hooks for easier conversion / checking
-			//	$this->addWPHooks();
+				$this->addWPHooks();
 
 				// Starts buffer of whole page, with callback .
 				$this->startOutputBuffer('processFront');
@@ -106,7 +106,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		protected function addWPHooks()
 		{
 
-				$settings = \wpSPIO()->settings;
+				$settings = \wpSPIO()->settings();
 
 				if (true === $settings->cdn_js)
 				{
@@ -132,6 +132,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 					$src = $this->replaceImage($src); // @todo function must be renamed if this works
 
 					$this->setCDNArgument('retauto', null);
+					Log::addTemp('Return Script: ', $src);
 				return $src;
 		}
 
@@ -144,18 +145,25 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 				$args = [];
 				$image_matches = $this->fetchImageMatches($content, $args);
-				$urls = $this->extractImageMatches($image_matches);
+				$replaceBlocks = $this->extractImageMatches($image_matches);
 
 			//	$document_matches = $this->fetchDocumentMatches($content, $args);
 			//	$urls = array_merge($url, $this->extraDocumentMatches($document_matches));
 
-				$new_urls = $this->getUpdatedUrls($urls);
+				$replaceBlocks = $this->filterRegexExclusions($replaceBlocks);
 
-        Log::addTemp('CDN Result ', [$urls, $new_urls]);
+Log::addTemp('ReplaceBlocks before', $replaceBlocks);
+				$this->createReplacements($replaceBlocks);
+//				$new_urls = $this->getUpdatedUrls($urls);
+
+				Log::addTemp('CDN Result ', $replaceBlocks);
       //  $replace_function = ($this->replace_method == 'preg') ? 'pregReplaceContent' : 'stringReplaceContent';
         $replace_function = 'stringReplaceContent'; // undercooked, will defer to next version
 
-        $content = $this->$replace_function($content, $urls, $new_urls);
+				$urls = array_column($replaceBlocks, 'url');
+				$replace_urls = array_column($replaceBlocks, 'replace_url');
+
+				$content = $this->$replace_function($content, $urls, $replace_urls);
         return $content;
 		}
 
@@ -183,7 +191,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		protected function extractImageMatches($matches)
 		{
 
-			$imageData= [];
+			$imageData = $blockData = [];
 			foreach($matches as $match)
 			{
 				 $imageObj = new FrontImage($match);
@@ -191,97 +199,109 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 				 if (! is_null($src))
 				 {
-           $imageData[] = $this->trimURL($src);
+					 $imageBlock = $this->getReplaceBlock($src);
+					 $blockData[] = $imageBlock;
+					 $imageData[] = $imageBlock->url; //$this->trimURL($src);
 				 }
+
 				 // Additional sources.
-         $moreData = array_map([$this, 'trimURL'],$imageObj->getImageData());
+				 //$moreData = array_map([$this, 'trimURL'],$imageObj->getImageData());
+				 $images = $imageObj->getImageData();
+				 foreach($images as $image)
+				 {
+						$imageBlock = $this->getReplaceBlock($image);
+						if (! in_array($image, $imageData))
+						{
+							$blockData[] = $imageBlock;
+							$imageData[] = $imageBlock->url;
+						}
+				 }
 				 // Merge and remove doubles.
 
-         $imageData = array_unique(array_merge($imageData, $moreData)); // pick out uniques.
+//         $imageData = array_unique(array_merge($imageData, $moreData)); // pick out uniques.
 
-         $imageData = array_filter(array_values($this->addEscapedUrls($imageData))); // reset indexes
+			 //  $imageData = array_filter(array_values($this->addEscapedUrls($imageData))); // reset indexes
 
 			}
 
       // Apply exlusions on URL's here.
-      $imageData = $this->applyRegexExclusions($imageData);
+//      $imageData = $this->applyRegexExclusions($imageData);
 
 
-			return $imageData;
+			return $blockData;
 		}
 
 
     /** @param $urls Array Source URLS
     * @return Updated URLs - The string that the original values should be replaced with
     */
-		protected function getUpdatedUrls($urls)
+		protected function createReplacements($replaceBlocks)
 		{
-			for ($i = 0; $i < count($urls); $i++)
+				$cdn_domain = $this->cdn_domain;
+
+				foreach($replaceBlocks as $replaceBlock)
+				{
+						$parsed = parse_url($replaceBlock->url);
+						$replaceBlock->parsed = $parsed;
+
+						$this->checkDomain($replaceBlock);
+						$this->checkScheme($replaceBlock);
+
+						// Take Parsed URL and add CDN info to add.
+						$url = $replaceBlock->url;
+						$url = str_replace(['http://', 'https://'], '', $url); // always remove scheme
+						$url = apply_filters('shortpixel/front/cdn/url', $url);
+
+						$cdn_prefix = trailingslashit($cdn_domain) . trailingslashit($this->getCDNArguments($url));
+						$replaceBlock->replace_url = $cdn_prefix . trim($url);
+
+
+
+				}
+
+			/*for ($i = 0; $i < count($urls); $i++)
 			{
 				 $src = $urls[$i];
-         $src = $this->processUrl($src);
+		 //    $src = $this->processUrl($src);
+
          $urls[$i] = $this->replaceImage($src);
 
-			}
+			} */
 
-			return $urls;
+		//	return $urls;
 		}
 
 
     // Special checks / operations because the URL is replaced. Data check.
-    protected function processUrl($url)
+
+		// @todo Transform these functions to 1 check each, so each combination can use it's own mix/match of checks / transforms ( image, css, javascript  ) . Possibly with URL as argument and parsed_url as non-optional second param.
+		protected function checkDomain($replaceBlock)
     {
-         $original_url = $url; // debug poruposes.
-        $parsedUrl = parse_url($url);
-        if (! isset($parsedUrl['host']))
+				$original_url = $replaceBlock->url; // debug poruposes.
+
+				//$parsedUrl = parse_url($url);
+				if (! isset($replaceBlock->parsed['host']))
         {
 						$site_url  = $this->site_url;
-            if (substr($parsedUrl['path'], 0, 1) !== '/')
+						if (substr($replaceBlock->parsed['path'], 0, 1) !== '/')
             {
                 $site_url .= '/';
             }
 
-					  $url = $site_url . $url;
-						$parsedUrl = parse_url($url); // parse the new URL 
+						$url = $site_url . $original_url;
+						$replaceBlock->parsed = parse_url($url); // parse the new URL
             Log::addTemp("URL from $original_url changed to $url");
         }
 
-				$this->setCDNArgument('scheme', null);
-        if (isset($parsedUrl['scheme']) && 'http' == $parsedUrl['scheme'])
-        {
-						$this->setCDNArgument('scheme', 'p_h');
-        }
-
-        return $url;
-
     }
 
-		protected function replaceImage($src)
+		private function checkScheme($replaceBlock)
 		{
-				$domain = $this->cdn_domain;
-
-       // Check for slashes ( stored via js etc escaped slashed)
-				if (strpos($src, '\/') !== false)
+				$this->setCDNArgument('scheme', null);
+				if (isset($parsedUrl['scheme']) && 'http' == $parsedUrl['scheme'])
 				{
-					 $src = stripslashes($src);
+						$this->setCDNArgument('scheme', 'p_h');
 				}
-
-        // Remove " . Some themes put this for some reason.
-				$remove = ['"'];
-				$src = str_replace($remove, [], $src);
-
-        // If there is a trailing-slash, remove it.
-        $src = rtrim($src, '/');
-
-				// Remove the protocol - always
-       	$src = str_replace(['http://', 'https://'], '', $src);
-
-        $src = apply_filters('shortpixel/front/cdn/url', $src);
-
-				$cdn_prefix = trailingslashit($domain) . trailingslashit($this->getCDNArguments($src));
-				$new_src = $cdn_prefix . trim($src);
-
-				return $new_src;
 		}
 
     protected function stringReplaceContent($content, $urls, $new_urls)
@@ -303,7 +323,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
        {
           //$replacement = $new_urls[$index];
           $patterns[] = '/("|\'| )(' . preg_quote($url, '/') . ')("|\'| )/mi';
-
        }
 
        foreach($new_urls as $index => $url)
@@ -347,29 +366,8 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 				}
 		}
 
-    // Function not only to trim, but also remove extra stuff like '200w' declarations in srcset.
-    // This should not alter URL, because it's used as the search in search / replace, so should point to full original URL
-    private function trimURL($url)
-		{
-				$url = trim(strtok($url, ' '));
 
-				return $url;
-		}
 
-		// Something in source the Url's can escaped which is undone by domDocument. Still add them to the replacement array, otherwise they won't be replaced properly.
-		private function addEscapedUrls($urls)
-		{
-				$new_urls = $urls;
-				foreach($urls as $url)
-				{
-						$escaped = esc_url($url);
-						if ($escaped !== $url)
-						{
-							 $new_urls[] = esc_url($url);
-						}
-				}
-				return $new_urls;
-		}
 
 
 
