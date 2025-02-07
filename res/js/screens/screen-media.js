@@ -11,6 +11,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		{
 			super.Init();
       this.ListenGallery();
+      console.log('Init Screen media');
 
 			// bind DoAction, for bulk actions in Media Libbrary to event
 			var actionEl = document.getElementById('doaction');
@@ -208,6 +209,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
               data.callback = 'shortpixel.MediaRenderView';
 
               window.addEventListener('shortpixel.MediaRenderView', this.renderSPIOView.bind(this), {'once':true});
+              console.trace('ListenGallery - fetchSPIODATa');
               self.processor.LoadItemView(data);
             },
 

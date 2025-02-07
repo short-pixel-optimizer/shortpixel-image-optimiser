@@ -199,7 +199,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
         $urls = array_column($replaceBlocks, 'raw_url');
 				$replace_urls = array_column($replaceBlocks, 'replace_url');
 
-        Log::addTemp('Array result', [$urls, $replace_urls]);
+      //  Log::addTemp('Array result', [$urls, $replace_urls]);
 
         $content = $this->$replace_function($original_content, $urls, $replace_urls);
 
