@@ -190,16 +190,24 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
         else {
             var detailsColumn = wp.media.view.Attachment.Details;
             var twoCol = false;
+
         }
 
   			 var extended = detailsColumn.extend ({
             render: function()
             {
-               detailsColumn.prototype.render.apply( this );
-               if(typeof this.fetchSPIOData === 'function') this.fetchSPIOData(this.model.get( 'id' ));
+               detailsColumn.prototype.render.apply( this ); // Render Parent
+
+               if(typeof this.fetchSPIOData === 'function')
+               {
+                 this.fetchSPIOData(this.model.get( 'id' ));
+                 this.spioBusy = true; // Note if this system turns out not to work, the perhaps render empties all if first was painted, second cancelled?
+
+               }
 
                return this;
             },
+
             fetchSPIOData : function (id)
             {
               var data = {};
@@ -207,12 +215,18 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
               data.type = self.type;
               data.callback = 'shortpixel.MediaRenderView';
 
+              if (typeof this.spioBusy !== 'undefined' && this.spioBusy === true)
+              {
+                return;
+              }
+
               window.addEventListener('shortpixel.MediaRenderView', this.renderSPIOView.bind(this), {'once':true});
               self.processor.LoadItemView(data);
             },
 
             renderSPIOView: function(e, timed)
             {
+              this.spioBusy = false;
               if (! e.detail || ! e.detail.media || ! e.detail.media.itemView)
               {
                 return;
@@ -229,8 +243,9 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
                 else {
                    timed++;
                 }
-                setTimeout(function () { this.renderSPIOView(e, true) }.bind(this), 1000);
+                setTimeout(function () { this.renderSPIOView(e, timed) }.bind(this), 1000);
               }
+
 
               var html = this.doSPIORow(e.detail.media.itemView);
 
