@@ -408,6 +408,10 @@
         padding-left: 35px;
         height: 36px;
         width: 240px;
+	&:focus {
+	  outline: none;
+	  box-shadow: none;
+	}
       }
 
       content button {
