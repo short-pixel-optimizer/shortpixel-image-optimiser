@@ -126,7 +126,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		{
         if (! is_string($src) || strlen($src) == 0)
         {
-           Log::addTemp('Empty Src: ', $handle);
            return $src;
         }
 
@@ -162,7 +161,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
           }
 
 					$this->setCDNArgument('retauto', null);
-        //	Log::addTemp('Return Script: ', $src);
 				return $src;
 		}
 
@@ -192,7 +190,8 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
            return $content;
         }
 
-				$this->createReplacements($replaceBlocks);
+        $replaceBlocks = $this->createReplacements($replaceBlocks);
+
 
       //  $replace_function = ($this->replace_method == 'preg') ? 'pregReplaceContent' : 'stringReplaceContent';
         $replace_function = 'stringReplaceContent'; // undercooked, will defer to next version
@@ -200,7 +199,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
         $urls = array_column($replaceBlocks, 'raw_url');
 				$replace_urls = array_column($replaceBlocks, 'replace_url');
 
-Log::addTemp('Array result', [$urls, $replace_urls]);
+        Log::addTemp('Array result', [$urls, $replace_urls]);
 
         $content = $this->$replace_function($original_content, $urls, $replace_urls);
 
@@ -255,6 +254,8 @@ Log::addTemp('Array result', [$urls, $replace_urls]);
 							$blockData[] = $imageBlock;
 							$imageData[] = $imageBlock->url;
 						}
+
+
 				 }
 			}
 
@@ -268,13 +269,15 @@ Log::addTemp('Array result', [$urls, $replace_urls]);
 		protected function createReplacements($replaceBlocks)
 		{
 				$cdn_domain = $this->cdn_domain;
+        $moveItems = [];
 
-				foreach($replaceBlocks as $replaceBlock)
+        foreach($replaceBlocks as $index => $replaceBlock)
 				{
-            //$parsed = parse_url($replaceBlock->url);
-            //$replaceBlock->parsed = $parsed;
-
-						$this->checkDomain($replaceBlock);
+            $bool = $this->checkDomain($replaceBlock);
+            if (true === $bool)
+            {
+               $moveItems[] = $index;
+            }
 						$this->checkScheme($replaceBlock);
 
 						// Take Parsed URL and add CDN info to add.
@@ -284,21 +287,29 @@ Log::addTemp('Array result', [$urls, $replace_urls]);
 
 						$cdn_prefix = trailingslashit($cdn_domain) . trailingslashit($this->getCDNArguments($url));
 						$replaceBlock->replace_url = $cdn_prefix . trim($url);
-
 				}
 
+        for($i = 0; $i < count($moveItems); $i++)
+        {
+           $moveIndex = $moveItems[$i];
+           $block = $replaceBlocks[$moveIndex];
+           unset($replaceBlocks[$moveIndex]);
+           array_push($replaceBlocks, $block);
+        }
+
+        return $replaceBlocks;
 		}
 
 
     // Special checks / operations because the URL is replaced. Data check.
 
-		// @todo Transform these functions to 1 check each, so each combination can use it's own mix/match of checks / transforms ( image, css, javascript  ) . Possibly with URL as argument and parsed_url as non-optional second param.
+    // @todo Transform these functions to 1 check each, so each combination can use it's own mix/match of checks / transforms ( image, css, javascript  ) . Possibly with URL as argument and parsed_url as non-optional second param.
+    // @return True of URL was changed, false if not.
 		protected function checkDomain($replaceBlock)
     {
-				$original_url = $replaceBlock->url; // debug poruposes.
-
 				if (! isset($replaceBlock->parsed['host']))
         {
+            $original_url = $replaceBlock->url;
 						$site_url  = $this->site_url;
 						if (substr($replaceBlock->parsed['path'], 0, 1) !== '/')
             {
@@ -309,8 +320,10 @@ Log::addTemp('Array result', [$urls, $replace_urls]);
 						$replaceBlock->parsed = parse_url($url); // parse the new URL
             $replaceBlock->url = $url;
             Log::addTemp("URL from $original_url changed to $url");
-        }
 
+            return true;
+        }
+        return false;
 
     }
 

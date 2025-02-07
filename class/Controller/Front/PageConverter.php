@@ -69,6 +69,11 @@ class PageConverter extends \ShortPixel\Controller
       return false;
     }
 
+    if (isset($_GET['spio_no_cdn']))
+    {
+       return false;
+    }
+
 
 	 add_filter('status_header', [$this, 'status_header_sent'], 10, 2);
 
@@ -145,7 +150,8 @@ class PageConverter extends \ShortPixel\Controller
 
      $replaceBlocks = array_filter($replaceBlocks, function ($replaceBlock)
      {
-          if (strpos($replaceBlock->url, $this->site_domain) === false)
+          // Check if block if from different domain (skip) but only if host set ( not relative )
+          if (strpos($replaceBlock->url, $this->site_domain) === false && isset($replaceBlock->parsed['host']))
           {
              return false;
           }
