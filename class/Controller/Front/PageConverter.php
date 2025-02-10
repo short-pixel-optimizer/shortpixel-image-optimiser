@@ -69,6 +69,12 @@ class PageConverter extends \ShortPixel\Controller
       return false;
     }
 
+    // Avada Live Builder
+    if (isset($_GET['fb-edit']))
+    {
+      return false;
+    }
+	
     if (isset($_GET['spio_no_cdn']))
     {
        return false;
