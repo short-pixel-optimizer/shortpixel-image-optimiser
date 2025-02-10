@@ -514,7 +514,7 @@ class ShortPixelPlugin {
 		if ( wp_style_is( $name, 'registered' ) ) {
 			wp_enqueue_style( $name );
 		} else {
-			Log::addWarn( "Style $name was asked for, but not registered" );
+			Log::addWarn( "Style $name was asked for, but not registered", $_SERVER['REQUEST_URI'] );
 		}
 	}
 
@@ -532,7 +532,7 @@ class ShortPixelPlugin {
 			if ( wp_script_is( $name, 'registered' ) ) {
 				wp_enqueue_script( $name );
 			} else {
-				Log::addWarn( "Script $name was asked for, but not registered" );
+				Log::addWarn( "Script $name was asked for, but not registered", $_SERVER['REQUEST_URI']  );
 			}
 		}
 	}

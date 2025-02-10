@@ -181,6 +181,8 @@ class AdminController extends \ShortPixel\Controller
             'wait' => 1,
         );
 
+        Log::addTemp("process cron hook", $args);
+
         return $this->processQueueHook($args);
     }
 
@@ -270,7 +272,7 @@ class AdminController extends \ShortPixel\Controller
       $otherMediaController = OtherMediaController::getInstance();
       if (false === $otherMediaController->hasCustomImages())
       {
-         return false; 
+         return false;
       }
 
 

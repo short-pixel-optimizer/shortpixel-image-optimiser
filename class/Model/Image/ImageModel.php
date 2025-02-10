@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Controller\ResponseController as ResponseController;
-use ShortPixel\Controller\ApiController as API;
+use ShortPixel\Controller\Api\ApiController as ApiController;
 
 use ShortPixel\Model\File\FileModel as FileModel;
 use ShortPixel\Model\AccessModel as AccessModel;
@@ -725,7 +725,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 						$originalSize = $this->getFileSize();
 					}
 
-          if ($status == API::STATUS_UNCHANGED || $status == API::STATUS_OPTIMIZED_BIGGER)
+          if ($status == APIController::STATUS_UNCHANGED || $status == APIController::STATUS_OPTIMIZED_BIGGER)
           {
             $copyok = true;
             $optimizedSize = $this->getFileSize();
@@ -857,7 +857,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
           }
 					elseif(isset($downloadResult['webp']) && isset($downloadResult['webp']['status']))
 					{
-						 if ($downloadResult['webp']['status'] == API::STATUS_OPTIMIZED_BIGGER)
+             if ($downloadResult['webp']['status'] == APIController::STATUS_OPTIMIZED_BIGGER)
 						 {
 							  $this->setMeta('webp', self::FILETYPE_BIGGER);
 						 }
@@ -875,7 +875,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 					elseif(isset($downloadResult['avif']) && isset($downloadResult['avif']['status']))
 					{
 
-						 if ($downloadResult['avif']['status'] == API::STATUS_OPTIMIZED_BIGGER)
+             if ($downloadResult['avif']['status'] == APIController::STATUS_OPTIMIZED_BIGGER)
 						 {
 								$this->setMeta('avif', self::FILETYPE_BIGGER);
 						 }

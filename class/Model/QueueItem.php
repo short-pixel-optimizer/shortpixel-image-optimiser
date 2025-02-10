@@ -43,6 +43,9 @@ class QueueItem
             $this->item_id = intval($args['item_id']);
         }
 
+
+        // Init defaults
+        $this->setResult();
     }
 
     public function setModel(ImageModel $imageModel)
@@ -72,7 +75,13 @@ class QueueItem
 		{
 				if (is_null($block))
 				{
-						return $this->data->block;
+            if (property_exists($this->data, 'block'))
+            {
+						        return $this->data->block;
+            }
+            else {
+              return false;
+            }
 				}
 				else {
 						$this->data->block = (bool) $block;

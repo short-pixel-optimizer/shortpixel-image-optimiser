@@ -377,14 +377,12 @@ class AdminNoticesController extends \ShortPixel\Controller
                 if (! is_array($notices))
                     $notices = false;
 
-
                 // Save transient anywhere to prevent over-asking when nothing good is there.
                 set_transient( $transient_name, $notices, $transient_duration );
             }
             else
             {
                 Log::addError('Error in fetching Remote Notices!', $notices_response);
-
                 set_transient( $transient_name, false, $transient_duration );
             }
         }

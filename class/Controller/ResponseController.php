@@ -9,7 +9,7 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Model\ResponseModel as ResponseModel;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
-
+use ShortPixel\Controller\Api\ApiController as ApiController;
 
 class ResponseController
 {
