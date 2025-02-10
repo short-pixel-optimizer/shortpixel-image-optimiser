@@ -19,7 +19,7 @@ class PageConverter extends \ShortPixel\Controller
 
 	public function __construct()
 	{
-			$this->site_url =  get_site_url();
+      $this->site_url =  get_home_url();
       $this->site_domain = $this->getDomain($this->site_url);
 	}
 
@@ -74,7 +74,7 @@ class PageConverter extends \ShortPixel\Controller
     {
       return false;
     }
-	
+
     if (isset($_GET['spio_no_cdn']))
     {
        return false;
