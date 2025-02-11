@@ -19,7 +19,7 @@ class PageConverter extends \ShortPixel\Controller
 
 	public function __construct()
 	{
-			$this->site_url =  get_site_url();
+      $this->site_url =  get_home_url();
       $this->site_domain = $this->getDomain($this->site_url);
 	}
 
@@ -65,6 +65,12 @@ class PageConverter extends \ShortPixel\Controller
 
     // Oxygen Builder
     if (isset($_GET['ct_builder']))
+    {
+      return false;
+    }
+
+    // Avada Live Builder
+    if (isset($_GET['fb-edit']))
     {
       return false;
     }

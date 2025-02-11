@@ -125,7 +125,9 @@ class CronController
          foreach($this->cron_options as $type => $options)
          {
             $name = $options['cron_name'];
-            $args = array('bulk' => $options['bulk']);
+            $args = [0 => [
+                  'bulk' => $options['bulk']]
+              ];              
 
             if ( false === wp_next_scheduled($name, $args))
             {

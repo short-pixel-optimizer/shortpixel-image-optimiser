@@ -329,7 +329,8 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
   protected function testInlineStyle($content)
   {
     //preg_match_all('/background.*[^:](url\(.*\))[;]/isU', $content, $matches);
-    preg_match_all('/url\(.*\)/isU', $content, $matches);
+    // Pattern : Find the URL() from CSS, save any extra background information ( position, repeat etc ) in second group and terminal at ; or " (hopefully end of line)
+    preg_match_all('/url\(.*\)(.*)(?:;|\"|\')/isU', $content, $matches);
 
     if (count($matches) == 0)
       return $content;
@@ -355,10 +356,17 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
     {
       $item = $matches[0][$i];
 
+      $image_data = '';
+      if (isset($matches[1][$i]) && strlen(trim($matches[1][$i])) > 0)
+      {
+          $image_data = trim($matches[1][$i]);
+      }
+
       preg_match('/url\(\'(.*)\'\)/imU', $item, $match);
       if (! isset($match[1]))
+      {
         continue;
-
+      }
       $url = $match[1];
       //$parsed_url = parse_url($url);
       $filename = basename($url);
@@ -412,7 +420,7 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
           if (! isset($converted[$target_urldef])) // if the same image is on multiple elements, this replace might go double. prevent.
           {
             $converted[] = $target_urldef;
-            $new_urldef = "url('" . $checkedFile . "'), " . $target_urldef;
+            $new_urldef = "url('" . $checkedFile . "') $image_data, " . $target_urldef;
             $content = str_replace($target_urldef, $new_urldef, $content);
           }
       }

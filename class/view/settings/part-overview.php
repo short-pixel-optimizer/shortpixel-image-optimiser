@@ -31,7 +31,7 @@ $bulkblock = $dashboard->bulkblock;
 
 					<div class='status-ok'>
 						<h4><?php  _e('Everything running smoothly.', 'shortpixel-image-optimiser'); ?></h4>
-						<p><?php  _e('Stay calm and carry on ', 'shortpixel-image-optimiser'); ?></p>
+						<p><?php  _e('Keep calm and carry on', 'shortpixel-image-optimiser'); ?></p>
 					</div>
 					<div class='status-warning'>
 						<h4><?php  _e('There are a few warnings you could fix', 'shortpixel-image-optimiser'); ?></h4>

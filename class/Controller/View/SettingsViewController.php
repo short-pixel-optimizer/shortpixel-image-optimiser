@@ -534,7 +534,7 @@ class SettingsViewController extends \ShortPixel\ViewController
         $mainblock->icon = 'ok';
         $mainblock->cocktail = true;
         $mainblock->header = __('Everything running smoothly.', 'shortpixel-image-optimiser');
-        $mainblock->message = __('Stay calm and carry on ', 'shortpixel-image-optimiser');
+        $mainblock->message = __('Keep calm and carry on', 'shortpixel-image-optimiser');
 
         if (false === $this->view->key->is_verifiedkey)
         {

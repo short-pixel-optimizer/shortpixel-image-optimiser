@@ -119,12 +119,12 @@
 					settinglist
 					{
 						h2 { // title
-							 font-size: 24px;
-							 font-family: 'Roboto';
-							 font-weight: 700;
-							 outline: 0;
-							 text-decoration: none;
-							 color: $color-darkest;
+							font-size: 24px;
+							font-family: 'Roboto';
+							font-weight: 700;
+							outline: 0;
+							text-decoration: none;
+							color: $color-darkest;
 						}
 						h3 {
 							  font-size: 18px;
@@ -226,7 +226,6 @@
 
 		}
 } // shortpixel-settings
-
 
 // Responsive
 @include breakpoint(0, 1200px)
