@@ -1845,6 +1845,7 @@ div.spio-modal-title {
   padding: 12px;
   margin-top: 30px;
   border: 1px solid #F4FBFC;
+  border-radius: 0.7rem;
 }
 .wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist:first-child {
   margin-right: 8px;
