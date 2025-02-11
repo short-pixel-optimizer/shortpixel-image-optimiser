@@ -139,7 +139,7 @@ Help us spread the word by recommending ShortPixel to your friends and collect *
 
 **Other plugins by ShortPixel**
 
-* [FastPixel Caching](https://fastpixel.io/?utm_source=spio&utm_campaign=DX8U3JT78) - WP Optimization made easy
+* [FastPixel Caching](https://wordpress.org/plugins/fastpixel-website-accelerator/) - WP Optimization made easy
 * [ShortPixel Adaptive Images](https://wordpress.org/plugins/shortpixel-adaptive-images/) - On-the-fly image optimization & CDN delivery
 * [Enable Media Replace](https://wordpress.org/plugins/enable-media-replace/) - Easily replace images or files in Media Library
 * [reGenerate Thumbnails Advanced](https://wordpress.org/plugins/regenerate-thumbnails-advanced/) - Easily regenerate thumbnails
