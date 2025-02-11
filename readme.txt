@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 4.8.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 6.1.1
+Stable tag: 6.1.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -445,6 +445,34 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 6.1.2 =
+
+🛒 The Seamless Shopping Update
+
+Release Date: February 11, 2025
+
+🛠️ Fixes
+
+* WooCommerce CDN Fixes: Resolved issues where images in the WooCommerce cart and checkout pages weren’t correctly replaced with CDN links.
+* Duplicate Optimization Info: Fixed cases where ShortPixel optimization details appeared twice when using Gutenberg.
+* Background Processing Errors: Corrected cron errors affecting background processing in specific scenarios.
+* Relative URL CDN Delivery: Ensured proper replacement of relative URLs when using CDN delivery for consistent performance.
+* Picture Tag Adjustments: All attributes are now fully supported when delivering next-gen images via the Picture tag method.
+
+🔧 Compatibility Updates
+
+* Avada Live Builder Integration: Automatically disabled the CDN replacer when using Avada Live Builder to prevent conflicts.
+
+✨ Tweaks & Improvements
+
+* UI Refinements: Enhanced CSS styling, clearer texts, and smoother layouts to improve the onboarding experience for new users.
+
+🌍 Language Updates
+
+* Added 2 new strings, updated 3, with no deprecated strings to improve global translation coverage.
+
+Update now to keep your WooCommerce store and website running seamlessly! 🚀
 
 = 6.1.1 =
 

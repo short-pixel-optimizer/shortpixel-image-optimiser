@@ -101,7 +101,7 @@ class ShortPixelOnboarding
           if (false === tos.checked)
           {
              tos.classList.add('invalid');
-             activePanel.querySelector('.tos-hand').style.display = 'block';
+             jQuery(".tos-robo").fadeIn(400,function(){jQuery(".tos-hand").fadeIn();});
              submit = false;
           }
           else {

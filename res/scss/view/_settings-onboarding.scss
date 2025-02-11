@@ -1,110 +1,140 @@
-#tab-nokey
-{
+#tab-nokey {
 
- h1 {
-	  font-size: 36px;
+	h1 {
+		font-size: 36px;
 		text-align: center;
 		margin: 20px 0;
- }
-  .onboarding-logo
-  {
-		 text-align: center;
-      img {
-        width: 400px;
-      }
-
-
-  }
-
+	}
+	.onboarding-logo {
+		text-align: center;
+		img {
+			width: 400px;
+		}
+	}
 	.onboarding-join-wrapper
 	{
-		 display: flex;
-//		 flex: 1;
-		 justify-content: space-between;
+		display: flex;
+		justify-content: space-between;
 
-		 settinglist {
-			 //flex: 0 0 50%;
-       background-color: #fff; //$blue_background;
-       width: 50%;
-       padding: 12px;
-       margin-top: 30px;
-       border: 0;
-       setting {
-         background-color: #fff ;
-       }
-       &:first-child {
-        //  border-right: 8px solid #fff;
-        margin-right: 8px;
-       }
-       &.now-active
-       {
-         background-color: $blue_background;
-      //   transition: all ease-out 0.5s;
-         border: 1px solid #000;
-
-         setting {
-           background-color: $blue_background ;
-
-         }
-       }
-       &.new-customer
-       {
-           #tos {
-              &.invalid
-              {
-                 border: 2px solid #ff0000;
-              }
-           }
-           .shortpixel-settings-error
-           {
-              color: #ff0000;
-           }
-       }
-     }
-
+		settinglist {
+			//flex: 0 0 50%;
+			background-color: $blue_background;
+			width: 45%;
+			padding: 12px;
+			margin-top: 30px;
+			border: 1px solid $blue_background;
+			border-radius: 0.7rem;
+       			&:first-child {
+				margin-right: 8px;
+			}
+			&.now-active {
+				border: 1px solid $blue_light;
+			}
+			&.new-customer, &.existing-customer {
+           			input#tos {
+					margin-top: 0px;
+					width: auto;
+ 					&.invalid {
+						border: 2px solid #ff0000;
+						margin-top: 0px;
+					}
+				}
+				.shortpixel-settings-error {
+					color: #ff0000;
+				}
+				h3 {
+					text-align: center;
+					font-weight: 600;
+					color: $blue_dark;
+				}
+				img {
+					display: block;
+					margin: auto;
+				}
+				h2 {
+					text-align: center;
+					color: black;
+				}
+				p {
+					text-align: center;
+					color: $blue_dark;
+				}
+			}
+			setting {
+				background: $blue_background;
+				input {
+					border: 1px solid $blue_light;
+					color: $blue_dark;
+					margin-top: 10px;
+					width: 290px;
+				}
+				info {
+					p {
+						color: black;
+						text-align: none;
+					}
+				}
+			}
+		}
+		@include breakpoint(768px, 1100px)
+		{
+			flex-wrap: wrap;
+		}
+		@include breakpoint(0, 768px) {
+			flex-direction: column;
+		}
 	}
+	.submit-errors {
+		button.notice-dismiss {
+			display: none;
+		}
+	}
+	.onboard-submit {
+		margin: 25px 0;
+		text-align: center;
+		button {
+			width: 250px;
+			.dots {
+				animation: dots 2s steps(3, end) infinite;
+				@include loadDots;
+				animation-play-state:paused;
+				display: none;
+				margin-left: 2px;
 
-  .submit-errors
-  {
-
-        button.notice-dismiss {
-          display: none;
-        }
-
-  }
-  .onboard-submit
-  {
-     margin: 25px 0;
-     text-align: center;
-     button {
-        width: 250px;
-        .dots {
-          animation: dots 2s steps(3, end) infinite;
-          @include loadDots;
-          animation-play-state:paused;
-          display: none;
-          margin-left: 2px;
-
-        }
-        &.submitting .dots {
-          animation-play-state:running;
-          display: inline;
-
-        }
-     }
-
-     setting {
-        background: #fff;
-        error
-        {
-           width: 100%;
-        }
-     }
-
-  }
-
+			}
+			&.submitting .dots {
+				animation-play-state:running;
+				display: inline;
+			}
+		}
+		setting {
+			background: #fff;
+			error {
+				width: 100%;
+			}
+		}
+	}
+	@include breakpoint(0, 768px) {
+		margin-top: 50px;
+		.onboarding-logo img {
+			max-width: 100%;
+		}
+		.onboarding-join-wrapper settinglist, setting {
+			width: auto;
+			padding: 12px 4px;
+			& info {
+				max-width: 100%;
+			}
+			& input#tos {
+				width: 10px;
+				height: 16px;
+			}
+		}
+		.onboarding-join-wrapper settinglist:first-child {
+			margin-right: 0px;
+		}
+	}
 } // tab-nokey
-
 
 // Quicktour highlight syste
 &.page-quick-tour  // quick tour active on root element

@@ -12,13 +12,15 @@ class PageConverter extends \ShortPixel\Controller
 {
 
 	protected $site_url;
+  protected $site_domain; // domain checks
 	protected $status_header = -1;
   protected $regex_exclusions = [];
 
 
 	public function __construct()
 	{
-			$this->site_url =  get_site_url();
+      $this->site_url =  get_home_url();
+      $this->site_domain = $this->getDomain($this->site_url);
 	}
 
   /** Check if the converters should run on this request.  This is mainly used to filter out frontend pagebuilder where changing images could result in crashing builders and such cases */
@@ -67,6 +69,17 @@ class PageConverter extends \ShortPixel\Controller
       return false;
     }
 
+    // Avada Live Builder
+    if (isset($_GET['fb-edit']))
+    {
+      return false;
+    }
+
+    if (isset($_GET['spio_no_cdn']))
+    {
+       return false;
+    }
+
 
 	 add_filter('status_header', [$this, 'status_header_sent'], 10, 2);
 
@@ -99,11 +112,14 @@ class PageConverter extends \ShortPixel\Controller
 
 
   // @param imageData Array with URLS
-  protected function applyRegexExclusions($imageData)
+	protected function filterRegexExclusions($replaceBlocks)
   {
-       $patterns = $this->regex_exclusions;
+			 $patterns = $this->regex_exclusions;
+			 $imageData = array_column($replaceBlocks, 'raw_url');
+
        if (! is_array($patterns) || count($patterns) == 0 )
        {
+				 Log::addWarn('No Patterns for exclusions');
           return $imageData;
        }
 
@@ -118,8 +134,105 @@ class PageConverter extends \ShortPixel\Controller
 
        }
 
-       $imageData = array_diff($imageData, $allMatches);
-       return array_values($imageData); // reset indexes
+       if (count($allMatches) > 0)
+       {
+         Log::addTEmp('RegexExclusions: ', $allMatches);
+       }
+
+			 $replaceBlocks = array_filter($replaceBlocks, function ($replaceBlock) use ($allMatches) {
+							if (in_array($replaceBlock->raw_url, $allMatches))
+							{
+								return false;
+							}
+							return true;
+			 }); // Filter function
+
+			return $replaceBlocks;
   }
 
+  protected function filterOtherDomains($replaceBlocks)
+  {
+     $imageData = array_column($replaceBlocks, 'raw_url');
+
+     $replaceBlocks = array_filter($replaceBlocks, function ($replaceBlock)
+     {
+          // Check if block if from different domain (skip) but only if host set ( not relative )
+          if (strpos($replaceBlock->url, $this->site_domain) === false && isset($replaceBlock->parsed['host']))
+          {
+             return false;
+          }
+          return true;
+     });
+
+     return $replaceBlocks;
+  }
+
+
+	// For now, in future perhaps integrate somehow with frontIMage, although these functions are also useful for other URLs
+	protected function getReplaceBlock($url)
+	{
+			$block = new \stdClass;
+			// Trim to limit area of search / replace, but URL should NOT be alterated here!
+
+      $block->raw_url = $this->trimURL($url);  // raw URL is the base for replacement and should match what's in document.
+
+			// Pre-parse checks
+
+      $url = $this->addEscapedUrl($block->raw_url);
+      $url = $this->stripSlashesUrl($url);
+      $url = $this->removeCharactersUrl($url);
+
+			if (filter_var($url, FILTER_VALIDATE_URL) === false)
+			{
+        // Log::addInfo('Replacement String still not URL - ', $url);
+			}
+
+			$block->url = $url;
+			$block->parsed = parse_url($url);
+
+			return $block;
+	}
+
+	// Function not only to trim, but also remove extra stuff like '200w' declarations in srcset.
+	// This should not alter URL, because it's used as the search in search / replace, so should point to full original URL
+	// This is a PRE-RAW FUNCTION on the harvested URL
+	private function trimURL($url)
+	{
+			$url = trim(strtok($url, ' '));
+			return $url;
+	}
+
+	protected function stripSlashesUrl($url)
+	{
+			return wp_unslash($url);
+	}
+
+	protected function removeCharactersUrl($url)
+	{
+		 $url = str_replace(['"', "'"],'', $url);
+		 return $url;
+	}
+
+	// Something in source the Url's can escaped which is undone by domDocument. Still add them to the replacement array, otherwise they won't be replaced properly.
+	// This is a PRE-RAW FUNCTION on the harvested URL
+	private function addEscapedUrl($url)
+	{
+			$escaped = esc_url($url);
+
+			if ($escaped !== $url)
+			{
+				 $url = esc_url($url);
+			}
+
+			return $url;
+	}
+
+// https://stackoverflow.com/questions/276516/parsing-domain-from-a-url
+private function getDomain($url)
+{
+    preg_match("/[a-z0-9\-]{1,63}\.[a-z\.]{2,6}$/", parse_url($url, PHP_URL_HOST), $_domain_tld);
+    return $_domain_tld[0];
 }
+
+
+} // class PageConverter
