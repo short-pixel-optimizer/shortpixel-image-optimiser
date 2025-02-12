@@ -1025,6 +1025,7 @@ div.spio-modal-title {
   width: 1rem;
   height: 1rem;
   opacity: 1;
+  display: inline-block;
 }
 .wrap.is-shortpixel-settings-page section#tab-webp img#exifviewer-img-1 {
   margin-bottom: -7px;
@@ -1566,6 +1567,10 @@ div.spio-modal-title {
   height: 36px;
   width: 240px;
 }
+.wrap.is-shortpixel-settings-page #tab-overview content input:focus {
+  outline: none;
+  box-shadow: none;
+}
 .wrap.is-shortpixel-settings-page #tab-overview content button {
   padding: 4px 12px;
   width: max-content;
@@ -1835,30 +1840,69 @@ div.spio-modal-title {
   justify-content: space-between;
 }
 .wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist {
-  background-color: #fff;
-  width: 50%;
+  background-color: #F4FBFC;
+  width: 45%;
   padding: 12px;
   margin-top: 30px;
-  border: 0;
-}
-.wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist setting {
-  background-color: #fff;
+  border: 1px solid #F4FBFC;
+  border-radius: 0.7rem;
 }
 .wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist:first-child {
   margin-right: 8px;
 }
 .wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist.now-active {
-  background-color: #F4FBFC;
-  border: 1px solid #000;
+  border: 1px solid #92D5E3;
 }
-.wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist.now-active setting {
-  background-color: #F4FBFC;
+.wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist.new-customer input#tos, .wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist.existing-customer input#tos {
+  margin-top: 0px;
+  width: auto;
 }
-.wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist.new-customer #tos.invalid {
+.wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist.new-customer input#tos.invalid, .wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist.existing-customer input#tos.invalid {
   border: 2px solid #ff0000;
+  margin-top: 0px;
 }
-.wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist.new-customer .shortpixel-settings-error {
+.wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist.new-customer .shortpixel-settings-error, .wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist.existing-customer .shortpixel-settings-error {
   color: #ff0000;
+}
+.wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist.new-customer h3, .wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist.existing-customer h3 {
+  text-align: center;
+  font-weight: 600;
+  color: #116C7E;
+}
+.wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist.new-customer img, .wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist.existing-customer img {
+  display: block;
+  margin: auto;
+}
+.wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist.new-customer h2, .wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist.existing-customer h2 {
+  text-align: center;
+  color: black;
+}
+.wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist.new-customer p, .wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist.existing-customer p {
+  text-align: center;
+  color: #116C7E;
+}
+.wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist setting {
+  background: #F4FBFC;
+}
+.wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist setting input {
+  border: 1px solid #92D5E3;
+  color: #116C7E;
+  margin-top: 10px;
+  width: 290px;
+}
+.wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist setting info p {
+  color: black;
+  text-align: none;
+}
+@media (min-width: 768px) and (max-width: 1100px) {
+  .wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper {
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: 768px) {
+  .wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper {
+    flex-direction: column;
+  }
 }
 .wrap.is-shortpixel-settings-page #tab-nokey .submit-errors button.notice-dismiss {
   display: none;
@@ -1901,6 +1945,28 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page #tab-nokey .onboard-submit setting error {
   width: 100%;
+}
+@media (max-width: 768px) {
+  .wrap.is-shortpixel-settings-page #tab-nokey {
+    margin-top: 50px;
+  }
+  .wrap.is-shortpixel-settings-page #tab-nokey .onboarding-logo img {
+    max-width: 100%;
+  }
+  .wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist, .wrap.is-shortpixel-settings-page #tab-nokey setting {
+    width: auto;
+    padding: 12px 4px;
+  }
+  .wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist info, .wrap.is-shortpixel-settings-page #tab-nokey setting info {
+    max-width: 100%;
+  }
+  .wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist input#tos, .wrap.is-shortpixel-settings-page #tab-nokey setting input#tos {
+    width: 10px;
+    height: 16px;
+  }
+  .wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist:first-child {
+    margin-right: 0px;
+  }
 }
 .wrap.is-shortpixel-settings-page [class*=step-highlight-] {
   border: 0px solid #00C898;

@@ -52,15 +52,17 @@ $disabled = ($view->key->is_editable) ? '' : 'disabled';
 
 <settinglist class='new-customer now-active'>
 
-	<h2><?php esc_html_e('New Customer','shortpixel-image-optimiser');?></h2>
-<p><?php esc_html_e('If you don\'t have an API Key, you can request one for free. Just press the "Request Key" button after checking that the e-mail is correct.','shortpixel-image-optimiser');?></p>
+	<h3><?php esc_html_e('New user?','shortpixel-image-optimiser');?></h3>
+	<?php echo UiHelper::getIcon('res/images/icon/new-user.svg'); ?>
+	<h2><?php esc_html_e('Create account','shortpixel-image-optimiser');?></h2>
+	<p><?php esc_html_e('If you don\'t have an API Key, you can request one for free. Just press the "Request Key" button after checking that the e-mail is correct.','shortpixel-image-optimiser');?></p>
 
   <form method="POST" action="<?php echo esc_url(add_query_arg(array('noheader' => 'true', 'sp-action' => 'action_request_new_key'))) ?>"
       id="shortpixel-form-request-key">
 
   <setting>
-      <name for="pluginemail"><?php esc_html_e('E-mail address:','shortpixel-image-optimiser');?></name>
       <content>
+      <name for="pluginemail"><?php esc_html_e('E-mail address:','shortpixel-image-optimiser');?></name>
               <input name="pluginemail" type="text" id="pluginemail" value="<?php echo esc_attr( sanitize_email($adminEmail) );?>" class="regular-text" <?php echo $disabled ?> />
 
               <span class="spinner" id="pluginemail_spinner" style="float:none;"></span>
@@ -103,19 +105,22 @@ $disabled = ($view->key->is_editable) ? '' : 'disabled';
 </settinglist>
 
 <settinglist class='existing-customer'>
-	<h2>
-			<?php esc_html_e('Existing Customer','shortpixel-image-optimiser');?>
-	</h2>
+	<h3>
+			<?php esc_html_e('Already have an account?','shortpixel-image-optimiser');?>
+	</h3>
+
+	<?php echo UiHelper::getIcon('res/images/icon/login.svg'); ?>
+	<h2><?php esc_html_e('Login','shortpixel-image-optimiser');?></h2>
+
 	<p>
 	    <?php esc_html_e('Welcome back! If you already have an API Key please input it below and press Validate.','shortpixel-image-optimiser');?>
 	</p>
 
-
   <setting>
+      <content>
       <name>
           <?php esc_html_e('API Key:','shortpixel-image-optimiser');?>
       </name>
-      <content>
         <input name="login_apiKey" type="text" id="key" value="<?php echo esc_attr( $view->key->apiKey );?>"
            class="regular-text" <?php echo $disabled ?>>
 

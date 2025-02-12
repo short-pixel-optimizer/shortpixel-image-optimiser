@@ -36,7 +36,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 				$this->setDefaultCDNArgs();
 
 				// Add hooks for easier conversion / checking
-				$this->addWPHooks();
+      //	$this->addWPHooks();
 
 				// Starts buffer of whole page, with callback .
 				$this->startOutputBuffer('processFront');
