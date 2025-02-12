@@ -144,7 +144,9 @@ class ApiController extends RequestManager
      $requestBody = [
                 'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
                 'key' => $keyControl->forceGetApiKey(),
-								'urllist' => $item->data()->urls	];
+                'urllist' => $item->data()->urls,
+                'item_id' => $item->item_id,
+    ];
 
      $request = $this->getRequest($requestBody, []);
 
@@ -292,11 +294,12 @@ class ApiController extends RequestManager
 								  $data['fileSize'] = $returnDataList['fileSizes'][$imageName];
 							 }
 
-							 $fileData = (property_exists($item->data(), 'files')) ? $item->data()->files : [];
+               $fileData = (property_exists($item->data(), 'files')) ? $item->data()->files : false;
 
+Log::addTemp('ApiController 299 - ', $fileData);
 							 // Previous check here was for Item->files[$imageName] , not sure if currently needed.
-							 // Check if image is not already in fileData. 
-							 if (false === isset($fileData[$imageName]))
+							 // Check if image is not already in fileData.
+               if ($fileData === false || false === property_exists($fileData, $imageName) )
 							 {
 							 	  $imageList[$imageName] = $this->handleNewSuccess($item, $imageObject, $data);
 							 }

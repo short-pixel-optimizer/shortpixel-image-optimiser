@@ -242,7 +242,6 @@ class OptimizeController
 				ResponseController::addData($item_id, $data);
 
         $item_id = $mediaItem->get('id');
-
 				$json->result->item_id = $item_id;
 
 				$optimized = $mediaItem->getMeta('tsOptimized');
@@ -256,7 +255,6 @@ class OptimizeController
 					 $result = false;
 					 $json->result->message = ResponseController::formatItem($mediaItem->get('id')); // $mediaItem->getReason('restorable');
 				}
-
 
 				// Compat for ancient WP
 				$now = function_exists('wp_date') ? wp_date( 'U', time() ) : time();
@@ -272,7 +270,7 @@ class OptimizeController
            //$item->urls = $mediaItem->getOptimizeUrls();
            $qItem = QueueItems::getImageItem($mediaItem);
            $qItem->newDumpAction();
-					 $api->dumpMediaItem($item);
+           $api->dumpMediaItem($qItem);
 				}
 
         if ($result)
@@ -644,7 +642,6 @@ class OptimizeController
       }
 			elseif(true === $item->block())
 			{
-				Log::addTemp('Item Blocked');
 //				$item->result = new \stdClass;
 				$item->setResult([
 						'apiStatus' => ApiController::STATUS_UNCHANGED,
@@ -739,9 +736,6 @@ class OptimizeController
 
               if (ApiController::STATUS_SUCCESS == $status)
               {
-//                 $item->result->apiStatus = ApiController::STATUS_SUCCESS;
-//                 $item->fileStatus = ImageModel::FILE_STATUS_SUCCESS;
-
 								 $item->setResult(['apiStatus' => ApiController::STATUS_SUCCESS, 'fileStatus' => ImageModel::FILE_STATUS_SUCCESS]);
 
                  do_action('shortpixel_image_optimised', $imageItem->get('id'));
@@ -749,11 +743,7 @@ class OptimizeController
                }
 							 elseif(ApiController::STATUS_CONVERTED == $status)
 							 {
-//								 $item->result->apiStatus = ApiController::STATUS_CONVERTED;
-//								 $item->fileStatus = ImageModel::FILE_STATUS_SUCCESS;
-
 								 $item->setResult(['apiStatus' => ApiController::STATUS_CONVERTED, 'fileStatus' => ImageModel::FILE_STATUS_SUCCESS]);
-
 
 								 $fs = \wpSPIO()->filesystem();
 		 						 $imageItem = $fs->getMediaImage($item->item_id);
@@ -783,9 +773,7 @@ class OptimizeController
                }
 
               // @todo SHoudl this be in results, if unset like this? This can't be unset like this!
-
               unset($item->result()->files);
-
 
               $item->setResult(['queuetype' => $qtype]);
 
@@ -846,7 +834,7 @@ class OptimizeController
          }
          else
          {
-           if ($imageItem->isProcessable() && $result->apiStatus !== ApiController::STATUS_NOT_API)
+           if ($imageItem->isProcessable() && $item->result()->apiStatus !== ApiController::STATUS_NOT_API)
            {
               Log::addDebug('Item with ID' . $imageItem->item_id . ' still has processables (with dump)', $imageItem->getOptimizeUrls());
 
@@ -863,7 +851,7 @@ class OptimizeController
 
               $this->addItemToQueue($imageItem); // requeue for further processing.
            }
-           elseif (ApiController::STATUS_CONVERTED !== $result->apiStatus)
+           elseif (ApiController::STATUS_CONVERTED !== $item->result()->apiStatus)
 					 {
             $q->itemDone($item); // Unbelievable but done.
 					 }
@@ -873,22 +861,21 @@ class OptimizeController
       {
           if ($item->result()->apiStatus == ApiController::STATUS_UNCHANGED || $item->result()->apiStatus === Apicontroller::STATUS_PARTIAL_SUCCESS)
           {
-              $item->fileStatus = ImageModel::FILE_STATUS_PENDING;
+              $item->setResult(['fileStatus' => ImageModel::FILE_STATUS_PENDING]);
 							$retry_limit = $q->getShortQ()->getOption('retry_limit');
 
-							if ($result->apiStatus === ApiController::STATUS_PARTIAL_SUCCESS)
+              if ($item->result()->apiStatus === ApiController::STATUS_PARTIAL_SUCCESS)
 							{
-									if (count($result->files) > 0 )
+                  if (property_exists($item->result(), 'files') && count($item->result()->files) > 0 )
 									{
-										 $this->handleOptimizedItem($q, $item, $imageItem, $result->files);
+                     $this->handleOptimizedItem($q, $item, $imageItem, $item->result()->files);
 									}
 									else {
-										Log::addWarn('Status is partial success, but no files followed. ');
+                    Log::addWarn('Status is partial success, but no files followed. ', $item->result());
 									}
 
 									// Let frontend follow unchanged / waiting procedure.
-									$result->apiStatus = ApiController::STATUS_UNCHANGED;
-
+                  $item->setResult(['apiStatus' => ApiController::STATUS_UNCHANGED]);
 							}
 
               if ($retry_limit == $item->data()->tries || $retry_limit == ($item->data()->tries -1))
@@ -981,11 +968,16 @@ class OptimizeController
 				$item->block(true);
 				$q->updateItem($item);
 
-				// @todo Here check if these item_files are persistent ( probablY ) and if so add them to data(), not result();
-				if (property_exists($item->data(), $files))
+        // @todo Here check if these item_files are persistent ( probablY ) and if so add them to data(), not result();
+        // @todo This should be a temporary cast. Perhaps best to include this in QueueItem object with extra functions / checks implementable?
+        if (property_exists($item->data(), 'files'))
 				{
-					$item_files = $item->data()->files;
+          $item_files = (array) $item->data()->files;
 				}
+        else {
+          $item_files = [];
+        }
+
 
 /*				if (! property_exists($item, 'files'))
 				{

@@ -46,6 +46,7 @@ class QueueItem
 
         // Init defaults
         $this->setResult();
+        $this->data = new \stdClass; // init
     }
 
     public function setModel(ImageModel $imageModel)
@@ -68,7 +69,7 @@ class QueueItem
 
     public function setData($name, $value)
     {
-           $this->data->$name = $value;
+         $this->data->$name = $value;
     }
 
 		public function block($block = null)
@@ -208,7 +209,16 @@ class QueueItem
 
        $args = wp_parse_args($args, $defaults);
 
-			 $result = (object) array_filter($args);
+       $array_diff = array_diff_key($defaults, $args);
+       if (count($array_diff) > 0)
+       {
+          Log::addWarn('Set Result encountered fields not in defaults', $array_diff);
+       }
+
+
+       $result = (object) array_filter($args, function ($value) {
+          return (is_null($value)) ? false : true;
+       });
 
        $this->result = $result;
 
@@ -218,7 +228,7 @@ class QueueItem
     {
         $imageModel = $this->imageModel;
         $urls = $imageModel->getOptimizeUrls();
-        $this->data->urls = $urls;
+        $this->setData('urls',$urls);
 
     }
 
