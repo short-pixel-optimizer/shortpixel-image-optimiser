@@ -187,11 +187,10 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
         // If the items didn't survive the filters.
         if (count($replaceBlocks) == 0)
         {
-           return $content;
+           return $original_content;
         }
 
         $replaceBlocks = $this->createReplacements($replaceBlocks);
-
 
       //  $replace_function = ($this->replace_method == 'preg') ? 'pregReplaceContent' : 'stringReplaceContent';
         $replace_function = 'stringReplaceContent'; // undercooked, will defer to next version
@@ -202,6 +201,11 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
       //  Log::addTemp('Array result', [$urls, $replace_urls]);
 
         $content = $this->$replace_function($original_content, $urls, $replace_urls);
+
+        if (true === $this->content_is_json)
+        {
+          $content = addslashes($content);
+        }
 
         return $content;
 		}
