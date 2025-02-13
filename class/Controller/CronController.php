@@ -173,13 +173,13 @@ class CronController
       wp_unschedule_event(wp_next_scheduled($name, $args), $name, $args);
 
       $name = 'spio-single-cron';
-      $args = array('bulk' => $options['bulk']);
+      $args = array('bulk' => false);
 
       wp_unschedule_event(wp_next_scheduled($name, $args), $name, $args);
 
 
       $name = 'spio-bulk-cron';
-      $args = array('bulk' => $options['bulk']);
+      $args = array('bulk' => true);
 
       wp_unschedule_event(wp_next_scheduled($name, $args), $name, $args);
 
