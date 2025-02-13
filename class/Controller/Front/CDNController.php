@@ -208,14 +208,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
         $content = $this->$replace_function($original_content, $urls, $replace_urls);
 
-      /*   -- This doesn't work.
-        if (true === ->content_is_json)
-
-        {
-          $content = addslashes($content);
-        } */
-
-//Log::addTemp('Replaced - ', $_SERVER['REQUEST_URI']);
 
         return $content;
 		}
