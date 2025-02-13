@@ -97,6 +97,7 @@ class PageConverter extends \ShortPixel\Controller
 	// Function to check just before doing the conversion if anything popped up that should prevent it.
 	protected function checkPreProcess()
 	{
+
 		 if (404 == $this->status_header)
 		 {
 				return false;
@@ -152,8 +153,6 @@ class PageConverter extends \ShortPixel\Controller
 
   protected function filterOtherDomains($replaceBlocks)
   {
-     $imageData = array_column($replaceBlocks, 'raw_url');
-
      $replaceBlocks = array_filter($replaceBlocks, function ($replaceBlock)
      {
           // Check if block if from different domain (skip) but only if host set ( not relative )
@@ -165,6 +164,23 @@ class PageConverter extends \ShortPixel\Controller
      });
 
      return $replaceBlocks;
+  }
+
+  protected function filterEmptyURLS($replaceBlocks)
+  {
+      $imageData = array_column($replaceBlocks, 'url');
+
+      $replaceBlocks = array_filter($replaceBlocks, function ($replaceBlock)
+      {
+          if (strlen(trim($replaceBlock->url)) == 0)
+          {
+             return false;
+          }
+
+          return true;
+      });
+
+      return $replaceBlocks;
   }
 
 

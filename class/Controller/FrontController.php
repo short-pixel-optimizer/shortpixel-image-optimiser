@@ -30,6 +30,7 @@ class FrontController extends \ShortPixel\Controller
 					}
 
 				}
+
 		}
 
 
