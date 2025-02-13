@@ -127,7 +127,7 @@ class CronController
             $name = $options['cron_name'];
             $args = [0 => [
                   'bulk' => $options['bulk']]
-              ];              
+              ];
 
             if ( false === wp_next_scheduled($name, $args))
             {
@@ -171,6 +171,19 @@ class CronController
       ];
 
       wp_unschedule_event(wp_next_scheduled($name, $args), $name, $args);
+
+      $name = 'spio-single-cron';
+      $args = array('bulk' => false);
+
+      wp_unschedule_event(wp_next_scheduled($name, $args), $name, $args);
+
+
+      $name = 'spio-bulk-cron';
+      $args = array('bulk' => true);
+
+      wp_unschedule_event(wp_next_scheduled($name, $args), $name, $args);
+
+
   }
 
   protected function bulkScheduleEvent($queue_type, $options, $args)
@@ -199,7 +212,9 @@ class CronController
     foreach($this->cron_options as $type => $options)
     {
        $name = $options['cron_name'];
-       $args = array('bulk' => $options['bulk']);
+       $args = [0 => [
+             'bulk' => $options['bulk']]
+         ];
 
        if (false !== wp_next_scheduled ($name, $args))
        {

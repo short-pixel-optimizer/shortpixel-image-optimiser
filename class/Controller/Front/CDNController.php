@@ -26,9 +26,11 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		public function __construct()
 		{
 				parent::__construct();
+        //Log::addTemp("DOING: ", $_SERVER['REQUEST_URI']);
 
 				if (false === $this->shouldConvert())
 				{
+           Log::addTemp("not Converting", $_SERVER['REQUEST_URI']);
 					 return false;
 				}
 
@@ -181,17 +183,20 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			//	$document_matches = $this->fetchDocumentMatches($content, $args);
 			//	$urls = array_merge($url, $this->extraDocumentMatches($document_matches));
 
+        $replaceBlocks = $this->filterEmptyURLS($replaceBlocks);
 				$replaceBlocks = $this->filterRegexExclusions($replaceBlocks);
         $replaceBlocks = $this->filterOtherDomains($replaceBlocks);
 
         // If the items didn't survive the filters.
         if (count($replaceBlocks) == 0)
         {
-           return $content;
+           Log::addTemp('No Replace Blocks', $_SERVER['REQUEST_URI']);
+           return $original_content;
         }
 
-        $replaceBlocks = $this->createReplacements($replaceBlocks);
+        //Log::addTemp('ReplaceBlcoks', $replaceBlocks);
 
+        $replaceBlocks = $this->createReplacements($replaceBlocks);
 
       //  $replace_function = ($this->replace_method == 'preg') ? 'pregReplaceContent' : 'stringReplaceContent';
         $replace_function = 'stringReplaceContent'; // undercooked, will defer to next version
@@ -199,9 +204,10 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
         $urls = array_column($replaceBlocks, 'raw_url');
 				$replace_urls = array_column($replaceBlocks, 'replace_url');
 
-      //  Log::addTemp('Array result', [$urls, $replace_urls]);
+        Log::addTemp('Array result', [$urls, $replace_urls]);
 
         $content = $this->$replace_function($original_content, $urls, $replace_urls);
+
 
         return $content;
 		}
