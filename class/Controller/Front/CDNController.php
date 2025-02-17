@@ -181,6 +181,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			//	$document_matches = $this->fetchDocumentMatches($content, $args);
 			//	$urls = array_merge($url, $this->extraDocumentMatches($document_matches));
 
+        $replaceBlocks = $this->filterEmptyURLS($replaceBlocks);
 				$replaceBlocks = $this->filterRegexExclusions($replaceBlocks);
         $replaceBlocks = $this->filterOtherDomains($replaceBlocks);
 
@@ -198,14 +199,10 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
         $urls = array_column($replaceBlocks, 'raw_url');
 				$replace_urls = array_column($replaceBlocks, 'replace_url');
 
-      //  Log::addTemp('Array result', [$urls, $replace_urls]);
+      //  Log::addDebug('Array result', [$urls, $replace_urls]);
 
         $content = $this->$replace_function($original_content, $urls, $replace_urls);
 
-        if (true === $this->content_is_json)
-        {
-          $content = addslashes($content);
-        }
 
         return $content;
 		}
@@ -323,7 +320,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 						$url = $site_url . $original_url;
 						$replaceBlock->parsed = parse_url($url); // parse the new URL
             $replaceBlock->url = $url;
-            Log::addTemp("URL from $original_url changed to $url");
 
             return true;
         }

@@ -1044,6 +1044,7 @@ class AjaxController
 
     public function ajax_checkquota()
     {
+
          $this->checkNonce('ajax_request');
 				 $action = 'check_quota';
 				 $this->checkActionAccess($action, 'is_author');

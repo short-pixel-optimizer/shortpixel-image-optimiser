@@ -57,7 +57,7 @@ class QuotaController
         if (! $cacheData->exists() )
         {
             $quotaData = $this->getRemoteQuota();
-						if (! $this->hasQuota())
+            if (false === $this->hasQuota())
 							$timeout = MINUTE_IN_SECONDS;
 						else {
 							$timeout = HOUR_IN_SECONDS;
@@ -173,7 +173,6 @@ class QuotaController
 				{
 						AdminNoticesController::resetQuotaNotices();
 				}
-		//		Log::addDebug('Reset Quota Exceeded and reset Notices');
        	$settings->quotaExceeded = 0;
     }
 

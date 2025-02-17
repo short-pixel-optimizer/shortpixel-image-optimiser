@@ -596,6 +596,13 @@ class ShortPixelScreen extends ShortPixelScreenBase
           data.http_text = this.strings.fatalError500;
           super.HandleError(data);
       }
+      else if(data.error) { // If this happens on the processor - checkResponse level instead of item.
+        var error = this.processor.aStatusError[data.error];
+        if (error == 'NOQUOTA')
+        {
+              this.ToggleOverQuotaNotice(true);
+        }
+      }
   }
 
 
@@ -627,12 +634,21 @@ class ShortPixelScreen extends ShortPixelScreenBase
 					{
 						var info = '<span class="kbinfo"><a href="' + result.kblink + '" target="_blank" ><span class="dashicons dashicons-editor-help">&nbsp;</span></a></span>';
 					}
+
+          // Error can be passed here, get it.
+          if (item.error)
+          {
+                var error = this.processor.aStatusError[item.error];
+          }
 			 }
 
-			 var error = this.processor.aStatusError[result.error];
+       if (typeof error === 'undefined')
+       {
+            var error = this.processor.aStatusError[result.error];
+       }
+
 			 if (error == 'NOQUOTA')
 			 {
-
 						 this.ToggleOverQuotaNotice(true);
 			 }
 
@@ -1185,7 +1201,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
      var target = event.target;
      var settingParent = target.closest('.optiongroup');
      var warningEl = settingParent.querySelector('.warning');
-     //console.log(settingParent, warningEl);
+
      if (true === target.checked)
      {
         warningEl.classList.remove('hidden');
