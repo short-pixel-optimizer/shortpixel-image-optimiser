@@ -19,8 +19,12 @@ class QuotaNoticeReached extends \ShortPixel\Model\AdminNoticeModel
 
 	public function load()
 	{
-		 $this->callback = array(AdminNoticesController::getInstance(), 'proposeUpgradePopup');
-		 parent::load();
+    // $this->callback = array(AdminNoticesController::getInstance(), 'proposeUpgradePopup');
+     $bool = parent::load();
+     if (true === $bool && is_object($this->notice))
+     {
+        AdminNoticesController::getInstance()->proposeUpgradePopup();
+     }
 	}
 
 	protected function checkTrigger()
@@ -29,8 +33,6 @@ class QuotaNoticeReached extends \ShortPixel\Model\AdminNoticeModel
 
 			if ($quotaController->hasQuota() === true)
 				return false;
-
-//			$quotaData = $quotaController->getQuota();
 
 		  $this->reset('MSG_UPGRADE_MONTH');
 			$this->reset('MSG_UPGRADE_BULK');

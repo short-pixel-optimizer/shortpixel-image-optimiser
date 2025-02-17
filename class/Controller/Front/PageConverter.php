@@ -135,11 +135,6 @@ class PageConverter extends \ShortPixel\Controller
 
        }
 
-       if (count($allMatches) > 0)
-       {
-         Log::addTEmp('RegexExclusions: ', $allMatches);
-       }
-
 			 $replaceBlocks = array_filter($replaceBlocks, function ($replaceBlock) use ($allMatches) {
 							if (in_array($replaceBlock->raw_url, $allMatches))
 							{

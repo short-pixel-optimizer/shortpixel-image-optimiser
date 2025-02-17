@@ -40,6 +40,7 @@ abstract class AdminNoticeModel
 		 $noticeController = Notices::getInstance();
 		 $notice = $noticeController->getNoticeByID($this->key);
 
+
 		 if (is_object($notice))
 		 {
 		 	$this->notice = $notice;
@@ -57,7 +58,9 @@ abstract class AdminNoticeModel
 		 elseif ( is_object($this->notice) && $this->checkReset() === true)
 		 {
 			  $this->reset();
+        return false;
 		 }
+     return true;
 	 }
 
 	 public function getKey()
@@ -69,6 +72,7 @@ abstract class AdminNoticeModel
 	 {
 		  $key = (is_null($key)) ? $this->key : $key;
 		 	Notices::removeNoticeByID($key);
+      $this->notice = null;
 	 }
 
 	 protected function checkReset()
@@ -130,6 +134,7 @@ abstract class AdminNoticeModel
 		 {
 			 $notice->limitScreens('include', $this->include_screens);
 		 }
+
 
 		 if (! is_null($this->callback))
 		 	Notices::makePersistent($notice, $this->key, $this->suppress_delay, $this->callback);
