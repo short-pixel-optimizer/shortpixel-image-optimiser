@@ -203,7 +203,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
         $content = $this->$replace_function($original_content, $urls, $replace_urls);
 
-
         return $content;
 		}
 
@@ -429,12 +428,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
             return false;
         }
     }
-
-
-
-
-
-
 
 
 } // class
