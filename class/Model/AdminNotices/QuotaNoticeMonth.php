@@ -15,8 +15,14 @@ class QuotaNoticeMonth extends \ShortPixel\Model\AdminNoticeModel
 
 	public function load()
 	{
-		 $this->callback = array(AdminNoticesController::getInstance(), 'proposeUpgradePopup');
-		 parent::load();
+    $bool = parent::load();
+
+  //	 $this->callback = array(AdminNoticesController::getInstance(), 'proposeUpgradePopup');
+    if (true === $bool && is_object($this->notice))
+    {
+       AdminNoticesController::getInstance()->proposeUpgradePopup();
+    }
+
 	}
 
 	protected function checkTrigger()
