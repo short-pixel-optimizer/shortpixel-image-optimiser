@@ -32,19 +32,28 @@ jobs:
       - name: List Docker Containers
         run: docker ps
 
+      - name: Print WordPress container logs
+        run: |
+          CONTAINER_ID=$(docker-compose -f .github/docker/docker-compose.yml ps -q wordpress)
+          docker logs "$CONTAINER_ID"
+
       # Wait for WordPress to be fully up before running commands
       - name: Wait for WordPress to be available
         run: |
+          # Give the container extra time to initialize
+          echo "Initial wait for container initialization…"
+          sleep 10
           for i in {1..30}; do
-            CONTENT=$(curl -s -v http://localhost:8000)
-            echo "Iteration $i: fetched content:"
-            echo "$CONTENT"
-            if echo "$CONTENT" | grep -q "WordPress"; then
+            echo "Iteration $i: Executing verbose curl"
+            RESPONSE=$(curl -v --max-time 30 http://localhost:8000 || true)
+            echo "Response from curl:"
+            echo "$RESPONSE"
+            if echo "$RESPONSE" | grep -q "WordPress"; then
               echo "WordPress is up"
               exit 0
             fi
-            echo "Waiting for WordPress..."
-            sleep 5
+            echo "Waiting for WordPress to be available..."
+            sleep 10
           done
           echo "Timed out waiting for WordPress to start."
           exit 1
