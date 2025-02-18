@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+    services:
+      docker:
+        image: docker:19.03.12
+        options: --privileged
+        # Docker-in-Docker is available on GitHub Actions by default on ubuntu-latest runners.
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Compose
+        run: |
+          docker-compose -f .github/docker/docker-compose.yml up -d
+
+      # Wait for WordPress to be fully up before running commands
+      - name: Wait for WordPress to be available
+        run: |
+          for i in {1..30}; do
+            if curl -s http://localhost:8000 | grep -q "WordPress"; then
+              echo "WordPress is up"
+              exit 0
+            fi
+            echo "Waiting for WordPress..."
+            sleep 5
+          done
+          exit 1
+
+      # Copy plugin into container
+      - name: Copy Plugin into Container
+        run: |
+          CONTAINER_ID=$(docker-compose -f .github/docker/docker-compose.yml ps -q wordpress)
+          docker cp ./* $CONTAINER_ID:/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
+
+      # Activate the plugin using WP-CLI
+      - name: Activate Plugin via WP-CLI
+        run: |
+          CONTAINER_ID=$(docker-compose -f .github/docker/docker-compose.yml ps -q wordpress)
+          # Install WP-CLI inside the container if not installed
+          docker exec $CONTAINER_ID bash -c "if ! command -v wp &> /dev/null; then curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && chmod +x wp-cli.phar && mv wp-cli.phar /usr/local/bin/wp; fi"
+          # Wait a few seconds in case the container is still configuring WordPress
+          sleep 5
+          docker exec $CONTAINER_ID wp plugin activate shortpixel-image-optimiser --allow-root
+
+      # Run your tests (customize this step to your testing framework)
+      - name: Run Plugin Tests
+        run: |
+          # Example: running PHPUnit test suite located in /tests directory.
+          # Customize the following command based on your actual testing framework.
+          composer install --no-interaction --prefer-dist
+          vendor/bin/phpunit --configuration phpunit.xml.dist
+
+      # Tear down Docker Compose
+      - name: Shut down Docker Compose
+        if: always()
+        run: docker-compose -f .github/docker/docker-compose.yml down
+
