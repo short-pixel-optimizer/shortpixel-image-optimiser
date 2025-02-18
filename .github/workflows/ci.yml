@@ -28,11 +28,15 @@ jobs:
         run: |
           docker-compose -f .github/docker/docker-compose.yml up -d
 
+      #Debug, remove when working
+      - name: List Docker Containers
+        run: docker ps
+
       # Wait for WordPress to be fully up before running commands
       - name: Wait for WordPress to be available
         run: |
           for i in {1..30}; do
-            CONTENT=$(curl -s http://localhost:8000)
+            CONTENT=$(curl -s -v http://localhost:8000)
             echo "Iteration $i: fetched content:"
             echo "$CONTENT"
             if echo "$CONTENT" | grep -q "WordPress"; then
