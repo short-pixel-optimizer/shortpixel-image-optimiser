@@ -47,21 +47,6 @@ jobs:
           RESPONSE=$(curl -v --max-time 30 http://localhost:8000 || true)
           echo "Response from curl:"
           echo "$RESPONSE"
-          
-          #for i in {1..30}; do
-          #  echo "Iteration $i: Executing verbose curl"
-          #  RESPONSE=$(curl -v --max-time 30 http://localhost:8000 || true)
-          #  echo "Response from curl:"
-          #  echo "$RESPONSE"
-          #  if echo "$RESPONSE" | grep -q "WordPress"; then
-          #    echo "WordPress is up"
-          #    exit 0
-          #  fi
-          #  echo "Waiting for WordPress to be available..."
-          #  sleep 10
-          #done
-          #echo "Timed out waiting for WordPress to start."
-          #exit 1
 
       - name: Install WordPress via WP-CLI
         run: |
@@ -86,16 +71,18 @@ jobs:
       - name: Copy Plugin into Container
         run: |
           CONTAINER_ID=$(docker-compose -f .github/docker/docker-compose.yml ps -q wordpress)
-          docker cp ./* $CONTAINER_ID:/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
+          docker cp ./build $CONTAINER_ID:/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
+          docker cp ./res $CONTAINER_ID:/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
+          docker cp ./class $CONTAINER_ID:/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
+          docker cp ./wp-shortpixel.php $CONTAINER_ID:/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
+          docker cp ./shortpixel-plugin.php $CONTAINER_ID:/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
+          docker cp ./readme.txt $CONTAINER_ID:/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
 
       # Activate the plugin using WP-CLI
       - name: Activate Plugin via WP-CLI
         run: |
           CONTAINER_ID=$(docker-compose -f .github/docker/docker-compose.yml ps -q wordpress)
-          # Install WP-CLI inside the container if not installed
-          docker exec $CONTAINER_ID bash -c "if ! command -v wp &> /dev/null; then curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && chmod +x wp-cli.phar && mv wp-cli.phar /usr/local/bin/wp; fi"
-          # Wait a few seconds in case the container is still configuring WordPress
-          sleep 5
+          # Activate the plugin via WP-CLI (already installed above)
           docker exec $CONTAINER_ID wp plugin activate shortpixel-image-optimiser --allow-root
 
       # Run your tests (customize this step to your testing framework)
