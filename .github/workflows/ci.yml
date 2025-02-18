@@ -66,14 +66,15 @@ jobs:
       - name: Install WordPress via WP-CLI
         run: |
           # Run WordPress install
-          docker exec $CONTAINER_ID wp core install \
-            --url="http://localhost:8000" \
-            --title="GitHub Actions Test Site" \
-            --admin_user="admin" \
-            --admin_password="admin_password" \
-            --admin_email="admin@example.com" \
-            --skip-email \
-            --allow-root
+          docker-compose -f .github/docker/docker-compose.yml exec -T wordpress \
+            wp core install \
+              --url="http://localhost:8000" \
+              --title="GitHub Actions Test Site" \
+              --admin_user="admin" \
+              --admin_password="admin_password" \
+              --admin_email="admin@example.com" \
+              --skip-email \
+              --allow-root
 
       # Copy plugin into container
       - name: Copy Plugin into Container
