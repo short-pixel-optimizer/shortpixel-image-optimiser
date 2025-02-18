@@ -43,6 +43,11 @@ jobs:
           # Give the container extra time to initialize
           echo "Initial wait for container initialization…"
           sleep 10
+          echo "Executing verbose curl"
+          RESPONSE=$(curl -v --max-time 30 http://localhost:8000 || true)
+          echo "Response from curl:"
+          echo "$RESPONSE"
+          
           #for i in {1..30}; do
           #  echo "Iteration $i: Executing verbose curl"
           #  RESPONSE=$(curl -v --max-time 30 http://localhost:8000 || true)
