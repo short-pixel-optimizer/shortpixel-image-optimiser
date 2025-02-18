@@ -29,3 +29,4 @@ services:
 
 volumes:
   db_data: {}
+  wp_content: {}
