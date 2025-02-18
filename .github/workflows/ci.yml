@@ -32,13 +32,17 @@ jobs:
       - name: Wait for WordPress to be available
         run: |
           for i in {1..30}; do
-            if curl -s http://localhost:8000 | grep -q "WordPress"; then
+            CONTENT=$(curl -s http://localhost:8000)
+            echo "Iteration $i: fetched content:"
+            echo "$CONTENT"
+            if echo "$CONTENT" | grep -q "WordPress"; then
               echo "WordPress is up"
               exit 0
             fi
             echo "Waiting for WordPress..."
             sleep 5
           done
+          echo "Timed out waiting for WordPress to start."
           exit 1
 
       # Copy plugin into container
