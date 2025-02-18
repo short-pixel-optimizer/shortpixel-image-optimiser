@@ -28,4 +28,4 @@ services:
     - ./wp-content:/var/www/html/wp-content
 
 volumes:
-  db_data:
+  db_data: {}
