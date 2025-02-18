@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches:
-      - main
+      - automated-testing
   pull_request:
 
 jobs:
