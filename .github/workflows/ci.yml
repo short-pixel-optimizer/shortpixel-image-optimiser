@@ -63,4 +63,3 @@ jobs:
       - name: Shut down Docker Compose
         if: always()
         run: docker-compose -f .github/docker/docker-compose.yml down
-
