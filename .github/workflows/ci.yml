@@ -71,7 +71,7 @@ jobs:
       - name: Copy Plugin into Container
         run: |
           CONTAINER_ID=$(docker-compose -f .github/docker/docker-compose.yml ps -q wordpress)
-          docker exec $CONTAINER_ID mkdir /var/www/html/wp-content/plugins/shortpixel-image-optimiser/build/
+          docker exec $CONTAINER_ID mkdir -p /var/www/html/wp-content/plugins/shortpixel-image-optimiser/build/
           docker cp build/shortpixel/ "$CONTAINER_ID":/var/www/html/wp-content/plugins/shortpixel-image-optimiser/build/
           docker cp res "$CONTAINER_ID":/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
           docker cp class "$CONTAINER_ID":/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
