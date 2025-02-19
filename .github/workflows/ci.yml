@@ -90,12 +90,16 @@ jobs:
           # Activate the plugin via WP-CLI (already installed above)
           docker exec $CONTAINER_ID wp plugin activate shortpixel-image-optimiser --allow-root
 
+      #Configure GH token to access the plugin-modules repo, which is private
+      - name: Configure GitHub OAuth for Composer
+        run: composer config --global github-oauth.github.com ${{ secrets.SP_PLUGIN_MODULES_TOKEN }}
+
       # Run your tests (customize this step to your testing framework)
       - name: Run Plugin Tests
         run: |
           # Example: running PHPUnit test suite located in /tests directory.
           # Customize the following command based on your actual testing framework.
-          composer install --no-interaction --prefer-dist
+          composer update --no-interaction --prefer-dist
           vendor/bin/phpunit --configuration phpunit.xml.dist
 
       # Tear down Docker Compose
