@@ -1,9 +1,13 @@
 {
+  "name": "short-pixel-optimizer/shortpixel-image-optimiser",
+  "require": {
+    "short-pixel-optimizer/plugin-modules": "*"
+  },
     "repositories": [
         {
             "packagist.org": false,
             "type": "path",
-            "url": "../modules/*",
+            "url": "../plugin-modules/*",
 	    "options": {
                 "symlink": true
             }
@@ -16,8 +20,7 @@
 				"shortpixel/replacer": ">=1.0"
     },
     "require-dev": {
-	"phpunit/phpunit": "^9",
-	"mikey179/vfsstream": "^1",
+	"phpunit/phpunit": "^12",
 	"10up/wp_mock": "@dev"
 
     },
@@ -32,5 +35,4 @@
     "extra": {
          "targetNamespace" : "ShortPixel"
     }
-
 }
