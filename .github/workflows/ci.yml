@@ -77,6 +77,7 @@ jobs:
           docker cp ./wp-shortpixel.php $CONTAINER_ID:/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
           docker cp ./shortpixel-plugin.php $CONTAINER_ID:/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
           docker cp ./readme.txt $CONTAINER_ID:/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
+          docker exec $CONTAINER_ID ls -alh /var/www/html/wp-content/plugins/shortpixel-image-optimiser/build/shortpixel/
 
       # Activate the plugin using WP-CLI
       - name: Activate Plugin via WP-CLI
