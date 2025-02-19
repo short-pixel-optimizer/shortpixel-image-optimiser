@@ -71,12 +71,14 @@ jobs:
       - name: Copy Plugin into Container
         run: |
           CONTAINER_ID=$(docker-compose -f .github/docker/docker-compose.yml ps -q wordpress)
-          docker cp build $CONTAINER_ID:/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
-          docker cp res $CONTAINER_ID:/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
-          docker cp class $CONTAINER_ID:/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
-          docker cp wp-shortpixel.php $CONTAINER_ID:/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
-          docker cp shortpixel-plugin.php $CONTAINER_ID:/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
-          docker cp readme.txt $CONTAINER_ID:/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
+          docker cp build "$CONTAINER_ID":/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
+          docker cp res "$CONTAINER_ID":/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
+          docker cp class "$CONTAINER_ID":/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
+          docker cp wp-shortpixel.php "$CONTAINER_ID":/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
+          docker cp shortpixel-plugin.php "$CONTAINER_ID":/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
+          docker cp readme.txt "$CONTAINER_ID":/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
+          docker exec $CONTAINER_ID ls -alh /var/www/html/wp-content/plugins/
+          docker exec $CONTAINER_ID ls -alh /var/www/html/wp-content/plugins/shortpixel-image-optimiser/
           docker exec $CONTAINER_ID ls -alh /var/www/html/wp-content/plugins/shortpixel-image-optimiser/build/shortpixel/
 
       # Activate the plugin using WP-CLI
