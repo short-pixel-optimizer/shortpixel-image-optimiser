@@ -43,6 +43,7 @@ jobs:
           # Give the container extra time to initialize
           echo "Initial wait for container initialization…"
           sleep 5
+          RESPONSE=$(curl -v --max-time 30 http://localhost:8000 || true)
 
       - name: Install WordPress via WP-CLI
         run: |
