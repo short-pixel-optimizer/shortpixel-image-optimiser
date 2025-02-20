@@ -108,7 +108,7 @@ jobs:
           # Example: running PHPUnit test suite located in /tests directory.
           # Customize the following command based on your actual testing framework.
           composer update --no-interaction --prefer-dist
-          #vendor/bin/phpunit --configuration phpunit.xml.dist
+          vendor/bin/phpunit --configuration phpunit.xml.dist
 
       # Tear down Docker Compose
       - name: Shut down Docker Compose
