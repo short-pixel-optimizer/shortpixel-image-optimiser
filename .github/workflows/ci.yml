@@ -106,8 +106,8 @@ jobs:
       - name: Run Plugin Tests
         run: |
           CONTAINER_ID=$(docker-compose -f .github/docker/docker-compose.yml ps -q wordpress)
-          doker exec $CONTAINER_ID composer update --no-interaction --prefer-dist
-          doker exec $CONTAINER_ID phpunit --configuration phpunit.xml.dist
+          docker exec $CONTAINER_ID composer update --no-interaction --prefer-dist
+          docker exec $CONTAINER_ID phpunit --configuration phpunit.xml.dist
 
       # Tear down Docker Compose
       - name: Shut down Docker Compose
