@@ -27,15 +27,6 @@ services:
     volumes:
       - ./wp-content:/var/www/html/wp-content
 
-  wordpress-cli:
-    image: wordpress:cli
-    depends_on:
-      - wordpress
-      - db
-    volumes:
-      - ./wordpress:/var/www/html
-      - ./plugins:/var/www/html/wp-content/plugins
-
 volumes:
   db_data: {}
   wp_content: {}

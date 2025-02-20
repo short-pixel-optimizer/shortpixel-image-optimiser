@@ -37,7 +37,7 @@ jobs:
           CONTAINER_ID=$(docker-compose -f .github/docker/docker-compose.yml ps -q wordpress)
           docker logs "$CONTAINER_ID"
 
-      - name: Install svn
+      - name: Install SVN
         run: |
           sudo apt-get update && sudo apt-get install -y subversion && sudo rm -rf /var/lib/apt/lists/*
           
@@ -54,6 +54,12 @@ jobs:
 
       - name: Install WordPress via WP-CLI
         run: |
+          CONTAINER_ID=$(docker-compose -f .github/docker/docker-compose.yml ps -q wordpress)
+          # Ensure WP-CLI is available inside the container.
+          docker exec $CONTAINER_ID bash -c "if ! command -v wp &> /dev/null; then \
+            curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && \
+            chmod +x wp-cli.phar && mv wp-cli.phar /usr/local/bin/wp; \
+          fi"
           # Run WordPress install
           docker-compose -f .github/docker/docker-compose.yml exec -T wordpress \
             wp core install \
@@ -87,6 +93,11 @@ jobs:
           CONTAINER_ID=$(docker-compose -f .github/docker/docker-compose.yml ps -q wordpress)
           # Activate the plugin via WP-CLI (already installed above)
           docker exec $CONTAINER_ID wp plugin activate shortpixel-image-optimiser --allow-root
+
+      # Setup WordPress tests
+      - name: Setup WordPress tests
+        run: |
+          ls -alh
 
       #Configure GH token to access the plugin-modules repo, which is private
       - name: Configure GitHub OAuth for Composer
