@@ -50,7 +50,7 @@ jobs:
 
       - name: Install WordPress via WP-CLI
         run: |
-          CONTAINER_ID=$(docker-compose -f .github/docker/docker-compose.yml ps -q wordpress)
+          #CONTAINER_ID=$(docker-compose -f .github/docker/docker-compose.yml ps -q wordpress)
           # Ensure WP-CLI is available inside the container.
           #docker exec $CONTAINER_ID bash -c "if ! command -v wp &> /dev/null; then \
           #  curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && \
