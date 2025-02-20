@@ -37,17 +37,6 @@ jobs:
           CONTAINER_ID=$(docker-compose -f .github/docker/docker-compose.yml ps -q wordpress)
           docker logs "$CONTAINER_ID"
 
-      # Wait for WordPress to be fully up before running commands
-      - name: Wait for WordPress to be available
-        run: |
-          # Give the container extra time to initialize
-          echo "Initial wait for container initialization…"
-          sleep 5
-          echo "Executing verbose curl"
-          RESPONSE=$(curl -v --max-time 30 http://localhost:8000 || true)
-          echo "Response from curl:"
-          echo "$RESPONSE"
-
       - name: Install WordPress via WP-CLI
         run: |
           CONTAINER_ID=$(docker-compose -f .github/docker/docker-compose.yml ps -q wordpress)
@@ -95,7 +84,7 @@ jobs:
         run: |
           CONTAINER_ID=$(docker-compose -f .github/docker/docker-compose.yml ps -q wordpress)
           echo "Copying WordPress tests..."
-          docker exec $CONTAINER_ID mkdir -p /var/www/html/tests/includes/
+          docker exec $CONTAINER_ID mkdir -p /var/www/html/tests/
           docker exec $CONTAINER_ID bash -c 'wp_version=$(wp core version --allow-root); \
             svn export --quiet --ignore-externals https://develop.svn.wordpress.org/tags/$wp_version/tests/phpunit/includes/ /var/www/html/tests/includes/; \
             svn export --quiet --ignore-externals https://develop.svn.wordpress.org/tags/$wp_version/tests/phpunit/data/ /var/www/html/tests/data/; \
