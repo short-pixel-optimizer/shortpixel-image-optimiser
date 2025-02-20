@@ -39,7 +39,8 @@ jobs:
 
       - name: Install SVN
         run: |
-          sudo apt-get update && sudo apt-get install -y subversion && sudo rm -rf /var/lib/apt/lists/*
+          CONTAINER_ID=$(docker-compose -f .github/docker/docker-compose.yml ps -q wordpress)
+          docker exec $CONTAINER_ID apt-get update && apt-get install -y subversion && rm -rf /var/lib/apt/lists/*
           
       # Wait for WordPress to be fully up before running commands
       - name: Wait for WordPress to be available
@@ -99,7 +100,7 @@ jobs:
         run: |
           CONTAINER_ID=$(docker-compose -f .github/docker/docker-compose.yml ps -q wordpress)
           echo "Copying WordPress tests..."
-          docker exec $CONTAINER_ID mkdir -p /var/www/html/tests/
+          docker exec $CONTAINER_ID mkdir -p /var/www/html/tests/includes/
           docker exec $CONTAINER_ID bash -c "wp_version=$(wp core version); \
             svn export --quiet --ignore-externals https://develop.svn.wordpress.org/$wp_version/tests/phpunit/includes/ /var/www/html/tests/includes/; \
             ls -alh /var/www/html/tests/includes/"
