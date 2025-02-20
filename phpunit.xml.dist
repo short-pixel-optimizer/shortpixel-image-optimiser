@@ -9,7 +9,7 @@
 	>
 	<testsuites>
 		<testsuite name="fileSystem">
-			<directory prefix="test-" suffix=".php">./tests/</directory>
+			<directory prefix="test-" suffix=".php">/var/www/html/tests/</directory>
 		</testsuite>
 	</testsuites>
 </phpunit>
