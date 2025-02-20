@@ -60,7 +60,7 @@ jobs:
               --admin_email="admin@example.com" \
               --skip-email \
               --allow-root
-	  
+  
       # Copy plugin into container
       - name: Copy Plugin into Container
         run: |
@@ -87,7 +87,6 @@ jobs:
       #Configure GH token to access the plugin-modules repo, which is private
       - name: Configure GitHub OAuth for Composer
         run: composer --version 
-	#composer config --global github-oauth.github.com ${{ secrets.SP_PLUGIN_MODULES_TOKEN }}
 
       # Run your tests (customize this step to your testing framework)
       - name: Run Plugin Tests
