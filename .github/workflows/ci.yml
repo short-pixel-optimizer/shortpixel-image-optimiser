@@ -96,7 +96,7 @@ jobs:
           CONTAINER_ID=$(docker-compose -f .github/docker/docker-compose.yml ps -q wordpress)
           echo "Copying WordPress tests..."
           docker exec $CONTAINER_ID mkdir -p /var/www/html/tests/includes/
-          docker exec $CONTAINER_ID bash -c 'wp_version=$(wp core version); \
+          docker exec $CONTAINER_ID bash -c 'wp_version=$(wp core version --allow-root); \
             svn export --quiet --ignore-externals https://develop.svn.wordpress.org/$wp_version/tests/phpunit/includes/ /var/www/html/tests/includes/; \
             ls -alh /var/www/html/tests/includes/'
 
