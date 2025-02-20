@@ -13,7 +13,9 @@ services:
       - db_data:/var/lib/mysql
 
   wordpress:
-    image: wordpress:latest
+    build:
+      context: ./docker/wordpress
+      dockerfile: Dockerfile
     depends_on:
       - db
     ports:

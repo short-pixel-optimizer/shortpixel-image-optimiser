@@ -37,11 +37,6 @@ jobs:
           CONTAINER_ID=$(docker-compose -f .github/docker/docker-compose.yml ps -q wordpress)
           docker logs "$CONTAINER_ID"
 
-      - name: Install SVN
-        run: |
-          CONTAINER_ID=$(docker-compose -f .github/docker/docker-compose.yml ps -q wordpress)
-          docker exec $CONTAINER_ID sudo apt-get update && sudo apt-get install -y subversion && sudo rm -rf /var/lib/apt/lists/*
-          
       # Wait for WordPress to be fully up before running commands
       - name: Wait for WordPress to be available
         run: |
