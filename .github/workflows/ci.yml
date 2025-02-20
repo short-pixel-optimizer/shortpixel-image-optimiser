@@ -106,12 +106,12 @@ jobs:
 
       # Run plugin tests
       - name: Run Plugin Tests
-        run: |
-          echo "Listing html folder..."
+        run: |         
           CONTAINER_ID=$(docker-compose -f .github/docker/docker-compose.yml ps -q wordpress)
-          docker exec $CONTAINER_ID ls -alh /var/www/html/
+          echo "Listing html folder..."
           docker exec $CONTAINER_ID composer update --no-interaction --prefer-dist
-          docker exec $CONTAINER_ID phpunit --configuration phpunit.xml.dist
+          docker exec $CONTAINER_ID ls -alh /var/www/html/
+          docker exec $CONTAINER_ID /var/www/html/vendor/bin/phpunit --configuration phpunit.xml.dist
 
       # Tear down Docker Compose
       - name: Shut down Docker Compose
