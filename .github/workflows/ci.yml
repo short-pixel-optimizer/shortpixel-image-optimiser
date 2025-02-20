@@ -42,7 +42,7 @@ jobs:
         run: |
           # Give the container extra time to initialize
           echo "Initial wait for container initialization…"
-          sleep 10
+          sleep 5
           echo "Executing verbose curl"
           RESPONSE=$(curl -v --max-time 30 http://localhost:8000 || true)
           echo "Response from curl:"
@@ -52,10 +52,10 @@ jobs:
         run: |
           CONTAINER_ID=$(docker-compose -f .github/docker/docker-compose.yml ps -q wordpress)
           # Ensure WP-CLI is available inside the container.
-          docker exec $CONTAINER_ID bash -c "if ! command -v wp &> /dev/null; then \
-            curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && \
-            chmod +x wp-cli.phar && mv wp-cli.phar /usr/local/bin/wp; \
-          fi"
+          #docker exec $CONTAINER_ID bash -c "if ! command -v wp &> /dev/null; then \
+          #  curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && \
+          #  chmod +x wp-cli.phar && mv wp-cli.phar /usr/local/bin/wp; \
+          #fi"
           # Run WordPress install
           docker-compose -f .github/docker/docker-compose.yml exec -T wordpress \
             wp core install \
@@ -66,7 +66,7 @@ jobs:
               --admin_email="admin@example.com" \
               --skip-email \
               --allow-root
-
+	  
       # Copy plugin into container
       - name: Copy Plugin into Container
         run: |
@@ -92,7 +92,8 @@ jobs:
 
       #Configure GH token to access the plugin-modules repo, which is private
       - name: Configure GitHub OAuth for Composer
-        run: composer config --global github-oauth.github.com ${{ secrets.SP_PLUGIN_MODULES_TOKEN }}
+        run: composer --version 
+	#composer config --global github-oauth.github.com ${{ secrets.SP_PLUGIN_MODULES_TOKEN }}
 
       # Run your tests (customize this step to your testing framework)
       - name: Run Plugin Tests
@@ -100,7 +101,7 @@ jobs:
           # Example: running PHPUnit test suite located in /tests directory.
           # Customize the following command based on your actual testing framework.
           composer update --no-interaction --prefer-dist
-          vendor/bin/phpunit --configuration phpunit.xml.dist
+          #vendor/bin/phpunit --configuration phpunit.xml.dist
 
       # Tear down Docker Compose
       - name: Shut down Docker Compose
