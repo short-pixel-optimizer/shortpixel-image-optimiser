@@ -5,7 +5,7 @@
  * @package Shortpixel_Image_Optimiser
  */
 
-$_tests_dir = '/var/www/html/tests/';
+$_tests_dir = '/var/www/html/tests';
 
 if ( ! $_tests_dir ) {
 	$_tests_dir = rtrim( sys_get_temp_dir(), '/\\' ) . '/wordpress-tests-lib';

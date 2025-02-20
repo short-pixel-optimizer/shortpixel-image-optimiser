@@ -105,10 +105,9 @@ jobs:
       # Run plugin tests
       - name: Run Plugin Tests
         run: |
-          # Example: running PHPUnit test suite located in /tests directory.
-          # Customize the following command based on your actual testing framework.
-          composer update --no-interaction --prefer-dist
-          vendor/bin/phpunit --configuration phpunit.xml.dist
+          CONTAINER_ID=$(docker-compose -f .github/docker/docker-compose.yml ps -q wordpress)
+          doker exec $CONTAINER_ID composer update --no-interaction --prefer-dist
+          doker exec $CONTAINER_ID phpunit --configuration phpunit.xml.dist
 
       # Tear down Docker Compose
       - name: Shut down Docker Compose
