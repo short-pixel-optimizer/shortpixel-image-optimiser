@@ -95,15 +95,18 @@ jobs:
           docker exec $CONTAINER_ID wp plugin activate shortpixel-image-optimiser --allow-root
 
       # Setup WordPress tests
-      - name: Setup WordPress tests
+      - name: Setup WordPress core tests
         run: |
-          ls -alh
+          echo "Copying WordPress tests..."
+          mkdir -p /var/www/html/tests/
+          wp_version=$(wp core version); svn export --quiet --ignore-externals https://develop.svn.wordpress.org/$wp_version/tests/phpunit/includes/ /var/www/html/tests/includes/
+          ls -alh /var/www/html/tests/includes/
 
       #Configure GH token to access the plugin-modules repo, which is private
       - name: Configure GitHub OAuth for Composer
         run: composer --version 
 
-      # Run your tests (customize this step to your testing framework)
+      # Run plugin tests
       - name: Run Plugin Tests
         run: |
           # Example: running PHPUnit test suite located in /tests directory.
