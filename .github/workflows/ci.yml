@@ -39,7 +39,7 @@ jobs:
 
       - name: Install svn
         run: |
-          apt-get update && apt-get install -y subversion && rm -rf /var/lib/apt/lists/*
+          sudo apt-get update && sudo apt-get install -y subversion && sudo rm -rf /var/lib/apt/lists/*
           
       # Wait for WordPress to be fully up before running commands
       - name: Wait for WordPress to be available
