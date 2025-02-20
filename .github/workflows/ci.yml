@@ -77,6 +77,8 @@ jobs:
           docker cp wp-shortpixel.php "$CONTAINER_ID":/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
           docker cp shortpixel-plugin.php "$CONTAINER_ID":/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
           docker cp readme.txt "$CONTAINER_ID":/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
+          docker cp composer.json "$CONTAINER_ID":/var/www/html/
+          docker cp phpunit.xml.dist "$CONTAINER_ID":/var/www/html/
           echo "Listing main plugin files:"
           docker exec $CONTAINER_ID ls -alh /var/www/html/wp-content/plugins/shortpixel-image-optimiser/
 
@@ -105,7 +107,9 @@ jobs:
       # Run plugin tests
       - name: Run Plugin Tests
         run: |
+          echo "Listing html folder..."
           CONTAINER_ID=$(docker-compose -f .github/docker/docker-compose.yml ps -q wordpress)
+          docker exec $CONTAINER_ID ls -alh /var/www/html/
           docker exec $CONTAINER_ID composer update --no-interaction --prefer-dist
           docker exec $CONTAINER_ID phpunit --configuration phpunit.xml.dist
 
