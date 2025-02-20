@@ -37,6 +37,13 @@ jobs:
           CONTAINER_ID=$(docker-compose -f .github/docker/docker-compose.yml ps -q wordpress)
           docker logs "$CONTAINER_ID"
 
+      # Wait for WordPress to be fully up before running commands
+      - name: Wait for WordPress to be available
+        run: |
+          # Give the container extra time to initialize
+          echo "Initial wait for container initialization…"
+          sleep 5
+
       - name: Install WordPress via WP-CLI
         run: |
           CONTAINER_ID=$(docker-compose -f .github/docker/docker-compose.yml ps -q wordpress)
