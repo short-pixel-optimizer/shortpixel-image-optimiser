@@ -17,7 +17,7 @@ jobs:
       WP_VERSION: latest
       DB_NAME: wordpress_test
       DB_USER: root
-      DB_PASS: ""
+      DB_PASS: password
       DB_HOST: 127.0.0.1
 
     steps:
