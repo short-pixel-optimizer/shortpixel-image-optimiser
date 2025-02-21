@@ -26,8 +26,8 @@ jobs:
           --health-retries 3
 
     env:
-      WP_CORE_DIR: ${{ github.workspace }}/tmp/wordpress
-      WP_TESTS_DIR: ${{ github.workspace }}/tmp/wordpress-tests-lib
+      WP_CORE_DIR: /tmp/wordpress
+      WP_TESTS_DIR: /tmp/wordpress-tests-lib
       WP_VERSION: latest
       DB_NAME: wordpress_test
       DB_USER: root
