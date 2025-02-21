@@ -1,20 +1,4 @@
 {
-    "repositories": [
-        {
-            "packagist.org": false,
-            "type": "path",
-            "url": "../modules/*",
-	    "options": {
-                "symlink": true
-            }
-        }
-    ],
-    "require": {
-        "shortpixel/notices":">=1.3",
-        "shortpixel/build" : "@dev",
-				"shortpixel/shortq": ">=1.0",
-				"shortpixel/replacer": ">=1.0"
-    },
     "require-dev": {
 	"phpunit/phpunit": "^9",
 	"mikey179/vfsstream": "^1",
