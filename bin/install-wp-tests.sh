@@ -49,7 +49,7 @@ wp core install --url=example.dev --title="Test Site" --admin_user=admin --admin
 # Download the testing framework
 mkdir -p "$WP_TESTS_DIR"
 svn checkout https://develop.svn.wordpress.org/trunk/tests/phpunit/includes/ "$WP_TESTS_DIR/includes"
-svn checkout https://develop.svn.wordpress.org/trunk/wp-tests-config-sample.php "$WP_TESTS_DIR/includes/wp-tests-config-sample.php"
+svn checkout --depth=files https://develop.svn.wordpress.org/trunk/wp-tests-config-sample.php "$WP_TESTS_DIR/includes/wp-tests-config-sample.php"
 
 # Copy the wp-tests-config.php file template from the downloaded includes
 cp "$WP_TESTS_DIR/includes/wp-tests-config-sample.php" "$WP_TESTS_DIR/wp-tests-config.php"
