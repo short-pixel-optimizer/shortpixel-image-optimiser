@@ -77,6 +77,7 @@ jobs:
           docker cp wp-shortpixel.php "$CONTAINER_ID":/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
           docker cp shortpixel-plugin.php "$CONTAINER_ID":/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
           docker cp readme.txt "$CONTAINER_ID":/var/www/html/wp-content/plugins/shortpixel-image-optimiser/
+          docker cp tests/bootstrap.php "$CONTAINER_ID":/var/www/html/tests/
           docker cp composer.json "$CONTAINER_ID":/var/www/html/
           docker cp phpunit.xml.dist "$CONTAINER_ID":/var/www/html/
           echo "Listing main plugin files:"
