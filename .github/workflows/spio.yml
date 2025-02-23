@@ -32,7 +32,7 @@ jobs:
       DB_NAME: wordpress_test
       DB_USER: root
       DB_PASS: password
-      DB_HOST: 127.0.0.1
+      DB_HOST: 127.0.0.1:3306
       WP_RUN_CORE_TESTS: 1
 
     steps:
@@ -58,6 +58,19 @@ jobs:
 
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist
+
+      - name: Test that MySQL works properly
+        run: |
+          timeout=30
+          while ! mysqladmin ping -h "127.0.0.1" --user="$DB_USER" --password="$DB_PASS" --silent; do
+            >&2 echo "MySQL is unavailable - sleeping"
+            sleep 1
+            timeout=$((timeout-1))
+            if [ $timeout -eq 0 ]; then
+              >&2 echo "MySQL still not responding, aborting."
+              exit 1
+            fi
+          done
 
       - name: Install WordPress Unit Test Suite
         run: |
