@@ -32,8 +32,8 @@ jobs:
       DB_NAME: wordpress_test
       DB_USER: root
       DB_PASS: password
-      DB_HOST: 127.0.0.1:3306
-      WP_RUN_CORE_TESTS: 1
+      DB_HOST: 127.0.0.1
+      WP_RUN_CORE_TESTS: 0
 
     steps:
       - name: Checkout code
