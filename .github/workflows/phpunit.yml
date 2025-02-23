@@ -55,6 +55,10 @@ jobs:
           chmod +x wp-cli.phar
           sudo mv wp-cli.phar /usr/local/bin/wp
 
+      #Configure GH token to access the plugin-modules repo, which is private
+      - name: Configure GitHub OAuth for Composer
+        run: composer config --global github-oauth.github.com ${{ secrets.SP_PLUGIN_MODULES_TOKEN }}
+
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist
 
