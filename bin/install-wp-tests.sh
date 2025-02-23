@@ -34,7 +34,7 @@ else
   wp core download --version="$WP_VERSION" --path="$WP_CORE_DIR" --force
 fi
 
-# Capture the output of the wp-cli command in the variable "output" to extract the WP version
+# Extract the WP version to use it for SVN
 output=$(wp core download --version=latest --path="$WP_CORE_DIR" --force)
 
 # Use grep to extract the version number
@@ -61,16 +61,11 @@ svn export https://develop.svn.wordpress.org/tags/$LATEST_WP/wp-tests-config-sam
 # Copy the wp-tests-config.php file template from the downloaded includes
 cp "$WP_TESTS_DIR/includes/wp-tests-config-sample.php" "$WP_TESTS_DIR/wp-tests-config.php"
 
-# Configure the testing file with database details and the location of your WordPress core
+# Configure the testing file with database details and the location of the WordPress core
 sed -i "s/youremptytestdbnamehere/$DB_NAME/" "$WP_TESTS_DIR/wp-tests-config.php"
 sed -i "s/yourusernamehere/$DB_USER/" "$WP_TESTS_DIR/wp-tests-config.php"
 sed -i "s/yourpasswordhere/$DB_PASS/" "$WP_TESTS_DIR/wp-tests-config.php"
 sed -i "s/localhost/$DB_HOST/" "$WP_TESTS_DIR/wp-tests-config.php"
-
 sed -i "s|define( 'ABSPATH', dirname( __FILE__ ) . '/src/' );|define('ABSPATH', '${WP_CORE_DIR}/');|" "$WP_TESTS_DIR/wp-tests-config.php"
 
-echo "Modified wp-tests-config.php:"
-cat "$WP_TESTS_DIR/wp-tests-config.php"
-
 echo "WordPress test environment installed."
-

@@ -1,4 +1,4 @@
-name: SPIO Tests
+name: SPIO PHPUnit Tests
 
 on:
   push:
@@ -33,7 +33,6 @@ jobs:
       DB_USER: root
       DB_PASS: password
       DB_HOST: 127.0.0.1
-      WP_RUN_CORE_TESTS: 1
 
     steps:
       - name: Checkout code
@@ -63,19 +62,6 @@ jobs:
         run: |
           mkdir -p "${WP_TESTS_DIR}"
           bash bin/install-wp-tests.sh "$DB_NAME" "$DB_USER" "$DB_PASS" "$DB_HOST" "${WP_VERSION}"
-          # Wait for MySQL to be up and running
-          timeout=30
-          while ! mysqladmin ping -h "$DB_HOST" --user="$DB_USER" --password="$DB_PASS" --silent; do
-            >&2 echo "MySQL is unavailable - sleeping"
-            sleep 1
-            timeout=$((timeout-1))
-            if [ $timeout -eq 0 ]; then
-              >&2 echo "MySQL still not responding, aborting."
-              exit 1
-            fi
-          done
-          echo "Listing WordPress files..."
-          ls -alh /tmp/wordpress/wp-includes/
 
       - name: Run PHPUnit tests
         run: vendor/bin/phpunit
