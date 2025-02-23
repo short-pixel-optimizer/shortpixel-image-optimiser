@@ -56,8 +56,10 @@ cp "$WP_TESTS_DIR/includes/wp-tests-config-sample.php" "$WP_TESTS_DIR/wp-tests-c
 
 # Configure the testing file with database details and the location of your WordPress core
 sed -i "s/youremptytestdbnamehere/$DB_NAME/" "$WP_TESTS_DIR/wp-tests-config.php"
-sed -i "s/your_username/$DB_USER/" "$WP_TESTS_DIR/wp-tests-config.php"
-sed -i "s/your_password/$DB_PASS/" "$WP_TESTS_DIR/wp-tests-config.php"
+sed -i "s/yourusernamehere/$DB_USER/" "$WP_TESTS_DIR/wp-tests-config.php"
+sed -i "s/yourpasswordhere/$DB_PASS/" "$WP_TESTS_DIR/wp-tests-config.php"
+sed -i "s/localhost/$DB_HOST/" "$WP_TESTS_DIR/wp-tests-config.php"
+
 sed -i "s|define( 'ABSPATH', dirname( __FILE__ ) . '/src/' );|define('ABSPATH', '${WP_CORE_DIR}/');|" "$WP_TESTS_DIR/wp-tests-config.php"
 
 echo "Modified wp-tests-config.php:"
