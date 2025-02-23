@@ -60,7 +60,9 @@ jobs:
         run: composer config --global github-oauth.github.com ${{ secrets.SP_PLUGIN_MODULES_TOKEN }}
 
       - name: Install Composer dependencies
-        run: composer install --no-interaction --prefer-dist
+        run: |
+          composer clear-cache
+          composer update --no-interaction --prefer-dist
 
       - name: Install WordPress Unit Test Suite
         run: |
