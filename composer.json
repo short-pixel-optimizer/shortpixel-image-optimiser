@@ -2,8 +2,8 @@
     "require-dev": {
 	"phpunit/phpunit": "^9",
 	"mikey179/vfsstream": "^1",
-	"10up/wp_mock": "@dev"
-
+	"10up/wp_mock": "@dev",
+	"yoast/phpunit-polyfills": "@dev"
     },
    "autoload": {
        "psr-4": { "ShortPixel\\" : "class" , "ShortPixel\\Tests\\" : "tests"}
