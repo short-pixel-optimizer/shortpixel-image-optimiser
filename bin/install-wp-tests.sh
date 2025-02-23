@@ -34,6 +34,13 @@ else
   wp core download --version="$WP_VERSION" --path="$WP_CORE_DIR" --force
 fi
 
+# Capture the output of the wp-cli command in the variable "output" to extract the WP version
+output=$(wp core download --version=latest --path="$WP_CORE_DIR" --force)
+
+# Use grep to extract the version number
+LATEST_WP=$(echo "$output" | grep -oP 'Downloading WordPress \K[0-9]+\.[0-9]+\.[0-9]+')
+echo "Latest WP version to use: $LATEST_WP"
+
 # Create a wp-config file for the test environment
 cd "$WP_CORE_DIR"
 wp config create --dbname="$DB_NAME" --dbuser="$DB_USER" --dbpass="$DB_PASS" --dbhost="$DB_HOST" --skip-check
@@ -48,8 +55,8 @@ wp core install --url=example.dev --title="Test Site" --admin_user=admin --admin
 
 # Download the testing framework
 mkdir -p "$WP_TESTS_DIR"
-svn checkout https://develop.svn.wordpress.org/trunk/tests/phpunit/includes/ "$WP_TESTS_DIR/includes"
-svn export https://develop.svn.wordpress.org/trunk/wp-tests-config-sample.php "$WP_TESTS_DIR/includes/wp-tests-config-sample.php"
+svn checkout https://develop.svn.wordpress.org/tags/$LATEST_WP/tests/phpunit/includes/ "$WP_TESTS_DIR/includes"
+svn export https://develop.svn.wordpress.org/tags/$LATEST_WP/wp-tests-config-sample.php "$WP_TESTS_DIR/includes/wp-tests-config-sample.php"
 
 # Copy the wp-tests-config.php file template from the downloaded includes
 cp "$WP_TESTS_DIR/includes/wp-tests-config-sample.php" "$WP_TESTS_DIR/wp-tests-config.php"
