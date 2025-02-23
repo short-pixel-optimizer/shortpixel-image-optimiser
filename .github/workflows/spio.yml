@@ -73,6 +73,9 @@ jobs:
               exit 1
             fi
           done
+          echo "Listing WordPress files..."
+          ls -alh /tmp/wordpress-tests-lib/
+          ls -alh /tmp/wordpress-tests-lib/src/
 
       - name: Run PHPUnit tests
         run: vendor/bin/phpunit
