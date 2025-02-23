@@ -60,5 +60,9 @@ sed -i "s/your_username/$DB_USER/" "$WP_TESTS_DIR/wp-tests-config.php"
 sed -i "s/your_password/$DB_PASS/" "$WP_TESTS_DIR/wp-tests-config.php"
 sed -i "s|/tmp/wordpress/|$WP_CORE_DIR/|" "$WP_TESTS_DIR/wp-tests-config.php"
 
+sed -i "1a define('ABSPATH', '${WP_CORE_DIR}/');" "$WP_TESTS_DIR/wp-tests-config.php"
+echo "Modified wp-tests-config.php:"
+cat "$WP_TESTS_DIR/wp-tests-config.php"
+
 echo "WordPress test environment installed."
 
