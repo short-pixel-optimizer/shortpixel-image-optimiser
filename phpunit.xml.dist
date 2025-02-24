@@ -14,7 +14,7 @@
 	</testsuites>
 	<testsuites>
 		<testsuite name="SPIO Main">
-			<directory suffix=".php">./tests/php/</directory>
+			<directory suffix=".php">./tests/</directory>
 		</testsuite>
 	</testsuites>
 </phpunit>
