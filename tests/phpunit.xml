@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<phpunit
+	bootstrap="bootstrap.php"
+	backupGlobals="false"
+	colors="true"
+	convertErrorsToExceptions="true"
+	convertNoticesToExceptions="true"
+	convertWarningsToExceptions="true"
+	>
+	<testsuites>
+    <testsuite name="SPIO-MAIN">
+      <directory suffix=".php">./php/</directory>
+    </testsuite>
+	</testsuites>
+</phpunit>
