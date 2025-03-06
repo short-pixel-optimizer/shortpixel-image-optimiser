@@ -105,7 +105,6 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
 
 
       $pattern = '/<img[^>]*>/i';
-      $count = 0;
       $content = preg_replace_callback($pattern, array($this, 'convertImage'), $content);
 
       // [BS] No callback because we need preg_match_all
@@ -114,36 +113,6 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
       return $content;
   }
 
-  /** If lazy loading is happening, get source (src) from those values
-  * Otherwise pass back image data in a regular way.
-  */
-  private function lazyGet($img, $type)
-  {
-
-    $value = false;
-    $prefix = false;
-
-     if (isset($img['data-lazy-' . $type]) && strlen($img['data-lazy-' . $type]) > 0)
-     {
-         $value = $img['data-lazy-' . $type];
-         $prefix = 'data-lazy-';
-     }
-     elseif( isset($img['data-' . $type]) && strlen($img['data-' . $type]) > 0)
-     {
-        $value = $img['data-' . $type];
-        $prefix = 'data-';
-     }
-     elseif(isset($img[$type]) && strlen($img[$type]) > 0)
-     {
-        $value = $img[$type];
-        $prefix = '';
-     }
-
-    return array(
-      'value' => $value,
-      'prefix' => $prefix,
-     );
-  }
 
   /* Find image tags within picture definitions and make sure they are converted only by block, */
   private function testPictures($content)
@@ -368,10 +337,7 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
         continue;
       }
       $url = $match[1];
-      //$parsed_url = parse_url($url);
       $filename = basename($url);
-
-      $fileonly = pathinfo($url, PATHINFO_FILENAME);
       $ext = pathinfo($url, PATHINFO_EXTENSION);
 
       if (! in_array($ext, $allowed_exts))
@@ -417,10 +383,15 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
       {
           // if webp, then add another URL() def after the targeted one.  (str_replace old full URL def, with new one on main match?
           $target_urldef = $matches[0][$i];
+          
+          // The target_urldef should remain original to be picked up by str_replace, but the original_definitions are what goes back of the original stuff and should be filtered. 
+         // $original_definitions = $this->filterForbiddenInline($target_urldef);
+          
           if (! isset($converted[$target_urldef])) // if the same image is on multiple elements, this replace might go double. prevent.
           {
             $converted[] = $target_urldef;
-            $new_urldef = "url('" . $checkedFile . "') $image_data, " . $target_urldef;
+            // Fix: The originals are not being put anymore because this would lead to double images and that's not a good thing.
+            $new_urldef = "url('" . $checkedFile . "') $image_data ";
             $content = str_replace($target_urldef, $new_urldef, $content);
           }
       }
@@ -428,6 +399,23 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
     }
 
     return $content;
+  }
+
+
+  /**
+   * FilterForbiddenInline
+   * 
+   * Filter tags like !important for the targetstring that should not be duplicated or causes issues otherwise. 
+   *
+   * @param [String] $targetString
+   * @return String
+   */
+  protected function filterForbiddenInline($targetString)
+  {
+        $search = ['!important'];
+        $targetString = str_replace($search, '', $targetString); 
+        
+        return $targetString;
   }
 
 } // class
