@@ -11,6 +11,7 @@ use ShortPixel\Controller\CacheController as CacheController;
 use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\Model\Converter\Converter as Converter;
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
+use ShortPixel\Model\QueueItem as QueueItem;
 
 
 use ShortPixel\Helper\UiHelper as UiHelper;
@@ -77,6 +78,7 @@ abstract class Queue
 
     /** Enqueues a single items into the urgent queue list
     *   - Should not be used for bulk images
+    *   @todo This function is deprecated.
     * @param ImageModel $mediaItem An ImageModel (CustomImageModel or MediaLibraryModel) object
     * @return mixed
     */
@@ -86,6 +88,7 @@ abstract class Queue
        $defaults = array(
           'forceExclusion' => false,
           'action' => 'optimize',
+          'remote_id' => null, // for retrieveAltAction
        );
        $args = wp_parse_args($args, $defaults);
 
@@ -102,30 +105,8 @@ abstract class Queue
 
        $qItem = QueueItems::getImageItem($imageModel);
 
-       switch($args['action'])
-       {
-          case 'optimize':
-             $qItem->newOptimizeAction();
-          break;
-          case 'alttext':
-              $qItem->newAltAction();
-          break;
-       }
-
-       //$qItem =  $this->imageModelToQueue($imageModel);
-       //$counts = $qItem->counts;
-
-      // $media_id = $imageModel->get('id');
-
-
-       /*if (count($args) > 0)
-       {
-          $qItem->options = $args;
-       } */
 
 			 $result = new \stdClass;
-
-       //$item = ['id' => $media_id, 'value' => $qItem, 'item_count' => $counts->creditCount];
 
        $this->q->addItems([$qItem->returnEnqueue()], false);
        $numitems = $this->q->withRemoveDuplicates()->enqueue(); // enqueue returns numitems
@@ -135,6 +116,19 @@ abstract class Queue
 
        do_action('shortpixel_start_image_optimisation', $imageModel->get('id'), $imageModel);
        return $result;
+    }
+
+    public function addQueueItem(QueueItem $qItem)
+    {
+      $this->q->addItems([$qItem->returnEnqueue()], false);
+      $numitems = $this->q->withRemoveDuplicates()->enqueue(); // enqueue returns numitems
+
+      $result = new \stdClass;
+      $this->getQStatus($result, $numitems);
+      $result->numitems = $numitems;
+
+      do_action('shortpixel_start_image_optimisation', $qItem->item_id, $qItem->imageModel);
+      return $result;
     }
 
 		/** Drop Item if it needs dropping. This can be needed in case of image alteration and it's in the queue */
@@ -562,7 +556,7 @@ Log::addTemp('QueueItem End', $item);
         return $item;
     }
 
-    protected function mediaItemToQueue($item)
+    protected function mediaItemToQueue(QueueItem $item)
     {
         // @todo Test this assumption
         return $item->getQueueItem();
@@ -582,7 +576,7 @@ Log::addTemp('QueueItem End', $item);
 
     // This is a general implementation - This should be done only once!
     // The 'avif / webp left imp. is commented out since both API / and OptimizeController don't play well with this.
-    protected function imageModelToQueue(ImageModel $imageModel, $args = array())
+    protected function imageModelToQueue(ImageModel $imageModel, $args = [])
     {
         $defaults = array(
             'debug_active' => false, // prevent write actions if called via debugger
@@ -711,15 +705,17 @@ Log::addTemp('QueueItem End', $item);
 				return false;
 		}
 
-    public function itemFailed($item, $fatal = false)
+    public function itemFailed(QueueItem $qItem, $fatal = false)
     {
 			  if ($fatal)
 			  {
-					 Log::addError('Item failed while optimizing', $item);
+					 Log::addError('Item failed while optimizing', $qItem->result());
 				}
-        $qItem = $this->mediaItemToQueue($item); // convert again
-        $this->q->itemFailed($qItem, $fatal);
-        $this->q->updateItemValue($qItem);
+
+        $item = $this->mediaItemToQueue($qItem);
+
+        $this->q->itemFailed($item, $fatal);
+        $this->q->updateItemValue($item);
     }
 
 		public function updateItem($item)

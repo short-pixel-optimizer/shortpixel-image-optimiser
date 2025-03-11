@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
-use ShortPixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\Controller\QueueController as QueueController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Controller\AjaxController as AjaxController;
 use ShortPixel\Controller\AdminController as AdminController;
@@ -140,11 +140,11 @@ class ShortPixelPlugin {
 		add_action( 'enqueue_block_assets', array($this, 'load_admin_scripts'), 90);
 		// defer notices a little to allow other hooks ( notable adminnotices )
 
-		$optimizeController = new OptimizeController();
-		add_action( 'shortpixel-thumbnails-regenerated', array( $optimizeController, 'thumbnailsChangedHookLegacy' ), 10, 4 );
-		add_action( 'rta/image/thumbnails_regenerated', array( $optimizeController, 'thumbnailsChangedHook' ), 10, 2 );
-		add_action( 'rta/image/thumbnails_removed', array( $optimizeController, 'thumbnailsChangedHook' ), 10, 2 );
-		add_action('rta/image/scaled_image_regenerated', array($optimizeController, 'scaledImageChangedHook'), 10, 2);
+		$queueController = new QueueController();
+		add_action( 'shortpixel-thumbnails-regenerated', array( $queueController, 'thumbnailsChangedHookLegacy' ), 10, 4 );
+		add_action( 'rta/image/thumbnails_regenerated', array( $queueController, 'thumbnailsChangedHook' ), 10, 2 );
+		add_action( 'rta/image/thumbnails_removed', array( $queueController, 'thumbnailsChangedHook' ), 10, 2 );
+		add_action('rta/image/scaled_image_regenerated', array($queueController, 'scaledImageChangedHook'), 10, 2);
 
 
 		// Media Library - Actions to route screen
@@ -246,7 +246,7 @@ class ShortPixelPlugin {
 
 		// Custom Media
 
-		add_action( 'wp_ajax_shortpixel_get_backup_size', array( AjaxController::getInstance(), 'ajax_getBackupFolderSize' ) );
+		//add_action( 'wp_ajax_shortpixel_get_backup_size', array( AjaxController::getInstance(), 'ajax_getBackupFolderSize' ) );
 
 		add_action( 'wp_ajax_shortpixel_propose_upgrade', array( AjaxController::getInstance(), 'ajax_proposeQuotaUpgrade' ) );
 		add_action( 'wp_ajax_shortpixel_check_quota', array( AjaxController::getInstance(), 'ajax_checkquota' ) );
@@ -295,8 +295,8 @@ class ShortPixelPlugin {
 
 		$is_bulk_page = \wpSPIO()->env()->is_bulk_page;
 
-		$optimizeController = new OptimizeController();
-		$optimizeController->setBulk( $is_bulk_page );
+		$queueController = new QueueController(['is_bulk' =>  $is_bulk_page ]);
+		
 
 		$quotaController = QuotaController::getInstance();
 
@@ -376,7 +376,7 @@ class ShortPixelPlugin {
 				'nonce_exit'        => wp_create_nonce( 'exit_process' ),
 				'nonce_ajaxrequest' => wp_create_nonce( 'ajax_request' ),
 				'nonce_settingsrequest' => wp_create_nonce('settings_request'),
-				'startData'         => ( \wpSPIO()->env()->is_screen_to_use ) ? $optimizeController->getStartupData() : false,
+				'startData'         => ( \wpSPIO()->env()->is_screen_to_use ) ? $queueController->getStartupData() : false,
 				'interval'          => $interval,
 				'deferInterval'     => $deferInterval,
 				'debugIsActive' 		=> (\wpSPIO()->env()->is_debug) ? 'true' : 'false',

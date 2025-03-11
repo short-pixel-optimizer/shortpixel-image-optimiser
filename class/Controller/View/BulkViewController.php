@@ -10,7 +10,7 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 use ShortPixel\Controller\QuotaController as QuotaController;
-use ShortPixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\Controller\QueueController as QueueController;
 use ShortPixel\Controller\BulkController as BulkController;
 use ShortPixel\Controller\StatsController as StatsController;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
@@ -35,13 +35,13 @@ class BulkViewController extends \ShortPixel\ViewController
   public function load()
   {
     $quota = QuotaController::getInstance();
-    $optimizeController = new OptimizeController();
+    $queueController = new QueueController();
     $bulkController = BulkController::getInstance();
 
 
     $this->view->quotaData = $quota->getQuota();
 
-    $this->view->stats = $optimizeController->getStartupData();
+    $this->view->stats = $queueController->getStartupData();
     $this->view->approx = $this->getApproxData();
 
     $this->view->logHeaders = array(__('Images', 'shortpixel_image_optimiser'), __('Errors', 'shortpixel_image_optimizer'), __('Date', 'shortpixel_image_optimizer'));

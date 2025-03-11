@@ -6,11 +6,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-use ShortPixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\Controller\QueueController as QueueController;
+use ShortPixel\Controller\OptimizeAiController as OptimizeAiController;
+
 use ShortPixel\Controller\BulkController as BulkController;
 
 use ShortPixel\Controller\Queue\Queue as Queue;
-use ShortPixel\Controller\ApiController as ApiController;
+use ShortPixel\Controller\Api\ApiController as ApiController;
 use ShortPixel\Controller\ResponseController as ResponseController;
 
 use ShortPixel\Helper\UiHelper as UiHelper;
@@ -96,7 +98,7 @@ class SpioCommandBase
      */
     public function add($args, $assoc)
     {
-        $controller = $this->getOptimizeController();
+        $controller = $this->getQueueController();
 
 				$type = isset($assoc['type']) ? sanitize_text_field($assoc['type']) : 'media';
 
@@ -119,23 +121,25 @@ class SpioCommandBase
 
 			//	$complete = isset($assoc['complete']) ? true : false;
 
-        if ($result->status == 1)
+        $message = '';
+        if (property_exists($result, 'message'))
 				{
-
-          \WP_CLI::Success($result->result->message);
-
-
-					if (! isset($assoc['halt']))
-					{
-							$this->run($args, $assoc);
-					}
-					else {
-						\WP_CLI::Line (__('You can optimize images via the run command', 'shortpixel-image-optimiser'));
-					}
-				}
-        elseif ($result->status == 0)
+           $message = $result->message;
+        }
+        if ($result->is_error)
         {
-          \WP_CLI::Error(sprintf(__("while adding item: %s", 'shortpixel_image_optimiser'), $result->result->message) );
+          \WP_CLI::Error(sprintf(__("while adding item: %s", 'shortpixel_image_optimiser'), $message) );
+        }
+        else {
+            \WP_CLI::Success($message);
+
+  					if (! isset($assoc['halt']))
+  					{
+  							$this->run($args, $assoc);
+  					}
+  					else {
+  						\WP_CLI::Line (__('You can optimize images via the run command', 'shortpixel-image-optimiser'));
+  					}
         }
 
 				$this->status($args, $assoc);
@@ -255,7 +259,7 @@ class SpioCommandBase
     {
 			  ResponseController::setOutput(ResponseController::OUTPUT_CLI);
 
-        $controller = $this->getOptimizeController();
+        $controller = $this->getQueueController();
         $results = $controller->processQueue($queueTypes);
 
 	 			$totalStats = (property_exists($results, 'total') && property_exists($results->total, 'stats')) ? $results->total->stats : null;
@@ -291,6 +295,7 @@ class SpioCommandBase
 						}
 	        }
 
+      Log::addTemp('QResult', $qresult);
 		        // Result after optimizing items and such.
 		        if (property_exists($qresult, 'results') && is_array($qresult->results))
 		        {
@@ -456,7 +461,6 @@ class SpioCommandBase
 	 */
 		public function status($args, $assoc)
 		{
-
 				$queue = $this->getQueueArgument($assoc);
 				$startupData = $this->getStatus();
 
@@ -465,7 +469,6 @@ class SpioCommandBase
 
 				foreach($queue as $queue_name)
 				{
-					  	//$Q = $optimizeController->getQueue($queue_name);
 							$stats = $startupData->$queue_name->stats;
 
 							$item = array(
@@ -540,7 +543,7 @@ class SpioCommandBase
 		public function clear($args, $assoc)
 		{
 			  $queues = $this->getQueueArgument($assoc);
-				$optimizeController = $this->getOptimizeController();
+        $optimizeController = $this->getQueueController();
 
 				foreach($queues as $type)
 				{
@@ -559,9 +562,9 @@ class SpioCommandBase
      *
      *
      */
-    public function addAlt($args, $assoc)
+    public function requestAlt($args, $assoc)
     {
-      $optimizeController = $this->getOptimizeController();
+  //    $optimizeController = $this->getOptimizeAiController();
       $fs = \wpSPIO()->filesystem();
 
       $id = intval($args[0]);
@@ -573,19 +576,17 @@ class SpioCommandBase
          \WP_CLI::Error(__('Image object not found / non-existing in database by this ID', 'shortpixel-image-optimiser'));
       }
 
-      $item = QueueItems::getImageItem($imageObj);
-      $item->newAltAction();
+// @todo When completing this script probably as for AddSingleItem with requestAlt as action, then run queue, then remove/update item for getter.
 
-      $qItem = $item->returnEnqueue();
+// @todo Check OptimizeController - sendToProcessing for options / other data.
 
-      $api = $optimizeController->getApi('alttext');
 
-      $item = QueueItems::getEmptyItem($qItem['id'], 'media');
-      $item->setFromData($qItem['value']);
+    $result = $optimizeController->addItemToQueue($imageObj);
 
-      $item = $api->processItem($item);
+    Log::addTemp('QueueRes', $result);
 
-      $this->displayResult($item->result, 'alttext');
+
+  //    $this->displayResult($item->result, 'alttext');
 
     }
 
@@ -621,7 +622,7 @@ class SpioCommandBase
 
 		protected function getStatus()
 		{
-				$optimizeController = $this->getOptimizeController();
+        $optimizeController = $this->getQueueController();
  				$startupData = $optimizeController->getStartupData();
 				return $startupData;
 
@@ -664,12 +665,20 @@ class SpioCommandBase
 		}
 
 		// To ensure the bulk switch is ok.
-		protected function getOptimizeController()
+    protected function getQueueController($bulk = false)
 		{
-						$optimizeController = new OptimizeController();
-						return $optimizeController;
+            $queueController = new QueueController(['is_bulk' => $bulk]);
+            return $queueController;
 		}
 
+/*
+    protected function getOptimizeAiController()
+    {
+      $optimizeController = new OptimizeAiController();
+      return $optimizeController;
+
+    }
+*/
 		private function unFormatNumber($string)
 		{
 			 $string = str_replace(',', '', $string);

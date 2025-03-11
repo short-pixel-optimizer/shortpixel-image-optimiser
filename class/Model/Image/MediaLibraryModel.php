@@ -11,6 +11,8 @@ use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 
+use ShortPixel\Controller\QueueController as QueueController;
+
 use ShortPixel\Helper\InstallHelper as InstallHelper;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
 
@@ -664,7 +666,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				Log::addError('Something went wrong with handleOptimized', $optimizeData);
 			}
 
-			$optimized = array();
+			$optimized = [];
 
 			// Main file has a  index.
 			$mainFile = (isset($files) && isset($files[$this->mainImageKey])) ? $files[$this->mainImageKey] : false;
@@ -677,7 +679,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       if (! $this->isOptimized() && isset($mainFile['image']) ) // main file might not be contained in results
       {
           $result = parent::handleOptimized($mainFile, $args);
-          if (! $result)
+          if (false === $result)
           {
              return false;
           }
@@ -1523,17 +1525,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 	public function dropFromQueue()
 	{
+     $queueController = new QueueController();
 
-		 $optimizeController = new OptimizeController();
-
-		 $q = $optimizeController->getQueue($this->type);
+     $q = $queueController->getQueue($this->type);
 		 $q->dropItem($this->get('id'));
 
 		 // Drop also from bulk if there.
 
-		 $optimizeController->setBulk(true);
-
-		 $q = $optimizeController->getQueue($this->type);
+     $queueController = new QueueController(['is_bulk' => true]);
+     $q = $queueController->getQueue($this->type);
 		 $q->dropItem($this->get('id'));
 	}
 
@@ -1822,6 +1822,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       return false;
   }
 
+  /**
+   * getOriginalFile
+   *
+   * @return Object|Boolean
+   */
   public function getOriginalFile()
   {
       if ($this->hasOriginal())

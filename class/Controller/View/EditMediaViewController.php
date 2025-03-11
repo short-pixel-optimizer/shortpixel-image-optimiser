@@ -1,6 +1,8 @@
 <?php
 namespace ShortPixel\Controller\View;
 
+use ShortPixel\Controller\QueueController;
+
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
@@ -17,7 +19,7 @@ use ShortPixel\Controller\Queue\QueueItems as QueueItems;
 
 use ShortPixel\Model\File\FileModel as FileModel;
 
-use ShortPixel\Helper\DownloadHelper as DownloadHelper;
+
 
 
 // Future contoller for the edit media metabox view.
@@ -149,7 +151,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 				elseif (false !== $imageObj->getMeta()->convertMeta()->didTry()) {
 					$ext = $imageObj->getMeta()->convertMeta()->getFileFormat();
 					$error = $imageObj->getMeta()->convertMeta()->getError(); // error code.
-					$stats[] = array(UiHelper::getConvertErrorReason($error, $ext), '');
+					$stats[] = array(UiHelper::getConvertErrorReason($error), '');
 				}
 
         if ($resize == true)
@@ -177,7 +179,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
       {
           if(! \wpSPIO()->env()->is_debug )
           {
-            return array();
+            return [];
           }
 
           $meta = \wp_get_attachment_metadata($this->post_id);
@@ -247,9 +249,9 @@ class EditMediaViewController extends \ShortPixel\ViewController
 					{
 						 $debugInfo[] = array(__('Optimize Data'), $optimizeData);
 
-						 $optControl = new optimizeController();
+						 $queueControl = new QueueController();
 
-						 $q = $optControl->getQueue($imageObj->get('type'));
+						 $q = $queueControl->getQueue($imageObj->get('type'));
 
              $item = QueueItems::getImageItem($imageObj);
              $item->setDebug();

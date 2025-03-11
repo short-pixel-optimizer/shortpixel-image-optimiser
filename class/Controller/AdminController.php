@@ -121,7 +121,7 @@ class AdminController extends \ShortPixel\Controller
               //do_action('shortpixel/converter/prevent-offload-off', $id);
 					}
 
-        	$control = new OptimizeController();
+        	$control = new QueueController();
         	$control->addItemToQueue($mediaItem);
 				}
 				else {
@@ -206,14 +206,14 @@ class AdminController extends \ShortPixel\Controller
 				$args = wp_parse_args($args, $defaults);
         $args = apply_filters('shortpixel/process_hook/options', $args);
 
-
-			  $control = new OptimizeController();
-        $env = \wpSPIO()->env();
-
+        $queueArgs = []; 
 				if ($args['bulk'] === true)
 				{
-					 $control->setBulk(true);
+					 $queueArgs['is_bulk'] = true;
 				}
+
+			  $control = new QueueController($queueArgs);
+        $env = \wpSPIO()->env();
 
 			 	if ($args['run_once'] === true)
 				{

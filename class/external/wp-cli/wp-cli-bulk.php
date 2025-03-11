@@ -10,7 +10,7 @@ use ShortPixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Controller\BulkController as BulkController;
 
 use ShortPixel\Controller\Queue\Queue as Queue;
-use ShortPixel\Controller\ApiController as ApiController;
+use ShortPixel\Controller\Api\ApiController as ApiController;
 use ShortPixel\Controller\ResponseController as ResponseController;
 
 /**
@@ -52,11 +52,6 @@ class SpioBulk extends SpioCommandBase
 			 {
 			 	$result = $bulkControl->startBulk($qname);
 			 }
-
-
-			// $this->run($args, $assoc);
-	     //$controller = new OptimizeController();
-	     //$result = $controller->startBulk();
 	  }
 
 
@@ -88,7 +83,7 @@ class SpioBulk extends SpioCommandBase
 		public function auto($args, $assoc)
 		{
 			 	$queue = $this->getQueueArgument($assoc);
-				$optimizeController = $this->getOptimizeController();
+        $queueController = $this->getQueueController(true);
 
 				$bulkControl = BulkController::getInstance();
 
@@ -100,7 +95,7 @@ class SpioBulk extends SpioCommandBase
 
 				while($running)
 				{
-						 	$data = $optimizeController->getStartupData();
+              $data = $queueController->getStartupData();
 							$combined = $data->total->stats;
 
 							// Is_finished is no queue running.
@@ -249,13 +244,7 @@ class SpioBulk extends SpioCommandBase
 
 		}
 
-		// To ensure the bulk switch is ok.
-		protected function getOptimizeController()
-		{
-				$optimizeController = new OptimizeController();
-				$optimizeController->setBulk(true);
-				return $optimizeController;
-		}
+
 
 		/**
 		* Prepares the items by adding them to the queue(s). It runs only when the queue is in the preparing phase and finishes when everything is prepared.
@@ -281,9 +270,9 @@ class SpioBulk extends SpioCommandBase
 			public function prepare($args, $assoc)
 			{
 					 $queues = $this->getQueueArgument($assoc);
-					 $optimizeController = $this->getOptimizeController();
+           $queueController = $this->getQueueController(true);
 
-						$data = $optimizeController->getStartupData();
+            $data = $queueController->getStartupData();
 
 						if (! $data->total->stats->is_preparing)
 						{

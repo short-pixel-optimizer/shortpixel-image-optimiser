@@ -53,7 +53,7 @@ class AiController extends RequestManager
       $requestBody = [
         'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
         'key' => $keyControl->forceGetApiKey(),
-        'url' => $item->url,
+        'url' => 'https://deleeuwkyiv.nl/wp-content/uploads/2025/02/WhatsApp-Image-2024-12-19-at-06.45.26_0ddb4e61-1024x768.jpg', // $item->url,
         'item_id' => $item->item_id,
         'source' => 1, // SPIO
 
@@ -71,9 +71,13 @@ class AiController extends RequestManager
     }
 
 
+    // Should return something that's usefull to set as response on the item.
     protected function handleResponse(QueueItem $item, $response)
     {
-       Log::addTemp('HAndle AI Response! ', $response);
+       $APIresponse = $this->parseResponse($response);//get the actual response from API, its an array
+       Log::addTemp('HAndle AI Response! ', $APIresponse);
+
+        // @todo This is probably not something that would happen, since repsonse is from the body. Implement here most error coming from the raw request and returnOk/returnFalse etc.
        if (! is_null($item->result))
        {
           if (true === $item->result->is_error && true === $item->result->is_done )
@@ -82,14 +86,22 @@ class AiController extends RequestManager
                 401 - Unauthorized
                 422 - Unprocessable
                  */
-              return $item;
+              return $this->returnFailure($status, $message);
           }
        }
-       if (false === $item->result->is_done)
+
+       if(is_array($APIresponse) && isset($APIresponse['data']) && property_exists($APIresponse['data'], 'Id'))
        {
-          $item->setData('remote_id', $remote_id);
+          $remote_id = intval($APIresponse['data']->Id);
+          $result = $this->returnOk();
+          $result['remote_id'] = $remote_id;
+       }
+       else {
+          return $this->returnFailure(0, '-');
        }
 
+
+       return $result;
     }
 
     protected function doRequest(QueueItem $item, $requestParameters)

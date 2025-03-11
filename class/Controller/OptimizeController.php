@@ -26,28 +26,26 @@ use ShortPixel\Controller\Queue\QueueItems as QueueItems;
 
 
 use ShortPixel\Helper\UiHelper as UiHelper;
-
 use ShortPixel\Helper\DownloadHelper as DownloadHelper;
 
 use ShortPixel\Model\Converter\Converter as Converter;
 
 class OptimizeController
 {
-    //protected static $instance;
-    //protected static $results;
-
     protected $isBulk = false; // if queueSystem should run on BulkQueues;
 
-		protected static $lastId; // Last item_id received / send. For catching errors.
+//		protected static $lastId; // Last item_id received / send. For catching errors.
 
     // If OptimizeController should use the bulkQueues.
-    public function setBulk($bool)
+    // @todo Should be in constructor.
+    /*public function setBulk($bool)
     {
        $this->isBulk = $bool;
-    }
+    } */
 
 		/** Gets the correct queue type */
-		// @todo Check how much this is called during run. Perhaps cachine q's instead of new object everytime is more efficient.
+    // @todo Check how much this is called during run. Perhaps cachine q's instead of new object everytime is more efficient.
+    /*
     public function getQueue($type)
     {
         $queue = null;
@@ -74,15 +72,18 @@ class OptimizeController
             $queue->setOptions($options);
         }
         return $queue;
-    }
+    } */
 
     // Queuing Part
     /* Add Item to Queue should be used for starting manual Optimization
     * Enqueue a single item, put it to front, remove duplicates.
 		* @param Object $mediaItem
     @return int Number of Items added
+
+    // Delegate to Optimizers via this func.
     */
-    public function addItemToQueue(ImageModel $mediaItem, $args = array())
+   /*
+    public function addItemToQueue(ImageModel $mediaItem, $args = [])
     {
         $defaults = array(
             'forceExclusion' => false,
@@ -124,14 +125,6 @@ class OptimizeController
 
         $queue = $this->getQueue($mediaItem->get('type'));
 
-        if ($mediaItem === false)
-        {
-          $json->is_error = true;
-          $json->result->is_error = true;
-          $json->result->is_done = true;
-          $json->result->message = __('Error - item could not be found', 'shortpixel-image-optimiser');
-          $json->result->fileStatus = ImageModel::FILE_STATUS_ERROR;
-        }
 
         $is_processable = $mediaItem->isProcessable();
         // Allow processable to be overridden when using the manual optimize button
@@ -159,6 +152,8 @@ class OptimizeController
         else
         {
           $result = $queue->addSingleItem($mediaItem, $args); // 1 if ok, 0 if not found, false is not processable
+
+          // @todo This is flawed, the last block will overwrite message /   that's done here?
           if ($result->numitems > 0)
           {
             $json->result->message = sprintf(__('Item %s added to Queue. %d items in Queue', 'shortpixel-image-optimiser'), $mediaItem->getFileName(), $result->numitems);
@@ -182,11 +177,13 @@ class OptimizeController
 
         return $json;
     }
+*/
 
 		/** Check if item is in queue. || Only checks the single queue!
 		* @param Object $mediaItem
 		*/
-		public function isItemInQueue($mediaItem)
+  /*
+    public function isItemInQueue(ImageModel $mediaItem)
 		{
 				if (! is_null($mediaItem->is_in_queue))
 					return $mediaItem->is_in_queue;
@@ -200,13 +197,14 @@ class OptimizeController
 			  // Preventing double queries here
 				$mediaItem->is_in_queue = $bool;
 				return $bool;
-		}
+    }*/
 
 		/** Restores an item
 		*
 		* @param Object $mediaItem
 		*/
-    public function restoreItem($mediaItem)
+  /*
+    public function restoreItem(ImageModel $mediaItem)
     {
         $fs = \wpSPIO()->filesystem();
 
@@ -290,12 +288,13 @@ class OptimizeController
 
         return $json;
     }
-
+*/
 		/** Reoptimize an item
 		*
 		* @param Object $mediaItem
 		*/
-		public function reOptimizeItem($mediaItem, $compressionType, $args = array())
+  /*
+    public function reOptimizeItem(ImageModel $mediaItem, $compressionType, $args = array())
     {
       $json = $this->restoreItem($mediaItem);
 
@@ -327,9 +326,10 @@ class OptimizeController
 
      return $json;
 
-    }
+    } */
 
     /** Returns the state of the queue so the startup JS can decide if something is going on and what.  **/
+    /*
     public function getStartupData()
     {
         $mediaQ = $this->getQueue('media');
@@ -348,7 +348,7 @@ class OptimizeController
 
         return $data;
     }
-
+*/
     // Processing Part
 
     // next tick of items to do.
@@ -356,10 +356,11 @@ class OptimizeController
     *
     * @return Object JSON object detailing results of run
     */
+   // @todo This is the main function that starts the processing
+   /*
     public function processQueue($queueTypes = array())
     {
         $keyControl = ApiKeyController::getInstance();
-
         if ($keyControl->keyIsVerified() === false)
         {
            $json = $this->getJsonResponse();
@@ -419,9 +420,12 @@ class OptimizeController
 				$results = $this->numberFormatStats($results);
 
         return $results;
-    }
+    } */
 
-    private function runTick($Q)
+    /** Run the Queue once with X amount of items, send to processor or handle.  */
+    // @todo Call by processQueue
+    /*
+    protected function runTick($Q)
     {
       $result = $Q->run();
       $results = array();
@@ -431,10 +435,7 @@ class OptimizeController
       // Items is array in case of a dequeue items.
       $items = (isset($result->items) && is_array($result->items)) ? $result->items : array();
 
-      /* Only runs if result is array, dequeued items.
-				 Item is a MediaItem subset of QueueItem
 
-			*/
       foreach($items as $mainIndex => $item)
       {
              //continue; // conversion done one way or another, item will be need requeuing, because new urls / flag.
@@ -442,7 +443,7 @@ class OptimizeController
 						$this->sendToProcessing($item, $Q);
 
             $this->handleAPIResult($item, $Q);
-            $result->items[$mainIndex] = $item->returnArray(); // replace processed item, should have result now.
+            $result->items[$mainIndex] = $item->returnObject(); // replace processed item, should have result now.
       }
 
       $result->stats = $Q->getStats();
@@ -450,13 +451,14 @@ class OptimizeController
       $this->checkQueueClean($result, $Q);
 
       return $json;
-    }
+    }  */
 
 
     /** Checks and sends the item to processing
     * @param Object $item Item is a stdClass object from Queue. This is not a model, nor a ShortQ Item.
     * @param Object $q  Queue Object
 		*/
+  /*
     public function sendToProcessing(QueueItem $item, $q)
     {
 			$this->setLastID($item->item_id);
@@ -465,14 +467,19 @@ class OptimizeController
 			$qtype = $q->getType();
 			$qtype = strtolower($qtype);
 
-      // Options contained in the queue item for extra uh options
+      // @todo @important The options probable don't work in new setup.
+      // Options contained in the queue item for extra uh options  // forceExclusion
 			$options = (false === is_null($item->options)) ? $item->options : [];
-			$action = (false === is_null($item->action)) ? $item->action : false; // This one is obligatory
+      $action = (false === is_null($item->data()->action)) ? $item->data()->action : false; // This one is obligatory
       $api = $this->getAPI($action);
 
-
+Log::addTemp('Action', $action);
       // @todo See if we can do without this after first try.
-			$imageObj = $fs->getImage($item->item_id, $qtype);
+      $imageObj = (! is_null($item->imageModel)) ? $item->imageModel : $fs->getImage($item->item_id, $qtype);
+      if (is_null($item->imageModel))
+      {
+        Log::addWarn('ImageObject was empty when send to processing - ' . $item->item_id);
+      }
 
 			if (is_object($imageObj))
 			{
@@ -545,7 +552,7 @@ class OptimizeController
 
       }
 
-    }
+    } */
 
     /**
      * Try to convert a PNGfile to JPG. This is done on the local server.  The file should be converted and then re-added to the queue to be processed as a JPG ( if success ) or continue as PNG ( if not success )
@@ -553,6 +560,8 @@ class OptimizeController
      * @param  Object $mediaQ               Queue object
      * @return Object         Returns queue item
      */
+    // @todo Via actions to Optimizers
+    /*
 		protected function convertPNG(QueueItem $item, $mediaQ)
     {
 //			$item->blocked = true;
@@ -606,10 +615,11 @@ class OptimizeController
 
       return $item;
     }
-
+*/
 
     // This is everything sub-efficient.
     /* Handles the Queue Item API result .
+    ** @todo This needs splitting in due time between various tasks / optimize / ai etc.
     */
 		protected function handleAPIResult(QueueItem $item, $q)
     {
@@ -632,12 +642,6 @@ class OptimizeController
 						'is_error' => true,
 				]);
 
-/*        $item->result->message = __("File Error. File could not be loaded with this ID ", 'shortpixel-image-optimiser');
-        $item->result->apiStatus = ApiController::STATUS_NOT_API;
-        $item->fileStatus = ImageModel::FILE_STATUS_ERROR;
-        $item->result->is_done = true;
-        $item->result->is_error = true;
-*/
 				ResponseController::addData($item->item_id, 'message', $item->result->message);
       }
 			elseif(true === $item->block())
@@ -810,13 +814,13 @@ class OptimizeController
 
            }
            // This was not a request process, just handle it and mark it as done.
-           elseif ($result->apiStatus == ApiController::STATUS_NOT_API)
+           elseif ($item->result()->apiStatus == ApiController::STATUS_NOT_API)
            {
               // Nothing here.
            }
            else
            {
-              Log::addWarn('Api returns Success, but result has no files', $result);
+              Log::addWarn('Api returns Success, but result has no files', $item->result());
               $message = sprintf(__('Image API returned succes, but without images', 'shortpixel-image-optimiser'), $item->item_id);
 							ResponseController::addData($item->item_id, 'message', $message );
               $item->setResult(['is_error' => true, 'apiStatus' => ApiController::STATUS_FAIL]);
@@ -1081,116 +1085,7 @@ class OptimizeController
 		}
 
 
-    /**
-		* @integration Regenerate Thumbnails Advanced
-		* Called via Hook when plugins like RegenerateThumbnailsAdvanced Update an thumbnail
-		*/
-    public function thumbnailsChangedHookLegacy($postId, $originalMeta, $regeneratedSizes = array(), $bulk = false)
-    {
-        $this->thumbnailsChangedHook($postId, $regeneratedSizes);
-    }
 
-    public function thumbnailsChangedHook($post_id, $sizes)
-    {
-       $fs = \wpSPIO()->filesystem();
-       $settings = \wpSPIO()->settings();
-       $imageObj = $fs->getMediaImage($post_id);
-
-       if (! is_object($imageObj))
-       {
-          Log::addWarn('Thumbnails changed on something thats not object', $imageObj);
-          return false;
-       }
-
-			 Log::addDebug('Regenerated Thumbnails reported', $sizes);
-
-       if (count($sizes) == 0)
-        return;
-
-        $metaUpdated = false;
-        foreach($sizes as $sizeName => $size) {
-            if(isset($size['file']))
-            {
-
-                //$fileObj = $fs->getFile( (string) $mainFile->getFileDir() . $size['file']);
-                $thumb = $imageObj->getThumbnail($sizeName);
-                if ($thumb !== false)
-                {
-
-                  $thumb->setMeta('status', ImageModel::FILE_STATUS_UNPROCESSED);
-									$thumb->onDelete(true);
-
-                  $metaUpdated = true;
-                }
-                else {
-                  Log::addDebug('Could not find thumbnail to update: ', $thumb);
-                }
-            }
-        }
-
-        if ($metaUpdated)
-           $imageObj->saveMeta();
-
-
-
-				if (\wpSPIO()->env()->is_autoprocess)
-				{
-            $imageObj = $fs->getMediaImage($post_id, false);
-						if($imageObj->isProcessable())
-						{
-
-							$this->addItemToQueue($imageObj);
-						}
-				}
-    }
-
-
-    public function scaledImageChangedHook($post_id, $removed = false)
-    {
-        $fs = \wpSPIO()->filesystem();
-        $settings = \wpSPIO()->settings();
-        $imageObj = $fs->getMediaImage($post_id);
-
-
-        if ($imageObj->isScaled())
-        {
-          $imageObj->setMeta('status', ImageModel::FILE_STATUS_UNPROCESSED);
-          $webp = $imageObj->getWebp();
-          if (is_object($webp) && $webp->exists())
-            $webp->delete();
-
-            $avif = $imageObj->getAvif('avif');
-            if (is_object($avif) && $avif->exists())
-              $avif->delete();
-
-          // Normally we would use onDelete for this to remove all meta, but since image is the whole object and it would remove all meta, this is not possible.
-          $imageObj->setmeta('webp', null);
-          $imageObj->setmeta('avif', null);
-          $imageObj->setmeta('compressedSize', null);
-          $imageObj->setmeta('compressionType', null);
-          $imageObj->setmeta('originalWidth', null);
-          $imageObj->setmeta('originalHeight', null);
-          $imageObj->setmeta('tsOptimized', null);
-
-
-          if ($imageObj->hasBackup())
-          {
-             $backup = $imageObj->getBackupFile();
-             $backup->delete();
-          }
-        }
-
-        $imageObj->saveMeta();
-
-        if (false === $removed && \wpSPIO()->env()->is_autoprocess)
-        {
-            $imageObj = $fs->getMediaImage($post_id, false);
-            if($imageObj->isProcessable())
-            {
-              $this->addItemToQueue($imageObj);
-            }
-        }
-    }
 
 
 		private function HandleItemError($item, $type)
@@ -1212,7 +1107,7 @@ class OptimizeController
           $fileLog->append($time . '|' . $fileName . '| ' . $item_id . '|' . $message . ';' .PHP_EOL);
         }
     }
-
+/*
     protected function checkQueueClean($result, $q)
     {
         if ($result->qstatus == Queue::RESULT_QUEUE_EMPTY && ! $this->isBulk)
@@ -1225,8 +1120,9 @@ class OptimizeController
             }
         }
     }
-
-    public function getAPI($action)
+*/
+    /* This will be move to the respective classes */
+    /*public function getAPI($action)
     {
        $api = false;
        switch($action)
@@ -1235,15 +1131,18 @@ class OptimizeController
           case 'restore':
             $api = ApiController::getInstance();
           break;
-          case 'alttext': // @todo Check if this is correct action name,
+          case 'requestAlt': // @todo Check if this is correct action name,
+          case 'retrieveAlt':
             $api = AiController::getInstance();
           break;
        }
 
        return $api;
-    }
+    } */
 
     /** Convert a result Queue Stdclass to a JSON send Object */
+    // Q
+    /*
     protected function queueToJson($result, $json = false)
     {
         if (! $json)
@@ -1285,9 +1184,10 @@ class OptimizeController
           $json->stats = $result->stats;
 
         return $json;
-    }
+    } */
 
     // Communication Part
+    /*
     protected function getJsonResponse()
     {
 
@@ -1300,135 +1200,11 @@ class OptimizeController
       $json->message = null;
 
       return $json;
-    }
-
-    /** Tries to calculate total stats of the process for bulk reporting
-    *  Format of results is   results [media|custom](object) -> stats
-    */
-    private function calculateStatsTotals($results)
-    {
-        $has_media = $has_custom = false;
-
-        if (property_exists($results, 'media') &&
-            is_object($results->media) &&
-            property_exists($results->media,'stats') && is_object($results->media->stats))
-        {
-          $has_media = true;
-        }
-
-        if (property_exists($results, 'custom') &&
-            is_object($results->custom) &&
-            property_exists($results->custom, 'stats') && is_object($results->custom->stats))
-        {
-          $has_custom = true;
-        }
-
-        $object = new \stdClass;  // total
-
-        if ($has_media && ! $has_custom)
-        {
-           $object->stats = $results->media->stats;
-           return $object;
-        }
-        elseif(! $has_media && $has_custom)
-        {
-           $object->stats = $results->custom->stats;
-           return $object;
-        }
-        elseif (! $has_media && ! $has_custom)
-        {
-            return null;
-        }
-
-        // When both have stats. Custom becomes the main. Calculate media stats over it. Clone, important!
-        $object->stats = clone $results->custom->stats;
-
-        if (property_exists($object->stats, 'images'))
-          $object->stats->images = clone $results->custom->stats->images;
-
-        foreach ($results->media->stats as $key => $value)
-        {
-            if (property_exists($object->stats, $key))
-            {
-							 if ($key == 'percentage_done')
-							 {
-								  if (property_exists($results->custom->stats, 'total') && $results->custom->stats->total == 0)
-										 $perc = $value;
-								  elseif(property_exists($results->media->stats, 'total') && $results->media->stats->total == 0)
-									{
-										 $perc = $object->stats->$key;
-									}
-									else
-									{
-										$total = $results->custom->stats->total + $results->media->stats->total;
-										$done = $results->custom->stats->done + $results->media->stats->done;
-										$fatal = $results->custom->stats->fatal_errors + $results->media->stats->fatal_errors;
-										$perc = round((100 / $total) * ($done + $fatal), 0, PHP_ROUND_HALF_DOWN);
-								 //		$perc = round(($object->stats->$key + $value) / 2); //exceptionnes.
-									}
-									$object->stats->$key  = $perc;
-							 }
-               elseif (is_numeric($object->stats->$key)) // add only if number.
-               {
-                $object->stats->$key += $value;
-               }
-               elseif(is_bool($object->stats->$key))
-               {
-                  // True > False in total since this status is true for one of the items.
-                  if ($value === true && $object->stats->$key === false)
-                     $object->stats->$key = true;
-               }
-               elseif (is_object($object->stats->$key)) // bulk object, only numbers.
-               {
-                  foreach($results->media->stats->$key as $bKey => $bValue)
-                  {
-                      $object->stats->$key->$bKey += $bValue;
-                  }
-               }
-            }
-        }
+    } */
 
 
-        return $object;
-    }
 
-		private function numberFormatStats($results) // run the whole stats thing through the numberFormat.
-		{
-			//qn: array('media', 'custom', 'total')
-			 foreach($results as $qn => $item)
-			 {
-				  if (is_object($item) && property_exists($item, 'stats'))
-					{
-					  foreach($item->stats as $key => $value)
-						{
-								 $raw_value = $value;
-								 if (is_object($value))
-								 {
-									  foreach($value as $key2 => $val2) // embedded 'images' can happen here.
-										{
-										 $value->$key2 = UiHelper::formatNumber($val2, 0);
-										}
-								 }
-								 elseif (strpos($key, 'percentage') !== false)
-								 {
-								 	  $value = UiHelper::formatNumber($value, 2);
-								 }
-								 elseif (is_numeric($value))
-								 {
-								 		$value = UiHelper::formatNumber($value, 0);
-								 }
-
-								$results->$qn->stats->$key = $value;
-							/*	if (! property_exists($results->$qn->stats, 'raw'))
-									$results->$qn->stats->raw = new \stdClass;
-
-								$results->$qn->stats->raw->$key = $raw_value; */
-						}
-					}
-			 }
-			 return $results;
-		}
-
+    // @todo For optimiser.
 		protected function deleteTempFiles($item)
 		{
 				if (! property_exists($item, 'files'))
@@ -1454,6 +1230,8 @@ class OptimizeController
 
 		}
 
+/*
+
 		protected function setLastID($item_id)
 		{
 			 self::$lastId = $item_id;
@@ -1464,6 +1242,11 @@ class OptimizeController
 			 return self::$lastId;
 		}
 
+*/
+
+    // Q
+    //
+    /*
     public static function resetQueues()
     {
 	      $queues = array('media', 'mediaSingle', 'custom', 'customSingle');
@@ -1474,6 +1257,7 @@ class OptimizeController
 	      }
     }
 
+    // Q
     public static function uninstallPlugin()
     {
 
@@ -1485,6 +1269,7 @@ class OptimizeController
       }
 
     }
+    */
 
 
 } // class

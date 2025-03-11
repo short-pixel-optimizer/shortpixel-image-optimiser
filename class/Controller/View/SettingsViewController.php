@@ -21,8 +21,10 @@ use ShortPixel\Controller\StatsController as StatsController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
-use ShortPixel\Controller\CacheController as CacheController;
+use ShortPixel\Controller\QueueController as QueueController;
 
+use ShortPixel\Controller\CacheController as CacheController;
+use ShortPixel\Controller\Queue\Queue;
 use ShortPixel\Controller\View\BulkViewController as BulkViewController;
 
 use ShortPixel\NextGenController as NextGenController;
@@ -241,7 +243,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 			{
 				$this->checkPost(false);
 
-				OptimizeController::resetQueues();
+				QueueController::resetQueues();
 
 				$action = isset($_REQUEST['bulk']) ? sanitize_text_field($_REQUEST['bulk']) : null;
 
@@ -327,18 +329,19 @@ class SettingsViewController extends \ShortPixel\ViewController
 
 				 if (! is_null($queue))
 				 {
-					 	 	$opt = new OptimizeController();
+					 	 	$opt = new QueueController();
 
               if (true === $uninstall)
               {
                   Log::addDebug("Using Debug UnInstall");
-                  OptimizeController::uninstallPlugin();
+                  QueueController::uninstallPlugin();
                   $this->doRedirect('');
               }
 				 		 	$statsMedia = $opt->getQueue('media');
 				 			$statsCustom = $opt->getQueue('custom');
 
-				 			$opt->setBulk(true);
+              $opt = new QueueController(['is_bulk' => true]);
+
 
 				 		 	$bulkMedia = $opt->getQueue('media');
 				 			$bulkCustom = $opt->getQueue('custom');
@@ -415,7 +418,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 					// If the compression type setting changes, remove all queued items to prevent further optimizing with a wrong type.
 					if (intval($this->postData['compressionType']) !== intval($this->model->compressionType))
 					{
-						 OptimizeController::resetQueues();
+						 QueueController::resetQueues();
 					}
 
           // write checked and verified post data to model. With normal models, this should just be call to update() function

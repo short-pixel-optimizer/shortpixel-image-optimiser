@@ -20,22 +20,23 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 
 	}
 
+	/* ResultItem : Object of result output coming from QueueItem result() function . Mostly passed via AjaxController Json output.
+	*/
 	HandleImage(resultItem, type)
 	{
 			if (type != this.type )  // We don't eat that here.
-				return false;
-
-			if (typeof resultItem.result !== 'undefined')
 			{
+				return false;
+			}
 					// This is final, not more messing with this. In results (multiple) defined one level higher than result object, if single, it's in result.
-					var item_id = typeof resultItem.item_id !== 'undefined' ? resultItem.item_id : resultItem.result.item_id;
-					var message = resultItem.result.message;
+					var item_id = resultItem.item_id;
+					var message = resultItem.message;
 
 					var element = document.getElementById('sp-msg-' + item_id); // empty result box while getting
 					if (typeof message !== 'undefined')
 					{
 							 var isError = false;
-						 if (resultItem.result.is_error == true)
+						 if (resultItem.is_error == true)
 								isError = true;
 						 this.UpdateMessage(item_id, message, isError);
 					}
@@ -45,7 +46,7 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 					//  var event = new CustomEvent('shortpixel.loadItemView', {detail: {'type' : type, 'id': result.id }}); // send for new item view.
 					var fileStatus = this.processor.fStatus[resultItem.fileStatus];
 
-						if (fileStatus == 'FILE_SUCCESS' || fileStatus == 'FILE_RESTORED' || resultItem.result.is_done == true)
+						if (fileStatus == 'FILE_SUCCESS' || fileStatus == 'FILE_RESTORED' || resultItem.is_done == true)
 						{
 							this.processor.LoadItemView({id: item_id, type: type});
 						}
@@ -55,12 +56,7 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 						}
 						//window.dispatchEvent(event);
 					}
-			}
-			else
-			{
-				console.error('handleImage without Result', resultItem);
 
-			}
 
 			return false;
 	}

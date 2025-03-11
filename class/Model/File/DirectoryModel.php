@@ -277,8 +277,19 @@ class DirectoryModel extends \ShortPixel\Model
         Log::addInfo('Directory does not exists. Try to create recursive ' . $this->path . ' with '  . $permission);
 
 
-        $result = @mkdir($this->path, $permission , true);
-				chmod ($this->path, $permission );
+        try {
+          $result = @mkdir($this->path, $permission , true);
+        }
+        catch (Exception $e)
+        {
+          Log::addWarning('Mkdir failed on ' . $this->path, $e);
+        }
+       
+        if (true === $result)
+        {
+          chmod ($this->path, $permission );
+        }
+				
 
         if (! $result)
         {

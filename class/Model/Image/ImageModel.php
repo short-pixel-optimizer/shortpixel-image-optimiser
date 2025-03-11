@@ -51,7 +51,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		const ACTION_SMARTCROPLESS = 101;
 
     // Extension that we process . Minus the one that one MediaLibraryModel should handle, so it doesn't touch the thumbns.
-    const PROCESSABLE_EXTENSIONS = array('jpg', 'jpeg', 'gif', 'png', 'pdf');
+    const PROCESSABLE_EXTENSIONS = array('jpg', 'jpeg', 'gif', 'png', 'pdf', 'webp');
 
     //
     const P_PROCESSABLE = 0;
@@ -150,7 +150,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         $this->setMeta('originalHeight', $this->get('height'));
 
       if (is_null($this->getMeta('tsAdded')))
-        $things->setMeta('tsAdded', time());
+        $this->setMeta('tsAdded', time());
 
       $this->setWebp();
       $this->setAvif();
@@ -703,12 +703,12 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
               {
                 Log::addError('Backup Not OK - ' . $this->getFileName(), $args);
 
-								$response = array(
+								$response = [
 										'is_error' => true,
 										'issue_type' => ResponseController::ISSUE_BACKUP_CREATE,
 										'message' => __('Could not create backup. Please check file permissions', 'shortpixel-image-optimiser'),
 										'fileName' => $this->getFileName(),
-								);
+                ];
 
 								ResponseController::addData($this->get('id'), $response);
 
@@ -817,20 +817,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
             return false;
           }
+
           return true;
 
-        Log::addWarn('Could not find images of this item in tempfile -' . $this->id . '(' . $this->getFullPath() . ')', array_keys($results) );
-
-				$response = array(
-					 'is_error' => true,
-					 'issue_type' => ResponseController::ISSUE_OPTIMIZED_NOFILE,
-					 'message' => __('Image is reporting as optimized, but file couldn\'t be found in the downloaded files', 'shortpixel-image-optimiser'),
-					 'fileName' => $this->getFileName(),
-				);
-
-				ResponseController::addData($this->get('id'), $response);
-
-        return null;
     }
 
     public function handleOptimizedFileType($downloadResult)

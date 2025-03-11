@@ -368,7 +368,7 @@ window.ShortPixelProcessor =
 					var handledError = false; // prevent passing to regular queueHandler is some action is taken.
 					this.workerErrors = 0;
 
-          if ( response.callback)
+          if (response.callback)
           {
               console.log('Running callback : ' + response.callback);
               var event = new CustomEvent(response.callback, {detail: response, cancelable: true});
@@ -379,6 +379,7 @@ window.ShortPixelProcessor =
           }
           if ( response.status == false)
           {
+            console.log('Worker error: Status false');
              // This is error status, or a usual shutdown, i.e. when process is in another browser.
              var error = this.aStatusError[response.error];
              if (error == 'PROCESSOR_ACTIVE')
@@ -498,31 +499,43 @@ window.ShortPixelProcessor =
          // Perhaps if optimization, the new stats and actions should be generated server side?
          // If there are items, give them to the screen for display of optimization, waiting status etc.
 				 var imageHandled = false;  // Only post one image per result-set to the ImageHandler (on bulk), to prevent flooding.
+console.log('response', response, type, imageHandled);
 
-				 // @todo Make sure that .result and .results can be iterated the same.
+         // @todo Make sure that .result and .results can be iterated the same.
+
+         /* Structure ::
+              json -> [media/custom] -> results array -> all results of item. New simplification!
+         */
+
          if (typeof response.results !== 'undefined' && response.results !== null)
          {
              for (var i = 0; i < response.results.length; i++)
              {
                 var imageItem = response.results[i];
-								if (imageItem == null || ! imageItem.result)
+								if (imageItem == null)
 								{
 									 console.error('Expecting ImageItem Object with result ', imageItem);
 									 continue;
 								}
-                if (imageItem.result.is_error)
+                if (imageItem.is_error)
 								{
                   this.HandleItemError(imageItem, type);
 								}
 
-								if (! imageHandled)
+                // Bulk page should deliver only one item for previewing not to flood the browser.
+								if (this.isBulkPage && imageHandled)
 								{
+                }
+                else
+                {
                 	imageHandled = this.screen.HandleImage(imageItem, type);
+                  console.log('handling by .results', response, imageHandled);
 								}
              }
          }
          if (typeof response.result !== 'undefined' && response.result !== null)
          {
+              console.warn('This response going trough deprecated single handler - ', response);
               if (response.result.is_error)
 							{
 									this.HandleItemError(response.result, type);
@@ -530,8 +543,11 @@ window.ShortPixelProcessor =
 							else if (! imageHandled)
 							{
               	imageHandled = this.screen.HandleImage(response, type); // whole response here is single item. (final!)
+                console.log('handling by .result', response, imageHandled);
+
 							}
          }
+
 
          // Queue status?
          if (response.stats)
@@ -614,7 +630,7 @@ window.ShortPixelProcessor =
 
     HandleItemError : function(result, type)
     {
-        
+
         console.log('Handle Item Error', result, type);
         var error = this.aStatusError[result.error];
 

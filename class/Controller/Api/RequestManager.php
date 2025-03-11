@@ -88,11 +88,12 @@ abstract class RequestManager
 	* @param Object $item  The QueueItemObject
 	* @param Array $requestParameters  The HTTP parameters for the remote post (arguments in getRequest)
 	*/
-  protected function doRequest(QueueItem $item, $requestParameters )
+  protected function doRequest(QueueItem $qItem, $requestParameters )
 	{
 		$response = wp_remote_post($this->apiEndPoint, $requestParameters );
     Log::addDebug('ShortPixel API Request sent to ' . $this->apiEndPoint , $requestParameters['body']);
 
+    //Log::addDebug('Response', $response['body']);
 		//only if $Blocking is true analyze the response
 		if ( $requestParameters['blocking'] )
 		{
@@ -100,40 +101,40 @@ abstract class RequestManager
 				{
 						$errorMessage = $response->errors['http_request_failed'][0];
 						$errorCode = self::STATUS_CONNECTION_ERROR;
-            $item->setResult($this->returnRetry($errorCode, $errorMessage));
+            $qItem->addResult($this->returnRetry($errorCode, $errorMessage));
 				}
 				elseif ( isset($response['response']['code']) && $response['response']['code'] <> 200 )
 				{
 						$errorMessage = $response['response']['code'] . " - " . $response['response']['message'];
 						$errorCode = $response['response']['code'];
-            $item->setResult($this->returnFailure($errorCode, $errorMessage));
+            $qItem->addResult($this->returnFailure($errorCode, $errorMessage));
 				}
 				else
 				{
-           $item->setResult($this->handleResponse($item, $response));
+           $qItem->addResult($this->handleResponse($qItem, $response));
 				}
 
 		}
 		else // This should be only non-blocking the FIRST time it's send off.
 		{
-			 if ($item->tries > 0)
+       if ($qItem->tries > 0)
 			 {
-					Log::addWarn('DOREQUEST sent item non-blocking with multiple tries!', $item);
+          Log::addWarn('DOREQUEST sent item non-blocking with multiple tries!', $qItem);
 			 }
 
-			 $urls = (property_exists($item->data(), 'urls')) ? count($item->data()->urls) : 0;
+       $urls = (property_exists($qItem->data(), 'urls')) ? count($qItem->data()->urls) : 0;
 
-			 if ($urls == 0 && property_exists($item->data(), 'url'))
-				$urls = count($item->data()->url);
+       if ($urls == 0 && property_exists($qItem->data(), 'url'))
+        $urls = count($qItem->data()->url);
 
-			 $flags = property_exists($item->data(), 'flags') ? $item->data()->flags : [];
+       $flags = property_exists($qItem->data(), 'flags') ? $qItem->data()->flags : [];
 			 $flags = implode("|", $flags);
-			 $text = sprintf(__('New item #%d sent for processing ( %d URLS %s)  ', 'shortpixel-image-optimiser'), $item->item_id, $urls, $flags );
+       $text = sprintf(__('New item #%d sent for processing ( %d URLS %s)  ', 'shortpixel-image-optimiser'), $qItem->item_id, $urls, $flags );
 
-       $item->setResult($this->returnOK(self::STATUS_ENQUEUED, $text ));
+       $qItem->addResult($this->returnOK(self::STATUS_ENQUEUED, $text ));
 		}
 
-		return $item;
+//		return $item;
 	}
 
 
@@ -189,29 +190,41 @@ abstract class RequestManager
   }
 
   /** Returns a success status. This is succeseption, each file gives it's own status, bundled. */
-  protected function returnSuccess($file, $status = self::STATUS_SUCCESS, $message = false)
-  {
-  /*    $result = $this->getResultObject();
-      $result->apiStatus = $status;
-      $result->message = $message;
+  /* @param $data Array sends the data to be included in the success result.
   */
+  protected function returnSuccess($data, $status = self::STATUS_SUCCESS, $message = false)
+  {
+
       $result = [
           'apiStatus' => $status,
           'message' => $message,
       ];
 
-
-
       if (self::STATUS_SUCCESS === $status)
         $result['is_done'] = true;
 
-      if (is_array($file))
+      if ($message == false)
+      {
+         unset($result['message']);
+      }
+
+    /*  if (is_array($file))
         $result['files'] = $file;
       else
         $result['file'] = $file; // this file is being used in imageModel
-
+*/
+      $result = array_merge($result, $data);
       return $result;
   }
+
+  protected function parseResponse($response)
+  {
+    $data = $response['body'];
+
+    $data = json_decode($data);
+    return (array)$data;
+  }
+
 
 
 } // class RequestManager
