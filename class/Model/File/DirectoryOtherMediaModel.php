@@ -11,7 +11,7 @@ use ShortPixel\Notices\NoticeController as Notice;
 use \ShortPixel\Model\File\DirectoryModel as DirectoryModel;
 use \ShortPixel\Model\Image\ImageModel as ImageModel;
 
-use ShortPixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\Controller\QueueController as QueueController;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 
 // extends DirectoryModel. Handles ShortPixel_meta database table
@@ -525,9 +525,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
 				 return false;
 			}
 
-      $values = array();
-
-      $optimizeControl = new OptimizeController();
+      $queueControl = new QueueController();
 			$otherMediaControl = OtherMediaController::getInstance();
 			$activeFolders = $otherMediaControl->getActiveDirectoryIDS();
 
@@ -561,7 +559,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
 						// If in Db, but not optimized and autoprocess is on; add to queue for optimizing
 						if (\wpSPIO()->env()->is_autoprocess && $imageObj->isProcessable())
 						{
-							 $optimizeControl->addItemToQueue($imageObj);
+							 $queueControl->addItemToQueue($imageObj);
 						}
 
             continue;
@@ -574,7 +572,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
              if (\wpSPIO()->env()->is_autoprocess)
              {
-                $optimizeControl->addItemToQueue($imageObj);
+                $queueControl->addItemToQueue($imageObj);
              }
           }
           else {

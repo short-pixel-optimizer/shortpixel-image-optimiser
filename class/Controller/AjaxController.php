@@ -556,15 +556,8 @@ class AjaxController
 
 		$this->checkImageAccess($imageModel);
 
-		//$control = new OptimizeController();
-
-		$qItem = QueueItems::getImageItem($imageModel);
-		$qItem->newRestoreAction();
-
-		$optimiser = $qItem->getApiController();
-		$optimiser->sendToProcessing($qItem);
-
-		$result = $qItem->result();
+		$queueController = new QueueController();
+		$result  = $queueController->addItemToQueue($imageModel, ['action' => 'restore']);
 
 		$json->$type->results = [$result];
 		$json->status = true;
@@ -591,10 +584,10 @@ class AjaxController
 			$smartcrop = $actionType;
 		}
 
+		// @todo Ideally this should go to QueueController - addItemToQueue, but issue with arguments. Leaving it for now.
 		$qItem = QueueItems::getImageItem($imageModel);
-		$qItem->newReOptimizeAction(['compressionType' => $compressionType, 'smartcrop' => $smartcrop]);
-		
-		
+		$qItem->newReOptimizeAction(['compressionType' => $compressionType, 'smartcrop' => $smartcrop]);		
+	
 		$optimiser = $qItem->getApiController();
 		$result = $optimiser->sendToProcessing($qItem);
 
@@ -603,7 +596,6 @@ class AjaxController
 			$result = $qItem->result();
 		}
 		
-
 		$json->$type->results = [$result];
 		$json->status = true;
 

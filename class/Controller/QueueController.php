@@ -37,33 +37,33 @@ class QueueController
   public function __construct($args = [])
   {
      $defaults = [
-       'is_bulk' => false
+       'is_bulk' => false,
      ];
 
      $this->args = wp_parse_args($args, $defaults);
   }
 
+  /**
+   * Add a single item to the queue
+   *
+   * @param ImageModel $imageModel 
+   * @param array $args
+   * @return Object Result object
+   */
   public function addItemToQueue(ImageModel $imageModel, $args = [])
   {
       $defaults = array(
         'forceExclusion' => false,
-        'action' => 'optimize',
+        'action' => 'optimize', 
+        'compressionType' => null, 
       );
       $args = wp_parse_args($args, $defaults);
 
-      if (! isset($args['action']))
-      {
-         Log::addError('Add Item without Action');
-         return false;
-      }
-
       $qItem = QueueItems::getImageItem($imageModel);
-
-      $json = $this->getJsonResponse();
 
       $queue = $this->getQueue($imageModel->get('type'));
 
-
+      // These checks are across all actions. 
       if ($queue->isDuplicateActive($imageModel))
       {
         $qItem->addResult([
@@ -75,12 +75,7 @@ class QueueController
         ]);
 
         return $qItem->result(); // @todo $qItem Or $qItem->result() ?
-        /*
-        $json->result->fileStatus = ;
-        $json->result->is_error = false;
-        $json->result->is_done = true;
-        $json->result->message = __('A duplicate of this item is already active in queue. ', 'shortpixel-image-optimiser');
-        return $json; */
+
       }
 
       if ($this->isItemInQueue($imageModel))
@@ -91,21 +86,20 @@ class QueueController
            'is_done' => true,
            'message' =>__('This item is already awaiting processing in queue', 'shortpixel-image-optimiser'),
         ]);
-        /*
-        $json = $this->getJsonResponse();
-        $json->result->fileStatus = ImageModel::FILE_STATUS_UNPROCESSED;
-        $json->result->is_error = false;
-        $json->result->is_done = true;
-        $json->result->message = __('This item is already awaiting processing in queue', 'shortpixel-image-optimiser');
-        return $json;
-        */
+
       }
 
 // @todo Later: check if all provisions of OptimizeController are implemented.
+      $args = array_filter($args);
       $qItem = QueueItems::getImageItem($imageModel);
-      $qItem->setData('action', $args['action']);
-      $qItem->setData('forceExclusion', $args['forceExclusion']);
 
+      foreach($args as $name => $value)
+      {
+         $qItem->setData($name, $value);
+      }
+/*      $qItem->setData('action', $args['action']);
+      $qItem->setData('forceExclusion', $args['forceExclusion']);
+*/
       $optimizer = $qItem->getApiController();
       $optimizer->setCurrentQueue($queue);
 
@@ -134,31 +128,36 @@ class QueueController
       {
           $status = $optimizer->enQueueItem($qItem);
           $this->lastQStatus = $status->qstatus;
-          $message = '';
-
-          if ($status->numitems > 0)
+          
+          // Not API status does it own messaging.
+          if ($status->qstatus !== ApiController::STATUS_NOT_API)
           {
-
-            $message = sprintf(__('Item %s added to Queue. %d items in Queue', 'shortpixel-image-optimiser'), $imageModel->getFileName(), $status->numitems);
-            //$json->status = 1;
-
-            // Check if background process is active / this needs activating.
-            $cronController = CronController::getInstance();
-            $cronController->checkNewJobs();
+            $message = '';
+            if ($status->numitems > 0)
+            {
+  
+              $message = sprintf(__('Item %s added to Queue. %d items in Queue', 'shortpixel-image-optimiser'), $imageModel->getFileName(), $status->numitems);
+              //$json->status = 1;
+  
+              // Check if background process is active / this needs activating.
+              $cronController = CronController::getInstance();
+              $cronController->checkNewJobs();
+            }
+            else {
+              $message = __('No items added to queue', 'shortpixel-image-optimiser');
+              //$json->status = 0;
+            }
+  
+            $qItem->addResult([
+              'message' => $message,
+            ]);
+  
+  
           }
-          else {
-            $message = __('No items added to queue', 'shortpixel-image-optimiser');
-            //$json->status = 0;
-          }
-
-          $qItem->addResult([
-            'message' => $message,
-          ]);
 
       }
 
       return $qItem->result();
-
   }
 
   public function isItemInQueue(ImageModel $mediaItem)

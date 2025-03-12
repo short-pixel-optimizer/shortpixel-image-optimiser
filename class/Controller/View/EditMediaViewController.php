@@ -259,7 +259,6 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
 						 $returnEnqueue = $item->returnEnqueue();
 
-						 $debugInfo[] = array(__('Image to Queue'), $q->_debug_imageModelToQueue($imageObj) );
 						 $debugInfo[] = array(__('Image to Queue V2'), $returnEnqueue );
 
 					}

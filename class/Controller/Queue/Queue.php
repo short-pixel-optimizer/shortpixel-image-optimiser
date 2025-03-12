@@ -111,7 +111,7 @@ abstract class Queue
        $this->q->addItems([$qItem->returnEnqueue()], false);
        $numitems = $this->q->withRemoveDuplicates()->enqueue(); // enqueue returns numitems
 
-       $result = $this->getQStatus($result, $numitems);
+       $result->qstatus = $this->getQStatus($numitems);
        $result->numitems = $numitems;
 
        do_action('shortpixel_start_image_optimisation', $imageModel->get('id'), $imageModel);
@@ -124,7 +124,7 @@ abstract class Queue
       $numitems = $this->q->withRemoveDuplicates()->enqueue(); // enqueue returns numitems
 
       $result = new \stdClass;
-      $this->getQStatus($result, $numitems);
+      $result->qstatus = $this->getQStatus($numitems);
       $result->numitems = $numitems;
 
       do_action('shortpixel_start_image_optimisation', $qItem->item_id, $qItem->imageModel);
@@ -201,7 +201,7 @@ abstract class Queue
 
        if (isset($items)) // did a dequeue.
        {
-          $result = $this->getQStatus($result, count($items));
+          $result->qstatus = $this->getQStatus(count($items));
           $result->items = $items;
 
        }
@@ -286,6 +286,7 @@ abstract class Queue
 
                     //$qObject = $this->imageModelToQueue($mediaItem);
 
+                  
                   //  $counts = $qObject->counts;
 
                    //$media_id = $mediaItem->get('id');
@@ -387,25 +388,26 @@ abstract class Queue
     }
 
 
-    public function getQStatus($result, $numitems)
+    protected function getQStatus($numitems)
     {
+
       if ($numitems == 0)
       {
         if ($this->getStatus('items') == 0 && $this->getStatus('errors') == 0 && $this->getStatus('in_process') == 0) // no items, nothing waiting in retry. Signal finished.
         {
-          $result->qstatus = self::RESULT_QUEUE_EMPTY;
+          $qstatus = self::RESULT_QUEUE_EMPTY;
         }
         else
         {
-          $result->qstatus = self::RESULT_EMPTY;
+          $qstatus = self::RESULT_EMPTY;
         }
       }
       else
       {
-        $result->qstatus = self::RESULT_ITEMS;
+        $qstatus = self::RESULT_ITEMS;
       }
 
-      return $result;
+      return $qstatus;
     }
 
 
@@ -552,7 +554,6 @@ abstract class Queue
 				{ // This must be array.
 					$item->files = json_decode(json_encode($item->files), true);
 				} */
-Log::addTemp('QueueItem End', $item);
         return $item;
     }
 
@@ -576,8 +577,13 @@ Log::addTemp('QueueItem End', $item);
 
     // This is a general implementation - This should be done only once!
     // The 'avif / webp left imp. is commented out since both API / and OptimizeController don't play well with this.
-    protected function imageModelToQueue(ImageModel $imageModel, $args = [])
+   /* protected function imageModelToQueue(ImageModel $imageModel, $args = [])
     {
+
+      //**** TODO - THIS IS ALREADY DONE IN NEWOPTIMIZEACTION 
+      // PROBABLY THIS CAN BE WHOLLY SKIPPED SINCE ALL THIS DATA SHOULD BE PREVENT IN QITEM -> DATA(); 
+      // Check references to this function
+
         $defaults = array(
             'debug_active' => false, // prevent write actions if called via debugger
         );
@@ -677,7 +683,7 @@ Log::addTemp('QueueItem End', $item);
 		public function _debug_imageModelToQueue($imageModel)
 		{
 			 return $this->imageModelToQueue($imageModel, ['debug_active' => true]);
-		}
+		} */
 
     protected function timestampURLS($urls, $id)
     {

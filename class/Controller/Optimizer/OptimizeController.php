@@ -36,14 +36,15 @@ class OptimizeController extends OptimizerBase
   }
 
     // @todo This function should probably be removed and use QueueController -> AddItemToQueue for these things, since checks and responses are not optimimal here.
-  public function enQueueItem(QueueItem $qItem)
+  public function enQueueItem(QueueItem $qItem, $args = [])
   {
-    $queue = $this->getCurrentQueue($qItem);
 
+    $queue = $this->getCurrentQueue($qItem);
+   
     $qItem->newOptimizeAction();
 
-    $result = $queue->addQueueItem($qItem);
-    return $result;
+    $status = $queue->addQueueItem($qItem);
+    return $status;
   }
 
 

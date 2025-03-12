@@ -11,6 +11,7 @@ use ShortPixel\Controller\Queue\QueueItems as QueueItems;
 
 use ShortPixel\Controller\Api\ApiController as ApiController;
 use ShortPixel\Controller\ResponseController as ResponseController;
+use ShortPixel\Controller\QueueController as QueueController;
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Model\Converter\Converter as Converter;
@@ -29,6 +30,9 @@ class ActionController extends OptimizerBase
          case 'reoptimize': 
             return $this->reoptimizeItem($item);
          break; 
+         case 'png2jpg':
+            return $this->convertPNG($item); 
+         break;
       }
 
   }
@@ -51,16 +55,53 @@ class ActionController extends OptimizerBase
   }
 
 
-  public function enqueueItem(QueueItem $item)
+  /**
+   * EnqueueItem . Enqueues item when needed, actionController is unique in that it has several 'direct' actions that don't require being in a queue.
+   *
+   * @param QueueItem $qItem
+   * @param array $args
+   * @return Object
+   */
+  public function enqueueItem(QueueItem $qItem, $args = [])
   {
-      return;  
+      
+   $queue = $this->getCurrentQueue($qItem);
+   $directAction = true; // By default, execute Actions directly ( not via queue sys )
+   
+   switch($qItem->data()->action)
+   {
+       case 'restore':
+          //$qItem->newRestoreAction(); // This doesn't do much really.
+       break; 
+       case 'reoptimize': 
+         $qItem->newReOptimizeAction();
+      break; 
+      case 'png2jpg':
+      break; 
+   }
+
+    if (true === $directAction)
+    {
+       // The directActions give back booleans, but the whole function must return an queue result object with qstatus and numitems
+       $bool = $this->sendToProcessing($qItem);
+       $result = new \stdClass;
+       $result->qstatus = ApiController::STATUS_NOT_API;
+
+    }
+    else
+    {
+      $result = $queue->addQueueItem($qItem);
+    }
+
+   
+    return $result;
   }
 
   /**
    * Try to convert a PNGfile to JPG. This is done on the local server.  The file should be converted and then re-added to the queue to be processed as a JPG ( if success ) or continue as PNG ( if not success )
    * @param  Object $item                 Queued item
    * @param  Object $mediaQ               Queue object
-   * @return Object         Returns queue item
+   * @return boolean Returns success status.
    */
   // @todo Via actions to Optimizers
   protected function convertPNG(QueueItem $qItem)
@@ -83,7 +124,6 @@ class ActionController extends OptimizerBase
        $queue->updateItem($qItem);
      }
 
-     
       $converter = Converter::getConverter($imageObj, true);
       $bool = false; // init
       if (false === $converter)
@@ -114,9 +154,11 @@ class ActionController extends OptimizerBase
     $queue->updateItem($qItem);
 
     // Add converted items to the queue for the process
-    $this->enqueueItem($imageObj);
+    $queueController = new QueueController(); 
+    $queueController->addItemToQueue($imageObj, ['action' => 'optimize'] );
+ //   $this->enqueueItem($imageObj);
 
-    return $qItem;
+    return $bool;
   }
 
   /** Reoptimize an item
@@ -149,18 +191,22 @@ class ActionController extends OptimizerBase
              $imageModel->doSetting('smartcrop', $queueItem->data()->smartcrop);
           }
 
-          $qItem = QueueItems::getImageItem($imageModel);
+          $queueController = new QueueController();
+            
+  /*        $qItem = QueueItems::getImageItem($imageModel);
           $qItem->newOptimizeAction();
           $qItem->data()->compressionType = $compressionType; 
-
+*/
+          $args = ['action' => 'optimize', 'compressionType' => $compressionType];
+          
           // This is a user triggered thing. If the whole thing is user excluxed, but one ones this, then ok.
           if (false === $imageModel->isProcessable() && true === $imageModel->isUserExcluded())
           {
-            $qItem->data()->forceExclusion = true; 
+            $args['forceExclusion'] = true;
+//            $qItem->data()->forceExclusion = true; 
           }
-
-          $apiController = $qItem->getAPIController(); 
-          $result = $apiController->enqueueItem($qItem);
+          
+          $result = $queueController->addItemToQueue($imageModel, $args);
 
           return $result;
     }
@@ -239,10 +285,6 @@ class ActionController extends OptimizerBase
              'is_done' => true,
              'success' => true,
          ]);
-/*         $json->status = 1; // @todo This status, is not result, check how low-level this is needed in general.
-         $json->result->message = __('Item restored', 'shortpixel-image-optimiser');
-         $json->fileStatus = ImageModel::FILE_STATUS_RESTORED;
-         $json->result->is_done = true; */
       }
       else
       {
@@ -252,11 +294,6 @@ class ActionController extends OptimizerBase
             'is_error' => true,
             'fileStatus' => ImageModel::FILE_STATUS_ERROR,
          ]);
-         /*
-         $json->result->message = ResponseController::formatItem($mediaItem->get('id'));
-         $json->result->is_done = true;
-         $json->fileStatus = ImageModel::FILE_STATUS_ERROR;
-         $json->result->is_error = true; */
       }
 
       // no returns here, the result is added to the qItem by reference.

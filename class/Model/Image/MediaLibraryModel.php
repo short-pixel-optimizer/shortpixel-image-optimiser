@@ -28,7 +28,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   protected $retinas; // retina files - MediaLibraryThumbnailModel (or retina / webp and move to thumbnail? )
   //protected $webps = array(); // webp files -
 
-	/** @var boolean */
+	/** @var boolean|Object */
   protected $original_file = false; // the original instead of the possibly _scaled one created by WP 5.3
 
 	/** @var boolean */

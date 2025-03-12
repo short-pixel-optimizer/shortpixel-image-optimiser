@@ -220,22 +220,22 @@ class QueueItem
    {
       // Should list every possible item, arrayfilter out.
       $validation = [
-         'apiStatus' => RequestManager::STATUS_UNCHANGED,
-         'message' => '',
-         'is_error' => false,
-         'is_done' => false,
-         'file' => null,  // should probably be merged these two.
-         'files' => null,
-         'fileStatus' => null,
-         'filename' => '', // @todo figure out why this is here.
-         'error' => null,  // might in time better be called error_code or so
-         'success' => false, // new
-         'improvements' => null,
-         'original' => null,
-         'optimized' => null,
-         'queueType' => null, // OptimizeController but (?) usage
-         'kblink' => null,
-         'data' => [], // Is returnDataList returned by apiController.
+         'apiStatus', 
+         'message',
+         'is_error',
+         'is_done',
+         'file',  // should probably be merged these two.
+         'files',
+         'fileStatus',
+         'filename', // @todo figure out why this is here.
+         'error',  // might in time better be called error_code or so
+         'success', // new
+         'improvements',
+         'original',
+         'optimized',
+         'queueType', // OptimizeController but (?) usage
+         'kblink',
+         'data', // Is returnDataList returned by apiController. (array)
 
       ];
 
@@ -247,7 +247,7 @@ class QueueItem
 
 
       foreach ($data as $name => $value) {
-         if (false === isset($validation[$name])) {
+         if (false === in_array($name, $validation)) {
             Log::addWarn("Result $name not in validation");
          }
 
@@ -272,14 +272,16 @@ class QueueItem
       /*  $defaults = array(
             'debug_active' => false, // prevent write actions if called via debugger
         ); */
+  
 
-      $item = new \stdClass;
+      if (false === property_exists($this->data, 'compressionType'))
+      {
+         $this->data->compressionType = \wpSPIO()->settings()->compressionType;
+      }
+      $this->data->action = 'optimize'; 
 
-      $item->compressionType = \wpSPIO()->settings()->compressionType;
-
-      $data = $imageModel->getOptimizeData();
-      $urls = $data['urls'];
-      $params = $data['params'];
+      $optimizeData = $imageModel->getOptimizeData();
+      $urls = $optimizeData['urls'];
 
       list($u, $baseCount) = $imageModel->getCountOptimizeData('thumbnails');
       list($u, $webpCount) = $imageModel->getCountOptimizeData('webp');
@@ -296,11 +298,11 @@ class QueueItem
       $removeKeys = array('image', 'webp', 'avif'); // keys not native to API / need to be removed.
 
       // Is UI info, not for processing.
-      if (isset($data['params']['paths'])) {
-         unset($data['params']['paths']);
+      if (isset($optimizeData['params']['paths'])) {
+         unset($optimizeData['params']['paths']);
       }
 
-      foreach ($data['params'] as $sizeName => $param) {
+      foreach ($optimizeData['params'] as $sizeName => $param) {
          $plus = false;
          $convertTo = array();
          if ($param['image'] === true) {
@@ -315,43 +317,42 @@ class QueueItem
 
          foreach ($removeKeys as $key) {
             if (isset($param[$key])) {
-               unset($data['params'][$sizeName][$key]);
+               unset($optimizeData['params'][$sizeName][$key]);
             }
          }
 
          if (count($convertTo) > 0) {
             $convertTo = implode('|', $convertTo);
-            $data['params'][$sizeName]['convertto'] = $convertTo;
+            $optimizeData['params'][$sizeName]['convertto'] = $convertTo;
          }
       }
 
       // CompressionType can be integer, but not empty string. In cases empty string might happen, causing lossless optimization, which is not correct.
-      if (!is_null($imageModel->getMeta('compressionType')) && is_numeric($imageModel->getMeta('compressionType'))) {
-         $item->compressionType = $imageModel->getMeta('compressionType');
-      }
+      /*if (!is_null($imageModel->getMeta('compressionType')) && is_numeric($imageModel->getMeta('compressionType'))) {
+         $this->data->compressionType = $imageModel->getMeta('compressionType');
+      }*/
 
       // Former securi function, add timestamp to all URLS, for cache busting.
       $urls = $this->timestampURLS(array_values($urls), $imageModel->get('id'));
-      $item->urls = apply_filters('shortpixel_image_urls', $urls, $imageModel->get('id'));
+      $this->data->urls = apply_filters('shortpixel_image_urls', $urls, $imageModel->get('id'));
 
-      if (count($data['params']) > 0) {
-         $item->paramlist = array_values($data['params']);
+      if (count($optimizeData['params']) > 0) {
+         $this->data->paramlist = array_values($optimizeData['params']);
       }
 
-      if (count($data['returnParams']) > 0) {
-         $item->returndatalist = $data['returnParams'];
+      if (count($optimizeData['returnParams']) > 0) {
+         $this->data->returndatalist = $optimizeData['returnParams'];
       }
 
-      $item->counts = $counts;
+      $this->data->counts = $counts;
 
       // Converter can alter the data for this item, based on conversion needs
       $converter = Converter::getConverter($imageModel, true);
       if ($baseCount > 0 && is_object($converter) && $converter->isConvertable()) {
-         $converter->filterQueue($item, ['debug_active' => $this->debug_active]);
+         $converter->filterQueue($this, ['debug_active' => $this->debug_active]);
       }
 
-      $this->data = $item;
-      $this->data->action = 'optimize';
+      //$this->data = $item;
 
       //return $item;
    }
@@ -377,6 +378,11 @@ class QueueItem
 
    }
 
+   /**
+    * Get the ApiController associated to the action performed
+    * 
+    * @return OptimizeBase  optimizer or higher.
+    */
    public function getAPIController() // @todo Move to QueueItem, or QUeueItems ?
    {
       $api = false;
