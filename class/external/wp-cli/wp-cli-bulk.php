@@ -6,7 +6,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-use ShortPixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Controller\BulkController as BulkController;
 
 use ShortPixel\Controller\Queue\Queue as Queue;
@@ -269,7 +268,7 @@ class SpioBulk extends SpioCommandBase
 		*/
 			public function prepare($args, $assoc)
 			{
-					 $queues = $this->getQueueArgument($assoc);
+					// $queues = $this->getQueueArgument($assoc);
            $queueController = $this->getQueueController(true);
 
             $data = $queueController->getStartupData();

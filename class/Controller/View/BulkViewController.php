@@ -79,7 +79,8 @@ class BulkViewController extends \ShortPixel\ViewController
 
     $this->view->customOperationMedia = (false !== $custom_operation_media) ? $this->getCustomLabel($custom_operation_media) : false;
     $this->view->customOperationCustom = (false !== $custom_operation_custom) ? $this->getCustomLabel($custom_operation_custom) : false;
-
+    $this->view->customOperationMediaName = $custom_operation_media; 
+    $this->view->customerOperationCustomName = $custom_operation_custom;
 
     $this->loadView();
 

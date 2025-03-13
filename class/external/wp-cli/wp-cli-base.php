@@ -543,11 +543,11 @@ class SpioCommandBase
 		public function clear($args, $assoc)
 		{
 			  $queues = $this->getQueueArgument($assoc);
-        $optimizeController = $this->getQueueController();
+        $queueController = $this->getQueueController();
 
 				foreach($queues as $type)
 				{
-					$queue = $optimizeController->getQueue($type);
+					$queue = $queueController->getQueue($type);
 					$queue->resetQueue();
 				}
 

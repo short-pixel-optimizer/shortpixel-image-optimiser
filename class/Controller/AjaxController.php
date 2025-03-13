@@ -585,16 +585,16 @@ class AjaxController
 		}
 
 		// @todo Ideally this should go to QueueController - addItemToQueue, but issue with arguments. Leaving it for now.
-		$qItem = QueueItems::getImageItem($imageModel);
-		$qItem->newReOptimizeAction(['compressionType' => $compressionType, 'smartcrop' => $smartcrop]);		
-	
-		$optimiser = $qItem->getApiController();
-		$result = $optimiser->sendToProcessing($qItem);
+		$queueController = new QueueController();
+		$result  = $queueController->addItemToQueue($imageModel, ['action' => 'reoptimize', 'compressionType' => $compressionType, 
+			'smartcrop' => $smartcrop]);
 
-		if (false === $result)
-		{
-			$result = $qItem->result();
-		}
+
+	//	$qItem = QueueItems::getImageItem($imageModel);
+	//	$qItem->newReOptimizeAction(['compressionType' => $compressionType, 'smartcrop' => $smartcrop]);		
+	
+	//	$optimiser = $qItem->getApiController();
+	//	$result = $optimiser->sendToProcessing($qItem);
 		
 		$json->$type->results = [$result];
 		$json->status = true;

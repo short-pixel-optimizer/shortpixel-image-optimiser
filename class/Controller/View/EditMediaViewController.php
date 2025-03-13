@@ -10,16 +10,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Helper\UiHelper as UiHelper;
-use ShortPixel\Helper\UtilHelper as UtilHelper;
-use ShortPixel\Controller\OptimizeController as OptimizeController;
-use ShortPixel\Controller\ErrorController as ErrorController;
 
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
-//use ShortPixel\Model\QueueItem as QueueItem;
 
 use ShortPixel\Model\File\FileModel as FileModel;
-
-
 
 
 // Future contoller for the edit media metabox view.

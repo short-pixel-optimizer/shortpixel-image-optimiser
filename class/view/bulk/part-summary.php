@@ -133,7 +133,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 			</button>
       <button class="button-primary button" type="button" data-action="StartBulk" data-control="data-check-total-total" data-check-presentation="disable">
 				<span class='dashicons dashicons-arrow-right'></span>
-				<p><?php esc_html_e('Start Bulk Optimization', 'shortpixel-image-optimiser'); ?></p>
+        <?php if ($view->customOperationMedia !== false) 
+        {
+            printf(esc_html('%s Start %s %s', 'shortpixel-image-optimiser'), '<p>', $view->customOperationMedia, '</p>');
+        }
+        else
+        {
+          ?>
+            <p><?php esc_html_e('Start Bulk Optimization', 'shortpixel-image-optimiser'); ?></p>
+          <?php 
+        } ?>
+				
 			</button>
     </nav>
   </div>

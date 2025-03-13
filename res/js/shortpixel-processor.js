@@ -60,7 +60,7 @@ window.ShortPixelProcessor =
        11: 'RESPONSE_WARNING', // *not used*
        12: 'RESPONSE_ERROR_DELAY', // when an error is serious enough to delay things.*not used*
     },
-    aStatusError: {  // AjaxController / optimizeController - when an error occured
+    aStatusError: {  // AjaxController / QueueController - when an error occured
         '-1': 'PROCESSOR_ACTIVE', // active in another window
         '-2': 'NONCE_FAILED',
         '-3': 'NO_STATUS',

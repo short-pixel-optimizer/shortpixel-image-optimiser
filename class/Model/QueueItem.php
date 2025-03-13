@@ -164,12 +164,14 @@ class QueueItem
    {
       $value = $this->data;
 
-      $media_id = $this->imageModel->get('id');
-      if ($this->imageModel->getParent() !== false) {
+      $item_id = $this->item_id; 
+
+      // ImageModel could not be set i.e. migrate or other special actions.
+      if (is_object($this->imageModel) && $this->imageModel->getParent() !== false) {
          $media_id = $this->imageModel->getParent();
       }
 
-      return ['id' => $media_id, 'value' => $value, 'item_count' => $this->item_count];
+      return ['id' => $item_id, 'value' => $value, 'item_count' => $this->item_count];
    }
 
    public function setDebug()

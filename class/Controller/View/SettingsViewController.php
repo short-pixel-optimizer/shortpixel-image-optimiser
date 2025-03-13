@@ -20,11 +20,9 @@ use ShortPixel\Controller\BulkController as BulkController;
 use ShortPixel\Controller\StatsController as StatsController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
-use ShortPixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Controller\QueueController as QueueController;
 
 use ShortPixel\Controller\CacheController as CacheController;
-use ShortPixel\Controller\Queue\Queue;
 use ShortPixel\Controller\View\BulkViewController as BulkViewController;
 
 use ShortPixel\NextGenController as NextGenController;

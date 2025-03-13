@@ -113,7 +113,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     /** @var string */
   	protected $optimizePreventedReason;
 
-		// Public var that can be set by OptimizeController to prevent double queries.
+		// Public var that can be set by QueueController to prevent double queries.
 		/** @var boolean */
 		public $is_in_queue;
 

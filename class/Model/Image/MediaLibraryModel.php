@@ -8,7 +8,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
-use ShortPixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 
 use ShortPixel\Controller\QueueController as QueueController;

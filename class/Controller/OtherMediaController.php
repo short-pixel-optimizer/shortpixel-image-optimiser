@@ -10,8 +10,6 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Model\File\DirectoryOtherMediaModel as DirectoryOtherMediaModel;
 use ShortPixel\Model\File\DirectoryModel as DirectoryModel;
 
-use ShortPixel\Controller\OptimizeController as OptimizeController;
-
 use ShortPixel\Helper\InstallHelper as InstallHelper;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
 
