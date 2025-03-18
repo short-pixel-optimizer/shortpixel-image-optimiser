@@ -89,6 +89,12 @@ class QueueItem
 
    public function result()
    {
+
+      if (is_null($this->result))
+      {
+         $this->result = new \stdClass;
+      }
+
       // check / set defaults.
       if (false === property_exists($this->result, 'item_id')) {
          $this->result->item_id = $this->item_id;
@@ -101,7 +107,6 @@ class QueueItem
       if (false === property_exists($this->result, 'is_done')) {
          $this->result->is_done = false;
       }
-
 
       $result = $this->result;
 
@@ -119,9 +124,18 @@ class QueueItem
       }
    }
 
-   // Return Data that need's storing in Queue Table
+   /** Return Data that need's storing in Queue Table
+    * 
+    *
+    * @return Object|boolean 
+    */
    public function getQueueItem()
    {
+      if (is_null($this->queueItem))
+      {
+          return false; 
+      }
+
       $qItem = $this->queueItem;
       $qItem->value = $this->data;
       return $qItem;
@@ -361,21 +375,20 @@ class QueueItem
 
    public function requestAltAction()
    {
-      $item = new \stdClass;
-      $item->url = $this->imageModel->getUrl();
-      $item->tries = 0;
-
+   
+      $this->data->url = $this->imageModel->getUrl();
+      $this->data->tries = 0;
       $this->item_count = 1;
-      $this->data = $item;
+
       $this->data->action = 'requestAlt'; // For Queue
    }
 
    public function retrieveAltAction($remote_id)
    {
-      $item = new \stdClass;
-      $item->remote_id = $remote_id;
-      $item->item_count = 1;
-      $this->data = $item;
+      
+      $this->data->remote_id = $remote_id;
+      $this->data->tries = 0;
+      $this->item_count = 1;
       $this->data->action = 'retrieveAlt';
 
    }

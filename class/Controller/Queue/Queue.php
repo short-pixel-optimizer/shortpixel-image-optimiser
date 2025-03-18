@@ -718,7 +718,12 @@ abstract class Queue
 					 Log::addError('Item failed while optimizing', $qItem->result());
 				}
 
+          // It can happen that the item is not in the queue yet ( directAction doing ) 
         $item = $this->mediaItemToQueue($qItem);
+        if (false === $item)
+        {
+           return;
+        }
 
         $this->q->itemFailed($item, $fatal);
         $this->q->updateItemValue($item);

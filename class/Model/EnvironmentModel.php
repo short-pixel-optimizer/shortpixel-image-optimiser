@@ -285,6 +285,7 @@ class EnvironmentModel extends \ShortPixel\Model
         return false;
     }
 
+
     if ( in_array($screen->id, $pages))
     {
        $this->is_screen_to_use = true;

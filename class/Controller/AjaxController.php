@@ -236,10 +236,13 @@ class AjaxController
 			case 'reOptimizeItem':
 				$json = $this->reOptimizeItem($json, $data);
 				break;
+
+			case 'ai/requestalt': 
+				$json = $this->requestAlt($json, $data);	
+			break; 
 			case 'unMarkCompleted':
 				$json = $this->unMarkCompleted($json, $data);
 				break;
-
 			case 'applyBulkSelection':
 				$this->checkActionAccess($action, 'is_editor');
 				$json = $this->applyBulkSelection($json, $data);
@@ -315,7 +318,6 @@ class AjaxController
 				$json = $this->recheckActive($json, $data);
 				break;
 			case 'settings/changemode':
-
 				$this->handleChangeMode($data);
 				break;
 			default:
@@ -601,6 +603,26 @@ class AjaxController
 
 		return $json;
 	}
+
+	protected function requestAlt($json, $data)
+	{
+		$id = $data['id'];
+		$type = $data['type'];
+		$imageModel = $this->getMediaItem($id, $type);
+
+		$queueController = new QueueController();
+
+		$args = [
+			'action' => 'requestAlt',
+
+		];
+		$result = $queueController->addItemToQueue($imageModel, $args);
+		
+		$json->$type->results = [$result];
+		$json->status = true;
+
+		return $json;
+	} 
 
 	protected function finishBulk($json, $data)
 	{

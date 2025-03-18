@@ -16,8 +16,6 @@ use ShortPixel\Helper\UtilHelper as UtilHelper;
 
 class ApiController extends RequestManager
 {
-
-
 	// Moved these numbers higher to prevent conflict with STATUS
 	const ERR_FILE_NOT_FOUND = -902;
 	const ERR_TIMEOUT = -903;
@@ -156,7 +154,6 @@ class ApiController extends RequestManager
 	{
 
 		$APIresponse = $this->parseResponse($response);//get the actual response from API, its an array
-		$settings = \wpSPIO()->settings();
 
 		// Don't know if it's this or that.
 		$status = false;
@@ -182,7 +179,7 @@ class ApiController extends RequestManager
 
 			unset($APIresponse['returndatalist']);
 		} else {
-			$returnDataList = array();
+			$returnDataList = [];
 		}
 
 		// This is only set if something is up, otherwise, ApiResponse returns array
@@ -353,6 +350,7 @@ class ApiController extends RequestManager
 	 */
 	protected function handleNewSuccess(QueueItem $qItem, $fileData, $data)
 	{
+		$settings = \wpSPIO()->settings;
 		$compressionType = property_exists($qItem->data(), 'compressionType') ? $qItem->data()->compressionType : $settings->compressionType;
 		//$savedSpace =  $originalSpace =  $optimizedSpace = $fileCount  = 0;
 
@@ -453,8 +451,8 @@ class ApiController extends RequestManager
 	/**
 	 *  Function to check if the filesize of the imagetype (webp/avif) is smaller, or within bounds of size to be stored. If not, the webp is not downloaded and uses.
 	 *
-	 * @param  Integer $fileSize                 Filesize of the original
-	 * @param  Integer $resultSize               Filesize of the optimized image
+	 * @param  int $fileSize                 Filesize of the original
+	 * @param  int $resultSize               Filesize of the optimized image
 	 * @return [type]             [description]
 	 */
 	private function checkFileSizeMargin($fileSize, $resultSize)

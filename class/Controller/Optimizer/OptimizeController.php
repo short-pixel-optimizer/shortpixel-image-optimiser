@@ -84,6 +84,9 @@ class OptimizeController extends OptimizerBase
       $is_processable = true;
     }
 
+    print_r(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5));
+exit('Running optimizer');
+
     // If is not processable and not user excluded (user via this way can force an optimize if needed) then don't do it!
     if (false === $is_processable) {
       $qItem->addResult([

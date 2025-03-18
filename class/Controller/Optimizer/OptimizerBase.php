@@ -20,10 +20,18 @@ abstract class OptimizerBase
     protected $currentQueue;  // trying to keep minimum, but optimize needs to speak to queue for items.
 
     //public abstract function getQueueItem();
-    public abstract function enqueueItem(QueueItem $item, $args = []);
-    public abstract function handleAPIResult(QueueItem $item);
-    protected abstract function HandleItemError(QueueItem $item);
-    public abstract function sendToProcessing(QueueItem $item);
+
+    public abstract function enqueueItem(QueueItem $qItem, $args = []);
+    public abstract function handleAPIResult(QueueItem $qItem);
+    protected abstract function HandleItemError(QueueItem $qItem);
+
+    public abstract function sendToProcessing(QueueItem $qItem);
+
+    /**
+    * 
+    * @param QueueItem $qItem 
+    * @return boolean 
+    */
     public abstract function checkItem(QueueItem $qItem);
 
     static $instances = []; 

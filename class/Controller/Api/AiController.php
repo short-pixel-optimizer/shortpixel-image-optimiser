@@ -30,84 +30,120 @@ class AiController extends RequestManager
       $this->main_url = 'https://capi.shortpixel.com/';
     }
 
-    public function processMediaItem(QueueItem $item, ImageModel $imageObj)
+    public function processMediaItem(QueueItem $qItem, ImageModel $imageObj)
     {
       if (! is_object($imageObj))
       {
-        $item->result = $this->returnFailure(self::STATUS_FAIL, __('Item seems invalid, removed or corrupted.', 'shortpixel-image-optimiser'));
-        return $item;
+        $qItem->addResult($this->returnFailure(self::STATUS_FAIL, __('Item seems invalid, removed or corrupted.', 'shortpixel-image-optimiser')));
+        return;
       }
 
-    //  var_dump($item);
-
-      Log::addTemp('AiContrll request', $item);
-      return $this->processItem($item);
-
-    }
-
-    public function processItem(QueueItem $item)
-    {
       $keyControl = ApiKeyController::getInstance();
 
       //$request = $this->getRequest($requestArgs);
       $requestBody = [
         'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
         'key' => $keyControl->forceGetApiKey(),
-        'url' => 'https://deleeuwkyiv.nl/wp-content/uploads/2025/02/WhatsApp-Image-2024-12-19-at-06.45.26_0ddb4e61-1024x768.jpg', // $item->url,
-        'item_id' => $item->item_id,
-        'source' => 1, // SPIO
 
+        'item_id' => $qItem->item_id,
+        'source' => 1, // SPIO
       ];
+
+      if ($qItem->data()->action == 'requestAlt')
+      {
+        $requestBody['url'] = $qItem->data()->url;
+      }
+
+      if ($qItem->data()->action == 'retrieveAlt')
+      {
+        $requestBody['Id'] = $qItem->data()->remote_id;
+      }
 
       // Should always check the results
       $requestParameters = [
         'blocking' => true,
       ];
 
+      Log::addTemp('RequestBody', $requestBody);
       $request = $this->getRequest($requestBody, $requestParameters);
-      $item = $this->doRequest($item, $request);
+      $this->doRequest($qItem, $request);
 
-      return $item;
     }
 
-
     // Should return something that's usefull to set as response on the item.
-    protected function handleResponse(QueueItem $item, $response)
+    protected function handleResponse(QueueItem $qItem, $response)
     {
        $APIresponse = $this->parseResponse($response);//get the actual response from API, its an array
        Log::addTemp('HAndle AI Response! ', $APIresponse);
 
         // @todo This is probably not something that would happen, since repsonse is from the body. Implement here most error coming from the raw request and returnOk/returnFalse etc.
-       if (! is_null($item->result))
-       {
-          if (true === $item->result->is_error && true === $item->result->is_done )
-          {
-                /*   So far nothing needed here, documenting what has been seen.
-                401 - Unauthorized
-                422 - Unprocessable
-                 */
-              return $this->returnFailure($status, $message);
-          }
-       }
 
-       if(is_array($APIresponse) && isset($APIresponse['data']) && property_exists($APIresponse['data'], 'Id'))
-       {
-          $remote_id = intval($APIresponse['data']->Id);
-          $result = $this->returnOk();
-          $result['remote_id'] = $remote_id;
-       }
-       else {
-          return $this->returnFailure(0, '-');
-       }
+        //if (true === $qItem->result()->is_error && true === $qItem->result()->is_done )
+       // {
+              /*   So far nothing needed here, documenting what has been seen.
+              401 - Unauthorized
+              422 - Unprocessable
+                */
+            
+        /*    $message = __('Ai Failure', 'shortpixel-image-optimiser'); 
+            Log::addError('AI API RESULT: ', $APIresponse);
+            $qItem->addResult($this->returnFailure(static::STATUS_FAIL, $message));
+        }  */
+      
+        // API seems to return two different formats : 
+        // 1.  requestAlt : Object in data, with ID as only return. 
+        // 2.  retrieveAlt: Array with first item ( zero index ) 
+        
+        $apiData = (is_array($APIresponse) && isset($APIresponse['data'])) ? $APIresponse['data'] : false; 
 
+        if (false === $apiData)
+        {
+            return $this->returnRetry(RequestManager::STATUS_CONNECTION_ERROR, __('AI Api returned without any data. ', 'shortpixel-image-optimiser')) ;
+        }
 
-       return $result;
+        if ($qItem->data()->action == 'requestAlt')
+        {
+             if (is_object($apiData) && property_exists($apiData, 'Id'))
+             {
+              $remote_id = intval($APIresponse['data']->Id);
+              //$qItem->addResult($this->returnOk());
+              $qItem->addResult(['remote_id' => $remote_id]);
+              //$result['remote_id'] = $remote_id;
+              return $this->returnOk();  
+             }
+
+        }
+
+        if ($qItem->data()->action == 'retrieveAlt')
+        {
+            if (is_array($apiData) && property_exists($apiData[0], 'Result'))
+            {
+               $text = sanitize_text_field($apiData[0]->Result); 
+              
+               if (is_null($text))
+               {
+                  Log::addTemp('Ai Text returned null?', $apiData[0]); 
+                  return $this->returnFailure(RequestManager::STATUS_FAIL, __('AI could not generate text for this image', 'shortpixel-image-optimiser'));
+               }  
+               else
+               {
+               $qItem->addResult(['retrievedText' => $text]); 
+
+                return $this->returnSuccess(['retrievedText' => $text], RequestManager::STATUS_SUCCESS, __('Retrieved AI Alt Text', 'shortpixel-image-optimiser'));
+               }
+            }
+        }
+
+        
+      return $this->returnFailure(0, 'No remote ID?');
+
+      
     }
 
     protected function doRequest(QueueItem $item, $requestParameters)
     {
         // For now
-        if (is_null($item->remote_id))
+        if (false === property_exists($item->data, 'remote_id') || is_null($item->data()->remote_id))
         {
            $this->apiEndPoint = $this->main_url . 'api/add-url';
         }

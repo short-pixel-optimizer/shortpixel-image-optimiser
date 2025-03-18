@@ -10,6 +10,7 @@ use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
 
 use ShortPixel\Controller\Api\ApiController as ApiController;
+use ShortPixel\Controller\Api\RequestManager as RequestManager;
 use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\Controller\QueueController as QueueController;
 
@@ -85,7 +86,7 @@ class ActionController extends OptimizerBase
        // The directActions give back booleans, but the whole function must return an queue result object with qstatus and numitems
        $bool = $this->sendToProcessing($qItem);
        $result = new \stdClass;
-       $result->qstatus = ApiController::STATUS_NOT_API;
+       $result->qstatus = RequestManager::STATUS_NOT_API;
 
     }
     else

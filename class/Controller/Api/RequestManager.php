@@ -16,6 +16,12 @@ abstract class RequestManager
   protected static $instance;
   protected $apiEndPoint;
 
+  /**
+   * 
+   * @param QueueItem $item 
+   * @param mixed $response 
+   * @return object Return must be one of the returnFail / returnSuccess / returnOk functions!
+   */
   protected abstract function handleResponse(QueueItem $item, $response);
   public abstract function processMediaItem(QueueItem $item, ImageModel $mediaItem);
 
@@ -48,10 +54,6 @@ abstract class RequestManager
 			return self::$instance;
 	}
 
-  public function processItem(QueueItem $item)
-  {
-
-  }
 
   /** Builds RequestData for wp_remote_get.
     @param Array RequestBody What to send to remote API, the arguments.
@@ -87,6 +89,7 @@ abstract class RequestManager
 	*
 	* @param Object $item  The QueueItemObject
 	* @param Array $requestParameters  The HTTP parameters for the remote post (arguments in getRequest)
+  * @return void
 	*/
   protected function doRequest(QueueItem $qItem, $requestParameters )
 	{

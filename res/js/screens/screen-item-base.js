@@ -233,6 +233,23 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 				this.processor.AjaxRequest(data);
 		}
 
+		RequestAlt(id)
+		{
+			  var data = {
+				 id: id, 
+				 type: this.type, 
+				 'screen_action' : 'ai/requestalt', 
+			  }
+
+			  if (! this.processor.CheckActive())
+				data.callback = 'shortpixel.' + this.type + '.resumeprocessing';
+
+		   this.SetMessageProcessing(id);
+		   this.processor.AjaxRequest(data);
+
+
+		}
+
 		Optimize(id, force)
 		{
 			 var data = {

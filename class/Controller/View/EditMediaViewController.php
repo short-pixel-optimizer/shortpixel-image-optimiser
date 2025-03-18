@@ -39,6 +39,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
       protected function loadHooks()
       {
             add_action( 'add_meta_boxes_attachment', array( $this, 'addMetaBox') );
+            add_action( 'attachment_fields_to_edit', [ $this, 'addAIAlter'], 10, 2);
             $this->hooked = true;
       }
 
@@ -49,6 +50,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
 					$fs = \wpSPIO()->filesystem();
 					$fs->startTrustedMode();
+
       }
 
       public function addMetaBox()
@@ -61,6 +63,25 @@ class EditMediaViewController extends \ShortPixel\ViewController
               'side'//'normal',      // part of page where the box should appear
               //'default'      // priority of the box
           );
+      }
+
+      /** Wordpress Filter to ( temp ) add a alt button for AI to the interface.
+       * 
+       * @param array $fields 
+       * @param object $post 
+       * @return array 
+       */
+      public function addAIAlter($fields, $post)
+      { 
+          $post_id = intval($post->ID);
+          $fields['aiboetton'] = [
+              'value' => 'fuckah', 
+              'label' => 'ai ai ai', 
+              'input' => 'html', 
+              'html' => "<a href='javascript:window.ShortPixelProcessor.screen.RequestAlt($post_id)' class='button button-secondary'>Ai Ai</a>",
+          ];
+         
+          return $fields;
       }
 
       public function dometaBox($post)
