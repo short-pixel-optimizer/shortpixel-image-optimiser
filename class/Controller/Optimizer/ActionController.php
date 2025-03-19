@@ -20,6 +20,12 @@ use ShortPixel\Model\Converter\Converter as Converter;
 class ActionController extends OptimizerBase
 {
 
+   public function __construct()
+   {
+      parent::__construct();
+      $this->apiName = 'action';
+   }
+
 
   public function sendToProcessing(QueueItem $item)
   {

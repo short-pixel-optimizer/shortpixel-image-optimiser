@@ -497,7 +497,7 @@ class AdminController extends \ShortPixel\Controller
 				$fields["shortpixel-image-optimiser"] = array(
 							"label" => esc_html__("ShortPixel", "shortpixel-image-optimiser"),
 							"input" => "html",
-							"html" => '<div id="sp-msg-' . $post->ID . '">--</div>',
+							"html" => '<div id="shortpixel-data-' . $post->ID . '">--</div>',
 						);
 
 				return $fields;

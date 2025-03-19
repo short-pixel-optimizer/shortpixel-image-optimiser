@@ -75,10 +75,11 @@ class EditMediaViewController extends \ShortPixel\ViewController
       { 
           $post_id = intval($post->ID);
           $fields['aiboetton'] = [
-              'value' => 'fuckah', 
               'label' => 'ai ai ai', 
               'input' => 'html', 
-              'html' => "<a href='javascript:window.ShortPixelProcessor.screen.RequestAlt($post_id)' class='button button-secondary'>Ai Ai</a>",
+              'html' => "<a href='javascript:window.ShortPixelProcessor.screen.RequestAlt($post_id)' class='button button-secondary'>Ai Ai</a>
+                 <div class='shortpixel-alt-messagebox' id='shortpixel-ai-messagebox-$post_id'>[Area]&nbsp;</div>
+               ",
           ];
          
           return $fields;

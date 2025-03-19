@@ -387,8 +387,14 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 	// Could in time be replaced by json_validate proper. (PHP 8.3)
 	protected function checkJson($json, $depth = 512, $flags = 0)
 	{
-		if (!is_string($json)) {
+		if (false === is_string($json)) {
 			return false;
+		}
+
+		// Try to simpler bail out without checking for the decode.
+		if (strpos($json, '{' ) === false && strpos($json, ':') === false)
+		{
+			return false; 
 		}
 
 		try {

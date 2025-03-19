@@ -350,7 +350,7 @@ class ApiController extends RequestManager
 	 */
 	protected function handleNewSuccess(QueueItem $qItem, $fileData, $data)
 	{
-		$settings = \wpSPIO()->settings;
+		$settings = \wpSPIO()->settings();
 		$compressionType = property_exists($qItem->data(), 'compressionType') ? $qItem->data()->compressionType : $settings->compressionType;
 		//$savedSpace =  $originalSpace =  $optimizedSpace = $fileCount  = 0;
 

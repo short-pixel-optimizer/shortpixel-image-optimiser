@@ -25,7 +25,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
         if (data.custom)
         {
             var id = data.custom.id;
-            var element = document.getElementById('sp-msg-' + id);
+            var element = document.getElementById('shortpixel-data-' + id);
             element.outerHTML = data.custom.itemView;
 
             var isOptimizable = data.custom.is_optimizable;

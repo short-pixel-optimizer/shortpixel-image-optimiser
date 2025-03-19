@@ -33,6 +33,8 @@ class OptimizeController extends OptimizerBase
   {
     parent::__construct();
     $this->api = ApiController::getInstance();
+    $this->apiName = 'optimize';
+
   }
 
     // @todo This function should probably be removed and use QueueController -> AddItemToQueue for these things, since checks and responses are not optimimal here.
@@ -84,9 +86,6 @@ class OptimizeController extends OptimizerBase
       $is_processable = true;
     }
 
-    print_r(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5));
-exit('Running optimizer');
-
     // If is not processable and not user excluded (user via this way can force an optimize if needed) then don't do it!
     if (false === $is_processable) {
       $qItem->addResult([
@@ -133,6 +132,8 @@ exit('Running optimizer');
     }
 
     $item_id = $qItem->item_id;
+
+    $qItem->addResult(['apiName' => $this->apiName]);
 
     // @todo this result message won't be.
     /*

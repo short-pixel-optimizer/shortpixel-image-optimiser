@@ -13,6 +13,7 @@ use ShortPixel\Model\QueueItem as QueueItem;
 use ShortPixel\Controller\Api\RequestManager as RequestManager;
 use ShortPixel\Controller\QueueController;
 use ShortPixel\Controller\Api\AiController;
+use ShortPixel\Controller\Queue\Queue;
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
 
 
@@ -24,6 +25,7 @@ class OptimizeAiController extends OptimizerBase
   {
      parent::__construct();
      $this->api = AiController::getInstance();
+     $this->apiName = 'ai';
   }
   
 
@@ -69,7 +71,7 @@ class OptimizeAiController extends OptimizerBase
 
     $queue = $this->getCurrentQueue($qItem);
     $directAction = true; 
-Log::addTemp('Action to Enqueue: ' . $action);
+
     switch($action)
     {
         case 'requestAlt': 
@@ -89,7 +91,7 @@ Log::addTemp('Action to Enqueue: ' . $action);
        $this->handleAPIResult($qItem);
       
        $result = new \stdClass; 
-       $result->qstatus = RequestManager::STATUS_ENQUEUED;
+       $result->qstatus = Queue::RESULT_ITEMS;
        $result->numitems = 1;
 
     }
@@ -106,6 +108,8 @@ Log::addTemp('Action to Enqueue: ' . $action);
   {
       Log::addTemp('HandleApiResult', $qItem->result());
       $queue = $this->currentQueue;
+
+      $qItem->addResult(['apiName' => $this->apiName]);
 
       if ($qItem->result()->is_error && true === $qItem->result()->is_done )  {
        

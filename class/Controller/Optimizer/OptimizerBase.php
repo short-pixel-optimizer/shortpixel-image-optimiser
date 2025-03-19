@@ -15,6 +15,7 @@ abstract class OptimizerBase
 {
 
     protected $api;
+    protected $apiName; 
 
     protected $response; // json response lives here.
     protected $currentQueue;  // trying to keep minimum, but optimize needs to speak to queue for items.

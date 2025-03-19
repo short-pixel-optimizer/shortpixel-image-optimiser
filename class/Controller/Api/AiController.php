@@ -116,21 +116,39 @@ class AiController extends RequestManager
 
         if ($qItem->data()->action == 'retrieveAlt')
         {
-            if (is_array($apiData) && property_exists($apiData[0], 'Result'))
+            if (is_array($apiData))
             {
-               $text = sanitize_text_field($apiData[0]->Result); 
+              $result = $apiData[0]; 
+              $text = property_exists($result, 'Result') ? sanitize_text_field($result->Result) : null;
+              $status = property_exists($result, 'Status') ? intval($result->Status) : -1; 
               
-               if (is_null($text))
-               {
-                  Log::addTemp('Ai Text returned null?', $apiData[0]); 
-                  return $this->returnFailure(RequestManager::STATUS_FAIL, __('AI could not generate text for this image', 'shortpixel-image-optimiser'));
-               }  
-               else
-               {
-               $qItem->addResult(['retrievedText' => $text]); 
+              // Switch known Statii 
+              switch ($status)
+              {
+                  case '-1':  // Error of some kind 
+                    $status = RequestManager::STATUS_FAIL; 
+                    $message = property_exists($result, 'Error') ? sanitize_text_field($result->Error) : __('Unknown Ai Api Error occured', 'shortpixel-image-optimiser'); 
+                    return $this->returnFailure($status, $message); 
+                  break; 
+                  case '3':  // Success of some kind. 
+                  default: 
+                    $status = RequestManager::STATUS_SUCCESS; 
+                    if (is_null($text) || strlen($text) == 0)
+                    {
+                        $status = RequestManager::STATUS_FAIL; 
+                        return $this->returnFailure(RequestManager::STATUS_FAIL, __('AI could not generate text for this image', 'shortpixel-image-optimiser'));
+                    }
+                    else
+                    {
+                    $qItem->addResult(['retrievedText' => $text]); 
 
-                return $this->returnSuccess(['retrievedText' => $text], RequestManager::STATUS_SUCCESS, __('Retrieved AI Alt Text', 'shortpixel-image-optimiser'));
-               }
+                      return $this->returnSuccess(['retrievedText' => $text], RequestManager::STATUS_SUCCESS, __('Retrieved AI Alt Text', 'shortpixel-image-optimiser'));
+                    }
+
+                  break;
+              }
+                             
+               
             }
         }
 

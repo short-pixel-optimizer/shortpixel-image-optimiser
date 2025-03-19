@@ -252,6 +252,8 @@ class QueueItem
          'queueType', // OptimizeController but (?) usage
          'kblink',
          'data', // Is returnDataList returned by apiController. (array)
+         'retrievedText', // Ai text returning from AIController 
+         'apiName', // NAme of the handling api, for JS / Response to show different results.
 
       ];
 

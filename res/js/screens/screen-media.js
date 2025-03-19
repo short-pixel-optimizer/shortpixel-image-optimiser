@@ -27,7 +27,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
         {
             var id = data.media.id;
 
-            var element = document.getElementById('sp-msg-' + id);
+            var element = document.getElementById('shortpixel-data-' + id);
 						if (element !== null) // Could be other page / not visible / whatever.
             	element.outerHTML = data.media.itemView;
             else {
@@ -58,7 +58,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 						for (var i = 0; i < items.length; i++)
 						{
 							 var media_id = items[i].value;
-							 var column = document.getElementById('sp-msg-' + media_id);
+							 var column = document.getElementById('shortpixel-data-' + media_id);
 							 var optimizable = column.classList.contains('is-optimizable');
 							 var restorable = column.classList.contains('is-restorable');
 
@@ -160,7 +160,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			}
 				data.callback = 'shortpixel.LoadItemView';
 
-  		window.addEventListener('shortpixel.LoadItemView', function (e) {
+  			window.addEventListener('shortpixel.LoadItemView', function (e) {
 					var itemData = { id: e.detail.media.id, type: 'media' };
 					this.processor.timesEmpty = 0; // reset the defer on this.
 					this.processor.LoadItemView(itemData);
