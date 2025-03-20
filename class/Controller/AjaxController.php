@@ -599,6 +599,8 @@ class AjaxController
 	//	$result = $optimiser->sendToProcessing($qItem);
 		
 		$json->$type->results = [$result];
+		$json->$type->qstatus = $queueController->getLastQueueStatus();
+
 		$json->status = true;
 
 		return $json;

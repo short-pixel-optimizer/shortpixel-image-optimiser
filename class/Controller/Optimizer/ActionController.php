@@ -11,6 +11,7 @@ use ShortPixel\Controller\Queue\QueueItems as QueueItems;
 
 use ShortPixel\Controller\Api\ApiController as ApiController;
 use ShortPixel\Controller\Api\RequestManager as RequestManager;
+use ShortPixel\Controller\Queue\Queue;
 use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\Controller\QueueController as QueueController;
 
@@ -90,9 +91,17 @@ class ActionController extends OptimizerBase
     if (true === $directAction)
     {
        // The directActions give back booleans, but the whole function must return an queue result object with qstatus and numitems
-       $bool = $this->sendToProcessing($qItem);
+       $process_result = $this->sendToProcessing($qItem);
+
        $result = new \stdClass;
        $result->qstatus = RequestManager::STATUS_NOT_API;
+
+      // The assumption here that will work always because of requeue in reOptimizeItem, should not respond with NO_API response, but with continue process 
+      if (is_object($process_result))
+      {
+         $result->qstatus = Queue::RESULT_EMPTY;
+         $result->numitems = 1;
+      }
 
     }
     else
@@ -120,7 +129,6 @@ class ActionController extends OptimizerBase
    
     $queue->updateItem($qItem);
 
-    $settings = \wpSPIO()->settings();
     $fs = \wpSPIO()->filesystem();
 
     $imageObj = $qItem->imageModel;
@@ -160,9 +168,13 @@ class ActionController extends OptimizerBase
     $qItem->block(false);
     $queue->updateItem($qItem);
 
+    // Get the item data to pass on settings like compressionType.
+    $args = get_object_vars($qItem->data());
+    $args['action'] = 'optimize';  // overwrite whatever option is set. 
+
     // Add converted items to the queue for the process
     $queueController = new QueueController(); 
-    $queueController->addItemToQueue($imageObj, ['action' => 'optimize'] );
+    $queueController->addItemToQueue($imageObj, $args );
  //   $this->enqueueItem($imageObj);
 
     return $bool;
@@ -188,12 +200,19 @@ class ActionController extends OptimizerBase
         $fs = \wpSPIO()->filesystem();
         $fs->flushImageCache();
 
+        // Mark Item ( for results ) as ongoing and such
+        $queueItem->addResult([
+            'fileStatus' => ImageModel::FILE_STATUS_PENDING, 
+            'is_done' => false, 
+            'message' => __('Image being reoptimized', 'shortpixel-image-optimiser'), 
+        ]);
+
         
         // Hard reload since metadata probably removed / changed but still loaded, which might enqueue wrong files.
         $imageModel = $fs->getImage($item_id, $item_type, false);
           //$imageModel->setMeta('compressionType', $compressionType);
 
-          if ($queueItem->data()->smartcrop)
+          if (property_exists($queueItem->data(), 'smartcrop') && true === $queueItem->data()->smartcrop)
           {
              $imageModel->doSetting('smartcrop', $queueItem->data()->smartcrop);
           }

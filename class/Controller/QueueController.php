@@ -74,7 +74,7 @@ class QueueController
 
         ]);
 
-        return $qItem->result(); // @todo $qItem Or $qItem->result() ?
+        return $qItem->result(); 
 
       }
 
@@ -90,7 +90,6 @@ class QueueController
       }
 
 // @todo Later: check if all provisions of OptimizeController are implemented.
-      $args = array_filter($args);
       $qItem = QueueItems::getImageItem($imageModel);
 
       foreach($args as $name => $value)
@@ -127,15 +126,17 @@ class QueueController
       if (true === $bool)
       {
           $status = $optimizer->enQueueItem($qItem);
+          Log::addTemp('Enqueue With ', $qItem->data());
           $this->lastQStatus = $status->qstatus;
           
+          Log::addTemp('Status', $status);
           // Not API status does it own messaging.
           if ($status->qstatus !== ApiController::STATUS_NOT_API)
           {
             $message = '';
             if ($status->numitems > 0)
             {
-  
+              
               $message = sprintf(__('Item %s added to Queue. %d items in Queue', 'shortpixel-image-optimiser'), $imageModel->getFileName(), $status->numitems);
               //$json->status = 1;
   
@@ -148,10 +149,12 @@ class QueueController
               //$json->status = 0;
             }
   
-            $qItem->addResult([
-              'message' => $message,
-            ]);
-  
+            if (! property_exists($qItem->result(), 'message') || strlen($qItem->result->message) <= 0)
+            {
+              $qItem->addResult([
+                'message' => $message,
+              ]);
+            }
   
           }
 

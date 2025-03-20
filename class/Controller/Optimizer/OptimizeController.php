@@ -426,7 +426,6 @@ class OptimizeController extends OptimizerBase
   protected function handleOptimizedItem($qItem, $imageModel)
   {
     $imageArray = $qItem->result()->files;
-    Log::addTemp('ImageArray, handleOPtimized', $imageArray);
 
     $downloadHelper = DownloadHelper::getInstance();
     $converter = Converter::getConverter($imageModel, true);

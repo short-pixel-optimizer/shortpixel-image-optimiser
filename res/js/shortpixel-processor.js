@@ -499,7 +499,7 @@ window.ShortPixelProcessor =
          // Perhaps if optimization, the new stats and actions should be generated server side?
          // If there are items, give them to the screen for display of optimization, waiting status etc.
 				 var imageHandled = false;  // Only post one image per result-set to the ImageHandler (on bulk), to prevent flooding.
-console.log('response', response, type, imageHandled);
+//console.log('response', response, type, imageHandled);
 
          // @todo Make sure that .result and .results can be iterated the same.
 
@@ -509,6 +509,7 @@ console.log('response', response, type, imageHandled);
 
          if (typeof response.results !== 'undefined' && response.results !== null)
          {
+            console.log('Response: Results', response.results, type);
              for (var i = 0; i < response.results.length; i++)
              {
                 var imageItem = response.results[i];
@@ -529,11 +530,10 @@ console.log('response', response, type, imageHandled);
                 else
                 {
                 	imageHandled = this.screen.HandleImage(imageItem, type);
-                  console.log('handling by .results', response, imageHandled);
 								}
              }
          }
-         if (typeof response.result !== 'undefined' && response.result !== null)
+         else if (typeof response.result !== 'undefined' && response.result !== null)
          {
               console.warn('This response going trough deprecated single handler - ', response);
               if (response.result.is_error)

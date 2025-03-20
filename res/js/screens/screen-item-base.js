@@ -141,7 +141,6 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 				  parent.parentNode.insertBefore(element, parent.nextSibling);
 			  }
 
-
 		 }
 
 		 return element; 
