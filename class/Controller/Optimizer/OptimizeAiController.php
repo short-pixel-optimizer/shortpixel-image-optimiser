@@ -93,6 +93,8 @@ class OptimizeAiController extends OptimizerBase
        $result = new \stdClass; 
        $result->qstatus = Queue::RESULT_ITEMS;
        $result->numitems = 1;
+       $qItem->addResult([
+        'message' => __('Request for Alt text send to Shortpixel AI', 'shortpixel-image-optimiser')]);
 
     }
     else

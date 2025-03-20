@@ -74,11 +74,11 @@ class EditMediaViewController extends \ShortPixel\ViewController
       public function addAIAlter($fields, $post)
       { 
           $post_id = intval($post->ID);
-          $fields['aiboetton'] = [
-              'label' => 'ai ai ai', 
+          $fields['aibutton'] = [
+              'label' => __('ShortPixel Ai Text', 'shortpixel-image-optimiser'), 
               'input' => 'html', 
-              'html' => "<a href='javascript:window.ShortPixelProcessor.screen.RequestAlt($post_id)' class='button button-secondary'>Ai Ai</a>
-                 <div class='shortpixel-alt-messagebox' id='shortpixel-ai-messagebox-$post_id'>[Area]&nbsp;</div>
+              'html' => "<a href='javascript:window.ShortPixelProcessor.screen.RequestAlt($post_id)' class='button button-secondary'>" . __('Generate', 'shortpixel-image-optimiser') . "</a>
+                 <div class='shortpixel-alt-messagebox' id='shortpixel-ai-messagebox-$post_id'>&nbsp;</div>
                ",
           ];
          
