@@ -335,7 +335,15 @@ class ApiKeyModel extends \ShortPixel\Model
   {
     $redirectedSettings =  \wpSPIO()->settings()->redirectedSettings;
     if(! \wpSPIO()->env()->is_ajaxcall && !$redirectedSettings && !$this->verifiedKey && (!function_exists("is_multisite") || ! is_multisite())) {
+      
       \wpSPIO()->settings()->redirectedSettings = 1;
+
+      if (isset($_GET['page']) && 'wp-shortpixel-settings' === $_GET['page'])
+      {
+         Log::addError('Panic! RedirectSettings failed setting!');
+         return false; 
+      }
+
   //    $this->update();
       wp_safe_redirect(admin_url("options-general.php?page=wp-shortpixel-settings"));
       exit();
