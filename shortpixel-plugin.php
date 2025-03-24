@@ -77,7 +77,7 @@ class ShortPixelPlugin {
 		$this->initHooks();
 		$this->ajaxHooks();
 
-		if ( defined( 'WP_CLI' ) && WP_CLI ) {
+		if ( defined( 'WP_CLI' ) && \WP_CLI ) {
 			WPCliController::getInstance();
 		}
 
@@ -296,10 +296,7 @@ class ShortPixelPlugin {
 		$is_bulk_page = \wpSPIO()->env()->is_bulk_page;
 
 		$queueController = new QueueController(['is_bulk' =>  $is_bulk_page ]);
-		
-
 		$quotaController = QuotaController::getInstance();
-
 
 	 wp_register_script('shortpixel-folderbrowser', plugins_url('/res/js/shortpixel-folderbrowser.js', SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
@@ -400,8 +397,10 @@ class ShortPixelPlugin {
 			'fatalError' => __('ShortPixel encountered a fatal error when optimizing images. Please check the issue below. If this is caused by a bug please contact our support', 'shortpixel-image-optimiser'),
 			'fatalErrorStop' => __('ShortPixel has encounted multiple errors and has now stopped processing', 'shortpixel-image-optimiser'),
 			'fatalErrorStopText' => __('No items are being processed. To try again after solving the issues, please reload the page ', 'shortpixel-image-optimiser'),
-			'fatalError500' => __('A fatal error HTTP 500 has occurred. On the bulk screen, this may be caused by the script running out of memory. Check your error log, increase memory or disable heavy plugins.')
-
+			'fatalError500' => __('A fatal error HTTP 500 has occurred. On the bulk screen, this may be caused by the script running out of memory. Check your error log, increase memory or disable heavy plugins.'),
+			'ai_label' => __('ShortPixel Ai Text', 'shortpixel-image-optimiser'), 
+			'ai_button_label' => __('Shortpixel AI : Generate Alt', 'shortpixel-image-optimiser'), 
+			'icon_url' => plugins_url( '/res/images/icon/', SHORTPIXEL_PLUGIN_FILE )
 		);
 
 		$screen_localize_custom = array( // Custom Screen
@@ -592,27 +591,24 @@ class ShortPixelPlugin {
 			$this->load_script( 'shortpixel-screen-custom' ); // screen
 
 		} elseif ( NextGenController::getInstance()->isNextGenScreen() ) {
-			//$this->load_script( $load_processor );
+
 			$this->load_script( 'shortpixel-screen-custom' ); // screen
 			$this->load_style( 'shortpixel-admin' );
 
 		//	$this->load_style( 'shortpixel' );
 			$this->load_style( 'shortpixel-nextgen' );
 		}
-		elseif ( $this->env()->is_gutenberg_editor === true)
+		elseif (true === $this->env()->is_gutenberg_editor || true === $this->env()->is_classic_editor)
 		{
 			$this->load_script( $load_processor );
 			$this->load_script( 'shortpixel-screen-media' ); // screen
 			$this->load_script( 'shortpixel-media' );
 
 			$this->load_style( 'shortpixel-admin' );
-		//	$this->load_style( 'notices-module');
-
 		}
 		elseif (true === \wpSPIO()->env()->is_screen_to_use  )
 		{
 			// If our screen, but we don't have a specific handler for it, do the no-list screen.
-			//$this->load_script( $load_processor );
 			$this->load_script( 'shortpixel-screen-nolist' ); // screen
 		}
 

@@ -39,7 +39,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
       protected function loadHooks()
       {
             add_action( 'add_meta_boxes_attachment', array( $this, 'addMetaBox') );
-            add_action( 'attachment_fields_to_edit', [ $this, 'addAIAlter'], 10, 2);
+          //  add_action( 'attachment_fields_to_edit', [ $this, 'addAIAlter'], 10, 2);
             $this->hooked = true;
       }
 

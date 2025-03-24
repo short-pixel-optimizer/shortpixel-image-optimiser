@@ -142,7 +142,12 @@ class OptimizeAiController extends OptimizerBase
       {
           $text = $qItem->result()->retrievedText; 
           $item_id = $qItem->item_id; 
-          update_post_meta($item_id, '_wp_attachment_image_alt', ucfirst($text));
+          $bool = update_post_meta($item_id, '_wp_attachment_image_alt', $text);
+
+         if (false === $bool)
+         {
+             Log::addWarn('Failed to add alt text to postmeta?' . $item_id, $text);
+         }
 
           $qItem->addResult([
             'apiStatus' => RequestManager::STATUS_SUCCESS,

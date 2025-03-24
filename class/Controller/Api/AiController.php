@@ -121,6 +121,9 @@ class AiController extends RequestManager
               $result = $apiData[0]; 
               $text = property_exists($result, 'Result') ? sanitize_text_field($result->Result) : null;
               $status = property_exists($result, 'Status') ? intval($result->Status) : -1; 
+
+              
+              $text = $this->filterResultText($text); 
               
               // Switch known Statii 
               switch ($status)
@@ -171,6 +174,19 @@ class AiController extends RequestManager
 
         return parent::doRequest($item, $requestParameters);
 
+    }
+
+    /**
+     * Simple function to check / process the result text.  I.e by default it's without capitals. 
+     *
+     * @param [string] $text
+     * @return string
+     */
+    protected function filterResultText($text)
+    {
+        $text = ucfirst($text);
+        return $text; 
+       
     }
 
 

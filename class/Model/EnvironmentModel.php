@@ -38,6 +38,7 @@ class EnvironmentModel extends \ShortPixel\Model
     public $is_screen_to_use = false; // where shortpixel optimizer loads
     public $is_our_screen = false; // where shortpixel hooks in more complicated functions.
 		public $is_gutenberg_editor = false;
+    public $is_classic_editor = false; 
     public $is_bulk_page = false; // ShortPixel bulk screen.
     public $screen_id = false;
 
@@ -263,7 +264,7 @@ class EnvironmentModel extends \ShortPixel\Model
         'edit-page', // all pages
         'media', // add new item screen
     );
-  //  var_dump($use_screens);
+
     $use_screens = apply_filters('shortpixel/init/optimize_on_screens', $use_screens, $screen);
 
     $this->screen_id = $screen->id;
@@ -299,6 +300,12 @@ class EnvironmentModel extends \ShortPixel\Model
 			  $this->is_screen_to_use = true;
 				$this->is_gutenberg_editor = true;
 	  }
+    elseif (isset($_GET['classic-editor']))
+    {
+      $this->is_screen_to_use = true;
+      $this->is_classic_editor = true;
+      
+    }
 
     $this->screen_is_set = true;
   }

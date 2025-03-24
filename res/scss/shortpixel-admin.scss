@@ -163,4 +163,27 @@
       right: auto;
     }
   }
+} // adv_switch 
+
+.shortpixel-ai-interface {
+  line-height: 1; 
+  margin: 8px 0; 
+
+  img 
+  {
+     vertical-align: middle;
+     height: 20px;
+     margin-top: -1px;
+  }
+  .shortpixel-alt-messagebox
+  {
+     margin: 4px 0;
+
+  }
+
+  &.attachment-details-two-column-alt-text, &.attachment-details-alt-text
+  {
+    float: right;     
+  }
+
 }

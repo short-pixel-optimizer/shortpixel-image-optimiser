@@ -55,8 +55,20 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 
 		if ('ai' === apiName && typeof resultItem.retrievedText !== 'undefined')
 		{
-			 var altInput = document.getElementById('attachment_alt');
-			altInput.innerText = resultItem.retrievedText; 
+			// Possible alt inputs across screens
+			 var inputs = [
+				'attachment_alt',  //edit-media 
+				'attachment-details-alt-text', // media library upload screen / image select
+				'attachment-details-two-column-alt-text',
+			
+			 ];
+
+			 for (var i = 0; i < inputs.length; i++)
+			 {
+				var altInput = document.getElementById(inputs[i]); 
+				if (altInput !== null)
+					altInput.innerText = resultItem.retrievedText; 
+			 }
 		}
 
 		return false;

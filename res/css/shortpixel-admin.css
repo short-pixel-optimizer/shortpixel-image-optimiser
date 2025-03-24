@@ -557,4 +557,20 @@ body.debug-model-active {
   right: auto;
 }
 
+.shortpixel-ai-interface {
+  line-height: 1;
+  margin: 8px 0;
+}
+.shortpixel-ai-interface img {
+  vertical-align: middle;
+  height: 20px;
+  margin-top: -1px;
+}
+.shortpixel-ai-interface .shortpixel-alt-messagebox {
+  margin: 4px 0;
+}
+.shortpixel-ai-interface.attachment-details-two-column-alt-text, .shortpixel-ai-interface.attachment-details-alt-text {
+  float: right;
+}
+
 /*# sourceMappingURL=shortpixel-admin.css.map */
