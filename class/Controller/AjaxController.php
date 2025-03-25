@@ -578,8 +578,6 @@ class AjaxController
 
 		$this->checkImageAccess($imageModel);
 
-		$args = [];
-
 		$smartcrop = false; 
 		if ($actionType == ImageModel::ACTION_SMARTCROP || $actionType == ImageModel::ACTION_SMARTCROPLESS) 
 		{
@@ -591,13 +589,7 @@ class AjaxController
 		$result  = $queueController->addItemToQueue($imageModel, ['action' => 'reoptimize', 'compressionType' => $compressionType, 
 			'smartcrop' => $smartcrop]);
 
-
-	//	$qItem = QueueItems::getImageItem($imageModel);
-	//	$qItem->newReOptimizeAction(['compressionType' => $compressionType, 'smartcrop' => $smartcrop]);		
 	
-	//	$optimiser = $qItem->getApiController();
-	//	$result = $optimiser->sendToProcessing($qItem);
-		
 		$json->$type->results = [$result];
 		$json->$type->qstatus = $queueController->getLastQueueStatus();
 

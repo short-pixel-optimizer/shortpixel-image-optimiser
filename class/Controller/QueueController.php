@@ -56,6 +56,7 @@ class QueueController
         'forceExclusion' => false,
         'action' => 'optimize', 
         'compressionType' => null, 
+        'smartcrop' => false, 
       );
       $args = wp_parse_args($args, $defaults);
 
@@ -96,9 +97,7 @@ class QueueController
       {
          $qItem->setData($name, $value);
       }
-/*      $qItem->setData('action', $args['action']);
-      $qItem->setData('forceExclusion', $args['forceExclusion']);
-*/
+
       $optimizer = $qItem->getApiController();
       $optimizer->setCurrentQueue($queue);
 
@@ -111,14 +110,7 @@ class QueueController
             'is_done' => true,
             'message' => __('No action found!', 'shortpixel-image-optimiser'),
          ]);
-         /*
-         $json->result->fileStatus = ImageModel::FILE_STATUS_UNPROCESSED;
-         $json->result->is_error = false;
-         $json->result->is_done = true;
-         $json->result->message = __('No action found!', 'shortpixel-image-optimiser');
-         return $json;
-         return false;
-        */
+
       }
 
       $bool = $optimizer->checkItem($qItem);

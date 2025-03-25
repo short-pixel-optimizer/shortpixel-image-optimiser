@@ -296,6 +296,11 @@ class QueueItem
       {
          $this->data->compressionType = \wpSPIO()->settings()->compressionType;
       }
+      if (true  === property_exists($this->data, 'smartcrop'))
+      {
+         $imageModel->doSetting('smartcrop', $this->data()->smartcrop);
+      }
+
       $this->data->action = 'optimize'; 
 
       $optimizeData = $imageModel->getOptimizeData();
