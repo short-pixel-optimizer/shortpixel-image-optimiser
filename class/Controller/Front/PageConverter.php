@@ -80,6 +80,11 @@ class PageConverter extends \ShortPixel\Controller
        return false;
     }
 
+    if (isset($_GET['PageSpeed']) && 'off' === $_GET['PageSpeed'])
+    {
+       return false;
+    }
+
 
 	 add_filter('status_header', [$this, 'status_header_sent'], 10, 2);
 
