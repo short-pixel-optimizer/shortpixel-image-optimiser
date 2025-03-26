@@ -48,12 +48,7 @@ class OptimizeAiController extends OptimizerBase
 
   public function sendToProcessing(QueueItem $qItem) { 
 
-//    $imageModel = $qItem->imageModel; 
-
-//    $result = $queueController->addItemToQueue($imageModel, $args);
-
     $this->api->processMediaItem($qItem, $qItem->imageModel);
-
 
   }
 

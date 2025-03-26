@@ -88,7 +88,13 @@ class QueueController
            'message' =>__('This item is already awaiting processing in queue', 'shortpixel-image-optimiser'),
         ]);
 
+        return $qItem->result();
+
       }
+
+      $args = array_filter($args, function ($value) {
+          return $value !== null;
+      });
 
 // @todo Later: check if all provisions of OptimizeController are implemented.
       $qItem = QueueItems::getImageItem($imageModel);

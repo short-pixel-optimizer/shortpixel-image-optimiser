@@ -67,7 +67,18 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 			 {
 				var altInput = document.getElementById(inputs[i]); 
 				if (altInput !== null)
-					altInput.innerText = resultItem.retrievedText; 
+				{
+					if (typeof altInput.value !== 'undefined')
+					{
+						altInput.value = resultItem.retrievedText; 	
+					}
+					else
+					{
+						altInput.innerText = resultItem.retrievedText; 	
+					}
+					
+				}
+					
 			 }
 		}
 

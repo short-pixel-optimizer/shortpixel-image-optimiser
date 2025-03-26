@@ -391,6 +391,7 @@ window.ShortPixelProcessor =
              else if (error == 'NONCE_FAILED')
              {
                this.Debug('Nonce Failed', 'error');
+               window.location.reload();  // This is 99% due to timeout
              }
              else if (error == 'NOQUOTA')
              {

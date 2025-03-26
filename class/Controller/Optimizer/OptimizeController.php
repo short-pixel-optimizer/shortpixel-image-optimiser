@@ -42,9 +42,7 @@ class OptimizeController extends OptimizerBase
   {
 
     $queue = $this->getCurrentQueue($qItem);
-   
     $qItem->newOptimizeAction();
-
     $status = $queue->addQueueItem($qItem);
     return $status;
   }

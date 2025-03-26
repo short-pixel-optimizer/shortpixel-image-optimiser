@@ -96,7 +96,6 @@ abstract class RequestManager
 		$response = wp_remote_post($this->apiEndPoint, $requestParameters );
     Log::addDebug('ShortPixel API Request sent to ' . $this->apiEndPoint , $requestParameters['body']);
 
-    //Log::addDebug('Response', $response['body']);
 		//only if $Blocking is true analyze the response
 		if ( $requestParameters['blocking'] )
 		{
@@ -104,6 +103,11 @@ abstract class RequestManager
 				{
 						$errorMessage = $response->errors['http_request_failed'][0];
 						$errorCode = self::STATUS_CONNECTION_ERROR;
+
+            if (strpos($errorMessage, 'cURL error 28') !== false)
+            {
+               $errorMessage = __('Timeout fetching data from ShortPixel servers. If persistent, check server connection / whitelist', 'shortpixel-image-optimiser');
+            }
             $qItem->addResult($this->returnRetry($errorCode, $errorMessage));
 				}
 				elseif ( isset($response['response']['code']) && $response['response']['code'] <> 200 )
