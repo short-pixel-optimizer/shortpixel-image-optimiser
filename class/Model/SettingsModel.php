@@ -93,12 +93,24 @@ class SettingsModel extends \ShortPixel\Model
 		{
        $this->settings = $this->check(get_option($this->option_name, []));
 
-			 register_shutdown_function(array($this, 'onShutdown'));
+       if (false === function_exists('register_shutdown_function'))
+       {
+          Log::addError('Register shutdown function not found!');
+       }
+       else
+       {
+          register_shutdown_function([$this, 'onShutdown']);
+       }
+
+       // This is done dual since it seems that -sometimes- for reasons unknown the PHP solution doesn't work. 
+       add_action('shutdown', [$this, 'onShutdown']);
+			 
 		}
 
 		protected function save()
 		{
 				$res = update_option($this->option_name, $this->settings);
+        $this->updated = false; // Prevent double saves with this.
 		}
 
 		public function __get($name)
@@ -196,6 +208,7 @@ class SettingsModel extends \ShortPixel\Model
 				if (true === $this->updated)
 				{
 						$this->save();
+
 				}
 		}
 

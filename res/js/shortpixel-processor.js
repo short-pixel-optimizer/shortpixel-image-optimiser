@@ -614,6 +614,7 @@ window.ShortPixelProcessor =
 
     HandleItemError : function(result, type)
     {
+        
         console.log('Handle Item Error', result, type);
         var error = this.aStatusError[result.error];
 

@@ -128,7 +128,13 @@ class AdminNoticesController extends \ShortPixel\Controller
         if (! \wpSPIO()->env()->is_screen_to_use)
         {
             if(get_current_screen()->base !== 'dashboard') // ugly exception for dashboard.
+            {
                 return; // suppress all when not our screen.
+            }
+            else {
+              \wpSPIO()->load_style('shortpixel-notices');
+              \wpSPIO()->load_style('notices-module');
+            }
         }
 
         $access = AccessModel::getInstance();
@@ -161,10 +167,10 @@ class AdminNoticesController extends \ShortPixel\Controller
                         continue;
                     }
 
-                    // @Todo change this to new keys
-                    if ($notice->getID() == 'MSG_QUOTA_REACHED' || $notice->getID() == 'MSG_UPGRADE_MONTH') //|| $notice->getID() == AdminNoticesController::MSG_UPGRADE_BULK
+
+                    if ($notice->getID() == 'MSG_QUOTA_REACHED' || $notice->getID() == 'MSG_UPGRADE_MONTH')
                     {
-                        // @todo check if this is still needed.
+                        // This is still needed
                         wp_enqueue_script('jquery.knob.min.js');
                         wp_enqueue_script('shortpixel');
                     }
