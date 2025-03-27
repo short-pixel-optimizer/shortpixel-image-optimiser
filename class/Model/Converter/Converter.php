@@ -96,6 +96,7 @@ abstract class Converter
 		{
         if (! is_object($imageModel))
         {
+			Log::addInfo('Converter - not an imagemodel');
            return false;
         }
 
@@ -108,6 +109,7 @@ abstract class Converter
 				// No Support (yet)
 				if ($imageModel->get('type') == 'custom')
 				{
+					Log::addInfo('Converter fail - no support for custom types');
 					return false;
 				}
 
@@ -130,7 +132,8 @@ abstract class Converter
 					 }
 					 else
 					 {
-					 		return false;
+						Log::addInfo('Converter failed - ', $imageModel->getMeta());
+					 	return false;
 					 }
 				}
 

@@ -23,6 +23,7 @@ use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 use ShortPixel\Model\Converter\Converter as Converter;
 
 use ShortPixel\Controller\AjaxController as AjaxController;
+use ShortPixel\Controller\Queue\QueueItems;
 use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Controller\StatsController as StatsController;
 
@@ -37,10 +38,8 @@ class OptimizeController extends OptimizerBase
 
   }
 
-    // @todo This function should probably be removed and use QueueController -> AddItemToQueue for these things, since checks and responses are not optimimal here.
   public function enQueueItem(QueueItem $qItem, $args = [])
   {
-
     $queue = $this->getCurrentQueue($qItem);
     $qItem->newOptimizeAction();
     $status = $queue->addQueueItem($qItem);
@@ -233,15 +232,9 @@ class OptimizeController extends OptimizerBase
               $qItem->setData('compressionType', $qItem->data()->compressionTypeRequested);
             }
             // Keep compressiontype from object, set in queue, imageModelToQueue
-            $imageModel->setMeta('compressionType', $qItem->data()->compressionType);
+            //$imageModel->setMeta('compressionType', $qItem->data()->compressionType);
           } else {
-            /*
-             $item->result->apiStatus = ApiController::STATUS_ERROR;
-             $item->fileStatus = ImageModel::FILE_STATUS_ERROR;
-          //   $item->result->message = sprintf(__('Image not optimized with errors', 'shortpixel-image-optimiser'), $item->item_id);
-          //   $item->result->message = $imageItem->getLastErrorMessage();
-             $item->result->is_error = true;
-            */
+
             $qItem->addResult([
               'apiStatus' => RequestManager::STATUS_ERROR,
               'fileStatus' => ImageModel::FILE_STATUS_ERROR,
@@ -249,12 +242,6 @@ class OptimizeController extends OptimizerBase
             ]);
 
           }
-
-          // @todo SHoudl this be in results, if unset like this? This can't be unset like this!
-          unset($qItem->result()->files);
-
-          // @todo ?
-          //$qItem->addResult(['queuetype' => $qtype]);
 
           $showItem = UiHelper::findBestPreview($imageModel); // find smaller / better preview
           $original = $optimized = false;
@@ -303,21 +290,23 @@ class OptimizeController extends OptimizerBase
         $q->itemFailed($qItem, true);
         $this->HandleItemError($qItem);
       } else {
+
+        // *** RESEND TO PROCESS MORE *** 
+        // If this keeps giving issues, probably some trigger is needed and move to QueueController instead.
         if ($imageModel->isProcessable() && $qItem->result()->apiStatus !== RequestManager::STATUS_NOT_API) {
           Log::addDebug('Item with ID' . $item_id . ' still has processables (with dump)', $imageModel->getOptimizeUrls());
 
           $api = $this->api;
-          // Create a copy of this for dumping, so doesn't influence the adding to queue.
-          //  $newItem = clone $imageItem;
-          //	$newItem->urls = $imageItem->getOptimizeUrls();
-
-
-          // Add to URLs also the possiblity of images with only webp / avif needs. Otherwise URLs would end up emtpy.
 
           // It can happen that only webp /avifs are left for this image. This can't influence the API cache, so dump is not needed. Just don't send empty URLs for processing here.
           $api->dumpMediaItem($qItem);
 
-          $this->enQueueItem($qItem); // requeue for further processing.
+          // Fetch a new qItem, because of all the left-over-data . Left the old one alone for reporting
+          $new_qItem = QueueItems::getImageItem($imageModel);
+          
+
+          
+          $this->enQueueItem($new_qItem); // requeue for further processing.
         } elseif (RequestManager::STATUS_CONVERTED !== $qItem->result()->apiStatus) {
           $q->itemDone($qItem); // Unbelievable but done.
         }
@@ -419,7 +408,7 @@ class OptimizeController extends OptimizerBase
    * @param  [object] $item                      [item QueueItem object. The data item]
    * @param  [object] $mediaObj                  [imageModel of the optimized collection]
    * @param  [array] $successData               [all successdata received so far]
-   * @return [int]              [status integer, one of apicontroller status constants]
+   * @return int           status integer, one of apicontroller status constants
    */
   protected function handleOptimizedItem($qItem, $imageModel)
   {

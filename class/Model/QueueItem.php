@@ -195,19 +195,23 @@ class QueueItem
 
    public function newMigrateAction()
    {
+      $this->newAction(); 
+
       $this->data->action = 'migrate';
       $this->item_count = 1;
    }
 
    public function newRestoreAction()
    {
+      $this->newAction(); 
+
       $this->data->action = 'restore';
       $this->item_count = 1;
    }
 
    public function newReOptimizeAction($args = [])
    {
-
+      $this->newAction(); 
 
        $this->data->action = 'reoptimize'; 
        $this->item_count = 1;
@@ -228,6 +232,8 @@ class QueueItem
 
    public function newRemoveLegacyAction()
    {
+      $this->newAction(); 
+
       $this->data->action = 'removeLegacy';
       $this->item_count = 1;
    }
@@ -274,8 +280,28 @@ class QueueItem
 
    }
 
+   /** Clean several aspects of this object ( result, other things ) before triggering a new action. 
+    * 
+    * Since QItem is mostly passed by reference 
+    * @return void 
+    */
+   protected function newAction()
+   {
+       $this->result = new \stdClass; // new action, new results 
+
+      // This monitors which files are done already.  Remove for new action. 
+       if (property_exists($this->data, 'files'))
+       {
+          unset($this->data->files); 
+       }
+
+       Log::addTemp('New Action!');
+   }
+
    public function newDumpAction()
    {
+      $this->newAction(); 
+
       $imageModel = $this->imageModel;
       $urls = $imageModel->getOptimizeUrls();
       $this->data->urls = $urls;
@@ -285,6 +311,8 @@ class QueueItem
 
    public function newOptimizeAction()
    {
+      $this->newAction(); 
+
       $imageModel = $this->imageModel;
 
       /*  $defaults = array(
@@ -375,14 +403,11 @@ class QueueItem
          $converter->filterQueue($this, ['debug_active' => $this->debug_active]);
       }
 
-      //$this->data = $item;
-
-      //return $item;
    }
 
    public function requestAltAction()
    {
-   
+      $this->newAction(); 
       $this->data->url = $this->imageModel->getUrl();
       $this->data->tries = 0;
       $this->item_count = 1;
@@ -392,7 +417,7 @@ class QueueItem
 
    public function retrieveAltAction($remote_id)
    {
-      
+      $this->newAction();
       $this->data->remote_id = $remote_id;
       $this->data->tries = 0;
       $this->item_count = 1;

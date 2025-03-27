@@ -210,19 +210,9 @@ class ActionController extends OptimizerBase
         
         // Hard reload since metadata probably removed / changed but still loaded, which might enqueue wrong files.
         $imageModel = $fs->getImage($item_id, $item_type, false);
-          //$imageModel->setMeta('compressionType', $compressionType);
 
-       /*   if (property_exists($queueItem->data(), 'smartcrop') && true === $queueItem->data()->smartcrop)
-          {
-             $imageModel->doSetting('smartcrop', $queueItem->data()->smartcrop);
-          }
-      */
           $queueController = new QueueController();
-            
-  /*        $qItem = QueueItems::getImageItem($imageModel);
-          $qItem->newOptimizeAction();
-          $qItem->data()->compressionType = $compressionType; 
-*/
+
           $args = ['action' => 'optimize', 'compressionType' => $compressionType];
 
           if (property_exists($queueItem->data(), 'smartcrop'))
