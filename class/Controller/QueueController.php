@@ -335,6 +335,7 @@ class QueueController
 
           $apiController->sendToProcessing($qItem);
           $apiController->handleAPIResult($qItem);
+          
 
           if (true === $qItem->result()->is_error &&  true === $this->args['is_bulk'] )
           {

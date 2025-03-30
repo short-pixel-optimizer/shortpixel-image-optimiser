@@ -63,7 +63,7 @@ class SettingsModel extends \ShortPixel\Model
         'redirectedSettings' => ['s' => 'int', 'default' => 0],
         'exif' => ['s' => 'int', 'default' => 1],
         'exif_ai' => ['s' => 'int', 'default' => 0],
-
+        'cdn_purge_version' => ['s' => 'int', 'default' => 1], 
     );
 
   //  const EXIF_REMOVE = 0;

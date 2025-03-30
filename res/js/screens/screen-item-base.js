@@ -98,7 +98,7 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 		}
 
 		var element = this.GetElement(resultItem, 'message');
-		//var element = document.getElementById('sp-message-' + id);
+
 		if (typeof isError === 'undefined')
 			isError = false;
 
@@ -114,7 +114,7 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 				element.classList.add('error');
 		}
 		else {
-			this.processor.Debug('Update Message Column not found - ' + item_id);
+			this.processor.Debug('Update Message Column not found - ' + resultItem.id);
 		}
 	}
 

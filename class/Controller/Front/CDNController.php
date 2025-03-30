@@ -36,7 +36,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		$this->setDefaultCDNArgs();
 
 		// Add hooks for easier conversion / checking
-		//	$this->addWPHooks();
+		$this->addWPHooks();
 
 		// Starts buffer of whole page, with callback .
 		$this->startOutputBuffer('processFront');
@@ -100,7 +100,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 	protected function addWPHooks()
 	{
-
 		$settings = \wpSPIO()->settings();
 
 		if (true === $settings->cdn_js) {
@@ -132,6 +131,9 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		if (count($replaceBlocks) == 0) {
 			return $src;
 		}
+
+		$version = \wpSPIO()->settings()->cdn_purge_version;
+		$this->setCDNArgument('version', 'v_' . $version);
 
 		$replaceBlocks = $this->filterOtherDomains($replaceBlocks);
 
