@@ -236,6 +236,9 @@ class AjaxController
 			case 'reOptimizeItem':
 				$json = $this->reOptimizeItem($json, $data);
 				break;
+			case 'settings/purgecdncache': 
+				$json = $this->purgeCDNCache($json, $data); 
+			break;
 
 			case 'ai/requestalt': 
 				$json = $this->requestAlt($json, $data);	
@@ -429,6 +432,31 @@ class AjaxController
 		$json->$type->results = [$control->addItemToQueue($mediaItem, $args)];
 		$json->$type->qstatus = $control->getLastQueueStatus();
 		return $json;
+	}
+
+	protected function purgeCDNCache($json, $data)
+	{
+		$settings = \wpSPIO()->settings();
+		$version = intval($settings->cdn_purge_version); 
+
+		$settings->cdn_purge_version = $version + 1; 
+
+		Notices::addNormal(__('CDN version purged', 'shortpixel-image-optimiser')); 
+
+		$noticeController = Notices::getInstance();
+		$json->notices = $noticeController->getNewNotices();
+
+		if (count($json->notices) > 0) {
+			$json->display_notices = [];
+			foreach ($json->notices as $notice) {
+				$json->display_notices[] = $notice->getForDisplay(['class' => 'is_ajax', 'is_removable' => false]);
+			}
+		}
+		$noticeController->update(); // dismiss one-time ponies
+
+		return $json;
+
+		
 	}
 
 	protected function markCompleted($json, $data)

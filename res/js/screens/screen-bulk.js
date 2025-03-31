@@ -131,7 +131,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
       });
   }
 
-	DoActionEvent()
+	DoActionEvent(event)
 	{
 		var element = event.target;
 		var action = element.getAttribute('data-action');

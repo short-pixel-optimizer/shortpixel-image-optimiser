@@ -30,11 +30,12 @@ class ShortPixelSettings
 			var self = this;
 			this.strings = settings_strings;
 
-			this.InitToggle();
-			this.InitExclusions();
-			this.InitWarnings();
-			this.InitMenu();
-			this.InitModeSwitcher();
+			this.InitToggle(); // data- toggles 
+			this.InitExclusions(); // Exclusions 
+			this.InitWarnings(); // Settings warnings 
+			this.InitMenu(); // The menu 
+			this.InitModeSwitcher(); // Simple / Advanced mode 
+			this.InitActionEvents(); // Action events. 
 
 			// Modals
 			var modals = this.root.querySelectorAll('[data-action="open-modal"]');
@@ -261,7 +262,7 @@ class ShortPixelSettings
 		updateShowWarning({ elements: remove_elements, warnings: warning, checks: checks});
 
 		var elements = root.querySelectorAll('input[name="backupImages"]');
-  	var warning =  root.querySelectorAll('#backup-warning');
+  		var warning =  root.querySelectorAll('#backup-warning');
 		var checks = [':not(:checked)'];
 		updateShowWarning({elements: elements, warnings: warning, checks: checks});
 
@@ -360,6 +361,51 @@ class ShortPixelSettings
 			}
 			switcher.addEventListener('change', this.SwitchViewModeEvent.bind(this));
 	}
+
+	InitActionEvents()
+	{
+		var actions = document.querySelectorAll('[setting-action]');
+		for (var i = 0; i < actions.length; i++)
+		{
+			 var actionElement = actions[i]; 
+			 /*if (false === actionElement.hasAttribute('data-function'))
+			 {
+				 console.warn('Action without function', actionElement); 
+				 continue; 
+			 } */
+			 
+			 var method = actionElement.getAttribute('setting-action');
+			 actions[i].addEventListener('click', this[method].bind(this));
+
+		}
+
+	}
+
+  PurgeCacheEvent(event)
+  {
+	 	event.preventDefault();
+
+		var data = {}; 
+
+		var data = {screen_action: 'settings/purgecdncache'}; //
+		data.callback = 'shortpixelSettings.purgeCDNCache';
+		data.type = 'settings';
+	
+		window.addEventListener(data.callback, function (response) {
+			console.log(response);
+			var json = response.detail;
+			let anchor = document.querySelector('.wp-header-end');
+			let screen = window.ShortPixelProcessor.GetScreen();
+
+			screen.AppendNotices(json.display_notices, anchor);
+
+		}, {'once': true} );
+	
+		window.ShortPixelProcessor.AjaxRequest(data);
+
+		
+
+  }
 
   SwitchViewModeEvent(event)
 	{

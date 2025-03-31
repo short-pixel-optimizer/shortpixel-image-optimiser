@@ -154,7 +154,7 @@ if( $this->is_nginx ){
            <?php printf(esc_html__('Change this only if you want to set up your %scustom domain%s.  ShortPixel CDN: %s','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain/" target="_blank">', '</a>', 'https://spcdn.shortpixel.ai/spio');?>
     </info>
 
-    <name><button></button></name>
+    <name><button setting-action="PurgeCacheEvent">Purge Cache</button></name>
   </setting>
 
 
