@@ -32,17 +32,34 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			return false;
 		}
 
+		$this->init();
+
+	}
+
+	protected function init()
+	{
 		$this->loadCDNDomain();
-		$this->setDefaultCDNArgs();
+		//$this->setDefaultCDNArgs();
 
 		// Add hooks for easier conversion / checking
 		$this->addWPHooks();
 
 		// Starts buffer of whole page, with callback .
 		$this->startOutputBuffer('processFront');
+
+
+		$this->regex_exclusions = apply_filters('shortpixel/front/cdn/regex_exclude', [
+			'*gravatar.com*',
+			'/data:image\/.*/',
+			'*' . $this->cdn_domain . '*'
+
+		]);
+
+		// string || preg
+		$this->replace_method = apply_filters('shortpixel/front/cdn/replace_method', 'preg'); 
 	}
 
-	protected function setDefaultCDNArgs()
+	protected function createArguments($args = [])
 	{
 		$settings = \wpSPIO()->settings();
 		$env = \wpSPIO()->env();
@@ -50,7 +67,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 		$compressionType = $settings->compressionType;
 		// Depend this on the SPIO setting
-		$args = ['ret_img'];
+		$args['return'] = 'ret_img';
 		$compressionArg = 'q_orig';
 
 		// Perhaps later if need to override in webp/avif check
@@ -85,17 +102,8 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			$args['webarg'] = $webpArg;
 		}
 
-		$this->cdn_arguments = $args;
+		return $args;
 
-		$this->regex_exclusions = apply_filters('shortpixel/front/cdn/regex_exclude', [
-			'*gravatar.com*',
-			'/data:image\/.*/',
-			'*' . $this->cdn_domain . '*'
-
-		]);
-
-		// string || preg
-		$this->replace_method = apply_filters('shortpixel/front/cdn/replace_method', 'preg');
 	}
 
 	protected function addWPHooks()
@@ -120,10 +128,15 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		// 1. Check if scheme is http and add
 		// 2. Check if there domain and if not, prepend.
 		// 3 Probably check if Src is from local domain, otherwise not replace (?)
-		$this->setCDNArgument('retauto', 'ret_auto'); // for each of this type.
+		//$this->setCDNArgument('retauto', 'ret_auto'); // for each of this type.
+
+		$version = \wpSPIO()->settings()->cdn_purge_version;
 
 		$replaceBlocks = [];
-		$replaceBlocks[] = $this->getReplaceBlock($src);
+		$block =  $this->getReplaceBlock($src);
+		$block->args = $this->createArguments(['retauto' => 'ret_auto', 'version' => 'v_' . $version]);
+
+		$replaceBlocks[] = $block;
 
 		$replaceBlocks = $this->filterRegexExclusions($replaceBlocks);
 
@@ -132,8 +145,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			return $src;
 		}
 
-		$version = \wpSPIO()->settings()->cdn_purge_version;
-		$this->setCDNArgument('version', 'v_' . $version);
+		//$this->setCDNArgument('version', 'v_' . $version);
 
 		$replaceBlocks = $this->filterOtherDomains($replaceBlocks);
 
@@ -147,7 +159,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			$src = $replaceBlocks[0]->replace_url;
 		}
 
-		$this->setCDNArgument('retauto', null);
+	//	$this->setCDNArgument('retauto', null);
 		return $src;
 	}
 
@@ -222,6 +234,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 			if (! is_null($src)) {
 				$imageBlock = $this->getReplaceBlock($src);
+				$imageBlock->args = $this->createArguments();
 				$blockData[] = $imageBlock;
 				$imageData[] = $imageBlock->url;
 			}
@@ -231,6 +244,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 			foreach ($images as $image) {
 				$imageBlock = $this->getReplaceBlock($image);
+				$imageBlock->args = $this->createArguments();
 				if (! in_array($image, $imageData)) {
 					$blockData[] = $imageBlock;
 					$imageData[] = $imageBlock->url;
@@ -257,12 +271,14 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			}
 			$this->checkScheme($replaceBlock);
 
-			// Take Parsed URL and add CDN info to add.
+			// Take Parsed URL and add CDN info to add
 			$url = $replaceBlock->url;
 			$url = str_replace(['http://', 'https://'], '', $url); // always remove scheme
 			$url = apply_filters('shortpixel/front/cdn/url', $url);
 
-			$cdn_prefix = trailingslashit($cdn_domain) . trailingslashit($this->getCDNArguments($url));
+			$cdnArgs = implode(',', $replaceBlock->args);
+
+			$cdn_prefix = trailingslashit($cdn_domain) . trailingslashit($cdnArgs);
 			$replaceBlock->replace_url = $cdn_prefix . trim($url);
 		}
 
@@ -303,9 +319,9 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 	private function checkScheme($replaceBlock)
 	{
-		$this->setCDNArgument('scheme', null);
+		//$this->setCDNArgument('scheme', null);
 		if (isset($replaceBlock->parsed['scheme']) && 'http' == $replaceBlock->parsed['scheme']) {
-			$this->setCDNArgument('scheme', 'p_h');
+			$replaceBlock->args['scheme'] = 'p_h'; 
 		}
 
 		if (substr($replaceBlock->url, 0, 2) === '//')
@@ -346,33 +362,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		return $content;
 	}
 
-	//maybe Shortpixel CDn specific?
-	// @param src string for future (?)
-	// @return Space separated list of settings for SPIO CDN.
-	protected function getCDNArguments($src)
-	{
-		$arguments = $this->cdn_arguments;
 
-		$string = implode(',', $arguments);
-
-		return  $string;
-	}
-
-	/* Sets an CDN Argument in a controlled way.  Pass null as value to unset it
-		*
-		*	 @param $name Name of the argument (internal)
-		*	 @param $value Value of the argument to be passed to API , null is unset.
-		*/
-	protected function setCDNArgument($name, $value)
-	{
-		if (is_null($value)) {
-			if (isset($this->cdn_arguments[$name])) {
-				unset($this->cdn_arguments[$name]);
-			}
-		} else {
-			$this->cdn_arguments[$name] = $value;
-		}
-	}
 
 	protected function checkContent($content)
 	{
