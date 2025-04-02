@@ -194,7 +194,7 @@ class ViewController extends Controller
       }
     }
 
-    if (is_null($this->model) && is_null($model))
+    if (is_null($this->model))
     {
       foreach($post as $name => $value )
       {

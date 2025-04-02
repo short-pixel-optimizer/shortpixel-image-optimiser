@@ -6,6 +6,7 @@ if (! defined('ABSPATH')) {
 	exit; // Exit if accessed directly.
 }
 
+use ShortPixel\Controller\ApiKeyController;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Model\FrontImage as FrontImage;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
@@ -58,6 +59,50 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 		// string || preg
 		$this->replace_method = apply_filters('shortpixel/front/cdn/replace_method', 'preg'); 
+	}
+
+
+	public function registerDomain($args = [])
+	{
+		$defaults = [
+			'action' => 'register', // or deregister 
+			
+		]; 
+		
+		$args = wp_parse_args($args, $defaults);
+
+		$register_domain = 'https://no-cdn.shortpixel.ai/'; 
+
+		if ('register' === $args['action'])
+		{
+			 $register_domain .= 'add-domain/'; 
+		}
+		else
+		{
+			 $register_domain .= 'revoke-domain/'; 
+		}
+
+		$parsed_url = parse_url(get_site_url());
+
+		if (isset($parsed_url['host']))
+		{
+			 $register_domain .= trim($parsed_url['host']) . '/';
+		}
+		else
+		{
+			 return false; 
+			 // @todo Concur here some error message 
+		}
+
+		$keyControl = ApiKeyController::getInstance();
+		$apiKey = $keyControl->forceGetApiKey();
+
+		$register_domain .= $apiKey;
+		Log::addTemp("Pinging" . $register_domain);
+		$res = wp_remote_post($register_domain);	
+		Log::addTemp('RESULT', $res);
+		
+		
 	}
 
 	protected function createArguments($args = [])
@@ -415,9 +460,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 	{
 		add_action('shortpixel/image/after_restore',  [$this, 'flushItem'], 10, 2); // hit this when restoring.
 		add_action('shortpixel/image/optimised', [$this, 'flushItem'], 10, 2);
-		
-
-		
 	}
 
 

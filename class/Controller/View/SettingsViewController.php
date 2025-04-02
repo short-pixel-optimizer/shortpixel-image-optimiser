@@ -804,6 +804,24 @@ class SettingsViewController extends \ShortPixel\ViewController
 
           }
 
+          $post_useCDN = isset($post['useCDN']) ? true : false; 
+          $setting_useCDN = $this->model->useCDN; 
+
+          if ($post_useCDN !== $setting_useCDN)
+          {
+              $controller = new \ShortPixel\Controller\Front\CDNController();
+              if (true === $post_useCDN)
+              {
+                 $controller->registerDomain(); 
+                 Log::addTemp('@todo here activate CDN DOMAIN'); 
+              }
+              else{
+                
+                $controller->registerDomain(['action' => 'deregister']);
+                 Log::addTemp('@todo Here Deactivate CDN DOMAIN');
+              }
+          }
+
 
 				// Field that are in form for other purpososes, but are not part of model and should not be saved.
 					$ignore_fields = array(
