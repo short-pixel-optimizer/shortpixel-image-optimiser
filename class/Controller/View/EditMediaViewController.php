@@ -211,6 +211,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
 					}
 
+
 					$thumbnails = $imageObj->get('thumbnails');
 					$processable = ($imageObj->isProcessable()) ? '<span class="green">Yes</span>' : '<span class="red">No</span> (' . $imageObj->getReason('processable') . ')';
 					$anyFileType = ($imageObj->isProcessableAnyFileType()) ? '<span class="green">Yes</span>' : '<span class="red">No</span>';

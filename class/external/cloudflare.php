@@ -70,14 +70,18 @@ class CloudFlareAPI {
         // Fetch CloudFlare API credentials
 
             // Fetch all WordPress install possible thumbnail sizes ( this will not return the full size option )
-            $fetch_images_sizes   = get_intermediate_image_sizes();
+            //$fetch_images_sizes   = get_intermediate_image_sizes();
             $purge_array  = array();
             $prepare_request_info = array();
 
             // if full image size tag is missing, we need to add it
+            /* Seems unused? 
+
             if ( ! in_array( 'full', $fetch_images_sizes ) ) {
                 $fetch_images_sizes[] = 'full';
             }
+
+            */
 
 						$fs = \wpSPIO()->filesystem();
 

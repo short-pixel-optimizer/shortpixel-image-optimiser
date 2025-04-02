@@ -85,6 +85,11 @@ class PageConverter extends \ShortPixel\Controller
        return false;
     }
 
+    if (false === \wpSPIO()->env()->is_front) // if is front.
+    {
+       return false; 
+    }
+
 
 	 add_filter('status_header', [$this, 'status_header_sent'], 10, 2);
 

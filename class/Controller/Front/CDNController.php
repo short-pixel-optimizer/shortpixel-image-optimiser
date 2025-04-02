@@ -28,6 +28,9 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 	{
 		parent::__construct();
 
+		$this->listenFlush();
+		$this->loadCDNDomain();
+
 		if (false === $this->shouldConvert()) {
 			return false;
 		}
@@ -38,8 +41,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 	protected function init()
 	{
-		$this->loadCDNDomain();
-		//$this->setDefaultCDNArgs();
 
 		// Add hooks for easier conversion / checking
 		$this->addWPHooks();
@@ -67,7 +68,11 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 		$compressionType = $settings->compressionType;
 		// Depend this on the SPIO setting
-		$args['return'] = 'ret_img';
+		if (! isset($args['return']))
+		{
+			$args['return'] = 'ret_img';
+		}
+
 		$compressionArg = 'q_orig';
 
 		// Perhaps later if need to override in webp/avif check
@@ -134,7 +139,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 		$replaceBlocks = [];
 		$block =  $this->getReplaceBlock($src);
-		$block->args = $this->createArguments(['retauto' => 'ret_auto', 'version' => 'v_' . $version]);
+		$block->args = $this->createArguments(['return' => 'ret_auto', 'version' => 'v_' . $version]);
 
 		$replaceBlocks[] = $block;
 
@@ -196,8 +201,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		$urls = array_column($replaceBlocks, 'raw_url');
 		$replace_urls = array_column($replaceBlocks, 'replace_url');
 
-		//  Log::addDebug('Array result', [$urls, $replace_urls]);
-
 		$content = $this->$replace_function($original_content, $urls, $replace_urls);
 
 		return $content;
@@ -208,7 +211,18 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		$settings = \wpSPIO()->settings();
 		$cdn_domain = $settings->CDNDomain;
 
+		$parsed_domain = parse_url($cdn_domain);
+		if (false === isset($parsed_domain['path']) )
+		{
+			 $cdn_domain = $cdn_domain . '/spio/'; 
+		}
+		elseif ($parsed_domain['path'] !== '/spio')
+		{
+			 $cdn_domain = $parsed_domain['scheme'] . '://' . $parsed_domain['host'] . '/spio'; 
+		}
+
 		$this->cdn_domain = trailingslashit($cdn_domain);
+
 	}
 
 	protected function fetchImageMatches($content, $args = [])
@@ -395,5 +409,70 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		} catch (\JsonException $e) {
 			return false;
 		}
+	}
+
+	protected function listenFlush()
+	{
+		add_action('shortpixel/image/after_restore',  [$this, 'flushItem'], 10, 2); // hit this when restoring.
+		add_action('shortpixel/image/optimised', [$this, 'flushItem'], 10, 2);
+		
+
+		
+	}
+
+
+	/**
+	 * Flush an Item from the CDN to reqacquire 
+	 * 
+	 * This should happen when the image has been optimiser / restored or altered in similar ways. 
+	 * 
+	 *
+	 * @param ImageModel $imageModel
+	 * @return void
+	 */
+	public function flushItem(ImageModel $imageModel)
+	{
+		$cdn_domain = $this->cdn_domain;
+
+		$url = $imageModel->getURL();
+
+		
+		$url = $this->getURLBase($url);
+
+		// as per CreateReplacements
+		$replaceBlock = $this->getReplaceBlock($url);
+		$replaceBlock->args = $this->createArguments(['remove' => 'f_remove']);
+
+		$url = str_replace(['http://', 'https://'], '', $replaceBlock->url); // always remove scheme
+		$url = apply_filters('shortpixel/front/cdn/url', $url);
+
+		$this->checkScheme($replaceBlock);
+
+		$cdnArgs = implode(',', $replaceBlock->args);
+		$cdn_prefix = trailingslashit($cdn_domain) . trailingslashit($cdnArgs);
+		
+		$url = $cdn_prefix . trim($url); 
+	
+		wp_remote_get($url);
+
+	}
+
+	/**
+	 * Hack and Slash until we have the base image URL without other definitions. 
+	 *
+	 * @param string $url
+	 * @return string result URL
+	 */
+	private function getURLBase($url)
+	{
+		$url = substr($url,0, strrpos($url, '.')  );
+
+		if (strpos($url, '-scaled') !== false)
+		{
+			$url = str_replace('-scaled', '', $url);
+		}
+
+		$url = $url . '*';
+		return $url;
 	}
 } // class
