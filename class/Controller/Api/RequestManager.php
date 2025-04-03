@@ -96,6 +96,8 @@ abstract class RequestManager
 		$response = wp_remote_post($this->apiEndPoint, $requestParameters );
     Log::addDebug('ShortPixel API Request sent to ' . $this->apiEndPoint , $requestParameters['body']);
 
+
+
 		//only if $Blocking is true analyze the response
 		if ( $requestParameters['blocking'] )
 		{
@@ -108,6 +110,7 @@ abstract class RequestManager
             {
                $errorMessage = __('Timeout fetching data from ShortPixel servers. If persistent, check server connection / whitelist', 'shortpixel-image-optimiser');
             }
+            Log::addTemp('Temporary: Full API Response', $response);
             $qItem->addResult($this->returnRetry($errorCode, $errorMessage));
 				}
 				elseif ( isset($response['response']['code']) && $response['response']['code'] <> 200 )
@@ -115,6 +118,7 @@ abstract class RequestManager
 						$errorMessage = $response['response']['code'] . " - " . $response['response']['message'];
 						$errorCode = $response['response']['code'];
             $qItem->addResult($this->returnFailure($errorCode, $errorMessage));
+            Log::addTemp('Temporary: Full API Response', $response);
 				}
 				else
 				{
