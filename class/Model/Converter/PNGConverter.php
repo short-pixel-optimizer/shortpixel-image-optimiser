@@ -20,7 +20,7 @@ class PNGConverter extends MediaLibraryConverter
 {
 		protected $instance;
 
-    protected $current_image; // The current PHP image resource in memory
+    	protected $current_image; // The current PHP image resource in memory
 		protected $virtual_filesize;
 		protected $replacer; // Replacer class Object.
 
@@ -452,6 +452,7 @@ class PNGConverter extends MediaLibraryConverter
 			$image = @imagecreatefrompng($imagePath);
 			if (! $image)
 			{
+				Log::addError('Image Create from PNG failed!');
 				$this->current_image = false;
 			}
 			else

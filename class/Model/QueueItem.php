@@ -294,8 +294,6 @@ class QueueItem
        {
           unset($this->data->files); 
        }
-
-       Log::addTemp('New Action!');
    }
 
    public function newDumpAction()

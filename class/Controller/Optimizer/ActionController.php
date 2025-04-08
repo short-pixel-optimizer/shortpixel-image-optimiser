@@ -166,7 +166,7 @@ class ActionController extends OptimizerBase
     $imageObj->setMeta('compressionType', $qItem->compressionType);
 
     $qItem->block(false);
-    $queue->updateItem($qItem);
+    $queue->itemDone($qItem);
 
     // Get the item data to pass on settings like compressionType.
     $args = get_object_vars($qItem->data());
@@ -174,9 +174,9 @@ class ActionController extends OptimizerBase
 
     // Add converted items to the queue for the process
     $queueController = new QueueController(); 
-    $queueController->addItemToQueue($imageObj, $args );
+   $result = $queueController->addItemToQueue($imageObj, $args );
  //   $this->enqueueItem($imageObj);
-
+    Log::addTemp('Result result PNG2JPG', $result);
     return $bool;
   }
 

@@ -38,6 +38,7 @@ window.ShortPixelProcessor =
 		debugIsActive : false, // indicating is SPIO is in debug mode. Don't report certain things if not.
 		hasStartQuota: false, // if we start without quota, don't notice too much, don't run.
 		workerErrors: 0, // times worker encoutered an error.
+    broadcaster: null, 
     qStatus: { // The Queue returns
        1:  'QUEUE_ITEMS',
        4:  'QUEUE_WAITING',
@@ -88,6 +89,8 @@ window.ShortPixelProcessor =
 
 				this.autoMediaLibrary = (ShortPixelProcessorData.autoMediaLibrary == 'true') ? true : false;
 
+        this.AddBroadCastListener();
+
 				if (hasQuota == 1)
 					this.hasStartQuota = true;
 
@@ -126,6 +129,24 @@ window.ShortPixelProcessor =
             	 this.RunProcess();
         }
 
+    },
+    AddBroadCastListener : function() // Sync between tabs :O 
+    {
+        var self = this; 
+        this.broadcaster = new BroadcastChannel('spio_processor');
+        this.broadcaster.onmessage = function (event) {
+
+          var data = event.data; 
+
+          if (data.reason === 'handleImage')
+          {
+             self.screen.HandleImage(data.imageItem, data.type); 
+          }
+          if (data.reason == 'handleItemError')
+          {
+             self.HandleItemError(data.imageItem, data.type);
+          }
+        };
     },
     CheckActive: function()
     {
@@ -522,6 +543,11 @@ window.ShortPixelProcessor =
                 if (imageItem.is_error)
 								{
                   this.HandleItemError(imageItem, type);
+                  this.broadcaster.postMessage({
+                    'reason' : 'handleItemError', 
+                    'imageItem': imageItem, 
+                    'type' : type, 
+                });
 								}
 
                 // Bulk page should deliver only one item for previewing not to flood the browser.
@@ -531,6 +557,11 @@ window.ShortPixelProcessor =
                 else
                 {
                 	imageHandled = this.screen.HandleImage(imageItem, type);
+                  this.broadcaster.postMessage({
+                      'reason' : 'handleImage', 
+                      'imageItem': imageItem, 
+                      'type' : type, 
+                  });
 								}
              }
          }
@@ -540,12 +571,21 @@ window.ShortPixelProcessor =
               if (response.result.is_error)
 							{
 									this.HandleItemError(response.result, type);
+                  this.broadcaster.postMessage({
+                    'reason' : 'handleItemError', 
+                    'imageItem': imageItem, 
+                    'type' : type, 
+                });
 							}
 							else if (! imageHandled)
 							{
               	imageHandled = this.screen.HandleImage(response, type); // whole response here is single item. (final!)
                 console.log('handling by .result', response, imageHandled);
-
+                this.broadcaster.postMessage({
+                  'reason' : 'handleImage', 
+                  'imageItem': imageItem, 
+                  'type' : type, 
+              });
 							}
          }
 

@@ -52,6 +52,7 @@ class AiController extends RequestManager
       if ($qItem->data()->action == 'requestAlt')
       {
         $requestBody['url'] = $qItem->data()->url;
+        $requestBody['retry'] = '1'; // when requesting alt, always wants a new one (?) 
       }
 
       if ($qItem->data()->action == 'retrieveAlt')
@@ -106,9 +107,7 @@ class AiController extends RequestManager
              if (is_object($apiData) && property_exists($apiData, 'Id'))
              {
               $remote_id = intval($APIresponse['data']->Id);
-              //$qItem->addResult($this->returnOk());
               $qItem->addResult(['remote_id' => $remote_id]);
-              //$result['remote_id'] = $remote_id;
               return $this->returnOk();  
              }
 

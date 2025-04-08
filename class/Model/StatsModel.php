@@ -139,9 +139,9 @@ class StatsModel
   public function add($stat)
   {
      if (property_exists($stat, 'images'))
-         $this->stats[$stat->type][$images] += $stats->images;
+         $this->stats[$stat->type]['images'] += $stat->images;
      if (property_exists($stat, 'items'))
-        $this->stats[$stat->type][$items] += $stats->items;
+        $this->stats[$stat->type]['items'] += $stat->items;
 
 
   }
