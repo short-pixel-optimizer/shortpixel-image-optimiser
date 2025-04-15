@@ -351,7 +351,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
 
 					this.HandleImageEffect(resultItem.original, resultItem.optimized);
 
-          if (resultItem.improvements.totalpercentage)
+          if (resultItem.improvements && resultItem.improvements.totalpercentage)
           {
 							// Opt-Circle-Image is average of the file itself.
               var circle = document.querySelector('.opt-circle-image');

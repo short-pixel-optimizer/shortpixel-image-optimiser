@@ -10,7 +10,7 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Model\File\DirectoryModel as DirectoryModel;
 use ShortPixel\Model\File\FileModel as FileModel;
 use ShortPixel\Controller\ResponseController as ResponseController;
-use ShortPixel\Model\QueueItem as QueueItem;
+use ShortPixel\Model\Queue\QueueItem as QueueItem;
 
 
 /* ShortPixel Image Optimiser Converters. Unified interface for handling conversion between file types */

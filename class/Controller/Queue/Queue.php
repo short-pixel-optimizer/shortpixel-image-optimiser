@@ -11,7 +11,7 @@ use ShortPixel\Controller\CacheController as CacheController;
 use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\Model\Converter\Converter as Converter;
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
-use ShortPixel\Model\QueueItem as QueueItem;
+use ShortPixel\Model\Queue\QueueItem as QueueItem;
 
 
 use ShortPixel\Helper\UiHelper as UiHelper;
@@ -42,6 +42,9 @@ abstract class Queue
     abstract protected function prepareBulkRestore();
     abstract public function getType();
 
+    protected $queueName = '';
+
+    
     public function createNewBulk()
     {
 				$this->resetQueue();

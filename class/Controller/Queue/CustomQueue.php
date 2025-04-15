@@ -12,7 +12,6 @@ use ShortPixel\Model\Image\ImageModel as ImageModel;
 class CustomQueue extends Queue
 {
 
-   protected $queueName = '';
    protected $cacheName = 'CustomCache'; // When preparing, write needed data to cache.
 
    protected static $instance;

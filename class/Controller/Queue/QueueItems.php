@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
-use ShortPixel\Model\QueueItem as QueueItem;
+use ShortPixel\Model\Queue\QueueItem as QueueItem;
 
 class QueueItems
 {

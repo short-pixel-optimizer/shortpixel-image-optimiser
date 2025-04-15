@@ -3,7 +3,7 @@ namespace ShortPixel\Controller\Api;
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
-use ShortPixel\Model\QueueItem as QueueItem;
+use ShortPixel\Model\Queue\QueueItem as QueueItem;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -133,19 +133,19 @@ abstract class RequestManager
           Log::addWarn('DOREQUEST sent item non-blocking with multiple tries!', $qItem);
 			 }
 
-       $urls = (property_exists($qItem->data(), 'urls')) ? count($qItem->data()->urls) : 0;
+       
+       $urls = (! is_null($qItem->data()->urls)) ? count($qItem->data()->urls) : 0;
 
-       if ($urls == 0 && property_exists($qItem->data(), 'url'))
+       if ($urls == 0 && (! is_null($qItem->data()->url)))
         $urls = count($qItem->data()->url);
 
-       $flags = property_exists($qItem->data(), 'flags') ? $qItem->data()->flags : [];
+       $flags = $qItem->data()->flags;
 			 $flags = implode("|", $flags);
        $text = sprintf(__('New item #%d sent for processing ( %d URLS %s)  ', 'shortpixel-image-optimiser'), $qItem->item_id, $urls, $flags );
 
        $qItem->addResult($this->returnOK(self::STATUS_ENQUEUED, $text ));
 		}
 
-//		return $item;
 	}
 
 

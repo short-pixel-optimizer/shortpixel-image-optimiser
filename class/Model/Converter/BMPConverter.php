@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-use ShortPixel\Model\QueueItem as QueueItem; 
+use ShortPixel\Model\Queue\QueueItem as QueueItem; 
 use ShortPixel\Helper\UtilHelper as UtilHelper;
 
 class BMPConverter extends MediaLibraryConverter

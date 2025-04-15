@@ -9,9 +9,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Model\Image\ImageModel as ImageModel;
-use ShortPixel\Model\QueueItem as QueueItem;
+use ShortPixel\Model\Queue\QueueItem as QueueItem;
 use ShortPixel\Controller\Api\RequestManager as RequestManager;
-use ShortPixel\Controller\QueueController;
 use ShortPixel\Controller\Api\AiController;
 use ShortPixel\Controller\Queue\Queue;
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
@@ -154,8 +153,7 @@ class OptimizeAiController extends OptimizerBase
       }
 
       $imageObj = $qItem->imageModel;
-      $queueController = new QueueController();
-
+      $queueController = $this->getQueueController();
       $queueController->addItemToQueue($imageObj, ['action' => 'retrieveAlt', 'remote_id' => $remote_id]);
 
   }

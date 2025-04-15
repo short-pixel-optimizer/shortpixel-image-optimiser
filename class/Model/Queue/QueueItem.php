@@ -1,5 +1,5 @@
 <?php
-namespace ShortPixel\Model;
+namespace ShortPixel\Model\Queue;
 
 if (!defined('ABSPATH')) {
    exit; // Exit if accessed directly.
@@ -45,7 +45,7 @@ class QueueItem
 
 
       // Init defaults
-      $this->data = new \stdClass; // init
+      $this->data = new QueueItemData(); // init
    }
 
    public function setModel(ImageModel $imageModel)
@@ -56,11 +56,16 @@ class QueueItem
 
    public function setFromData($data)
    {
+      foreach($data as $name => $value)
+      {
+          $this->setData($name, $value);
+      }
+      /*
       if (is_array($data)) {
          $this->data = (object) $data;
       } elseif (is_object($data)) {
          $this->data = $data;
-      }
+      } */
 
    }
 
@@ -72,13 +77,9 @@ class QueueItem
    public function block($block = null)
    {
       if (is_null($block)) {
-         if (property_exists($this->data, 'block')) {
             return $this->data->block;
-         } else {
-            return false;
-         }
       } else {
-         $this->data->block = (bool) $block;
+         $this->setData('block', (bool) $block);
       }
    }
 
@@ -137,7 +138,7 @@ class QueueItem
       }
 
       $qItem = $this->queueItem;
-      $qItem->value = $this->data;
+      $qItem->value = $this->data->toObject();
       return $qItem;
    }
 
@@ -146,9 +147,7 @@ class QueueItem
       if (property_exists($this, $name)) {
          return $this->$name;
       }
-      if (property_exists($this->data, $name)) {
-         return $this->data->$name;
-      }
+
 
       return null;
    }
@@ -158,7 +157,7 @@ class QueueItem
       $array = [
          'item_id' => $this->item_id,
          'result' => $this->result,
-         'data' => $this->data,
+         'data' => $this->data->toObject(),
       ];
 
       return $array;
@@ -169,14 +168,14 @@ class QueueItem
       $object = new \stdClass;
       $object->item_id = $this->item_id;
       $object->result = $this->result;
-      $object->data = $this->data;
+      $object->data = $this->data->toObject();
 
       return $object;
    }
 
    public function returnEnqueue()
    {
-      $value = $this->data;
+      $value = $this->data->toObject();
 
       $item_id = $this->item_id; 
 
@@ -214,6 +213,7 @@ class QueueItem
       $this->newAction(); 
 
        $this->data->action = 'reoptimize'; 
+       $this->data->next_actions = ['optimize'];
        $this->item_count = 1;
 
        // Smartcrop setting (?) 
@@ -289,10 +289,15 @@ class QueueItem
    {
        $this->result = new \stdClass; // new action, new results 
 
-      // This monitors which files are done already.  Remove for new action. 
-       if (property_exists($this->data, 'files'))
+       if ($this->data->hasNextAction()) // Keep this at all times / not optimal still
        {
-          unset($this->data->files); 
+          $nextActions = $this->data->next_actions; 
+       }
+
+       $this->data = new QueueItemData(); // new action, new data(?)
+       if (isset($nextActions))
+       {
+         $this->data->next_action = $nextActions;
        }
    }
 
@@ -430,7 +435,7 @@ class QueueItem
     */
    public function getAPIController() // @todo Move to QueueItem, or QUeueItems ?
    {
-      $api = false;
+      $api = null;
       $action = $this->data()->action;
       switch ($action) {
          case 'optimize':

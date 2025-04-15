@@ -12,7 +12,7 @@ use ShortPixel\Controller\BulkController as BulkController;
 use ShortPixel\Controller\Queue\Queue as Queue;
 use ShortPixel\Controller\ResponseController as ResponseController;
 
-use ShortPixel\Model\QueueItem as QueueItem;
+use ShortPixel\Model\Queue\QueueItem as QueueItem;
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
 
 /**

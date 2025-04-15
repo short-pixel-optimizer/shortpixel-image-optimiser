@@ -136,7 +136,10 @@ class BulkViewController extends \ShortPixel\ViewController
 
     // If sizes are excluded, remove this count from the approx.
     if (is_array($excludeSizes) && count($excludeSizes) > 0)
+    {
       $approx->media->thumbs = $approx->media->thumbs - ($approx->media->items * count($excludeSizes));
+      
+    }
 
     // Total optimized items + Total optimized (approx) thumbnails
     $approx->media->total = $approx->media->items + $approx->media->thumbs;

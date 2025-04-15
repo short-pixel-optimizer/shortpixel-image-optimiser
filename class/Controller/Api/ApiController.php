@@ -9,7 +9,7 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\Controller\QuotaController as QuotaController;
-use ShortPixel\Model\QueueItem as QueueItem;
+use ShortPixel\Model\Queue\QueueItem as QueueItem;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 
 use ShortPixel\Helper\UtilHelper as UtilHelper;
@@ -65,7 +65,8 @@ class ApiController extends RequestManager
 
 		$settings = \wpSPIO()->settings();
 		$keyControl = ApiKeyController::getInstance();
-		$convertTo = (property_exists($qItem->data(), 'flags')) ? implode("|", $qItem->data()->flags) : '';
+		$flags = $qItem->data()->flags; 
+		$convertTo = implode("|", $flags);
 
 		$requestBody = [
 			'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
@@ -93,17 +94,6 @@ class ApiController extends RequestManager
 		$requestParameters = [
 			'blocking' => (0 == $qItem->data()->tries) ? false : true
 		];
-
-		//  $requestArgs = array('urls' => $item->urls); // obligatory
-		//  if (property_exists($item, 'compressionType'))
-		//      $requestArgs['compressionType'] = $item->compressionType;
-		//  $requestArgs['blocking'] =  ($item->tries == 0) ? false : true;
-		//  $requestArgs['item_id'] = $item->item_id;
-		//  $requestArgs['refresh'] = (property_exists($item, 'refresh') && $item->refresh) || $item->tries == 0 ? true : false;
-		//    $requestArgs['flags'] = (property_exists($item, 'flags')) ? $item->flags : [];
-
-		//	$requestArgs['paramlist']  = property_exists($item, 'paramlist') ? $item->paramlist : null;
-		//	$requestArgs['returndatalist']  = property_exists($item, 'returndatalist') ? $item->returndatalist : null;
 
 		$request = $this->getRequest($requestBody, $requestParameters);
 		$this->doRequest($qItem, $request);
@@ -154,6 +144,8 @@ class ApiController extends RequestManager
 	{
 
 		$APIresponse = $this->parseResponse($response);//get the actual response from API, its an array
+
+Log::addTemp('API API RESPONSE', $APIresponse);
 
 		// Don't know if it's this or that.
 		$status = false;
@@ -258,12 +250,12 @@ class ApiController extends RequestManager
 						$data['fileSize'] = $returnDataList['fileSizes'][$imageName];
 					}
 
-					$fileData = (property_exists($qItem->data(), 'files')) ? $qItem->data()->files : false;
+					$fileData = $qItem->data()->files; 
 
-					//Log::addTemp('ApiController 299 - ', $fileData);
+
 					// Previous check here was for Item->files[$imageName] , not sure if currently needed.
 					// Check if image is not already in fileData.
-					if ($fileData === false || false === property_exists($fileData, $imageName)) {
+					if (is_null($fileData) || false === property_exists($fileData, $imageName)) {
 						$imageList[$imageName] = $this->handleNewSuccess($qItem, $imageObject, $data);
 					} else {
 						//Log::addTEmp("Property $imageName  existing in files ", $qItem->data());
@@ -351,7 +343,7 @@ class ApiController extends RequestManager
 	protected function handleNewSuccess(QueueItem $qItem, $fileData, $data)
 	{
 		$settings = \wpSPIO()->settings();
-		$compressionType = property_exists($qItem->data(), 'compressionType') ? $qItem->data()->compressionType : $settings->compressionType;
+		$compressionType = ! is_null($qItem->data()->compressionType) ? $qItem->data()->compressionType : $settings->compressionType;
 		//$savedSpace =  $originalSpace =  $optimizedSpace = $fileCount  = 0;
 
 		$defaults = [

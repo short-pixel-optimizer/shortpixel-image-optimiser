@@ -23,8 +23,6 @@ use ShortPixel\Model\AccessModel as AccessModel;
 
 // @todo This should probably become settingscontroller, for saving
 use ShortPixel\Controller\View\SettingsViewController as SettingsViewController;
-
-use ShortPixel\Model\QueueItem as QueueItem;
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
 
 // Class for containing all Ajax Related Actions.

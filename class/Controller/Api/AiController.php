@@ -5,7 +5,7 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
-use \ShortPixel\Model\QueueItem as QueueItem;
+use \ShortPixel\Model\Queue\QueueItem as QueueItem;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 
 

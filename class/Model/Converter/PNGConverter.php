@@ -14,7 +14,7 @@
  use ShortPixel\Controller\ResponseController as ResponseController;
 
  use ShortPixel\Helper\DownloadHelper as DownloadHelper;
-use ShortPixel\Model\QueueItem;
+use ShortPixel\Model\Queue\QueueItem;
 
 class PNGConverter extends MediaLibraryConverter
 {

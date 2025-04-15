@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\ResponseController as ResponseController;
 
-use ShortPixel\Model\QueueItem as QueueItem;
+use ShortPixel\Model\Queue\QueueItem as QueueItem;
 
 use ShortPixel\Helper\DownloadHelper as DownloadHelper;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
@@ -107,7 +107,7 @@ class OptimizeController extends OptimizerBase
 
     if (false === $is_processable) {
       // @todo This should be checked.
-      if (property_exists($qItem->data(), 'forceExclusion') && true == $qItem->data()->forceExclusion) {
+      if (! is_null($qItem->data()->forceExclusion) && true == $qItem->data()->forceExclusion) {
         $qItem->imageModel->cancelUserExclusions();
       }
 
@@ -120,7 +120,7 @@ class OptimizeController extends OptimizerBase
   public function handleAPIResult(QueueItem $qItem)
   {
     $imageModel = $qItem->imageModel;
-    $q = $this->currentQueue;
+    $q = $this->getCurrentQueue($qItem); 
     $fs = \wpSPIO()->filesystem();
 
     $bool = $this->checkImageModel($qItem);
@@ -228,7 +228,7 @@ class OptimizeController extends OptimizerBase
 
             $imageModel = $fs->getMediaImage($qItem->item_id);
 
-            if (property_exists($qItem->data(), 'compressionTypeRequested')) {
+            if (! is_null($qItem->data()->compressionTypeRequested)) {
               $qItem->setData('compressionType', $qItem->data()->compressionTypeRequested);
             }
             // Keep compressiontype from object, set in queue, imageModelToQueue
@@ -354,18 +354,8 @@ class OptimizeController extends OptimizerBase
       }
     }
 
-    // Not relevant for further returning.
-    /*if (property_exists($qItem->data(), 'paramlist'))
-       unset($item->data()->paramlist);
-
-    if (property_exists($item, 'returndatalist'))
-       unset($item->returndatalist);
-     */
-
     // Cleaning up the debugger.
     $debugItem = clone $qItem; 
-    //unset($debugItem->_queueItem);
-    //unset($debugItem->counts);
 
     Log::addDebug('Optimizecontrol - QueueItem has a result ', $debugItem->result());
 
@@ -426,7 +416,7 @@ class OptimizeController extends OptimizerBase
 
     // @todo Here check if these item_files are persistent ( probablY ) and if so add them to data(), not result();
     // @todo This should be a temporary cast. Perhaps best to include this in QueueItem object with extra functions / checks implementable?
-    if (property_exists($qItem->data(), 'files')) {
+    if (! is_null($qItem->data()->files)) {
       $item_files = (array) $qItem->data()->files;
     } else {
       $item_files = [];
@@ -517,7 +507,7 @@ class OptimizeController extends OptimizerBase
 
   protected function deleteTempFiles(QueueItem $qItem)
   {
-    if (!property_exists($qItem, 'files')) {
+    if (! is_null($qItem->data()->files)) {
       return false;
     }
 

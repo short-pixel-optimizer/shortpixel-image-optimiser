@@ -83,6 +83,15 @@ class UtilHelper
 			return $new_path;
 		}
 
+    /** Usage: Plug this into array_filter method. 
+     * 
+     * @return bool 
+     */
+    public static function arrayFilterNullValues($val)
+    {
+        return $val !== null;
+    }
+
 		public static function getExclusions($args = array())
 		{
        $defaults = array(

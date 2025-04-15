@@ -13,7 +13,6 @@ use ShortPixel\Model\Image\ImageModel as ImageModel;
 
 class MediaLibraryQueue extends Queue
 {
-   protected $queueName = '';
    protected $cacheName = 'MediaCache'; // When preparing, write needed data to cache.
 
    protected static $instance;

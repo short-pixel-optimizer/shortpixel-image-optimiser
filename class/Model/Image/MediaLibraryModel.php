@@ -2029,10 +2029,23 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			$toRemove[] = $thumbObj;
 		}
 
+		$removed = []; 
 		foreach ($toRemove as $fileObj) {
 			if (false === $this->is_virtual()) {
-				$fileObj->delete();
-				$fileObj->resetStatus();
+				$fullpath = $fileObj->getFullPath();
+
+				// If multiple thumbs pass to the same file, prevent trying to double-delete it.
+				if (in_array($fullpath, $removed))
+				{
+					 continue; 
+				}
+				$bool = $fileObj->delete();
+
+				if (true === $bool)
+				{
+					 $removed[] = $fullpath; 
+				}
+
 			}
 
 			if ($fileObj->get('is_main_file') == false) {

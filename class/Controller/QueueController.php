@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Model\Image\ImageModel as ImageModel;
-use ShortPixel\Model\QueueItem as QueueItem;
+use ShortPixel\Model\Queue\QueueItem as QueueItem;
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
 
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
@@ -105,7 +105,6 @@ class QueueController
       }
 
       $optimizer = $qItem->getApiController();
-      $optimizer->setCurrentQueue($queue);
 
       if (is_null($optimizer))
       {
@@ -116,15 +115,20 @@ class QueueController
             'is_done' => true,
             'message' => __('No action found!', 'shortpixel-image-optimiser'),
          ]);
-
       }
 
-      $bool = $optimizer->checkItem($qItem);
+      $bool = false; 
+
+      if (! is_null($optimizer))
+      {
+        $optimizer->setCurrentQueue($queue, $this);
+        $bool = $optimizer->checkItem($qItem);
+      }
 
       if (true === $bool)
       {
           $status = $optimizer->enQueueItem($qItem);
-          Log::addTemp('Enqueue With ', $qItem->data());
+          Log::addTemp('Enqueue With to ' . $queue->getQueueName(), $qItem->data());
           $this->lastQStatus = $status->qstatus;
           
           Log::addTemp('Status', $status);
@@ -293,7 +297,26 @@ class QueueController
           // Note, all these functions change content of QueueItem
           $action = $qItem->data()->action;
           $apiController = $qItem->getAPIController($action);
-          $apiController->setCurrentQueue($Q);
+
+          if (is_null($apiController))
+          {
+            Log::addError('No optimiser found for this action, or action missing!', $qItem);
+            $qItem->addResult([
+                'fileStatus' => ImageModel::FILE_STATUS_UNPROCESSED,
+                'is_error' => true,
+                'is_done' => true,
+                'message' => __('No action found!', 'shortpixel-image-optimiser'),
+            ]);
+            
+            $Q->itemFailed($qItem, true); 
+
+          }
+          else
+          {
+            $apiController->setCurrentQueue($Q, $this);
+            
+          }
+
           $item_id = $qItem->item_id;
 
           $imageModel = (! is_null($qItem->imageModel)) ? $qItem->imageModel : $fs->getImage($item_id, $qtype);
@@ -331,10 +354,14 @@ class QueueController
 
           ResponseController::addData($item_id, 'fileName', $imageModel->getFileName());
 
+        
           $this->setLastID($item_id);
 
-          $apiController->sendToProcessing($qItem);
-          $apiController->handleAPIResult($qItem);
+          if (! is_null($apiController))
+          {
+            $apiController->sendToProcessing($qItem);
+            $apiController->handleAPIResult($qItem);  
+          }
           
 
           if (true === $qItem->result()->is_error &&  true === $this->args['is_bulk'] )
@@ -358,7 +385,7 @@ class QueueController
    * Get Queue Object for adding items to it.  This is dependent on the type of image. 
    *
    * @param [string] $type
-   * @return Object Queue object
+   * @return Object|boolean Queue object
    */
   public function getQueue($type)
   {

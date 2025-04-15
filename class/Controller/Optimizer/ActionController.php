@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
-use ShortPixel\Model\QueueItem as QueueItem;
+use ShortPixel\Model\Queue\QueueItem as QueueItem;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
 
@@ -13,7 +13,6 @@ use ShortPixel\Controller\Api\ApiController as ApiController;
 use ShortPixel\Controller\Api\RequestManager as RequestManager;
 use ShortPixel\Controller\Queue\Queue;
 use ShortPixel\Controller\ResponseController as ResponseController;
-use ShortPixel\Controller\QueueController as QueueController;
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Model\Converter\Converter as Converter;
@@ -47,7 +46,7 @@ class ActionController extends OptimizerBase
 
   public function checkItem(QueueItem $qItem)
   {
-      $check = $this->checkImageModel($qItem);
+      $check = $this->checkImageModel($qItem); // Does check if Image exist with ID. 
       return $check;
   }
 
@@ -163,19 +162,25 @@ class ActionController extends OptimizerBase
     $imageObj = $fs->getMediaImage($qItem->item_id);
 
     // Keep compressiontype from object, set in queue, imageModelToQueue
-    $imageObj->setMeta('compressionType', $qItem->compressionType);
+   // $imageObj->setMeta('compressionType', $qItem->compressionType);
 
     $qItem->block(false);
     $queue->itemDone($qItem);
 
     // Get the item data to pass on settings like compressionType.
-    $args = get_object_vars($qItem->data());
-    $args['action'] = 'optimize';  // overwrite whatever option is set. 
+   // $args = get_object_vars($qItem->data());
+    //$args['action'] = 'optimize';  // overwrite whatever option is set. 
+    
+    $keepData = [
+       'compressionType', 
+    ];
 
     // Add converted items to the queue for the process
-    $queueController = new QueueController(); 
-   $result = $queueController->addItemToQueue($imageObj, $args );
- //   $this->enqueueItem($imageObj);
+    // @TODO!  The queueController here resets any bulk statii going on. Somehow for redoing tasks / adding items should use the current q / get data from QueueController calling
+    $queueController = $this->getQueueController();
+    $result = $queueController->addItemToQueue($imageObj, $keepData );
+ 
+
     Log::addTemp('Result result PNG2JPG', $result);
     return $bool;
   }
@@ -189,11 +194,11 @@ class ActionController extends OptimizerBase
   protected function reoptimizeItem(QueueItem $queueItem)
   {
     
-    $item_id = $queueItem->item_id; 
-    $item_type = $queueItem->imageModel->get('type');
+    //$item_id = $queueItem->item_id; 
+    //$item_type = $queueItem->imageModel->get('type');
     $bool = $this->restoreItem($queueItem);
 
-    $compressionType = $queueItem->data()->compressionType; 
+  //  $compressionType = $queueItem->data()->compressionType; 
 
     if (true == $bool) // successful restore.
     {
@@ -209,27 +214,40 @@ class ActionController extends OptimizerBase
 
         
         // Hard reload since metadata probably removed / changed but still loaded, which might enqueue wrong files.
-        $imageModel = $fs->getImage($item_id, $item_type, false);
+        // $imageModel = $fs->getImage($item_id, $item_type, false);
 
-          $queueController = new QueueController();
+        //  $queueController = new QueueController();
 
-          $args = ['action' => 'optimize', 'compressionType' => $compressionType];
+        //  $args = ['action' => 'optimize', 'compressionType' => $compressionType];
 
-          if (property_exists($queueItem->data(), 'smartcrop'))
+        /*  if (! is_null($queueItem->data()->smartcrop))
           {
              $args['smartcrop'] = $queueItem->data()->smartcrop;
-          }
+          } */
 
           // This is a user triggered thing. If the whole thing is user excluxed, but one ones this, then ok.
-          if (false === $imageModel->isProcessable() && true === $imageModel->isUserExcluded())
+         /* if (false === $imageModel->isProcessable() && true === $imageModel->isUserExcluded())
           {
             $args['forceExclusion'] = true;
 //            $qItem->data()->forceExclusion = true; 
-          }
+          } */
+
+          $keepData = [
+               'compressionType', 
+               'smartcrop', 
+               'forceExclusion' => true, 
+          ]; 
+
+          $result = $this->finishItemProcess($queueItem, $keepData);
+
           
-          $result = $queueController->addItemToQueue($imageModel, $args);
+          //$result = $queueController->addItemToQueue($imageModel, $args);
 
           return $result;
+    }
+    else
+    {
+      Log::addError('Restore Item returned false!');
     }
 
    return $bool;
@@ -294,7 +312,7 @@ class ActionController extends OptimizerBase
 
          $queueItem->newDumpAction();
 
-        $api = ApiController::getInstance(); //$queueItem->getAPIController();
+         $api = ApiController::getInstance(); //$queueItem->getAPIController();
          $api->dumpMediaItem($queueItem);
       }
 
