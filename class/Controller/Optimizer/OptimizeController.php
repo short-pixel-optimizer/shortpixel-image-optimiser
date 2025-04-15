@@ -453,6 +453,10 @@ class OptimizeController extends OptimizerBase
       } elseif ($image['webp']['status'] == ApiController::STATUS_OPTIMIZED_BIGGER) {
         $item_files[$imageName]['webp'] = ApiController::STATUS_OPTIMIZED_BIGGER;
       }
+      elseif ($image['webp']['status'] == ApiController::STATUS_NOT_COMPATIBLE) {
+       $item_files[$imageName]['webp'] = ApiController::STATUS_NOT_COMPATIBLE;
+      }
+      //STATUS_NOT_COMPATIBLE
 
       if (!isset($item_files[$imageName]['avif']) && $image['avif']['status'] == ApiController::STATUS_SUCCESS) {
         $tempFile = $downloadHelper->downloadFile($image['avif']['url']);
@@ -462,7 +466,9 @@ class OptimizeController extends OptimizerBase
         }
       } elseif ($image['avif']['status'] == ApiController::STATUS_OPTIMIZED_BIGGER) {
         $item_files[$imageName]['avif'] = ApiController::STATUS_OPTIMIZED_BIGGER;
-
+      }
+      elseif ($image['avif']['status'] == ApiController::STATUS_NOT_COMPATIBLE) {
+        $item_files[$imageName]['avif'] = ApiController::STATUS_NOT_COMPATIBLE;
       }
     }
 

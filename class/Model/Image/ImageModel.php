@@ -725,7 +725,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 						$originalSize = $this->getFileSize();
 					}
 
-          if ($status == APIController::STATUS_UNCHANGED || $status == APIController::STATUS_OPTIMIZED_BIGGER)
+          if ($status == APIController::STATUS_UNCHANGED || 
+            $status == APIController::STATUS_OPTIMIZED_BIGGER || 
+            $status = APIController::STATUS_NOT_COMPATIBLE)
           {
             $copyok = true;
             $optimizedSize = $this->getFileSize();
@@ -850,6 +852,10 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 						 {
 							  $this->setMeta('webp', self::FILETYPE_BIGGER);
 						 }
+             elseif ($downloadResult['webp']['status'] == APIController::STATUS_NOT_COMPATIBLE)
+						 {
+							  $this->setMeta('webp', self::FILETYPE_BIGGER);
+						 }
 					}
 
           if (isset($downloadResult['avif']) && isset($downloadResult['avif']['file'])) // check if there is webp with same filename
@@ -867,6 +873,10 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
              if ($downloadResult['avif']['status'] == APIController::STATUS_OPTIMIZED_BIGGER)
 						 {
 								$this->setMeta('avif', self::FILETYPE_BIGGER);
+						 }
+             elseif ($downloadResult['avif']['status'] == APIController::STATUS_NOT_COMPATIBLE)
+						 {
+							  $this->setMeta('avif', self::FILETYPE_BIGGER);
 						 }
 					}
     }

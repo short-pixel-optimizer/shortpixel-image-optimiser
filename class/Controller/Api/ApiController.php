@@ -410,7 +410,11 @@ Log::addTemp('API API RESPONSE', $APIresponse);
 			$type = "WebP" . $fileType;
 			$size = "WebP" . $fileSize;
 
-			if ($fileData->$type != 'NA') {
+			if ($fileData->$type == 'NC')
+			{
+				 $image['webp']['status'] = self::STATUS_NOT_COMPATIBLE; 
+			}
+			elseif ($fileData->$type != 'NA') {
 				$image['webp']['url'] = $fileData->$type;
 				$image['webp']['size'] = $fileData->$size;
 				if (false === $this->checkFileSizeMargin($checkFileSize, $fileData->$size)) {
@@ -424,7 +428,11 @@ Log::addTemp('API API RESPONSE', $APIresponse);
 			$type = "AVIF" . $fileType;
 			$size = "AVIF" . $fileSize;
 
-			if ($fileData->$type != 'NA') {
+			if ($fileData->$type == 'NC')
+			{
+				 $image['avif']['status'] = self::STATUS_NOT_COMPATIBLE; 
+			}
+			elseif ($fileData->$type != 'NA') {
 				$image['avif']['url'] = $fileData->$type;
 				$image['avif']['size'] = $fileData->$size;
 				if (false === $this->checkFileSizeMargin($checkFileSize, $fileData->$size)) {

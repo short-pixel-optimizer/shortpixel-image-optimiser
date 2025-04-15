@@ -40,6 +40,7 @@ abstract class RequestManager
  // const STATUS_SEARCHING = -8; // when the Queue is looping over images, but in batch none were   found.
  const STATUS_OPTIMIZED_BIGGER = -9;
  const STATUS_CONVERTED = -10;
+ const STATUS_NOT_COMPATIBLE = -11;
 
   const STATUS_QUEUE_FULL = -404;
   const STATUS_MAINTENANCE = -500;
