@@ -281,7 +281,7 @@ class DirectoryModel extends \ShortPixel\Model
         try {
           $result = @mkdir($this->path, $permission , true);
         }
-        catch (Exception $e)
+        catch (\Exception $e)
         {
           Log::addWarning('Mkdir failed on ' . $this->path, $e);
         }

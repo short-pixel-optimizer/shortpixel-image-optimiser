@@ -118,7 +118,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			$args['return'] = 'ret_img';
 		}
 
-		$compressionArg = 'q_orig';
+		$compressionArg = 'q_cdnize';
 
 		// Perhaps later if need to override in webp/avif check
 		$args['compression'] = $compressionArg;
