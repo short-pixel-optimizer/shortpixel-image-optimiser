@@ -13,7 +13,7 @@ use ShortPixel\Controller\AjaxController as AjaxController;
 use ShortPixel\Controller\AdminController as AdminController;
 use ShortPixel\Controller\ImageEditorController as ImageEditorController;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
-
+use ShortPixel\Controller\FileSystemController;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 use ShortPixel\NextGenController as NextGenController;
 
@@ -113,6 +113,10 @@ class ShortPixelPlugin {
 		return Model\EnvironmentModel::getInstance();
 	}
 
+	/** Get the SPIO FileSystemController
+	 * 
+	 * @return FileSystemController 
+	 */
 	public function fileSystem() {
 		return new Controller\FileSystemController();
 	}

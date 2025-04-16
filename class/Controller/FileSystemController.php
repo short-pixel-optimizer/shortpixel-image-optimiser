@@ -125,7 +125,10 @@ Class FileSystemController extends \ShortPixel\Controller
 				}
 		}
 
-    /** Gets a custom Image Model without being in the database. This is used to check if path is a proper customModel path ( not mediaLibrary ) and see if the file should be included per excusion rules */
+    /** Gets a custom Image Model without being in the database. This is used to check if path is a proper customModel path ( not mediaLibrary ) and see if the file should be included per excusion rules 
+     * 
+     * @return CustomImageModel 
+    */
     public function getCustomStub( $path, $load = true)
     {
         $imageObj = new CustomImageModel(0);

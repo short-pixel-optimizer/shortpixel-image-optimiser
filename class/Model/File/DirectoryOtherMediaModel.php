@@ -311,7 +311,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
       $fs = \wpSPIO()->filesystem();
       $filter = ($time > 0)  ? array('date_newer' => $time) : array();
-      $filter['exclude_files'] = array('.webp', '.avif');
+      $filter['exclude_files'] = array('.avif');
 			$filter['include_files'] = ImageModel::PROCESSABLE_EXTENSIONS;
 
       $files = $fs->getFilesRecursive($this, $filter);
@@ -515,11 +515,10 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
   /** This function is called by OtherMediaController / RefreshFolders. Other scripts should not call it
   * @public
-  * @param Array of CustomMediaImageModel stubs.
+  * @param Array CustomMediaImageModel stubs array.
   */
   public function addImages($files) {
 
-      global $wpdb;
 			if ( apply_filters('shortpixel/othermedia/addfiles', true, $files, $this) === false)
 			{
 				 return false;
@@ -531,7 +530,6 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
       $fs = \wpSPIO()->filesystem();
 			$updated = false;
-
 
       foreach($files as $fileObj)
       {
@@ -576,6 +574,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
              }
           }
           else {
+            Log::addTemp('Not processable', $imageObj->getProcessableReason());
           }
 
       }

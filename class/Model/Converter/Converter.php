@@ -107,11 +107,11 @@ abstract class Converter
 				$converter = self::getConverterByExt($extension, $imageModel);
 
 				// No Support (yet)
-				if ($imageModel->get('type') == 'custom')
+				/*if ($imageModel->get('type') == 'custom')
 				{
 					Log::addInfo('Converter fail - no support for custom types');
 					return false;
-				}
+				} */
 
 				// Second option for conversion is image who have been placeholdered.
 				if (true === $imageModel->getMeta()->convertMeta()->hasPlaceHolder() && false === $imageModel->getMeta()->convertMeta()->isConverted() && ! is_null($imageModel->getMeta()->convertMeta()->getFileFormat()))

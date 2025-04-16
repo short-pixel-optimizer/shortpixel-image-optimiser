@@ -19,8 +19,8 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
     protected $type = 'custom';
 
-    protected $thumbnails = array(); // placeholder, should return empty.
-    protected $retinas = array(); // placeholder, should return empty.
+    protected $thumbnails = []; // placeholder, should return empty.
+    protected $retinas = []; // placeholder, should return empty.
 
     protected $in_db = false;
     protected $is_stub = false;
@@ -39,11 +39,6 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         if ($id > 0)
 				{
           $bool = $this->loadMeta();
-					/*if ($bool)
-					{
-				  	$this->setWebp();
-				  	$this->setAvif();
-					} */
 				}
         else
         {

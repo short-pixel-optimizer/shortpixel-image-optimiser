@@ -69,7 +69,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	/** @var array */
 	protected $forceSettings = array();  // option derives from setting or otherwise, request to be forced upon via UI to use specific value.
 
-	const PROCESSABLE_EXTENSIONS = array('jpg', 'jpeg', 'gif', 'png', 'pdf', 'bmp', 'tiff', 'tif');
+	const PROCESSABLE_EXTENSIONS = array('jpg', 'jpeg', 'gif', 'png', 'pdf', 'bmp', 'tiff', 'tif', 'webp');
 
 
 	public function __construct($post_id, $path)

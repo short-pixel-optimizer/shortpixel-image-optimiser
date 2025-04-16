@@ -208,9 +208,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 					{
 						 $optimizeData = $imageObj->getOptimizeData();
 						 $urls = $optimizeData['urls'];
-
 					}
-
 
 					$thumbnails = $imageObj->get('thumbnails');
 					$processable = ($imageObj->isProcessable()) ? '<span class="green">Yes</span>' : '<span class="red">No</span> (' . $imageObj->getReason('processable') . ')';
