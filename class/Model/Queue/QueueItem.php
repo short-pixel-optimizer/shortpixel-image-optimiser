@@ -322,12 +322,11 @@ class QueueItem
             'debug_active' => false, // prevent write actions if called via debugger
         ); */
   
-
-      if (false === property_exists($this->data, 'compressionType'))
+      if (is_null($this->data()->compressionType))
       {
-         $this->data->compressionType = \wpSPIO()->settings()->compressionType;
+         $this->data()->compressionType = \wpSPIO()->settings()->compressionType;
       }
-      if (true  === property_exists($this->data, 'smartcrop'))
+      if (is_null($this->data()->smartcrop))
       {
          $imageModel->doSetting('smartcrop', $this->data()->smartcrop);
       }

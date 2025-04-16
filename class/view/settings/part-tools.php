@@ -77,6 +77,24 @@ $queueRunning = $bulk->isAnyBulkRunning();
 
     </settinglist>
 
+    <h3><?php _e('Settings import / export', 'shortpixel-image-optimiser'); ?></h3>
+    <settingslist>
+      <setting>
+        <name><?php _e('Export all settings', 'shortpixel-image-optimiser'); ?></name>
+        <content>
+          <button></button>
+        </content>
+      </setting>
+      <setting>
+        <name><?php _e('Import settings', 'shortpixel-image-optimiser'); ?></name>
+        <content>
+            <input type="file" name="import_file" />    
+            <button>Bla</button>
+        </content>
+        <warning><message>This will remove all current settings!</message></warning>
+      
+      </setting>
+    </settingslist>
 
 		<hr />
 
