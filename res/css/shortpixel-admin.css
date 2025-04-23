@@ -561,10 +561,11 @@ body.debug-model-active {
   line-height: 1;
   margin: 8px 0;
 }
-.shortpixel-ai-interface img {
+.shortpixel-ai-interface .shortpixel-ai-icon {
   vertical-align: middle;
   height: 20px;
   margin-top: -1px;
+  filter: brightness(0) saturate(100%);
 }
 .shortpixel-ai-interface .shortpixel-alt-messagebox {
   margin: 4px 0;

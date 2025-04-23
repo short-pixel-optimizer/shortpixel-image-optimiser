@@ -169,12 +169,14 @@
   line-height: 1; 
   margin: 8px 0; 
 
-  img 
+  .shortpixel-ai-icon 
   {
      vertical-align: middle;
      height: 20px;
      margin-top: -1px;
+     filter: $filter_black;
   }
+
   .shortpixel-alt-messagebox
   {
      margin: 4px 0;

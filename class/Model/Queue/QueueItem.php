@@ -60,13 +60,6 @@ class QueueItem
       {
           $this->setData($name, $value);
       }
-      /*
-      if (is_array($data)) {
-         $this->data = (object) $data;
-      } elseif (is_object($data)) {
-         $this->data = $data;
-      } */
-
    }
 
    public function setData($name, $value)
@@ -208,6 +201,14 @@ class QueueItem
       $this->item_count = 1;
    }
 
+   public function getAltDataAction()
+   {
+       $this->newAction(); 
+       $this->data->action = 'getAltData'; 
+       
+       $this->item_count = 0; 
+   }
+
    public function newReOptimizeAction($args = [])
    {
       $this->newAction(); 
@@ -311,6 +312,8 @@ class QueueItem
       $this->data->action = 'dumpItem';
 
    }
+
+
 
    public function newOptimizeAction()
    {
@@ -443,6 +446,7 @@ class QueueItem
          break;
          case 'requestAlt': // @todo Check if this is correct action name,
          case 'retrieveAlt':
+         case 'getAltData': 
             $api = OptimizeAiController::getInstance();
             break;
          case 'restore':

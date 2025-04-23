@@ -813,12 +813,10 @@ class SettingsViewController extends \ShortPixel\ViewController
               if (true === $post_useCDN)
               {
                  $controller->registerDomain(); 
-                 Log::addTemp('@todo here activate CDN DOMAIN'); 
               }
               else{
-                
-                $controller->registerDomain(['action' => 'deregister']);
-                 Log::addTemp('@todo Here Deactivate CDN DOMAIN');
+                // Deregister off for now.
+               // $controller->registerDomain(['action' => 'deregister']);
               }
           }
 

@@ -1,6 +1,5 @@
 <?php
 namespace ShortPixel;
-use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Helper\UiHelper as UiHelper;
 
@@ -18,7 +17,6 @@ if ( isset($_GET['noheader']) ) {
 $this->loadView('custom/part-othermedia-top');
 
 ?>
-
 
 <div class='extra-heading top'>
   <span>&nbsp;</span>

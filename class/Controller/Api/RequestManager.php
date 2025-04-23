@@ -201,8 +201,12 @@ abstract class RequestManager
       return $result;
   }
 
-  /** Returns a success status. This is succeseption, each file gives it's own status, bundled. */
-  /* @param $data Array sends the data to be included in the success result.
+  /** Returns a success status. This is succeseption, each file gives it's own status, bundled. 
+
+  @param array $data sends the data to be included in the success result.
+  @param int $status Status code of the return ( success by default ) 
+  @param string $message Message to add to the result. 
+  @return Array The result array 
   */
   protected function returnSuccess($data, $status = self::STATUS_SUCCESS, $message = false)
   {

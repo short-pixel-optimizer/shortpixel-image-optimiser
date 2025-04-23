@@ -16,6 +16,11 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		if (actionEl !== null)
 			actionEl.addEventListener('click', this.BulkActionEvent.bind(this));
 	   
+		this.FetchAltView();
+	}
+
+	FetchAltView()
+	{
 		// edit media screen
 		var attachmentAlt = document.getElementById('attachment_alt'); 
 		if (null !== attachmentAlt)
@@ -25,9 +30,18 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			{
 				 return; 
 			}
-			this.AttachAiInterface(input_post_id.value, attachmentAlt);
-		}
 
+			var data = {
+				id: input_post_id.value,
+				type: 'media',
+				screen_action: 'ai/getAltData',
+			}
+			data.callback = 'shortpixel.AttachAiInterface';
+			this.processor.AjaxRequest(data);
+
+			window.addEventListener('shortpixel.AttachAiInterface', this.AttachAiInterface.bind(this), {'once' : true});
+		}
+		 
 	}
 
 	RenderItemView(e) {
@@ -282,19 +296,25 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 	}
 
 	// It's not possible via hooks / server-side, so attach the AI interface HTML to where it should be attached. 
-	AttachAiInterface(id, element)
+	AttachAiInterface(event)
 	{
-		var label = this.strings.ai_label; 
-		var button_label = this.strings.ai_button_label;
+		
+		var data = event.detail.media; 	
+		var element = document.getElementById('attachment_alt'); 
+		console.log('Attach AI IF', data); 
+		//return; 
+		//var label = this.strings.ai_label; 
+		//var button_label = this.strings.ai_button_label;
 		
 	
-		var icon = this.strings.icon_url + '/eye.svg';  // This is a temp cheat, add to SCSS if permanent.
+		//var robo_icon = this.strings.icon_url + '/robo.svg';  // This is a temp cheat, add to SCSS if permanent.
+		//var ai_icon = this.strings.icon_url + '/'
 		var wrapper = document.createElement('div');
 		wrapper.classList.add('shortpixel-ai-interface',element.getAttribute('id'));
 
 		//wrapper.innerHTML  = '<label>' + label + '</label><a href="javascript:window.ShortPixelProcessor.screen.RequestAlt(' + id + ')" class="button button-secondary">' + button_label + '</a><div class="shortpixel-alt-messagebox" id="shortpixel-ai-messagebox-' + id + '">&nbsp;</div>';
-		wrapper.innerHTML  = '<a href="javascript:window.ShortPixelProcessor.screen.RequestAlt(' + id + ')" class="button button-secondary"><img src="' + icon + '"> ' + button_label + '</a><div class="shortpixel-alt-messagebox" id="shortpixel-ai-messagebox-' + id + '">&nbsp;</div>';
-	  		
+		//wrapper.outerHTML  = data.snippet;
+	  	wrapper.innerHTML = data.snippet;	
 		element.after(wrapper);
 
 	}

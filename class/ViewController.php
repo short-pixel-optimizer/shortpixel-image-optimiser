@@ -133,6 +133,40 @@ class ViewController extends Controller
 
   }
 
+  /** Manually add data to this viewcontroller
+   * 
+   * @param array $data  Data to add. 
+   * @return void 
+   */
+  public function addData($data)
+  {
+      $this->data = array_merge($this->data, $data);
+  }
+
+  /** Loads a view and then returns it as html string. Handy for passing back snippets in JSON and other things. 
+   * 
+   * @param string $template Name of template
+   * @return string HTML string of view loaded.  
+   */
+  public function returnView($template = null)
+  {
+     $bool = ob_start();
+     $html = ''; 
+
+     if (true === $bool)
+     {
+        $this->loadView($template, false); 
+        $html = ob_get_contents();
+        ob_end_clean();
+     }
+     else
+     {
+       Log::addError('Output buffer failed requesting returnView!' . $template);
+     }
+
+     return $html; 
+  }
+
   protected function printInlineHelp($url)
   {
 

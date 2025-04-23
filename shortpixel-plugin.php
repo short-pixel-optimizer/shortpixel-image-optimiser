@@ -402,9 +402,7 @@ class ShortPixelPlugin {
 			'fatalErrorStop' => __('ShortPixel has encounted multiple errors and has now stopped processing', 'shortpixel-image-optimiser'),
 			'fatalErrorStopText' => __('No items are being processed. To try again after solving the issues, please reload the page ', 'shortpixel-image-optimiser'),
 			'fatalError500' => __('A fatal error HTTP 500 has occurred. On the bulk screen, this may be caused by the script running out of memory. Check your error log, increase memory or disable heavy plugins.'),
-			'ai_label' => __('ShortPixel Ai Text', 'shortpixel-image-optimiser'), 
-			'ai_button_label' => __('Shortpixel AI : Generate Alt', 'shortpixel-image-optimiser'), 
-			'icon_url' => plugins_url( '/res/images/icon/', SHORTPIXEL_PLUGIN_FILE )
+
 		);
 
 		$screen_localize_custom = array( // Custom Screen

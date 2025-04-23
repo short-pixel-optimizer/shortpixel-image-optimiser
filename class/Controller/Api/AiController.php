@@ -142,9 +142,10 @@ class AiController extends RequestManager
                     }
                     else
                     {
-                    $qItem->addResult(['retrievedText' => $text]); 
-
-                      return $this->returnSuccess(['retrievedText' => $text], RequestManager::STATUS_SUCCESS, __('Retrieved AI Alt Text', 'shortpixel-image-optimiser'));
+                    //$qItem->addResult(['retrievedText' => $text]); 
+                    return $this->handleSuccess($text, $qItem);
+                    
+                    //  return $this->returnSuccess(['retrievedText' => $text], RequestManager::STATUS_SUCCESS, __('Retrieved AI Alt Text', 'shortpixel-image-optimiser'));
                     }
 
                   break;
@@ -153,11 +154,20 @@ class AiController extends RequestManager
                
             }
         }
-
-        
       return $this->returnFailure(0, 'No remote ID?');
+    }
 
-      
+    /**
+     * Undocumented function
+     *
+     * @param string $text
+     * @param object $qItem
+     * @return array Result array via requestManager 
+     */
+    protected function handleSuccess($text, QueueItem $qItem)
+    {
+      $qItem->addResult(['retrievedText' => $text]); 
+      return $this->returnSuccess(['retrievedText' => $text], RequestManager::STATUS_SUCCESS, __('Retrieved AI Alt Text', 'shortpixel-image-optimiser')); ; 
     }
 
     protected function doRequest(QueueItem $item, $requestParameters)

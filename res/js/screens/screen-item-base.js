@@ -25,6 +25,8 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 		{
 			return false;
 		}
+
+
 		// This is final, not more messing with this. In results (multiple) defined one level higher than result object, if single, it's in result.
 		var item_id = resultItem.item_id;
 		var message = resultItem.message;
@@ -33,6 +35,12 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 		// This is the reporting element ( all the data, via getItemView? )
 		var element = this.GetElement(resultItem, 'data');
 		var apiName = (typeof resultItem.apiName !== 'undefined') ? resultItem.apiName : 'optimize'; 
+
+		// Don't put processing messages, only errors.
+		if (apiName == 'ai')
+		{
+			return; 
+		}
 
 		if (typeof message !== 'undefined') {
 			var isError = false;
@@ -253,7 +261,7 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 			this.UpdateMessage(result, result.message, true);
 		}
 
-		if (typeof result.item_id !== 'undefined') {
+		if (typeof result.item_id !== 'undefined' && result.apiName !== 'ai') {
 			this.processor.LoadItemView({ id: result.item_id, type: 'media' });
 		}
 	}
@@ -309,8 +317,21 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 
 		this.SetMessageProcessing(id, 'ai');
 		this.processor.AjaxRequest(data);
+	}
 
+	UndoAlt(id)
+	{
+		var data = {
+			id: id,
+			type: this.type,
+			'screen_action': 'ai/undoAlt',
+		}
 
+	/*	if (!this.processor.CheckActive())
+			data.callback = 'shortpixel.' + this.type + '.resumeprocessing'; */
+
+		//this.SetMessageProcessing(id, 'ai');
+		this.processor.AjaxRequest(data);
 	}
 
 	Optimize(id, force) {

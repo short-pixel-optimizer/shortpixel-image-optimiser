@@ -14,6 +14,7 @@ use ShortPixel\Controller\Api\RequestManager as RequestManager;
 use ShortPixel\Controller\Api\AiController;
 use ShortPixel\Controller\Queue\Queue;
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
+use ShortPixel\ViewController as ViewController;
 
 
 // Class for AI Operations.  In time split off OptimizeController / Optimize actions to a main queue runner seperately.
@@ -131,17 +132,38 @@ class OptimizeAiController extends OptimizerBase
           }
       }
 
+
       // Result for retrieveAlt
       if (property_exists($qItem->result(), 'retrievedText'))
       {
           $text = $qItem->result()->retrievedText; 
           $item_id = $qItem->item_id; 
+
+          $current_alt = get_post_meta($item_id, '_wp_attachment_image_alt', true);
+
+          $ai_metadata = get_post_meta($item_id, 'shortpixel_alt_requests', true); 
+
+          if (false === is_array($ai_metadata) || false === isset($ai_metadata['original_alt']) || $ai_metadata['original_alt'] = '')
+          {
+            $ai_metadata = [ 
+                'original_alt' => $current_alt, 
+            ];
+          }
+          $ai_metadata['result_alt'] = $text;
+
+          $bool = update_post_meta($item_id, 'shortpixel_alt_requests', $ai_metadata); 
+          
+          if (false === $bool)
+          {
+              Log::addWarn('Save alt requests failed? - ' . $item_id, $ai_metadata);
+          }
+          
           $bool = update_post_meta($item_id, '_wp_attachment_image_alt', $text);
 
-         if (false === $bool)
-         {
-             Log::addWarn('Failed to add alt text to postmeta?' . $item_id, $text);
-         }
+           if (false === $bool)
+           {
+               Log::addWarn('Failed to add alt text to postmeta?' . $item_id, $text);
+            }
 
           $qItem->addResult([
             'apiStatus' => RequestManager::STATUS_SUCCESS,
@@ -158,6 +180,67 @@ class OptimizeAiController extends OptimizerBase
 
   }
 
+  public function undoAltData(QueueItem $qItem)
+  {
+       $altData = $this->getAltData($qItem);
+       $item_id = $qItem->item_id;
+    
+       $bool = update_post_meta($item_id, '_wp_attachment_image_alt', $altData['original_alt']);
+
+       if (true === $bool)
+       {
+          $bool = delete_post_meta($item_id, 'shortpixel_alt_requests');
+       }
+
+       if (false === $bool)
+       {
+          Log::addError('Undo post meta removal failed?');
+       }
+
+       return $this->getAltData($qItem); 
+  }
+
+public function getAltData(QueueItem $qItem)
+{
+    $item_id = $qItem->item_id; 
+    $metadata = get_post_meta($item_id, 'shortpixel_alt_requests', true);
+    $current_alt = get_post_meta($item_id, '_wp_attachment_image_alt', true);
 
 
+    if (false === is_array($metadata))
+    {
+         $metadata = [
+            'original_alt' => false, 
+            'result_alt' => false, 
+            'snippet' => false, 
+         ];
+    }
+
+    $image_url = $qItem->imageModel->getUrl();
+
+    // Check if it's our data. 
+    $has_data = ($metadata['original_alt'] !== false && $metadata['result_alt'] !== false) ? true : false; 
+    if ($current_alt !== $metadata['result_alt'])
+    {
+         $has_data = false; 
+    }
+
+
+    $view = new ViewController();
+    $view->addData([
+            'item_id' => $item_id, 
+            'orginal_alt' => $metadata['original_alt'], 
+            'result_alt' => $metadata['result_alt'], 
+            'has_data' => $has_data, 
+            'image_url' => $image_url, 
+            'current_alt' => $current_alt, 
+        ]);
+
+    $metadata['snippet'] = $view->returnView('snippets/part-aitext');
+
+    return $metadata; 
 }
+
+
+
+} // class 

@@ -24,6 +24,7 @@ use ShortPixel\Model\AccessModel as AccessModel;
 // @todo This should probably become settingscontroller, for saving
 use ShortPixel\Controller\View\SettingsViewController as SettingsViewController;
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
+use ShortPixel\Model\Queue\QueueItem;
 
 // Class for containing all Ajax Related Actions.
 class AjaxController
@@ -241,6 +242,12 @@ class AjaxController
 			case 'ai/requestalt': 
 				$json = $this->requestAlt($json, $data);	
 			break; 
+			case 'ai/getAltData': 
+				$json = $this->getAltData($json, $data);
+			break; 
+			case 'ai/undoAlt':
+				$json = $this->undoAltData($json, $data);			
+			break;
 			case 'unMarkCompleted':
 				$json = $this->unMarkCompleted($json, $data);
 				break;
@@ -644,6 +651,48 @@ class AjaxController
 
 		return $json;
 	} 
+
+	protected function getAltData($json, $data)
+	{
+		 $id = $data['id'];
+		 $type = $data['type']; 
+
+		 $imageModel = $this->getMediaItem($id, $type); 
+		 $queueItem = new QueueItem(['imageModel' => $imageModel]);
+
+		 $queueItem->getAltDataAction(); 
+
+		 $api = $queueItem->getApiController('getAltData'); 
+
+		 $metadata = $api->getAltData($queueItem);
+
+		 $json->$type = (object) $metadata; 
+		 $json->$type->results = null;
+		 $json->status = true; 
+		 
+		 return $json;
+	}
+	
+	protected function undoAltData($json, $data)
+	{
+		$id = $data['id'];
+		$type = $data['type']; 
+
+		$imageModel = $this->getMediaItem($id, $type); 
+		$queueItem = new QueueItem(['imageModel' => $imageModel]);
+
+		$queueItem->getAltDataAction(); 
+
+		$api = $queueItem->getApiController('getAltData'); 
+
+		$metadata = $api->undoAltData($queueItem);
+
+		$json->$type = (object) $metadata; 
+		$json->$type->results = null;
+		$json->status = true; 
+		
+		return $json;
+	}
 
 	protected function finishBulk($json, $data)
 	{
