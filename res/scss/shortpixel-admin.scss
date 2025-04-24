@@ -175,8 +175,12 @@
      height: 20px;
      width: 20px;
      margin-top: -1px;
-     filter: $filter_black;
+     //filter: $filter_black;
 
+  }
+  .shortpixel-ai-caption
+  {
+    margin: 0 4px;
   }
   span {
     vertical-align: middle; 
