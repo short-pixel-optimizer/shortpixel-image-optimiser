@@ -173,8 +173,14 @@
   {
      vertical-align: middle;
      height: 20px;
+     width: 20px;
      margin-top: -1px;
      filter: $filter_black;
+
+  }
+  span {
+    vertical-align: middle; 
+    margin: 0 4px; 
   }
 
   .shortpixel-alt-messagebox

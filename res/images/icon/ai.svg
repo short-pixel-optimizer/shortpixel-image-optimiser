@@ -5,13 +5,6 @@
     height="24"
     fill="currentColor"
 >
-    <!-- Central Star -->
-    <path d="M12 2l2.39 7.26h7.61l-6.14 4.45 2.39 7.26L12 16.52l-6.25 4.45 2.39-7.26-6.14-4.45h7.61z"/>
-    
-    <!-- First Smaller Star -->
-    <path d="M16 10l1.5 1.5-1.5 1.5-1.5-1.5L16 10z" transform="translate(0, 0) scale(1)"/>
-    
-    <!-- Second Smaller Star -->
-    <path d="M16 10l1.5 1.5-1.5 1.5-1.5-1.5L16 10z" transform="translate(12, 0) scale(0.5)"/>
+    <path d="M12 2l1.5 4.5h4.5l-3.5 2.5 1.5 4.5-3.5-2.5-3.5 2.5 1.5-4.5-3.5-2.5h4.5z" />
+    <path d="M4 4l1.5 1.5L4 7l1.5-1.5L4 4zM20 20l-1.5-1.5L20 16l-1.5 1.5L20 20zM4 20l1.5-1.5L4 16l1.5 1.5L4 20zM20 4l-1.5 1.5L20 7l-1.5-1.5L20 4z" />
 </svg>
-

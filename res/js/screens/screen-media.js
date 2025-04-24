@@ -19,8 +19,36 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		this.FetchAltView();
 	}
 
-	FetchAltView()
+	FetchAltView(newAltText)
 	{
+
+		if (typeof newAltText !== 'undefined')
+		{
+			var inputs = [
+				'attachment_alt',  //edit-media 
+				'attachment-details-alt-text', // media library upload screen / image select
+				'attachment-details-two-column-alt-text',
+			
+			 ];
+	
+			for (var i = 0; i < inputs.length; i++)
+			{
+				   var altInput = document.getElementById(inputs[i]); 
+				   if (altInput !== null)
+				   {
+					   if (typeof altInput.value !== 'undefined')
+					   {
+						   altInput.value = newAltText; 	
+					   }
+					   else
+					   {
+						   altInput.innerText = newAltText; 	
+					   }
+					   
+				   }
+					   
+			}
+		}
 		// edit media screen
 		var attachmentAlt = document.getElementById('attachment_alt'); 
 		if (null !== attachmentAlt)
@@ -39,7 +67,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			data.callback = 'shortpixel.AttachAiInterface';
 			this.processor.AjaxRequest(data);
 
-			window.addEventListener('shortpixel.AttachAiInterface', this.AttachAiInterface.bind(this), {'once' : true});
+			window.addEventListener('shortpixel.AttachAiInterface', this.AttachAiInterface.bind(this), {once: true});
 		}
 		 
 	}
@@ -302,18 +330,18 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		var data = event.detail.media; 	
 		var element = document.getElementById('attachment_alt'); 
 		console.log('Attach AI IF', data); 
-		//return; 
-		//var label = this.strings.ai_label; 
-		//var button_label = this.strings.ai_button_label;
-		
-	
-		//var robo_icon = this.strings.icon_url + '/robo.svg';  // This is a temp cheat, add to SCSS if permanent.
-		//var ai_icon = this.strings.icon_url + '/'
-		var wrapper = document.createElement('div');
-		wrapper.classList.add('shortpixel-ai-interface',element.getAttribute('id'));
 
-		//wrapper.innerHTML  = '<label>' + label + '</label><a href="javascript:window.ShortPixelProcessor.screen.RequestAlt(' + id + ')" class="button button-secondary">' + button_label + '</a><div class="shortpixel-alt-messagebox" id="shortpixel-ai-messagebox-' + id + '">&nbsp;</div>';
-		//wrapper.outerHTML  = data.snippet;
+		var wrapper = document.getElementById('shortpixel-ai-wrapper');
+
+		if (null !== wrapper) // remove previous controls
+		{
+			wrapper.remove();
+		}
+
+		var wrapper = document.createElement('div');
+		wrapper.id = 'shortpixel-ai-wrapper'; 
+		wrapper.classList.add('shortpixel-ai-interface',element.getAttribute('id'));
+		
 	  	wrapper.innerHTML = data.snippet;	
 		element.after(wrapper);
 

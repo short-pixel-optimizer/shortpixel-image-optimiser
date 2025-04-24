@@ -36,18 +36,14 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 		var element = this.GetElement(resultItem, 'data');
 		var apiName = (typeof resultItem.apiName !== 'undefined') ? resultItem.apiName : 'optimize'; 
 
-		// Don't put processing messages, only errors.
-		if (apiName == 'ai')
-		{
-			return; 
-		}
 
-		if (typeof message !== 'undefined') {
+		if (typeof message !== 'undefined' && apiName !== 'ai') {
 			var isError = false;
 			if (resultItem.is_error == true)
 				isError = true;
 			this.UpdateMessage(resultItem, message, isError);
 		}
+
 		if (element !== null && apiName !== 'ai')  {
 			element.innerHTML = '';
 			//  var event = new CustomEvent('shortpixel.loadItemView', {detail: {'type' : type, 'id': result.id }}); // send for new item view.
@@ -63,31 +59,10 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 
 		if ('ai' === apiName && typeof resultItem.retrievedText !== 'undefined')
 		{
-			// Possible alt inputs across screens
-			 var inputs = [
-				'attachment_alt',  //edit-media 
-				'attachment-details-alt-text', // media library upload screen / image select
-				'attachment-details-two-column-alt-text',
+			console.log('RetrievedText!');
 			
-			 ];
-
-			 for (var i = 0; i < inputs.length; i++)
-			 {
-				var altInput = document.getElementById(inputs[i]); 
-				if (altInput !== null)
-				{
-					if (typeof altInput.value !== 'undefined')
-					{
-						altInput.value = resultItem.retrievedText; 	
-					}
-					else
-					{
-						altInput.innerText = resultItem.retrievedText; 	
-					}
-					
-				}
-					
-			 }
+			// Not optimal
+			 this.FetchAltView(resultItem.retrievedText);
 		}
 
 		return false;
@@ -180,20 +155,28 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 
 	// Show a message that an action has started.
 	SetMessageProcessing(id, apiName) {
-		var message = this.strings.startAction;
 
-		var loading = document.createElement('img');
-		loading.width = 20;
-		loading.height = 20;
-		loading.src = this.processor.GetPluginUrl() + '/res/img/bulk/loading-hourglass.svg';
-
-		message += loading.outerHTML;
-		
 		if (typeof apiName === 'undefined')
-		{
-			var apiName = 'optimize'; 
-		}
+			{
+				var apiName = 'optimize'; 
+			}
 
+		if (apiName == 'ai')
+		{
+			var message = this.strings.startActionAI;
+		}	
+		else {
+			var message = this.strings.startAction;
+			var loading = document.createElement('img');
+			loading.width = 20;
+			loading.height = 20;
+			loading.src = this.processor.GetPluginUrl() + '/res/img/bulk/loading-hourglass.svg';
+	
+			message += loading.outerHTML;
+	
+		}	
+
+		
 		var item = {
 			item_id: id, 
 			apiName: apiName,
@@ -325,7 +308,16 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 			id: id,
 			type: this.type,
 			'screen_action': 'ai/undoAlt',
+			'callback': 'shortpixel.HandleUndoAlt',
 		}
+
+		window.addEventListener('shortpixel.HandleUndoAlt', function (event) {
+			var data = event.detail.media;
+			var replaceAlt = data.original_alt
+	
+			this.FetchAltView(replaceAlt);
+
+		}.bind(this), {once: true});
 
 	/*	if (!this.processor.CheckActive())
 			data.callback = 'shortpixel.' + this.type + '.resumeprocessing'; */
@@ -367,6 +359,16 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 		data.screen_action = 'unMarkCompleted';
 
 		this.processor.AjaxRequest(data);
+	}
+
+	FetchAltView()
+	{
+		 console.error('not implemented for this view!');
+	}
+	
+	AttachAiInterface()
+	{
+		 console.error('not implemented for this view!');
 	}
 
 } // class

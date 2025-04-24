@@ -206,15 +206,15 @@ public function getAltData(QueueItem $qItem)
     $metadata = get_post_meta($item_id, 'shortpixel_alt_requests', true);
     $current_alt = get_post_meta($item_id, '_wp_attachment_image_alt', true);
 
-
     if (false === is_array($metadata))
     {
          $metadata = [
-            'original_alt' => false, 
+            'original_alt' => $current_alt, 
             'result_alt' => false, 
             'snippet' => false, 
          ];
     }
+
 
     $image_url = $qItem->imageModel->getUrl();
 
@@ -237,6 +237,8 @@ public function getAltData(QueueItem $qItem)
         ]);
 
     $metadata['snippet'] = $view->returnView('snippets/part-aitext');
+
+    $metadata['action'] = $qItem->data()->action;
 
     return $metadata; 
 }

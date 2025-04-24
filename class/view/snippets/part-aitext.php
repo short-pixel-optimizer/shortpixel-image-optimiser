@@ -12,7 +12,7 @@ if (false === $has_data):
         <label></label>
         <a class='button button-secondary' href="javascript:window.ShortPixelProcessor.screen.RequestAlt(<?php echo $item_id ?>)">
 			<img class="shortpixel-ai-icon ai" src="<?php echo $ai_icon ?>">	
-			<?php _e('AI Captioning - by ShortPixel', 'shortpixel-image-optimiser') ?>
+			<span><?php _e('AI Captioning - by ShortPixel', 'shortpixel-image-optimiser') ?></span>
 			<img class="shortpixel-ai-icon robo" src="<?php echo $robo_icon ?>">
 		</a>
         <div class="shortpixel-alt-messagebox" id="shortpixel-ai-messagebox-<?php echo $item_id ?>">&nbsp;</div>
