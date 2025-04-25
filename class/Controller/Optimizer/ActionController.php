@@ -181,7 +181,6 @@ class ActionController extends OptimizerBase
     $result = $queueController->addItemToQueue($imageObj, $keepData );
  
 
-    Log::addTemp('Result result PNG2JPG', $result);
     return $bool;
   }
 

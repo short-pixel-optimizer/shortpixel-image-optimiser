@@ -128,10 +128,8 @@ class QueueController
       if (true === $bool)
       {
           $status = $optimizer->enQueueItem($qItem);
-          Log::addTemp('Enqueue With to ' . $queue->getQueueName(), $qItem->data());
           $this->lastQStatus = $status->qstatus;
           
-          Log::addTemp('Status', $status);
           // Not API status does it own messaging.
           if ($status->qstatus !== ApiController::STATUS_NOT_API)
           {

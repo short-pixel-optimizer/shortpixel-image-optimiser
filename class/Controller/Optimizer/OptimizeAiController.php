@@ -103,7 +103,6 @@ class OptimizeAiController extends OptimizerBase
 
   public function handleAPIResult(QueueItem $qItem)
   {
-      Log::addTemp('HandleApiResult', $qItem->result());
       $queue = $this->currentQueue;
 
       $qItem->addResult(['apiName' => $this->apiName]);
@@ -117,7 +116,13 @@ class OptimizeAiController extends OptimizerBase
       }
 
       // Result for requestAlt 
-      if (property_exists($qItem->result(), 'remote_id'))
+      $apiStatus = $qItem->result()->apiStatus; 
+
+      if ($apiStatus == RequestManager::STATUS_WAITING)
+      {
+        return; 
+      }
+      elseif (property_exists($qItem->result(), 'remote_id'))
       {
           $remote_id = $qItem->result()->remote_id;
       }
@@ -143,12 +148,15 @@ class OptimizeAiController extends OptimizerBase
 
           $ai_metadata = get_post_meta($item_id, 'shortpixel_alt_requests', true); 
 
-          if (false === is_array($ai_metadata) || false === isset($ai_metadata['original_alt']) || $ai_metadata['original_alt'] = '')
+          if (false === is_array($ai_metadata))
           {
-            $ai_metadata = [ 
-                'original_alt' => $current_alt, 
-            ];
+            $ai_metadata = []; 
           }
+         // if (false === is_array($ai_metadata) || false === isset($ai_metadata['original_alt']) || $ai_metadata['original_alt'] = '')
+        //  {
+            $ai_metadata['original_alt'] = $current_alt;
+            
+        // }
           $ai_metadata['result_alt'] = $text;
 
           $bool = update_post_meta($item_id, 'shortpixel_alt_requests', $ai_metadata); 
@@ -213,6 +221,19 @@ public function getAltData(QueueItem $qItem)
             'result_alt' => false, 
             'snippet' => false, 
          ];
+    }
+
+    // Check for changes
+    if ($metadata['result_alt'] !== false && $metadata['original_alt'] !== false)
+    {
+        // If both result / original are not the current, this indicates that the current alt has been manually changed and should replace our original alt. 
+        if ($metadata['result_alt'] !== $current_alt && $metadata['original_alt'] !== $current_alt)
+        {
+            $metadata['original_alt'] = $current_alt; 
+            $bool = update_post_meta($item_id, 'shortpixel_alt_requests', $metadata); 
+
+        }
+
     }
 
 

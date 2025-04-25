@@ -133,10 +133,28 @@ window.ShortPixelProcessor =
     AddBroadCastListener : function() // Sync between tabs :O 
     {
         var self = this; 
+        var window_origin = window.location.origin; 
         this.broadcaster = new BroadcastChannel('spio_processor');
         this.broadcaster.onmessage = function (event) {
 
+        if (window_origin !== event.origin)
+        {
+          console.warn('Broadcast - wrong origin');
+           return false; 
+        }
+        if (! event.originalTarget || event.originalTarget.name !== 'spio_processor')
+        {
+          console.log('Broadcast = Wrong target');
+          return false; 
+        }
+
+
           var data = event.data; 
+
+          if (data.imageItem && data.imageItem.apiName == 'ai')
+          {
+            return false; 
+          }
 
           if (data.reason === 'handleImage')
           {
@@ -521,7 +539,6 @@ window.ShortPixelProcessor =
          // Perhaps if optimization, the new stats and actions should be generated server side?
          // If there are items, give them to the screen for display of optimization, waiting status etc.
 				 var imageHandled = false;  // Only post one image per result-set to the ImageHandler (on bulk), to prevent flooding.
-//console.log('response', response, type, imageHandled);
 
          // @todo Make sure that .result and .results can be iterated the same.
 

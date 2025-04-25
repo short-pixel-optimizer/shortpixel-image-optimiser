@@ -65,7 +65,6 @@ class AiController extends RequestManager
         'blocking' => true,
       ];
 
-      Log::addTemp('RequestBody', $requestBody);
       $request = $this->getRequest($requestBody, $requestParameters);
       $this->doRequest($qItem, $request);
 
@@ -120,24 +119,38 @@ class AiController extends RequestManager
               $result = $apiData[0]; 
               $text = property_exists($result, 'Result') ? sanitize_text_field($result->Result) : null;
               $status = property_exists($result, 'Status') ? intval($result->Status) : -1; 
+              $error = property_exists($result, 'Error' && trim($result->Error) !== '') ? sanitize_text_field($result->Error) : false;
 
-              
+              if (is_null($text))
+              {
+                 Log::addWarn('Text came back as null?');
+
+              }
               $text = $this->filterResultText($text); 
               
               // Switch known Statii 
               switch ($status)
               {
                   case '-1':  // Error of some kind 
-                    $status = RequestManager::STATUS_FAIL; 
+                    $apiStatus = RequestManager::STATUS_FAIL; 
                     $message = property_exists($result, 'Error') ? sanitize_text_field($result->Error) : __('Unknown Ai Api Error occured', 'shortpixel-image-optimiser'); 
-                    return $this->returnFailure($status, $message); 
+                    return $this->returnFailure($apiStatus, $message); 
+                  break; 
+                  case '0':
+                      if (false !== $error)
+                      {
+                         return $this->returnFailure(RequestManager::STATUS_FAIL, $result->Error);
+                      }
+                  case '1':
+                  case '2':  // waiting for result. Perhaps. 
+                     return $this->returnOk(RequestManager::STATUS_WAITING, __('Waiting for result', 'shortpixel-image-optimiser'));
                   break; 
                   case '3':  // Success of some kind. 
                   default: 
-                    $status = RequestManager::STATUS_SUCCESS; 
-                    if (is_null($text) || strlen($text) == 0)
+                    $apiStatus = RequestManager::STATUS_SUCCESS; 
+                    if (is_null($text) || strlen($text) == 0 || $error !== false)
                     {
-                        $status = RequestManager::STATUS_FAIL; 
+                        $apiStatus = RequestManager::STATUS_FAIL; 
                         return $this->returnFailure(RequestManager::STATUS_FAIL, __('AI could not generate text for this image', 'shortpixel-image-optimiser'));
                     }
                     else

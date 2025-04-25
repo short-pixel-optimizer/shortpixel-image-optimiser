@@ -120,7 +120,6 @@ abstract class MediaLibraryConverter extends Converter
 			{
 				$attachment = get_post( $attach_id );
 				$new_metadata = wp_generate_attachment_metadata($attach_id, $newFile->getFullPath());
-				Log::addTemp('MediaLibraryConverter :: UpdateMetadata, Generating Metadata');
 			}
 			else { // when not regenarting the metadata, ie bmp
         $file = $metadata['file'];

@@ -271,7 +271,6 @@ class SpioCommandBase
 				}
 			}
 
-			Log::addTemp('QResult', $qresult);
 			// Result after optimizing items and such.
 			if (property_exists($qresult, 'results') && is_array($qresult->results)) {
 				foreach ($qresult->results as $result) {
@@ -542,9 +541,6 @@ class SpioCommandBase
 
 		];
 		$result = $queueController->addItemToQueue($imageObj, $args);
-
-		Log::addTemp('QueueRes', $result);
-
 
 		$this->displayResult($result, 'alttext');
 	}

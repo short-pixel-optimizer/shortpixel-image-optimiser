@@ -658,6 +658,13 @@ class AjaxController
 		 $type = $data['type']; 
 
 		 $imageModel = $this->getMediaItem($id, $type); 
+
+		 $this->checkImageAccess($imageModel);
+
+		 if (false === $imageModel)
+		 {
+
+		 }
 		 $queueItem = new QueueItem(['imageModel' => $imageModel]);
 
 		 $queueItem->getAltDataAction(); 

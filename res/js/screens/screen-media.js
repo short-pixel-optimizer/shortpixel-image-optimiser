@@ -6,6 +6,12 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 	isCustom = true;
 	isMedia = true;
 	type = 'media';
+	altInputNames = [
+		'attachment_alt',  //edit-media 
+		'attachment-details-alt-text', // media library upload screen / image select
+		'attachment-details-two-column-alt-text',
+	
+	 ];
 
 	Init() {
 		super.Init();
@@ -16,20 +22,38 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		if (actionEl !== null)
 			actionEl.addEventListener('click', this.BulkActionEvent.bind(this));
 	   
-		this.FetchAltView();
+		// This init only in edit-media and pass the ID for safety. 
+		if (document.getElementById('attachment_alt') !== null)
+		{
+			var altInput = document.getElementById('attachment_alt')
+			this.FetchAltView(undefined, altInput.value);
+		}
+
+		/*this.altInputNames = [
+			'attachment_alt',  //edit-media 
+			'attachment-details-alt-text', // media library upload screen / image select
+			'attachment-details-two-column-alt-text',
+		
+		 ]; */
 	}
 
-	FetchAltView(newAltText)
+	FetchAltView(newAltText, item_id)
 	{
+		var attachmentAlt = this.GetPageAttachmentAlt();
+		if (null === attachmentAlt) // No attach alt around
+		{
+			return; 
+		}
+		if (typeof item_id === 'undefined')
+		{
+			console.error('Item_id not passed');
+			return; 
+		}
+
 
 		if (typeof newAltText !== 'undefined')
 		{
-			var inputs = [
-				'attachment_alt',  //edit-media 
-				'attachment-details-alt-text', // media library upload screen / image select
-				'attachment-details-two-column-alt-text',
-			
-			 ];
+			var inputs = this.altInputNames;
 	
 			for (var i = 0; i < inputs.length; i++)
 			{
@@ -50,17 +74,14 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			}
 		}
 		// edit media screen
-		var attachmentAlt = document.getElementById('attachment_alt'); 
+		 // = document.getElementById('attachment_alt'); 
+
+
 		if (null !== attachmentAlt)
 		{
-			var input_post_id = document.getElementById('post_ID'); 
-			if (null === input_post_id)
-			{
-				 return; 
-			}
 
 			var data = {
-				id: input_post_id.value,
+				id: item_id,
 				type: 'media',
 				screen_action: 'ai/getAltData',
 			}
@@ -70,6 +91,19 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			window.addEventListener('shortpixel.AttachAiInterface', this.AttachAiInterface.bind(this), {once: true});
 		}
 		 
+	}
+
+	GetPageAttachmentAlt()
+	{
+		for (var i = 0; i < this.altInputNames.length; i++)
+			{
+				var attachmentAlt = document.getElementById(this.altInputNames[i]);
+				if (attachmentAlt !== null)
+				{
+					return attachmentAlt;
+				} 	
+			}
+		return null;
 	}
 
 	RenderItemView(e) {
@@ -278,8 +312,11 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				var html = this.doSPIORow(e.detail.media.itemView);
 				$spSpace.after(html);
 
+				self.FetchAltView(undefined, item_id); 
+
+
 				// These are checked / interfaced here, also add the item-base on HandleImage.
-				var altFields = [
+				/*var altFields = [
 					'attachment-details-alt-text',
 					'attachment-details-two-column-alt-text',
 					
@@ -292,10 +329,9 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 					var altText = document.getElementById(field); 
 					if (null !== altText)
 					{
-						self.AttachAiInterface(item_id, altText); 
 	
 					}					 
-				}
+				} */
 
 
 			},
@@ -328,7 +364,11 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 	{
 		
 		var data = event.detail.media; 	
-		var element = document.getElementById('attachment_alt'); 
+		if (typeof data === 'undefined')
+		{
+			console.log('Error on ai interface!', data);
+		}
+		var element = this.GetPageAttachmentAlt();
 		console.log('Attach AI IF', data); 
 
 		var wrapper = document.getElementById('shortpixel-ai-wrapper');

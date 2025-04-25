@@ -212,7 +212,6 @@ class ResponseController
            if ($item->tries > 0)
 					      $text .= sprintf(__('(cycle %d)', 'shortpixel-image-optimiser'), intval($item->tries) );
 				}
-        Log::addTemp("Format regulare Item $item->item_id", $text);
 				return $text;
 		}
 

@@ -182,7 +182,6 @@ class AdminController extends \ShortPixel\Controller
             'wait' => 1,
         );
 
-        Log::addTemp("process cron hook", $args);
 
         return $this->processQueueHook($args);
     }

@@ -59,10 +59,9 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 
 		if ('ai' === apiName && typeof resultItem.retrievedText !== 'undefined')
 		{
-			console.log('RetrievedText!');
 			
 			// Not optimal
-			 this.FetchAltView(resultItem.retrievedText);
+			 this.FetchAltView(resultItem.retrievedText, item_id);
 		}
 
 		return false;
@@ -135,7 +134,6 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 		 {
 			  if (false === createIfMissing)
 			  {
-				 console.log(elementName + ' not found - false on createmissing');
 				 return null; 
 			  }
 
@@ -315,7 +313,7 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 			var data = event.detail.media;
 			var replaceAlt = data.original_alt
 	
-			this.FetchAltView(replaceAlt);
+			this.FetchAltView(replaceAlt ,id);
 
 		}.bind(this), {once: true});
 

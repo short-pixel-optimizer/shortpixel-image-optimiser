@@ -145,8 +145,6 @@ class ApiController extends RequestManager
 
 		$APIresponse = $this->parseResponse($response);//get the actual response from API, its an array
 
-Log::addTemp('API API RESPONSE', $APIresponse);
-
 		// Don't know if it's this or that.
 		$status = false;
 		if (isset($APIresponse['Status'])) {
@@ -258,7 +256,6 @@ Log::addTemp('API API RESPONSE', $APIresponse);
 					if (is_null($fileData) || false === property_exists($fileData, $imageName)) {
 						$imageList[$imageName] = $this->handleNewSuccess($qItem, $imageObject, $data);
 					} else {
-						//Log::addTEmp("Property $imageName  existing in files ", $qItem->data());
 					}
 				}
 
@@ -287,7 +284,6 @@ Log::addTemp('API API RESPONSE', $APIresponse);
 			} else {
 				// Theoretically this should not be needed.
 				Log::addWarn('ApiController Response not handled before default case', $imageList);
-				Log::addTemp('ApiREsponse with that ', $APIresponse);
 				if (isset($APIresponse[0]->Status->Message)) {
 
 					$err = array(

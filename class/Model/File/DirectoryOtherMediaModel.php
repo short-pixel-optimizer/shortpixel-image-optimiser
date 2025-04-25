@@ -574,7 +574,6 @@ class DirectoryOtherMediaModel extends DirectoryModel
              }
           }
           else {
-            Log::addTemp('Not processable', $imageObj->getProcessableReason());
           }
 
       }
