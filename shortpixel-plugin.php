@@ -46,6 +46,7 @@ class ShortPixelPlugin {
 	public function __construct() {
 		// $this->initHooks();
 		add_action( 'plugins_loaded', [$this, 'lowInit'], 5 ); // early as possible init.
+		
 	}
 
 	/** LowInit after all Plugins are loaded. Core WP function can still be missing. This should mostly add hooks */
@@ -68,7 +69,6 @@ class ShortPixelPlugin {
 			return;
 		}
 
-		$cron = Controller\CronController::getInstance();  // cron jobs - must be low init to function!
 
 		$front        = new Controller\FrontController(); // init front checkers
 		$admin        = Controller\AdminController::getInstance();
@@ -81,14 +81,22 @@ class ShortPixelPlugin {
 			WPCliController::getInstance();
 		}
 
-		add_action( 'admin_init', [ $this, 'init' ] );
+		add_action ('init', [$this, 'init']);
+		add_action( 'admin_init', [ $this, 'admin_init' ] );
+	}
+
+	public function init()
+	{
+		Controller\CronController::getInstance();  // cron jobs - must be init to function!
+
 	}
 
 
 	/** Mainline Admin Init. Tasks that can be loaded later should go here */
-	public function init() {
+	public function admin_init() {
 			// This runs activation thing. Should be -after- init
 			$this->check_plugin_version();
+
 
 			$notices             = Notices::getInstance(); // This hooks the ajax listener
 			$quotaController = QuotaController::getInstance();

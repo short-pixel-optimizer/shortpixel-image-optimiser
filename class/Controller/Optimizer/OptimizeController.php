@@ -478,7 +478,7 @@ class OptimizeController extends OptimizerBase
     $qItem->setData('files', $item_files);
 
     $converter = Converter::getConverter($imageModel, true);
-    $optimizedArgs = array();
+
     if (is_object($converter) && $converter->isConverterFor('api')) {
       $optimizedResult = $converter->handleConverted($successData);
       if (true === $optimizedResult) {

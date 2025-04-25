@@ -442,7 +442,7 @@ class QueueController
     return $json;
   }
 
-  /** Convert a result Queue Stdclass to a JSON send Object */
+  /** f a result Queue Stdclass to a JSON send Object */
   // Q
   protected function queueToJson($result, $json = false)
   {

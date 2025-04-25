@@ -442,6 +442,7 @@ class QueueItem
       switch ($action) {
          case 'optimize':
          case 'dumpItem':
+         case 'convert_api':
             $api = OptimizeController::getInstance();
          break;
          case 'requestAlt': // @todo Check if this is correct action name,

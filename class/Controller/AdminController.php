@@ -172,6 +172,7 @@ class AdminController extends \ShortPixel\Controller
     /* Function to process Hook coming from the WP cron system */
     public function processCronHook($bulk)
     {
+
         $args = array(
             'max_runs' => 10,
             'run_once' => false,

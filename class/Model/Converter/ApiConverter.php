@@ -41,12 +41,26 @@ class ApiConverter extends MediaLibraryConverter
 	}
 
 
-	public function filterQueue(QueueItem $item, $args = [])
+	public function filterQueue(QueueItem $qItem, $args = [])
 	{
-		foreach ($item->data()->paramlist as $index => $data) {
-			if (isset($item->data()->paramlist[$index]['convertto'])) {
-				$item->data()->paramlist[$index]['convertto'] = 'jpg';
+		foreach ($qItem->data()->paramlist as $index => $data) {
+			if (isset($qItem->data()->paramlist[$index]['convertto'])) {
+				$paramlist = $qItem->data()->paramlist; 
+				unset($paramlist[$index]['convertto']);
+				$qItem->data()->paramlist = $paramlist;
+//				$item->data()->paramlist[$index]['convertto'] = 'jpg';
 			}
+		}
+
+		$prev_action = $qItem->data()->action; 
+		$qItem->data()->action = 'convert_api'; 
+		if (false === is_null($qItem->data()->next_actions))
+		{
+			$qItem->data()->next_actions = array_merge($qItem->data()->next_actions, [$prev_action]);
+		}
+		else 
+		{
+			$qItem->data()->next_actions = [$prev_action];
 		}
 
 		// Run converter to create backup and make placeholder to block similar heics from overwriting.
@@ -56,11 +70,11 @@ class ApiConverter extends MediaLibraryConverter
 		}
 
 		//Lossless because thumbnails will otherwise be derived of compressed image, leaving to double compression.
-		if (property_exists($item->data(), 'compressionType')) {
-			$item->setData('compressionTypeRequested', $item->compressionType);
+		if (property_exists($qItem->data(), 'compressionType')) {
+			$qItem->setData('compressionTypeRequested', $qItem->compressionType);
 		}
 		// Process Heic as Lossless so we don't have double opts.
-		$item->data()->compressionType = ImageModel::COMPRESSION_LOSSLESS;
+		$qItem->data()->compressionType = ImageModel::COMPRESSION_LOSSLESS;
 
 		// Reset counts
 		$counts = new \stdClass;
@@ -69,7 +83,7 @@ class ApiConverter extends MediaLibraryConverter
 		$counts->webpCount = 0;
 		$counts->creditCount = 1;
 
-		$item->setData('counts', $counts);
+		$qItem->setData('counts', $counts);
 	}
 
 	/**
