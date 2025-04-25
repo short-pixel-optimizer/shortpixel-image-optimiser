@@ -25,8 +25,8 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		// This init only in edit-media and pass the ID for safety. 
 		if (document.getElementById('attachment_alt') !== null)
 		{
-			var altInput = document.getElementById('attachment_alt')
-			this.FetchAltView(undefined, altInput.value);
+			var postInput = document.getElementById('post_ID')
+			this.FetchAltView(undefined, postInput.value);
 		}
 
 		/*this.altInputNames = [
