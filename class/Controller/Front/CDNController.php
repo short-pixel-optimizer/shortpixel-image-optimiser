@@ -104,9 +104,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		$apiKey = $keyControl->forceGetApiKey();
 
 		$register_domain .= $apiKey;
-		Log::addTemp("Pinging" . $register_domain);
 		$res = wp_remote_post($register_domain);	
-		Log::addTemp('RESULT', $res);
 		
 		
 	}

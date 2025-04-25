@@ -135,7 +135,6 @@ abstract class OptimizerBase
         // Can happen with actions outside queue / direct action 
         if ($qItem->getQueueItem() !== false)
         {
-          Log::addTemp('Qitem: Done');
           $queue->itemDone($qItem); 
         }
         if (true === $qItem->data()->hasNextAction())
@@ -171,7 +170,6 @@ abstract class OptimizerBase
               // @todo Here too, this will mess with bulks. Check somehow which queue we are called from.
             $queueController = new QueueController(); 
             $result = $queueController->addItemToQueue($imageModel, $args); 
-            Log::addTemp("LE RESULT", $result);
         }
 
         if (! isset($result))

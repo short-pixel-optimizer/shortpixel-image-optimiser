@@ -367,9 +367,9 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		if (typeof data === 'undefined')
 		{
 			console.log('Error on ai interface!', data);
+			return false;
 		}
 		var element = this.GetPageAttachmentAlt();
-		console.log('Attach AI IF', data); 
 
 		var wrapper = document.getElementById('shortpixel-ai-wrapper');
 

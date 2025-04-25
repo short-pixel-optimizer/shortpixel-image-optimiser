@@ -264,7 +264,6 @@ class QueueItem
 
       ];
 
-      //Log::addTemp('Qitem adding result: ', $data);
 
       if (is_null($this->result)) {
          $this->result = new \stdClass;

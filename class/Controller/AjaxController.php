@@ -661,10 +661,6 @@ class AjaxController
 
 		 $this->checkImageAccess($imageModel);
 
-		 if (false === $imageModel)
-		 {
-
-		 }
 		 $queueItem = new QueueItem(['imageModel' => $imageModel]);
 
 		 $queueItem->getAltDataAction(); 
