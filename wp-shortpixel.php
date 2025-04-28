@@ -61,18 +61,14 @@ define('SHORTPIXEL_MAX_EXECUTION_TIME', $max_exec);
 // ** Load the modules */
 require_once(SHORTPIXEL_PLUGIN_DIR . '/build/shortpixel/autoload.php');
 
-$sp__uploads = wp_upload_dir();
+$sp__uploads = wp_get_upload_dir();
+
 define('SHORTPIXEL_UPLOADS_BASE', (file_exists($sp__uploads['basedir']) ? '' : ABSPATH) . $sp__uploads['basedir'] );
-//define('SHORTPIXEL_UPLOADS_URL', is_main_site() ? $sp__uploads['baseurl'] : dirname(dirname($sp__uploads['baseurl'])));
+define('SHORTPIXEL_UPLOADS_URL', is_main_site() ? $sp__uploads['baseurl'] : dirname(dirname($sp__uploads['baseurl'])));
 define('SHORTPIXEL_UPLOADS_NAME', basename(is_main_site() ? SHORTPIXEL_UPLOADS_BASE : dirname(dirname(SHORTPIXEL_UPLOADS_BASE))));
 $sp__backupBase = is_main_site() ? SHORTPIXEL_UPLOADS_BASE : dirname(dirname(SHORTPIXEL_UPLOADS_BASE));
 define('SHORTPIXEL_BACKUP_FOLDER', $sp__backupBase . '/' . SHORTPIXEL_BACKUP);
-// @todo Backup URL not in use. Candidate for removal.
-define('SHORTPIXEL_BACKUP_URL',
-    ((is_main_site() || (defined( 'SUBDOMAIN_INSTALL' ) && SUBDOMAIN_INSTALL))
-        ? $sp__uploads['baseurl']
-        : dirname(dirname($sp__uploads['baseurl'])))
-    . '/' . SHORTPIXEL_BACKUP);
+
 
 
 //define('SHORTPIXEL_SILENT_MODE', true); // no global notifications. Can lead to data damage. After setting, reactivate plugin.

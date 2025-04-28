@@ -213,10 +213,10 @@ Class FileSystemController extends \ShortPixel\Controller
 
       $backup_subdir = $fileDir->getRelativePath();
 
-      if ($backup_subdir === false)
+      /*if ($backup_subdir === false)
       {
          $backup_subdir = $this->returnOldSubDir($filepath);
-      }
+      } */
 
       $backup_fulldir = SHORTPIXEL_BACKUP_FOLDER . '/' . $backup_subdir;
 
@@ -528,35 +528,6 @@ Class FileSystemController extends \ShortPixel\Controller
 			}
 		}
 
-    /** Old method of getting a subDir. This is messy and hopefully should not be used anymore. It's added here for backward compat in case of exceptions */
-    private function returnOldSubDir($file)
-    {
-              // Experimental FS handling for relativePath. Should be able to cope with more exceptions.  See Unit Tests
-				Log::addWarn('Return Old Subdir was called, everything else failed');
-              $homePath = get_home_path();
-              if($homePath == '/') {
-                  $homePath = $this->getWPAbsPath();
-              }
-              $hp = wp_normalize_path($homePath);
-              $file = wp_normalize_path($file);
-
-            //  $sp__uploads = wp_upload_dir();
-
-              if(strstr($file, $hp)) {
-                  $path = str_replace( $hp, "", $file);
-              } elseif( strstr($file, dirname( WP_CONTENT_DIR ))) { //in some situations the content dir is not inside the root, check this also (ex. single.shortpixel.com)
-                  $path = str_replace( trailingslashit(dirname( WP_CONTENT_DIR )), "", $file);
-              } elseif( (strstr(realpath($file), realpath($hp)))) {
-                  $path = str_replace( realpath($hp), "", realpath($file));
-              } elseif( strstr($file, trailingslashit(dirname(dirname( SHORTPIXEL_UPLOADS_BASE )))) ) {
-                  $path = str_replace( trailingslashit(dirname(dirname( SHORTPIXEL_UPLOADS_BASE ))), "", $file);
-              } else {
-                  $path = (substr($file, 1));
-              }
-              $pathArr = explode('/', $path);
-              unset($pathArr[count($pathArr) - 1]);
-              return implode('/', $pathArr) . '/';
-    }
 
 
 
