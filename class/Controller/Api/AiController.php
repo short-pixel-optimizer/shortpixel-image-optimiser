@@ -107,7 +107,8 @@ class AiController extends RequestManager
              {
               $remote_id = intval($APIresponse['data']->Id);
               $qItem->addResult(['remote_id' => $remote_id]);
-              return $this->returnOk();  
+              
+              return $this->returnOk(RequestManager::STATUS_UNCHANGED, __('Request for Alt text send to Shortpixel AI', 'shortpixel-image-optimiser'));  
              }
 
         }

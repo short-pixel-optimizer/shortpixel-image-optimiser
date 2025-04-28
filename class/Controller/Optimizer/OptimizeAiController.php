@@ -41,7 +41,7 @@ class OptimizeAiController extends OptimizerBase
 
       }
 
-      
+      $qItem->addResult(['qstatus' => Queue::RESULT_ERROR]);
       return;
   }
 
@@ -62,7 +62,7 @@ class OptimizeAiController extends OptimizerBase
   public function enqueueItem(QueueItem $qItem, $args = [])
   {
 
-    $action = $qItem->data()->action; 
+    $action = $args['action']; // $qItem->data()->action; 
 
     $queue = $this->getCurrentQueue($qItem);
     $directAction = true; 
@@ -74,7 +74,7 @@ class OptimizeAiController extends OptimizerBase
             
         break;
         case 'retrieveAlt': 
-            $qItem->retrieveAltAction($qItem->data()->remote_id);
+            $qItem->retrieveAltAction($args['remote_id']);
             $directAction = false; 
         break; 
     }
@@ -86,11 +86,17 @@ class OptimizeAiController extends OptimizerBase
        $this->sendToProcessing($qItem);
        $this->handleAPIResult($qItem);
       
-       $result = new \stdClass; 
-       $result->qstatus = Queue::RESULT_ITEMS;
-       $result->numitems = 1;
-       $qItem->addResult([
-        'message' => __('Request for Alt text send to Shortpixel AI', 'shortpixel-image-optimiser')]);
+       $result = $qItem->result();
+ 
+        // Probably not as is should be, but functional
+       if ($result->is_error === false)
+       {
+            $result = new \stdClass; 
+            $result->qstatus = Queue::RESULT_ITEMS;
+            $result->numitems = 1;
+            $qItem->addResult([
+            'message' => __('Request for Alt text send to Shortpixel AI', 'shortpixel-image-optimiser')]);
+        }
 
     }
     else
@@ -153,11 +159,9 @@ class OptimizeAiController extends OptimizerBase
           {
             $ai_metadata = []; 
           }
-         // if (false === is_array($ai_metadata) || false === isset($ai_metadata['original_alt']) || $ai_metadata['original_alt'] = '')
-        //  {
-            $ai_metadata['original_alt'] = $current_alt;
+
+         $ai_metadata['original_alt'] = $current_alt;
             
-        // }
           $ai_metadata['result_alt'] = $text;
 
           $bool = update_post_meta($item_id, 'shortpixel_alt_requests', $ai_metadata); 

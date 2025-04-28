@@ -131,7 +131,7 @@ class QueueController
           $this->lastQStatus = $status->qstatus;
           
           // Not API status does it own messaging.
-          if ($status->qstatus !== ApiController::STATUS_NOT_API)
+          if ($status->qstatus !== RequestManager::STATUS_NOT_API)
           {
             $message = '';
             if ($status->numitems > 0)
