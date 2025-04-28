@@ -98,13 +98,13 @@ class QueueController
 
 // @todo Later: check if all provisions of OptimizeController are implemented.
       $qItem = QueueItems::getImageItem($imageModel);
-
+/*
       foreach($args as $name => $value)
       {
          $qItem->setData($name, $value);
       }
-
-      $optimizer = $qItem->getApiController();
+*/
+      $optimizer = $qItem->getApiController($args['action']);
 
       if (is_null($optimizer))
       {
@@ -127,7 +127,7 @@ class QueueController
 
       if (true === $bool)
       {
-          $status = $optimizer->enQueueItem($qItem);
+          $status = $optimizer->enQueueItem($qItem, $args);
           $this->lastQStatus = $status->qstatus;
           
           // Not API status does it own messaging.
@@ -138,7 +138,6 @@ class QueueController
             {
               
               $message = sprintf(__('Item %s added to Queue. %d items in Queue', 'shortpixel-image-optimiser'), $imageModel->getFileName(), $status->numitems);
-              //$json->status = 1;
   
               // Check if background process is active / this needs activating.
               $cronController = CronController::getInstance();

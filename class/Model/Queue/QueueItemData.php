@@ -18,6 +18,7 @@ class QueueItemData
         protected $forceExclusion; 
         protected $action; 
         protected $next_actions; // multiple actions requeue mechanism. 
+        protected $next_keepdata; // keep this data for next actions
         protected $smartcrop; 
         protected $remote_id; // for Ai 
         protected $returndatalist;
@@ -111,6 +112,35 @@ class QueueItemData
             }
 
             return $next_action; 
+        }
+
+        public function getKeepDataArgs()
+        {
+            if (! is_array($this->next_keepdata) || count($this->next_keepdata) === 0)
+            {
+                return []; 
+
+            }
+
+            $args = []; 
+
+            foreach($this->next_keepdata as $name => $value)
+            {
+                  // Only arg parsed, take value from this data. 
+                  if (is_numeric($name))
+                  {
+                     if (property_exists($this, $value) && false === is_null($this->$value))
+                     {
+                      $args[$value] = $this->$value;                       
+                     }
+                  }
+                  elseif (false === is_null($value))
+                  {
+                      $args[$name]  = $value; 
+                  }
+            }
+
+            return $args;
         }
 
         

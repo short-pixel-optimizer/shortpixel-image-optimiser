@@ -79,6 +79,7 @@ class OptimizeAiController extends OptimizerBase
         break; 
     }
 
+
     if (true === $directAction)
     {
        // The directActions give back booleans, but the whole function must return an queue result object with qstatus and numitems

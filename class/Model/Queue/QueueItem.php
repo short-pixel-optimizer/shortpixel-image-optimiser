@@ -215,19 +215,22 @@ class QueueItem
 
        $this->data->action = 'reoptimize'; 
        $this->data->next_actions = ['optimize'];
+       $this->data->next_keepdata = ['compressionType', 'smartcrop']; // Each action it's own set of keep data.
        $this->item_count = 1;
 
        // Smartcrop setting (?) 
        if (isset($args['smartcrop']))
        {
-          $this->data->smartcrop = $args['smartcrop']; 
+          $this->data()->smartcrop = $args['smartcrop']; 
        }
 
        // Then new compresion type to optimize to. 
-       if (isset($args['compressiontype'])) 
+       if (isset($args['compressionType'])) 
        {
-          $this->data->compressiontype = $args['compressiontype'];
+          $this->data()->compressionType = $args['compressionType'];
        }
+
+       Log::addTemp('New reOPtimze Action Data', $this->data);
        
    }
 
@@ -291,14 +294,40 @@ class QueueItem
 
        if ($this->data->hasNextAction()) // Keep this at all times / not optimal still
        {
-          $nextActions = $this->data->next_actions; 
-       }
+          $nextActions = $this->data()->next_actions; 
+       } 
+
+       $keepDataArgs = $this->data()->getKeepDataArgs();
+       $next_keepdata = $this->data()->next_keepdata; 
+
 
        $this->data = new QueueItemData(); // new action, new data(?)
+
        if (isset($nextActions))
        {
-         $this->data->next_action = $nextActions;
+         $this->data()->next_actions = $nextActions;
+
+
        }
+
+      Log::addTemp('keepData', $keepDataArgs);
+      Log::addTemp('nextkeepdata', $next_keepdata);
+
+      // Always pass
+      if (count($keepDataArgs) > 0)
+      {
+         $this->data()->next_keepdata = $next_keepdata;
+         foreach($keepDataArgs as $name => $value)
+         {
+               $this->data()->$name = $value;
+         }
+
+      }
+
+
+
+       Log::addTemp("New Action ", $this->data() );
+
    }
 
    public function newDumpAction()
@@ -314,7 +343,7 @@ class QueueItem
 
 
 
-   public function newOptimizeAction()
+   public function newOptimizeAction($args = [])
    {
       $this->newAction(); 
 
@@ -323,12 +352,21 @@ class QueueItem
       /*  $defaults = array(
             'debug_active' => false, // prevent write actions if called via debugger
         ); */
-  
-      if (is_null($this->data()->compressionType))
+      
+      if (isset($args['compressionType'])) 
+      {
+          $this->data()->compressionType = $args['compressionType'];
+      }
+      elseif (is_null($this->data()->compressionType))
       {
          $this->data()->compressionType = \wpSPIO()->settings()->compressionType;
       }
-      if (is_null($this->data()->smartcrop))
+
+      if (isset($args['smartcrop'])) 
+      {
+         $imageModel->doSetting('smartcrop', $args['smartcrop']);
+      }
+      elseif (! is_null($this->data()->smartcrop))
       {
          $imageModel->doSetting('smartcrop', $this->data()->smartcrop);
       }
@@ -432,12 +470,17 @@ class QueueItem
    /**
     * Get the ApiController associated to the action performed
     * 
+    * In future probably should not take data()->action since newActions wipes all of this ( double ? )
     * @return OptimizeBase  optimizer or higher.
     */
-   public function getAPIController() // @todo Move to QueueItem, or QUeueItems ?
+   public function getAPIController($action = null) // @todo Move to QueueItem, or QUeueItems ?
    {
       $api = null;
-      $action = $this->data()->action;
+      if (is_null($action))
+      {
+         $action = $this->data()->action;         
+      }
+
       switch ($action) {
          case 'optimize':
          case 'dumpItem':

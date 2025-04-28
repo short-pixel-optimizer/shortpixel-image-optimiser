@@ -128,7 +128,8 @@ abstract class OptimizerBase
        return $this->queueController; 
     }
 
-    protected function finishItemProcess(QueueItem $qItem, $keepData = [])
+
+    protected function finishItemProcess(QueueItem $qItem)
     {
         $queue = $this->getCurrentQueue($qItem); 
         $fs = \wpSPIO()->filesystem();
@@ -149,12 +150,16 @@ abstract class OptimizerBase
             ];
 
             
-            foreach($keepData as $name => $value)
+            $keepArgs = $qItem->data()->getKeepDataArgs();
+            $args = array_merge($args, $keepArgs);
+            
+
+/*            foreach($keepData as $name => $value)
             {
                   // Only arg parsed, take value from this data. 
-                  if (is_numeric($name) && property_exists($this, $value))
+                  if (is_numeric($name) && property_exists($qItem->data(), $value))
                   {
-                     if (false === is_null($this->$value))
+                     if (false === is_null($qItem->data()->$value))
                      {
                       $args[$value] = $this->$value;                       
                      }
@@ -164,11 +169,11 @@ abstract class OptimizerBase
                       $args[$name]  = $value; 
                   }
             }
-
+*/
             Log::addInfo("New Action $action with args", $args);
 
-              // @todo Here too, this will mess with bulks. Check somehow which queue we are called from.
-            $queueController = new QueueController(); 
+
+            $queueController = $this->getQueueController(); 
             $result = $queueController->addItemToQueue($imageModel, $args); 
         }
 

@@ -41,7 +41,10 @@ class OptimizeController extends OptimizerBase
   public function enQueueItem(QueueItem $qItem, $args = [])
   {
     $queue = $this->getCurrentQueue($qItem);
-    $qItem->newOptimizeAction();
+    
+    $qItem->newOptimizeAction($args);
+
+
     $status = $queue->addQueueItem($qItem);
     return $status;
   }
@@ -204,8 +207,12 @@ class OptimizeController extends OptimizerBase
         $tempFiles = [];
 
         // Set the metadata decided on APItime.
-        if (isset($qItem->data()->compressionType)) {
+        if (false === is_null($qItem->data()->compressionType)) {
           $imageModel->setMeta('compressionType', $qItem->data()->compressionType);
+        }
+        else
+        {
+          Log::addWarn('Compression Type not set on handleSuccess!');
         }
 
         if (is_array($qItem->result()->files) && count($qItem->result()->files) > 0) {

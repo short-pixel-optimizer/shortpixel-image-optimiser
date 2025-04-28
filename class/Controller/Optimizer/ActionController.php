@@ -75,17 +75,18 @@ class ActionController extends OptimizerBase
    $queue = $this->getCurrentQueue($qItem);
    $directAction = true; // By default, execute Actions directly ( not via queue sys )
    
-   switch($qItem->data()->action)
+   switch($args['action'])
    {
        case 'restore':
           //$qItem->newRestoreAction(); // This doesn't do much really.
        break; 
        case 'reoptimize': 
-         $qItem->newReOptimizeAction();
+         $qItem->newReOptimizeAction($args);
       break; 
       case 'png2jpg':
       break; 
    }
+
 
     if (true === $directAction)
     {
@@ -170,13 +171,15 @@ class ActionController extends OptimizerBase
     // Get the item data to pass on settings like compressionType.
    // $args = get_object_vars($qItem->data());
     //$args['action'] = 'optimize';  // overwrite whatever option is set. 
-    
+
+    // This is a mess / needed for re-optimize but needs some better structuring.
     $keepData = [
-       'compressionType', 
+       'compressionType' => $qItem->data()->compressionType, 
+       'smartcrop' => $qItem->data()->smartcrop,
+
     ];
 
     // Add converted items to the queue for the process
-    // @TODO!  The queueController here resets any bulk statii going on. Somehow for redoing tasks / adding items should use the current q / get data from QueueController calling
     $queueController = $this->getQueueController();
     $result = $queueController->addItemToQueue($imageObj, $keepData );
  
@@ -192,7 +195,9 @@ class ActionController extends OptimizerBase
  // @todo This should probably be contained in the newAction in QueueItem ( comrpressiontype / args )
   protected function reoptimizeItem(QueueItem $queueItem)
   {
-    
+   //Log::addTemp('reoptimize', $queueItem);
+
+   // exit('temp blemp');
     //$item_id = $queueItem->item_id; 
     //$item_type = $queueItem->imageModel->get('type');
     $bool = $this->restoreItem($queueItem);
@@ -231,13 +236,14 @@ class ActionController extends OptimizerBase
 //            $qItem->data()->forceExclusion = true; 
           } */
 
-          $keepData = [
+          /*$keepData = [
                'compressionType', 
                'smartcrop', 
                'forceExclusion' => true, 
-          ]; 
+          ]; */
+          
 
-          $result = $this->finishItemProcess($queueItem, $keepData);
+          $result = $this->finishItemProcess($queueItem);
 
           
           //$result = $queueController->addItemToQueue($imageModel, $args);
