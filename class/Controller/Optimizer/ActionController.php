@@ -78,7 +78,7 @@ class ActionController extends OptimizerBase
    switch($args['action'])
    {
        case 'restore':
-          //$qItem->newRestoreAction(); // This doesn't do much really.
+          $qItem->newRestoreAction(); // This doesn't do much really.
        break; 
        case 'reoptimize': 
          $qItem->newReOptimizeAction($args);
