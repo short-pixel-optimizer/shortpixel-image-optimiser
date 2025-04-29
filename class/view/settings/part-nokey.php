@@ -121,7 +121,7 @@ $disabled = ($view->key->is_editable) ? '' : 'disabled';
       <name>
           <?php esc_html_e('API Key:','shortpixel-image-optimiser');?>
       </name>
-        <input name="login_apiKey" type="text" id="key" value="<?php echo esc_attr( $view->key->apiKey );?>"
+        <input name="login_apiKey" type="text" id="new-key" value="<?php echo esc_attr( $view->key->apiKey );?>"
            class="regular-text" <?php echo $disabled ?>>
 
               <input type="hidden" name="validate" id="valid" value="validate"/>

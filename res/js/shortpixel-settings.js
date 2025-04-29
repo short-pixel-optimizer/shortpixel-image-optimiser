@@ -698,7 +698,7 @@ FormSendEvent(event)
 
 	 if (this.save_in_progress)
 	 {
-					return false;
+		return false;
 	 }
 
 	 this.save_in_progress = true;

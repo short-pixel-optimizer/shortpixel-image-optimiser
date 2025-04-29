@@ -31,6 +31,16 @@ class ShortPixelOnboarding
          var addButton = this.root.querySelector('button[name="add-key"]');
          addButton.addEventListener('click', this.AddKeyEvent.bind(this));
 
+         let inputs = ['pluginemail', 'new-key']; 
+         for (let i = 0; i < inputs.length; i++)
+         {
+             var input = document.getElementById(inputs[i]); 
+             if (input !== null)
+             {
+               input.addEventListener('keypress', this.EnterKeyPressEvent.bind(this));
+             }
+         }
+      
          var quickTour = this.root.querySelector('.quick-tour');
          if (quickTour !== null)
          {
@@ -45,6 +55,17 @@ class ShortPixelOnboarding
         {
            panels[i].addEventListener('click', this.NewKeyPanelEvent.bind(this));
         }
+    }
+
+    EnterKeyPressEvent(event)
+    {
+       if (event.keyCode === 13)
+       {
+          event.preventDefault(); 
+          this.AddKeyEvent(event);
+          return false;
+       }
+
     }
 
     NewKeyPanelEvent(event)
