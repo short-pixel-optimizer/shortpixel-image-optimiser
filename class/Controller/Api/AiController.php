@@ -120,7 +120,7 @@ class AiController extends RequestManager
               $result = $apiData[0]; 
               $text = property_exists($result, 'Result') ? sanitize_text_field($result->Result) : null;
               $status = property_exists($result, 'Status') ? intval($result->Status) : -1; 
-              $error = property_exists($result, 'Error' && trim($result->Error) !== '') ? sanitize_text_field($result->Error) : false;
+              $error = (property_exists($result, 'Error') && trim($result->Error) !== '') ? sanitize_text_field($result->Error) : false;
 
               if (is_null($text))
               {
