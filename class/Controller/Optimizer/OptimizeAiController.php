@@ -265,6 +265,7 @@ public function getAltData(QueueItem $qItem)
     $metadata['snippet'] = $view->returnView('snippets/part-aitext');
 
     $metadata['action'] = $qItem->data()->action;
+    $metadata['item_id'] = $item_id;
 
     return $metadata; 
 }

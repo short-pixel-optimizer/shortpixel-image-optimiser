@@ -60,6 +60,11 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				   var altInput = document.getElementById(inputs[i]); 
 				   if (altInput !== null)
 				   {
+					   if (altInput.dataset.shortpixelAlt != item_id)
+					   {
+						 console.log('Returned alt, but not ours.', item_id, altInput);
+						 continue; 
+					   }
 					   if (typeof altInput.value !== 'undefined')
 					   {
 						   altInput.value = newAltText; 	
@@ -79,7 +84,12 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 		if (null !== attachmentAlt)
 		{
-
+			if (attachmentAlt.dataset.shortpixelAlt && attachmentAlt.dataset.shortpixelAlt != item_id)
+			{
+				console.log('AttachmentAlt not ' + item_id); 
+				return;
+			}
+			
 			var data = {
 				id: item_id,
 				type: 'media',
@@ -314,26 +324,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 				self.FetchAltView(undefined, item_id); 
 
-
-				// These are checked / interfaced here, also add the item-base on HandleImage.
-				/*var altFields = [
-					'attachment-details-alt-text',
-					'attachment-details-two-column-alt-text',
-					
-				];
-
-				// Check all possible alt fields and attach if found. 
-				for (var i = 0; i < altFields.length; i++)
-				{
-					var field = altFields[i];
-					var altText = document.getElementById(field); 
-					if (null !== altText)
-					{
-	
-					}					 
-				} */
-
-
 			},
 			doSPIORow: function (dataHtml) {
 				var html = '';
@@ -364,6 +354,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 	{
 		
 		var data = event.detail.media; 	
+		var item_id = data.item_id; 
 		if (typeof data === 'undefined')
 		{
 			console.log('Error on ai interface!', data);
@@ -371,19 +362,24 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		}
 		var element = this.GetPageAttachmentAlt();
 
-		var wrapper = document.getElementById('shortpixel-ai-wrapper');
+		var wrapper = document.getElementById('shortpixel-ai-wrapper-' + item_id);
 
 		if (null !== wrapper) // remove previous controls
 		{
 			wrapper.remove();
 		}
 
+		// This will not work because the wrapper doesn't exist and is recreated each time on fly. Need some place to store item_id on item load
 		var wrapper = document.createElement('div');
-		wrapper.id = 'shortpixel-ai-wrapper'; 
+		wrapper.id = 'shortpixel-ai-wrapper-' + item_id;
 		wrapper.classList.add('shortpixel-ai-interface',element.getAttribute('id'));
 		
 	  	wrapper.innerHTML = data.snippet;	
 		element.after(wrapper);
+
+		element.dataset.shortpixelAlt = data.item_id;		
+		if (data.result_alt)
+			element.value = data.result_alt;
 
 	}
 

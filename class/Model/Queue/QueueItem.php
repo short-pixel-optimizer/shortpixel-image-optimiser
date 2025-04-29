@@ -311,9 +311,6 @@ class QueueItem
 
        }
 
-      Log::addTemp('keepData', $keepDataArgs);
-      Log::addTemp('nextkeepdata', $next_keepdata);
-
       // Always pass
       if (count($keepDataArgs) > 0)
       {
@@ -324,10 +321,6 @@ class QueueItem
          }
 
       }
-
-
-
-       Log::addTemp("New Action ", $this->data() );
 
    }
 
@@ -341,8 +334,6 @@ class QueueItem
       $this->data->action = 'dumpItem';
 
    }
-
-
 
    public function newOptimizeAction($args = [])
    {

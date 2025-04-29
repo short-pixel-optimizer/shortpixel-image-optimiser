@@ -148,13 +148,12 @@ window.ShortPixelProcessor =
           return false; 
         }
 
-
           var data = event.data; 
 
-          if (data.imageItem && data.imageItem.apiName == 'ai')
+          /*if (data.imageItem && data.imageItem.apiName == 'ai')
           {
             return false; 
-          }
+          } */
 
           if (data.reason === 'handleImage')
           {
