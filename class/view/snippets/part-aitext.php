@@ -1,5 +1,8 @@
+<?php
 
-<?php 
+use ShortPixel\Controller\ApiKeyController;
+use ShortPixel\Controller\QuotaController;
+
 $icon_url = plugins_url( '/res/images/icon/', SHORTPIXEL_PLUGIN_FILE ); 
 $robo_icon = $icon_url . '/shortpixel.svg'; 
 $ai_icon = $icon_url . '/ai.svg'; 
@@ -7,16 +10,31 @@ $ai_icon = $icon_url . '/ai.svg';
 $item_id = $this->data['item_id']; 
 $has_data = $this->data['has_data'];
 
+$quotaControl = QuotaController::getInstance();
+$keyControl = ApiKeyController::getInstance();
+
+
 if (false === $has_data): 
-?>
-        <label></label>
+
+	if (false === $keyControl->keyIsVerified() && false === $has_data):
+	
+  		_e('Invalid API Key. <a href="options-general.php?page=wp-shortpixel-settings">Check your Settings</a>','shortpixel-image-optimiser');
+
+	elseif (false === $quotaControl->hasQuota() && false === $has_data):
+	?>
+	<label>&nbsp;</label> 
+	<p><?php _e('No quota left', 'shortpixel-image-optimiser'); ?></p>
+
+	<?php else: ?>
+
+        <label>&nbsp;</label>
         <a class='button button-secondary' href="javascript:window.ShortPixelProcessor.screen.RequestAlt(<?php echo $item_id ?>)">
 			<img class="shortpixel-ai-icon ai" src="<?php echo $ai_icon ?>">	
 			<span><?php _e('AI Captioning - by ShortPixel', 'shortpixel-image-optimiser') ?></span>
 			<img class="shortpixel-ai-icon shortpixel" src="<?php echo $robo_icon ?>">
 		</a>
         <div class="shortpixel-alt-messagebox" id="shortpixel-ai-messagebox-<?php echo $item_id ?>">&nbsp;</div>
-        
+	<?php endif; ?>   
 <?php else : 
 	
 	$lb = '%0D%0A';

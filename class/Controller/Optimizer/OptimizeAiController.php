@@ -202,12 +202,13 @@ class OptimizeAiController extends OptimizerBase
 
        if (true === $bool)
        {
-          $bool = delete_post_meta($item_id, 'shortpixel_alt_requests');
+          $bool = delete_post_meta((int) $item_id, 'shortpixel_alt_requests');
        }
 
        if (false === $bool)
        {
-          Log::addError('Undo post meta removal failed?');
+          $bool = delete_metadata( 'post', $item_id, 'shortpixel_alt_requests', '' );
+
        }
 
        return $this->getAltData($qItem); 

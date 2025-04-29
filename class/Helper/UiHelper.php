@@ -462,7 +462,6 @@ class UiHelper
   public static function getStatusText($mediaItem)
   {
     $keyControl = ApiKeyController::getInstance();
-    $quotaControl = QuotaController::getInstance();
     $queueController = new QueueController();
     $settings = \wpSPIO()->settings();
 
