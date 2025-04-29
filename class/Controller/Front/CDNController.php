@@ -109,6 +109,64 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		
 	}
 
+	public function purgeCDN($args = [])
+	{
+		$purge = $args['purge']; 
+		$settings = \wpSPIO()->settings();
+		$purge_domain = 'https://no-cdn.shortpixel.ai/purge-cdn-cache-bulk'; 
+
+		$result = [
+			'is_error' => false, 
+			'message' => '', 
+		]; 
+
+
+		if ('cssjs' == $purge)
+		{
+			$settings->cdn_purge_version = time(); 
+			$result['message'] = __('CDN and JS cache purged', 'shortpixel-image-optimiser');
+		}
+
+		if ('all' == $purge)
+		{
+			$apiKeyController = ApiKeyController::getInstance();
+			$site_domain = parse_url(get_site_url());
+			$cdnDomain = parse_url($settings->CDNDomain); 
+			$key = $apiKeyController->forceGetApiKey();
+
+			$cdnHost = (isset($cdnDomain['host'])) ? $cdnDomain['host'] : 'spcdn.shortpixel.ai';
+
+			$domain = $purge_domain . '/' . $key  . '/' . trim($site_domain['host']) . '/' . trim($cdnHost);
+Log::addTemp('Purging cache : ' . $domain);
+			$remote_post = wp_remote_post($domain);
+
+			if (is_wp_error($remote_post))
+			{
+				$result['message'] = $remote_post->errors['http_request_failed'][0];
+				$result['is_error'] = true;
+			}
+			else
+			{
+				$response = isset($remote_post['body']) ? json_decode($remote_post['body']) : []; 
+				if (property_exists($response, 'Status') && $response->Status == 2 )
+				{
+					 $result['message'] = __('Cache purged', 'shortpixel-image-optimiser');
+				}
+	
+			}
+			
+
+
+
+			//https://no-cdn.shortpixel.ai/purge-cdn-cache-bulk/ API_KEY / main_site_domain_without_www / SPIO_CDN_Domain
+
+
+		}
+
+		return $result;
+		 
+	}
+
 	protected function createArguments($args = [])
 	{
 		$settings = \wpSPIO()->settings();

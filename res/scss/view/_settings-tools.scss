@@ -84,5 +84,20 @@
 	//	 border: 1px solid #ff0000;
 	}
 
+	.purge-message 
+	{
+		background: #F4FBFC;
+  	 	border-radius: 12px;
+		height: 0; 
+		transition: all 0.2s;
+		font-weight: 700;
+		&.opened
+		{
+			height: auto;	 
+			padding: 16px;
+
+		}
+	}
+
 
 } // Tab tools.

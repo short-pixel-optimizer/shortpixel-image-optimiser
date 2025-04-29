@@ -299,7 +299,7 @@ class UiHelper
 		  $keyControl = ApiKeyController::getInstance();
 			if (! $keyControl->keyIsVerified())
 			{
-				return array(); // nothing
+				return []; // nothing
 			}
 
       $quotaControl = QuotaController::getInstance();
@@ -428,7 +428,7 @@ class UiHelper
 		$keyControl = ApiKeyController::getInstance();
 		if (! $keyControl->keyIsVerified())
 		{
-			return array(); // nothing
+			return []; // nothing
 		}
 
 		$access = AccessModel::getInstance();

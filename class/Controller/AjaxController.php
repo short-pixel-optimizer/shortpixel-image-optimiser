@@ -441,12 +441,30 @@ class AjaxController
 
 	protected function purgeCDNCache($json, $data)
 	{
-		$settings = \wpSPIO()->settings();
-		$version = intval($settings->cdn_purge_version); 
+		//$settings = \wpSPIO()->settings();
+		//$version = intval($settings->cdn_purge_version); 
 
-		$settings->cdn_purge_version = $version + 1; 
+		$purge =  isset($_POST['purge']) ? sanitize_text_field($_POST['purge']) : 'cssjs'; 
 
-		Notices::addNormal(__('CDN version purged', 'shortpixel-image-optimiser')); 
+
+		$CDNController = new \ShortPixel\Controller\Front\CDNController();
+		$result = $CDNController->purgeCDN(['purge' => $purge]);
+
+		$json->settings->results = $result;
+		$json->status = true;
+
+
+		/*if ('cdnjs' === $purge)
+		{
+			$settings->cdn_purge_version = time(); 
+		}
+		else
+		{
+			//
+		} */
+
+
+		/*Notices::addNormal(__('CDN version purged', 'shortpixel-image-optimiser')); 
 
 		$noticeController = Notices::getInstance();
 		$json->notices = $noticeController->getNewNotices();
@@ -458,7 +476,7 @@ class AjaxController
 			}
 		}
 		$noticeController->update(); // dismiss one-time ponies
-
+*/
 		return $json;
 
 		

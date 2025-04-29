@@ -384,20 +384,35 @@ class ShortPixelSettings
   PurgeCacheEvent(event)
   {
 	 	event.preventDefault();
+		var target = event.target; 
 
 		var data = {}; 
 
 		var data = {screen_action: 'settings/purgecdncache'}; //
 		data.callback = 'shortpixelSettings.purgeCDNCache';
+		data.purge = target.dataset.purge;
 		data.type = 'settings';
 	
 		window.addEventListener(data.callback, function (response) {
 			console.log(response);
 			var json = response.detail;
-			let anchor = document.querySelector('.wp-header-end');
-			let screen = window.ShortPixelProcessor.GetScreen();
 
-			screen.AppendNotices(json.display_notices, anchor);
+			let results = json.settings.results; 
+			//let anchor = document.querySelector('.wp-header-end');
+			//let screen = window.ShortPixelProcessor.GetScreen();
+
+			//screen.AppendNotices(json.display_notices, anchor);
+			var messageBox = document.getElementById('settings-purge-message'); 
+			
+			messageBox.innerHTML = results.message;
+			messageBox.classList.add('opened');
+
+			setTimeout(function () {
+				messageBox.innerHTML = '';
+				messageBox.classList.remove('opened');
+				
+			}, 3000);
+
 
 		}, {'once': true} );
 	
