@@ -175,7 +175,6 @@
      height: 20px;
      width: 20px;
      margin-top: -1px;
-     //filter: $filter_black;
 
   }
   .shortpixel-ai-caption
@@ -190,12 +189,27 @@
   .shortpixel-alt-messagebox
   {
      margin: 4px 0;
-
   }
 
   &.attachment-details-two-column-alt-text, &.attachment-details-alt-text
   {
-    float: right;     
+    float: right;
+    width: 65%;
+    & img.ai {
+      margin-top: 5px;
+      float: left;
+    }
+    & img.shortpixel {
+      margin-right: 10px;
+    }
+  }
+
+  @at-root .media-sidebar & {
+    width: 100%;
+    text-align: right;
+    & img.shortpixel.shortpixel-ai-caption {
+      margin-right: 0px;
+    }
   }
 
 }
