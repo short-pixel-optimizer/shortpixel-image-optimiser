@@ -686,6 +686,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 				$args = wp_parse_args($args, $defaults);
 
 				$status = $results['image']['status'];
+        Log::addTemp("Status: $status", $results['image']);
 
           if ($settings->backupImages)
           {
@@ -725,9 +726,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 						$originalSize = $this->getFileSize();
 					}
 
-          if ($status == APIController::STATUS_UNCHANGED || 
-            $status == APIController::STATUS_OPTIMIZED_BIGGER || 
-            $status = APIController::STATUS_NOT_COMPATIBLE)
+          $stati = [ApiController::STATUS_UNCHANGED, ApiController::STATUS_OPTIMIZED_BIGGER, ApiController::STATUS_NOT_COMPATIBLE];
+          if (true === in_array($status, $stati, true))
           {
             $copyok = true;
             $optimizedSize = $this->getFileSize();
