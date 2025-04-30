@@ -48,7 +48,7 @@ class DownloadHelper
 
           $methods = array(
               "download_url" => array(array($this, 'downloadURLMethod'), $url, false),
-              "download_url_force" => array(array($this, 'downloadURLMethod'), true),
+              "download_url_force" => array(array($this, 'downloadURLMethod'), $url, true),
               "remote_get" => array(array($this, 'remoteGetMethod'), $url)
           );
 

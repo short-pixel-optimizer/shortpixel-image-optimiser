@@ -238,7 +238,9 @@ class AjaxController
 			case 'settings/purgecdncache': 
 				$json = $this->purgeCDNCache($json, $data); 
 			break;
-
+			case 'settings/importexport':
+				$jso = $this->importexportSettings($json, $data);
+			break; 
 			case 'ai/requestalt': 
 				$json = $this->requestAlt($json, $data);	
 			break; 
@@ -441,9 +443,6 @@ class AjaxController
 
 	protected function purgeCDNCache($json, $data)
 	{
-		//$settings = \wpSPIO()->settings();
-		//$version = intval($settings->cdn_purge_version); 
-
 		$purge =  isset($_POST['purge']) ? sanitize_text_field($_POST['purge']) : 'cssjs'; 
 
 
@@ -453,33 +452,70 @@ class AjaxController
 		$json->settings->results = $result;
 		$json->status = true;
 
-
-		/*if ('cdnjs' === $purge)
-		{
-			$settings->cdn_purge_version = time(); 
-		}
-		else
-		{
-			//
-		} */
-
-
-		/*Notices::addNormal(__('CDN version purged', 'shortpixel-image-optimiser')); 
-
-		$noticeController = Notices::getInstance();
-		$json->notices = $noticeController->getNewNotices();
-
-		if (count($json->notices) > 0) {
-			$json->display_notices = [];
-			foreach ($json->notices as $notice) {
-				$json->display_notices[] = $notice->getForDisplay(['class' => 'is_ajax', 'is_removable' => false]);
-			}
-		}
-		$noticeController->update(); // dismiss one-time ponies
-*/
 		return $json;
 
 		
+	}
+
+				
+	protected function importexportSettings($json, $data)
+	{
+		$action = (isset($_POST['actionType'])) ? sanitize_text_field($_POST['actionType']) : 'export'; 
+		$settings = \wpSPIO()->settings();
+
+		if ('import' === $action)
+		{
+			$importdata = (isset($_POST['importData'])) ? sanitize_text_field(trim($_POST['importData'])) : false; 
+			$importdata = stripslashes($importdata); 
+			$importdata = trim($importdata); 
+
+			if (false === $importdata || 0 == strlen($importdata))
+			{
+				 $json->settings->results = ['is_error' => true, 'message' => __('Import contained empty field', 'shortpixel-image-optimiser')];
+			}
+			elseif (true === \json_validate($importdata))
+			{
+				//$result = ['is_error' => false];
+				$messages = []; 
+
+				$importjson = json_decode($importdata, true);
+				Log::addInfo('JSON Import: ', $importjson);
+				$counter = 0;
+				foreach($importjson as $name => $value )
+				{
+					if (false === $settings->exists($name))
+					{
+						$messages[] = sprintf(__('Field with name %s does not exist in current version', 'shortpixel-image-optimiser'), $name);
+					}
+					else
+					{
+						 $settings->$name = $value;
+						 $counter++;
+					}
+				}
+
+				$messages[] = sprintf(__('%s settings imported! Reload page to see changes', 'shortpixel-image-optimiser'), $counter); 
+				$json->settings->results = ['is_error' => false, 'messages' => $messages];
+		 
+			}
+			else
+			{
+				$json->settings->results = ['is_error' => true, 
+				'message' => sprintf(__('Invalid JSON sent: %s', 'shortpixel-image-optimiser'), json_last_error_msg())];
+			}
+
+		}
+		else
+		{	
+			$data = $settings->getExport(); 
+			
+			$json->settings->exportData = json_encode($data);
+			$json->settings->message = __('Export completed. Copy the string below', 'shortpixel-image-optimiser');
+			
+		}
+		
+		$json->status = true; 
+		return $json;
 	}
 
 	protected function markCompleted($json, $data)

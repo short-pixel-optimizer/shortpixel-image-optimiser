@@ -77,27 +77,6 @@ $queueRunning = $bulk->isAnyBulkRunning();
 
     </settinglist>
 
-    <h3><?php _e('Settings import / export', 'shortpixel-image-optimiser'); ?></h3>
-    <settinglist>
-      <setting>
-        <name><?php _e('Export all settings', 'shortpixel-image-optimiser'); ?></name>
-        <content>
-          <button></button>
-        </content>
-      </setting>
-      <setting>
-        <name><?php _e('Import settings', 'shortpixel-image-optimiser'); ?></name>
-        <content>
-            <input type="file" name="import_file" />    
-            <button>Bla</button>
-        </content>
-        <warning><message>This will remove all current settings!</message></warning>
-      
-      </setting>
-    </settinglist>
-
-		<hr />
-
     <h3><?php _e('CDN Tools', 'shortpixel-image-optimiser'); ?></h3>
     <settinglist>
 
@@ -132,10 +111,39 @@ $queueRunning = $bulk->isAnyBulkRunning();
 
       </setting>
 
-      <div id='settings-purge-message' class='purge-message'>&nbsp;</div>
-
+      <div id='settings-purge-message' class='tools-message purge-message'>&nbsp;</div>
       
     </settinglist>
+
+
+
+    <h3><?php _e('Settings import / export', 'shortpixel-image-optimiser'); ?></h3>
+    <settinglist class='setting-importexport'>
+      <setting>
+        <name><?php _e('Export all settings', 'shortpixel-image-optimiser'); ?></name>
+        <content>
+          <button class='button secondary' setting-action="ExportSettingsEvent"><?php _e('Export','shortpixel-image-optimiser'); ?></button>
+        </content>
+      </setting>
+      <setting>
+        <name><?php _e('Import settings', 'shortpixel-image-optimiser'); ?></name>
+        <content>
+            <info><?php _e('Import settings will change all submitted settings', 'shortpixel-image-optimiser'); ?></info>
+            <textarea name="import-settings" id='spio-tools-import' class='import-textarea' placeholder="<?php _e('Paste settings JSON', 'shortpixel-image-optimiser'); ?>">&nbsp;</textarea>
+            <br>
+            <button setting-action="ImportSettingsEvent"><?php _e('Import', 'shortpixel-image-optimiser'); ?></button>
+        </content>
+        <warning><message>This will remove all current settings!</message></warning>
+      
+      </setting>
+
+      <div id='settings-importexport-message' class='tools-message export-message'>&nbsp;</div>
+
+    </settinglist>
+
+		<hr />
+
+
 
 
 

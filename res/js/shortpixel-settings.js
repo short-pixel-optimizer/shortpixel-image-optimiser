@@ -375,7 +375,15 @@ class ShortPixelSettings
 			 } */
 			 
 			 var method = actionElement.getAttribute('setting-action');
-			 actions[i].addEventListener('click', this[method].bind(this));
+			 if ('undefined' === typeof this[method])
+			 {
+				 console.error('Method ' + method + ' event is undefined!' );
+			 }
+			 else
+			 {
+				actions[i].addEventListener('click', this[method].bind(this));
+			 }
+
 
 		}
 
@@ -418,7 +426,120 @@ class ShortPixelSettings
 	
 		window.ShortPixelProcessor.AjaxRequest(data);
 
+  }
+
+  ImportSettingsEvent(event)
+  {
+	var data = {}; 
+	var data = {screen_action: 'settings/importexport'}; //
+	data.callback = 'shortpixelSettings.importSettings';
+	data.type = 'settings'; 
+	data.actionType = 'import'; 
+
+	var messageBox = document.getElementById('settings-importexport-message'); 
+	messageBox.innerHTML = ''; // wipe previous
+
+	var value = document.getElementById('spio-tools-import').value; 
+	value = value.trim();
+
+	try{
+		var json = JSON.parse(value);
+	}
+	catch(e)
+	{
+		 console.error(e);
+		 var messageNode = document.createElement('p');
+		 messageNode.classList.add('error'); 
+		 messageNode.innerText = e.message; 
+
+		 messageBox.append(messageNode);
+		 messageBox.classList.add('opened');
+		 return; 
+	}
+	
+	
+	data.importData = JSON.stringify(json);
+
+	window.addEventListener(data.callback, function (response){
+		var data = response.detail; 
+		console.log(data); 
+
+	//	var messageBox = document.getElementById('settings-importexport-message'); 
+	//	messageBox.innerHTML = ''; // wipe previous
+
+		let results = (data.settings.results) ? data.settings.results : null; 
+		if (results)
+		{
+			 if (true == results.is_error)
+			 {
+				 var messageNode = document.createElement('p');
+				 messageNode.classList.add('error'); 
+				 messageNode.innerText = results.message; 
+
+				 messageBox.append(messageNode);
+				 messageBox.classList.add('opened');
+
+			 }
+			 else
+			 {
+				if (results.messages)
+				{
+					messageBox.classList.add('opened');
+					 for (let i = 0; i < results.messages.length; i++)
+					 {
+						var messageNode = document.createElement('p');
+						messageNode.innerText = results.messages[i]; 
+						messageBox.append(messageNode);
+					 }
+				}
+			 }
+
+			 
+		}
 		
+	}, {once: true});
+
+	window.ShortPixelProcessor.AjaxRequest(data);
+
+  }
+
+  ExportSettingsEvent(event)
+  {
+	var data = {}; 
+	var data = {screen_action: 'settings/importexport'}; //
+	data.callback = 'shortpixelSettings.exportSettings';
+	data.type = 'settings'; 
+	data.actionType = 'export'; 
+
+	window.addEventListener(data.callback, function (response)
+	{
+		console.log(response); 
+		let data = response.detail; 
+		if (data.settings && data.settings.exportData)
+		{
+			var messageBox = document.getElementById('settings-importexport-message'); 
+			messageBox.innerHTML = ''; // wipe previous
+			
+			var messageNode = document.createElement('p'); 
+			messageNode.innerText = data.settings.message; 
+
+		
+			var textNode = document.createElement('textarea'); 
+			textNode.classList.add('exportjson');
+			textNode.innerText = data.settings.exportData;
+
+			messageBox.append(messageNode);
+			messageBox.append(textNode);
+			messageBox.classList.add('opened');
+			textNode.addEventListener('focus', function () { 
+					this.select();
+			});
+		}
+
+	}, {once: true});
+
+	window.ShortPixelProcessor.AjaxRequest(data);
+
 
   }
 

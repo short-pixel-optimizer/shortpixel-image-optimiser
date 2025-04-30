@@ -2185,16 +2185,25 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page #tab-tools .danger-zone > p {
   margin-left: 15px;
 }
-.wrap.is-shortpixel-settings-page #tab-tools .purge-message {
+.wrap.is-shortpixel-settings-page #tab-tools .tools-message {
   background: #F4FBFC;
   border-radius: 12px;
   height: 0;
   transition: all 0.2s;
   font-weight: 700;
 }
-.wrap.is-shortpixel-settings-page #tab-tools .purge-message.opened {
+.wrap.is-shortpixel-settings-page #tab-tools .tools-message.opened {
   height: auto;
   padding: 16px;
+}
+.wrap.is-shortpixel-settings-page #tab-tools .setting-importexport textarea {
+  width: 300px;
+  height: 150px;
+  font-weight: 500;
+  resize: both;
+}
+.wrap.is-shortpixel-settings-page #tab-tools .setting-importexport .import-textarea {
+  height: 75px;
 }
 .wrap.is-shortpixel-settings-page setting {
   padding: 12px;

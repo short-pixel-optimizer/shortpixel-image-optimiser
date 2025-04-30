@@ -84,7 +84,7 @@
 	//	 border: 1px solid #ff0000;
 	}
 
-	.purge-message 
+	.tools-message 
 	{
 		background: #F4FBFC;
   	 	border-radius: 12px;
@@ -98,6 +98,24 @@
 
 		}
 	}
+
+	.setting-importexport
+	{
+		 textarea {
+			 width: 300px;
+			 height: 150px;
+			 font-weight: 500;
+			 resize: both;
+		 }
+		 .import-textarea 
+		 {
+			height: 75px;
+		 }
+
+	
+	}
+
+	
 
 
 } // Tab tools.
