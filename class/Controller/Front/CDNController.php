@@ -44,6 +44,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 	{
 
 		// Add hooks for easier conversion / checking
+		
 		$this->addWPHooks();
 
 		// Starts buffer of whole page, with callback .
@@ -138,7 +139,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			$cdnHost = (isset($cdnDomain['host'])) ? $cdnDomain['host'] : 'spcdn.shortpixel.ai';
 
 			$domain = $purge_domain . '/' . $key  . '/' . trim($site_domain['host']) . '/' . trim($cdnHost);
-Log::addTemp('Purging cache : ' . $domain);
 			$remote_post = wp_remote_post($domain);
 
 			if (is_wp_error($remote_post))
@@ -216,20 +216,25 @@ Log::addTemp('Purging cache : ' . $domain);
 	{
 		$settings = \wpSPIO()->settings();
 
-		if (true === $settings->cdn_js) {
+		if (true === $settings->cdn_js || true === $settings->cdn_css) {
 			add_filter('script_loader_src', [$this, 'processScript'], 10, 2);
-		}
-		if (true === $settings->cdn_css) {
-			add_filter('style_loader_src', [$this, 'processScript'], 10, 2);
 		}
 	}
 
 	public function processScript($src, $handle)
 	{
+		// @todo check here if file is JS / CSS at all. 
+
+		if (false === $this->checkPreProcess()) {
+			return;
+		}
+
+
 		if (! is_string($src) || strlen($src) == 0) {
 			return $src;
 		}
 
+		Log::addTemp($src);
 		//Prefix the SRC with the API Loader info .
 		// 1. Check if scheme is http and add
 		// 2. Check if there domain and if not, prepend.
@@ -257,6 +262,35 @@ Log::addTemp('Purging cache : ' . $domain);
 
 		if (count($replaceBlocks) == 0) {
 			return $src;
+		}
+
+		$settings = \wpSPIO()->settings();
+		$checkExtensions = []; 
+		$fonts = ['.ttf', '.woff', '.woff2', '.otf']; 
+
+		if (true === $settings->cdn_js) {
+			$checkExtensions[] = '.js'; 
+			
+		}
+		if (true === $settings->cdn_css)
+		{	
+			$checkExtensions[] = '.css'; 
+			$checkExtensions = array_merge($checkExtensions, $fonts);
+		}
+
+		$checkExt = false; 
+		foreach($checkExtensions as $extcheck)
+		{
+			 if (strpos($src, $extcheck) !== false)
+			 {	
+				$checkExt = true; 
+				break; 
+			 }
+		}
+
+		if (false === $checkExt)
+		{
+			 return $src;
 		}
 
 		$this->createReplacements($replaceBlocks);
