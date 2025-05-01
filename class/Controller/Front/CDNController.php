@@ -58,6 +58,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			'*/wp-admin/css*', 
 			'*/wp-includes/js*', 
 			'*/wp-includes/css*', 
+			'*admin-ajax.php*',
 			
 
 
@@ -154,13 +155,6 @@ Log::addTemp('Purging cache : ' . $domain);
 				}
 	
 			}
-			
-
-
-
-			//https://no-cdn.shortpixel.ai/purge-cdn-cache-bulk/ API_KEY / main_site_domain_without_www / SPIO_CDN_Domain
-
-
 		}
 
 		return $result;
