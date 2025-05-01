@@ -19,12 +19,9 @@ class AiController extends RequestManager
 
     protected $main_url;
 
-  // @todo This API probably needs it's own queue to prevent duplications and so on.
-  // @todo WP-Cli Implementation of this API  to check how things might go.
-  // @todo(3)  Perhaps no queue implementation. Just find a queueItem and send it off directly?
-  // @todo(4) Perhaps result object / handling should also be offloaded to QueueItem since it's this part.
-  // @todo(5) Figure out how to get ApiController Item to QUeueItem object and sync with the getRequest stuff.
-  //  ^^ Key for that lies in queueToMediaItem in Queue.php
+    const AI_STATUS_OVERQUOTA = 3; 
+
+
     public function __construct()
     {
       $this->main_url = 'https://capi.shortpixel.com/';
@@ -103,13 +100,31 @@ class AiController extends RequestManager
 
         if ($qItem->data()->action == 'requestAlt')
         {
-             if (is_object($apiData) && property_exists($apiData, 'Id'))
+            if (false === is_object($apiData))
+            {
+               return $this->returnRetry(RequestManager::STATUS_WAITING, __('Response without result object', 'shortpixel-image-optimiser'));
+            }
+            
+
+            $status = property_exists($apiData, 'Status') ? $apiData->status : 0; 
+
+            $error_msg = (property_exists($apiData, 'Error')) ? $apiData->Error : false; 
+            
+            if (is_object($apiData) && property_exists($apiData, 'Id') && intval($apiData->Id) > 0)
              {
               $remote_id = intval($APIresponse['data']->Id);
               $qItem->addResult(['remote_id' => $remote_id]);
               
               return $this->returnOk(RequestManager::STATUS_UNCHANGED, __('Request for Alt text send to Shortpixel AI', 'shortpixel-image-optimiser'));  
-             }
+            }
+            elseif(self::AI_STATUS_OVERQUOTA === $status)
+            {
+               return $this->returnFailure(RequestManager::STATUS_ERROR, __('AI over quota', 'shortpixel-image-optimiser'));
+            }
+            else
+            {
+               return $this->returnFailure(RequestManager::STATUS_ERROR, $error_msg);
+            }
 
         }
 
