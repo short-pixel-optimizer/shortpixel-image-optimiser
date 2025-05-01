@@ -268,7 +268,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		else {
 			var detailsColumn = wp.media.view.Attachment.Details;
 			var twoCol = false;
-
 		}
 
 		var extended = detailsColumn.extend({

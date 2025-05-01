@@ -66,6 +66,15 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
     }
 
+    /** Is WordPress scaled is always false on custom images.
+     * 
+     * @return false 
+     */
+    public function isScaled()
+    {
+       return false; 
+    }
+
     protected function getExcludePatterns()
     {
         $args = array(

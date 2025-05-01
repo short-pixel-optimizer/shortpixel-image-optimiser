@@ -300,12 +300,17 @@ class EnvironmentModel extends \ShortPixel\Model
 			  $this->is_screen_to_use = true;
 				$this->is_gutenberg_editor = true;
 	  }
-    elseif (isset($_GET['classic-editor']))
+    // If settings / classic editor is by default, this get is not included, so test-override for now to always load on post, see if other page editor have issues with this. 
+    // If no issues, at some point this statements should be done uh better. 
+    elseif (isset($_GET['classic-editor']) || 'post' === $screen->id)
     {
       $this->is_screen_to_use = true;
       $this->is_classic_editor = true;
       
     }
+    
+    
+    
 
     $this->screen_is_set = true;
   }
