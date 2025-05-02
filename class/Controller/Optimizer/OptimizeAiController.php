@@ -97,6 +97,10 @@ class OptimizeAiController extends OptimizerBase
             $qItem->addResult([
             'message' => __('Request for Alt text send to Shortpixel AI', 'shortpixel-image-optimiser')]);
         }
+        else
+        {
+            $result->numitems = 0;
+        }
 
     }
     else

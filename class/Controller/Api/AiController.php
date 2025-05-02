@@ -19,6 +19,7 @@ class AiController extends RequestManager
 
     protected $main_url;
 
+    const AI_STATUS_INVALID_URL = 2;
     const AI_STATUS_OVERQUOTA = 3; 
 
 
@@ -106,12 +107,12 @@ class AiController extends RequestManager
             }
             
 
-            $status = property_exists($apiData, 'Status') ? $apiData->status : 0; 
+            $status = property_exists($apiData, 'Status') ? intval($apiData->Status) : 1; 
 
             $error_msg = (property_exists($apiData, 'Error')) ? $apiData->Error : false; 
             
             if (is_object($apiData) && property_exists($apiData, 'Id') && intval($apiData->Id) > 0)
-             {
+            {
               $remote_id = intval($APIresponse['data']->Id);
               $qItem->addResult(['remote_id' => $remote_id]);
               
@@ -120,6 +121,10 @@ class AiController extends RequestManager
             elseif(self::AI_STATUS_OVERQUOTA === $status)
             {
                return $this->returnFailure(RequestManager::STATUS_ERROR, __('AI over quota', 'shortpixel-image-optimiser'));
+            }
+            elseif(self::AI_STATUS_INVALID_URL === $status)
+            {
+                return $this->returnFailure(RequestManager::STATUS_FAIL, __('No URL or Invalid URL', 'shortpixel-image-optimiser'));
             }
             else
             {
