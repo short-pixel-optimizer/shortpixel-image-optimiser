@@ -142,11 +142,12 @@ window.ShortPixelProcessor =
           console.warn('Broadcast - wrong origin');
            return false; 
         }
+       /*   This is mozilla only, not standard , shan't be used!
         if (! event.originalTarget || event.originalTarget.name !== 'spio_processor')
         {
           console.log('Broadcast = Wrong target');
           return false; 
-        }
+        } */
 
           var data = event.data; 
 
