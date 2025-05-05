@@ -234,7 +234,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			return $src;
 		}
 
-		Log::addTemp($src);
 		//Prefix the SRC with the API Loader info .
 		// 1. Check if scheme is http and add
 		// 2. Check if there domain and if not, prepend.
@@ -268,11 +267,11 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		$checkExtensions = []; 
 		$fonts = ['.ttf', '.woff', '.woff2', '.otf']; 
 
-		if (true === $settings->cdn_js) {
+		if (true == $settings->cdn_js) {
 			$checkExtensions[] = '.js'; 
 			
 		}
-		if (true === $settings->cdn_css)
+		if (true == $settings->cdn_css)
 		{	
 			$checkExtensions[] = '.css'; 
 			$checkExtensions = array_merge($checkExtensions, $fonts);
