@@ -1,24 +1,24 @@
 // A settings setting (tm)
 
-setting{
+setting {
 
   padding: 12px;
-	background-color: $blue_background;
-    border-radius: 0.7rem;
-	margin: 10px 0;
-	display: block;
+  background-color: $blue_background;
+  border-radius: 0.7rem;
+  margin: 10px 0;
+  display: block;
   width: auto;
   height: auto;
   position: relative;
   transition: all 0.5s ease-in;
 
   //display: flex;
- // align-items: center;
+  // align-items: center;
   //flex-wrap: wrap;
-	//flex-direction: column;
+  //flex-direction: column;
 
   // when showing on a toggle, force flex.
-/*  &.toggleTarget.is-visible
+  /*  &.toggleTarget.is-visible
   {
      //display: flex !important;
   } */
@@ -29,8 +29,8 @@ setting{
 
   // main title of setting
   name {
-//    width: 220px;
-//    min-width: 220px;
+    //    width: 220px;
+    //    min-width: 220px;
     font-size: 14px;
     font-weight: 700;
     display: block;
@@ -41,82 +41,92 @@ setting{
   }
 
   content {
-     padding: 5px 10px;
-     flex-basis: calc(100% - 250px);
-     font-size: 14px;
-     display: inline-block;
+    padding: 5px 10px;
+    flex-basis: calc(100% - 250px);
+    font-size: 14px;
+    display: inline-block;
 
-     &.shortpixel-compression {
-       max-width: calc(100% - 260px);
-     }
+    &.shortpixel-compression {
+      max-width: calc(100% - 260px);
+    }
 
-     // Label for text input next to the input box.
-     inputlabel
-     {
-        min-width: 100px;
-        font-weight: 700;
-        display: inline-block;
-     }
+    // Label for text input next to the input box.
+    inputlabel {
+      min-width: 100px;
+      font-weight: 700;
+      display: inline-block;
+    }
 
   }
+
   // additional information
   info {
-     display: block;
-     color: #818181;
-     font-size: 13px;
-     margin: 6px 0;
+    display: block;
+    color: #818181;
+    font-size: 13px;
+    margin: 6px 0;
+    &.fieldmessage {
+       font-weight: 700;
+       color: #ff0000;
+    }
   }
 
-  warning, error {
-      border-left: 4px solid #ffb900;
-      box-shadow: 0 1px 1px 0 rgba( 0, 0, 0, 0.1 );
-      padding: 8px;
-      //margin-left: 230px;
-      margin: 4px 0 12px 0px;
-      flex-basis: 100%;
-      display: none;
-      opacity: 0;
-      transition: opacity 300ms;
-      background: #fff;
-      // Looks better with full width
-      //max-width: 700px;
+  warning,
+  error {
+    border-left: 4px solid #ffb900;
+    box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.1);
+    padding: 8px;
+    //margin-left: 230px;
+    margin: 4px 0 12px 0px;
+    flex-basis: 100%;
+    display: none;
+    opacity: 0;
+    transition: opacity 300ms;
+    background: #fff;
+    // Looks better with full width
+    //max-width: 700px;
 
-      h4 {
-        margin: 0;
-        font-size: 16px;
-      }
+    h4 {
+      margin: 0;
+      font-size: 16px;
+    }
 
-      p {
-         color: #333;
-         font-size: 13px;
-      }
-      &.is-visible {
-          display: block;
-      }
-  }
-	error {
-		 border-left-color: #ff0000;
-	}
+    p {
+      color: #333;
+      font-size: 13px;
+    }
 
-  switch
-  {
-     label {
-        font-weight: 700;
-     }
+    &.is-visible {
+      display: block;
+    }
   }
 
-	&.switch
-	{
-		name, info, warning, error {
-		//	 margin-left: 70px;
-		}
-	}
-
-  &.disabled
-  {
-     filter: blur(1px);
-     opacity: 0.4;
-     transition: all 0.5s ease-out;
+  error {
+    border-left-color: #ff0000;
   }
 
-} // setting
+  switch {
+    label {
+      font-weight: 700;
+    }
+  }
+
+  &.switch {
+
+    name,
+    info,
+    warning,
+    error {
+      //	 margin-left: 70px;
+    }
+  }
+
+  &.disabled {
+    filter: blur(1px);
+    opacity: 0.4;
+    transition: all 0.5s ease-out;
+  }
+
+}
+
+// setting

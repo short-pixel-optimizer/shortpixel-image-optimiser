@@ -154,6 +154,7 @@ window.ShortPixelProcessor =
           {
             return false; 
           } */
+          console.log('Broadcast data', data);
 
           if (data.reason === 'handleImage')
           {

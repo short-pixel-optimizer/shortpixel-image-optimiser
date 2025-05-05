@@ -56,6 +56,9 @@ class SettingsViewController extends \ShortPixel\ViewController
 		 protected $is_ajax_save = false; // checker if saved via ajax ( aka no redirect / json return )
 		 protected $notices_added = []; // Added notices this run, to report via ajax.
 
+     // Array of updated values to be passed back in the settings page
+     protected $returnFormData = []; 
+
 		 protected static $instance;
 
       public function __construct()
@@ -805,20 +808,43 @@ class SettingsViewController extends \ShortPixel\ViewController
           }
 
           $post_useCDN = isset($post['useCDN']) ? true : false; 
+          $post_CDNDomain = isset($post['CDNDomain']) ? sanitize_text_field($post['CDNDomain']) : ''; 
+
           $setting_useCDN = $this->model->useCDN; 
+          $setting_CDNDomain = $this->model->CDNDomain; 
+
+          $CDNcontroller = new \ShortPixel\Controller\Front\CDNController();
 
           if ($post_useCDN !== $setting_useCDN)
           {
-              $controller = new \ShortPixel\Controller\Front\CDNController();
+              
               if (true === $post_useCDN)
               {
-                 $controller->registerDomain(); 
+                 $CDNcontroller->registerDomain(); 
               }
               else{
                 // Deregister off for now.
                // $controller->registerDomain(['action' => 'deregister']);
               }
           }
+
+          if ($post_useCDN)
+          {
+              $check = $CDNcontroller->validateCDNDomain($post_CDNDomain);
+              if (true !== $check)
+              {
+                 $this->addReturnFormData([
+                    'field' => 'CDNDomain', 
+                    'old_value' => $post_CDNDomain, 
+                    'new_value' => $check, 
+                    'hook_query' => 'info.useCDN', 
+                    'message' => sprintf(__('CDN Domain has been changed from %s to %s . SPIO needs a path component', 'shortpixel-image-optimiser'), $post_CDNDomain, $check),
+                 ]);
+                 $post['CDNDomain'] = $check;
+              }
+          }
+
+          
 
 
 				// Field that are in form for other purpososes, but are not part of model and should not be saved.
@@ -850,6 +876,8 @@ class SettingsViewController extends \ShortPixel\ViewController
               'nonce',
               'action',
               'form-nonce',
+              'request_url', 
+              'login_apiKey',
 
 					);
 
@@ -862,6 +890,13 @@ class SettingsViewController extends \ShortPixel\ViewController
 					}
 
           parent::processPostData($post);
+
+      }
+
+      protected function addReturnFormData($data)
+      {
+        
+          $this->returnFormData[] = $data; 
 
       }
 
@@ -1058,6 +1093,11 @@ class SettingsViewController extends \ShortPixel\ViewController
 						{
               $json->redirect = ($url !== false && ! is_null($url) ) ? $url : $redirect;
 						}
+
+            if (count($this->returnFormData) > 0)
+            {
+               $json->returnFormData = $this->returnFormData;
+            }
 
 						$noticeController->update(); // dismiss one-time ponies
 						wp_send_json($json);

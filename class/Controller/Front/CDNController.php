@@ -341,23 +341,58 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		return $content;
 	}
 
-	protected function loadCDNDomain()
+	protected function loadCDNDomain($CDNDomain = false)
 	{
-		$settings = \wpSPIO()->settings();
-		$cdn_domain = $settings->CDNDomain;
+		if ($CDNDomain === false)
+		{
+			$settings = \wpSPIO()->settings();
+			$cdn_domain = $settings->CDNDomain;
+		}
+		else
+		{
+			$cdn_domain = $CDNDomain;
+		}
 
 		$parsed_domain = parse_url($cdn_domain);
-		if (false === isset($parsed_domain['path']) )
+		if (false === isset($parsed_domain['path']) || 
+			strlen($parsed_domain['path']) === 0 ||
+			'/' === $parsed_domain['path']
+			 )
 		{
-			 $cdn_domain = $cdn_domain . '/spio/'; 
+			 $cdn_domain = trailingslashit($cdn_domain) . 'spio/'; 
 		}
-		elseif ($parsed_domain['path'] !== '/spio')
+	/*	elseif ($parsed_domain['path'] !== '/spio')
 		{
 			 $cdn_domain = $parsed_domain['scheme'] . '://' . $parsed_domain['host'] . '/spio'; 
+		} */
+
+		if (false === $CDNDomain)
+		{
+			$this->cdn_domain = trailingslashit($cdn_domain);
+		}
+		else
+		{
+			return  $cdn_domain;
 		}
 
-		$this->cdn_domain = trailingslashit($cdn_domain);
 
+	}
+
+	public function validateCDNDomain($CDNDomain)
+	{
+		
+		$resultDomain = $this->loadCDNDomain($CDNDomain);
+
+		if ($resultDomain === $CDNDomain)
+		{
+			 return true; 
+		}
+		else
+		{
+			return $resultDomain;
+		}
+
+		 //return $this->cdn_domain;
 	}
 
 	protected function fetchImageMatches($content, $args = [])

@@ -906,7 +906,7 @@ FormResponseEvent(json)
 			{
 				 if (json.redirect == 'reload')
 				 {
-							window.location.reload();
+						window.location.reload();
 				 }
 				 else {
 						 window.location.href = json.redirect;
@@ -933,6 +933,41 @@ FormResponseEvent(json)
 					{
 						anchor.insertAdjacentHTML('afterend', json.display_notices[i]);
 					} */
+			}
+
+			// Remove old messages 
+			var fieldMessages = document.querySelectorAll(['.fieldmessage']).forEach(e => e.remove()); 
+			/*for(let i = 0; i < fieldMessages.length; i++)
+			{
+
+			} */
+
+			if (json.returnFormData)
+			{
+				 for (let i = 0; i < json.returnFormData.length; i++)
+				 {
+					 var fieldData = json.returnFormData[i]; 
+					 var fieldName = fieldData.field; 
+
+					 var fieldObj = document.querySelector('input[name="' + fieldName + '"]'); 
+					 fieldObj.value= fieldData.new_value;
+
+					 var newEl = document.createElement('info'); 
+					 newEl.classList.add('fieldmessage', 'updated'); 
+					 newEl.innerHTML = fieldData.message; 
+
+					 if (fieldData.hook_query)
+					 {
+						var hookElement = document.querySelector(fieldData.hook_query); 
+						hookElement.after(newEl);
+					 }
+					 else
+					 {
+						fieldObj.after(newEl);
+					 }
+
+
+				 }
 			}
 
 		saveDialog.classList.add('show');

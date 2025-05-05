@@ -205,7 +205,7 @@ div.spio-modal-title {
   box-shadow: none;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings button:hover, .wrap.is-shortpixel-settings-page .shortpixel-settings .button-setting:hover {
-  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
+  background: #32d7e5;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings button i.switch, .wrap.is-shortpixel-settings-page .shortpixel-settings .button-setting i.switch {
   width: 18px;
@@ -311,7 +311,7 @@ div.spio-modal-title {
   filter: brightness(0%) invert(1);
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab .save-buttons.saving button.save {
-  background-color: rgb(14.3684210526, 104.4473684211, 111.6315789474);
+  background-color: #0e6870;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab .save-buttons.saving button.save i {
   animation: cssload-spin 5000ms infinite linear;
@@ -528,7 +528,7 @@ div.spio-modal-title {
   box-shadow: none;
 }
 .wrap.is-shortpixel-settings-page header .top-buttons a:hover, .wrap.is-shortpixel-settings-page header .top-buttons button:hover {
-  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
+  background: #32d7e5;
 }
 .wrap.is-shortpixel-settings-page header .top-buttons a i.switch, .wrap.is-shortpixel-settings-page header .top-buttons button i.switch {
   width: 18px;
@@ -1244,7 +1244,7 @@ div.spio-modal-title {
   box-shadow: none;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper .dashboard-button:hover {
-  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
+  background: #32d7e5;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper .dashboard-button i.switch {
   width: 18px;
@@ -2126,7 +2126,7 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page #tab-tools .button {
   min-height: 44px;
   color: #1ABDCA;
-  background-color: rgb(232.25, 232.25, 232.25);
+  background-color: #e8e8e8;
   border-radius: 6px;
   font-weight: 700;
   letter-spacing: 0.3px;
@@ -2134,7 +2134,7 @@ div.spio-modal-title {
   transition: all 0.1s ease-in-out;
 }
 .wrap.is-shortpixel-settings-page #tab-tools .button:hover {
-  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
+  background: #32d7e5;
   color: #fff;
 }
 .wrap.is-shortpixel-settings-page #tab-tools .option, .wrap.is-shortpixel-settings-page #tab-tools setting {
@@ -2216,9 +2216,9 @@ div.spio-modal-title {
   position: relative;
   transition: all 0.5s ease-in;
   /*  &.toggleTarget.is-visible
-    {
-       //display: flex !important;
-    } */
+  {
+     //display: flex !important;
+  } */
 }
 .wrap.is-shortpixel-settings-page setting#compression-type {
   margin-bottom: 30px;
@@ -2251,7 +2251,12 @@ div.spio-modal-title {
   font-size: 13px;
   margin: 6px 0;
 }
-.wrap.is-shortpixel-settings-page setting warning, .wrap.is-shortpixel-settings-page setting error {
+.wrap.is-shortpixel-settings-page setting info.fieldmessage {
+  font-weight: 700;
+  color: #ff0000;
+}
+.wrap.is-shortpixel-settings-page setting warning,
+.wrap.is-shortpixel-settings-page setting error {
   border-left: 4px solid #ffb900;
   box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.1);
   padding: 8px;
@@ -2262,15 +2267,18 @@ div.spio-modal-title {
   transition: opacity 300ms;
   background: #fff;
 }
-.wrap.is-shortpixel-settings-page setting warning h4, .wrap.is-shortpixel-settings-page setting error h4 {
+.wrap.is-shortpixel-settings-page setting warning h4,
+.wrap.is-shortpixel-settings-page setting error h4 {
   margin: 0;
   font-size: 16px;
 }
-.wrap.is-shortpixel-settings-page setting warning p, .wrap.is-shortpixel-settings-page setting error p {
+.wrap.is-shortpixel-settings-page setting warning p,
+.wrap.is-shortpixel-settings-page setting error p {
   color: #333;
   font-size: 13px;
 }
-.wrap.is-shortpixel-settings-page setting warning.is-visible, .wrap.is-shortpixel-settings-page setting error.is-visible {
+.wrap.is-shortpixel-settings-page setting warning.is-visible,
+.wrap.is-shortpixel-settings-page setting error.is-visible {
   display: block;
 }
 .wrap.is-shortpixel-settings-page setting error {
