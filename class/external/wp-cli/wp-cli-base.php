@@ -506,44 +506,6 @@ class SpioCommandBase
 		\WP_CLI::Success(__('Queue(s) cleared', 'shortpixel-image-optimiser'));
 	}
 
-	/**
-	 * Add an Alt Tag to Item
-	 *
-	 *  <id>
-	 *   : Media Library ID
-	 *
-	 *
-	 */
-	public function requestAlt($args, $assoc)
-	{
-		$queueController = $this->getQueueController();
-		$fs = \wpSPIO()->filesystem();
-
-		if (! isset($args[0])) {
-			\WP_CLI::Error(__('Specify an Media Library Item ID', 'shortpixel-image-optimiser'));
-			return;
-		}
-
-		$id = intval($args[0]);
-
-		$imageObj = $fs->getMediaImage($id);
-
-		if ($imageObj === false) {
-			\WP_CLI::Error(__('Image object not found / non-existing in database by this ID', 'shortpixel-image-optimiser'));
-		}
-
-		// @todo When completing this script probably as for AddSingleItem with requestAlt as action, then run queue, then remove/update item for getter.
-
-		// @todo Check OptimizeController - sendToProcessing for options / other data.
-
-		$args = [
-			'action' => 'requestAlt',
-
-		];
-		$result = $queueController->addItemToQueue($imageObj, $args);
-
-		$this->displayResult($result, 'alttext');
-	}
 
 	//  Colored is buggy, so off for now -> https://github.com/wp-cli/php-cli-tools/issues/134
 	private function textBoolean($bool, $colored = false)

@@ -10,6 +10,7 @@ use ShortPixel\Controller\BulkController as BulkController;
 
 use ShortPixel\Controller\Queue\Queue as Queue;
 use ShortPixel\Controller\Api\ApiController as ApiController;
+use ShortPixel\Controller\QueueController;
 use ShortPixel\Controller\ResponseController as ResponseController;
 
 /**
@@ -45,7 +46,7 @@ class SpioBulk extends SpioCommandBase
 
 			 $queue = $this->getQueueArgument($assoc);
 
-       \WP_CLI::Line('Start signal for Bulk Processing given.');
+       		\WP_CLI::Line('Start signal for Bulk Processing given.');
 
 			 foreach($queue as $qname)
 			 {
@@ -82,7 +83,7 @@ class SpioBulk extends SpioCommandBase
 		public function auto($args, $assoc)
 		{
 			 	$queue = $this->getQueueArgument($assoc);
-        $queueController = $this->getQueueController(true);
+      		  $queueController = $this->getQueueController(true);
 
 				$bulkControl = BulkController::getInstance();
 
@@ -283,4 +284,11 @@ class SpioBulk extends SpioCommandBase
 							 $bool = $this->run($args, $assoc);
 						}
 			}
+
+				// To ensure the bulk switch is ok.
+	protected function getQueueController($bulk = false)
+	{
+		$queueController = new QueueController(['is_bulk' => true]);
+		return $queueController;
+	}
 } // CLASS

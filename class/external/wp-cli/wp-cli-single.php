@@ -75,10 +75,13 @@ class SpioSingle extends SpioCommandBase
       $qItem = QueueItems::getImageItem($imageModel);
       $qItem->newRestoreAction();
 
-      $optimiser = $qItem->getApiController();
-      $optimiser->restoreItem($qItem);
+      $queueController = $this->getQueueController();
+      //$optimiser = $qItem->getApiController();
+      //$optimiser->restoreItem($qItem);
 
-      $result = $qItem->result();
+      $result  = $queueController->addItemToQueue($imageModel, ['action' => 'restore']);
+
+      //$result = $qItem->result();
 
 			$this->showResponses();
 
@@ -105,6 +108,45 @@ class SpioSingle extends SpioCommandBase
         \WP_CLI::Error('Undetermined' . $message);
       }
   }
+
+  	/**
+	 * Add an Alt Tag to Item
+	 *
+	 *  <id>
+	 *   : Media Library ID
+	 *
+	 *
+	 */
+	public function requestAlt($args, $assoc)
+	{
+		$queueController = $this->getQueueController();
+		$fs = \wpSPIO()->filesystem();
+
+		if (! isset($args[0])) {
+			\WP_CLI::Error(__('Specify an Media Library Item ID', 'shortpixel-image-optimiser'));
+			return;
+		}
+
+		$id = intval($args[0]);
+
+		$imageObj = $fs->getMediaImage($id);
+
+		if ($imageObj === false) {
+			\WP_CLI::Error(__('Image object not found / non-existing in database by this ID', 'shortpixel-image-optimiser'));
+		}
+
+		// @todo When completing this script probably as for AddSingleItem with requestAlt as action, then run queue, then remove/update item for getter.
+
+		// @todo Check OptimizeController - sendToProcessing for options / other data.
+
+		$args = [
+			'action' => 'requestAlt',
+
+		];
+		$result = $queueController->addItemToQueue($imageObj, $args);
+
+		$this->displayResult($result, 'alttext');
+	}
 
 
 
