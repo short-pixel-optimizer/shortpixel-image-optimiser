@@ -115,7 +115,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 	{
 		$purge = $args['purge']; 
 		$settings = \wpSPIO()->settings();
-		$purge_domain = 'https://no-cdn.shortpixel.ai/purge-cdn-cache-bulk'; 
+	//	$purge_domain = 'https://no-cdn.shortpixel.ai/purge-cdn-cache-bulk'; 
 
 		$result = [
 			'is_error' => false, 
@@ -131,14 +131,19 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 		if ('all' == $purge)
 		{
-			$apiKeyController = ApiKeyController::getInstance();
+		/*	$apiKeyController = ApiKeyController::getInstance();
 			$site_domain = parse_url(get_site_url());
 			$cdnDomain = parse_url($settings->CDNDomain); 
 			$key = $apiKeyController->forceGetApiKey();
 
 			$cdnHost = (isset($cdnDomain['host'])) ? $cdnDomain['host'] : 'spcdn.shortpixel.ai';
 
-			$domain = $purge_domain . '/' . $key  . '/' . trim($site_domain['host']) . '/' . trim($cdnHost);
+			//$domain = $this->getPurgeURL(['action' => 'purge-cdn-cache-bulk']);
+
+			$domain = $purge_domain . '/' . $key  . '/' . trim($site_domain['host']) . '/' . trim($cdnHost); 
+*/
+			$domain = $this->getPurgeURL(['action' => 'purge-cdn-cache-bulk']);
+
 			$remote_post = wp_remote_post($domain);
 
 			if (is_wp_error($remote_post))
@@ -159,6 +164,34 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 		return $result;
 		 
+	}
+
+	private function getPurgeURL($args = [])
+	{
+		$action = isset($args['action']) ? $args['action'] : ''; 
+		$purge_domain = 'https://no-cdn.shortpixel.ai'; 
+
+		$settings = \wpSPIO()->settings();
+		$apiKeyController = ApiKeyController::getInstance();
+
+		$site_domain = parse_url(get_site_url());
+		$cdnDomain = parse_url($settings->CDNDomain); 
+		$key = $apiKeyController->forceGetApiKey();
+		$cdnHost = (isset($cdnDomain['host'])) ? $cdnDomain['host'] : 'spcdn.shortpixel.ai';
+
+		if ('purge-cdn-cache' == $action)
+		{
+			//http://no-cdn.shortpixel.ai/purge-cdn-cache/API_KEY_HERE/FULL_CDN_DOMAIN/costomer-domain.com/wp-content/uploads/2024/12/file-name-without-extension*
+			$domain = $purge_domain . '/' . $action . '/' . $key  . '/';
+		}
+		else
+		{
+			$domain = $purge_domain . '/' . $action . '/' . $key  . '/' . trim($site_domain['host']) . '/' . trim($cdnHost);
+		}
+		
+
+		return $domain; 
+
 	}
 
 	protected function createArguments($args = [])
@@ -216,14 +249,21 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 	{
 		$settings = \wpSPIO()->settings();
 
-		if (true === $settings->cdn_js || true === $settings->cdn_css) {
+		if (true === $settings->cdn_js) {
+
 			add_filter('script_loader_src', [$this, 'processScript'], 10, 2);
 		}
+
+		if (true === $settings->cdn_css) {
+			add_filter('style_loader_src', [$this, 'processScript'], 10, 2);
+		}
+
 	}
 
 	public function processScript($src, $handle)
 	{
 		// @todo check here if file is JS / CSS at all. 
+		
 
 		if (false === $this->checkPreProcess()) {
 			return;
@@ -598,28 +638,47 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 	 */
 	public function flushItem(ImageModel $imageModel)
 	{
-		$cdn_domain = $this->cdn_domain;
 
+		// Find URL. Non-scaled.
 		$url = $imageModel->getURL();
 
-		
-		$url = $this->getURLBase($url);
+		if ('media' == $imageModel->get('type'))
+		{
+			if ($imageModel->hasOriginal())
+			{
+				$url = $imageModel->getOriginalFile()->getURL();
+			}
+		}
 
-		// as per CreateReplacements
+		// Get the nocdn URL as start. 
+		$domain = $this->getPurgeURL(['action' => 'purge-cdn-cache']);
+
+		//http://no-cdn.shortpixel.ai/purge-cdn-cache/API_KEY_HERE/FULL_CDN_DOMAIN/costomer-domain.com/wp-content/uploads/2024/12/file-name-without-extension*
+
+		
+		// ReplaceBlock should find and replace the URL with all arguments, as in regular operation.
 		$replaceBlock = $this->getReplaceBlock($url);
-		$replaceBlock->args = $this->createArguments(['remove' => 'f_remove']);
+		$replaceBlock->args = $this->createArguments();
 
-		$url = str_replace(['http://', 'https://'], '', $replaceBlock->url); // always remove scheme
-		$url = apply_filters('shortpixel/front/cdn/url', $url);
-
-		$this->checkScheme($replaceBlock);
-
-		$cdnArgs = implode(',', $replaceBlock->args);
-		$cdn_prefix = trailingslashit($cdn_domain) . trailingslashit($cdnArgs);
+		$blocks = $this->createReplacements([$replaceBlock]);
 		
-		$url = $cdn_prefix . trim($url); 
-	
-		wp_remote_get($url);
+
+		$replaceBlocks = $blocks[0];
+
+		// Find the base (without extension) of the main image. 
+		$full_cdn_url = $this->getURLBase($replaceBlocks->replace_url);
+
+		$flush_url = $domain . $full_cdn_url; 
+		Log::addTemp('Flush URL : ' . $flush_url);
+
+		$getArgs = [
+			'timeout'=> 8,
+			'sslverify' => apply_filters('shortpixel/system/sslverify', true),
+		];
+
+		$result = wp_remote_get($flush_url, $getArgs);
+
+		Log::addTemp('Flush result', $result);
 
 	}
 
@@ -633,10 +692,12 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 	{
 		$url = substr($url,0, strrpos($url, '.')  );
 
-		if (strpos($url, '-scaled') !== false)
+		//$url = str_replace(['http://', 'https://'], '', $url);
+
+		/*if (strpos($url, '-scaled') !== false)
 		{
 			$url = str_replace('-scaled', '', $url);
-		}
+		} */
 
 		$url = $url . '*';
 		return $url;

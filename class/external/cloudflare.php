@@ -65,7 +65,7 @@ class CloudFlareAPI {
      *
      * @param $image_id - WordPress image media ID
      */
-    private function start_cloudflare_cache_purge_process( $imageItem ) {
+    private function start_cloudflare_cache_purge_process($imageItem ) {
 
         // Fetch CloudFlare API credentials
 

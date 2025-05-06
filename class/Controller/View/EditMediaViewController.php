@@ -1,6 +1,7 @@
 <?php
 namespace ShortPixel\Controller\View;
 
+use ShortPixel\Controller\Front\CDNController;
 use ShortPixel\Controller\QueueController;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -203,6 +204,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
           $fs = \wpSPIO()->filesystem();
 
 					$imageObj = $this->imageModel;
+
 
 					if ($imageObj->isProcessable())
 					{
