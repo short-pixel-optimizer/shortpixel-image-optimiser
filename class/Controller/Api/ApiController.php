@@ -476,7 +476,7 @@ class ApiController extends RequestManager
 			return true;
 
 
-		if (\wpSPIO()->settings()->useSmartCrop == true && \wpSPIO()->settings()->smartCropIgnoreSizes == true) {
+		if (\wpSPIO()->settings()->useSmartcrop == true && \wpSPIO()->settings()->smartCropIgnoreSizes == true) {
 			return true;
 		}
 

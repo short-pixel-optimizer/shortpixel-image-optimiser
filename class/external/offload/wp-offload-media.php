@@ -87,7 +87,7 @@ class wpOffload
 
 		 	add_filter('shortpixel_get_original_image_path', array($this, 'checkScaledUrl'), 10,2);
 
-      add_filter('shortpixel/image/urltopath', array($this, 'checkIfOffloaded'), 10,2);
+      add_filter('shortpixel/image/urltopath', array($this, 'checkIfOffloaded'), 10,3);
       add_filter('shortpixel/file/virtual/translate', array($this, 'getLocalPathByURL'));
 
       // for webp picture paths rendered via output
@@ -225,7 +225,7 @@ class wpOffload
 			return null;
 		}
 
-    public function checkIfOffloaded($bool, $url)
+    public function checkIfOffloaded($bool, $url, $rawpath)
     {
 			$source_id = $this->sourceCache($url);
 			$orig_url = $url;
@@ -233,18 +233,23 @@ class wpOffload
 			if (is_null($source_id))
 			{
 				$extension = substr($url, strrpos($url, '.') + 1);
+				// Check the file extension without loading anything of the fileObj ( virtual )
+				$file_extension = substr($rawpath, strrpos($rawpath, '.') + 1);
 
 				// If these filetypes are not in the cache, they cannot be found via geSourceyIDByUrl method ( not in path DB ), so it's pointless to try. If they are offloaded, at some point the extra-info might load.
-				if ($extension == 'webp' || $extension == 'avif')
+				if (false == in_array($file_extension, ['webp', 'avif']))
 				{
-					return false;
+					if ($extension == 'webp' || $extension == 'avif')
+					{
+						return false;
+					}
+	
 				}
 
      		$source_id = $this->getSourceIDByURL($url);
 
 			}
-			else {
-			}
+
 
       if ($source_id !== false)
 			{
@@ -561,6 +566,8 @@ class wpOffload
       {
          $file = $fs->getFile($path);
 
+
+
 				 $basedir = $file->getFileDir();
 
 				 if (is_null($basedir)) // This could only happen if path is completely empty.
@@ -571,6 +578,12 @@ class wpOffload
          $basepath = $basedir->getPath();
 
          $newPaths[$size] = $path;
+
+		 		 // If webp/avif is native, don't do this. 
+		 if ('webp' == $file->getExtension() || 'avif' == $file->getExtension())
+		 {
+			 continue; 
+		 } 
 
          $webpformat1 = $basepath . $file->getFileName() . '.webp';
          $webpformat2 = $basepath . $file->getFileBase() . '.webp';

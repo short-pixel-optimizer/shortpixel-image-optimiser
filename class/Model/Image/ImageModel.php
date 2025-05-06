@@ -1409,44 +1409,44 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		 $hasResizeSizes = (intval($settings->resizeImages) > 0) ? true : false;
 		 $result = array();
 
-		 $useSmartCrop = false;
+		 $useSmartcrop = false;
      $useResize = false;
 
      if ($this->getExtension() !== 'pdf')
      {
     		 if (isset($args['smartcrop']))
     		 {
-    			  $useSmartCrop = $args['smartcrop'];
+    			  $useSmartcrop = $args['smartcrop'];
     		 }
     		 else {
-    		 	 $useSmartCrop = (bool) $settings->useSmartCrop;
+    		 	 $useSmartcrop = (bool) $settings->useSmartcrop;
     		 }
      }
 
      /** This construct. If both resize and smartcrop are on, the smartcrop is applied to cropped images, and resize to the rest. If one or the other is off, apply that setting to all if possible */
      if ($this->getExtension() == 'pdf') // pdf can never be smartcrop
      {
-        $useSmartCrop = false;
+        $useSmartcrop = false;
         if (true === $hasResizeSizes)
         {
           $useResize = true;
         }
      }
-     elseif ( true === $useSmartCrop && true === $hasResizeSizes )
+     elseif ( true === $useSmartcrop && true === $hasResizeSizes )
      {
         $size = is_array($this->sizeDefinition) ? $this->sizeDefinition : false;
 
         if (false === $size) // if there is no size definition, err on the safe side.
         {
            $useResize = true;
-           $useSmartCrop = false;
+           $useSmartcrop = false;
         }
         else {
             if (true == $size['crop'])
             {
 
               $useResize = false;
-              $useSmartCrop = true;
+              $useSmartcrop = true;
 
               if ($args['main_width'] !== false && $args['main_height'] !== false)
               {
@@ -1455,7 +1455,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
                  if ($ratio_check == 0)
                  {
-                    $useSmartCrop = false;
+                    $useSmartcrop = false;
                     $useResize = true;
                  }
 
@@ -1463,28 +1463,28 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
             }
             else {
               $useResize = true;
-              $useSmartCrop = false;
+              $useSmartcrop = false;
             }
         }
      }
-		 elseif (true === $useSmartCrop) // these for clarity
+		 elseif (true === $useSmartcrop) // these for clarity
 		 {
-			$useSmartCrop = true;
+			$useSmartcrop = true;
       $useResize = false;
 		 }
 		 elseif (true === $hasResizeSizes)
 		 {
 		 	 $useResize = true;
-       $useSmartCrop = false;
+       $useSmartcrop = false;
 		 }
 
      // Log if this goes wrong, but err on the side of resize if so.
-     if (true === $useSmartCrop && true === $useResize)
+     if (true === $useSmartcrop && true === $useResize)
      {
       Log::addError('Both UseSmartCrop and UseResize are true, this should not be');
      }
 
-     if (true === $useSmartCrop)
+     if (true === $useSmartcrop)
      {
         $resize = 4;
      }
@@ -1499,7 +1499,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
  	 		 $width = $this->get('width');
 			 $height = $this->get('height');
 
-       if (true === $useSmartCrop)
+       if (true === $useSmartcrop)
        {
          $url = $args['main_url'];
        }
