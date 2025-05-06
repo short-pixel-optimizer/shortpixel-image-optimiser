@@ -377,7 +377,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		element.after(wrapper);
 
 		element.dataset.shortpixelAlt = data.item_id;		
-		if (data.result_alt)
+		if (data.result_alt && data.has_data)
 			element.value = data.result_alt;
 
 	}

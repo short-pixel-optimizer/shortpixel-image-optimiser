@@ -271,6 +271,7 @@ public function getAltData(QueueItem $qItem)
 
     $metadata['action'] = $qItem->data()->action;
     $metadata['item_id'] = $item_id;
+    $metadata['has_data'] = $has_data;
 
     return $metadata; 
 }
