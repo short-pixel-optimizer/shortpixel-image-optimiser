@@ -243,6 +243,7 @@ class SpioCommandBase
 		ResponseController::setOutput(ResponseController::OUTPUT_CLI);
 
 		$controller = $this->getQueueController();
+		
 		$results = $controller->processQueue($queueTypes);
 
 		$totalStats = (property_exists($results, 'total') && property_exists($results->total, 'stats')) ? $results->total->stats : null;
