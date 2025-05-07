@@ -234,6 +234,17 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
         if ($type == 'avif' && ! $settings->createAvif)
             return false;
+        
+        if ('webp' == $type && 'webp' ==  $this->getExtension())
+        {
+           return false;
+        }
+
+        if ('avif' == $type && 'avif' ==  $this->getExtension())
+        {
+           return false;
+        }
+
 
 				// Pdf, no special files.
 				if ($this->getExtension() == 'pdf')

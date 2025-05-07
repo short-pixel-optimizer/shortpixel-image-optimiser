@@ -72,7 +72,7 @@ class ApiController extends RequestManager
 			'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
 			'key' => $keyControl->forceGetApiKey(),
 			'urllist' => $qItem->data()->urls,
-			'compressionType' => $qItem->data()->compressionType,
+			'lossy' => $qItem->data()->compressionType,
 			'item_id' => $qItem->item_id,
 			'refresh' => $qItem->data()->tries == 0 ? true : false,
 			'cmyk2rgb' => $settings->CMYKtoRGBconversion,

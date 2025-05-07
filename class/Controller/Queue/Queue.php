@@ -564,130 +564,9 @@ abstract class Queue
     {
         // @todo Test this assumption
         return $item->getQueueItem();
+    }
 
 /*
-        $mediaItem = clone $item;  // clone here, not to loose referenced data.
-        unset($mediaItem->item_id);
-        unset($mediaItem->tries);
-
-        $qItem = $mediaItem->_queueItem;
-
-        unset($mediaItem->_queueItem);
-
-        $qItem->value = $mediaItem;
-        return $qItem; */
-    }
-
-    // This is a general implementation - This should be done only once!
-    // The 'avif / webp left imp. is commented out since both API / and OptimizeController don't play well with this.
-   /* protected function imageModelToQueue(ImageModel $imageModel, $args = [])
-    {
-
-      //**** TODO - THIS IS ALREADY DONE IN NEWOPTIMIZEACTION 
-      // PROBABLY THIS CAN BE WHOLLY SKIPPED SINCE ALL THIS DATA SHOULD BE PREVENT IN QITEM -> DATA(); 
-      // Check references to this function
-
-        $defaults = array(
-            'debug_active' => false, // prevent write actions if called via debugger
-        );
-
-        $args = wp_parse_args($args, $defaults);
-
-        $item = new \stdClass;
-        $item->compressionType = \wpSPIO()->settings()->compressionType;
-
-				$data = $imageModel->getOptimizeData();
-				$urls = $data['urls'];
-				$params = $data['params'];
-
-				list($u, $baseCount) = $imageModel->getCountOptimizeData('thumbnails');
-				list($u, $webpCount) = $imageModel->getCountOptimizeData('webp');
-				list($u, $avifCount) = $imageModel->getCountOptimizeData('avif');
-
-        $counts = new \stdClass;
-        $counts->creditCount = $baseCount + $webpCount + $avifCount;  // count the used credits for this item.
-				$counts->baseCount = $baseCount; // count the base images.
-        $counts->avifCount = $avifCount;
-        $counts->webpCount = $webpCount;
-
-			 	$removeKeys = array('image', 'webp', 'avif'); // keys not native to API / need to be removed.
-
-				// Is UI info, not for processing.
-				if (isset($data['params']['paths']))
-				{
-					 unset($data['params']['paths']);
-				}
-
-				foreach($data['params'] as $sizeName => $param)
-				{
-						$plus = false;
-						$convertTo = array();
-						if ($param['image'] === true)
-						{
-							 $plus = true;
-						}
-					  if ($param['webp'] === true)
-						{
-							 $convertTo[] = ($plus === true) ? '+webp' : 'webp';
-						}
-						if ($param['avif'] === true)
-						{
-							$convertTo[] = ($plus === true) ? '+avif' : 'avif';
-						}
-
-						foreach($removeKeys as $key)
-						{
-							 if (isset($param[$key]))
-							 {
-								  unset($data['params'][$sizeName][$key]);
-							 }
-						}
-
-						if (count($convertTo) > 0)
-						{
-							$convertTo = implode('|', $convertTo);
-							$data['params'][$sizeName]['convertto'] = $convertTo;
-						}
-				}
-
-				// CompressionType can be integer, but not empty string. In cases empty string might happen, causing lossless optimization, which is not correct.
-        if (! is_null($imageModel->getMeta('compressionType')) && is_numeric($imageModel->getMeta('compressionType')))
-				{
-          $item->compressionType = $imageModel->getMeta('compressionType');
-				}
-
-        // Former securi function, add timestamp to all URLS, for cache busting.
-        $urls = $this->timestampURLS( array_values($urls), $imageModel->get('id'));
-
-        $item->urls = apply_filters('shortpixel_image_urls', $urls, $imageModel->get('id'));
-				if (count($data['params']) > 0)
-				{
-					$item->paramlist= array_values($data['params']);
-				}
-
-				if (count($data['returnParams']) > 0)
-				{
-					 $item->returndatalist = $data['returnParams'];
-				}
-		//		$item->preview = $imagePreviewURL;
-        $item->counts = $counts;
-
-        // Converter can alter the data for this item, based on conversion needs
-        $converter = Converter::getConverter($imageModel, true);
-        if ($baseCount > 0 && is_object($converter) && $converter->isConvertable())
-        {
-           $converter->filterQueue($item, $args);
-        }
-
-        return $item;
-    }
-
-		// @internal
-		public function _debug_imageModelToQueue($imageModel)
-		{
-			 return $this->imageModelToQueue($imageModel, ['debug_active' => true]);
-		} */
-
     protected function timestampURLS($urls, $id)
     {
       // https://developer.wordpress.org/reference/functions/get_post_modified_time/
@@ -699,7 +578,7 @@ abstract class Queue
 
       return $urls;
     }
-
+*/
 
 		// Check if item is in queue. Considered not in queue if status is done.
 		public function isItemInQueue($item_id)
