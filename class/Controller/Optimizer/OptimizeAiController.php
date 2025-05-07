@@ -48,7 +48,22 @@ class OptimizeAiController extends OptimizerBase
 
   public function sendToProcessing(QueueItem $qItem) { 
 
-    $this->api->processMediaItem($qItem, $qItem->imageModel);
+    if (false == $this->isSupported($qItem))
+    {
+        // For now only fail here is GIF support, so message is a backstop for now that later should be updated. 
+        $qItem->addResult([
+            'is_error' => true, 
+            'is_done' => true,
+            'message' => __('ALT Tags cannot be generated for GIF files by ShortPixel AI, for now', 'shortpixel-image-optimiser'), 
+            'apiStatus' => AiController::AI_STATUS_INVALID_URL,
+        ]); 
+
+    }
+    else
+    {
+        $this->api->processMediaItem($qItem, $qItem->imageModel);
+    }
+ 
 
   }
 
@@ -71,6 +86,8 @@ class OptimizeAiController extends OptimizerBase
     {
         case 'requestAlt': 
             $qItem->requestAltAction();
+
+
             
         break;
         case 'retrieveAlt': 
@@ -197,6 +214,19 @@ class OptimizeAiController extends OptimizerBase
 
   }
 
+  public function isSupported(queueItem $qItem)
+  {
+       $imageModel = $qItem->imageModel; 
+
+        // @todo This should check for animated gifs in the future, for now blanket no. 
+       if('gif' == $imageModel->getExtension())
+       {
+         return false; 
+       }
+       
+       return true; 
+  }
+
   public function undoAltData(QueueItem $qItem)
   {
        $altData = $this->getAltData($qItem);
@@ -257,6 +287,8 @@ public function getAltData(QueueItem $qItem)
     }
 
 
+
+
     $view = new ViewController();
     $view->addData([
             'item_id' => $item_id, 
@@ -265,6 +297,7 @@ public function getAltData(QueueItem $qItem)
             'has_data' => $has_data, 
             'image_url' => $image_url, 
             'current_alt' => $current_alt, 
+            'isSupported' => $this->isSupported($qItem),
         ]);
 
     $metadata['snippet'] = $view->returnView('snippets/part-aitext');

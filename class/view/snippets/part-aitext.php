@@ -9,12 +9,18 @@ $ai_icon = $icon_url . '/ai.svg';
 
 $item_id = $this->data['item_id']; 
 $has_data = $this->data['has_data'];
+$isSupported = $this->data['isSupported'];
 
 $quotaControl = QuotaController::getInstance();
 $keyControl = ApiKeyController::getInstance();
 
+if (false === $isSupported):
 
-if (false === $has_data): 
+	?>
+		<p><?php _e('ALT Tags cannot be generated for GIF files by ShortPixel AI, for now', 'shortpixel-image-optimiser'); ?></p>
+	<?php 
+
+elseif (false === $has_data): 
 
 	if (false === $keyControl->keyIsVerified() && false === $has_data):
 	
