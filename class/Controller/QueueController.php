@@ -230,6 +230,8 @@ class QueueController
       // @todo If once queue exited because of mediaItem, don't run the other one but abort
       $results = new \stdClass;
       $results->status = 1;
+      $overlimit = false;
+      
       if ( in_array('media', $queueTypes))
       {
         $mediaQ = $this->getQueue('media');

@@ -96,7 +96,21 @@ class SpioBulk extends SpioCommandBase
 		while ($running) {
 			$data = $queueController->getStartupData();
 		//	print_r($data);
-			$combined = $data->total->stats;
+
+			// Both are present. @todo If any queues appear this will be issue. 
+			if (count($queue) == 2)
+			{
+				$combined = $data->total->stats;
+			}
+			elseif('custom' == $queue[0])
+			{
+				 $combined = $data->custom->stats; 
+			}
+			else
+			{
+				$combined = $data->media->stats; 
+			}
+
 
 			// Is_finished is no queue running.
 			if ($combined->is_preparing) {

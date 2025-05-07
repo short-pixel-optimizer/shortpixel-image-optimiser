@@ -26,7 +26,6 @@ class CloudFlareAPI {
 				add_action('shortpixel/image/before_restore', array($this, 'check_cloudflare'), 10);
     }
 
-
     public function setup()
     {
 
