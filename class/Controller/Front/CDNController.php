@@ -125,23 +125,13 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 		if ('cssjs' == $purge)
 		{
-			$settings->cdn_purge_version = time(); 
+			$settings->cdn_purge_version = substr(time(), -4, 4); 
+
 			$result['message'] = __('CDN and JS cache purged', 'shortpixel-image-optimiser');
 		}
 
 		if ('all' == $purge)
 		{
-		/*	$apiKeyController = ApiKeyController::getInstance();
-			$site_domain = parse_url(get_site_url());
-			$cdnDomain = parse_url($settings->CDNDomain); 
-			$key = $apiKeyController->forceGetApiKey();
-
-			$cdnHost = (isset($cdnDomain['host'])) ? $cdnDomain['host'] : 'spcdn.shortpixel.ai';
-
-			//$domain = $this->getPurgeURL(['action' => 'purge-cdn-cache-bulk']);
-
-			$domain = $purge_domain . '/' . $key  . '/' . trim($site_domain['host']) . '/' . trim($cdnHost); 
-*/
 			$domain = $this->getPurgeURL(['action' => 'purge-cdn-cache-bulk']);
 
 			$remote_post = wp_remote_post($domain);
@@ -674,6 +664,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		$getArgs = [
 			'timeout'=> 8,
 			'sslverify' => apply_filters('shortpixel/system/sslverify', true),
+			'blocking' => false, 
 		];
 
 		$result = wp_remote_get($flush_url, $getArgs);
