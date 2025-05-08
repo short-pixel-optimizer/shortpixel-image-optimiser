@@ -24,7 +24,7 @@ use ShortPixel\Controller\QueueController as QueueController;
 
 use ShortPixel\Controller\CacheController as CacheController;
 use ShortPixel\Controller\View\BulkViewController as BulkViewController;
-
+use ShortPixel\External\Offload\Offloader;
 use ShortPixel\NextGenController as NextGenController;
 
 class SettingsViewController extends \ShortPixel\ViewController
@@ -490,10 +490,11 @@ class SettingsViewController extends \ShortPixel\ViewController
 
         // $this->view->savedBandwidth = UiHelper::formatBytes( intval($this->view->data->savedSpace) * 10000,2);
 
+         // @todo this might be converted at some point tho view->env or something to divide better. 
+         $offLoader = Offloader::getInstance();
          $this->view->cloudflare_constant = defined('SHORTPIXEL_CFTOKEN') ? true : false;
-
-         $this->view->is_unlimited=  (!is_null($this->quotaData) && $this->quotaData->unlimited) ? true : false;
-
+         $this->view->is_unlimited =  (!is_null($this->quotaData) && $this->quotaData->unlimited) ? true : false;
+         $this->view->is_wpoffload = $offLoader->isActive('wp-offload');
 
          $settings = \wpSPIO()->settings();
 

@@ -72,7 +72,7 @@ class ShortPixelScreenBase
 				var noticeDom = dom.body.firstChild;
 				if (noticeDom.classList.contains('is-dismissible'))
 				{
-					console.log('is dismiss');  //  Add close Event
+					 //  Add close Event
 					let button = noticeDom.querySelector('button.notice-dismiss'); 
 					button.addEventListener('click', this.EventCloseErrorNotice.bind(this)); // Might be renamed
 

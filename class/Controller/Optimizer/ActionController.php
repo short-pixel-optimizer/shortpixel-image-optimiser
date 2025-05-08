@@ -195,11 +195,8 @@ class ActionController extends OptimizerBase
  // @todo This should probably be contained in the newAction in QueueItem ( comrpressiontype / args )
   protected function reoptimizeItem(QueueItem $queueItem)
   {
-   //Log::addTemp('reoptimize', $queueItem);
 
-   // exit('temp blemp');
-    //$item_id = $queueItem->item_id; 
-    //$item_type = $queueItem->imageModel->get('type');
+
     $bool = $this->restoreItem($queueItem);
 
   //  $compressionType = $queueItem->data()->compressionType; 

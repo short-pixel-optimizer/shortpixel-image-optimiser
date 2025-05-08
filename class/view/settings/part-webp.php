@@ -115,17 +115,16 @@ if( $this->is_nginx ){
   if (true === apply_filters('shortpixel/settings/allow_cdn', true)): ?>
     <setting class='switch step-highlight-3'>
       <content>
-    <?php $this->printSwitchButton(
+    <?php
+        $inputclass = (true == $view->is_wpoffload) ? 'switch is-wpoffload' : 'switch'; 
+        $this->printSwitchButton(
           ['name' => 'useCDN',
            'checked' =>  ($view->data->useCDN > 0) ? 1 : 0,
            'label' => esc_html__('Deliver the next generation images using the ShortPixel CDN:','shortpixel-image-optimiser'),
-
+           'input_class' => $inputclass,
            'data' => ['data-toggle="useCDN"', 'data-exclude="deliverWebp"', 'data-dashboard="' . __('Next generation images are not delivered', 'shortpixel-image-optimiser') . '"', ],
           ]);
     ?>
-
-
-
 
     <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/deliver-webp-avif-images-using-the-shortpixel-cdn-in-spio/?target=iframe"></i>
 
@@ -154,6 +153,16 @@ if( $this->is_nginx ){
            <?php printf(esc_html__('Change this only if you want to set up your %scustom domain%s.  ShortPixel CDN: %s','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain/" target="_blank">', '</a>', 'https://spcdn.shortpixel.ai/spio');?>
     </info>
 
+    <?php if($this->view->is_wpoffload)
+    {
+       ?>
+        <warning class="cdn-offload">
+          <?php _e('It looks like you have the Offload Media plugin enabled. Please note that the CDN delivery will not work because usually Offload Media is taking care of this. We recommend you to disable the CDN delivery in this case.', 'shortpixel-image-optimiser'); 
+          ?>
+    </warning>
+       <?php 
+    }
+    ?>
   </setting>
 
 

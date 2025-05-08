@@ -155,7 +155,6 @@ window.ShortPixelProcessor =
           {
             return false; 
           } */
-          console.log('Broadcast data', data);
 
           if (data.reason === 'handleImage')
           {
@@ -598,7 +597,6 @@ window.ShortPixelProcessor =
 							else if (! imageHandled)
 							{
               	imageHandled = this.screen.HandleImage(response, type); // whole response here is single item. (final!)
-                console.log('handling by .result', response, imageHandled);
                 this.broadcaster.postMessage({
                   'reason' : 'handleImage', 
                   'imageItem': imageItem, 

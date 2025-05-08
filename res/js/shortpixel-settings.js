@@ -281,6 +281,14 @@ class ShortPixelSettings
 		var checks = [':checked', ':checked'];
 		updateShowWarning({elements: elements, warnings: warning, checks: checks});
 
+		// This warning takes the same element twice, with different checks.
+		var element = root.querySelector('input[name="useCDN"]');
+		var elements = [element, element];
+		var warning = root.querySelectorAll('.cdn-offload');
+		var checks = [':checked', '.is-wpoffload'];
+		updateShowWarning({elements: elements, warnings: warning, checks: checks});
+
+
 		// Checks for the dashboard boxes
 		// What can be send back match wise, can be 'allmatches' for red and 'anymatches' for yellow warning and let the dashboard function figure it out how to display that ( and which text? )
 		var dashboardFunctions = {
@@ -402,7 +410,6 @@ class ShortPixelSettings
 		data.type = 'settings';
 	
 		window.addEventListener(data.callback, function (response) {
-			console.log(response);
 			var json = response.detail;
 
 			let results = json.settings.results; 
@@ -462,7 +469,6 @@ class ShortPixelSettings
 
 	window.addEventListener(data.callback, function (response){
 		var data = response.detail; 
-		console.log(data); 
 
 	//	var messageBox = document.getElementById('settings-importexport-message'); 
 	//	messageBox.innerHTML = ''; // wipe previous
@@ -513,7 +519,6 @@ class ShortPixelSettings
 
 	window.addEventListener(data.callback, function (response)
 	{
-		console.log(response); 
 		let data = response.detail; 
 		if (data.settings && data.settings.exportData)
 		{

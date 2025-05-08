@@ -230,7 +230,6 @@ class QueueItem
           $this->data()->compressionType = $args['compressionType'];
        }
 
-       Log::addTemp('New reOPtimze Action Data', $this->data);
        
    }
 

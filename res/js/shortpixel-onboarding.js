@@ -244,7 +244,6 @@ class ShortPixelOnboarding
           {
              var current_step_number = i;
              var current_step = this.steps[i];
-             console.log('current_step', current_step_number);
              break;
           }
        }
@@ -289,10 +288,8 @@ class ShortPixelOnboarding
        this.root.classList.remove('active-step-' + current_step_number);
        this.step_counter.innerText = (new_step +1) + '/' + this.steps.length;
 
-console.log('newstep', new_step, this.steps.length-1);
        if (new_step == (this.steps.length-1))
        {
-          console.log('next step number at end?');
           next_button.disable();
           end_button.enable();
        }

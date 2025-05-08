@@ -33,9 +33,10 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
 
             var inputSelect = document.querySelector('.item-' + id + ' input[name="select[]"]');
 
-            if (null === inputSelect)
+            if (null === inputSelect) // This happens on NGG 
             {
                console.warn('Checkbox not found ' + id);
+               return; 
             }
 
             inputSelect.classList.remove('is-optimizable', 'is-restorable');

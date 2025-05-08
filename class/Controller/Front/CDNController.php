@@ -659,7 +659,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		$full_cdn_url = $this->getURLBase($replaceBlocks->replace_url);
 
 		$flush_url = $domain . $full_cdn_url; 
-		Log::addTemp('Flush URL : ' . $flush_url);
+		Log::addDebug('Flush URL : ' . $flush_url);
 
 		$getArgs = [
 			'timeout'=> 8,
@@ -668,8 +668,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		];
 
 		$result = wp_remote_get($flush_url, $getArgs);
-
-		Log::addTemp('Flush result', $result);
 
 	}
 

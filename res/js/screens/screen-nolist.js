@@ -20,7 +20,6 @@ class ShortPixelScreen extends ShortPixelScreenBase
     {
        return;
     }
-console.log('ListPLUpload');
     var self = this;
     uploader.bind('UploadComplete', function (up, file, response)
     {

@@ -94,22 +94,7 @@ class NextGenController
   public function isNextGenScreen()
   {
 			return $this->is_ngg_screen;
-     // $screens = $this->add_screen_loads(array());
-		/*	if (! is_admin())
-			{
-				 return false;
-			}
-			if (! function_exists('get_current_screen'))
-			{
-				 return false;
-			}
-			$screen_id = \wpSPIO()->env()->screen_id;
 
-      if (in_array($screen_id, $screens))
-        return true;
-      else
-        return false;
- 				*/
   }
 
   /** called from settingController when enabling the nextGen settings */

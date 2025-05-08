@@ -697,7 +697,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 				$args = wp_parse_args($args, $defaults);
 
 				$status = $results['image']['status'];
-        Log::addTemp("Status: $status", $results['image']);
 
           if ($settings->backupImages)
           {

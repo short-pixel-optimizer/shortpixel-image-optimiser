@@ -111,6 +111,17 @@ class wpOffload
 		return $class;
 	}
 
+	/**
+	 * Function to determine if this offloader is active.
+	 * Considered active, when available and actively offloading
+	 *
+	 * @return boolean
+	 */
+	public function isActive()
+	{
+		 return $this->active && $this->offloading; 
+	}
+
 	// This is used in the converted. Might be deployed elsewhere for better control.
 	public function preventOffload($attach_id)
 	{
