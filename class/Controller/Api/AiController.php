@@ -116,11 +116,11 @@ class AiController extends RequestManager
               $remote_id = intval($APIresponse['data']->Id);
               $qItem->addResult(['remote_id' => $remote_id]);
               
-              return $this->returnOk(RequestManager::STATUS_UNCHANGED, __('Request for Alt text send to Shortpixel AI', 'shortpixel-image-optimiser'));  
+              return $this->returnOk(RequestManager::STATUS_UNCHANGED, __('Request for Alt text sent to ShortPixel AI', 'shortpixel-image-optimiser'));  
             }
             elseif(self::AI_STATUS_OVERQUOTA === $status)
             {
-               return $this->returnFailure(RequestManager::STATUS_ERROR, __('AI over quota', 'shortpixel-image-optimiser'));
+               return $this->returnFailure(RequestManager::STATUS_ERROR, sprintf(esc_html__('Your AI quota for this month has been exceeded. We would love to hear your feedback — please share it with us %shere%s.', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/contact" target="_blank">', '</a>'));
             }
             elseif(self::AI_STATUS_INVALID_URL === $status)
             {
