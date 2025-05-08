@@ -38,8 +38,7 @@ class BulkController
    */
    public function createNewBulk($type = 'media', $customOp = null)
    {
-      $optimizeController = new OptimizeController();
-      $optimizeController->setBulk(true);
+      $queueController = new QueueController(['is_bulk' => true]);
 
 			$fs = \wpSPIO()->filesystem();
 			$backupDir = $fs->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
@@ -51,11 +50,9 @@ class BulkController
 				 $current_log->delete();
 			}
 
-      $Q = $optimizeController->getQueue($type);
+      $Q = $queueController->getQueue($type);
 
       $Q->createNewBulk();
-
-			$Q = $optimizeController->getQueue($type);
 
       if (! is_null($customOp))
       {
@@ -80,10 +77,8 @@ class BulkController
 
 	 public function isBulkRunning($type = 'media')
 	 {
-       $optimizeControl = new OptimizeController();
-       $optimizeControl->setBulk(true);
-
-		   $queue = $optimizeControl->getQueue($type);
+       $queueControl = new QueueController(['is_bulk' => true]);
+       $queue = $queueControl->getQueue($type);
 
 			 $stats = $queue->getStats();
 
@@ -132,10 +127,8 @@ class BulkController
 
    public function getCustomOperation($qname)
    {
-     $optimizeControl = new OptimizeController();
-     $optimizeControl->setBulk(true);
-
-     $q = $optimizeControl->getQueue($qname);
+     $queueControl = new QueueController(['is_bulk' => true]);
+     $q = $queueControl->getQueue($qname);
 
      $op = $q->getCustomDataItem('customOperation');
      return $op;
@@ -144,15 +137,14 @@ class BulkController
    /*** Start the bulk run. Must deliver all queues at once due to processQueue bundling */
    public function startBulk($types = 'media')
    {
-       $optimizeControl = new OptimizeController();
-       $optimizeControl->setBulk(true);
+       $queueControl = new QueueController(['is_bulk' => true]);
 
 			 if (! is_array($types))
 			 	 $types = array($types);
 
 			 foreach($types as $type)
 			 {
-	       $q = $optimizeControl->getQueue($type);
+         $q = $queueControl->getQueue($type);
 	       $q->startBulk();
 			 }
 
@@ -161,10 +153,9 @@ class BulkController
 
    public function finishBulk($type = 'media')
    {
-     $optimizeControl = new OptimizeController();
-     $optimizeControl->setBulk(true);
+     $queueControl = new QueueController(['is_bulk' => true]);
 
-     $q = $optimizeControl->getQueue($type);
+     $q = $queueControl->getQueue($type);
 
 		 $this->addLog($q);
 

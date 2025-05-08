@@ -3,369 +3,464 @@
 // MainScreen as an option for delegate functions
 class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen, processor)
 {
-    isCustom = true;
-    isMedia = true;
-		type = 'media';
+	isCustom = true;
+	isMedia = true;
+	type = 'media';
+	altInputNames = [
+		'attachment_alt',  //edit-media 
+		'attachment-details-alt-text', // media library upload screen / image select
+		'attachment-details-two-column-alt-text',
+	
+	 ];
 
-		Init()
+	Init() {
+		super.Init();
+		this.ListenGallery();
+
+		// bind DoAction, for bulk actions in Media Libbrary to event
+		var actionEl = document.getElementById('doaction');
+		if (actionEl !== null)
+			actionEl.addEventListener('click', this.BulkActionEvent.bind(this));
+	   
+		// This init only in edit-media and pass the ID for safety. 
+		if (document.getElementById('attachment_alt') !== null)
 		{
-			super.Init();
-      this.ListenGallery();
-
-			// bind DoAction, for bulk actions in Media Libbrary to event
-			var actionEl = document.getElementById('doaction');
-      if (actionEl !== null)
-			   actionEl.addEventListener('click', this.BulkActionEvent.bind(this));
-
+			var postInput = document.getElementById('post_ID')
+			this.FetchAltView(undefined, postInput.value);
 		}
 
-    RenderItemView(e)
-    {
-				e.preventDefault();
-        var data = e.detail;
-        if (data.media)
-        {
-            var id = data.media.id;
+		/*this.altInputNames = [
+			'attachment_alt',  //edit-media 
+			'attachment-details-alt-text', // media library upload screen / image select
+			'attachment-details-two-column-alt-text',
+		
+		 ]; */
+	}
 
-            var element = document.getElementById('sp-msg-' + id);
-						if (element !== null) // Could be other page / not visible / whatever.
-            	element.outerHTML = data.media.itemView;
-            else {
-              console.error('Render element not found');
-            }
-        }
-				else {
-					console.error('Data not found - RenderItemview on media screen');
-				}
-        return false; // callback shouldn't do more, see processor.
-    }
-
-		BulkActionEvent(event)
+	FetchAltView(newAltText, item_id)
+	{
+		var attachmentAlt = this.GetPageAttachmentAlt();
+		if (null === attachmentAlt) // No attach alt around
 		{
-
-			 var actionSelect = document.querySelector('select[name="action"]');
-			 if ( null === actionSelect)
-			  return ;
-
-	     var actionValue = actionSelect.value;
-
-			 // Check if we have a shortpixel event
-			  if (actionValue.includes('shortpixel'))
-				{
-						event.preventDefault();
-						var items = document.querySelectorAll('input[name="media[]"]:checked');
-
-						for (var i = 0; i < items.length; i++)
-						{
-							 var media_id = items[i].value;
-							 var column = document.getElementById('sp-msg-' + media_id);
-							 var optimizable = column.classList.contains('is-optimizable');
-							 var restorable = column.classList.contains('is-restorable');
-
-							 var compressionType = column.dataset.compression;
-
-							 switch(actionValue)
-							 {
-								 	case 'shortpixel-optimize':
-											if (optimizable)
-											{
-												 this.Optimize(media_id);
-											}
-									break;
-									case 'shortpixel-glossy':
-									case 'shortpixel-lossy':
-									case 'shortpixel-lossless':
-									case 'shortpixel-smartcrop':
-									case 'shortpixel-smartcropless':
-
-										  switch(actionValue)
-											{
-												case 'shortpixel-glossy':
-												  var compression = this.imageConstants.COMPRESSION_GLOSSY;
-												break;
-												case 'shortpixel-lossless':
-											  	var compression = this.imageConstants.COMPRESSION_LOSSLESS;
-												break;
-												case 'shortpixel-lossy':
-												  var compression = this.imageConstants.COMPRESSION_LOSSY;
-												break;
-												case 'shortpixel-smartcrop':
-													 var action = this.imageConstants.ACTION_SMARTCROP;
-												break;
-												case 'shortpixel-smartcropless':
-													 var action = this.imageConstants.ACTION_SMARTCROPLESS;
-												break;
-											}
-
-											if (typeof action === 'undefined' && compressionType == compression)
-											{
-													items[i].checked = false
-													continue; // no need for compression. Should probably not work when actionstuff is happening.
-											}
-											else {
-												 compressionType = compression;
-											}
-
-											if (restorable)
-											{
-												 	this.ReOptimize(media_id, compressionType, action);
-											}
-
-									break;
-									case 'shortpixel-restore':
-											if (restorable)
-											{
-												 this.RestoreItem(media_id);
-											}
-									break;
-									case 'shortpixel-mark-completed':
-									{
-										if (optimizable)
-										{
-											 this.MarkCompleted(media_id);
-										}
-									}
-							 }
-							 items[i].checked = false;
-
-						} // for Loop
-
-						var selectAllCheck = document.getElementById('cb-select-all-1');
-						selectAllCheck.checked = false;
-				} // actionvalue shortpixel check
+			return; 
+		}
+		if (typeof item_id === 'undefined')
+		{
+			console.error('Item_id not passed');
+			return; 
 		}
 
-		HandleImage(resultItem, type)
-		{
-				var res = super.HandleImage(resultItem, type);
-				var fileStatus = this.processor.fStatus[resultItem.fileStatus];
 
-				// If image editor is active and file is being restored because of this reason ( or otherwise ), remove the warning if this one exists.
-				if (fileStatus == 'FILE_RESTORED')
-				{
-					 var warning = document.getElementById('shortpixel-edit-image-warning');
-					 if (warning !== null)
-					 {
-						  warning.remove();
-					 }
-				}
-		}
-
-		RedoLegacy(id)
+		if (typeof newAltText !== 'undefined')
 		{
-			var data = {
-				 id: id,
-				 type: 'media',
-				 screen_action: 'redoLegacy',
+			var inputs = this.altInputNames;
+	
+			for (var i = 0; i < inputs.length; i++)
+			{
+				   var altInput = document.getElementById(inputs[i]); 
+				   if (altInput !== null)
+				   {
+					   if (altInput.dataset.shortpixelAlt != item_id)
+					   {
+						 console.log('Returned alt, but not ours.', item_id, altInput);
+						 continue; 
+					   }
+					   if (typeof altInput.value !== 'undefined')
+					   {
+						   altInput.value = newAltText; 	
+					   }
+					   else
+					   {
+						   altInput.innerText = newAltText; 	
+					   }
+					   
+				   }
+					   
 			}
-				data.callback = 'shortpixel.LoadItemView';
+		}
+		// edit media screen
+		 // = document.getElementById('attachment_alt'); 
 
-  		window.addEventListener('shortpixel.LoadItemView', function (e) {
-					var itemData = { id: e.detail.media.id, type: 'media' };
-					this.processor.timesEmpty = 0; // reset the defer on this.
-					this.processor.LoadItemView(itemData);
-					this.UpdateMessage(itemData.id, '');
 
-			}.bind(this), {'once': true} );
-
-			this.SetMessageProcessing(id);
+		if (null !== attachmentAlt)
+		{
+			if (attachmentAlt.dataset.shortpixelAlt && attachmentAlt.dataset.shortpixelAlt != item_id)
+			{
+				console.log('AttachmentAlt not ' + item_id); 
+				return;
+			}
+			
+			var data = {
+				id: item_id,
+				type: 'media',
+				screen_action: 'ai/getAltData',
+			}
+			data.callback = 'shortpixel.AttachAiInterface';
 			this.processor.AjaxRequest(data);
+
+			window.addEventListener('shortpixel.AttachAiInterface', this.AttachAiInterface.bind(this), {once: true});
+		}
+		 
+	}
+
+	GetPageAttachmentAlt()
+	{
+		for (var i = 0; i < this.altInputNames.length; i++)
+			{
+				var attachmentAlt = document.getElementById(this.altInputNames[i]);
+				if (attachmentAlt !== null)
+				{
+					return attachmentAlt;
+				} 	
+			}
+		return null;
+	}
+
+	RenderItemView(e) {
+		e.preventDefault();
+		var data = e.detail;
+		if (data.media) {
+			var id = data.media.id;
+
+			var element = document.getElementById('shortpixel-data-' + id);
+			if (element !== null) // Could be other page / not visible / whatever.
+				element.outerHTML = data.media.itemView;
+			else {
+				console.error('Render element not found');
+			}
+		}
+		else {
+			console.error('Data not found - RenderItemview on media screen');
+		}
+		return false; // callback shouldn't do more, see processor.
+	}
+
+	BulkActionEvent(event) {
+
+		var actionSelect = document.querySelector('select[name="action"]');
+		if (null === actionSelect)
+			return;
+
+		var actionValue = actionSelect.value;
+
+		// Check if we have a shortpixel event
+		if (actionValue.includes('shortpixel')) {
+			event.preventDefault();
+			var items = document.querySelectorAll('input[name="media[]"]:checked');
+
+			for (var i = 0; i < items.length; i++) {
+				var media_id = items[i].value;
+				var column = document.getElementById('shortpixel-data-' + media_id);
+				var optimizable = column.classList.contains('is-optimizable');
+				var restorable = column.classList.contains('is-restorable');
+
+				var compressionType = column.dataset.compression;
+
+				switch (actionValue) {
+					case 'shortpixel-optimize':
+						if (optimizable) {
+							this.Optimize(media_id);
+						}
+						break;
+					case 'shortpixel-glossy':
+					case 'shortpixel-lossy':
+					case 'shortpixel-lossless':
+					case 'shortpixel-smartcrop':
+					case 'shortpixel-smartcropless':
+
+						switch (actionValue) {
+							case 'shortpixel-glossy':
+								var compression = this.imageConstants.COMPRESSION_GLOSSY;
+								break;
+							case 'shortpixel-lossless':
+								var compression = this.imageConstants.COMPRESSION_LOSSLESS;
+								break;
+							case 'shortpixel-lossy':
+								var compression = this.imageConstants.COMPRESSION_LOSSY;
+								break;
+							case 'shortpixel-smartcrop':
+								var action = this.imageConstants.ACTION_SMARTCROP;
+								break;
+							case 'shortpixel-smartcropless':
+								var action = this.imageConstants.ACTION_SMARTCROPLESS;
+								break;
+						}
+
+						if (typeof action === 'undefined' && compressionType == compression) {
+							items[i].checked = false
+							continue; // no need for compression. Should probably not work when actionstuff is happening.
+						}
+						else {
+							compressionType = compression;
+						}
+
+						if (restorable) {
+							this.ReOptimize(media_id, compressionType, action);
+						}
+
+						break;
+					case 'shortpixel-restore':
+						if (restorable) {
+							this.RestoreItem(media_id);
+						}
+						break;
+					case 'shortpixel-mark-completed':
+						{
+							if (optimizable) {
+								this.MarkCompleted(media_id);
+							}
+						}
+				}
+				items[i].checked = false;
+
+			} // for Loop
+
+			var selectAllCheck = document.getElementById('cb-select-all-1');
+			selectAllCheck.checked = false;
+		} // actionvalue shortpixel check
+	}
+
+	HandleImage(resultItem, type) {
+		var res = super.HandleImage(resultItem, type);
+		var fileStatus = this.processor.fStatus[resultItem.fileStatus];
+
+		// If image editor is active and file is being restored because of this reason ( or otherwise ), remove the warning if this one exists.
+		if (fileStatus == 'FILE_RESTORED') {
+			var warning = document.getElementById('shortpixel-edit-image-warning');
+			if (warning !== null) {
+				warning.remove();
+			}
+		}
+	}
+
+	RedoLegacy(id) {
+		var data = {
+			id: id,
+			type: 'media',
+			screen_action: 'redoLegacy',
+		}
+		data.callback = 'shortpixel.LoadItemView';
+
+		window.addEventListener('shortpixel.LoadItemView', function (e) {
+			var itemData = { id: e.detail.media.id, type: 'media' };
+			this.processor.timesEmpty = 0; // reset the defer on this.
+			this.processor.LoadItemView(itemData);
+			this.UpdateMessage(itemData.id, '');
+
+		}.bind(this), { 'once': true });
+
+		this.SetMessageProcessing(id);
+		this.processor.AjaxRequest(data);
+	}
+
+	ListenGallery() {
+		var self = this;
+		if (typeof wp.media === 'undefined') {
+			this.ListenEditAttachment(); // Edit Media edit attachment screen
+			return;
 		}
 
-    ListenGallery()
-  	{
-  	   	var self = this;
-  			if (typeof wp.media === 'undefined')
-  			{
-  				 this.ListenEditAttachment(); // Edit Media edit attachment screen
-  				 return;
-  			}
+		// This taken from S3-offload / media.js /  Grid media gallery
+		if (typeof wp.media.view.Attachment.Details.TwoColumn !== 'undefined') {
+			var detailsColumn = wp.media.view.Attachment.Details.TwoColumn;
+			var twoCol = true;
+		}
+		else {
+			var detailsColumn = wp.media.view.Attachment.Details;
+			var twoCol = false;
+		}
 
-  			// This taken from S3-offload / media.js /  Grid media gallery
-  		  if (typeof wp.media.view.Attachment.Details.TwoColumn !== 'undefined')
-        {
-  			     var detailsColumn = wp.media.view.Attachment.Details.TwoColumn;
-             var twoCol = true;
-        }
-        else {
-            var detailsColumn = wp.media.view.Attachment.Details;
-            var twoCol = false;
+		var extended = detailsColumn.extend({
+			render: function () {
+				detailsColumn.prototype.render.apply(this); // Render Parent
 
-        }
+				if (typeof this.fetchSPIOData === 'function') {
+					this.fetchSPIOData(this.model.get('id'));
+					this.spioBusy = true; // Note if this system turns out not to work, the perhaps render empties all if first was painted, second cancelled?
 
-  			 var extended = detailsColumn.extend ({
-            render: function()
-            {
-               detailsColumn.prototype.render.apply( this ); // Render Parent
+				}
 
-               if(typeof this.fetchSPIOData === 'function')
-               {
-                 this.fetchSPIOData(this.model.get( 'id' ));
-                 this.spioBusy = true; // Note if this system turns out not to work, the perhaps render empties all if first was painted, second cancelled?
+				return this;
+			},
 
-               }
+			fetchSPIOData: function (id) {
+				var data = {};
+				data.id = id;
+				data.type = self.type;
+				data.callback = 'shortpixel.MediaRenderView';
 
-               return this;
-            },
+				if (typeof this.spioBusy !== 'undefined' && this.spioBusy === true) {
+					return;
+				}
 
-            fetchSPIOData : function (id)
-            {
-              var data = {};
-              data.id =  id;
-              data.type = self.type;
-              data.callback = 'shortpixel.MediaRenderView';
+				window.addEventListener('shortpixel.MediaRenderView', this.renderSPIOView.bind(this), { 'once': true });
+				self.processor.LoadItemView(data);
+			},
 
-              if (typeof this.spioBusy !== 'undefined' && this.spioBusy === true)
-              {
-                return;
-              }
+			renderSPIOView: function (e, timed) {
+				this.spioBusy = false;
+				if (!e.detail || !e.detail.media || !e.detail.media.itemView) {
+					return;
+				}
 
-              window.addEventListener('shortpixel.MediaRenderView', this.renderSPIOView.bind(this), {'once':true});
-              self.processor.LoadItemView(data);
-            },
+				var item_id = e.detail.media.id; 
 
-            renderSPIOView: function(e, timed)
-            {
-              this.spioBusy = false;
-              if (! e.detail || ! e.detail.media || ! e.detail.media.itemView)
-              {
-                return;
-              }
-
-              var $spSpace = this.$el.find('.attachment-info .details');
-              if ($spSpace.length === 0 && (typeof timed === 'undefined' || timed < 5))
-              {
-                // It's possible the render is slow or blocked by other plugins. Added a delay and retry bit later to draw.
-                if (typeof timed === 'undefined')
-                {
-                   var timed = 0;
-                }
-                else {
-                   timed++;
-                }
-                setTimeout(function () { this.renderSPIOView(e, timed) }.bind(this), 1000);
-              }
+				var $spSpace = this.$el.find('.attachment-info .details');
+				if ($spSpace.length === 0 && (typeof timed === 'undefined' || timed < 5)) {
+					// It's possible the render is slow or blocked by other plugins. Added a delay and retry bit later to draw.
+					if (typeof timed === 'undefined') {
+						var timed = 0;
+					}
+					else {
+						timed++;
+					}
+					setTimeout(function () { this.renderSPIOView(e, timed) }.bind(this), 1000);
+				}
 
 
-              var html = this.doSPIORow(e.detail.media.itemView);
+				var html = this.doSPIORow(e.detail.media.itemView);
+				$spSpace.after(html);
 
-              $spSpace.after(html);
-            },
-            doSPIORow : function(dataHtml)
-            {
-               var html = '';
-               html += '<div class="shortpixel-popup-info">';
-               html += '<label class="name">ShortPixel</label>';
-               html += dataHtml;
-               html += '</div>';
-               return html;
-            },
-            editAttachment: function(event)
-            {
-               event.preventDefault();
-               self.AjaxOptimizeWarningFromUnderscore(this.model.get( 'id' ));
-               detailsColumn.prototype.editAttachment.apply( this, [event]);
-            }
-        });
+				self.FetchAltView(undefined, item_id); 
 
-        if (true === twoCol)
-        {
-          wp.media.view.Attachment.Details.TwoColumn =  extended; //wpAttachmentDetailsTwoColumn;
-        }
-        else {
-          wp.media.view.Attachment.Details = extended;
-        }
-  	}
+			},
+			doSPIORow: function (dataHtml) {
+				var html = '';
+				html += '<div class="shortpixel-popup-info">';
+				html += '<label class="name">ShortPixel</label>';
+				html += dataHtml;
+				html += '</div>';
+				return html;
+			},
+			 
+			editAttachment: function (event) {
+				event.preventDefault();
+				self.AjaxOptimizeWarningFromUnderscore(this.model.get('id'));
+				detailsColumn.prototype.editAttachment.apply(this, [event]);
+			}
+		});
 
-  	AjaxOptimizeWarningFromUnderscore(id)
-  	{
-  		var data = {
-  			id: id,
-  			type: 'media',
-  			screen_action: 'getItemEditWarning',
-  			callback: 'ShortPixelMedia.getItemEditWarning'
-  		};
+		if (true === twoCol) {
+			wp.media.view.Attachment.Details.TwoColumn = extended; //wpAttachmentDetailsTwoColumn;
+		}
+		else {
+			wp.media.view.Attachment.Details = extended;
+		}
+	}
 
-  		window.addEventListener('ShortPixelMedia.getItemEditWarning', this.CheckOptimizeWarning.bind(this), {'once': true} );
-  		this.processor.AjaxRequest(data);
-  	}
+	// It's not possible via hooks / server-side, so attach the AI interface HTML to where it should be attached. 
+	AttachAiInterface(event)
+	{
+		
+		var data = event.detail.media; 	
+		var item_id = data.item_id; 
+		if (typeof data === 'undefined')
+		{
+			console.log('Error on ai interface!', data);
+			return false;
+		}
+		var element = this.GetPageAttachmentAlt();
 
-  	CheckOptimizeWarning(event)
-  	{
-  		var data = event.detail;
+		var wrapper = document.getElementById('shortpixel-ai-wrapper-' + item_id);
 
-  		var image_post_id = data.id;
-  		var is_restorable = data.is_restorable;
-  		var is_optimized = data.is_optimized;
+		if (null !== wrapper) // remove previous controls
+		{
+			wrapper.remove();
+		}
 
-  		if ('true' === is_restorable || 'true' === is_optimized)
-  		{
-  			 this.ShowOptimizeWarning(image_post_id, is_restorable, is_optimized);
-  		}
-  	}
+		// This will not work because the wrapper doesn't exist and is recreated each time on fly. Need some place to store item_id on item load
+		var wrapper = document.createElement('div');
+		wrapper.id = 'shortpixel-ai-wrapper-' + item_id;
+		wrapper.classList.add('shortpixel-ai-interface',element.getAttribute('id'));
+		
+	  	wrapper.innerHTML = data.snippet;	
+		element.after(wrapper);
 
-  	ShowOptimizeWarning(image_post_id, is_restorable, is_optimized)
-  	{
-  			var div = document.createElement('div');
-  			div.id = 'shortpixel-edit-image-warning';
-  			div.classList.add('shortpixel', 'shortpixel-notice', 'notice-warning');
+		element.dataset.shortpixelAlt = data.item_id;		
+		if (data.result_alt && data.has_data)
+			element.value = data.result_alt;
+
+	}
+
+	AjaxOptimizeWarningFromUnderscore(id) {
+		var data = {
+			id: id,
+			type: 'media',
+			screen_action: 'getItemEditWarning',
+			callback: 'ShortPixelMedia.getItemEditWarning'
+		};
+
+		window.addEventListener('ShortPixelMedia.getItemEditWarning', this.CheckOptimizeWarning.bind(this), { 'once': true });
+		this.processor.AjaxRequest(data);
+	}
+
+	CheckOptimizeWarning(event) {
+		var data = event.detail;
+
+		var image_post_id = data.id;
+		var is_restorable = data.is_restorable;
+		var is_optimized = data.is_optimized;
+
+		if ('true' === is_restorable || 'true' === is_optimized) {
+			this.ShowOptimizeWarning(image_post_id, is_restorable, is_optimized);
+		}
+	}
+
+	ShowOptimizeWarning(image_post_id, is_restorable, is_optimized) {
+		var div = document.createElement('div');
+		div.id = 'shortpixel-edit-image-warning';
+		div.classList.add('shortpixel', 'shortpixel-notice', 'notice-warning');
 
 
-  			if ('true' == is_restorable)
-  			{
-  				var restore_link = spio_media.restore_link.replace('#post_id#', image_post_id);
-  				div.innerHTML = '<p>' + spio_media.optimized_text + ' <a href="'  + restore_link + '">' + spio_media.restore_link_text + '</a></p>' ;
-  			}
-  			else {
-  				div.innerHTML = '<p>' + spio_media.optimized_text  + ' ' + spio_media.restore_link_text_unrestorable + '</p>' ;
+		if ('true' == is_restorable) {
+			var restore_link = spio_media.restore_link.replace('#post_id#', image_post_id);
+			div.innerHTML = '<p>' + spio_media.optimized_text + ' <a href="' + restore_link + '">' + spio_media.restore_link_text + '</a></p>';
+		}
+		else {
+			div.innerHTML = '<p>' + spio_media.optimized_text + ' ' + spio_media.restore_link_text_unrestorable + '</p>';
 
-  			}
-  			// only if not existing.
-  			if (document.getElementById('shortpixel-edit-image-warning') == null)
-        {
-          var $menu = jQuery('.imgedit-menu');
-          if ($menu.length > 0)
-          {
-  				      $menu.append(div);
-          }
-          else {
-            jQuery(document).one('image-editor-ui-ready', function() // one!
-            {
-                jQuery('.imgedit-menu').append(div);
-            });
+		}
+		// only if not existing.
+		if (document.getElementById('shortpixel-edit-image-warning') == null) {
+			var $menu = jQuery('.imgedit-menu');
+			if ($menu.length > 0) {
+				$menu.append(div);
+			}
+			else {
+				jQuery(document).one('image-editor-ui-ready', function () // one!
+				{
+					jQuery('.imgedit-menu').append(div);
+				});
 
-          }
+			}
 
-        }
-  	}
+		}
+	}
 
-  	// This should be the edit-attachment screen
-   ListenEditAttachment()
-   {
-  	 var self = this;
-  	 var imageEdit = window.imageEdit;
+	// This should be the edit-attachment screen
+	ListenEditAttachment() {
+		var self = this;
+		var imageEdit = window.imageEdit;
 
-  	 jQuery(document).on('image-editor-ui-ready', function()
-  	 {
-  		 var element = document.querySelector('input[name="post_ID"]');
-  		 if (null === element)
-  		 {
-  				console.error('Could not fetch post id on this screen');
-  				return;
-  		 }
+		jQuery(document).on('image-editor-ui-ready', function () {
+			var element = document.querySelector('input[name="post_ID"]');
+			if (null === element) {
+				console.error('Could not fetch post id on this screen');
+				return;
+			}
 
-  		 var post_id = element.value;
+			var post_id = element.value;
 
-  		 var data = {
-  			 id: post_id,
-  			 type: 'media',
-  			 screen_action: 'getItemEditWarning',
-  			 callback: 'ShortPixelMedia.getItemEditWarning'
-  		 };
+			var data = {
+				id: post_id,
+				type: 'media',
+				screen_action: 'getItemEditWarning',
+				callback: 'ShortPixelMedia.getItemEditWarning'
+			};
 
-  		 window.addEventListener('ShortPixelMedia.getItemEditWarning', self.CheckOptimizeWarning.bind(self), {'once': true} );
-  		 window.ShortPixelProcessor.AjaxRequest(data);
-  	 });
-   }
+			window.addEventListener('ShortPixelMedia.getItemEditWarning', self.CheckOptimizeWarning.bind(self), { 'once': true });
+			window.ShortPixelProcessor.AjaxRequest(data);
+		});
+	}
 
 } // class

@@ -260,7 +260,7 @@ div.spio-modal-title {
   box-shadow: none;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings menu div.adv_switcher {
-  padding-top: 10px;
+  padding-top: 20px;
   padding-left: 5px;
   padding-bottom: 20px;
   font-size: 1rem;
@@ -663,6 +663,9 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page .shortpixel-icon.user {
   background-image: url("../images/icon/user.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.shortpixel {
+  background-image: url("../images/icon/shortpixel.svg");
 }
 .wrap.is-shortpixel-settings-page .shortpixel-illustration {
   display: inline-block;
@@ -2182,6 +2185,26 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page #tab-tools .danger-zone > p {
   margin-left: 15px;
 }
+.wrap.is-shortpixel-settings-page #tab-tools .tools-message {
+  background: #F4FBFC;
+  border-radius: 12px;
+  height: 0;
+  transition: all 0.2s;
+  font-weight: 700;
+}
+.wrap.is-shortpixel-settings-page #tab-tools .tools-message.opened {
+  height: auto;
+  padding: 16px;
+}
+.wrap.is-shortpixel-settings-page #tab-tools .setting-importexport textarea {
+  width: 300px;
+  height: 150px;
+  font-weight: 500;
+  resize: both;
+}
+.wrap.is-shortpixel-settings-page #tab-tools .setting-importexport .import-textarea {
+  height: 75px;
+}
 .wrap.is-shortpixel-settings-page setting {
   padding: 12px;
   background-color: #F4FBFC;
@@ -2193,9 +2216,9 @@ div.spio-modal-title {
   position: relative;
   transition: all 0.5s ease-in;
   /*  &.toggleTarget.is-visible
-    {
-       //display: flex !important;
-    } */
+  {
+     //display: flex !important;
+  } */
 }
 .wrap.is-shortpixel-settings-page setting#compression-type {
   margin-bottom: 30px;
@@ -2228,7 +2251,12 @@ div.spio-modal-title {
   font-size: 13px;
   margin: 6px 0;
 }
-.wrap.is-shortpixel-settings-page setting warning, .wrap.is-shortpixel-settings-page setting error {
+.wrap.is-shortpixel-settings-page setting info.fieldmessage {
+  font-weight: 700;
+  color: #ff0000;
+}
+.wrap.is-shortpixel-settings-page setting warning,
+.wrap.is-shortpixel-settings-page setting error {
   border-left: 4px solid #ffb900;
   box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.1);
   padding: 8px;
@@ -2239,15 +2267,18 @@ div.spio-modal-title {
   transition: opacity 300ms;
   background: #fff;
 }
-.wrap.is-shortpixel-settings-page setting warning h4, .wrap.is-shortpixel-settings-page setting error h4 {
+.wrap.is-shortpixel-settings-page setting warning h4,
+.wrap.is-shortpixel-settings-page setting error h4 {
   margin: 0;
   font-size: 16px;
 }
-.wrap.is-shortpixel-settings-page setting warning p, .wrap.is-shortpixel-settings-page setting error p {
+.wrap.is-shortpixel-settings-page setting warning p,
+.wrap.is-shortpixel-settings-page setting error p {
   color: #333;
   font-size: 13px;
 }
-.wrap.is-shortpixel-settings-page setting warning.is-visible, .wrap.is-shortpixel-settings-page setting error.is-visible {
+.wrap.is-shortpixel-settings-page setting warning.is-visible,
+.wrap.is-shortpixel-settings-page setting error.is-visible {
   display: block;
 }
 .wrap.is-shortpixel-settings-page setting error {

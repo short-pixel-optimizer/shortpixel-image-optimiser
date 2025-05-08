@@ -208,7 +208,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         <?php
         if (! $this->view->cloudflare_constant) // @todo
         {
-          //$this->loadView('settings/part-cloudflare');
+
         }
 
 
@@ -222,6 +222,4 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 </article>
 <?php $this->loadView('settings/part-wso'); ?>
-
-<?php //$this->loadView('snippets/part-inline-help'); ?>
 <?php $this->loadView('snippets/part-inline-modal'); ?>

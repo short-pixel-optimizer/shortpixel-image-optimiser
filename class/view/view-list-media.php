@@ -21,13 +21,13 @@ if (property_exists($this->view, 'infoData'))
 
 <div class='sp-column-info <?php echo property_exists($this->view, 'infoClass') ? $this->view->infoClass : '' ?>'
 	 	  <?php echo $datastring; ?>
-			id='sp-msg-<?php echo esc_attr($this->view->id );?>'>
+			id='shortpixel-data-<?php echo esc_attr($this->view->id );?>'>
 <?php	if (isset($this->view->list_actions))
 	{
 	   echo $this->view->list_actions;
 	}
 	?>
-<?php if (property_exists($this->view,'text') && strlen($this->view->text) > 0):  ?>
+<?php if (property_exists($this->view,'text') && ! is_null($this->view->text) && strlen($this->view->text) > 0):  ?>
       <p><?php  echo $this->view->text;  ?></p>
 <?php endif;
 

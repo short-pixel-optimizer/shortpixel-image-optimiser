@@ -10,8 +10,6 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Model\File\DirectoryOtherMediaModel as DirectoryOtherMediaModel;
 use ShortPixel\Model\File\DirectoryModel as DirectoryModel;
 
-use ShortPixel\Controller\OptimizeController as OptimizeController;
-
 use ShortPixel\Helper\InstallHelper as InstallHelper;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
 
@@ -335,10 +333,10 @@ class OtherMediaController extends \ShortPixel\Controller
 				}
 				elseif ($old_count < $new_count)
 				{
-					$message = printf(__(' %s files added', 'shortpixel-image-optimiser'), ($new_count-$old_count));
+					$message = sprintf(__(' %s files added', 'shortpixel-image-optimiser'), ($new_count-$old_count));
 				}
 				else {
-					$message = printf(__(' %s files removed', 'shortpixel-image-optimiser'), ($old_count-$new_count));
+					$message = sprintf(__(' %s files removed', 'shortpixel-image-optimiser'), ($old_count-$new_count));
 				}
 
 				$return['message'] = $message;

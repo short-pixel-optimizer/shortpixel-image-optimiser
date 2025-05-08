@@ -62,7 +62,7 @@
   box-shadow: none;
 }
 .wrap.is-shortpixel-bulk-page header .top-buttons a:hover, .wrap.is-shortpixel-bulk-page header .top-buttons button:hover {
-  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
+  background: #32d7e5;
 }
 .wrap.is-shortpixel-bulk-page header .top-buttons a i.switch, .wrap.is-shortpixel-bulk-page header .top-buttons button i.switch {
   width: 18px;
@@ -198,6 +198,9 @@
 .wrap.is-shortpixel-bulk-page .shortpixel-icon.user {
   background-image: url("../images/icon/user.svg");
 }
+.wrap.is-shortpixel-bulk-page .shortpixel-icon.shortpixel {
+  background-image: url("../images/icon/shortpixel.svg");
+}
 .wrap.is-shortpixel-bulk-page .shortpixel-illustration {
   display: inline-block;
   background-repeat: no-repeat;
@@ -249,7 +252,7 @@
   transition: all 0.1s ease-in-out;
 }
 .wrap.is-shortpixel-bulk-page section.panel.dashboard .bulk-wrapper button:hover {
-  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
+  background: #32d7e5;
 }
 .wrap.is-shortpixel-bulk-page section.panel.dashboard .bulk-wrapper button:disabled {
   color: #ccc;
@@ -382,7 +385,7 @@
   transition: all 0.1s ease-in-out;
 }
 .wrap.is-shortpixel-bulk-page .button-primary:hover {
-  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
+  background: #32d7e5;
 }
 .wrap.is-shortpixel-bulk-page nav {
   margin: 45px auto;
@@ -589,7 +592,7 @@
   transition: all 900ms;
 }
 .wrap.is-shortpixel-bulk-page .processor-paused:hover {
-  background: rgb(27.5926724138, 169.1163793103, 178.9073275862);
+  background: #1ca9b3;
 }
 .wrap.is-shortpixel-bulk-page .processor-paused .dashicons {
   margin-right: 6px;
@@ -1226,7 +1229,7 @@
   transition: all 0.5s ease;
 }
 .wrap.is-shortpixel-bulk-page section.panel.finished nav button.finish:hover {
-  background: rgb(36.2392241379, 209.2887931034, 221.2607758621);
+  background: #24d1dd;
 }
 .wrap.is-shortpixel-bulk-page .part-debug {
   background: #000;

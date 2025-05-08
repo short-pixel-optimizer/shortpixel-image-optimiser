@@ -38,6 +38,7 @@ class EnvironmentModel extends \ShortPixel\Model
     public $is_screen_to_use = false; // where shortpixel optimizer loads
     public $is_our_screen = false; // where shortpixel hooks in more complicated functions.
 		public $is_gutenberg_editor = false;
+    public $is_classic_editor = false; 
     public $is_bulk_page = false; // ShortPixel bulk screen.
     public $screen_id = false;
 
@@ -263,7 +264,7 @@ class EnvironmentModel extends \ShortPixel\Model
         'edit-page', // all pages
         'media', // add new item screen
     );
-  //  var_dump($use_screens);
+
     $use_screens = apply_filters('shortpixel/init/optimize_on_screens', $use_screens, $screen);
 
     $this->screen_id = $screen->id;
@@ -285,6 +286,7 @@ class EnvironmentModel extends \ShortPixel\Model
         return false;
     }
 
+
     if ( in_array($screen->id, $pages))
     {
        $this->is_screen_to_use = true;
@@ -298,6 +300,17 @@ class EnvironmentModel extends \ShortPixel\Model
 			  $this->is_screen_to_use = true;
 				$this->is_gutenberg_editor = true;
 	  }
+    // If settings / classic editor is by default, this get is not included, so test-override for now to always load on post, see if other page editor have issues with this. 
+    // If no issues, at some point this statements should be done uh better. 
+    elseif (isset($_GET['classic-editor']) || 'post' === $screen->id)
+    {
+      $this->is_screen_to_use = true;
+      $this->is_classic_editor = true;
+      
+    }
+    
+    
+    
 
     $this->screen_is_set = true;
   }

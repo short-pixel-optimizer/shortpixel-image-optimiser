@@ -26,7 +26,6 @@ class CloudFlareAPI {
 				add_action('shortpixel/image/before_restore', array($this, 'check_cloudflare'), 10);
     }
 
-
     public function setup()
     {
 
@@ -65,19 +64,23 @@ class CloudFlareAPI {
      *
      * @param $image_id - WordPress image media ID
      */
-    private function start_cloudflare_cache_purge_process( $imageItem ) {
+    private function start_cloudflare_cache_purge_process($imageItem ) {
 
         // Fetch CloudFlare API credentials
 
             // Fetch all WordPress install possible thumbnail sizes ( this will not return the full size option )
-            $fetch_images_sizes   = get_intermediate_image_sizes();
+            //$fetch_images_sizes   = get_intermediate_image_sizes();
             $purge_array  = array();
             $prepare_request_info = array();
 
             // if full image size tag is missing, we need to add it
+            /* Seems unused? 
+
             if ( ! in_array( 'full', $fetch_images_sizes ) ) {
                 $fetch_images_sizes[] = 'full';
             }
+
+            */
 
 						$fs = \wpSPIO()->filesystem();
 

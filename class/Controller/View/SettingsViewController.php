@@ -20,11 +20,11 @@ use ShortPixel\Controller\BulkController as BulkController;
 use ShortPixel\Controller\StatsController as StatsController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
-use ShortPixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\Controller\QueueController as QueueController;
+
 use ShortPixel\Controller\CacheController as CacheController;
-
 use ShortPixel\Controller\View\BulkViewController as BulkViewController;
-
+use ShortPixel\External\Offload\Offloader;
 use ShortPixel\NextGenController as NextGenController;
 
 class SettingsViewController extends \ShortPixel\ViewController
@@ -55,6 +55,9 @@ class SettingsViewController extends \ShortPixel\ViewController
      protected $view_mode = 'simple'; // advanced or simple
 		 protected $is_ajax_save = false; // checker if saved via ajax ( aka no redirect / json return )
 		 protected $notices_added = []; // Added notices this run, to report via ajax.
+
+     // Array of updated values to be passed back in the settings page
+     protected $returnFormData = []; 
 
 		 protected static $instance;
 
@@ -241,7 +244,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 			{
 				$this->checkPost(false);
 
-				OptimizeController::resetQueues();
+				QueueController::resetQueues();
 
 				$action = isset($_REQUEST['bulk']) ? sanitize_text_field($_REQUEST['bulk']) : null;
 
@@ -327,18 +330,19 @@ class SettingsViewController extends \ShortPixel\ViewController
 
 				 if (! is_null($queue))
 				 {
-					 	 	$opt = new OptimizeController();
+					 	 	$opt = new QueueController();
 
               if (true === $uninstall)
               {
                   Log::addDebug("Using Debug UnInstall");
-                  OptimizeController::uninstallPlugin();
+                  QueueController::uninstallPlugin();
                   $this->doRedirect('');
               }
 				 		 	$statsMedia = $opt->getQueue('media');
 				 			$statsCustom = $opt->getQueue('custom');
 
-				 			$opt->setBulk(true);
+              $opt = new QueueController(['is_bulk' => true]);
+
 
 				 		 	$bulkMedia = $opt->getQueue('media');
 				 			$bulkCustom = $opt->getQueue('custom');
@@ -415,7 +419,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 					// If the compression type setting changes, remove all queued items to prevent further optimizing with a wrong type.
 					if (intval($this->postData['compressionType']) !== intval($this->model->compressionType))
 					{
-						 OptimizeController::resetQueues();
+						 QueueController::resetQueues();
 					}
 
           // write checked and verified post data to model. With normal models, this should just be call to update() function
@@ -486,10 +490,11 @@ class SettingsViewController extends \ShortPixel\ViewController
 
         // $this->view->savedBandwidth = UiHelper::formatBytes( intval($this->view->data->savedSpace) * 10000,2);
 
+         // @todo this might be converted at some point tho view->env or something to divide better. 
+         $offLoader = Offloader::getInstance();
          $this->view->cloudflare_constant = defined('SHORTPIXEL_CFTOKEN') ? true : false;
-
-         $this->view->is_unlimited=  (!is_null($this->quotaData) && $this->quotaData->unlimited) ? true : false;
-
+         $this->view->is_unlimited =  (!is_null($this->quotaData) && $this->quotaData->unlimited) ? true : false;
+         $this->view->is_wpoffload = $offLoader->isActive('wp-offload');
 
          $settings = \wpSPIO()->settings();
 
@@ -803,6 +808,45 @@ class SettingsViewController extends \ShortPixel\ViewController
 
           }
 
+          $post_useCDN = isset($post['useCDN']) ? true : false; 
+          $post_CDNDomain = isset($post['CDNDomain']) ? sanitize_text_field($post['CDNDomain']) : ''; 
+
+          $setting_useCDN = $this->model->useCDN; 
+          $setting_CDNDomain = $this->model->CDNDomain; 
+
+          $CDNcontroller = new \ShortPixel\Controller\Front\CDNController();
+
+          if ($post_useCDN !== $setting_useCDN)
+          {
+              
+              if (true === $post_useCDN)
+              {
+                 $CDNcontroller->registerDomain(); 
+              }
+              else{
+                // Deregister off for now.
+               // $controller->registerDomain(['action' => 'deregister']);
+              }
+          }
+
+          if ($post_useCDN)
+          {
+              $check = $CDNcontroller->validateCDNDomain($post_CDNDomain);
+              if (true !== $check)
+              {
+                 $this->addReturnFormData([
+                    'field' => 'CDNDomain', 
+                    'old_value' => $post_CDNDomain, 
+                    'new_value' => $check, 
+                    'hook_query' => 'info.useCDN', 
+                    'message' => sprintf(__('CDN Domain has been changed from %s to %s . SPIO needs a path component', 'shortpixel-image-optimiser'), $post_CDNDomain, $check),
+                 ]);
+                 $post['CDNDomain'] = $check;
+              }
+          }
+
+          
+
 
 				// Field that are in form for other purpososes, but are not part of model and should not be saved.
 					$ignore_fields = array(
@@ -833,6 +877,8 @@ class SettingsViewController extends \ShortPixel\ViewController
               'nonce',
               'action',
               'form-nonce',
+              'request_url', 
+              'login_apiKey',
 
 					);
 
@@ -845,6 +891,13 @@ class SettingsViewController extends \ShortPixel\ViewController
 					}
 
           parent::processPostData($post);
+
+      }
+
+      protected function addReturnFormData($data)
+      {
+        
+          $this->returnFormData[] = $data; 
 
       }
 
@@ -1041,6 +1094,11 @@ class SettingsViewController extends \ShortPixel\ViewController
 						{
               $json->redirect = ($url !== false && ! is_null($url) ) ? $url : $redirect;
 						}
+
+            if (count($this->returnFormData) > 0)
+            {
+               $json->returnFormData = $this->returnFormData;
+            }
 
 						$noticeController->update(); // dismiss one-time ponies
 						wp_send_json($json);

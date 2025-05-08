@@ -238,18 +238,19 @@ class CronController
   // This could be transferred to getStartUpData instead.
   private function getQueueData($queue_type)
   {
-      $optimizeController = new OptimizeController();
       if ('bulk' === $queue_type)
       {
-         $optimizeController->setBulk(true);
+         $args['is_bulk'] = true; 
       }
-      else {
-        $optimizeController->setBulk(false);
+      else
+      {
+        $args['is_bulk'] = false;
       }
 
 
-      $data = $optimizeController->getStartUpData();
-      return $data;
+      $queueController = new QueueController($args);
+      return $queueController->getStartUpData();
+
 
   }
 

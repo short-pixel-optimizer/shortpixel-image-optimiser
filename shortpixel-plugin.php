@@ -7,13 +7,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
-use ShortPixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\Controller\QueueController as QueueController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Controller\AjaxController as AjaxController;
 use ShortPixel\Controller\AdminController as AdminController;
 use ShortPixel\Controller\ImageEditorController as ImageEditorController;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
-
+use ShortPixel\Controller\FileSystemController;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 use ShortPixel\NextGenController as NextGenController;
 
@@ -46,6 +46,7 @@ class ShortPixelPlugin {
 	public function __construct() {
 		// $this->initHooks();
 		add_action( 'plugins_loaded', [$this, 'lowInit'], 5 ); // early as possible init.
+		
 	}
 
 	/** LowInit after all Plugins are loaded. Core WP function can still be missing. This should mostly add hooks */
@@ -68,7 +69,6 @@ class ShortPixelPlugin {
 			return;
 		}
 
-		$cron = Controller\CronController::getInstance();  // cron jobs - must be low init to function!
 
 		$front        = new Controller\FrontController(); // init front checkers
 		$admin        = Controller\AdminController::getInstance();
@@ -77,18 +77,26 @@ class ShortPixelPlugin {
 		$this->initHooks();
 		$this->ajaxHooks();
 
-		if ( defined( 'WP_CLI' ) && WP_CLI ) {
+		if ( defined( 'WP_CLI' ) && \WP_CLI ) {
 			WPCliController::getInstance();
 		}
 
-		add_action( 'admin_init', [ $this, 'init' ] );
+		add_action ('init', [$this, 'init']);
+		add_action( 'admin_init', [ $this, 'admin_init' ] );
+	}
+
+	public function init()
+	{
+		Controller\CronController::getInstance();  // cron jobs - must be init to function!
+
 	}
 
 
 	/** Mainline Admin Init. Tasks that can be loaded later should go here */
-	public function init() {
+	public function admin_init() {
 			// This runs activation thing. Should be -after- init
 			$this->check_plugin_version();
+
 
 			$notices             = Notices::getInstance(); // This hooks the ajax listener
 			$quotaController = QuotaController::getInstance();
@@ -113,6 +121,10 @@ class ShortPixelPlugin {
 		return Model\EnvironmentModel::getInstance();
 	}
 
+	/** Get the SPIO FileSystemController
+	 * 
+	 * @return FileSystemController 
+	 */
 	public function fileSystem() {
 		return new Controller\FileSystemController();
 	}
@@ -140,11 +152,11 @@ class ShortPixelPlugin {
 		add_action( 'enqueue_block_assets', array($this, 'load_admin_scripts'), 90);
 		// defer notices a little to allow other hooks ( notable adminnotices )
 
-		$optimizeController = new OptimizeController();
-		add_action( 'shortpixel-thumbnails-regenerated', array( $optimizeController, 'thumbnailsChangedHookLegacy' ), 10, 4 );
-		add_action( 'rta/image/thumbnails_regenerated', array( $optimizeController, 'thumbnailsChangedHook' ), 10, 2 );
-		add_action( 'rta/image/thumbnails_removed', array( $optimizeController, 'thumbnailsChangedHook' ), 10, 2 );
-		add_action('rta/image/scaled_image_regenerated', array($optimizeController, 'scaledImageChangedHook'), 10, 2);
+		$queueController = new QueueController();
+		add_action( 'shortpixel-thumbnails-regenerated', array( $queueController, 'thumbnailsChangedHookLegacy' ), 10, 4 );
+		add_action( 'rta/image/thumbnails_regenerated', array( $queueController, 'thumbnailsChangedHook' ), 10, 2 );
+		add_action( 'rta/image/thumbnails_removed', array( $queueController, 'thumbnailsChangedHook' ), 10, 2 );
+		add_action('rta/image/scaled_image_regenerated', array($queueController, 'scaledImageChangedHook'), 10, 2);
 
 
 		// Media Library - Actions to route screen
@@ -246,7 +258,7 @@ class ShortPixelPlugin {
 
 		// Custom Media
 
-		add_action( 'wp_ajax_shortpixel_get_backup_size', array( AjaxController::getInstance(), 'ajax_getBackupFolderSize' ) );
+		//add_action( 'wp_ajax_shortpixel_get_backup_size', array( AjaxController::getInstance(), 'ajax_getBackupFolderSize' ) );
 
 		add_action( 'wp_ajax_shortpixel_propose_upgrade', array( AjaxController::getInstance(), 'ajax_proposeQuotaUpgrade' ) );
 		add_action( 'wp_ajax_shortpixel_check_quota', array( AjaxController::getInstance(), 'ajax_checkquota' ) );
@@ -295,11 +307,8 @@ class ShortPixelPlugin {
 
 		$is_bulk_page = \wpSPIO()->env()->is_bulk_page;
 
-		$optimizeController = new OptimizeController();
-		$optimizeController->setBulk( $is_bulk_page );
-
+		$queueController = new QueueController(['is_bulk' =>  $is_bulk_page ]);
 		$quotaController = QuotaController::getInstance();
-
 
 	 wp_register_script('shortpixel-folderbrowser', plugins_url('/res/js/shortpixel-folderbrowser.js', SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
@@ -376,7 +385,7 @@ class ShortPixelPlugin {
 				'nonce_exit'        => wp_create_nonce( 'exit_process' ),
 				'nonce_ajaxrequest' => wp_create_nonce( 'ajax_request' ),
 				'nonce_settingsrequest' => wp_create_nonce('settings_request'),
-				'startData'         => ( \wpSPIO()->env()->is_screen_to_use ) ? $optimizeController->getStartupData() : false,
+				'startData'         => ( \wpSPIO()->env()->is_screen_to_use ) ? $queueController->getStartupData() : false,
 				'interval'          => $interval,
 				'deferInterval'     => $deferInterval,
 				'debugIsActive' 		=> (\wpSPIO()->env()->is_debug) ? 'true' : 'false',
@@ -397,10 +406,11 @@ class ShortPixelPlugin {
 
 	  $screen_localize = array(  // Item Base
 			'startAction' => __('Processing... ','shortpixel-image-optimiser'),
+			'startActionAI' => __('Generating Alt Text', 'shortpixel-image-optimiser'),
 			'fatalError' => __('ShortPixel encountered a fatal error when optimizing images. Please check the issue below. If this is caused by a bug please contact our support', 'shortpixel-image-optimiser'),
 			'fatalErrorStop' => __('ShortPixel has encounted multiple errors and has now stopped processing', 'shortpixel-image-optimiser'),
 			'fatalErrorStopText' => __('No items are being processed. To try again after solving the issues, please reload the page ', 'shortpixel-image-optimiser'),
-			'fatalError500' => __('A fatal error HTTP 500 has occurred. On the bulk screen, this may be caused by the script running out of memory. Check your error log, increase memory or disable heavy plugins.')
+			'fatalError500' => __('A fatal error HTTP 500 has occurred. On the bulk screen, this may be caused by the script running out of memory. Check your error log, increase memory or disable heavy plugins.'),
 
 		);
 
@@ -514,7 +524,7 @@ class ShortPixelPlugin {
 		if ( wp_style_is( $name, 'registered' ) ) {
 			wp_enqueue_style( $name );
 		} else {
-			Log::addWarn( "Style $name was asked for, but not registered" );
+			Log::addWarn( "Style $name was asked for, but not registered", $_SERVER['REQUEST_URI'] );
 		}
 	}
 
@@ -532,7 +542,7 @@ class ShortPixelPlugin {
 			if ( wp_script_is( $name, 'registered' ) ) {
 				wp_enqueue_script( $name );
 			} else {
-				Log::addWarn( "Script $name was asked for, but not registered" );
+				Log::addWarn( "Script $name was asked for, but not registered", $_SERVER['REQUEST_URI']  );
 			}
 		}
 	}
@@ -592,27 +602,24 @@ class ShortPixelPlugin {
 			$this->load_script( 'shortpixel-screen-custom' ); // screen
 
 		} elseif ( NextGenController::getInstance()->isNextGenScreen() ) {
-			//$this->load_script( $load_processor );
+
 			$this->load_script( 'shortpixel-screen-custom' ); // screen
 			$this->load_style( 'shortpixel-admin' );
 
 		//	$this->load_style( 'shortpixel' );
 			$this->load_style( 'shortpixel-nextgen' );
 		}
-		elseif ( $this->env()->is_gutenberg_editor === true)
+		elseif (true === $this->env()->is_gutenberg_editor || true === $this->env()->is_classic_editor)
 		{
 			$this->load_script( $load_processor );
 			$this->load_script( 'shortpixel-screen-media' ); // screen
 			$this->load_script( 'shortpixel-media' );
 
 			$this->load_style( 'shortpixel-admin' );
-		//	$this->load_style( 'notices-module');
-
 		}
 		elseif (true === \wpSPIO()->env()->is_screen_to_use  )
 		{
 			// If our screen, but we don't have a specific handler for it, do the no-list screen.
-			//$this->load_script( $load_processor );
 			$this->load_script( 'shortpixel-screen-nolist' ); // screen
 		}
 

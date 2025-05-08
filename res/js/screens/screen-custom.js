@@ -25,7 +25,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
         if (data.custom)
         {
             var id = data.custom.id;
-            var element = document.getElementById('sp-msg-' + id);
+            var element = document.getElementById('shortpixel-data-' + id);
             element.outerHTML = data.custom.itemView;
 
             var isOptimizable = data.custom.is_optimizable;
@@ -33,9 +33,10 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
 
             var inputSelect = document.querySelector('.item-' + id + ' input[name="select[]"]');
 
-            if (null === inputSelect)
+            if (null === inputSelect) // This happens on NGG 
             {
                console.warn('Checkbox not found ' + id);
+               return; 
             }
 
             inputSelect.classList.remove('is-optimizable', 'is-restorable');
@@ -402,6 +403,11 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
                messageEl.textContent = data.folder.message;
                messageEl.classList.remove('hidden');
 							 this.Show(messageEl);
+           }
+           if (data.display_notices)
+           {
+                 //var element = document.querySelector('.modal-folder-picker .description');
+                 this.AppendNotices(data.display_notices, messageEl);
            }
            if (data.display_notices)
            {

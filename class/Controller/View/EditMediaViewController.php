@@ -1,6 +1,9 @@
 <?php
 namespace ShortPixel\Controller\View;
 
+use ShortPixel\Controller\Front\CDNController;
+use ShortPixel\Controller\QueueController;
+
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
@@ -8,13 +11,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Helper\UiHelper as UiHelper;
-use ShortPixel\Helper\UtilHelper as UtilHelper;
-use ShortPixel\Controller\OptimizeController as OptimizeController;
-use ShortPixel\Controller\ErrorController as ErrorController;
+
+use ShortPixel\Controller\Queue\QueueItems as QueueItems;
 
 use ShortPixel\Model\File\FileModel as FileModel;
-
-use ShortPixel\Helper\DownloadHelper as DownloadHelper;
 
 
 // Future contoller for the edit media metabox view.
@@ -40,6 +40,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
       protected function loadHooks()
       {
             add_action( 'add_meta_boxes_attachment', array( $this, 'addMetaBox') );
+          //  add_action( 'attachment_fields_to_edit', [ $this, 'addAIAlter'], 10, 2);
             $this->hooked = true;
       }
 
@@ -50,6 +51,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
 					$fs = \wpSPIO()->filesystem();
 					$fs->startTrustedMode();
+
       }
 
       public function addMetaBox()
@@ -62,6 +64,26 @@ class EditMediaViewController extends \ShortPixel\ViewController
               'side'//'normal',      // part of page where the box should appear
               //'default'      // priority of the box
           );
+      }
+
+      /** Wordpress Filter to ( temp ) add a alt button for AI to the interface.
+       * 
+       * @param array $fields 
+       * @param object $post 
+       * @return array 
+       */
+      public function addAIAlter($fields, $post)
+      { 
+          $post_id = intval($post->ID);
+          $fields['aibutton'] = [
+              'label' => __('ShortPixel Ai Text', 'shortpixel-image-optimiser'), 
+              'input' => 'html', 
+              'html' => "<a href='javascript:window.ShortPixelProcessor.screen.RequestAlt($post_id)' class='button button-secondary'>" . __('Generate', 'shortpixel-image-optimiser') . "</a>
+                 <div class='shortpixel-alt-messagebox' id='shortpixel-ai-messagebox-$post_id'>&nbsp;</div>
+               ",
+          ];
+         
+          return $fields;
       }
 
       public function dometaBox($post)
@@ -131,7 +153,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
 
         $exifData = UIHelper::getExifDisplayValues($did_keepExif);
-      
+
         if (is_array($exifData) && isset($exifData['line']))
         {
            $stats[] = [$exifData['line'], ''];
@@ -146,7 +168,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 				elseif (false !== $imageObj->getMeta()->convertMeta()->didTry()) {
 					$ext = $imageObj->getMeta()->convertMeta()->getFileFormat();
 					$error = $imageObj->getMeta()->convertMeta()->getError(); // error code.
-					$stats[] = array(UiHelper::getConvertErrorReason($error, $ext), '');
+					$stats[] = array(UiHelper::getConvertErrorReason($error), '');
 				}
 
         if ($resize == true)
@@ -174,7 +196,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
       {
           if(! \wpSPIO()->env()->is_debug )
           {
-            return array();
+            return [];
           }
 
           $meta = \wp_get_attachment_metadata($this->post_id);
@@ -183,11 +205,12 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
 					$imageObj = $this->imageModel;
 
+
+
 					if ($imageObj->isProcessable())
 					{
 						 $optimizeData = $imageObj->getOptimizeData();
 						 $urls = $optimizeData['urls'];
-
 					}
 
 					$thumbnails = $imageObj->get('thumbnails');
@@ -244,10 +267,18 @@ class EditMediaViewController extends \ShortPixel\ViewController
 					{
 						 $debugInfo[] = array(__('Optimize Data'), $optimizeData);
 
-						 $optControl = new optimizeController();
-						 $q = $optControl->getQueue($imageObj->get('type'));
+						 $queueControl = new QueueController();
 
-						 $debugInfo[] = array(__('Image to Queue'), $q->_debug_imageModelToQueue($imageObj) );
+						 $q = $queueControl->getQueue($imageObj->get('type'));
+
+             $item = QueueItems::getImageItem($imageObj);
+             $item->setDebug();
+             $item->newOptimizeAction();
+
+						 $returnEnqueue = $item->returnEnqueue();
+
+						 $debugInfo[] = array(__('Image to Queue V2'), $returnEnqueue );
+
 					}
 
           $debugInfo['imagemetadata'] = array(__('ImageModel Metadata (ShortPixel)'), $imageObj);
@@ -255,8 +286,6 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
           $debugInfo['wpmetadata'] = array(__('WordPress Get Attachment Metadata'), $meta );
 					$debugInfo[] = array('', '<hr>');
-
-
 
 						if ($imageObj->hasBackup())
             	$backupFile = $imageObj->getBackupFile();
@@ -290,6 +319,14 @@ class EditMediaViewController extends \ShortPixel\ViewController
              $original = $imageObj->getOriginalFile();
              $debugInfo[] = array(__('Has Original File: '), $original->getFullPath()  . '(' . UiHelper::formatBytes($original->getFileSize()) . ')');
              $orbackup = $original->getBackupFile();
+
+             $processable = ($original->isProcessable()) ? '<span class="green">Yes</span>' : '<span class="red">No</span> (' . $original->getReason('processable') . ')';
+             $restorable = ($original->isRestorable()) ? '<span class="green">Yes</span>' : '<span class="red">No</span> (' . 		$original->getReason('restorable') . ')';
+
+             $debugInfo[] = ['Original Processable:', $processable];
+             $debugInfo[] = ['Original Restorable:', $restorable];
+
+
              if ($orbackup)
               $debugInfo[] = array(__('Has Backup Original Image'), $orbackup->getFullPath() . '(' . UiHelper::formatBytes($orbackup->getFileSize()) . ')');
 						$debugInfo[] = array('', '<hr>');

@@ -121,7 +121,7 @@ class AdminController extends \ShortPixel\Controller
               //do_action('shortpixel/converter/prevent-offload-off', $id);
 					}
 
-        	$control = new OptimizeController();
+        	$control = new QueueController();
         	$control->addItemToQueue($mediaItem);
 				}
 				else {
@@ -172,6 +172,7 @@ class AdminController extends \ShortPixel\Controller
     /* Function to process Hook coming from the WP cron system */
     public function processCronHook($bulk)
     {
+
         $args = array(
             'max_runs' => 10,
             'run_once' => false,
@@ -180,6 +181,7 @@ class AdminController extends \ShortPixel\Controller
             'timelimit' => 50,
             'wait' => 1,
         );
+
 
         return $this->processQueueHook($args);
     }
@@ -204,14 +206,14 @@ class AdminController extends \ShortPixel\Controller
 				$args = wp_parse_args($args, $defaults);
         $args = apply_filters('shortpixel/process_hook/options', $args);
 
-
-			  $control = new OptimizeController();
-        $env = \wpSPIO()->env();
-
+        $queueArgs = []; 
 				if ($args['bulk'] === true)
 				{
-					 $control->setBulk(true);
+					 $queueArgs['is_bulk'] = true;
 				}
+
+			  $control = new QueueController($queueArgs);
+        $env = \wpSPIO()->env();
 
 			 	if ($args['run_once'] === true)
 				{
@@ -270,7 +272,7 @@ class AdminController extends \ShortPixel\Controller
       $otherMediaController = OtherMediaController::getInstance();
       if (false === $otherMediaController->hasCustomImages())
       {
-         return false; 
+         return false;
       }
 
 
@@ -495,7 +497,7 @@ class AdminController extends \ShortPixel\Controller
 				$fields["shortpixel-image-optimiser"] = array(
 							"label" => esc_html__("ShortPixel", "shortpixel-image-optimiser"),
 							"input" => "html",
-							"html" => '<div id="sp-msg-' . $post->ID . '">--</div>',
+							"html" => '<div id="shortpixel-data-' . $post->ID . '">--</div>',
 						);
 
 				return $fields;

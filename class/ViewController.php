@@ -133,6 +133,40 @@ class ViewController extends Controller
 
   }
 
+  /** Manually add data to this viewcontroller
+   * 
+   * @param array $data  Data to add. 
+   * @return void 
+   */
+  public function addData($data)
+  {
+      $this->data = array_merge($this->data, $data);
+  }
+
+  /** Loads a view and then returns it as html string. Handy for passing back snippets in JSON and other things. 
+   * 
+   * @param string $template Name of template
+   * @return string HTML string of view loaded.  
+   */
+  public function returnView($template = null)
+  {
+     $bool = ob_start();
+     $html = ''; 
+
+     if (true === $bool)
+     {
+        $this->loadView($template, false); 
+        $html = ob_get_contents();
+        ob_end_clean();
+     }
+     else
+     {
+       Log::addError('Output buffer failed requesting returnView!' . $template);
+     }
+
+     return $html; 
+  }
+
   protected function printInlineHelp($url)
   {
 
@@ -148,6 +182,7 @@ class ViewController extends Controller
         'checked' => false,
         'label' => '',
         'switch_class' => false,
+        'input_class' => 'switch', 
         'data' => [],
         'disabled' => false,
     );
@@ -155,9 +190,11 @@ class ViewController extends Controller
     $args = wp_parse_args($args, $defaults);
 
     $switchclass = ($args['switch_class'] !== false) ? 'class="' . $args['switch_class'] . '"' : '';
+    $inputclass = $args['input_class'];
     $checked = checked($args['checked'], true, false);
     $name = esc_attr($args['name']);
     $label = esc_attr($args['label']);
+
 
     $data = implode(' ', $args['data']);
     
@@ -166,11 +203,11 @@ class ViewController extends Controller
 
     $output = sprintf('<switch %s>
       <label>
-        <input type="checkbox" class="switch" name="%s" value="1" %s %s %s>
+        <input type="checkbox" class="%s" name="%s" value="1" %s %s %s>
         <div class="the_switch">&nbsp;</div>
         %s
       </label>
-    </switch>', $switchclass, $name, $checked, $disabled, $data, $label);
+    </switch>', $switchclass, $inputclass, $name, $checked, $disabled, $data, $label);
 
     echo $output;
   }
@@ -194,7 +231,7 @@ class ViewController extends Controller
       }
     }
 
-    if (is_null($this->model) && is_null($model))
+    if (is_null($this->model))
     {
       foreach($post as $name => $value )
       {

@@ -84,5 +84,38 @@
 	//	 border: 1px solid #ff0000;
 	}
 
+	.tools-message 
+	{
+		background: #F4FBFC;
+  	 	border-radius: 12px;
+		height: 0; 
+		transition: all 0.2s;
+		font-weight: 700;
+		&.opened
+		{
+			height: auto;	 
+			padding: 16px;
+
+		}
+	}
+
+	.setting-importexport
+	{
+		 textarea {
+			 width: 300px;
+			 height: 150px;
+			 font-weight: 500;
+			 resize: both;
+		 }
+		 .import-textarea 
+		 {
+			height: 75px;
+		 }
+
+	
+	}
+
+	
+
 
 } // Tab tools.

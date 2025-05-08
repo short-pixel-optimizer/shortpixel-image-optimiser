@@ -10,7 +10,7 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 use ShortPixel\Controller\QuotaController as QuotaController;
-use ShortPixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\Controller\QueueController as QueueController;
 use ShortPixel\Controller\BulkController as BulkController;
 use ShortPixel\Controller\StatsController as StatsController;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
@@ -35,13 +35,13 @@ class BulkViewController extends \ShortPixel\ViewController
   public function load()
   {
     $quota = QuotaController::getInstance();
-    $optimizeController = new OptimizeController();
+    $queueController = new QueueController();
     $bulkController = BulkController::getInstance();
 
 
     $this->view->quotaData = $quota->getQuota();
 
-    $this->view->stats = $optimizeController->getStartupData();
+    $this->view->stats = $queueController->getStartupData();
     $this->view->approx = $this->getApproxData();
 
     $this->view->logHeaders = array(__('Images', 'shortpixel_image_optimiser'), __('Errors', 'shortpixel_image_optimizer'), __('Date', 'shortpixel_image_optimizer'));
@@ -79,7 +79,8 @@ class BulkViewController extends \ShortPixel\ViewController
 
     $this->view->customOperationMedia = (false !== $custom_operation_media) ? $this->getCustomLabel($custom_operation_media) : false;
     $this->view->customOperationCustom = (false !== $custom_operation_custom) ? $this->getCustomLabel($custom_operation_custom) : false;
-
+    $this->view->customOperationMediaName = $custom_operation_media; 
+    $this->view->customerOperationCustomName = $custom_operation_custom;
 
     $this->loadView();
 
@@ -135,7 +136,10 @@ class BulkViewController extends \ShortPixel\ViewController
 
     // If sizes are excluded, remove this count from the approx.
     if (is_array($excludeSizes) && count($excludeSizes) > 0)
+    {
       $approx->media->thumbs = $approx->media->thumbs - ($approx->media->items * count($excludeSizes));
+      
+    }
 
     // Total optimized items + Total optimized (approx) thumbnails
     $approx->media->total = $approx->media->items + $approx->media->thumbs;

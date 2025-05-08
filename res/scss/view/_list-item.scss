@@ -124,8 +124,6 @@
     clear: both;
     border-top: 1px solid #dcdcde;
     margin: 12px 0;
-  //  float: left;
-  //  width: 100%;
 
     label {
       min-width: 30%;
@@ -136,6 +134,10 @@
 
     > div { padding-left: 8px; padding-bottom: 8px; }
 
+    @at-root .media-sidebar & {
+      padding-top: 20px;
+      margin-bottom: 0px;
+    }
 }
 
 .edit-attachment-frame .shortpixel-popup-info

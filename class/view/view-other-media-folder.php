@@ -1,9 +1,5 @@
 <?php
-
 namespace ShortPixel;
-use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-
-use ShortPixel\Helper\UiHelper as UiHelper;
 
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
@@ -15,6 +11,7 @@ if ( isset($_GET['noheader']) ) {
 }
 
 
+
 $this->loadView('custom/part-othermedia-top');
 
 ?>
@@ -23,7 +20,7 @@ $this->loadView('custom/part-othermedia-top');
 <div class='addCustomFolder'>
 
   <p class='add-folder-text'><strong><?php esc_html_e('Add a custom folder', 'shortpixel-image-optimiser'); ?></strong></p>
-  <input type="text" name="addCustomFolderView" id="addCustomFolderView" class="regular-text" value="" disabled style="">&nbsp;
+  <input type="text" name="addCustomFolderView" id="addCustomFolderView" class="regular-text" value="" disabled >&nbsp;
 
   <a class="button open-selectfolder-modal" title="<?php esc_html_e('Select the images folder on your server.','shortpixel-image-optimiser');?>" href="javascript:void(0);">
       <?php esc_html_e('Select','shortpixel-image-optimiser');?>

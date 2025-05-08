@@ -47,21 +47,23 @@ class SettingsModel extends \ShortPixel\Model
 				'doBackgroundProcess' => ['s' => 'boolean', 'default' => false], // checkbox
 				'showCustomMedia' => ['s' => 'boolean', 'default' => true], // checkbox
 				'mediaLibraryViewMode' => ['s' => 'int', 'default' => false], // set in installhelper
-				'currentVersion' => ['s' => 'string', 'default' => null], // last known version of plugin. Used for updating
+				'currentVersion' => ['s' => 'string', 'default' => null, 'export' => false], // last known version of plugin. Used for updating
 				'hasCustomFolders' => ['s' => 'int', 'default' => false], // timestamp used for custom folders
-				'quotaExceeded' => ['s' => 'int', 'default' => 0], // indicator for quota
+				'quotaExceeded' => ['s' => 'int', 'default' => 0, 'export' => false], // indicator for quota
 				'httpProto' => ['s' => 'string', 'default' => 'https'], // Less than optimal setting for using http(s)
 				'downloadProto' => ['s' => 'string', 'default' => 'https'], // Less than optimal setting for using http(s) when Downloading
-				'activationDate' => ['s' => 'int', 'default' => null], // date of activation
+				'activationDate' => ['s' => 'int', 'default' => null, 'export' => false], // date of activation
 				'unlistedCounter' => ['s' => 'int', 'default' => 0], // counter to prevent checking unlisted files too much
-				'currentStats' => ['s' => 'array', 'default' => array()], // whatever the current stats are.
-        'currentVersion' => ['s' => 'string', 'default' => ''],
+				'currentStats' => ['s' => 'array', 'default' => array(), 'export' => false], // whatever the current stats are.
+        'currentVersion' => ['s' => 'string', 'default' => '', 'export' => false],
 				'useCDN' => ['s' => 'boolean', 'default' => false],
+				'cdn_css' => ['s' =>  'boolean', 'default' => false],
+				'cdn_js' => ['s' => 'boolean', 'default' => false],
 				'CDNDomain' => ['s' => 'string', 'default' => 'https://spcdn.shortpixel.ai/spio'],
         'redirectedSettings' => ['s' => 'int', 'default' => 0],
         'exif' => ['s' => 'int', 'default' => 1],
         'exif_ai' => ['s' => 'int', 'default' => 0],
-
+        'cdn_purge_version' => ['s' => 'int', 'default' => 1, 'export' => false], 
     );
 
   //  const EXIF_REMOVE = 0;
@@ -182,6 +184,44 @@ class SettingsModel extends \ShortPixel\Model
 
 		}
 
+    /** Check if this entry in settings should be in import / export function . Some are internal / site only .
+     * 
+     * @param string $name 
+     * @return bool 
+     */
+    public function forExport($name)
+    {
+       if (false === $this->exists($name))
+       {
+         return false; 
+       }
+
+       if (isset($this->model[$name]['export']))
+       {
+          return $this->model[$name]['export'];
+       }
+
+       return true; // if no rules, ok .
+
+    }
+
+    public function getExport()
+    {
+        $data = $this->getData(); 
+        $export = []; 
+        foreach($data as $name => $value)
+        {
+           if (false === $this->forExport($name))
+           {
+             continue; 
+           }
+           $export[$name] = $value; 
+        }
+
+        return $export;
+    }
+
+
 		public function deleteOption($name)
 		{
 				if ($this->exists($name) && $this->isset($name))
@@ -213,3 +253,4 @@ class SettingsModel extends \ShortPixel\Model
 		}
 
 } // class
+

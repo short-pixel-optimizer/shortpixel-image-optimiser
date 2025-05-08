@@ -10,6 +10,8 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Model\File\DirectoryModel as DirectoryModel;
 use ShortPixel\Model\File\FileModel as FileModel;
 use ShortPixel\Controller\ResponseController as ResponseController;
+use ShortPixel\Model\Queue\QueueItem as QueueItem;
+
 
 /* ShortPixel Image Optimiser Converters. Unified interface for handling conversion between file types */
 abstract class Converter
@@ -38,7 +40,7 @@ abstract class Converter
 		abstract protected function setTarget($file);
 
     // Prepare item for adding to queue, adding data, doing backup perhaps.
-    abstract public function filterQueue($item, $args = array());
+    abstract public function filterQueue(QueueItem $item, $args = array());
 
 		public function __construct($imageModel)
 		{
@@ -94,9 +96,10 @@ abstract class Converter
 		{
         if (! is_object($imageModel))
         {
+			Log::addInfo('Converter - not an imagemodel');
            return false;
         }
-        
+
 			  $extension = $imageModel->getExtension();
 
 				$converter = false;
@@ -106,8 +109,9 @@ abstract class Converter
 				// No Support (yet)
 				if ($imageModel->get('type') == 'custom')
 				{
+				//	Log::addInfo('Converter fail - no support for custom types');
 					return false;
-				}
+				} 
 
 				// Second option for conversion is image who have been placeholdered.
 				if (true === $imageModel->getMeta()->convertMeta()->hasPlaceHolder() && false === $imageModel->getMeta()->convertMeta()->isConverted() && ! is_null($imageModel->getMeta()->convertMeta()->getFileFormat()))
@@ -128,7 +132,8 @@ abstract class Converter
 					 }
 					 else
 					 {
-					 		return false;
+						Log::addInfo('Converter failed - ', $imageModel->getMeta());
+					 	return false;
 					 }
 				}
 

@@ -14,13 +14,13 @@
  use ShortPixel\Controller\ResponseController as ResponseController;
 
  use ShortPixel\Helper\DownloadHelper as DownloadHelper;
-
+use ShortPixel\Model\Queue\QueueItem;
 
 class PNGConverter extends MediaLibraryConverter
 {
 		protected $instance;
 
-    protected $current_image; // The current PHP image resource in memory
+    	protected $current_image; // The current PHP image resource in memory
 		protected $virtual_filesize;
 		protected $replacer; // Replacer class Object.
 
@@ -96,10 +96,10 @@ class PNGConverter extends MediaLibraryConverter
 			 return false;
 		}
 
-    public function filterQueue($item, $args = array())
+    public function filterQueue(QueueItem $qItem, $args = [])
     {
-       $item->action = 'png2jpg';
-       return $item;
+       $qItem->data()->action = 'png2jpg';
+       return $qItem;
     }
 
 		public function convert($args = array())
@@ -278,7 +278,7 @@ class PNGConverter extends MediaLibraryConverter
 					}
 					elseif (! $newFile->exists())
 					{
-						 Log::addWarn('PNG imagejpeg file not written!', $uniqueFile->getFileName() );
+						 Log::addWarn('PNG imagejpeg file not written!', $newFile->getFileName() );
 						 $msg = __('Error - PNG file not written', 'shortpixel-image-optimiser');
 						 ResponseController::addData($this->imageModel->get('id'), 'message', $msg);
 						 $this->imageModel->getMeta()->convertMeta()->setError(self::ERROR_WRITEERROR);
@@ -301,8 +301,8 @@ class PNGConverter extends MediaLibraryConverter
     /**
      *  Function to check if the filesize of the imagetype (webp/avif) is smaller, or within bounds of size to be stored. If not, the webp is not downloaded and uses.
      *
-     * @param  Integer $fileSize                 Filesize of the original
-     * @param  Integer $resultSize               Filesize of the optimized image
+     * @param  int $fileSize                 Filesize of the original
+     * @param  int $resultSize               Filesize of the optimized image
      * @return [type]             [description]
      */
     private function checkFileSizeMargin($fileSize, $resultSize)
@@ -452,6 +452,7 @@ class PNGConverter extends MediaLibraryConverter
 			$image = @imagecreatefrompng($imagePath);
 			if (! $image)
 			{
+				Log::addError('Image Create from PNG failed!');
 				$this->current_image = false;
 			}
 			else

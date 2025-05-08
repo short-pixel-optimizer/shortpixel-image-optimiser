@@ -48,7 +48,7 @@ class DownloadHelper
 
           $methods = array(
               "download_url" => array(array($this, 'downloadURLMethod'), $url, false),
-              "download_url_force" => array(array($this, 'downloadURLMethod'), true),
+              "download_url_force" => array(array($this, 'downloadURLMethod'), $url, true),
               "remote_get" => array(array($this, 'remoteGetMethod'), $url)
           );
 
@@ -132,7 +132,7 @@ class DownloadHelper
 
         if (is_wp_error($tempFile))
         {
-           Log::addError('Failed to Download File ', $tempFile);
+           Log::addError('Failed to Download File from ' . $url , $tempFile);
            Responsecontroller::addData('message', $tempFile->get_error_message());
            return false;
         }

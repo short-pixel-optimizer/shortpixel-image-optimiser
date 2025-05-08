@@ -115,11 +115,13 @@ if( $this->is_nginx ){
   if (true === apply_filters('shortpixel/settings/allow_cdn', true)): ?>
     <setting class='switch step-highlight-3'>
       <content>
-    <?php $this->printSwitchButton(
+    <?php
+        $inputclass = (true == $view->is_wpoffload) ? 'switch is-wpoffload' : 'switch'; 
+        $this->printSwitchButton(
           ['name' => 'useCDN',
            'checked' =>  ($view->data->useCDN > 0) ? 1 : 0,
            'label' => esc_html__('Deliver the next generation images using the ShortPixel CDN:','shortpixel-image-optimiser'),
-
+           'input_class' => $inputclass,
            'data' => ['data-toggle="useCDN"', 'data-exclude="deliverWebp"', 'data-dashboard="' . __('Next generation images are not delivered', 'shortpixel-image-optimiser') . '"', ],
           ]);
     ?>
@@ -129,7 +131,7 @@ if( $this->is_nginx ){
     </content>
     <?php echo UiHelper::getIcon('res/images/icon/new.svg'); ?>
     <info>
-           <?php printf(esc_html__('When enabled, the plugin replaces images with CDN URLs and delivers next-generation formats (e.g. WebP, AVIF, if enabled above). Otherwise, images are served locally, as usual. You must %sassociate your domain%s to your ShortPixel account for this delivery method to work. %sRead more%s.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/associated-domains" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/deliver-webp-avif-images-using-the-shortpixel-cdn-in-spio/" target="_blank">', '</a>' );?>
+           <?php printf(esc_html__('When enabled, the plugin replaces images with CDN URLs and delivers next-generation formats (e.g. WebP, AVIF, if enabled above). Otherwise, images are served locally, as usual. For this delivery method to work, your %sdomain will be associated%s automatically to your ShortPixel account. %sRead more%s.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/associated-domains" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/deliver-webp-avif-images-using-the-shortpixel-cdn-in-spio/" target="_blank">', '</a>' );?>
     </info>
 
     <?php
@@ -141,6 +143,7 @@ if( $this->is_nginx ){
     }
     ?>
 
+
     <name class='useCDN toggleTarget'><?php esc_html_e('CDN Domain', 'shortpixel-image-optimiser'); ?></name>
     <content class='useCDN toggleTarget'>
         <input type="text" name="CDNDomain" class='regular-text' value="<?php echo esc_attr($cdnDomain) ?>" >
@@ -149,7 +152,56 @@ if( $this->is_nginx ){
     <info class='useCDN toggleTarget'>
            <?php printf(esc_html__('Change this only if you want to set up your %scustom domain%s.  ShortPixel CDN: %s','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain/" target="_blank">', '</a>', 'https://spcdn.shortpixel.ai/spio');?>
     </info>
+
+    <?php if($this->view->is_wpoffload)
+    {
+       ?>
+        <warning class="cdn-offload">
+          <?php _e('It looks like you have the Offload Media plugin enabled. Please note that the CDN delivery will not work because usually Offload Media is taking care of this. We recommend you to disable the CDN delivery in this case.', 'shortpixel-image-optimiser'); 
+          ?>
+    </warning>
+       <?php 
+    }
+    ?>
   </setting>
+
+
+<gridbox class="width_half">
+
+	<setting class="useCDN toggleTarget">
+			<content>
+	<?php
+	$this->printSwitchButton(
+				 ['name' => 'cdn_css',
+					'checked' =>  ($view->data->cdn_css > 0) ? 1 : 0,
+					'label' => esc_html__('Minify the CSS, replace  background image URLs and serve the CSS files from the CDN, as well as all the locally referred fonts.','shortpixel-image-optimiser'),
+
+			//		'data' => ['data-toggle="useCDN"' ],
+					'disabled' => false,
+					'switch_class' => '',
+				 ]);
+
+		?>
+
+		</content>
+	</setting>
+	<setting class="useCDN toggleTarget">
+		<content>
+		<?php
+		$this->printSwitchButton(
+					 ['name' => 'cdn_js',
+						'checked' =>  ($view->data->cdn_js > 0) ? 1 : 0,
+						'label' => esc_html__('Minify and serve the JavaScript files from the CDN. The JS files from other domains are not affected by this option.','shortpixel-image-optimiser'),
+
+	//s					'data' => ['data-toggle="useCDN"'],
+						'disabled' => false,
+						'switch_class' => '',
+					 ]);
+
+			?>
+		</content>
+		</setting>
+</gridbox>
 
 <?php
 // sadly this field need to be present, because of field checks

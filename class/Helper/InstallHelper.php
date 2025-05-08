@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-use ShortPixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\Controller\QueueController as QueueController;
 use ShortPixel\Controller\CronController as CronController;
 use ShortPixel\Controller\BulkController as BulkController;
 use ShortPixel\Controller\FileSystemController as FileSystemController;
@@ -35,8 +35,8 @@ class InstallHelper
       AdminNoticesController::resetOldNotices();
       \WPShortPixelSettings::onActivate();
 
-      $optimizeController = new OptimizeController();
-      $q = $optimizeController->getQueue('media');
+      $queueController = new QueueController();
+      $q = $queueController->getQueue('media');
       $q->getShortQ()->install(); // create table.
 
       $settings = \wpSPIO()->settings();
@@ -75,7 +75,7 @@ class InstallHelper
 
   public static function uninstallPlugin()
   {
-    OptimizeController::uninstallPlugin();
+    	QueueController::uninstallPlugin();
 		ApiKeyController::uninstallPlugin();
 
 		delete_transient('bulk-secret');

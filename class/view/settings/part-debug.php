@@ -2,14 +2,14 @@
 namespace ShortPixel;
 use ShortPixel\Notices\NoticeController as NoticeController;
 use ShortPixel\Controller\StatsController as StatsController;
-use ShortPixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\Controller\QueueController as QueueController;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
-$opt = new OptimizeController();
+$opt = new QueueController();
 
 $q = $opt->getQueue('media');
 
@@ -57,7 +57,7 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
 				<span>Uploads Base</span><span><?php echo esc_html((defined('SHORTPIXEL_UPLOADS_BASE')) ? SHORTPIXEL_UPLOADS_BASE : 'not defined'); ?></span>
 				<span>Uploads Name</span><span><?php echo esc_html((defined('SHORTPIXEL_UPLOADS_NAME')) ? SHORTPIXEL_UPLOADS_NAME : 'not defined'); ?></span>
 				<span>Backup Folder</span><span><?php echo esc_html((defined('SHORTPIXEL_BACKUP_FOLDER')) ? SHORTPIXEL_BACKUP_FOLDER : 'not defined'); ?></span>
-				<span>Backup URL</span><span><?php echo esc_html((defined('SHORTPIXEL_BACKUP_URL')) ? SHORTPIXEL_BACKUP_URL : 'not defined'); ?></span>
+			
 
         <span>
 
@@ -236,12 +236,12 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
 
 	<div class='table queue-stats'>
 		<?php
-			$opt = new OptimizeController();
+      $opt = new QueueController();
 
 		 	$statsMedia = $opt->getQueue('media');
 			$statsCustom = $opt->getQueue('custom');
 
-			$opt->setBulk(true);
+      $opt = new QueueController(['is_bulk' => true]);
 
 		 	$bulkMedia = $opt->getQueue('media');
 			$bulkCustom = $opt->getQueue('custom');

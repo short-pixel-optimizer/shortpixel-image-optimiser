@@ -31,6 +31,16 @@ class ShortPixelOnboarding
          var addButton = this.root.querySelector('button[name="add-key"]');
          addButton.addEventListener('click', this.AddKeyEvent.bind(this));
 
+         let inputs = ['pluginemail', 'new-key']; 
+         for (let i = 0; i < inputs.length; i++)
+         {
+             var input = document.getElementById(inputs[i]); 
+             if (input !== null)
+             {
+               input.addEventListener('keypress', this.EnterKeyPressEvent.bind(this));
+             }
+         }
+      
          var quickTour = this.root.querySelector('.quick-tour');
          if (quickTour !== null)
          {
@@ -45,6 +55,17 @@ class ShortPixelOnboarding
         {
            panels[i].addEventListener('click', this.NewKeyPanelEvent.bind(this));
         }
+    }
+
+    EnterKeyPressEvent(event)
+    {
+       if (event.keyCode === 13)
+       {
+          event.preventDefault(); 
+          this.AddKeyEvent(event);
+          return false;
+       }
+
     }
 
     NewKeyPanelEvent(event)
@@ -223,7 +244,6 @@ class ShortPixelOnboarding
           {
              var current_step_number = i;
              var current_step = this.steps[i];
-             console.log('current_step', current_step_number);
              break;
           }
        }
@@ -268,10 +288,8 @@ class ShortPixelOnboarding
        this.root.classList.remove('active-step-' + current_step_number);
        this.step_counter.innerText = (new_step +1) + '/' + this.steps.length;
 
-console.log('newstep', new_step, this.steps.length-1);
        if (new_step == (this.steps.length-1))
        {
-          console.log('next step number at end?');
           next_button.disable();
           end_button.enable();
        }

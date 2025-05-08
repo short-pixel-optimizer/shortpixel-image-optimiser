@@ -30,11 +30,12 @@ class ShortPixelSettings
 			var self = this;
 			this.strings = settings_strings;
 
-			this.InitToggle();
-			this.InitExclusions();
-			this.InitWarnings();
-			this.InitMenu();
-			this.InitModeSwitcher();
+			this.InitToggle(); // data- toggles 
+			this.InitExclusions(); // Exclusions 
+			this.InitWarnings(); // Settings warnings 
+			this.InitMenu(); // The menu 
+			this.InitModeSwitcher(); // Simple / Advanced mode 
+			this.InitActionEvents(); // Action events. 
 
 			// Modals
 			var modals = this.root.querySelectorAll('[data-action="open-modal"]');
@@ -261,7 +262,7 @@ class ShortPixelSettings
 		updateShowWarning({ elements: remove_elements, warnings: warning, checks: checks});
 
 		var elements = root.querySelectorAll('input[name="backupImages"]');
-  	var warning =  root.querySelectorAll('#backup-warning');
+  		var warning =  root.querySelectorAll('#backup-warning');
 		var checks = [':not(:checked)'];
 		updateShowWarning({elements: elements, warnings: warning, checks: checks});
 
@@ -279,6 +280,14 @@ class ShortPixelSettings
 		var warning = root.querySelectorAll('.heavy-feature-virtual.retina');
 		var checks = [':checked', ':checked'];
 		updateShowWarning({elements: elements, warnings: warning, checks: checks});
+
+		// This warning takes the same element twice, with different checks.
+		var element = root.querySelector('input[name="useCDN"]');
+		var elements = [element, element];
+		var warning = root.querySelectorAll('.cdn-offload');
+		var checks = [':checked', '.is-wpoffload'];
+		updateShowWarning({elements: elements, warnings: warning, checks: checks});
+
 
 		// Checks for the dashboard boxes
 		// What can be send back match wise, can be 'allmatches' for red and 'anymatches' for yellow warning and let the dashboard function figure it out how to display that ( and which text? )
@@ -360,6 +369,184 @@ class ShortPixelSettings
 			}
 			switcher.addEventListener('change', this.SwitchViewModeEvent.bind(this));
 	}
+
+	InitActionEvents()
+	{
+		var actions = document.querySelectorAll('[setting-action]');
+		for (var i = 0; i < actions.length; i++)
+		{
+			 var actionElement = actions[i]; 
+			 /*if (false === actionElement.hasAttribute('data-function'))
+			 {
+				 console.warn('Action without function', actionElement); 
+				 continue; 
+			 } */
+			 
+			 var method = actionElement.getAttribute('setting-action');
+			 if ('undefined' === typeof this[method])
+			 {
+				 console.error('Method ' + method + ' event is undefined!' );
+			 }
+			 else
+			 {
+				actions[i].addEventListener('click', this[method].bind(this));
+			 }
+
+
+		}
+
+	}
+
+  PurgeCacheEvent(event)
+  {
+	 	event.preventDefault();
+		var target = event.target; 
+
+		var data = {}; 
+
+		var data = {screen_action: 'settings/purgecdncache'}; //
+		data.callback = 'shortpixelSettings.purgeCDNCache';
+		data.purge = target.dataset.purge;
+		data.type = 'settings';
+	
+		window.addEventListener(data.callback, function (response) {
+			var json = response.detail;
+
+			let results = json.settings.results; 
+			//let anchor = document.querySelector('.wp-header-end');
+			//let screen = window.ShortPixelProcessor.GetScreen();
+
+			//screen.AppendNotices(json.display_notices, anchor);
+			var messageBox = document.getElementById('settings-purge-message'); 
+			
+			messageBox.innerHTML = results.message;
+			messageBox.classList.add('opened');
+
+			setTimeout(function () {
+				messageBox.innerHTML = '';
+				messageBox.classList.remove('opened');
+				
+			}, 3000);
+
+
+		}, {'once': true} );
+	
+		window.ShortPixelProcessor.AjaxRequest(data);
+
+  }
+
+  ImportSettingsEvent(event)
+  {
+	var data = {}; 
+	var data = {screen_action: 'settings/importexport'}; //
+	data.callback = 'shortpixelSettings.importSettings';
+	data.type = 'settings'; 
+	data.actionType = 'import'; 
+
+	var messageBox = document.getElementById('settings-importexport-message'); 
+	messageBox.innerHTML = ''; // wipe previous
+
+	var value = document.getElementById('spio-tools-import').value; 
+	value = value.trim();
+
+	try{
+		var json = JSON.parse(value);
+	}
+	catch(e)
+	{
+		 console.error(e);
+		 var messageNode = document.createElement('p');
+		 messageNode.classList.add('error'); 
+		 messageNode.innerText = e.message; 
+
+		 messageBox.append(messageNode);
+		 messageBox.classList.add('opened');
+		 return; 
+	}
+	
+	
+	data.importData = JSON.stringify(json);
+
+	window.addEventListener(data.callback, function (response){
+		var data = response.detail; 
+
+	//	var messageBox = document.getElementById('settings-importexport-message'); 
+	//	messageBox.innerHTML = ''; // wipe previous
+
+		let results = (data.settings.results) ? data.settings.results : null; 
+		if (results)
+		{
+			 if (true == results.is_error)
+			 {
+				 var messageNode = document.createElement('p');
+				 messageNode.classList.add('error'); 
+				 messageNode.innerText = results.message; 
+
+				 messageBox.append(messageNode);
+				 messageBox.classList.add('opened');
+
+			 }
+			 else
+			 {
+				if (results.messages)
+				{
+					messageBox.classList.add('opened');
+					 for (let i = 0; i < results.messages.length; i++)
+					 {
+						var messageNode = document.createElement('p');
+						messageNode.innerText = results.messages[i]; 
+						messageBox.append(messageNode);
+					 }
+				}
+			 }
+
+			 
+		}
+		
+	}, {once: true});
+
+	window.ShortPixelProcessor.AjaxRequest(data);
+
+  }
+
+  ExportSettingsEvent(event)
+  {
+	var data = {}; 
+	var data = {screen_action: 'settings/importexport'}; //
+	data.callback = 'shortpixelSettings.exportSettings';
+	data.type = 'settings'; 
+	data.actionType = 'export'; 
+
+	window.addEventListener(data.callback, function (response)
+	{
+		let data = response.detail; 
+		if (data.settings && data.settings.exportData)
+		{
+			var messageBox = document.getElementById('settings-importexport-message'); 
+			messageBox.innerHTML = ''; // wipe previous
+			
+			var messageNode = document.createElement('p'); 
+			messageNode.innerText = data.settings.message; 
+
+		
+			var textNode = document.createElement('textarea'); 
+			textNode.classList.add('exportjson');
+			textNode.innerText = data.settings.exportData;
+
+			messageBox.append(messageNode);
+			messageBox.append(textNode);
+			messageBox.classList.add('opened');
+			textNode.addEventListener('focus', function () { 
+					this.select();
+			});
+		}
+
+	}, {once: true});
+
+	window.ShortPixelProcessor.AjaxRequest(data);
+
+
+  }
 
   SwitchViewModeEvent(event)
 	{
@@ -637,7 +824,7 @@ FormSendEvent(event)
 
 	 if (this.save_in_progress)
 	 {
-					return false;
+		return false;
 	 }
 
 	 this.save_in_progress = true;
@@ -724,7 +911,7 @@ FormResponseEvent(json)
 			{
 				 if (json.redirect == 'reload')
 				 {
-							window.location.reload();
+						window.location.reload();
 				 }
 				 else {
 						 window.location.href = json.redirect;
@@ -751,6 +938,41 @@ FormResponseEvent(json)
 					{
 						anchor.insertAdjacentHTML('afterend', json.display_notices[i]);
 					} */
+			}
+
+			// Remove old messages 
+			var fieldMessages = document.querySelectorAll(['.fieldmessage']).forEach(e => e.remove()); 
+			/*for(let i = 0; i < fieldMessages.length; i++)
+			{
+
+			} */
+
+			if (json.returnFormData)
+			{
+				 for (let i = 0; i < json.returnFormData.length; i++)
+				 {
+					 var fieldData = json.returnFormData[i]; 
+					 var fieldName = fieldData.field; 
+
+					 var fieldObj = document.querySelector('input[name="' + fieldName + '"]'); 
+					 fieldObj.value= fieldData.new_value;
+
+					 var newEl = document.createElement('info'); 
+					 newEl.classList.add('fieldmessage', 'updated'); 
+					 newEl.innerHTML = fieldData.message; 
+
+					 if (fieldData.hook_query)
+					 {
+						var hookElement = document.querySelector(fieldData.hook_query); 
+						hookElement.after(newEl);
+					 }
+					 else
+					 {
+						fieldObj.after(newEl);
+					 }
+
+
+				 }
 			}
 
 		saveDialog.classList.add('show');

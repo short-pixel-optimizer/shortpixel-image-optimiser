@@ -34,7 +34,7 @@ use ShortPixel\Helper\UiHelper as UiHelper;
           <h4><?php _e('Feature Request', 'shortpixel-image-optimiser'); ?></h4>
           <p><?php esc_html_e('Is there a feature missing? Do you have suggestions for improving ShortPixel?', 'shortpixel-image-optimiser'); ?></p>
 
-          <a href="mailto:help@shortpixel.com?subject=SPIO Feature Request" target="_blank" class="button-setting"><?php //echo UIHelper::getIcon('res/images/icon/external.svg'); ?>
+          <a href="https://ideas.shortpixel.com/" target="_blank" class="button-setting"><?php //echo UIHelper::getIcon('res/images/icon/external.svg'); ?>
              <?php esc_html_e('Feature Request', 'shortpixel-image-optimiser'); ?>
            <?php //echo UIHelper::getIcon('res/images/icon/arrow-right.svg'); ?> </a>
       </div>

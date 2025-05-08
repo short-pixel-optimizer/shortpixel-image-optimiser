@@ -13,7 +13,6 @@ use ShortPixel\Model\Image\ImageModel as ImageModel;
 
 class MediaLibraryQueue extends Queue
 {
-   protected $queueName = '';
    protected $cacheName = 'MediaCache'; // When preparing, write needed data to cache.
 
    protected static $instance;
@@ -94,7 +93,7 @@ class MediaLibraryQueue extends Queue
      $prepare[] = $limit;
 
      $sqlmeta = $wpdb->prepare($sqlmeta, $prepare);
-     
+
      $results = $wpdb->get_col($sqlmeta);
 
      $items = [];

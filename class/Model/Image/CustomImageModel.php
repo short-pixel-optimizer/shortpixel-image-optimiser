@@ -6,10 +6,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-use ShortPixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\Controller\QueueController as QueueController;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
-
-use ShortPixel\Controller\ApiController as API;
 
 
 // @todo Custom Model for adding files, instead of meta DAO.
@@ -21,8 +19,8 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
     protected $type = 'custom';
 
-    protected $thumbnails = array(); // placeholder, should return empty.
-    protected $retinas = array(); // placeholder, should return empty.
+    protected $thumbnails = []; // placeholder, should return empty.
+    protected $retinas = []; // placeholder, should return empty.
 
     protected $in_db = false;
     protected $is_stub = false;
@@ -41,11 +39,6 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         if ($id > 0)
 				{
           $bool = $this->loadMeta();
-					/*if ($bool)
-					{
-				  	$this->setWebp();
-				  	$this->setAvif();
-					} */
 				}
         else
         {
@@ -71,6 +64,15 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 			$data = $this->getOptimizeData();
 			return array_values($data['urls']);
 
+    }
+
+    /** Is WordPress scaled is always false on custom images.
+     * 
+     * @return false 
+     */
+    public function isScaled()
+    {
+       return false; 
     }
 
     protected function getExcludePatterns()
@@ -155,9 +157,11 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
          case 'avifs':
             $count = count($this->getAvifs());
          break;
+         /*  Never happens / function not here (?)
          case 'retinas':
            $count = count($this->getRetinas());
          break;
+         */
       }
 
 
@@ -644,17 +648,16 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
 			public function dropFromQueue()
 			{
-				 $optimizeController = new OptimizeController();
+				 $queueController = new QueueController();
 
-				 $q = $optimizeController->getQueue($this->type);
-				 $q->dropItem($this->get('id'));
+				 $queue = $queueController->getQueue($this->type);
+				 $queue->dropItem($this->get('id'));
 
 				 // Drop also from bulk if there.
+				 $queueController = new QueueController(['is_bulk' => true]);
 
-				 $optimizeController->setBulk(true);
-
-				 $q = $optimizeController->getQueue($this->type);
-				 $q->dropItem($this->get('id'));
+				 $queue = $queueController->getQueue($this->type);
+				 $queue->dropItem($this->get('id'));
 			}
 
     public function getImprovement($int = false)

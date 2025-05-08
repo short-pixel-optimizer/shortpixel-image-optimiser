@@ -3,7 +3,7 @@
  * Plugin Name: ShortPixel Image Optimizer
  * Plugin URI: https://shortpixel.com/
  * Description: ShortPixel optimizes images automatically, while guarding the quality of your images. Check your <a href="/wp-admin/options-general.php?page=wp-shortpixel-settings" target="_blank">Settings &gt; ShortPixel</a> page on how to start optimizing your image library and make your website load faster.
- * Version: 6.1.4
+ * Version: 6.2.0
  * Author: ShortPixel - Convert WebP/AVIF & Optimize Images
  * Author URI: https://shortpixel.com
  * GitHub Plugin URI: https://github.com/short-pixel-optimizer/shortpixel-image-optimiser
@@ -36,7 +36,7 @@ if (! defined('SHORTPIXEL_RESET_ON_ACTIVATE'))
 define('SHORTPIXEL_PLUGIN_FILE', __FILE__);
 define('SHORTPIXEL_PLUGIN_DIR', __DIR__);
 
-define('SHORTPIXEL_IMAGE_OPTIMISER_VERSION', "6.1.4");
+define('SHORTPIXEL_IMAGE_OPTIMISER_VERSION', "6.2.0");
 
 define('SHORTPIXEL_BACKUP', 'ShortpixelBackups');
 define('SHORTPIXEL_MAX_FAIL_RETRIES', 3);
@@ -61,18 +61,14 @@ define('SHORTPIXEL_MAX_EXECUTION_TIME', $max_exec);
 // ** Load the modules */
 require_once(SHORTPIXEL_PLUGIN_DIR . '/build/shortpixel/autoload.php');
 
-$sp__uploads = wp_upload_dir();
+$sp__uploads = wp_get_upload_dir();
+
 define('SHORTPIXEL_UPLOADS_BASE', (file_exists($sp__uploads['basedir']) ? '' : ABSPATH) . $sp__uploads['basedir'] );
-//define('SHORTPIXEL_UPLOADS_URL', is_main_site() ? $sp__uploads['baseurl'] : dirname(dirname($sp__uploads['baseurl'])));
+define('SHORTPIXEL_UPLOADS_URL', is_main_site() ? $sp__uploads['baseurl'] : dirname(dirname($sp__uploads['baseurl'])));
 define('SHORTPIXEL_UPLOADS_NAME', basename(is_main_site() ? SHORTPIXEL_UPLOADS_BASE : dirname(dirname(SHORTPIXEL_UPLOADS_BASE))));
 $sp__backupBase = is_main_site() ? SHORTPIXEL_UPLOADS_BASE : dirname(dirname(SHORTPIXEL_UPLOADS_BASE));
 define('SHORTPIXEL_BACKUP_FOLDER', $sp__backupBase . '/' . SHORTPIXEL_BACKUP);
-// @todo Backup URL not in use. Candidate for removal.
-define('SHORTPIXEL_BACKUP_URL',
-    ((is_main_site() || (defined( 'SUBDOMAIN_INSTALL' ) && SUBDOMAIN_INSTALL))
-        ? $sp__uploads['baseurl']
-        : dirname(dirname($sp__uploads['baseurl'])))
-    . '/' . SHORTPIXEL_BACKUP);
+
 
 
 //define('SHORTPIXEL_SILENT_MODE', true); // no global notifications. Can lead to data damage. After setting, reactivate plugin.

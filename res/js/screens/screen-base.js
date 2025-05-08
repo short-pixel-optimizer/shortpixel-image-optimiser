@@ -66,21 +66,20 @@ class ShortPixelScreenBase
 			{
 				let notice = notices[i];
 
-				// Attempt to remove js
-				/* notice = notice.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script\s*>/gim, '');
-				notice.replace('/\/g', '');
-				console.log(notice); */
+				// Parse Dom
+				const parser = new DOMParser();
+				var dom = parser.parseFromString(notice, 'text/html');
+				var noticeDom = dom.body.firstChild;
+				if (noticeDom.classList.contains('is-dismissible'))
+				{
+					 //  Add close Event
+					let button = noticeDom.querySelector('button.notice-dismiss'); 
+					button.addEventListener('click', this.EventCloseErrorNotice.bind(this)); // Might be renamed
 
-			//	node.innnerHTML = notice;
-				//let parsed = node.outerHTML;
-
-//				console.log(node.querySelector('.icon'));
-
-//				console.log(node, node.innerHTML);
-
-				element.insertAdjacentHTML('afterend', notices[i]);
+				}
+			//	element.insertAdjacentHTML('afterend', notices[i]);
+			element.after(noticeDom); // Add to top
 			}
-
 	}
 
 	HandleErrorStop()

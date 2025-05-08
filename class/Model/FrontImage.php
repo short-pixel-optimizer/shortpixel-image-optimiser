@@ -90,9 +90,8 @@ class FrontImage
 					 $this->attributes[$attr->nodeName] = $attr->nodeValue;
         }
 
-
         // Parse the directory path and other sources
-				$result = $this->setupSources();
+				$result = $this->setupSource();
 
 
 				if (true === $result)
@@ -208,7 +207,8 @@ class FrontImage
 		}
 
 
-		protected function setupSources()
+    // Check if this image has a source to work from.
+		protected function setupSource()
 		{
 			$src = null;
 
@@ -219,6 +219,7 @@ class FrontImage
 			elseif (! is_null($this->srcset))
 			{
 				$parts = preg_split('/\s+/', trim($this->srcset));
+
 				$image_url = $parts[0];
 				$src = $image_url;
 			}
@@ -233,8 +234,6 @@ class FrontImage
       {
           return false;
       }
-
-
 
 			$fs = \wpSPIO()->filesystem();
 			$fileObj = $fs->getFile($src);

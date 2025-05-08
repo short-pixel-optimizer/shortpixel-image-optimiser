@@ -80,6 +80,16 @@ class PageConverter extends \ShortPixel\Controller
        return false;
     }
 
+    if (isset($_GET['PageSpeed']) && 'off' === $_GET['PageSpeed'])
+    {
+       return false;
+    }
+
+    if (false === \wpSPIO()->env()->is_front) // if is front.
+    {
+       return false; 
+    }
+
 
 	 add_filter('status_header', [$this, 'status_header_sent'], 10, 2);
 
@@ -182,7 +192,8 @@ class PageConverter extends \ShortPixel\Controller
 	// For now, in future perhaps integrate somehow with frontIMage, although these functions are also useful for other URLs
 	protected function getReplaceBlock($url)
 	{
-			$block = new \stdClass;
+		$block = new \stdClass;
+      $block->args = [];
 			// Trim to limit area of search / replace, but URL should NOT be alterated here!
 
       $block->raw_url = $this->trimURL($url);  // raw URL is the base for replacement and should match what's in document.

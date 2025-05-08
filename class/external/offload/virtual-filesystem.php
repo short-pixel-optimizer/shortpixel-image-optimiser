@@ -21,12 +21,12 @@ class VirtualFileSystem
 		public function listen()
 		{
 				//  $fs = \wpSPIO()->fileSystem()->startTrustedMode(); // @todo check if this works trusted mode forever.
-					add_filter('shortpixel/image/urltopath', array($this, 'checkIfOffloaded'), 10,2);
+					add_filter('shortpixel/image/urltopath', array($this, 'checkIfOffloaded'), 10,3);
 					add_filter('shortpixel/file/virtual/translate', array($this, 'getLocalPathByURL'));
 					add_filter('shortpixel/file/virtual/heavy_features', array($this, 'extraFeatures'), 10);
 		}
 
-		public function checkIfOffloaded($bool, $url)
+		public function checkIfOffloaded($bool, $url, $rawpath)
 		{
 				// Slow as it is, check nothing.
 			 if ($offloadName = 's3-uploads-human')

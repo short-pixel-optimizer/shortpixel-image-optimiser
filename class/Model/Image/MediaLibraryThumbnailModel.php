@@ -1,12 +1,13 @@
 <?php
+
 namespace ShortPixel\Model\Image;
 
 use ShortPixel\Helper\DownloadHelper as DownloadHelper;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
 
 
-if ( ! defined( 'ABSPATH' ) ) {
- exit; // Exit if accessed directly.
+if (! defined('ABSPATH')) {
+	exit; // Exit if accessed directly.
 }
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
@@ -17,313 +18,286 @@ use \ShortPixel\Model\File\FileModel as FileModel;
 class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 {
 
-  public $name;
+	public $name;
 
-/*  public $width;
+	/*  public $width;
   public $height;
   public $mime; */
-  protected $prevent_next_try = false;
-  protected $is_main_file = false;
+	protected $prevent_next_try = false;
+	protected $is_main_file = false;
 	protected $is_retina = false; // diffentiate from thumbnail / retina.
-  protected $id; // this is the parent attachment id
-  protected $size; // size name of image in WP, if applicable.
-  protected $sizeDefinition; // size width / height / crop according to WordPress
+	protected $id; // this is the parent attachment id
+	protected $size; // size name of image in WP, if applicable.
+	protected $sizeDefinition; // size width / height / crop according to WordPress
 
-  public function __construct($path, $id, $size)
-  {
+	public function __construct($path, $id, $size)
+	{
 
-        parent::__construct($path);
-        $this->image_meta = new ImageThumbnailMeta();
-        $this->id = $id;
-				$this->imageType = self::IMAGE_TYPE_THUMB;
-        $this->size = $size;
+		parent::__construct($path);
+		$this->image_meta = new ImageThumbnailMeta();
+		$this->id = $id;
+		$this->imageType = self::IMAGE_TYPE_THUMB;
+		$this->size = $size;
+	}
 
-  }
 
+	protected function loadMeta() {}
 
-  protected function loadMeta()
-  {
-  }
+	protected function saveMeta() {}
 
-  protected function saveMeta()
-  {
-  }
+	// Implementing this because it's abstract. Should not really be used.
+	public function getParent()
+	{
+		return $this->getMainFile()->getParent();
+	}
 
-  public function __debugInfo() {
-     return array(
-      'image_meta' => $this->image_meta,
-      'name' => $this->name,
-      'path' => $this->getFullPath(),
+	public function __debugInfo()
+	{
+		return array(
+			'image_meta' => $this->image_meta,
+			'name' => $this->name,
+			'path' => $this->getFullPath(),
 			'size' => $this->size,
-      'width' => $this->get('width'),
-      'height' => $this->get('height'),
-      'exists' => ($this->exists()) ? 'yes' : 'no',
-      'is_virtual' => ($this->is_virtual()) ? 'yes' : 'no',
-      'wordpress_size' => $this->sizeDefinition,
+			'width' => $this->get('width'),
+			'height' => $this->get('height'),
+			'exists' => ($this->exists()) ? 'yes' : 'no',
+			'is_virtual' => ($this->is_virtual()) ? 'yes' : 'no',
+			'wordpress_size' => $this->sizeDefinition,
 
-    );
-  }
+		);
+	}
 
-  /** Set the meta name of thumbnail. */
-  public function setName($name)
-  {
-     $this->name = $name;
-  }
+	/** Set the meta name of thumbnail. */
+	public function setName($name)
+	{
+		$this->name = $name;
+	}
 
-  public function setSizeDefinition($sizedef)
-  {
-      $this->sizeDefinition = $sizedef;
-  }
+	public function setSizeDefinition($sizedef)
+	{
+		$this->sizeDefinition = $sizedef;
+	}
 
 	public function setImageType($type)
 	{
-		 $this->imageType = $type;
+		$this->imageType = $type;
 	}
 
-  public function getRetina()
-  {
-			if ($this->is_virtual())
-			{
-				$fs = \wpSPIO()->filesystem();
-				$filepath = apply_filters('shortpixel/file/virtual/translate', $this->getFullPath(), $this);
-				$virtualFile = $fs->getFile($filepath);
+	public function getRetina()
+	{
+		if ($this->is_virtual()) {
+			$fs = \wpSPIO()->filesystem();
+			$filepath = apply_filters('shortpixel/file/virtual/translate', $this->getFullPath(), $this);
+			$virtualFile = $fs->getFile($filepath);
 
-				$filebase = $virtualFile->getFileBase();
-	      $filepath = (string) $virtualFile->getFileDir();
-	      $extension = $virtualFile->getExtension();
+			$filebase = $virtualFile->getFileBase();
+			$filepath = (string) $virtualFile->getFileDir();
+			$extension = $virtualFile->getExtension();
 
-				// This function needs an hard check on file exists, which might not be wanted.
-				if (false === \wpSPIO()->env()->useVirtualHeavyFunctions())
-				{
-						return false;
-				}
-
+			// This function needs an hard check on file exists, which might not be wanted.
+			if (false === \wpSPIO()->env()->useVirtualHeavyFunctions()) {
+				return false;
 			}
-			else {
-				$filebase = $this->getFileBase();
-	      $filepath = (string) $this->getFileDir();
-	      $extension = $this->getExtension();
-			}
+		} else {
+			$filebase = $this->getFileBase();
+			$filepath = (string) $this->getFileDir();
+			$extension = $this->getExtension();
+		}
 
-      $retina = new MediaLibraryThumbnailModel($filepath . $filebase . '@2x.' . $extension, $this->id, $this->size); // mind the dot in after 2x
-			$retina->setName($this->size);
-			$retina->setImageType(self::IMAGE_TYPE_RETINA);
+		$retina = new MediaLibraryThumbnailModel($filepath . $filebase . '@2x.' . $extension, $this->id, $this->size); // mind the dot in after 2x
+		$retina->setName($this->size);
+		$retina->setImageType(self::IMAGE_TYPE_RETINA);
 
-			$retina->is_retina = true;
+		$retina->is_retina = true;
 
-			$forceCheck = true;
-      if ($retina->exists($forceCheck))
-        return $retina;
+		$forceCheck = true;
+		if ($retina->exists($forceCheck))
+			return $retina;
 
-      return false;
-  }
+		return false;
+	}
 
-  public function isFileTypeNeeded($type = 'webp')
-  {
-      // pdf extension can be optimized, but don't come with these filetypes
-      if ($this->getExtension() == 'pdf')
-      {
-        return false;
-      }
+	public function isFileTypeNeeded($type = 'webp')
+	{
+		// pdf extension can be optimized, but don't come with these filetypes
+		if ($this->getExtension() == 'pdf') {
+			return false;
+		}
 
-      if ($type == 'webp')
-        $file = $this->getWebp();
-      elseif ($type == 'avif')
-        $file = $this->getAvif();
+		if ($type == 'webp')
+			$file = $this->getWebp();
+		elseif ($type == 'avif')
+			$file = $this->getAvif();
 
-      if ( ($this->isThumbnailProcessable() || $this->isOptimized()) && $file === false)  // if no file, it can be optimized.
-        return true;
-      else
-        return false;
-  }
+		if (($this->isThumbnailProcessable() || $this->isOptimized()) && $file === false)  // if no file, it can be optimized.
+			return true;
+		else
+			return false;
+	}
 
 	// @param FileDelete can be false. I.e. multilang duplicates might need removal of metadata, but not images.
-  public function onDelete($fileDelete = true)
-  {
-			if ($fileDelete == true)
-      {
-      	$bool = parent::onDelete();
-      }
-			else {
-				$bool = true;
-			}
+	public function onDelete($fileDelete = true)
+	{
+		if ($fileDelete == true) {
+			$bool = parent::onDelete();
+		} else {
+			$bool = true;
+		}
 
-			// minimally reset all the metadata.
-			if ($this->is_main_file)
-			{
-				 $this->image_meta = new ImageMeta();
-			}
-			else {
-					$this->image_meta = new ImageThumbnailMeta();
-			}
+		// minimally reset all the metadata.
+		if ($this->is_main_file) {
+			$this->image_meta = new ImageMeta();
+		} else {
+			$this->image_meta = new ImageThumbnailMeta();
+		}
 
-			return $bool;
-  }
+		return $bool;
+	}
 
 
 
-  protected function setMetaObj($metaObj)
-  {
-     $this->image_meta = clone $metaObj;
-  }
+	protected function setMetaObj($metaObj)
+	{
+		$this->image_meta = clone $metaObj;
+	}
 
-  protected function getMetaObj()
-  {
-    return $this->image_meta;
-  }
-
-
+	protected function getMetaObj()
+	{
+		return $this->image_meta;
+	}
 
 	// get_path param see MediaLibraryModel
 	// This should be unused at the moment!
-  public function getOptimizeUrls()
-  {
-    if (! $this->isProcessable() )
-      return false;
+	public function getOptimizeUrls()
+	{
+		if (! $this->isProcessable())
+			return false;
 
 		$url = $this->getURL();
 
-    if (! $url)
-		{
-      return false; //nothing
+		if (! $url) {
+			return false; //nothing
 		}
 
-    return $url;
-  }
+		return $url;
+	}
 
-  public function getURL()
-  {
-			$fs = \wpSPIO()->filesystem();
+	public function getURL()
+	{
+		$fs = \wpSPIO()->filesystem();
 
-      if ($this->size == 'original' && ! $this->get('is_retina'))
-			{
-        $url = wp_get_original_image_url($this->id);
-			}
-      elseif ($this->isUnlisted())
-			{
+		if ($this->size == 'original' && ! $this->get('is_retina')) {
+			$url = wp_get_original_image_url($this->id);
+		} elseif ($this->isUnlisted()) {
+			$url = $fs->pathToUrl($this);
+		} else {
+			// We can't trust higher lever function, or any WP functions.  I.e. Woocommerce messes with the URL's if they like so.
+			// So get it from intermediate and if that doesn't work, default to pathToUrl - better than nothing.
+			// https://app.asana.com/0/1200110778640816/1202589533659780
+			$size_array = image_get_intermediate_size($this->id, $this->size);
+
+			if ($size_array === false || ! isset($size_array['url'])) {
 				$url = $fs->pathToUrl($this);
+			} elseif (isset($size_array['url'])) {
+				$url = $size_array['url'];
+				// Even this can go wrong :/
+				if (strpos($url, $this->getFileName()) === false) {
+					// Taken from image_get_intermediate_size if somebody still messes with the filters.
+					$mainurl = wp_get_attachment_url($this->id);
+					$url = path_join(dirname($mainurl), $this->getFileName());
+				}
+			} else {
+				return false;
 			}
-			else
-			{
-				// We can't trust higher lever function, or any WP functions.  I.e. Woocommerce messes with the URL's if they like so.
-				// So get it from intermediate and if that doesn't work, default to pathToUrl - better than nothing.
-				// https://app.asana.com/0/1200110778640816/1202589533659780
-				$size_array = image_get_intermediate_size($this->id, $this->size);
+		}
 
-				if ($size_array === false || ! isset($size_array['url']))
-				{
-					 $url = $fs->pathToUrl($this);
-				}
-				elseif (isset($size_array['url']))
-				{
-					 $url = $size_array['url'];
-					 // Even this can go wrong :/
-					 if (strpos($url, $this->getFileName() ) === false)
-					 {
-						 // Taken from image_get_intermediate_size if somebody still messes with the filters.
-							$mainurl = wp_get_attachment_url( $this->id);
-							$url = path_join( dirname( $mainurl ), $this->getFileName() );
-					 }
-				}
-				else {
-						return false;
-				}
+		return $this->fs()->checkURL($url);
+	}
 
-			}
-
-      return $this->fs()->checkURL($url);
-  }
-
-  // Just a placeholder for abstract, shouldn't do anything.
-  public function getImprovements()
-  {
-     return parent::getImprovements();
-  }
+	// Just a placeholder for abstract, shouldn't do anything.
+	public function getImprovements()
+	{
+		return parent::getImprovements();
+	}
 
 
 	public function getBackupFileName()
 	{
-			$mainFile = ($this->is_main_file) ? $this : $this->getMainFile();
-			if (false == $mainFile)
-			{
-				return parent::getBackupFileName();
-			}
-
-		  if ($mainFile->getMeta()->convertMeta()->getReplacementImageBase() !== false)
-			{
-				 if ($this->is_main_file)
-				 	return $mainFile->getMeta()->convertMeta()->getReplacementImageBase() . '.' . $this->getExtension();
-				else {
-//					 $fileBaseNoSize =
-					 $name = str_replace($mainFile->getFileBase(), $mainFile->getMeta()->convertMeta()->getReplacementImageBase(), $this->getFileName());
-
-					 return $name;
-				}
-			}
-
+		$mainFile = ($this->is_main_file) ? $this : $this->getMainFile();
+		if (false == $mainFile) {
 			return parent::getBackupFileName();
+		}
+
+		if ($mainFile->getMeta()->convertMeta()->getReplacementImageBase() !== false) {
+			if ($this->is_main_file)
+				return $mainFile->getMeta()->convertMeta()->getReplacementImageBase() . '.' . $this->getExtension();
+			else {
+				//					 $fileBaseNoSize =
+				$name = str_replace($mainFile->getFileBase(), $mainFile->getMeta()->convertMeta()->getReplacementImageBase(), $this->getFileName());
+
+				return $name;
+			}
+		}
+
+		return parent::getBackupFileName();
 	}
 
 
-  protected function preventNextTry($reason = '')
-  {
-      $this->prevent_next_try = $reason;
-  }
+	protected function preventNextTry($reason = '')
+	{
+		$this->prevent_next_try = $reason;
+	}
 
-  // Don't ask thumbnails this, only the main image
-  public function isOptimizePrevented()
-  {
-     return false;
-  }
+	// Don't ask thumbnails this, only the main image
+	public function isOptimizePrevented()
+	{
+		return false;
+	}
 
-  // Don't ask thumbnails this, only the main image
-  public function resetPrevent()
-  {
-     return null;
-  }
+	// Don't ask thumbnails this, only the main image
+	public function resetPrevent()
+	{
+		return null;
+	}
 
-  protected function isThumbnailProcessable()
-  {
-			// if thumbnail processing is off, thumbs are never processable.
-			// This is also used by main file, so check for that!
+	protected function isThumbnailProcessable()
+	{
+		// if thumbnail processing is off, thumbs are never processable.
+		// This is also used by main file, so check for that!
 
-      if ( $this->excludeThumbnails() && $this->is_main_file === false && $this->get('imageType') !== self::IMAGE_TYPE_ORIGINAL)
-			{
-				$this->processable_status = self::P_EXCLUDE_SIZE;
-        return false;
-			}
-      else
-      {
-        $bool = parent::isProcessable();
+		if ($this->excludeThumbnails() && $this->is_main_file === false && $this->get('imageType') !== self::IMAGE_TYPE_ORIGINAL) {
+			$this->processable_status = self::P_EXCLUDE_SIZE;
+			return false;
+		} else {
+			$bool = parent::isProcessable();
 
-				return $bool;
-      }
-  }
+			return $bool;
+		}
+	}
 
 	/** Function to check if said thumbnail is a WP-native or something SPIO added as unlisted
-	*
-	*
-	*/
+	 *
+	 *
+	 */
 	protected function isUnlisted()
 	{
-		 	 if (! is_null($this->getMeta('file')))
-			 	return true;
-			else
-				return false;
+		if (! is_null($this->getMeta('file')))
+			return true;
+		else
+			return false;
 	}
 
 
 
-  // !Important . This doubles as  checking excluded image sizes.
-  protected function isSizeExcluded()
-  {
+	// !Important . This doubles as  checking excluded image sizes.
+	protected function isSizeExcluded()
+	{
 
-    $excludeSizes = \wpSPIO()->settings()->excludeSizes;
+		$excludeSizes = \wpSPIO()->settings()->excludeSizes;
 
-    if (is_array($excludeSizes) && in_array($this->name, $excludeSizes))
-		{
+		if (is_array($excludeSizes) && in_array($this->name, $excludeSizes)) {
 			$this->processable_status = self::P_EXCLUDE_SIZE;
-      return true;
+			return true;
 		}
 
 		$bool = parent::isSizeExcluded();
@@ -333,153 +307,136 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
 	public function isProcessableFileType($type = 'webp')
 	{
-			// Prevent webp / avif processing for thumbnails if this is off. Exclude main file
-		  if ($this->excludeThumbnails() === true && $this->is_main_file === false )
-				return false;
+		// Prevent webp / avif processing for thumbnails if this is off. Exclude main file
+		if ($this->excludeThumbnails() === true && $this->is_main_file === false)
+			return false;
 
-			return parent::isProcessableFileType($type);
+		return parent::isProcessableFileType($type);
 	}
 
-  protected function getExcludePatterns()
-  {
-      $args = array(
-        'filter' => true,
-        'thumbname' => $this->name,
-        'is_thumbnail' => (true === $this->is_main_file) ? false : true,
-      );
+	protected function getExcludePatterns()
+	{
+		$args = array(
+			'filter' => true,
+			'thumbname' => $this->name,
+			'is_thumbnail' => (true === $this->is_main_file) ? false : true,
+		);
 
-// @todo Find a way to cache IsProcessable perhaps due to amount of checks being done.  Should be release in flushOptimizeCache or elsewhere (?)
+		// @todo Find a way to cache IsProcessable perhaps due to amount of checks being done.  Should be release in flushOptimizeCache or elsewhere (?)
 
-  //    $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
+		//    $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
 
-      $patterns = UtilHelper::getExclusions($args);
-    //  echo "<PRE>"; print_r($args); print_r($patterns); echo "</PRE>";
-      return $patterns;
-  }
+		$patterns = UtilHelper::getExclusions($args);
+		//  echo "<PRE>"; print_r($args); print_r($patterns); echo "</PRE>";
+		return $patterns;
+	}
 
-  protected function excludeThumbnails()
-  {
-    return (! \wpSPIO()->settings()->processThumbnails);
-  }
+	protected function excludeThumbnails()
+	{
+		return (! \wpSPIO()->settings()->processThumbnails);
+	}
 
-  public function hasBackup($args = array())
-  {
-			$defaults = array(
-				'forceConverted' => false,
-				'noConversionCheck' => false,  // do not check on mainfile, this loops when used in loadMeta / legacyConversion
-			);
-			$args = wp_parse_args($args, $defaults);
+	public function hasBackup($args = array())
+	{
+		$defaults = array(
+			'forceConverted' => false,
+			'noConversionCheck' => false,  // do not check on mainfile, this loops when used in loadMeta / legacyConversion
+		);
+		$args = wp_parse_args($args, $defaults);
 
-			// @todo This can probably go.
-			if (true === $args['noConversionCheck'])
-			{
-				return parent::hasBackup();
-			}
+		// @todo This can probably go.
+		if (true === $args['noConversionCheck']) {
+			return parent::hasBackup();
+		}
 
-			$mainFile = ($this->is_main_file) ? $this : $this->getMainFile();
-			if (false == $mainFile)
-			{
-				return parent::hasBackup();
+		$mainFile = ($this->is_main_file) ? $this : $this->getMainFile();
+		if (false == $mainFile) {
+			return parent::hasBackup();
+		}
 
-			}
-
-			// When main file and converted and omitBackup is true ( only original backup ) and not forced.
-			$loadRegular= (false === $mainFile->getMeta()->convertMeta()->isConverted() ||
+		// When main file and converted and omitBackup is true ( only original backup ) and not forced.
+		$loadRegular = (false === $mainFile->getMeta()->convertMeta()->isConverted() ||
 			false === $mainFile->getMeta()->convertMeta()->omitBackup()) && false === $args['forceConverted'];
 
-      if (true === $loadRegular)
-      {
-          return parent::hasBackup();
-      }
-      else
-      {
-        $directory = $this->getBackupDirectory();
-				$converted_ext = $mainFile->getMeta()->convertMeta()->getFileFormat();
+		if (true === $loadRegular) {
+			return parent::hasBackup();
+		} else {
+			$directory = $this->getBackupDirectory();
+			$converted_ext = $mainFile->getMeta()->convertMeta()->getFileFormat();
 
-        if (! $directory)
-          return false;
+			if (! $directory)
+				return false;
 
 
-        $backupFile =  $directory . $this->getFileBase() . '.' . $converted_ext;
+			$backupFile =  $directory . $this->getFileBase() . '.' . $converted_ext;
 
-				// Issue with PNG not being scaled on the main file.
-				if (! file_exists($backupFile) && $mainFile->isScaled())
-				{
-					 $backupFile = $directory . $mainFile->getOriginalFile()->getFileBase() . '.' . $converted_ext;
-				}
-        if (file_exists($backupFile) && ! is_dir($backupFile) )
-          return true;
-        else {
-          return false;
-        }
-      }
-  }
+			// Issue with PNG not being scaled on the main file.
+			if (! file_exists($backupFile) && $mainFile->isScaled()) {
+				$backupFile = $directory . $mainFile->getOriginalFile()->getFileBase() . '.' . $converted_ext;
+			}
+			if (file_exists($backupFile) && ! is_dir($backupFile))
+				return true;
+			else {
+				return false;
+			}
+		}
+	}
 
 	public function hasDBRecord()
 	{
-			global $wpdb;
+		global $wpdb;
 
-			$sql = 'SELECT id FROM ' . $wpdb->prefix . 'shortpixel_postmeta WHERE attach_id = %d AND size = %s';
-			$sql = $wpdb->prepare($sql, $this->id, $this->size);
+		$sql = 'SELECT id FROM ' . $wpdb->prefix . 'shortpixel_postmeta WHERE attach_id = %d AND size = %s';
+		$sql = $wpdb->prepare($sql, $this->id, $this->size);
 
-			$id = $wpdb->get_var($sql);
+		$id = $wpdb->get_var($sql);
 
-			if (is_null($id))
-			{
-				 return false;
-			}
-			elseif (is_numeric($id)) {
-				return true;
-			}
-
+		if (is_null($id)) {
+			return false;
+		} elseif (is_numeric($id)) {
+			return true;
+		}
 	}
 
-  public function restore()
-  {
-    if ($this->is_virtual())
-    {
-       $fs = \wpSPIO()->filesystem();
-       $filepath = apply_filters('shortpixel/file/virtual/translate', $this->getFullPath(), $this);
+	public function restore()
+	{
+		if ($this->is_virtual()) {
+			$fs = \wpSPIO()->filesystem();
+			$filepath = apply_filters('shortpixel/file/virtual/translate', $this->getFullPath(), $this);
 
-       $this->setVirtualToReal($filepath);
-    }
+			$this->setVirtualToReal($filepath);
+		}
 
-    $bool = parent::restore();
+		$bool = parent::restore();
 
-		if ($bool === true)
-		{
-			 if ($this->is_main_file)
-			 {
-				 	// If item is converted and will not be moved back to original format ( but converted ) , keep the convert metadata
-				  if (true === $this->getMeta()->convertMeta()->isConverted() && false === $this->getMeta()->convertMeta()->omitBackup() )
-					{
-							$convertMeta = clone $this->getMeta()->convertMeta();
-							$imageMeta = new ImageMeta();
-							$imageMeta->convertMeta()->fromClass($convertMeta);
-              // This removed, because interfering with messaging / other functions
-        //			$bool = false; // Prevent cleanRestore from deleting the metadata.
-					}
-					else {
-							$imageMeta = new ImageMeta();
-					}
+		if ($bool === true) {
+			if ($this->is_main_file) {
+				// If item is converted and will not be moved back to original format ( but converted ) , keep the convert metadata
+				if (true === $this->getMeta()->convertMeta()->isConverted() && false === $this->getMeta()->convertMeta()->omitBackup()) {
+					$convertMeta = clone $this->getMeta()->convertMeta();
+					$imageMeta = new ImageMeta();
+					$imageMeta->convertMeta()->fromClass($convertMeta);
+					// This removed, because interfering with messaging / other functions
+					//			$bool = false; // Prevent cleanRestore from deleting the metadata.
+				} else {
+					$imageMeta = new ImageMeta();
+				}
 
-					$this->image_meta = $imageMeta;
-			 }
-			 else
-			 {
-				 $this->image_meta = new ImageThumbNailMeta();
-			 }
+				$this->image_meta = $imageMeta;
+			} else {
+				$this->image_meta = new ImageThumbNailMeta();
+			}
 		}
 
 		return $bool;
-  }
+	}
 
 	/** Tries to retrieve an *existing* BackupFile. Returns false if not present.
-  * This file might not be writable.
-  * To get writable directory reference to backup, use FileSystemController
-  */
-  public function getBackupFile($args = array())
-  {
+	 * This file might not be writable.
+	 * To get writable directory reference to backup, use FileSystemController
+	 */
+	public function getBackupFile($args = array())
+	{
 
 		$defaults = array(
 			'forceConverted' => false,
@@ -487,108 +444,94 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 		);
 		$args = wp_parse_args($args, $defaults);
 
-		if (true === $args['noConversionCheck'])
-		{
+		if (true === $args['noConversionCheck']) {
 			return parent::getBackupFile();
 		}
 
 		$mainFile = ($this->is_main_file) ? $this : $this->getMainFile();
-		if (false == $mainFile)
-		{
+		if (false == $mainFile) {
 			return parent::getBackupFile();
-
 		}
 		// When main file and converted and omitBackup is true ( only original backup ) and not forced.
-		$loadRegular= (false === $mainFile->getMeta()->convertMeta()->isConverted() ||
-		false === $mainFile->getMeta()->convertMeta()->omitBackup()) && false === $args['forceConverted'];
+		$loadRegular = (false === $mainFile->getMeta()->convertMeta()->isConverted() ||
+			false === $mainFile->getMeta()->convertMeta()->omitBackup()) && false === $args['forceConverted'];
 
-		if (true === $loadRegular )
-    {
-        return parent::getBackupFile();
-    }
-    else
-    {
-     if ($this->hasBackup($args))
-		 {
+		if (true === $loadRegular) {
+			return parent::getBackupFile();
+		} else {
+			if ($this->hasBackup($args)) {
 
-			  $directory = $this->getBackupDirectory();
+				$directory = $this->getBackupDirectory();
 				$converted_ext = $mainFile->getMeta()->convertMeta()->getFileFormat();
 
-			  $backupFile = $directory . $this->getFileBase() . '.' . $converted_ext;
+				$backupFile = $directory . $this->getFileBase() . '.' . $converted_ext;
 
 				/* Because WP doesn't support big PNG with scaled for some reason, it's possible it doesn't create them. Which means we end up with a scaled images without backup */
- 				if (! file_exists($backupFile) && $mainFile->isScaled())
- 				{
- 					 $backupFile = $directory . $mainFile->getOriginalFile()->getFileBase() . '.' . $converted_ext;
- 				}
+				if (! file_exists($backupFile) && $mainFile->isScaled()) {
+					$backupFile = $directory . $mainFile->getOriginalFile()->getFileBase() . '.' . $converted_ext;
+				}
 
 				return new FileModel($backupFile);
+			} else
+				return false;
+		}
+	}
 
-		 }
-     else
-       return false;
-    }
-  }
-
-  protected function createBackup()
-  {
-    if ($this->is_virtual()) // download remote file to backup.
-    {
-      $fs = \wpSPIO()->filesystem();
-      $filepath = apply_filters('shortpixel/file/virtual/translate', $this->getFullPath(), $this);
+	protected function createBackup()
+	{
+		if ($this->is_virtual()) // download remote file to backup.
+		{
+			$fs = \wpSPIO()->filesystem();
+			$filepath = apply_filters('shortpixel/file/virtual/translate', $this->getFullPath(), $this);
 
 			$result = false;
-			if ($this->virtual_status == self::$VIRTUAL_REMOTE)
-			{
-          // filepath is translated. Check if this exists as a local copy, if not remotely download.
-        if ($filepath !== $this->getFullPath())
-        {
-            $fileObj = $fs->getFile($filepath);
-            $fileExists = $fileObj->exists();
-        }
-        else {
-           $fileExists = false;
-        }
+			if ($this->virtual_status == self::$VIRTUAL_REMOTE) {
+				// filepath is translated. Check if this exists as a local copy, if not remotely download.
+				if ($filepath !== $this->getFullPath()) {
+					$fileObj = $fs->getFile($filepath);
+					// Result is same as fileExists, check if file is already here.
+					$result = $fileExists = $fileObj->exists();
+					
+				} else {
+					$fileExists = false;
+				}
 
-        if (false === $fileExists)
-        {
-            $downloadHelper = DownloadHelper::getInstance();
-            $url = $this->getURL();
-            $result = $downloadHelper->downloadFile($url, array('destinationPath' => $filepath));
-        }
-
+				if (false === $fileExists) {
+					$downloadHelper = DownloadHelper::getInstance();
+					$url = $this->getURL();
+					$result = $downloadHelper->downloadFile($url, array('destinationPath' => $filepath));
+				}
+			} elseif ($this->virtual_status == self::$VIRTUAL_STATELESS) {
+				$result = $filepath;
+			} else {
+				Log::addWarning('Virtual Status not set. Trying to blindly download vv DownloadHelper');
+				$downloadHelper = DownloadHelper::getInstance();
+				$url = $this->getURL();
+				$result = $downloadHelper->downloadFile($url, array('destinationPath' => $filepath));
 			}
-			elseif ($this->virtual_status == self::$VIRTUAL_STATELESS)
-			{
-				 $result = $filepath;
+
+			if ($result == false) {
+				$this->preventNextTry(__('Fatal Issue: Remote virtual file could not be downloaded for backup', 'shortpixel-image-optimiser'));
+				if (! isset($url))
+				{
+					 $url = 'Unknown'; 
+				}
+				Log::addError('Remote file download failed from : ' . $url . ' to: ' . $filepath, $this->getURL());
+				$this->error_message = __('Remote file could not be downloaded' . $this->getFullPath(), 'shortpixel-image-optimiser');
+
+				return false;
 			}
-      else {
-        Log::addWarning('Virtual Status not set. Trying to blindly download vv DownloadHelper');
-        $downloadHelper = DownloadHelper::getInstance();
-        $url = $this->getURL();
-        $result = $downloadHelper->downloadFile($url, array('destinationPath' => $filepath));
-      }
 
-      if ($result == false)
-      {
-        $this->preventNextTry(__('Fatal Issue: Remote virtual file could not be downloaded for backup', 'shortpixel-image-optimiser'));
-        Log::addError('Remote file download failed from : ' . $url . ' to: ' . $filepath, $this->getURL());
-        $this->error_message = __('Remote file could not be downloaded' . $this->getFullPath(), 'shortpixel-image-optimiser');
+			$this->setVirtualToReal($filepath);
+		}
 
-        return false;
-      }
-
-      $this->setVirtualToReal($filepath);
-    }
-
-    return parent::createBackup();
-  }
+		return parent::createBackup();
+	}
 
 	// @todo This is a breach of pattern to realize checking for changes to the main image path on conversion / duplicates.
 	private function getMainFile()
 	{
-			$fs = \wpSPIO()->filesystem();
-			return $fs->getMediaImage($this->id, true, true);
+		$fs = \wpSPIO()->filesystem();
+		return $fs->getMediaImage($this->id, true, true);
 	}
-
 } // class

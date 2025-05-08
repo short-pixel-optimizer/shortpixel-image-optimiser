@@ -356,7 +356,7 @@ class QuotaController
               $this->setQuotaExceeded();
 					}
 
-          Log::addDebug('GetQuotaInformation Result ', $dataArray);
+        //  Log::addDebug('GetQuotaInformation Result ', $dataArray);
           return $dataArray;
     }
 

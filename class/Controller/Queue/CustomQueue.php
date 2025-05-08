@@ -12,7 +12,6 @@ use ShortPixel\Model\Image\ImageModel as ImageModel;
 class CustomQueue extends Queue
 {
 
-   protected $queueName = '';
    protected $cacheName = 'CustomCache'; // When preparing, write needed data to cache.
 
    protected static $instance;
@@ -79,7 +78,7 @@ class CustomQueue extends Queue
      $sql = 'SELECT id FROM ' . $wpdb->prefix . 'shortpixel_meta WHERE folder_id in ( ';
 
      $sql .= $query_arr . ') ';
-      // Query anything else than success, since that is done.
+     // Query anything else than success, since that is done.
      $prepare = array_merge($prepare, $folderRow);
 
       if (true === $fastmode)

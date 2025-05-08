@@ -77,8 +77,75 @@ $queueRunning = $bulk->isAnyBulkRunning();
 
     </settinglist>
 
+    <h3><?php _e('CDN Tools', 'shortpixel-image-optimiser'); ?></h3>
+    <settinglist>
+
+      <setting>
+          <name>
+          </name>
+          <content>
+            <button setting-action="PurgeCacheEvent" data-purge="cssjs">
+              <?php _e('Purge CSS & JS CDN Cache', 'shortpixel-image-optimiser'); ?>
+            </button>
+
+            <info>
+                <?php _e('This cleanup only affects the CSS and JS files when they are processed and served by our CDN. This process is very useful when you update the layout of your website.
+', 'shortpixel-image-optimiser'); ?>
+              </info>
+            </content>
+        </setting>
+
+      <setting>
+          <name></name>    
+          <content>
+
+          <button setting-action="PurgeCacheEvent" data-purge="all">
+              <?php _e('Purge All','shortpixel-image-optimiser'); ?>
+            </button>
+
+            <info>
+                <?php _e('It deletes everything from the CDN: CSS, JS and images. Normally, this process is not needed unless important updates have been made to your website (e.g. theme change, thumbnail regeneration, etc.)', 'shortpixel-image-optimiser'); 
+                ?>
+            </info>
+          </content>
+
+      </setting>
+
+      <div id='settings-purge-message' class='tools-message purge-message'>&nbsp;</div>
+      
+    </settinglist>
+
+
+
+    <h3><?php _e('Settings import / export', 'shortpixel-image-optimiser'); ?></h3>
+    <settinglist class='setting-importexport'>
+      <setting>
+        <name><?php _e('Export all settings', 'shortpixel-image-optimiser'); ?></name>
+        <content>
+          <button class='button secondary' setting-action="ExportSettingsEvent"><?php _e('Export','shortpixel-image-optimiser'); ?></button>
+        </content>
+      </setting>
+      <setting>
+        <name><?php _e('Import settings', 'shortpixel-image-optimiser'); ?></name>
+        <content>
+            <info><?php _e('Import settings will change all submitted settings', 'shortpixel-image-optimiser'); ?></info>
+            <textarea name="import-settings" id='spio-tools-import' class='import-textarea' placeholder="<?php _e('Paste settings JSON', 'shortpixel-image-optimiser'); ?>">&nbsp;</textarea>
+            <br>
+            <button setting-action="ImportSettingsEvent"><?php _e('Import', 'shortpixel-image-optimiser'); ?></button>
+        </content>
+        <warning><message>This will remove all current settings!</message></warning>
+      
+      </setting>
+
+      <div id='settings-importexport-message' class='tools-message export-message'>&nbsp;</div>
+
+    </settinglist>
 
 		<hr />
+
+
+
+
 
 		<div class='danger-zone'>
 			<h3><?php esc_html_e('Danger Zone - please read carefully!', 'shortpixel-image-optimiser'); ?></h3>

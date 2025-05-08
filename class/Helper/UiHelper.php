@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 use ShortPixel\Controller\QuotaController as QuotaController;
-use ShortPixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\Controller\QueueController as QueueController;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 
@@ -270,16 +270,25 @@ class UiHelper
 
   public static function compressionTypeToText($type)
   {
-     if ($type == ImageModel::COMPRESSION_LOSSLESS )
-       return __('Lossless', 'shortpixel-image-optimiser');
 
-     if ($type == ImageModel::COMPRESSION_LOSSY )
-         return __('Lossy', 'shortpixel-image-optimiser');
+     switch($type)
+     {
+        case ImageModel::COMPRESSION_LOSSLESS:
+           $text = __('Lossless', 'shortpixel-image-optimiser');
+        break;
+        case ImageModel::COMPRESSION_LOSSY:
+            $text = __('Lossy', 'shortpixel-image-optimiser');
+        break;
+        case ImageModel::COMPRESSION_GLOSSY:
+            $text = __('Glossy', 'shortpixel-image-optimiser');
+        break;
+        default:
+            $text = __('No compression', 'shortpixel-image-optimiser');
+        break; 
+     }
 
-     if ($type == ImageModel::COMPRESSION_GLOSSY )
-         return __('Glossy', 'shortpixel-image-optimiser');
 
-      return $type;
+      return $text;
   }
 
   public static function getListActions($mediaItem)
@@ -290,7 +299,7 @@ class UiHelper
 		  $keyControl = ApiKeyController::getInstance();
 			if (! $keyControl->keyIsVerified())
 			{
-				return array(); // nothing
+				return []; // nothing
 			}
 
       $quotaControl = QuotaController::getInstance();
@@ -414,12 +423,12 @@ class UiHelper
     $actions = array();
     $id = $mediaItem->get('id');
     $quotaControl = QuotaController::getInstance();
-		$optimizeController = new OptimizeController();
+    $queueController = new QueueController();
 
 		$keyControl = ApiKeyController::getInstance();
 		if (! $keyControl->keyIsVerified())
 		{
-			return array(); // nothing
+			return []; // nothing
 		}
 
 		$access = AccessModel::getInstance();
@@ -436,7 +445,7 @@ class UiHelper
        $actions['extendquota'] = self::getAction('extendquota', $id);
        $actions['checkquota'] = self::getAction('checkquota', $id);
     }
-    elseif($mediaItem->isProcessable() && ! $mediaItem->isSomethingOptimized() && ! $mediaItem->isOptimizePrevented() && ! $optimizeController->isItemInQueue($mediaItem))
+    elseif($mediaItem->isProcessable() && ! $mediaItem->isSomethingOptimized() && ! $mediaItem->isOptimizePrevented() && ! $queueController->isItemInQueue($mediaItem))
     {
        $actions['optimize'] = self::getAction('optimize', $id);
        $actions['markCompleted']  = self::getAction('markCompleted', $id);
@@ -453,8 +462,7 @@ class UiHelper
   public static function getStatusText($mediaItem)
   {
     $keyControl = ApiKeyController::getInstance();
-    $quotaControl = QuotaController::getInstance();
-		$optimizeController = new OptimizeController();
+    $queueController = new QueueController();
     $settings = \wpSPIO()->settings();
 
     $text = '';
@@ -501,7 +509,7 @@ class UiHelper
     {
       $text = $mediaItem->getMeta('errorMessage');
     }
-		elseif( $optimizeController->isItemInQueue($mediaItem) === true)
+    elseif( $queueController->isItemInQueue($mediaItem) === true)
 		{
 			 $text = '<p>' . __('This item is waiting to be processed', 'shortpixel-image-optimiser') . '</p>';
 			 $action = self::getAction('cancelOptimize', $mediaItem->get('id'));

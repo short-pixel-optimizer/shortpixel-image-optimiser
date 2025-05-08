@@ -131,7 +131,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
       });
   }
 
-	DoActionEvent()
+	DoActionEvent(event)
 	{
 		var element = event.target;
 		var action = element.getAttribute('data-action');
@@ -339,26 +339,26 @@ class ShortPixelScreen extends ShortPixelScreenBase
   HandleImage(resultItem, type)
   {
 
-      var result = resultItem.result;
+     // var result = resultItem.result;
       if ( this.processor.fStatus[resultItem.fileStatus] == 'FILE_DONE')
       {
-          this.UpdateData('result', result);
+          this.UpdateData('result', resultItem);
 
           if (document.querySelector('.image-preview-section').classList.contains('hidden')  )
           {
             document.querySelector('.image-preview-section').classList.remove('hidden');
           }
 
-					this.HandleImageEffect(result.original, result.optimized);
+					this.HandleImageEffect(resultItem.original, resultItem.optimized);
 
-          if (result.improvements.totalpercentage)
+          if (resultItem.improvements && resultItem.improvements.totalpercentage)
           {
 							// Opt-Circle-Image is average of the file itself.
               var circle = document.querySelector('.opt-circle-image');
 
               var total_circle = 289.027;
-              if(result.improvements.totalpercentage >0 ) {
-                  total_circle = Math.round(total_circle-(total_circle*result.improvements.totalpercentage/100));
+              if(resultItem.improvements.totalpercentage >0 ) {
+                  total_circle = Math.round(total_circle-(total_circle*resultItem.improvements.totalpercentage/100));
               }
 
               for( var i = 0; i < circle.children.length; i++)
@@ -370,38 +370,15 @@ class ShortPixelScreen extends ShortPixelScreenBase
                  }
                  else if (child.classList.contains('text'))
                  {
-                    child.textContent = result.improvements.totalpercentage + '%';
+                    child.textContent = resultItem.improvements.totalpercentage + '%';
                  }
               }
 
-							this.AddAverageOptimization(result.improvements.totalpercentage);
+							this.AddAverageOptimization(resultItem.improvements.totalpercentage);
           }
 					return true; // This prevents flooding.
       }
-			else if (typeof resultItem.preview !== 'undefined' && resultItem.preview != false)
-			{
-				/* Preloading doesn't solve it.
-				 var name = resultItem.preview.split(/[\\/]/).pop();
-				 name = name.replace(/[^a-zA-Z0-9 ]/g, '');
 
-				 var preLoader = document.getElementById('preloader');
-				 if (preLoader.querySelector('[data-name="' + name + '"]') == null)
-				 {
-						var el = document.createElement('span');
-						var img = document.createElement('img');
-						img.src = resultItem.preview;
-						el.appendChild(img);
-						el.dataset.name = name;
-						preloader.appendChild(el)
-						console.log('preloading URL with name', name, resultItem.preview, el);
-
-						// Remove from DOM after a while to prevent DOM bloating.
-						if (preloader.children.length >= 10)
-						{
-							 preloader.children[0].remove();
-						}
-				 } */
-			}
 
 			return false;
   }

@@ -272,6 +272,10 @@
   padding-left: 8px;
   padding-bottom: 8px;
 }
+.media-sidebar .shortpixel-popup-info {
+  padding-top: 20px;
+  margin-bottom: 0px;
+}
 
 .edit-attachment-frame .shortpixel-popup-info {
   border: 0;
@@ -555,6 +559,45 @@ body.debug-model-active {
   content: "ON";
   left: 8px;
   right: auto;
+}
+
+.shortpixel-ai-interface {
+  line-height: 1;
+  margin: 8px 0;
+}
+.shortpixel-ai-interface .shortpixel-ai-icon {
+  vertical-align: middle;
+  height: 20px;
+  width: 20px;
+  margin-top: -1px;
+}
+.shortpixel-ai-interface .shortpixel-ai-caption {
+  margin: 0 4px;
+}
+.shortpixel-ai-interface span {
+  vertical-align: middle;
+  margin: 0 4px;
+}
+.shortpixel-ai-interface .shortpixel-alt-messagebox {
+  margin: 4px 0;
+}
+.shortpixel-ai-interface.attachment-details-two-column-alt-text, .shortpixel-ai-interface.attachment-details-alt-text {
+  float: right;
+  width: 65%;
+}
+.shortpixel-ai-interface.attachment-details-two-column-alt-text img.ai, .shortpixel-ai-interface.attachment-details-alt-text img.ai {
+  margin-top: 5px;
+  float: left;
+}
+.shortpixel-ai-interface.attachment-details-two-column-alt-text img.shortpixel, .shortpixel-ai-interface.attachment-details-alt-text img.shortpixel {
+  margin-right: 10px;
+}
+.media-sidebar .shortpixel-ai-interface {
+  width: 100%;
+  text-align: right;
+}
+.media-sidebar .shortpixel-ai-interface img.shortpixel.shortpixel-ai-caption {
+  margin-right: 0px;
 }
 
 /*# sourceMappingURL=shortpixel-admin.css.map */

@@ -240,10 +240,7 @@ class ShortPixelFeedback {
                             value = formContainer.find( 'input[name="shortpixel-deactivate-reason"]:checked' ).val();
 														commentBox = formContainer.find('textarea[name="shortpixel-deactivate-details"]');
 
-											//	console.log(detailsLabel);
-											//	console.log(commentBox);
 												var the_detail = detailsStrings[ value ];
-											//	console.log(the_detail);
 												if (the_detail == '')
 												{
 													detailsLabel.css('visibility','hidden');
