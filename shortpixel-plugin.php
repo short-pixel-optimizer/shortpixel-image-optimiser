@@ -414,9 +414,15 @@ class ShortPixelPlugin {
 
 		);
 
-		$screen_localize_custom = array( // Custom Screen
+	 $screen_localize_custom = array( // Custom Screen
 			'stopActionMessage' => __('Folder scan has stopped', 'shortpixel-image-optimiser'),
 		);
+
+	 $screen_localize_media = [ 
+			'hide_ai' => apply_filters('shortpixel/settings/no_ai', false),
+	 ];
+
+		wp_localize_script('shortpixel-screen-media', 'spio_mediascreen_settings', $screen_localize_media); 
 
 		wp_localize_script( 'shortpixel-screen-base', 'spio_screenStrings', array_merge($screen_localize, $screen_localize_custom));
 
