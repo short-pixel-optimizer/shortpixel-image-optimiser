@@ -2,9 +2,9 @@
 Contributors: ShortPixel
 Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 4.8.0
-Tested up to: 6.7
+Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 6.1.4
+Stable tag: 6.2.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -28,9 +28,13 @@ Make an instant <a href="https://shortpixel.com/image-compression-test" target="
 
 == 💡 Why is ShortPixel the best choice for image optimization or PDF compression? ==
 
-### 🆕 New! Prevent AI Data Mining ###
+### 🆕 New! Freshly added features ###
 
-Decide whether AI bots can use your images for machine learning (ML) training, or block them entirely.
+* Compress WebP images – ShortPixel now also <a href="https://shortpixel.com/blog/introducing-smartcompress/" target="_blank">smartly compresses</a> all your existing WebP images.
+* Image captioning – Using our AI model, you can automatically add "alternative text" to your images (BETA).
+* Added support for serving CSS and JS from our global CDN.
+* Save & Restore option for all settings – ideal for agencies and users managing multiple websites.
+* Decide whether AI bots can use your images for machine learning (ML) training, or < href="https://shortpixel.com/blog/prevent-ai-data-mining-on-images/" target="_blank">block them entirely</a>.
 
 ### 🌍 Faster Websites for Global Audiences ###
 
@@ -55,6 +59,7 @@ Optimized images lead to a better user experience, improved PageSpeed Insights o
 ### 🔄 Convert WebP and AVIF Formats ###
 
 * Option to automatically convert JPEG, PNG, or GIF to WebP and AVIF for better performance and improved Google ranking.
+* Automatically optimize your existing WebP files with ShortPixel's SmartCompress algorithm.
 * Animated GIFs can be automatically converted to much smaller animated WebP or AVIF files.
 * Option to include next-gen images (WebP and AVIF) in front-end pages with a single click using the <picture> tag.
 
@@ -428,23 +433,70 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 
 == Screenshots ==
 
-1. Bulk optimization running. (Media>Bulk ShortPixel)
+1. Select bulk optimization options. (Media -> Bulk ShortPixel)
 
-2. Activate your API key in the plugin Settings. (Settings>ShortPixel)
+2. Bulk optimization running. (Media -> Bulk ShortPixel)
 
-3. Check out the main settings after the API key is activated. (Settings>ShortPixel)
+3. Activate your API key in the plugin Settings. (Settings -> ShortPixel)
 
-4. Tweak it using Advanced settings. (Settings>ShortPixel)
+4. Plugin dashboard after entering the API key. (Settings -> ShortPixel)
 
-5. Compress all your past images with one click. (Media>Bulk ShortPixel)
+5. Image Optimization settings. (Settings -> ShortPixel -> Image Optimization)
 
-6. Check image optimization status, and restore or reoptimize the image. (Media>Library)
+6. Exclusion settings. (Settings -> ShortPixel -> Exclusions)
 
-7. Check image optimisation details. (Media>Library->Edit)
+7. Processing settings. (Settings -> ShortPixel -> Processing)
 
-8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
+8. Next generation and delivery settings. (Settings -> ShortPixel -> WebP/AVIF and CDN)
+
+9. Integrations. (Settings -> ShortPixel -> Integrations)
+
+10. Tools. (Settings -> ShortPixel -> Tools)
+
+11. Help Center. (Settings -> ShortPixel -> Help Center)
+
+12. Check image optimization status, and restore or reoptimize the image. (Media -> Library)
+
+13. Check image optimisation details. (Media -> Library -> Edit)
+
+14. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 6.2.0 =
+
+🚀 The Power Tools Update
+
+🌟 New Features
+
+- Smart WebP Compression: ShortPixel now compresses your existing WebP images to save even more space without sacrificing quality.
+- AI-Powered Image Captioning (BETA): Automatically generate meaningful “*alternative text(ALT)”* for your images using our AI model—great for SEO and accessibility!
+- Global CDN for CSS & JS: Your CSS, JS, and even background images can now be served via ShortPixel's global CDN for faster page loads.
+- CDN Cache Purge Controls: New buttons to purge cached CSS, JS, or the entire CDN cache with one click—right from your dashboard.
+- Save & Restore Settings: Export and import all settings effortlessly — ideal for agencies managing multiple sites.
+
+⚙️ Improvements
+
+- Cross-Tab Sync: Optimizations done in multiple browser tabs now stay in sync using browser broadcasting.
+- Automatic Association to ShortPixel Account: Your site domain is now automatically associated to your ShortPixel account when enabling CDN delivery.
+- CDN Domain Validation: Prevent misconfigurations with smart validation of your CDN domain format.
+- Cleaner Admin Bar: The ShortPixel icon is now hidden when restoring items to keep your admin interface tidy.
+- CDN Bypass Option: Append `?PageSpeed=off` to disable CDN replacement for debugging or testing.
+- WebP Limit Handling: Files that exceed WebP conversion limits are now properly managed to avoid errors.
+
+🛠️ Fixes
+
+- Lossless Labeling Bug: Fixed an issue where images were incorrectly marked as "Lossless" if the main image wasn't optimized.
+- Sticky Notification: Resolved an issue where the API key notification couldn't be dismissed after saving it from settings.
+- Folder Creation Fix: The plugin no longer attempts to create month-based folders—it now leaves that job to WordPress.
+- File Format Conversions: Improved support for HEIC, TIFF, and BMP file conversion.
+- API Key Onboarding Fix: Pressing *Enter* now correctly saves your API key during onboarding.
+
+🌍 Language Updates
+
+* Added 87 new strings, updated 2, and deprecated 28 to enhance global translation support.
+
+Update now for faster speeds, smarter automation, and more control than ever! 🚀
 
 = 6.1.4 =
 
