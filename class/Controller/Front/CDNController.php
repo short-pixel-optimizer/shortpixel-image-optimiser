@@ -341,23 +341,51 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		$original_content = $content;
 		$content = $this->checkContent($content);
 
-		$args = [];
-		$image_matches = $this->fetchImageMatches($content, $args);
-		$replaceBlocks = $this->extractImageMatches($image_matches);
+		$background_inline_found = false; 
+		
 
-		//	$document_matches = $this->fetchDocumentMatches($content, $args);
-		//	$urls = array_merge($url, $this->extraDocumentMatches($document_matches));
+		$args = [];
+
+		// *** DO INLINE BACKGROUND FIRST *** 
+		$replaceBlocks = $this->fetchInlineBackground($content, $args);
 
 		$replaceBlocks = $this->filterEmptyURLS($replaceBlocks);
 		$replaceBlocks = $this->filterRegexExclusions($replaceBlocks);
 		$replaceBlocks = $this->filterOtherDomains($replaceBlocks);
 
+		if (count($replaceBlocks) > 0) {
+			$replaceBlocks = $this->createReplacements($replaceBlocks);
+			$replaceBlocks = $this->filterDoubles($replaceBlocks);
+			$content = $this->pregReplaceContent($content, $replaceBlocks);
+			$background_inline_found = true; 
+		}
+	
+
+		// ** DO IMAGE MATCHES **/
+		$image_matches = $this->fetchImageMatches($content, $args);
+		$replaceBlocks = $this->extractImageMatches($image_matches);
+
+		$replaceBlocks = $this->filterEmptyURLS($replaceBlocks);
+		$replaceBlocks = $this->filterRegexExclusions($replaceBlocks);
+		$replaceBlocks = $this->filterOtherDomains($replaceBlocks);
+
+
 		// If the items didn't survive the filters.
 		if (count($replaceBlocks) == 0) {
-			return $original_content;
+			if (true === $background_inline_found)
+			{
+				 return $content; 
+			}
+			else
+			{
+				return $original_content;
+			}
+			
 		}
 
 		$replaceBlocks = $this->createReplacements($replaceBlocks);
+
+		$replaceBlocks = $this->filterDoubles($replaceBlocks);
 
 		//  $replace_function = ($this->replace_method == 'preg') ? 'pregReplaceContent' : 'stringReplaceContent';
 		$replace_function = 'stringReplaceContent'; // undercooked, will defer to next version
@@ -365,10 +393,13 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		$urls = array_column($replaceBlocks, 'raw_url');
 		$replace_urls = array_column($replaceBlocks, 'replace_url');
 
-		$content = $this->$replace_function($original_content, $urls, $replace_urls);
+		//$content = $this->$replace_function($original_content, $urls, $replace_urls);
+		$content = $this->$replace_function($content, $urls, $replace_urls);
 
 		return $content;
 	}
+
+
 
 	protected function loadCDNDomain($CDNDomain = false)
 	{
@@ -429,6 +460,23 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		$number = preg_match_all('/<img[^>]*>/i', $content, $matches);
 		$matches = $matches[0];
 		return $matches;
+	}
+
+	protected function fetchInlineBackground($content, $args = [])
+	{
+		$number = preg_match_all('/url(\(((?:[^()]+|(?1))+)\))/m', $content, $matches); 
+		$matches = $matches[2]; 
+		
+		$matches = str_replace('\'', '', $matches);
+		Log::addTemp('Inline Matches', $matches);
+
+		$replaceBlocks = []; 
+		foreach($matches as $url)
+		{
+			 $replaceBlocks[] = $this->getReplaceBlock($url);
+		}
+
+		return $replaceBlocks;
 	}
 
 	protected function fetchDocumentMatches($content, $args = [])
@@ -546,19 +594,33 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 	protected function stringReplaceContent($content, $urls, $new_urls)
 	{
 
-		//	$count = 0;
-		//	$content = str_replace($urls, $new_urls, $content, $count);
+		Log::addTemp('Replace Content ', [$urls, $new_urls]); 
 
 		$replacer = new Replacer();
 		$content = $replacer->replaceContent($content, $urls, $new_urls);
 
-
 		return $content;
 	}
 
-	protected function pregReplaceContent($content, $urls, $new_urls)
+	protected function pregReplaceContent($content, $replaceBlocks)
 	{
-		$count = 0;
+
+		$pattern = '/url(\(%%replace%%\))/m';
+		$raw_urls = $replace_urls = $patterns = []; 
+
+		foreach($replaceBlocks as $replaceBlock)
+		{
+			 $raw_url = $replaceBlock->raw_url; 
+			 // Rebuild the matches url: pattern ( easier than $1 getting it back )
+			 $replace_urls[] = 'url(\'' . $replaceBlock->replace_url . '\')'; 
+			 $patterns[] = str_replace('%%replace%%', "'" . preg_quote($raw_url, '/') . "'", $pattern); 
+
+		}
+
+		$content =preg_replace($patterns, $replace_urls, $content);
+		return $content;
+
+/*		$count = 0;
 		$patterns = [];
 
 		// Create pattern for each URL to search.
@@ -572,7 +634,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		}
 
 		$content = preg_replace($patterns, $new_urls, $content, -1, $count);
-		return $content;
+		return $content; */
 	}
 
 

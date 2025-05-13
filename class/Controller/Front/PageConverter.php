@@ -173,7 +173,7 @@ class PageConverter extends \ShortPixel\Controller
 
   protected function filterEmptyURLS($replaceBlocks)
   {
-      $imageData = array_column($replaceBlocks, 'url');
+    //  $imageData = array_column($replaceBlocks, 'url');
 
       $replaceBlocks = array_filter($replaceBlocks, function ($replaceBlock)
       {
@@ -186,6 +186,43 @@ class PageConverter extends \ShortPixel\Controller
       });
 
       return $replaceBlocks;
+  }
+
+  protected function filterDoubles($replaceBlocks)
+  {
+   $foundSources = $foundReplaced = $removeIndex = []; 
+
+   foreach($replaceBlocks as $index => $replaceBlock)
+   {
+      $url = $replaceBlock->raw_url; 
+      $replace_url = $replaceBlock->replace_url; 
+
+      if (in_array($url, $foundSources))  
+      {
+          $found_index = array_search($url, $foundSources);
+          if (in_array($replace_url, $foundReplaced) && $found_index == array_search($replace_url, $foundReplaced))
+          {
+             $removeIndex[] = $index; 
+          }
+      }
+      else
+      {
+         $foundSources[] = $url; 
+         $foundReplaced[] = $replace_url; 
+      }
+
+   }
+
+   foreach($removeIndex as $counter => $remove)
+   {
+       unset($replaceBlocks[$remove]);
+   }
+
+   // Reset Index.
+   $replaceBlocks = array_values($replaceBlocks); 
+
+   return $replaceBlocks;
+      
   }
 
 

@@ -14,7 +14,13 @@ $isSupported = $this->data['isSupported'];
 $quotaControl = QuotaController::getInstance();
 $keyControl = ApiKeyController::getInstance();
 
-if (false === $isSupported):
+if (true === apply_filters('shortpixel/settings/no_ai', false)):
+
+	?>
+	<p class='hidden' id='shortpixel-noai'></p>
+<?php
+
+elseif (false === $isSupported):
 
 	?>
 		<p><?php _e('Currently, ShortPixel AI cannot generate ALT tags for GIF files.', 'shortpixel-image-optimiser'); ?></p>
