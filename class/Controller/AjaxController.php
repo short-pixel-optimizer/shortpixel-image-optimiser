@@ -17,6 +17,7 @@ use ShortPixel\Notices\NoticeController as Notices;
 //use ShortPixel\Controller\BulkController as BulkController;
 use ShortPixel\Helper\UiHelper as UiHelper;
 use ShortPixel\Helper\InstallHelper as InstallHelper;
+use ShortPixel\Helper\UtilHelper;
 
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Model\AccessModel as AccessModel;
@@ -24,6 +25,7 @@ use ShortPixel\Model\AccessModel as AccessModel;
 // @todo This should probably become settingscontroller, for saving
 use ShortPixel\Controller\View\SettingsViewController as SettingsViewController;
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
+
 use ShortPixel\Model\Queue\QueueItem;
 
 // Class for containing all Ajax Related Actions.
@@ -473,7 +475,7 @@ class AjaxController
 			{
 				 $json->settings->results = ['is_error' => true, 'message' => __('Import contained empty field', 'shortpixel-image-optimiser')];
 			}
-			elseif (true === \json_validate($importdata))
+			elseif (true ===  UtilHelper::validateJson($importdata) )
 			{
 				//$result = ['is_error' => false];
 				$messages = []; 

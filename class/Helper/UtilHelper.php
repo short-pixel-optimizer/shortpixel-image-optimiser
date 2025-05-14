@@ -92,6 +92,22 @@ class UtilHelper
         return $val !== null;
     }
 
+    public static function validateJSON($json)
+    {
+      if (!is_string($json)) {
+        return false;
+      }
+
+      if (function_exists('json_validate'))
+      {
+         return json_validate($json); 
+      }
+
+      json_decode($json);
+      return json_last_error() === JSON_ERROR_NONE;
+
+    }
+
 		public static function getExclusions($args = array())
 		{
        $defaults = array(
