@@ -385,14 +385,34 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 		$replaceBlocks = $this->createReplacements($replaceBlocks);
 
-		$replaceBlocks = $this->filterDoubles($replaceBlocks);
+		// FilterDoubles should prob. be off if we are doing a own htmlReplace only. 
+	//	$replaceBlocks = $this->filterDoubles($replaceBlocks);
 
 		//  $replace_function = ($this->replace_method == 'preg') ? 'pregReplaceContent' : 'stringReplaceContent';
+
 		$replace_function = 'stringReplaceContent'; // undercooked, will defer to next version
+		$imageIndexes = array_column($replaceBlocks, 'imageId');
 
-		$urls = array_column($replaceBlocks, 'raw_url');
-		$replace_urls = array_column($replaceBlocks, 'replace_url');
+		array_multisort($imageIndexes, SORT_ASC, $replaceBlocks); 
 
+		$sortedBlocks = []; 
+		foreach($replaceBlocks as $replaceBlock)
+		{
+			 $sortedBlocks[$replaceBlock->imageId][] = $replaceBlock; 
+		}
+
+		foreach($sortedBlocks as $sortedBlock)
+		{
+			$urls = array_column($sortedBlock, 'raw_url');
+			$replace_urls = array_column($sortedBlock, 'replace_url'); 
+			$original_block_content = $sortedBlock[0]->htmlMatch;
+
+			$replaced_block_content = $this->$replace_function($original_block_content, $urls, $replace_urls);
+			
+			$content = str_replace($original_block_content, $replaced_block_content, $content, $count); 
+			Log::addTemp('Replacement count: ' . $count);
+		}
+		
 		//$content = $this->$replace_function($original_content, $urls, $replace_urls);
 		$content = $this->$replace_function($content, $urls, $replace_urls);
 
@@ -457,7 +477,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 	protected function fetchImageMatches($content, $args = [])
 	{
-		$number = preg_match_all('/<img[^>]*>/i', $content, $matches);
+		$number = preg_match_all('/<img[^>]*>|<source srcset="[^>]*">/i', $content, $matches);
 		$matches = $matches[0];
 		return $matches;
 	}
@@ -489,12 +509,16 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 	{
 
 		$imageData = $blockData = [];
-		foreach ($matches as $match) {
+		
+		foreach ($matches as $index => $match) {
+
 			$imageObj = new FrontImage($match);
 			$src = $imageObj->src;
 
 			if (! is_null($src)) {
 				$imageBlock = $this->getReplaceBlock($src);
+				$imageBlock->htmlMatch = $match; 
+				$imageBlock->imageId = 'image' . $index; 
 				$imageBlock->args = $this->createArguments();
 				$blockData[] = $imageBlock;
 				$imageData[] = $imageBlock->url;
@@ -505,8 +529,10 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 			foreach ($images as $image) {
 				$imageBlock = $this->getReplaceBlock($image);
+				$imageBlock->htmlMatch = $match;
+				$imageBlock->imageId = 'image' . $index; 
 				$imageBlock->args = $this->createArguments();
-				if (! in_array($image, $imageData)) {
+				if ($src !== $imageBlock->url) {
 					$blockData[] = $imageBlock;
 					$imageData[] = $imageBlock->url;
 				}
@@ -564,6 +590,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			$original_url = $replaceBlock->url;
 			$site_url  = $this->site_url;
 			// This can happen when srcset or so is relative starting with // 
+
 
 			if (substr($replaceBlock->parsed['path'], 0, 1) !== '/') {
 				$site_url .= '/';

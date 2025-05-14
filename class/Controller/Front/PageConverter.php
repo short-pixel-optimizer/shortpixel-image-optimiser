@@ -182,6 +182,13 @@ class PageConverter extends \ShortPixel\Controller
              return false;
           }
 
+          $parsed = $replaceBlock->parsed; 
+          // Most likely a non-url.
+          if (! isset($parsed['path']) && ! isset($parsed['host']))
+          {
+             return false; 
+          }
+
           return true;
       });
 
