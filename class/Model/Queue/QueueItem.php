@@ -413,7 +413,8 @@ class QueueItem
 
          if (isset($param['url']))
          {
-            $optimizeData['params'][$sizeName]['url'] = $this->timestampURLS([$param['url']], $item_id);
+            $url = $this->timestampURLS([$param['url']], $item_id);
+            $optimizeData['params'][$sizeName]['url'] = $url[0];
          }
       }
 
@@ -500,11 +501,19 @@ class QueueItem
 
       return $api;
    }
-
+   
+   /**
+    * Add a timestamp to the URL for cache-prevention.
+    *
+    * @param array $urls  URL's to timestamp 
+    * @param int $id  Item_id to get post time for this.
+    * @return array
+    */
    protected function timestampURLS($urls, $id)
    {
       // https://developer.wordpress.org/reference/functions/get_post_modified_time/
       $time = get_post_modified_time('U', false, $id);
+
       foreach ($urls as $index => $url) {
          $urls[$index] = add_query_arg('ver', $time, $url); //has url
       }
