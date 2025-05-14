@@ -360,7 +360,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			$background_inline_found = true; 
 		}
 	
-
 		// ** DO IMAGE MATCHES **/
 		$image_matches = $this->fetchImageMatches($content, $args);
 		$replaceBlocks = $this->extractImageMatches($image_matches);
@@ -487,8 +486,8 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		$number = preg_match_all('/url(\(((?:[^()]+|(?1))+)\))/m', $content, $matches); 
 		$matches = $matches[2]; 
 		
-		$matches = str_replace('\'', '', $matches);
-		Log::addTemp('Inline Matches', $matches);
+		//$matches = str_replace('\'', '', $matches);
+	//	Log::addTemp('Inline Matches', $matches);
 
 		$replaceBlocks = []; 
 		foreach($matches as $url)
@@ -621,7 +620,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 	protected function stringReplaceContent($content, $urls, $new_urls)
 	{
 
-		Log::addTemp('Replace Content ', [$urls, $new_urls]); 
+		//Log::addTemp('Replace Content ', [$urls, $new_urls]); 
 
 		$replacer = new Replacer();
 		$content = $replacer->replaceContent($content, $urls, $new_urls);
@@ -640,7 +639,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			 $raw_url = $replaceBlock->raw_url; 
 			 // Rebuild the matches url: pattern ( easier than $1 getting it back )
 			 $replace_urls[] = 'url(\'' . $replaceBlock->replace_url . '\')'; 
-			 $patterns[] = str_replace('%%replace%%', "'" . preg_quote($raw_url, '/') . "'", $pattern); 
+			 $patterns[] = str_replace('%%replace%%', "" . preg_quote($raw_url, '/') . "", $pattern); 
 
 		}
 
@@ -748,7 +747,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		$full_cdn_url = $this->getURLBase($replaceBlocks->replace_url);
 
 		$flush_url = $domain . $full_cdn_url; 
-		Log::addDebug('Flush URL : ' . $flush_url);
+		//Log::addDebug('Flush URL : ' . $flush_url);
 
 		$getArgs = [
 			'timeout'=> 8,

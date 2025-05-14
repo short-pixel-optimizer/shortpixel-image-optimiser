@@ -242,15 +242,21 @@ class PageConverter extends \ShortPixel\Controller
 
       $block->raw_url = $this->trimURL($url);  // raw URL is the base for replacement and should match what's in document.
 
+      // From Url('') formats, the regex is selected often with single quotes. Filter them out for parsing, but they should be in raw_url for replacing
+      $url = $block->raw_url; 
+      if (strpos($url, '"') !== false || strpos($url, "'") !== false)
+      {
+         $url = str_replace(['"', "'"], '', $url);
+      }
 			// Pre-parse checks
 
-      $url = $this->addEscapedUrl($block->raw_url);
+      $url = $this->addEscapedUrl($url);
       $url = $this->stripSlashesUrl($url);
       $url = $this->removeCharactersUrl($url);
 
 			if (filter_var($url, FILTER_VALIDATE_URL) === false)
 			{
-        // Log::addInfo('Replacement String still not URL - ', $url);
+      //   Log::addInfo('Replacement String still not URL - ' . $url);
 			}
 
 			$block->url = $url;
