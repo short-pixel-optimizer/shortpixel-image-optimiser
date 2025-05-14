@@ -339,6 +339,7 @@ class QueueItem
       $this->newAction(); 
 
       $imageModel = $this->imageModel;
+      $item_id = $imageModel->get('id');
 
       /*  $defaults = array(
             'debug_active' => false, // prevent write actions if called via debugger
@@ -409,6 +410,11 @@ class QueueItem
             $convertTo = implode('|', $convertTo);
             $optimizeData['params'][$sizeName]['convertto'] = $convertTo;
          }
+
+         if (isset($param['url']))
+         {
+            $optimizeData['params'][$sizeName]['url'] = $this->timestampURLS([$param['url']], $item_id);
+         }
       }
 
       // CompressionType can be integer, but not empty string. In cases empty string might happen, causing lossless optimization, which is not correct.
@@ -418,7 +424,7 @@ class QueueItem
 
       // Former securi function, add timestamp to all URLS, for cache busting.
       $urls = $this->timestampURLS(array_values($urls), $imageModel->get('id'));
-      $this->data->urls = apply_filters('shortpixel_image_urls', $urls, $imageModel->get('id'));
+      $this->data->urls = apply_filters('shortpixel_image_urls', $urls, $item_id);
 
       if (count($optimizeData['params']) > 0) {
          $this->data->paramlist = array_values($optimizeData['params']);
