@@ -389,7 +389,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 		//  $replace_function = ($this->replace_method == 'preg') ? 'pregReplaceContent' : 'stringReplaceContent';
 
-		$replace_function = 'stringReplaceContent'; // undercooked, will defer to next version
+		$replace_function = 'pregReplaceByString'; // undercooked, will defer to next version
 		$imageIndexes = array_column($replaceBlocks, 'imageId');
 
 		array_multisort($imageIndexes, SORT_ASC, $replaceBlocks); 
@@ -624,6 +624,18 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 		$replacer = new Replacer();
 		$content = $replacer->replaceContent($content, $urls, $new_urls);
+
+		return $content;
+	}
+
+	protected function pregReplaceByString($content, $urls, $new_urls)
+	{
+		$patterns = array_map(function ($url) {
+			return '/(?<!(\/|[a-z]|[0-9]))' . preg_quote($url, '/') . '(?!(\/|[a-z]|[0-9]))/mi'; 
+		}, $urls);
+
+		Log::addTemp('Patterns', $patterns);
+		$content = preg_replace($patterns, $new_urls, $content);
 
 		return $content;
 	}

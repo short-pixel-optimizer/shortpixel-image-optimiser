@@ -323,6 +323,10 @@ class QueueItem
 
    }
 
+   /** Action for dunping (removing from cache) for image URLS's so optimization will be redone.
+    * 
+    * @return void 
+    */
    public function newDumpAction()
    {
       $this->newAction(); 
@@ -334,6 +338,11 @@ class QueueItem
 
    }
 
+   /** Start optimize action 
+    * 
+    * @param array $args  Arguments and settings
+    * @return void 
+    */
    public function newOptimizeAction($args = [])
    {
       $this->newAction(); 
@@ -521,7 +530,7 @@ class QueueItem
       return $urls;
    }
 
-
+   
    public function checkImageModelExists()
    {
       if (is_null($this->imageModel) || false === is_object($this->imageModel)) {

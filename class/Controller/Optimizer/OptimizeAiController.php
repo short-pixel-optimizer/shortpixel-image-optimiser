@@ -165,7 +165,6 @@ class OptimizeAiController extends OptimizerBase
           }
       }
 
-
       // Result for retrieveAlt
       if (property_exists($qItem->result(), 'retrievedText'))
       {
