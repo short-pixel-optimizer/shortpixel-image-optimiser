@@ -343,7 +343,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 		$background_inline_found = false; 
 		
-
 		$args = [];
 
 		// *** DO INLINE BACKGROUND FIRST *** 
@@ -471,7 +470,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			return $resultDomain;
 		}
 
-		 //return $this->cdn_domain;
 	}
 
 	protected function fetchImageMatches($content, $args = [])
@@ -590,7 +588,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			$site_url  = $this->site_url;
 			// This can happen when srcset or so is relative starting with // 
 
-
 			if (substr($replaceBlock->parsed['path'], 0, 1) !== '/') {
 				$site_url .= '/';
 			}
@@ -606,7 +603,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 	private function checkScheme($replaceBlock)
 	{
-		//$this->setCDNArgument('scheme', null);
 		if (isset($replaceBlock->parsed['scheme']) && 'http' == $replaceBlock->parsed['scheme']) {
 			$replaceBlock->args['scheme'] = 'p_h'; 
 		}
@@ -617,19 +613,35 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		}
 	}
 
+	/** Simple string replace using the replacer ( current unused ) 
+	 * 
+	 * @param mixed $content 
+	 * @param array $urls 
+	 * @param array $new_urls 
+	 * @return mixed 
+	 */
 	protected function stringReplaceContent($content, $urls, $new_urls)
 	{
-
-		//Log::addTemp('Replace Content ', [$urls, $new_urls]); 
-
 		$replacer = new Replacer();
 		$content = $replacer->replaceContent($content, $urls, $new_urls);
 
 		return $content;
 	}
 
+	/** Do a regex replace on the found strings. Try to prevent it picking up relative paths / doubling the CDN path. 
+	 * 
+	 * @param mixed $content 
+	 * @param array $urls 
+	 * @param array $new_urls 
+	 * @return string|string[]|null 
+	 */
 	protected function pregReplaceByString($content, $urls, $new_urls)
 	{
+
+		/* 
+		Pattern:  Negative lookback to / a-z and 0-9 ( URL components / not image closers ) - URL Match - Negative lookforward (same pattern)
+
+		*/
 		$patterns = array_map(function ($url) {
 			return '/(?<!(\/|[a-z]|[0-9]))' . preg_quote($url, '/') . '(?!(\/|[a-z]|[0-9]))/mi'; 
 		}, $urls);
@@ -640,6 +652,12 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		return $content;
 	}
 
+	/** Preg replace the background URL on content.
+	 * 
+	 * @param mixed $content 
+	 * @param array $replaceBlocks 
+	 * @return string|string[]|null 
+	 */
 	protected function pregReplaceContent($content, $replaceBlocks)
 	{
 
@@ -658,21 +676,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		$content =preg_replace($patterns, $replace_urls, $content);
 		return $content;
 
-/*		$count = 0;
-		$patterns = [];
-
-		// Create pattern for each URL to search.
-		foreach ($urls as $index => $url) {
-			//$replacement = $new_urls[$index];
-			$patterns[] = '/("|\'| )(' . preg_quote($url, '/') . ')("|\'| )/mi';
-		}
-
-		foreach ($new_urls as $index => $url) {
-			$new_urls[$index] = '$1' . $url . '$1';
-		}
-
-		$content = preg_replace($patterns, $new_urls, $content, -1, $count);
-		return $content; */
 	}
 
 
