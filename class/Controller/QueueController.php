@@ -64,6 +64,11 @@ class QueueController
 
       $queue = $this->getQueue($imageModel->get('type'));
 
+      $args = array_filter($args, function ($value) {
+        return $value !== null;
+      });
+
+        
       // These checks are across all actions. 
       if ($queue->isDuplicateActive($imageModel))
       {
@@ -79,7 +84,7 @@ class QueueController
 
       }
 
-      if ($this->isItemInQueue($imageModel))
+      if ($this->isItemInQueue($imageModel, $args['action']))
       {
         $qItem->addResult([
            'fileStatus' => ImageModel::FILE_STATUS_UNPROCESSED,
@@ -92,9 +97,6 @@ class QueueController
 
       }
 
-      $args = array_filter($args, function ($value) {
-          return $value !== null;
-      });
 
 // @todo Later: check if all provisions of OptimizeController are implemented.
       $qItem = QueueItems::getImageItem($imageModel);
@@ -162,7 +164,12 @@ class QueueController
       return $qItem->result();
   }
 
-  public function isItemInQueue(ImageModel $mediaItem)
+  /** Check if item and action is already listed in the queue 
+   * 
+   * @param ImageModel $mediaItem 
+   * @return mixed 
+   */
+  public function isItemInQueue(ImageModel $mediaItem, $action)
   {
       if (! is_null($mediaItem->is_in_queue))
         return $mediaItem->is_in_queue;
@@ -172,6 +179,23 @@ class QueueController
       $q = $this->getQueue($type);
       $bool = $q->isItemInQueue($mediaItem->get('id'));
 
+      if (true === $bool)
+      {
+          $queueItem = $q->getItem($mediaItem->get('id'));
+          if (is_object($queueItem))
+          {
+              $queueItem->setModel($mediaItem); 
+              // @todo If item can be appended, probably add function in queueItem to add next_action and update to database (this q )?
+              if (false === $queueItem->data()->hasAction($action))
+              {
+                  $bool = false; 
+                  
+              }
+          }
+
+          
+      }
+      
       // Preventing double queries here
       $mediaItem->is_in_queue = $bool;
       return $bool;

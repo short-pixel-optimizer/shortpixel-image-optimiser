@@ -92,6 +92,28 @@ class QueueItemData
             
         }
 
+        public function hasAction($action)
+        {
+            if (is_array($this->next_actions))
+            {
+                $actions = array_merge($this->action, $this->next_actions);
+            }
+            else
+            {
+                $actions = [$this->action];
+            }
+
+            if (in_array($action, $actions))
+            {
+                 return true; 
+            }
+            else
+            {
+                 return false; 
+            }
+
+        }
+
         public function hasNextAction()
         {
              if (! is_null($this->next_actions) && count($this->next_actions) > 0)

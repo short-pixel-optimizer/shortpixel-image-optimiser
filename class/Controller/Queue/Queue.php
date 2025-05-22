@@ -562,19 +562,17 @@ abstract class Queue
         return $item->getQueueItem();
     }
 
-/*
-    protected function timestampURLS($urls, $id)
+    public function getItem($item_id)
     {
-      // https://developer.wordpress.org/reference/functions/get_post_modified_time/
-      $time = get_post_modified_time('U', false, $id );
-      foreach($urls as $index => $url)
-      {
-        $urls[$index] = add_query_arg('ver', $time, $url); //has url
-      }
+        $itemObj = $this->q->getItem($item_id); 
+        if (false === is_object($itemObj))
+        {
+           return $itemObj; // probably boolean / not found. 
+        }
 
-      return $urls;
+        return $this->queueToMediaItem(($itemObj));
     }
-*/
+
 
 		// Check if item is in queue. Considered not in queue if status is done.
 		public function isItemInQueue($item_id)
