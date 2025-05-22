@@ -1367,8 +1367,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	/* @param Strict Boolean Check only the main image, don't check thumbnails */
 	public function isProcessable($strict = false)
 	{
-		$bool = true;
-		$bool = parent::isProcessable();
+		$main_bool = $bool = parent::isProcessable();
 
 		$settings = \wpSPIO()->settings();
 
@@ -1403,11 +1402,23 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 				if ($thumbnail->isOptimized() && true === $thumbnail->isProcessableAnyFileType())
 					return true;
+
+				if (false === $bool)
+				{
+					// These statii might in other situations ( i.e wp-cli ) looks processable, but if not warn the user. When the main image is optimized, but thumbnails are prevented somehow it will otherwise return 'image already optimized', which is confusing. 
+					$status = $thumbnail->processable_status; 
+					$warnable_statii = [ImageModel::P_FILE_NOT_EXIST, ImageModel::P_DIRECTORY_NOTWRITABLE, ImageModel::P_BACKUPDIR_NOTWRITABLE, ImageModel::P_FILE_NOTWRITABLE];
+
+					if (in_array($status, $warnable_statii ))
+					{
+						$this->processable_status = $status;
+					}
+				}
 			}
 		}
 
-		// First test if this file isn't unprocessable for any other reason, then check.
-		if (($this->isProcessable(true) || $this->isOptimized()) && $this->isProcessableAnyFileType() === true) {
+		// First test if this file isn't unprocessable for any other reason, then check.  Strict_bool is the result of the main image, and should not be updated / rechecked
+		if ((true === $main_bool || $this->processable_status === ImageModel::P_IS_OPTIMIZED) && $this->isProcessableAnyFileType() === true) {
 			if (false === $this->is_directory_writable()) {
 				$this->processable_status = ImageModel::P_DIRECTORY_NOTWRITABLE;
 				$bool = false;
