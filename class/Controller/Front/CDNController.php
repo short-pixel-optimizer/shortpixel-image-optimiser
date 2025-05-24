@@ -7,6 +7,7 @@ if (! defined('ABSPATH')) {
 }
 
 use ShortPixel\Controller\ApiKeyController;
+use ShortPixel\Helper\UtilHelper;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Model\FrontImage as FrontImage;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
@@ -490,7 +491,9 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		$replaceBlocks = []; 
 		foreach($matches as $url)
 		{
-			 $replaceBlocks[] = $this->getReplaceBlock($url);
+			$block = $this->getReplaceBlock($url);
+			$block->args = $this->createArguments();
+			$replaceBlocks[] = $block; 
 		}
 
 		return $replaceBlocks;
@@ -705,12 +708,14 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			return false; 
 		}
 
-		try {
+		$bool = UtilHelper::validateJSON($json); 
+
+		/*try {
 			json_decode($json, false, $depth, $flags | JSON_THROW_ON_ERROR);
 			return true;
 		} catch (\JsonException $e) {
 			return false;
-		}
+		} */
 	}
 
 	protected function listenFlush()

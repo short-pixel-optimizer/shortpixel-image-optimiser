@@ -244,9 +244,10 @@ class PageConverter extends \ShortPixel\Controller
 
       // From Url('') formats, the regex is selected often with single quotes. Filter them out for parsing, but they should be in raw_url for replacing
       $url = $block->raw_url; 
-      if (strpos($url, '"') !== false || strpos($url, "'") !== false)
+
+      if (strpos($url, '"') !== false || strpos($url, "'") !== false || strpos($url, '&quot;') !== false)
       {
-         $url = str_replace(['"', "'"], '', $url);
+         $url = str_replace(['"', "'", '&quot;'], '', $url);
       }
 			// Pre-parse checks
 
