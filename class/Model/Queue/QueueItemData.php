@@ -114,6 +114,24 @@ class QueueItemData
 
         }
 
+           /**  Add an action to be performed after current action.  
+            * 
+            * Note Doesn't save anything! 
+            * @param string Action - name of the action
+            */
+        public function addNextAction($action)
+        {   
+            if (false === is_null($this->next_actions))
+            {
+                $this->next_actions = array_merge($this->next_actions, [$action]);
+            }
+            else 
+            {
+                $this->next_actions = [$action];
+            }
+
+        }
+
         public function hasNextAction()
         {
              if (! is_null($this->next_actions) && count($this->next_actions) > 0)

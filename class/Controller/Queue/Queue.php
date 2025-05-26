@@ -43,6 +43,7 @@ abstract class Queue
     abstract public function getType();
 
     protected $queueName = '';
+    protected $cacheName; 
 
     
     public function createNewBulk()
@@ -94,16 +95,6 @@ abstract class Queue
           'remote_id' => null, // for retrieveAltAction
        );
        $args = wp_parse_args($args, $defaults);
-
-
-       // Check if this is a duplicate existing.
-      /* Added to QueueItem
-       if (->getParent() !== false)
-
-			 {
-				  $media_id = $imageModel->getParent();
-          $imageModel = \wpSPIO()->filesystem()
-       } */
 
 
        $qItem = QueueItems::getImageItem($imageModel);

@@ -283,6 +283,7 @@ class QueueItem
 
    }
 
+
    /** Clean several aspects of this object ( result, other things ) before triggering a new action. 
     * 
     * Since QItem is mostly passed by reference 

@@ -86,12 +86,6 @@ class QueueController
 
       if ($this->isItemInQueue($imageModel, $args['action']))
       {
-        $qItem->addResult([
-           'fileStatus' => ImageModel::FILE_STATUS_UNPROCESSED,
-           'is_error' => false,
-           'is_done' => true,
-           'message' =>__('This item is already awaiting processing in queue', 'shortpixel-image-optimiser'),
-        ]);
 
         return $qItem->result();
 
@@ -169,7 +163,7 @@ class QueueController
    * @param ImageModel $mediaItem 
    * @return mixed 
    */
-  public function isItemInQueue(ImageModel $mediaItem, $action)
+  public function isItemInQueue(ImageModel $mediaItem, $action = null)
   {
       if (! is_null($mediaItem->is_in_queue))
         return $mediaItem->is_in_queue;
@@ -180,16 +174,35 @@ class QueueController
       $bool = $q->isItemInQueue($mediaItem->get('id'));
 
       if (true === $bool)
-      {
+      { 
           $queueItem = $q->getItem($mediaItem->get('id'));
           if (is_object($queueItem))
           {
               $queueItem->setModel($mediaItem); 
               // @todo If item can be appended, probably add function in queueItem to add next_action and update to database (this q )?
-              if (false === $queueItem->data()->hasAction($action))
+              if (false === is_null($action) && false === $queueItem->data()->hasAction($action))
               {
                   $bool = false; 
-                  
+                  $queueItem->addNextAction($action);
+
+                  $q->updateItemValue($queueItem->returnEnqueue());
+
+                  $queueItem->addResult([
+                    'fileStatus' => ImageModel::FILE_STATUS_UNPROCESSED,
+                    'is_error' => false,
+                    'is_done' => false,
+                    'message' =>__('Action has been added to queue and will be processed after current actions', 'shortpixel-image-optimiser'),
+                  ]);
+
+              }
+              else
+              {
+                    $queueItem->addResult([
+                    'fileStatus' => ImageModel::FILE_STATUS_UNPROCESSED,
+                    'is_error' => false,
+                    'is_done' => true,
+                    'message' =>__('This item is already awaiting processing in queue', 'shortpixel-image-optimiser'),
+                ]); 
               }
           }
 
