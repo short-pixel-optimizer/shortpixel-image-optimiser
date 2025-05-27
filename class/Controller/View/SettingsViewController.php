@@ -33,7 +33,7 @@ class SettingsViewController extends \ShortPixel\ViewController
      //env
      protected $is_nginx;
      protected $is_htaccess_writable;
-		 protected $is_gd_installed;
+		 protected $has_image_library;
 		 protected $is_curl_installed;
      protected $is_multisite;
      protected $is_mainsite;
@@ -50,7 +50,7 @@ class SettingsViewController extends \ShortPixel\ViewController
      );
 
      protected $display_part = 'overview';
-     protected $all_display_parts = array('overview', 'optimisation','exclusions', 'processing', 'webp', 'integrations', 'debug', 'tools', 'help');
+     protected $all_display_parts = array('overview', 'optimisation','exclusions', 'processing', 'webp','ai', 'integrations', 'debug', 'tools', 'help');
      protected $form_action = 'save-settings';
      protected $view_mode = 'simple'; // advanced or simple
 		 protected $is_ajax_save = false; // checker if saved via ajax ( aka no redirect / json return )
@@ -649,7 +649,7 @@ class SettingsViewController extends \ShortPixel\ViewController
           $env = wpSPIO()->env();
 
           $this->is_nginx = $env->is_nginx;
-          $this->is_gd_installed = $env->is_gd_installed;
+          $this->has_image_library = ($env->is_gd_installed || $env->is_imagick_installed); // Any library 
           $this->is_curl_installed = $env->is_curl_installed;
 
           $this->is_htaccess_writable = $this->HTisWritable();
