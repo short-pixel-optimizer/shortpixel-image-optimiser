@@ -1036,6 +1036,8 @@ class AjaxController
 		$json->folder->message = __('Folder has been removed', 'shortpixel-image-optimiser');
 		$json->folder->is_done = true;
 		$json->folder->action = 'remove';
+		$json->folder->id = $folder_id;
+		
 
 		return $json;
 	}
