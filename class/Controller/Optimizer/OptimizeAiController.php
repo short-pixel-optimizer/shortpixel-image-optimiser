@@ -134,17 +134,31 @@ class OptimizeAiController extends OptimizerBase
       $queue = $this->currentQueue;
 
       $qItem->addResult(['apiName' => $this->apiName]);
+      $apiStatus = $qItem->result()->apiStatus;
 
-      if ($qItem->result()->is_error && true === $qItem->result()->is_done )  {
+      if ($qItem->result()->is_error)  {
        
-        Log::addDebug('Item failed, has error on done ', $qItem->result());
-        $queue->itemFailed($qItem, true);
-        $this->HandleItemError($qItem);
+        if (true === $qItem->result()->is_done )
+        {
+            Log::addDebug('Item failed, has error on done ', $qItem->result());
+            $queue->itemFailed($qItem, true);
+            $this->HandleItemError($qItem);
+        }
+        else // Do nothing for now / retry (?)
+        {
+            // timeout
+            /*if ($apiStatus === RequestManager::STATUS_CONNECTION_ERROR)
+            {
+
+            } */
+        }
+
         return; 
       }
 
+
       // Result for requestAlt 
-      $apiStatus = $qItem->result()->apiStatus; 
+
 
       if ($apiStatus == RequestManager::STATUS_WAITING)
       {
@@ -165,11 +179,11 @@ class OptimizeAiController extends OptimizerBase
           }
       }
 
-
       // Result for retrieveAlt
       if (property_exists($qItem->result(), 'retrievedText'))
       {
           $text = $qItem->result()->retrievedText; 
+          $text = $this->processTextResult($text);
           $item_id = $qItem->item_id; 
 
           $current_alt = get_post_meta($item_id, '_wp_attachment_image_alt', true);
@@ -200,6 +214,7 @@ class OptimizeAiController extends OptimizerBase
             }
 
           $qItem->addResult([
+            'retrievedText' => $text,
             'apiStatus' => RequestManager::STATUS_SUCCESS,
             'fileStatus' => ImageModel::FILE_STATUS_SUCCESS
           ]);
@@ -212,6 +227,24 @@ class OptimizeAiController extends OptimizerBase
       $queueController = $this->getQueueController();
       $queueController->addItemToQueue($imageObj, ['action' => 'retrieveAlt', 'remote_id' => $remote_id]);
 
+  }
+
+  /**
+   * Process the resulting AI text
+   *
+   * @param string $text  The result text string from AI
+   * @return string
+   */
+  protected function processTextResult($text)
+  {
+        $text = trim($text);
+        // Add period to the end of the string.
+        if (substr($text, -1) !== '.' && true === apply_filters('shortpixel/ai/check_period', true))
+        {
+            $text .= '.';
+        }
+
+        return $text;
   }
 
   public function isSupported(queueItem $qItem)

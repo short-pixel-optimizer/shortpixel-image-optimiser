@@ -173,7 +173,7 @@ class PageConverter extends \ShortPixel\Controller
 
   protected function filterEmptyURLS($replaceBlocks)
   {
-      $imageData = array_column($replaceBlocks, 'url');
+    //  $imageData = array_column($replaceBlocks, 'url');
 
       $replaceBlocks = array_filter($replaceBlocks, function ($replaceBlock)
       {
@@ -182,10 +182,54 @@ class PageConverter extends \ShortPixel\Controller
              return false;
           }
 
+          $parsed = $replaceBlock->parsed; 
+          // Most likely a non-url.
+          if (! isset($parsed['path']) && ! isset($parsed['host']))
+          {
+             return false; 
+          }
+
           return true;
       });
 
       return $replaceBlocks;
+  }
+
+  protected function filterDoubles($replaceBlocks)
+  {
+   $foundSources = $foundReplaced = $removeIndex = []; 
+
+   foreach($replaceBlocks as $index => $replaceBlock)
+   {
+      $url = $replaceBlock->raw_url; 
+      $replace_url = $replaceBlock->replace_url; 
+
+      if (in_array($url, $foundSources))  
+      {
+          $found_index = array_search($url, $foundSources);
+          if (in_array($replace_url, $foundReplaced) && $found_index == array_search($replace_url, $foundReplaced))
+          {
+             $removeIndex[] = $index; 
+          }
+      }
+      else
+      {
+         $foundSources[] = $url; 
+         $foundReplaced[] = $replace_url; 
+      }
+
+   }
+
+   foreach($removeIndex as $counter => $remove)
+   {
+       unset($replaceBlocks[$remove]);
+   }
+
+   // Reset Index.
+   $replaceBlocks = array_values($replaceBlocks); 
+
+   return $replaceBlocks;
+      
   }
 
 
@@ -198,15 +242,22 @@ class PageConverter extends \ShortPixel\Controller
 
       $block->raw_url = $this->trimURL($url);  // raw URL is the base for replacement and should match what's in document.
 
+      // From Url('') formats, the regex is selected often with single quotes. Filter them out for parsing, but they should be in raw_url for replacing
+      $url = $block->raw_url; 
+
+      if (strpos($url, '"') !== false || strpos($url, "'") !== false || strpos($url, '&quot;') !== false)
+      {
+         $url = str_replace(['"', "'", '&quot;'], '', $url);
+      }
 			// Pre-parse checks
 
-      $url = $this->addEscapedUrl($block->raw_url);
+      $url = $this->addEscapedUrl($url);
       $url = $this->stripSlashesUrl($url);
       $url = $this->removeCharactersUrl($url);
 
 			if (filter_var($url, FILTER_VALIDATE_URL) === false)
 			{
-        // Log::addInfo('Replacement String still not URL - ', $url);
+      //   Log::addInfo('Replacement String still not URL - ' . $url);
 			}
 
 			$block->url = $url;

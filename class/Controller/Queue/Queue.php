@@ -287,23 +287,19 @@ abstract class Queue
                     $qItem = QueueItems::getImageItem($mediaItem);
                     $qItem->newOptimizeAction();
 
-                    //$qObject = $this->imageModelToQueue($mediaItem);
-
-                  
-                  //  $counts = $qObject->counts;
-
-                   //$media_id = $mediaItem->get('id');
 									 if ($mediaItem->getParent() !== false)
 						 			 {
 						 				  $media_id = $mediaItem->getParent();
 						 			 }
 
                     $queue[] = $qItem->returnEnqueue(); //array('id' => $media_id, 'value' => $qObject, 'item_count' => $counts->creditCount);
-// @todo Get this from the QueueItem -
-                  /*  $imageCount += $counts->creditCount;
+
+                    $counts = $qItem->data()->counts; 
+
+                    $imageCount += $counts->creditCount;
                     $webpCount += $counts->webpCount;
                     $avifCount += $counts->avifCount;
-										$baseCount += $counts->baseCount; // base images (all minus webp/avif) */
+										$baseCount += $counts->baseCount; // base images (all minus webp/avif) 
 
                     do_action('shortpixel_start_image_optimisation', $mediaItem);
 

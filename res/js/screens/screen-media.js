@@ -12,10 +12,20 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		'attachment-details-two-column-alt-text',
 	
 	 ];
+	 ai_enabled = true; 
+
 
 	Init() {
 		super.Init();
 		this.ListenGallery();
+
+		let settings = spio_mediascreen_settings;
+		if (typeof settings.hide_ai !== 'undefined')
+		{
+			this.ai_enabled = ! settings.hide_ai;
+		}
+		
+
 
 		// bind DoAction, for bulk actions in Media Libbrary to event
 		var actionEl = document.getElementById('doaction');
@@ -39,6 +49,10 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 	FetchAltView(newAltText, item_id)
 	{
+		if (false == this.ai_enabled)
+		{
+			 return;
+		}
 		var attachmentAlt = this.GetPageAttachmentAlt();
 		if (null === attachmentAlt) // No attach alt around
 		{

@@ -7,6 +7,7 @@ if (! defined('ABSPATH')) {
 }
 
 use ShortPixel\Controller\ApiKeyController;
+use ShortPixel\Helper\UtilHelper;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Model\FrontImage as FrontImage;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
@@ -341,34 +342,83 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		$original_content = $content;
 		$content = $this->checkContent($content);
 
+		$background_inline_found = false; 
+		
 		$args = [];
-		$image_matches = $this->fetchImageMatches($content, $args);
-		$replaceBlocks = $this->extractImageMatches($image_matches);
 
-		//	$document_matches = $this->fetchDocumentMatches($content, $args);
-		//	$urls = array_merge($url, $this->extraDocumentMatches($document_matches));
+		// *** DO INLINE BACKGROUND FIRST *** 
+		$replaceBlocks = $this->fetchInlineBackground($content, $args);
 
 		$replaceBlocks = $this->filterEmptyURLS($replaceBlocks);
 		$replaceBlocks = $this->filterRegexExclusions($replaceBlocks);
 		$replaceBlocks = $this->filterOtherDomains($replaceBlocks);
 
+		if (count($replaceBlocks) > 0) {
+			$replaceBlocks = $this->createReplacements($replaceBlocks);
+			$replaceBlocks = $this->filterDoubles($replaceBlocks);
+			$content = $this->pregReplaceContent($content, $replaceBlocks);
+			$background_inline_found = true; 
+		}
+	
+		// ** DO IMAGE MATCHES **/
+		$image_matches = $this->fetchImageMatches($content, $args);
+		$replaceBlocks = $this->extractImageMatches($image_matches);
+
+		$replaceBlocks = $this->filterEmptyURLS($replaceBlocks);
+		$replaceBlocks = $this->filterRegexExclusions($replaceBlocks);
+		$replaceBlocks = $this->filterOtherDomains($replaceBlocks);
+
+
 		// If the items didn't survive the filters.
 		if (count($replaceBlocks) == 0) {
-			return $original_content;
+			if (true === $background_inline_found)
+			{
+				 return $content; 
+			}
+			else
+			{
+				return $original_content;
+			}
+			
 		}
 
 		$replaceBlocks = $this->createReplacements($replaceBlocks);
 
+		// FilterDoubles should prob. be off if we are doing a own htmlReplace only. 
+	//	$replaceBlocks = $this->filterDoubles($replaceBlocks);
+
 		//  $replace_function = ($this->replace_method == 'preg') ? 'pregReplaceContent' : 'stringReplaceContent';
-		$replace_function = 'stringReplaceContent'; // undercooked, will defer to next version
 
-		$urls = array_column($replaceBlocks, 'raw_url');
-		$replace_urls = array_column($replaceBlocks, 'replace_url');
+		$replace_function = 'pregReplaceByString'; // undercooked, will defer to next version
+		$imageIndexes = array_column($replaceBlocks, 'imageId');
 
-		$content = $this->$replace_function($original_content, $urls, $replace_urls);
+		array_multisort($imageIndexes, SORT_ASC, $replaceBlocks); 
+
+		$sortedBlocks = []; 
+		foreach($replaceBlocks as $replaceBlock)
+		{
+			 $sortedBlocks[$replaceBlock->imageId][] = $replaceBlock; 
+		}
+
+		foreach($sortedBlocks as $sortedBlock)
+		{
+			$urls = array_column($sortedBlock, 'raw_url');
+			$replace_urls = array_column($sortedBlock, 'replace_url'); 
+			$original_block_content = $sortedBlock[0]->htmlMatch;
+
+			$replaced_block_content = $this->$replace_function($original_block_content, $urls, $replace_urls);
+			
+			$content = str_replace($original_block_content, $replaced_block_content, $content, $count); 
+			Log::addTemp('Replacement count: ' . $count);
+		}
+		
+		//$content = $this->$replace_function($original_content, $urls, $replace_urls);
+		$content = $this->$replace_function($content, $urls, $replace_urls);
 
 		return $content;
 	}
+
+
 
 	protected function loadCDNDomain($CDNDomain = false)
 	{
@@ -421,14 +471,32 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			return $resultDomain;
 		}
 
-		 //return $this->cdn_domain;
 	}
 
 	protected function fetchImageMatches($content, $args = [])
 	{
-		$number = preg_match_all('/<img[^>]*>/i', $content, $matches);
+		$number = preg_match_all('/<img[^>]*>|<source srcset="[^>]*">/i', $content, $matches);
 		$matches = $matches[0];
 		return $matches;
+	}
+
+	protected function fetchInlineBackground($content, $args = [])
+	{
+		$number = preg_match_all('/url(\(((?:[^()]+|(?1))+)\))/m', $content, $matches); 
+		$matches = $matches[2]; 
+		
+		//$matches = str_replace('\'', '', $matches);
+	//	Log::addTemp('Inline Matches', $matches);
+
+		$replaceBlocks = []; 
+		foreach($matches as $url)
+		{
+			$block = $this->getReplaceBlock($url);
+			$block->args = $this->createArguments();
+			$replaceBlocks[] = $block; 
+		}
+
+		return $replaceBlocks;
 	}
 
 	protected function fetchDocumentMatches($content, $args = [])
@@ -441,12 +509,16 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 	{
 
 		$imageData = $blockData = [];
-		foreach ($matches as $match) {
+		
+		foreach ($matches as $index => $match) {
+
 			$imageObj = new FrontImage($match);
 			$src = $imageObj->src;
 
 			if (! is_null($src)) {
 				$imageBlock = $this->getReplaceBlock($src);
+				$imageBlock->htmlMatch = $match; 
+				$imageBlock->imageId = 'image' . $index; 
 				$imageBlock->args = $this->createArguments();
 				$blockData[] = $imageBlock;
 				$imageData[] = $imageBlock->url;
@@ -457,8 +529,10 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 			foreach ($images as $image) {
 				$imageBlock = $this->getReplaceBlock($image);
+				$imageBlock->htmlMatch = $match;
+				$imageBlock->imageId = 'image' . $index; 
 				$imageBlock->args = $this->createArguments();
-				if (! in_array($image, $imageData)) {
+				if ($src !== $imageBlock->url) {
 					$blockData[] = $imageBlock;
 					$imageData[] = $imageBlock->url;
 				}
@@ -532,7 +606,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 	private function checkScheme($replaceBlock)
 	{
-		//$this->setCDNArgument('scheme', null);
 		if (isset($replaceBlock->parsed['scheme']) && 'http' == $replaceBlock->parsed['scheme']) {
 			$replaceBlock->args['scheme'] = 'p_h'; 
 		}
@@ -543,36 +616,69 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		}
 	}
 
+	/** Simple string replace using the replacer ( current unused ) 
+	 * 
+	 * @param mixed $content 
+	 * @param array $urls 
+	 * @param array $new_urls 
+	 * @return mixed 
+	 */
 	protected function stringReplaceContent($content, $urls, $new_urls)
 	{
-
-		//	$count = 0;
-		//	$content = str_replace($urls, $new_urls, $content, $count);
-
 		$replacer = new Replacer();
 		$content = $replacer->replaceContent($content, $urls, $new_urls);
-
 
 		return $content;
 	}
 
-	protected function pregReplaceContent($content, $urls, $new_urls)
+	/** Do a regex replace on the found strings. Try to prevent it picking up relative paths / doubling the CDN path. 
+	 * 
+	 * @param mixed $content 
+	 * @param array $urls 
+	 * @param array $new_urls 
+	 * @return string|string[]|null 
+	 */
+	protected function pregReplaceByString($content, $urls, $new_urls)
 	{
-		$count = 0;
-		$patterns = [];
 
-		// Create pattern for each URL to search.
-		foreach ($urls as $index => $url) {
-			//$replacement = $new_urls[$index];
-			$patterns[] = '/("|\'| )(' . preg_quote($url, '/') . ')("|\'| )/mi';
-		}
+		/* 
+		Pattern:  Negative lookback to / a-z and 0-9 ( URL components / not image closers ) - URL Match - Negative lookforward (same pattern)
 
-		foreach ($new_urls as $index => $url) {
-			$new_urls[$index] = '$1' . $url . '$1';
-		}
+		*/
+		$patterns = array_map(function ($url) {
+			return '/(?<!(\/|[a-z]|[0-9]))' . preg_quote($url, '/') . '(?!(\/|[a-z]|[0-9]))/mi'; 
+		}, $urls);
 
-		$content = preg_replace($patterns, $new_urls, $content, -1, $count);
+		Log::addTemp('Patterns', $patterns);
+		$content = preg_replace($patterns, $new_urls, $content);
+
 		return $content;
+	}
+
+	/** Preg replace the background URL on content.
+	 * 
+	 * @param mixed $content 
+	 * @param array $replaceBlocks 
+	 * @return string|string[]|null 
+	 */
+	protected function pregReplaceContent($content, $replaceBlocks)
+	{
+
+		$pattern = '/url(\(%%replace%%\))/m';
+		$raw_urls = $replace_urls = $patterns = []; 
+
+		foreach($replaceBlocks as $replaceBlock)
+		{
+			 $raw_url = $replaceBlock->raw_url; 
+			 // Rebuild the matches url: pattern ( easier than $1 getting it back )
+			 $replace_urls[] = 'url(\'' . $replaceBlock->replace_url . '\')'; 
+			 $patterns[] = str_replace('%%replace%%', "" . preg_quote($raw_url, '/') . "", $pattern); 
+
+		}
+
+		$content =preg_replace($patterns, $replace_urls, $content);
+		return $content;
+
 	}
 
 
@@ -602,12 +708,14 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			return false; 
 		}
 
-		try {
+		$bool = UtilHelper::validateJSON($json); 
+
+		/*try {
 			json_decode($json, false, $depth, $flags | JSON_THROW_ON_ERROR);
 			return true;
 		} catch (\JsonException $e) {
 			return false;
-		}
+		} */
 	}
 
 	protected function listenFlush()
@@ -659,7 +767,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		$full_cdn_url = $this->getURLBase($replaceBlocks->replace_url);
 
 		$flush_url = $domain . $full_cdn_url; 
-		Log::addDebug('Flush URL : ' . $flush_url);
+		//Log::addDebug('Flush URL : ' . $flush_url);
 
 		$getArgs = [
 			'timeout'=> 8,

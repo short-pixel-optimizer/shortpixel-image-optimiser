@@ -17,6 +17,7 @@ class EnvironmentModel extends \ShortPixel\Model
     public $is_nginx;
     public $is_apache;
     public $is_gd_installed;
+    public $is_imagick_installed;
     public $is_curl_installed;
     private $disabled_functions = array();
 
@@ -211,6 +212,8 @@ class EnvironmentModel extends \ShortPixel\Model
     $this->is_nginx = ! empty($_SERVER["SERVER_SOFTWARE"]) && strpos(strtolower(wp_unslash($_SERVER["SERVER_SOFTWARE"])), 'nginx') !== false ? true : false;
     $this->is_apache = ! empty($_SERVER["SERVER_SOFTWARE"]) && strpos(strtolower(wp_unslash($_SERVER["SERVER_SOFTWARE"])), 'apache') !== false ? true : false;
     $this->is_gd_installed = function_exists('imagecreatefrompng') && function_exists('imagejpeg');
+    $this->is_imagick_installed = (extension_loaded('imagick')) ? true : false; 
+
     $this->is_curl_installed = function_exists('curl_init');
 
     $this->memoryLimit = $this->unitToInt(ini_get('memory_limit'));

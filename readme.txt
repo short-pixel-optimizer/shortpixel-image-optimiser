@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 4.8.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 6.2.0
+Stable tag: 6.2.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -32,9 +32,9 @@ Make an instant <a href="https://shortpixel.com/image-compression-test" target="
 
 * Compress WebP images – ShortPixel now also <a href="https://shortpixel.com/blog/introducing-smartcompress/" target="_blank">smartly compresses</a> all your existing WebP images.
 * Image captioning – Using our AI model, you can automatically add "alternative text" to your images (BETA).
-* Added support for serving CSS and JS from our global CDN.
+* Added support for serving CSS, JS and fonts from our global CDN.
 * Save & Restore option for all settings – ideal for agencies and users managing multiple websites.
-* Decide whether AI bots can use your images for machine learning (ML) training, or < href="https://shortpixel.com/blog/prevent-ai-data-mining-on-images/" target="_blank">block them entirely</a>.
+* Decide whether AI bots can use your images for machine learning (ML) training, or <a href="https://shortpixel.com/blog/prevent-ai-data-mining-on-images/" target="_blank">block them entirely</a>.
 
 ### 🌍 Faster Websites for Global Audiences ###
 
@@ -463,34 +463,76 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 
 == Changelog ==
 
+= 6.2.1 =
+
+🚀 The CDN & AI Control Update
+
+Release Date: May 27, 2025
+
+⚙️ Improvements
+
+* AI Feature Control: Added a filter to easily disable AI-powered features if needed.
+
+CDN Delivery Enhancements:
+* Now supports background images inside inline style blocks.
+* Delivers inline SVGs through the CDN for consistent asset performance.
+* Fallback for Missing WebP/AVIF: If WebP or AVIF images aren't generated locally, they’ll now be created on-the-fly and served directly from the CDN.
+* Broken Image Protection: Added checks to ensure the CDN doesn't store or deliver broken images.
+
+* Improved Timestamp Handling: Timestamps are now added whenever images are sent for optimization, helping prevent unwanted caching.
+* PNG Conversion via ImageMagick: Added fallback support for PNG conversion using ImageMagick when the GD extension isn’t available.
+* Punctuation Tweak for AI Texts: AI-generated alternative texts now end with a trailing dot for readability (can be disabled via filter).
+
+🛠️ Fixes
+
+CDN Delivery:
+* Fixed multiple edge cases where image URLs with single/double quotes were not parsed correctly.
+* Corrected issues with relative paths not resolving to the proper CDN URL.
+* Resolved an issue where CDN links were accidentally duplicated in specific situations.
+
+* Settings Import: Fixed import functionality for older PHP versions.
+* WebP/AVIF Count Fix: Image counts in bulk processing now display correctly again.
+* S3 Uploads Compatibility: Fixed an error triggered by a missing method when using the S3 Uploads plugin (thanks @matthewgrzegorczyk! 🙌).
+* WP-CLI Message Bug: Corrected a misleading WP-CLI message shown when thumbnails were unwritable but main images were optimized.
+* Custom Media Folder Fix: Resolved errors in the folders list when performing specific actions.
+
+🌍 Language Updates
+
+* Added 2 new strings and updated 2, to enhance global translation support.
+
+Update now to take full advantage of smarter CDN handling, more control over AI features, and improved compatibility across the board! 🚀
+
+
 = 6.2.0 =
 
 🚀 The Power Tools Update
 
+Release Date: May 8, 2025
+
 🌟 New Features
 
-- Smart WebP Compression: ShortPixel now compresses your existing WebP images to save even more space without sacrificing quality.
-- AI-Powered Image Captioning (BETA): Automatically generate meaningful “*alternative text(ALT)”* for your images using our AI model—great for SEO and accessibility!
-- Global CDN for CSS & JS: Your CSS, JS, and even background images can now be served via ShortPixel's global CDN for faster page loads.
-- CDN Cache Purge Controls: New buttons to purge cached CSS, JS, or the entire CDN cache with one click—right from your dashboard.
-- Save & Restore Settings: Export and import all settings effortlessly — ideal for agencies managing multiple sites.
+* Smart WebP Compression: ShortPixel now compresses your existing WebP images to save even more space without sacrificing quality.
+* AI-Powered Image Captioning (BETA): Automatically generate meaningful “*alternative text(ALT)”* for your images using our AI model—great for SEO and accessibility!
+* Global CDN for CSS & JS: Your CSS, JS, and even background images can now be served via ShortPixel's global CDN for faster page loads.
+* CDN Cache Purge Controls: New buttons to purge cached CSS, JS, or the entire CDN cache with one click—right from your dashboard.
+* Save & Restore Settings: Export and import all settings effortlessly — ideal for agencies managing multiple sites.
 
 ⚙️ Improvements
 
-- Cross-Tab Sync: Optimizations done in multiple browser tabs now stay in sync using browser broadcasting.
-- Automatic Association to ShortPixel Account: Your site domain is now automatically associated to your ShortPixel account when enabling CDN delivery.
-- CDN Domain Validation: Prevent misconfigurations with smart validation of your CDN domain format.
-- Cleaner Admin Bar: The ShortPixel icon is now hidden when restoring items to keep your admin interface tidy.
-- CDN Bypass Option: Append `?PageSpeed=off` to disable CDN replacement for debugging or testing.
-- WebP Limit Handling: Files that exceed WebP conversion limits are now properly managed to avoid errors.
+* Cross-Tab Sync: Optimizations done in multiple browser tabs now stay in sync using browser broadcasting.
+* Automatic Association to ShortPixel Account: Your site domain is now automatically associated to your ShortPixel account when enabling CDN delivery.
+* CDN Domain Validation: Prevent misconfigurations with smart validation of your CDN domain format.
+* Cleaner Admin Bar: The ShortPixel icon is now hidden when restoring items to keep your admin interface tidy.
+* CDN Bypass Option: Append `?PageSpeed=off` to disable CDN replacement for debugging or testing.
+* WebP Limit Handling: Files that exceed WebP conversion limits are now properly managed to avoid errors.
 
 🛠️ Fixes
 
-- Lossless Labeling Bug: Fixed an issue where images were incorrectly marked as "Lossless" if the main image wasn't optimized.
-- Sticky Notification: Resolved an issue where the API key notification couldn't be dismissed after saving it from settings.
-- Folder Creation Fix: The plugin no longer attempts to create month-based folders—it now leaves that job to WordPress.
-- File Format Conversions: Improved support for HEIC, TIFF, and BMP file conversion.
-- API Key Onboarding Fix: Pressing *Enter* now correctly saves your API key during onboarding.
+* Lossless Labeling Bug: Fixed an issue where images were incorrectly marked as "Lossless" if the main image wasn't optimized.
+* Sticky Notification: Resolved an issue where the API key notification couldn't be dismissed after saving it from settings.
+* Folder Creation Fix: The plugin no longer attempts to create month-based folders—it now leaves that job to WordPress.
+* File Format Conversions: Improved support for HEIC, TIFF, and BMP file conversion.
+* API Key Onboarding Fix: Pressing *Enter* now correctly saves your API key during onboarding.
 
 🌍 Language Updates
 

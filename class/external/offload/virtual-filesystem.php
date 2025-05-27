@@ -29,7 +29,7 @@ class VirtualFileSystem
 		public function checkIfOffloaded($bool, $url, $rawpath)
 		{
 				// Slow as it is, check nothing.
-			 if ($offloadName = 's3-uploads-human')
+			 if ($this->offloadName = 's3-uploads-human')
 			 {
 				 return FileModel::$VIRTUAL_STATELESS;
 			 }
@@ -50,6 +50,16 @@ class VirtualFileSystem
 		public function extraFeatures()
 		{
 			 return false;
+		}
+
+		/** Check if offload is active. 
+		 * 
+		 * Virtual offloader when invokes as class is always active, since filters are set without any predictors if all other settings are correct.
+		 * @return true 
+		 */
+		public function isActive()
+		{
+			 return true; 
 		}
 
 
