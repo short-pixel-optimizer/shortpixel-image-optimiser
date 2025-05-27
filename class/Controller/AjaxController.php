@@ -1013,6 +1013,7 @@ class AjaxController
 		$json->folder->fileCount = $folderObj->get('fileCount');
 		$json->folder->action = 'refresh';
 		$json->folder->updated = UiHelper::formatTS($folderObj->get('updated'));
+		$json->folder->id = $folder_id;
 
 		return $json;
 	}
