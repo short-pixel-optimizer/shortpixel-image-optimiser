@@ -138,7 +138,7 @@ class OptimizeAiController extends OptimizerBase
       $queue = $this->currentQueue;
 
       $qItem->addResult(['apiName' => $this->apiName]);
-      $apiStatus = $qItem->result()->apiStatus; 
+      $apiStatus = $qItem->result()->apiStatus;
 
       if ($qItem->result()->is_error)  {
        
@@ -150,16 +150,17 @@ class OptimizeAiController extends OptimizerBase
         }
         else // Do nothing for now / retry (?)
         {
-            // timeout 
+            // timeout
             /*if ($apiStatus === RequestManager::STATUS_CONNECTION_ERROR)
             {
-             
+
             } */
         }
 
         return; 
       }
       
+
 
       // Result for requestAlt 
 
@@ -221,7 +222,7 @@ class OptimizeAiController extends OptimizerBase
             }
 
           $qItem->addResult([
-            'retrievedText' => $text, 
+            'retrievedText' => $text,
             'apiStatus' => RequestManager::STATUS_SUCCESS,
             'fileStatus' => ImageModel::FILE_STATUS_SUCCESS
           ]);
@@ -273,21 +274,21 @@ class OptimizeAiController extends OptimizerBase
   }
 
   /**
-   * Process the resulting AI text 
+   * Process the resulting AI text
    *
    * @param string $text  The result text string from AI
-   * @return string 
+   * @return string
    */
   protected function processTextResult($text)
   {
-        $text = trim($text); 
+        $text = trim($text);
         // Add period to the end of the string.
         if (substr($text, -1) !== '.' && true === apply_filters('shortpixel/ai/check_period', true))
         {
-            $text .= '.';     
+            $text .= '.';
         }
 
-        return $text; 
+        return $text;
   }
 
   protected function parseQuestionForQItem(QueueItem $qItem)
