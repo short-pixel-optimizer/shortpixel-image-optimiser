@@ -312,9 +312,6 @@ class EnvironmentModel extends \ShortPixel\Model
       
     }
     
-    
-    
-
     $this->screen_is_set = true;
   }
 

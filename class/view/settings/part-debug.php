@@ -50,6 +50,7 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
     </div>
 		<div class='flex'>
 			<span>GD Installed</span><span><?php var_export($env->is_gd_installed); ?></span>
+      <span>Imagick Installed</span><span><?php var_export($env->is_imagick_installed); ?></span>
 			<span>Curl Installed</span><span><?php var_export($env->is_curl_installed); ?></span>
 		</div>
 
@@ -106,7 +107,8 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
     </select>
       New Value <input name="new_value" value="">
 
-    <button class='button' type='submit'>Update</button>
+    <button class='button' type='submit' name="Submit" value="update">Update</button>
+    <button class='button' type='submit' name="Submit" value="remove">Remove</button>
 </form>
   </div>
 

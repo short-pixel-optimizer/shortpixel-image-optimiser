@@ -96,7 +96,7 @@ class QueueItemData
         {
             if (is_array($this->next_actions))
             {
-                $actions = array_merge($this->action, $this->next_actions);
+                $actions = array_merge([$this->action], $this->next_actions);
             }
             else
             {
@@ -121,6 +121,7 @@ class QueueItemData
             */
         public function addNextAction($action)
         {   
+            // @todo This should also incorporate keep_args -per next action-
             if (false === is_null($this->next_actions))
             {
                 $this->next_actions = array_merge($this->next_actions, [$action]);
@@ -156,13 +157,12 @@ class QueueItemData
 
         public function getKeepDataArgs()
         {
+            $args = []; 
+
             if (! is_array($this->next_keepdata) || count($this->next_keepdata) === 0)
             {
-                return []; 
-
-            }
-
-            $args = []; 
+                return $args; 
+            } 
 
             foreach($this->next_keepdata as $name => $value)
             {

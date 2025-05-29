@@ -28,6 +28,10 @@ use ShortPixel\Helper\UiHelper as UiHelper;
 class QueueController
 {
 
+  const IN_QUEUE_ACTION_ADDED = 1; 
+  const IN_QUEUE_SKIPPED = 2; 
+
+
   protected static $lastId; // Last item_id received / send. For catching errors.
   protected $lastQStatus; // last status for reporting purposes.
 
@@ -57,10 +61,17 @@ class QueueController
         'action' => 'optimize', 
         'compressionType' => null, 
         'smartcrop' => false, 
+        'next_actions' => [], 
       );
       $args = wp_parse_args($args, $defaults);
 
       $qItem = QueueItems::getImageItem($imageModel);
+
+      /* QueueItem is basically reset each action to prevent interference between tasks. next_actions should be kept persistent until all tasks done */
+      if (count($args['next_actions']) > 0)
+      {
+         $qItem->data()->next_actions = $args['next_actions'];
+      }
 
       $queue = $this->getQueue($imageModel->get('type'));
 
@@ -83,23 +94,37 @@ class QueueController
         return $qItem->result(); 
 
       }
-
-      if ($this->isItemInQueue($imageModel, $args['action']))
+      
+      $in_queue = $this->isItemInQueue($imageModel, $args['action']);
+      if (is_numeric($in_queue) && $in_queue !== false)
       {
+
+      //  Log::addTemp('Is in queue, result: ', $qItem->result());
+
+        if (self::IN_QUEUE_ACTION_ADDED == $in_queue)
+        {
+          $qItem->addResult([
+            'fileStatus' => ImageModel::FILE_STATUS_UNPROCESSED,
+            'is_error' => false,
+            'is_done' => false,
+            'message' =>__('Action has been added to queue and will be processed after current actions', 'shortpixel-image-optimiser'),
+          ]);
+        }
+
+        if (self::IN_QUEUE_SKIPPED == $in_queue)
+        {
+          $qItem->addResult([
+            'fileStatus' => ImageModel::FILE_STATUS_UNPROCESSED,
+            'is_error' => false,
+            'is_done' => true,
+            'message' =>__('This item is already awaiting processing in queue', 'shortpixel-image-optimiser'),
+          ]); 
+        }
 
         return $qItem->result();
 
       }
 
-
-// @todo Later: check if all provisions of OptimizeController are implemented.
-      $qItem = QueueItems::getImageItem($imageModel);
-/*
-      foreach($args as $name => $value)
-      {
-         $qItem->setData($name, $value);
-      }
-*/
       $optimizer = $qItem->getApiController($args['action']);
 
       if (is_null($optimizer))
@@ -165,9 +190,6 @@ class QueueController
    */
   public function isItemInQueue(ImageModel $mediaItem, $action = null)
   {
-      if (! is_null($mediaItem->is_in_queue))
-        return $mediaItem->is_in_queue;
-
       $type = $mediaItem->get('type');
 
       $q = $this->getQueue($type);
@@ -175,6 +197,7 @@ class QueueController
 
       if (true === $bool)
       { 
+        // @todo This queueItem should maybe not to stuffed with 'addresult'm since it's a different object. 
           $queueItem = $q->getItem($mediaItem->get('id'));
           if (is_object($queueItem))
           {
@@ -182,27 +205,17 @@ class QueueController
               // @todo If item can be appended, probably add function in queueItem to add next_action and update to database (this q )?
               if (false === is_null($action) && false === $queueItem->data()->hasAction($action))
               {
-                  $bool = false; 
-                  $queueItem->addNextAction($action);
+                  // @todo This probably move up to addItemToQueue, also needs to add additional args
+                  $queueItem->data()->addNextAction($action);
+                  $q->updateItem($queueItem);
 
-                  $q->updateItemValue($queueItem->returnEnqueue());
-
-                  $queueItem->addResult([
-                    'fileStatus' => ImageModel::FILE_STATUS_UNPROCESSED,
-                    'is_error' => false,
-                    'is_done' => false,
-                    'message' =>__('Action has been added to queue and will be processed after current actions', 'shortpixel-image-optimiser'),
-                  ]);
+                  $bool = self::IN_QUEUE_ACTION_ADDED;
 
               }
               else
               {
-                    $queueItem->addResult([
-                    'fileStatus' => ImageModel::FILE_STATUS_UNPROCESSED,
-                    'is_error' => false,
-                    'is_done' => true,
-                    'message' =>__('This item is already awaiting processing in queue', 'shortpixel-image-optimiser'),
-                ]); 
+                  $bool = self::IN_QUEUE_SKIPPED; 
+
               }
           }
 
@@ -210,7 +223,7 @@ class QueueController
       }
       
       // Preventing double queries here
-      $mediaItem->is_in_queue = $bool;
+
       return $bool;
   }
 
@@ -325,6 +338,7 @@ class QueueController
     $qtype = $Q->getType();
     $qtype = strtolower($qtype);
 
+    Log::addTemp('RunTick Items - ', $items);
     /* Only runs if result is array, dequeued items.
        Item is a MediaItem subset of QueueItem
     */
@@ -333,6 +347,8 @@ class QueueController
           // Note, all these functions change content of QueueItem
           $action = $qItem->data()->action;
           $apiController = $qItem->getAPIController($action);
+
+          Log::addTemp('Api Controller', $apiController);
 
           if (is_null($apiController))
           {

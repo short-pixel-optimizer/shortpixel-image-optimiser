@@ -46,12 +46,13 @@ abstract class OptimizerBase
     {
       //exit('This call is wron because in it messes with ActionController - Reoptimize ( calls ActionController again instead of OptimizeConrtoller');
       $calledClass = get_called_class(); 
-
+//Log::addTemp('OptimizerBase Called Class - ' . $calledClass); 
       if (! isset(static::$instances[$calledClass]))
       {
          static::$instances[$calledClass] = new $calledClass(); 
       }
 
+ //  Log::addTemp('OptimizeBase, Instances', self::$instances);
         return self::$instances[$calledClass];
     }
 
@@ -146,15 +147,18 @@ abstract class OptimizerBase
      * @param QueueItem $qItem 
      * @return Object Result Object
      */
-    protected function finishItemProcess(QueueItem $qItem)
+    protected function finishItemProcess(QueueItem $qItem, $args = [])
     {
         $queue = $this->getCurrentQueue($qItem); 
         $fs = \wpSPIO()->filesystem();
+        $queue->itemDone($qItem); 
+
+         Log::addTemp('FinishItemProcess: ', $qItem->data());
         // Can happen with actions outside queue / direct action 
-        if ($qItem->getQueueItem() !== false)
+       /* if ($qItem->getQueueItem() !== false)
         {
-          $queue->itemDone($qItem); 
-        }
+          return; 
+        } */
         if (true === $qItem->data()->hasNextAction())
         {
             $action = $qItem->data()->popNextAction(); 
@@ -162,12 +166,14 @@ abstract class OptimizerBase
             $item_type = $qItem->imageModel->get('type');
             $imageModel = $fs->getImage($item_id, $item_type, false);
 
-            $args = [
-              'action' => $action, 
-            ];
-
+            $args['action'] = $action; 
             
             $keepArgs = $qItem->data()->getKeepDataArgs();
+            if (true === $qItem->data()->hasNextAction())
+            {
+               Log::addTemp('Finishing, next actions: ', $qItem->data()->next_actions);
+                $args['next_actions'] = $qItem->data()->next_actions; 
+            }
             $args = array_merge($args, $keepArgs);
 
             Log::addInfo("New Action $action with args", $args);

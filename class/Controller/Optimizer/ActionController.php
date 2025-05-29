@@ -166,7 +166,11 @@ class ActionController extends OptimizerBase
    // $imageObj->setMeta('compressionType', $qItem->compressionType);
 
     $qItem->block(false);
-    $queue->itemDone($qItem);
+
+    //$queue->itemDone($qItem);
+    $this->finishItemProcess(($qItem));
+
+    return $bool;  // In future below queuing should work via finishItemProcess @todo
 
     // Get the item data to pass on settings like compressionType.
    // $args = get_object_vars($qItem->data());

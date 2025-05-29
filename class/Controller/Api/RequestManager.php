@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 abstract class RequestManager
 {
 
-  protected static $instance;
+  protected static $instances;
   protected $apiEndPoint;
 
   /**
@@ -49,10 +49,13 @@ abstract class RequestManager
 
 	public static function getInstance()
 	{
-		 if (is_null(self::$instance))
-			 self::$instance = new static();
-
-			return self::$instance;
+    $calledClass = get_called_class(); 
+          if (! isset(static::$instances[$calledClass]))
+          {
+             static::$instances[$calledClass] = new $calledClass(); 
+          }
+    
+     return self::$instances[$calledClass];
 	}
 
 

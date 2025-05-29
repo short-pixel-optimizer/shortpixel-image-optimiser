@@ -293,7 +293,7 @@ class QueueItem
    {
        $this->result = new \stdClass; // new action, new results 
 
-       if ($this->data->hasNextAction()) // Keep this at all times / not optimal still
+       if ($this->data()->hasNextAction()) // Keep this at all times / not optimal still
        {
           $nextActions = $this->data()->next_actions; 
        } 
@@ -463,6 +463,15 @@ class QueueItem
       $this->item_count = 1;
 
       $this->data->action = 'requestAlt'; // For Queue
+      if ($this->data()->hasNextAction())
+      {
+          $next_actions = array_merge(['retrieveAlt'], $this->data()->next_actions);
+      }
+      else
+      {
+         $next_actions = ['retrieveAlt'];
+      }
+      $this->data->next_actions = $next_actions;
    }
 
    public function retrieveAltAction($remote_id)

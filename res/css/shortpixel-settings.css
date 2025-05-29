@@ -86,78 +86,6 @@ div.spio-modal-title {
 
 .wrap.is-shortpixel-settings-page {
   /* TABS CONTROLS */
-  /*
-  	.sp-column-actions-template + .sp-column-info {
-  	    display: none;
-  	}
-  */
-  /*
-    .top-menu
-    {
-        font-size: 18px;
-  	  display: flex;
-  	  width: 100%;
-  	  min-height: 50px;
-  	  align-items: center;
-  	  margin: 15px 0;
-  	  position: relative;
-  	  @include breakpoint(0, 1200px)
-  	  {
-  		  margin-bottom: 50px;
-  	  }
-
-  		.links
-  		{
-  	    	a { font-size: 18px; margin-right: 8px; white-space: nowrap; line-height: 26px;}
-  			padding-right: 195px;
-  			flex: 12 4 auto;
-  		}
-  		.quota-remaining
-  		{
-  			font-size: 13px;
-  		}
-  	    .spio-status-box {
-  			text-align: center;
-  			position: absolute;
-  			top: -49px;
-  			right: 0;
-  			padding: 5px 10px;
-  			background: white;
-  			box-shadow: 0 3px 3px rgba(0,0,0,0.1);
-  			z-index: 1;
-  		}
-  		.pie-wrapper
-  		{
-  			flex: 4 2 auto;
-  			min-width: 100px;
-  			display: inline-block;
-  		}
-  		div.sp-bulk-summary {
-
-  				z-index: 10;
-
-
-  				span {
-  					margin: 0;
-  					font-size: 12px;
-  					padding: 4px 8px;
-  					font-weight: 700;
-  					border-radius: 3px;
-  					white-space: nowrap;
-  					color: $color-darkest;
-  				}
-  				@include breakpoint(0,1500px)
-  				{
-
-  					.opt-circle-average {
-  							width: 100px;
-  							height: 100px;
-  					}
-  				}
-  		} // optimized thing
-    } // top menu
-
-  */
   /* In-view notice ( not on top, between the options ) - styled after WP notice */
   /* Specific styles for advanced settings tab */
   /*
@@ -1618,6 +1546,10 @@ div.spio-modal-title {
   display: inline;
   float: none;
 }
+.wrap.is-shortpixel-settings-page textarea {
+  width: 400px;
+  height: 100px;
+}
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-thumbnail-setting content {
   column-count: 3;
   column-width: 220px;
@@ -2237,6 +2169,9 @@ div.spio-modal-title {
   font-size: 14px;
   display: inline-block;
 }
+.wrap.is-shortpixel-settings-page setting content.nextline {
+  display: block;
+}
 .wrap.is-shortpixel-settings-page setting content.shortpixel-compression {
   max-width: calc(100% - 260px);
 }
@@ -2244,6 +2179,15 @@ div.spio-modal-title {
   min-width: 100px;
   font-weight: 700;
   display: inline-block;
+}
+.wrap.is-shortpixel-settings-page setting content input[type=text], .wrap.is-shortpixel-settings-page setting content input[type=number] {
+  width: 290px;
+  height: 36px;
+  border: 1px solid #1ABDCA;
+  background: #fff;
+}
+.wrap.is-shortpixel-settings-page setting content input[type=text][type=number], .wrap.is-shortpixel-settings-page setting content input[type=number][type=number] {
+  width: 80px;
 }
 .wrap.is-shortpixel-settings-page setting info {
   display: block;
@@ -2287,6 +2231,14 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page setting switch label {
   font-weight: 700;
+}
+.wrap.is-shortpixel-settings-page setting.switch {
+  /*name,
+  info,
+  warning,
+  error {
+    //	 margin-left: 70px;
+  } */
 }
 .wrap.is-shortpixel-settings-page setting.disabled {
   filter: blur(1px);

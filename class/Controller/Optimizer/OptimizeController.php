@@ -310,12 +310,11 @@ class OptimizeController extends OptimizerBase
 
           // Fetch a new qItem, because of all the left-over-data . Left the old one alone for reporting
           $new_qItem = QueueItems::getImageItem($imageModel);
-          
-
-          
+                    
           $this->enQueueItem($new_qItem); // requeue for further processing.
         } elseif (RequestManager::STATUS_CONVERTED !== $qItem->result()->apiStatus) {
-          $q->itemDone($qItem); // Unbelievable but done.
+              $this->finishItemProcess($qItem);
+//          $q->itemDone($qItem); // Unbelievable but done.
         }
       }
     } else {

@@ -14,6 +14,7 @@ use ShortPixel\Controller\AdminController as AdminController;
 use ShortPixel\Controller\ImageEditorController as ImageEditorController;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 use ShortPixel\Controller\FileSystemController;
+use ShortPixel\Controller\Optimizer\OptimizeAiController;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 use ShortPixel\NextGenController as NextGenController;
 
@@ -189,7 +190,7 @@ class ShortPixelPlugin {
 
       			add_action( 'shortpixel-thumbnails-before-regenerate', array( $admin, 'preventImageHook' ), 10, 1 );
 
-						add_action( 'enable-media-replace-upload-done', array( $admin, 'handleReplaceEnqueue' ), 10, 3 );
+				add_action( 'enable-media-replace-upload-done', array( $admin, 'handleReplaceEnqueue' ), 10, 3 );
 
 				add_filter( 'wp_generate_attachment_metadata', array( $admin, 'handleImageUploadHook' ), 5, 2 );
 				add_action('add_attachment', array($admin, 'addAttachmentHook'));
@@ -310,6 +311,8 @@ class ShortPixelPlugin {
 		$queueController = new QueueController(['is_bulk' =>  $is_bulk_page ]);
 		$quotaController = QuotaController::getInstance();
 
+		$OptimizeAiController = OptimizeAiController::getInstance(); 
+
 	 wp_register_script('shortpixel-folderbrowser', plugins_url('/res/js/shortpixel-folderbrowser.js', SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
 	 wp_localize_script('shortpixel-folderbrowser', 'spio_folderbrowser', array(
@@ -419,7 +422,7 @@ class ShortPixelPlugin {
 		);
 
 	 $screen_localize_media = [ 
-			'hide_ai' => apply_filters('shortpixel/settings/no_ai', false),
+			'hide_ai' => ! $OptimizeAiController->isAiEnabled(),  // turn around negative setting
 	 ];
 
 		wp_localize_script('shortpixel-screen-media', 'spio_mediascreen_settings', $screen_localize_media); 

@@ -37,9 +37,7 @@ class OptimizeAiController extends OptimizerBase
           case '422' :  // Unprocessable Item 
               // No different message than API 
           break; 
-  
-
-      }
+        }
 
       $qItem->addResult(['qstatus' => Queue::RESULT_ERROR]);
       return;
@@ -64,15 +62,12 @@ class OptimizeAiController extends OptimizerBase
         $this->api->processMediaItem($qItem, $qItem->imageModel);
     }
  
-
   }
 
-    
+// @todo Probably here should check if Alt item is already generated . 
   public function checkItem(QueueItem $qItem) { 
       return true;
-
   }
-
 
   public function enqueueItem(QueueItem $qItem, $args = [])
   {
@@ -80,23 +75,32 @@ class OptimizeAiController extends OptimizerBase
     $action = $args['action']; // $qItem->data()->action; 
 
     $queue = $this->getCurrentQueue($qItem);
-    $directAction = true; 
+   // $directAction = ; 
 
     switch($action)
     {
         case 'requestAlt': 
-            $qItem->requestAltAction();
-
-
-            
+           $qItem->requestAltAction();
+        //   $this->parseQuestionForQItem($qItem); 
+           $directAction = false; 
         break;
-        case 'retrieveAlt': 
+        case 'retrieveAlt':  // This might be deprecated, since retrieve will be called via next_action. 
+            //$qItem->data()->remote_id =  
             $qItem->retrieveAltAction($args['remote_id']);
             $directAction = false; 
         break; 
+        default: 
+            Log::addError('no Ai controller action found!');
+            $qItem->addResult([
+                'message' => 'Wrong action in AiController!', 
+                'is_error' => true, 
+                'is_done' => true, 
+            ]);
+            return $qItem->result();
+        break; 
     }
 
-
+    // @todo This is probably out of use for good, already. 
     if (true === $directAction)
     {
        // The directActions give back booleans, but the whole function must return an queue result object with qstatus and numitems
@@ -167,6 +171,9 @@ class OptimizeAiController extends OptimizerBase
       elseif (property_exists($qItem->result(), 'remote_id'))
       {
           $remote_id = $qItem->result()->remote_id;
+          Log::addTemp('Remote ID fetched: ' . $remote_id);
+          
+          $this->finishItemProcess($qItem, ['remote_id' => $remote_id]);
       }
       else
       {
@@ -219,14 +226,50 @@ class OptimizeAiController extends OptimizerBase
             'fileStatus' => ImageModel::FILE_STATUS_SUCCESS
           ]);
 
-          $queue->itemDone($qItem);
+          //$queue->itemDone($qItem);
+          $this->finishItemProcess($qItem);
           return;
       }
 
-      $imageObj = $qItem->imageModel;
+    /*  $imageObj = $qItem->imageModel;
       $queueController = $this->getQueueController();
       $queueController->addItemToQueue($imageObj, ['action' => 'retrieveAlt', 'remote_id' => $remote_id]);
+    */
+  }
 
+  /**
+   * Check if setting AI is enabled in settings. 
+   *
+   * @return boolean
+   */
+  public function isAiEnabled()
+  {
+     $settings = \wpSPIO()->settings(); 
+
+     $bool = (true == $settings->enable_ai) ? true : false; // make sure boolean is hard type. 
+    
+     $no_ai = apply_filters('shortpixel/settings/no_ai', false);
+     if (true === $no_ai) // switch around negative filter
+     {
+         $bool = false; 
+     } 
+     
+     return $bool; 
+  }
+
+  public function isAutoAiEnabled()
+  {
+      $bool = $this->isAiEnabled(); 
+      if (false === $bool)
+      { 
+         return $bool; 
+      }
+
+      $settings = \wpSPIO()->settings(); 
+
+      $bool = (true == $settings->autoAI) ? true : false; 
+
+      return $bool; 
   }
 
   /**
@@ -246,6 +289,193 @@ class OptimizeAiController extends OptimizerBase
 
         return $text; 
   }
+
+  protected function parseQuestionForQItem(QueueItem $qItem)
+  {
+        $url = $qItem->data()->url; 
+        $item_id = $qItem->item_id;
+        $question = $this->parseQuestion($url, $item_id); 
+        $qItem->data()->url = $question;
+  }
+
+  public function parseQuestion($url, $item_id, $params = [])
+  {
+    $settings = \wpSPIO()->settings(); 
+
+    $defaults = [
+    'ai_general_context' => $settings->ai_general_context, 
+    'ai_use_post' => $settings->ai_use_post, 
+    'ai_gen_alt' => $settings->ai_gen_alt, 
+    'ai_gen_caption' => $settings->ai_gen_caption, 
+    'ai_gen_description' => $settings->ai_gen_description, 
+    'ai_filename_prefercurrent' => $settings->ai_filename_prefercurrent,
+    'ai_limit_alt_chars' => $settings->ai_limit_alt_chars, 
+    'ai_alt_context' => $settings->ai_alt_context, 
+    'ai_limit_description_chars' => $settings->ai_limit_description_chars, 
+    'ai_description_context' => $settings->ai_description_context, 
+    'ai_limit_caption_chars' => $settings->ai_limit_caption_chars, 
+    'ai_caption_context' => $settings->ai_caption_context, 
+    'ai_gen_filename' => $settings->ai_gen_filename, 
+    'ai_limit_filename_chars' => $settings->ai_limit_filename_chars, 
+    'ai_filename_context' => $settings->ai_filename_context, 
+    'ai_use_exif' => $settings->ai_use_exif, 
+    'ai_language' => $settings->ai_language,
+    ];
+
+    $params = wp_parse_args($params, $defaults);
+
+    $question = [
+            'main' => $params['ai_general_context'],
+            'language' => $params['ai_language'], 
+            'required_tags' => [],
+     ]; 
+
+     $question['page'] = $this->getPageQuestion($question, $item_id, $params);
+    
+     $question = $this->getPartQuestion($question, 'alt', $params);
+     $question = $this->getPartQuestion($question, 'caption', $params);
+     $question = $this->getPartQuestion($question, 'description', $params);
+     $question = $this->getPartQuestion($question, 'filename', $params);
+
+    if (true == $params['ai_use_exif'])
+    {
+         $question['exif'] = ' and take into account the image EXIF data when generating all the requested texts'; 
+    }
+
+   // $question['tags'] = implode($question['required_tags'], ',');
+
+    $question = apply_filters('shortpixel/ai/parsed_questions', $question);
+
+   /* $alt = isset($question['alt']) ? $question['alt'] : ''; 
+    $caption = isset($question['caption']) ? $question['caption'] : ''; 
+    $description =isset($question['description']) ? $question['description'] : ''; 
+    $filename = isset($question['filename']) ? $question['filename'] : ''; 
+*/
+    $specs = [];
+    foreach($question['required_tags'] as $tag)
+    {
+        $specs[] = $question[$tag]; 
+    }
+    $specs = implode(' ', $specs);
+
+    $required_tags =  implode(',', $question['required_tags_ainame']); 
+    
+    if (strlen(trim($params['ai_language'])) <= 0)
+    {   
+        $params['ai_language'] = get_locale();
+    }
+
+    $final_question = sprintf("For the URL %s , with this context \" %s \" , write for %s SEO friendly texts with the following specifications: %s in %s language %s . Provide the answer in JSON format, seperating the %s output in seperate fields",
+        $url, 
+        $question['main'], 
+        $required_tags,
+        $specs, 
+        $question['language'], 
+        $question['exif'], 
+        $required_tags
+
+
+    ); 
+
+    return $final_question;
+
+  }
+  
+  protected function getPartQuestion($question, $name, $params)
+  {
+    
+    $limit = 'ai_limit_' . $name . '_chars';
+    $context = 'ai_' . $name . '_context'; 
+    $to_use = 'ai_gen_' . $name;  
+
+    switch($name)
+    {
+         case 'alt': 
+            $aiName = 'alt tag'; 
+         break; 
+         case 'caption': 
+            $aiName = 'caption tag'; 
+         break;
+         case 'description': 
+            $aiName = 'description text'; 
+         break; 
+         case 'filename': 
+            $aiName = 'the file name'; 
+         break; 
+    }
+
+    if (true === $params[$to_use])
+    {
+        $limit = $params[$limit]; 
+        $context = $params[$context]; 
+
+        $string = ' For the ' . $aiName . ' limit your response to the most relevant ' . $limit . ' characters for SEO ';
+
+        if ('filename' == $name)
+        {
+            $string .= ' leaving the filename extension intact '; 
+            if (true === $params['ai_filename_prefercurrent'])
+            {
+                $string .=  ' and change filename only when the current filename is not relevant. Otherwise return false for this field '; 
+            }
+            
+        }
+
+        if (strlen(trim($context)) > 0)
+        {
+             $string .= ' and use this additional information when generating the ' . $aiName . ':' . $context . '. '; 
+        }
+
+        $question[$name] = $string; 
+        $question['required_tags_ainame'][] = $aiName;
+        $question['required_tags'][] = $name;
+    }
+
+    
+    return $question;
+  }
+
+  protected function getPageQuestion($question, $item_id, $params)
+  {
+        if (false == $params['ai_use_post'])
+        {
+             return false; 
+        }
+
+        $post = get_post($item_id); 
+        if (is_null($post) || false === $post)
+        {
+             return false; 
+        }
+
+        $parent = $post->post_parent; 
+
+        if ($parent <= 0 || ! is_int($parent))
+        {
+             return false; 
+        }
+
+        $page_post = get_post($parent); 
+        if (is_null($page_post) || false === $page_post)
+        {
+             return false; 
+        }
+
+        $title = $page_post->post_title; 
+        $excerpt = get_the_excerpt(($page_post)); 
+
+        $string = ' for the article with the title ' . $title; 
+
+        if (strlen(trim($excerpt)) > 0 )
+        {
+            $string .= ' and excerpt ' . $excerpt; 
+        } 
+
+        
+        return $string;
+  }
+
+  
 
   public function isSupported(queueItem $qItem)
   {
@@ -309,7 +539,6 @@ public function getAltData(QueueItem $qItem)
 
     }
 
-
     $image_url = $qItem->imageModel->getUrl();
 
     // Check if it's our data. 
@@ -318,9 +547,6 @@ public function getAltData(QueueItem $qItem)
     {
          $has_data = false; 
     }
-
-
-
 
     $view = new ViewController();
     $view->addData([

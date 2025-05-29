@@ -79,6 +79,13 @@ if ( ! defined( 'ABSPATH' ) ) {
             'title' => __("WebP/AVIF & CDN", "shortpixel-image-optimiser"),
             'icon' => 'shortpixel-icon webp_avif']); ?>
         </li>
+        <li>
+            <?php echo $this->settingLink([
+                'part' => 'ai', 
+                'title' => __('AI by ShortPixel', 'shortpixel-image-optimiser'), 
+                'icon' => 'shortpixel-icon ai'
+            ]); ?>
+        </li>
 
 				<li class='is-advanced'>
 					<?php echo $this->settingLink([
@@ -165,6 +172,7 @@ if ( ! defined( 'ABSPATH' ) ) {
           <?php $this->loadView('settings/part-optimisation'); ?>
           <?php $this->loadView('settings/part-processing'); ?>
           <?php $this->loadView('settings/part-webp'); ?>
+          <?php $this->loadView('settings/part-ai'); ?>
           <?php $this->loadView('settings/part-integrations'); ?>
           <?php $this->loadView('settings/part-exclusions'); ?>
           <?php $this->loadView('settings/part-help'); ?>

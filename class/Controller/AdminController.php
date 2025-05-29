@@ -5,6 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
+use ShortPixel\Controller\Optimizer\OptimizeAiController;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 use ShortPixel\Controller\Queue\Queue as Queue;
@@ -119,10 +120,20 @@ class AdminController extends \ShortPixel\Controller
 							$meta = $converter->getUpdatedMeta();
 
               //do_action('shortpixel/converter/prevent-offload-off', $id);
-					}
+           }
 
-        	$control = new QueueController();
-        	$control->addItemToQueue($mediaItem);
+         // $autoAi = $settings->
+         $optimizeAiController = OptimizeAiController::getInstance(); 
+         $queueController = new QueueController();
+
+         if ($optimizeAiController->isAutoAiEnabled())
+         {
+            $args = ['action' => 'requestAlt'];
+            $queueController->addItemToQueue($mediaItem, $args); 
+         }
+                 
+          
+        	$queueController->addItemToQueue($mediaItem);
 				}
 				else {
 					Log::addWarn('Passed mediaItem is not processable', $mediaItem);

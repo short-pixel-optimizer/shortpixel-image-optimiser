@@ -25,8 +25,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			this.ai_enabled = ! settings.hide_ai;
 		}
 		
-
-
 		// bind DoAction, for bulk actions in Media Libbrary to event
 		var actionEl = document.getElementById('doaction');
 		if (actionEl !== null)
@@ -478,3 +476,38 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 	}
 
 } // class
+
+
+/*
+// Gutenberg Stuff 
+(function(wp) {
+    const { select, subscribe } = wp.data;
+    const { addAction } = wp.hooks;
+
+    // Function to run when an image is uploaded
+    const onImageUpload = (media) => {
+        // Your custom logic here
+        console.log('Image uploaded:', media);
+    };
+
+    // Subscribe to changes in the media state
+    const unsubscribe = subscribe(() => {
+		console.log(select('core'));
+		
+        const isUploading = select('core/media').isUploading();
+        if (!isUploading) {
+            const uploadedImages = select('core/media').getMedia();
+            if (uploadedImages.length > 0) {
+                // Call the function with the uploaded images
+                onImageUpload(uploadedImages);
+            }
+        }
+    });
+
+    // Clean up the subscription when the component unmounts
+    addAction('editor.PostSave', () => {
+        unsubscribe();
+    });
+
+})(window.wp);
+*/
