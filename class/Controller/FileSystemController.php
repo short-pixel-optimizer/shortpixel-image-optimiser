@@ -162,6 +162,7 @@ Class FileSystemController extends \ShortPixel\Controller
 
     /* wp_get_original_image_path with specific ShortPixel filter
 		* @param int $id
+    * @return MediaLibraryThumbnailModel;
      */
     public function getOriginalImage($id)
     {
