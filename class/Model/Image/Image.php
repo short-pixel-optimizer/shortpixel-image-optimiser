@@ -15,6 +15,8 @@ Class Image extends \ShortPixel\Model\File\FileModel
         protected $image; // The image resource
         protected $useLib = 'gd'; 
         protected $replacementPath; 
+        protected $width;
+        protected $height;
 
         protected $error = []; 
 
@@ -60,8 +62,34 @@ Class Image extends \ShortPixel\Model\File\FileModel
             }
         }
 
+    /*    public function setWidth($width)
+        {
+            if (! is_int($width))
+            {
+                Log::addWarn('Image not given int width ', $width);
+                 return false; 
+            }
+
+             $this->width = $width;
+        }
+
+        public function setHeight($height)
+        {
+            if (! is_int($height))
+            {
+                Log::addWarn('Image not given int width ', $height);
+                 return false; 
+            }
+
+             $this->height = $height;
+        } */
+
         public function getWidth()
         {
+            /* if (! is_null($this->width))
+             {
+                 return $this->width; 
+             } */
              if ('gd' == $this->useLib)
              {
                  return imagesx($this->image);
@@ -74,6 +102,10 @@ Class Image extends \ShortPixel\Model\File\FileModel
 
         public function getHeight()
         {
+            /* if (! is_null($this->height))
+             {
+                 return $this->height; 
+             } */
              if ('gd' == $this->useLib)
              {
                  return imagesy($this->image);
@@ -84,16 +116,16 @@ Class Image extends \ShortPixel\Model\File\FileModel
              }
         }
 
-        public function convertPNG($args = [])
+        public function convertPNG()
         {
 
             if ('gd' == $this->useLib)
             {
-                return $this->convertGD($args);
+                return $this->convertGD();
             }
             if ('imagick' == $this->useLib)
             {
-                return $this->convertImagick($args);
+                return $this->convertImagick();
             }
              
         }
@@ -143,6 +175,18 @@ Class Image extends \ShortPixel\Model\File\FileModel
         protected function loadGDImage()
         {
 
+           /* if (strpos($this->getFullPath(), ' ') !== false )
+            {
+                $target = sys_get_temp_dir() . '/nospace.png';
+                copy($this->getFullPath(), $target);
+                Log::addTemp('Target Path', $target); 
+
+            }
+            else
+            {
+                $target = $this->getFullPath(); 
+            } */
+            
             $image = @imagecreatefrompng($this->getFullPath());
             $this->image = $image; 
 
@@ -161,11 +205,11 @@ Class Image extends \ShortPixel\Model\File\FileModel
             return $bool; 
         }
 
-        protected function convertGD($args)
+        protected function convertGD()
         {
 
-            $width = $args['width']; 
-            $height = $args['height'];
+            $width = $this->getWidth(); 
+            $height = $this->getHeight();
 
             $bg = imagecreatetruecolor($width, $height);
 

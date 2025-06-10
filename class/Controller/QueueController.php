@@ -288,6 +288,7 @@ class QueueController
     $qtype = $Q->getType();
     $qtype = strtolower($qtype);
 
+    //Log::addTemp('RunTick Items - ', $items);
     /* Only runs if result is array, dequeued items.
        Item is a MediaItem subset of QueueItem
     */
