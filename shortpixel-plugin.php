@@ -393,6 +393,7 @@ class ShortPixelPlugin {
 				'deferInterval'     => $deferInterval,
 				'debugIsActive' 		=> (\wpSPIO()->env()->is_debug) ? 'true' : 'false',
 				'autoMediaLibrary'  => ($settings->autoMediaLibrary) ? 'true' : 'false',
+				'disable_processor' => apply_filters('shortpixel/processorjs/disable', false),
             )
         );
 

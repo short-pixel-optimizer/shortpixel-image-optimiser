@@ -212,7 +212,7 @@ class QueueController
                   $bool = self::IN_QUEUE_ACTION_ADDED;
 
               }
-              else
+              elseif(false === is_null($action)) // Only set this is action add is requested, otherwise keep boolean
               {
                   $bool = self::IN_QUEUE_SKIPPED; 
 

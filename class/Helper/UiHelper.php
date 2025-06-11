@@ -450,7 +450,7 @@ class UiHelper
        $actions['optimize'] = self::getAction('optimize', $id);
        $actions['markCompleted']  = self::getAction('markCompleted', $id);
     }
-    elseif ($mediaItem->isUserExcluded() && false === $mediaItem->isSomethingOptimized())
+    elseif ($mediaItem->isUserExcluded() && false === $mediaItem->isSomethingOptimized() && ! $queueController->isItemInQueue($mediaItem))
     {
       $actions['optimize'] = self::getAction('forceOptimize', $id);
     }

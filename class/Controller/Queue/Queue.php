@@ -23,6 +23,7 @@ abstract class Queue
     protected $q;
 //    protected static $instance;
     protected static $results;
+    protected static $isInQueue = [];
 
     const PLUGIN_SLUG = 'SPIO';
 
@@ -568,7 +569,13 @@ abstract class Queue
 		// Check if item is in queue. Considered not in queue if status is done.
 		public function isItemInQueue($item_id)
 		{
+        if (isset(self::$isInQueue[$item_id]))
+        {
+           return self::$isInQueue[$item_id];
+        }
+
 				$itemObj = $this->q->getItem($item_id);
+        self::$isInQueue[$item_id] = $itemObj; // cache this, since interface requests this X amount of times.
 
 				$notQ = array(ShortQ::QSTATUS_DONE, ShortQ::QSTATUS_FATAL);
 				if (is_object($itemObj) && in_array(floor($itemObj->status), $notQ) === false )
