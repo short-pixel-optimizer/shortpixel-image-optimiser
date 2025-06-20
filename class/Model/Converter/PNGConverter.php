@@ -99,9 +99,7 @@ class PNGConverter extends MediaLibraryConverter
 
     public function filterQueue(QueueItem $qItem, $args = [])
     {
-		$currentAction = $qItem->data()->action; 
        $qItem->data()->action = 'png2jpg';
-	   $qItem->data()->addNextAction($currentAction);
        return $qItem;
     }
 
