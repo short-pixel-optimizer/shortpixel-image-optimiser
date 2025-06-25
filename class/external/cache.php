@@ -164,6 +164,7 @@ class cacheRemover
       }
 
 			$urls = $imageItem->getAllUrls();
+      $urls = array_values($urls['urls']);
 			foreach($urls as $url)
 			{
 				 do_action('litespeed_purge_url', $url, false, true);
