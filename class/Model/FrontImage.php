@@ -49,7 +49,15 @@ class FrontImage
 		return null;
 	}
 
-	public function loadImageDom()
+	public function __set($name, $value)
+	{
+		if (property_exists($this, $name) ) {
+			$this->$name = $value;
+		}
+
+	}
+
+	protected function loadImageDom()
 	{
 		if (function_exists("mb_convert_encoding")) {
 			$this->raw = mb_encode_numericentity($this->raw, [0x80, 0x10FFFF, 0, ~0], 'UTF-8');
@@ -93,6 +101,11 @@ class FrontImage
 			}
 
 			$this->attributes[$attr->nodeName] = $attr->nodeValue;
+		}
+
+		if (is_null($this->srcset) && isset($this->attributes['data-srcset']))
+		{
+			 $this->srcset = $this->attributes['data-srcset'];
 		}
 
 		// Parse the directory path and other sources
@@ -156,6 +169,7 @@ class FrontImage
 		if (! is_null($this->srcset)) {
 			$data = $this->getLazyData('srcset');
 			$data = explode(',', $data); // srcset is multiple images, split.
+				
 		} else {
 			$data = $this->getLazyData('src');
 			$data = array($data);  // single item, wrap in array
@@ -262,7 +276,7 @@ class FrontImage
 		return $output;
 	}
 
-	protected function buildImage()
+	public function buildImage()
 	{
 		$src = $this->src;
 		$output = '<img src="' . $src . '" ';
