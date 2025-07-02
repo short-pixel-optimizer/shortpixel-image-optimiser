@@ -2,6 +2,7 @@
 namespace ShortPixel\Controller\View;
 
 use ShortPixel\Controller\Front\CDNController;
+use ShortPixel\Controller\Optimizer\OptimizeAiController;
 use ShortPixel\Controller\QueueController;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -268,13 +269,29 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
 						 $queueControl = new QueueController();
 
-						 $q = $queueControl->getQueue($imageObj->get('type'));
+					//	 $q = $queueControl->getQueue($imageObj->get('type'));
 
              $item = QueueItems::getImageItem($imageObj);
              $item->setDebug();
              $item->newOptimizeAction();
 
 						 $returnEnqueue = $item->returnEnqueue();
+
+             // TEST @todo REMOVE 
+             /*$replacer2 = new \ShortPixel\Replacer\Replacer(); 
+             $setup = $replacer2->Setup(); 
+             $setup->forSearch()->URL()->addData($item->imageModel->getURL());
+             
+             $base_url = $setup->forSearch()->URL()->getBaseURL();
+            
+             $text = 'AI TEST'; 
+
+             $finder = $replacer2->Finder(['base_url' => $base_url, 'callback' => [OptimizeAiController::getInstance(), 'handleReplace'], 'return_data' => [
+                 'retrievedText' => $text, 
+                 'qItem' => $item,
+             ]]);
+             
+             $posts = $finder->posts();  */
 
 						 $debugInfo[] = array(__('Image to Queue V2'), $returnEnqueue );
 

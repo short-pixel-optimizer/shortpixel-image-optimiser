@@ -20,17 +20,15 @@ use ShortPixel\Controller\Optimizer\ActionController as ActionController;
 class QueueItem
 {
 
-   protected $imageModel;
-   protected $item_id;
-   //  protected $action = 'optimize'; // This must be in data!
+   protected $imageModel; // ImageModel 
+   protected $item_id; // Item Id 
    protected $queueItem; // Object coming from WPQ
 
-   protected $result;
+   protected $result; // Result object stores a viable customer response.
 
    protected $data; // something savable to dbase, for now object. This is the only thing persistent!
 
    protected $item_count; // counted images for the table.
-
 
    protected $debug_active = false; // prevent operations when it's debug view in edit media
 

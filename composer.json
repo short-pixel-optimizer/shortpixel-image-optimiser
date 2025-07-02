@@ -13,7 +13,7 @@
         "shortpixel/notices":">=1.3",
         "shortpixel/build" : "@dev",
 				"shortpixel/shortq": ">=1.0",
-				"shortpixel/replacer": ">=1.0"
+				"shortpixel/replacer2": ">=2.0"
     },
     "require-dev": {
 	"phpunit/phpunit": "^9",

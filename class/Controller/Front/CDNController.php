@@ -369,6 +369,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		$replaceBlocks = $this->filterOtherDomains($replaceBlocks);
 
 
+
 		// If the items didn't survive the filters.
 		if (count($replaceBlocks) == 0) {
 			if (true === $background_inline_found)
@@ -409,7 +410,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			$replaced_block_content = $this->$replace_function($original_block_content, $urls, $replace_urls);
 			
 			$content = str_replace($original_block_content, $replaced_block_content, $content, $count); 
-			Log::addTemp('Replacement count: ' . $count);
 		}
 		
 		//$content = $this->$replace_function($original_content, $urls, $replace_urls);
@@ -417,7 +417,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 		return $content;
 	}
-
 
 
 	protected function loadCDNDomain($CDNDomain = false)
@@ -645,11 +644,12 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		Pattern:  Negative lookback to / a-z and 0-9 ( URL components / not image closers ) - URL Match - Negative lookforward (same pattern)
 
 		*/
+		$count = 0;
 		$patterns = array_map(function ($url) {
 			return '/(?<!(\/|[a-z]|[0-9]))' . preg_quote($url, '/') . '(?!(\/|[a-z]|[0-9]))/mi'; 
 		}, $urls);
 
-		Log::addTemp('Patterns', $patterns);
+		//Log::addTemp('Patterns X replacecount ', $patterns );
 		$content = preg_replace($patterns, $new_urls, $content);
 
 		return $content;

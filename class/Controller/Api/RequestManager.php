@@ -66,6 +66,7 @@ abstract class RequestManager
   protected function getRequest($requestBody = [], $requestParameters = [])
   {
     $settings = \wpSPIO()->settings();
+
     $requestBody = apply_filters('shortpixel/api/request', $requestBody, $requestBody['item_id']);
 
     $arguments = array(
@@ -75,10 +76,11 @@ abstract class RequestManager
         'sslverify' => apply_filters('shortpixel/system/sslverify', true),
         'httpversion' => '1.0',
         'blocking' => isset($requestParameters['blocking']) ? $requestParameters['blocking'] : true,
-        'headers' => array(),
+        'headers' => isset($requestParameters['headers']) ? $requestParameters['headers'] : [],
         'body' => json_encode($requestBody, JSON_UNESCAPED_UNICODE),
-        'cookies' => array()
+        'cookies' => [], 
     );
+
     //add this explicitely only for https, otherwise (for http) it slows down the request
     if($settings->httpProto !== 'https') {
         unset($arguments['sslverify']);
@@ -99,8 +101,7 @@ abstract class RequestManager
 	{
 		$response = wp_remote_post($this->apiEndPoint, $requestParameters );
     Log::addDebug('ShortPixel API Request sent to ' . $this->apiEndPoint , $requestParameters['body']);
-
-
+    Log::addTemp('ShortPixel API Request sent to ' . $this->apiEndPoint , $requestParameters);
 
 		//only if $Blocking is true analyze the response
 		if ( $requestParameters['blocking'] )
@@ -109,12 +110,27 @@ abstract class RequestManager
 				{
 						$errorMessage = $response->errors['http_request_failed'][0];
 						$errorCode = self::STATUS_CONNECTION_ERROR;
+            $is_fatal = false; 
 
             if (strpos($errorMessage, 'cURL error 28') !== false)
             {
                $errorMessage = __('Timeout fetching data from ShortPixel servers. If persistent, check server connection / whitelist', 'shortpixel-image-optimiser');
             }
-            $qItem->addResult($this->returnRetry($errorCode, $errorMessage));
+            if (strpos($errorMessage, 'cURL error 60') !== false)
+            {
+               $errorMessage = __('Server error, please contact support ( ' . $errorMessage. ')');
+               $is_fatal = true; 
+
+            }
+            if (true === $is_fatal)
+            {
+              $qItem->addResult($this->returnFailure($errorCode, $errorMessage));
+            }
+            else
+            {
+              $qItem->addResult($this->returnRetry($errorCode, $errorMessage));
+            }
+            
 				}
 				elseif ( isset($response['response']['code']) && $response['response']['code'] <> 200 )
 				{

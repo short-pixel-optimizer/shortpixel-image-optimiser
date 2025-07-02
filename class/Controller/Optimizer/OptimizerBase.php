@@ -151,7 +151,11 @@ abstract class OptimizerBase
     {
         $queue = $this->getCurrentQueue($qItem); 
         $fs = \wpSPIO()->filesystem();
-        $queue->itemDone($qItem); 
+        // If the action is passed as direct action / out of queue, there might be no queueItem in DB
+        if (is_object($qItem->getQueueItem()))
+        {
+           $queue->itemDone($qItem); 
+        }
 
          Log::addTemp('FinishItemProcess: ', $qItem->data());
         // Can happen with actions outside queue / direct action 

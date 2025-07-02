@@ -103,6 +103,7 @@ class FrontImage
 			$this->attributes[$attr->nodeName] = $attr->nodeValue;
 		}
 
+		// Seen in wild, skipping over data-srcset because 
 		if (is_null($this->srcset) && isset($this->attributes['data-srcset']))
 		{
 			 $this->srcset = $this->attributes['data-srcset'];

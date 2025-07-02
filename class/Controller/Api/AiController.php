@@ -25,7 +25,7 @@ class AiController extends RequestManager
 
     public function __construct()
     {
-      $this->main_url = 'https://capi.shortpixel.com/';
+      $this->main_url = 'https://devapigpt.shortpixel.com/';
     }
 
     public function processMediaItem(QueueItem $qItem, ImageModel $imageObj)
@@ -49,7 +49,13 @@ class AiController extends RequestManager
 
       if ($qItem->data()->action == 'requestAlt')
       {
-        $requestBody['url'] = $qItem->data()->url;
+      //  $requestBody['url'] = $qItem->data()->url;
+      $paramlist = $qItem->data()->paramlist; 
+      if (is_object($paramlist))
+      {
+         $paramlist = (array) $paramlist; 
+      }
+        $requestBody = array_merge($requestBody, $paramlist);
         $requestBody['retry'] = '1'; // when requesting alt, always wants a new one (?) 
       }
 
@@ -61,6 +67,10 @@ class AiController extends RequestManager
       // Should always check the results
       $requestParameters = [
         'blocking' => true,
+        'headers' => [
+            'Authorization' => 'ApiKey ' . $keyControl->forceGetApiKey(), 
+            'Content-Type' => 'application/json',
+        ]
       ];
 
       $request = $this->getRequest($requestBody, $requestParameters);
@@ -180,10 +190,7 @@ class AiController extends RequestManager
                     }
                     else
                     {
-                    //$qItem->addResult(['retrievedText' => $text]); 
-                    return $this->handleSuccess($text, $qItem);
-                    
-                    //  return $this->returnSuccess(['retrievedText' => $text], RequestManager::STATUS_SUCCESS, __('Retrieved AI Alt Text', 'shortpixel-image-optimiser'));
+                      return $this->handleSuccess($text, $qItem);
                     }
 
                   break;
@@ -213,10 +220,10 @@ class AiController extends RequestManager
         // For now
         if (false === property_exists($item->data, 'remote_id') || is_null($item->data()->remote_id))
         {
-           $this->apiEndPoint = $this->main_url . 'api/add-url';
+           $this->apiEndPoint = $this->main_url . 'add-url.php';
         }
         else {
-          $this->apiEndPoint = $this->main_url . 'api/get-url';
+          $this->apiEndPoint = $this->main_url . 'get-url.php';
         }
 
         return parent::doRequest($item, $requestParameters);

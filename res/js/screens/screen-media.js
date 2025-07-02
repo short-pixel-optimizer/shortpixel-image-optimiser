@@ -13,6 +13,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 	
 	 ];
 	 ai_enabled = true; 
+	 gutenCheck = []; 
 
 
 	Init() {
@@ -22,6 +23,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		this.settings = settings;
 
 		this.ListenGallery();
+		this.ListenGutenberg();
 
 
 		if (typeof settings.hide_ai !== 'undefined')
@@ -485,39 +487,50 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		});
 	}
 
+	ListenGutenberg()
+	{
+
+		var self = this; 
+
+		if (typeof wp.data == 'undefined')
+		{
+			return;
+		}
+
+		wp.data.subscribe(() => {
+			const { getMedia } = wp.data.select('core');
+			const { getSelectedBlock } = wp.data.select('core/block-editor');
+		
+			const block = getSelectedBlock();
+			
+			if (block && block.name === 'core/image') {
+				const imageId = block.attributes.id; // Get the image ID
+				//const imageUrl = block.attributes.url; // Get the image URL
+		
+				if (imageId) {
+		
+					if (self.gutenCheck.indexOf(imageId) === -1)
+					{
+						
+						window.ShortPixelProcessor.SetInterval(-1);
+						window.ShortPixelProcessor.RunProcess();
+						
+						self.gutenCheck.push(imageId);
+					}
+					else
+					{
+						
+					}
+		
+				}
+			}
+		});
+	}
+
 } // class
 
 
-/*
-// Gutenberg Stuff 
-(function(wp) {
-    const { select, subscribe } = wp.data;
-    const { addAction } = wp.hooks;
 
-    // Function to run when an image is uploaded
-    const onImageUpload = (media) => {
-        // Your custom logic here
-        console.log('Image uploaded:', media);
-    };
 
-    // Subscribe to changes in the media state
-    const unsubscribe = subscribe(() => {
-		console.log(select('core'));
-		
-        const isUploading = select('core/media').isUploading();
-        if (!isUploading) {
-            const uploadedImages = select('core/media').getMedia();
-            if (uploadedImages.length > 0) {
-                // Call the function with the uploaded images
-                onImageUpload(uploadedImages);
-            }
-        }
-    });
 
-    // Clean up the subscription when the component unmounts
-    addAction('editor.PostSave', () => {
-        unsubscribe();
-    });
 
-})(window.wp);
-*/

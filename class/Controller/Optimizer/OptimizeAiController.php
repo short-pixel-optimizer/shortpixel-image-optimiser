@@ -28,7 +28,11 @@ class OptimizeAiController extends OptimizerBase
      $this->apiName = 'ai';
   }
   
-
+  /** Handle Item errors . Adds to result object
+   * 
+   * @param QueueItem $qItem 
+   * @return void 
+   */
   protected function HandleItemError(QueueItem $qItem) { 
 
       // Change to chance the result / message with specific errors. 
@@ -39,7 +43,7 @@ class OptimizeAiController extends OptimizerBase
           break; 
         }
 
-      $qItem->addResult(['qstatus' => Queue::RESULT_ERROR]);
+   //   $qItem->addResult(['qStatus' => Queue::RESULT_ERROR]);
       return;
   }
 
@@ -81,7 +85,7 @@ class OptimizeAiController extends OptimizerBase
     {
         case 'requestAlt': 
            $qItem->requestAltAction();
-        //   $this->parseQuestionForQItem($qItem); 
+           $this->parseJSONForQItem($qItem); 
            $directAction = false; 
         break;
         case 'retrieveAlt':  // This might be deprecated, since retrieve will be called via next_action. 
@@ -140,6 +144,18 @@ class OptimizeAiController extends OptimizerBase
       $qItem->addResult(['apiName' => $this->apiName]);
       $apiStatus = $qItem->result()->apiStatus;
 
+
+    // @TODO  TEST DATA 
+    $qItem->addResult([
+        'apiStatus' => 2, 
+        'is_error' => false, 
+        'retrievedText' => 'Regenerated text', 
+        'message' => 'Hardcoded Text done',
+    ]); 
+    $qItem->data()->action = 'retrieveAlt';
+    $qItem->data()->next_actions = []; 
+    $apiStatus = 2;
+
       if ($qItem->result()->is_error)  {
        
         if (true === $qItem->result()->is_done )
@@ -160,11 +176,7 @@ class OptimizeAiController extends OptimizerBase
         return; 
       }
       
-
-
       // Result for requestAlt 
-
-
       if ($apiStatus == RequestManager::STATUS_WAITING)
       {
         return; 
@@ -190,52 +202,127 @@ class OptimizeAiController extends OptimizerBase
       // Result for retrieveAlt
       if (property_exists($qItem->result(), 'retrievedText'))
       {
-          $text = $qItem->result()->retrievedText; 
-          $text = $this->processTextResult($text);
-          $item_id = $qItem->item_id; 
-
-          $current_alt = get_post_meta($item_id, '_wp_attachment_image_alt', true);
-
-          $ai_metadata = get_post_meta($item_id, 'shortpixel_alt_requests', true); 
-
-          if (false === is_array($ai_metadata))
-          {
-            $ai_metadata = []; 
-          }
-
-         $ai_metadata['original_alt'] = $current_alt;
-            
-          $ai_metadata['result_alt'] = $text;
-
-          $bool = update_post_meta($item_id, 'shortpixel_alt_requests', $ai_metadata); 
-          
-          if (false === $bool)
-          {
-              Log::addWarn('Save alt requests failed? - ' . $item_id, $ai_metadata);
-          }
-          
-          $bool = update_post_meta($item_id, '_wp_attachment_image_alt', $text);
-
-           if (false === $bool)
-           {
-               Log::addWarn('Failed to add alt text to postmeta?' . $item_id, $text);
-            }
-
-          $qItem->addResult([
-            'retrievedText' => $text,
-            'apiStatus' => RequestManager::STATUS_SUCCESS,
-            'fileStatus' => ImageModel::FILE_STATUS_SUCCESS
-          ]);
-
-          //$queue->itemDone($qItem);
-          $this->finishItemProcess($qItem);
-          return;
+            return $this->HandleSuccess($qItem);
       }
 
-    /*  $imageObj = $qItem->imageModel;
-      $queueController = $this->getQueueController();
-      $queueController->addItemToQueue($imageObj, ['action' => 'retrieveAlt', 'remote_id' => $remote_id]);
-    */
+
+  }
+
+  protected function HandleSuccess(QueueItem $qItem)
+  {
+        // @todo Move success Handler here + replacer start. 
+        $text = $qItem->result()->retrievedText; 
+        $text = $this->processTextResult($text);
+        $item_id = $qItem->item_id; 
+
+        $current_alt = get_post_meta($item_id, '_wp_attachment_image_alt', true);
+
+        $ai_metadata = get_post_meta($item_id, 'shortpixel_alt_requests', true); 
+
+        if (false === is_array($ai_metadata))
+        {
+          $ai_metadata = []; 
+        }
+
+        if (! isset($ai_metadata['original_alt']))
+        {
+            $ai_metadata['original_alt'] = $current_alt;     
+        }
+        $ai_metadata['result_alt'] = $text;
+
+        $bool = update_post_meta($item_id, 'shortpixel_alt_requests', $ai_metadata); 
+        
+        if (false === $bool)
+        {
+            Log::addWarn('Save alt requests failed? - ' . $item_id, $ai_metadata);
+        }
+        
+        $bool = update_post_meta($item_id, '_wp_attachment_image_alt', $text);
+
+         if (false === $bool)
+         {
+             Log::addWarn('Failed to add alt text to postmeta?' . $item_id, $text);
+          }
+
+        $qItem->addResult([
+          'retrievedText' => $text,
+          'apiStatus' => RequestManager::STATUS_SUCCESS,
+          'fileStatus' => ImageModel::FILE_STATUS_SUCCESS
+        ]);
+
+        $this->startReplace($qItem, $text); 
+
+        $this->finishItemProcess($qItem);
+        return;
+  }
+
+  protected function startReplace(QueueItem $qItem, $new_text)
+  {
+             // Replacer Part 
+             $url = $qItem->data()->url; 
+             if (is_null($url)) // can be empty on restore action 
+             {
+                 $url = $qItem->imageModel->getUrl(); 
+             }
+
+             $replacer2 = \ShortPixel\Replacer\Replacer::getInstance(); 
+             $setup = $replacer2->Setup(); 
+             $setup->forSearch()->URL()->addData($url);
+             
+             $base_url = $setup->forSearch()->URL()->getBaseURL();
+     
+             $finder = $replacer2->Finder(['base_url' => $base_url, 'callback' => [$this, 'handleReplace'], 'return_data' => [
+                 'retrievedText' => $new_text, 
+                 'qItem' => $qItem,
+             ]]);
+     
+             $finder->posts();
+
+  }
+
+
+  // @todo This might be returned in multiple formats / post data / postmeta data?  Public because of callback
+  public function handleReplace($results, $args)
+  {
+
+    $replacer2 = \ShortPixel\Replacer\Replacer::getInstance();
+    $text = $args['retrievedText'];
+
+
+        foreach($results as $result)
+        {
+            $post_id = $result['post_id']; 
+            $content = $result['content'];
+
+            $matches = $this->fetchImageMatches($content); 
+            $sources = []; 
+            $replaces = []; 
+
+            foreach($matches as $match)
+            {
+                $sources[] = $match; 
+            // @todo The result of the post, should parse the content somehow via regex, then load.
+             $frontImage = new \ShortPixel\Model\FrontImage($match); 
+             $frontImage->alt = $text; 
+             $replaces[] = $frontImage->buildImage();
+
+
+            }
+
+            $content = $replacer2->replaceContent($match, $sources, $replaces);
+           
+            $replacer2->Updater()->updatePost($post_id, $content); 
+        }
+
+
+  }
+
+  // @todo Direct copy from CDNController. In future might be merged somewhere. 
+  protected function fetchImageMatches($content, $args = [])
+  {
+      $number = preg_match_all('/<img[^>]*>|<source srcset="[^>]*">/i', $content, $matches);
+      $matches = $matches[0];
+      return $matches;
   }
 
   /**
@@ -291,12 +378,89 @@ class OptimizeAiController extends OptimizerBase
         return $text;
   }
 
+  protected function getRequestJSON($url, $item_id, $params = [])
+  { 
+     $settings = $this->getAISettings($params);
+
+     $json = [
+        'url' => $url, 
+        'languages' => $settings['ai_language'], 
+        'context' => $settings['ai_general_context'], 
+
+     ]; 
+
+     // if ($settings['ai_use_post']) // not in API? 
+
+     if ($settings['ai_gen_alt'])
+     {
+        $json['alt'] = [
+                'context' => $settings['ai_alt_context'],
+                'chars' => $settings['ai_limit_alt_chars'],
+        ];
+     }
+
+     if ($settings['ai_gen_caption'])
+     {
+         $json['caption'] = [
+                'context' => $settings['ai_caption_context'], 
+                'chars' => $settings['ai_limit_caption_chars'], 
+         ];
+     }
+
+     if ($settings['ai_gen_filename'])
+     {
+         $json['file'] = [
+                'context' => $settings['ai_filename_context'], 
+                'chars' => $settings['ai_limit_filename_chars'], 
+         ];
+     }
+
+     return $json; 
+  }
+
+  protected function parseJSONForQItem(QueueItem $qItem)
+  {
+        $url = $qItem->data()->url; 
+        $item_id = $qItem->item_id;
+        $json = $this->getRequestJSON($url, $item_id); 
+        $qItem->data()->paramlist = $json;
+  }
+
   protected function parseQuestionForQItem(QueueItem $qItem)
   {
         $url = $qItem->data()->url; 
         $item_id = $qItem->item_id;
         $question = $this->parseQuestion($url, $item_id); 
         $qItem->data()->url = $question;
+  }
+
+  private function getAISettings($params = [])
+  {
+    $settings = \wpSPIO()->settings(); 
+
+    $defaults = [
+    'ai_general_context' => $settings->ai_general_context, 
+    'ai_use_post' => $settings->ai_use_post, 
+    'ai_gen_alt' => $settings->ai_gen_alt, 
+    'ai_gen_caption' => $settings->ai_gen_caption, 
+    'ai_gen_description' => $settings->ai_gen_description, 
+    'ai_filename_prefercurrent' => $settings->ai_filename_prefercurrent,
+    'ai_limit_alt_chars' => $settings->ai_limit_alt_chars, 
+    'ai_alt_context' => $settings->ai_alt_context, 
+    'ai_limit_description_chars' => $settings->ai_limit_description_chars, 
+    'ai_description_context' => $settings->ai_description_context, 
+    'ai_limit_caption_chars' => $settings->ai_limit_caption_chars, 
+    'ai_caption_context' => $settings->ai_caption_context, 
+    'ai_gen_filename' => $settings->ai_gen_filename, 
+    'ai_limit_filename_chars' => $settings->ai_limit_filename_chars, 
+    'ai_filename_context' => $settings->ai_filename_context, 
+    'ai_use_exif' => $settings->ai_use_exif, 
+    'ai_language' => $settings->ai_language,
+    ];
+
+    $params = wp_parse_args($params, $defaults);
+
+    return $params; 
   }
 
   public function parseQuestion($url, $item_id, $params = [])
@@ -495,8 +659,10 @@ class OptimizeAiController extends OptimizerBase
   {
        $altData = $this->getAltData($qItem);
        $item_id = $qItem->item_id;
+
+       $original_text = $altData['original_alt'];
     
-       $bool = update_post_meta($item_id, '_wp_attachment_image_alt', $altData['original_alt']);
+       $bool = update_post_meta($item_id, '_wp_attachment_image_alt', $original_text);
 
        if (true === $bool)
        {
@@ -508,6 +674,8 @@ class OptimizeAiController extends OptimizerBase
           $bool = delete_metadata( 'post', $item_id, 'shortpixel_alt_requests', '' );
 
        }
+
+       $this->startReplace($qItem, $original_text);
 
        return $this->getAltData($qItem); 
   }
