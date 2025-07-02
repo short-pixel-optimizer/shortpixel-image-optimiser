@@ -315,7 +315,7 @@ class AdminController extends \ShortPixel\Controller
     public function checkRestMedia($result, $server, $request )
     {
       $data = $result->data; 
-      if ($data['type'] !== 'attachment') // check if for us. 
+      if (! is_array($data) || ! isset($data['type']) || $data['type'] !== 'attachment') // check if for us. 
       {
          return $result; 
       }
