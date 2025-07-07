@@ -128,6 +128,7 @@ abstract class RequestManager
             }
             else
             {
+              Log::addTemp('ReturnRetry?');
               $qItem->addResult($this->returnRetry($errorCode, $errorMessage));
             }
             
@@ -136,6 +137,7 @@ abstract class RequestManager
 				{
 						$errorMessage = $response['response']['code'] . " - " . $response['response']['message'];
 						$errorCode = $response['response']['code'];
+
             $qItem->addResult($this->returnFailure($errorCode, $errorMessage));
 				}
 				else

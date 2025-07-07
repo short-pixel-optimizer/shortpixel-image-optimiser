@@ -14,6 +14,7 @@ use ShortPixel\Controller\Api\RequestManager as RequestManager;
 use ShortPixel\Controller\Api\AiController;
 use ShortPixel\Controller\Queue\Queue;
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
+use ShortPixel\Model\AiDataModel;
 use ShortPixel\ViewController as ViewController;
 
 
@@ -146,15 +147,18 @@ class OptimizeAiController extends OptimizerBase
 
 
     // @TODO  TEST DATA 
-    $qItem->addResult([
+ /*   $qItem->addResult([
         'apiStatus' => 2, 
         'is_error' => false, 
-        'retrievedText' => 'Regenerated text', 
+//        'retrievedText' => 'Regenerated text', 
         'message' => 'Hardcoded Text done',
     ]); 
+
     $qItem->data()->action = 'retrieveAlt';
     $qItem->data()->next_actions = []; 
-    $apiStatus = 2;
+    $apiStatus = 2; */
+    // ***** END TEST -- REMOVE!!111!!11!! ****** 
+
 
       if ($qItem->result()->is_error)  {
        
@@ -200,7 +204,7 @@ class OptimizeAiController extends OptimizerBase
       }
 
       // Result for retrieveAlt
-      if (property_exists($qItem->result(), 'retrievedText'))
+      if (property_exists($qItem->result(), 'aiData'))
       {
             return $this->HandleSuccess($qItem);
       }
@@ -210,12 +214,30 @@ class OptimizeAiController extends OptimizerBase
 
   protected function HandleSuccess(QueueItem $qItem)
   {
-        // @todo Move success Handler here + replacer start. 
-        $text = $qItem->result()->retrievedText; 
-        $text = $this->processTextResult($text);
-        $item_id = $qItem->item_id; 
+        // @todo Move success Handler here + replacer start.
+        $aiData = $qItem->result->aiData;  
+//        $text = $qItem->result()->retrievedText;
 
-        $current_alt = get_post_meta($item_id, '_wp_attachment_image_alt', true);
+        $textItems = ['alt', 'caption'];
+        foreach($textItems as $textItem)
+        {
+             if (isset($aiData[$textItem]) && false !== $aiData['textItem'])
+             {
+                 $aiData[$textItem] = $this->processTextResult($aiData[$textItem]);
+             }
+        }            
+
+        // Description : From POST CONTENT 
+        // Caption : From POST EXCERPT 
+        // Alt  : Own Metadata field 
+
+
+        $item_id = $qItem->item_id; 
+        
+        $aiModel = new AIDataModel($item_id, 'media');
+        $aiModel->handleNewData($aiData);
+
+       /* $current_alt = get_post_meta($item_id, '_wp_attachment_image_alt', true);
 
         $ai_metadata = get_post_meta($item_id, 'shortpixel_alt_requests', true); 
 
@@ -244,19 +266,35 @@ class OptimizeAiController extends OptimizerBase
              Log::addWarn('Failed to add alt text to postmeta?' . $item_id, $text);
           }
 
+*/
         $qItem->addResult([
-          'retrievedText' => $text,
+//          'retrievedText' => $text,
           'apiStatus' => RequestManager::STATUS_SUCCESS,
           'fileStatus' => ImageModel::FILE_STATUS_SUCCESS
         ]);
 
-        $this->startReplace($qItem, $text); 
+        $this->replaceImageAttributes($qItem, $text); 
+
+        // @todo Pseudso var still here, to be determined later. 
+        if ($qItem->result()->ai_new_file)
+        {
+
+        }
+        
 
         $this->finishItemProcess($qItem);
         return;
   }
 
-  protected function startReplace(QueueItem $qItem, $new_text)
+  /** Replace Image Attributes ( others? ) on images via BaseURL 
+   * 
+   * The finder is passed a callback to which the results will be returned.  
+   * 
+   * @param QueueItem $qItem 
+   * @param mixed $new_text The new text 
+   * @return void 
+   */
+  protected function replaceImageAttributes(QueueItem $qItem, $new_text)
   {
              // Replacer Part 
              $url = $qItem->data()->url; 
@@ -282,6 +320,14 @@ class OptimizeAiController extends OptimizerBase
 
 
   // @todo This might be returned in multiple formats / post data / postmeta data?  Public because of callback
+  /** This is the callback for Finder results for replacing attributes on the Images  
+   * 
+   * This function also saves the results!
+   * 
+   * @param mixed $results 
+   * @param mixed $args 
+   * @return void 
+   */
   public function handleReplace($results, $args)
   {
 
@@ -368,7 +414,10 @@ class OptimizeAiController extends OptimizerBase
    */
   protected function processTextResult($text)
   {
-        $text = trim($text);
+
+
+        $text = ucfirst(trim($text));
+
         // Add period to the end of the string.
         if (substr($text, -1) !== '.' && true === apply_filters('shortpixel/ai/check_period', true))
         {

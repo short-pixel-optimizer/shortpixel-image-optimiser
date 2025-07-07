@@ -18,6 +18,7 @@ class AiController extends RequestManager
 {
 
     protected $main_url;
+    protected $auth_token = 'spio_ai_jwt_token';
 
     const AI_STATUS_INVALID_URL = 2;
     const AI_STATUS_OVERQUOTA = 3; 
@@ -41,7 +42,7 @@ class AiController extends RequestManager
       //$request = $this->getRequest($requestArgs);
       $requestBody = [
         'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
-        'key' => $keyControl->forceGetApiKey(),
+       // 'key' => $keyControl->forceGetApiKey(),
 
         'item_id' => $qItem->item_id,
         'source' => 1, // SPIO
@@ -64,11 +65,24 @@ class AiController extends RequestManager
         $requestBody['Id'] = $qItem->data()->remote_id;
       }
 
+      
+      $token = get_transient($this->auth_token);
+      // Token doesn't seem to work normally.
+      /*if ($token !== false)
+      {
+         $auth = $token; 
+      }
+      else
+      { */
+        $auth = 'ApiKey ' . $keyControl->forceGetApiKey();
+     // }
+
+
       // Should always check the results
       $requestParameters = [
         'blocking' => true,
         'headers' => [
-            'Authorization' => 'ApiKey ' . $keyControl->forceGetApiKey(), 
+            'Authorization' => $auth,  
             'Content-Type' => 'application/json',
         ]
       ];
@@ -81,8 +95,27 @@ class AiController extends RequestManager
     // Should return something that's usefull to set as response on the item.
     protected function handleResponse(QueueItem $qItem, $response)
     {
-       $APIresponse = $this->parseResponse($response);//get the actual response from API, its an array
-       Log::addTemp('HAndle AI Response! ', $APIresponse);
+       $apiData = $this->parseResponse($response);//get the actual response from API, its an array
+       Log::addTemp('HAndle AI Response! ', $apiData);
+
+        // List all the random crap that might return. 
+        $id = isset($apiData['Id']) ? intval($apiData['Id']) : false; 
+        $jwt = isset($apiData['jwt']) ? sanitize_text_field($apiData['jwt']) : false; 
+        $status = isset($apiData['Status']) ? intval($apiData['Status']) : false;
+        
+        $error = isset($apiData['Error']) ? sanitize_text_field($apiData['Error']) : false; 
+        $is_error = (false !== $error) ? true : false; 
+
+        if (false !== $jwt)
+        {
+          $authKey = get_transient($this->auth_token);
+          if (false === $authKey || $jwt !== $authKey)
+          {
+             set_transient($this->auth_token, $jwt, HOUR_IN_SECONDS);
+             Log::addTemp('Setting auth key trans');
+          }
+
+        }
 
         // @todo This is probably not something that would happen, since repsonse is from the body. Implement here most error coming from the raw request and returnOk/returnFalse etc.
 
@@ -102,7 +135,9 @@ class AiController extends RequestManager
         // 1.  requestAlt : Object in data, with ID as only return. 
         // 2.  retrieveAlt: Array with first item ( zero index ) 
         
-        $apiData = (is_array($APIresponse) && isset($APIresponse['data'])) ? $APIresponse['data'] : false; 
+      //  $apiData = (is_array($APIresponse) && isset($APIresponse['data'])) ? $APIresponse['data'] : false; 
+
+
 
         if (false === $apiData)
         {
@@ -111,19 +146,19 @@ class AiController extends RequestManager
 
         if ($qItem->data()->action == 'requestAlt')
         {
-            if (false === is_object($apiData))
+            if (false === $id)
             {
                return $this->returnRetry(RequestManager::STATUS_WAITING, __('Response without result object', 'shortpixel-image-optimiser'));
             }
             
 
-            $status = property_exists($apiData, 'Status') ? intval($apiData->Status) : 1; 
+//            $status = property_exists($apiData, 'Status') ? intval($apiData->Status) : 1; 
 
-            $error_msg = (property_exists($apiData, 'Error')) ? $apiData->Error : false; 
+//            $error_msg = (property_exists($apiData, 'Error')) ? $apiData->Error : false; 
             
-            if (is_object($apiData) && property_exists($apiData, 'Id') && intval($apiData->Id) > 0)
+            if (false !== $id)
             {
-              $remote_id = intval($APIresponse['data']->Id);
+              $remote_id = intval($id);
               $qItem->addResult(['remote_id' => $remote_id]);
               
               return $this->returnOk(RequestManager::STATUS_UNCHANGED, __('Request for Alt text sent to ShortPixel AI', 'shortpixel-image-optimiser'));  
@@ -138,30 +173,31 @@ class AiController extends RequestManager
             }
             else
             {
-               return $this->returnFailure(RequestManager::STATUS_ERROR, $error_msg);
+               return $this->returnFailure(RequestManager::STATUS_ERROR, $error);
             }
 
         }
 
         if ($qItem->data()->action == 'retrieveAlt')
         {
-            if (is_array($apiData))
-            {
-              $result = $apiData[0]; 
-              $text = property_exists($result, 'Result') ? sanitize_text_field($result->Result) : null;
-              $status = property_exists($result, 'Status') ? intval($result->Status) : -1; 
-              $error = (property_exists($result, 'Error')) ? sanitize_text_field($result->Error) : false;
-              if (is_null($error) || trim($error) == '')
-              {
-                 $error = false; 
-              }
+            //if (is_array($apiData))
+            //{
+           //   $result = $apiData[0]; 
+              
+              // @todo This should be checked with new API, what the result can be. 
+//              $aiData = property_exists($result, 'Result') ? sanitize_text_field($result->Result) : null;
+             // $status = property_exists($result, 'Status') ? intval($result->Status) : -1; 
+             // $error = (property_exists($result, 'Error')) ? sanitize_text_field($result->Error) : false;
+             
 
-              if (is_null($text))
-              {
-                 Log::addWarn('Text came back as null?');
+              // @todo According to docs : 
+             /* $aiData = [
+                  'filename' => property_exists($result, 'file_name') ? $result->file_name : false, 
+                  'alt' => property_exists($result, 'alt') ? $result->alt : false, 
+                  'caption' => property_exists($result, 'caption') ? $result->caption : false, 
+                  'relevance' => property_exists($result, 'relevance') ? $result->relevance : false, 
+              ]; */
 
-              }
-              $text = $this->filterResultText($text); 
               
               // Switch known Statii 
               switch ($status)
@@ -183,18 +219,20 @@ class AiController extends RequestManager
                   case '3':  // Success of some kind. 
                   default: 
                     $apiStatus = RequestManager::STATUS_SUCCESS; 
-                    if (is_null($text) || strlen($text) == 0 || $error !== false)
+                    // @todo Possibly add a fail state here if all AI stuff came back negative / without data (?) 
+                    /*      if (is_null($text) || strlen($text) == 0 || $error !== false)
                     {
                         $apiStatus = RequestManager::STATUS_FAIL; 
                         return $this->returnFailure(RequestManager::STATUS_FAIL, __('AI could not generate text for this image', 'shortpixel-image-optimiser'));
                     }
                     else
                     {
-                      return $this->handleSuccess($text, $qItem);
-                    }
+              */
+                      return $this->handleSuccess($aiData, $qItem);
+               //     }
 
                   break;
-              }
+            //  }
                              
                
             }
@@ -205,14 +243,14 @@ class AiController extends RequestManager
     /**
      * Undocumented function
      *
-     * @param string $text
+     * @param array $aiData
      * @param object $qItem
      * @return array Result array via requestManager 
      */
-    protected function handleSuccess($text, QueueItem $qItem)
+    protected function handleSuccess($aiData, QueueItem $qItem)
     {
-      $qItem->addResult(['retrievedText' => $text]); 
-      return $this->returnSuccess(['retrievedText' => $text], RequestManager::STATUS_SUCCESS, __('Retrieved AI Alt Text', 'shortpixel-image-optimiser')); ; 
+      $qItem->addResult(['aiData' => $aiData]); 
+      return $this->returnSuccess(['aiData' => $aiData], RequestManager::STATUS_SUCCESS, __('Retrieved AI Alt Text', 'shortpixel-image-optimiser')); ; 
     }
 
     protected function doRequest(QueueItem $item, $requestParameters)
@@ -230,17 +268,18 @@ class AiController extends RequestManager
 
     }
 
-    /**
-     * Simple function to check / process the result text.  I.e by default it's without capitals. 
-     *
-     * @param [string] $text
-     * @return string
-     */
-    protected function filterResultText($text)
+    protected function returnFailure($code, $message)
     {
-        $text = ucfirst($text);
-        return $text; 
-       
+       if (401 == $code)
+       {
+          $token = get_transient($this->auth_token);
+          if ($token !== false)
+          {
+             delete_transient($this->auth_token);
+             return $this->returnRetry($code, __('Authentication token failure - Reset - Please wait', 'shortpixel-image-optimiser'));
+          }
+       }
+       return parent::returnFailure($code, $message);
     }
 
 
