@@ -216,12 +216,17 @@ class OptimizeAiController extends OptimizerBase
   {
         // @todo Move success Handler here + replacer start.
         $aiData = $qItem->result->aiData;  
+
+        if (! isset($aiData['filebase']))
+        {
+             $aiData['filebase'] = $qItem->imageModel->getFileBase();
+        }
 //        $text = $qItem->result()->retrievedText;
 
         $textItems = ['alt', 'caption'];
         foreach($textItems as $textItem)
         {
-             if (isset($aiData[$textItem]) && false !== $aiData['textItem'])
+             if (isset($aiData[$textItem]) && false !== $aiData[$textItem])
              {
                  $aiData[$textItem] = $this->processTextResult($aiData[$textItem]);
              }
@@ -273,12 +278,13 @@ class OptimizeAiController extends OptimizerBase
           'fileStatus' => ImageModel::FILE_STATUS_SUCCESS
         ]);
 
-        $this->replaceImageAttributes($qItem, $text); 
 
-        // @todo Pseudso var still here, to be determined later. 
-        if ($qItem->result()->ai_new_file)
+
+        $this->replaceImageAttributes($qItem, $aiData); 
+
+        if ($qItem->result()->filename)
         {
-
+            
         }
         
 
@@ -294,7 +300,7 @@ class OptimizeAiController extends OptimizerBase
    * @param mixed $new_text The new text 
    * @return void 
    */
-  protected function replaceImageAttributes(QueueItem $qItem, $new_text)
+  protected function replaceImageAttributes(QueueItem $qItem, $aiData)
   {
              // Replacer Part 
              $url = $qItem->data()->url; 
@@ -310,7 +316,7 @@ class OptimizeAiController extends OptimizerBase
              $base_url = $setup->forSearch()->URL()->getBaseURL();
      
              $finder = $replacer2->Finder(['base_url' => $base_url, 'callback' => [$this, 'handleReplace'], 'return_data' => [
-                 'retrievedText' => $new_text, 
+                 'aiData' => $aiData, 
                  'qItem' => $qItem,
              ]]);
      
@@ -332,8 +338,6 @@ class OptimizeAiController extends OptimizerBase
   {
 
     $replacer2 = \ShortPixel\Replacer\Replacer::getInstance();
-    $text = $args['retrievedText'];
-
 
         foreach($results as $result)
         {
@@ -349,7 +353,15 @@ class OptimizeAiController extends OptimizerBase
                 $sources[] = $match; 
             // @todo The result of the post, should parse the content somehow via regex, then load.
              $frontImage = new \ShortPixel\Model\FrontImage($match); 
-             $frontImage->alt = $text; 
+             if (isset($args['alt']))
+             {
+                $frontImage->alt = $args['alt']; 
+             }
+             if (isset($args['caption']))
+             {
+                $frontImage->caption = $args['caption'];
+             }
+
              $replaces[] = $frontImage->buildImage();
 
 
@@ -706,25 +718,29 @@ class OptimizeAiController extends OptimizerBase
 
   public function undoAltData(QueueItem $qItem)
   {
-       $altData = $this->getAltData($qItem);
+       //$altData = $this->getAltData($qItem);
        $item_id = $qItem->item_id;
 
-       $original_text = $altData['original_alt'];
+       //$original_text = $altData['original_alt'];
+Log::addTemp('UNDO ALT DATA - OptimizeAIController');
+       $aiModel = new AiDataModel($item_id, 'media');
+
+      // $generated = $aiModel->getGeneratedData(); 
+       $original = $aiModel->getOriginalData();
+
+       $aiData = [
+            'alt' => $original['alt'], 
+            'caption' => $original['caption'], 
+            'description' => $original['description'],
+       ];
     
-       $bool = update_post_meta($item_id, '_wp_attachment_image_alt', $original_text);
+       //$bool = update_post_meta($item_id, '_wp_attachment_image_alt', $alt);
 
-       if (true === $bool)
-       {
-          $bool = delete_post_meta((int) $item_id, 'shortpixel_alt_requests');
-       }
+       $aiModel->revert();
 
-       if (false === $bool)
-       {
-          $bool = delete_metadata( 'post', $item_id, 'shortpixel_alt_requests', '' );
+       $this->replaceImageAttributes($qItem, $aiData); 
 
-       }
-
-       $this->startReplace($qItem, $original_text);
+   //    $this->startReplace($qItem, $original_text);
 
        return $this->getAltData($qItem); 
   }
@@ -732,9 +748,17 @@ class OptimizeAiController extends OptimizerBase
 public function getAltData(QueueItem $qItem)
 {
     $item_id = $qItem->item_id; 
-    $metadata = get_post_meta($item_id, 'shortpixel_alt_requests', true);
-    $current_alt = get_post_meta($item_id, '_wp_attachment_image_alt', true);
+   // $metadata = get_post_meta($item_id, 'shortpixel_alt_requests', true);
+   // $current_alt = get_post_meta($item_id, '_wp_attachment_image_alt', true);
 
+    $aiModel = new AiDataModel($item_id, 'media');
+
+    $generated = $aiModel->getGeneratedData(); 
+    $original = $aiModel->getOriginalData();
+
+    $status = $aiModel->getStatus();
+
+    /*
     if (false === is_array($metadata))
     {
          $metadata = [
@@ -742,9 +766,10 @@ public function getAltData(QueueItem $qItem)
             'result_alt' => false, 
             'snippet' => false, 
          ];
-    }
+    } */
 
     // Check for changes
+    /*
     if ($metadata['result_alt'] !== false && $metadata['original_alt'] !== false)
     {
         // If both result / original are not the current, this indicates that the current alt has been manually changed and should replace our original alt. 
@@ -756,32 +781,48 @@ public function getAltData(QueueItem $qItem)
         }
 
     }
-
+*/
     $image_url = $qItem->imageModel->getUrl();
 
+    $fields = ['alt', 'caption', 'description'];
+    $dataItems = []; 
+    foreach($fields as $name)
+    {
+         if (isset($generated[$name]) && false === is_null($generated[$name]) && strlen($generated[$name]) > 1)
+         {
+            $dataItems[] = ucfirst($name); 
+         }
+    } 
+
     // Check if it's our data. 
+    /*
     $has_data = ($metadata['original_alt'] !== false && $metadata['result_alt'] !== false) ? true : false; 
     if ($current_alt !== $metadata['result_alt'])
     {
          $has_data = false; 
     }
-
+*/
     $view = new ViewController();
     $view->addData([
             'item_id' => $item_id, 
-            'orginal_alt' => $metadata['original_alt'], 
-            'result_alt' => $metadata['result_alt'], 
-            'has_data' => $has_data, 
+            'orginal_alt' => $original['alt'], 
+            'result_alt' => $generated['alt'], 
+            'has_data' => ($status == AiDataModel::AI_STATUS_GENERATED) ? true : false,
             'image_url' => $image_url, 
-            'current_alt' => $current_alt, 
+           // 'current_alt' => $current_alt, 
+            'status' => $status, 
             'isSupported' => $this->isSupported($qItem),
+            'dataItems' => $dataItems, 
+            'isDifferent' =>  $aiModel->currentIsDifferent(),
         ]);
 
     $metadata['snippet'] = $view->returnView('snippets/part-aitext');
 
+    $metadata['generated'] = $generated; 
+    $metadata['original'] = $original; 
     $metadata['action'] = $qItem->data()->action;
     $metadata['item_id'] = $item_id;
-    $metadata['has_data'] = $has_data;
+  //  $metadata['has_data'] = $has_data;
 
     return $metadata; 
 }

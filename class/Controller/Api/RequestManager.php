@@ -101,7 +101,7 @@ abstract class RequestManager
 	{
 		$response = wp_remote_post($this->apiEndPoint, $requestParameters );
     Log::addDebug('ShortPixel API Request sent to ' . $this->apiEndPoint , $requestParameters['body']);
-    Log::addTemp('ShortPixel API Request sent to ' . $this->apiEndPoint , $requestParameters);
+   // Log::addTemp('ShortPixel API Request sent to ' . $this->apiEndPoint , $requestParameters);
 
 		//only if $Blocking is true analyze the response
 		if ( $requestParameters['blocking'] )
@@ -142,7 +142,8 @@ abstract class RequestManager
 				}
 				else
 				{
-           $qItem->addResult($this->handleResponse($qItem, $response));
+           $resultData = $this->handleResponse($qItem, $response);
+           $qItem->addResult($resultData);
 				}
 
 		}
@@ -256,10 +257,35 @@ abstract class RequestManager
   {
     $data = $response['body'];
 
+    $raw_data = $data; 
+
     $data = json_decode($data);
+    if (is_null($data)) // null means failure on return
+    {
+      /* $data = [
+         'status' => self::STATUS_ERROR,
+         'error' => json_last_error_msg(),
+       ]; */
+       $data = $this->getJsonStrings($raw_data);
+       $data = (array) json_decode($data[0]);
+       return $data;
+    }
     return (array)$data;
   }
 
+  // Temporary! 
+  private function getJsonStrings(string $text): array
+  {
+      preg_match_all('#\{(?:[^{}]|(?R))*\}#s', $text, $matches);
+      $finalValidJson = [];
+      foreach ($matches[0] as $match) {
+          if (json_validate($match)) {
+              $finalValidJson[] = $match;
+          }
+      }
+
+      return $finalValidJson;
+  }
 
 
 } // class RequestManager

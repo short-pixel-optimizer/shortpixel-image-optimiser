@@ -57,11 +57,11 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 			}
 		}
 
-		if ('ai' === apiName && typeof resultItem.retrievedText !== 'undefined')
+		if ('ai' === apiName && typeof resultItem.aiData !== 'undefined')
 		{
 			
 			// Not optimal
-			 this.FetchAltView(resultItem.retrievedText, item_id);
+			 this.FetchAltView(resultItem.aiData, item_id);
 		}
 
 		return false;
@@ -311,9 +311,9 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 
 		window.addEventListener('shortpixel.HandleUndoAlt', function (event) {
 			var data = event.detail.media;
-			var replaceAlt = data.original_alt
+			var original = data.original; 
 	
-			this.FetchAltView(replaceAlt ,id);
+			this.FetchAltView(original ,id);
 
 		}.bind(this), {once: true});
 

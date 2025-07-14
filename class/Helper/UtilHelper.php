@@ -100,8 +100,14 @@ class UtilHelper
       return false;
     }
 
+    // Try to simpler bail out without checking for the decode.
+		if (strpos($json, '{' ) === false && strpos($json, ':') === false)
+		{
+			return false; 
+		}
+
     if (function_exists('json_validate')) {
-      return json_validate($json);
+      return \json_validate($json);
     }
 
     json_decode($json);

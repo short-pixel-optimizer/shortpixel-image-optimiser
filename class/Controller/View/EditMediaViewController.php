@@ -212,7 +212,15 @@ class EditMediaViewController extends \ShortPixel\ViewController
 						 $urls = $optimizeData['urls'];
 					}
 
-      
+          $aiData = [
+            'alt' => 'genalt', 
+            'description' => 'gendesc', 
+          ];
+          $aiDataRestore = [
+            'alt' => 'origdata', 
+            'description' => 'origindesc',
+          ];
+
 					$thumbnails = $imageObj->get('thumbnails');
 					$processable = ($imageObj->isProcessable()) ? '<span class="green">Yes</span>' : '<span class="red">No</span> (' . $imageObj->getReason('processable') . ')';
 					$anyFileType = ($imageObj->isProcessableAnyFileType()) ? '<span class="green">Yes</span>' : '<span class="red">No</span>';

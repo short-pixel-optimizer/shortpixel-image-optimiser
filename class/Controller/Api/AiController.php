@@ -96,8 +96,10 @@ class AiController extends RequestManager
     protected function handleResponse(QueueItem $qItem, $response)
     {
        $apiData = $this->parseResponse($response);//get the actual response from API, its an array
+   //    Log::addTemp('Response AI ', $response);
        Log::addTemp('HAndle AI Response! ', $apiData);
 
+       
         // List all the random crap that might return. 
         $id = isset($apiData['Id']) ? intval($apiData['Id']) : false; 
         $jwt = isset($apiData['jwt']) ? sanitize_text_field($apiData['jwt']) : false; 
@@ -198,27 +200,35 @@ class AiController extends RequestManager
                   'relevance' => property_exists($result, 'relevance') ? $result->relevance : false, 
               ]; */
 
+              $aiData = array_filter([
+                 'filename' => isset($apiData['file_name']) ? sanitize_text_field($apiData['file_name']) : null,
+                 'alt' => isset($apiData['alt']) ? sanitize_text_field($apiData['alt']) : null, 
+                 'caption' => isset($apiData['caption']) ? sanitize_text_field($apiData['caption']) : null, 
+                 'relevance' => isset($apiData['relevance']) ? sanitize_text_field($apiData['relevance']) : null, 
+                 'description' => isset($apiData['image_description']) ? sanitize_text_field($apiData['image_description']) : null,
+              ]);
+
+              
               
               // Switch known Statii 
               switch ($status)
               {
                   case '-1':  // Error of some kind 
                     $apiStatus = RequestManager::STATUS_FAIL; 
-                    $message = property_exists($result, 'Error') ? sanitize_text_field($result->Error) : __('Unknown Ai Api Error occured', 'shortpixel-image-optimiser'); 
-                    return $this->returnFailure($apiStatus, $message); 
+                    return $this->returnFailure($apiStatus, $error); 
                   break; 
-                  case '0':
-                      if (false !== $error)
+                  case '0': // queued
+                      if (false !== $is_error)
                       {
-                         return $this->returnFailure(RequestManager::STATUS_FAIL, $result->Error);
+                         return $this->returnFailure(RequestManager::STATUS_FAIL, $error);
                       }
                   case '1':
-                  case '2':  // waiting for result. Perhaps. 
+                 
                      return $this->returnOk(RequestManager::STATUS_WAITING, __('Waiting for result', 'shortpixel-image-optimiser'));
                   break; 
-                  case '3':  // Success of some kind. 
+                  case '2':  // Success of some kind. 
                   default: 
-                    $apiStatus = RequestManager::STATUS_SUCCESS; 
+                    //$apiStatus = RequestManager::STATUS_SUCCESS; 
                     // @todo Possibly add a fail state here if all AI stuff came back negative / without data (?) 
                     /*      if (is_null($text) || strlen($text) == 0 || $error !== false)
                     {
@@ -228,7 +238,8 @@ class AiController extends RequestManager
                     else
                     {
               */
-                      return $this->handleSuccess($aiData, $qItem);
+                      $successData = $this->handleSuccess($aiData, $qItem);
+                      return $successData;
                //     }
 
                   break;
@@ -249,7 +260,7 @@ class AiController extends RequestManager
      */
     protected function handleSuccess($aiData, QueueItem $qItem)
     {
-      $qItem->addResult(['aiData' => $aiData]); 
+       
       return $this->returnSuccess(['aiData' => $aiData], RequestManager::STATUS_SUCCESS, __('Retrieved AI Alt Text', 'shortpixel-image-optimiser')); ; 
     }
 

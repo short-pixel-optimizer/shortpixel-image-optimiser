@@ -51,7 +51,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		 ]; */
 	}
 
-	FetchAltView(newAltText, item_id)
+	FetchAltView(aiData, item_id)
 	{
 		if (false == this.ai_enabled)
 		{
@@ -68,6 +68,12 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			return; 
 		}
 
+		if (typeof aiData !== 'undefined')
+		{
+			var newAltText = aiData.alt; 
+			var newCaption = aiData.caption;
+			var newDescription = aiData.description;
+		}
 
 		if (typeof newAltText !== 'undefined')
 		{
@@ -98,6 +104,25 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		}
 		// edit media screen
 		 // = document.getElementById('attachment_alt'); 
+
+		 if (typeof newCaption !== 'undefined')
+		 {
+			let captionField = document.getElementById('attachment_caption'); 
+			if (null !== captionField)
+			{
+				captionField.value = newCaption; 
+			}
+				
+		 }
+
+		 if (typeof newDescription !== 'undefined')
+		 {
+			let descriptionField = document.getElementById('attachment_content');
+			if (null !== descriptionField)
+			{
+				 descriptionField.value = newDescription; 
+			}
+		 }
 
 
 		if (null !== attachmentAlt)

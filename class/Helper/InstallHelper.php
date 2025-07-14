@@ -168,6 +168,7 @@ class InstallHelper
 		dbDelta(self::getFolderTableSQL());
 		dbDelta(self::getMetaTableSQL());
 		dbDelta(self::getPostMetaSQL());
+		dbDelta(self::getAIPostSQL());
 
 		self::checkIndexes();
 	}
@@ -223,6 +224,10 @@ class InstallHelper
 		}
 		if (self::checkTableExists('shortpixel_postmeta') === true) {
 			$sql = 'DROP TABLE  ' . $wpdb->prefix . 'shortpixel_postmeta';
+			$wpdb->query($sql);
+		}
+		if (self::checkTableExists('shortpixel_aipostmeta') === true) {
+			$sql = 'DROP TABLE  ' . $wpdb->prefix . 'shortpixel_aipostmeta';
 			$wpdb->query($sql);
 		}
 	}
@@ -314,12 +319,13 @@ class InstallHelper
 				id bigint unsigned not null AUTO_INCREMENT, 
 				post_type tinyint default 1,
 				attach_id bigint unsigned NOT NULL,  
-				original text, 
-				generated text, 
+				original_data text, 
+				generated_data text, 
 				status int, 
 				tsUpdated timestamp, 
 				PRIMARY KEY(id)
 		) $charsetCollate";
 
+		return $sql;
 	}
 } // InstallHelper

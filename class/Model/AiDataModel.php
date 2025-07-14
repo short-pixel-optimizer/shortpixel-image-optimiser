@@ -5,6 +5,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
+use ShortPixel\Helper\InstallHelper;
+use ShortPixel\Helper\UtilHelper;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notice;
 
@@ -17,23 +19,23 @@ class AiDataModel
     protected $type;
 
     protected $original = [
-        'alt', 
-        'caption', 
-        'description', 
-        'filebase'
+        'alt' => null, 
+        'caption' => null, 
+        'description' => null, 
+        'filebase' => null, 
     ];
 
     protected $current = [
-        'alt',  
-        'caption', 
-        'description', 
+        'alt' => null,  
+        'caption' => null, 
+        'description' => null, 
     ]; 
 
     protected $generated = [
-        'alt',  
-        'caption', 
-        'description',
-        'filebase' 
+        'alt' => null,  
+        'caption' => null, 
+        'description' => null,
+        'filebase' => null, 
     ]; 
 
     protected $status = 0;
@@ -64,7 +66,7 @@ class AiDataModel
            global $wpdb; 
            $tableName = $this->getTableName();
            
-           $sql = ' SELECT * FROM ' . $tableName . ' where attach_id = %d and type = %d';
+           $sql = ' SELECT * FROM ' . $tableName . ' where attach_id = %d and post_type = %d';
            $sql = $wpdb->prepare($sql, $attach_id, $type); 
 
            $row = $wpdb->get_row($sql);  
@@ -80,18 +82,36 @@ class AiDataModel
             return; 
         }
 
+        $originalData = $this->checkRowData($row->original_data); 
+        $generatedData = $this->checkRowData($row->generated_data); 
+
+
         $this->id = $row->id; 
         $this->has_record = true; 
         $this->status = $row->status; 
-        $this->original = $row->original; 
-        $this->generated = $row->generated; 
+        $this->original = array_merge($this->original, $originalData); 
+        $this->generated = array_merge($this->generated, $generatedData); 
 
+
+    }
+
+    private function checkRowData($json)
+    {
+        $bool = UtilHelper::ValidateJSON($json);
+        if (false === $bool)
+        {
+             return []; 
+        }
+        
+        $data = json_decode($json); 
+
+        return (array) $data;
 
     }
 
     public function handleNewData($data)
     {   
-        foreach($data as $name => $value)
+        /*foreach($data as $name => $value)
         {
              if (isset($this->generated[$name]))
              {
@@ -101,6 +121,14 @@ class AiDataModel
              {
                  Log::addTemp('Still to handle new data in AiDataMOdeL : ' . $name, $value);
              }
+        } */
+
+        //$this->generated = array_merge($data, $this->generated); 
+
+        // Save to Database
+        foreach($data as $name => $value)
+        {
+             $this->generated[$name] = $value; 
         }
 
         $this->setCurrentData();
@@ -109,21 +137,27 @@ class AiDataModel
         if (false === $this->has_record)
         {
             $this->original = $this->current; 
+            $this->status = self::AI_STATUS_GENERATED;
             $this->updateRecord();
         }
         else
         {
             // Not sure if  just categorically deny this, or some smart updater ( with more risks ) 
-            Log::addError('New AI DATA wil record available');
+            Log::addError('New Ai Data already has an entry');
         }
 
 
+        // Save to WordPress
+        /*
         if (isset($this->generated['alt']) && false !== $this->generated['alt'])
         {
             $bool = update_post_meta($this->attach_id, '_wp_attachment_image_alt', $this->generated['alt']);
-        }
+        } */
 
-        $post = get_post($this->attach_id); 
+        $this->updateWPPost($this->generated);
+        $this->updateWpMeta($this->generated); 
+
+/*        $post = get_post($this->attach_id); 
         $post_updated = false; 
 
         if (isset($this->generated['caption']) && false !== $this->generated['caption'])
@@ -141,6 +175,40 @@ class AiDataModel
         if (true === $post_updated)
         {
             wp_update_post($post);
+        } */
+    }
+
+    protected function updateWPPost($data)
+    {
+     
+        Log::addTemp('Update WpPost', $data);
+        $post = get_post($this->attach_id); 
+        $post_updated = false; 
+
+        if (isset($data['caption']) && false !== $data['caption'])
+        {
+            $post->post_excerpt = $data['caption'];
+            $post_updated = true; 
+        }
+
+        if (isset($data['description']) && false !== $data['description'])
+        {
+            $post->post_content = $data['description'];
+            $post_updated = true; 
+        }
+
+        if (true === $post_updated)
+        {
+            wp_update_post($post);
+        }
+    }
+
+    protected function updateWpMeta($data)
+    {
+        Log::addTemp('Update WpMeta', $data);
+        if (isset($data['alt']) && false !== $data['alt'])
+        {
+            $bool = update_post_meta($this->attach_id, '_wp_attachment_image_alt', $data['alt']);
         }
     }
 
@@ -148,6 +216,39 @@ class AiDataModel
     public function getGeneratedData()
     {
         return $this->generated;
+    }
+
+    public function getStatus()
+    {
+         return $this->status;
+    }
+
+    public function currentIsDifferent()
+    {
+         $this->setCurrentData(); 
+
+         $generated = array_filter($this->generated, [$this, 'mapWPVars'], ARRAY_FILTER_USE_KEY); 
+         $current = array_filter($this->current, [$this, 'mapWPVars'], ARRAY_FILTER_USE_KEY);
+         
+         $diff = array_diff($generated, $current); 
+
+         if (count($diff) > 0)
+         {
+             return true; 
+         }
+         return false; 
+    }
+
+    private function mapWPVars($key)
+    {
+         $fields = ['alt', 'caption', 'description']; 
+
+         if (false === in_array($key, $fields))
+         {
+            return false; 
+         }
+         return true;
+        
     }
 
     // Should return the current situation. If not stored in the database - or different from meta - uh something should be returned. 
@@ -160,7 +261,7 @@ class AiDataModel
         $post = get_post($attach_id); 
 
         $current_description = $post->post_content; 
-        $current_caption = $post->post_except; 
+        $current_caption = $post->post_excerpt; 
 
         $this->current = [
              'alt' => $current_alt, 
@@ -185,7 +286,7 @@ class AiDataModel
 
         $this->setCurrentData();
         
-        if ($this)
+        //if ($this)
           
     }
 
@@ -203,9 +304,9 @@ class AiDataModel
         $fields = [
             'attach_id' => $this->attach_id, 
             'status' => $this->status, 
-            'generated' => $this->generated, 
-            'original' => $this->original, 
-            'tsUpdated' => time(), 
+            'generated_data' => json_encode($this->generated), 
+            'original_data' => json_encode($this->original), 
+            'tsUpdated' => UtilHelper::timestampToDB(time()), 
         ];
 
         $format = ['%d', '%d', '%s', '%s', '%d'];
@@ -222,14 +323,21 @@ class AiDataModel
 
     }
 
-    protected function removeRecord()
+    public function revert()
     {   
         if (true === $this->has_record)
         {
             global $wpdb; 
-            return $wpdb->delete($this->getTableName()(), ['id' => $this->id], ['%s']);
+            $wpdb->delete($this->getTableName(), ['id' => $this->id], ['%s']);
 
         }
+
+        $this->updateWPPost($this->original);
+        $this->updateWpMeta($this->original);
+
+
+        Log::addTemp("REVERT DONE");
+
     
     }
 
