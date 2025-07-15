@@ -420,7 +420,7 @@ class ShortPixelPlugin {
 		);
 
 	 $screen_localize_media = [ 
-			'hide_ai' => ! $OptimizeAiController->isAiEnabled(),  // turn around negative setting
+			'hide_ai' => apply_filters('shortpixel/settings/no_ai', false),
 			'hide_spio_in_popups' => apply_filters('shortpixel/js/media/hide_in_popups', false), 
 	 ];
 
