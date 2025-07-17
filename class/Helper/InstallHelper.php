@@ -321,6 +321,8 @@ class InstallHelper
 				attach_id bigint unsigned NOT NULL,  
 				original_data text, 
 				generated_data text, 
+				old_filename varchar(300), 
+				new_filename varchar(300),
 				status int, 
 				tsUpdated timestamp, 
 				PRIMARY KEY(id)

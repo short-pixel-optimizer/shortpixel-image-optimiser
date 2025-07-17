@@ -141,6 +141,33 @@ class AdminController extends \ShortPixel\Controller
         return $meta; // It's a filter, otherwise no thumbs
     }
 
+    public function handleAiImageUploadHook($meta, $id)
+    {
+              // Media only hook
+				if ( in_array($id, self::$preventUploadHook))
+				{
+					 return $meta;
+				}
+
+        $fs = \wpSPIO()->filesystem();
+				$fs->flushImageCache(); // it's possible file just changed by external plugin.
+        $mediaItem = $fs->getImage($id, 'media');
+
+				if ($mediaItem === false)
+				{
+					 Log::addError('Handle Image Upload Hook triggered, by error in image :' . $id );
+					 return $meta;
+				}
+
+         $queueController = new QueueController();
+
+        
+        $args = ['action' => 'requestAlt'];
+        $queueController->addItemToQueue($mediaItem, $args); 
+         
+        return $meta;
+    }
+
 
     /**
      * Prevent autohandling image for integrations, i.e. when external source wants to generate thumbnails or edit attachments

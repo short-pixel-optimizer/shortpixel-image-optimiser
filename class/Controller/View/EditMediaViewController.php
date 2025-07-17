@@ -212,14 +212,19 @@ class EditMediaViewController extends \ShortPixel\ViewController
 						 $urls = $optimizeData['urls'];
 					}
 
-          $aiData = [
-            'alt' => 'genalt', 
-            'description' => 'gendesc', 
-          ];
-          $aiDataRestore = [
-            'alt' => 'origdata', 
-            'description' => 'origindesc',
-          ];
+/*
+          $qItem = QueueItems::getImageItem($imageObj);
+          $class = new \ReflectionClass('\ShortPixel\Controller\Optimizer\OptimizeAiController');
+          $method = $class->getMethod('replaceFiles'); 
+          $method->setAccessible(true);
+
+          $aiController = new \ShortPixel\Controller\Optimizer\OptimizeAiController(); 
+          //$aiController->replaceFiles($qItem, 'new-file-name');
+
+          $method->invokeArgs($aiController, [$qItem, 'new-file-name']);
+*/
+
+
 
 					$thumbnails = $imageObj->get('thumbnails');
 					$processable = ($imageObj->isProcessable()) ? '<span class="green">Yes</span>' : '<span class="red">No</span> (' . $imageObj->getReason('processable') . ')';

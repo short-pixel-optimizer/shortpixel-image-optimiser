@@ -309,7 +309,7 @@ class AiDataModel
             'tsUpdated' => UtilHelper::timestampToDB(time()), 
         ];
 
-        $format = ['%d', '%d', '%s', '%s', '%d'];
+        $format = ['%d', '%d', '%s', '%s', '%s'];
 
         if (false === $this->has_record)
         {
@@ -321,6 +321,35 @@ class AiDataModel
             $wpdb->update($this->getTableName(),$fields, ['id' => $this->id],$format);
         }
 
+    }
+
+    public function migrate($data)
+    {
+        $updated = false; 
+        if (false === is_array($data))
+        {
+            return false;
+        }
+        
+        if (is_null($this->original['alt']))
+        {
+            $this->original['alt'] = $data['original_alt']; 
+            $updated = true; 
+        }
+        if (is_null($this->generated['alt']))
+        {
+            $this->generated['alt'] = $data['result_alt'];
+            $updated = true; 
+        }
+        
+        if (true === $updated)
+        {
+            $this->status = self::AI_STATUS_GENERATED;
+            $this->updateRecord();
+            
+        }
+
+        return true;
     }
 
     public function revert()

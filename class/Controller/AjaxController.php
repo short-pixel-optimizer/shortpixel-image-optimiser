@@ -736,6 +736,7 @@ class AjaxController
 	{
 		$id = $data['id'];
 		$type = $data['type']; 
+		$action_type = isset($_POST['action_type']) ? sanitize_text_field($_POST['action_type']) : 'undo'; 
 
 		$imageModel = $this->getMediaItem($id, $type); 
 		$queueItem = new QueueItem(['imageModel' => $imageModel]);
@@ -745,6 +746,12 @@ class AjaxController
 		$api = $queueItem->getApiController('getAltData'); 
 
 		$metadata = $api->undoAltData($queueItem);
+
+		if ('redo' == $action_type)
+		{
+			 return $this->requestAlt($json, $data);
+		}
+
 
 		$json->$type = (object) $metadata; 
 		$json->$type->results = null;

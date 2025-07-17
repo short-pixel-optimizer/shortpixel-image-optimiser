@@ -15,6 +15,7 @@ use ShortPixel\Controller\Api\AiController;
 use ShortPixel\Controller\Queue\Queue;
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
 use ShortPixel\Model\AiDataModel;
+use ShortPixel\Replacer\Replacer;
 use ShortPixel\ViewController as ViewController;
 
 
@@ -221,7 +222,6 @@ class OptimizeAiController extends OptimizerBase
         {
              $aiData['filebase'] = $qItem->imageModel->getFileBase();
         }
-//        $text = $qItem->result()->retrievedText;
 
         $textItems = ['alt', 'caption'];
         foreach($textItems as $textItem)
@@ -235,58 +235,25 @@ class OptimizeAiController extends OptimizerBase
         // Description : From POST CONTENT 
         // Caption : From POST EXCERPT 
         // Alt  : Own Metadata field 
-
-
         $item_id = $qItem->item_id; 
         
         $aiModel = new AIDataModel($item_id, 'media');
         $aiModel->handleNewData($aiData);
 
-       /* $current_alt = get_post_meta($item_id, '_wp_attachment_image_alt', true);
-
-        $ai_metadata = get_post_meta($item_id, 'shortpixel_alt_requests', true); 
-
-        if (false === is_array($ai_metadata))
-        {
-          $ai_metadata = []; 
-        }
-
-        if (! isset($ai_metadata['original_alt']))
-        {
-            $ai_metadata['original_alt'] = $current_alt;     
-        }
-        $ai_metadata['result_alt'] = $text;
-
-        $bool = update_post_meta($item_id, 'shortpixel_alt_requests', $ai_metadata); 
-        
-        if (false === $bool)
-        {
-            Log::addWarn('Save alt requests failed? - ' . $item_id, $ai_metadata);
-        }
-        
-        $bool = update_post_meta($item_id, '_wp_attachment_image_alt', $text);
-
-         if (false === $bool)
-         {
-             Log::addWarn('Failed to add alt text to postmeta?' . $item_id, $text);
-          }
-
-*/
         $qItem->addResult([
 //          'retrievedText' => $text,
           'apiStatus' => RequestManager::STATUS_SUCCESS,
           'fileStatus' => ImageModel::FILE_STATUS_SUCCESS
         ]);
 
-
-
         $this->replaceImageAttributes($qItem, $aiData); 
 
+       /* Feature off for now - This DOES NOT YET work 
         if ($qItem->result()->filename)
         {
-            
+            $this->replaceFiles($qItem, $qItem->result()->filename);
         }
-        
+        */
 
         $this->finishItemProcess($qItem);
         return;
@@ -323,6 +290,134 @@ class OptimizeAiController extends OptimizerBase
              $finder->posts();
 
   }
+
+  protected function replaceFiles($qItem, $newFileName)
+  {
+      $imageModel = $qItem->imageModel; 
+      $item_id = $qItem->item_id; 
+
+      $files = $imageModel->getAllFiles();
+      $fs = \wpSPIO()->filesystem();
+
+      if (isset($files['files'][$imageModel->getImageKey('original')]))
+      {
+         $baseFileObj = $files['files'][$imageModel->getImageKey('original')];
+      }
+      else
+      {
+        $baseFileObj = $files['files'][$imageModel->getImageKey('main')];
+      }
+
+      $source_url = $url = $baseFileObj->getURL();
+      $base_filename = $baseFileObj->getFileBase();
+
+      $base_url = parse_url($url, PHP_URL_PATH);
+      $base_url = str_replace('.' . pathinfo($base_url, PATHINFO_EXTENSION), '', $base_url);
+      $base_url = str_replace($base_filename, '', $base_url);
+
+      $target_url = str_replace($base_filename, $newFileName, $source_url);
+
+
+      $searchArray = $replaceArray = $sourceFiles = $targetFiles = []; 
+    
+      foreach($files['files'] as $key => $fileObj)
+      {
+          $searchArray[$key] = $base_url . $fileObj->getFilename(); 
+          $replaceArray[$key] = $base_url . $newFileName . '.' . $fileObj->getExtension(); 
+          $sourceFiles[$key] = $fileObj; 
+          
+          $filename = str_replace($base_filename, $newFileName, $fileObj->getFileName());
+          $targetFiles[$key] = $fileObj->getFileDir() . $filename . '.' . $fileObj->getExtension(); 
+
+      }
+
+      if (count($files['webp']) > 0)
+      {
+         foreach($files['webp'] as $key => $fileObj)
+         {
+            $searchArray['webp_' . $key] = $base_url . $fileObj->getFileName(); 
+            $replaceArray['webp_' . $key] = $base_url . $newFileName . $fileObj->getExtension(); 
+            $sourceFiles['webp_' . $key] = $fileObj; 
+            $targetFiles['webp_' . $key] =  $fileObj->getFileDir() . $newFileName . '.' . $fileObj->getExtension();
+          }
+      }
+
+
+      $targetFileObjs = []; // if we have to check them all anyhow, store it for moving / deleting. 
+      foreach($targetFiles as $key => $target_path)
+      {
+        $targetFileObj = $fs->getFile($target_path); 
+        if ($targetFileObj->exists())
+        {
+          //$qItem->result()->is_error = true; 
+          //$qItem->result()->message = __('Replace Files: File Already exists', 'shortpixel-image-optimiser');
+          Log::addWarn('Replace files found filename conflict and didnt run', $targetFileObj->getFullPath());
+          return false; 
+        }
+
+        $targetFileObjs[$key] = $targetFileObj; 
+        
+      }
+
+      foreach($sourceFiles as $key => $sourceFile)
+      { 
+            $targetFileObj = isset($targetFileObjs[$key]) ? $targetFileObjs[$key] : null; 
+            if (is_null($targetFileObj))
+            {
+                 Log::addError('Source/Target mismatch in replacements. This should not happen!'); 
+                continue;      
+            }
+
+            $result = $sourceFile->move($targetFileObj);
+      }
+
+
+
+
+      $replacer = new Replacer(); 
+      $replacer->setSource($source_url);
+      $replacer->setTarget($target_url); 
+      $replacer->setSourceMeta($searchArray); 
+      $replacer->setTargetMeta($replaceArray);
+      
+      $replacer->replace();
+
+
+      $this->replaceMetaData($item_id, $base_filename, $newFileName );
+      return false; 
+
+  }
+
+  protected function replaceMetaData($item_id, $old_file, $new_file)
+  {
+        $metadata = wp_get_attachment_metadata($item_id); 
+        if (isset($metadata['file']) && strpos($metadata['file'], $old_file) !== false)
+        {
+             $metadata['file'] = str_replace($old_file, $new_file, $metadata['file']); 
+             update_attached_file($item_id, $metadata['file']);
+        }
+
+        if (isset($metadata['original_image']) && strpos($metadata['original_image'], $old_file) !== false)
+        {
+            $metadata['original_image'] = str_replace($old_file, $new_file, $metadata['original_image']); 
+        }
+
+        if (isset($metadata['sizes']) && is_array($metadata['sizes']))
+        {
+             foreach($metadata['sizes'] as $sizeName => $sizeData)
+             {
+                 if (isset($sizeData['file']) && strpos($sizeData['file'], $old_file) !== false)
+                 {
+                    $metadata['sizes'][$sizeName]['file'] = str_replace($old_file, $new_file, $sizeData['file']);
+                 }
+             } 
+        }
+
+        Log::addTemp('New Metadata after replace: ', $metadata);
+        wp_update_attachment_metadata($item_id, $metadata);
+        
+  }
+
 
 
   // @todo This might be returned in multiple formats / post data / postmeta data?  Public because of callback
@@ -718,14 +813,8 @@ class OptimizeAiController extends OptimizerBase
 
   public function undoAltData(QueueItem $qItem)
   {
-       //$altData = $this->getAltData($qItem);
        $item_id = $qItem->item_id;
-
-       //$original_text = $altData['original_alt'];
-Log::addTemp('UNDO ALT DATA - OptimizeAIController');
        $aiModel = new AiDataModel($item_id, 'media');
-
-      // $generated = $aiModel->getGeneratedData(); 
        $original = $aiModel->getOriginalData();
 
        $aiData = [
@@ -734,13 +823,9 @@ Log::addTemp('UNDO ALT DATA - OptimizeAIController');
             'description' => $original['description'],
        ];
     
-       //$bool = update_post_meta($item_id, '_wp_attachment_image_alt', $alt);
-
        $aiModel->revert();
 
        $this->replaceImageAttributes($qItem, $aiData); 
-
-   //    $this->startReplace($qItem, $original_text);
 
        return $this->getAltData($qItem); 
   }
@@ -748,40 +833,27 @@ Log::addTemp('UNDO ALT DATA - OptimizeAIController');
 public function getAltData(QueueItem $qItem)
 {
     $item_id = $qItem->item_id; 
-   // $metadata = get_post_meta($item_id, 'shortpixel_alt_requests', true);
-   // $current_alt = get_post_meta($item_id, '_wp_attachment_image_alt', true);
 
     $aiModel = new AiDataModel($item_id, 'media');
+
+    $status = $aiModel->getStatus();
+    
+    // check for old data
+    if (AiDataModel::AI_STATUS_NOTHING === $status) // old data 
+    {
+         $metacheck = get_post_meta($item_id, 'shortpixel_alt_requests', true); 
+         if (false !== $metacheck && strlen($metacheck) > 0 && is_array($metacheck))
+         {
+                $aiModel->migrate($metacheck);
+                delete_post_meta($item_id, 'shortpixel_alt_requests');
+                $aiModel = new AiDataModel($item_id, 'media');
+                $status = $aiModel->getStatus();
+         }
+    }
 
     $generated = $aiModel->getGeneratedData(); 
     $original = $aiModel->getOriginalData();
 
-    $status = $aiModel->getStatus();
-
-    /*
-    if (false === is_array($metadata))
-    {
-         $metadata = [
-            'original_alt' => $current_alt, 
-            'result_alt' => false, 
-            'snippet' => false, 
-         ];
-    } */
-
-    // Check for changes
-    /*
-    if ($metadata['result_alt'] !== false && $metadata['original_alt'] !== false)
-    {
-        // If both result / original are not the current, this indicates that the current alt has been manually changed and should replace our original alt. 
-        if ($metadata['result_alt'] !== $current_alt && $metadata['original_alt'] !== $current_alt)
-        {
-            $metadata['original_alt'] = $current_alt; 
-            $bool = update_post_meta($item_id, 'shortpixel_alt_requests', $metadata); 
-
-        }
-
-    }
-*/
     $image_url = $qItem->imageModel->getUrl();
 
     $fields = ['alt', 'caption', 'description'];
@@ -794,14 +866,6 @@ public function getAltData(QueueItem $qItem)
          }
     } 
 
-    // Check if it's our data. 
-    /*
-    $has_data = ($metadata['original_alt'] !== false && $metadata['result_alt'] !== false) ? true : false; 
-    if ($current_alt !== $metadata['result_alt'])
-    {
-         $has_data = false; 
-    }
-*/
     $view = new ViewController();
     $view->addData([
             'item_id' => $item_id, 
@@ -822,7 +886,6 @@ public function getAltData(QueueItem $qItem)
     $metadata['original'] = $original; 
     $metadata['action'] = $qItem->data()->action;
     $metadata['item_id'] = $item_id;
-  //  $metadata['has_data'] = $has_data;
 
     return $metadata; 
 }

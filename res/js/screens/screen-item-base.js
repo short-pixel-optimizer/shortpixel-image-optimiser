@@ -300,12 +300,13 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 		this.processor.AjaxRequest(data);
 	}
 
-	UndoAlt(id)
+	UndoAlt(id, action_type)
 	{
 		var data = {
 			id: id,
 			type: this.type,
 			'screen_action': 'ai/undoAlt',
+			'action_type' : action_type, 
 			'callback': 'shortpixel.HandleUndoAlt',
 		}
 
@@ -313,6 +314,15 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 			var data = event.detail.media;
 			var original = data.original; 
 	
+			if ('redo' == action_type)
+			{
+				if (!this.processor.CheckActive())
+				{
+					let ev = new Event('shortpixel.' + this.type + '.resumeprocessing');
+					window.dispatchEvent(ev);
+
+				}
+			}
 			this.FetchAltView(original ,id);
 
 		}.bind(this), {once: true});
