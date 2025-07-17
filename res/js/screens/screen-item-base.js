@@ -323,7 +323,7 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 
 				}
 			}
-			this.FetchAltView(original ,id);
+			this.FetchAltView(original,id);
 
 		}.bind(this), {once: true});
 

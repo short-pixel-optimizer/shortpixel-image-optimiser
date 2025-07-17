@@ -700,7 +700,7 @@ class AjaxController
 
 		];
 		$result = $queueController->addItemToQueue($imageModel, $args);
-		
+		$result->apiName = 'ai'; // prevent response leaking to media interface.
 		$json->$type->results = [$result];
 		$json->$type->qstatus = $queueController->getLastQueueStatus();
 		$json->status = true;

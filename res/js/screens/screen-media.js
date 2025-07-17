@@ -143,7 +143,10 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 			window.addEventListener('shortpixel.AttachAiInterface', this.AttachAiInterface.bind(this), {once: true});
 		}
-		this.processor.LoadItemView({ id: item_id, type: 'media' });
+	/*	if (typeof aiData !== 'undefined')
+		{
+			this.processor.LoadItemView({ id: item_id, type: 'media' });
+		} */
 
 
 	}
