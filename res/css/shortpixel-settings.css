@@ -1547,7 +1547,7 @@ div.spio-modal-title {
   float: none;
 }
 .wrap.is-shortpixel-settings-page textarea {
-  width: 400px;
+  width: 80%;
   height: 100px;
 }
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-thumbnail-setting content {
