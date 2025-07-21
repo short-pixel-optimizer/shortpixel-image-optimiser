@@ -60,7 +60,7 @@ class QueueController
         'forceExclusion' => false,
         'action' => 'optimize', 
         'compressionType' => null, 
-        'smartcrop' => false, 
+        'smartcrop' => null, 
         'next_actions' => [], 
       );
       $args = wp_parse_args($args, $defaults);
