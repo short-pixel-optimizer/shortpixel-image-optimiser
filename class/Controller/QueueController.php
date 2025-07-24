@@ -320,8 +320,11 @@ class QueueController
           $item_id = $qItem->item_id;
 
           $imageModel = (! is_null($qItem->imageModel)) ? $qItem->imageModel : $fs->getImage($item_id, $qtype);
-          $qItem->setModel($imageModel);
-
+          if (is_object($imageModel))
+          {
+            $qItem->setModel($imageModel);
+          }
+          
           if (! is_object($imageModel))
           {
             Log::addWarn('ImageObject was empty when send to processing - ' . $item_id);
