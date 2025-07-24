@@ -237,6 +237,12 @@
 
   }
 
+  // cancel out toggleTarget if the field is also only for advanced, and simple mode is active.
+  &.simple section.setting-tab .toggleTarget.is-advanced 
+  {
+	 display: none; 
+  }
+
   section#tab-optimisation
   {
 	content.exif-ai img.icon {

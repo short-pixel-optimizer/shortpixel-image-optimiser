@@ -27,6 +27,7 @@ class ShortPixelScreenBase
 	// Function for subclasses to add more init. Seperated because of screens that need to call Process functions when starting.
 	Init()
 	{
+
 	}
 
 //	var message = {status: false, http_status: response.status, http_text: text, status_text: response.statusText };

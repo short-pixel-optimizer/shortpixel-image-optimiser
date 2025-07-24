@@ -117,6 +117,10 @@ window.ShortPixelProcessor =
 				{
           this.screen = new ShortPixelScreen({}, this);
 					this.screen.Init();
+
+          var event = new CustomEvent('shortpixel.screen.loaded', { detail : this});
+          window.dispatchEvent(event);
+      
 				}
 
 				// Load the Startup Data (needs screen)

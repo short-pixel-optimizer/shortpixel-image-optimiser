@@ -64,7 +64,7 @@ class AiDataModel
     protected function fetchRecord($attach_id, $type)
     {
            global $wpdb; 
-           $tableName = $this->getTableName();
+           $tableName = self::getTableName();
            
            $sql = ' SELECT * FROM ' . $tableName . ' where attach_id = %d and post_type = %d';
            $sql = $wpdb->prepare($sql, $attach_id, $type); 
@@ -181,7 +181,7 @@ class AiDataModel
     protected function updateWPPost($data)
     {
      
-        Log::addTemp('Update WpPost', $data);
+      //  Log::addTemp('Update WpPost', $data);
         $post = get_post($this->attach_id); 
         $post_updated = false; 
 
@@ -221,6 +221,11 @@ class AiDataModel
     public function getStatus()
     {
          return $this->status;
+    }
+
+    public function getAttachId()
+    {
+         return $this->attach_id;
     }
 
     public function currentIsDifferent()
@@ -290,7 +295,7 @@ class AiDataModel
           
     }
 
-    private function getTableName()
+    private static function getTableName()
     {
          global $wpdb; 
          return $wpdb->prefix . 'shortpixel_aipostmeta';
@@ -313,12 +318,12 @@ class AiDataModel
 
         if (false === $this->has_record)
         {
-            $this->id = $wpdb->insert($this->getTableName(), $fields, $format); 
+            $this->id = $wpdb->insert(self::getTableName(), $fields, $format); 
             $this->has_record = true; 
         }
         else
         {
-            $wpdb->update($this->getTableName(),$fields, ['id' => $this->id],$format);
+            $wpdb->update(self::getTableName(),$fields, ['id' => $this->id],$format);
         }
 
     }
@@ -357,7 +362,7 @@ class AiDataModel
         if (true === $this->has_record)
         {
             global $wpdb; 
-            $wpdb->delete($this->getTableName(), ['id' => $this->id], ['%s']);
+            $wpdb->delete(self::getTableName(), ['id' => $this->id], ['%s']);
 
         }
 
@@ -368,6 +373,20 @@ class AiDataModel
         Log::addTemp("REVERT DONE");
 
     
+    }
+
+    public static function getMostRecent()
+    {
+        global $wpdb; 
+         $sql = 'SELECT attach_id FROM ' . self::getTableName() . ' order by tsUpdated desc limit 1'; 
+         $attach_id = $wpdb->get_var($sql);         
+
+        if (false === $attach_id)
+        {
+             return false; 
+        }
+
+        return new AiDataModel($attach_id);
     }
 
     

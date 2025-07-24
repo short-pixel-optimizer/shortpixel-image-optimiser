@@ -90,6 +90,12 @@
   vertical-align: middle;
   margin-right: 4px;
 }
+.wrap.is-shortpixel-bulk-page .shortpixel-icon.rotate_right {
+  rotate: -90deg;
+}
+.wrap.is-shortpixel-bulk-page .shortpixel-icon.ai {
+  background-image: url("../images/icon/ai.svg");
+}
 .wrap.is-shortpixel-bulk-page .shortpixel-icon.alert {
   background-image: url("../images/icon/alert.svg");
 }
@@ -158,6 +164,9 @@
 }
 .wrap.is-shortpixel-bulk-page .shortpixel-icon.notifications {
   background-image: url("../images/icon/notifications.svg");
+}
+.wrap.is-shortpixel-bulk-page .shortpixel-icon.refresh {
+  background-image: url("../images/icon/refresh.svg");
 }
 .wrap.is-shortpixel-bulk-page .shortpixel-icon.robo {
   background-image: url("../images/icon/robo.svg");

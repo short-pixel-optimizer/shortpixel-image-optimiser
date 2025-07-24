@@ -25,7 +25,7 @@ use ShortPixel\Model\AccessModel as AccessModel;
 // @todo This should probably become settingscontroller, for saving
 use ShortPixel\Controller\View\SettingsViewController as SettingsViewController;
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
-
+use ShortPixel\Model\AiDataModel;
 use ShortPixel\Model\Queue\QueueItem;
 
 // Class for containing all Ajax Related Actions.
@@ -333,6 +333,15 @@ class AjaxController
 				$this->handleChangeMode($data);
 				break;
 			default:
+			case 'settings/getAiExample': 
+				$this->getSettingsAiExample($data);
+			break; 
+			case 'settings/setAiImageId': 
+				$this->setSettingsAiImage($data);
+			break; 
+			case 'settings/getNewAiImagePreview': 
+				$this->getNewAiImagePreview($data);
+			break;
 				$json->$type->message = __('Ajaxrequest - no action found', 'shorpixel-image-optimiser');
 				$json->error = self::NO_ACTION;
 				break;
@@ -691,14 +700,19 @@ class AjaxController
 	{
 		$id = $data['id'];
 		$type = $data['type'];
+
+		$preview_only = isset($_POST['preview_only']) ? true : false; 
 		$imageModel = $this->getMediaItem($id, $type);
 
 		$queueController = new QueueController();
 
 		$args = [
 			'action' => 'requestAlt',
-
 		];
+		if (true === $preview_only)
+		{
+			$args['preview_only'] = true; 
+		}
 		$result = $queueController->addItemToQueue($imageModel, $args);
 		$result->apiName = 'ai'; // prevent response leaking to media interface.
 		$json->$type->results = [$result];
@@ -909,7 +923,7 @@ class AjaxController
 		$this->send($json);
 	}
 
-	public function handleChangeMode($data)
+	protected function handleChangeMode($data)
 	{
 		$user_id = get_current_user_id();
 		$new_mode = isset($_POST['new_mode']) ? sanitize_text_field($_POST['new_mode']) : false;
@@ -920,6 +934,83 @@ class AjaxController
 
 		update_user_option($user_id, 'shortpixel-settings-mode', $new_mode);
 	}
+
+	protected function getNewAiImagePreview($data)
+	{
+  //public function addItemToQueue(ImageModel $imageModel, $args = [])
+		 $queueController = new QueueController();
+		$item_id = $data['id'];
+
+		$imageModel = \wpSPIO()->filesystem()->getMediaImage($item_id); 
+		//$result = $queueController->addItemToQueue($imageModel, ['preview_only' => true, 'action' => 'requestAlt']);
+
+		$qItem = QueueItems::getImageItem($imageModel);
+		$qItem->requestAltAction(); 
+
+		$optimizer = $qItem->getApiController('requestAlt');
+		$result = $optimizer->enqueueItem($qItem, ['preview_only' => true, 'action' => 'requestAlt']);
+
+
+		if ($result->is_done === false)
+		{ 
+			$optimizer->sendToProcessing($qItem);
+		}
+		else
+		{
+			Log::addTemp('Result', $result); 
+		}
+		
+
+	}
+
+	protected function getSettingsAiExample($data)
+	{
+		 
+		$id = get_transient('spio_settings_ai_example_id');
+		
+		if (false === $id || ! is_numeric($id))
+		{
+			$item = AiDataModel::getMostRecent();
+			$attach_id = $item->getAttachId(); 
+		}
+		else
+		{
+			$item = new AiDataModel($id);
+			$attach_id = $id; 
+		}
+		
+		$imageModel = \wpSPIO()->fileSystem()->getMediaImage($attach_id);
+
+        if (false === $item)
+        {
+           // make something up
+        }
+        else
+        {
+          $generated = $item->getGeneratedData();
+          $original = $item->getOriginalData();;
+        }
+
+
+        $json = [
+          'preview_image' => UiHelper::findBestPreview($imageModel)->getURL(), 
+		  'item_id' => $attach_id,
+          'generated' => $generated, 
+          'original' => $original,
+        ];
+
+        $this->send((object) $json);
+	}
+
+	protected function setSettingsAiImage($data)
+	{
+		 $id = $data['id']; 
+		 set_transient('spio_settings_ai_example_id', $id); 
+
+		 return;
+	}
+
+	
 
 	/** Data for the compare function */
 	protected function getComparerData($json, $data)

@@ -319,6 +319,10 @@ div.spio-modal-title {
   grid-template-columns: 60% 40%;
   column-gap: 5%;
 }
+.wrap.is-shortpixel-settings-page .shortpixel-settings gridbox.width_two_with_middle {
+  grid-template-columns: 45% 10% 45%;
+  width: 100%;
+}
 @media (max-width: 1200px) {
   .wrap.is-shortpixel-settings-page .shortpixel-settings {
     width: 100%;
@@ -484,6 +488,12 @@ div.spio-modal-title {
   vertical-align: middle;
   margin-right: 4px;
 }
+.wrap.is-shortpixel-settings-page .shortpixel-icon.rotate_right {
+  rotate: -90deg;
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.ai {
+  background-image: url("../images/icon/ai.svg");
+}
 .wrap.is-shortpixel-settings-page .shortpixel-icon.alert {
   background-image: url("../images/icon/alert.svg");
 }
@@ -552,6 +562,9 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page .shortpixel-icon.notifications {
   background-image: url("../images/icon/notifications.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.refresh {
+  background-image: url("../images/icon/refresh.svg");
 }
 .wrap.is-shortpixel-settings-page .shortpixel-icon.robo {
   background-image: url("../images/icon/robo.svg");
@@ -919,6 +932,9 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page section.setting-tab .toggleTarget.is-visible {
   display: block;
   height: auto;
+}
+.wrap.is-shortpixel-settings-page.simple section.setting-tab .toggleTarget.is-advanced {
+  display: none;
 }
 .wrap.is-shortpixel-settings-page section#tab-optimisation content.exif-ai img.icon {
   height: 40px;
@@ -1546,9 +1562,63 @@ div.spio-modal-title {
   display: inline;
   float: none;
 }
-.wrap.is-shortpixel-settings-page textarea {
-  width: 80%;
+.wrap.is-shortpixel-settings-page #tab-ai .ai_general_context {
   height: 100px;
+  width: 80%;
+}
+.wrap.is-shortpixel-settings-page #tab-ai .switch input {
+  opacity: 1;
+}
+.wrap.is-shortpixel-settings-page #tab-ai .generate_ai_items textarea {
+  width: 80%;
+  height: 50px;
+  margin: 6px 0;
+}
+.wrap.is-shortpixel-settings-page #tab-ai hr {
+  background-color: #92D5E3;
+  height: 1px;
+  margin: 6px 0;
+}
+.wrap.is-shortpixel-settings-page #tab-ai .preview_wrapper {
+  border: 1px solid #92D5E3;
+  display: block;
+  padding: 12px;
+}
+.wrap.is-shortpixel-settings-page #tab-ai .preview_wrapper .ai_preview .image_preview {
+  width: 200px;
+  height: auto;
+}
+.wrap.is-shortpixel-settings-page #tab-ai .preview_wrapper .ai_preview button i {
+  filter: brightness(0) saturate(100%) invert(100%) sepia(100%) saturate(20%) hue-rotate(283deg) brightness(105%) contrast(105%);
+}
+.wrap.is-shortpixel-settings-page #tab-ai .preview_wrapper .result_wrapper .result_info {
+  padding: 10px;
+}
+.wrap.is-shortpixel-settings-page #tab-ai .preview_wrapper .result_wrapper .result_info label {
+  font-weight: 700;
+}
+.wrap.is-shortpixel-settings-page #tab-ai .preview_wrapper .result_wrapper .result_info span {
+  display: block;
+}
+.wrap.is-shortpixel-settings-page #tab-ai .preview_wrapper .result_wrapper .result_info h3 {
+  font-size: 14px;
+  font-weight: 700;
+}
+.wrap.is-shortpixel-settings-page #tab-ai .preview_wrapper .result_wrapper .current {
+  background: #F5F5F5;
+}
+.wrap.is-shortpixel-settings-page #tab-ai .preview_wrapper .result_wrapper .result {
+  background: #F4FBFC;
+  padding: 6px;
+}
+.wrap.is-shortpixel-settings-page #tab-ai .preview_wrapper .result_wrapper .icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.wrap.is-shortpixel-settings-page #tab-ai .preview_wrapper .result_wrapper .icon i {
+  width: 35px;
+  height: 20px;
 }
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-thumbnail-setting content {
   column-count: 3;
@@ -2232,18 +2302,13 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page setting switch label {
   font-weight: 700;
 }
-.wrap.is-shortpixel-settings-page setting.switch {
-  /*name,
-  info,
-  warning,
-  error {
-    //	 margin-left: 70px;
-  } */
-}
 .wrap.is-shortpixel-settings-page setting.disabled {
   filter: blur(1px);
   opacity: 0.4;
   transition: all 0.5s ease-out;
+}
+.wrap.is-shortpixel-settings-page setting.textarea content {
+  display: block;
 }
 
 /*# sourceMappingURL=shortpixel-settings.css.map */

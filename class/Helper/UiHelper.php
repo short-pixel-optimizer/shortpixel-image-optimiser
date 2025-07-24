@@ -933,9 +933,15 @@ class UiHelper
             'alert' => __('Action needed', 'shortpixel-image-optimiser'),
       ];
 
+      $ai_string = [
+            'imagemodaltitle' => __('Select an image for preview', 'shortpixel-image-optimiser'), 
+            'selectimage' => __('Use this image', 'shortpixel-image-optimiser'),
+      ];
+
       $strings['exclusion_types'] = $exclusion_types;
       $strings['exclusion_apply'] = $exclusion_apply;
       $strings['dashboard_strings'] = $dashboard_string;
+      $strings['ai_strings'] = $ai_string; 
 
       if ($name !== false && isset($strings[$name]))
       {

@@ -26,6 +26,7 @@ use ShortPixel\Controller\CacheController as CacheController;
 use ShortPixel\Controller\Optimizer\OptimizeAiController;
 use ShortPixel\Controller\View\BulkViewController as BulkViewController;
 use ShortPixel\External\Offload\Offloader;
+use ShortPixel\Model\AiDataModel;
 use ShortPixel\NextGenController as NextGenController;
 
 class SettingsViewController extends \ShortPixel\ViewController
@@ -512,7 +513,7 @@ class SettingsViewController extends \ShortPixel\ViewController
          $this->view->languages = wp_get_available_translations();
         
          
-         $this->view->latest_ai = $this->getLatestAIExamples();
+         //$this->view->latest_ai = $this->getLatestAIExamples();
 
          $settings = \wpSPIO()->settings();
 
@@ -1124,17 +1125,6 @@ class SettingsViewController extends \ShortPixel\ViewController
 						exit();
 			}
 
-      protected function getLatestAIExamples()
-      {
-        // @todo Test Data
-        $url = 'http://tunnel.vrijwazig.org:8080/wp-content/uploads/2023/11/HelloIMG1704727837020.jpeg'; 
-        $item_id = 7356;
-
-         $controller = OptimizeAiController::getInstance();
-         $question = $controller->parseQuestion($url, $item_id); 
-
-         return $question;
-      }
 
 
 }

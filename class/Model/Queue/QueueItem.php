@@ -454,12 +454,17 @@ class QueueItem
 
    }
 
-   public function requestAltAction()
-   {
+   public function requestAltAction($args = [])
+   {   
       $this->newAction(); 
       $this->data->url = $this->imageModel->getUrl();
       $this->data->tries = 0;
       $this->item_count = 1;
+
+      /*if (isset($args['preview_only']) && true == $args['preview_only'])
+      {
+         $this->data->paramlist = ['preview_only' => true];
+      } */
 
       $this->data->action = 'requestAlt'; // For Queue
       if ($this->data()->hasNextAction())

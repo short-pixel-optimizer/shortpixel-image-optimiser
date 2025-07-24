@@ -78,20 +78,20 @@ class OptimizeAiController extends OptimizerBase
   public function enqueueItem(QueueItem $qItem, $args = [])
   {
 
-    $action = $args['action']; // $qItem->data()->action; 
-
+    $action = $args['action']; 
     $queue = $this->getCurrentQueue($qItem);
-   // $directAction = ; 
+
+    $preview_only = isset($args['preview_only']) ? $args['preview_only'] : false; 
 
     switch($action)
     {
         case 'requestAlt': 
-           $qItem->requestAltAction();
+           $qItem->requestAltAction($args);
            $this->parseJSONForQItem($qItem); 
            $directAction = false; 
         break;
         case 'retrieveAlt':  // This might be deprecated, since retrieve will be called via next_action. 
-            //$qItem->data()->remote_id =  
+              
             $qItem->retrieveAltAction($args['remote_id']);
             $directAction = false; 
         break; 
@@ -104,6 +104,11 @@ class OptimizeAiController extends OptimizerBase
             ]);
             return $qItem->result();
         break; 
+    }
+
+    if (true === $preview_only)
+    {
+        $directAction = true;
     }
 
     // @todo This is probably out of use for good, already. 
