@@ -81,6 +81,7 @@ class OptimizeAiController extends OptimizerBase
     $action = $args['action']; 
     $queue = $this->getCurrentQueue($qItem);
 
+    // For loading AI Preview on settings page.
     $preview_only = isset($args['preview_only']) ? $args['preview_only'] : false; 
 
     switch($action)
@@ -123,11 +124,14 @@ class OptimizeAiController extends OptimizerBase
         // Probably not as is should be, but functional
        if ($result->is_error === false)
        {
-            $result = new \stdClass; 
+          //  $result = new \stdClass; 
             $result->qstatus = Queue::RESULT_ITEMS;
             $result->numitems = 1;
-            $qItem->addResult([
-            'message' => __('Request for Alt text send to Shortpixel AI', 'shortpixel-image-optimiser')]);
+            if ($qItem->result()->message == '')
+            {
+                $qItem->addResult([
+                'message' => __('Request for Alt text send to Shortpixel AI', 'shortpixel-image-optimiser')]);
+            }
         }
         else
         {
@@ -151,21 +155,6 @@ class OptimizeAiController extends OptimizerBase
       $qItem->addResult(['apiName' => $this->apiName]);
       $apiStatus = $qItem->result()->apiStatus;
 
-
-    // @TODO  TEST DATA 
- /*   $qItem->addResult([
-        'apiStatus' => 2, 
-        'is_error' => false, 
-//        'retrievedText' => 'Regenerated text', 
-        'message' => 'Hardcoded Text done',
-    ]); 
-
-    $qItem->data()->action = 'retrieveAlt';
-    $qItem->data()->next_actions = []; 
-    $apiStatus = 2; */
-    // ***** END TEST -- REMOVE!!111!!11!! ****** 
-
-
       if ($qItem->result()->is_error)  {
        
         if (true === $qItem->result()->is_done )
@@ -176,11 +165,7 @@ class OptimizeAiController extends OptimizerBase
         }
         else // Do nothing for now / retry (?)
         {
-            // timeout
-            /*if ($apiStatus === RequestManager::STATUS_CONNECTION_ERROR)
-            {
 
-            } */
         }
 
         return; 
@@ -218,24 +203,29 @@ class OptimizeAiController extends OptimizerBase
 
   }
 
+  public function formatResultData($aiData, $qItem)
+  {
+    if (! isset($aiData['filebase']))
+    {
+         $aiData['filebase'] = $qItem->imageModel->getFileBase();
+    }
+
+    $textItems = ['alt', 'caption'];
+    foreach($textItems as $textItem)
+    {
+         if (isset($aiData[$textItem]) && false !== $aiData[$textItem])
+         {
+             $aiData[$textItem] = $this->processTextResult($aiData[$textItem]);
+         }
+    }            
+
+    return $aiData; 
+  }
+
   protected function HandleSuccess(QueueItem $qItem)
   {
-        // @todo Move success Handler here + replacer start.
         $aiData = $qItem->result->aiData;  
-
-        if (! isset($aiData['filebase']))
-        {
-             $aiData['filebase'] = $qItem->imageModel->getFileBase();
-        }
-
-        $textItems = ['alt', 'caption'];
-        foreach($textItems as $textItem)
-        {
-             if (isset($aiData[$textItem]) && false !== $aiData[$textItem])
-             {
-                 $aiData[$textItem] = $this->processTextResult($aiData[$textItem]);
-             }
-        }            
+        $aiData = $this->formatResultData($aiData, $qItem);
 
         // Description : From POST CONTENT 
         // Caption : From POST EXCERPT 

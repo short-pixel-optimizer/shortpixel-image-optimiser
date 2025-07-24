@@ -325,7 +325,7 @@ class InstallHelper
 				new_filename varchar(300),
 				status int, 
 				tsUpdated timestamp, 
-				PRIMARY KEY(id)
+				PRIMARY KEY id (id)
 		) $charsetCollate";
 
 		return $sql;

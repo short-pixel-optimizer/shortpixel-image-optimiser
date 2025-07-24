@@ -366,7 +366,6 @@ class QueueController
           else
           {
             $apiController->setCurrentQueue($Q, $this);
-            
           }
 
           $item_id = $qItem->item_id;
@@ -376,7 +375,7 @@ class QueueController
           {
             $qItem->setModel($imageModel);
           }
-          
+
           if (! is_object($imageModel))
           {
             Log::addWarn('ImageObject was empty when send to processing - ' . $item_id);

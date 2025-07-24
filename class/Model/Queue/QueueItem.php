@@ -461,10 +461,14 @@ class QueueItem
       $this->data->tries = 0;
       $this->item_count = 1;
 
-      /*if (isset($args['preview_only']) && true == $args['preview_only'])
+
+      $preview_only = false; 
+      if (isset($args['preview_only']) && true == $args['preview_only'])
       {
          $this->data->paramlist = ['preview_only' => true];
-      } */
+         $preview_only = true; 
+      } 
+      
 
       $this->data->action = 'requestAlt'; // For Queue
       if ($this->data()->hasNextAction())
@@ -475,7 +479,12 @@ class QueueItem
       {
          $next_actions = ['retrieveAlt'];
       }
-      $this->data->next_actions = $next_actions;
+      
+      if (false === $preview_only)
+      {
+         $this->data->next_actions = $next_actions;
+      }
+      
    }
 
    public function retrieveAltAction($remote_id)

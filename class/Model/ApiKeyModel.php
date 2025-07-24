@@ -87,7 +87,6 @@ class ApiKeyModel extends \ShortPixel\Model
 		}
 
 		$this->apiKey = isset($apikeySettings['apiKey']) ? $apikeySettings['apiKey'] : '';
-		$this->verifiedKey = $apikeySettings['verifiedKey'];
 		$this->apiKeyTried = $apikeySettings['apiKeyTried'];
 
 

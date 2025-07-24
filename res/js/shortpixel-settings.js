@@ -377,8 +377,8 @@ class ShortPixelSettings {
 				 var data = {
 					id: attach_id,
 					type: 'media',
-					'screen_action': 'settings/getNewAiImagePreview',
-					'callback' : 'shortpixelSettings.AiImageSet',
+					screen_action: 'settings/getNewAiImagePreview',
+					callback : 'shortpixelSettings.AiImageSet',
 					
 				}
 				window.ShortPixelProcessor.AjaxRequest(data); 
@@ -408,8 +408,8 @@ class ShortPixelSettings {
 					var data = {
 						id: attachment.id,
 						type: 'media',
-						'screen_action': 'settings/setAiImageId',
-						'callback' : 'shortpixelSettings.AiImageSet',
+						screen_action: 'settings/setAiImageId',
+						callback : 'shortpixelSettings.AiImageSet',
 						
 					}
 

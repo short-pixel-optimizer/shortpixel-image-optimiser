@@ -937,29 +937,75 @@ class AjaxController
 
 	protected function getNewAiImagePreview($data)
 	{
-  //public function addItemToQueue(ImageModel $imageModel, $args = [])
-		 $queueController = new QueueController();
+		 //$queueController = new QueueController();
 		$item_id = $data['id'];
 
 		$imageModel = \wpSPIO()->filesystem()->getMediaImage($item_id); 
 		//$result = $queueController->addItemToQueue($imageModel, ['preview_only' => true, 'action' => 'requestAlt']);
 
 		$qItem = QueueItems::getImageItem($imageModel);
-		$qItem->requestAltAction(); 
+		//$qItem->requestAltAction(['preview_only' => true]); 
 
 		$optimizer = $qItem->getApiController('requestAlt');
 		$result = $optimizer->enqueueItem($qItem, ['preview_only' => true, 'action' => 'requestAlt']);
 
-
-		if ($result->is_done === false)
-		{ 
-			$optimizer->sendToProcessing($qItem);
-		}
-		else
-		{
-			Log::addTemp('Result', $result); 
-		}
+		//$result = $qItem->result();
 		
+		$state = 'requestAlt'; // mimic here the double task of the Ai gen. 
+		$is_done = false; 
+		$i = 0; 
+
+		$result_json = [
+			'error' => __('Something went wrong', 'shortpixel-image-optimiser'), 
+			'is_error' => true, 
+		];
+
+		while (false === $is_done)
+		{
+
+			if (false === property_exists($result, 'is_done') || $result->is_done === false)
+			{ 
+				$optimizer->sendToProcessing($qItem);
+				$result = $qItem->result();
+			}
+			
+			if (property_exists($result, 'is_done') && true === $result->is_done)
+			{
+				if ('requestAlt' === $state)
+				{
+					$remote_id = $result->remote_id; 
+				//	$qItem->retrieveAltAction($remote_id);
+					
+					$result = $optimizer->enqueueItem($qItem, ['preview_only' => true, 'action' => 'retrieveAlt', 'remote_id' => $remote_id]); 
+					$state = 'retrieveAlt';
+				}
+				if ('retrieveAlt' === $state)
+				{
+					Log::addTemp('Result', $result); 
+					if (property_exists($result, 'aiData'))
+					{
+						 $aiData = $optimizer->formatResultData($result->aiData, $qItem);
+						 $aiData['item_id'] = $qItem->item_id;
+						 $aiData['time_generated'] = time(); 
+
+						 set_transient('spio_settings_ai_example', $aiData, MONTH_IN_SECONDS);
+						 $this->send((object) $aiData);
+						 $is_done = true; 
+						 break;  // safe guards.
+
+					}
+				}
+				
+			}
+
+			if ($i >= 30) // safeguard. 
+			{
+				break; 
+			}
+			$i++; 
+		}
+
+		$this->send($result_json);
 
 	}
 
@@ -967,7 +1013,7 @@ class AjaxController
 	{
 		 
 		$id = get_transient('spio_settings_ai_example_id');
-		
+
 		if (false === $id || ! is_numeric($id))
 		{
 			$item = AiDataModel::getMostRecent();
@@ -987,8 +1033,17 @@ class AjaxController
         }
         else
         {
-          $generated = $item->getGeneratedData();
-          $original = $item->getOriginalData();;
+		  $transient = get_transient('spio_settings_ai_example'); 
+		  if (is_array($transient) && $transient['item_id'] == $id)
+		  { 
+			 $generated = $transient; 
+		  }
+		  else
+		  {
+			$generated = $item->getGeneratedData();
+		  }
+
+          $original = $item->getOriginalData();
         }
 
 
@@ -1005,7 +1060,7 @@ class AjaxController
 	protected function setSettingsAiImage($data)
 	{
 		 $id = $data['id']; 
-		 set_transient('spio_settings_ai_example_id', $id); 
+		 set_transient('spio_settings_ai_example_id', $id, MONTH_IN_SECONDS); 
 
 		 return;
 	}

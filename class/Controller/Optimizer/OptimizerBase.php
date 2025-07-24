@@ -159,10 +159,7 @@ abstract class OptimizerBase
 
          Log::addTemp('FinishItemProcess: ', $qItem->data());
         // Can happen with actions outside queue / direct action 
-       /* if ($qItem->getQueueItem() !== false)
-        {
-          return; 
-        } */
+
         if (true === $qItem->data()->hasNextAction())
         {
             $action = $qItem->data()->popNextAction(); 
