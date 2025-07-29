@@ -289,19 +289,63 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return $url;
 	}
 
+
+	public function getImageKey($key = 'main')
+	{
+		 if ('main' == $key)
+		 {
+			 return $this->mainImageKey;
+		 }
+		 if ('original' == $key)
+		 {
+			 return $this->originalImageKey;
+		 }
+	}
 	/** Return all urls of item.  This should -not- be used for optimization. Use getOptimizeUrls(). In use for cache
 	 */
 	public function getAllUrls()
 	{
 		$urls = array();
-		$urls[] = $this->getUrl();
+		$urls[$this->mainImageKey] = $this->getUrl();
 
-		$thumbs = $this->getThumbObjects();
-		foreach ($thumbs as $thumbObj) {
-			$urls[] = $thumbObj->getUrl();
+
+		if ($this->isScaled())
+		{
+			 $urls[$this->originalImageKey]  = $this->getOriginalFile()->getUrl();
+
 		}
 
-		return $urls;
+		$thumbs = $this->getThumbObjects();
+		foreach ($thumbs as $thumbName => $thumbObj) {
+			$urls[$thumbName] = $thumbObj->getUrl();
+
+		}
+
+	//	$w = $this->getWebps();
+	//	$urls = array_merge($urls, $this->getWebps(), $this->getAvifs());
+	$results = [
+		'urls' => $urls, 
+		'avif' => [],
+		'webp' => [] 
+	];
+	
+
+		$webps = $this->getWebps();
+		$avifs = $this->getAvifs(); 
+		
+		$base_url = trailingslashit(str_replace($this->getFileName(), '', $this->getURL()));
+
+		foreach($webps as $webpName => $webpObj)
+		{
+			$results['webp'][$webpName]  =  $base_url . $webpObj->getFileName(); 
+		}
+		foreach($avifs as $avifName => $avifObj)
+		{
+			$results['avif'][$avifName]  = $base_url .  $avifObj->getFileName(); 	 
+		}
+
+
+		return $results;
 	}
 
 	public function getWPMetaData()

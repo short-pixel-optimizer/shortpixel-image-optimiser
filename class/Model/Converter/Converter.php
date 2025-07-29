@@ -176,20 +176,31 @@ abstract class Converter
 		protected function getReplacementPath()
 		{
 			$fs = \wpSPIO()->filesystem();
+			$image_id = $this->imageModel->get('id');
 
-			$filename = $this->imageModel->getFileName();
-			$newFileName = $this->imageModel->getFileBase() . '.jpg'; // convert extension to .jpg
-
-			$fsNewFile = $fs->getFile($this->imageModel->getFileDir() . $newFileName);
-
-			$uniqueFile = $this->unique_file( $this->imageModel->getFileDir(), $fsNewFile);
-			$newPath =  $uniqueFile->getFullPath(); //(string) $fsFile->getFileDir() . $uniquepath;
-
-			if (! $this->imageModel->getFileDir()->is_writable())
+			if ($this->imageModel->isScaled())
 			{
-					Log::addWarn('Replacement path for PNG not writable ' . $this->imageModel->getFileDir()->getPath());
+				$fileObj = $this->imageModel->getOriginalFile();  
+			}
+			else
+			{
+				$fileObj = $this->imageModel; 
+			}
+
+		//	$filename = $fileObj->getFileName();
+			$newFileName = $fileObj->getFileBase() . '.jpg'; // convert extension to .jpg
+			$fileDir = $fileObj->getFileDir(); 
+
+			$fsNewFile = $fs->getFile($fileDir . $newFileName);
+
+			$uniqueFile = $this->unique_file( $fileDir, $fsNewFile);
+			$newPath =  $uniqueFile->getFullPath();
+
+			if (! $fileDir->is_writable())
+			{
+					Log::addWarn('Replacement path for PNG not writable ' . $newPath);
 					$msg = __('Replacement path for PNG not writable', 'shortpixel-image-optimiser');
-					ResponseController::addData($this->imageModel->get('id'), 'message', $msg);
+					ResponseController::addData($image_id, 'message', $msg);
 
 				return false;
 			}

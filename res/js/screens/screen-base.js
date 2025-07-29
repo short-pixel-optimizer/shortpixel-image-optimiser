@@ -6,6 +6,7 @@ class ShortPixelScreenBase
 	isMedia = true;
 	processor;
 	strings = [];
+	settings;
 
 	// ImageModel Constants
 	imageConstants = {

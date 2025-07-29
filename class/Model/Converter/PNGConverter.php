@@ -206,7 +206,7 @@ class PNGConverter extends MediaLibraryConverter
 				return false; 
 			}
 
-			$width = $this->imageModel->get('width');
+		/*	$width = $this->imageModel->get('width');
 			$height = $this->imageModel->get('height');
 
 			// If imageModel doesn't have proper width / height set. This can happen with remote files.
@@ -218,8 +218,12 @@ class PNGConverter extends MediaLibraryConverter
 			{
 				 $height = $image->getHeight(); //imagesy($img);
 			}
+*/
 
+			$width = $image->getWidth(); 
+			$height = $image->getHeight();
 			Log::addDebug("PNG2JPG doConvert width $width height $height", memory_get_usage());
+
 			/* $bg = imagecreatetruecolor($width, $height);
 
 			if(false === $bg || false === $img)
@@ -248,7 +252,7 @@ class PNGConverter extends MediaLibraryConverter
 
 			// check old filename, replace with uniqued filename.
 
-			$bool = $image->convertPNG(['width' => $width, 'height' => $height]);
+			$bool = $image->convertPNG();
 
       /** Quality is set to 90 and not using WP defaults (or filter) for good reason. Lower settings very quickly degrade the libraries output quality.  Better to leave this hardcoded at 90 and let the ShortPixel API handle the optimization **/
 			if (true === $bool) {
@@ -262,7 +266,14 @@ class PNGConverter extends MediaLibraryConverter
 						 $origSize = $this->virtual_filesize;
 					}
 					else {
-						$origSize = $this->imageModel->getFileSize();
+						if ($this->imageModel->isScaled())
+						{
+							$origSize = $this->imageModel->getOriginalFile()->getFileSize();
+						}
+						else
+						{
+							$origSize = $this->imageModel->getFileSize();
+						}
 					}
 
 					// Reload the file we just wrote.
@@ -426,9 +437,11 @@ class PNGConverter extends MediaLibraryConverter
 			if ($this->imageModel->isScaled())
 			{
 				$imagePath = $this->imageModel->getOriginalFile()->getFullPath();
+				$imageObj = $this->imageModel->getOriginalFile();
 			}
 			else {
 				$imagePath = $this->imageModel->getFullPath();
+				$imageObj = $this->imageModel;
 			}
 
 			if (true === $this->imageModel->is_virtual())
@@ -436,7 +449,7 @@ class PNGConverter extends MediaLibraryConverter
 				$downloadHelper = DownloadHelper::getInstance();
 				Log::addDebug('PNG converter: Item is remote, attempting to download');
 
-				$tempFile = $downloadHelper->downloadFile($this->imageModel->getURL());
+				$tempFile = $downloadHelper->downloadFile($imageObj->getURL());
 				if (is_object($tempFile))
 				{
 					 $imagePath = $tempFile->getFullPath();
@@ -445,6 +458,7 @@ class PNGConverter extends MediaLibraryConverter
 			}
 
 			$replacementPath = $this->getReplacementPath();
+			Log::addTemp("replacement path: " . $replacementPath);
 
 			// @todo Add ResponseController support to here and getReplacementPath.
 			if (false === $replacementPath)

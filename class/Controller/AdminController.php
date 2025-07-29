@@ -301,6 +301,62 @@ class AdminController extends \ShortPixel\Controller
 
     }
 
+    public function checkRestMedia($result, $server, $request )
+    {
+      $data = $result->data; 
+      if (! is_array($data) || ! isset($data['type']) || $data['type'] !== 'attachment') // check if for us. 
+      {
+         return $result; 
+      }
+
+      $attach_id = $data['id'];
+       
+      $fs = \wpSPIO()->filesystem();
+			$mediaImage = $fs->getImage($attach_id, 'media');
+
+      if (false === $mediaImage)
+      {
+         return $result; 
+      }
+
+      $urls = $mediaImage->getAllUrls(); 
+      $webps = $urls['webp']; 
+      $avifs = $urls['avif']; 
+
+      if (count($webps) == 0 && count($avifs) == 0)
+      {
+         return $result; 
+      }
+
+      $mainKey = $mediaImage->getImageKey('main'); 
+
+
+      if (isset($webps[$mainKey]))
+      {
+        $result->data['source_url_webp'] = $webps[$mainKey];
+      }
+
+      if (isset($avifs[$mainKey]))
+      {
+        $result->data['source_url_avif'] = $avifs[$mainKey];
+      }
+
+      foreach($data['media_details']['sizes'] as $sizeName => $sizeData )
+      {
+          if (isset($webps[$sizeName]))
+          {
+             $result->data['media_details']['sizes'][$sizeName]['source_url_webp'] = $webps[$sizeName];
+          }
+          if (isset($avifs[$sizeName]))
+          {
+             $result->data['media_details']['sizes'][$sizeName]['source_url_avif'] = $avifs[$sizeName];
+          }
+      }
+
+
+      return $result; 
+
+    }
 		// WP functions that are not loaded during Cron Time.
 		protected function loadCronCompat()
 		{

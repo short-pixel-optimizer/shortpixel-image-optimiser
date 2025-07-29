@@ -17,9 +17,13 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 	Init() {
 		super.Init();
+		
+		let settings = spio_mediascreen_settings;
+		this.settings = settings;
+
 		this.ListenGallery();
 
-		let settings = spio_mediascreen_settings;
+
 		if (typeof settings.hide_ai !== 'undefined')
 		{
 			this.ai_enabled = ! settings.hide_ai;
@@ -269,6 +273,12 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 	ListenGallery() {
 		var self = this;
+
+		if (this.settings.hide_spio_in_popups)
+		{
+			return;
+		}
+
 		if (typeof wp.media === 'undefined') {
 			this.ListenEditAttachment(); // Edit Media edit attachment screen
 			return;

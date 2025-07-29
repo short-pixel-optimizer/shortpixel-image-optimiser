@@ -178,9 +178,10 @@ class ShortPixelPlugin {
 		//add_filter('attachment_fields_to_edit', array($admin, 'editAttachmentScreen'), 10, 2);
 		add_action('print_media_templates', array($admin, 'printComparer'));
 
-
 		// Placeholder function for heic and such, return placeholder URL in image to help w/ database replacements after conversion.
 		add_filter('wp_get_attachment_url', array($admin, 'checkPlaceHolder'), 10, 2);
+
+		add_filter('rest_post_dispatch', [$admin, 'checkRestMedia'],10, 3);
 
 		/** When automagically process images when uploaded is on */
 		if ( $this->env()->is_autoprocess ) {
@@ -420,6 +421,7 @@ class ShortPixelPlugin {
 
 	 $screen_localize_media = [ 
 			'hide_ai' => apply_filters('shortpixel/settings/no_ai', false),
+			'hide_spio_in_popups' => apply_filters('shortpixel/js/media/hide_in_popups', false), 
 	 ];
 
 		wp_localize_script('shortpixel-screen-media', 'spio_mediascreen_settings', $screen_localize_media); 

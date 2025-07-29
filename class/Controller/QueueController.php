@@ -56,7 +56,7 @@ class QueueController
         'forceExclusion' => false,
         'action' => 'optimize', 
         'compressionType' => null, 
-        'smartcrop' => false, 
+        'smartcrop' => null, 
       );
       $args = wp_parse_args($args, $defaults);
 
@@ -288,6 +288,7 @@ class QueueController
     $qtype = $Q->getType();
     $qtype = strtolower($qtype);
 
+    //Log::addTemp('RunTick Items - ', $items);
     /* Only runs if result is array, dequeued items.
        Item is a MediaItem subset of QueueItem
     */
@@ -319,8 +320,11 @@ class QueueController
           $item_id = $qItem->item_id;
 
           $imageModel = (! is_null($qItem->imageModel)) ? $qItem->imageModel : $fs->getImage($item_id, $qtype);
-          $qItem->setModel($imageModel);
-
+          if (is_object($imageModel))
+          {
+            $qItem->setModel($imageModel);
+          }
+          
           if (! is_object($imageModel))
           {
             Log::addWarn('ImageObject was empty when send to processing - ' . $item_id);
