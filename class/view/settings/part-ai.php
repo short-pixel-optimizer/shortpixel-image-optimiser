@@ -6,8 +6,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 ?>
-
-
 <section id="tab-ai" class="<?php echo ($this->display_part == 'ai') ? 'active setting-tab' :'setting-tab'; ?>" data-part="ai" >
 
 <settinglist>
@@ -46,11 +44,31 @@ if ( ! defined( 'ABSPATH' ) ) {
       <i class='documentation dashicons dashicons-editor-help' data-link="-todo-"></i>
       <name>
 
-        <?php esc_html_e('Automatically add alt and descriptions when uploading the image','shortpixel-image-optimiser');?>
+        <?php esc_html_e('Automatically process Ai settings after uploading the image','shortpixel-image-optimiser');?>
 
       </name>
     </content>
   </setting>
+
+  <setting class='switch'>
+    <content>
+
+      <?php $this->printSwitchButton(
+            ['name' => 'autoAIBulk',
+             'checked' => $view->data->autoAIBulk,
+             'label' => esc_html__('Auto Bulk','shortpixel-image-optimiser'),
+            ]);
+      ?>
+
+      <i class='documentation dashicons dashicons-editor-help' data-link="-todo-"></i>
+      <name>
+
+        <?php esc_html_e('Automatically process Ai settings when running the bulk','shortpixel-image-optimiser');?>
+
+      </name>
+    </content>
+  </setting>
+
 
   <setting class='textarea'>      
         <content>
@@ -189,26 +207,28 @@ if ( ! defined( 'ABSPATH' ) ) {
       [
         'name' => 'ai_gen_filename',
         'checked' => $view->data->ai_gen_filename,
-        'label' => esc_html__('Update image filename with SEO-Friendly one', 'shortpixel-image-optimiser')
+        'label' => esc_html__('Update image filename with SEO-Friendly one', 'shortpixel-image-optimiser'),
+        'data' => ['data-toggle="ai_gen_filename"'], 
+
       ]
     );
   ?>
   </content>
 
-  <content class='nextline'>
+  <content class='nextline toggleTarget ai_gen_filename'>
     <?php 
     $input  = '<input type="number" name="ai_limit_filename_chars" value="' . $view->data->ai_limit_filename_chars . '">';
     ?>
     <name><?php printf(__('Limit filename to %s characters ', 'shortpixel-image-optimiser'), $input); ?></name>
   </content>
 
-  <content class='nextline'>
+  <content class='nextline toggleTarget ai_gen_filename'>
     <name><?php _e('Additional context for filename : ', 'shortpixel-image-optimiser'); ?></name>
     <textarea name="ai_filename_context"><?php echo $view->data->ai_filename_context ?></textarea>
     
   </content>
 
-  <content class='nextline'>
+  <content class='nextline toggleTarget ai_gen_filename'>
     <?php $this->printSwitchButton(
         [
           'name' => 'ai_filename_prefercurrent',
@@ -223,6 +243,7 @@ if ( ! defined( 'ABSPATH' ) ) {
   </gridbox>
   </settinglist>
 
+  <!--  @todo Might be removed in general
     <setting class='switch'>
         
         <content>
@@ -237,6 +258,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         ?>
         </content>
     </setting>
+        -->
 
     <setting>
           <content>

@@ -210,7 +210,7 @@ class OptimizeAiController extends OptimizerBase
          $aiData['filebase'] = $qItem->imageModel->getFileBase();
     }
 
-    $textItems = ['alt', 'caption'];
+    $textItems = ['alt', 'caption', 'description'];
     foreach($textItems as $textItem)
     {
          if (isset($aiData[$textItem]) && false !== $aiData[$textItem])
@@ -225,6 +225,24 @@ class OptimizeAiController extends OptimizerBase
   protected function HandleSuccess(QueueItem $qItem)
   {
         $aiData = $qItem->result->aiData;  
+        $settings = $this->getAISettings();
+
+
+        $checks = ['alt' => 'ai_gen_alt', 
+        'caption' => 'ai_gen_caption', 
+        'description' => 'ai_gen_description',
+        'filename' => 'ai_gen_filename',
+        ];
+
+        foreach($checks as $check_name => $check_setting)
+        {
+            if (false === $settings[$check_setting])
+            {
+                 unset($aiData[$check_name]);
+            }
+        }
+
+
         $aiData = $this->formatResultData($aiData, $qItem);
 
         // Description : From POST CONTENT 
@@ -516,8 +534,6 @@ class OptimizeAiController extends OptimizerBase
    */
   protected function processTextResult($text)
   {
-
-
         $text = ucfirst(trim($text));
 
         // Add period to the end of the string.
@@ -555,6 +571,14 @@ class OptimizeAiController extends OptimizerBase
          $json['caption'] = [
                 'context' => $settings['ai_caption_context'], 
                 'chars' => $settings['ai_limit_caption_chars'], 
+         ];
+     }
+
+     if ($settings['ai_gen_description'])
+     {
+         $json['description'] = [
+                'context' => $settings['ai_description_context'], 
+                'chars' => $settings['ai_limit_description_chars'],
          ];
      }
 

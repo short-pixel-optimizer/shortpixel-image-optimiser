@@ -266,10 +266,11 @@ class ApiKeyModel extends \ShortPixel\Model
           $this->apiKey = $key;
         }
         $this->verifiedKey = $checked_key;
+        $this->apiKeyTried = $this->apiKey;
         $this->processNewKey($quotaData);
         $this->update();
-     }
-     return $this->verifiedKey;
+     }    
+      return $this->verifiedKey;
   }
 
   /** Process some things when key has been added. This is from original wp-short-pixel.php */

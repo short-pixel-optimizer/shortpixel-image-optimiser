@@ -66,6 +66,7 @@ class SettingsModel extends \ShortPixel\Model
         'cdn_purge_version' => ['s' => 'int', 'default' => 1, 'export' => false], 
         'enable_ai' => ['s' => 'boolean', 'default' => true], 
         'autoAI' => ['s' => 'boolean', 'default' => true], 
+        'autoAIBulk' => ['s' => 'boolean', 'default' => false],
         'ai_general_context' => ['s' => 'string', 'default' => 'callback'], 
         'ai_use_post' => ['s' => 'boolean', 'default' => true], 
         'ai_gen_alt' => ['s' => 'boolean', 'default' => true], 
