@@ -116,8 +116,32 @@ abstract class Converter
 
 		if (true === $forConversion) // don't check more.
 		{
-			return $converter;
-		}
+			$fs = \wpSPIO()->filesystem();
+			$image_id = $this->imageModel->get('id');
+
+			if ($this->imageModel->isScaled())
+			{
+				$fileObj = $this->imageModel->getOriginalFile();  
+			}
+			else
+			{
+				$fileObj = $this->imageModel; 
+			}
+
+		//	$filename = $fileObj->getFileName();
+			$newFileName = $fileObj->getFileBase() . '.jpg'; // convert extension to .jpg
+			$fileDir = $fileObj->getFileDir(); 
+
+			$fsNewFile = $fs->getFile($fileDir . $newFileName);
+
+			$uniqueFile = $this->unique_file( $fileDir, $fsNewFile);
+			$newPath =  $uniqueFile->getFullPath();
+
+			if (! $fileDir->is_writable())
+			{
+					Log::addWarn('Replacement path for PNG not writable ' . $newPath);
+					$msg = __('Replacement path for PNG not writable', 'shortpixel-image-optimiser');
+					ResponseController::addData($image_id, 'message', $msg);
 
 		if (false === $converter) {
 			if ($imageModel->getMeta()->convertMeta()->isConverted() && ! is_null($imageModel->getMeta()->convertMeta()->getFileFormat())) {
