@@ -937,19 +937,27 @@ class AjaxController
 
 	protected function getNewAiImagePreview($data)
 	{
-		 //$queueController = new QueueController();
 		$item_id = $data['id'];
+		$settingsData = isset($_POST['settingsData']) ? $_POST['settingsData'] : null; 
+
+		if (! is_null($settingsData))
+		{
+			 $json = json_decode(stripslashes($settingsData), true);
+			 $settingsData = array_map('sanitize_text_field', $json); 
+		}
+		else
+		{
+			 $settingsData = [];  // null - empty array
+		}
 
 		$imageModel = \wpSPIO()->filesystem()->getMediaImage($item_id); 
-		//$result = $queueController->addItemToQueue($imageModel, ['preview_only' => true, 'action' => 'requestAlt']);
 
 		$qItem = QueueItems::getImageItem($imageModel);
-		//$qItem->requestAltAction(['preview_only' => true]); 
 
 		$optimizer = $qItem->getApiController('requestAlt');
-		$result = $optimizer->enqueueItem($qItem, ['preview_only' => true, 'action' => 'requestAlt']);
+		//$optimize->useCustomSettings($settingsData);
+		$result = $optimizer->enqueueItem($qItem, array_merge(['preview_only' => true, 'action' => 'requestAlt'], $settingsData));
 
-		//$result = $qItem->result();
 		
 		$state = 'requestAlt'; // mimic here the double task of the Ai gen. 
 		$is_done = false; 
@@ -996,6 +1004,11 @@ class AjaxController
 					}
 				}
 				
+			}
+
+			if ('retrieveAlt' === $state)
+			{
+				sleep(3); // prevent in case of fast connection hammering the API
 			}
 
 			if ($i >= 30) // safeguard. 

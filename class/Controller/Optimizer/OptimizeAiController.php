@@ -88,7 +88,7 @@ class OptimizeAiController extends OptimizerBase
     {
         case 'requestAlt': 
            $qItem->requestAltAction($args);
-           $this->parseJSONForQItem($qItem); 
+           $this->parseJSONForQItem($qItem, $args); 
            $directAction = false; 
         break;
         case 'retrieveAlt':  // This might be deprecated, since retrieve will be called via next_action. 
@@ -593,11 +593,11 @@ class OptimizeAiController extends OptimizerBase
      return $json; 
   }
 
-  protected function parseJSONForQItem(QueueItem $qItem)
+  protected function parseJSONForQItem(QueueItem $qItem, $params = [])
   {
         $url = $qItem->data()->url; 
         $item_id = $qItem->item_id;
-        $json = $this->getRequestJSON($url, $item_id); 
+        $json = $this->getRequestJSON($url, $item_id, $params); 
         $qItem->data()->paramlist = $json;
   }
 

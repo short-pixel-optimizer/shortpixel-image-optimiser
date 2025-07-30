@@ -373,11 +373,40 @@ class ShortPixelSettings {
 			button.addEventListener('click', function () {
 				 //window.dispatchEvent(triggerEvent);
 				 var attach_id = document.querySelector('input[name="ai_preview_image_id"]').value; 
+				 var inputs = document.querySelectorAll('#tab-ai input, #tab-ai select, #tab-ai textarea'); 
+
+				 var settingsData = {}; 
+				 for (let i = 0; i < inputs.length; i++)
+				 {
+					console.log(inputs[i]);
+					let input = inputs[i]; 
+					let name = input.name; 
+					if ('checkbox' == input.type)
+					{
+						 if (input.checked)
+						 {
+							 settingsData[name] = 1
+						 }
+						 else
+						 {
+							settingsData[name] = 0; 
+						 }
+					}
+					else
+					{
+						settingsData[name] = input.value;
+					}
+					
+				 }
+
+				 console.log(JSON.stringify(settingsData));
+
 
 				 var data = {
 					id: attach_id,
 					type: 'media',
 					screen_action: 'settings/getNewAiImagePreview',
+					settingsData : JSON.stringify(settingsData),
 					callback : 'shortpixelSettings.AiImageSet',
 					
 				}

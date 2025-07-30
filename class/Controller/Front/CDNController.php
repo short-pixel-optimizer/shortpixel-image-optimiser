@@ -338,7 +338,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		if (false === $this->checkPreProcess()) {
 			return $content;
 		}
-
+		
 		$original_content = $content;
 		$content = $this->checkContent($content);
 
