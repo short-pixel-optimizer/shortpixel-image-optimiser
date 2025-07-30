@@ -290,9 +290,20 @@ class AiDataModel
         }
 
         $this->setCurrentData();
-        
-        //if ($this)
-          
+                 
+    }
+
+    /** Function to check if on this item there is something to AI 
+     * 
+     * @return boolean 
+     */
+    public function isProcessable()
+    {
+        if (true === $this->has_record)
+        {
+             return false; 
+        }
+        return true; 
     }
 
     private static function getTableName()

@@ -115,7 +115,24 @@ $approx = $this->view->approx;
 	               <span class="number" ><?php echo esc_html($approx->custom->images) ?></span>
 	            </div>
 	         </div>
-				</div> <!-- block -->
+
+			<?php if (true === \wpSPIO()->settings()->enable_ai):  ?>
+			 <div class='ai-images optiongroup'>
+				<div class='switch_button'>
+				<label>
+		               <input type="checkbox" class="switch" id="autoai_checkbox" name="autoai_checkbox"
+		                <?php checked(\wpSPIO()->settings()->autoAIBulk); ?>  />
+		               <div class="the_switch">&nbsp; </div>
+	             </label>
+				 <h4><label for="autoai_checkbox">
+					 <?php printf(esc_html__('Use AI in the bulk to create image data according to settings' ,'shortpixel-image-optimiser') ); ?>
+				 </label></h4>
+
+				</div>	
+
+			 </div>
+			<?php endif ?>
+				</div> <!-- // optimize block -->
 
 				 <div class="option-block selection-settings">
 					 <h2><?php esc_html_e('Options','shortpixel-image-optimiser') ?>: </h2>

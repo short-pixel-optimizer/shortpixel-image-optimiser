@@ -87,6 +87,7 @@ class ApiKeyModel extends \ShortPixel\Model
 		}
 
 		$this->apiKey = isset($apikeySettings['apiKey']) ? $apikeySettings['apiKey'] : '';
+    $this->verifiedKey = isset($apikeySettings['verifiedKey']) ? $apikeySettings['verifiedKey'] : false; 
 		$this->apiKeyTried = $apikeySettings['apiKeyTried'];
 
 
@@ -266,7 +267,6 @@ class ApiKeyModel extends \ShortPixel\Model
           $this->apiKey = $key;
         }
         $this->verifiedKey = $checked_key;
-        $this->apiKeyTried = $this->apiKey;
         $this->processNewKey($quotaData);
         $this->update();
      }    

@@ -99,8 +99,6 @@ class QueueController
       if (is_numeric($in_queue) && $in_queue !== false)
       {
 
-      //  Log::addTemp('Is in queue, result: ', $qItem->result());
-
         if (self::IN_QUEUE_ACTION_ADDED == $in_queue)
         {
           $qItem->addResult([

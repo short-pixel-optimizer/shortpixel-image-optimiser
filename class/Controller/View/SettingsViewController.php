@@ -423,7 +423,7 @@ class SettingsViewController extends \ShortPixel\ViewController
           {
               $nextgen = NextGenController::getInstance();
               $previous = $this->model->includeNextGen;
-              $nextgen->enableNextGen(true);
+          //    $nextgen->enableNextGen(true);
 
               // Reset any integration notices when updating settings.
               AdminNoticesController::resetIntegrationNotices();
@@ -899,6 +899,7 @@ class SettingsViewController extends \ShortPixel\ViewController
               'request_url', 
               'login_apiKey',
               'ajaxSave',
+              'ai_preview_image_id',
 
 					);
 

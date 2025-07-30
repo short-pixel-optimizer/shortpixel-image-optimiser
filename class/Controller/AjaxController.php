@@ -811,6 +811,7 @@ class AjaxController
 		$doCustom = filter_var(sanitize_text_field($_POST['customActive']), FILTER_VALIDATE_BOOLEAN);
 		$doWebp = filter_var(sanitize_text_field($_POST['webpActive']), FILTER_VALIDATE_BOOLEAN);
 		$doAvif = filter_var(sanitize_text_field($_POST['avifActive']), FILTER_VALIDATE_BOOLEAN);
+		$doAi = filter_var(sanitize_text_field($_POST['aiActive']), FILTER_VALIDATE_BOOLEAN);
 		$backgroundProcess = filter_var(sanitize_text_field($_POST['backgroundProcess']), FILTER_VALIDATE_BOOLEAN);
 
 
@@ -823,6 +824,7 @@ class AjaxController
 		\wpSPIO()->settings()->createWebp = $doWebp;
 		\wpSPIO()->settings()->createAvif = $doAvif;
 		\wpSPIO()->settings()->doBackgroundProcess = $backgroundProcess;
+		\wpSPIO()->settings()->autoAIBulk = $doAi;
 
 		$bulkControl = BulkController::getInstance();
 

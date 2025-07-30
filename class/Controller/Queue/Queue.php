@@ -15,7 +15,7 @@ use ShortPixel\Model\Queue\QueueItem as QueueItem;
 
 
 use ShortPixel\Helper\UiHelper as UiHelper;
-
+use ShortPixel\Model\AiDataModel;
 use ShortPixel\ShortQ\ShortQ as ShortQ;
 
 abstract class Queue
@@ -264,6 +264,18 @@ abstract class Queue
             //checking if the $mediaItem actually exists
             if ( is_object($mediaItem) ) {
 
+                // If autoAi is on the bulk, add operation to the item
+                if ('media' === $mediaItem->get('type') && true === $settings->autoAIBulk)
+                {
+
+                  $aiDataModel = new AiDataModel($mediaItem->get('id')); 
+                  $enqueueAi = false; 
+                  if ($aiDataModel->isProcessable())
+                  {
+                    $enqueueAi = true; 
+                  }
+                }
+
                 if ('pdf' === $mediaItem->getExtension() && false === $settings->optimizePdfs)
                 {
                     continue;
@@ -283,6 +295,11 @@ abstract class Queue
 						 			 {
 						 				  $media_id = $mediaItem->getParent();
 						 			 }
+
+                   if (true === $enqueueAi)
+                   {
+                      $qItem->data->addNextAction('requestAlt'); 
+                   }
 
                     $queue[] = $qItem->returnEnqueue(); //array('id' => $media_id, 'value' => $qObject, 'item_count' => $counts->creditCount);
 
@@ -312,6 +329,13 @@ abstract class Queue
                    }
                    elseif($mediaItem->isOptimized())
                    {
+                      if (true === $enqueueAi)
+                      {
+                          $qItem = QueueItems::getImageItem($mediaItem);
+                          $qItem->requestAltAction();
+
+                          $queue[] = $qItem->returnEnqueue();
+                      }
                    }
 									 else
 									 {

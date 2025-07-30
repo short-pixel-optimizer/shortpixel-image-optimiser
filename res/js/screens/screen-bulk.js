@@ -261,6 +261,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
      data.customActive = (document.getElementById('custom_checkbox').checked) ? true : false;
      data.webpActive = (document.getElementById('webp_checkbox').checked) ? true : false;
      data.avifActive = (document.getElementById('avif_checkbox').checked) ? true : false;
+     data.aiActive = (document.getElementById('autoai_checkbox').checked) ? true : false;
      data.backgroundProcess = (document.getElementById('background_checkbox').checked) ? true : false;
 
 
@@ -478,6 +479,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
       data.customActive = (document.getElementById('custom_checkbox').checked) ? true : false;
       data.webpActive = (document.getElementById('webp_checkbox').checked) ? true : false;
       data.avifActive = (document.getElementById('avif_checkbox').checked) ? true : false;
+      data.aiActive = (document.getElementById('autoai_checkbox').checked) ? true : false;
       data.backgroundProcess = (document.getElementById('background_checkbox').checked) ? true : false;
 
       window.addEventListener('shortpixel.applySelectionDone', function (e) { this.SwitchPanel('summary'); }.bind(this) , {'once': true} );

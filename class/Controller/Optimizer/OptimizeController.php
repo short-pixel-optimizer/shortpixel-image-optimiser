@@ -50,9 +50,11 @@ class OptimizeController extends OptimizerBase
   }
 
 
-  // Possibly best to return true / false here.
-  // And rename it from getItem to something else, because nothing is gotten here.
-  // This is check before enqueue!
+  /** Item check before the enqueueing happens 
+   * 
+   * @param QueueItem  
+   * @return boolean 
+   */
   public function checkItem(QueueItem $qItem)
   {
     /*  $defaults = array(
@@ -76,8 +78,6 @@ class OptimizeController extends OptimizerBase
     if ($imageModel->isOptimizePrevented() !== false) {
       $imageModel->resetPrevent();
     }
-
-    //  $queue = $this->getQueue($mediaItem->get('type'));
 
     $is_processable = $imageModel->isProcessable();
     // Allow processable to be overridden when using the manual optimize button
