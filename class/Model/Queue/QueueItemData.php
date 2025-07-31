@@ -30,6 +30,7 @@ class QueueItemData
         protected $tries;
         protected $block;
         protected $counts;
+        protected $queue_list_order;  // optional from Queue class, the place of the queue. This might prevent 'next-action' to end up way at the bottom. 
         
 
         public function __construct()
@@ -67,6 +68,7 @@ class QueueItemData
         {
             if (property_exists($this, $name))
             {
+
                  $this->$name = $value; 
             }             
             else
@@ -153,6 +155,23 @@ class QueueItemData
             }
 
             return $next_action; 
+        }
+
+        public function addKeepDataArgs($args)
+        {
+             if (! is_array($args))
+             {
+                $args = [$args];
+             }
+             if (is_null($this->next_keepdata))
+             {
+                 $this->next_keepdata = $args; 
+             }
+             else
+             {
+                $this->next_keepdata = array_merge($this->next_keepdata, $args);
+             }
+
         }
 
         public function getKeepDataArgs()

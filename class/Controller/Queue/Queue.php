@@ -275,6 +275,10 @@ abstract class Queue
                     $enqueueAi = true; 
                   }
                 }
+                else
+                {
+                   $enqueueAi = false; 
+                }
 
                 if ('pdf' === $mediaItem->getExtension() && false === $settings->optimizePdfs)
                 {
@@ -562,6 +566,8 @@ abstract class Queue
         $item = QueueItems::getEmptyItem($qItem->item_id, $this->getType());
         $item->setFromData($qItem->value);
         $item->setData('tries', $qItem->tries);
+        $item->setData('queue_list_order', $qItem->list_order);
+        $item->data()->addKeepDataArgs('queue_list_order'); 
         $item->set('queueItem', $qItem);
 
 				/* Dunno about this, the decode should handle arrays properly

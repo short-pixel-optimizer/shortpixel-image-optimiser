@@ -50,12 +50,17 @@ class AiController extends RequestManager
 
       if ($qItem->data()->action == 'requestAlt')
       {
-      //  $requestBody['url'] = $qItem->data()->url;
-      $paramlist = $qItem->data()->paramlist; 
-      if (is_object($paramlist))
-      {
-         $paramlist = (array) $paramlist; 
-      }
+        $requestBody['url'] = $qItem->data()->url;
+        $paramlist = $qItem->data()->paramlist; 
+        if (is_object($paramlist))
+        {
+          $paramlist = (array) $paramlist; 
+        }
+        if (! is_array($paramlist)) // not serious paramlist then
+        {
+           $paramlist = []; 
+        }
+
         $requestBody = array_merge($requestBody, $paramlist);
         $requestBody['retry'] = '1'; // when requesting alt, always wants a new one (?) 
       }

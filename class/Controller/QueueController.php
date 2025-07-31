@@ -346,7 +346,6 @@ class QueueController
           $action = $qItem->data()->action;
           $apiController = $qItem->getAPIController($action);
 
-          Log::addTemp('Api Controller', $apiController);
 
           if (is_null($apiController))
           {

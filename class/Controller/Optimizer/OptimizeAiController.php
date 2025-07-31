@@ -92,7 +92,7 @@ class OptimizeAiController extends OptimizerBase
     {
         case 'requestAlt': 
            $qItem->requestAltAction($args);
-           $this->parseJSONForQItem($qItem, $args); 
+          // $this->parseJSONForQItem($qItem, $args); 
            $directAction = false; 
         break;
         case 'retrieveAlt':  // This might be deprecated, since retrieve will be called via next_action. 
@@ -145,6 +145,11 @@ class OptimizeAiController extends OptimizerBase
     }
     else
     {
+      if (isset($args['queue_list_order']))
+      {
+         $qItem->setData('queue_list_order', $args['queue_list_order']);
+         $qItem->data()->addKeepDataArgs('queue_list_order');
+      }
       $result = $queue->addQueueItem($qItem);
     }
 
@@ -597,7 +602,7 @@ class OptimizeAiController extends OptimizerBase
      return $json; 
   }
 
-  protected function parseJSONForQItem(QueueItem $qItem, $params = [])
+  public function parseJSONForQItem(QueueItem $qItem, $params = [])
   {
         $url = $qItem->data()->url; 
         $item_id = $qItem->item_id;

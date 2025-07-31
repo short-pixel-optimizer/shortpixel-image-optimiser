@@ -340,42 +340,75 @@ class ShortPixelScreen extends ShortPixelScreenBase
   HandleImage(resultItem, type)
   {
 
-     // var result = resultItem.result;
+    var apiName = (typeof resultItem.apiName !== 'undefined') ? resultItem.apiName : 'optimize'; 
+    var aiPreviewElement = document.querySelector('.ai-preview-wrapper'); 
+    if (false === aiPreviewElement.classList.contains('hidden'))
+    {
+       aiPreviewElement.classList.add('hidden');
+    }
+
+
       if ( this.processor.fStatus[resultItem.fileStatus] == 'FILE_DONE')
       {
-          this.UpdateData('result', resultItem);
 
-          if (document.querySelector('.image-preview-section').classList.contains('hidden')  )
+        if (document.querySelector('.image-preview-section').classList.contains('hidden')  )
           {
             document.querySelector('.image-preview-section').classList.remove('hidden');
           }
 
-					this.HandleImageEffect(resultItem.original, resultItem.optimized);
+          
+        if ('ai' !== apiName)
+        {
+            this.UpdateData('result', resultItem);
 
-          if (resultItem.improvements && resultItem.improvements.totalpercentage)
+
+            this.HandleImageEffect(resultItem.original, resultItem.optimized);
+
+            if (resultItem.improvements && resultItem.improvements.totalpercentage)
+            {
+                // Opt-Circle-Image is average of the file itself.
+                var circle = document.querySelector('.opt-circle-image');
+
+                var total_circle = 289.027;
+                if(resultItem.improvements.totalpercentage >0 ) {
+                    total_circle = Math.round(total_circle-(total_circle*resultItem.improvements.totalpercentage/100));
+                }
+
+                for( var i = 0; i < circle.children.length; i++)
+                {
+                  var child = circle.children[i];
+                  if (child.classList.contains('path'))
+                  {
+                      child.style.strokeDashoffset = total_circle + 'px';
+                  }
+                  else if (child.classList.contains('text'))
+                  {
+                      child.textContent = resultItem.improvements.totalpercentage + '%';
+                  }
+                }
+
+                this.AddAverageOptimization(resultItem.improvements.totalpercentage);
+            }
+          }
+          if ('ai' === apiName)
           {
-							// Opt-Circle-Image is average of the file itself.
-              var circle = document.querySelector('.opt-circle-image');
+             console.log(resultItem);
+             
+             if (aiPreviewElement.classList.contains('hidden'))
+             {
+                aiPreviewElement.classList.remove('hidden'); 
+             }
 
-              var total_circle = 289.027;
-              if(resultItem.improvements.totalpercentage >0 ) {
-                  total_circle = Math.round(total_circle-(total_circle*resultItem.improvements.totalpercentage/100));
-              }
-
-              for( var i = 0; i < circle.children.length; i++)
-              {
-                 var child = circle.children[i];
-                 if (child.classList.contains('path'))
-                 {
-                    child.style.strokeDashoffset = total_circle + 'px';
-                 }
-                 else if (child.classList.contains('text'))
-                 {
-                    child.textContent = resultItem.improvements.totalpercentage + '%';
-                 }
-              }
-
-							this.AddAverageOptimization(resultItem.improvements.totalpercentage);
+             let ul = aiPreviewElement.querySelector('ul'); 
+             ul.innerHTML = ''; 
+             
+             for (var field in resultItem.aiData)
+             {  
+                let value = resultItem.aiData[field];
+                 let li = document.createElement('li'); 
+                 li.innerHTML = '<strong>' + field + '</strong>: ' + value; 
+                 ul.append(li);
+             }
           }
 					return true; // This prevents flooding.
       }

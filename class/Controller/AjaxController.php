@@ -958,8 +958,11 @@ class AjaxController
 
 		$optimizer = $qItem->getApiController('requestAlt');
 		//$optimize->useCustomSettings($settingsData);
-		$result = $optimizer->enqueueItem($qItem, array_merge(['preview_only' => true, 'action' => 'requestAlt'], $settingsData));
+		//$result = $optimizer->enqueueItem($qItem, array_merge(['preview_only' => true, 'action' => 'requestAlt'], $settingsData));
 
+		$qItem->requestAltAction(['preview_only' => true]);
+		$optimizer->sendToProcessing($qItem);
+		$result = $qItem->result(); 
 		
 		$state = 'requestAlt'; // mimic here the double task of the Ai gen. 
 		$is_done = false; 

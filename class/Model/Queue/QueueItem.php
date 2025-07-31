@@ -175,7 +175,17 @@ class QueueItem
          $media_id = $this->imageModel->getParent();
       }
 
-      return ['id' => $item_id, 'value' => $value, 'item_count' => $this->item_count];
+
+      $enqueue = ['id' => $item_id, 'value' => $value, 'item_count' => $this->item_count];
+      
+      if (! is_null($this->data->queue_list_order))
+      {
+         $enqueue['order'] = $this->data->queue_list_order;
+      }
+
+      return $enqueue; 
+
+      
    }
 
    public function setDebug()
@@ -213,7 +223,7 @@ class QueueItem
 
        $this->data->action = 'reoptimize'; 
        $this->data->next_actions = ['optimize'];
-       $this->data->next_keepdata = ['compressionType', 'smartcrop']; // Each action it's own set of keep data.
+       $this->data->addKeepDataArgs(['compressionType', 'smartcrop']); // Each action it's own set of keep data.
        $this->item_count = 1;
 
        // Smartcrop setting (?) 
@@ -468,9 +478,12 @@ class QueueItem
          $this->data->paramlist = ['preview_only' => true];
          $preview_only = true; 
       } 
-      
 
       $this->data->action = 'requestAlt'; // For Queue
+
+      $optimizer = $this->getAPIController($this->data->action); 
+      $optimizer->parseJSONForQItem($this, $args);
+
       if ($this->data()->hasNextAction())
       {
           $next_actions = array_merge(['retrieveAlt'], $this->data()->next_actions);

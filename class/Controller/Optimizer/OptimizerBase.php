@@ -177,7 +177,7 @@ abstract class OptimizerBase
             }
             $args = array_merge($args, $keepArgs);
 
-            Log::addInfo("New Action $action with args", $args);
+            Log::addInfo("New Action $action for $item_id with args", $args);
 
             $queueController = $this->getQueueController(); 
             $result = $queueController->addItemToQueue($imageModel, $args); 
