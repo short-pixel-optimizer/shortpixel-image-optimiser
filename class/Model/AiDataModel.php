@@ -306,6 +306,20 @@ class AiDataModel
         return true; 
     }
 
+    public function isSomeThingGenerated()
+    {
+        if (false === $this->has_record)
+        {
+             return false; 
+        }
+
+        if (count(array_keys(array_filter($this->generated))) > 0)
+        {
+             return true; 
+        }
+        return false;
+    }
+
     private static function getTableName()
     {
          global $wpdb; 
@@ -379,11 +393,7 @@ class AiDataModel
 
         $this->updateWPPost($this->original);
         $this->updateWpMeta($this->original);
-
-
-        Log::addTemp("REVERT DONE");
-
-    
+   
     }
 
     public static function getMostRecent()

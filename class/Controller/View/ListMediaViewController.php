@@ -14,7 +14,7 @@ use ShortPixel\Helper\UtilHelper as UtilHelper;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Controller\QueueController as QueueController;
-
+use ShortPixel\Model\AiDataModel;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Model\Image\MediaLibraryModel as MediaLibraryModel;
 
@@ -59,6 +59,10 @@ class ListMediaViewController extends \ShortPixel\ViewController
   public function headerColumns($defaults)
   {
     $defaults['wp-shortPixel'] = __('ShortPixel Compression', 'shortpixel-image-optimiser');
+    if (true === \wpSPIO()->settings()->enable_ai)
+    {
+      $defaults['wp-spio-ai'] = __('Ai', 'shortpixel-image-optimiser'); 
+    }
 
     return $defaults;
   }
@@ -72,6 +76,13 @@ class ListMediaViewController extends \ShortPixel\ViewController
        $this->loadItem($id);
 
 	     $this->loadView(null, false);
+     }
+     if ($column_name == 'wp-spio-ai')
+     {
+        $this->view = new \stdClass; 
+        $this->view->id = $id; 
+        $this->loadAiItem($id); 
+        $this->loadView('view-list-ai-media', false);
      }
   }
 
@@ -147,6 +158,28 @@ class ListMediaViewController extends \ShortPixel\ViewController
       $this->view->actions = array();
       $this->view->list_actions = '';
     }
+  }
+
+  protected function loadAiItem($item_id)
+  {
+     $AiDataModel = new AiDataModel($item_id); 
+
+     $generated_data = $AiDataModel->getGeneratedData(); 
+     if ($AiDataModel->isSomeThingGenerated())
+     {
+        $generated_fields = implode(',', array_keys(array_filter($generated_data)));
+        $this->view->icon = 'ok'; 
+        $this->view->title = sprintf(__('Ai Data Generated %s', 'shortpixel-image-optimiser'), $generated_fields); 
+
+     }
+     else
+     {
+       $this->view->icon = 'help'; 
+       $this->view->title = __('No Ai Data generated for this image', 'shortpixel-image-optimiser'); 
+
+     }
+
+
   }
 
   public function loadComparer()
