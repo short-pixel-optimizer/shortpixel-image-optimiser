@@ -960,7 +960,7 @@ class AjaxController
 		//$optimize->useCustomSettings($settingsData);
 		//$result = $optimizer->enqueueItem($qItem, array_merge(['preview_only' => true, 'action' => 'requestAlt'], $settingsData));
 
-		$qItem->requestAltAction(['preview_only' => true]);
+		$qItem->requestAltAction(array_merge(['preview_only' => true], $settingsData));
 		$optimizer->sendToProcessing($qItem);
 		$result = $qItem->result(); 
 		
