@@ -585,7 +585,7 @@ class OptimizeAiController extends OptimizerBase
 
      if ($settings['ai_gen_description'])
      {
-         $json['description'] = [
+         $json['image_description'] = [
                 'context' => $settings['ai_description_context'], 
                 'chars' => $settings['ai_limit_description_chars'],
          ];
