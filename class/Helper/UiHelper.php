@@ -13,6 +13,7 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 
 use ShortPixel\Model\AccessModel as AccessModel;
+use ShortPixel\Model\AiDataModel;
 
 class UiHelper
 {
@@ -310,8 +311,12 @@ class UiHelper
 				 return array();
 			}
 
+      $aiDataModel = new AiDataModel($id);
+
 			if ($id === 0)
-				return array();
+      {
+				return [];
+      }
 
       if ($mediaItem->isSomethingOptimized() )
       {
@@ -409,6 +414,11 @@ class UiHelper
 				}
       } //isOptimized
 
+      if ($aiDataModel->isProcessable())
+      {
+         $list_actions['shortpixel-generateai'] = self::getAction('shortpixel-generateai', $id);
+      }
+
       if(! $quotaControl->hasQuota())
       {
          $remove = array('reoptimize-lossy' => '', 'reoptimize-glossy' => '', 'reoptimize-lossless' => '', 'optimizethumbs' => '');
@@ -420,7 +430,7 @@ class UiHelper
 
   public static function getActions($mediaItem)
   {
-    $actions = array();
+    $actions = [];
     $id = $mediaItem->get('id');
     $quotaControl = QuotaController::getInstance();
     $queueController = new QueueController();
@@ -434,11 +444,13 @@ class UiHelper
 		$access = AccessModel::getInstance();
 		if (! $access->imageIsEditable($mediaItem))
 		{
-			 return array();
+			 return [];
 		}
 
 		if ($id === 0)
-			return array();
+    {
+			return [];
+    }
 
     if(! $quotaControl->hasQuota())
     {
@@ -654,7 +666,6 @@ class UiHelper
           $action['type']  = 'js';
           $action['text'] = __('Click to unmark this item as done', 'shortpixel-image-optimiser');
           $action['display'] = 'js';
-
       break;
       case 'optimizethumbs':
           $action['function'] = 'window.ShortPixelProcessor.screen.Optimize(' . $id . ');';
@@ -663,7 +674,6 @@ class UiHelper
           $action['display'] = 'inline';
           $action['is-optimizable'] = true;
       break;
-
       case 'retry':
          $action['function'] = 'window.ShortPixelProcessor.screen.Optimize(' . $id . ');';
          $action['type']  = 'js';
@@ -728,6 +738,12 @@ class UiHelper
         $action['text'] = __('Re-optimize without SmartCrop','shortpixel-image-optimiser');
         $action['display'] = 'inline';
      break;
+     case 'shortpixel-generateai': 
+      $action['function'] = 'window.ShortPixelProcessor.screen.GenerateAI(' . $id . ')';
+      $action['type'] = 'js';
+      $action['text'] = __('Generate AI','shortpixel-image-optimiser');     
+      $action['ai-action'] = true;
+      break; 
      case 'extendquota':
         $action['function'] = 'https://shortpixel.com/login/'. $keyControl->getKeyForDisplay();
         $action['type'] = 'button';

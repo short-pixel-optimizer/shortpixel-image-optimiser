@@ -96,7 +96,6 @@ class OptimizeAiController extends OptimizerBase
            $directAction = false; 
         break;
         case 'retrieveAlt':  // This might be deprecated, since retrieve will be called via next_action. 
-              
             $qItem->retrieveAltAction($args['remote_id']);
             $directAction = false; 
         break; 
@@ -214,10 +213,14 @@ class OptimizeAiController extends OptimizerBase
 
   public function formatResultData($aiData, $qItem)
   {
+    // Always save the original filename
+    $aiData['original_filebase'] = $qItem->imageModel->getFileBase();
+
     if (! isset($aiData['filebase']))
     {
-         $aiData['filebase'] = $qItem->imageModel->getFileBase();
+         $aiData['filebase'] = $aiData['original_filebase']; 
     }
+    
 
     $textItems = ['alt', 'caption', 'description'];
     foreach($textItems as $textItem)

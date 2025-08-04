@@ -61,7 +61,7 @@ class ListMediaViewController extends \ShortPixel\ViewController
     $defaults['wp-shortPixel'] = __('ShortPixel Compression', 'shortpixel-image-optimiser');
     if (true === \wpSPIO()->settings()->enable_ai)
     {
-      $defaults['wp-spio-ai'] = __('Ai', 'shortpixel-image-optimiser'); 
+      $defaults['wp-spio-ai'] = __('AI By Shortpixel', 'shortpixel-image-optimiser'); 
     }
 
     return $defaults;
@@ -135,6 +135,11 @@ class ListMediaViewController extends \ShortPixel\ViewController
 		{
 				$checkBoxActions[] = 'is-restorable';
 		}
+
+    if (array_key_exists('shortpixel-generateai', $allActions))
+    {
+       $checkBoxActions[] = 'ai-action'; 
+    }
 
 		$infoData  = array(); // stuff to write as data-tag.
 

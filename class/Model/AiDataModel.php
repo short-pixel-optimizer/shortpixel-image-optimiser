@@ -111,24 +111,18 @@ class AiDataModel
 
     public function handleNewData($data)
     {   
-        /*foreach($data as $name => $value)
-        {
-             if (isset($this->generated[$name]))
-             {
-                 $this->generated[$name] = $value; 
-             }
-             else
-             {
-                 Log::addTemp('Still to handle new data in AiDataMOdeL : ' . $name, $value);
-             }
-        } */
-
-        //$this->generated = array_merge($data, $this->generated); 
-
         // Save to Database
         foreach($data as $name => $value)
         {
-             $this->generated[$name] = $value; 
+             if ('original_filebase' == $name)
+             {
+                 $this->current['filebase'] = $value; 
+             }
+             else
+             {
+                $this->generated[$name] = $value;                 
+             }
+
         }
 
         $this->setCurrentData();
@@ -137,6 +131,7 @@ class AiDataModel
         if (false === $this->has_record)
         {
             $this->original = $this->current; 
+            
             $this->status = self::AI_STATUS_GENERATED;
             $this->updateRecord();
         }
@@ -260,19 +255,25 @@ class AiDataModel
     protected function setCurrentData()
     {
         $attach_id = $this->attach_id;      
-
         $current_alt = get_post_meta($attach_id, '_wp_attachment_image_alt', true);
-        
         $post = get_post($attach_id); 
 
         $current_description = $post->post_content; 
         $current_caption = $post->post_excerpt; 
 
-        $this->current = [
+        /*$this->current = [
              'alt' => $current_alt, 
              'description' => $current_description, 
              'caption' => $current_caption, 
-        ];
+
+        ]; */
+
+        $this->current['alt'] = $current_alt; 
+        $this->current['description'] = $current_description; 
+        $this->current['caption'] = $current_caption; 
+
+
+
     }
 
     // This should return originals, or what the system thinks is the last user-generated content here. 

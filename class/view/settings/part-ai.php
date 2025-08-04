@@ -200,7 +200,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 </setting>
 
-<setting>
+<setting class="ai_filename_setting">
   <content>
   
   <?php $this->printSwitchButton(
@@ -209,6 +209,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         'checked' => $view->data->ai_gen_filename,
         'label' => esc_html__('Update image filename with SEO-Friendly one', 'shortpixel-image-optimiser'),
         'data' => ['data-toggle="ai_gen_filename"'], 
+        'disabled' => true, 
 
       ]
     );

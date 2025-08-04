@@ -1620,6 +1620,9 @@ div.spio-modal-title {
   width: 35px;
   height: 20px;
 }
+.wrap.is-shortpixel-settings-page #tab-ai .ai_filename_setting {
+  filter: blur(1px);
+}
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-thumbnail-setting content {
   column-count: 3;
   column-width: 220px;

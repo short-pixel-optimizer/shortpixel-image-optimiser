@@ -8,15 +8,26 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 abstract class Model
 {
-  protected $model = array();
+  protected $model = [];
 
   public function getData()
   {
     $data = array();
     foreach($this->model as $item => $options)
     {
-      //if (property_exists($this, $item))
-        $data[$item] = $this->{$item};
+      
+        $value = $this->{$item};
+
+        if (isset($this->model[$item]) && $this->model[$item]['s'] == 'string')
+        {
+          if (false === is_null($value))
+          {
+            $value = stripslashes($value);
+          }
+        }
+        
+        $data[$item] = $value; 
+        
     }
     return $data;
   }

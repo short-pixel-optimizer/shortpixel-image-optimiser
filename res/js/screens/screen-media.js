@@ -201,6 +201,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				var column = document.getElementById('shortpixel-data-' + media_id);
 				var optimizable = column.classList.contains('is-optimizable');
 				var restorable = column.classList.contains('is-restorable');
+				var aiAction = column.classList.contains('ai-action');
 
 				var compressionType = column.dataset.compression;
 
@@ -253,11 +254,16 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 						}
 						break;
 					case 'shortpixel-mark-completed':
-						{
 							if (optimizable) {
 								this.MarkCompleted(media_id);
 							}
+					break; 
+					case 'shortpixel-generateai':
+						if (aiAction)
+						{
+							 this.RequestAlt(media_id);
 						}
+					break; 
 				}
 				items[i].checked = false;
 
