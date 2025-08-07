@@ -75,8 +75,18 @@ class OptimizeAiController extends OptimizerBase
       
 
       $aiDataModel = new AiDataModel($qItem->item_id); 
-      return $aiDataModel->isProcessable();
+      $is_processable = $aiDataModel->isProcessable();
 
+      if (false === $is_processable) {
+        $qItem->addResult([
+          'message' => __('AI generation not possible or already generated', 'shortpixel-image-optimiser'),
+          'is_error' => true,
+          'is_done' => true,
+          'fileStatus' => ImageModel::FILE_STATUS_ERROR,
+        ]);
+      }
+
+      return $is_processable;
   }
 
   public function enqueueItem(QueueItem $qItem, $args = [])
