@@ -959,8 +959,6 @@ class AjaxController
 			'is_error' => true, 
 		];
 
-
-
 		$imageModel = \wpSPIO()->filesystem()->getMediaImage($item_id); 
 
 		if (false === $imageModel)
@@ -968,7 +966,7 @@ class AjaxController
 			 $result_json['message'] = __('This image could not be loaded', 'shortpixel-image-optimiser'); 
 			 $this->send($result_json);
 		}
-		
+
 		$qItem = QueueItems::getImageItem($imageModel);
 
 		$optimizer = $qItem->getApiController('requestAlt');
