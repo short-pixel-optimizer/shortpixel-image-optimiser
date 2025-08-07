@@ -300,6 +300,9 @@ if (! defined('ABSPATH')) {
             <button type='button' name='refresh_ai_preview'>
               <i class='shortpixel-icon refresh'></i><?php _e('Refresh with latest settings', 'shortpixel-image-optimiser'); ?></button>
           </p>
+          <div class='preview_result'>
+              []
+          </div>
       </gridbox>
     </div>
     <hr>

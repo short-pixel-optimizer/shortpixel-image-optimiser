@@ -71,8 +71,8 @@ class OptimizeAiController extends OptimizerBase
   }
 
 // @todo Probably here should check if Alt item is already generated . 
-  public function checkItem(QueueItem $qItem) { 
-      
+  public function checkItem(QueueItem $qItem) 
+  {     
 
       $aiDataModel = new AiDataModel($qItem->item_id); 
       $is_processable = $aiDataModel->isProcessable();

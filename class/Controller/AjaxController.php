@@ -953,8 +953,22 @@ class AjaxController
 			 $settingsData = [];  // null - empty array
 		}
 
+
+		$result_json = [
+			'error' => __('Something went wrong', 'shortpixel-image-optimiser'), 
+			'is_error' => true, 
+		];
+
+
+
 		$imageModel = \wpSPIO()->filesystem()->getMediaImage($item_id); 
 
+		if (false === $imageModel)
+		{
+			 $result_json['message'] = __('This image could not be loaded', 'shortpixel-image-optimiser'); 
+			 $this->send($result_json);
+		}
+		
 		$qItem = QueueItems::getImageItem($imageModel);
 
 		$optimizer = $qItem->getApiController('requestAlt');
@@ -969,10 +983,6 @@ class AjaxController
 		$is_done = false; 
 		$i = 0; 
 
-		$result_json = [
-			'error' => __('Something went wrong', 'shortpixel-image-optimiser'), 
-			'is_error' => true, 
-		];
 
 		while (false === $is_done)
 		{

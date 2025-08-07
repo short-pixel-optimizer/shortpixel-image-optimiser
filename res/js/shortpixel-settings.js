@@ -375,6 +375,13 @@ class ShortPixelSettings {
 				 var attach_id = document.querySelector('input[name="ai_preview_image_id"]').value; 
 				 var inputs = document.querySelectorAll('#tab-ai input, #tab-ai select, #tab-ai textarea'); 
 
+				 let previewResult = document.querySelector('.preview_wrapper .preview_result'); 
+
+				if (null !== previewResult)
+				{
+					 previewResult.innerText = self.strings.ai_strings.preview_requested; 
+				} 
+
 				 var settingsData = {}; 
 				 for (let i = 0; i < inputs.length; i++)
 				 {
@@ -467,10 +474,10 @@ class ShortPixelSettings {
 			callback: 'shortpixelSettings.getAiExample',
 		};
 
+
 		window.addEventListener('shortpixelSettings.getAiExample', function (response)
 		{
 			var json = response.detail; 
-
 			
 			var elements = ['generated', 'original'];
 			var fields = ['filename', 'alt', 'caption', 'description'];
@@ -479,6 +486,12 @@ class ShortPixelSettings {
 
 			var idInput = document.querySelector('input[name="ai_preview_image_id"]'); 
 			idInput.value = json.item_id;
+
+			let previewResult = document.querySelector('.preview_wrapper .preview_result'); 
+			if (null !== previewResult)
+			{
+				 previewResult.innerText = ''; 
+			} 
 
 			if (json.preview_image)
 			{
@@ -518,6 +531,7 @@ class ShortPixelSettings {
 			}
 
 		}, {once: true});
+
 
 		// Processor / Screen might not be loaded if the current screen is AI.
 		if (null === window.ShortPixelProcessor.screen)

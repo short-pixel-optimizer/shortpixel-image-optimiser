@@ -952,6 +952,7 @@ class UiHelper
       $ai_string = [
             'imagemodaltitle' => __('Select an image for preview', 'shortpixel-image-optimiser'), 
             'selectimage' => __('Use this image', 'shortpixel-image-optimiser'),
+            'preview_requested' => __('Example is being generated. This may take a while ... ', 'shortpixel-image-optimiser'),
       ];
 
       $strings['exclusion_types'] = $exclusion_types;

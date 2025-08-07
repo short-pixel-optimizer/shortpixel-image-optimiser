@@ -122,7 +122,7 @@ var SpWorker = {
 				 {
 					 console.error('Worker: Fatal error detected');
 				 }
-				 else if (response.status == 502 || response.status == 503) // server gave up
+				 else if (response.status == 502 || response.status == 503 || response.status == 504) // server gave up
 				 {
 					 	console.error('Worker: server unavailable or overloaded');
 				 }
