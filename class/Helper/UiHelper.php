@@ -739,7 +739,7 @@ class UiHelper
         $action['display'] = 'inline';
      break;
      case 'shortpixel-generateai': 
-      $action['function'] = 'window.ShortPixelProcessor.screen.GenerateAI(' . $id . ')';
+      $action['function'] = 'window.ShortPixelProcessor.screen.RequestAlt(' . $id . ')';
       $action['type'] = 'js';
       $action['text'] = __('Generate AI','shortpixel-image-optimiser');     
       $action['ai-action'] = true;

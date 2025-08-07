@@ -1043,7 +1043,7 @@ class AjaxController
 			$attach_id = $id; 
 		}
 
-		$attach_id = null;
+	//	$attach_id = null;
 		
 		$imageModel = \wpSPIO()->fileSystem()->getMediaImage($attach_id);
 
@@ -1070,7 +1070,14 @@ class AjaxController
 			$generated = $item->getGeneratedData();
 		  }
 
-          $original = $item->getOriginalData();
+		  if ($item->isSomeThingGenerated())
+		  {
+          	$original = $item->getOriginalData();
+		  }
+		  else
+		  {
+			 $original = $item->getCurrentData();
+		  }
         }
 
 
@@ -1089,7 +1096,7 @@ class AjaxController
 		 $id = $data['id']; 
 		 set_transient('spio_settings_ai_example_id', $id, MONTH_IN_SECONDS); 
 
-		 return;
+		 return $this->getSettingsAiExample($data);
 	}
 
 	

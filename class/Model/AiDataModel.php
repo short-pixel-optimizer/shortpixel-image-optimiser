@@ -42,6 +42,7 @@ class AiDataModel
 
     private $has_record = false; 
     private $has_generated = false; 
+    private $current_is_set = false; 
 
 
     const TYPE_MEDIA = 1; 
@@ -272,8 +273,18 @@ class AiDataModel
         $this->current['description'] = $current_description; 
         $this->current['caption'] = $current_caption; 
 
+        $this->current_is_set = true; 
 
+    }
 
+    public function getCurrentData()
+    {
+          if (false === $this->current_is_set)
+          {
+             $this->setCurrentData(); 
+          }
+
+          return $this->current;
     }
 
     // This should return originals, or what the system thinks is the last user-generated content here. 

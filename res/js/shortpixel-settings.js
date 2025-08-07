@@ -378,7 +378,6 @@ class ShortPixelSettings {
 				 var settingsData = {}; 
 				 for (let i = 0; i < inputs.length; i++)
 				 {
-					console.log(inputs[i]);
 					let input = inputs[i]; 
 					let name = input.name; 
 					if ('checkbox' == input.type)
@@ -398,9 +397,6 @@ class ShortPixelSettings {
 					}
 					
 				 }
-
-				 console.log(JSON.stringify(settingsData));
-
 
 				 var data = {
 					id: attach_id,

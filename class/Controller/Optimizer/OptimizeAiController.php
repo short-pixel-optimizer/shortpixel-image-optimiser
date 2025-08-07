@@ -873,7 +873,7 @@ public function getAltData(QueueItem $qItem)
     if (AiDataModel::AI_STATUS_NOTHING === $status) // old data 
     {
          $metacheck = get_post_meta($item_id, 'shortpixel_alt_requests', true); 
-         if (false !== $metacheck && strlen($metacheck) > 0 && is_array($metacheck))
+         if (false !== $metacheck && is_array($metacheck))
          {
                 $aiModel->migrate($metacheck);
                 delete_post_meta($item_id, 'shortpixel_alt_requests');
