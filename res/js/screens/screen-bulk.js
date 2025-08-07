@@ -200,7 +200,6 @@ class ShortPixelScreen extends ShortPixelScreenBase
   }
   SwitchPanel(targetName)
   {
-     console.trace('Switching Panel ' + targetName);
 
       this.ToggleLoading(false);
       if (! this.panels[targetName])
@@ -261,7 +260,14 @@ class ShortPixelScreen extends ShortPixelScreenBase
      data.customActive = (document.getElementById('custom_checkbox').checked) ? true : false;
      data.webpActive = (document.getElementById('webp_checkbox').checked) ? true : false;
      data.avifActive = (document.getElementById('avif_checkbox').checked) ? true : false;
-     data.aiActive = (document.getElementById('autoai_checkbox').checked) ? true : false;
+     if (null !== document.getElementById('autoai_checkbox'))
+     {
+        data.aiActive = (document.getElementById('autoai_checkbox').checked) ? true : false;
+     }
+     else
+     {
+       data.aiActive = false; 
+     }
      data.backgroundProcess = (document.getElementById('background_checkbox').checked) ? true : false;
 
 

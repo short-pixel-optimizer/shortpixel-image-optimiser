@@ -428,7 +428,6 @@ class ShortPixelSettings {
 				// When an image is selected, run a callback
 				mediaFrame.on('select', function() {
 					var attachment = mediaFrame.state().get('selection').first().toJSON();
-					//console.log('Selected Image ID: ' + attachment.id); // Log the image ID
 					//alert('Selected Image ID: ' + attachment.id); // Show the image ID in an alert
 					var data = {
 						id: attachment.id,
@@ -471,7 +470,7 @@ class ShortPixelSettings {
 		window.addEventListener('shortpixelSettings.getAiExample', function (response)
 		{
 			var json = response.detail; 
-			console.log(response); 
+
 			
 			var elements = ['generated', 'original'];
 			var fields = ['filename', 'alt', 'caption', 'description'];
