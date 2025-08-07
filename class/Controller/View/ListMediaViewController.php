@@ -172,6 +172,10 @@ class ListMediaViewController extends \ShortPixel\ViewController
      $generated_data = $AiDataModel->getGeneratedData(); 
      if ($AiDataModel->isSomeThingGenerated())
      {
+        if (isset($generated_data['filebase']))
+        {
+           unset($generated_data['filebase']);
+        }
         $generated_fields = implode(',', array_keys(array_filter($generated_data)));
         $this->view->icon = 'ok'; 
         $this->view->title = sprintf(__('Ai Data Generated %s', 'shortpixel-image-optimiser'), $generated_fields); 

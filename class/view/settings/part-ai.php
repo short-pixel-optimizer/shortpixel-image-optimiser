@@ -295,25 +295,25 @@ if ( ! defined( 'ABSPATH' ) ) {
     <hr>
     <gridbox class='width_two_with_middle result_wrapper'>
         <div class='current result_info'>
-            <h3>Current Seo Data</h3>
+            <h3><?php _e('Current Seo Data', 'shortpixel-image-optimiser'); ?></h3>
             <ul>
-              <li><label>Image FileName:</label> <span class='filename'>Example.jpg</span>
+            <li class='hidden'><label><?php _e('Image FileName','shortpixel-image-optimiser'); ?>:</label> <span class='filename'></span>
             </li>
-            <li><label>Image SEO ALt Tag:</label> <span class='alt'>Alt</span></li>
-            <li><label>Caption:</label> <span class='caption'>Caption</span></li>
-            <li><label>Image description:</label> <span class='description'>Loerum Ipsum</span>
+            <li><label><?php _e('Image SEO ALt Tag', 'shortpixel-image-optimiser'); ?>:</label> <span class='alt'></span></li>
+            <li><label><?php _e('Caption', 'shortpixel-image-optimiser'); ?>:</label> <span class='caption'></span></li>
+            <li><label><?php _e('Image description','shortpixel-image-optimiser'); ?>:</label> <span class='description'></span>
             </li>
             </ul>
         </div>      
         <div class='icon' ><i class='shortpixel-icon chevron rotate_right'></i>&nbsp;</div>
         <div class='result result_info'>
-            <h3>Ai Image Seo Result </h3>
+            <h3><?php _e('Ai Image Seo Result','shortpixel-image-optimiser'); ?></h3>
             <ul>
-            <li><label>Image FileName:</label> <span class='filename'>Example.jpg</span>
+            <li class='hidden'><label><?php _e('Image FileName','shortpixel-image-optimiser'); ?>:</label> <span class='filename'></span>
             </li>
-            <li><label>Image SEO ALt Tag:</label> <span class='alt'>Alt</span></li>
-            <li><label>Caption:</label> <span class='caption'>Caption</span></li>
-            <li><label>Image description:</label> <span class='description'>Loerum Ipsum</span>
+            <li><label><?php _e('Image SEO ALt Tag', 'shortpixel-image-optimiser'); ?>:</label> <span class='alt'></span></li>
+            <li><label><?php _e('Caption', 'shortpixel-image-optimiser'); ?>:</label> <span class='caption'></span></li>
+            <li><label><?php _e('Image description','shortpixel-image-optimiser'); ?>:</label> <span class='description'></span>
              </ul>
         </div>
 

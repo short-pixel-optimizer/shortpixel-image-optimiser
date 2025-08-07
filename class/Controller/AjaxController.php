@@ -1042,12 +1042,21 @@ class AjaxController
 			$item = new AiDataModel($id);
 			$attach_id = $id; 
 		}
+
+		$attach_id = null;
 		
 		$imageModel = \wpSPIO()->fileSystem()->getMediaImage($attach_id);
 
-        if (false === $item)
+        if (is_null($attach_id) || false === $imageModel)
         {
            // make something up
+		   $json = [
+				'preview_image' => '', 
+				'item_id' => -1, 
+				'generated' => ['alt' => __('Select an image for example', 'shortpixel-image-optimser')], 
+				'original'	=> [], 
+		   ]; 
+		   $this->send((object) $json);
         }
         else
         {
