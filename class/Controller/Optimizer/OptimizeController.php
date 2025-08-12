@@ -300,10 +300,21 @@ class OptimizeController extends OptimizerBase
 
         // *** RESEND TO PROCESS MORE *** 
         // If this keeps giving issues, probably some trigger is needed and move to QueueController instead.
+        // @todo In future check if we can more relaible do this via finishItem process. 
         if ($imageModel->isProcessable() && $qItem->result()->apiStatus !== RequestManager::STATUS_NOT_API) {
           Log::addDebug('Item with ID' . $item_id . ' still has processables (with dump)', $imageModel->getOptimizeUrls());
 
           $api = $this->api;
+
+          $optimize_args = []; 
+          if (! is_null($qItem->data()->compressionType))
+          {
+            $optimize_args['compressionType'] = $qItem->data()->compressionType; 
+          }
+          if (! is_null($qItem->data()->smartcrop))
+          {
+            $optimize_args['smartcrop'] = $qItem->data()->smartcrop; 
+          }
 
           // It can happen that only webp /avifs are left for this image. This can't influence the API cache, so dump is not needed. Just don't send empty URLs for processing here.
           $api->dumpMediaItem($qItem);
@@ -311,7 +322,8 @@ class OptimizeController extends OptimizerBase
           // Fetch a new qItem, because of all the left-over-data . Left the old one alone for reporting
           $new_qItem = QueueItems::getImageItem($imageModel);
                     
-          $this->enQueueItem($new_qItem); // requeue for further processing.
+          $this->enQueueItem($new_qItem, $optimize_args); // requeue for further processing.
+
         } elseif (RequestManager::STATUS_CONVERTED !== $qItem->result()->apiStatus) {
               $this->finishItemProcess($qItem);
 //          $q->itemDone($qItem); // Unbelievable but done.
