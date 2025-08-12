@@ -510,6 +510,15 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
        return $this->isOptimized();
     }
 
+    public function getSomethingOptimized()
+    {
+      if ($this->isOptimized())
+      {
+        return $this; 
+      } 
+      return false; 
+    }
+
     public function resetPrevent()
     {
 

@@ -705,6 +705,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		$compressionType = $this->getMeta('compressionType'); // CompressionType not set on subimages etc.
 
+	
 		// If thumbnails should not be optimized, they should not be in result Array.
 		// #### THUMBNAILS ####
 		$thumbObjs = $this->getThumbObjects();
@@ -1810,7 +1811,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		}
 
 		$reason = get_post_meta($this->id, '_shortpixel_prevent_optimize', true);
-		//$status = get_post_meta($this->id, '_shortpixel_prevent_optimize_status', true);
 
 		if ($reason === false || strlen($reason) == 0) {
 			$this->optimizePrevented = false;
@@ -1833,6 +1833,22 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		foreach ($thumbs as $thumbObj) {
 			if ($thumbObj->isOptimized()) {
 				return true;
+			}
+		}
+		return false;
+	}
+
+	public function getSomethingOptimized()
+	{
+		if ($this->isOptimized())
+		{
+			return $this;
+		}
+
+		$thumbs = $this->getThumbObjects();
+		foreach ($thumbs as $thumbObj) {
+			if ($thumbObj->isOptimized()) {
+				return $thumbObj;
 			}
 		}
 		return false;

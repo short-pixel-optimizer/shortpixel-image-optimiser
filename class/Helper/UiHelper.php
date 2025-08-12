@@ -330,12 +330,21 @@ class UiHelper
              if ($optimizable > 0)
              {
 							 $total = $optimizable + $optimizableWebp + $optimizableAvif;
+               $thumbObj = $mediaItem->getSomethingOptimized(); 
+               if (false !== $thumbObj)
+               {
+                  $compressionType = $thumbObj->getMeta('compressionType'); 
+                  $action = self::getAction('optimizethumbs', $id, ['compressionType' => $compressionType]);
+               }
+
 							 if ($optimizableWebp > 0 || $optimizableAvif > 0)
 							 	   $itemText = __('items', 'shortpixel-image-optimiser');
 								else {
 									 $itemText = __('thumbnails', 'shortpixel-image-optimiser');
 								}
                $action['text']  = sprintf(__('Optimize %s  %s','shortpixel-image-optimiser'),$total, $itemText);
+
+
              }
              else
              {
@@ -457,7 +466,7 @@ class UiHelper
        $actions['extendquota'] = self::getAction('extendquota', $id);
        $actions['checkquota'] = self::getAction('checkquota', $id);
     }
-    elseif($mediaItem->isProcessable() && ! $mediaItem->isSomethingOptimized() && ! $mediaItem->isOptimizePrevented() && ! $queueController->isItemInQueue($mediaItem))
+    elseif($mediaItem->isProcessable() && false === $mediaItem->isSomethingOptimized() && ! $mediaItem->isOptimizePrevented() && ! $queueController->isItemInQueue($mediaItem))
     {
        $actions['optimize'] = self::getAction('optimize', $id);
        $actions['markCompleted']  = self::getAction('markCompleted', $id);
@@ -668,7 +677,15 @@ class UiHelper
           $action['display'] = 'js';
       break;
       case 'optimizethumbs':
-          $action['function'] = 'window.ShortPixelProcessor.screen.Optimize(' . $id . ');';
+          if (! is_null($compressionType))
+          {
+            $action['function'] = 'window.ShortPixelProcessor.screen.Optimize(' . $id . ', null, ' . $compressionType . ');';
+          }
+          else
+          {
+            $action['function'] = 'window.ShortPixelProcessor.screen.Optimize(' . $id . ');';
+          }
+
           $action['type'] = 'js';
           $action['text']  = '';
           $action['display'] = 'inline';

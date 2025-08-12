@@ -334,7 +334,7 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 		this.processor.AjaxRequest(data);
 	}
 
-	Optimize(id, force) {
+	Optimize(id, force, compressionType) {
 		var data = {
 			id: id,
 			type: this.type,
@@ -343,6 +343,11 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 
 		if (typeof force !== 'undefined' && true == force) {
 			data.flags = 'force';
+		}
+
+		if (typeof compressionType !== 'undefined')
+		{
+			data.compressionType = compressionType; 
 		}
 
 		if (!this.processor.CheckActive())

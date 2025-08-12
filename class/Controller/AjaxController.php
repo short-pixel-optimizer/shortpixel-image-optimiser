@@ -428,6 +428,7 @@ class AjaxController
 	{
 		$id = intval($_POST['id']);
 		$type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
+		$compressionType = isset($_POST['compressionType']) ? sanitize_text_field($_POST['compressionType']) : false; 
 		$flags = isset($_POST['flags']) ? sanitize_text_field($_POST['flags']) : false;
 
 		$mediaItem = $this->getMediaItem($id, $type);
@@ -436,15 +437,27 @@ class AjaxController
 
 		// if order is given, remove barrier and file away.
 		if ($mediaItem->isOptimizePrevented() !== false)
+		{
 			$mediaItem->resetPrevent();
+		}
+
+
 
 		$control = new QueueController();
 		$json = new \stdClass;
 		$json->$type = new \stdClass;
 
-		$args = array();
+
+
+		$args = [];
+
 		if ('force' === $flags) {
 			$args['forceExclusion'] =  true;
+		}
+
+		if (false !== $compressionType)
+		{
+			 $args['compressionType'] = $compressionType; 
 		}
 
 		$json->$type->results = [$control->addItemToQueue($mediaItem, $args)];
