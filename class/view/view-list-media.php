@@ -33,9 +33,12 @@ if (property_exists($this->view, 'infoData'))
 
 if (property_exists($this->view, 'actions')):
   $this->loadView('snippets/part-single-actions', false);
-
-
 endif;
 
+if (property_exists($this->view, 'ai_icon'))
+{
+ 	$this->loadView('view-list-ai-media', false);
+}
 ?>
+
 </div>

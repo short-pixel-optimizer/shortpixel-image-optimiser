@@ -7,6 +7,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 ?>
 
-<?php if (property_exists($this->view, 'icon')): ?> 
-<i class="shortpixel-icon <?php echo $this->view->icon ?>" title="<?php echo $this->view->title ?>"></i>
+<?php if (property_exists($this->view, 'ai_icon')): ?> 
+<i class="shortpixel-icon <?php echo $this->view->ai_icon ?>" title="<?php echo $this->view->ai_title ?>"></i>
 <?php endif ?>

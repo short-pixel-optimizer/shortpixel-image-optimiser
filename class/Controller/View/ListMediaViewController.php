@@ -59,10 +59,10 @@ class ListMediaViewController extends \ShortPixel\ViewController
   public function headerColumns($defaults)
   {
     $defaults['wp-shortPixel'] = __('ShortPixel Compression', 'shortpixel-image-optimiser');
-    if (true === \wpSPIO()->settings()->enable_ai)
+    /*if (true === \wpSPIO()->settings()->enable_ai)
     {
       $defaults['wp-spio-ai'] = __('AI By Shortpixel', 'shortpixel-image-optimiser'); 
-    }
+    } */
 
     return $defaults;
   }
@@ -75,15 +75,17 @@ class ListMediaViewController extends \ShortPixel\ViewController
        $this->view->id = $id;
        $this->loadItem($id);
 
-	     $this->loadView(null, false);
+       if (true === \wpSPIO()->settings()->enable_ai)
+       {
+          $this->loadAiItem($id);
+//          $this->loadView('view-list-ai-media', false);
+       }
+       
      }
-     if ($column_name == 'wp-spio-ai')
-     {
-        $this->view = new \stdClass; 
-        $this->view->id = $id; 
-        $this->loadAiItem($id); 
-        $this->loadView('view-list-ai-media', false);
-     }
+
+     $this->loadView(null, false);
+
+
   }
 
   protected function loadItem($id)
@@ -163,6 +165,7 @@ class ListMediaViewController extends \ShortPixel\ViewController
       $this->view->actions = array();
       $this->view->list_actions = '';
     }
+
   }
 
   protected function loadAiItem($item_id)
@@ -177,14 +180,14 @@ class ListMediaViewController extends \ShortPixel\ViewController
            unset($generated_data['filebase']);
         }
         $generated_fields = implode(',', array_keys(array_filter($generated_data)));
-        $this->view->icon = 'ok'; 
-        $this->view->title = sprintf(__('Ai Data Generated %s', 'shortpixel-image-optimiser'), $generated_fields); 
+        $this->view->ai_icon = 'ok'; 
+        $this->view->ai_title = sprintf(__('Ai Data Generated %s', 'shortpixel-image-optimiser'), $generated_fields); 
 
      }
      else
      {
-       $this->view->icon = 'help'; 
-       $this->view->title = __('No Ai Data generated for this image', 'shortpixel-image-optimiser'); 
+       $this->view->ai_icon = 'help'; 
+       $this->view->ai_title = __('No Ai Data generated for this image', 'shortpixel-image-optimiser'); 
 
      }
 
