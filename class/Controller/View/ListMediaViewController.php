@@ -171,6 +171,7 @@ class ListMediaViewController extends \ShortPixel\ViewController
   protected function loadAiItem($item_id)
   {
      $AiDataModel = new AiDataModel($item_id); 
+     $this->view->item_id = $item_id;
 
      $generated_data = $AiDataModel->getGeneratedData(); 
      if ($AiDataModel->isSomeThingGenerated())

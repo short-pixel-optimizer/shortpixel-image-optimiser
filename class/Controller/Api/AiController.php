@@ -144,8 +144,6 @@ class AiController extends RequestManager
         
       //  $apiData = (is_array($APIresponse) && isset($APIresponse['data'])) ? $APIresponse['data'] : false; 
 
-
-
         if (false === $apiData)
         {
             return $this->returnRetry(RequestManager::STATUS_CONNECTION_ERROR, __('AI Api returned without any data. ', 'shortpixel-image-optimiser')) ;

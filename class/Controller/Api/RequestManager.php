@@ -122,6 +122,12 @@ abstract class RequestManager
                $is_fatal = true; 
 
             }
+            if (strpos($errorMessage, 'cURL error 6') !== false)
+            {
+              $errorMessage = __('Host error, please check configuration or contact support ( ' . $errorMessage. ')');
+              $is_fatal = true; 
+            }
+
             if (true === $is_fatal)
             {
               $qItem->addResult($this->returnFailure($errorCode, $errorMessage));
