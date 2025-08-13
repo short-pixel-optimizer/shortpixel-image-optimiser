@@ -52,7 +52,18 @@ class UiHelper
   {
     $output = '';
     //$percent = $imageObj->getMeta('improvement');
-    $percent = $imageObj->getImprovement();
+    $percent = $imageObj->getImprovement(); 
+
+    if (false === $percent || $percent < 5)
+    {
+      $improvements = $imageObj->getImprovements();
+      if (isset($improvements['totalpercentage']))
+      {
+        $percent = $improvements['totalpercentage'];
+      }
+      else
+        $percent = 999; // dunno what is this, but bail out
+    }
 
     if($percent == 999) return ;
 

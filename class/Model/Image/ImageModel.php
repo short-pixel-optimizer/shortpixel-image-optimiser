@@ -653,7 +653,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
         }
         else
-          return 0;
+          return false;
     }
 
 
