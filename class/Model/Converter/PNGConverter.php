@@ -102,6 +102,9 @@ class PNGConverter extends MediaLibraryConverter
 		$currentAction = $qItem->data()->action; 
        $qItem->data()->action = 'png2jpg';
 	   $qItem->data()->addNextAction($currentAction);
+		$qItem->data()->addKeepDataArgs(['compressionType', 'smartcrop']);
+
+
        return $qItem;
     }
 
