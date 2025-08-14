@@ -434,7 +434,7 @@ class UiHelper
 				}
       } //isOptimized
 
-      if ($aiDataModel->isProcessable())
+      if ($aiDataModel->isProcessable() && 'media' === $mediaItem->get('type'))
       {
          $list_actions['shortpixel-generateai'] = self::getAction('shortpixel-generateai', $id);
       }
