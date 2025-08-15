@@ -1,6 +1,7 @@
 <?php
 namespace ShortPixel\Controller\Api;
 
+use ShortPixel\Helper\UtilHelper;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Model\Queue\QueueItem as QueueItem;
@@ -279,13 +280,13 @@ abstract class RequestManager
     return (array)$data;
   }
 
-  // Temporary! 
+  // Temporary!  (not sure what temporary means here)
   private function getJsonStrings(string $text): array
   {
       preg_match_all('#\{(?:[^{}]|(?R))*\}#s', $text, $matches);
       $finalValidJson = [];
       foreach ($matches[0] as $match) {
-          if (json_validate($match)) {
+          if (UtilHelper::validateJSON($match)) {
               $finalValidJson[] = $match;
           }
       }
