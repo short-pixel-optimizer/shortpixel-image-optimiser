@@ -26,7 +26,7 @@ class AiController extends RequestManager
 
     public function __construct()
     {
-      $this->main_url = 'https://devapigpt.shortpixel.com/';
+      $this->main_url = 'https://capi-gpt.shortpixel.com/';
     }
 
     public function processMediaItem(QueueItem $qItem, ImageModel $imageObj)
