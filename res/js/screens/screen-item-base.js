@@ -43,6 +43,10 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 				isError = true;
 			this.UpdateMessage(resultItem, message, isError);
 		}
+		else if ('ai' == apiName && null !== element && true == resultItem.is_error)
+		{
+			this.UpdateMessage(resultItem, message, true);
+		}
 
 		if (element !== null && apiName !== 'ai')  {
 			element.innerHTML = '';
@@ -57,10 +61,19 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 			}
 		}
 
+		// Not optimal
 		if ('ai' === apiName && typeof resultItem.aiData !== 'undefined')
 		{
 			
-			// Not optimal
+			if (null !== element)
+			{
+				var fileStatus = this.processor.fStatus[resultItem.fileStatus];
+				if (fileStatus == 'FILE_SUCCESS')
+				{
+					this.processor.LoadItemView({ id: item_id, type: type });
+
+				}
+			}
 			 this.FetchAltView(resultItem.aiData, item_id);
 		}
 
