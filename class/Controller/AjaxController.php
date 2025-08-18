@@ -1029,7 +1029,15 @@ class AjaxController
 						 break;  // safe guards.
 
 					}
+					
+					 $this->send($result); 
+					 break;
 				}
+
+
+				$is_done = true; 
+				$this->send((object) $result_json); 
+				break; 
 				
 			}
 

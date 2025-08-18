@@ -375,7 +375,7 @@ class ShortPixelSettings {
 				 var attach_id = document.querySelector('input[name="ai_preview_image_id"]').value; 
 				 var inputs = document.querySelectorAll('#tab-ai input, #tab-ai select, #tab-ai textarea'); 
 
-				 let previewResult = document.querySelector('.preview_wrapper .preview_result'); 
+				 var previewResult = document.querySelector('.preview_wrapper .preview_result'); 
 
 				if (null !== previewResult)
 				{
@@ -416,6 +416,14 @@ class ShortPixelSettings {
 				window.ShortPixelProcessor.AjaxRequest(data); 
 
 				window.addEventListener('shortpixelSettings.AiImageSet', function (response) {
+
+					if (typeof response.aiData == 'undefined')
+					{
+						if (typeof response.message !== 'undefined')
+						{
+							previewResult.innerText = response.message;
+						}
+					}
 					window.dispatchEvent(triggerEvent); 
 				}, {once: true});
 
@@ -447,6 +455,7 @@ class ShortPixelSettings {
 					window.ShortPixelProcessor.AjaxRequest(data); 
 
 					window.addEventListener('shortpixelSettings.AiImageSet', function (response) {
+						
 						window.dispatchEvent(triggerEvent); 
 					}, {once: true});
 
