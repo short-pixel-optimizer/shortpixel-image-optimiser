@@ -977,7 +977,7 @@ class AjaxController
 		if (false === $imageModel)
 		{
 			 $result_json['message'] = __('This image could not be loaded', 'shortpixel-image-optimiser'); 
-			 $this->send($result_json);
+			 $this->send((object) $result_json);
 		}
 
 		$qItem = QueueItems::getImageItem($imageModel);
@@ -1043,7 +1043,7 @@ class AjaxController
 
 			if ('retrieveAlt' === $state)
 			{
-				sleep(3); // prevent in case of fast connection hammering the API
+				sleep(2); // prevent in case of fast connection hammering the API
 			}
 
 			if ($i >= 30) // safeguard. 
@@ -1053,7 +1053,7 @@ class AjaxController
 			$i++; 
 		}
 
-		$this->send($result_json);
+		//$this->send($result_json);
 
 	}
 
