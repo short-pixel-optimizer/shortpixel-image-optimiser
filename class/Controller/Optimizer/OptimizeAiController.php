@@ -58,7 +58,7 @@ class OptimizeAiController extends OptimizerBase
         $qItem->addResult([
             'is_error' => true, 
             'is_done' => true,
-            'message' => __('ALT Tags cannot be generated for GIF files by ShortPixel AI, for now', 'shortpixel-image-optimiser'), 
+            'message' => __('AI data cannot be generated for GIF files by ShortPixel AI, for now', 'shortpixel-image-optimiser'), 
             'apiStatus' => AiController::AI_STATUS_INVALID_URL,
         ]); 
 
@@ -110,7 +110,7 @@ class OptimizeAiController extends OptimizerBase
             $directAction = false; 
         break; 
         default: 
-            Log::addError('no Ai controller action found!');
+            Log::addError('no AI controller action found!');
             $qItem->addResult([
                 'message' => 'Wrong action in AiController!', 
                 'is_error' => true, 
@@ -143,7 +143,7 @@ class OptimizeAiController extends OptimizerBase
             if ($qItem->result()->message == '')
             {
                 $qItem->addResult([
-                'message' => __('Request for Alt text send to Shortpixel AI', 'shortpixel-image-optimiser')]);
+                'message' => __('Request for image SEO data sent to Shortpixel AI', 'shortpixel-image-optimiser')]);
             }
         }
         else

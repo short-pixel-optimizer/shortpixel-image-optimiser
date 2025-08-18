@@ -421,7 +421,7 @@ class ShortPixelPlugin {
 
 	  $screen_localize = array(  // Item Base
 			'startAction' => __('Processing... ','shortpixel-image-optimiser'),
-			'startActionAI' => __('Generating Alt Text', 'shortpixel-image-optimiser'),
+			'startActionAI' => __('Generating image SEO data', 'shortpixel-image-optimiser'),
 			'fatalError' => __('ShortPixel encountered a fatal error when optimizing images. Please check the issue below. If this is caused by a bug please contact our support', 'shortpixel-image-optimiser'),
 			'fatalErrorStop' => __('ShortPixel has encounted multiple errors and has now stopped processing', 'shortpixel-image-optimiser'),
 			'fatalErrorStopText' => __('No items are being processed. To try again after solving the issues, please reload the page ', 'shortpixel-image-optimiser'),
@@ -489,7 +489,7 @@ class ShortPixelPlugin {
 			'redoSmartcrop'               => __( 'Re-optimize with SmartCrop', 'shortpixel-image-optimiser'),
 			'redoSmartcropless'           => __( 'Re-optimize without SmartCrop', 'shortpixel-image-optimiser'),
 			'restoreOriginal'             => __( 'Restore Originals', 'shortpixel-image-optimiser' ),
-			'generateAI' 				  => __( 'Generate AI Data', 'shortpixel-image-optimiser'),
+			'generateAI' 				  => __( 'Generate image SEO data', 'shortpixel-image-optimiser'),
 			'markCompleted' 			  => __('Mark as completed' ,'shortpixel-image-optimiser'),
 			'areYouSureStopOptimizing'    => __( 'Are you sure you want to stop optimizing the folder {0}?', 'shortpixel-image-optimiser' ),
 			'pleaseDoNotSetLesserSize'    => __( "Please do not set a {0} less than the {1} of the largest thumbnail which is {2}, to be able to still regenerate all your thumbnails in case you'll ever need this.", 'shortpixel-image-optimiser' ),

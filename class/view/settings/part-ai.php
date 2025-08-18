@@ -11,7 +11,9 @@ if (! defined('ABSPATH')) {
 
   <settinglist>
 
-    <h2><?php esc_html_e('AI by ShortPixel', 'shortpixel-image-optimiser'); ?></h2>
+    <h2><?php esc_html_e('AI Image SEO', 'shortpixel-image-optimiser'); ?></h2>
+
+    <gridbox class="width_half">
 
     <setting class='switch'>
       <content>
@@ -20,7 +22,7 @@ if (! defined('ABSPATH')) {
           [
             'name' => 'enable_ai',
             'checked' => $view->data->enable_ai,
-            'label' => esc_html__('Enable AI', 'shortpixel-image-optimiser'),
+            'label' => esc_html__('Enable AI Image SEO', 'shortpixel-image-optimiser'),
           ]
         );
         ?>
@@ -28,7 +30,7 @@ if (! defined('ABSPATH')) {
         <i class='documentation dashicons dashicons-editor-help' data-link="-todo-"></i>
         <name>
 
-          <?php esc_html_e('Show AI options throughout ShortPixel Image Optimiser', 'shortpixel-image-optimiser'); ?>
+          <?php esc_html_e('Show AI image SEO options throughout ShortPixel Image Optimizer.', 'shortpixel-image-optimiser'); ?>
 
         </name>
       </content>
@@ -41,7 +43,7 @@ if (! defined('ABSPATH')) {
           [
             'name' => 'autoAI',
             'checked' => $view->data->autoAI,
-            'label' => esc_html__('Auto AI', 'shortpixel-image-optimiser'),
+            'label' => esc_html__('Generate image SEO data on upload', 'shortpixel-image-optimiser'),
           ]
         );
         ?>
@@ -49,7 +51,7 @@ if (! defined('ABSPATH')) {
         <i class='documentation dashicons dashicons-editor-help' data-link="-todo-"></i>
         <name>
 
-          <?php esc_html_e('Automatically process Ai settings after uploading the image', 'shortpixel-image-optimiser'); ?>
+          <?php esc_html_e('Automatically generate image SEO data with AI after uploading the image, based on the settings below.', 'shortpixel-image-optimiser'); ?>
 
         </name>
       </content>
@@ -62,7 +64,7 @@ if (! defined('ABSPATH')) {
           [
             'name' => 'autoAIBulk',
             'checked' => $view->data->autoAIBulk,
-            'label' => esc_html__('Auto Bulk', 'shortpixel-image-optimiser'),
+            'label' => esc_html__('Generate image SEO data when running Bulk Processing', 'shortpixel-image-optimiser'),
           ]
         );
         ?>
@@ -70,39 +72,24 @@ if (! defined('ABSPATH')) {
         <i class='documentation dashicons dashicons-editor-help' data-link="-todo-"></i>
         <name>
 
-          <?php esc_html_e('Automatically process Ai settings when running the bulk', 'shortpixel-image-optimiser'); ?>
+          <?php esc_html_e('Automatically generate image SEO data using AI for all the images queued during the Bulk Processing. The settings below will be taken into account when running the bulk.', 'shortpixel-image-optimiser'); ?>
 
         </name>
       </content>
     </setting>
 
+    </gridbox>
+
+    <hr>
 
     <setting class='textarea'>
       <content>
         <name><?php _e('General site context', 'shortpixel-image-optimiser'); ?></name>
-        <info>&nbsp;</info>
+        <info>This is a general context that will be passed to the AI model to provide more more relevant data for your website.</info>
         <textarea class="ai_general_context" name="ai_general_context"><?php echo $view->data->ai_general_context; ?></textarea>
       </content>
 
     </setting>
-
-    <setting class='switch'>
-      <content>
-        <?php $this->printSwitchButton(
-          [
-            'name' => 'ai_use_post',
-            'checked' => $view->data->ai_use_post,
-            'label' => esc_html__('Use connected Post / Page for AI', 'shortpixel-image-optimiser')
-          ]
-        );
-        ?>
-
-        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-optimize-thumbnails/?target=iframe"></i>
-
-      </content>
-    </setting>
-
-    <hr>
 
   </settinglist>
 
@@ -117,7 +104,7 @@ if (! defined('ABSPATH')) {
             [
               'name' => 'ai_gen_alt',
               'checked' => $view->data->ai_gen_alt,
-              'label' => esc_html__('Generate Alt Tag', 'shortpixel-image-optimiser'),
+              'label' => esc_html__('Generate image ALT tag', 'shortpixel-image-optimiser'),
               'data' => ['data-toggle="ai_gen_alt"'],
             ]
           );
@@ -132,11 +119,11 @@ if (! defined('ABSPATH')) {
           <?php
           $input = "<input type='number' name='ai_limit_alt_chars' value='" . $view->data->ai_limit_alt_chars . "'>";
           ?>
-          <name><?php printf(__('Limit ALT Tag to %s characters', 'shortpixel-image-optimiser'), $input); ?></name>
+          <name><?php printf(__('Limit generated ALT Tag to %s characters', 'shortpixel-image-optimiser'), $input); ?></name>
         </content>
 
         <content class='toggleTarget ai_gen_alt is-advanced'>
-          <name> <?php _e('Additional context for ALT Tags', 'shortpixel-image-optimiser'); ?></name>
+          <name> <?php _e('Additional context for generating ALT Tags:', 'shortpixel-image-optimiser'); ?></name>
           <textarea name="ai_alt_context"><?php echo $view->data->ai_alt_context ?></textarea>
         </content>
 
@@ -149,7 +136,7 @@ if (! defined('ABSPATH')) {
             [
               'name' => 'ai_gen_description',
               'checked' => $view->data->ai_gen_description,
-              'label' => esc_html__('Generate Image Description', 'shortpixel-image-optimiser'),
+              'label' => esc_html__('Generate image description', 'shortpixel-image-optimiser'),
               'data' => ['data-toggle="ai_gen_description"'],
             ]
           );
@@ -163,11 +150,11 @@ if (! defined('ABSPATH')) {
           <?php
           $input = "<input type='number' name='ai_limit_description_chars' value='" . $view->data->ai_limit_description_chars . "'>";
           ?>
-          <name><?php printf(__('Limit Image Description to %s characters', 'shortpixel-image-optimiser'), $input); ?></name>
+          <name><?php printf(__('Limit generated image description to %s characters', 'shortpixel-image-optimiser'), $input); ?></name>
         </content>
 
         <content class='toggleTarget ai_gen_description is-advanced'>
-          <name> <?php _e('Additional context for image description', 'shortpixel-image-optimiser'); ?></name>
+          <name> <?php _e('Additional context for generating image description', 'shortpixel-image-optimiser'); ?></name>
           <textarea name='ai_description_context'><?php echo $view->data->ai_description_context ?></textarea>
         </content>
 
@@ -181,7 +168,7 @@ if (! defined('ABSPATH')) {
             [
               'name' => 'ai_gen_caption',
               'checked' => $view->data->ai_gen_caption,
-              'label' => esc_html__('Generate Image Caption', 'shortpixel-image-optimiser'),
+              'label' => esc_html__('Generate image caption', 'shortpixel-image-optimiser'),
               'data' => ['data-toggle="ai_gen_caption"'],
 
             ]
@@ -196,12 +183,12 @@ if (! defined('ABSPATH')) {
           <?php
           $input = '<input type="number" name="ai_limit_caption_chars" value="' . $view->data->ai_limit_caption_chars . '">';
           ?>
-          <name><?php printf(__('Limit Image Description to %s characters', 'shortpixel-image-optimiser'), $input); ?></name>
+          <name><?php printf(__('Limit generated image caption to %s characters', 'shortpixel-image-optimiser'), $input); ?></name>
         </content>
 
 
         <content class='toggleTarget ai_gen_caption is-advanced'>
-          <name> <?php _e('Additional context for image caption', 'shortpixel-image-optimiser'); ?></name>
+          <name> <?php _e('Additional context for generating image caption', 'shortpixel-image-optimiser'); ?></name>
           <textarea name='ai_caption_context'><?php echo $view->data->ai_caption_context ?></textarea>
         </content>
 
@@ -214,13 +201,14 @@ if (! defined('ABSPATH')) {
             [
               'name' => 'ai_gen_filename',
               'checked' => $view->data->ai_gen_filename,
-              'label' => esc_html__('Update image filename with SEO-Friendly one', 'shortpixel-image-optimiser'),
+              'label' => esc_html__('Update image filename with an SEO-friendly one', 'shortpixel-image-optimiser'),
               'data' => ['data-toggle="ai_gen_filename"'],
               'disabled' => true,
 
             ]
           );
           ?>
+        <info>This is a feature we are currently evaluating. If you would like to see it implemented in a future version of our plugin, please vote for it here.</info>
         </content>
 
         <content class='nextline toggleTarget ai_gen_filename is-advanced'>
@@ -231,7 +219,7 @@ if (! defined('ABSPATH')) {
         </content>
 
         <content class='nextline toggleTarget ai_gen_filename is-advanced'>
-          <name><?php _e('Additional context for filename : ', 'shortpixel-image-optimiser'); ?></name>
+          <name><?php _e('Additional context for filename generation: ', 'shortpixel-image-optimiser'); ?></name>
           <textarea name="ai_filename_context"><?php echo $view->data->ai_filename_context ?></textarea>
 
         </content>
@@ -251,23 +239,42 @@ if (! defined('ABSPATH')) {
     </gridbox>
   </settinglist>
 
-  <!--  @todo Might be removed in general
+  <hr>
+
+  <!-- will add this later
     <setting class='switch'>
         
         <content>
-        <name><?php //_e('Use image EXIF data', 'shortpixel-image-optimiser'); 
+        <name><?php // _e('Use image EXIF data', 'shortpixel-image-optimiser'); 
               ?></name>
         <?php $this->printSwitchButton(
           [
             'name' => 'ai_use_exif',
             'checked' => $view->data->ai_use_exif,
-            'label' => esc_html__('Take into account image Exif data', 'shortpixel-image-optimiser')
+            'label' => esc_html__('Take into account the image EXIF data when generating image SEO data', 'shortpixel-image-optimiser')
           ]
         );
         ?>
         </content>
     </setting>
-        -->
+  -->
+  <gridbox class="width_half step-highlight-2">
+    <setting class='switch'>
+      <content>
+        <?php $this->printSwitchButton(
+          [
+            'name' => 'ai_use_post',
+            'checked' => $view->data->ai_use_post,
+            'label' => esc_html__('Use parent Post / Page title for image SEO data', 'shortpixel-image-optimiser')
+          ]
+        );
+        ?>
+
+        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-optimize-thumbnails/?target=iframe"></i>
+
+        <info>When this is enabled, the title of the image parent post/page will be send to the AI model for more accurate image SEO data results.</info>
+      </content>
+    </setting>
 
   <setting>
     <content>
@@ -282,9 +289,10 @@ if (! defined('ABSPATH')) {
         ]);
         ?>
       </name>
+      <info>Select the language you would like to be used for generating image SEO data.</info>
     </content>
   </setting>
-
+  </gridbox>
   </settinglist>
 
   <settingslist class='preview_wrapper'>
@@ -292,13 +300,13 @@ if (! defined('ABSPATH')) {
     <div class='ai_preview'>
       <gridbox class='width_half'>
         <span><img src="" class='image_preview'></span>
-        <span><i class='shortpixel-icon eye'></i><?php _e('Ai Image Seo Preview','shortpixel-image-optimiser'); ?><i class='shortpixel-icon ai'></i>
-          <p><?php _e('This is a preview - no data will be saved', 'shortpixel-image-optimiser'); ?></p>
+        <span><h2><i class='shortpixel-icon ai'></i><?php _e('AI Image SEO Preview','shortpixel-image-optimiser'); ?></h2>
+          <p><?php _e('Preview only', 'shortpixel-image-optimiser'); ?><i class='shortpixel-icon ai'></i><?php _e('- the current image data will not be touched!', 'shortpixel-image-optimiser'); ?></p>
           <p>
             <button type='button' name='open_change_photo'>
-              <i class='shortpixel-icon optimization'></i><?php _e('Change photo', 'shortpixel-image-optimiser'); ?></button>
+              <i class='shortpixel-icon optimization'></i><?php _e('Select test image', 'shortpixel-image-optimiser'); ?></button>
             <button type='button' name='refresh_ai_preview'>
-              <i class='shortpixel-icon refresh'></i><?php _e('Refresh with latest settings', 'shortpixel-image-optimiser'); ?></button>
+              <i class='shortpixel-icon refresh'></i><?php _e('Generate AI SEO data preview', 'shortpixel-image-optimiser'); ?></button>
           </p>
           <div class='preview_result'>
               
@@ -308,24 +316,24 @@ if (! defined('ABSPATH')) {
     <hr>
     <gridbox class='width_two_with_middle result_wrapper'>
       <div class='current result_info'>
-        <h3><?php _e('Current Seo Data', 'shortpixel-image-optimiser'); ?></h3>
+        <h3><?php _e('Current SEO Data', 'shortpixel-image-optimiser'); ?></h3>
         <ul>
-          <li class='hidden'><label><?php _e('Image FileName', 'shortpixel-image-optimiser'); ?>:</label> <span class='filename'></span>
+          <li <label><?php _e('Image filemame', 'shortpixel-image-optimiser'); ?>:</label> <span class='filename'></span>
           </li>
-          <li><label><?php _e('Image SEO ALt Tag', 'shortpixel-image-optimiser'); ?>:</label> <span class='alt'></span></li>
-          <li><label><?php _e('Caption', 'shortpixel-image-optimiser'); ?>:</label> <span class='caption'></span></li>
+          <li><label><?php _e('Image ALT tag', 'shortpixel-image-optimiser'); ?>:</label> <span class='alt'></span></li>
+          <li><label><?php _e('Image caption', 'shortpixel-image-optimiser'); ?>:</label> <span class='caption'></span></li>
           <li><label><?php _e('Image description', 'shortpixel-image-optimiser'); ?>:</label> <span class='description'></span>
           </li>
         </ul>
       </div>
       <div class='icon'><i class='shortpixel-icon chevron rotate_right'></i>&nbsp;</div>
       <div class='result result_info'>
-        <h3><?php _e('Ai Image Seo Result', 'shortpixel-image-optimiser'); ?></h3>
+        <h3><?php _e('Generated AI image SEO data', 'shortpixel-image-optimiser'); ?></h3>
         <ul>
-          <li class='hidden'><label><?php _e('Image FileName', 'shortpixel-image-optimiser'); ?>:</label> <span class='filename'></span>
+          <li><label><?php _e('Image filemame', 'shortpixel-image-optimiser'); ?>:</label> <span class='filename'></span>
           </li>
-          <li><label><?php _e('Image SEO ALt Tag', 'shortpixel-image-optimiser'); ?>:</label> <span class='alt'></span></li>
-          <li><label><?php _e('Caption', 'shortpixel-image-optimiser'); ?>:</label> <span class='caption'></span></li>
+          <li><label><?php _e('Image ALT tag', 'shortpixel-image-optimiser'); ?>:</label> <span class='alt'></span></li>
+          <li><label><?php _e('Image caption', 'shortpixel-image-optimiser'); ?>:</label> <span class='caption'></span></li>
           <li><label><?php _e('Image description', 'shortpixel-image-optimiser'); ?>:</label> <span class='description'></span>
         </ul>
       </div>

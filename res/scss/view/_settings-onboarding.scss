@@ -37,6 +37,11 @@
  					&.invalid {
 						border: 2px solid #ff0000;
 						margin-top: 0px;
+						&:checked::before {
+							width: 16px;
+							height: 16px;
+							margin-top: -2px;
+						}
 					}
 				}
 				.shortpixel-settings-error {

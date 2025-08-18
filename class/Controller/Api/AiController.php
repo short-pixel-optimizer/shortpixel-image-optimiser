@@ -155,7 +155,7 @@ class AiController extends RequestManager
               $remote_id = intval($id);
               $qItem->addResult(['remote_id' => $remote_id]);
               
-              return $this->returnSuccess(['remote_id' => $remote_id], RequestManager::STATUS_SUCCESS, __('Request for Alt text sent to ShortPixel AI', 'shortpixel-image-optimiser'));  
+              return $this->returnSuccess(['remote_id' => $remote_id], RequestManager::STATUS_SUCCESS, __('Request for image SEO data sent to ShortPixel AI', 'shortpixel-image-optimiser'));  
             }
             elseif(self::AI_STATUS_OVERQUOTA === $status)
             {

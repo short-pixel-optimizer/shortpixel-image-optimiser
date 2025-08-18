@@ -182,13 +182,13 @@ class ListMediaViewController extends \ShortPixel\ViewController
         }
         $generated_fields = implode(',', array_keys(array_filter($generated_data)));
         $this->view->ai_icon = 'ok'; 
-        $this->view->ai_title = sprintf(__('Ai Data Generated %s', 'shortpixel-image-optimiser'), $generated_fields); 
+        $this->view->ai_title = sprintf(__('AI Data Generated %s', 'shortpixel-image-optimiser'), $generated_fields); 
 
      }
      else
      {
        $this->view->ai_icon = 'help'; 
-       $this->view->ai_title = __('No Ai Data generated for this image', 'shortpixel-image-optimiser'); 
+       $this->view->ai_title = __('No AI Data generated for this image', 'shortpixel-image-optimiser'); 
 
      }
 

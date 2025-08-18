@@ -371,7 +371,7 @@
   display: block;
 }
 .sp-column-info .sp-column-actions {
-  margin: 4px;
+  margin: 0 4px;
   position: relative;
 }
 .sp-column-info .thumbs-todo {

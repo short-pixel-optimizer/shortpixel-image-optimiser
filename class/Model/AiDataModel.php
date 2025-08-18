@@ -139,7 +139,7 @@ class AiDataModel
         else
         {
             // Not sure if  just categorically deny this, or some smart updater ( with more risks ) 
-            Log::addError('New Ai Data already has an entry');
+            Log::addError('New AI Data already has an entry');
         }
 
 
@@ -436,4 +436,4 @@ class AiDataModel
 
 
 
-} // class 
+} // class

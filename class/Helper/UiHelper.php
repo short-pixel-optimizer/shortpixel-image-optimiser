@@ -772,7 +772,7 @@ class UiHelper
      case 'shortpixel-generateai': 
       $action['function'] = 'window.ShortPixelProcessor.screen.RequestAlt(' . $id . ')';
       $action['type'] = 'js';
-      $action['text'] = __('Generate AI','shortpixel-image-optimiser');     
+      $action['text'] = __('Generate image SEO data','shortpixel-image-optimiser');     
       $action['ai-action'] = true;
       break; 
      case 'extendquota':
@@ -981,9 +981,9 @@ class UiHelper
       ];
 
       $ai_string = [
-            'imagemodaltitle' => __('Select an image for preview', 'shortpixel-image-optimiser'), 
+            'imagemodaltitle' => __('Select an image for AI SEO data preview', 'shortpixel-image-optimiser'), 
             'selectimage' => __('Use this image', 'shortpixel-image-optimiser'),
-            'preview_requested' => __('Example is being generated. This may take a while ... ', 'shortpixel-image-optimiser'),
+            'preview_requested' => __('Working on your AI SEO data preview. This may take a while ... ', 'shortpixel-image-optimiser'),
       ];
 
       $strings['exclusion_types'] = $exclusion_types;

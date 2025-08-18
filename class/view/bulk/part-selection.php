@@ -111,7 +111,8 @@ $approx = $this->view->approx;
 		               <div class="the_switch">&nbsp; </div>
 	             </label>
 				 <h4><label for="autoai_checkbox">
-					 <?php printf(esc_html__('Use AI in the bulk to create image data for media library, according to settings ' ,'shortpixel-image-optimiser') ); ?>
+					<?php printf(esc_html__('Use ShortPixel AI to generate image SEO data for all Media Library images, according to the %ssettings%s', 'shortpixel-image-optimiser'), '<a href="options-general.php?page=wp-shortpixel-settings&part=ai">', '</a>' ); ?>
+              				<span class='new'><?php _e('New!', 'shortpixel-image-optimiser'); ?></span>
 				 </label></h4>
 
 				</div>	
@@ -195,7 +196,6 @@ $approx = $this->view->approx;
           <h4><label for="background_checkbox">
 
             <?php printf(esc_html__('Background Mode' ,'shortpixel-image-optimiser') ); ?>
-              <span class='new'><?php _e('New!', 'shortpixel-image-optimiser'); ?></span>
           </label></h4>
             <?php $link = 'https://shortpixel.com/knowledge-base/article/background-processing-using-cron-jobs-in-shortpixel-image-optimizer/'; ?>
          <div class="option"><?php printf(esc_html__('Utilize this feature to optimize images without the need to keep a browser window open. Please be aware that on websites with low traffic or shared hosting, this method of optimization might be considerably slower. If you observe a significant increase in server resource usage or processing time, consider switching to browser-based optimization. %sRead more%s.','shortpixel-image-optimiser'), '<strong><a href="' . esc_attr($link) . '" target="_blank">', '</a></strong>'); ?>

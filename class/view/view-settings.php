@@ -82,7 +82,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         <li>
             <?php echo $this->settingLink([
                 'part' => 'ai', 
-                'title' => __('AI by ShortPixel', 'shortpixel-image-optimiser'), 
+                'title' => __('AI Image SEO', 'shortpixel-image-optimiser'), 
                 'icon' => 'shortpixel-icon ai'
             ]); ?>
         </li>
@@ -148,7 +148,11 @@ if ( ! defined( 'ABSPATH' ) ) {
               </div>
               <div class="banner-line-container">
                   <span class="shortpixel-icon ok"></span>
-                  <p><?php _e('SmartCompress ', 'shortpixel-image-optimiser'); ?></p>
+                  <p><?php _e('500GB CDN/month ', 'shortpixel-image-optimiser'); ?></p>
+              </div>
+              <div class="banner-line-container">
+                  <span class="shortpixel-icon ok"></span>
+                  <p><?php _e('SmartCompress & more ', 'shortpixel-image-optimiser'); ?></p>
               </div>
               <div class='banner-upgrade-button'>
                   <button type="button" class="button button-primary" id="upgrade" onclick="window.open('https://shortpixel.com/ms/af/KZYK08Q28044', '_blank');">
