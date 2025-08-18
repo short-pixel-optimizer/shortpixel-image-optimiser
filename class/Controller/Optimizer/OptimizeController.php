@@ -50,9 +50,11 @@ class OptimizeController extends OptimizerBase
   }
 
 
-  // Possibly best to return true / false here.
-  // And rename it from getItem to something else, because nothing is gotten here.
-  // This is check before enqueue!
+  /** Item check before the enqueueing happens 
+   * 
+   * @param QueueItem  
+   * @return boolean 
+   */
   public function checkItem(QueueItem $qItem)
   {
     /*  $defaults = array(
@@ -76,8 +78,6 @@ class OptimizeController extends OptimizerBase
     if ($imageModel->isOptimizePrevented() !== false) {
       $imageModel->resetPrevent();
     }
-
-    //  $queue = $this->getQueue($mediaItem->get('type'));
 
     $is_processable = $imageModel->isProcessable();
     // Allow processable to be overridden when using the manual optimize button
@@ -250,7 +250,7 @@ class OptimizeController extends OptimizerBase
 
           }
 
-          $showItem = UiHelper::findBestPreview($imageModel); // find smaller / better preview
+          /*$showItem = UiHelper::findBestPreview($imageModel); // find smaller / better preview
           $original = $optimized = false;
 
           if ($showItem->getExtension() == 'pdf') // non-showable formats here
@@ -270,7 +270,8 @@ class OptimizeController extends OptimizerBase
           $qItem->addResult([
             'original' => $original,
             'optimized' => $optimized,
-          ]);
+          ]);*/
+          $this->addPreview($qItem);
 
           // Dump Stats, Dump Quota. Refresh
           $statsController->reset();
@@ -300,22 +301,33 @@ class OptimizeController extends OptimizerBase
 
         // *** RESEND TO PROCESS MORE *** 
         // If this keeps giving issues, probably some trigger is needed and move to QueueController instead.
+        // @todo In future check if we can more relaible do this via finishItem process. 
         if ($imageModel->isProcessable() && $qItem->result()->apiStatus !== RequestManager::STATUS_NOT_API) {
           Log::addDebug('Item with ID' . $item_id . ' still has processables (with dump)', $imageModel->getOptimizeUrls());
 
           $api = $this->api;
+
+          $optimize_args = []; 
+          if (! is_null($qItem->data()->compressionType))
+          {
+            $optimize_args['compressionType'] = $qItem->data()->compressionType; 
+          }
+          if (! is_null($qItem->data()->smartcrop))
+          {
+            $optimize_args['smartcrop'] = $qItem->data()->smartcrop; 
+          }
 
           // It can happen that only webp /avifs are left for this image. This can't influence the API cache, so dump is not needed. Just don't send empty URLs for processing here.
           $api->dumpMediaItem($qItem);
 
           // Fetch a new qItem, because of all the left-over-data . Left the old one alone for reporting
           $new_qItem = QueueItems::getImageItem($imageModel);
-          
+                    
+          $this->enQueueItem($new_qItem, $optimize_args); // requeue for further processing.
 
-          
-          $this->enQueueItem($new_qItem); // requeue for further processing.
         } elseif (RequestManager::STATUS_CONVERTED !== $qItem->result()->apiStatus) {
-          $q->itemDone($qItem); // Unbelievable but done.
+              $this->finishItemProcess($qItem);
+//          $q->itemDone($qItem); // Unbelievable but done.
         }
       }
     } else {

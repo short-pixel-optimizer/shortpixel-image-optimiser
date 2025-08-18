@@ -36,11 +36,16 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 		var element = this.GetElement(resultItem, 'data');
 		var apiName = (typeof resultItem.apiName !== 'undefined') ? resultItem.apiName : 'optimize'; 
 
+		var isError = false;
+		if (resultItem.is_error == true)
+			isError = true;
 
 		if (typeof message !== 'undefined' && apiName !== 'ai') {
-			var isError = false;
-			if (resultItem.is_error == true)
-				isError = true;
+
+			this.UpdateMessage(resultItem, message, isError);
+		}
+		else if ('ai' == apiName && null !== element)
+		{
 			this.UpdateMessage(resultItem, message, isError);
 		}
 
@@ -49,7 +54,7 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 			//  var event = new CustomEvent('shortpixel.loadItemView', {detail: {'type' : type, 'id': result.id }}); // send for new item view.
 			var fileStatus = this.processor.fStatus[resultItem.fileStatus];
 
-			if (fileStatus == 'FILE_SUCCESS' || fileStatus == 'FILE_RESTORED' || resultItem.is_done == true) {
+			if (fileStatus == 'FILE_DONE' || fileStatus == 'FILE_RESTORED' || resultItem.is_done == true) {
 				this.processor.LoadItemView({ id: item_id, type: type });
 			}
 			else if (fileStatus == 'FILE_PENDING') {
@@ -57,11 +62,20 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 			}
 		}
 
-		if ('ai' === apiName && typeof resultItem.retrievedText !== 'undefined')
+		// Not optimal
+		if ('ai' === apiName && typeof resultItem.aiData !== 'undefined')
 		{
 			
-			// Not optimal
-			 this.FetchAltView(resultItem.retrievedText, item_id);
+			if (null !== element)
+			{
+				var fileStatus = this.processor.fStatus[resultItem.fileStatus];
+				if (fileStatus == 'FILE_DONE' || true == resultItem.is_done)
+				{
+					this.processor.LoadItemView({ id: item_id, type: type });
+
+				}
+			}
+			 this.FetchAltView(resultItem.aiData, item_id);
 		}
 
 		return false;
@@ -113,8 +127,17 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 
 		 if (apiName == 'ai')
 		 {
+			// Edit media view 
 			var elementName = 'shortpixel-ai-messagebox-' + id; 
-		 }	
+			var element = document.getElementById(elementName);
+
+			if (null == element) // List-view
+			{
+				var elementName = 'shortpixel-message-' + id;  // see if this works better
+				createIfMissing = true; 
+			}
+
+		}	
 		 if (apiName == 'optimize')
 		 {
 			 if ('message' == dataType)
@@ -300,20 +323,30 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 		this.processor.AjaxRequest(data);
 	}
 
-	UndoAlt(id)
+	UndoAlt(id, action_type)
 	{
 		var data = {
 			id: id,
 			type: this.type,
 			'screen_action': 'ai/undoAlt',
+			'action_type' : action_type, 
 			'callback': 'shortpixel.HandleUndoAlt',
 		}
 
 		window.addEventListener('shortpixel.HandleUndoAlt', function (event) {
 			var data = event.detail.media;
-			var replaceAlt = data.original_alt
+			var original = data.original; 
 	
-			this.FetchAltView(replaceAlt ,id);
+			if ('redo' == action_type)
+			{
+				if (!this.processor.CheckActive())
+				{
+					let ev = new Event('shortpixel.' + this.type + '.resumeprocessing');
+					window.dispatchEvent(ev);
+
+				}
+			}
+			this.FetchAltView(original,id);
 
 		}.bind(this), {once: true});
 
@@ -324,7 +357,7 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 		this.processor.AjaxRequest(data);
 	}
 
-	Optimize(id, force) {
+	Optimize(id, force, compressionType) {
 		var data = {
 			id: id,
 			type: this.type,
@@ -333,6 +366,11 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 
 		if (typeof force !== 'undefined' && true == force) {
 			data.flags = 'force';
+		}
+
+		if (typeof compressionType !== 'undefined')
+		{
+			data.compressionType = compressionType; 
 		}
 
 		if (!this.processor.CheckActive())

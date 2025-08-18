@@ -33,8 +33,9 @@ var ShortPixel = function() {
                 + '</option><option value="shortpixel-glossy"> → ' + _spTr.redoGlossy
                 + '</option><option value="shortpixel-lossless"> → ' + _spTr.redoLossless
                 + '</option><option value="shortpixel-restore"> → ' + _spTr.restoreOriginal
-								+ '</option><option value="shortpixel-smartcrop"> → ' + _spTr.redoSmartcrop
-								+ '</option><option value="shortpixel-smartcropless"> → ' + _spTr.redoSmartcropless
+				+ '</option><option value="shortpixel-smartcrop"> → ' + _spTr.redoSmartcrop
+				+ '</option><option value="shortpixel-smartcropless"> → ' + _spTr.redoSmartcropless
+                + '</option><option value="shortpixel-generateai"> → ' + _spTr.generateAI 
                 + '</option><option value="shortpixel-mark-completed"> → ' + _spTr.markCompleted
                 + '</option>');
         }

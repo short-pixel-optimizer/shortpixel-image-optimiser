@@ -131,6 +131,198 @@
   color: red;
 }
 
+.shortpixel-icon {
+  width: 25px;
+  height: 25px;
+  display: inline-block;
+  background-repeat: no-repeat;
+  background-size: cover;
+  line-height: 25px;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+.shortpixel-icon.rotate_right {
+  rotate: -90deg;
+}
+
+.shortpixel-icon.ai {
+  background-image: url("../images/icon/ai.svg");
+}
+
+.shortpixel-icon.alert {
+  background-image: url("../images/icon/alert.svg");
+}
+
+.shortpixel-icon.arrow-right {
+  background-image: url("../images/icon/arrow-right.svg");
+}
+
+.shortpixel-icon.arrows-left-right {
+  background-image: url("../images/icon/arrows-left-right.svg");
+}
+
+.shortpixel-icon.arrows-up-down {
+  background-image: url("../images/icon/arrows-up-down.svg");
+}
+
+.shortpixel-icon.box-archive {
+  background-image: url("../images/icon/box-archive.svg");
+}
+
+.shortpixel-icon.bulk {
+  background-image: url("../images/icon/bulk.svg");
+}
+
+.shortpixel-icon.chevron {
+  background-image: url("../images/icon/chevron.svg");
+}
+
+.shortpixel-icon.close {
+  background-image: url("../images/icon/close.svg");
+}
+
+.shortpixel-icon.cart {
+  background-image: url("../images/icon/cart.svg");
+}
+
+.shortpixel-icon.dashboard {
+  background-image: url("../images/icon/dashboard.svg");
+}
+
+.shortpixel-icon.debug {
+  background-image: url("../images/icon/debug.svg");
+}
+
+.shortpixel-icon.delivery {
+  background-image: url("../images/icon/delivery.svg");
+}
+
+.shortpixel-icon.exclusions {
+  background-image: url("../images/icon/exclusions.svg");
+}
+
+.shortpixel-icon.edit {
+  background-image: url("../images/icon/edit.svg");
+}
+
+.shortpixel-icon.eye {
+  background-image: url("../images/icon/eye.svg");
+}
+
+.shortpixel-icon.file {
+  background-image: url("../images/icon/file.svg");
+}
+
+.shortpixel-icon.fix {
+  background-image: url("../images/icon/fix.svg");
+}
+
+.shortpixel-icon.feedback {
+  background-image: url("../images/icon/feedback.svg");
+}
+
+.shortpixel-icon.help {
+  background-image: url("../images/icon/help.svg");
+}
+
+.shortpixel-icon.integrations {
+  background-image: url("../images/icon/integrations.svg");
+}
+
+.shortpixel-icon.optimization {
+  background-image: url("../images/icon/optimization.svg");
+}
+
+.shortpixel-icon.processing {
+  background-image: url("../images/icon/processing.svg");
+}
+
+.shortpixel-icon.notifications {
+  background-image: url("../images/icon/notifications.svg");
+}
+
+.shortpixel-icon.refresh {
+  background-image: url("../images/icon/refresh.svg");
+}
+
+.shortpixel-icon.robo {
+  background-image: url("../images/icon/robo.svg");
+}
+
+.shortpixel-icon.rocket {
+  background-image: url("../images/icon/rocket.svg");
+}
+
+.shortpixel-icon.tools {
+  background-image: url("../images/icon/tools.svg");
+}
+
+.shortpixel-icon.trash {
+  background-image: url("../images/icon/trash.svg");
+}
+
+.shortpixel-icon.webp_avif {
+  background-image: url("../images/icon/webp_avif.svg");
+}
+
+.shortpixel-icon.photo {
+  background-image: url("../images/icon/photo.svg");
+}
+
+.shortpixel-icon.ok {
+  background-image: url("../images/icon/ok.svg");
+}
+
+.shortpixel-icon.warning {
+  background-image: url("../images/icon/warning.svg");
+}
+
+.shortpixel-icon.key {
+  background-image: url("../images/icon/key.svg");
+}
+
+.shortpixel-icon.save {
+  background-image: url("../images/icon/save.svg");
+}
+
+.shortpixel-icon.switch {
+  background-image: url("../images/icon/switch.svg");
+}
+
+.shortpixel-icon.help-circle {
+  background-image: url("../images/icon/help-circle.svg");
+}
+
+.shortpixel-icon.user {
+  background-image: url("../images/icon/user.svg");
+}
+
+.shortpixel-icon.shortpixel {
+  background-image: url("../images/icon/shortpixel.svg");
+}
+
+.shortpixel-illustration {
+  display: inline-block;
+  background-repeat: no-repeat;
+  background-size: cover;
+  width: 50px;
+  height: 50px;
+}
+.shortpixel-illustration.wizzard-done {
+  background-image: url("../images/illustration/wizzard-done.svg");
+  width: 70px;
+  height: 70px;
+}
+.shortpixel-illustration.cocktail {
+  background-image: url("../images/illustration/cocktail.svg");
+  height: 104px;
+  width: 60px;
+}
+
+.fixed .column-wp-spio-ai {
+  width: 5.5em;
+}
+
 .sp-column-info {
   position: relative;
 }
@@ -179,7 +371,7 @@
   display: block;
 }
 .sp-column-info .sp-column-actions {
-  margin: 10px;
+  margin: 0 4px;
   position: relative;
 }
 .sp-column-info .thumbs-todo {
@@ -209,6 +401,9 @@
 }
 .sp-column-info .shortpixel-image-notice {
   border: 1px solid #000;
+}
+.sp-column-info .statusText i {
+  margin-left: 4px;
 }
 
 .column-wp-shortPixel .message {

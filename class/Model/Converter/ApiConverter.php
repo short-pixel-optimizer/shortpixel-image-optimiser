@@ -54,6 +54,8 @@ class ApiConverter extends MediaLibraryConverter
 
 		$prev_action = $qItem->data()->action; 
 		$qItem->data()->action = 'convert_api'; 
+		$qItem->data()->addNextAction(($prev_action));
+		/*
 		if (false === is_null($qItem->data()->next_actions))
 		{
 			$qItem->data()->next_actions = array_merge($qItem->data()->next_actions, [$prev_action]);
@@ -61,7 +63,7 @@ class ApiConverter extends MediaLibraryConverter
 		else 
 		{
 			$qItem->data()->next_actions = [$prev_action];
-		}
+		} */
 
 		// Run converter to create backup and make placeholder to block similar heics from overwriting.
 		$converter_args = array('runReplacer' => false);

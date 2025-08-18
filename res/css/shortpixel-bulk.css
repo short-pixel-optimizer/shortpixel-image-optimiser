@@ -62,7 +62,7 @@
   box-shadow: none;
 }
 .wrap.is-shortpixel-bulk-page header .top-buttons a:hover, .wrap.is-shortpixel-bulk-page header .top-buttons button:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
 }
 .wrap.is-shortpixel-bulk-page header .top-buttons a i.switch, .wrap.is-shortpixel-bulk-page header .top-buttons button i.switch {
   width: 18px;
@@ -89,6 +89,12 @@
   line-height: 25px;
   vertical-align: middle;
   margin-right: 4px;
+}
+.wrap.is-shortpixel-bulk-page .shortpixel-icon.rotate_right {
+  rotate: -90deg;
+}
+.wrap.is-shortpixel-bulk-page .shortpixel-icon.ai {
+  background-image: url("../images/icon/ai.svg");
 }
 .wrap.is-shortpixel-bulk-page .shortpixel-icon.alert {
   background-image: url("../images/icon/alert.svg");
@@ -158,6 +164,9 @@
 }
 .wrap.is-shortpixel-bulk-page .shortpixel-icon.notifications {
   background-image: url("../images/icon/notifications.svg");
+}
+.wrap.is-shortpixel-bulk-page .shortpixel-icon.refresh {
+  background-image: url("../images/icon/refresh.svg");
 }
 .wrap.is-shortpixel-bulk-page .shortpixel-icon.robo {
   background-image: url("../images/icon/robo.svg");
@@ -252,7 +261,7 @@
   transition: all 0.1s ease-in-out;
 }
 .wrap.is-shortpixel-bulk-page section.panel.dashboard .bulk-wrapper button:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
 }
 .wrap.is-shortpixel-bulk-page section.panel.dashboard .bulk-wrapper button:disabled {
   color: #ccc;
@@ -385,7 +394,7 @@
   transition: all 0.1s ease-in-out;
 }
 .wrap.is-shortpixel-bulk-page .button-primary:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
 }
 .wrap.is-shortpixel-bulk-page nav {
   margin: 45px auto;
@@ -592,7 +601,7 @@
   transition: all 900ms;
 }
 .wrap.is-shortpixel-bulk-page .processor-paused:hover {
-  background: #1ca9b3;
+  background: rgb(27.5926724138, 169.1163793103, 178.9073275862);
 }
 .wrap.is-shortpixel-bulk-page .processor-paused .dashicons {
   margin-right: 6px;
@@ -1229,7 +1238,7 @@
   transition: all 0.5s ease;
 }
 .wrap.is-shortpixel-bulk-page section.panel.finished nav button.finish:hover {
-  background: #24d1dd;
+  background: rgb(36.2392241379, 209.2887931034, 221.2607758621);
 }
 .wrap.is-shortpixel-bulk-page .part-debug {
   background: #000;

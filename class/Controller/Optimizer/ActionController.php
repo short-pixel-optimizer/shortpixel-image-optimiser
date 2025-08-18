@@ -40,6 +40,9 @@ class ActionController extends OptimizerBase
          case 'png2jpg':
             return $this->convertPNG($item); 
          break;
+         case 'migrate': 
+            return $this->migrate($item);
+         break;
       }
 
   }
@@ -166,7 +169,11 @@ class ActionController extends OptimizerBase
    // $imageObj->setMeta('compressionType', $qItem->compressionType);
 
     $qItem->block(false);
-    $queue->itemDone($qItem);
+
+    //$queue->itemDone($qItem);
+    $this->finishItemProcess($qItem);
+
+    return $bool;  // In future below queuing should work via finishItemProcess @todo
 
     // Get the item data to pass on settings like compressionType.
    // $args = get_object_vars($qItem->data());
@@ -196,10 +203,7 @@ class ActionController extends OptimizerBase
   protected function reoptimizeItem(QueueItem $queueItem)
   {
 
-
     $bool = $this->restoreItem($queueItem);
-
-  //  $compressionType = $queueItem->data()->compressionType; 
 
     if (true == $bool) // successful restore.
     {
@@ -213,37 +217,7 @@ class ActionController extends OptimizerBase
             'message' => __('Image being reoptimized', 'shortpixel-image-optimiser'), 
         ]);
 
-        
-        // Hard reload since metadata probably removed / changed but still loaded, which might enqueue wrong files.
-        // $imageModel = $fs->getImage($item_id, $item_type, false);
-
-        //  $queueController = new QueueController();
-
-        //  $args = ['action' => 'optimize', 'compressionType' => $compressionType];
-
-        /*  if (! is_null($queueItem->data()->smartcrop))
-          {
-             $args['smartcrop'] = $queueItem->data()->smartcrop;
-          } */
-
-          // This is a user triggered thing. If the whole thing is user excluxed, but one ones this, then ok.
-         /* if (false === $imageModel->isProcessable() && true === $imageModel->isUserExcluded())
-          {
-            $args['forceExclusion'] = true;
-//            $qItem->data()->forceExclusion = true; 
-          } */
-
-          /*$keepData = [
-               'compressionType', 
-               'smartcrop', 
-               'forceExclusion' => true, 
-          ]; */
-          
-
           $result = $this->finishItemProcess($queueItem);
-
-          
-          //$result = $queueController->addItemToQueue($imageModel, $args);
 
           return $result;
     }
@@ -253,8 +227,25 @@ class ActionController extends OptimizerBase
     }
 
    return $bool;
-   //return $json;
 
+  }
+
+  protected function migrate(QueueItem $queueItem)
+  {
+       $imageModel = $queueItem->imageModel;
+
+       $result = $imageModel->migrate();
+
+       $this->finishItemProcess($queueItem);
+
+       $queueItem->addResult([
+         'is_done' => true, 
+         'is_error' => false,
+         'message' => __('Item migrated / checked ', 'shortpixel-image-optimiser'), 
+         'apiStatus' => ApiController::STATUS_NOT_API,
+     ]);
+
+       return $result;
   }
 
   /** 

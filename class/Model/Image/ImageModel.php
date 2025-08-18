@@ -211,7 +211,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 					{
             $this->processable_status = self::P_DIRECTORY_NOTWRITABLE;
 					}
-          Log::addTemp('File ' . $this->getFileName() . ' Not processable: ' . $this->processable_status);
 
           return false;
         }
@@ -654,7 +653,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
         }
         else
-          return 0;
+          return false;
     }
 
 

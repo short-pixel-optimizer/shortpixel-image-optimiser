@@ -1,4 +1,11 @@
 
+.fixed .column-wp-spio-ai
+{
+   width: 5.5em 
+   
+}
+
+
 .sp-column-info
 {
   position: relative;
@@ -67,7 +74,7 @@
   }
   .sp-column-actions
   {
-		 margin: 10px;
+     margin: 0 4px;
      position: relative;
   }
   .thumbs-todo
@@ -98,6 +105,12 @@
   } //error
   .shortpixel-image-notice {
      border: 1px solid #000;
+  }
+  .statusText 
+  {
+     i { 
+       margin-left: 4px;
+     }
   }
 } // sp-column-info
 

@@ -1,0 +1,94 @@
+
+#tab-ai
+{
+    .ai_general_context { 
+
+        height: 100px;
+        width: 80%;
+    }
+
+    // Fix for google analytics plugin that likes to hide input fields on switch
+    .switch input {
+        opacity: 1;
+    }
+
+    .generate_ai_items textarea 
+    {
+        width: 80%; 
+        height: 50px;
+        margin: 6px 0;
+    }
+
+    hr {
+        background-color: $blue_light;
+        height: 1px;
+        margin: 6px 0;
+    }
+
+
+    .preview_wrapper
+    {
+        border: 1px solid $blue_light; 
+        display: block;
+        padding: 12px;
+
+        .ai_preview
+        {
+            .image_preview
+            {
+                width: 200px;
+                height: auto; 
+            }
+            button i {
+                filter: $filter_white;
+            }                
+        }
+
+        .result_wrapper
+        {
+            .result_info 
+            {
+                padding: 10px;
+                label {
+                    font-weight: 700;
+                }
+                span {
+                    display: block; 
+                }
+                h3 {
+                    font-size: 14px;
+                    font-weight: 700;
+                }
+            }
+            .current {
+                background: $color-brokenwhite;
+
+            }
+            .result {
+                background: $blue_background;
+                padding: 6px;
+            }
+
+            .icon {
+                display: flex; 
+                justify-content: center; 
+                align-items: center; 
+                i
+                {
+                    width: 35px; 
+                    height: 20px;    
+                }
+            }
+        }
+    }
+
+    .ai_filename_setting switch, .ai_filename_setting content.ai_gen_filename
+    {
+        filter: blur(1px);
+    }
+    .ai_gen_filename {
+	opacity: 1!important;
+    }
+
+} // tab-ai 
+

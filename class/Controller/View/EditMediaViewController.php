@@ -2,6 +2,7 @@
 namespace ShortPixel\Controller\View;
 
 use ShortPixel\Controller\Front\CDNController;
+use ShortPixel\Controller\Optimizer\OptimizeAiController;
 use ShortPixel\Controller\QueueController;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -76,7 +77,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
       { 
           $post_id = intval($post->ID);
           $fields['aibutton'] = [
-              'label' => __('ShortPixel Ai Text', 'shortpixel-image-optimiser'), 
+              'label' => __('ShortPixel AI Data', 'shortpixel-image-optimiser'), 
               'input' => 'html', 
               'html' => "<a href='javascript:window.ShortPixelProcessor.screen.RequestAlt($post_id)' class='button button-secondary'>" . __('Generate', 'shortpixel-image-optimiser') . "</a>
                  <div class='shortpixel-alt-messagebox' id='shortpixel-ai-messagebox-$post_id'>&nbsp;</div>
@@ -205,16 +206,37 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
 					$imageObj = $this->imageModel;
 
-
-
 					if ($imageObj->isProcessable())
 					{
 						 $optimizeData = $imageObj->getOptimizeData();
 						 $urls = $optimizeData['urls'];
 					}
 
+/*
+         
+          $class = new \ReflectionClass('\ShortPixel\Controller\Optimizer\OptimizeAiController');
+          $method = $class->getMethod('replaceFiles'); 
+          $method->setAccessible(true);
+
+          $aiController = new \ShortPixel\Controller\Optimizer\OptimizeAiController(); 
+          //$aiController->replaceFiles($qItem, 'new-file-name');
+
+          $method->invokeArgs($aiController, [$qItem, 'new-file-name']);
+*/
+/*
+$qItem = QueueItems::getImageItem($imageObj);
+$qItem->newOptimizeAction([]);
+$blap = $qItem->returnEnQueue();
+
+$optimizer = $qItem->getApiController('optimize');
+$status = $optimizer->enQueueItem($qItem, []);
+
+*/
+
 					$thumbnails = $imageObj->get('thumbnails');
 					$processable = ($imageObj->isProcessable()) ? '<span class="green">Yes</span>' : '<span class="red">No</span> (' . $imageObj->getReason('processable') . ')';
+          $optimized = ($imageObj->isOptimized()) ? '<span class="green">Yes</span>' : '<span class="red">No</span>';
+
 					$anyFileType = ($imageObj->isProcessableAnyFileType()) ? '<span class="green">Yes</span>' : '<span class="red">No</span>';
 					$restorable = ($imageObj->isRestorable()) ? '<span class="green">Yes</span>' : '<span class="red">No</span> (' . $imageObj->getReason('restorable') . ')';
 
@@ -241,6 +263,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
           $debugInfo[] = array(__('Status (ShortPixel)'), $imageObj->getMeta('status') . ' '   );
 
 					$debugInfo[] = array(__('Processable'), $processable);
+          $debugInfo[] = array(__('Optimized'), $optimized);
 					$debugInfo[] = array(__('Avif/Webp needed'), $anyFileType);
 					$debugInfo[] = array(__('Restorable'), $restorable);
 					$debugInfo[] = array(__('Record'), $hasrecord);
@@ -269,13 +292,29 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
 						 $queueControl = new QueueController();
 
-						 $q = $queueControl->getQueue($imageObj->get('type'));
+					//	 $q = $queueControl->getQueue($imageObj->get('type'));
 
              $item = QueueItems::getImageItem($imageObj);
              $item->setDebug();
              $item->newOptimizeAction();
 
 						 $returnEnqueue = $item->returnEnqueue();
+
+             // TEST @todo REMOVE 
+             /*$replacer2 = new \ShortPixel\Replacer\Replacer(); 
+             $setup = $replacer2->Setup(); 
+             $setup->forSearch()->URL()->addData($item->imageModel->getURL());
+             
+             $base_url = $setup->forSearch()->URL()->getBaseURL();
+            
+             $text = 'AI TEST'; 
+
+             $finder = $replacer2->Finder(['base_url' => $base_url, 'callback' => [OptimizeAiController::getInstance(), 'handleReplace'], 'return_data' => [
+                 'retrievedText' => $text, 
+                 'qItem' => $item,
+             ]]);
+             
+             $posts = $finder->posts();  */
 
 						 $debugInfo[] = array(__('Image to Queue V2'), $returnEnqueue );
 
@@ -321,6 +360,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
              $orbackup = $original->getBackupFile();
 
              $processable = ($original->isProcessable()) ? '<span class="green">Yes</span>' : '<span class="red">No</span> (' . $original->getReason('processable') . ')';
+             
              $restorable = ($original->isRestorable()) ? '<span class="green">Yes</span>' : '<span class="red">No</span> (' . 		$original->getReason('restorable') . ')';
 
              $debugInfo[] = ['Original Processable:', $processable];

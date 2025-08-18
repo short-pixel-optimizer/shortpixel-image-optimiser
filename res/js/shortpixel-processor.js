@@ -39,6 +39,7 @@ window.ShortPixelProcessor =
 		hasStartQuota: false, // if we start without quota, don't notice too much, don't run.
 		workerErrors: 0, // times worker encoutered an error.
     broadcaster: null, 
+    is_disabled: false, 
     qStatus: { // The Queue returns
        1:  'QUEUE_ITEMS',
        4:  'QUEUE_WAITING',
@@ -76,11 +77,12 @@ window.ShortPixelProcessor =
 
 			window.addEventListener('error', this.ScriptError.bind(this));
 
-        this.isBulkPage = ShortPixelProcessorData.isBulkPage;
+        this.isBulkPage = Boolean(ShortPixelProcessorData.isBulkPage);
         this.localSecret = localStorage.getItem('bulkSecret');
 
         this.remoteSecret = ShortPixelProcessorData.bulkSecret;
 				this.debugIsActive = ShortPixelProcessorData.debugIsActive;
+        this.is_disabled = Boolean(ShortPixelProcessorData.disable_processor); 
 
         this.nonce['process'] = ShortPixelProcessorData.nonce_process;
         this.nonce['exit'] = ShortPixelProcessorData.nonce_exit;
@@ -115,6 +117,10 @@ window.ShortPixelProcessor =
 				{
           this.screen = new ShortPixelScreen({}, this);
 					this.screen.Init();
+
+          var event = new CustomEvent('shortpixel.screen.loaded', { detail : this});
+          window.dispatchEvent(event);
+      
 				}
 
 				// Load the Startup Data (needs screen)
@@ -318,6 +324,12 @@ window.ShortPixelProcessor =
         if (! this.CheckActive())
         {
             return;
+        }
+
+        if (true == this.is_disabled && false === this.isBulkPage)
+        {
+           console.log('Processor disabled by config'); 
+           return;
         }
 
         if (this.timer_recheckactive)

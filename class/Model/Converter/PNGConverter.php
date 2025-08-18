@@ -99,7 +99,12 @@ class PNGConverter extends MediaLibraryConverter
 
     public function filterQueue(QueueItem $qItem, $args = [])
     {
+		$currentAction = $qItem->data()->action; 
        $qItem->data()->action = 'png2jpg';
+	   $qItem->data()->addNextAction($currentAction);
+		$qItem->data()->addKeepDataArgs(['compressionType', 'smartcrop']);
+
+
        return $qItem;
     }
 
@@ -150,7 +155,7 @@ class PNGConverter extends MediaLibraryConverter
 			 }
 
 			 Log::addDebug('Starting PNG conversion of #' . $this->imageModel->get('id'));
-			 $bool = $this->run();
+			 $bool = $this->convertFile();
 
 			 if (true === $bool)
 			 {
@@ -192,7 +197,7 @@ class PNGConverter extends MediaLibraryConverter
 		}
 
 
-		protected function run()
+		protected function convertFile()
 		{
 			do_action('shortpixel/image/convertpng2jpg_before', $this->imageModel);
 

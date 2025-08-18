@@ -8,6 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ShortPixel\Model\Queue\QueueItem as QueueItem;
 use Shortpixel\Controller\Api\RequestManager as RequestManager;
 use ShortPixel\Controller\QueueController;
+use ShortPixel\Helper\UiHelper;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use stdClass;
@@ -46,12 +47,13 @@ abstract class OptimizerBase
     {
       //exit('This call is wron because in it messes with ActionController - Reoptimize ( calls ActionController again instead of OptimizeConrtoller');
       $calledClass = get_called_class(); 
-
+//Log::addTemp('OptimizerBase Called Class - ' . $calledClass); 
       if (! isset(static::$instances[$calledClass]))
       {
          static::$instances[$calledClass] = new $calledClass(); 
       }
 
+ //  Log::addTemp('OptimizeBase, Instances', self::$instances);
         return self::$instances[$calledClass];
     }
 
@@ -146,15 +148,19 @@ abstract class OptimizerBase
      * @param QueueItem $qItem 
      * @return Object Result Object
      */
-    protected function finishItemProcess(QueueItem $qItem)
+    protected function finishItemProcess(QueueItem $qItem, $args = [])
     {
         $queue = $this->getCurrentQueue($qItem); 
         $fs = \wpSPIO()->filesystem();
-        // Can happen with actions outside queue / direct action 
-        if ($qItem->getQueueItem() !== false)
+        // If the action is passed as direct action / out of queue, there might be no queueItem in DB
+        if (is_object($qItem->getQueueItem()))
         {
-          $queue->itemDone($qItem); 
+           $queue->itemDone($qItem); 
         }
+
+         Log::addTemp('FinishItemProcess: ', $qItem->data());
+        // Can happen with actions outside queue / direct action 
+
         if (true === $qItem->data()->hasNextAction())
         {
             $action = $qItem->data()->popNextAction(); 
@@ -162,15 +168,17 @@ abstract class OptimizerBase
             $item_type = $qItem->imageModel->get('type');
             $imageModel = $fs->getImage($item_id, $item_type, false);
 
-            $args = [
-              'action' => $action, 
-            ];
-
+            $args['action'] = $action; 
             
             $keepArgs = $qItem->data()->getKeepDataArgs();
+            if (true === $qItem->data()->hasNextAction())
+            {
+               Log::addTemp('Finishing, next actions: ', $qItem->data()->next_actions);
+                $args['next_actions'] = $qItem->data()->next_actions; 
+            }
             $args = array_merge($args, $keepArgs);
 
-            Log::addInfo("New Action $action with args", $args);
+            Log::addInfo("New Action $action for $item_id with args", $args);
 
             $queueController = $this->getQueueController(); 
             $result = $queueController->addItemToQueue($imageModel, $args); 
@@ -183,6 +191,36 @@ abstract class OptimizerBase
 
         return $result; 
 
+    }
+
+    protected function addPreview(QueueItem $qItem)
+    {
+      $imageModel = $qItem->imageModel; 
+      $showItem = UiHelper::findBestPreview($imageModel); // find smaller / better preview
+      $fs = \wpSPIO()->filesystem();
+
+      $original = $optimized = false;
+
+      if ($showItem->getExtension() == 'pdf') // non-showable formats here
+      {
+        //								 $item->result->original = false;
+//								 $item->result->optimized = false;
+      } elseif ($showItem->hasBackup()) {
+        $backupFile = $showItem->getBackupFile(); // attach backup for compare in bulk
+        $backup_url = $fs->pathToUrl($backupFile);
+        $original = $backup_url;
+        $optimized = $fs->pathToUrl($showItem);
+      } else {
+        $original = false;
+        $optimized = $fs->pathToUrl($showItem);
+      }
+
+      $qItem->addResult([
+        'original' => $original,
+        'optimized' => $optimized,
+      ]);
+
+      return $qItem;
     }
 
 }

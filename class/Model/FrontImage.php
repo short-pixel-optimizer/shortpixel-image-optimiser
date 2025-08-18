@@ -52,6 +52,7 @@ class FrontImage
 	public function __set($name, $value)
 	{
 		if (property_exists($this, $name) ) {
+
 			$this->$name = $value;
 		}
 
@@ -97,16 +98,23 @@ class FrontImage
 				continue;
 
 			if (property_exists($this, $attr->nodeName)) {
+				
 				$this->{$attr->nodeName} = $attr->nodeValue;
 			}
 
 			$this->attributes[$attr->nodeName] = $attr->nodeValue;
 		}
 
+		// Seen in wild, skipping over data-srcset because 
 		if (is_null($this->srcset) && isset($this->attributes['data-srcset']))
 		{
 			 $this->srcset = $this->attributes['data-srcset'];
 		}
+
+		//$src = $this->src; 
+		//$src = preg_replace('/[^a-zA-Z],\//', '', $src)	;
+		//$this->src = filter_var(stripslashes($this->src), FILTER_SANITIZE_URL);
+		
 
 		// Parse the directory path and other sources
 		$result = $this->setupSource();

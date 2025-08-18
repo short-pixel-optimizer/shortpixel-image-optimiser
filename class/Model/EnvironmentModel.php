@@ -240,6 +240,8 @@ class EnvironmentModel extends \ShortPixel\Model
     if (\wpSPIO()->settings()->autoMediaLibrary == 1)
       $this->is_autoprocess = true;
 
+    
+
   }
 
   // check if this request is front or back.
@@ -312,9 +314,6 @@ class EnvironmentModel extends \ShortPixel\Model
       
     }
     
-    
-    
-
     $this->screen_is_set = true;
   }
 

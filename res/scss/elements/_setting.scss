@@ -45,6 +45,9 @@ setting {
     flex-basis: calc(100% - 250px);
     font-size: 14px;
     display: inline-block;
+    &.nextline {
+       display: block;
+    }
 
     &.shortpixel-compression {
       max-width: calc(100% - 260px);
@@ -55,6 +58,17 @@ setting {
       min-width: 100px;
       font-weight: 700;
       display: inline-block;
+    }
+
+    input[type="text"], input[type="number"] {
+       width: 290px; 
+       height: 36px;
+       border: 1px solid #1ABDCA;
+       background: #fff; 
+       &[type="number"]
+       {
+         width: 80px;
+       }
     }
 
   }
@@ -112,20 +126,18 @@ setting {
     }
   }
 
-  &.switch {
-
-    name,
-    info,
-    warning,
-    error {
-      //	 margin-left: 70px;
-    }
-  }
 
   &.disabled {
     filter: blur(1px);
     opacity: 0.4;
     transition: all 0.5s ease-out;
+  }
+
+  &.textarea 
+  {
+     content {
+       display: block;
+     }
   }
 
 }

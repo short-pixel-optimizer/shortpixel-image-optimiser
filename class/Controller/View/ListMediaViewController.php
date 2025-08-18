@@ -14,7 +14,7 @@ use ShortPixel\Helper\UtilHelper as UtilHelper;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Controller\QueueController as QueueController;
-
+use ShortPixel\Model\AiDataModel;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Model\Image\MediaLibraryModel as MediaLibraryModel;
 
@@ -59,6 +59,10 @@ class ListMediaViewController extends \ShortPixel\ViewController
   public function headerColumns($defaults)
   {
     $defaults['wp-shortPixel'] = __('ShortPixel Compression', 'shortpixel-image-optimiser');
+    /*if (true === \wpSPIO()->settings()->enable_ai)
+    {
+      $defaults['wp-spio-ai'] = __('AI By Shortpixel', 'shortpixel-image-optimiser'); 
+    } */
 
     return $defaults;
   }
@@ -71,8 +75,17 @@ class ListMediaViewController extends \ShortPixel\ViewController
        $this->view->id = $id;
        $this->loadItem($id);
 
-	     $this->loadView(null, false);
+       if (true === \wpSPIO()->settings()->enable_ai)
+       {
+          $this->loadAiItem($id);
+//          $this->loadView('view-list-ai-media', false);
+       }
+       
      }
+
+     $this->loadView(null, false);
+
+
   }
 
   protected function loadItem($id)
@@ -125,6 +138,11 @@ class ListMediaViewController extends \ShortPixel\ViewController
 				$checkBoxActions[] = 'is-restorable';
 		}
 
+    if (array_key_exists('shortpixel-generateai', $allActions))
+    {
+       $checkBoxActions[] = 'ai-action'; 
+    }
+
 		$infoData  = array(); // stuff to write as data-tag.
 
 		if ($mediaItem->isOptimized())
@@ -147,6 +165,34 @@ class ListMediaViewController extends \ShortPixel\ViewController
       $this->view->actions = array();
       $this->view->list_actions = '';
     }
+
+  }
+
+  protected function loadAiItem($item_id)
+  {
+     $AiDataModel = new AiDataModel($item_id); 
+     $this->view->item_id = $item_id;
+
+     $generated_data = $AiDataModel->getGeneratedData(); 
+     if ($AiDataModel->isSomeThingGenerated())
+     {
+        if (isset($generated_data['filebase']))
+        {
+           unset($generated_data['filebase']);
+        }
+        $generated_fields = implode(',', array_keys(array_filter($generated_data)));
+        $this->view->ai_icon = 'ok'; 
+        $this->view->ai_title = sprintf(__('AI Data Generated %s', 'shortpixel-image-optimiser'), $generated_fields); 
+
+     }
+     else
+     {
+       $this->view->ai_icon = 'help'; 
+       $this->view->ai_title = __('No AI Data generated for this image', 'shortpixel-image-optimiser'); 
+
+     }
+
+
   }
 
   public function loadComparer()

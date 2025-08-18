@@ -1,6 +1,7 @@
 <?php
 namespace ShortPixel\Controller\Api;
 
+use ShortPixel\Helper\UtilHelper;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Model\Queue\QueueItem as QueueItem;
@@ -13,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 abstract class RequestManager
 {
 
-  protected static $instance;
+  protected static $instances;
   protected $apiEndPoint;
 
   /**
@@ -49,10 +50,13 @@ abstract class RequestManager
 
 	public static function getInstance()
 	{
-		 if (is_null(self::$instance))
-			 self::$instance = new static();
-
-			return self::$instance;
+    $calledClass = get_called_class(); 
+          if (! isset(static::$instances[$calledClass]))
+          {
+             static::$instances[$calledClass] = new $calledClass(); 
+          }
+    
+     return self::$instances[$calledClass];
 	}
 
 
@@ -63,6 +67,7 @@ abstract class RequestManager
   protected function getRequest($requestBody = [], $requestParameters = [])
   {
     $settings = \wpSPIO()->settings();
+
     $requestBody = apply_filters('shortpixel/api/request', $requestBody, $requestBody['item_id']);
 
     $arguments = array(
@@ -72,10 +77,11 @@ abstract class RequestManager
         'sslverify' => apply_filters('shortpixel/system/sslverify', true),
         'httpversion' => '1.0',
         'blocking' => isset($requestParameters['blocking']) ? $requestParameters['blocking'] : true,
-        'headers' => array(),
+        'headers' => isset($requestParameters['headers']) ? $requestParameters['headers'] : [],
         'body' => json_encode($requestBody, JSON_UNESCAPED_UNICODE),
-        'cookies' => array()
+        'cookies' => [], 
     );
+
     //add this explicitely only for https, otherwise (for http) it slows down the request
     if($settings->httpProto !== 'https') {
         unset($arguments['sslverify']);
@@ -96,8 +102,7 @@ abstract class RequestManager
 	{
 		$response = wp_remote_post($this->apiEndPoint, $requestParameters );
     Log::addDebug('ShortPixel API Request sent to ' . $this->apiEndPoint , $requestParameters['body']);
-
-
+   // Log::addTemp('ShortPixel API Request sent to ' . $this->apiEndPoint , $requestParameters);
 
 		//only if $Blocking is true analyze the response
 		if ( $requestParameters['blocking'] )
@@ -106,22 +111,46 @@ abstract class RequestManager
 				{
 						$errorMessage = $response->errors['http_request_failed'][0];
 						$errorCode = self::STATUS_CONNECTION_ERROR;
+            $is_fatal = false; 
 
             if (strpos($errorMessage, 'cURL error 28') !== false)
             {
                $errorMessage = __('Timeout fetching data from ShortPixel servers. If persistent, check server connection / whitelist', 'shortpixel-image-optimiser');
             }
-            $qItem->addResult($this->returnRetry($errorCode, $errorMessage));
+            if (strpos($errorMessage, 'cURL error 60') !== false)
+            {
+               $errorMessage = __('Server error, please contact support ( ' . $errorMessage. ')');
+               $is_fatal = true; 
+
+            }
+            if (strpos($errorMessage, 'cURL error 6') !== false)
+            {
+              $errorMessage = __('Host error, please check configuration or contact support ( ' . $errorMessage. ')');
+              $is_fatal = true; 
+            }
+
+            if (true === $is_fatal)
+            {
+              $qItem->addResult($this->returnFailure($errorCode, $errorMessage));
+            }
+            else
+            {
+              Log::addTemp('ReturnRetry?');
+              $qItem->addResult($this->returnRetry($errorCode, $errorMessage));
+            }
+            
 				}
 				elseif ( isset($response['response']['code']) && $response['response']['code'] <> 200 )
 				{
 						$errorMessage = $response['response']['code'] . " - " . $response['response']['message'];
 						$errorCode = $response['response']['code'];
+
             $qItem->addResult($this->returnFailure($errorCode, $errorMessage));
 				}
 				else
 				{
-           $qItem->addResult($this->handleResponse($qItem, $response));
+           $resultData = $this->handleResponse($qItem, $response);
+           $qItem->addResult($resultData);
 				}
 
 		}
@@ -235,10 +264,35 @@ abstract class RequestManager
   {
     $data = $response['body'];
 
+    $raw_data = $data; 
+
     $data = json_decode($data);
+    if (is_null($data)) // null means failure on return
+    {
+      /* $data = [
+         'status' => self::STATUS_ERROR,
+         'error' => json_last_error_msg(),
+       ]; */
+       $data = $this->getJsonStrings($raw_data);
+       $data = (array) json_decode($data[0]);
+       return $data;
+    }
     return (array)$data;
   }
 
+  // Temporary!  (not sure what temporary means here)
+  private function getJsonStrings(string $text): array
+  {
+      preg_match_all('#\{(?:[^{}]|(?R))*\}#s', $text, $matches);
+      $finalValidJson = [];
+      foreach ($matches[0] as $match) {
+          if (UtilHelper::validateJSON($match)) {
+              $finalValidJson[] = $match;
+          }
+      }
+
+      return $finalValidJson;
+  }
 
 
 } // class RequestManager

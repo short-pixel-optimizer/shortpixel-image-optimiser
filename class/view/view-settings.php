@@ -79,6 +79,13 @@ if ( ! defined( 'ABSPATH' ) ) {
             'title' => __("WebP/AVIF & CDN", "shortpixel-image-optimiser"),
             'icon' => 'shortpixel-icon webp_avif']); ?>
         </li>
+        <li>
+            <?php echo $this->settingLink([
+                'part' => 'ai', 
+                'title' => __('AI Image SEO', 'shortpixel-image-optimiser'), 
+                'icon' => 'shortpixel-icon ai'
+            ]); ?>
+        </li>
 
 				<li class='is-advanced'>
 					<?php echo $this->settingLink([
@@ -141,7 +148,11 @@ if ( ! defined( 'ABSPATH' ) ) {
               </div>
               <div class="banner-line-container">
                   <span class="shortpixel-icon ok"></span>
-                  <p><?php _e('SmartCompress ', 'shortpixel-image-optimiser'); ?></p>
+                  <p><?php _e('500GB CDN/month ', 'shortpixel-image-optimiser'); ?></p>
+              </div>
+              <div class="banner-line-container">
+                  <span class="shortpixel-icon ok"></span>
+                  <p><?php _e('SmartCompress & more ', 'shortpixel-image-optimiser'); ?></p>
               </div>
               <div class='banner-upgrade-button'>
                   <button type="button" class="button button-primary" id="upgrade" onclick="window.open('https://shortpixel.com/ms/af/KZYK08Q28044', '_blank');">
@@ -165,6 +176,7 @@ if ( ! defined( 'ABSPATH' ) ) {
           <?php $this->loadView('settings/part-optimisation'); ?>
           <?php $this->loadView('settings/part-processing'); ?>
           <?php $this->loadView('settings/part-webp'); ?>
+          <?php $this->loadView('settings/part-ai'); ?>
           <?php $this->loadView('settings/part-integrations'); ?>
           <?php $this->loadView('settings/part-exclusions'); ?>
           <?php $this->loadView('settings/part-help'); ?>

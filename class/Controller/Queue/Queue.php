@@ -15,7 +15,7 @@ use ShortPixel\Model\Queue\QueueItem as QueueItem;
 
 
 use ShortPixel\Helper\UiHelper as UiHelper;
-
+use ShortPixel\Model\AiDataModel;
 use ShortPixel\ShortQ\ShortQ as ShortQ;
 
 abstract class Queue
@@ -23,6 +23,7 @@ abstract class Queue
     protected $q;
 //    protected static $instance;
     protected static $results;
+    protected static $isInQueue = [];
 
     const PLUGIN_SLUG = 'SPIO';
 
@@ -43,6 +44,7 @@ abstract class Queue
     abstract public function getType();
 
     protected $queueName = '';
+    protected $cacheName; 
 
     
     public function createNewBulk()
@@ -94,16 +96,6 @@ abstract class Queue
           'remote_id' => null, // for retrieveAltAction
        );
        $args = wp_parse_args($args, $defaults);
-
-
-       // Check if this is a duplicate existing.
-      /* Added to QueueItem
-       if (->getParent() !== false)
-
-			 {
-				  $media_id = $imageModel->getParent();
-          $imageModel = \wpSPIO()->filesystem()
-       } */
 
 
        $qItem = QueueItems::getImageItem($imageModel);
@@ -272,11 +264,29 @@ abstract class Queue
             //checking if the $mediaItem actually exists
             if ( is_object($mediaItem) ) {
 
-                if ('pdf' === $mediaItem->getExtension() && false === $settings->optimizePdfs)
+              if ('pdf' === $mediaItem->getExtension() && false === $settings->optimizePdfs)
+              {
+                  continue;
+              }
+              
+                // If autoAi is on the bulk, add operation to the item
+                if ('media' === $mediaItem->get('type') && true === $settings->autoAIBulk)
                 {
-                    continue;
+
+                  $aiDataModel = new AiDataModel($mediaItem->get('id')); 
+                  $enqueueAi = false; 
+                  if ($aiDataModel->isProcessable() && in_array($mediaItem->getExtension(), $aiDataModel->supportedExtensions()))
+                  {
+                    $enqueueAi = true; 
+                  }
                 }
-                elseif ($mediaItem->isProcessable() && $mediaItem->isOptimizePrevented() === false && ! $operation) // Checking will be done when processing queue.
+                else
+                {
+                   $enqueueAi = false; 
+                }
+
+
+                if ($mediaItem->isProcessable() && $mediaItem->isOptimizePrevented() === false && ! $operation) // Checking will be done when processing queue.
                 {
 
 										if ($this->isDuplicateActive($mediaItem, $queue))
@@ -291,6 +301,11 @@ abstract class Queue
 						 			 {
 						 				  $media_id = $mediaItem->getParent();
 						 			 }
+
+                   if (true === $enqueueAi)
+                   {
+                      $qItem->data->addNextAction('requestAlt'); 
+                   }
 
                     $queue[] = $qItem->returnEnqueue(); //array('id' => $media_id, 'value' => $qObject, 'item_count' => $counts->creditCount);
 
@@ -318,8 +333,11 @@ abstract class Queue
                           }
                       }
                    }
-                   elseif($mediaItem->isOptimized())
+                   elseif(true === $enqueueAi)
                    {
+                          $qItem = QueueItems::getImageItem($mediaItem);
+                          $qItem->requestAltAction();
+                          $queue[] = $qItem->returnEnqueue();
                    }
 									 else
 									 {
@@ -546,6 +564,8 @@ abstract class Queue
         $item = QueueItems::getEmptyItem($qItem->item_id, $this->getType());
         $item->setFromData($qItem->value);
         $item->setData('tries', $qItem->tries);
+        $item->setData('queue_list_order', $qItem->list_order);
+        $item->data()->addKeepDataArgs('queue_list_order'); 
         $item->set('queueItem', $qItem);
 
 				/* Dunno about this, the decode should handle arrays properly
@@ -562,24 +582,28 @@ abstract class Queue
         return $item->getQueueItem();
     }
 
-/*
-    protected function timestampURLS($urls, $id)
+    public function getItem($item_id)
     {
-      // https://developer.wordpress.org/reference/functions/get_post_modified_time/
-      $time = get_post_modified_time('U', false, $id );
-      foreach($urls as $index => $url)
-      {
-        $urls[$index] = add_query_arg('ver', $time, $url); //has url
-      }
+        $itemObj = $this->q->getItem($item_id); 
+        if (false === is_object($itemObj))
+        {
+           return $itemObj; // probably boolean / not found. 
+        }
 
-      return $urls;
+        return $this->queueToMediaItem(($itemObj));
     }
-*/
+
 
 		// Check if item is in queue. Considered not in queue if status is done.
 		public function isItemInQueue($item_id)
 		{
+        if (isset(self::$isInQueue[$item_id]))
+        {
+           return self::$isInQueue[$item_id];
+        }
+
 				$itemObj = $this->q->getItem($item_id);
+        self::$isInQueue[$item_id] = $itemObj; // cache this, since interface requests this X amount of times.
 
 				$notQ = array(ShortQ::QSTATUS_DONE, ShortQ::QSTATUS_FATAL);
 				if (is_object($itemObj) && in_array(floor($itemObj->status), $notQ) === false )

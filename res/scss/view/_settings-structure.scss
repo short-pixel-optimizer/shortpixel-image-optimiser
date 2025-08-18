@@ -223,6 +223,12 @@
 					grid-template-columns:  60% 40%;
 					column-gap: 5%;
 			 }
+			 &.width_two_with_middle
+			 {
+				grid-template-columns: 45% 10% 45%; 
+				//column-gap: 5%;
+				width: 100%;
+			 }
 
 		}
 } // shortpixel-settings

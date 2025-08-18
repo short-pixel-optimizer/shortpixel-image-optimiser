@@ -30,6 +30,7 @@ class QueueItemData
         protected $tries;
         protected $block;
         protected $counts;
+        protected $queue_list_order;  // optional from Queue class, the place of the queue. This might prevent 'next-action' to end up way at the bottom. 
         
 
         public function __construct()
@@ -67,6 +68,7 @@ class QueueItemData
         {
             if (property_exists($this, $name))
             {
+
                  $this->$name = $value; 
             }             
             else
@@ -92,6 +94,47 @@ class QueueItemData
             
         }
 
+        public function hasAction($action)
+        {
+            if (is_array($this->next_actions))
+            {
+                $actions = array_merge([$this->action], $this->next_actions);
+            }
+            else
+            {
+                $actions = [$this->action];
+            }
+
+            if (in_array($action, $actions))
+            {
+                 return true; 
+            }
+            else
+            {
+                 return false; 
+            }
+
+        }
+
+           /**  Add an action to be performed after current action.  
+            * 
+            * Note Doesn't save anything! 
+            * @param string Action - name of the action
+            */
+        public function addNextAction($action)
+        {   
+            // @todo This should also incorporate keep_args -per next action-
+            if (false === is_null($this->next_actions))
+            {
+                $this->next_actions = array_merge($this->next_actions, [$action]);
+            }
+            else 
+            {
+                $this->next_actions = [$action];
+            }
+
+        }
+
         public function hasNextAction()
         {
              if (! is_null($this->next_actions) && count($this->next_actions) > 0)
@@ -114,15 +157,31 @@ class QueueItemData
             return $next_action; 
         }
 
+        public function addKeepDataArgs($args)
+        {
+             if (! is_array($args))
+             {
+                $args = [$args];
+             }
+             if (is_null($this->next_keepdata))
+             {
+                 $this->next_keepdata = $args; 
+             }
+             else
+             {
+                $this->next_keepdata = array_merge($this->next_keepdata, $args);
+             }
+
+        }
+
         public function getKeepDataArgs()
         {
+            $args = []; 
+
             if (! is_array($this->next_keepdata) || count($this->next_keepdata) === 0)
             {
-                return []; 
-
-            }
-
-            $args = []; 
+                return $args; 
+            } 
 
             foreach($this->next_keepdata as $name => $value)
             {

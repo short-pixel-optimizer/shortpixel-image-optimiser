@@ -86,78 +86,6 @@ div.spio-modal-title {
 
 .wrap.is-shortpixel-settings-page {
   /* TABS CONTROLS */
-  /*
-  	.sp-column-actions-template + .sp-column-info {
-  	    display: none;
-  	}
-  */
-  /*
-    .top-menu
-    {
-        font-size: 18px;
-  	  display: flex;
-  	  width: 100%;
-  	  min-height: 50px;
-  	  align-items: center;
-  	  margin: 15px 0;
-  	  position: relative;
-  	  @include breakpoint(0, 1200px)
-  	  {
-  		  margin-bottom: 50px;
-  	  }
-
-  		.links
-  		{
-  	    	a { font-size: 18px; margin-right: 8px; white-space: nowrap; line-height: 26px;}
-  			padding-right: 195px;
-  			flex: 12 4 auto;
-  		}
-  		.quota-remaining
-  		{
-  			font-size: 13px;
-  		}
-  	    .spio-status-box {
-  			text-align: center;
-  			position: absolute;
-  			top: -49px;
-  			right: 0;
-  			padding: 5px 10px;
-  			background: white;
-  			box-shadow: 0 3px 3px rgba(0,0,0,0.1);
-  			z-index: 1;
-  		}
-  		.pie-wrapper
-  		{
-  			flex: 4 2 auto;
-  			min-width: 100px;
-  			display: inline-block;
-  		}
-  		div.sp-bulk-summary {
-
-  				z-index: 10;
-
-
-  				span {
-  					margin: 0;
-  					font-size: 12px;
-  					padding: 4px 8px;
-  					font-weight: 700;
-  					border-radius: 3px;
-  					white-space: nowrap;
-  					color: $color-darkest;
-  				}
-  				@include breakpoint(0,1500px)
-  				{
-
-  					.opt-circle-average {
-  							width: 100px;
-  							height: 100px;
-  					}
-  				}
-  		} // optimized thing
-    } // top menu
-
-  */
   /* In-view notice ( not on top, between the options ) - styled after WP notice */
   /* Specific styles for advanced settings tab */
   /*
@@ -205,7 +133,7 @@ div.spio-modal-title {
   box-shadow: none;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings button:hover, .wrap.is-shortpixel-settings-page .shortpixel-settings .button-setting:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings button i.switch, .wrap.is-shortpixel-settings-page .shortpixel-settings .button-setting i.switch {
   width: 18px;
@@ -311,7 +239,7 @@ div.spio-modal-title {
   filter: brightness(0%) invert(1);
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab .save-buttons.saving button.save {
-  background-color: #0e6870;
+  background-color: rgb(14.3684210526, 104.4473684211, 111.6315789474);
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab .save-buttons.saving button.save i {
   animation: cssload-spin 5000ms infinite linear;
@@ -390,6 +318,10 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page .shortpixel-settings gridbox.width_60 {
   grid-template-columns: 60% 40%;
   column-gap: 5%;
+}
+.wrap.is-shortpixel-settings-page .shortpixel-settings gridbox.width_two_with_middle {
+  grid-template-columns: 45% 10% 45%;
+  width: 100%;
 }
 @media (max-width: 1200px) {
   .wrap.is-shortpixel-settings-page .shortpixel-settings {
@@ -528,7 +460,7 @@ div.spio-modal-title {
   box-shadow: none;
 }
 .wrap.is-shortpixel-settings-page header .top-buttons a:hover, .wrap.is-shortpixel-settings-page header .top-buttons button:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
 }
 .wrap.is-shortpixel-settings-page header .top-buttons a i.switch, .wrap.is-shortpixel-settings-page header .top-buttons button i.switch {
   width: 18px;
@@ -555,6 +487,12 @@ div.spio-modal-title {
   line-height: 25px;
   vertical-align: middle;
   margin-right: 4px;
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.rotate_right {
+  rotate: -90deg;
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.ai {
+  background-image: url("../images/icon/ai.svg");
 }
 .wrap.is-shortpixel-settings-page .shortpixel-icon.alert {
   background-image: url("../images/icon/alert.svg");
@@ -624,6 +562,9 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page .shortpixel-icon.notifications {
   background-image: url("../images/icon/notifications.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.refresh {
+  background-image: url("../images/icon/refresh.svg");
 }
 .wrap.is-shortpixel-settings-page .shortpixel-icon.robo {
   background-image: url("../images/icon/robo.svg");
@@ -853,7 +794,7 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page .upgrade-banner {
   width: 220px;
-  height: 270px;
+  height: 305px;
   margin: 16px 9px 7px 2px;
   border-radius: 0.7rem;
   background-color: #F4FBFC;
@@ -991,6 +932,9 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page section.setting-tab .toggleTarget.is-visible {
   display: block;
   height: auto;
+}
+.wrap.is-shortpixel-settings-page.simple section.setting-tab .toggleTarget.is-advanced {
+  display: none;
 }
 .wrap.is-shortpixel-settings-page section#tab-optimisation content.exif-ai img.icon {
   height: 40px;
@@ -1244,7 +1188,7 @@ div.spio-modal-title {
   box-shadow: none;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper .dashboard-button:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper .dashboard-button i.switch {
   width: 18px;
@@ -1618,6 +1562,70 @@ div.spio-modal-title {
   display: inline;
   float: none;
 }
+.wrap.is-shortpixel-settings-page #tab-ai .ai_general_context {
+  height: 100px;
+  width: 80%;
+}
+.wrap.is-shortpixel-settings-page #tab-ai .switch input {
+  opacity: 1;
+}
+.wrap.is-shortpixel-settings-page #tab-ai .generate_ai_items textarea {
+  width: 80%;
+  height: 50px;
+  margin: 6px 0;
+}
+.wrap.is-shortpixel-settings-page #tab-ai hr {
+  background-color: #92D5E3;
+  height: 1px;
+  margin: 6px 0;
+}
+.wrap.is-shortpixel-settings-page #tab-ai .preview_wrapper {
+  border: 1px solid #92D5E3;
+  display: block;
+  padding: 12px;
+}
+.wrap.is-shortpixel-settings-page #tab-ai .preview_wrapper .ai_preview .image_preview {
+  width: 200px;
+  height: auto;
+}
+.wrap.is-shortpixel-settings-page #tab-ai .preview_wrapper .ai_preview button i {
+  filter: brightness(0) saturate(100%) invert(100%) sepia(100%) saturate(20%) hue-rotate(283deg) brightness(105%) contrast(105%);
+}
+.wrap.is-shortpixel-settings-page #tab-ai .preview_wrapper .result_wrapper .result_info {
+  padding: 10px;
+}
+.wrap.is-shortpixel-settings-page #tab-ai .preview_wrapper .result_wrapper .result_info label {
+  font-weight: 700;
+}
+.wrap.is-shortpixel-settings-page #tab-ai .preview_wrapper .result_wrapper .result_info span {
+  display: block;
+}
+.wrap.is-shortpixel-settings-page #tab-ai .preview_wrapper .result_wrapper .result_info h3 {
+  font-size: 14px;
+  font-weight: 700;
+}
+.wrap.is-shortpixel-settings-page #tab-ai .preview_wrapper .result_wrapper .current {
+  background: #F5F5F5;
+}
+.wrap.is-shortpixel-settings-page #tab-ai .preview_wrapper .result_wrapper .result {
+  background: #F4FBFC;
+  padding: 6px;
+}
+.wrap.is-shortpixel-settings-page #tab-ai .preview_wrapper .result_wrapper .icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.wrap.is-shortpixel-settings-page #tab-ai .preview_wrapper .result_wrapper .icon i {
+  width: 35px;
+  height: 20px;
+}
+.wrap.is-shortpixel-settings-page #tab-ai .ai_filename_setting switch, .wrap.is-shortpixel-settings-page #tab-ai .ai_filename_setting content.ai_gen_filename {
+  filter: blur(1px);
+}
+.wrap.is-shortpixel-settings-page #tab-ai .ai_gen_filename {
+  opacity: 1 !important;
+}
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-thumbnail-setting content {
   column-count: 3;
   column-width: 220px;
@@ -1863,6 +1871,11 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist.new-customer input#tos.invalid, .wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist.existing-customer input#tos.invalid {
   border: 2px solid #ff0000;
   margin-top: 0px;
+}
+.wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist.new-customer input#tos.invalid:checked::before, .wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist.existing-customer input#tos.invalid:checked::before {
+  width: 16px;
+  height: 16px;
+  margin-top: -2px;
 }
 .wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist.new-customer .shortpixel-settings-error, .wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist.existing-customer .shortpixel-settings-error {
   color: #ff0000;
@@ -2126,7 +2139,7 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page #tab-tools .button {
   min-height: 44px;
   color: #1ABDCA;
-  background-color: #e8e8e8;
+  background-color: rgb(232.25, 232.25, 232.25);
   border-radius: 6px;
   font-weight: 700;
   letter-spacing: 0.3px;
@@ -2134,7 +2147,7 @@ div.spio-modal-title {
   transition: all 0.1s ease-in-out;
 }
 .wrap.is-shortpixel-settings-page #tab-tools .button:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
   color: #fff;
 }
 .wrap.is-shortpixel-settings-page #tab-tools .option, .wrap.is-shortpixel-settings-page #tab-tools setting {
@@ -2237,6 +2250,9 @@ div.spio-modal-title {
   font-size: 14px;
   display: inline-block;
 }
+.wrap.is-shortpixel-settings-page setting content.nextline {
+  display: block;
+}
 .wrap.is-shortpixel-settings-page setting content.shortpixel-compression {
   max-width: calc(100% - 260px);
 }
@@ -2244,6 +2260,15 @@ div.spio-modal-title {
   min-width: 100px;
   font-weight: 700;
   display: inline-block;
+}
+.wrap.is-shortpixel-settings-page setting content input[type=text], .wrap.is-shortpixel-settings-page setting content input[type=number] {
+  width: 290px;
+  height: 36px;
+  border: 1px solid #1ABDCA;
+  background: #fff;
+}
+.wrap.is-shortpixel-settings-page setting content input[type=text][type=number], .wrap.is-shortpixel-settings-page setting content input[type=number][type=number] {
+  width: 80px;
 }
 .wrap.is-shortpixel-settings-page setting info {
   display: block;
@@ -2292,6 +2317,9 @@ div.spio-modal-title {
   filter: blur(1px);
   opacity: 0.4;
   transition: all 0.5s ease-out;
+}
+.wrap.is-shortpixel-settings-page setting.textarea content {
+  display: block;
 }
 
 /*# sourceMappingURL=shortpixel-settings.css.map */

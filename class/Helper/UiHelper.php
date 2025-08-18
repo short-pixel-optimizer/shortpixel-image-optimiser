@@ -13,6 +13,7 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 
 use ShortPixel\Model\AccessModel as AccessModel;
+use ShortPixel\Model\AiDataModel;
 
 class UiHelper
 {
@@ -51,22 +52,36 @@ class UiHelper
   {
     $output = '';
     //$percent = $imageObj->getMeta('improvement');
-    $percent = $imageObj->getImprovement();
+    $percent = $imageObj->getImprovement(); 
 
-    if($percent == 999) return ;
-
-    if ($percent == 999 )
-      $output .= __("Reduced by X%(unknown)", 'shortpixel-image-optimiser');
-
-    if ($percent && $percent > 0)
+    if (false === $percent || $percent < 5)
     {
-      $output .= __('Reduced by','shortpixel-image-optimiser') . ' <strong>' . self::formatNumber($percent,2) . '%</strong> ';
+      $improvements = $imageObj->getImprovements();
+      if (isset($improvements['totalpercentage']))
+      {
+        $percent = $improvements['totalpercentage'];
+      }
+      else
+        $percent = 999; // dunno what is this, but bail out
     }
-    if (intval($percent) < 5)
+
+    if($percent == 999) 
+    {
+       return ;
+    }
+
+    $output .= '<p>';
+    if ($percent && intval($percent) >= 5)
+    {
+      $output .= __('Reduced by','shortpixel-image-optimiser') . ' <strong>' . self::formatNumber($percent,2) . '%</strong>';
+    }
+    else if (intval($percent) < 5)
       $output .= __('Bonus processing','shortpixel-image-optimiser');
 
     $type = $imageObj->getMeta('compressionType');
     $output .= ' ('. self::compressionTypeToText($type) .')';
+
+    $output .= '<!-- eofsngline --></p> ';
 
     $thumbs = $imageObj->get('thumbnails');
     $thumbsDone = $retinasDone = 0;
@@ -100,7 +115,7 @@ class UiHelper
 
     if (isset($improvements['thumbnails']))
     {
-       $excluded = ($excludedThumbs > 0) ? sprintf(__('(%s excluded)', 'shortpixel-image-optimiser'), $excludedThumbs) : '';
+       $excluded = ($excludedThumbs > 0) ? sprintf(__('%s (%s excluded)', 'shortpixel-image-optimiser'), '<br>', $excludedThumbs) : '';
 
        $output .= '<div class="thumbnails optimized">';
        if ($thumbsTotal > $thumbsDone)
@@ -310,8 +325,12 @@ class UiHelper
 				 return array();
 			}
 
+      $aiDataModel = new AiDataModel($id);
+
 			if ($id === 0)
-				return array();
+      {
+				return [];
+      }
 
       if ($mediaItem->isSomethingOptimized() )
       {
@@ -325,12 +344,21 @@ class UiHelper
              if ($optimizable > 0)
              {
 							 $total = $optimizable + $optimizableWebp + $optimizableAvif;
+               $thumbObj = $mediaItem->getSomethingOptimized(); 
+               if (false !== $thumbObj)
+               {
+                  $compressionType = $thumbObj->getMeta('compressionType'); 
+                  $action = self::getAction('optimizethumbs', $id, ['compressionType' => $compressionType]);
+               }
+
 							 if ($optimizableWebp > 0 || $optimizableAvif > 0)
 							 	   $itemText = __('items', 'shortpixel-image-optimiser');
 								else {
 									 $itemText = __('thumbnails', 'shortpixel-image-optimiser');
 								}
                $action['text']  = sprintf(__('Optimize %s  %s','shortpixel-image-optimiser'),$total, $itemText);
+
+
              }
              else
              {
@@ -409,6 +437,11 @@ class UiHelper
 				}
       } //isOptimized
 
+      if ($aiDataModel->isProcessable() && 'media' === $mediaItem->get('type') && in_array($mediaItem->getExtension(), $aiDataModel->supportedExtensions()))
+      {
+         $list_actions['shortpixel-generateai'] = self::getAction('shortpixel-generateai', $id);
+      }
+
       if(! $quotaControl->hasQuota())
       {
          $remove = array('reoptimize-lossy' => '', 'reoptimize-glossy' => '', 'reoptimize-lossless' => '', 'optimizethumbs' => '');
@@ -420,7 +453,7 @@ class UiHelper
 
   public static function getActions($mediaItem)
   {
-    $actions = array();
+    $actions = [];
     $id = $mediaItem->get('id');
     $quotaControl = QuotaController::getInstance();
     $queueController = new QueueController();
@@ -434,23 +467,25 @@ class UiHelper
 		$access = AccessModel::getInstance();
 		if (! $access->imageIsEditable($mediaItem))
 		{
-			 return array();
+			 return [];
 		}
 
 		if ($id === 0)
-			return array();
+    {
+			return [];
+    }
 
     if(! $quotaControl->hasQuota())
     {
        $actions['extendquota'] = self::getAction('extendquota', $id);
        $actions['checkquota'] = self::getAction('checkquota', $id);
     }
-    elseif($mediaItem->isProcessable() && ! $mediaItem->isSomethingOptimized() && ! $mediaItem->isOptimizePrevented() && ! $queueController->isItemInQueue($mediaItem))
+    elseif($mediaItem->isProcessable() && false === $mediaItem->isSomethingOptimized() && ! $mediaItem->isOptimizePrevented() && ! $queueController->isItemInQueue($mediaItem))
     {
        $actions['optimize'] = self::getAction('optimize', $id);
        $actions['markCompleted']  = self::getAction('markCompleted', $id);
     }
-    elseif ($mediaItem->isUserExcluded() && false === $mediaItem->isSomethingOptimized())
+    elseif ($mediaItem->isUserExcluded() && false === $mediaItem->isSomethingOptimized() && ! $queueController->isItemInQueue($mediaItem))
     {
       $actions['optimize'] = self::getAction('forceOptimize', $id);
     }
@@ -654,16 +689,22 @@ class UiHelper
           $action['type']  = 'js';
           $action['text'] = __('Click to unmark this item as done', 'shortpixel-image-optimiser');
           $action['display'] = 'js';
-
       break;
       case 'optimizethumbs':
-          $action['function'] = 'window.ShortPixelProcessor.screen.Optimize(' . $id . ');';
+          if (! is_null($compressionType))
+          {
+            $action['function'] = 'window.ShortPixelProcessor.screen.Optimize(' . $id . ', null, ' . $compressionType . ');';
+          }
+          else
+          {
+            $action['function'] = 'window.ShortPixelProcessor.screen.Optimize(' . $id . ');';
+          }
+
           $action['type'] = 'js';
           $action['text']  = '';
           $action['display'] = 'inline';
           $action['is-optimizable'] = true;
       break;
-
       case 'retry':
          $action['function'] = 'window.ShortPixelProcessor.screen.Optimize(' . $id . ');';
          $action['type']  = 'js';
@@ -728,6 +769,12 @@ class UiHelper
         $action['text'] = __('Re-optimize without SmartCrop','shortpixel-image-optimiser');
         $action['display'] = 'inline';
      break;
+     case 'shortpixel-generateai': 
+      $action['function'] = 'window.ShortPixelProcessor.screen.RequestAlt(' . $id . ')';
+      $action['type'] = 'js';
+      $action['text'] = __('Generate image SEO data','shortpixel-image-optimiser');     
+      $action['ai-action'] = true;
+      break; 
      case 'extendquota':
         $action['function'] = 'https://shortpixel.com/login/'. $keyControl->getKeyForDisplay();
         $action['type'] = 'button';
@@ -933,9 +980,16 @@ class UiHelper
             'alert' => __('Action needed', 'shortpixel-image-optimiser'),
       ];
 
+      $ai_string = [
+            'imagemodaltitle' => __('Select an image for AI SEO data preview', 'shortpixel-image-optimiser'), 
+            'selectimage' => __('Use this image', 'shortpixel-image-optimiser'),
+            'preview_requested' => __('Working on your AI SEO data preview. This may take a while ... ', 'shortpixel-image-optimiser'),
+      ];
+
       $strings['exclusion_types'] = $exclusion_types;
       $strings['exclusion_apply'] = $exclusion_apply;
       $strings['dashboard_strings'] = $dashboard_string;
+      $strings['ai_strings'] = $ai_string; 
 
       if ($name !== false && isset($strings[$name]))
       {

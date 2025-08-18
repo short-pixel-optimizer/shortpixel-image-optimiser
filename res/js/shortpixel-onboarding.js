@@ -180,7 +180,7 @@ class ShortPixelOnboarding
                  window.location.href = json.redirect;
              }
           }
-        },500);
+        },3000);
     }
 
     IsEmailValid(email) {

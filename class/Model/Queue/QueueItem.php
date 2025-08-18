@@ -20,17 +20,15 @@ use ShortPixel\Controller\Optimizer\ActionController as ActionController;
 class QueueItem
 {
 
-   protected $imageModel;
-   protected $item_id;
-   //  protected $action = 'optimize'; // This must be in data!
+   protected $imageModel; // ImageModel 
+   protected $item_id; // Item Id 
    protected $queueItem; // Object coming from WPQ
 
-   protected $result;
+   protected $result; // Result object stores a viable customer response.
 
    protected $data; // something savable to dbase, for now object. This is the only thing persistent!
 
    protected $item_count; // counted images for the table.
-
 
    protected $debug_active = false; // prevent operations when it's debug view in edit media
 
@@ -177,7 +175,17 @@ class QueueItem
          $media_id = $this->imageModel->getParent();
       }
 
-      return ['id' => $item_id, 'value' => $value, 'item_count' => $this->item_count];
+
+      $enqueue = ['id' => $item_id, 'value' => $value, 'item_count' => $this->item_count];
+      
+      if (! is_null($this->data->queue_list_order))
+      {
+         $enqueue['order'] = $this->data->queue_list_order;
+      }
+
+      return $enqueue; 
+
+      
    }
 
    public function setDebug()
@@ -215,7 +223,7 @@ class QueueItem
 
        $this->data->action = 'reoptimize'; 
        $this->data->next_actions = ['optimize'];
-       $this->data->next_keepdata = ['compressionType', 'smartcrop']; // Each action it's own set of keep data.
+       $this->data->addKeepDataArgs(['compressionType', 'smartcrop']); // Each action it's own set of keep data.
        $this->item_count = 1;
 
        // Smartcrop setting (?) 
@@ -261,9 +269,10 @@ class QueueItem
          'queueType', // OptimizeController but (?) usage
          'kblink',
          'data', // Is returnDataList returned by apiController. (array)
-         'retrievedText', // Ai text returning from AIController 
+    //     'retrievedText', // Ai text returning from AIController  //  @todo Can probably be removed on release. 
          'apiName', // NAme of the handling api, for JS / Response to show different results.
          'remote_id', 
+         'aiData',   // Returning AI Data
 
       ];
 
@@ -283,6 +292,7 @@ class QueueItem
 
    }
 
+
    /** Clean several aspects of this object ( result, other things ) before triggering a new action. 
     * 
     * Since QItem is mostly passed by reference 
@@ -292,7 +302,7 @@ class QueueItem
    {
        $this->result = new \stdClass; // new action, new results 
 
-       if ($this->data->hasNextAction()) // Keep this at all times / not optimal still
+       if ($this->data()->hasNextAction()) // Keep this at all times / not optimal still
        {
           $nextActions = $this->data()->next_actions; 
        } 
@@ -454,14 +464,40 @@ class QueueItem
 
    }
 
-   public function requestAltAction()
-   {
+   public function requestAltAction($args = [])
+   {   
       $this->newAction(); 
       $this->data->url = $this->imageModel->getUrl();
       $this->data->tries = 0;
       $this->item_count = 1;
 
+
+      $preview_only = false; 
+      if (isset($args['preview_only']) && true == $args['preview_only'])
+      {
+         $this->data->paramlist = ['preview_only' => true];
+         $preview_only = true; 
+      } 
+
       $this->data->action = 'requestAlt'; // For Queue
+
+      $optimizer = $this->getAPIController($this->data->action); 
+      $optimizer->parseJSONForQItem($this, $args);
+
+      if ($this->data()->hasNextAction())
+      {
+          $next_actions = array_merge(['retrieveAlt'], $this->data()->next_actions);
+      }
+      else
+      {
+         $next_actions = ['retrieveAlt'];
+      }
+      
+      if (false === $preview_only)
+      {
+         $this->data->next_actions = $next_actions;
+      }
+      
    }
 
    public function retrieveAltAction($remote_id)

@@ -312,7 +312,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		if ($this->isScaled())
 		{
 			 $urls[$this->originalImageKey]  = $this->getOriginalFile()->getUrl();
-
 		}
 
 		$thumbs = $this->getThumbObjects();
@@ -321,8 +320,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		}
 
-	//	$w = $this->getWebps();
-	//	$urls = array_merge($urls, $this->getWebps(), $this->getAvifs());
 	$results = [
 		'urls' => $urls, 
 		'avif' => [],
@@ -346,6 +343,48 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 
 		return $results;
+	}
+
+	public function getAllFiles()
+	{
+		$urls = array();
+		$urls[$this->mainImageKey] = $this;
+
+
+		if ($this->isScaled())
+		{
+			 $urls[$this->originalImageKey]  = $this->getOriginalFile();
+		}
+
+		$thumbs = $this->getThumbObjects();
+		foreach ($thumbs as $thumbName => $thumbObj) {
+			$urls[$thumbName] = $thumbObj;
+
+		}
+
+	$results = [
+		'files' => $urls, 
+		'avif' => [],
+		'webp' => [] 
+	];
+	
+
+		$webps = $this->getWebps();
+		$avifs = $this->getAvifs(); 
+		
+		//$base_url = trailingslashit(str_replace($this->getFileName(), '', $this->getURL()));
+
+		foreach($webps as $webpName => $webpObj)
+		{
+			$results['webp'][$webpName]  =  $webpObj; 
+		}
+		foreach($avifs as $avifName => $avifObj)
+		{
+			$results['avif'][$avifName]  = $avifObj; 	 
+		}
+
+
+		return $results;	 
 	}
 
 	public function getWPMetaData()
@@ -666,6 +705,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		$compressionType = $this->getMeta('compressionType'); // CompressionType not set on subimages etc.
 
+	
 		// If thumbnails should not be optimized, they should not be in result Array.
 		// #### THUMBNAILS ####
 		$thumbObjs = $this->getThumbObjects();
@@ -1771,7 +1811,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		}
 
 		$reason = get_post_meta($this->id, '_shortpixel_prevent_optimize', true);
-		//$status = get_post_meta($this->id, '_shortpixel_prevent_optimize_status', true);
 
 		if ($reason === false || strlen($reason) == 0) {
 			$this->optimizePrevented = false;
@@ -1794,6 +1833,22 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		foreach ($thumbs as $thumbObj) {
 			if ($thumbObj->isOptimized()) {
 				return true;
+			}
+		}
+		return false;
+	}
+
+	public function getSomethingOptimized()
+	{
+		if ($this->isOptimized())
+		{
+			return $this;
+		}
+
+		$thumbs = $this->getThumbObjects();
+		foreach ($thumbs as $thumbObj) {
+			if ($thumbObj->isOptimized()) {
+				return $thumbObj;
 			}
 		}
 		return false;

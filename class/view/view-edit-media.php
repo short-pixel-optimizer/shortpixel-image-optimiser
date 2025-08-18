@@ -77,6 +77,7 @@ if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->de
     </ul>
     <?php endif; ?>
   </div>
+
 </div>
 
   <div id="sp-message-<?php echo( esc_attr($this->view->id) ); ?>" class='spio-message'>

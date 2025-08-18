@@ -7,7 +7,7 @@ $disabled:  'disabled.svg';
 $selected: 'selected.svg';
 
 
-$icons: alert, arrow-right, arrows-left-right, arrows-up-down, box-archive, bulk, chevron, close, cart, dashboard, debug, delivery, exclusions, edit, eye, file, fix, feedback, help, integrations, optimization, processing, notifications, robo, rocket, tools, trash, webp_avif, photo, ok, warning, key, save, switch, help-circle, user, shortpixel;
+$icons: ai, alert, arrow-right, arrows-left-right, arrows-up-down, box-archive, bulk, chevron, close, cart, dashboard, debug, delivery, exclusions, edit, eye, file, fix, feedback, help, integrations, optimization, processing, notifications, refresh, robo, rocket, tools, trash, webp_avif, photo, ok, warning, key, save, switch, help-circle, user, shortpixel;
 
 .shortpixel-icon
 {
@@ -21,6 +21,9 @@ $icons: alert, arrow-right, arrows-left-right, arrows-up-down, box-archive, bulk
   line-height: 25px;
   vertical-align: middle;
   margin-right: 4px;
+  &.rotate_right {
+     rotate: -90deg;
+  }
 
 }
 

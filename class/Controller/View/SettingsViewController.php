@@ -23,8 +23,10 @@ use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 use ShortPixel\Controller\QueueController as QueueController;
 
 use ShortPixel\Controller\CacheController as CacheController;
+use ShortPixel\Controller\Optimizer\OptimizeAiController;
 use ShortPixel\Controller\View\BulkViewController as BulkViewController;
 use ShortPixel\External\Offload\Offloader;
+use ShortPixel\Model\AiDataModel;
 use ShortPixel\NextGenController as NextGenController;
 
 class SettingsViewController extends \ShortPixel\ViewController
@@ -224,6 +226,8 @@ class SettingsViewController extends \ShortPixel\ViewController
 
         $setting_name =  isset($_POST['edit_setting']) ? sanitize_text_field($_POST['edit_setting']) : false;
         $new_value = isset($_POST['new_value']) ? sanitize_text_field($_POST['new_value']) : false;
+        $submit_name = isset($_POST['Submit']) ? sanitize_text_field($_POST['Submit']) : false; 
+
       //  $apiKeyModel = (isset($_POST['apiKeySettings']) && 'true' == $_POST['apikeySettings'])  ? true : false;
 
       // @todo ApiKeyModel will not really work, for no autosave/ public save, only via keychecks. Will be an issue when updating redirectedSettings, probably move back to settings where it was.
@@ -233,9 +237,18 @@ class SettingsViewController extends \ShortPixel\ViewController
             $model = $this->model;
             if ($model->exists($setting_name))
             {
-               $this->model->$setting_name = $new_value;
+              if ('remove' == $submit_name)
+              {
+                 $this->model->deleteOption($setting_name);
+              }
+              else
+              {
+                 $this->model->$setting_name = $new_value;
+              }
+              
             }
         }
+        
 
         $this->doRedirect();
       }
@@ -410,7 +423,7 @@ class SettingsViewController extends \ShortPixel\ViewController
           {
               $nextgen = NextGenController::getInstance();
               $previous = $this->model->includeNextGen;
-              $nextgen->enableNextGen(true);
+          //    $nextgen->enableNextGen(true);
 
               // Reset any integration notices when updating settings.
               AdminNoticesController::resetIntegrationNotices();
@@ -495,6 +508,12 @@ class SettingsViewController extends \ShortPixel\ViewController
          $this->view->cloudflare_constant = defined('SHORTPIXEL_CFTOKEN') ? true : false;
          $this->view->is_unlimited =  (!is_null($this->quotaData) && $this->quotaData->unlimited) ? true : false;
          $this->view->is_wpoffload = $offLoader->isActive('wp-offload');
+
+         require_once( ABSPATH . 'wp-admin/includes/translation-install.php' );
+         $this->view->languages = wp_get_available_translations();
+        
+         
+         //$this->view->latest_ai = $this->getLatestAIExamples();
 
          $settings = \wpSPIO()->settings();
 
@@ -879,6 +898,8 @@ class SettingsViewController extends \ShortPixel\ViewController
               'form-nonce',
               'request_url', 
               'login_apiKey',
+              'ajaxSave',
+              'ai_preview_image_id',
 
 					);
 
@@ -1104,6 +1125,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 						wp_send_json($json);
 						exit();
 			}
+
 
 
 }

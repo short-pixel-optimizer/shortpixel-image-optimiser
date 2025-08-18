@@ -102,6 +102,24 @@ $approx = $this->view->approx;
 					</div>
 				<?php endif; ?>
 
+				<?php if (true === \wpSPIO()->settings()->enable_ai):  ?>
+			 <div class='ai-images optiongroup'>
+				<div class='switch_button'>
+				<label>
+		               <input type="checkbox" class="switch" id="autoai_checkbox" name="autoai_checkbox"
+		                <?php checked(\wpSPIO()->settings()->autoAIBulk); ?>  />
+		               <div class="the_switch">&nbsp; </div>
+	             </label>
+				 <h4><label for="autoai_checkbox">
+					<?php printf(esc_html__('Use ShortPixel AI to generate image SEO data for all Media Library images, according to the %ssettings%s', 'shortpixel-image-optimiser'), '<a href="options-general.php?page=wp-shortpixel-settings&part=ai">', '</a>' ); ?>
+              				<span class='new'><?php _e('New!', 'shortpixel-image-optimiser'); ?></span>
+				 </label></h4>
+
+				</div>	
+
+			 </div>
+			<?php endif ?>
+			
 	         <div class="custom-images optiongroup"  data-check-visibility data-control="data-check-custom-hascustom" >
 	           <div class='switch_button'>
 	             <label>
@@ -115,7 +133,9 @@ $approx = $this->view->approx;
 	               <span class="number" ><?php echo esc_html($approx->custom->images) ?></span>
 	            </div>
 	         </div>
-				</div> <!-- block -->
+
+
+				</div> <!-- // optimize block -->
 
 				 <div class="option-block selection-settings">
 					 <h2><?php esc_html_e('Options','shortpixel-image-optimiser') ?>: </h2>
@@ -176,7 +196,6 @@ $approx = $this->view->approx;
           <h4><label for="background_checkbox">
 
             <?php printf(esc_html__('Background Mode' ,'shortpixel-image-optimiser') ); ?>
-              <span class='new'><?php _e('New!', 'shortpixel-image-optimiser'); ?></span>
           </label></h4>
             <?php $link = 'https://shortpixel.com/knowledge-base/article/background-processing-using-cron-jobs-in-shortpixel-image-optimizer/'; ?>
          <div class="option"><?php printf(esc_html__('Utilize this feature to optimize images without the need to keep a browser window open. Please be aware that on websites with low traffic or shared hosting, this method of optimization might be considerably slower. If you observe a significant increase in server resource usage or processing time, consider switching to browser-based optimization. %sRead more%s.','shortpixel-image-optimiser'), '<strong><a href="' . esc_attr($link) . '" target="_blank">', '</a></strong>'); ?>

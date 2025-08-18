@@ -14,6 +14,7 @@ use ShortPixel\Controller\AdminController as AdminController;
 use ShortPixel\Controller\ImageEditorController as ImageEditorController;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 use ShortPixel\Controller\FileSystemController;
+use ShortPixel\Controller\Optimizer\OptimizeAiController;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 use ShortPixel\NextGenController as NextGenController;
 
@@ -190,13 +191,23 @@ class ShortPixelPlugin {
 
       			add_action( 'shortpixel-thumbnails-before-regenerate', array( $admin, 'preventImageHook' ), 10, 1 );
 
-						add_action( 'enable-media-replace-upload-done', array( $admin, 'handleReplaceEnqueue' ), 10, 3 );
+				add_action( 'enable-media-replace-upload-done', array( $admin, 'handleReplaceEnqueue' ), 10, 3 );
 
 				add_filter( 'wp_generate_attachment_metadata', array( $admin, 'handleImageUploadHook' ), 5, 2 );
 				add_action('add_attachment', array($admin, 'addAttachmentHook'));
+
 				// @integration MediaPress
 				add_filter( 'mpp_generate_metadata', array( $admin, 'handleImageUploadHook' ), 10, 2 );
 			}
+		}
+
+		$optimizeAiController = OptimizeAiController::getInstance(); 
+		if (true === $optimizeAiController->isAutoAiEnabled())
+		{
+
+			// Run one hit earlier than optimization, to do this action first if needed.
+			add_filter( 'wp_generate_attachment_metadata', array( $admin, 'handleAiImageUploadHook' ), 4, 2 );
+			add_filter( 'mpp_generate_metadata', array( $admin, 'handleAiImageUploadHook' ), 9, 2 );
 		}
 
 		$isAdminUser = $access->userIsAllowed('is_admin_user');
@@ -311,6 +322,8 @@ class ShortPixelPlugin {
 		$queueController = new QueueController(['is_bulk' =>  $is_bulk_page ]);
 		$quotaController = QuotaController::getInstance();
 
+		$OptimizeAiController = OptimizeAiController::getInstance(); 
+
 	 wp_register_script('shortpixel-folderbrowser', plugins_url('/res/js/shortpixel-folderbrowser.js', SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
 	 wp_localize_script('shortpixel-folderbrowser', 'spio_folderbrowser', array(
@@ -391,6 +404,7 @@ class ShortPixelPlugin {
 				'deferInterval'     => $deferInterval,
 				'debugIsActive' 		=> (\wpSPIO()->env()->is_debug) ? 'true' : 'false',
 				'autoMediaLibrary'  => ($settings->autoMediaLibrary) ? 'true' : 'false',
+				'disable_processor' => apply_filters('shortpixel/processorjs/disable', false),
             )
         );
 
@@ -407,7 +421,7 @@ class ShortPixelPlugin {
 
 	  $screen_localize = array(  // Item Base
 			'startAction' => __('Processing... ','shortpixel-image-optimiser'),
-			'startActionAI' => __('Generating Alt Text', 'shortpixel-image-optimiser'),
+			'startActionAI' => __('Generating image SEO data', 'shortpixel-image-optimiser'),
 			'fatalError' => __('ShortPixel encountered a fatal error when optimizing images. Please check the issue below. If this is caused by a bug please contact our support', 'shortpixel-image-optimiser'),
 			'fatalErrorStop' => __('ShortPixel has encounted multiple errors and has now stopped processing', 'shortpixel-image-optimiser'),
 			'fatalErrorStopText' => __('No items are being processed. To try again after solving the issues, please reload the page ', 'shortpixel-image-optimiser'),
@@ -420,7 +434,7 @@ class ShortPixelPlugin {
 		);
 
 	 $screen_localize_media = [ 
-			'hide_ai' => apply_filters('shortpixel/settings/no_ai', false),
+			'hide_ai' => ! $OptimizeAiController->isAiEnabled(),  // turn around negative setting
 			'hide_spio_in_popups' => apply_filters('shortpixel/js/media/hide_in_popups', false), 
 	 ];
 
@@ -475,7 +489,8 @@ class ShortPixelPlugin {
 			'redoSmartcrop'               => __( 'Re-optimize with SmartCrop', 'shortpixel-image-optimiser'),
 			'redoSmartcropless'           => __( 'Re-optimize without SmartCrop', 'shortpixel-image-optimiser'),
 			'restoreOriginal'             => __( 'Restore Originals', 'shortpixel-image-optimiser' ),
-			'markCompleted' 							=> __('Mark as completed' ,'shortpixel-image-optimiser'),
+			'generateAI' 				  => __( 'Generate image SEO data', 'shortpixel-image-optimiser'),
+			'markCompleted' 			  => __('Mark as completed' ,'shortpixel-image-optimiser'),
 			'areYouSureStopOptimizing'    => __( 'Are you sure you want to stop optimizing the folder {0}?', 'shortpixel-image-optimiser' ),
 			'pleaseDoNotSetLesserSize'    => __( "Please do not set a {0} less than the {1} of the largest thumbnail which is {2}, to be able to still regenerate all your thumbnails in case you'll ever need this.", 'shortpixel-image-optimiser' ),
 			'pleaseDoNotSetLesser1024'    => __( "Please do not set a {0} less than 1024, to be able to still regenerate all your thumbnails in case you'll ever need this.", 'shortpixel-image-optimiser' ),
@@ -654,6 +669,7 @@ class ShortPixelPlugin {
         switch ( $plugin_page ) {
             case 'wp-shortpixel-settings': // settings
 						$controller = 'ShortPixel\Controller\View\SettingsViewController';
+						wp_enqueue_media();
         	break;
 					 case 'shortpixel-network-settings':
 					 	$controller = 'ShortPixel\Controller\View\MultiSiteViewController';

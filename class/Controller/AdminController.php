@@ -5,6 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
+use ShortPixel\Controller\Optimizer\OptimizeAiController;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 use ShortPixel\Controller\Queue\Queue as Queue;
@@ -119,15 +120,52 @@ class AdminController extends \ShortPixel\Controller
 							$meta = $converter->getUpdatedMeta();
 
               //do_action('shortpixel/converter/prevent-offload-off', $id);
-					}
+           }
 
-        	$control = new QueueController();
-        	$control->addItemToQueue($mediaItem);
+         // $autoAi = $settings->
+         $optimizeAiController = OptimizeAiController::getInstance(); 
+         $queueController = new QueueController();
+
+         if ($optimizeAiController->isAutoAiEnabled())
+         {
+            $args = ['action' => 'requestAlt'];
+            $queueController->addItemToQueue($mediaItem, $args); 
+         }
+                 
+          
+        	$queueController->addItemToQueue($mediaItem);
 				}
 				else {
 					Log::addWarn('Passed mediaItem is not processable', $mediaItem);
 				}
         return $meta; // It's a filter, otherwise no thumbs
+    }
+
+    public function handleAiImageUploadHook($meta, $id)
+    {
+              // Media only hook
+				if ( in_array($id, self::$preventUploadHook))
+				{
+					 return $meta;
+				}
+
+        $fs = \wpSPIO()->filesystem();
+				$fs->flushImageCache(); // it's possible file just changed by external plugin.
+        $mediaItem = $fs->getImage($id, 'media');
+
+				if ($mediaItem === false)
+				{
+					 Log::addError('Handle Image Upload Hook triggered, by error in image :' . $id );
+					 return $meta;
+				}
+
+         $queueController = new QueueController();
+
+        
+        $args = ['action' => 'requestAlt'];
+        $queueController->addItemToQueue($mediaItem, $args); 
+         
+        return $meta;
     }
 
 

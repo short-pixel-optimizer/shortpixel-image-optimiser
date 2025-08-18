@@ -369,6 +369,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		$replaceBlocks = $this->filterOtherDomains($replaceBlocks);
 
 
+
 		// If the items didn't survive the filters.
 		if (count($replaceBlocks) == 0) {
 			if (true === $background_inline_found)
@@ -390,6 +391,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		//  $replace_function = ($this->replace_method == 'preg') ? 'pregReplaceContent' : 'stringReplaceContent';
 
 		$replace_function = 'pregReplaceByString'; // undercooked, will defer to next version
+	//	$replace_function = 'stringReplaceContent';
 		$imageIndexes = array_column($replaceBlocks, 'imageId');
 
 		array_multisort($imageIndexes, SORT_ASC, $replaceBlocks); 
@@ -406,18 +408,27 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			$replace_urls = array_column($sortedBlock, 'replace_url'); 
 			$original_block_content = $sortedBlock[0]->htmlMatch;
 
+			if ($this->content_is_json) // add slashes here to the replace URLS
+			{
+				 $urls = array_merge($urls, array_map([$this, 'encodeForJson'], $urls));
+				 $replace_urls = array_merge($replace_urls, array_map([$this, 'encodeForJson'], $replace_urls));
+			}			
+
 			$replaced_block_content = $this->$replace_function($original_block_content, $urls, $replace_urls);
 			
 			$content = str_replace($original_block_content, $replaced_block_content, $content, $count); 
-			Log::addTemp('Replacement count: ' . $count);
 		}
 		
-		//$content = $this->$replace_function($original_content, $urls, $replace_urls);
-		$content = $this->$replace_function($content, $urls, $replace_urls);
 
 		return $content;
 	}
 
+	private function encodeForJSON($url)
+	{
+		 $url = json_encode($url);
+		 $url = str_replace('"', '', $url); 
+		 return $url;
+	}
 
 
 	protected function loadCDNDomain($CDNDomain = false)
@@ -512,12 +523,17 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		
 		foreach ($matches as $index => $match) {
 
+			$raw_match = $match; 
+			if ($this->content_is_json)
+			{
+				$match = stripslashes($match);
+			}
 			$imageObj = new FrontImage($match);
 			$src = $imageObj->src;
-
+			
 			if (! is_null($src)) {
 				$imageBlock = $this->getReplaceBlock($src);
-				$imageBlock->htmlMatch = $match; 
+				$imageBlock->htmlMatch = $raw_match; 
 				$imageBlock->imageId = 'image' . $index; 
 				$imageBlock->args = $this->createArguments();
 				$blockData[] = $imageBlock;
@@ -640,16 +656,15 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 	 */
 	protected function pregReplaceByString($content, $urls, $new_urls)
 	{
-
 		/* 
 		Pattern:  Negative lookback to / a-z and 0-9 ( URL components / not image closers ) - URL Match - Negative lookforward (same pattern)
-
 		*/
+		$count = 0;
 		$patterns = array_map(function ($url) {
 			return '/(?<!(\/|[a-z]|[0-9]))' . preg_quote($url, '/') . '(?!(\/|[a-z]|[0-9]))/mi'; 
 		}, $urls);
 
-		Log::addTemp('Patterns', $patterns);
+		//Log::addTemp('Patterns X replacecount ', $patterns );
 		$content = preg_replace($patterns, $new_urls, $content);
 
 		return $content;
@@ -681,15 +696,16 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 	}
 
-
-
 	protected function checkContent($content)
 	{
-
 		if (true === $this->checkJson($content)) {
 			// Slashes in json content can interfere with detection of images and formats. Set flag to re-add slashes on the result so it hopefully doesn't break.
-			$content = stripslashes($content);
+		
 			$this->content_is_json = true;
+		}
+		else
+		{
+			$this->content_is_json = false;
 		}
 		return $content;
 	}
@@ -698,24 +714,9 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 	// Could in time be replaced by json_validate proper. (PHP 8.3)
 	protected function checkJson($json, $depth = 512, $flags = 0)
 	{
-		if (false === is_string($json)) {
-			return false;
-		}
-
-		// Try to simpler bail out without checking for the decode.
-		if (strpos($json, '{' ) === false && strpos($json, ':') === false)
-		{
-			return false; 
-		}
-
 		$bool = UtilHelper::validateJSON($json); 
+		return $bool;
 
-		/*try {
-			json_decode($json, false, $depth, $flags | JSON_THROW_ON_ERROR);
-			return true;
-		} catch (\JsonException $e) {
-			return false;
-		} */
 	}
 
 	protected function listenFlush()

@@ -220,6 +220,16 @@ $settings = \wpSPIO()->settings();
 					</div>
 	      </div> <!-- slidemask -->
 			</div>  <!-- preview wrapper -->
+
+      <div class='ai-preview-wrapper hidden'>
+          <h3><?php _e('Ai Generated Data: ', 'shortpixel-image-optimiser'); ?></h3>
+          <ul class='ai-preview-data'>
+
+          </ul>
+      </div>
+
+
+      </div>
     </div>
 
 		<div id="preloader" class="hidden">

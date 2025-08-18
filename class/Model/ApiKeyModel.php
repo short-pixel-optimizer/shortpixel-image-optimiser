@@ -87,7 +87,7 @@ class ApiKeyModel extends \ShortPixel\Model
 		}
 
 		$this->apiKey = isset($apikeySettings['apiKey']) ? $apikeySettings['apiKey'] : '';
-		$this->verifiedKey = $apikeySettings['verifiedKey'];
+    $this->verifiedKey = isset($apikeySettings['verifiedKey']) ? $apikeySettings['verifiedKey'] : false; 
 		$this->apiKeyTried = $apikeySettings['apiKeyTried'];
 
 
@@ -269,8 +269,8 @@ class ApiKeyModel extends \ShortPixel\Model
         $this->verifiedKey = $checked_key;
         $this->processNewKey($quotaData);
         $this->update();
-     }
-     return $this->verifiedKey;
+     }    
+      return $this->verifiedKey;
   }
 
   /** Process some things when key has been added. This is from original wp-short-pixel.php */
