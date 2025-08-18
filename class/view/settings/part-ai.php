@@ -208,7 +208,7 @@ if (! defined('ABSPATH')) {
             ]
           );
           ?>
-        <info>This is a feature we are currently evaluating. If you would like to see it implemented in a future version of our plugin, please vote for it here.</info>
+        <info><?php _e('This is a feature we are currently evaluating. If you would like to see it implemented in a future version of our plugin, please vote for it here.','shortpixel-image-optimiser'); ?></info>
         </content>
 
         <content class='nextline toggleTarget ai_gen_filename is-advanced'>
@@ -289,7 +289,7 @@ if (! defined('ABSPATH')) {
         ]);
         ?>
       </name>
-      <info>Select the language you would like to be used for generating image SEO data.</info>
+      <info><?php _e('Select the language you would like to be used for generating image SEO data.','shortpixel-image-optimiser'); ?></info>
     </content>
   </setting>
   </gridbox>
@@ -318,8 +318,8 @@ if (! defined('ABSPATH')) {
       <div class='current result_info'>
         <h3><?php _e('Current SEO Data', 'shortpixel-image-optimiser'); ?></h3>
         <ul>
-          <li <label><?php _e('Image filemame', 'shortpixel-image-optimiser'); ?>:</label> <span class='filename'></span>
-          </li>
+      <!--    <li <label><?php _e('Image filemame', 'shortpixel-image-optimiser'); ?>:</label> <span class='filename'></span>
+          </li> -->
           <li><label><?php _e('Image ALT tag', 'shortpixel-image-optimiser'); ?>:</label> <span class='alt'></span></li>
           <li><label><?php _e('Image caption', 'shortpixel-image-optimiser'); ?>:</label> <span class='caption'></span></li>
           <li><label><?php _e('Image description', 'shortpixel-image-optimiser'); ?>:</label> <span class='description'></span>
@@ -330,8 +330,8 @@ if (! defined('ABSPATH')) {
       <div class='result result_info'>
         <h3><?php _e('Generated AI image SEO data', 'shortpixel-image-optimiser'); ?></h3>
         <ul>
-          <li><label><?php _e('Image filemame', 'shortpixel-image-optimiser'); ?>:</label> <span class='filename'></span>
-          </li>
+<!--          <li><label><?php _e('Image filemame', 'shortpixel-image-optimiser'); ?>:</label> <span class='filename'></span>
+          </li> -->
           <li><label><?php _e('Image ALT tag', 'shortpixel-image-optimiser'); ?>:</label> <span class='alt'></span></li>
           <li><label><?php _e('Image caption', 'shortpixel-image-optimiser'); ?>:</label> <span class='caption'></span></li>
           <li><label><?php _e('Image description', 'shortpixel-image-optimiser'); ?>:</label> <span class='description'></span>
