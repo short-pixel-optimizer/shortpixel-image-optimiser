@@ -289,6 +289,10 @@ class OptimizeAiController extends OptimizerBase
             $this->replaceFiles($qItem, $qItem->result()->filename);
         }
         */
+        $imageModel = $qItem->imageModel;
+        $qItem->addResult(['improvements' => $imageModel->getImprovements()]);
+
+
         $this->addPreview($qItem);
 
         $this->finishItemProcess($qItem);

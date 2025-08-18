@@ -363,8 +363,8 @@ class ShortPixelScreen extends ShortPixelScreenBase
           }
 
           
-        if ('ai' !== apiName)
-        {
+     //   if ('ai' !== apiName)
+      //  {
             this.UpdateData('result', resultItem);
 
 
@@ -395,7 +395,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
 
                 this.AddAverageOptimization(resultItem.improvements.totalpercentage);
             }
-          }
+     //     }
           if ('ai' === apiName)
           {            
              if (aiPreviewElement.classList.contains('hidden'))
@@ -403,7 +403,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
                 aiPreviewElement.classList.remove('hidden'); 
              }
 
-             this.HandleImageEffect(resultItem.original, resultItem.optimized);
+          //   this.HandleImageEffect(resultItem.original, resultItem.optimized);
 
 
              let ul = aiPreviewElement.querySelector('ul'); 
