@@ -27,7 +27,7 @@ if (! defined('ABSPATH')) {
         );
         ?>
 
-        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe"></i>
+        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/#0-toc-title?target=iframe"></i>
         <name>
 
           <?php esc_html_e('Show AI image SEO options throughout ShortPixel Image Optimizer.', 'shortpixel-image-optimiser'); ?>
@@ -48,7 +48,7 @@ if (! defined('ABSPATH')) {
         );
         ?>
 
-        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe"></i>
+        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/#1-toc-title?target=iframe"></i>
         <name>
 
           <?php esc_html_e('Automatically generate image SEO data with AI after uploading the image, based on the settings below.', 'shortpixel-image-optimiser'); ?>
@@ -69,7 +69,7 @@ if (! defined('ABSPATH')) {
         );
         ?>
 
-        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe"></i>
+        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/#2-toc-title?target=iframe"></i>
         <name>
 
           <?php esc_html_e('Automatically generate image SEO data using AI for all the images queued during the Bulk Processing. The settings below will be taken into account when running the bulk.', 'shortpixel-image-optimiser'); ?>
@@ -85,7 +85,7 @@ if (! defined('ABSPATH')) {
     <setting class='textarea'>
       <content>
         <name><?php _e('General site context', 'shortpixel-image-optimiser'); ?></name>
-        <info><?php _e('This is a general context that will be passed to the AI model to provide more more relevant data for your website.', 'shortpixel-image-optimiser'); ?></info>
+        <info><?php _e('This is a general context that will be passed to the AI model to provide more relevant data for your website.', 'shortpixel-image-optimiser'); ?></info>
         <textarea class="ai_general_context" name="ai_general_context"><?php echo $view->data->ai_general_context; ?></textarea>
       </content>
 
@@ -109,8 +109,6 @@ if (! defined('ABSPATH')) {
             ]
           );
           ?>
-
-          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe"></i>
 
         </content>
 
@@ -142,8 +140,6 @@ if (! defined('ABSPATH')) {
           );
           ?>
 
-          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe"></i>
-
         </content>
 
         <content class='toggleTarget ai_gen_description is-advanced'>
@@ -174,8 +170,6 @@ if (! defined('ABSPATH')) {
             ]
           );
           ?>
-
-          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe"></i>
 
         </content>
 
@@ -272,7 +266,7 @@ if (! defined('ABSPATH')) {
         );
         ?>
 
-        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe"></i>
+        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/#3-toc-title?target=iframe"></i>
 
         <info><?php _e('When this is enabled, the title of the image\'s parent post or page will be sent to the AI model for more accurate image SEO results.', 'shortpixel-image-optimiser'); ?></info>
       </content>
