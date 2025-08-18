@@ -417,14 +417,19 @@ class ShortPixelSettings {
 
 				window.addEventListener('shortpixelSettings.AiImageSet', function (response) {
 
-					if (typeof response.aiData == 'undefined')
+					var json = response.detail; 
+					if (typeof json.aiData == 'undefined')
 					{
-						if (typeof response.message !== 'undefined')
+						if (typeof json.message !== 'undefined')
 						{
-							previewResult.innerText = response.message;
+							previewResult.innerText = json.message;
 						}
 					}
-					window.dispatchEvent(triggerEvent); 
+					else
+					{
+						window.dispatchEvent(triggerEvent); 
+					}
+					
 				}, {once: true});
 
 			})

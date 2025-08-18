@@ -1013,6 +1013,7 @@ class AjaxController
 					
 					$result = $optimizer->enqueueItem($qItem, ['preview_only' => true, 'action' => 'retrieveAlt', 'remote_id' => $remote_id]); 
 					$state = 'retrieveAlt';
+					
 				}
 				if ('retrieveAlt' === $state)
 				{
@@ -1030,14 +1031,17 @@ class AjaxController
 
 					}
 					
+					if ($result->is_done)
+					{
 					 $this->send($result); 
 					 break;
+					}
 				}
 
 
-				$is_done = true; 
-				$this->send((object) $result_json); 
-				break; 
+				//$is_done = true; 
+				//$this->send((object) $result_json); 
+				//break; 
 				
 			}
 
@@ -1048,6 +1052,7 @@ class AjaxController
 
 			if ($i >= 30) // safeguard. 
 			{
+				$this->send((object) $result_json);
 				break; 
 			}
 			$i++; 
