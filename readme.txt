@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 4.8.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 6.2.2
+Stable tag: 6.3.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -28,17 +28,26 @@ Make an instant <a href="https://shortpixel.com/image-compression-test" target="
 
 == 💡 Why is ShortPixel the best choice for image optimization or PDF compression? ==
 
+### 🆕 New! Freshly added image SEO features ###
+
+* AI-powered image SEO – Automatically generate ALT text, captions, and image descriptions for all your images.
+* Bulk mode – Mass-generate and update details for all your images.
+* Preview mode – Test and fine-tune AI results before applying new ALT texts and descriptions in bulk.
+* Multilingual – Support for 100+ languages.
+* WooCommerce – Seamless support for WooCommerce product images.
+* Unlimited credits – AI-generate image titles, captions, and more with our Unlimited plan.
+* Accessibility – Improve website accessibility by generating all the necessary metadata for each image.
+
 ### 🆕 New! Freshly added features ###
 
 * Compress WebP images – ShortPixel now also <a href="https://shortpixel.com/blog/introducing-smartcompress/" target="_blank">smartly compresses</a> all your existing WebP images.
-* Image captioning – Using our AI model, you can automatically add "alternative text" to your images (BETA).
 * Added support for serving CSS, JS and fonts from our global CDN.
 * Save & Restore option for all settings – ideal for agencies and users managing multiple websites.
 * Decide whether AI bots can use your images for machine learning (ML) training, or <a href="https://shortpixel.com/blog/prevent-ai-data-mining-on-images/" target="_blank">block them entirely</a>.
 
 ### 🌍 Faster Websites for Global Audiences ###
 
-The ShortPixel plugin now includes a built-in global Content Delivery Network (CDN). This powerful feature ensures that ShortPixel-optimized WebP and AVIF images are delivered quickly and efficiently to any location worldwide, minimizing delays and improving load times.
+The ShortPixel plugin now includes a built-in global Content Delivery Network (CDN). This powerful feature ensures that ShortPixel-optimized WebP and AVIF images, as well as your website’s CSS and JavaScript files, are delivered quickly and efficiently to any location worldwide, minimizing delays and improving load times.
 
 By leveraging this built-in solution, you enhance the user experience, reduce server strain, boost SEO performance, and simplify website management — all with minimal effort.
 
@@ -111,6 +120,8 @@ With ShortPixel, you can now add images in Apple's HEIC format directly from you
 
 * Safe to test and use: original images are backed up locally and can be restored with a single click (either individually or in bulk).
 * No credits are used for images optimized by less than 5%
+* Save & Restore option for all settings – ideal for agencies and users managing multiple websites.
+* Decide whether AI bots can use your images for machine learning (ML) training, or block them entirely
 
 ### 📊 Reporting, Analytics, Compliance and Customer Support ###
 
@@ -462,6 +473,28 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 14. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 6.3.0 =
+
+✨ The AI Image SEO Update
+
+Release Date: August 18, 2025
+
+🌟 New Features
+
+* Faster AI Model: We've upgraded to a better, faster AI model for generating image SEO data more accurate and efficient.
+* Expanded SEO Tags: In addition to ALT tags, you can now automatically generate image captions and descriptions to enhance SEO and accessibility.
+* Auto-Generate on Upload: Image SEO data can now be generated automatically for newly uploaded images.
+* Bulk SEO Generation: Easily generate image SEO data in bulk, perfect for optimizing existing media libraries.
+* Language Selection: Choose the language used for image SEO generation directly from the plugin settings.
+
+🛠️ Fixes & Improvements
+
+* Cache-Control Headers: WebP and AVIF images now include cache-control headers when delivered via .htaccess, improving cache behavior.
+* Thumbnail Handling: If a main image in a special format (like BMP/TIFF) is excluded from optimization, its JPG thumbnails are no longer excluded incorrectly.
+* WooCommerce SVG Fix: Fixed an issue where certain SVG icons for payment methods weren’t correctly replaced with CDN links on the WooCommerce cart.
+
+Update now to take full advantage of smarter image SEO with AI and better compatibility across your site! 🚀
 
 = 6.2.2 =
 
