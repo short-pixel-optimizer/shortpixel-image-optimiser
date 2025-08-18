@@ -85,7 +85,7 @@ if (! defined('ABSPATH')) {
     <setting class='textarea'>
       <content>
         <name><?php _e('General site context', 'shortpixel-image-optimiser'); ?></name>
-        <info>This is a general context that will be passed to the AI model to provide more more relevant data for your website.</info>
+        <info><?php _e('This is a general context that will be passed to the AI model to provide more more relevant data for your website.', 'shortpixel-image-optimiser'); ?></info>
         <textarea class="ai_general_context" name="ai_general_context"><?php echo $view->data->ai_general_context; ?></textarea>
       </content>
 
@@ -272,7 +272,7 @@ if (! defined('ABSPATH')) {
 
         <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-optimize-thumbnails/?target=iframe"></i>
 
-        <info>When this is enabled, the title of the image parent post/page will be send to the AI model for more accurate image SEO data results.</info>
+        <info><?php _e('When this is enabled, the title of the image parent post/page will be send to the AI model for more accurate image SEO data results.', 'shortpixel-image-optimiser'); ?></info>
       </content>
     </setting>
 

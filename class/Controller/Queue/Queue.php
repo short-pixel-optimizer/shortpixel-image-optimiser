@@ -264,13 +264,18 @@ abstract class Queue
             //checking if the $mediaItem actually exists
             if ( is_object($mediaItem) ) {
 
+              if ('pdf' === $mediaItem->getExtension() && false === $settings->optimizePdfs)
+              {
+                  continue;
+              }
+              
                 // If autoAi is on the bulk, add operation to the item
                 if ('media' === $mediaItem->get('type') && true === $settings->autoAIBulk)
                 {
 
                   $aiDataModel = new AiDataModel($mediaItem->get('id')); 
                   $enqueueAi = false; 
-                  if ($aiDataModel->isProcessable())
+                  if ($aiDataModel->isProcessable() && in_array($mediaItem->getExtension(), $aiDataModel->supportedExtensions()))
                   {
                     $enqueueAi = true; 
                   }
@@ -280,11 +285,8 @@ abstract class Queue
                    $enqueueAi = false; 
                 }
 
-                if ('pdf' === $mediaItem->getExtension() && false === $settings->optimizePdfs)
-                {
-                    continue;
-                }
-                elseif ($mediaItem->isProcessable() && $mediaItem->isOptimizePrevented() === false && ! $operation) // Checking will be done when processing queue.
+
+                if ($mediaItem->isProcessable() && $mediaItem->isOptimizePrevented() === false && ! $operation) // Checking will be done when processing queue.
                 {
 
 										if ($this->isDuplicateActive($mediaItem, $queue))
@@ -331,15 +333,11 @@ abstract class Queue
                           }
                       }
                    }
-                   elseif($mediaItem->isOptimized())
+                   elseif(true === $enqueueAi)
                    {
-                      if (true === $enqueueAi)
-                      {
                           $qItem = QueueItems::getImageItem($mediaItem);
                           $qItem->requestAltAction();
-
                           $queue[] = $qItem->returnEnqueue();
-                      }
                    }
 									 else
 									 {
