@@ -130,11 +130,7 @@ class AiController extends RequestManager
               401 - Unauthorized
               422 - Unprocessable
                 */
-            
-        /*    $message = __('Ai Failure', 'shortpixel-image-optimiser'); 
-            Log::addError('AI API RESULT: ', $APIresponse);
-            $qItem->addResult($this->returnFailure(static::STATUS_FAIL, $message));
-        }  */
+
       
         // API seems to return two different formats : 
         // 1.  requestAlt : Object in data, with ID as only return. 

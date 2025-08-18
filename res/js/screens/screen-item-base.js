@@ -127,9 +127,15 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 
 		 if (apiName == 'ai')
 		 {
-			//var elementName = 'shortpixel-ai-messagebox-' + id; 
-			var elementName = 'shortpixel-message-' + id;  // see if this works better
-			createIfMissing = true; 
+			// Edit media view 
+			var elementName = 'shortpixel-ai-messagebox-' + id; 
+			var element = document.getElementById(elementName);
+
+			if (null == element) // List-view
+			{
+				var elementName = 'shortpixel-message-' + id;  // see if this works better
+				createIfMissing = true; 
+			}
 
 		}	
 		 if (apiName == 'optimize')
