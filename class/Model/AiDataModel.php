@@ -318,6 +318,11 @@ class AiDataModel
         return true; 
     }
 
+    public function supportedExtensions()
+    {
+         return ['png', 'jpeg', 'gif', 'webp', 'jpg'];
+    }
+
     public function isSomeThingGenerated()
     {
         if (false === $this->has_record)

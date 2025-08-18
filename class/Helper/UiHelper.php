@@ -65,20 +65,23 @@ class UiHelper
         $percent = 999; // dunno what is this, but bail out
     }
 
-    if($percent == 999) return ;
-
-    if ($percent == 999 )
-      $output .= __("Reduced by X%(unknown)", 'shortpixel-image-optimiser');
-
-    if ($percent && $percent > 0)
+    if($percent == 999) 
     {
-      $output .= __('Reduced by','shortpixel-image-optimiser') . ' <strong>' . self::formatNumber($percent,2) . '%</strong> ';
+       return ;
     }
-    if (intval($percent) < 5)
+
+    $output .= '<p>';
+    if ($percent && intval($percent) >= 5)
+    {
+      $output .= __('Reduced by','shortpixel-image-optimiser') . ' <strong>' . self::formatNumber($percent,2) . '%</strong>';
+    }
+    else if (intval($percent) < 5)
       $output .= __('Bonus processing','shortpixel-image-optimiser');
 
     $type = $imageObj->getMeta('compressionType');
     $output .= ' ('. self::compressionTypeToText($type) .')';
+
+    $output .= '<!-- eofsngline --></p> ';
 
     $thumbs = $imageObj->get('thumbnails');
     $thumbsDone = $retinasDone = 0;
@@ -112,7 +115,7 @@ class UiHelper
 
     if (isset($improvements['thumbnails']))
     {
-       $excluded = ($excludedThumbs > 0) ? sprintf(__('(%s excluded)', 'shortpixel-image-optimiser'), $excludedThumbs) : '';
+       $excluded = ($excludedThumbs > 0) ? sprintf(__('%s (%s excluded)', 'shortpixel-image-optimiser'), '<br>', $excludedThumbs) : '';
 
        $output .= '<div class="thumbnails optimized">';
        if ($thumbsTotal > $thumbsDone)
@@ -434,7 +437,7 @@ class UiHelper
 				}
       } //isOptimized
 
-      if ($aiDataModel->isProcessable() && 'media' === $mediaItem->get('type'))
+      if ($aiDataModel->isProcessable() && 'media' === $mediaItem->get('type') && in_array($mediaItem->getExtension(), $aiDataModel->supportedExtensions()))
       {
          $list_actions['shortpixel-generateai'] = self::getAction('shortpixel-generateai', $id);
       }

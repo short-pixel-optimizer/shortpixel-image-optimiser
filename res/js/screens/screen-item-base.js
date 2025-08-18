@@ -36,16 +36,17 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 		var element = this.GetElement(resultItem, 'data');
 		var apiName = (typeof resultItem.apiName !== 'undefined') ? resultItem.apiName : 'optimize'; 
 
+		var isError = false;
+		if (resultItem.is_error == true)
+			isError = true;
 
 		if (typeof message !== 'undefined' && apiName !== 'ai') {
-			var isError = false;
-			if (resultItem.is_error == true)
-				isError = true;
+
 			this.UpdateMessage(resultItem, message, isError);
 		}
-		else if ('ai' == apiName && null !== element && true == resultItem.is_error)
+		else if ('ai' == apiName && null !== element)
 		{
-			this.UpdateMessage(resultItem, message, true);
+			this.UpdateMessage(resultItem, message, isError);
 		}
 
 		if (element !== null && apiName !== 'ai')  {
@@ -53,7 +54,7 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 			//  var event = new CustomEvent('shortpixel.loadItemView', {detail: {'type' : type, 'id': result.id }}); // send for new item view.
 			var fileStatus = this.processor.fStatus[resultItem.fileStatus];
 
-			if (fileStatus == 'FILE_SUCCESS' || fileStatus == 'FILE_RESTORED' || resultItem.is_done == true) {
+			if (fileStatus == 'FILE_DONE' || fileStatus == 'FILE_RESTORED' || resultItem.is_done == true) {
 				this.processor.LoadItemView({ id: item_id, type: type });
 			}
 			else if (fileStatus == 'FILE_PENDING') {
@@ -68,7 +69,7 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 			if (null !== element)
 			{
 				var fileStatus = this.processor.fStatus[resultItem.fileStatus];
-				if (fileStatus == 'FILE_SUCCESS')
+				if (fileStatus == 'FILE_DONE' || true == resultItem.is_done)
 				{
 					this.processor.LoadItemView({ id: item_id, type: type });
 
@@ -126,8 +127,11 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 
 		 if (apiName == 'ai')
 		 {
-			var elementName = 'shortpixel-ai-messagebox-' + id; 
-		 }	
+			//var elementName = 'shortpixel-ai-messagebox-' + id; 
+			var elementName = 'shortpixel-message-' + id;  // see if this works better
+			createIfMissing = true; 
+
+		}	
 		 if (apiName == 'optimize')
 		 {
 			 if ('message' == dataType)

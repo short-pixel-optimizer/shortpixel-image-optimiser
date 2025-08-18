@@ -65,7 +65,7 @@ class AiController extends RequestManager
 
       if ($qItem->data()->action == 'retrieveAlt')
       {
-        $requestBody['Id'] = $qItem->data()->remote_id;
+        $requestBody['id'] = $qItem->data()->remote_id;
       }
 
       

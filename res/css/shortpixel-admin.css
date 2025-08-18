@@ -371,7 +371,7 @@
   display: block;
 }
 .sp-column-info .sp-column-actions {
-  margin: 10px;
+  margin: 4px;
   position: relative;
 }
 .sp-column-info .thumbs-todo {
@@ -401,6 +401,9 @@
 }
 .sp-column-info .shortpixel-image-notice {
   border: 1px solid #000;
+}
+.sp-column-info .statusText i {
+  margin-left: 4px;
 }
 
 .column-wp-shortPixel .message {
