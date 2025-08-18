@@ -42,8 +42,6 @@ class AiController extends RequestManager
       //$request = $this->getRequest($requestArgs);
       $requestBody = [
         'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
-       // 'key' => $keyControl->forceGetApiKey(),
-
         'item_id' => $qItem->item_id,
         'source' => 1, // SPIO
       ];
@@ -106,11 +104,11 @@ class AiController extends RequestManager
 
        
         // List all the random crap that might return. 
-        $id = isset($apiData['Id']) ? intval($apiData['Id']) : false; 
+        $id = isset($apiData['id']) ? intval($apiData['id']) : false; 
         $jwt = isset($apiData['jwt']) ? sanitize_text_field($apiData['jwt']) : false; 
-        $status = isset($apiData['Status']) ? intval($apiData['Status']) : false;
+        $status = isset($apiData['status']) ? intval($apiData['status']) : false;
         
-        $error = isset($apiData['Error']) ? sanitize_text_field($apiData['Error']) : false; 
+        $error = isset($apiData['error']) ? sanitize_text_field($apiData['error']) : false; 
         $is_error = (false !== $error) ? true : false; 
 
         if (false !== $jwt)
@@ -142,8 +140,6 @@ class AiController extends RequestManager
         // 1.  requestAlt : Object in data, with ID as only return. 
         // 2.  retrieveAlt: Array with first item ( zero index ) 
         
-      //  $apiData = (is_array($APIresponse) && isset($APIresponse['data'])) ? $APIresponse['data'] : false; 
-
         if (false === $apiData)
         {
             return $this->returnRetry(RequestManager::STATUS_CONNECTION_ERROR, __('AI Api returned without any data. ', 'shortpixel-image-optimiser')) ;
@@ -157,9 +153,6 @@ class AiController extends RequestManager
             }
             
 
-//            $status = property_exists($apiData, 'Status') ? intval($apiData->Status) : 1; 
-
-//            $error_msg = (property_exists($apiData, 'Error')) ? $apiData->Error : false; 
             
             if (false !== $id)
             {
@@ -185,24 +178,6 @@ class AiController extends RequestManager
 
         if ($qItem->data()->action == 'retrieveAlt')
         {
-            //if (is_array($apiData))
-            //{
-           //   $result = $apiData[0]; 
-              
-              // @todo This should be checked with new API, what the result can be. 
-//              $aiData = property_exists($result, 'Result') ? sanitize_text_field($result->Result) : null;
-             // $status = property_exists($result, 'Status') ? intval($result->Status) : -1; 
-             // $error = (property_exists($result, 'Error')) ? sanitize_text_field($result->Error) : false;
-             
-
-              // @todo According to docs : 
-             /* $aiData = [
-                  'filename' => property_exists($result, 'file_name') ? $result->file_name : false, 
-                  'alt' => property_exists($result, 'alt') ? $result->alt : false, 
-                  'caption' => property_exists($result, 'caption') ? $result->caption : false, 
-                  'relevance' => property_exists($result, 'relevance') ? $result->relevance : false, 
-              ]; */
-
               $aiData = array_filter([
                  'filename' => isset($apiData['file_name']) ? sanitize_text_field($apiData['file_name']) : null,
                  'alt' => isset($apiData['alt']) ? sanitize_text_field($apiData['alt']) : null, 

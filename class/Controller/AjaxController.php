@@ -842,7 +842,7 @@ class AjaxController
 
 		$bulkControl = BulkController::getInstance();
 
-		if (! $doMedia) {
+		if (! $doMedia && ! $doAi) {
 			$bulkControl->finishBulk('media');
 		}
 		if (! $doCustom) {

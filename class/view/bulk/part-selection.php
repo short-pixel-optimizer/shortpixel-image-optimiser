@@ -102,6 +102,23 @@ $approx = $this->view->approx;
 					</div>
 				<?php endif; ?>
 
+				<?php if (true === \wpSPIO()->settings()->enable_ai):  ?>
+			 <div class='ai-images optiongroup'>
+				<div class='switch_button'>
+				<label>
+		               <input type="checkbox" class="switch" id="autoai_checkbox" name="autoai_checkbox"
+		                <?php checked(\wpSPIO()->settings()->autoAIBulk); ?>  />
+		               <div class="the_switch">&nbsp; </div>
+	             </label>
+				 <h4><label for="autoai_checkbox">
+					 <?php printf(esc_html__('Use AI in the bulk to create image data for media library, according to settings ' ,'shortpixel-image-optimiser') ); ?>
+				 </label></h4>
+
+				</div>	
+
+			 </div>
+			<?php endif ?>
+			
 	         <div class="custom-images optiongroup"  data-check-visibility data-control="data-check-custom-hascustom" >
 	           <div class='switch_button'>
 	             <label>
@@ -116,22 +133,7 @@ $approx = $this->view->approx;
 	            </div>
 	         </div>
 
-			<?php if (true === \wpSPIO()->settings()->enable_ai):  ?>
-			 <div class='ai-images optiongroup'>
-				<div class='switch_button'>
-				<label>
-		               <input type="checkbox" class="switch" id="autoai_checkbox" name="autoai_checkbox"
-		                <?php checked(\wpSPIO()->settings()->autoAIBulk); ?>  />
-		               <div class="the_switch">&nbsp; </div>
-	             </label>
-				 <h4><label for="autoai_checkbox">
-					 <?php printf(esc_html__('Use AI in the bulk to create image data according to settings' ,'shortpixel-image-optimiser') ); ?>
-				 </label></h4>
 
-				</div>	
-
-			 </div>
-			<?php endif ?>
 				</div> <!-- // optimize block -->
 
 				 <div class="option-block selection-settings">
