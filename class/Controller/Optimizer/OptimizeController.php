@@ -250,7 +250,7 @@ class OptimizeController extends OptimizerBase
 
           }
 
-          $showItem = UiHelper::findBestPreview($imageModel); // find smaller / better preview
+          /*$showItem = UiHelper::findBestPreview($imageModel); // find smaller / better preview
           $original = $optimized = false;
 
           if ($showItem->getExtension() == 'pdf') // non-showable formats here
@@ -270,7 +270,8 @@ class OptimizeController extends OptimizerBase
           $qItem->addResult([
             'original' => $original,
             'optimized' => $optimized,
-          ]);
+          ]);*/
+          $this->addPreview($qItem);
 
           // Dump Stats, Dump Quota. Refresh
           $statsController->reset();

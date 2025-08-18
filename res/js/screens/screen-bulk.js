@@ -397,13 +397,14 @@ class ShortPixelScreen extends ShortPixelScreenBase
             }
           }
           if ('ai' === apiName)
-          {
-             console.log(resultItem);
-             
+          {            
              if (aiPreviewElement.classList.contains('hidden'))
              {
                 aiPreviewElement.classList.remove('hidden'); 
              }
+
+             this.HandleImageEffect(resultItem.original, resultItem.optimized);
+
 
              let ul = aiPreviewElement.querySelector('ul'); 
              ul.innerHTML = ''; 

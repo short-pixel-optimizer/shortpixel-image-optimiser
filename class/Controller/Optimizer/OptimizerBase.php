@@ -8,6 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ShortPixel\Model\Queue\QueueItem as QueueItem;
 use Shortpixel\Controller\Api\RequestManager as RequestManager;
 use ShortPixel\Controller\QueueController;
+use ShortPixel\Helper\UiHelper;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use stdClass;
@@ -190,6 +191,36 @@ abstract class OptimizerBase
 
         return $result; 
 
+    }
+
+    protected function addPreview(QueueItem $qItem)
+    {
+      $imageModel = $qItem->imageModel; 
+      $showItem = UiHelper::findBestPreview($imageModel); // find smaller / better preview
+      $fs = \wpSPIO()->filesystem();
+
+      $original = $optimized = false;
+
+      if ($showItem->getExtension() == 'pdf') // non-showable formats here
+      {
+        //								 $item->result->original = false;
+//								 $item->result->optimized = false;
+      } elseif ($showItem->hasBackup()) {
+        $backupFile = $showItem->getBackupFile(); // attach backup for compare in bulk
+        $backup_url = $fs->pathToUrl($backupFile);
+        $original = $backup_url;
+        $optimized = $fs->pathToUrl($showItem);
+      } else {
+        $original = false;
+        $optimized = $fs->pathToUrl($showItem);
+      }
+
+      $qItem->addResult([
+        'original' => $original,
+        'optimized' => $optimized,
+      ]);
+
+      return $qItem;
     }
 
 }

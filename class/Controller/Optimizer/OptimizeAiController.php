@@ -289,6 +289,7 @@ class OptimizeAiController extends OptimizerBase
             $this->replaceFiles($qItem, $qItem->result()->filename);
         }
         */
+        $this->addPreview($qItem);
 
         $this->finishItemProcess($qItem);
         return;
