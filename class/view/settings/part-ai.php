@@ -27,7 +27,7 @@ if (! defined('ABSPATH')) {
         );
         ?>
 
-        <i class='documentation dashicons dashicons-editor-help' data-link="-todo-"></i>
+        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe"></i>
         <name>
 
           <?php esc_html_e('Show AI image SEO options throughout ShortPixel Image Optimizer.', 'shortpixel-image-optimiser'); ?>
@@ -48,7 +48,7 @@ if (! defined('ABSPATH')) {
         );
         ?>
 
-        <i class='documentation dashicons dashicons-editor-help' data-link="-todo-"></i>
+        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe"></i>
         <name>
 
           <?php esc_html_e('Automatically generate image SEO data with AI after uploading the image, based on the settings below.', 'shortpixel-image-optimiser'); ?>
@@ -69,7 +69,7 @@ if (! defined('ABSPATH')) {
         );
         ?>
 
-        <i class='documentation dashicons dashicons-editor-help' data-link="-todo-"></i>
+        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe"></i>
         <name>
 
           <?php esc_html_e('Automatically generate image SEO data using AI for all the images queued during the Bulk Processing. The settings below will be taken into account when running the bulk.', 'shortpixel-image-optimiser'); ?>
@@ -110,7 +110,7 @@ if (! defined('ABSPATH')) {
           );
           ?>
 
-          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-optimize-thumbnails/?target=iframe"></i>
+          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe"></i>
 
         </content>
 
@@ -142,7 +142,7 @@ if (! defined('ABSPATH')) {
           );
           ?>
 
-          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-optimize-thumbnails/?target=iframe"></i>
+          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe"></i>
 
         </content>
 
@@ -175,7 +175,7 @@ if (! defined('ABSPATH')) {
           );
           ?>
 
-          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-optimize-thumbnails/?target=iframe"></i>
+          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe"></i>
 
         </content>
 
@@ -203,28 +203,26 @@ if (! defined('ABSPATH')) {
               'checked' => $view->data->ai_gen_filename,
               'label' => esc_html__('Update image filename with an SEO-friendly one', 'shortpixel-image-optimiser'),
               'data' => ['data-toggle="ai_gen_filename"'],
-              'disabled' => true,
-
+              'disabled' => true
             ]
           );
           ?>
-        <info><?php _e('This is a feature we are currently evaluating. If you would like to see it implemented in a future version of our plugin, please vote for it here.','shortpixel-image-optimiser'); ?></info>
         </content>
 
-        <content class='nextline toggleTarget ai_gen_filename is-advanced'>
+        <content class='nextline ai_gen_filename is-advanced'>
           <?php
           $input  = '<input type="number" name="ai_limit_filename_chars" value="' . $view->data->ai_limit_filename_chars . '">';
           ?>
           <name><?php printf(__('Limit filename to %s characters ', 'shortpixel-image-optimiser'), $input); ?></name>
         </content>
 
-        <content class='nextline toggleTarget ai_gen_filename is-advanced'>
+        <content class='nextline ai_gen_filename is-advanced'>
           <name><?php _e('Additional context for filename generation: ', 'shortpixel-image-optimiser'); ?></name>
           <textarea name="ai_filename_context"><?php echo $view->data->ai_filename_context ?></textarea>
 
         </content>
 
-        <content class='nextline toggleTarget ai_gen_filename'>
+        <content class='nextline ai_gen_filename is-advanced'>
           <?php $this->printSwitchButton(
             [
               'name' => 'ai_filename_prefercurrent',
@@ -233,6 +231,10 @@ if (! defined('ABSPATH')) {
             ]
           );
           ?>
+        </content>
+
+        <content class='nextline'>
+            <name><?php printf(esc_html__('This is a feature we are currently evaluating. If you would like to see it implemented in a future version of our plugin, please %svote for it here%s.','shortpixel-image-optimiser'), '<a target="_blank" href="https://ideas.shortpixel.com/update-image-filename-with-an-seo-friendly-one~4cMEvKmvFbosoYTI9T4UgK?from=board">', '</a>' ); ?></name>
         </content>
 
 
@@ -270,9 +272,9 @@ if (! defined('ABSPATH')) {
         );
         ?>
 
-        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-optimize-thumbnails/?target=iframe"></i>
+        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe"></i>
 
-        <info><?php _e('When this is enabled, the title of the image parent post/page will be send to the AI model for more accurate image SEO data results.', 'shortpixel-image-optimiser'); ?></info>
+        <info><?php _e('When this is enabled, the title of the image\'s parent post or page will be sent to the AI model for more accurate image SEO results.', 'shortpixel-image-optimiser'); ?></info>
       </content>
     </setting>
 
@@ -301,7 +303,7 @@ if (! defined('ABSPATH')) {
       <gridbox class='width_half'>
         <span><img src="" class='image_preview'></span>
         <span><h2><i class='shortpixel-icon ai'></i><?php _e('AI Image SEO Preview','shortpixel-image-optimiser'); ?></h2>
-          <p><?php _e('Preview only', 'shortpixel-image-optimiser'); ?><i class='shortpixel-icon ai'></i><?php _e('- the current image data will not be touched!', 'shortpixel-image-optimiser'); ?></p>
+          <p><?php _e('Preview only: the current image data will not be touched!', 'shortpixel-image-optimiser'); ?></p>
           <p>
             <button type='button' name='open_change_photo'>
               <i class='shortpixel-icon optimization'></i><?php _e('Select test image', 'shortpixel-image-optimiser'); ?></button>
