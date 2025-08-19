@@ -473,6 +473,8 @@ class OptimizeAiController extends OptimizerBase
   {
 
     $replacer2 = \ShortPixel\Replacer\Replacer::getInstance();
+    $aiData = $args['aiData'];
+    $qItem = $args['qItem'];
 
         foreach($results as $result)
         {
@@ -488,13 +490,13 @@ class OptimizeAiController extends OptimizerBase
                 $sources[] = $match; 
             // @todo The result of the post, should parse the content somehow via regex, then load.
              $frontImage = new \ShortPixel\Model\FrontImage($match); 
-             if (isset($args['alt']))
+             if (isset($aiData['alt']))
              {
-                $frontImage->alt = $args['alt']; 
+                $frontImage->alt = $aiData['alt']; 
              }
-             if (isset($args['caption']))
+             if (isset($aiData['caption']))
              {
-                $frontImage->caption = $args['caption'];
+                $frontImage->caption = $aiData['caption'];
              }
 
              $replaces[] = $frontImage->buildImage();
@@ -502,7 +504,7 @@ class OptimizeAiController extends OptimizerBase
 
             }
 
-            $content = $replacer2->replaceContent($match, $sources, $replaces);
+            $content = $replacer2->replaceContent($content, $sources, $replaces);
            
             $replacer2->Updater()->updatePost($post_id, $content); 
         }
