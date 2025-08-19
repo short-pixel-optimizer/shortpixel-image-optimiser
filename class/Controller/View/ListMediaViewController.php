@@ -74,16 +74,10 @@ class ListMediaViewController extends \ShortPixel\ViewController
        $this->view = new \stdClass; // reset every row
        $this->view->id = $id;
        $this->loadItem($id);
-
-       if (true === \wpSPIO()->settings()->enable_ai)
-       {
-          $this->loadAiItem($id);
-//          $this->loadView('view-list-ai-media', false);
-       }
-       
+       $this->loadView(null, false);
+      
      }
 
-     $this->loadView(null, false);
 
 
   }
@@ -104,9 +98,18 @@ class ListMediaViewController extends \ShortPixel\ViewController
      $actions = array();
      $list_actions = array();
 
+     if (true === \wpSPIO()->settings()->enable_ai)
+     {
+        $aiDataModel = $this->loadAiItem($id);
+     }
+     else
+     {
+        $aiDataModel = null; 
+     }
+
     $this->view->text = UiHelper::getStatusText($mediaItem);
 
-		$list_actions = UiHelper::getListActions($mediaItem);
+		$list_actions = UiHelper::getListActions($mediaItem, $aiDataModel);
     $this->view->list_actions = $list_actions;
 
     if ( count($this->view->list_actions) > 0)
@@ -191,6 +194,8 @@ class ListMediaViewController extends \ShortPixel\ViewController
        $this->view->ai_title = __('No AI Data generated for this image', 'shortpixel-image-optimiser'); 
 
      }
+
+     return $AiDataModel;
 
 
   }

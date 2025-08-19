@@ -306,7 +306,7 @@ class UiHelper
       return $text;
   }
 
-  public static function getListActions($mediaItem)
+  public static function getListActions($mediaItem, $aiDataModel = null)
   {
       $list_actions = array();
       $id = $mediaItem->get('id');
@@ -322,15 +322,15 @@ class UiHelper
 			$access = AccessModel::getInstance();
 			if (! $access->imageIsEditable($mediaItem))
 			{
-				 return array();
+				 return [];
 			}
 
-      $aiDataModel = new AiDataModel($id);
-
-			if ($id === 0)
+      if ($id === 0)
       {
 				return [];
       }
+
+      //$aiDataModel = new AiDataModel($id);
 
       if ($mediaItem->isSomethingOptimized() )
       {
@@ -437,7 +437,8 @@ class UiHelper
 				}
       } //isOptimized
 
-      if ($aiDataModel->isProcessable() && 'media' === $mediaItem->get('type') && in_array($mediaItem->getExtension(), $aiDataModel->supportedExtensions()))
+
+      if (false === is_null($aiDataModel) && $aiDataModel->isProcessable() && 'media' === $mediaItem->get('type') && in_array($mediaItem->getExtension(), $aiDataModel->supportedExtensions()))
       {
          $list_actions['shortpixel-generateai'] = self::getAction('shortpixel-generateai', $id);
       }

@@ -534,7 +534,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		}
 
 		wp.data.subscribe(() => {
-			const { getMedia } = wp.data.select('core');
+			//const { getMedia } = wp.data.select('core');
 			const { getSelectedBlock } = wp.data.select('core/block-editor');
 		
 			const block = getSelectedBlock();

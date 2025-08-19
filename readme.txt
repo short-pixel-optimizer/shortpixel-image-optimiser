@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 4.8.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 6.3.0
+Stable tag: 6.3.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -474,6 +474,20 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 
 == Changelog ==
 
+= 6.3.1 =
+
+🔥 The Quick Fix Update
+
+Release Date: August 19, 2025
+
+🛠️ Fixes & Improvements
+
+* Draft Content Preservation: AI Image SEO data generation now respects and preserves content from draft posts.
+* Cleaner Media Library Display: ShortPixel info is now shown only in the designated column, so no more unexpected placements.
+* Classic Editor Compatibility: Resolved JavaScript errors appearing in the post editor when using the Classic Editor.
+
+A focused hotfix to ensure a smoother experience after the latest major release. Update now! 🚀
+
 = 6.3.0 =
 
 ✨ The AI Image SEO Update
@@ -482,7 +496,7 @@ Release Date: August 18, 2025
 
 🌟 New Features
 
-* Faster AI Model: We've upgraded to a better, faster AI model for generating image SEO data more accurate and efficient.
+* Faster AI Model: We've upgraded to a better, faster AI model for generating image SEO data more accurately and efficiently.
 * Expanded SEO Tags: In addition to ALT tags, you can now automatically generate image captions and descriptions to enhance SEO and accessibility.
 * Auto-Generate on Upload: Image SEO data can now be generated automatically for newly uploaded images.
 * Bulk SEO Generation: Easily generate image SEO data in bulk, perfect for optimizing existing media libraries.
