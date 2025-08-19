@@ -74,10 +74,10 @@ class ListMediaViewController extends \ShortPixel\ViewController
        $this->view = new \stdClass; // reset every row
        $this->view->id = $id;
        $this->loadItem($id);
+       $this->loadView(null, false);
       
      }
 
-     $this->loadView(null, false);
 
 
   }
