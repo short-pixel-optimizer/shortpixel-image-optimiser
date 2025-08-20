@@ -237,6 +237,10 @@
   background-image: url("../images/icon/processing.svg");
 }
 
+.shortpixel-icon.no-ai {
+  background-image: url("../images/icon/no-ai.svg");
+}
+
 .shortpixel-icon.notifications {
   background-image: url("../images/icon/notifications.svg");
 }

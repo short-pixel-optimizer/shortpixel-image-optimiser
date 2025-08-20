@@ -560,6 +560,9 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page .shortpixel-icon.processing {
   background-image: url("../images/icon/processing.svg");
 }
+.wrap.is-shortpixel-settings-page .shortpixel-icon.no-ai {
+  background-image: url("../images/icon/no-ai.svg");
+}
 .wrap.is-shortpixel-settings-page .shortpixel-icon.notifications {
   background-image: url("../images/icon/notifications.svg");
 }
