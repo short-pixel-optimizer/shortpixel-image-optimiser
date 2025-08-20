@@ -104,24 +104,37 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		}
 		// edit media screen
 		 // = document.getElementById('attachment_alt'); 
+		 let captionFields = ['attachment_caption', 'attachment-details-caption']; 
+		 let descriptionFields = ['attachment_content', 'attachment-details-description']; 
 
+
+		 
 		 if (typeof newCaption !== 'undefined')
 		 {
-			let captionField = document.getElementById('attachment_caption'); 
-			if (null !== captionField)
+			for (var i = 0; i < captionFields.length; i++)
 			{
-				captionField.value = newCaption; 
+				let captionField = document.getElementById(captionFields[i]); 
+				if (null !== captionField)
+				{
+					captionField.value = newCaption; 
+				}				 
 			}
+
 				
 		 }
 
 		 if (typeof newDescription !== 'undefined')
 		 {
-			let descriptionField = document.getElementById('attachment_content');
-			if (null !== descriptionField)
+			for (var i = 0; i < descriptionFields.length; i++)
 			{
-				 descriptionField.value = newDescription; 
+				let descriptionField = document.getElementById(descriptionFields[i]);
+				if (null !== descriptionField)
+				{
+					 descriptionField.value = newDescription; 
+				}
 			}
+
+
 		 }
 
 
@@ -534,30 +547,32 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		}
 
 		wp.data.subscribe(() => {
-			//const { getMedia } = wp.data.select('core');
-			const { getSelectedBlock } = wp.data.select('core/block-editor');
+			if (wp.data.select('core')) {
+				//const { getMedia } = wp.data.select('core');
+				const { getSelectedBlock } = wp.data.select('core/block-editor');
 		
-			const block = getSelectedBlock();
+				const block = getSelectedBlock();
 			
-			if (block && block.name === 'core/image') {
-				const imageId = block.attributes.id; // Get the image ID
-				//const imageUrl = block.attributes.url; // Get the image URL
+				if (block && block.name === 'core/image') {
+					const imageId = block.attributes.id; // Get the image ID
+					//const imageUrl = block.attributes.url; // Get the image URL
 		
-				if (imageId) {
+					if (imageId) {
 		
-					if (self.gutenCheck.indexOf(imageId) === -1)
-					{
+						if (self.gutenCheck.indexOf(imageId) === -1)
+						{
 						
-						window.ShortPixelProcessor.SetInterval(-1);
-						window.ShortPixelProcessor.RunProcess();
+							window.ShortPixelProcessor.SetInterval(-1);
+							window.ShortPixelProcessor.RunProcess();
 						
-						self.gutenCheck.push(imageId);
+							self.gutenCheck.push(imageId);
+						}
+						else
+						{
+						
+						}
+		
 					}
-					else
-					{
-						
-					}
-		
 				}
 			}
 		});

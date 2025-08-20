@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 4.8.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 6.3.1
+Stable tag: 6.3.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -473,6 +473,20 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 14. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 6.3.2 =
+
+🧠 The AI SEO Compatibility Update
+
+Release Date: August 20, 2025
+
+🛠️ Fixes & Improvements
+
+* Yoast SEO + Classic Editor Fix: Resolved a JavaScript error that occurred when using Yoast SEO alongside the Classic Editor.
+* Improved AI Data Layout: The display of AI-generated image SEO data in the Media Library has been refined for better clarity and usability.
+* Accurate Undo Function: Undoing AI-generated data from the Media Library popup now correctly reverts all related fields.
+
+Update now for a smoother, more reliable SEO and editing experience! 🚀
 
 = 6.3.1 =
 
