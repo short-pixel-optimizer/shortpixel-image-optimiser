@@ -104,24 +104,37 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		}
 		// edit media screen
 		 // = document.getElementById('attachment_alt'); 
+		 let captionFields = ['attachment_caption', 'attachment-details-caption']; 
+		 let descriptionFields = ['attachment_content', 'attachment-details-description']; 
 
+
+		 
 		 if (typeof newCaption !== 'undefined')
 		 {
-			let captionField = document.getElementById('attachment_caption'); 
-			if (null !== captionField)
+			for (var i = 0; i < captionFields.length; i++)
 			{
-				captionField.value = newCaption; 
+				let captionField = document.getElementById(captionFields[i]); 
+				if (null !== captionField)
+				{
+					captionField.value = newCaption; 
+				}				 
 			}
+
 				
 		 }
 
 		 if (typeof newDescription !== 'undefined')
 		 {
-			let descriptionField = document.getElementById('attachment_content');
-			if (null !== descriptionField)
+			for (var i = 0; i < descriptionFields.length; i++)
 			{
-				 descriptionField.value = newDescription; 
+				let descriptionField = document.getElementById(descriptionFields[i]);
+				if (null !== descriptionField)
+				{
+					 descriptionField.value = newDescription; 
+				}
 			}
+
+
 		 }
 
 
