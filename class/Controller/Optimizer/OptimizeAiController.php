@@ -281,6 +281,8 @@ class OptimizeAiController extends OptimizerBase
           'fileStatus' => ImageModel::FILE_STATUS_SUCCESS
         ]);
 
+        $aiData['replace_filebase'] = $aiData['original_filebase'];
+
         $this->replaceImageAttributes($qItem, $aiData); 
 
        /* Feature off for now - This DOES NOT YET work 
@@ -487,9 +489,19 @@ class OptimizeAiController extends OptimizerBase
 
             foreach($matches as $match)
             {
-                $sources[] = $match; 
+
             // @todo The result of the post, should parse the content somehow via regex, then load.
              $frontImage = new \ShortPixel\Model\FrontImage($match); 
+
+             $src = $frontImage->src; 
+             // Only replace in post content the image we did
+             if (strpos($src, $aiData['replace_filebase']) === false)
+             {
+                continue; 
+             }
+
+             $sources[] = $match; 
+
              if (isset($aiData['alt']))
              {
                 $frontImage->alt = $aiData['alt']; 
@@ -864,11 +876,13 @@ class OptimizeAiController extends OptimizerBase
        $item_id = $qItem->item_id;
        $aiModel = new AiDataModel($item_id, 'media');
        $original = $aiModel->getOriginalData();
+       $generated = $aiModel->getGeneratedData();
 
        $aiData = [
             'alt' => $original['alt'], 
             'caption' => $original['caption'], 
             'description' => $original['description'],
+            'replace_filebase' => $generated['filebase'],
        ];
     
        $aiModel->revert();
