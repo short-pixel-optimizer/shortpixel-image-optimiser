@@ -531,8 +531,9 @@ class OptimizeAiController extends OptimizerBase
             $replacer2->Updater()->updatePost($post_id, $content); 
         }
 
-
   }
+
+
 
   // @todo Direct copy from CDNController. In future might be merged somewhere. 
   protected function fetchImageMatches($content, $args = [])
