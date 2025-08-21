@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 4.8.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 6.3.2
+Stable tag: 6.3.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -473,6 +473,21 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 14. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 6.3.3 =
+
+🧠 The Smarter ALT Tags Update
+
+Release Date: August 21, 2025
+
+🛠️ Fixes & Improvements
+
+* Reliable ALT Tag Replacement: The replacer module now ensures AI-generated ALT tags are updated correctly in all scenarios.
+* Cache Purge for Visibility: Automatically clears the cache after ALT tag replacement, ensuring changes show up even when object caching is enabled.
+* AI Settings Limits: Added max values for AI context and output fields to prevent excessive input and ensure consistent results.
+* UI & Wording Tweaks: Minor text and layout improvements on the settings and bulk processing pages for a cleaner experience.
+
+Update now for smoother AI integration and more accurate image SEO handling! 🚀
 
 = 6.3.2 =
 
