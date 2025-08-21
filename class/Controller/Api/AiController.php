@@ -235,7 +235,7 @@ class AiController extends RequestManager
     protected function handleSuccess($aiData, QueueItem $qItem)
     {
        
-      return $this->returnSuccess(['aiData' => $aiData], RequestManager::STATUS_SUCCESS, __('Retrieved AI Alt Text', 'shortpixel-image-optimiser')); ; 
+      return $this->returnSuccess(['aiData' => $aiData], RequestManager::STATUS_SUCCESS, __('Retrieved AI image SEO data', 'shortpixel-image-optimiser')); ;
     }
 
     protected function doRequest(QueueItem $item, $requestParameters)

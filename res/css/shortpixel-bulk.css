@@ -162,6 +162,9 @@
 .wrap.is-shortpixel-bulk-page .shortpixel-icon.processing {
   background-image: url("../images/icon/processing.svg");
 }
+.wrap.is-shortpixel-bulk-page .shortpixel-icon.no-ai {
+  background-image: url("../images/icon/no-ai.svg");
+}
 .wrap.is-shortpixel-bulk-page .shortpixel-icon.notifications {
   background-image: url("../images/icon/notifications.svg");
 }
