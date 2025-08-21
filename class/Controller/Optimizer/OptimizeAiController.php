@@ -461,7 +461,6 @@ class OptimizeAiController extends OptimizerBase
   }
 
 
-
   // @todo This might be returned in multiple formats / post data / postmeta data?  Public because of callback
   /** This is the callback for Finder results for replacing attributes on the Images  
    * 
@@ -478,6 +477,8 @@ class OptimizeAiController extends OptimizerBase
     $aiData = $args['aiData'];
     $qItem = $args['qItem'];
 
+    $imageModel = $qItem->imageModel;
+
         foreach($results as $result)
         {
             $post_id = $result['post_id']; 
@@ -487,6 +488,8 @@ class OptimizeAiController extends OptimizerBase
             $sources = []; 
             $replaces = []; 
 
+            $image_filebase = ($imageModel->isScaled()) ? $imageModel->getOriginalFile()->getFileBase() : $imageModel->getFileBase(); 
+
             foreach($matches as $match)
             {
 
@@ -495,10 +498,17 @@ class OptimizeAiController extends OptimizerBase
 
              $src = $frontImage->src; 
              // Only replace in post content the image we did
-             if (strpos($src, $aiData['replace_filebase']) === false)
+
+             $pattern = '/' . preg_quote($image_filebase, '/') . '(-\d+x\d+\.|\.)' . $imageModel->getExtension() . '/i';
+             if (preg_match($pattern, $src ) !== 1)
+             {
+                continue;
+             }
+             
+          /*   if (strpos($src, $aiData['replace_filebase']) === false)
              {
                 continue; 
-             }
+             } */
 
              $sources[] = $match; 
 
