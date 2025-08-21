@@ -499,7 +499,7 @@ class OptimizeAiController extends OptimizerBase
              $src = $frontImage->src; 
              // Only replace in post content the image we did
 
-             $pattern = '/' . preg_quote($image_filebase, '/') . '(-\d+x\d+\.|\.)' . $imageModel->getExtension() . '/i';
+             $pattern = '/' . preg_quote($image_filebase, '/') . '(-\d+x\d+\.|\.|-scaled\.)' . $imageModel->getExtension() . '/i';
              if (preg_match($pattern, $src ) !== 1)
              {
                 continue;
