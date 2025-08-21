@@ -864,9 +864,7 @@ class SettingsViewController extends \ShortPixel\ViewController
               }
           }
 
-          
-
-
+        
 				// Field that are in form for other purpososes, but are not part of model and should not be saved.
 					$ignore_fields = array(
 							'display_part',

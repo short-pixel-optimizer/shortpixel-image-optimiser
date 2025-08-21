@@ -115,7 +115,7 @@ if (! defined('ABSPATH')) {
 
         <content class='toggleTarget ai_gen_alt is-advanced'>
           <?php
-          $input = "<input type='number' name='ai_limit_alt_chars' value='" . $view->data->ai_limit_alt_chars . "'>";
+          $input = "<input type='number' name='ai_limit_alt_chars' value='" . $view->data->ai_limit_alt_chars . "' max='200' min='0'>";
           ?>
           <name><?php printf(__('Limit generated ALT Tag to %s characters', 'shortpixel-image-optimiser'), $input); ?></name>
         </content>
@@ -144,7 +144,7 @@ if (! defined('ABSPATH')) {
 
         <content class='toggleTarget ai_gen_description is-advanced'>
           <?php
-          $input = "<input type='number' name='ai_limit_description_chars' value='" . $view->data->ai_limit_description_chars . "'>";
+          $input = "<input type='number' name='ai_limit_description_chars' value='" . $view->data->ai_limit_description_chars . "' max='500' min='0'>";
           ?>
           <name><?php printf(__('Limit generated image description to %s characters', 'shortpixel-image-optimiser'), $input); ?></name>
         </content>
@@ -175,7 +175,7 @@ if (! defined('ABSPATH')) {
 
         <content class='toggleTarget ai_gen_caption is-advanced'>
           <?php
-          $input = '<input type="number" name="ai_limit_caption_chars" value="' . $view->data->ai_limit_caption_chars . '">';
+          $input = '<input type="number" name="ai_limit_caption_chars" value="' . $view->data->ai_limit_caption_chars . '" max="250" min="0" >';
           ?>
           <name><?php printf(__('Limit generated image caption to %s characters', 'shortpixel-image-optimiser'), $input); ?></name>
         </content>
@@ -205,7 +205,7 @@ if (! defined('ABSPATH')) {
 
         <content class='nextline ai_gen_filename is-advanced'>
           <?php
-          $input  = '<input type="number" name="ai_limit_filename_chars" value="' . $view->data->ai_limit_filename_chars . '">';
+          $input  = '<input type="number" name="ai_limit_filename_chars" value="' . $view->data->ai_limit_filename_chars . '" max="200" min="0">';
           ?>
           <name><?php printf(__('Limit filename to %s characters ', 'shortpixel-image-optimiser'), $input); ?></name>
         </content>
@@ -221,7 +221,8 @@ if (! defined('ABSPATH')) {
             [
               'name' => 'ai_filename_prefercurrent',
               'checked' => $view->data->ai_filename_prefercurrent,
-              'label' => esc_html__('Prefer keeping current filename if relevant', 'shortpixel-image-optimiser')
+              'label' => esc_html__('Prefer keeping current filename if relevant', 'shortpixel-image-optimiser'),
+              'disabled' => true
             ]
           );
           ?>

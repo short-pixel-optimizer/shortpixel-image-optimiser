@@ -281,6 +281,8 @@ class OptimizeAiController extends OptimizerBase
           'fileStatus' => ImageModel::FILE_STATUS_SUCCESS
         ]);
 
+        $aiData['replace_filebase'] = $aiData['original_filebase'];
+
         $this->replaceImageAttributes($qItem, $aiData); 
 
        /* Feature off for now - This DOES NOT YET work 
@@ -459,7 +461,6 @@ class OptimizeAiController extends OptimizerBase
   }
 
 
-
   // @todo This might be returned in multiple formats / post data / postmeta data?  Public because of callback
   /** This is the callback for Finder results for replacing attributes on the Images  
    * 
@@ -476,6 +477,8 @@ class OptimizeAiController extends OptimizerBase
     $aiData = $args['aiData'];
     $qItem = $args['qItem'];
 
+    $imageModel = $qItem->imageModel;
+
         foreach($results as $result)
         {
             $post_id = $result['post_id']; 
@@ -485,11 +488,30 @@ class OptimizeAiController extends OptimizerBase
             $sources = []; 
             $replaces = []; 
 
+            $image_filebase = ($imageModel->isScaled()) ? $imageModel->getOriginalFile()->getFileBase() : $imageModel->getFileBase(); 
+
             foreach($matches as $match)
             {
-                $sources[] = $match; 
+
             // @todo The result of the post, should parse the content somehow via regex, then load.
              $frontImage = new \ShortPixel\Model\FrontImage($match); 
+
+             $src = $frontImage->src; 
+             // Only replace in post content the image we did
+
+             $pattern = '/' . preg_quote($image_filebase, '/') . '(-\d+x\d+\.|\.|-scaled\.)' . $imageModel->getExtension() . '/i';
+             if (preg_match($pattern, $src ) !== 1)
+             {
+                continue;
+             }
+             
+          /*   if (strpos($src, $aiData['replace_filebase']) === false)
+             {
+                continue; 
+             } */
+
+             $sources[] = $match; 
+
              if (isset($aiData['alt']))
              {
                 $frontImage->alt = $aiData['alt']; 
@@ -509,8 +531,9 @@ class OptimizeAiController extends OptimizerBase
             $replacer2->Updater()->updatePost($post_id, $content); 
         }
 
-
   }
+
+
 
   // @todo Direct copy from CDNController. In future might be merged somewhere. 
   protected function fetchImageMatches($content, $args = [])
@@ -864,11 +887,13 @@ class OptimizeAiController extends OptimizerBase
        $item_id = $qItem->item_id;
        $aiModel = new AiDataModel($item_id, 'media');
        $original = $aiModel->getOriginalData();
+       $generated = $aiModel->getGeneratedData();
 
        $aiData = [
             'alt' => $original['alt'], 
             'caption' => $original['caption'], 
             'description' => $original['description'],
+            'replace_filebase' => $generated['filebase'],
        ];
     
        $aiModel->revert();

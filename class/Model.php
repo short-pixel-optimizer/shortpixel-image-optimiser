@@ -50,9 +50,11 @@ abstract class Model
     {
       case "string":
         $value = $this->sanitizeString($value);
+        $value = $this->checkMaxLength($name, $value);
       break;
       case "int":
         $value = $this->sanitizeInteger($value);
+        $value = $this->checkMax($name, $value); 
       break;
       case "boolean":
         $value = $this->sanitizeBoolean($value);
@@ -143,6 +145,34 @@ abstract class Model
   public function sanitizeInteger($int)
   {
     return intval($int);
+  }
+
+  protected function checkMax($name, $value)
+  {
+      if (false === isset($this->model[$name]['max']))
+      {
+         return $value; 
+      }
+
+      return max($value, $this->model[$name]['max']);
+  }
+
+  protected function checkMaxLength($name, $value)
+  {
+    if (false === isset($this->model[$name]['maxlength']))
+    {
+       return $value; 
+    }
+
+    $maxlength = $this->model[$name]['maxlength']; 
+
+    if (strlen($value) > $maxlength)
+    {
+       $value = substr($value, 0, $maxlength); 
+    }
+
+    return $value; 
+
   }
 
   public function sanitizeBoolean($bool)

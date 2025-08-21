@@ -1047,6 +1047,12 @@
 						 }
            }
          }
+
+         .ai-preview-wrapper {
+           .ai-preview-data strong {
+              text-transform: capitalize;
+           }
+         }
       }
 
       nav {

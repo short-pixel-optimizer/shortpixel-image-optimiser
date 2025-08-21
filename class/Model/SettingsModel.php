@@ -22,7 +22,7 @@ class SettingsModel extends \ShortPixel\Model
         'resizeWidth' => ['s' => 'int' , 'default' => 0], // int
         'resizeHeight' => ['s' => 'int', 'default' => 0], // int
         'processThumbnails' => ['s' => 'boolean', 'default' => true], // checkbox
-				'useSmartcrop' => ['s' => 'boolean', 'default' => false],
+	'useSmartcrop' => ['s' => 'boolean', 'default' => false],
         'smartCropIgnoreSizes' => ['s' => 'boolean', 'default' => false],
         'backupImages' => ['s' => 'boolean', 'default' => true], // checkbox
     //    'keepExif' => ['s' => 'int', 'default' => 0], // checkbox
@@ -67,21 +67,21 @@ class SettingsModel extends \ShortPixel\Model
         'enable_ai' => ['s' => 'boolean', 'default' => true],
         'autoAI' => ['s' => 'boolean', 'default' => false],
         'autoAIBulk' => ['s' => 'boolean', 'default' => false],
-        'ai_general_context' => ['s' => 'string', 'default' => 'callback'],
+        'ai_general_context' => ['s' => 'string', 'default' => 'callback', 'maxlength' => 500],
         'ai_use_post' => ['s' => 'boolean', 'default' => true],
         'ai_gen_alt' => ['s' => 'boolean', 'default' => true],
         'ai_gen_caption' => ['s' => 'boolean', 'default' => true],
         'ai_gen_description' => ['s' => 'boolean', 'default' => true],
         'ai_filename_prefercurrent' => ['s' => 'boolean', 'default' => false],
-        'ai_limit_alt_chars' => ['s' => 'int', 'default' => 100],
-        'ai_alt_context' => ['s' => 'string', 'default' => ''],
-        'ai_limit_description_chars' => ['s' => 'int', 'default' => 200],
-        'ai_description_context' => ['s' => 'string', 'default' => ''],
-        'ai_limit_caption_chars' => ['s' => 'int', 'default' => 150],
-        'ai_caption_context' => ['s' => 'string', 'default' => ''],
+        'ai_limit_alt_chars' => ['s' => 'int', 'default' => 100, 'max' => 200],
+        'ai_alt_context' => ['s' => 'string', 'default' => '', 'maxlength' => 200],
+        'ai_limit_description_chars' => ['s' => 'int', 'default' => 200, 'max' => 500],
+        'ai_description_context' => ['s' => 'string', 'default' => '', 'maxlength' => 200],
+        'ai_limit_caption_chars' => ['s' => 'int', 'default' => 150, 'max' => 250],
+        'ai_caption_context' => ['s' => 'string', 'default' => '', 'maxlength' => 200],
         'ai_gen_filename' => ['s' => 'boolean', 'default' => false],
-        'ai_limit_filename_chars' => ['s' => 'int', 'default' => 30],
-        'ai_filename_context' => ['s' => 'string', 'default' => ''],
+        'ai_limit_filename_chars' => ['s' => 'int', 'default' => 30, 'max' => 200],
+        'ai_filename_context' => ['s' => 'string', 'default' => '', 'maxlength' => 200],
         'ai_use_exif' => ['s' => 'boolean', 'default' => true],
         'ai_language' => ['s' => 'string', 'default' => 'callback'],
      
@@ -117,8 +117,6 @@ class SettingsModel extends \ShortPixel\Model
 		protected function load()
 		{
        $this->settings = $this->check(get_option($this->option_name, []));
-
-       
 
        if (false === function_exists('register_shutdown_function'))
        {

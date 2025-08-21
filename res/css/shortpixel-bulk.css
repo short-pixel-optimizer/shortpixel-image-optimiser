@@ -1207,6 +1207,9 @@
   font-weight: 700;
   font-size: 14px;
 }
+.wrap.is-shortpixel-bulk-page section.panel.process .image-preview-section .ai-preview-wrapper .ai-preview-data strong, .wrap.is-shortpixel-bulk-page section.panel.finished .image-preview-section .ai-preview-wrapper .ai-preview-data strong {
+  text-transform: capitalize;
+}
 .wrap.is-shortpixel-bulk-page section.panel.process nav, .wrap.is-shortpixel-bulk-page section.panel.finished nav {
   width: 80%;
   margin-top: 35px;
