@@ -221,7 +221,8 @@ if (! defined('ABSPATH')) {
             [
               'name' => 'ai_filename_prefercurrent',
               'checked' => $view->data->ai_filename_prefercurrent,
-              'label' => esc_html__('Prefer keeping current filename if relevant', 'shortpixel-image-optimiser')
+              'label' => esc_html__('Prefer keeping current filename if relevant', 'shortpixel-image-optimiser'),
+              'disabled' => true
             ]
           );
           ?>
