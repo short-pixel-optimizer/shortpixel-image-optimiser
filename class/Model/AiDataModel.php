@@ -57,7 +57,8 @@ class AiDataModel
     // IsProcessable
     const P_PROCESSABLE = 0; 
     const P_ALREADYDONE = 1;  // Data already there 
-    const P_PROCESSABLE_EXIFAI = 2;  // When Exif Flag forbids AI doing 
+    const P_EXIFAI = 2;  // When Exif Flag forbids AI doing 
+    const P_EXTENSION = 3; 
     
 
     public function __construct($attach_id, $type = 'media')
@@ -327,7 +328,7 @@ class AiDataModel
         }
 
         // Stash here other conditions on top with && to build a big processable function 
-        $processable = ( $this->isExifProcesssable() ) ? true : false; 
+        $processable = ( $this->isExifProcesssable() && $this->isExtensionIncluded() ) ? true : false; 
         return $processable; 
     }
 
@@ -343,6 +344,7 @@ class AiDataModel
         }
 
         $imageObj = $imageModel->getSomethingOptimized(); 
+        
 
         $keepExif = $imageObj->getMeta('did_keepExif');
 
@@ -352,7 +354,7 @@ class AiDataModel
             return true; 
         }
 
-        $this->processable_status = self::P_PROCESSABLE_EXIFAI;
+        $this->processable_status = self::P_EXIFAI;
         return false; 
 
     }
@@ -366,17 +368,33 @@ class AiDataModel
             case self::P_ALREADYDONE:
                 $message = __('This image already has generated data', 'shortpixel-image-optimiser');
             break; 
-            case self::P_PROCESSABLE_EXIFAI:
+            case self::P_EXIFAI:
                 $message = __('Image Exif settings restrict AI usage', 'shortpixel-image-optimiser');
+            break; 
+            case self::P_EXTENSION:
+                 $message = __('File Extension not supported', 'shortpixel-image-optimiser');
             break; 
         }
 
         return $message;
     }
 
-    public function supportedExtensions()
+    public function isExtensionIncluded()
     {
-         return ['png', 'jpeg', 'gif', 'webp', 'jpg'];
+        $fs = \wpSPIO()->filesystem(); 
+        $imageModel = $fs->getMediaImage($this->attach_id); 
+        
+        $extensions = ['png', 'jpeg', 'gif', 'webp', 'jpg'];
+
+        if (in_array($imageModel->getExtension(), $extensions))
+        {
+            return true; 
+        }
+
+        $this->processable_status = self::P_EXTENSION;
+        return false; 
+
+
     }
 
     public function isSomeThingGenerated()

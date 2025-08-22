@@ -273,21 +273,12 @@ abstract class Queue
                 $optimizeAiController = OptimizeAiController::getInstance(); 
 
                 // If autoAi is on the bulk, add operation to the item
+                $enqueueAi = false; 
                 if ('media' === $mediaItem->get('type') && true === $optimizeAiController->isAiEnabled() && true === $settings->autoAIBulk)
                 {
-
-                  $aiDataModel = new AiDataModel($mediaItem->get('id')); 
-                  $enqueueAi = false; 
-                  if ($aiDataModel->isProcessable() && in_array($mediaItem->getExtension(), $aiDataModel->supportedExtensions()))
-                  {
-                    $enqueueAi = true; 
-                  }
+                  $aiDataModel = new AiDataModel($mediaItem->get('id'));  
+                  $enqueueAi = $aiDataModel->isProcessable();
                 }
-                else
-                {
-                   $enqueueAi = false; 
-                }
-
 
                 if ($mediaItem->isProcessable() && $mediaItem->isOptimizePrevented() === false && ! $operation) // Checking will be done when processing queue.
                 {
