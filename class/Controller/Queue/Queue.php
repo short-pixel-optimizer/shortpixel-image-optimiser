@@ -8,6 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\CacheController as CacheController;
+use ShortPixel\Controller\Optimizer\OptimizeAiController;
 use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\Model\Converter\Converter as Converter;
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
@@ -269,8 +270,10 @@ abstract class Queue
                   continue;
               }
               
+                $optimizeAiController = OptimizeAiController::getInstance(); 
+
                 // If autoAi is on the bulk, add operation to the item
-                if ('media' === $mediaItem->get('type') && true === $settings->enable_ai && true === $settings->autoAIBulk)
+                if ('media' === $mediaItem->get('type') && true === $optimizeAiController->isAiEnabled() && true === $settings->autoAIBulk)
                 {
 
                   $aiDataModel = new AiDataModel($mediaItem->get('id')); 

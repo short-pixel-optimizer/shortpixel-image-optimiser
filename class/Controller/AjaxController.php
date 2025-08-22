@@ -1539,18 +1539,26 @@ class AjaxController
 	protected function checkImageAccess($mediaItem)
 	{
 
+		// defaults 
+		$message = __('This user is not allowed to edit this image', 'shortpixel-image-optimiser');
+
 		$accessModel = AccessModel::getInstance();
 		if (is_object($mediaItem)) {
 			$bool = $accessModel->imageIsEditable($mediaItem);
 			$id = $mediaItem->get('id');
+
 		} else {
 			$bool = false;
 			$id = false;
+			if (! is_object($mediaItem))
+			{
+				$message = __('Image does not exist or could not be loaded', 'shortpixel-image-optimiser');
+			}
 		}
 
 		if ($bool === false) {
 			$json = new \stdClass;
-			$json->message = __('This user is not allowed to edit this image', 'shortpixel-image-optimiser');
+			$json->message = $message; 
 			$json->status = false;
 			$json->id = $id;
 			$json->error = self::NO_ACCESS;

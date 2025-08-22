@@ -348,9 +348,17 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				detailsColumn.prototype.render.apply(this); // Render Parent
 
 				if (typeof this.fetchSPIOData === 'function') {
-					this.fetchSPIOData(this.model.get('id'));
-					this.spioBusy = true; // Note if this system turns out not to work, the perhaps render empties all if first was painted, second cancelled?
+					let attach_id = this.model.get('id');
 
+					if (typeof attach_id !== 'undefined')
+					{
+						this.fetchSPIOData(attach_id);
+						this.spioBusy = true; // Note if this system turns out not to work, the perhaps render empties all if first was painted, second cancelled?
+					}
+					else
+					{
+						console.log('Id not found on render');
+					}
 				}
 
 				return this;
