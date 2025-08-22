@@ -14,6 +14,8 @@ use ShortPixel\Notices\NoticeController as Notice;
 class AiDataModel
 {
 
+    
+
     protected $id; 
     protected $attach_id; 
     protected $type;
@@ -44,12 +46,19 @@ class AiDataModel
     private $has_generated = false; 
     private $current_is_set = false; 
 
+    private $processable_status = null;
 
     const TYPE_MEDIA = 1; 
     const TYPE_CUSTOM = 2; 
 
     const AI_STATUS_NOTHING = 0;
     const AI_STATUS_GENERATED = 1; 
+
+    // IsProcessable
+    const P_PROCESSABLE = 0; 
+    const P_ALREADYDONE = 1;  // Data already there 
+    const P_PROCESSABLE_EXIFAI = 2;  // When Exif Flag forbids AI doing 
+    
 
     public function __construct($attach_id, $type = 'media')
     {
@@ -313,9 +322,56 @@ class AiDataModel
     {
         if (true === $this->has_record)
         {
+             $this->processable_status = SELF::P_ALREADYDONE;
              return false; 
         }
-        return true; 
+
+        // Stash here other conditions on top with && to build a big processable function 
+        $processable = ( $this->isExifProcesssable() ) ? true : false; 
+        return $processable; 
+    }
+
+
+    private function isExifProcesssable()
+    {
+        $fs = \wpSPIO()->filesystem(); 
+        $imageModel = $fs->getMediaImage($this->attach_id); 
+
+        if (false === $imageModel->isSomethingOptimized())
+        {
+            return true; 
+        }
+
+        $imageObj = $imageModel->getSomethingOptimized(); 
+
+        $keepExif = $imageObj->getMeta('did_keepExif');
+
+        // 2-3 are exif_ai combined settings with keep-exif. 0-1 are when default settings are used and unset / unused 
+        if (in_array($keepExif, [0,1,2,3]))
+        {
+            return true; 
+        }
+
+        $this->processable_status = self::P_PROCESSABLE_EXIFAI;
+        return false; 
+
+    }
+
+    public function getProcessableReason()
+    {
+        $message = false; 
+
+        switch($this->processable_status)
+        {
+            case self::P_ALREADYDONE:
+                $message = __('This image already has generated data', 'shortpixel-image-optimiser');
+            break; 
+            case self::P_PROCESSABLE_EXIFAI:
+                $message = __('Image Exif settings restrict AI usage', 'shortpixel-image-optimiser');
+            break; 
+        }
+
+        return $message;
     }
 
     public function supportedExtensions()

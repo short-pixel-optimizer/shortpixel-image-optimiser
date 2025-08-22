@@ -78,8 +78,9 @@ class OptimizeAiController extends OptimizerBase
       $is_processable = $aiDataModel->isProcessable();
 
       if (false === $is_processable) {
+         $message = $aiDataModel->getProcessableReason(); 
         $qItem->addResult([
-          'message' => __('AI generation not possible or already generated', 'shortpixel-image-optimiser'),
+          'message' => $message,
           'is_error' => true,
           'is_done' => true,
           'fileStatus' => ImageModel::FILE_STATUS_ERROR,
