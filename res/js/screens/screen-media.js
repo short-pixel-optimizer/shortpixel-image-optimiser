@@ -322,6 +322,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 	ListenGallery() {
 		var self = this;
+		var next_item_run_process = false; 
 
 		if (this.settings.hide_spio_in_popups)
 		{
@@ -352,8 +353,22 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 					if (typeof attach_id !== 'undefined')
 					{
+						if (true === next_item_run_process )
+						{
+							window.ShortPixelProcessor.SetInterval(-1);
+							window.ShortPixelProcessor.RunProcess();
+							next_item_run_process = false; 
+						}
+						else
+						{
 						this.fetchSPIOData(attach_id);
 						this.spioBusy = true; // Note if this system turns out not to work, the perhaps render empties all if first was painted, second cancelled?
+						}
+					}
+					else if (true == this.model.get('uploading'))
+					{
+						next_item_run_process = true; 
+						console.log('Upload Start Detected');
 					}
 					else
 					{
