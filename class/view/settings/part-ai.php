@@ -23,7 +23,9 @@ if (! defined('ABSPATH')) {
             'name' => 'enable_ai',
             'checked' => $view->data->enable_ai,
             'label' => esc_html__('Enable AI Image SEO', 'shortpixel-image-optimiser'),
-          ]
+            'data' => ['data-toggle="autoAiOptions"'],
+
+            ]
         );
         ?>
 
@@ -36,7 +38,7 @@ if (! defined('ABSPATH')) {
       </content>
     </setting>
 
-    <setting class='switch'>
+    <setting class='switch toggleTarget autoAiOptions'>
       <content>
 
         <?php $this->printSwitchButton(
@@ -57,7 +59,7 @@ if (! defined('ABSPATH')) {
       </content>
     </setting>
 
-    <setting class='switch'>
+    <setting class='switch toggleTarget autoAiOptions'>
       <content>
 
         <?php $this->printSwitchButton(
