@@ -290,6 +290,8 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 	HandleImage(resultItem, type) {
 		var res = super.HandleImage(resultItem, type);
 		var fileStatus = this.processor.fStatus[resultItem.fileStatus];
+		var apiName = (typeof resultItem.apiName !== 'undefined') ? resultItem.apiName : 'optimize'; 
+
 
 		// If image editor is active and file is being restored because of this reason ( or otherwise ), remove the warning if this one exists.
 		if (fileStatus == 'FILE_RESTORED') {
@@ -297,6 +299,11 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			if (warning !== null) {
 				warning.remove();
 			}
+		}
+
+		if (fileStatus == 'FILE_DONE' && apiName == 'ai')
+		{
+			this.UpdateGutenBerg(resultItem);
 		}
 	}
 
@@ -599,6 +606,39 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				}
 			}
 		});
+	}
+
+	UpdateGutenBerg(resultItem)
+	{
+		
+		var attach_id = resultItem.item_id; 
+		var aiData = resultItem.aiData; 
+		
+		if (! wp.data.select('core'))
+		{
+			return false; 
+		}
+
+		console.log(wp.data.select( 'core/block-editor' ));
+
+		let blocks = wp.data.select( 'core/block-editor' ).getBlocks();
+		console.log(blocks);
+		for (let i = 0; i < blocks.length; i++)
+		{
+			let block = blocks[i];
+
+			 if (block.attributes.id == attach_id)
+			 {
+				//block.attributes.alt = "I CAME TO ALT"; 
+				//block.attributes.caption = "CAPTION THIS";
+				let clientId = block.clientId;
+
+				console.log('DATA DISPATCH ', clientId, aiData);				
+				wp.data.dispatch( 'core/block-editor' ).updateBlockAttributes( clientId, 
+					aiData );
+
+			 }
+		}
 	}
 
 } // class
