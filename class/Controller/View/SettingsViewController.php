@@ -429,6 +429,8 @@ class SettingsViewController extends \ShortPixel\ViewController
               AdminNoticesController::resetIntegrationNotices();
           }
 
+          
+
 					// If the compression type setting changes, remove all queued items to prevent further optimizing with a wrong type.
 					if (intval($this->postData['compressionType']) !== intval($this->model->compressionType))
 					{
@@ -447,9 +449,16 @@ class SettingsViewController extends \ShortPixel\ViewController
 					foreach($data as $name => $value)
 					{
 							$type = $this->model->getType($name);
-							if ('boolean' === $type && ! isset($this->postData[$name]))
+							if ('boolean' === $type )
 							{
-								 $this->model->{$name} = false;
+                if( ! isset($this->postData[$name]))
+                {
+								  $this->model->{$name} = false;
+                }
+                else
+                {
+                   $this->model->{$name} = true; 
+                }
 							}
 					}
 
@@ -863,6 +872,18 @@ class SettingsViewController extends \ShortPixel\ViewController
                  $post['CDNDomain'] = $check;
               }
           }
+
+        if (false === isset($post['enable_ai']))
+        {
+             if (isset($post['autoAI']))
+             {
+                unset($post['autoAI']);
+             }
+             if (isset($post['autoAIBulk']))
+             {
+                unset($post['autoAIBulk']);
+             }
+        }
 
         
 				// Field that are in form for other purpososes, but are not part of model and should not be saved.

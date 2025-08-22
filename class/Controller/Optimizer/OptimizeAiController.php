@@ -543,6 +543,12 @@ class OptimizeAiController extends OptimizerBase
       return $matches;
   }
 
+  /*
+  protected function fetchCaptionMatches($content, $qItem)
+  {
+       $pattern = '/' 
+  }
+*/
   /**
    * Check if setting AI is enabled in settings. 
    *

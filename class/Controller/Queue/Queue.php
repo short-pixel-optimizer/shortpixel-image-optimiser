@@ -270,7 +270,7 @@ abstract class Queue
               }
               
                 // If autoAi is on the bulk, add operation to the item
-                if ('media' === $mediaItem->get('type') && true === $settings->autoAIBulk)
+                if ('media' === $mediaItem->get('type') && true === $settings->enable_ai && true === $settings->autoAIBulk)
                 {
 
                   $aiDataModel = new AiDataModel($mediaItem->get('id')); 
