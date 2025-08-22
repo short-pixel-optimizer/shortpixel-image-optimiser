@@ -1,6 +1,8 @@
 <?php
 namespace ShortPixel;
 
+use ShortPixel\Controller\Optimizer\OptimizeAiController;
+
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
@@ -102,7 +104,9 @@ $approx = $this->view->approx;
 					</div>
 				<?php endif; ?>
 
-				<?php if (true === \wpSPIO()->settings()->enable_ai):  ?>
+				<?php
+				$optimizeAiController = OptimizeAiController::getInstance(); 
+				if (true === $optimizeAiController->isAiEnabled()):  ?>
 			 <div class='ai-images optiongroup'>
 				<div class='switch_button'>
 				<label>
