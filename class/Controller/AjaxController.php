@@ -689,16 +689,17 @@ class AjaxController
 
 		$this->checkImageAccess($imageModel);
 
-		$smartcrop = false; 
+		$args = ['action' => 'reoptimize', 'compressionType' => $compressionType];
+
+		// Smartcrop is not always passed, only add here when passed otherwise to defaults.
 		if ($actionType == ImageModel::ACTION_SMARTCROP || $actionType == ImageModel::ACTION_SMARTCROPLESS) 
 		{
-			$smartcrop = $actionType;
+			$args['smartcrop'] = $actionType;
 		}
 
 		// @todo Ideally this should go to QueueController - addItemToQueue, but issue with arguments. Leaving it for now.
 		$queueController = new QueueController();
-		$result  = $queueController->addItemToQueue($imageModel, ['action' => 'reoptimize', 'compressionType' => $compressionType, 
-			'smartcrop' => $smartcrop]);
+		$result  = $queueController->addItemToQueue($imageModel, $args);
 
 	
 		$json->$type->results = [$result];
