@@ -345,6 +345,7 @@ class QueueController
           // Note, all these functions change content of QueueItem
           $action = $qItem->data()->action;
           $apiController = $qItem->getAPIController($action);
+          $send_to_processing = true; 
 
 
           if (is_null($apiController))
@@ -373,16 +374,17 @@ class QueueController
             $qItem->setModel($imageModel);
           }
           
-          if (! is_object($imageModel))
+          if (! is_object($imageModel)) // Error in loading imageModel, can't process this. 
           {
             Log::addWarn('ImageObject was empty when send to processing - ' . $item_id);
             $qItem->addResult([
                 'apiStatus' => RequestManager::STATUS_NOT_API,
-                'message' => __("File Error. File could not be loaded with this ID ", 'shortpixel-image-optimiser'),
+                'message' => __("File Error. Media Item could not be loaded with this ID ", 'shortpixel-image-optimiser'),
                 'fileStatus' => ImageModel::FILE_STATUS_ERROR,
                 'is_done' => true,
                 'is_error' => true,
             ]);
+            $send_to_processing = false; 
           }
           elseif(true === $qItem->block())
           {
@@ -391,6 +393,8 @@ class QueueController
                 'message' => __('Item is waiting (blocked)', 'shortpixel-image-optimiser'),
             ]);
             Log::addWarn('Encountered blocked item, processing success? ', $item_id);
+            ResponseController::addData($item_id, 'fileName', $imageModel->getFileName());
+            $send_to_processing = false; 
           }
           else
           {
@@ -402,13 +406,10 @@ class QueueController
             // Used in WP-CLI
             ResponseController::addData($item_id, 'fileName', $imageModel->getFileName());
           }
-
-          ResponseController::addData($item_id, 'fileName', $imageModel->getFileName());
-
         
           $this->setLastID($item_id);
 
-          if (! is_null($apiController))
+          if (! is_null($apiController) && true === $send_to_processing)
           {
             $apiController->sendToProcessing($qItem);
             $apiController->handleAPIResult($qItem);  
