@@ -106,8 +106,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		 // = document.getElementById('attachment_alt'); 
 		 let captionFields = ['attachment_caption', 'attachment-details-caption']; 
 		 let descriptionFields = ['attachment_content', 'attachment-details-description']; 
-
-
 		 
 		 if (typeof newCaption !== 'undefined')
 		 {
@@ -119,8 +117,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 					captionField.value = newCaption; 
 				}				 
 			}
-
-				
 		 }
 
 		 if (typeof newDescription !== 'undefined')
@@ -133,10 +129,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 					 descriptionField.value = newDescription; 
 				}
 			}
-
-
 		 }
-
 
 		if (null !== attachmentAlt)
 		{
@@ -156,12 +149,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 			window.addEventListener('shortpixel.AttachAiInterface', this.AttachAiInterface.bind(this), {once: true});
 		}
-	/*	if (typeof aiData !== 'undefined')
-		{
-			this.processor.LoadItemView({ id: item_id, type: 'media' });
-		} */
-
-
 	}
 
 	GetPageAttachmentAlt()
@@ -476,7 +463,9 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		wrapper.id = 'shortpixel-ai-wrapper-' + item_id;
 		wrapper.classList.add('shortpixel-ai-interface',element.getAttribute('id'));
 		
-	  	wrapper.innerHTML = data.snippet;	
+		wrapper.innerHTML = data.snippet;	
+
+
 		element.after(wrapper);
 
 		element.dataset.shortpixelAlt = data.item_id;		
@@ -614,7 +603,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		var attach_id = resultItem.item_id; 
 		var aiData = resultItem.aiData; 
 		
-		if (! wp.data.select('core'))
+		if (! wp.data || ! wp.data.select('core'))
 		{
 			return false; 
 		}

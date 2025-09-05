@@ -45,14 +45,13 @@ class OptimizeAiController extends OptimizerBase
           break; 
         }
 
-   //   $qItem->addResult(['qStatus' => Queue::RESULT_ERROR]);
       return;
   }
 
 
   public function sendToProcessing(QueueItem $qItem) { 
 
-    if (false == $this->isSupported($qItem))
+/*    if (false == $this->isSupported($qItem))
     {
         // For now only fail here is GIF support, so message is a backstop for now that later should be updated. 
         $qItem->addResult([
@@ -64,9 +63,9 @@ class OptimizeAiController extends OptimizerBase
 
     }
     else
-    {
+    { */
         $this->api->processMediaItem($qItem, $qItem->imageModel);
-    }
+    //}
  
   }
 
@@ -74,7 +73,7 @@ class OptimizeAiController extends OptimizerBase
   public function checkItem(QueueItem $qItem) 
   {     
 
-      $aiDataModel = new AiDataModel($qItem->item_id); 
+      $aiDataModel = AiDataModel::getModelByAttachment($qItem->item_id); 
       $is_processable = $aiDataModel->isProcessable();
 
       if (false === $is_processable) {
@@ -107,7 +106,7 @@ class OptimizeAiController extends OptimizerBase
            $directAction = false; 
         break;
         case 'retrieveAlt':  // This might be deprecated, since retrieve will be called via next_action. 
-            $qItem->retrieveAltAction($args['remote_id']);
+            $qItem->retrieveAltAction($args);
             $directAction = false; 
         break; 
         default: 
@@ -226,6 +225,7 @@ class OptimizeAiController extends OptimizerBase
   {
     // Always save the original filename
     $aiData['original_filebase'] = $qItem->imageModel->getFileBase();
+    $returnDataList = $qItem->data()->returndatalist; 
 
     if (! isset($aiData['filebase']))
     {
@@ -236,7 +236,7 @@ class OptimizeAiController extends OptimizerBase
     $textItems = ['alt', 'caption', 'description'];
     foreach($textItems as $textItem)
     {
-         if (isset($aiData[$textItem]) && false !== $aiData[$textItem])
+         if (isset($aiData[$textItem]) && false !== $aiData[$textItem] && false === is_numeric($aiData[$textItem]))
          {
              $aiData[$textItem] = $this->processTextResult($aiData[$textItem]);
          }
@@ -248,23 +248,13 @@ class OptimizeAiController extends OptimizerBase
   protected function HandleSuccess(QueueItem $qItem)
   {
         $aiData = $qItem->result->aiData;  
-        $settings = $this->getAISettings();
-
+        $settings = \wpSPIO()->settings();
 
         $checks = ['alt' => 'ai_gen_alt', 
         'caption' => 'ai_gen_caption', 
         'description' => 'ai_gen_description',
         'filename' => 'ai_gen_filename',
         ];
-
-        foreach($checks as $check_name => $check_setting)
-        {
-            if (false === $settings[$check_setting])
-            {
-                 unset($aiData[$check_name]);
-            }
-        }
-
 
         $aiData = $this->formatResultData($aiData, $qItem);
 
@@ -273,7 +263,7 @@ class OptimizeAiController extends OptimizerBase
         // Alt  : Own Metadata field 
         $item_id = $qItem->item_id; 
         
-        $aiModel = new AIDataModel($item_id, 'media');
+        $aiModel = AiDataModel::getModelByAttachment($item_id, 'media');
         $aiModel->handleNewData($aiData);
 
         $qItem->addResult([
@@ -292,11 +282,11 @@ class OptimizeAiController extends OptimizerBase
             $this->replaceFiles($qItem, $qItem->result()->filename);
         }
         */
+
         $imageModel = $qItem->imageModel;
-        $qItem->addResult(['improvements' => $imageModel->getImprovements()]);
+        $qItem->addResult(['improvements' => $imageModel->getImprovements()]); // Improvements for bulk UX. 
 
-
-        $this->addPreview($qItem);
+        $this->addPreview($qItem); // Preview ( image ) for bulk UX 
 
         $this->finishItemProcess($qItem);
         return;
@@ -312,6 +302,12 @@ class OptimizeAiController extends OptimizerBase
    */
   protected function replaceImageAttributes(QueueItem $qItem, $aiData)
   {
+            if (is_int($aiData['alt']) && is_int($aiData['caption']))
+            {
+                Log::addInfo('Alt/Caption returned integer/status, not replace'); 
+                return; 
+            }
+
              // Replacer Part 
              $url = $qItem->data()->url; 
              if (is_null($url)) // can be empty on restore action 
@@ -392,8 +388,6 @@ class OptimizeAiController extends OptimizerBase
         $targetFileObj = $fs->getFile($target_path); 
         if ($targetFileObj->exists())
         {
-          //$qItem->result()->is_error = true; 
-          //$qItem->result()->message = __('Replace Files: File Already exists', 'shortpixel-image-optimiser');
           Log::addWarn('Replace files found filename conflict and didnt run', $targetFileObj->getFullPath());
           return false; 
         }
@@ -414,9 +408,6 @@ class OptimizeAiController extends OptimizerBase
             $result = $sourceFile->move($targetFileObj);
       }
 
-
-
-
       $replacer = new Replacer(); 
       $replacer->setSource($source_url);
       $replacer->setTarget($target_url); 
@@ -424,7 +415,6 @@ class OptimizeAiController extends OptimizerBase
       $replacer->setTargetMeta($replaceArray);
       
       $replacer->replace();
-
 
       $this->replaceMetaData($item_id, $base_filename, $newFileName );
       return false; 
@@ -511,25 +501,33 @@ class OptimizeAiController extends OptimizerBase
                 continue; 
              } */
 
-             $sources[] = $match; 
+             $do_replace = false; 
 
-             if (isset($aiData['alt']))
+             if (isset($aiData['alt']) && false === is_int($aiData['alt']))
              {
                 $frontImage->alt = $aiData['alt']; 
+                $do_replace = true; 
              }
-             if (isset($aiData['caption']))
+             if (isset($aiData['caption']) && false === is_int($aiData['caption']))
              {
                 $frontImage->caption = $aiData['caption'];
+                $do_replace = true; 
              }
 
-             $replaces[] = $frontImage->buildImage();
-
+             if (true === $do_replace)
+             {
+                $sources[] = $match; 
+                $replaces[] = $frontImage->buildImage();
+             }
 
             }
 
-            $content = $replacer2->replaceContent($content, $sources, $replaces);
-           
-            $replacer2->Updater()->updatePost($post_id, $content); 
+            if (count($sources) > 0 && count($replaces) > 0)
+            {
+                Log::addInfo('Running Ai Replace : ', [$aiData, $sources, $replaces]); 
+                $content = $replacer2->replaceContent($content, $sources, $replaces);
+                $replacer2->Updater()->updatePost($post_id, $content); 
+            }
         }
 
   }
@@ -604,9 +602,12 @@ class OptimizeAiController extends OptimizerBase
         return $text;
   }
 
-  protected function getRequestJSON($url, $item_id, $params = [])
+  /*
+  protected function getRequestJSON($url, $params = [])
   { 
      $settings = $this->getAISettings($params);
+
+     $ignore_fields = (isset($params['ignore_fields'])) ? $params['ignore_fields'] : []; 
 
      $json = [
         'url' => $url, 
@@ -652,14 +653,42 @@ class OptimizeAiController extends OptimizerBase
      return $json; 
   }
 
+  */
+
+  /*
   public function parseJSONForQItem(QueueItem $qItem, $params = [])
   {
         $url = $qItem->data()->url; 
         $item_id = $qItem->item_id;
-        $json = $this->getRequestJSON($url, $item_id, $params); 
+        $settings = \wpSPIO()->settings(); 
+
+        // Note this is also checked in AiDataModel for checking processable.  Might need to sync upon adding fields
+        if (true === $settings->aiPreserve) 
+        { 
+            $returnDataList = $qItem->data()->returndatalist; 
+
+            $aiModel = AiDataModel::getModelByAttachment($item_id, 'media');
+            $current = $aiModel->getCurrentData();
+            $filtered = array_filter($current); // filter out all empty variables
+
+          //  $altdata = $this->getAltData($qItem);
+            $params['ignore_fields'] = array_keys($filtered);
+            
+            foreach($filtered as $key => $filter)
+            {
+                 $returnDataList[$key] = AiDataModel::F_STATUS_EXCLUDE;
+            }
+            $qItem->data()->returndatalist = $returnDataList; 
+        }
+        
+        $json = $this->getRequestJSON($url, $params); 
+
+
         $qItem->data()->paramlist = $json;
   }
+        */
 
+/*
   protected function parseQuestionForQItem(QueueItem $qItem)
   {
         $url = $qItem->data()->url; 
@@ -667,7 +696,8 @@ class OptimizeAiController extends OptimizerBase
         $question = $this->parseQuestion($url, $item_id); 
         $qItem->data()->url = $question;
   }
-
+*/
+  /*
   private function getAISettings($params = [])
   {
     $settings = \wpSPIO()->settings(); 
@@ -690,192 +720,17 @@ class OptimizeAiController extends OptimizerBase
     'ai_filename_context' => $settings->ai_filename_context, 
     'ai_use_exif' => $settings->ai_use_exif, 
     'ai_language' => $settings->ai_language,
+    'aiPreserve' => $settings->aiPreserve, 
     ];
 
     $params = wp_parse_args($params, $defaults);
 
     return $params; 
   }
-
-  public function parseQuestion($url, $item_id, $params = [])
-  {
-    $settings = \wpSPIO()->settings(); 
-
-    $defaults = [
-    'ai_general_context' => $settings->ai_general_context, 
-    'ai_use_post' => $settings->ai_use_post, 
-    'ai_gen_alt' => $settings->ai_gen_alt, 
-    'ai_gen_caption' => $settings->ai_gen_caption, 
-    'ai_gen_description' => $settings->ai_gen_description, 
-    'ai_filename_prefercurrent' => $settings->ai_filename_prefercurrent,
-    'ai_limit_alt_chars' => $settings->ai_limit_alt_chars, 
-    'ai_alt_context' => $settings->ai_alt_context, 
-    'ai_limit_description_chars' => $settings->ai_limit_description_chars, 
-    'ai_description_context' => $settings->ai_description_context, 
-    'ai_limit_caption_chars' => $settings->ai_limit_caption_chars, 
-    'ai_caption_context' => $settings->ai_caption_context, 
-    'ai_gen_filename' => $settings->ai_gen_filename, 
-    'ai_limit_filename_chars' => $settings->ai_limit_filename_chars, 
-    'ai_filename_context' => $settings->ai_filename_context, 
-    'ai_use_exif' => $settings->ai_use_exif, 
-    'ai_language' => $settings->ai_language,
-    ];
-
-    $params = wp_parse_args($params, $defaults);
-
-    $question = [
-            'main' => $params['ai_general_context'],
-            'language' => $params['ai_language'], 
-            'required_tags' => [],
-     ]; 
-
-     $question['page'] = $this->getPageQuestion($question, $item_id, $params);
+ */
     
-     $question = $this->getPartQuestion($question, 'alt', $params);
-     $question = $this->getPartQuestion($question, 'caption', $params);
-     $question = $this->getPartQuestion($question, 'description', $params);
-     $question = $this->getPartQuestion($question, 'filename', $params);
 
-    if (true == $params['ai_use_exif'])
-    {
-         $question['exif'] = ' and take into account the image EXIF data when generating all the requested texts'; 
-    }
-
-   // $question['tags'] = implode($question['required_tags'], ',');
-
-    $question = apply_filters('shortpixel/ai/parsed_questions', $question);
-
-   /* $alt = isset($question['alt']) ? $question['alt'] : ''; 
-    $caption = isset($question['caption']) ? $question['caption'] : ''; 
-    $description =isset($question['description']) ? $question['description'] : ''; 
-    $filename = isset($question['filename']) ? $question['filename'] : ''; 
-*/
-    $specs = [];
-    foreach($question['required_tags'] as $tag)
-    {
-        $specs[] = $question[$tag]; 
-    }
-    $specs = implode(' ', $specs);
-
-    $required_tags =  implode(',', $question['required_tags_ainame']); 
-    
-    if (strlen(trim($params['ai_language'])) <= 0)
-    {   
-        $params['ai_language'] = get_locale();
-    }
-
-    $final_question = sprintf("For the URL %s , with this context \" %s \" , write for %s SEO friendly texts with the following specifications: %s in %s language %s . Provide the answer in JSON format, seperating the %s output in seperate fields",
-        $url, 
-        $question['main'], 
-        $required_tags,
-        $specs, 
-        $question['language'], 
-        $question['exif'], 
-        $required_tags
-
-
-    ); 
-
-    return $final_question;
-
-  }
-  
-  protected function getPartQuestion($question, $name, $params)
-  {
-    
-    $limit = 'ai_limit_' . $name . '_chars';
-    $context = 'ai_' . $name . '_context'; 
-    $to_use = 'ai_gen_' . $name;  
-
-    switch($name)
-    {
-         case 'alt': 
-            $aiName = 'alt tag'; 
-         break; 
-         case 'caption': 
-            $aiName = 'caption tag'; 
-         break;
-         case 'description': 
-            $aiName = 'description text'; 
-         break; 
-         case 'filename': 
-            $aiName = 'the file name'; 
-         break; 
-    }
-
-    if (true === $params[$to_use])
-    {
-        $limit = $params[$limit]; 
-        $context = $params[$context]; 
-
-        $string = ' For the ' . $aiName . ' limit your response to the most relevant ' . $limit . ' characters for SEO ';
-
-        if ('filename' == $name)
-        {
-            $string .= ' leaving the filename extension intact '; 
-            if (true === $params['ai_filename_prefercurrent'])
-            {
-                $string .=  ' and change filename only when the current filename is not relevant. Otherwise return false for this field '; 
-            }
-            
-        }
-
-        if (strlen(trim($context)) > 0)
-        {
-             $string .= ' and use this additional information when generating the ' . $aiName . ':' . $context . '. '; 
-        }
-
-        $question[$name] = $string; 
-        $question['required_tags_ainame'][] = $aiName;
-        $question['required_tags'][] = $name;
-    }
-
-    
-    return $question;
-  }
-
-  protected function getPageQuestion($question, $item_id, $params)
-  {
-        if (false == $params['ai_use_post'])
-        {
-             return false; 
-        }
-
-        $post = get_post($item_id); 
-        if (is_null($post) || false === $post)
-        {
-             return false; 
-        }
-
-        $parent = $post->post_parent; 
-
-        if ($parent <= 0 || ! is_int($parent))
-        {
-             return false; 
-        }
-
-        $page_post = get_post($parent); 
-        if (is_null($page_post) || false === $page_post)
-        {
-             return false; 
-        }
-
-        $title = $page_post->post_title; 
-        $excerpt = get_the_excerpt(($page_post)); 
-
-        $string = ' for the article with the title ' . $title; 
-
-        if (strlen(trim($excerpt)) > 0 )
-        {
-            $string .= ' and excerpt ' . $excerpt; 
-        } 
-
-        
-        return $string;
-  }
-
-  
-
+  /*
   public function isSupported(queueItem $qItem)
   {
        $imageModel = $qItem->imageModel; 
@@ -887,14 +742,15 @@ class OptimizeAiController extends OptimizerBase
        }
        
        return true; 
-  }
+  } */
 
   public function undoAltData(QueueItem $qItem)
   {
        $item_id = $qItem->item_id;
-       $aiModel = new AiDataModel($item_id, 'media');
+       $aiModel = AiDataModel::getModelByAttachment($item_id, 'media');
        $original = $aiModel->getOriginalData();
        $generated = $aiModel->getGeneratedData();
+
 
        $aiData = [
             'alt' => $original['alt'], 
@@ -904,9 +760,11 @@ class OptimizeAiController extends OptimizerBase
        ];
     
        $aiModel->revert();
+       AiDataModel::flushModelCache($item_id);
 
        $this->replaceImageAttributes($qItem, $aiData); 
 
+    
        return $this->getAltData($qItem); 
   }
 
@@ -914,7 +772,7 @@ public function getAltData(QueueItem $qItem)
 {
     $item_id = $qItem->item_id; 
 
-    $aiModel = new AiDataModel($item_id, 'media');
+    $aiModel = AiDataModel::getModelByAttachment($item_id, 'media');
 
     $status = $aiModel->getStatus();
     
@@ -926,23 +784,47 @@ public function getAltData(QueueItem $qItem)
          {
                 $aiModel->migrate($metacheck);
                 delete_post_meta($item_id, 'shortpixel_alt_requests');
-                $aiModel = new AiDataModel($item_id, 'media');
+                $aiModel = AiDataModel::getModelByAttachment($item_id, 'media');
                 $status = $aiModel->getStatus();
          }
     }
 
     $generated = $aiModel->getGeneratedData(); 
     $original = $aiModel->getOriginalData();
+    $current = $aiModel->getCurrentData();
 
     $image_url = $qItem->imageModel->getUrl();
 
     $fields = ['alt', 'caption', 'description'];
     $dataItems = []; 
+
+    // Statii from AiDataModel which means generated is not available (replace for original/current?) 
+    $statii = [AiDataModel::F_STATUS_PREVENTOVERRIDE, AiDataModel::F_STATUS_EXCLUDESETTING];
+
     foreach($fields as $name)
     {
-         if (isset($generated[$name]) && false === is_null($generated[$name]) && strlen($generated[$name]) > 1)
+         if (false === isset($generated[$name]))
+         {
+            continue; 
+         }
+         $value = $generated[$name]; 
+         
+
+         if (false === is_null($value) && false === is_int($value) && strlen($value) > 1)
          {
             $dataItems[] = ucfirst($name); 
+         }
+         if (is_int($value) && in_array($value, $statii))
+         {
+            if (isset($current[$name]))
+            {
+                 $value = $current[$name];
+            }
+            elseif(isset($original[$name]))
+            {
+                 $value = $original[$name];
+            }
+            $generated[$name] = $value;
          }
     } 
 
@@ -952,13 +834,17 @@ public function getAltData(QueueItem $qItem)
             'orginal_alt' => $original['alt'], 
             'result_alt' => $generated['alt'], 
             'has_data' => ($status == AiDataModel::AI_STATUS_GENERATED) ? true : false,
+            'is_processable' => $aiModel->isProcessable(), 
+            'processable_reason' => $aiModel->getProcessableReason(), 
+            'processable_status' => $aiModel->getProcessableReason(true), 
             'image_url' => $image_url, 
            // 'current_alt' => $current_alt, 
             'status' => $status, 
-            'isSupported' => $this->isSupported($qItem),
-            'dataItems' => $dataItems, 
+      //      'isSupported' => $this->isSupported($qItem),
+            'dataItems' => $dataItems,  // This seems not used(?)
             'isDifferent' =>  $aiModel->currentIsDifferent(),
         ]);
+
 
     $metadata['snippet'] = $view->returnView('snippets/part-aitext');
 

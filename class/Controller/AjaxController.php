@@ -827,6 +827,9 @@ class AjaxController
 		$doAvif = filter_var(sanitize_text_field($_POST['avifActive']), FILTER_VALIDATE_BOOLEAN);
 		
 		$doAi = filter_var(sanitize_text_field($_POST['aiActive']), FILTER_VALIDATE_BOOLEAN);
+
+		$aiPreserve = isset($_POST['aiPreserve']) ? filter_var(sanitize_text_field($_POST['aiPreserve']), FILTER_VALIDATE_BOOLEAN) : null; 
+
 		$backgroundProcess = filter_var(sanitize_text_field($_POST['backgroundProcess']), FILTER_VALIDATE_BOOLEAN);
 
 
@@ -840,6 +843,11 @@ class AjaxController
 		\wpSPIO()->settings()->createAvif = $doAvif;
 		\wpSPIO()->settings()->doBackgroundProcess = $backgroundProcess;
 		\wpSPIO()->settings()->autoAIBulk = $doAi;
+
+		if (false === is_null($aiPreserve))
+		{
+			\wpSPIO()->settings()->aiPreserve = $aiPreserve;
+		}
 
 		$bulkControl = BulkController::getInstance();
 
@@ -1076,11 +1084,9 @@ class AjaxController
 		}
 		else
 		{
-			$item = new AiDataModel($id);
+			$item = AiDataModel::getModelByAttachment($id);
 			$attach_id = $id; 
 		}
-
-	//	$attach_id = null;
 		
 		$imageModel = \wpSPIO()->fileSystem()->getMediaImage($attach_id);
 
@@ -1581,7 +1587,6 @@ class AjaxController
 			$json->processorKey = $pKey;
 
 		wp_send_json($json);
-
 		exit();
 	}
 

@@ -47,13 +47,12 @@ abstract class OptimizerBase
     {
       //exit('This call is wron because in it messes with ActionController - Reoptimize ( calls ActionController again instead of OptimizeConrtoller');
       $calledClass = get_called_class(); 
-//Log::addTemp('OptimizerBase Called Class - ' . $calledClass); 
+
       if (! isset(static::$instances[$calledClass]))
       {
          static::$instances[$calledClass] = new $calledClass(); 
       }
 
- //  Log::addTemp('OptimizeBase, Instances', self::$instances);
         return self::$instances[$calledClass];
     }
 

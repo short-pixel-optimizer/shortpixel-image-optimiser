@@ -330,8 +330,6 @@ class UiHelper
 				return [];
       }
 
-      //$aiDataModel = new AiDataModel($id);
-
       if ($mediaItem->isSomethingOptimized() )
       {
 						list($u, $optimizable) = $mediaItem->getCountOptimizeData('thumbnails');

@@ -62,6 +62,7 @@ class QueueController
         'compressionType' => null, 
         'smartcrop' => null, 
         'next_actions' => [], 
+        'returndatalist' => [], 
       );
       $args = wp_parse_args($args, $defaults);
 
@@ -71,6 +72,15 @@ class QueueController
       if (count($args['next_actions']) > 0)
       {
          $qItem->data()->next_actions = $args['next_actions'];
+      }
+
+      if (is_object($args['returndatalist']))
+      {
+         $args['returndatalist'] = (array) $args['returndatalist'];
+      }
+      if (is_array($args['returndatalist']) && count($args['returndatalist']) > 0)
+      {
+         $qItem->data()->returndatalist = $args['returndatalist'];
       }
 
       $queue = $this->getQueue($imageModel->get('type'));

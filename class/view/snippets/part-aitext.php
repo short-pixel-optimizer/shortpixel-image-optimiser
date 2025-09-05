@@ -2,6 +2,7 @@
 
 use ShortPixel\Controller\ApiKeyController;
 use ShortPixel\Controller\QuotaController;
+use ShortPixel\Model\AiDataModel;
 
 $icon_url = plugins_url( '/res/images/icon/', SHORTPIXEL_PLUGIN_FILE ); 
 $robo_icon = $icon_url . '/shortpixel.svg'; 
@@ -9,9 +10,13 @@ $ai_icon = $icon_url . '/ai.svg';
 
 $item_id = $this->data['item_id']; 
 $has_data = $this->data['has_data'];
-$isSupported = $this->data['isSupported'];
+//$isSupported = $this->data['isSupported'];
 $isDifferent = $this->data['isDifferent'];
 $dataItems = implode(',',$this->data['dataItems']);
+
+$is_processable = $this->data['is_processable']; 
+$processable_reason = $this->data['processable_reason'];
+$processable_status = $this->data['processable_status'];
 
 $quotaControl = QuotaController::getInstance();
 $keyControl = ApiKeyController::getInstance();
@@ -22,12 +27,19 @@ if (true === apply_filters('shortpixel/settings/no_ai', false)):
 	?>
 	<p class='hidden' id='shortpixel-noai'></p>
 <?php
+endif;
 
-elseif (false === $isSupported):
+if (false === $is_processable && $processable_status !== AiDataModel::P_ALREADYDONE):
 
-	?>
-		<p><?php _e('Currently, ShortPixel AI cannot generate SEO data for GIF files.', 'shortpixel-image-optimiser'); ?></p>
-	<?php 
+	if (true === in_array($processable_status, [AiDataModel::P_NOJOB])) // Silent fail if all done
+	{
+
+	}
+	else
+	{
+		printf('<p>%s</p>', $processable_reason);
+	}
+	
 
 elseif (false === $has_data): 
 

@@ -260,13 +260,16 @@ class ShortPixelScreen extends ShortPixelScreenBase
      data.customActive = (document.getElementById('custom_checkbox').checked) ? true : false;
      data.webpActive = (document.getElementById('webp_checkbox').checked) ? true : false;
      data.avifActive = (document.getElementById('avif_checkbox').checked) ? true : false;
+     
      if (null !== document.getElementById('autoai_checkbox'))
      {
         data.aiActive = (document.getElementById('autoai_checkbox').checked) ? true : false;
+        data.aiPreserve = (document.getElementById('aipreserve_checkbox').checked) ? true : false;
      }
      else
      {
        data.aiActive = false; 
+     //  data.aiPreserve = false; 
      }
      data.backgroundProcess = (document.getElementById('background_checkbox').checked) ? true : false;
 
@@ -509,23 +512,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
 				}
 			}); // circles;
 	}
-  DoSelection() // action to update response.
-  {
-      // @todo Check the future of this function, since checking this is now createBulk.
-      var data = {screen_action: 'applyBulkSelection'}; //
-      data.callback = 'shortpixel.applySelectionDone';
 
-      data.mediaActive = (document.getElementById('media_checkbox').checked) ? true : false;
-      data.customActive = (document.getElementById('custom_checkbox').checked) ? true : false;
-      data.webpActive = (document.getElementById('webp_checkbox').checked) ? true : false;
-      data.avifActive = (document.getElementById('avif_checkbox').checked) ? true : false;
-      data.aiActive = (document.getElementById('autoai_checkbox').checked) ? true : false;
-      data.backgroundProcess = (document.getElementById('background_checkbox').checked) ? true : false;
-
-      window.addEventListener('shortpixel.applySelectionDone', function (e) { this.SwitchPanel('summary'); }.bind(this) , {'once': true} );
-      this.processor.AjaxRequest(data);
-
-  }
 
   UpdateStats(stats, type)
   {
