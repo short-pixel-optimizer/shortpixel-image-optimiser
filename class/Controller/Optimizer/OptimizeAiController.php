@@ -236,11 +236,21 @@ class OptimizeAiController extends OptimizerBase
     $textItems = ['alt', 'caption', 'description'];
     foreach($textItems as $textItem)
     {
+      
          if (isset($aiData[$textItem]) && false !== $aiData[$textItem] && false === is_numeric($aiData[$textItem]))
          {
              $aiData[$textItem] = $this->processTextResult($aiData[$textItem]);
          }
-    }            
+         // If 1 is returned as data, this means for some reason the API didn't create a text for this field, while it is allowed to do so. Defer to empty string better than '1' 
+         if (true === is_numeric($aiData[$textItem]) && 1 == $aiData[$textItem])
+         {
+            $aiData[$textItem] = ''; 
+         }
+    }   
+
+    // Re-add Result after formatting so it passed back
+    //$qItem->addResult(['aiData' => $aiData]);
+
 
     return $aiData; 
   }
@@ -287,6 +297,12 @@ class OptimizeAiController extends OptimizerBase
         $qItem->addResult(['improvements' => $imageModel->getImprovements()]); // Improvements for bulk UX. 
 
         $this->addPreview($qItem); // Preview ( image ) for bulk UX 
+
+        AiDataModel::flushModelCache($item_id);
+
+        // Get generated data which is the final result for the action including exclusions etc. 
+        $data = $this->getAltData($qItem); 
+        $qItem->addResult(['aiData' => $data['generated']]); // But the generated data in the result.
 
         $this->finishItemProcess($qItem);
         return;
@@ -764,6 +780,7 @@ class OptimizeAiController extends OptimizerBase
 
        $this->replaceImageAttributes($qItem, $aiData); 
 
+       $aiData = $aiModel->getCurrentData();
     
        return $this->getAltData($qItem); 
   }
@@ -850,6 +867,7 @@ public function getAltData(QueueItem $qItem)
 
     $metadata['generated'] = $generated; 
     $metadata['original'] = $original; 
+    $metadata['current'] = $current; 
     $metadata['action'] = $qItem->data()->action;
     $metadata['item_id'] = $item_id;
 

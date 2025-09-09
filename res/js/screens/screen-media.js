@@ -75,7 +75,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			var newDescription = aiData.description;
 		}
 
-		if (typeof newAltText !== 'undefined')
+		if (typeof newAltText !== 'undefined' || newAltText < 0)
 		{
 			var inputs = this.altInputNames;
 	
@@ -107,7 +107,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		 let captionFields = ['attachment_caption', 'attachment-details-caption']; 
 		 let descriptionFields = ['attachment_content', 'attachment-details-description']; 
 		 
-		 if (typeof newCaption !== 'undefined')
+		 if (typeof newCaption !== 'undefined' || newCaption < 0)
 		 {
 			for (var i = 0; i < captionFields.length; i++)
 			{
@@ -119,7 +119,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			}
 		 }
 
-		 if (typeof newDescription !== 'undefined')
+		 if (typeof newDescription !== 'undefined' || newDescription < 0)
 		 {
 			for (var i = 0; i < descriptionFields.length; i++)
 			{
