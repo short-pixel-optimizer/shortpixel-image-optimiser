@@ -497,6 +497,8 @@
         {
            opacity: 1;
 					 height: auto;
+           z-index: 10;
+           position: relative;
         }
       }
       .load.wrapper

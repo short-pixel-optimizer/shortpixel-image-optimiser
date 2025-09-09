@@ -46,7 +46,7 @@ $approx = $this->view->approx;
         </div>
 
 
-       </div>
+      </div>
 
        <div class="interface wrapper">
 
