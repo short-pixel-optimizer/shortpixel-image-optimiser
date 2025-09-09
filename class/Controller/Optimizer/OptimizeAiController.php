@@ -863,6 +863,17 @@ public function getAltData(QueueItem $qItem)
         ]);
 
 
+    // *****!!! Temporary don't pass these back since we don't support it yet ** // 
+
+    if (isset($generated['filebase']))
+    {
+       unset($generated['filebase']); 
+    }
+    if (isset($generated['filename']))
+    {
+       unset($generated['filename']);
+    }
+
     $metadata['snippet'] = $view->returnView('snippets/part-aitext');
 
     $metadata['generated'] = $generated; 
