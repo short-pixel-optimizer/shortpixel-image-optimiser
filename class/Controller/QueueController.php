@@ -393,6 +393,7 @@ class QueueController
                 'is_done' => true,
                 'is_error' => true,
             ]);
+            $Q->itemFailed($qItem, true); 
             $send_to_processing = false; 
           }
           elseif(true === $qItem->block())
@@ -830,7 +831,13 @@ class QueueController
   {
     $item_id = $qItem->item_id;
     $responseItem = ResponseController::getResponseItem($item_id);
-    $type = $qItem->imageModel->get('type');
+
+    $type = (is_object($qItem->imageModel)) ? $qItem->imageModel->get('type') : false;
+
+    if (false === $type)
+    {
+      return;
+    }
 
     $fs = \wpSPIO()->filesystem();
     $backupDir = $fs->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
