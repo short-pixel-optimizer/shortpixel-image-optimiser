@@ -207,6 +207,7 @@ class QueueController
       { 
         // @todo This queueItem should maybe not to stuffed with 'addresult'm since it's a different object. 
           $queueItem = $q->getItem($mediaItem->get('id'));
+          
           if (is_object($queueItem))
           {
               $queueItem->setModel($mediaItem); 

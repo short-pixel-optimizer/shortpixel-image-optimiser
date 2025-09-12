@@ -203,11 +203,11 @@ class SpioBulk extends SpioCommandBase
 
 		if (isset($assoc['start-date']))
 		{
-			 $filters['start_date'] = sanitize_text_field($assoc['start_date']); 
+			 $filters['start_date'] = sanitize_text_field($assoc['start-date']); 
 		}
 		if (isset($assoc['end-date']))
 		{
-			 $filters['end_date'] = sanitize_text_field($assoc['end_date']); 
+			 $filters['end_date'] = sanitize_text_field($assoc['end-date']); 
 		}
 
 		if (count($filters) > 0)

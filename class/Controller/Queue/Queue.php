@@ -316,6 +316,7 @@ abstract class Queue
                     $avifCount += $counts->avifCount;
 										$baseCount += $counts->baseCount; // base images (all minus webp/avif) 
 
+                    
                     do_action('shortpixel_start_image_optimisation', $mediaItem);
 
                 }
