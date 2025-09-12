@@ -366,7 +366,7 @@ class ShortPixelPlugin {
 
 		wp_register_script('shortpixel-inline-help', plugins_url('res/js/shortpixel-inline-help.js',  SHORTPIXEL_PLUGIN_FILE), [], SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 		wp_register_script('shortpixel-chatbot', 
-			apply_filters('shortpixel/plugin/nohelp', plugins_url('res/js/shortpixel-chatbot.js',  SHORTPIXEL_PLUGIN_FILE)), [], SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
+			apply_filters('shortpixel/plugin/nohelp', 'https://spcdn.shortpixel.ai/assets/js/ext/ai-chat-agent.js'), [], SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
 		// This filter is from ListMediaViewController for the media library grid display, executive script in shortpixel-media.js.
 

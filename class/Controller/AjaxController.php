@@ -807,11 +807,34 @@ class AjaxController
 
 	protected function createBulk($json, $data)
 	{
+		$filters = []; 
+		$has_filters = false; 
+		
+		if (isset($_POST['filter_startdate'])) 
+		{
+			 $filters['start_date'] = intval($_POST['filter_startdate']); 
+			 $has_filters = true; 	 
+		}
+		if (isset($_POST['filter_enddate']))
+		{
+			 $filters['end_date'] = intval($_POST['filter_enddate']); 
+			 $has_filters = true; 
+
+		}
+
+		$args = []; 
+		if (true === $has_filters)
+		{ 
+			$args['filters'] = $filters; 
+		}
+		
+
+
 		$bulkControl = BulkController::getInstance();
-		$stats = $bulkControl->createNewBulk('media');
+		$stats = $bulkControl->createNewBulk('media', $args);
 		$json->media->stats = $stats;
 
-		$stats = $bulkControl->createNewBulk('custom');
+		$stats = $bulkControl->createNewBulk('custom', $args);
 		$json->custom->stats = $stats;
 
 		$json = $this->applyBulkSelection($json, $data);
@@ -895,12 +918,12 @@ class AjaxController
 		$queues = array_filter(explode(',', $queue), 'trim');
 
 		if (in_array('media', $queues)) {
-			$stats = $bulkControl->createNewBulk('media', 'bulk-restore');
+			$stats = $bulkControl->createNewBulk('media', ['customOp' => 'bulk-restore']);
 			$json->media->stats = $stats;
 		}
 
 		if (in_array('custom', $queues)) {
-			$stats = $bulkControl->createNewBulk('custom', 'bulk-restore');
+			$stats = $bulkControl->createNewBulk('custom', ['customOp' => 'bulk-restore']);
 			$json->custom->stats = $stats;
 		}
 
@@ -913,7 +936,7 @@ class AjaxController
 		QueueController::resetQueues(); // prevent any weirdness
 
 
-		$stats = $bulkControl->createNewBulk('media', 'migrate');
+		$stats = $bulkControl->createNewBulk('media', ['customOp' => 'migrate']);
 		$json->media->stats = $stats;
 
 		return $json;
@@ -925,7 +948,7 @@ class AjaxController
 		QueueController::resetQueues(); // prevent any weirdness
 
 
-		$stats = $bulkControl->createNewBulk('media', 'removeLegacy');
+		$stats = $bulkControl->createNewBulk('media', ['customOp' => 'removeLegacy']);
 		$json->media->stats = $stats;
 
 		return $json;

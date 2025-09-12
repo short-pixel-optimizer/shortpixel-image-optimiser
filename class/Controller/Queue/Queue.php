@@ -48,7 +48,7 @@ abstract class Queue
     protected $cacheName; 
 
     
-    public function createNewBulk()
+    public function createNewBulk($args = [])
     {
 				$this->resetQueue();
 
@@ -58,6 +58,8 @@ abstract class Queue
 
         $cache = new CacheController();
         $cache->deleteItem($this->cacheName);
+
+        $this->setCustomBulk($args);
     }
 
     public function startBulk()
@@ -98,9 +100,7 @@ abstract class Queue
        );
        $args = wp_parse_args($args, $defaults);
 
-
        $qItem = QueueItems::getImageItem($imageModel);
-
 
 			 $result = new \stdClass;
 
@@ -504,13 +504,21 @@ abstract class Queue
         return $this->q->getStatus($name);
     }
 
-    public function setCustomBulk($type = null, $options = array() )
+    public function setCustomBulk($options = [] )
     {
-        if (is_null($type))
+        if (0 === count($options))
           return false;
 
         $customData = $this->getStatus('custom_data');
-        $customData->customOperation = $type;
+
+
+        if (isset($options['customOp']))
+        {
+           $customOp = $options['customOp'];   
+           $customData->customOperation = $customOp;
+           unset($options['customOp']);
+        }
+
         if (is_array($options) && count($options) > 0)
           $customData->queueOptions = $options;
 
