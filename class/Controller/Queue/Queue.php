@@ -117,13 +117,19 @@ abstract class Queue
     public function addQueueItem(QueueItem $qItem)
     {
       $this->q->addItems([$qItem->returnEnqueue()], false);
+      $item_id = $qItem->item_id; 
       $numitems = $this->q->withRemoveDuplicates()->enqueue(); // enqueue returns numitems
 
       $result = new \stdClass;
       $result->qstatus = $this->getQStatus($numitems);
       $result->numitems = $numitems;
 
-      do_action('shortpixel_start_image_optimisation', $qItem->item_id, $qItem->imageModel);
+      if (isset(self::$isInQueue[$item_id]))
+      {
+         unset(self::$isInQueue[$item_id]);
+      }
+
+      do_action('shortpixel_start_image_optimisation', $item_id, $qItem->imageModel);
       return $result;
     }
 
