@@ -107,6 +107,8 @@ abstract class Queue
        $this->q->addItems([$qItem->returnEnqueue()], false);
        $numitems = $this->q->withRemoveDuplicates()->enqueue(); // enqueue returns numitems
 
+       $this->checkQueueCache($imageModel->get('id'));
+
        $result->qstatus = $this->getQStatus($numitems);
        $result->numitems = $numitems;
 
@@ -124,10 +126,8 @@ abstract class Queue
       $result->qstatus = $this->getQStatus($numitems);
       $result->numitems = $numitems;
 
-      if (isset(self::$isInQueue[$item_id]))
-      {
-         unset(self::$isInQueue[$item_id]);
-      }
+      $this->checkQueueCache($item_id);
+      
 
       do_action('shortpixel_start_image_optimisation', $item_id, $qItem->imageModel);
       return $result;
@@ -317,6 +317,7 @@ abstract class Queue
 										$baseCount += $counts->baseCount; // base images (all minus webp/avif) 
 
                     
+                    $this->checkQueueCache($item_id);
                     do_action('shortpixel_start_image_optimisation', $mediaItem);
 
                 }
@@ -621,6 +622,20 @@ abstract class Queue
 				}
 				return false;
 		}
+
+    protected function checkQueueCache($item_id)
+    {
+
+      
+      if (isset(self::$isInQueue[$item_id]) && false === self::$isInQueue[$item_id])
+      {
+         unset(self::$isInQueue[$item_id]);
+      }
+
+
+
+
+    }
 
     public function itemFailed(QueueItem $qItem, $fatal = false)
     {

@@ -130,9 +130,9 @@ class AiDataModel
      * 
      * @return array{paramlist: array<string, array{context: mixed, chars: mixed}>, returndatalist: array<string, array<string, int>>} 
      */
-    public function getOptimizeData()
+    public function getOptimizeData($params = [])
     {
-        $settings = \wpSPIO()->settings(); //UtilHelper::getAiSettings(); 
+        $settings = (object) UtilHelper::getAiSettings($params); 
 
         $ignore_fields = []; 
         if (true === $settings->aiPreserve)

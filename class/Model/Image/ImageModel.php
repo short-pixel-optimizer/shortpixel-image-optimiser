@@ -477,11 +477,11 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 				if (! isset($optimizeData['params']) || ! isset($optimizeData['urls']))
 				{
-					array(array(), 0);
+					array([], 0);
 				}
 
 				$count = 0;
-				$urls = array();
+				$urls = [];
 				$i = 0;
 
 				$params = $optimizeData['params'];

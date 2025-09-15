@@ -483,7 +483,7 @@ class QueueItem
 
       $aiDataModel = new AiDataModel($item_id);
       
-      $data = $aiDataModel->getOptimizeData();
+      $data = $aiDataModel->getOptimizeData($args);
 
       if (isset($data['paramlist']))
       {

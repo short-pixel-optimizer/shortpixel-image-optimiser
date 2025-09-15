@@ -1015,8 +1015,6 @@ class AjaxController
 		$qItem = QueueItems::getImageItem($imageModel);
 
 		$optimizer = $qItem->getApiController('requestAlt');
-		//$optimize->useCustomSettings($settingsData);
-		//$result = $optimizer->enqueueItem($qItem, array_merge(['preview_only' => true, 'action' => 'requestAlt'], $settingsData));
 
 		$qItem->requestAltAction(array_merge(['preview_only' => true], $settingsData));
 		$optimizer->sendToProcessing($qItem);
@@ -1052,7 +1050,10 @@ class AjaxController
 					Log::addTemp('Result', $result); 
 					if (property_exists($result, 'aiData'))
 					{
+						$aiModel = AiDataModel::getModelByAttachment($qItem->item_id, 'media');
+
 						 $aiData = $optimizer->formatResultData($result->aiData, $qItem);
+						 list($items, $aiData) = $optimizer->formatGenerated($aiData, $aiModel->getCurrentData(), $aiModel->getOriginalData());
 						 $aiData['item_id'] = $qItem->item_id;
 						 $aiData['time_generated'] = time(); 
 
@@ -1070,11 +1071,6 @@ class AjaxController
 					 break;
 					}
 				}
-
-
-				//$is_done = true; 
-				//$this->send((object) $result_json); 
-				//break; 
 				
 			}
 
@@ -1090,9 +1086,6 @@ class AjaxController
 			}
 			$i++; 
 		}
-
-		//$this->send($result_json);
-
 	}
 
 	protected function getSettingsAiExample($data)

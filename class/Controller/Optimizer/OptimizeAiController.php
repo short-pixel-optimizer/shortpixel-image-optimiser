@@ -812,38 +812,8 @@ public function getAltData(QueueItem $qItem)
 
     $image_url = $qItem->imageModel->getUrl();
 
-    $fields = ['alt', 'caption', 'description'];
-    $dataItems = []; 
+    list($dataItems, $generated) = $this->formatGenerated($generated, $current, $original);
 
-    // Statii from AiDataModel which means generated is not available (replace for original/current?) 
-    $statii = [AiDataModel::F_STATUS_PREVENTOVERRIDE, AiDataModel::F_STATUS_EXCLUDESETTING];
-
-    foreach($fields as $name)
-    {
-         if (false === isset($generated[$name]))
-         {
-            continue; 
-         }
-         $value = $generated[$name]; 
-         
-
-         if (false === is_null($value) && false === is_int($value) && strlen($value) > 1)
-         {
-            $dataItems[] = ucfirst($name); 
-         }
-         if (is_int($value) && in_array($value, $statii))
-         {
-            if (isset($current[$name]))
-            {
-                 $value = $current[$name];
-            }
-            elseif(isset($original[$name]))
-            {
-                 $value = $original[$name];
-            }
-            $generated[$name] = $value;
-         }
-    } 
 
     $view = new ViewController();
     $view->addData([
@@ -883,6 +853,45 @@ public function getAltData(QueueItem $qItem)
     $metadata['item_id'] = $item_id;
 
     return $metadata; 
+}
+
+public function formatGenerated($generated, $current, $original)
+{
+    
+  $fields = ['alt', 'caption', 'description'];
+  $dataItems = []; 
+
+  // Statii from AiDataModel which means generated is not available (replace for original/current?) 
+  $statii = [AiDataModel::F_STATUS_PREVENTOVERRIDE, AiDataModel::F_STATUS_EXCLUDESETTING];
+
+  foreach($fields as $name)
+  {
+       if (false === isset($generated[$name]))
+       {
+          continue; 
+       }
+       $value = $generated[$name]; 
+       
+
+       if (false === is_null($value) && false === is_int($value) && strlen($value) > 1)
+       {
+          $dataItems[] = ucfirst($name); 
+       }
+       if (is_int($value) && in_array($value, $statii))
+       {
+          if (isset($current[$name]))
+          {
+               $value = $current[$name];
+          }
+          elseif(isset($original[$name]))
+          {
+               $value = $original[$name];
+          }
+          $generated[$name] = $value;
+       }
+  } 
+
+  return [$dataItems, $generated];
 }
 
 
