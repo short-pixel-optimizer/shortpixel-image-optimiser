@@ -75,7 +75,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			var newDescription = aiData.description;
 		}
 
-		if (typeof newAltText !== 'undefined')
+		if (typeof newAltText !== 'undefined' || newAltText < 0)
 		{
 			var inputs = this.altInputNames;
 	
@@ -106,10 +106,8 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		 // = document.getElementById('attachment_alt'); 
 		 let captionFields = ['attachment_caption', 'attachment-details-caption']; 
 		 let descriptionFields = ['attachment_content', 'attachment-details-description']; 
-
-
 		 
-		 if (typeof newCaption !== 'undefined')
+		 if (typeof newCaption !== 'undefined' || newCaption < 0)
 		 {
 			for (var i = 0; i < captionFields.length; i++)
 			{
@@ -119,11 +117,9 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 					captionField.value = newCaption; 
 				}				 
 			}
-
-				
 		 }
 
-		 if (typeof newDescription !== 'undefined')
+		 if (typeof newDescription !== 'undefined' || newDescription < 0)
 		 {
 			for (var i = 0; i < descriptionFields.length; i++)
 			{
@@ -133,10 +129,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 					 descriptionField.value = newDescription; 
 				}
 			}
-
-
 		 }
-
 
 		if (null !== attachmentAlt)
 		{
@@ -156,12 +149,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 			window.addEventListener('shortpixel.AttachAiInterface', this.AttachAiInterface.bind(this), {once: true});
 		}
-	/*	if (typeof aiData !== 'undefined')
-		{
-			this.processor.LoadItemView({ id: item_id, type: 'media' });
-		} */
-
-
 	}
 
 	GetPageAttachmentAlt()
@@ -290,6 +277,8 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 	HandleImage(resultItem, type) {
 		var res = super.HandleImage(resultItem, type);
 		var fileStatus = this.processor.fStatus[resultItem.fileStatus];
+		var apiName = (typeof resultItem.apiName !== 'undefined') ? resultItem.apiName : 'optimize'; 
+
 
 		// If image editor is active and file is being restored because of this reason ( or otherwise ), remove the warning if this one exists.
 		if (fileStatus == 'FILE_RESTORED') {
@@ -297,6 +286,11 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			if (warning !== null) {
 				warning.remove();
 			}
+		}
+
+		if (fileStatus == 'FILE_DONE' && apiName == 'ai')
+		{
+			this.UpdateGutenBerg(resultItem);
 		}
 	}
 
@@ -322,6 +316,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 	ListenGallery() {
 		var self = this;
+		var next_item_run_process = false; 
 
 		if (this.settings.hide_spio_in_popups)
 		{
@@ -348,9 +343,31 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				detailsColumn.prototype.render.apply(this); // Render Parent
 
 				if (typeof this.fetchSPIOData === 'function') {
-					this.fetchSPIOData(this.model.get('id'));
-					this.spioBusy = true; // Note if this system turns out not to work, the perhaps render empties all if first was painted, second cancelled?
+					let attach_id = this.model.get('id');
 
+					if (typeof attach_id !== 'undefined')
+					{
+						if (true === next_item_run_process )
+						{
+							window.ShortPixelProcessor.SetInterval(-1);
+							window.ShortPixelProcessor.RunProcess();
+							next_item_run_process = false; 
+						}
+						else
+						{
+						this.fetchSPIOData(attach_id);
+						this.spioBusy = true; // Note if this system turns out not to work, the perhaps render empties all if first was painted, second cancelled?
+						}
+					}
+					else if (true == this.model.get('uploading'))
+					{
+						next_item_run_process = true; 
+						console.log('Upload Start Detected');
+					}
+					else
+					{
+						console.log('Id not found on render');
+					}
 				}
 
 				return this;
@@ -446,7 +463,9 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		wrapper.id = 'shortpixel-ai-wrapper-' + item_id;
 		wrapper.classList.add('shortpixel-ai-interface',element.getAttribute('id'));
 		
-	  	wrapper.innerHTML = data.snippet;	
+		wrapper.innerHTML = data.snippet;	
+
+
 		element.after(wrapper);
 
 		element.dataset.shortpixelAlt = data.item_id;		
@@ -576,6 +595,39 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				}
 			}
 		});
+	}
+
+	UpdateGutenBerg(resultItem)
+	{
+		
+		var attach_id = resultItem.item_id; 
+		var aiData = resultItem.aiData; 
+		
+		if (! wp.data || ! wp.data.select('core'))
+		{
+			return false; 
+		}
+
+		console.log(wp.data.select( 'core/block-editor' ));
+
+		let blocks = wp.data.select( 'core/block-editor' ).getBlocks();
+		console.log(blocks);
+		for (let i = 0; i < blocks.length; i++)
+		{
+			let block = blocks[i];
+
+			 if (block.attributes.id == attach_id)
+			 {
+				//block.attributes.alt = "I CAME TO ALT"; 
+				//block.attributes.caption = "CAPTION THIS";
+				let clientId = block.clientId;
+
+				console.log('DATA DISPATCH ', clientId, aiData);				
+				wp.data.dispatch( 'core/block-editor' ).updateBlockAttributes( clientId, 
+					aiData );
+
+			 }
+		}
 	}
 
 } // class

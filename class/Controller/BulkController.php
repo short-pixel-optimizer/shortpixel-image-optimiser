@@ -36,8 +36,17 @@ class BulkController
    * @param $customOp String   Not a usual optimize queue, but something else. options:
    * 'bulk-restore', or 'migrate'.
    */
-   public function createNewBulk($type = 'media', $customOp = null)
+   public function createNewBulk($type = 'media', $args = [])
    {
+      $defaults = [
+          'customOp' => null, 
+          'filters' => [], 
+
+      ];
+
+
+      $args = wp_parse_args($args, $defaults); 
+
       $queueController = new QueueController(['is_bulk' => true]);
 
 			$fs = \wpSPIO()->filesystem();
@@ -52,25 +61,29 @@ class BulkController
 
       $Q = $queueController->getQueue($type);
 
-      $Q->createNewBulk();
-
-      if (! is_null($customOp))
+      if (! is_null($args['customOp']))
       {
-        $options = array();
+        $customOp = $args['customOp'];
+        //$args['customOp'] = $customOp;
         if ($customOp == 'bulk-restore')
         {
-          $options['numitems'] = 5;
-          $options['retry_limit'] = 5;
-          $options['process_timeout'] = 3000;
+          $args['numitems'] = 5;
+          $args['retry_limit'] = 5;
+          $args['process_timeout'] = 3000;
+          
         }
         if ($customOp == 'migrate' || $customOp == 'removeLegacy')
         {
-           $options['numitems'] = 200;
+           $args['numitems'] = 200;
         }
 
-				$options = apply_filters('shortpixel/bulk/custom_options', $options, $customOp);
-        $Q->setCustomBulk($customOp, $options);
+				$args = apply_filters('shortpixel/bulk/custom_options', $args);
+
       }
+
+      
+      $Q->createNewBulk($args);
+
 
       return $Q->getStats();
    }

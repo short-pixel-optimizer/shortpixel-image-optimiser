@@ -7,6 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use ShortPixel\ShortQ\ShortQ as ShortQ;
 use ShortPixel\Controller\CacheController as CacheController;
+use ShortPixel\Helper\UtilHelper;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 
@@ -31,6 +32,7 @@ class MediaLibraryQueue extends Queue
         'process_timeout' => 10000, // time between request for the image. (in milisecs)
         'retry_limit' => 30, // amount of times it will retry without errors before giving up
         'enqueue_limit' => 200, // amount of items added to the queue when preparing.
+        'filters' => [], 
      );
 
      $options = apply_filters('shortpixel/medialibraryqueue/options', $options);
@@ -55,6 +57,56 @@ class MediaLibraryQueue extends Queue
       return $this->prepareItems($items);
    }
 
+   public function createNewBulk($args = [])
+   {
+     /* if (isset($args['filters']))
+      {
+         $this->addFilters($args['filters']); 
+      } */
+       
+      
+      // Parent should save options as well. 
+       return parent::createNewBulk($args); 
+   }
+
+
+   protected function addFilters($filters)
+   {
+
+      //$start_id = $end_id = null; 
+
+      
+      global $wpdb; 
+      
+
+      $start_date = isset($filters['start_date'])  ? new \DateTime($filters['start_date']) : false; 
+      $end_date = isset($filters['end_date'])  ? new \DateTime($filters['end_date']) : false; 
+
+      if (isset($filters['start_date']))
+      {
+         //$date = UtilHelper::timestampToDB($filters['start_time']); 
+         $date = $start_date->format("Y-m-d H:i:s");
+         $startSQL = 'select max(ID) from wp_posts where post_date <= %s group by post_date order by post_date DESC limit 1';
+         $sql = $wpdb->prepare($startSQL, $date); 
+         $start_id =  $wpdb->get_var($sql); 
+      }
+      if (isset($filters['end_date']))
+      {
+        // $date = UtilHelper::timestampToDB($filters['end_time']); 
+        $date = $end_date->format("Y-m-d H:i:s");
+         $endSQL = 'select MIN(ID) from wp_posts where post_date <= %s group by post_date order by post_date DESC limit 1';
+         $sql = $wpdb->prepare($endSQL, $date); 
+         $end_id =  $wpdb->get_var($sql); 
+      }
+      
+
+
+       //echo "Start $start_id END $end_id";
+       //exit();
+      // IF POST DATE NEEDS 09-20 ( or 23:59:59? )
+      // select post_date, max(ID) from wp_posts where post_date <= '2024-09-21 00:00:00' group by post_date order by post_date DESC limit 100
+   }
+   
 
    private function queryPostMeta()
    {

@@ -354,9 +354,10 @@ class wpOffload
 						}
 					}
 				}
-			}
-		}
 
+			}
+
+		}
 
 		return $source_id;
 	}

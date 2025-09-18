@@ -238,10 +238,18 @@ class ApiController extends RequestManager
 					$analyze['ready']++;
 					$imageName = $imageNames[$index];
 					$fileName = $fileNames[$index];
+					$paramlist = $qItem->data()->paramlist; 
+
+					// Here add paramList items that are possible needed for success checks 
+					$params = isset($paramlist[$index]) ? (array) $paramlist[$index] : []; 
+					
+
 					$data = array(
 						'fileName' => $fileName,
 						'imageName' => $imageName,
 					);
+
+					$data = array_merge($params, $data);
 
 					// Filesize might not be present, but also imageName ( only if smartcrop is done, might differ per image)
 					if (isset($returnDataList['fileSizes']) && isset($returnDataList['fileSizes'][$imageName])) {
@@ -398,8 +406,13 @@ class ApiController extends RequestManager
 		$checkFileSize = intval($fileData->$fileSize); // Size of optimized image to check against Avif/Webp
 
 		if (false === $this->checkFileSizeMargin($originalFileSize, $checkFileSize)) {
-			$image['image']['status'] = self::STATUS_OPTIMIZED_BIGGER;
-			$checkFileSize = $originalFileSize;
+			
+			// Prevent this check if smartcrop is active on this image. 
+			if (isset($data['resize']) && 4 == $data['resize'] )
+			{
+				$image['image']['status'] = self::STATUS_OPTIMIZED_BIGGER;
+				$checkFileSize = $originalFileSize;
+			}
 		}
 
 		if (property_exists($fileData, "WebP" . $fileType)) {

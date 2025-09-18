@@ -62,6 +62,7 @@ class QueueController
         'compressionType' => null, 
         'smartcrop' => null, 
         'next_actions' => [], 
+        'returndatalist' => [], 
       );
       $args = wp_parse_args($args, $defaults);
 
@@ -71,6 +72,15 @@ class QueueController
       if (count($args['next_actions']) > 0)
       {
          $qItem->data()->next_actions = $args['next_actions'];
+      }
+
+      if (is_object($args['returndatalist']))
+      {
+         $args['returndatalist'] = (array) $args['returndatalist'];
+      }
+      if (is_array($args['returndatalist']) && count($args['returndatalist']) > 0)
+      {
+         $qItem->data()->returndatalist = $args['returndatalist'];
       }
 
       $queue = $this->getQueue($imageModel->get('type'));
@@ -197,6 +207,7 @@ class QueueController
       { 
         // @todo This queueItem should maybe not to stuffed with 'addresult'm since it's a different object. 
           $queueItem = $q->getItem($mediaItem->get('id'));
+          
           if (is_object($queueItem))
           {
               $queueItem->setModel($mediaItem); 
@@ -326,7 +337,6 @@ class QueueController
   protected function runTick($Q)
   {
     $result = $Q->run();
-    $results = [];
     $fs = \wpSPIO()->filesystem();
 
     ResponseController::setQ($Q);
@@ -336,7 +346,6 @@ class QueueController
     $qtype = $Q->getType();
     $qtype = strtolower($qtype);
 
-    //Log::addTemp('RunTick Items - ', $items);
     /* Only runs if result is array, dequeued items.
        Item is a MediaItem subset of QueueItem
     */
@@ -345,6 +354,7 @@ class QueueController
           // Note, all these functions change content of QueueItem
           $action = $qItem->data()->action;
           $apiController = $qItem->getAPIController($action);
+          $send_to_processing = true; 
 
 
           if (is_null($apiController))
@@ -373,16 +383,18 @@ class QueueController
             $qItem->setModel($imageModel);
           }
           
-          if (! is_object($imageModel))
+          if (! is_object($imageModel)) // Error in loading imageModel, can't process this. 
           {
             Log::addWarn('ImageObject was empty when send to processing - ' . $item_id);
             $qItem->addResult([
                 'apiStatus' => RequestManager::STATUS_NOT_API,
-                'message' => __("File Error. File could not be loaded with this ID ", 'shortpixel-image-optimiser'),
+                'message' => __("File Error. Media Item could not be loaded with this ID ", 'shortpixel-image-optimiser'),
                 'fileStatus' => ImageModel::FILE_STATUS_ERROR,
                 'is_done' => true,
                 'is_error' => true,
             ]);
+            $Q->itemFailed($qItem, true); 
+            $send_to_processing = false; 
           }
           elseif(true === $qItem->block())
           {
@@ -391,6 +403,8 @@ class QueueController
                 'message' => __('Item is waiting (blocked)', 'shortpixel-image-optimiser'),
             ]);
             Log::addWarn('Encountered blocked item, processing success? ', $item_id);
+            ResponseController::addData($item_id, 'fileName', $imageModel->getFileName());
+            $send_to_processing = false; 
           }
           else
           {
@@ -402,13 +416,10 @@ class QueueController
             // Used in WP-CLI
             ResponseController::addData($item_id, 'fileName', $imageModel->getFileName());
           }
-
-          ResponseController::addData($item_id, 'fileName', $imageModel->getFileName());
-
         
           $this->setLastID($item_id);
 
-          if (! is_null($apiController))
+          if (! is_null($apiController) && true === $send_to_processing)
           {
             $apiController->sendToProcessing($qItem);
             $apiController->handleAPIResult($qItem);  
@@ -820,7 +831,13 @@ class QueueController
   {
     $item_id = $qItem->item_id;
     $responseItem = ResponseController::getResponseItem($item_id);
-    $type = $qItem->imageModel->get('type');
+
+    $type = (is_object($qItem->imageModel)) ? $qItem->imageModel->get('type') : false;
+
+    if (false === $type)
+    {
+      return;
+    }
 
     $fs = \wpSPIO()->filesystem();
     $backupDir = $fs->getDirectory(SHORTPIXEL_BACKUP_FOLDER);

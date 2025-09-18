@@ -166,8 +166,13 @@ class SpioBulk extends SpioCommandBase
 	 *   - custom
 	 * [--special=<migrate>]
 	 * : Run the migration
-	 * ---
-	 *
+	 * 
+	 * [--start-date=<start_date>]
+	 * : Filter, start from this date 
+	 * 
+	 * [--end-date=<end_date>]
+	 * : Filter, don't enqueue items old than this date. 
+	 * 
 	 * ## EXAMPLES
 	 *
 	 *  wp spio bulk create
@@ -185,17 +190,33 @@ class SpioBulk extends SpioCommandBase
 		$queues = $this->getQueueArgument($assoc);
 
 		$operation = null;
+		$args = $filters = []; 
 		if (isset($assoc['special'])) {
 			switch ($assoc['special']) {
 				case 'migrate':
 					$operation = 'migrate';
+					$args['customOp'] = $operation; 
 					$queues = array('media'); // can only have one bulk, this.
 					break;
 			}
 		}
 
+		if (isset($assoc['start-date']))
+		{
+			 $filters['start_date'] = sanitize_text_field($assoc['start-date']); 
+		}
+		if (isset($assoc['end-date']))
+		{
+			 $filters['end_date'] = sanitize_text_field($assoc['end-date']); 
+		}
+
+		if (count($filters) > 0)
+		{
+			 $args['filters'] = $filters; 
+		}
+
 		foreach ($queues as $qname) {
-			$stats = $bulkControl->createNewBulk($qname, $operation);
+			$stats = $bulkControl->createNewBulk($qname, $args);
 			$json->$qname->stats = $stats;
 
 			\WP_CLI::Line("Bulk $qname created. Ready to prepare");

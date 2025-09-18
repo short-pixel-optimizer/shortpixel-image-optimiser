@@ -14,7 +14,7 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Helper\UiHelper as UiHelper;
 
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
-
+use ShortPixel\Model\AiDataModel;
 use ShortPixel\Model\File\FileModel as FileModel;
 
 
@@ -140,8 +140,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
       protected function getStatistics()
       {
-        //$data = $this->data;
-        $stats = array();
+        $stats = [];
         $imageObj = $this->imageModel;
         $did_keepExif = $imageObj->getMeta('did_keepExif');
 
@@ -212,6 +211,8 @@ class EditMediaViewController extends \ShortPixel\ViewController
 						 $urls = $optimizeData['urls'];
 					}
 
+          $optimizeAiController = OptimizeAiController::getInstance();
+
 
 					$thumbnails = $imageObj->get('thumbnails');
 					$processable = ($imageObj->isProcessable()) ? '<span class="green">Yes</span>' : '<span class="red">No</span> (' . $imageObj->getReason('processable') . ')';
@@ -266,39 +267,52 @@ class EditMediaViewController extends \ShortPixel\ViewController
 					{
 						 $debugInfo[] = array(__('To Optimize URLS'),  $urls);
 					}
-					if (isset($optimizeData))
+
+
+          $item = QueueItems::getImageItem($imageObj);
+
+          if ($imageObj->isProcessable())
 					{
-						 $debugInfo[] = array(__('Optimize Data'), $optimizeData);
+						// $queueControl = new QueueController();
 
-						 $queueControl = new QueueController();
 
-					//	 $q = $queueControl->getQueue($imageObj->get('type'));
-
-             $item = QueueItems::getImageItem($imageObj);
              $item->setDebug();
              $item->newOptimizeAction();
 
 						 $returnEnqueue = $item->returnEnqueue();
 
-             // TEST @todo REMOVE 
-             /*$replacer2 = new \ShortPixel\Replacer\Replacer(); 
-             $setup = $replacer2->Setup(); 
-             $setup->forSearch()->URL()->addData($item->imageModel->getURL());
-             
-             $base_url = $setup->forSearch()->URL()->getBaseURL();
-            
-             $text = 'AI TEST'; 
-
-             $finder = $replacer2->Finder(['base_url' => $base_url, 'callback' => [OptimizeAiController::getInstance(), 'handleReplace'], 'return_data' => [
-                 'retrievedText' => $text, 
-                 'qItem' => $item,
-             ]]);
-             
-             $posts = $finder->posts();  */
-
-						 $debugInfo[] = array(__('Image to Queue V2'), $returnEnqueue );
+						 $debugInfo[] = array(__('Image to Queue'), $returnEnqueue );
 
 					}
+
+          if ( $optimizeAiController->isAIEnabled())
+          {
+            $aiDataModel = AiDataModel::getModelByAttachment($this->post_id);
+
+            $aiProcessable = ($aiDataModel->isProcessable()) ? '<span class="green">Yes</span>' : '<span class="red">No</span> ';
+
+            $debugInfo[] = ['AI - is Processable', $aiProcessable]; 
+
+            if (true === $aiDataModel->isProcessable())
+            {
+              //$item->requestAltAction();
+             // $optimizeAiController->parseJsonForQItem($item); 
+              $debugInfo[] = ['Ai - Paramlist ', $aiDataModel->getOptimizeData() ];
+   //           $debugInfo[] = ['Ai - returnDataList' , $item->data()->returndatalist];
+              
+            }
+            else
+            {
+               $debugInfo[] = ['Ai - Reason', $aiDataModel->getProcessableReason()];
+            }
+            if (true === $aiDataModel->isSomeThingGenerated())
+            {
+              $debugInfo[] = ['Ai -Generated ', $aiDataModel->getGeneratedData()];
+            }
+
+          }
+
+
 
           $debugInfo['imagemetadata'] = array(__('ImageModel Metadata (ShortPixel)'), $imageObj);
 					$debugInfo[] = array('', '<hr>');
@@ -365,7 +379,6 @@ class EditMediaViewController extends \ShortPixel\ViewController
 							$size = $thumbObj->get('size');
 
               $display_size = ucfirst(str_replace("_", " ", $size));
-              //$thumbObj = $imageObj->getThumbnail($size);
 
               if ($thumbObj === false)
               {
@@ -373,7 +386,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
                 continue;
               }
 
-              $url = $thumbObj->getURL(); //$fs->pathToURL($thumbObj); //wp_get_attachment_image_src($this->post_id, $size);
+              $url = $thumbObj->getURL(); 
               $filename = $thumbObj->getFullPath();
               $fileDir = $thumbObj->getFileDir();
 

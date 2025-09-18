@@ -689,16 +689,17 @@ class AjaxController
 
 		$this->checkImageAccess($imageModel);
 
-		$smartcrop = false; 
+		$args = ['action' => 'reoptimize', 'compressionType' => $compressionType];
+
+		// Smartcrop is not always passed, only add here when passed otherwise to defaults.
 		if ($actionType == ImageModel::ACTION_SMARTCROP || $actionType == ImageModel::ACTION_SMARTCROPLESS) 
 		{
-			$smartcrop = $actionType;
+			$args['smartcrop'] = $actionType;
 		}
 
 		// @todo Ideally this should go to QueueController - addItemToQueue, but issue with arguments. Leaving it for now.
 		$queueController = new QueueController();
-		$result  = $queueController->addItemToQueue($imageModel, ['action' => 'reoptimize', 'compressionType' => $compressionType, 
-			'smartcrop' => $smartcrop]);
+		$result  = $queueController->addItemToQueue($imageModel, $args);
 
 	
 		$json->$type->results = [$result];
@@ -806,11 +807,34 @@ class AjaxController
 
 	protected function createBulk($json, $data)
 	{
+		$filters = []; 
+		$has_filters = false; 
+		
+		if (isset($_POST['filter_startdate'])) 
+		{
+			 $filters['start_date'] = intval($_POST['filter_startdate']); 
+			 $has_filters = true; 	 
+		}
+		if (isset($_POST['filter_enddate']))
+		{
+			 $filters['end_date'] = intval($_POST['filter_enddate']); 
+			 $has_filters = true; 
+
+		}
+
+		$args = []; 
+		if (true === $has_filters)
+		{ 
+			$args['filters'] = $filters; 
+		}
+		
+
+
 		$bulkControl = BulkController::getInstance();
-		$stats = $bulkControl->createNewBulk('media');
+		$stats = $bulkControl->createNewBulk('media', $args);
 		$json->media->stats = $stats;
 
-		$stats = $bulkControl->createNewBulk('custom');
+		$stats = $bulkControl->createNewBulk('custom', $args);
 		$json->custom->stats = $stats;
 
 		$json = $this->applyBulkSelection($json, $data);
@@ -826,6 +850,9 @@ class AjaxController
 		$doAvif = filter_var(sanitize_text_field($_POST['avifActive']), FILTER_VALIDATE_BOOLEAN);
 		
 		$doAi = filter_var(sanitize_text_field($_POST['aiActive']), FILTER_VALIDATE_BOOLEAN);
+
+		$aiPreserve = isset($_POST['aiPreserve']) ? filter_var(sanitize_text_field($_POST['aiPreserve']), FILTER_VALIDATE_BOOLEAN) : null; 
+
 		$backgroundProcess = filter_var(sanitize_text_field($_POST['backgroundProcess']), FILTER_VALIDATE_BOOLEAN);
 
 
@@ -839,6 +866,11 @@ class AjaxController
 		\wpSPIO()->settings()->createAvif = $doAvif;
 		\wpSPIO()->settings()->doBackgroundProcess = $backgroundProcess;
 		\wpSPIO()->settings()->autoAIBulk = $doAi;
+
+		if (false === is_null($aiPreserve))
+		{
+			\wpSPIO()->settings()->aiPreserve = $aiPreserve;
+		}
 
 		$bulkControl = BulkController::getInstance();
 
@@ -886,12 +918,12 @@ class AjaxController
 		$queues = array_filter(explode(',', $queue), 'trim');
 
 		if (in_array('media', $queues)) {
-			$stats = $bulkControl->createNewBulk('media', 'bulk-restore');
+			$stats = $bulkControl->createNewBulk('media', ['customOp' => 'bulk-restore']);
 			$json->media->stats = $stats;
 		}
 
 		if (in_array('custom', $queues)) {
-			$stats = $bulkControl->createNewBulk('custom', 'bulk-restore');
+			$stats = $bulkControl->createNewBulk('custom', ['customOp' => 'bulk-restore']);
 			$json->custom->stats = $stats;
 		}
 
@@ -904,7 +936,7 @@ class AjaxController
 		QueueController::resetQueues(); // prevent any weirdness
 
 
-		$stats = $bulkControl->createNewBulk('media', 'migrate');
+		$stats = $bulkControl->createNewBulk('media', ['customOp' => 'migrate']);
 		$json->media->stats = $stats;
 
 		return $json;
@@ -916,7 +948,7 @@ class AjaxController
 		QueueController::resetQueues(); // prevent any weirdness
 
 
-		$stats = $bulkControl->createNewBulk('media', 'removeLegacy');
+		$stats = $bulkControl->createNewBulk('media', ['customOp' => 'removeLegacy']);
 		$json->media->stats = $stats;
 
 		return $json;
@@ -983,8 +1015,6 @@ class AjaxController
 		$qItem = QueueItems::getImageItem($imageModel);
 
 		$optimizer = $qItem->getApiController('requestAlt');
-		//$optimize->useCustomSettings($settingsData);
-		//$result = $optimizer->enqueueItem($qItem, array_merge(['preview_only' => true, 'action' => 'requestAlt'], $settingsData));
 
 		$qItem->requestAltAction(array_merge(['preview_only' => true], $settingsData));
 		$optimizer->sendToProcessing($qItem);
@@ -1020,7 +1050,10 @@ class AjaxController
 					Log::addTemp('Result', $result); 
 					if (property_exists($result, 'aiData'))
 					{
+						$aiModel = AiDataModel::getModelByAttachment($qItem->item_id, 'media');
+
 						 $aiData = $optimizer->formatResultData($result->aiData, $qItem);
+						 list($items, $aiData) = $optimizer->formatGenerated($aiData, $aiModel->getCurrentData(), $aiModel->getOriginalData());
 						 $aiData['item_id'] = $qItem->item_id;
 						 $aiData['time_generated'] = time(); 
 
@@ -1038,11 +1071,6 @@ class AjaxController
 					 break;
 					}
 				}
-
-
-				//$is_done = true; 
-				//$this->send((object) $result_json); 
-				//break; 
 				
 			}
 
@@ -1058,9 +1086,6 @@ class AjaxController
 			}
 			$i++; 
 		}
-
-		//$this->send($result_json);
-
 	}
 
 	protected function getSettingsAiExample($data)
@@ -1075,11 +1100,9 @@ class AjaxController
 		}
 		else
 		{
-			$item = new AiDataModel($id);
+			$item = AiDataModel::getModelByAttachment($id);
 			$attach_id = $id; 
 		}
-
-	//	$attach_id = null;
 		
 		$imageModel = \wpSPIO()->fileSystem()->getMediaImage($attach_id);
 
@@ -1539,18 +1562,26 @@ class AjaxController
 	protected function checkImageAccess($mediaItem)
 	{
 
+		// defaults 
+		$message = __('This user is not allowed to edit this image', 'shortpixel-image-optimiser');
+
 		$accessModel = AccessModel::getInstance();
 		if (is_object($mediaItem)) {
 			$bool = $accessModel->imageIsEditable($mediaItem);
 			$id = $mediaItem->get('id');
+
 		} else {
 			$bool = false;
 			$id = false;
+			if (! is_object($mediaItem))
+			{
+				$message = __('Image does not exist or could not be loaded', 'shortpixel-image-optimiser');
+			}
 		}
 
 		if ($bool === false) {
 			$json = new \stdClass;
-			$json->message = __('This user is not allowed to edit this image', 'shortpixel-image-optimiser');
+			$json->message = $message; 
 			$json->status = false;
 			$json->id = $id;
 			$json->error = self::NO_ACCESS;
@@ -1572,7 +1603,6 @@ class AjaxController
 			$json->processorKey = $pKey;
 
 		wp_send_json($json);
-
 		exit();
 	}
 

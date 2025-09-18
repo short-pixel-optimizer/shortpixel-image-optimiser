@@ -29,12 +29,12 @@ class UtilHelper
     return in_array($plugin, $activePlugins);
   }
 
-  static public function timestampToDB($timestamp)
+  public static function timestampToDB($timestamp)
   {
     return date("Y-m-d H:i:s", $timestamp);
   }
 
-  static public function DBtoTimestamp($date)
+  public static function DBtoTimestamp($date)
   {
     return strtotime($date);
   }
@@ -169,6 +169,36 @@ class UtilHelper
       }
     }
     return $bool;
+  }
+
+  public static function getAiSettings($params = [])
+  {
+    $settings = \wpSPIO()->settings(); 
+
+    $defaults = [
+    'ai_general_context' => $settings->ai_general_context, 
+    'ai_use_post' => $settings->ai_use_post, 
+    'ai_gen_alt' => $settings->ai_gen_alt, 
+    'ai_gen_caption' => $settings->ai_gen_caption, 
+    'ai_gen_description' => $settings->ai_gen_description, 
+    'ai_filename_prefercurrent' => $settings->ai_filename_prefercurrent,
+    'ai_limit_alt_chars' => $settings->ai_limit_alt_chars, 
+    'ai_alt_context' => $settings->ai_alt_context, 
+    'ai_limit_description_chars' => $settings->ai_limit_description_chars, 
+    'ai_description_context' => $settings->ai_description_context, 
+    'ai_limit_caption_chars' => $settings->ai_limit_caption_chars, 
+    'ai_caption_context' => $settings->ai_caption_context, 
+    'ai_gen_filename' => $settings->ai_gen_filename, 
+    'ai_limit_filename_chars' => $settings->ai_limit_filename_chars, 
+    'ai_filename_context' => $settings->ai_filename_context, 
+    'ai_use_exif' => $settings->ai_use_exif, 
+    'ai_language' => $settings->ai_language,
+    'aiPreserve' => $settings->aiPreserve, 
+    ];
+
+    $params = wp_parse_args($params, $defaults);
+
+    return $params; 
   }
 
   public static function alterHtaccess($webp = false, $avif = false)

@@ -126,11 +126,11 @@ class AdminController extends \ShortPixel\Controller
          $optimizeAiController = OptimizeAiController::getInstance(); 
          $queueController = new QueueController();
 
-         if ($optimizeAiController->isAutoAiEnabled())
+        /* if ($optimizeAiController->isAutoAiEnabled())
          {
             $args = ['action' => 'requestAlt'];
             $queueController->addItemToQueue($mediaItem, $args); 
-         }
+         } */
                  
           
         	$queueController->addItemToQueue($mediaItem);

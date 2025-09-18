@@ -26,11 +26,9 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 			return false;
 		}
 
-
 		// This is final, not more messing with this. In results (multiple) defined one level higher than result object, if single, it's in result.
 		var item_id = resultItem.item_id;
 		var message = resultItem.message;
-
 		
 		// This is the reporting element ( all the data, via getItemView? )
 		var element = this.GetElement(resultItem, 'data');
@@ -65,7 +63,6 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 		// Not optimal
 		if ('ai' === apiName && typeof resultItem.aiData !== 'undefined')
 		{
-			
 			if (null !== element)
 			{
 				var fileStatus = this.processor.fStatus[resultItem.fileStatus];
@@ -335,7 +332,7 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 
 		window.addEventListener('shortpixel.HandleUndoAlt', function (event) {
 			var data = event.detail.media;
-			var original = data.original; 
+			var original = data.current; 
 	
 			if ('redo' == action_type)
 			{

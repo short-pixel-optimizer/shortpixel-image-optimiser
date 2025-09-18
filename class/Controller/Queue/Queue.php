@@ -8,6 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\CacheController as CacheController;
+use ShortPixel\Controller\Optimizer\OptimizeAiController;
 use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\Model\Converter\Converter as Converter;
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
@@ -47,7 +48,7 @@ abstract class Queue
     protected $cacheName; 
 
     
-    public function createNewBulk()
+    public function createNewBulk($args = [])
     {
 				$this->resetQueue();
 
@@ -57,6 +58,8 @@ abstract class Queue
 
         $cache = new CacheController();
         $cache->deleteItem($this->cacheName);
+
+        $this->setCustomBulk($args);
     }
 
     public function startBulk()
@@ -97,14 +100,14 @@ abstract class Queue
        );
        $args = wp_parse_args($args, $defaults);
 
-
        $qItem = QueueItems::getImageItem($imageModel);
-
 
 			 $result = new \stdClass;
 
        $this->q->addItems([$qItem->returnEnqueue()], false);
        $numitems = $this->q->withRemoveDuplicates()->enqueue(); // enqueue returns numitems
+
+       $this->checkQueueCache($imageModel->get('id'));
 
        $result->qstatus = $this->getQStatus($numitems);
        $result->numitems = $numitems;
@@ -116,13 +119,17 @@ abstract class Queue
     public function addQueueItem(QueueItem $qItem)
     {
       $this->q->addItems([$qItem->returnEnqueue()], false);
+      $item_id = $qItem->item_id; 
       $numitems = $this->q->withRemoveDuplicates()->enqueue(); // enqueue returns numitems
 
       $result = new \stdClass;
       $result->qstatus = $this->getQStatus($numitems);
       $result->numitems = $numitems;
 
-      do_action('shortpixel_start_image_optimisation', $qItem->item_id, $qItem->imageModel);
+      $this->checkQueueCache($item_id);
+      
+
+      do_action('shortpixel_start_image_optimisation', $item_id, $qItem->imageModel);
       return $result;
     }
 
@@ -269,22 +276,15 @@ abstract class Queue
                   continue;
               }
               
+                $optimizeAiController = OptimizeAiController::getInstance(); 
+
                 // If autoAi is on the bulk, add operation to the item
-                if ('media' === $mediaItem->get('type') && true === $settings->autoAIBulk)
+                $enqueueAi = false; 
+                if ('media' === $mediaItem->get('type') && true === $optimizeAiController->isAiEnabled() && true === $settings->autoAIBulk)
                 {
-
-                  $aiDataModel = new AiDataModel($mediaItem->get('id')); 
-                  $enqueueAi = false; 
-                  if ($aiDataModel->isProcessable() && in_array($mediaItem->getExtension(), $aiDataModel->supportedExtensions()))
-                  {
-                    $enqueueAi = true; 
-                  }
+                  $aiDataModel = AiDataModel::getModelByAttachment($mediaItem->get('id'));  
+                  $enqueueAi = $aiDataModel->isProcessable();
                 }
-                else
-                {
-                   $enqueueAi = false; 
-                }
-
 
                 if ($mediaItem->isProcessable() && $mediaItem->isOptimizePrevented() === false && ! $operation) // Checking will be done when processing queue.
                 {
@@ -316,6 +316,8 @@ abstract class Queue
                     $avifCount += $counts->avifCount;
 										$baseCount += $counts->baseCount; // base images (all minus webp/avif) 
 
+                    
+                    $this->checkQueueCache($item_id);
                     do_action('shortpixel_start_image_optimisation', $mediaItem);
 
                 }
@@ -510,13 +512,21 @@ abstract class Queue
         return $this->q->getStatus($name);
     }
 
-    public function setCustomBulk($type = null, $options = array() )
+    public function setCustomBulk($options = [] )
     {
-        if (is_null($type))
+        if (0 === count($options))
           return false;
 
         $customData = $this->getStatus('custom_data');
-        $customData->customOperation = $type;
+
+
+        if (isset($options['customOp']))
+        {
+           $customOp = $options['customOp'];   
+           $customData->customOperation = $customOp;
+           unset($options['customOp']);
+        }
+
         if (is_array($options) && count($options) > 0)
           $customData->queueOptions = $options;
 
@@ -612,6 +622,20 @@ abstract class Queue
 				}
 				return false;
 		}
+
+    protected function checkQueueCache($item_id)
+    {
+
+      
+      if (isset(self::$isInQueue[$item_id]) && false === self::$isInQueue[$item_id])
+      {
+         unset(self::$isInQueue[$item_id]);
+      }
+
+
+
+
+    }
 
     public function itemFailed(QueueItem $qItem, $fatal = false)
     {

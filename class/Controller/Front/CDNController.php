@@ -298,11 +298,11 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		$checkExtensions = []; 
 		$fonts = ['.ttf', '.woff', '.woff2', '.otf']; 
 
-		if (true == $settings->cdn_js) {
+		if (true === $settings->cdn_js) {
 			$checkExtensions[] = '.js'; 
 			
 		}
-		if (true == $settings->cdn_css)
+		if (true === $settings->cdn_css)
 		{	
 			$checkExtensions[] = '.css'; 
 			$checkExtensions = array_merge($checkExtensions, $fonts);
@@ -352,6 +352,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		$replaceBlocks = $this->filterEmptyURLS($replaceBlocks);
 		$replaceBlocks = $this->filterRegexExclusions($replaceBlocks);
 		$replaceBlocks = $this->filterOtherDomains($replaceBlocks);
+		$replaceBlocks = $this->filterFonts($replaceBlocks);
 
 		if (count($replaceBlocks) > 0) {
 			$replaceBlocks = $this->createReplacements($replaceBlocks);
@@ -465,6 +466,38 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			return  $cdn_domain;
 		}
 
+
+	}
+
+	/** The image check on inline CSS might also catch inline fonts.  Check against settings if they should be processed or not. 
+	 * 
+	 * @param mixed $replaceBlocks 
+	 * @return mixed 
+	 */
+	protected function filterFonts($replaceBlocks)
+	{
+		$settings = \wpSPIO()->settings();
+
+		if (true === $settings->cdn_css)
+		{
+			return $replaceBlocks; 
+		}
+
+		$replaceBlocks = array_filter($replaceBlocks, function ($replaceBlock)
+		{
+			 $fonts = ['.ttf', '.woff', '.woff2', '.otf']; 
+			 foreach($fonts as $extcheck)
+			 {
+				  if (strpos($replaceBlock->url, $extcheck) !== false)
+				  {	
+						return false; 
+				  }
+			 }
+			 return true; 
+
+		});
+   
+		return $replaceBlocks;
 
 	}
 

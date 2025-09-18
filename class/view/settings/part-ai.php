@@ -11,7 +11,7 @@ if (! defined('ABSPATH')) {
 
   <settinglist>
 
-    <h2><?php esc_html_e('AI Image SEO', 'shortpixel-image-optimiser'); ?></h2>
+    <h2><?php esc_html_e('AI Image SEO & Accessibility', 'shortpixel-image-optimiser'); ?></h2>
 
     <gridbox class="width_half">
 
@@ -23,20 +23,22 @@ if (! defined('ABSPATH')) {
             'name' => 'enable_ai',
             'checked' => $view->data->enable_ai,
             'label' => esc_html__('Enable AI Image SEO', 'shortpixel-image-optimiser'),
-          ]
+            'data' => ['data-toggle="autoAiOptions"'],
+
+            ]
         );
         ?>
 
         <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/#0-toc-title?target=iframe"></i>
         <name>
 
-          <?php esc_html_e('Show AI image SEO options throughout ShortPixel Image Optimizer.', 'shortpixel-image-optimiser'); ?>
+          <?php esc_html_e('Show AI image SEO options throughout ShortPixel Image Optimizer. The generated ALT tag is also very useful for accessibility.', 'shortpixel-image-optimiser'); ?>
 
         </name>
       </content>
     </setting>
 
-    <setting class='switch'>
+    <setting class='switch toggleTarget autoAiOptions'>
       <content>
 
         <?php $this->printSwitchButton(
@@ -57,14 +59,14 @@ if (! defined('ABSPATH')) {
       </content>
     </setting>
 
-    <setting class='switch'>
+    <setting class='switch toggleTarget autoAiOptions'>
       <content>
 
         <?php $this->printSwitchButton(
           [
             'name' => 'autoAIBulk',
             'checked' => $view->data->autoAIBulk,
-            'label' => esc_html__('Generate image SEO data when running Bulk Processing', 'shortpixel-image-optimiser'),
+            'label' => esc_html__('Generate image SEO data during Bulk Processing', 'shortpixel-image-optimiser'),
           ]
         );
         ?>
@@ -77,6 +79,29 @@ if (! defined('ABSPATH')) {
         </name>
       </content>
     </setting>
+
+
+    <setting class='switch toggleTarget autoAiOptions'>
+      <content>
+
+        <?php $this->printSwitchButton(
+          [
+            'name' => 'aiPreserve',
+            'checked' => $view->data->aiPreserve,
+            'label' => esc_html__('Preserve existing Image SEO data', 'shortpixel-image-optimiser'),
+          ]
+        );
+        ?>
+        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/#2-toc-title?target=iframe"></i>
+
+        <name>
+
+          <?php esc_html_e('When enabled, all existing ALT tags, captions and descriptions are retained. Disabling the switch means that the SEO data for images created with AI will overwrite the existing data.', 'shortpixel-image-optimiser'); ?>
+
+        </name>
+      </content>
+    </setting>
+
 
     </gridbox>
 

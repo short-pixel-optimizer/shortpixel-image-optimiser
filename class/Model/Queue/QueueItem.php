@@ -16,6 +16,7 @@ use ShortPixel\Model\Converter\Converter as Converter;
 use ShortPixel\Controller\Optimizer\OptimizeController as OptimizeController;
 use ShortPixel\Controller\Optimizer\OptimizeAiController as OptimizeAiController;
 use ShortPixel\Controller\Optimizer\ActionController as ActionController;
+use ShortPixel\Model\AiDataModel;
 
 class QueueItem
 {
@@ -175,7 +176,6 @@ class QueueItem
          $media_id = $this->imageModel->getParent();
       }
 
-
       $enqueue = ['id' => $item_id, 'value' => $value, 'item_count' => $this->item_count];
       
       if (! is_null($this->data->queue_list_order))
@@ -184,7 +184,6 @@ class QueueItem
       }
 
       return $enqueue; 
-
       
    }
 
@@ -471,18 +470,36 @@ class QueueItem
       $this->data->tries = 0;
       $this->item_count = 1;
 
+      $item_id = $this->imageModel->get('id');
+
+      $paramlist = []; 
 
       $preview_only = false; 
       if (isset($args['preview_only']) && true == $args['preview_only'])
       {
-         $this->data->paramlist = ['preview_only' => true];
+         $paramlist['preview_only'] = true;
          $preview_only = true; 
       } 
 
+      $aiDataModel = new AiDataModel($item_id);
+      
+      $data = $aiDataModel->getOptimizeData($args);
+
+      if (isset($data['paramlist']))
+      {
+         $this->data()->paramlist = $data['paramlist'];
+      }
+      if (isset($data['returndatalist']))
+      {
+         $this->data()->returndatalist = $data['returndatalist'];
+         $this->data()->addKeepDataArgs('returndatalist');
+      }
+
+
       $this->data->action = 'requestAlt'; // For Queue
 
-      $optimizer = $this->getAPIController($this->data->action); 
-      $optimizer->parseJSONForQItem($this, $args);
+    //  $optimizer = $this->getAPIController($this->data->action); 
+   //   $optimizer->parseJSONForQItem($this, $args);
 
       if ($this->data()->hasNextAction())
       {
@@ -497,12 +514,23 @@ class QueueItem
       {
          $this->data->next_actions = $next_actions;
       }
+
+
       
    }
 
-   public function retrieveAltAction($remote_id)
+   public function retrieveAltAction($args)
    {
       $this->newAction();
+
+      $remote_id = $args['remote_id'];
+      
+      if (isset($args['returndatalist']))
+      {
+         $this->data()->returndatalist = $args['returndatalist'];
+      }
+
+
       $this->data->remote_id = $remote_id;
       $this->data->tries = 0;
       $this->item_count = 1;

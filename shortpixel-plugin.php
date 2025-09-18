@@ -364,7 +364,9 @@ class ShortPixelPlugin {
 
 		wp_register_script('shortpixel-media', plugins_url('res/js/shortpixel-media.js',  SHORTPIXEL_PLUGIN_FILE), array('jquery'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
-		wp_register_script('shortpixel-inline-help', plugins_url('res/js/shortpixel-inline-help.js',  SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
+		wp_register_script('shortpixel-inline-help', plugins_url('res/js/shortpixel-inline-help.js',  SHORTPIXEL_PLUGIN_FILE), [], SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
+		wp_register_script('shortpixel-chatbot', 
+			apply_filters('shortpixel/plugin/nohelp', 'https://spcdn.shortpixel.ai/assets/js/ext/ai-chat-agent.js'), [], SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
 		// This filter is from ListMediaViewController for the media library grid display, executive script in shortpixel-media.js.
 
@@ -588,6 +590,7 @@ class ShortPixelPlugin {
 
 			$this->load_script( 'shortpixel-screen-nolist' ); // screen
 			$this->load_script( 'shortpixel-settings' );
+			$this->load_script('shortpixel-chatbot');
 
 			// @todo Load onboarding only when no api key / onboarding required
 			$this->load_script('shortpixel-onboarding');
@@ -598,6 +601,7 @@ class ShortPixelPlugin {
 
 		} elseif ( $plugin_page == 'wp-short-pixel-bulk' ) {
 			$this->load_script( 'shortpixel-screen-bulk' );
+			$this->load_script('shortpixel-chatbot');
 
 			$this->load_style( 'shortpixel-admin' );
 			$this->load_style( 'shortpixel-bulk' );
@@ -618,6 +622,7 @@ class ShortPixelPlugin {
 		//	$this->load_style( 'shortpixel' );
 
 			$this->load_script( 'shortpixel-folderbrowser' );
+			$this->load_script('shortpixel-chatbot');
 
 			$this->load_style( 'shortpixel-admin' );
 			$this->load_style( 'shortpixel-folderbrowser' );

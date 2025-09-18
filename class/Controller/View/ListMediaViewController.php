@@ -12,6 +12,7 @@ use ShortPixel\Helper\UtilHelper as UtilHelper;
 
 
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
+use ShortPixel\Controller\Optimizer\OptimizeAiController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Controller\QueueController as QueueController;
 use ShortPixel\Model\AiDataModel;
@@ -59,10 +60,7 @@ class ListMediaViewController extends \ShortPixel\ViewController
   public function headerColumns($defaults)
   {
     $defaults['wp-shortPixel'] = __('ShortPixel Compression', 'shortpixel-image-optimiser');
-    /*if (true === \wpSPIO()->settings()->enable_ai)
-    {
-      $defaults['wp-spio-ai'] = __('AI By Shortpixel', 'shortpixel-image-optimiser'); 
-    } */
+
 
     return $defaults;
   }
@@ -98,7 +96,10 @@ class ListMediaViewController extends \ShortPixel\ViewController
      $actions = array();
      $list_actions = array();
 
-     if (true === \wpSPIO()->settings()->enable_ai)
+     $optimizeAiController = OptimizeAiController::getInstance(); 
+
+
+     if (true === $optimizeAiController->isAiEnabled())
      {
         $aiDataModel = $this->loadAiItem($id);
      }
@@ -173,7 +174,7 @@ class ListMediaViewController extends \ShortPixel\ViewController
 
   protected function loadAiItem($item_id)
   {
-     $AiDataModel = new AiDataModel($item_id); 
+     $AiDataModel = AiDataModel::getModelByAttachment($item_id); 
      $this->view->item_id = $item_id;
 
      $generated_data = $AiDataModel->getGeneratedData(); 
