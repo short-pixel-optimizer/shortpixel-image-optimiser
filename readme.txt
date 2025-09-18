@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 4.8.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 6.3.3
+Stable tag: 6.3.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -473,6 +473,28 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 14. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 6.3.4 =
+
+🤖 The Smarter AI Control Update
+
+Release Date: September 18, 2025
+
+✨ New Features & Improvements
+
+* Preserve Existing SEO Data: Added an option to keep your existing ALT, caption, and description fields untouched when using AI-generated image SEO — your manual work is safe!
+* Better Block Editor Integration: AI-generated SEO data and image optimization now work flawlessly when uploading images directly from the block editor.
+* AI Support Chatbot: Meet our new AI-powered support assistant — here to help you faster, 24/7.
+
+🛠️ Fixes & Behavioral Improvements
+
+* Full AI Deactivation: Disabling AI Image SEO now also disables auto-generation and hides all related options from WP Admin, including the Bulk Processing section.
+* EXIF-Based AI Training Block: If AI training is blocked via EXIF data, the plugin now shows a clear message and prevents the image from being sent for processing.
+* Re-Optimize Logic Fixed: The "Re-optimize with/without SmartCrop" buttons now respect the selected option instead of always using the saved setting.
+* Inline Font Handling: Inline fonts will no longer be replaced with CDN links if the CSS option is disabled.
+* AI SEO for Excluded Items: Bulk AI SEO generation now skips excluded items as expected.
+
+Update now for smarter AI behavior, more control over your data, and an improved support experience! 🚀
 
 = 6.3.3 =
 
