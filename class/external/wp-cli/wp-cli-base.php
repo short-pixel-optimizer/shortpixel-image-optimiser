@@ -350,7 +350,6 @@ class SpioCommandBase
 				if (isset($improvements['main'])) {
 					$outputTable[] = array('name' => 'main', 'improvement' => $improvements['main'][0] . '%');
 				}
-				// \WP_CLI::Success( sprintf(__('Image optimized by %d %% ', 'shortpixel-image-optimiser'), $improvements['main'][0]));
 
 				if (isset($improvements['thumbnails'])) {
 					foreach ($improvements['thumbnails'] as $thumbName => $optData) {

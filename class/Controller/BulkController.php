@@ -82,7 +82,7 @@ class BulkController
       }
 
       
-      $Q->createNewBulk($args);
+      $options = $Q->createNewBulk($args);
 
 
       return $Q->getStats();

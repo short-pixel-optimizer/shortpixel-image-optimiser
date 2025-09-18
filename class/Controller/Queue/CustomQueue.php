@@ -54,6 +54,68 @@ class CustomQueue extends Queue
       return $this->prepareItems($items);
    }
 
+   public function createNewBulk($args = [])
+   {
+      if (isset($args['filters']))
+      {
+         $this->addFilters($args['filters']); 
+         
+      } 
+       
+      
+      // Parent should save options as well. 
+       return parent::createNewBulk($this->options); 
+   }
+
+   protected function addFilters($filters)
+   {
+
+      global $wpdb; 
+      return;
+
+      try {
+         $start_date = isset($filters['start_date'])  ? new \DateTime($filters['start_date']) : false; 
+      }
+      catch (\Exception $e)
+      {
+         Log::addError('Start date bad', $e); 
+         unset($filters['start_date']);
+      }
+
+      try {
+         $end_date = isset($filters['end_date'])  ? new \DateTime($filters['end_date']) : false; 
+      }
+      catch (\Exception $e)
+      {
+         Log::addError('End Data bad', $e); 
+         unset($filters['end_date']); 
+      }
+
+      if (isset($filters['start_date']))
+      {
+         $date = $start_date->format("Y-m-d H:i:s");
+         $startSQL = 'select max(ID) from wp_posts where post_date <= %s group by post_date order by post_date DESC limit 1';
+         $sql = $wpdb->prepare($startSQL, $date); 
+         $start_id =  $wpdb->get_var($sql); 
+         $this->options['filters']['start_id'] = $start_id; 
+      }
+      if (isset($filters['end_date']))
+      {
+         $date = $end_date->format("Y-m-d H:i:s");
+         $endSQL = 'select MIN(ID) from wp_posts where post_date <= %s group by post_date order by post_date DESC limit 1';
+         $sql = $wpdb->prepare($endSQL, $date); 
+         $end_id =  $wpdb->get_var($sql); 
+         $this->options['filters']['end_id'] = $end_id; 
+      }
+      
+      
+       //echo "Start $start_id END $end_id";
+       //exit();
+      // IF POST DATE NEEDS 09-20 ( or 23:59:59? )
+      // select post_date, max(ID) from wp_posts where post_date <= '2024-09-21 00:00:00' group by post_date order by post_date DESC limit 100
+   }
+
+
    private function queryItems()
    {
      $last_id = $this->getStatus('last_item_id');

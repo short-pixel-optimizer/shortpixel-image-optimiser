@@ -46,6 +46,7 @@ abstract class Queue
 
     protected $queueName = '';
     protected $cacheName; 
+    protected $options = []; 
 
     
     public function createNewBulk($args = [])
@@ -59,7 +60,8 @@ abstract class Queue
         $cache = new CacheController();
         $cache->deleteItem($this->cacheName);
 
-        $this->setCustomBulk($args);
+        $this->setBulkOptions($args);
+        return $this->options; 
     }
 
     public function startBulk()
@@ -497,10 +499,21 @@ abstract class Queue
         return $count;
     }
 
+    /** Get options which the queue was started with.  Formerly custom_data but now for all options. 
+     * 
+     * @return array 
+     */
+    protected function getOptions()
+    {
+         $options = $this->getCustomDataItem('queueOptions'); 
+         return $options;
+    }
+
 
     protected function getStatus($name = false)
     {
-        if ($name == 'custom_data')
+       // Slow name and purpose change on this one.
+        if ($name == 'custom_data' || 'options' == $name)
         {
             $customData = $this->q->getStatus('custom_data');
             if (! is_object($customData))
@@ -512,7 +525,7 @@ abstract class Queue
         return $this->q->getStatus($name);
     }
 
-    public function setCustomBulk($options = [] )
+    public function setBulkOptions($options = [] )
     {
         if (0 === count($options))
           return false;
@@ -537,7 +550,7 @@ abstract class Queue
 		// Use to give the go processing when out of credits (ie)
 		public function isCustomOperation()
 		{
-			if ($this->getCustomDataItem('customOperation'))
+			if ($this->getCustomDataItem('customOperation') && false !== $this->getCustomDataItem('customOperation'))
 			{
 				return true;
 			}

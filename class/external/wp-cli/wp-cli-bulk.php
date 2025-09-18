@@ -217,6 +217,7 @@ class SpioBulk extends SpioCommandBase
 
 		foreach ($queues as $qname) {
 			$stats = $bulkControl->createNewBulk($qname, $args);
+
 			$json->$qname->stats = $stats;
 
 			\WP_CLI::Line("Bulk $qname created. Ready to prepare");
