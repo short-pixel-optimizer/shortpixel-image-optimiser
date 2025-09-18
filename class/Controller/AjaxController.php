@@ -1036,6 +1036,11 @@ class AjaxController
 			
 			if (property_exists($result, 'is_done') && true === $result->is_done)
 			{
+				if (true === $result->is_error) 
+				{
+					$this->send($result);
+				}
+				
 				if ('requestAlt' === $state)
 				{
 					$remote_id = $result->remote_id; 
