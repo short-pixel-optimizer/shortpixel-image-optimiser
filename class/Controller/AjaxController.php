@@ -1036,6 +1036,7 @@ class AjaxController
 			
 			if (property_exists($result, 'is_done') && true === $result->is_done)
 			{
+				// If is done and is error, bail out. 
 				if (true === $result->is_error) 
 				{
 					$this->send($result);
