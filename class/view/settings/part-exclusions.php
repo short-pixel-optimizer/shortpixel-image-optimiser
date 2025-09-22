@@ -172,6 +172,9 @@ if ( ! defined( 'ABSPATH' ) ) {
                         case 'size':
                           $field_name = $typeStrings['size']; // __('Size', 'shortpixel-image-optimiser');
                         break;
+                        case 'date': 
+                          $field_name = $typeStrings['date']; // ??   
+                        break; 
                         default:
                           $field_name = __('Unknown', 'shortpixel-image-optimiser');
                         break;
@@ -229,7 +232,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                <option value='name'><?php _e('Image Name', 'shortpixel-image-optimiser'); ?></option>
                                <option value='path' data-example="/path/"><?php _e('Image Path', 'shortpixel-image-optimiser'); ?></option>
                                <option value='size' data-example="widthXheight-widthXheight"><?php _e('Image Size', 'shortpixel-image-optimiser'); ?></option>
-
+                               <option value='date' data-example="YYYY-MM-DD"><?php _e('Date', 'shortpixel-image-optimiser') ?></option> 
                            </select>
                          </div>
 
@@ -275,6 +278,18 @@ if ( ! defined( 'ABSPATH' ) ) {
                                  </div>
                              </div>
                         </div> <!-- value / size container -->
+
+                        <div class='date not-visible'>
+                        <label><?php _e('Date Options:', 'shortpixel-image-optimiser'); ?></label>
+
+                            <div class='date-picker'></div>
+                            <div>
+                              <select>
+                                <option><?php _e('Before this date', 'shortpixel-image-optimiser'); ?></option>
+                                <option><?php _e('After this date', 'shortpixel-image-optimiser'); ?></option>
+                              </select>
+                            </div>
+                        </div>
 
                          <div>
                            <label><?php _e('Apply To:', 'shortpixel-image-optimiser'); ?></label>

@@ -86,26 +86,42 @@ class MediaLibraryQueue extends Queue
       
 
          // @todo Probably move all of this to global function and only sql statement to child class
-      try {
-         $start_date = isset($filters['start_date'])  ? new \DateTime($filters['start_date']) : false; 
-      }
-      catch (\Exception $e)
-      {
-         Log::addError('Start date bad', $e); 
-         unset($filters['start_date']);
-      }
-
-      try {
-         $end_date = isset($filters['end_date'])  ? $filters['end_date'] : false; 
-         $end_date = new \DateTime($end_date);
-      }
-      catch (\Exception $e)
-      {
-         Log::addError('End Data bad', $e); 
-         unset($filters['end_date']); 
-      }
-
       if (isset($filters['start_date']))
+      {
+         try {
+            $start_date = new \DateTime($filters['start_date']); 
+         }
+         catch (\Exception $e)
+         {
+            Log::addError('Start date bad', $e); 
+            unset($filters['start_date']);
+         }
+      }
+
+      if (isset($filters['end_date']))
+      {
+         try {
+            $end_date = new \DateTime($filters['end_date']);
+         }
+         catch (\Exception $e)
+         {
+            Log::addError('End Data bad', $e); 
+            unset($filters['end_date']); 
+         }
+      }
+
+      if (isset($start_date) && isset($end_date))
+      {
+         // Confusing since we do DESC, so just swap dates if one is higher than other. 
+          if ($start_date->format('U') < $end_date->format('U'))
+          {
+               $swap_date = $end_date; 
+               $end_date = $start_date; 
+               $start_date = $swap_date; 
+          }
+      }
+      
+      if (isset($start_date))
       {
          $date = $start_date->format("Y-m-d H:i:s");
          $startSQL = 'select max(ID) from wp_posts where post_date <= %s group by post_date order by post_date DESC limit 1';
@@ -113,7 +129,7 @@ class MediaLibraryQueue extends Queue
          $start_id =  $wpdb->get_var($sql); 
          $this->options['filters']['start_id'] = $start_id; 
       }
-      if (isset($filters['end_date']))
+      if (isset($end_date))
       {
          $date = $end_date->format("Y-m-d H:i:s");
          $endSQL = 'select MIN(ID) from wp_posts where post_date <= %s group by post_date order by post_date DESC limit 1';

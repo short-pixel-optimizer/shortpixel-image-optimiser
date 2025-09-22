@@ -1451,6 +1451,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	/* @param Strict Boolean Check only the main image, don't check thumbnails */
 	public function isProcessable($strict = false)
 	{
+		if (false !== $this->checkDateExcluded())
+		{
+			$bool = $this->isDateExcluded();
+			if (true === $bool)
+			{
+				 return false; 
+			}
+		}
+
 		$main_bool = $bool = parent::isProcessable();
 
 		$settings = \wpSPIO()->settings();
@@ -1822,6 +1831,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			return true;
 		}
 	}
+
+	protected function isDateExcluded()
+	{
+		//@todo Implement
+		
+	}
+
 
 	// Check if anything is optimized. Main image can't be relied upon as in the past since it can be excluded, so anything optimized is the check to show the optimized options like restore.
 	public function isSomethingOptimized()

@@ -199,7 +199,13 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
             }
         }
 
-        if ( $this->isOptimized() || ! $this->exists()  || (! $this->is_virtual() && ! $this->is_writable()) || (! $this->is_virtual() && ! $this->is_directory_writable() || $this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded() )
+        if ( $this->isOptimized() || ! $this->exists()  || (! $this->is_virtual() && ! $this->is_writable()) || 
+        (! $this->is_virtual() && ! $this->is_directory_writable() || 
+        $this->isPathExcluded() || 
+        $this->isExtensionExcluded() || 
+        $this->isSizeExcluded() ||
+        $this->isDateExcluded()
+        )
 				|| $this->isOptimizePrevented() !== false
         || ! $this->isFileSizeOK() )
         {
@@ -1262,6 +1268,26 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 								}
 							else
 									$bool = false; // continue and check all patterns, there might be multiple.
+						}
+			 }
+
+			 return $bool;
+		}
+
+    protected function checkDateExcluded()
+		{
+			$excludePatterns = $this->getExcludePatterns();
+			if (! $excludePatterns || ! is_array($excludePatterns) ) // no patterns, nothing excluded
+				return false;
+
+			$bool = false;
+
+			foreach($excludePatterns as $item) {
+					$type = (isset($item['type'])) ? trim($item["type"]) : '';
+					if($type == "date") {
+
+              $check_date = $item['value'];
+              return $check_date; 
 						}
 			 }
 

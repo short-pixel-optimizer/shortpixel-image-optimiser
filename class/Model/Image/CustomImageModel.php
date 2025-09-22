@@ -504,6 +504,12 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
          return false;
     }
 
+    protected function isDateExcluded()
+    {
+        // @todo Implement
+    }
+  
+
     // Only one item for now, so it's equal
     public function isSomethingOptimized()
     {
