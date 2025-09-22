@@ -176,12 +176,12 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
         if (true === $bool && false !== $this->checkDateExcluded())
         {
-          $bool = $this->isDateExcluded();
-          if (true === $bool)
+          $date_bool = $this->isDateExcluded();
+          if (true === $date_bool)
           {
              return false; 
           }
-        }
+        } 
 
 				if($strict)
 				{
@@ -536,7 +536,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         }
         catch(\Exception $e)
         {
-          Log::addError('Date exclusion - not valid date'); 
+          Log::addError('[Custom] Date exclusion - not valid date'); 
           return false; 
         }
 

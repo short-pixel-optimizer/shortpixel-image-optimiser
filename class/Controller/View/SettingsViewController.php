@@ -1007,7 +1007,7 @@ class SettingsViewController extends \ShortPixel\ViewController
         {
           $pattern = $pair['value'];
           $type = $pair['type'];
-          //$first = substr($pattern, 0,1);
+
           if ($type == 'regex-name' || $type == 'regex-path')
           {
             if ( @preg_match($pattern, false) === false)
@@ -1016,50 +1016,25 @@ class SettingsViewController extends \ShortPixel\ViewController
                Notice::addWarning(sprintf(__('Regular Expression Pattern %s returned an error. Please check if the expression is correct. %s * Special characters should be escaped. %s * A regular expression must be contained between two slashes  ', 'shortpixel-image-optimiser'), $pattern, "<br>", "<br>" ));
             }
           }
+          if ('date' === $type)
+          { 
+             try {
+              $date = new \DateTime($pattern);
+             }
+             catch (\Exception $e)
+             {
+               Notice::addWarning(sprintf(__('Date format %s return an error %s . Accepted are formats that are valid for PHP dateFormat', 'shortpixel-image-optimiser'), 
+                 $pattern, $e->getMessage()
+             ));
+             }
+          }
         }
 
         $post['excludePatterns'] = $accepted;
 
 
-        return $post; // @todo The switch to check regex patterns or not.
+        return $post; 
 
-        if(isset($post['excludePatterns']) && strlen($post['excludePatterns'])) {
-            $items = explode(',', $post['excludePatterns']);
-            foreach($items as $pat) {
-                $parts = explode(':', $pat);
-                if (count($parts) == 1)
-                {
-                  $type = 'name';
-                  $value = str_replace('\\\\','\\', trim($parts[0]));
-                }
-                else
-                {
-                  $type = trim($parts[0]);
-                  $value = str_replace('\\\\','\\',trim($parts[1]));
-                }
-
-                if (strlen($value) > 0)  // omit faulty empty statements.
-                  $patterns[] = array('type' => $type, 'value' => $value);
-
-            }
-
-        }
-
-
-			  foreach($patterns as $pair)
-				{
-						$pattern = $pair['value'];
-						//$first = substr($pattern, 0,1);
-						if ($type == 'regex-name' || $type == 'regex-path')
-						{
-						  if ( @preg_match($pattern, false) === false)
-							{
-								 Notice::addWarning(sprintf(__('Regular Expression Pattern %s returned an error. Please check if the expression is correct. %s * Special characters should be escaped. %s * A regular expression must be contained between two slashes  ', 'shortpixel-image-optimiser'), $pattern, "<br>", "<br>" ));
-							}
-						}
-				}
-        $post['excludePatterns'] = $patterns;
-        return $post;
       }
 
 

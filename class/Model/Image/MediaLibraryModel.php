@@ -1457,8 +1457,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		if (true === $main_bool && false !== $this->checkDateExcluded())
 		{
-			$bool = $this->isDateExcluded();
-			if (true === $bool)
+			$date_bool = $this->isDateExcluded();
+			if (true === $date_bool)
 			{
 				 return false; 
 			}
@@ -1469,14 +1469,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			return $bool;
 		}
 
-
-
 		// Never allow optimizePrevented to be processable
 		if (true === $this->isOptimizePrevented()) {
 			return false;
 		}
-
-
 
 		if (! $bool) // if parent is not processable, check if thumbnails are, can still have a work to do.
 		{
