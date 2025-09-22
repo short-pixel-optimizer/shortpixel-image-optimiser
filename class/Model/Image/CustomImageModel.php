@@ -173,10 +173,22 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     {
         $bool = parent::isProcessable();
 
+
+        if (true === $bool && false !== $this->checkDateExcluded())
+        {
+          $bool = $this->isDateExcluded();
+          if (true === $bool)
+          {
+             return false; 
+          }
+        }
+
 				if($strict)
 				{
 					return $bool;
 				}
+
+
 
 				// The exclude size on the  image - via regex - if fails, prevents the whole thing from optimization.
 				if ($this->processable_status == ImageModel::P_EXCLUDE_SIZE || $this->processable_status == ImageModel::P_EXCLUDE_PATH)
@@ -507,6 +519,55 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     protected function isDateExcluded()
     {
         // @todo Implement
+        $options = $this->checkDateExcluded();
+
+
+        if ($this->getMeta('tsOptimized') > 0)
+          $timestamp = $this->getMeta('tsOptimized');
+        else
+          $timestamp = $this->getMeta('tsAdded');
+
+        $itemDate = new \DateTime();
+        $itemDate->setTimestamp($timestamp);
+
+
+        try{
+          $date = new \DateTime($options['date']); 
+        }
+        catch(\Exception $e)
+        {
+          Log::addError('Date exclusion - not valid date'); 
+          return false; 
+        }
+
+        $when = isset($options['when']) ? $options['when'] : 'before'; 
+
+        $bool = false; 
+
+        switch($when)
+        {
+          case 'before':
+            if ($date->format('U') > $itemDate->format('U'))
+            {
+              $bool = true; 
+            }
+          break; 
+          case 'after': 
+          default:
+          if ($date->format('U') < $itemDate->format('U'))
+            {
+              $bool = true; 
+            }
+          break; 
+        }
+
+        if (true === $bool)
+        {
+          $this->processable_status = ImageModel::P_EXCLUDE_DATE; 
+        }
+
+        return $bool; 
+
     }
   
 

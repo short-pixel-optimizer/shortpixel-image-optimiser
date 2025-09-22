@@ -93,6 +93,13 @@ class ShortPixelSettings {
 		// Events for the New Exclusion dialog
 		var newExclusionInputs = this.root.querySelectorAll('.new-exclusion select, .new-exclusion input, .new-exclusion button, button[name="cancelEditExclusion"]');
 
+		var exclusionItems = this.root.querySelectorAll('.exclude-list li i.edit, .exclude-list li');
+		exclusionItems.forEach(function (input) {
+			if (false == input.classList.contains('no-exclusion-item')) {
+				input.addEventListener('click', self.NewExclusionShowInterfaceEvent.bind(self));
+			}
+		});
+
 		newExclusionInputs.forEach(function (input) {
 			switch (input.name) {
 				case 'addExclusion':
@@ -109,12 +116,7 @@ class ShortPixelSettings {
 			input.addEventListener(eventType, self.NewExclusionUpdateEvent.bind(self));
 		});
 
-		var exclusionItems = this.root.querySelectorAll('.exclude-list li i.edit, .exclude-list li');
-		exclusionItems.forEach(function (input) {
-			if (false == input.classList.contains('no-exclusion-item')) {
-				input.addEventListener('click', self.NewExclusionShowInterfaceEvent.bind(self));
-			}
-		});
+
 
 		var exclusionItems = this.root.querySelectorAll('.exclude-list li i.remove');
 		exclusionItems.forEach(function (input) {
@@ -1483,8 +1485,10 @@ class ShortPixelSettings {
 
 		var valueOption = this.root.querySelector('.new-exclusion .value-option');
 		var sizeOption = this.root.querySelector('.new-exclusion .size-option');
+		var dateOption = this.root.querySelector('.new-exclusion .date-option');
 		var regexOption = this.root.querySelector('.regex-option');
 		var switchExactOption = this.root.querySelector('.exact-option');
+		var applyOption = this.root.querySelector('.new-exclusion select[name="apply-select"]');
 
 
 		if (value == 'size') {
@@ -1499,6 +1503,21 @@ class ShortPixelSettings {
 			switchExactOption.classList.add('not-visible');
 			regexOption.classList.remove('not-visible');
 		}
+
+		if ('date' === value)
+		{
+			dateOption.classList.remove('not-visible'); 
+			regexOption.classList.add('not-visible');
+			applyOption.value = 'all';
+			applyOption.disabled = true; 
+		}
+		else
+		{
+			dateOption.classList.add('not-visible');
+			regexOption.classList.remove('not-visible');
+			applyOption.disabled = false; 
+		}
+		
 
 		var valueInput = this.root.querySelector('input[name="exclusion-value"]');
 		if (null !== valueInput) {
@@ -1655,6 +1674,13 @@ class ShortPixelSettings {
 			validateInput.push(valueOption);
 		}
 
+		if ('date' === setting.type)
+		{
+			let whenOption = this.root.querySelector('.new-exclusion select[name="exclusion-when"]');
+			setting.dateWhen = whenOption.value;
+			this.NewExclusionUpdateType(typeOption);
+
+		}
 
 		// // Problem - with validatation, must note which field is not validated (1) and secondly value must be valited as string, while the sizes should be numbers.
 		setting.validated = this.DoValidateInputs(validateInput);

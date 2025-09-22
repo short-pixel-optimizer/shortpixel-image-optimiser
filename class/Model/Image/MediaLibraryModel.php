@@ -1451,7 +1451,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	/* @param Strict Boolean Check only the main image, don't check thumbnails */
 	public function isProcessable($strict = false)
 	{
-		if (false !== $this->checkDateExcluded())
+		$main_bool = $bool = parent::isProcessable();
+
+		$settings = \wpSPIO()->settings();
+
+		if (true === $main_bool && false !== $this->checkDateExcluded())
 		{
 			$bool = $this->isDateExcluded();
 			if (true === $bool)
@@ -1460,14 +1464,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			}
 		}
 
-		$main_bool = $bool = parent::isProcessable();
-
-		$settings = \wpSPIO()->settings();
-
 		// If already true, this item can be processed. No need for further checks.
 		if ($strict || true === $bool) {
 			return $bool;
 		}
+
+
 
 		// Never allow optimizePrevented to be processable
 		if (true === $this->isOptimizePrevented()) {
@@ -1834,10 +1836,51 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 	protected function isDateExcluded()
 	{
-		//@todo Implement
-		
-	}
+		 $options = $this->checkDateExcluded();
 
+		 $post = get_post($this->id); 
+		 $date = $post->post_date; 
+
+		$postDate = new \DateTime($date);
+
+		 try{
+			$date = new \DateTime($options['date']); 
+		 }
+		 catch(\Exception $e)
+		 {
+			 Log::addError('Date exclusion - not valid date'); 
+			 return false; 
+		 }
+
+		 $when = isset($options['when']) ? $options['when'] : 'before'; 
+
+		 $bool = false; 
+
+		 switch($when)
+		 {
+			 case 'before':
+				if ($date->format('U') > $postDate->format('U'))
+				{
+					$bool = true; 
+				}
+			 break; 
+			 case 'after': 
+			 default:
+			 if ($date->format('U') < $postDate->format('U'))
+				{
+					$bool = true; 
+				}
+			 break; 
+		 }
+
+		if (true === $bool)
+		{
+			 $this->processable_status = ImageModel::P_EXCLUDE_DATE; 
+		}
+
+		 return $bool; 
+
+	}
 
 	// Check if anything is optimized. Main image can't be relied upon as in the past since it can be excluded, so anything optimized is the check to show the optimized options like restore.
 	public function isSomethingOptimized()

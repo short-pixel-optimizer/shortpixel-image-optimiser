@@ -964,6 +964,7 @@ class UiHelper
           'name' => __('Image Name', 'shortpixel-image-optimiser'),
           'path' => __('Image Path', 'shortpixel-image-optimiser'),
           'size' => __('Image Size', 'shortpixel-image-optimiser'),
+          'date' => __('Date', 'shortpixel-image-optimiser'), 
       );
 
       $exclusion_apply = array(

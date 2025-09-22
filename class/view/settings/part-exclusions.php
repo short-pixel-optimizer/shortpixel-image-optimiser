@@ -279,17 +279,16 @@ if ( ! defined( 'ABSPATH' ) ) {
                              </div>
                         </div> <!-- value / size container -->
 
-                        <div class='date not-visible'>
+                        <div class='date-option not-visible'>
                         <label><?php _e('Date Options:', 'shortpixel-image-optimiser'); ?></label>
 
-                            <div class='date-picker'></div>
-                            <div>
-                              <select>
-                                <option><?php _e('Before this date', 'shortpixel-image-optimiser'); ?></option>
-                                <option><?php _e('After this date', 'shortpixel-image-optimiser'); ?></option>
+                          
+                              <select name='exclusion-when'>
+                                <option value='before'><?php _e('Before this date', 'shortpixel-image-optimiser'); ?></option>
+                                <option value='after'><?php _e('After this date', 'shortpixel-image-optimiser'); ?></option>
                               </select>
-                            </div>
-                        </div>
+                            
+                </div>
 
                          <div>
                            <label><?php _e('Apply To:', 'shortpixel-image-optimiser'); ?></label>
