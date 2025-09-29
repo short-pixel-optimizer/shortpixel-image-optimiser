@@ -43,6 +43,7 @@ abstract class Queue
     abstract protected function prepare();
     abstract protected function prepareBulkRestore();
     abstract public function getType();
+    abstract protected function getFilterQueryData();
 
     protected $queueName = '';
     protected $cacheName; 
@@ -211,6 +212,127 @@ abstract class Queue
        }
 
        return $result;
+    }
+
+
+    protected function addFilters($filters)
+    {
+         global $wpdb; 
+         $start_date = $end_date = false; 
+
+         // @todo Probably move all of this to global function and only sql statement to child class
+         if (isset($filters['start_date']))
+         {
+            try {
+               $start_date = new \DateTime($filters['start_date']); 
+            }
+            catch (\Exception $e)
+            {
+               Log::addError('Start date bad', $e); 
+               unset($filters['start_date']);
+            }
+         }
+   
+         if (isset($filters['end_date']))
+         {
+            try {
+               $end_date = new \DateTime($filters['end_date']);
+            }
+            catch (\Exception $e)
+            {
+               Log::addError('End Data bad', $e); 
+               unset($filters['end_date']); 
+            }
+         }
+   
+         if (false !== $start_date && false !== $end_date)
+         {
+            // Confusing since we do DESC, so just swap dates if one is higher than other. 
+             if ($start_date->format('U') < $end_date->format('U'))
+             {
+                  $swap_date = $end_date; 
+                  $end_date = $start_date; 
+                  $start_date = $swap_date; 
+             }
+         }
+
+        // Take start date end of this day, since we do DESC and otherwise dates on the day of the start day will be omitted 
+         if (false !== $start_date)
+         {
+          $start_date->modify('+23 hours 59 minutes');
+         }
+
+         $args = $this->getFilterQueryData();
+         Log::addTemp('Query Filter Args', $args);
+         $prepare = $args['base_prepare']; 
+         $base_query = $args['base_query'];
+         $prepare = $args['base_prepare']; 
+         $date_field = $args['date_field']; 
+
+         $dateSQL = ''; 
+         //$prepare = []; 
+         
+         if (isset($start_date) && false !== $start_date)
+         {
+            $startDateSQL = $date_field . ' <= %s '; 
+            $prepare[] = $start_date->format("Y-m-d H:i:s");
+         }
+         if (isset($end_date) && false !== $end_date)
+         {
+            $endDateSQL = $date_field . ' >= %s'; 
+            $prepare[] = $end_date->format("Y-m-d H:i:s");
+         }
+   
+         $get_start_id = $get_end_id = false; 
+         if (isset($startDateSQL) && isset($endDateSQL))
+         {
+             $dateSQL = $startDateSQL . ' and ' . $endDateSQL; 
+             $get_start_id = true; 
+             $get_end_id = true; 
+         }
+         elseif (isset($startDateSQL) && false === isset($endDateSQL))
+         {
+             $dateSQL = $startDateSQL;
+             $get_start_id = true; 
+         }
+         elseif (false === isset($startDateSQL) && isset($endDateSQL))
+         {
+             $dateSQL = $endDateSQL; 
+             $get_end_id = true; 
+         }
+
+         $base_query .= $dateSQL;
+   
+            if (true === $get_start_id)
+         {
+             $startSQL = $base_query . '  ORDER BY ' . $date_field . ' DESC LIMIT 1'; 
+             $startSQL = $wpdb->prepare($startSQL, $prepare); 
+             Log::addTemp("StartSQl", $startSQL);
+             $start_id = $wpdb->get_var($startSQL); 
+             if (is_null($start_id))
+             {
+               $start_id = -1; 
+             }
+   
+             $this->options['filters']['start_id'] = $start_id; 
+         }
+   
+         if (true === $get_end_id)
+         {
+            $endSQL = $base_query . '  ORDER BY ' . $date_field . ' ASC LIMIT 1'; 
+            $endSQL = $wpdb->prepare($endSQL, $prepare); 
+            Log::addTemp("EndSQl", $endSQL);
+
+            $end_id = $wpdb->get_var($endSQL); 
+            if (is_null($end_id))
+            {
+                $end_id = -1; 
+            }
+            $this->options['filters']['end_id'] = $end_id; 
+   
+         
+         }   
+         
     }
 
 
@@ -503,7 +625,7 @@ abstract class Queue
      * 
      * @return array 
      */
-    protected function getOptions()
+    public function getOptions()
     {
          $options = $this->getCustomDataItem('queueOptions'); 
          return $options;

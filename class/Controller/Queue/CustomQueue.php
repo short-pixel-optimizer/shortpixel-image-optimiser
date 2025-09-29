@@ -67,53 +67,89 @@ class CustomQueue extends Queue
        return parent::createNewBulk($this->options); 
    }
 
+   /*
    protected function addFilters($filters)
    {
 
       global $wpdb; 
-      return;
+      $table = $wpdb->prefix . 'shortpixel_meta'; 
+      list($start_date, $end_date) = parent::addFilters($filters);
 
-      try {
-         $start_date = isset($filters['start_date'])  ? new \DateTime($filters['start_date']) : false; 
-      }
-      catch (\Exception $e)
-      {
-         Log::addError('Start date bad', $e); 
-         unset($filters['start_date']);
-      }
+      
 
-      try {
-         $end_date = isset($filters['end_date'])  ? new \DateTime($filters['end_date']) : false; 
-      }
-      catch (\Exception $e)
+      if (isset($start_date) && false !== $start_date)
       {
-         Log::addError('End Data bad', $e); 
-         unset($filters['end_date']); 
+         $startDateSQL = 'ts_added <= %s '; 
+         $prepare[] = $start_date->format("Y-m-d H:i:s");
+      }
+      if (isset($end_date) && false !== $end_date)
+      {
+         $endDateSQL = 'ts_added >= %s'; 
+         $prepare[] = $end_date->format("Y-m-d H:i:s");
       }
 
-      if (isset($filters['start_date']))
+      $get_start_id = $get_end_id = false; 
+      if (isset($startDateSQL) && isset($endDateSQL))
       {
-         $date = $start_date->format("Y-m-d H:i:s");
-         $startSQL = 'select max(ID) from wp_posts where post_date <= %s group by post_date order by post_date DESC limit 1';
-         $sql = $wpdb->prepare($startSQL, $date); 
-         $start_id =  $wpdb->get_var($sql); 
-         $this->options['filters']['start_id'] = $start_id; 
+          $dateSQL = $startDateSQL . ' and ' . $endDateSQL; 
+          $get_start_id = true; 
+          $get_end_id = true; 
       }
-      if (isset($filters['end_date']))
+      elseif (isset($startDateSQL) && false === isset($endDateSQL))
       {
-         $date = $end_date->format("Y-m-d H:i:s");
-         $endSQL = 'select MIN(ID) from wp_posts where post_date <= %s group by post_date order by post_date DESC limit 1';
-         $sql = $wpdb->prepare($endSQL, $date); 
-         $end_id =  $wpdb->get_var($sql); 
+          $dateSQL = $startDateSQL;
+          $get_start_id = true; 
+      }
+      elseif (false === isset($startDateSQL) && isset($endDateSQL))
+      {
+          $dateSQL = $endDateSQL; 
+          $get_end_id = true; 
+      }
+
+
+      $sql = 'SELECT id from '  . $table . ' WHERE ' . $dateSQL; 
+
+
+      if (true === $get_start_id)
+      {
+          $startSQL = $sql . '  ORDER BY ts_added DESC LIMIT 1'; 
+          $startSQL = $wpdb->prepare($startSQL, $prepare); 
+          $start_id = $wpdb->get_var($startSQL); 
+          if (is_null($start_id))
+          {
+              $start_id = -1; 
+          }
+          $this->options['filters']['start_id'] = $start_id; 
+      }
+
+      if (true === $get_end_id)
+      {
+         $endSQL = $sql . '  ORDER BY ts_added ASC LIMIT 1'; 
+         $endSQL = $wpdb->prepare($endSQL, $prepare); 
+         $end_id = $wpdb->get_var($endSQL); 
+         if (is_null($end_id))
+         {
+             $end_id = -1; 
+         }
          $this->options['filters']['end_id'] = $end_id; 
       }
       
-      
-       //echo "Start $start_id END $end_id";
-       //exit();
-      // IF POST DATE NEEDS 09-20 ( or 23:59:59? )
-      // select post_date, max(ID) from wp_posts where post_date <= '2024-09-21 00:00:00' group by post_date order by post_date DESC limit 100
+
+   } */
+
+   protected function getFilterQueryData()
+   {
+      global $wpdb; 
+      $table = $wpdb->prefix . 'shortpixel_meta'; 
+
+      return [
+          'date_field' => 'ts_added', 
+          'base_query' => 'SELECT ID FROM ' . $table . ' WHERE ',
+          'base_prepare' => [], 
+          
+      ];
    }
+
 
 
    private function queryItems()
@@ -124,6 +160,26 @@ class CustomQueue extends Queue
      $items = array();
      $fastmode = apply_filters('shortpixel/queue/fastmode', false);
 
+     $options = $this->getOptions(); 
+
+     // Filters. 
+    $start_id = $end_id = null; 
+    if (isset($options['filters']))
+    {
+       if (isset($options['filters']['start_id']))
+       {
+         $start_id = $options['filters']['start_id'];
+       }
+       if (isset($options['filters']['end_id']))
+       {
+         $end_id = $options['filters']['end_id'];
+       }
+    }
+
+    if (-1 === $start_id || -1 === $end_id)
+    {
+      return []; 
+    }
 
      global $wpdb;
 
@@ -153,6 +209,17 @@ class CustomQueue extends Queue
      {
         $sql .= " AND id < %d ";
         $prepare [] = intval($last_id);
+     }
+     elseif (false === is_null($start_id))
+     {
+       $sql .= ' and id <= %d ';
+       $prepare[] = intval($start_id);
+     }
+
+     if (false === is_null($end_id))
+     {
+       $sql .= ' and id >= %d '; 
+       $prepare[] = intval($end_id); 
      }
 
 

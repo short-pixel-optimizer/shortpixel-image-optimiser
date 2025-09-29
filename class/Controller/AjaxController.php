@@ -812,24 +812,23 @@ class AjaxController
 		
 		if (isset($_POST['filter_startdate'])) 
 		{
-			 $filters['start_date'] = intval($_POST['filter_startdate']); 
+			 $filters['start_date'] = sanitize_text_field($_POST['filter_startdate']); 
 			 $has_filters = true; 	 
 		}
 		if (isset($_POST['filter_enddate']))
 		{
-			 $filters['end_date'] = intval($_POST['filter_enddate']); 
+			 $filters['end_date'] = sanitize_text_field($_POST['filter_enddate']); 
 			 $has_filters = true; 
-
 		}
 
 		$args = []; 
 		if (true === $has_filters)
 		{ 
 			$args['filters'] = $filters; 
+			Log::addTemp('Queue starting with filters: ', $filters);
 		}
+
 		
-
-
 		$bulkControl = BulkController::getInstance();
 		$stats = $bulkControl->createNewBulk('media', $args);
 		$json->media->stats = $stats;
@@ -848,13 +847,10 @@ class AjaxController
 		$doCustom = filter_var(sanitize_text_field($_POST['customActive']), FILTER_VALIDATE_BOOLEAN);
 		$doWebp = filter_var(sanitize_text_field($_POST['webpActive']), FILTER_VALIDATE_BOOLEAN);
 		$doAvif = filter_var(sanitize_text_field($_POST['avifActive']), FILTER_VALIDATE_BOOLEAN);
-		
 		$doAi = filter_var(sanitize_text_field($_POST['aiActive']), FILTER_VALIDATE_BOOLEAN);
 
 		$aiPreserve = isset($_POST['aiPreserve']) ? filter_var(sanitize_text_field($_POST['aiPreserve']), FILTER_VALIDATE_BOOLEAN) : null; 
-
 		$backgroundProcess = filter_var(sanitize_text_field($_POST['backgroundProcess']), FILTER_VALIDATE_BOOLEAN);
-
 
 		// Can be hidden
 		if (isset($_POST['thumbsActive'])) {

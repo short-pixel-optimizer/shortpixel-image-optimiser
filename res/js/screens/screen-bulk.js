@@ -21,6 +21,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
 		// Hook up the button and all.
 			this.LoadPanels();
 			this.LoadActions();
+      this.LoadDatePicker(); 
 
 			window.addEventListener('shortpixel.processor.paused', this.TogglePauseNotice.bind(this));
 			window.addEventListener('shortpixel.processor.responseHandled', this.CheckPanelData.bind(this));
@@ -94,6 +95,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
 			{
 				 this.SwitchPanel(shortPixelScreen.panel);
 			}
+
 	}
 
   LoadPanels()
@@ -129,6 +131,35 @@ class ShortPixelScreen extends ShortPixelScreenBase
 					}
 					*/
       });
+  }
+
+  LoadDatePicker()
+  {
+    // Used -https://thedatepicker.github.io/thedatepicker/
+    let containers = document.querySelectorAll('.date-picker-container');
+      for (let i = 0; i < containers.length; i++)
+      {
+        let container = containers[i]; 
+        let input = container.querySelector('input'); 
+     //   let datePicker = container.querySelector('.the-date-picker');
+//        let input = containers[i].children();
+        let datepicker = new TheDatepicker.Datepicker(input);
+        datepicker.options.setMaxDate(new Date());
+        //datepicker.options.setTitle('select');
+
+        datepicker.options.onSelect(function (ev)
+        {
+          console.log(this);
+          //let formatDate = datepicker.getSelectedDateFormatted('d/m/Y'); 
+          let formatDate = datepicker.getSelectedDateFormatted('Y/m/d'); 
+
+          input.dataset.formatteddate = formatDate; 
+
+        }); 
+
+        datepicker.render();
+
+      }
   }
 
 	DoActionEvent(event)
@@ -275,7 +306,25 @@ class ShortPixelScreen extends ShortPixelScreenBase
 
 
 		 if (document.getElementById('thumbnails_checkbox') !== null)
+      {
 		 		data.thumbsActive = (document.getElementById('thumbnails_checkbox').checked) ? true : false;
+      } 
+
+    let startDate = document.getElementById('bulk-start-date'); 
+    if (startDate !== null && startDate.dataset.formatteddate !== null)
+    {
+      data.filter_startdate = startDate.dataset.formatteddate;
+    }
+
+    let endDate = document.getElementById('bulk-end-date'); 
+    if (endDate !== null && endDate.dataset.formatteddate)
+    {
+       data.filter_enddate = endDate.dataset.formatteddate; 
+    }
+    
+//    data.endDate = document.getElementById('bulk-end-date').value; 
+    data.limitItemsSwitch = (document.getElementById('limit_items').checked) ? true : false; 
+    data.limitItems = document.getElementById('limit_numitems');
 
      this.UpdatePanelStatus('loading', 'selection');
 

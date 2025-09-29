@@ -78,71 +78,89 @@ class MediaLibraryQueue extends Queue
        return parent::createNewBulk($this->options); 
    }
 
-
+/*
    protected function addFilters($filters)
    {
 
       global $wpdb; 
+      $table = $wpdb->posts; 
       
+      list($start_date, $end_date) = parent::addFilters($filters);
 
-         // @todo Probably move all of this to global function and only sql statement to child class
-      if (isset($filters['start_date']))
+      $dateSQL = ''; 
+      $prepare = []; 
+      
+      if (isset($start_date) && false !== $start_date)
       {
-         try {
-            $start_date = new \DateTime($filters['start_date']); 
-         }
-         catch (\Exception $e)
-         {
-            Log::addError('Start date bad', $e); 
-            unset($filters['start_date']);
-         }
+         $startDateSQL = 'post_date <= %s '; 
+         $prepare[] = $start_date->format("Y-m-d H:i:s");
+      }
+      if (isset($end_date) && false !== $end_date)
+      {
+         $endDateSQL = 'post_date >= %s'; 
+         $prepare[] = $end_date->format("Y-m-d H:i:s");
       }
 
-      if (isset($filters['end_date']))
+      $get_start_id = $get_end_id = false; 
+      if (isset($startDateSQL) && isset($endDateSQL))
       {
-         try {
-            $end_date = new \DateTime($filters['end_date']);
-         }
-         catch (\Exception $e)
-         {
-            Log::addError('End Data bad', $e); 
-            unset($filters['end_date']); 
-         }
+          $dateSQL = $startDateSQL . ' and ' . $endDateSQL; 
+          $get_start_id = true; 
+          $get_end_id = true; 
+      }
+      elseif (isset($startDateSQL) && false === isset($endDateSQL))
+      {
+          $dateSQL = $startDateSQL;
+          $get_start_id = true; 
+      }
+      elseif (false === isset($startDateSQL) && isset($endDateSQL))
+      {
+          $dateSQL = $endDateSQL; 
+          $get_end_id = true; 
       }
 
-      if (isset($start_date) && isset($end_date))
+      $sql = 'SELECT ID FROM ' . $table . ' WHERE post_type = %s AND '  . $dateSQL;       
+      array_unshift($prepare, 'attachment'); 
+
+      if (true === $get_start_id)
       {
-         // Confusing since we do DESC, so just swap dates if one is higher than other. 
-          if ($start_date->format('U') < $end_date->format('U'))
+          $startSQL = $sql . '  ORDER BY POST_DATE DESC LIMIT 1'; 
+          $startSQL = $wpdb->prepare($startSQL, $prepare); 
+          $start_id = $wpdb->get_var($startSQL); 
+          if (is_null($start_id))
           {
-               $swap_date = $end_date; 
-               $end_date = $start_date; 
-               $start_date = $swap_date; 
+            $start_id = -1; 
           }
+
+          $this->options['filters']['start_id'] = $start_id; 
       }
-      
-      if (isset($start_date))
+
+      if (true === $get_end_id)
       {
-         $date = $start_date->format("Y-m-d H:i:s");
-         $startSQL = 'select max(ID) from wp_posts where post_date <= %s group by post_date order by post_date DESC limit 1';
-         $sql = $wpdb->prepare($startSQL, $date); 
-         $start_id =  $wpdb->get_var($sql); 
-         $this->options['filters']['start_id'] = $start_id; 
-      }
-      if (isset($end_date))
-      {
-         $date = $end_date->format("Y-m-d H:i:s");
-         $endSQL = 'select MIN(ID) from wp_posts where post_date <= %s group by post_date order by post_date DESC limit 1';
-         $sql = $wpdb->prepare($endSQL, $date); 
-         $end_id =  $wpdb->get_var($sql); 
+         $endSQL = $sql . '  ORDER BY POST_DATE ASC LIMIT 1'; 
+         $endSQL = $wpdb->prepare($endSQL, $prepare); 
+         $end_id = $wpdb->get_var($endSQL); 
+         if (is_null($end_id))
+         {
+             $end_id = -1; 
+         }
          $this->options['filters']['end_id'] = $end_id; 
-      }
+
       
-      
-       //echo "Start $start_id END $end_id";
-       //exit();
-      // IF POST DATE NEEDS 09-20 ( or 23:59:59? )
-      // select post_date, max(ID) from wp_posts where post_date <= '2024-09-21 00:00:00' group by post_date order by post_date DESC limit 100
+      }   
+   } */
+
+   protected function getFilterQueryData()
+   {
+      global $wpdb; 
+      $table = $wpdb->posts; 
+
+      return [
+          'date_field' => 'POST_DATE', 
+          'base_query' => 'SELECT ID FROM ' . $table . ' WHERE post_type = %s AND ',
+          'base_prepare' => ['attachment'], 
+          
+      ];
    }
    
 
@@ -165,6 +183,11 @@ class MediaLibraryQueue extends Queue
         {
           $end_id = $options['filters']['end_id'];
         }
+     }
+
+     if (-1 === $start_id || -1 === $end_id)
+     {
+       return []; 
      }
 
 

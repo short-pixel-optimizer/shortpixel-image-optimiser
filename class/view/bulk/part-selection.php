@@ -9,6 +9,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 $approx = $this->view->approx;
 ?>
+
+
 <section class='panel selection' data-panel="selection" data-status="loaded" >
   <div class="panel-container">
 			<span class='hidden' data-check-custom-hascustom >
@@ -151,6 +153,36 @@ $approx = $this->view->approx;
 	               <span class="number" ><?php echo esc_html($approx->custom->images) ?></span>
 	            </div>
 	         </div>
+
+
+			<h2><?php _e('Limit bulk', 'shortpixel-image-optimiser'); ?></h2>
+
+			<div class='bulk-date-picker'>
+				<?php printf(esc_html__('Optimize items between  %s and %s ', 'shortpixel-image-optimiser'), 
+				'<span class="date-picker-container">
+					<span class="the-date-picker">&nbsp;</span>
+					<label><input type="text" name="start-date" id="bulk-start-date" value="" placeholder="' . __('Select a date' ,'shortpixel-image-optimiser') . '" /></label></span>', 
+				'<span class="date-picker-container">
+				<span class="the-date-picker">&nbsp;</span>
+				<label><input type="text" name="end-date" id="bulk-end-date" value="" placeholder="' . __('Select a date' ,'shortpixel-image-optimiser') . '" /></label></span>'
+				); ?>
+			</div>
+
+			<div class='maximum-items'> 
+			<div class='switch_button'>
+			<br>
+				<div class='switch_button'>
+	             <label>
+	               <input type="checkbox" class="switch" id="limit_items" >
+	               <div class="the_switch">&nbsp; </div>
+	             </label>
+	           </div>
+			   Limit Items to 
+							
+					<input type='text' name="limit_numitems" value="1000">
+
+				</div>	
+			</div>
 
 
 				</div> <!-- // optimize block -->

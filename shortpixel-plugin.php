@@ -410,6 +410,10 @@ class ShortPixelPlugin {
             )
         );
 
+		//https://github.com/thedatepicker/thedatepicker
+		wp_register_script('shortpixel-datepicker', plugins_url('res/js/the-datepicker.min.js', SHORTPIXEL_PLUGIN_FILE),  ['wp-components', 'wp-i18n', 'wp-element', 'wp-hooks'], SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
+		
+
 		/*** SCREENS */
 		wp_register_script('shortpixel-screen-base', plugins_url( '/res/js/screens/screen-base.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'shortpixel-processor' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
@@ -537,6 +541,7 @@ class ShortPixelPlugin {
 
 		wp_register_style( 'shortpixel-settings', plugins_url( '/res/css/shortpixel-settings.css', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
 
+		wp_register_style('shortpixel-datepicker', plugins_url('res/css/the-datepicker.css', SHORTPIXEL_PLUGIN_FILE), [], SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
 	}
 
 
@@ -602,7 +607,9 @@ class ShortPixelPlugin {
 		} elseif ( $plugin_page == 'wp-short-pixel-bulk' ) {
 			$this->load_script( 'shortpixel-screen-bulk' );
 			$this->load_script('shortpixel-chatbot');
+			$this->load_script('shortpixel-datepicker');
 
+			$this->load_style('shortpixel-datepicker');
 			$this->load_style( 'shortpixel-admin' );
 			$this->load_style( 'shortpixel-bulk' );
 		} elseif ( $screen_id == 'upload' || $screen_id == 'attachment' ) {
