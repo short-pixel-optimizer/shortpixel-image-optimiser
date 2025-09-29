@@ -142,6 +142,7 @@ class AdminNoticesController extends \ShortPixel\Controller
         $access = AccessModel::getInstance();
         $screen = get_current_screen();
         $screen_id = \wpSPIO()->env()->screen_id;
+        $is_our_screen = \wpSPIO()->env()->is_our_screen; 
 
         $noticeControl = Notices::getInstance();
 
@@ -155,10 +156,15 @@ class AdminNoticesController extends \ShortPixel\Controller
 
                 foreach($notices as $notice)
                 {
-
+                    
                     if ($notice->checkScreen($screen_id) === false)
                     {
                         continue;
+                    }
+                    // Bit hacky; limit global messages to our screens. Next step here @todo would be to include a remotenotice flag in the noticemodel
+                    elseif (strpos($notice->getID(), 'Global') !== false && false === $is_our_screen)
+                    {
+                        continue; 
                     }
                     elseif ($access->noticeIsAllowed($notice))
                     {

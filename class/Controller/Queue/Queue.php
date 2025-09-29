@@ -220,6 +220,8 @@ abstract class Queue
          global $wpdb; 
          $start_date = $end_date = false; 
 
+         
+
          // @todo Probably move all of this to global function and only sql statement to child class
          if (isset($filters['start_date']))
          {
