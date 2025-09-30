@@ -154,7 +154,12 @@ abstract class Model
          return $value; 
       }
 
-      return max($value, $this->model[$name]['max']);
+      if ($value > $this->model[$name]['max'])
+      {
+         return $this->model[$name]['max'];
+      }
+
+      return $value;
   }
 
   protected function checkMaxLength($name, $value)
