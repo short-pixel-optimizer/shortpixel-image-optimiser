@@ -67,28 +67,30 @@ class ShortPixelFeedback {
         // Get our strings for the form
         $form = $this->getFormInfo();
 
+      //  $form['body'] = 'bs';
+
         // Build the HTML to go in the form
-        $html = '<div class="shortpixel-deactivate-form-head"><strong>' . esc_html( $form['heading'] ) . '</strong></div>';
+        $html = '<div class="shortpixel-deactivate-form-head"><strong>' . esc_html__( $form['heading'] ) . '</strong></div>';
         $html .= '<div class="shortpixel-deactivate-form-body">';
         if( is_array( $form['options'] ) ) {
             $html .= '<div class="shortpixel-deactivate-options">';
-            $html .= '<p><strong>' . esc_html( $form['body'] ) . '</strong></p><p>';
+            $html .= '<p><strong>' . esc_html__( $form['body'] ) . '</strong></p><p>';
             foreach( $form['options'] as $key => $option ) {
                 $html .= '<input type="radio" name="shortpixel-deactivate-reason" id="' . esc_attr( $key ) . '" value="' . esc_attr( $key ) . '"> <label for="' . esc_attr( $key ) . '">' . esc_attr( $option ) . '</label><br>';
             }
-            $html .= '</p><label id="shortpixel-deactivate-details-label" for="shortpixel-deactivate-reasons"><strong>' . esc_html( $form['details'] ) .'</strong></label><textarea name="shortpixel-deactivate-details" id="shortpixel-deactivate-details" rows="2" style="width:100%"></textarea>';
+            $html .= '</p><label id="shortpixel-deactivate-details-label" for="shortpixel-deactivate-reasons"><strong>' . esc_html__( $form['details'] ) .'</strong></label><textarea name="shortpixel-deactivate-details" id="shortpixel-deactivate-details" rows="2" style="width:100%"></textarea>';
             $html .= '</div><!-- .shortpixel-deactivate-options -->';
         }
         $html .= '<hr/>';
         $html .= '<span title="' . __( 'Un-check this if you don\\\'t plan to use ShortPixel in the future on this website. You might also want to run a Bulk Delete SP Metadata before removing the plugin (Media Library -> Bulk ShortPixel).', 'shortpixel-image-optimiser' )
             . '">'
-            . sprintf(__(  'If you want to completely uninstall ShortPIxel from your site, please go to %s Settings → ShortPixel → Tools %s.', 'shortpixel-image-optimiser' ),'<a href="' . esc_url(admin_url('/options-general.php?page=wp-shortpixel-settings&part=tools'))  . '">', '</a>') . '</span><br>';
+            . sprintf(esc_html__(  'If you want to completely uninstall ShortPixel from your site, please go to %s Settings → ShortPixel → Tools %s.', 'shortpixel-image-optimiser' ),'<a href="' . esc_url(admin_url('/options-general.php?page=wp-shortpixel-settings&part=tools'))  . '">', '</a>') . '</span><br>';
         $html .= '<hr/>';
         $html .= '</div><!-- .shortpixel-deactivate-form-body -->';
-        $html .= '<p class="deactivating-spinner"><span class="spinner"></span> ' . __( 'Submitting form', 'shortpixel-image-optimiser' ) . '</p>';
+        $html .= '<p class="deactivating-spinner"><span class="spinner"></span> ' . esc_html__( 'Submitting form', 'shortpixel-image-optimiser' ) . '</p>';
         $html .= '<div class="shortpixel-deactivate-form-footer"><p>';
         $html .= '<label for="anonymous" title="'
-            . __("If you UNCHECK this then your email address will be sent along with your feedback. This can be used by ShortPixel to get back to you for more info or a solution.",'shortpixel-image-optimiser')
+            . esc_html__("If you UNCHECK this then your email address will be sent along with your feedback. This can be used by ShortPixel to get back to you for more info or a solution.",'shortpixel-image-optimiser')
             . '"><input type="checkbox" name="shortpixel-deactivate-tracking" checked="checked" id="anonymous" value="1"> ' . esc_html__( 'Send anonymous', 'shortpixel-image-optimiser' ) . '</label><br>';
         $html .= '<a id="shortpixel-deactivate-submit-form" class="button button-primary" href="#">'
             . __( '<span>Submit&nbsp;and&nbsp;</span>Deactivate', 'shortpixel-image-optimiser' )
@@ -265,7 +267,6 @@ class ShortPixelFeedback {
                                 var data = {
                                     reason: formContainer.find('input[name="shortpixel-deactivate-reason"]:checked').val(),
                                     details: formContainer.find('#shortpixel-deactivate-details').val()
-                                    //anonymous: formContainer.find('#anonymous:checked').length,
                                 };
 																if (formContainer.find('#anonymous').is(':checked'))
 																	data['anonymous'] = 1;
@@ -279,11 +280,8 @@ class ShortPixelFeedback {
 
                     formContainer.on('click', '#shortpixel-deactivate-submit-form', function(e){
                         e.preventDefault();
-                       // if( formContainer.find('#shortpixel-keep-settings:checked').length ) {
                             window.location.href = url;
-                       /* } else {
-                            SubmitFeedback({}, formContainer);
-                        } */
+
                     });
 
                     // If we click outside the form, the form will close
