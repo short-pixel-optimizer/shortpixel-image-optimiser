@@ -245,7 +245,7 @@ class AdminController extends \ShortPixel\Controller
         $args = apply_filters('shortpixel/process_hook/options', $args);
 
         $queueArgs = []; 
-				if ($args['bulk'] === true)
+				if ($args['bulk'] == true)
 				{
 					 $queueArgs['is_bulk'] = true;
 				}
