@@ -54,6 +54,10 @@ class Offloader
 		elseif(defined('INFINITE_UPLOADS_VERSION'))   // infinite uploads
 		{
 			$this->offloadName = 'infinite-uploads'; 
+			if (function_exists('infinite_uploads_enabled') && true == \infinite_uploads_enabled())
+			{
+				 self::$offload_instance = new InfiniteUploads();
+			}
 			return true;
 		}	
 		/* (Doesn't work)

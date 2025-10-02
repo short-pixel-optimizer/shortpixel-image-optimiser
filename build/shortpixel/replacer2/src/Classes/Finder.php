@@ -47,39 +47,11 @@ class Finder
 			);
 	
 			$rs = $wpdb->get_results($posts_sql, ARRAY_A);
-			$number_of_updates = 0;
 	
 
 			// @todo before this filter results?  pass results to some worker
 			call_user_func_array($this->callback, ['results' => $rs, 'args' => $this->return_data]);
 
-			/*if (! empty($rs)) {
-				foreach ($rs as $rows) {
-					$number_of_updates = $number_of_updates + 1;
-					// replace old URLs with new URLs.
-	
-					$post_content = $rows["post_content"];
-					$post_id = $rows['ID'];
-					$replaced_content = $this->replaceContent($post_content, $search_urls, $replace_urls, false, true);
-	
-					if ($replaced_content !== $post_content) {
-	
-						//  $result = wp_update_post($post_ar);
-						$sql = 'UPDATE ' . $wpdb->posts . ' SET post_content = %s WHERE ID = %d';
-						$sql = $wpdb->prepare($sql, $replaced_content, $post_id);
-	
-						$result = $wpdb->query($sql);
-	
-						if ($result === false) {
-							// Notice::addError('Something went wrong while replacing' .  $result->get_error_message() );
-							Log::addError('WP-Error during post update', $result);
-						}
-					}
-				}
-			} */
-	
-		//	$number_of_updates += $this->handleMetaData($base_url, $search_urls, $replace_urls);
-		//	return $number_of_updates;
 		}
 
 		public function postmeta()
