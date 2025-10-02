@@ -25,7 +25,7 @@ class SmartSlider
              return; 
         }
 
-        add_action('shortpixel/replacer/replace_urls', [$this, 'doReplaceQueries'], 10, 2);
+        add_action('shortpixel/replacer/replace_urls', [$this, 'doReplaceQueries']);
     }
 
 

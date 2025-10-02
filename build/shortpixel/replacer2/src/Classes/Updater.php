@@ -6,6 +6,7 @@ if (! defined('ABSPATH')) {
 	exit; // Exit if accessed directly.
 }
 
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 
 class Updater
@@ -20,17 +21,16 @@ class Updater
         $sql = 'UPDATE ' . $wpdb->posts . ' SET post_content = %s WHERE ID = %d';
         $sql = $wpdb->prepare($sql, $content, $post_id);
     
-	$result = $wpdb->query($sql);
-
-	//Also flush object cache to ensure the content is updated properly
-	wp_cache_delete($post_id, 'posts');
+        $result = $wpdb->query($sql);
     
         if ($result === false) {
             // Notice::addError('Something went wrong while replacing' .  $result->get_error_message() );
             Log::addError('WP-Error during post update', $result);
+            return false; 
         }
 
         self::$updatesNumber++; 
+        return true;
     }
 
 

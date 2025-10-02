@@ -47,6 +47,7 @@ class BuildAutoLoader
 			'class/external/offload/Offloader.php',
       'class/external/offload/wp-offload-media.php',
 			'class/external/offload/virtual-filesystem.php',
+      'class/external/offload/InfiniteUploads.php', 
       'class/external/wp-cli/wp-cli-base.php',
 			'class/external/wp-cli/wp-cli-single.php',
 			'class/external/wp-cli/wp-cli-bulk.php',
@@ -60,6 +61,7 @@ class BuildAutoLoader
       'class/external/themes/total-theme.php',
       'class/external/MediaFileRenamer.php',
       'class/external/formidable.php',
+      
     );
 
     echo "Build Plugin.JSON ";
