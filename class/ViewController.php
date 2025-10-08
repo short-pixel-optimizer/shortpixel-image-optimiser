@@ -71,9 +71,15 @@ class ViewController extends Controller
 		}
     elseif (! isset($_POST['sp-nonce']) || ! wp_verify_nonce( sanitize_key($_POST['sp-nonce']), $this->form_action))
     {
+      // Obscure issue. Detected other plugin that adds information to $_POST without an actual form submit, which would trigger the nonce check on the settings page. In case this happens, be lenient.
+      
+      if ( ! isset($_POST['ajaxSave']) || ! isset($_POST['action']) )
+      {
+         return false; 
+      }
       Log::addInfo('Check Post fails nonce check, action : ' . $this->form_action, array($_POST) );
 			exit('Nonce Failed');
-      return false;
+      return true;
     }
     elseif (isset($_POST) && count($_POST) > 0)
     {
