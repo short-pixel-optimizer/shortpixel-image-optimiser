@@ -360,7 +360,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			$content = $this->pregReplaceContent($content, $replaceBlocks);
 			$background_inline_found = true; 
 		}
-	
+
 		// ** DO IMAGE MATCHES **/
 		$image_matches = $this->fetchImageMatches($content, $args);
 		$replaceBlocks = $this->extractImageMatches($image_matches);
@@ -368,7 +368,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		$replaceBlocks = $this->filterEmptyURLS($replaceBlocks);
 		$replaceBlocks = $this->filterRegexExclusions($replaceBlocks);
 		$replaceBlocks = $this->filterOtherDomains($replaceBlocks);
-
 
 
 		// If the items didn't survive the filters.
@@ -718,8 +717,20 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		foreach($replaceBlocks as $replaceBlock)
 		{
 			 $raw_url = $replaceBlock->raw_url; 
+			
+			 // @TODO . Check on Raw_URL if there is " or '  and add that, if none, add none. 
+			 if (true === str_contains($raw_url, '"'))
+			 {
+				$delim = '"'; 
+			 }
+			 elseif (true === str_contains($raw_url, "'"))
+			 {
+				 $delim = "'";
+			 }
+			 else 
+			 	$delim = '';
 			 // Rebuild the matches url: pattern ( easier than $1 getting it back )
-			 $replace_urls[] = 'url(\'' . $replaceBlock->replace_url . '\')'; 
+			 $replace_urls[] = 'url(' . $delim . $replaceBlock->replace_url . $delim . ')'; 
 			 $patterns[] = str_replace('%%replace%%', "" . preg_quote($raw_url, '/') . "", $pattern); 
 
 		}
