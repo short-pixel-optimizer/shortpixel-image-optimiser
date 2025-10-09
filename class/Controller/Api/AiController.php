@@ -61,6 +61,7 @@ class AiController extends RequestManager
 
         $requestBody = array_merge($requestBody, $paramlist);
         $requestBody['retry'] = '1'; // when requesting alt, always wants a new one (?) 
+        $requestBody['version'] = 'v_2'; 
       }
 
       if ($qItem->data()->action == 'retrieveAlt')
@@ -99,10 +100,8 @@ class AiController extends RequestManager
     protected function handleResponse(QueueItem $qItem, $response)
     {
        $apiData = $this->parseResponse($response);//get the actual response from API, its an array
-   //    Log::addTemp('Response AI ', $response);
-       Log::addTemp('HAndle AI Response! ', $apiData);
+       Log::addInfo('HAndle AI Response! ', $apiData);
 
-       
         // List all the random crap that might return. 
         $id = isset($apiData['id']) ? intval($apiData['id']) : false; 
         $jwt = isset($apiData['jwt']) ? sanitize_text_field($apiData['jwt']) : false; 
@@ -117,7 +116,6 @@ class AiController extends RequestManager
           if (false === $authKey || $jwt !== $authKey)
           {
              set_transient($this->auth_token, $jwt, HOUR_IN_SECONDS);
-             Log::addTemp('Setting auth key trans');
           }
 
         }
@@ -148,7 +146,6 @@ class AiController extends RequestManager
                return $this->returnRetry(RequestManager::STATUS_WAITING, __('Response without result object', 'shortpixel-image-optimiser'));
             }
             
-
             
             if (false !== $id)
             {
