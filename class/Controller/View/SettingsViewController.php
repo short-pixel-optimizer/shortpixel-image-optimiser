@@ -522,7 +522,17 @@ class SettingsViewController extends \ShortPixel\ViewController
          require_once( ABSPATH . 'wp-admin/includes/translation-install.php' );
          $this->view->languages = wp_get_available_translations();
         
-         
+         $this->view->hide_banner = false; 
+         $bool = apply_filters('shortpixel/settings/no_banner', false);
+         if (true === $bool )
+            $this->view->hide_banner = true; 
+
+         if ( defined('SHORTPIXEL_NO_BANNER') && SHORTPIXEL_NO_BANNER == true)
+         {
+           $this->view->hide_banner = true; 
+         }
+          
+
          //$this->view->latest_ai = $this->getLatestAIExamples();
 
          $settings = \wpSPIO()->settings();

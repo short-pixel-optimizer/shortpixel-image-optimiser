@@ -128,7 +128,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             		    	</label>
 			</div>
 
-<?php if (false == $view->is_unlimited): ?>
+<?php if (false == $view->is_unlimited && false === $view->hide_banner): ?>
           <div class='upgrade-banner'>
               <div class="robo-container">
                   <div class="robo-from-banner"> <?php echo UIHelper::getIcon('res/img/robo-slider.png'); ?></div>

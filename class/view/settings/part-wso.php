@@ -5,12 +5,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
-$bool = apply_filters('shortpixel/settings/no_banner', true);
-if (! $bool )
-  return;
-
-if ( defined('SHORTPIXEL_NO_BANNER') && SHORTPIXEL_NO_BANNER == true)
-  return;
+if (true === $view->hide_banner)
+{
+   return;
+}
 
 ?>
 
