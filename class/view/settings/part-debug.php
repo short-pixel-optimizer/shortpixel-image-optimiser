@@ -260,6 +260,7 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
 					<span>Fatal</span>
 					<span>Done</span>
 					<span>Total</span>
+          <span>IsCustomOp</span>
 				</div>
 			<?php
 
@@ -298,7 +299,8 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
 						echo "<span>" .  esc_html($stats->fatal_errors) . '</span>';
 						echo "<span>" .  esc_html($stats->done) . '</span>';
 						echo "<span>" .  esc_html($stats->total) . '</span>';
-
+            echo "<span>" .  $queue->getCustomDataItem('customOperation') . '</span>';
+            
 					echo "</div>";
 
 				?>

@@ -561,6 +561,8 @@ class QueueItem
          case 'requestAlt': // @todo Check if this is correct action name,
          case 'retrieveAlt':
          case 'getAltData': 
+         case 'undoAI': 
+         case 'redoAI': 
             $api = OptimizeAiController::getInstance();
             break;
          case 'restore':

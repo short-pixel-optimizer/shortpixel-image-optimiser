@@ -141,20 +141,14 @@ class ShortPixelScreen extends ShortPixelScreenBase
       {
         let container = containers[i]; 
         let input = container.querySelector('input'); 
-     //   let datePicker = container.querySelector('.the-date-picker');
-//        let input = containers[i].children();
+
         let datepicker = new TheDatepicker.Datepicker(input);
         datepicker.options.setMaxDate(new Date());
-        //datepicker.options.setTitle('select');
 
         datepicker.options.onSelect(function (ev)
         {
-          console.log(this);
-          //let formatDate = datepicker.getSelectedDateFormatted('d/m/Y'); 
           let formatDate = datepicker.getSelectedDateFormatted('Y/m/d'); 
-
           input.dataset.formatteddate = formatDate; 
-
         }); 
 
         datepicker.render();
@@ -322,10 +316,11 @@ class ShortPixelScreen extends ShortPixelScreenBase
        data.filter_enddate = endDate.dataset.formatteddate; 
     }
     
-//    data.endDate = document.getElementById('bulk-end-date').value; 
-    data.limitItemsSwitch = (document.getElementById('limit_items').checked) ? true : false; 
-    data.limitItems = document.getElementById('limit_numitems');
 
+/*
+    data.doLimitItems = (document.getElementById('limit_items').checked) ? true : false; 
+    data.limitItems = document.getElementById('limit_numitems').value;
+*/
      this.UpdatePanelStatus('loading', 'selection');
 
      // Prepare should happen after selecting what the optimize.
@@ -1033,7 +1028,6 @@ class ShortPixelScreen extends ShortPixelScreenBase
 
     this.RemovePanelFromURL(shortPixelScreen.panel);
 
-
     this.UpdatePanelStatus('loading', 'selection');
     this.SwitchPanel('selection');
 
@@ -1042,6 +1036,21 @@ class ShortPixelScreen extends ShortPixelScreenBase
     window.addEventListener('shortpixel.startRestoreAll', this.PrepareBulk.bind(this), {'once': true} );
     window.addEventListener('shortpixel.bulk.onSwitchPanel', this.StartBulk.bind(this), {'once': true});
     this.processor.AjaxRequest(data);
+  }
+  BulkUndoAI(event)
+  {
+    var data = {screen_action: 'startBulkUndoAI', callback: 'shortpixel.startUndoAI'}; //
+
+		this.UpdatePanelStatus('loading', 'selection');
+		this.SwitchPanel('selection');
+
+  	//this.SwitchPanel('process');
+    this.RemovePanelFromURL(shortPixelScreen.panel);
+
+    // Prepare should happen after selecting what the optimize.
+    window.addEventListener('shortpixel.startUndoAI', this.PrepareBulk.bind(this), {'once': true} );
+    window.addEventListener('shortpixel.bulk.onSwitchPanel', this.StartBulk.bind(this), {'once': true});
+    this.processor.AjaxRequest(data);    
   }
 
   BulkMigrateAll(event)

@@ -291,7 +291,7 @@
   }
   section#tab-debug
   {
-			h2 { left: 738px; }
+		h2 { left: 738px; }
      .flex {
        display: flex;
      }
@@ -310,6 +310,7 @@
             display: table-row;
             >span {
               display: table-cell;
+			  padding: 0 4px;
             }
             &.head > span { font-weight: 700; }
         }

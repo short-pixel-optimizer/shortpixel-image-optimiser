@@ -124,8 +124,11 @@
   .date-picker-container {
      // border: 1px solid #ccc; 
       ///padding: 8px;
+      position: relative;
+      display: inline-block;
 
-      .the-date-picker
+      // Date Picker tweaks / fixes 
+     /* .the-date-picker
       {
          width: 40%; 
          max-width: 300px;
@@ -135,6 +138,20 @@
            background: none;
            padding: 6px;
          }
+      }
+*/
+  
+      .the-datepicker__container {
+          margin-top: 4px;
+
+      }
+      .the-datepicker__main select.the-datepicker__select
+      {
+         min-width: 70px;
+         text-align: center;
+         background: none;   
+         border: 0; 
+         cursor: pointer;
       }
 
 

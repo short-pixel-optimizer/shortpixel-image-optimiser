@@ -1002,6 +1002,7 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page section#tab-debug .table > div > span {
   display: table-cell;
+  padding: 0 4px;
 }
 .wrap.is-shortpixel-settings-page section#tab-debug .table > div.head > span {
   font-weight: 700;

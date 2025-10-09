@@ -169,6 +169,20 @@ $queueRunning = $bulk->isAnyBulkRunning();
          </content>
       </setting>
 
+       <!-- Bulk Restore AI DATA -->
+       <setting>
+         <name>
+              <?php esc_html_e('Undo AI generation :  Restore all images to previous state ','shortpixel-image-optimiser'); ?>
+         </name>
+         <content>
+           <a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'restoreAI', 'noheader' => true), $url)) ?>" class="button danger"><?php _e('Bulk Undo AI', 'shortpixel-image-optimiser'); ?></a>
+
+           <info>
+             <?php printf(esc_html__('%sUndoes%s all generated AI Data. Will restore AI Generated fields back to previous state', 'shortpixel-image-optimiser'), '<b>','</b>'); ?>
+           </info>
+         </content>
+      </setting>
+
       <!-- Remove Legacy Data -->
       <setting>
       <!--  <name>

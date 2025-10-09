@@ -241,7 +241,7 @@ class AjaxController
 				$json = $this->purgeCDNCache($json, $data); 
 			break;
 			case 'settings/importexport':
-				$jso = $this->importexportSettings($json, $data);
+				$json = $this->importexportSettings($json, $data);
 			break; 
 			case 'ai/requestalt': 
 				$json = $this->requestAlt($json, $data);	
@@ -770,9 +770,19 @@ class AjaxController
 	{
 		$id = $data['id'];
 		$type = $data['type']; 
+		// undo or redo 
 		$action_type = isset($_POST['action_type']) ? sanitize_text_field($_POST['action_type']) : 'undo'; 
 
 		$imageModel = $this->getMediaItem($id, $type); 
+		$this->checkImageAccess($imageModel);
+
+
+		// @todo Should e.v be moved to QItem hop. 
+		/*$queueController = new QueueController();
+		$action = ('redo' == $action_type) ? 'redoAI' : 'undoAI'; 
+		
+		$result  = $queueController->addItemToQueue($imageModel, ['action' => $action]);
+*/
 		$queueItem = new QueueItem(['imageModel' => $imageModel]);
 
 		$queueItem->getAltDataAction(); 
@@ -784,14 +794,15 @@ class AjaxController
 		if ('redo' == $action_type)
 		{
 			 return $this->requestAlt($json, $data);
-		}
+		} 
 
-		$json->$type = (object) $metadata; 
-		$json->$type->results = null;
-		$json->status = true; 
+		$json->$type->results = [$result];
+		$json->status = true;
 		
 		return $json;
 	}
+
+
 
 	protected function finishBulk($json, $data)
 	{

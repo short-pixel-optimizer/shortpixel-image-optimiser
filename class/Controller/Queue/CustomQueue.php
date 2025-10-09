@@ -54,17 +54,24 @@ class CustomQueue extends Queue
       return $this->prepareItems($items);
    }
 
+   // Not implemented, for abstract.
+   protected function prepareUndoAI()
+   {
+       return []; 
+   }
+
    public function createNewBulk($args = [])
    {
       if (isset($args['filters']))
       {
          $this->addFilters($args['filters']); 
-         
+         unset($args['filters']); 
       } 
        
+      $options = array_merge($this->options, $args);
       
       // Parent should save options as well. 
-       return parent::createNewBulk($this->options); 
+       return parent::createNewBulk($options); 
    }
 
    /*

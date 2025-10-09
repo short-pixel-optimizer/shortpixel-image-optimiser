@@ -8,6 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ShortPixel\ShortQ\ShortQ as ShortQ;
 use ShortPixel\Controller\CacheController as CacheController;
 use ShortPixel\Helper\UtilHelper;
+use ShortPixel\Model\AiDataModel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 
@@ -65,17 +66,24 @@ class MediaLibraryQueue extends Queue
       return $this->prepareItems($items);
    }
 
+   protected function prepareUndoAI()
+   {
+      $items = $this->queryAiItems(); 
+      return $this->prepareItems($items);
+   }
+
    public function createNewBulk($args = [])
    {
       if (isset($args['filters']))
       {
          $this->addFilters($args['filters']); 
-         
+         unset($args['filters']); // added to options 
       } 
        
-      
+      $options = array_merge($this->options, $args);
+
       // Parent should save options as well. 
-       return parent::createNewBulk($this->options); 
+       return parent::createNewBulk($options); 
    }
 
 
@@ -208,6 +216,45 @@ class MediaLibraryQueue extends Queue
      }
 
      return array_filter($items);
+
+   }
+
+
+   private function queryAiItems()
+   {
+       $last_id = $this->getStatus('last_item_id'); 
+
+       $limit = $this->q->getOption('enqueue_limit');
+       $prepare = [];
+       global $wpdb;
+
+       $table = $wpdb->prefix . 'shortpixel_aipostmeta';
+
+       $sql = ' SELECT attach_id from ' . $table . ' WHERE status = %d '; 
+       $prepare[] = AiDataModel::AI_STATUS_GENERATED; 
+
+       if ($last_id > 0)
+       {
+          $sql .= " and attach_id < %d ";
+          $prepare [] = intval($last_id);
+       }
+  
+       $sql .= ' order by attach_id DESC LIMIT %d ';
+       $prepare[] = $limit;
+  
+       $sql = $wpdb->prepare($sql, $prepare);
+  
+       $results = $wpdb->get_col($sql);
+  
+       $items = [];
+  
+       foreach($results as $item_id)
+       {
+          $items[] = $item_id;
+       }
+  
+       return array_filter($items);
+  
 
    }
 

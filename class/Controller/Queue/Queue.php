@@ -42,6 +42,7 @@ abstract class Queue
 
     abstract protected function prepare();
     abstract protected function prepareBulkRestore();
+    abstract protected function prepareUndoAI(); 
     abstract public function getType();
     abstract protected function getFilterQueryData();
 
@@ -62,7 +63,7 @@ abstract class Queue
         $cache->deleteItem($this->cacheName);
 
         $this->setBulkOptions($args);
-        return $this->options; 
+        return $args; 
     }
 
     public function startBulk()
@@ -76,7 +77,7 @@ abstract class Queue
        $this->q->cleanQueue();
     }
 
-		public function resetQueue()
+    public function resetQueue()
 		{
 			$this->q->resetQueue();
 		}
@@ -159,6 +160,10 @@ abstract class Queue
             if (false !== $custom_operation && 'bulk-restore' === $custom_operation)
             {
               $prepared = $this->prepareBulkRestore();
+            }
+            elseif (false !== $custom_operation && 'bulk-undoai' === $custom_operation)
+            {
+               $prepared = $this->prepareUndoAI(); 
             }
             else {
 
@@ -451,6 +456,7 @@ abstract class Queue
                 { // @todo Incorporate these actions here.  . Perhaps operations should all be on top?
                    if($operation !== false)
                    {
+                    // Possibly these should become propert qItems as well when enqueueing (?) 
                       if ($operation == 'bulk-restore')
                       {
                           if ($mediaItem->isRestorable())
@@ -459,6 +465,12 @@ abstract class Queue
                             $qObject->action = 'restore';
                             $queue[] = array('id' => $mediaItem->get('id'), 'value' => $qObject);
                           }
+                      }
+                      elseif ('bulk-undoAI' == $operation)
+                      {
+                         $qObject = new \stdClass; 
+                         $qObject->action = 'undoAI'; 
+                         $queue[] = ['id' => $mediaItem->get('id'), 'value' => $qObject];
                       }
                    }
                    elseif(true === $enqueueAi)
@@ -674,6 +686,7 @@ abstract class Queue
 		// Use to give the go processing when out of credits (ie)
 		public function isCustomOperation()
 		{
+      $customOp = $this->getCustomDataItem('customOperation');
 			if ($this->getCustomDataItem('customOperation') && false !== $this->getCustomDataItem('customOperation'))
 			{
 				return true;

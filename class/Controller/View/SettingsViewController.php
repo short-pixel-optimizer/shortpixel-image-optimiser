@@ -261,16 +261,19 @@ class SettingsViewController extends \ShortPixel\ViewController
 
 				$action = isset($_REQUEST['bulk']) ? sanitize_text_field($_REQUEST['bulk']) : null;
 
-				if ($action == 'migrate')
+				if ('migrate' == $action)
 				{
 					$this->doRedirect('bulk-migrate');
 				}
-
-				if ($action == 'restore')
+				elseif ('restore' == $action)
 				{
 					$this->doRedirect('bulk-restore');
 				}
-				if ($action == 'removeLegacy')
+        elseif ('restoreAI' == $action)
+        {
+          $this->doRedirect('bulk-restoreAI');
+        }
+				elseif ('removeLegacy' == $action)
 				{
 					 $this->doRedirect('bulk-removeLegacy');
 				}
@@ -1058,19 +1061,23 @@ class SettingsViewController extends \ShortPixel\ViewController
             $url = remove_query_arg('sp-action', $url); // has url
           }
         }
-        elseif($redirect == 'bulk')
+        elseif('bulk' == $redirect )
         {
           $url = admin_url("upload.php?page=wp-short-pixel-bulk");
         }
-				elseif($redirect == 'bulk-migrate')
+				elseif('bulk-migrate' == $redirect)
 				{
 					 $url = admin_url('upload.php?page=wp-short-pixel-bulk&panel=bulk-migrate');
 				}
-				elseif ($redirect == 'bulk-restore')
+				elseif ('bulk-restore' == $redirect)
 				{
 						$url = admin_url('upload.php?page=wp-short-pixel-bulk&panel=bulk-restore');
 				}
-				elseif ($redirect == 'bulk-removeLegacy')
+        elseif ('bulk-restoreAI' == $redirect)
+        {
+            $url = admin_url('upload.php?page=wp-short-pixel-bulk&panel=bulk-restoreAI');
+        }
+				elseif ('bulk-removeLegacy' == $redirect)
 				{
 						$url = admin_url('upload.php?page=wp-short-pixel-bulk&panel=bulk-removeLegacy');
 				}

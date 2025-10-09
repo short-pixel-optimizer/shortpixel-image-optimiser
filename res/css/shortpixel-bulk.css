@@ -413,15 +413,31 @@
 .wrap.is-shortpixel-bulk-page .hidden {
   display: none !important;
 }
-.wrap.is-shortpixel-bulk-page .date-picker-container .the-date-picker {
-  width: 40%;
-  max-width: 300px;
-  position: absolute;
-  z-index: 20;
+.wrap.is-shortpixel-bulk-page .date-picker-container {
+  position: relative;
+  display: inline-block;
+  /* .the-date-picker
+        {
+           width: 40%; 
+           max-width: 300px;
+           position: absolute; 
+           z-index: 20;
+           select {
+             background: none;
+             padding: 6px;
+           }
+        }
+  */
 }
-.wrap.is-shortpixel-bulk-page .date-picker-container .the-date-picker select {
+.wrap.is-shortpixel-bulk-page .date-picker-container .the-datepicker__container {
+  margin-top: 4px;
+}
+.wrap.is-shortpixel-bulk-page .date-picker-container .the-datepicker__main select.the-datepicker__select {
+  min-width: 70px;
+  text-align: center;
   background: none;
-  padding: 6px;
+  border: 0;
+  cursor: pointer;
 }
 .wrap.is-shortpixel-bulk-page .dashicons.spin {
   animation: dashicons-spin 1s infinite;

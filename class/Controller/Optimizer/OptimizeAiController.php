@@ -12,6 +12,7 @@ use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Model\Queue\QueueItem as QueueItem;
 use ShortPixel\Controller\Api\RequestManager as RequestManager;
 use ShortPixel\Controller\Api\AiController;
+use ShortPixel\Controller\Api\ApiController;
 use ShortPixel\Controller\Queue\Queue;
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
 use ShortPixel\Model\AiDataModel;
@@ -51,7 +52,21 @@ class OptimizeAiController extends OptimizerBase
 
   public function sendToProcessing(QueueItem $qItem) { 
 
-/*    if (false == $this->isSupported($qItem))
+
+    $action = $qItem->data()->action; 
+
+    switch($action)
+    {
+      case 'undoAI': 
+          
+          return $this->undoAltData($qItem); 
+
+      break; 
+      default: 
+        $this->api->processMediaItem($qItem, $qItem->imageModel);
+      break; 
+    }
+    /*    if (false == $this->isSupported($qItem))
     {
         // For now only fail here is GIF support, so message is a backstop for now that later should be updated. 
         $qItem->addResult([
@@ -64,7 +79,7 @@ class OptimizeAiController extends OptimizerBase
     }
     else
     { */
-        $this->api->processMediaItem($qItem, $qItem->imageModel);
+       
     //}
  
   }
@@ -760,6 +775,7 @@ class OptimizeAiController extends OptimizerBase
        return true; 
   } */
 
+  // @todo Should be moved to protected / called via sendToProcessing in future ( now also called via ajaxControl )
   public function undoAltData(QueueItem $qItem)
   {
        $item_id = $qItem->item_id;
@@ -767,6 +783,7 @@ class OptimizeAiController extends OptimizerBase
        $original = $aiModel->getOriginalData();
        $generated = $aiModel->getGeneratedData();
 
+       Log::addTEmp('Undo ALT on ' . $item_id);
 
        $aiData = [
             'alt' => $original['alt'], 
@@ -781,6 +798,15 @@ class OptimizeAiController extends OptimizerBase
        $this->replaceImageAttributes($qItem, $aiData); 
 
        $aiData = $aiModel->getCurrentData();
+
+       $qItem->addResult([
+        'is_done' => true, 
+        'is_error' => false,
+        'message' => __('AI Data reverted ', 'shortpixel-image-optimiser'), 
+        'apiStatus' => ApiController::STATUS_NOT_API,
+    ]);
+    $this->finishItemProcess($qItem);
+
     
        return $this->getAltData($qItem); 
   }
