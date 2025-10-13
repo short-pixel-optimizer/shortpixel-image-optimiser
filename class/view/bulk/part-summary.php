@@ -39,6 +39,9 @@ if ( ! defined( 'ABSPATH' ) ) {
             <div class='filetypes' data-check-visibility data-control="data-check-has-avif">
 							<span>&nbsp; <?php esc_html_e('+ AVIF images','shortpixel-image-optimiser'); ?> </span><span data-stats-media="images-images_avif" data-check-has-avif>&nbsp;</span>
 						</div>
+            <div class='filetypes' data-check-visibility data-control="data-check-has-ai">
+							<span>&nbsp; <?php esc_html_e('+ AI ','shortpixel-image-optimiser'); ?> </span><span data-stats-media="images-images_ai" data-check-has-ai>&nbsp;</span>
+						</div>
 
 
           <div><span><?php esc_html_e('Total from Media Library','shortpixel-image-optimiser'); ?></span><span data-stats-media="images-images">0</span></div>

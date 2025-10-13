@@ -224,8 +224,7 @@ abstract class Queue
     {
          global $wpdb; 
          $start_date = $end_date = false; 
-
-         
+        
 
          // @todo Probably move all of this to global function and only sql statement to child class
          if (isset($filters['start_date']))
@@ -270,7 +269,6 @@ abstract class Queue
          }
 
          $args = $this->getFilterQueryData();
-         Log::addTemp('Query Filter Args', $args);
          $prepare = $args['base_prepare']; 
          $base_query = $args['base_query'];
          $prepare = $args['base_prepare']; 
@@ -314,7 +312,6 @@ abstract class Queue
          {
              $startSQL = $base_query . '  ORDER BY ' . $date_field . ' DESC LIMIT 1'; 
              $startSQL = $wpdb->prepare($startSQL, $prepare); 
-             Log::addTemp("StartSQl", $startSQL);
              $start_id = $wpdb->get_var($startSQL); 
              if (is_null($start_id))
              {
@@ -328,7 +325,6 @@ abstract class Queue
          {
             $endSQL = $base_query . '  ORDER BY ' . $date_field . ' ASC LIMIT 1'; 
             $endSQL = $wpdb->prepare($endSQL, $prepare); 
-            Log::addTemp("EndSQl", $endSQL);
 
             $end_id = $wpdb->get_var($endSQL); 
             if (is_null($end_id))
@@ -352,6 +348,7 @@ abstract class Queue
 
 				$settings = \wpSPIO()->settings();
         $env = \wpSPIO()->env();
+        $queueOptions = $this->getOptions();
 
           if (count($items) == 0)
           {
@@ -372,9 +369,12 @@ abstract class Queue
 
           $i = 0;
 
+          $customData = $this->getStatus('custom_data');
+
           // maybe while on the whole function, until certain time has elapsed?
           foreach($items as $item_id)
           {
+              $counterUpdated = false; 
 
 							// Migrate shouldn't load image object at all since that would trigger the conversion.
 							  if ($operation == 'migrate' || $operation == 'removeLegacy')
@@ -411,13 +411,25 @@ abstract class Queue
 
                 // If autoAi is on the bulk, add operation to the item
                 $enqueueAi = false; 
-                if ('media' === $mediaItem->get('type') && true === $optimizeAiController->isAiEnabled() && true === $settings->autoAIBulk)
+                if ('media' === $mediaItem->get('type') && 
+                true === $optimizeAiController->isAiEnabled() && 
+                true === $settings->autoAIBulk &&
+                true === $queueOptions['doAi']
+
+                )
                 {
                   $aiDataModel = AiDataModel::getModelByAttachment($mediaItem->get('id'));  
                   $enqueueAi = $aiDataModel->isProcessable();
+
+
+
                 }
 
-                if ($mediaItem->isProcessable() && $mediaItem->isOptimizePrevented() === false && ! $operation) // Checking will be done when processing queue.
+                if ($mediaItem->isProcessable() && 
+                    $mediaItem->isOptimizePrevented() === false &&
+                     ! $operation &&
+                    true === $queueOptions['doMedia']
+                  ) // Checking will be done when processing queue.
                 {
 
 										if ($this->isDuplicateActive($mediaItem, $queue))
@@ -443,11 +455,15 @@ abstract class Queue
                     $counts = $qItem->data()->counts; 
 
                     $imageCount += $counts->creditCount;
-                    $webpCount += $counts->webpCount;
-                    $avifCount += $counts->avifCount;
-										$baseCount += $counts->baseCount; // base images (all minus webp/avif) 
+                    // $webpCount += $counts->webpCount;
+                   // $avifCount += $counts->avifCount;
+									 //	$baseCount += $counts->baseCount; // base images (all minus webp/avif) 
 
-                    
+                    $customData->webpCount += $counts->webpCount;
+                    $customData->avifCount += $counts->avifCount;
+                    $customData->baseCount += $counts->baseCount;
+
+                    $counterUpdated = true; 
                     $this->checkQueueCache($item_id);
                     do_action('shortpixel_start_image_optimisation', $mediaItem);
 
@@ -478,6 +494,10 @@ abstract class Queue
                           $qItem = QueueItems::getImageItem($mediaItem);
                           $qItem->requestAltAction();
                           $queue[] = $qItem->returnEnqueue();
+
+                          $counts = $qItem->data()->counts; 
+                          $customData->aiCount += $counts->aiCount;
+                          $counterUpdated = true;
                    }
 									 else
 									 {
@@ -516,13 +536,12 @@ abstract class Queue
           $this->q->additems($queue);
           $numitems = $this->q->enqueue();
 
-          $customData = $this->getStatus('custom_data');
+          Log::addTemp('CustomData', $customData);
 
-          $customData->webpCount += $webpCount;
-          $customData->avifCount += $avifCount;
-					$customData->baseCount += $baseCount;
-
-          $this->q->setStatus('custom_data', $customData, false);
+          if (true === $counterUpdated)
+          {
+            $this->q->setStatus('custom_data', $customData, false);
+          }
 
           // mediaItem should be last_item_id, save this one.
           $this->q->setStatus('last_item_id', $item_id); // enum status to prevent a hang when no items are enqueued, thus last_item_id is not raised. save to DB.
@@ -535,6 +554,7 @@ abstract class Queue
 					*/
           $return['results'] = count($items); // This is the return of the query. Preparing should not be 'done' before the query ends, but it can return 0 on the qcount if all results are already optimized.
 
+          Log::addTemp('ImageCount '  . $customData->baseCount . ' added : ' . $baseCount .  ' leading to ', $return);
           return $return; // only return real amount.
     }
 
@@ -605,6 +625,7 @@ abstract class Queue
         $stats->images = $this->countQueue();
       }
 
+      Log::addTemp('GetStats', $stats);
       return $stats;
     }
 
@@ -630,6 +651,7 @@ abstract class Queue
           $count->images_webp = (int) $customData->webpCount;
           $count->images_avif = (int) $customData->avifCount;
 					$count->images_basecount = (int) $customData->baseCount;
+          $count->images_ai = (int) $customData->aiCount;
         }
 
         return $count;
@@ -880,6 +902,7 @@ abstract class Queue
         $data->webpCount = 0;
         $data->avifCount = 0;
 				$data->baseCount = 0;
+        $data->aiCount = 0;
         $data->customOperation = false;
 
         return $data;

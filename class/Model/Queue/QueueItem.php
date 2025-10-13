@@ -393,6 +393,7 @@ class QueueItem
       $counts = new \stdClass;
       $counts->creditCount = $baseCount + $webpCount + $avifCount;  // count the used credits for this item.
       $counts->baseCount = $baseCount; // count the base images.
+      //$counts->thumbCount = 
       $counts->avifCount = $avifCount;
       $counts->webpCount = $webpCount;
 
@@ -453,7 +454,8 @@ class QueueItem
          $this->data->returndatalist = $optimizeData['returnParams'];
       }
 
-      $this->data->counts = $counts;
+      $this->data()->addCount($counts);
+     // $this->data->counts = $counts;
 
       // Converter can alter the data for this item, based on conversion needs
       $converter = Converter::getConverter($imageModel, true);
@@ -495,6 +497,7 @@ class QueueItem
          $this->data()->addKeepDataArgs('returndatalist');
       }
 
+      $this->data->addCount(['aiCount' => 1]); // @todo Check if this is really a one credito operation.
 
       $this->data->action = 'requestAlt'; // For Queue
 

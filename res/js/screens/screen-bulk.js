@@ -305,13 +305,13 @@ class ShortPixelScreen extends ShortPixelScreenBase
       } 
 
     let startDate = document.getElementById('bulk-start-date'); 
-    if (startDate !== null && startDate.dataset.formatteddate !== null)
+    if (startDate !== null && startDate.dataset.formatteddate !== null && typeof startDate.dataset.formatteddate !== 'undefined')
     {
       data.filter_startdate = startDate.dataset.formatteddate;
     }
 
     let endDate = document.getElementById('bulk-end-date'); 
-    if (endDate !== null && endDate.dataset.formatteddate)
+    if (endDate !== null && endDate.dataset.formatteddate && typeof endDate.dataset.formatteddate !== 'undefined')
     {
        data.filter_enddate = endDate.dataset.formatteddate; 
     }
@@ -797,8 +797,8 @@ class ShortPixelScreen extends ShortPixelScreenBase
 	SkipPreparing()
 	{
 		this.processor.StopProcess({ waiting: true });
-		this.SwitchPanel('summary');
-		this.UpdatePanelStatus('loaded', 'selection');
+		this.SwitchPanel('summary'); // switch to summary
+		this.UpdatePanelStatus('loaded', 'selection'); // move back previous screen one step.
 		this.processor.tooltip.ProcessEnd();
 		this.processor.SetInterval(-1); // back to default.
 	}
@@ -1104,6 +1104,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
 
   }
 
+  /* Unused ? 
 	StartBulkOperation(event)
 	{
 		this.PrepareBulk();
@@ -1111,7 +1112,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
 		this.UpdatePanelStatus('loading', 'selection');
 		this.SwitchPanel('selection');
 
-	}
+	} */
 
 	// Opening of Log files on the dashboard
 	OpenLog(event)

@@ -491,7 +491,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 				$count = 0;
 				$urls = [];
-				$i = 0;
 
 				$params = $optimizeData['params'];
 

@@ -279,9 +279,12 @@ class EditMediaViewController extends \ShortPixel\ViewController
              $item->setDebug();
              $item->newOptimizeAction();
 
+             $counts = $item->data()->counts;
+
 						 $returnEnqueue = $item->returnEnqueue();
 
 						 $debugInfo[] = array(__('Image to Queue'), $returnEnqueue );
+             $debugInfo[] = [__('Counts'), $counts];
 
 					}
 

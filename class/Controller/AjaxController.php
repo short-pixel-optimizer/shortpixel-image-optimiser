@@ -846,7 +846,12 @@ class AjaxController
 
 		
 		$bulkControl = BulkController::getInstance();
-		$stats = $bulkControl->createNewBulk('media', $args);
+		// This is where the settings start to break and double. This info is also needs inside the process. 
+		$doMedia = filter_var(sanitize_text_field($_POST['mediaActive']), FILTER_VALIDATE_BOOLEAN);
+		$doAi = filter_var(sanitize_text_field($_POST['aiActive']), FILTER_VALIDATE_BOOLEAN);
+		$mediaArgs = array_merge($args, ['doMedia' => $doMedia, 'doAi' => $doAi]);
+
+		$stats = $bulkControl->createNewBulk('media', $mediaArgs);
 		$json->media->stats = $stats;
 
 		$stats = $bulkControl->createNewBulk('custom', $args);

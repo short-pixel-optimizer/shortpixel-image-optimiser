@@ -202,6 +202,20 @@ class QueueItemData
             return $args;
         }
 
+        public function addCount($new_count)
+        {
+             if (! is_object($this->counts))
+             {
+                 $this->counts = new \stdClass; 
+             }
+
+             foreach($new_count as $name => $value)
+             {
+                 $this->counts->{$name} = $value;
+             }
+
+        }
+
         
 
 } // class 
