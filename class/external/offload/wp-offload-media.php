@@ -175,8 +175,7 @@ class wpOffload
 		$remove = \DeliciousBrains\WP_Offload_Media\Items\Remove_Provider_Handler::get_item_handler_key_name();
 		$itemHandler = $this->as3cf->get_item_handler($remove);
 
-		$result = $itemHandler->handle($a3cfItem, array('verify_exists_on_local' => false)); //handle it then.
-		return $result;
+
 	}
 
 

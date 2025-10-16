@@ -275,6 +275,10 @@ class AjaxController
 				$this->checkActionAccess($action, 'is_admin_user');
 				$json = $this->startRestoreAll($json, $data);
 				break;
+			case 'startBulkUndoAI':
+				$this->checkActionAccess($action, 'is_admin_user');
+				$json = $this->startUndoAI($json, $data);
+				break;
 			case 'startMigrateAll':
 				$this->checkActionAccess($action, 'is_admin_user');
 				$json = $this->startMigrateAll($json, $data);
@@ -334,9 +338,11 @@ class AjaxController
 				break;
 			default:
 			case 'settings/getAiExample': 
+				$this->checkActionAccess($action, 'is_admin_user');
 				$this->getSettingsAiExample($data);
 			break; 
 			case 'settings/setAiImageId': 
+				$this->checkActionAccess($action, 'is_admin_user');
 				$this->setSettingsAiImage($data);
 			break; 
 			case 'settings/getNewAiImagePreview': 
@@ -467,8 +473,9 @@ class AjaxController
 
 	protected function purgeCDNCache($json, $data)
 	{
-		$purge =  isset($_POST['purge']) ? sanitize_text_field($_POST['purge']) : 'cssjs'; 
+		$this->checkActionAccess('purge', 'is_admin_user');
 
+		$purge =  isset($_POST['purge']) ? sanitize_text_field($_POST['purge']) : 'cssjs'; 
 
 		$CDNController = new \ShortPixel\Controller\Front\CDNController();
 		$result = $CDNController->purgeCDN(['purge' => $purge]);
@@ -477,14 +484,13 @@ class AjaxController
 		$json->status = true;
 
 		return $json;
-
-		
 	}
 
 				
 	protected function importexportSettings($json, $data)
 	{
 		$action = (isset($_POST['actionType'])) ? sanitize_text_field($_POST['actionType']) : 'export'; 
+		$this->checkActionAccess($action, 'is_admin_user');
 		$settings = \wpSPIO()->settings();
 
 		if ('import' === $action)
@@ -780,7 +786,6 @@ class AjaxController
 			 return $this->requestAlt($json, $data);
 		}
 
-
 		$json->$type = (object) $metadata; 
 		$json->$type->results = null;
 		$json->status = true; 
@@ -930,6 +935,18 @@ class AjaxController
 		return $json;
 	}
 
+	protected function startUndoAI($json, $data)
+	{
+		$bulkControl = BulkController::getInstance();
+		QueueController::resetQueues(); // prevent any weirdness
+
+		$stats = $bulkControl->createNewBulk('media', ['customOp' => 'bulk-undoAI']);
+		$json->media->stats = $stats;
+
+		return $json;
+
+	}
+
 	protected function startMigrateAll($json, $data)
 	{
 		$bulkControl = BulkController::getInstance();
@@ -1036,6 +1053,12 @@ class AjaxController
 			
 			if (property_exists($result, 'is_done') && true === $result->is_done)
 			{
+				// If is done and is error, bail out. 
+				if (true === $result->is_error) 
+				{
+					$this->send($result);
+				}
+				
 				if ('requestAlt' === $state)
 				{
 					$remote_id = $result->remote_id; 

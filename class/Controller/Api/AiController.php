@@ -26,7 +26,7 @@ class AiController extends RequestManager
 
     public function __construct()
     {
-      $this->main_url = 'https://capi-gpt.shortpixel.com/';
+     $this->main_url = 'https://capi-gpt.shortpixel.com/';
     }
 
     public function processMediaItem(QueueItem $qItem, ImageModel $imageObj)
@@ -143,7 +143,7 @@ class AiController extends RequestManager
 
         if ($qItem->data()->action == 'requestAlt')
         {
-            if (false === $id)
+            if (false === $id && false === $is_error)
             {
                return $this->returnRetry(RequestManager::STATUS_WAITING, __('Response without result object', 'shortpixel-image-optimiser'));
             }

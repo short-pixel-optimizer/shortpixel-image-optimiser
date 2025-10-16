@@ -210,6 +210,11 @@ class AdminController extends \ShortPixel\Controller
     /* Function to process Hook coming from the WP cron system */
     public function processCronHook($bulk)
     {
+       // Cron shenenigans
+        if (is_array($bulk) && isset($bulk['bulk']))
+        {
+           $bulk = $bulk['bulk'];
+        }
 
         $args = array(
             'max_runs' => 10,
@@ -245,10 +250,11 @@ class AdminController extends \ShortPixel\Controller
         $args = apply_filters('shortpixel/process_hook/options', $args);
 
         $queueArgs = []; 
-				if ($args['bulk'] === true)
+				if (true == $args['bulk'])
 				{
 					 $queueArgs['is_bulk'] = true;
 				}
+
 
 			  $control = new QueueController($queueArgs);
         $env = \wpSPIO()->env();

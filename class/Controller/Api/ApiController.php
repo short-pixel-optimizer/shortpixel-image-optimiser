@@ -408,7 +408,7 @@ class ApiController extends RequestManager
 		if (false === $this->checkFileSizeMargin($originalFileSize, $checkFileSize)) {
 			
 			// Prevent this check if smartcrop is active on this image. 
-			if (isset($data['resize']) && 4 == $data['resize'] )
+			if (isset($data['resize']) && 4 <> $data['resize'] )
 			{
 				$image['image']['status'] = self::STATUS_OPTIMIZED_BIGGER;
 				$checkFileSize = $originalFileSize;
