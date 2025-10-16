@@ -391,7 +391,7 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
           {
             $converted[] = $target_urldef;
             // Fix: The originals are not being put anymore because this would lead to double images and that's not a good thing.
-            $new_urldef = "url('" . $checkedFile . "') $image_data ";
+            $new_urldef = "url('" . $checkedFile . "') $image_data ;";
             $content = str_replace($target_urldef, $new_urldef, $content);
           }
       }
