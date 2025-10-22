@@ -27,6 +27,7 @@ use ShortPixel\Controller\View\SettingsViewController as SettingsViewController;
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
 use ShortPixel\Model\AiDataModel;
 use ShortPixel\Model\Queue\QueueItem;
+use ShortPixel\ViewController;
 
 // Class for containing all Ajax Related Actions.
 class AjaxController
@@ -297,7 +298,7 @@ class AjaxController
 				break;
 			case 'request_new_api_key': // @todo Dunnoo why empty, should go if not here.
 
-				break;
+			break;
 			case "loadLogFile":
 				$this->checkActionAccess($action, 'is_editor');
 				$data['logFile'] = isset($_POST['loadFile']) ? sanitize_text_field($_POST['loadFile']) : null;
@@ -336,7 +337,6 @@ class AjaxController
 			case 'settings/changemode':
 				$this->handleChangeMode($data);
 				break;
-			default:
 			case 'settings/getAiExample': 
 				$this->checkActionAccess($action, 'is_admin_user');
 				$this->getSettingsAiExample($data);
@@ -348,9 +348,16 @@ class AjaxController
 			case 'settings/getNewAiImagePreview': 
 				$this->getNewAiImagePreview($data);
 			break;
+			case 'media/getEditorPopup': 
+				$this->getEditorPopup($data);
+			break; 
+			case 'media/getEditorPreview': 
+				$this->getEditorPreview($data);
+			break;
+			default:
 				$json->$type->message = __('Ajaxrequest - no action found', 'shorpixel-image-optimiser');
 				$json->error = self::NO_ACTION;
-				break;
+			break;
 		}
 		$this->send($json);
 	}
@@ -407,11 +414,92 @@ class AjaxController
 		exit('ajaxcontroller - formsubmit');
 	}
 
+	protected function getEditorPopup($data)
+	{
+		 $item_id = intval($_POST['id']);
+		 $mediaItem = $this->getMediaItem($item_id, 'media');
+		 $this->checkImageAccess($mediaItem);
+
+		 $previewImage = UiHelper::findBestPreview($mediaItem);
+
+		 $json = new \stdClass; 
+		 $json->item_id = $item_id; 
+
+		 
+		 $view = new ViewController();
+		 $view->addData([
+			'originalImage' => $previewImage, 
+			'placeholderImage' => \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'), 
+			'item_id' => $item_id, 
+			]
+		 ); 
+
+		 $json->popup = $view->returnView('snippets/media-popup'); 
+
+		 $this->send($json);
+
+	}
+	protected function getEditorPreview($data)
+	{
+		$item_id = $data['id'];
+		
+		$mediaItem = $this->getMediaItem($item_id, 'media');
+
+		$this->checkImageAccess($mediaItem);
+
+		$qItem = QueueItems::getImageItem($mediaItem);
+		$optimizer = $qItem->getApiController('remove_background');
+
+		$qItem->newRemoveBackgroundAction(array_merge(['is_preview' => true], []));
+		$optimizer->sendToProcessing($qItem);
+		$result = $qItem->result(); 
+		
+	//	$state = 'requestAlt'; // mimic here the double task of the Ai gen. 
+		$is_done = false; 
+		$i = 0; 
+
+		while (false === $is_done)
+		{
+			Log::addTemp('Result', $result);
+
+			if (false === property_exists($result, 'is_done') || $result->is_done === false)
+			{ 
+				$optimizer->sendToProcessing($qItem);
+				$optimizer->handleAPIResult($qItem);  
+
+				$result = $qItem->result();
+			}
+			
+			if (property_exists($result, 'is_done') && true === $result->is_done)
+			{
+				if (true === $result->is_error) 
+				{
+					$this->send($result);
+				}
+								
+				exit();
+			}
+
+			if ($i >= 15) // safeguard. 
+			{
+				//$this->send((object) $result_json);
+				Log::addTemp('Timeout 15x');
+				exit('Timeout');
+				break; 
+			}
+
+			sleep(4); // prevent in case of fast connection hammering the API
+			$i++; 
+		}
+	}
+
 	protected function getMediaItem($id, $type)
 	{
 		$fs = \wpSPIO()->filesystem();
 		return $fs->getImage($id, $type);
 	}
+
+	
 
 	protected function getItemEditWarning($json, $data)
 	{
@@ -447,13 +535,9 @@ class AjaxController
 			$mediaItem->resetPrevent();
 		}
 
-
-
 		$control = new QueueController();
 		$json = new \stdClass;
 		$json->$type = new \stdClass;
-
-
 
 		$args = [];
 
@@ -707,7 +791,6 @@ class AjaxController
 		$queueController = new QueueController();
 		$result  = $queueController->addItemToQueue($imageModel, $args);
 
-	
 		$json->$type->results = [$result];
 		$json->$type->qstatus = $queueController->getLastQueueStatus();
 
@@ -796,7 +879,7 @@ class AjaxController
 			 return $this->requestAlt($json, $data);
 		} 
 
-		$json->$type->results = [$result];
+		//$json->$type->results = [$result];
 		$json->status = true;
 		
 		return $json;
@@ -1034,6 +1117,7 @@ class AjaxController
 		];
 
 		$imageModel = \wpSPIO()->filesystem()->getMediaImage($item_id); 
+		
 
 		if (false === $imageModel)
 		{
@@ -1198,8 +1282,6 @@ class AjaxController
 	/** Data for the compare function */
 	protected function getComparerData($json, $data)
 	{
-
-
 		$type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
 		$id = isset($_POST['id']) ? intval($_POST['id']) : false;
 
@@ -1217,6 +1299,12 @@ class AjaxController
 
 		$this->checkImageAccess($imageObj);
 
+
+		if (false === $imageObj->isOptimized())
+		{
+			$imageObj = $imageObj->getSomethingOptimized();
+		}
+
 		// With PDF, the thumbnail called 'full' is the image, the main is the PDF file
 		if ($imageObj->getExtension() == 'pdf') {
 			$thumbImg = $imageObj->getThumbnail('full');
@@ -1224,6 +1312,8 @@ class AjaxController
 				$imageObj = $thumbImg;
 			}
 		}
+
+
 
 		$backupFile = $imageObj->getBackupFile();
 		if (is_object($backupFile))

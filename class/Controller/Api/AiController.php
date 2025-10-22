@@ -29,8 +29,10 @@ class AiController extends RequestManager
      $this->main_url = 'https://capi-gpt.shortpixel.com/';
     }
 
-    public function processMediaItem(QueueItem $qItem, ImageModel $imageObj)
+    public function processMediaItem(QueueItem $qItem)
     {
+      $imageObj = $qItem->imageModel; 
+      
       if (! is_object($imageObj))
       {
         $qItem->addResult($this->returnFailure(self::STATUS_FAIL, __('Item seems invalid, removed or corrupted.', 'shortpixel-image-optimiser')));
@@ -48,7 +50,7 @@ class AiController extends RequestManager
 
       if ($qItem->data()->action == 'requestAlt')
       {
-        $requestBody['url'] = $qItem->data()->url;
+        $requestBody['url'] = $qItem->data()->urls[0];
         $paramlist = $qItem->data()->paramlist; 
         if (is_object($paramlist))
         {

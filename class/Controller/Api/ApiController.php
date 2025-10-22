@@ -46,8 +46,10 @@ class ApiController extends RequestManager
 	 * @param Object $item Item of stdClass
 	 * @return Returns same Item with Result of request
 	 */
-	public function processMediaItem(QueueItem $qItem, ImageModel $imageModel)
+	public function processMediaItem(QueueItem $qItem)
 	{
+		$imageModel = $qItem->imageModel; 
+
 		if (!is_object($imageModel)) {
 			$qItem->addResult($this->returnFailure(self::STATUS_FAIL, __('Item seems invalid, removed or corrupted.', 'shortpixel-image-optimiser')));
 		} elseif (false === $imageModel->isProcessable() || $imageModel->isOptimizePrevented() == true) {
@@ -61,6 +63,7 @@ class ApiController extends RequestManager
 
 		if (!is_array($qItem->data()->urls) || count($qItem->data()->urls) == 0) {
 			$qItem->addResult($this->returnFailure(self::STATUS_FAIL, __('No Urls given for this Item', 'shortpixel-image-optimiser')));
+			return;
 		}
 
 		$settings = \wpSPIO()->settings();
@@ -107,6 +110,38 @@ class ApiController extends RequestManager
 
 	}
 
+	public function processActionItem(QueueItem $qItem)
+	{
+		$keyControl = ApiKeyController::getInstance();
+
+		$requestBody = [
+			'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
+			'key' => $keyControl->forceGetApiKey(),
+			'urllist' => $qItem->data()->urls,
+			'lossy' => $qItem->data()->compressionType,
+			'item_id' => $qItem->item_id,
+			'refresh' => false,
+			'bg_remove' => 1, // @todo Fill out this param according to settings.
+		];
+
+		$requestParameters = [
+			'blocking' => true, //(0 == $qItem->data()->tries) ? false : true
+		];
+
+		if (!is_null($qItem->data()->returndatalist)) {
+			$requestBody['returndatalist'] = $qItem->data()->returndatalist;
+		}
+
+
+		$request = $this->getRequest($requestBody, $requestParameters);
+		$this->doRequest($qItem, $request);
+		
+		if ($qItem->result()->is_error === true && $qItem->result()->is_done === true) {
+			$this->dumpMediaItem($qItem); // item failed, directly dump anything from server.
+		}
+
+	}
+
 	/* Ask to remove the items from the remote cache.
 		 @param $item Must be object, with URLS set as array of urllist. - Secretly not a mediaItem - shame
 	   */
@@ -144,32 +179,15 @@ class ApiController extends RequestManager
 	{
 
 		$APIresponse = $this->parseResponse($response);//get the actual response from API, its an array
+		$action = $qItem->data()->action;
 
+		Log::addTemp('ApiResponse', $APIresponse);
 		// Don't know if it's this or that.
 		$status = false;
 		if (isset($APIresponse['Status'])) {
 			$status = $APIresponse['Status'];
 		} elseif (is_array($APIresponse) && isset($APIresponse[0]) && property_exists($APIresponse[0], 'Status')) {
 			$status = $APIresponse[0]->Status;
-		}
-
-		if (isset($APIresponse['returndatalist'])) {
-			$returnDataList = (array) $APIresponse['returndatalist'];
-			if (isset($returnDataList['sizes']) && is_object($returnDataList['sizes']))
-				$returnDataList['sizes'] = (array) $returnDataList['sizes'];
-
-			if (isset($returnDataList['doubles']) && is_object($returnDataList['doubles']))
-				$returnDataList['doubles'] = (array) $returnDataList['doubles'];
-
-			if (isset($returnDataList['duplicates']) && is_object($returnDataList['duplicates']))
-				$returnDataList['duplicates'] = (array) $returnDataList['duplicates'];
-
-			if (isset($returnDataList['fileSizes']) && is_object($returnDataList['fileSizes']))
-				$returnDataList['fileSizes'] = (array) $returnDataList['fileSizes'];
-
-			unset($APIresponse['returndatalist']);
-		} else {
-			$returnDataList = [];
 		}
 
 		// This is only set if something is up, otherwise, ApiResponse returns array
@@ -210,106 +228,18 @@ class ApiController extends RequestManager
 			}
 		}
 
-		$neededURLS = $qItem->data()->urls; // URLS we are waiting for.
-
 		if (is_array($APIresponse) && isset($APIresponse[0])) //API returned image details
 		{
 
-			if (!isset($returnDataList['sizes'])) {
-				return $this->returnFailure(self::STATUS_FAIL, __('Item did not return image size information. This might be a failed queue item. Reset the queue if this persists or contact support', 'shortpixel-image-optimiser'));
-			}
-
-			$analyze = array('total' => count($neededURLS), 'ready' => 0, 'waiting' => 0);
-			$waitingDebug = array();
-
-			$imageList = [];
-			$partialSuccess = false;
-			$imageNames = array_keys($returnDataList['sizes']);
-			$fileNames = array_values($returnDataList['sizes']);
-
-			foreach ($APIresponse as $index => $imageObject) {
-				if (!property_exists($imageObject, 'Status')) {
-					Log::addWarn('Result without Status', $imageObject);
-					continue; // can't do nothing with that, probably not an image.
-				} elseif ($imageObject->Status->Code == self::STATUS_UNCHANGED || $imageObject->Status->Code == self::STATUS_WAITING) {
-					$analyze['waiting']++;
-					$partialSuccess = true; // Not the whole job has been done.
-				} elseif ($imageObject->Status->Code == self::STATUS_SUCCESS) {
-					$analyze['ready']++;
-					$imageName = $imageNames[$index];
-					$fileName = $fileNames[$index];
-					$paramlist = $qItem->data()->paramlist; 
-
-					// Here add paramList items that are possible needed for success checks 
-					$params = isset($paramlist[$index]) ? (array) $paramlist[$index] : []; 
-					
-
-					$data = array(
-						'fileName' => $fileName,
-						'imageName' => $imageName,
-					);
-
-					$data = array_merge($params, $data);
-
-					// Filesize might not be present, but also imageName ( only if smartcrop is done, might differ per image)
-					if (isset($returnDataList['fileSizes']) && isset($returnDataList['fileSizes'][$imageName])) {
-						$data['fileSize'] = $returnDataList['fileSizes'][$imageName];
-					}
-
-					$fileData = $qItem->data()->files; 
-
-
-					// Previous check here was for Item->files[$imageName] , not sure if currently needed.
-					// Check if image is not already in fileData.
-					if (is_null($fileData) || false === property_exists($fileData, $imageName)) {
-						$imageList[$imageName] = $this->handleNewSuccess($qItem, $imageObject, $data);
-					} else {
-					}
+				if ('optimize' === $action)
+				{
+					 return $this->handleOptimizeResponse($qItem, $APIresponse);
+				} 
+				if ('remove_background' === $action)
+				{
+					 return $this->handleActionResponse($qItem, $APIresponse); 
 				}
-
-			}
-
-			$imageData = array(
-				'images_done' => $analyze['ready'],
-				'images_waiting' => $analyze['waiting'],
-				'images_total' => $analyze['total']
-			);
-			ResponseController::addData($qItem->item_id, $imageData);
-
-			if (count($imageList) > 0) {
-				$data = array(
-					'files' => $imageList,
-					'data' => $returnDataList,
-				);
-				if (false === $partialSuccess) {
-					return $this->returnSuccess($data, self::STATUS_SUCCESS, false);
-				} else {
-					return $this->returnSuccess($data, self::STATUS_PARTIAL_SUCCESS, false);
-				}
-			} elseif ($analyze['waiting'] > 0) {
-
-				return $this->returnOK(self::STATUS_UNCHANGED, sprintf(__('Item is waiting', 'shortpixel-image-optimiser')));
-			} else {
-				// Theoretically this should not be needed.
-				Log::addWarn('ApiController Response not handled before default case', $imageList);
-				if (isset($APIresponse[0]->Status->Message)) {
-
-					$err = array(
-						"Status" => self::STATUS_FAIL,
-						"Code" => (isset($APIresponse[0]->Status->Code) ? $APIresponse[0]->Status->Code : self::ERR_UNKNOWN),
-						"Message" => __('There was an error and your request was not processed.', 'shortpixel-image-optimiser')
-							. " (" . wp_basename($APIresponse[0]->OriginalURL) . ": " . $APIresponse[0]->Status->Message . ")"
-					);
-					return $this->returnRetry($err['Code'], $err['Message']);
-				} else {
-					$err = array(
-						"Status" => self::STATUS_FAIL,
-						"Message" => __('There was an error and your request was not processed.', 'shortpixel-image-optimiser'),
-						"Code" => (isset($APIresponse[0]->Status->Code) ? $APIresponse[0]->Status->Code : self::ERR_UNKNOWN)
-					);
-					return $this->returnRetry($err['Code'], $err['Message']);
-				}
-			}
+		
 
 		} // ApiResponse[0]
 
@@ -336,6 +266,142 @@ class ApiController extends RequestManager
 	}
 	// handleResponse function
 
+	protected function handleOptimizeResponse($qItem, $response)
+	{
+		$neededURLS = $qItem->data()->urls; // URLS we are waiting for.
+
+
+		if (isset($APIresponse['returndatalist'])) {
+			$returnDataList = (array) $APIresponse['returndatalist'];
+			if (isset($returnDataList['sizes']) && is_object($returnDataList['sizes']))
+				$returnDataList['sizes'] = (array) $returnDataList['sizes'];
+
+			if (isset($returnDataList['doubles']) && is_object($returnDataList['doubles']))
+				$returnDataList['doubles'] = (array) $returnDataList['doubles'];
+
+			if (isset($returnDataList['duplicates']) && is_object($returnDataList['duplicates']))
+				$returnDataList['duplicates'] = (array) $returnDataList['duplicates'];
+
+			if (isset($returnDataList['fileSizes']) && is_object($returnDataList['fileSizes']))
+				$returnDataList['fileSizes'] = (array) $returnDataList['fileSizes'];
+
+			unset($APIresponse['returndatalist']);
+		} else {
+			$returnDataList = [];
+		}
+
+		if (!isset($returnDataList['sizes'])) {
+			return $this->returnFailure(self::STATUS_FAIL, __('Item did not return image size information. This might be a failed queue item. Reset the queue if this persists or contact support', 'shortpixel-image-optimiser'));
+		}
+
+		$analyze = array('total' => count($neededURLS), 'ready' => 0, 'waiting' => 0);
+		$waitingDebug = array();
+
+		$imageList = [];
+		$partialSuccess = false;
+		$imageNames = array_keys($returnDataList['sizes']);
+		$fileNames = array_values($returnDataList['sizes']);
+
+		foreach ($response as $index => $imageObject) {
+			if (!property_exists($imageObject, 'Status')) {
+				Log::addWarn('Result without Status', $imageObject);
+				continue; // can't do nothing with that, probably not an image.
+			} elseif ($imageObject->Status->Code == self::STATUS_UNCHANGED || $imageObject->Status->Code == self::STATUS_WAITING) {
+				$analyze['waiting']++;
+				$partialSuccess = true; // Not the whole job has been done.
+			} elseif ($imageObject->Status->Code == self::STATUS_SUCCESS) {
+				$analyze['ready']++;
+				$imageName = $imageNames[$index];
+				$fileName = $fileNames[$index];
+				$paramlist = $qItem->data()->paramlist; 
+
+				// Here add paramList items that are possible needed for success checks 
+				$params = isset($paramlist[$index]) ? (array) $paramlist[$index] : []; 
+				
+
+				$data = array(
+					'fileName' => $fileName,
+					'imageName' => $imageName,
+				);
+
+				$data = array_merge($params, $data);
+
+				// Filesize might not be present, but also imageName ( only if smartcrop is done, might differ per image)
+				if (isset($returnDataList['fileSizes']) && isset($returnDataList['fileSizes'][$imageName])) {
+					$data['fileSize'] = $returnDataList['fileSizes'][$imageName];
+				}
+
+				$fileData = $qItem->data()->files; 
+
+				// Previous check here was for Item->files[$imageName] , not sure if currently needed.
+				// Check if image is not already in fileData.
+				if (is_null($fileData) || false === property_exists($fileData, $imageName)) {
+					$imageList[$imageName] = $this->handleNewSuccess($qItem, $imageObject, $data);
+				} else {
+				}
+			}
+
+		}
+
+		$imageData = array(
+			'images_done' => $analyze['ready'],
+			'images_waiting' => $analyze['waiting'],
+			'images_total' => $analyze['total']
+		);
+		ResponseController::addData($qItem->item_id, $imageData);
+
+		if (count($imageList) > 0) {
+			$data = array(
+				'files' => $imageList,
+				'data' => $returnDataList,
+			);
+			if (false === $partialSuccess) {
+				return $this->returnSuccess($data, self::STATUS_SUCCESS, false);
+			} else {
+				return $this->returnSuccess($data, self::STATUS_PARTIAL_SUCCESS, false);
+			}
+		} elseif ($analyze['waiting'] > 0) {
+
+			return $this->returnOK(self::STATUS_UNCHANGED, sprintf(__('Item is waiting', 'shortpixel-image-optimiser')));
+		} else {
+			// Theoretically this should not be needed.
+			Log::addWarn('ApiController Response not handled before default case', $imageList);
+			if (isset($APIresponse[0]->Status->Message)) {
+
+				$err = array(
+					"Status" => self::STATUS_FAIL,
+					"Code" => (isset($APIresponse[0]->Status->Code) ? $APIresponse[0]->Status->Code : self::ERR_UNKNOWN),
+					"Message" => __('There was an error and your request was not processed.', 'shortpixel-image-optimiser')
+						. " (" . wp_basename($APIresponse[0]->OriginalURL) . ": " . $APIresponse[0]->Status->Message . ")"
+				);
+				return $this->returnRetry($err['Code'], $err['Message']);
+			} else {
+				$err = array(
+					"Status" => self::STATUS_FAIL,
+					"Message" => __('There was an error and your request was not processed.', 'shortpixel-image-optimiser'),
+					"Code" => (isset($APIresponse[0]->Status->Code) ? $APIresponse[0]->Status->Code : self::ERR_UNKNOWN)
+				);
+				return $this->returnRetry($err['Code'], $err['Message']);
+			}
+		}
+	}
+
+	protected function handleActionResponse($qItem, $response)
+	{
+		$item = $response[0]; // First File Response of API. 
+		$status_code = $item->Status->Code; 
+		
+		
+		if (in_array($status_code, [self::STATUS_UNCHANGED, self::STATUS_WAITING] ))
+		{
+			return $this->returnOK(self::STATUS_UNCHANGED, sprintf(__('Item is waiting', 'shortpixel-image-optimiser')));
+		}
+		if (self::STATUS_SUCCESS === $status_code)
+		{	
+			return $this->returnSuccess($response);
+		}
+	
+	}
 
 	/**
 	 * When API signals it's done optimizing an image.

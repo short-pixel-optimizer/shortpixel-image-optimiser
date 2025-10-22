@@ -43,6 +43,9 @@ class ActionController extends OptimizerBase
          case 'migrate': 
             return $this->migrate($item);
          break;
+         /*case 'remove_background': 
+            return $this->removeBackground($item);
+         break;  */
       }
 
   }

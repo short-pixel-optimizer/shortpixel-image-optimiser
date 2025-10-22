@@ -468,7 +468,7 @@ class QueueItem
    public function requestAltAction($args = [])
    {   
       $this->newAction(); 
-      $this->data->url = $this->imageModel->getUrl();
+      $this->data->urls = [$this->imageModel->getUrl()];
       $this->data->tries = 0;
       $this->item_count = 1;
 
@@ -501,9 +501,6 @@ class QueueItem
 
       $this->data->action = 'requestAlt'; // For Queue
 
-    //  $optimizer = $this->getAPIController($this->data->action); 
-   //   $optimizer->parseJSONForQItem($this, $args);
-
       if ($this->data()->hasNextAction())
       {
           $next_actions = array_merge(['retrieveAlt'], $this->data()->next_actions);
@@ -517,9 +514,6 @@ class QueueItem
       {
          $this->data->next_actions = $next_actions;
       }
-
-
-      
    }
 
    public function retrieveAltAction($args)
@@ -541,6 +535,34 @@ class QueueItem
 
    }
 
+   public function newRemoveBackgroundAction($args)
+   {
+       $this->newAction(); 
+
+       $defaults = [
+            'do_transparant' => true, 
+            'replace_color' => null, 
+            'url' => null, 
+            'is_preview' => false, 
+       ]; 
+
+       $paramlist = []; 
+       $args = wp_parse_args($args, $defaults);
+
+       $paramlist['preview_only'] = $args['is_preview'];
+       $returndatalist = [$this->imageModel->getImageKey() => $this->imageModel->getFileName()];
+       
+       $this->data->action = 'remove_background'; 
+       $this->data->compressionType = ImageModel::COMPRESSION_LOSSLESS;
+       $this->data->urls = [$this->imageModel->getUrl()];
+       $this->data->returndatalist = $returndatalist;
+       
+       $this->data->paramlist = $paramlist; 
+       $this->data->tries = 0;
+       $this->item_count = 1;
+
+   }
+
    /**
     * Get the ApiController associated to the action performed
     * 
@@ -559,6 +581,7 @@ class QueueItem
          case 'optimize':
          case 'dumpItem':
          case 'convert_api':
+         case 'remove_background': 
             $api = OptimizeController::getInstance();
          break;
          case 'requestAlt': // @todo Check if this is correct action name,

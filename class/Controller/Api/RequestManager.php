@@ -23,8 +23,8 @@ abstract class RequestManager
    * @param mixed $response 
    * @return object Return must be one of the returnFail / returnSuccess / returnOk functions!
    */
-  protected abstract function handleResponse(QueueItem $item, $response);
-  public abstract function processMediaItem(QueueItem $item, ImageModel $mediaItem);
+  protected abstract function handleResponse(QueueItem $qItem, $response);
+  public abstract function processMediaItem(QueueItem $qItem);
 
   const STATUS_ENQUEUED = 10;
   const STATUS_PARTIAL_SUCCESS = 3;
@@ -165,7 +165,7 @@ abstract class RequestManager
        $urls = (! is_null($qItem->data()->urls)) ? count($qItem->data()->urls) : 0;
 
        if ($urls == 0 && (! is_null($qItem->data()->url)))
-        $urls = count($qItem->data()->url);
+        $urls = 1;
 
        $flags = $qItem->data()->flags;
 			 $flags = implode("|", $flags);

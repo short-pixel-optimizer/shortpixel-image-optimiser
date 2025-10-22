@@ -58,12 +58,10 @@ class OptimizeAiController extends OptimizerBase
     switch($action)
     {
       case 'undoAI': 
-          
           return $this->undoAltData($qItem); 
-
       break; 
       default: 
-        $this->api->processMediaItem($qItem, $qItem->imageModel);
+        $this->api->processMediaItem($qItem);
       break; 
     }
     /*    if (false == $this->isSupported($qItem))

@@ -421,8 +421,6 @@ abstract class Queue
                   $aiDataModel = AiDataModel::getModelByAttachment($mediaItem->get('id'));  
                   $enqueueAi = $aiDataModel->isProcessable();
 
-
-
                 }
 
                 if ($mediaItem->isProcessable() && 
@@ -536,7 +534,7 @@ abstract class Queue
           $this->q->additems($queue);
           $numitems = $this->q->enqueue();
 
-          Log::addTemp('CustomData', $customData);
+         // Log::addTemp('CustomData', $customData);
 
           if (true === $counterUpdated)
           {
@@ -554,7 +552,7 @@ abstract class Queue
 					*/
           $return['results'] = count($items); // This is the return of the query. Preparing should not be 'done' before the query ends, but it can return 0 on the qcount if all results are already optimized.
 
-          Log::addTemp('ImageCount '  . $customData->baseCount . ' added : ' . $baseCount .  ' leading to ', $return);
+          //Log::addTemp('ImageCount '  . $customData->baseCount . ' added : ' . $baseCount .  ' leading to ', $return);
           return $return; // only return real amount.
     }
 
@@ -625,7 +623,7 @@ abstract class Queue
         $stats->images = $this->countQueue();
       }
 
-      Log::addTemp('GetStats', $stats);
+     // Log::addTemp('GetStats - ' . $this->queueName, $stats);
       return $stats;
     }
 

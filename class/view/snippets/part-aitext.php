@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use ShortPixel\Controller\ApiKeyController;
 use ShortPixel\Controller\QuotaController;
 use ShortPixel\Model\AiDataModel;

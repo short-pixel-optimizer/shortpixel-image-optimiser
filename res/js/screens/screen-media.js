@@ -39,16 +39,127 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		// This init only in edit-media and pass the ID for safety. 
 		if (document.getElementById('attachment_alt') !== null)
 		{
-			var postInput = document.getElementById('post_ID')
+			var postInput = document.getElementById('post_ID');
 			this.FetchAltView(undefined, postInput.value);
+			this.InitEditorActions(postInput.value); 
 		}
 
-		/*this.altInputNames = [
-			'attachment_alt',  //edit-media 
-			'attachment-details-alt-text', // media library upload screen / image select
-			'attachment-details-two-column-alt-text',
+
+
+	}
+
+	InitEditorActions(item_id)
+	{
+		let id = 'shortpixel_removebackground_button';
+
+		var button = document.createElement('button'); 
+
+		button.name = 'removeBackground'; 
+		button.innerHTML = "removebg"; 
+		button.type =  'button'; 
+		button.classList.add('button', 'button-secondary');
+		button.id = id; 
+		button.dataset.item_id = item_id; 
+
+		button.addEventListener('click', this.OpenEditorEvent.bind(this)); 
+
+		var parent = document.querySelector('[id^=media-head]'); 
+
+		parent.append(button);
 		
-		 ]; */
+		window.addEventListener('shortpixel.mediaEditorPreviewLoaded', this.MediaEditorPreviewEvent.bind(this));
+
+	}
+
+	OpenEditorEvent(event)
+	{
+		 console.log(event);
+		 let item_id = event.target.dataset.item_id; 
+
+		 event.preventDefault(); 
+		 let data = {
+			id: item_id,
+			type: 'media',
+			screen_action: 'media/getEditorPopup',
+		}
+		data.callback = 'shortpixel.openEditorPopup';
+		this.processor.AjaxRequest(data);
+
+		event.preventDefault();
+		let backgroundShade = document.createElement('div');
+		backgroundShade.id = 'shortpixel-media-modal-shade';
+		backgroundShade.classList.add('shortpixel-media-modal-shade');
+		
+		let modal = document.createElement('div'); 
+		modal.id = 'shortpixel-media-modal'; 
+		modal.classList.add('shortpixel-media-modal', 'modal');
+
+		if (null === document.getElementById('shortpixel-media-modal-css'))
+		{
+			var head  = document.getElementsByTagName('head')[0];
+			var link  = document.createElement('link');
+			link.id   = 'shortpixel-media-modal-css';
+			link.rel  = 'stylesheet';
+			link.type = 'text/css';
+			link.href = this.settings.modalcss;
+			link.media = 'all';
+			head.appendChild(link);	
+		}
+
+
+		// CloseEvent to close the modal + background
+		var closeEvent = new CustomEvent('shortpixel-media-modal-close', { detail : 
+			 {
+				 modal: modal,
+				 shade: backgroundShade
+			 }
+		} ); 
+		document.addEventListener('shortpixel-media-modal-close', (event) => {
+				let detail = event.detail; 
+				detail.modal.remove();
+				detail.shade.remove(); 
+		}, { once: true });
+
+
+		backgroundShade.addEventListener('click', () => { document.dispatchEvent(closeEvent)});
+
+		document.body.append(backgroundShade);
+		document.body.append(modal);
+
+		window.addEventListener('shortpixel.openEditorPopup', function (event) {
+			let previewData = event.detail; 
+
+			modal.innerHTML = previewData.popup; 
+			console.log(modal.querySelector('[data-action="close"]'));
+			modal.querySelector('[data-action="close"]').addEventListener('click', () => {
+				document.dispatchEvent(closeEvent);
+			}, { once: true });
+
+				let backgroundType = modal.querySelector('input[name="background_type"]').value; 
+
+				let data = {
+					id: item_id,
+					type: 'media',
+					screen_action: 'media/getEditorPreview',
+					background_type:  backgroundType
+				}
+				data.callback = 'shortpixel.mediaEditorPreviewLoaded';
+				this.processor.AjaxRequest(data);
+
+		}.bind(this), { once: true });
+
+	}
+
+	MediaEditorPreviewEvent(event)
+	{
+		 let data = event.detail; 
+
+		 if (true === data.is_error)
+		 {
+			 let errorElement = document.querySelector('.error-message'); 
+			 errorElement.innerText = data.message; 
+			 errorElement.classList.remove('shortpixel-hide');
+		 }
 	}
 
 	FetchAltView(aiData, item_id)
@@ -567,14 +678,12 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 		wp.data.subscribe(() => {
 			if (wp.data.select('core')) {
-				//const { getMedia } = wp.data.select('core');
 				const { getSelectedBlock } = wp.data.select('core/block-editor');
 		
 				const block = getSelectedBlock();
 			
 				if (block && block.name === 'core/image') {
 					const imageId = block.attributes.id; // Get the image ID
-					//const imageUrl = block.attributes.url; // Get the image URL
 		
 					if (imageId) {
 		
@@ -608,18 +717,13 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			return false; 
 		}
 
-		console.log(wp.data.select( 'core/block-editor' ));
-
 		let blocks = wp.data.select( 'core/block-editor' ).getBlocks();
-		console.log(blocks);
 		for (let i = 0; i < blocks.length; i++)
 		{
 			let block = blocks[i];
 
 			 if (block.attributes.id == attach_id)
 			 {
-				//block.attributes.alt = "I CAME TO ALT"; 
-				//block.attributes.caption = "CAPTION THIS";
 				let clientId = block.clientId;
 
 				console.log('DATA DISPATCH ', clientId, aiData);				
