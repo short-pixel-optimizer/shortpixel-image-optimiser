@@ -34,6 +34,13 @@ class DownloadHelper
 				}
 			}
 
+      /** Helper to download file from remote. 
+       * 
+       * @param string $url The remote URL to download.
+       * @param array $args  if DestinationPath is included it will try to move file there, otherwise remain in /tmp. 
+       * @return string File Path 
+       */
+      
 			public function downloadFile($url, $args = array())
 			{
 					$defaults = array(

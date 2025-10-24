@@ -442,7 +442,10 @@ class AjaxController
 	protected function getEditorPreview($data)
 	{
 		$item_id = $data['id'];
+		$is_preview = true; // default to no action 
+		$is_preview = (isset($_POST['is_preview'])) ? filter_var(sanitize_text_field($_POST['is_preview']), FILTER_VALIDATE_BOOL) : $is_preview; 
 		
+
 		$mediaItem = $this->getMediaItem($item_id, 'media');
 
 		$this->checkImageAccess($mediaItem);
@@ -450,8 +453,12 @@ class AjaxController
 		$qItem = QueueItems::getImageItem($mediaItem);
 		$optimizer = $qItem->getApiController('remove_background');
 
-		$qItem->newRemoveBackgroundAction(array_merge(['is_preview' => true], []));
+	
+
+		$qItem->newRemoveBackgroundAction(array_merge(['is_preview' => $is_preview], []));
 		$optimizer->sendToProcessing($qItem);
+		$optimizer->handleAPIResult($qItem);  
+
 		$result = $qItem->result(); 
 		
 	//	$state = 'requestAlt'; // mimic here the double task of the Ai gen. 
@@ -472,10 +479,10 @@ class AjaxController
 			
 			if (property_exists($result, 'is_done') && true === $result->is_done)
 			{
-				if (true === $result->is_error) 
-				{
+			//	if (true === $result->is_error) 
+			//	{
 					$this->send($result);
-				}
+			//	}
 								
 				exit();
 			}
@@ -488,7 +495,7 @@ class AjaxController
 				break; 
 			}
 
-			sleep(4); // prevent in case of fast connection hammering the API
+			sleep(3); // prevent in case of fast connection hammering the API
 			$i++; 
 		}
 	}

@@ -263,6 +263,7 @@ class ApiController extends RequestManager
 			}
 			return $this->returnRetry(self::STATUS_FAIL, $message);
 		} // else
+
 	}
 	// handleResponse function
 
@@ -389,16 +390,20 @@ class ApiController extends RequestManager
 	protected function handleActionResponse($qItem, $response)
 	{
 		$item = $response[0]; // First File Response of API. 
-		$status_code = $item->Status->Code; 
-		
+		$status_code = intval($item->Status->Code); 
 		
 		if (in_array($status_code, [self::STATUS_UNCHANGED, self::STATUS_WAITING] ))
 		{
 			return $this->returnOK(self::STATUS_UNCHANGED, sprintf(__('Item is waiting', 'shortpixel-image-optimiser')));
 		}
-		if (self::STATUS_SUCCESS === $status_code)
+		if (self::STATUS_SUCCESS == $status_code)
 		{	
-			return $this->returnSuccess($response);
+			$image = $item->LosslessURL; 
+			$imageData = [
+				'optimized' => $image, 
+				'original' => $item->OriginalURL, 
+			];
+			return $this->returnSuccess($imageData);
 		}
 	
 	}

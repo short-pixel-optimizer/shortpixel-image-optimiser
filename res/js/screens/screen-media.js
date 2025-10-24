@@ -130,35 +130,74 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			let previewData = event.detail; 
 
 			modal.innerHTML = previewData.popup; 
-			console.log(modal.querySelector('[data-action="close"]'));
 			modal.querySelector('[data-action="close"]').addEventListener('click', () => {
 				document.dispatchEvent(closeEvent);
 			}, { once: true });
 
-				let backgroundType = modal.querySelector('input[name="background_type"]').value; 
+			this.MediaEditorDoAction({ preview: true, 'item_id': item_id, 'modal': modal});
 
-				let data = {
-					id: item_id,
-					type: 'media',
-					screen_action: 'media/getEditorPreview',
-					background_type:  backgroundType
-				}
-				data.callback = 'shortpixel.mediaEditorPreviewLoaded';
-				this.processor.AjaxRequest(data);
+			let previewButton = modal.querySelector('[data-action="media-get-preview"]'); 
+			previewButton.addEventListener('click', () => {
+				 	this.MediaEditorDoAction({ preview: true, 'item_id': item_id, 'modal' : modal});
+			});
+
+
+			let saveButton = modal.querySelector('[data-action="media-save-button"]'); 
+			saveButton.addEventListener('click', () =>  { 
+				 this.MediaEditorDoAction({ preview: false, 'item_id': item_id, 'modal' : modal});
+			});
+
 
 		}.bind(this), { once: true });
+
+	}
+
+	MediaEditorDoAction(data)
+	{
+		let modal = data.modal;
+		let backgroundType = modal.querySelector('input[name="background_type"]').value; 
+
+		let request = {
+			id: data.item_id,
+			type: 'media',
+			screen_action: 'media/getEditorPreview',
+			background_type:  backgroundType, 
+			is_preview: data.preview,
+		};
+		request.callback = 'shortpixel.mediaEditorPreviewLoaded';
+		this.processor.AjaxRequest(request);
 
 	}
 
 	MediaEditorPreviewEvent(event)
 	{
 		 let data = event.detail; 
+console.log('Preview Load', data); 
+
+		let errorElement = document.querySelector('.error-message'); 
+		let spinner = document.querySelector('.load-preview-spinner'); 
 
 		 if (true === data.is_error)
 		 {
-			 let errorElement = document.querySelector('.error-message'); 
 			 errorElement.innerText = data.message; 
 			 errorElement.classList.remove('shortpixel-hide');
+		 }
+		 if (true === data.is_done)
+		 {
+			 spinner.classList.add('shortpixel-hide');
+		 }
+
+		 if (data.optimized)
+		 {	
+			 errorElement.classList.add('shortpixel-hide');
+			 let previewImage = document.querySelector('.modal-wrapper .image-preview i'); 
+			 previewImage.style.backgroundImage = 'url("' + data.optimized + '")'; 
+
+		 }
+
+		 if (typeof data.redirect !== 'undefined')
+		 {
+			window.location.href = data.redirect;
 		 }
 	}
 

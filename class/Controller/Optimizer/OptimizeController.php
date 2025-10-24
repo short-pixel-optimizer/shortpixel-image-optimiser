@@ -388,13 +388,28 @@ class OptimizeController extends OptimizerBase
     $item_id = $qItem->item_id; 
     $imageModel = $qItem->imageModel;
 
-    $is_preview = $qItem->data()->is_preview; 
+
+    $is_preview = (is_array($qItem->data()->paramlist) && isset($qItem->data()->paramlist['preview_only'])) ? $qItem->data()->paramlist['preview_only'] : false ; 
 
     $apiStatus = $qItem->result()->apiStatus; 
 
+    // @todo When opening all from gutenberg et al, should send the original page / post id and add it to media item.
+    $attached_post_id = 0; 
+
     if (RequestManager::STATUS_SUCCESS === $apiStatus)
     {
-       
+        if (false === $is_preview)
+        {
+           // Handle image here / copy etc. 
+         //  $downloadHelper = DownloadHelper::getInstance(); 
+           $url = $qItem->result()->optimized; 
+          // $tmpFile = $downloadHelper->downloadFile($url);
+
+           $new_attach_id = media_sideload_image($url, $attached_post_id, '', 'id'); // Add to WP, return attach_id
+           
+           $qItem->addResult(['new_attach_id' => $new_attach_id, 'redirect' => 
+            admin_url('post.php?post=' . $new_attach_id . '&action=edit')] );
+        }
     }
 
   }

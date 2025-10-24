@@ -15,8 +15,8 @@ $originalImage = $this->data['originalImage'];
 $placeholderImage = $this->data['placeholderImage'];
 ?>
 
-<div class="modal-wrapper">
-    <div class="title"> <span data-action='close'>X</span></div>
+<div class="modal-wrapper" id="media-modal" data-item-id="<?php echo $this->data['item_id'] ?>" >
+    <div class="title"><?php __('Remove background', 'shortpixel-image-optimiser'); ?> <span data-action='close'>X</span></div>
 
     <div class="image-wrapper">
             <div class="image-original">
@@ -48,7 +48,7 @@ $placeholderImage = $this->data['placeholderImage'];
 						<p class="howto">
 							<?php esc_html_e('If you select this option, the image will have a solid color background and you can choose the color code from the color picker below.', 'shortpixel-image-optimiser'); ?>
 						</p>
-						<div id="solid_selecter" style="display:none;">
+						<div id="solid_selecter">
 							<label for="bg_display_picker">
 								<p><?php esc_html_e('Background Color:','shortpixel-image-optimiser'); ?> <strong>
 									<span style="text-transform: uppercase;" id="color_range">
@@ -70,7 +70,13 @@ $placeholderImage = $this->data['placeholderImage'];
 				</section>
 
 
-        <button class='button' type='button' data-action='open-modal'>Preview</button>
+        <button class='button' type='button' id='media-get-preview' data-action='media-get-preview'>
+			<?php _e('Preview','shortpixel-image-optimiser'); ?>
+		</button>
+		<button class='button' type='button'  id='media-save-button' data-action='media-save-button'>
+			<?php _e('Save', 'shortpixel-image-optimiser'); ?>
+			<p><?php _e('A new image will be created', 'shortpixel-image-optimiser'); ?></p>
+		</button>
     
     </div>
 </div>

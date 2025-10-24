@@ -261,10 +261,12 @@ class QueueItem
          'fileStatus',
          'filename', // @todo figure out why this is here.
          'error',  // might in time better be called error_code or so
+         'new_attach_id', // new attach id for background remove.
          'success', // new
          'improvements',
          'original',
          'optimized',
+         'redirect', // Redirection for background remove etc 
          'queueType', // OptimizeController but (?) usage
          'kblink',
          'data', // Is returnDataList returned by apiController. (array)
