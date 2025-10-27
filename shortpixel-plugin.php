@@ -444,7 +444,7 @@ class ShortPixelPlugin {
 			'hide_ai' => ! $OptimizeAiController->isAiEnabled(),  // turn around negative setting
 			'hide_spio_in_popups' => apply_filters('shortpixel/js/media/hide_in_popups', false), 
 			'modalcss' => plugins_url('res/css/shortpixel-media-modal.css', SHORTPIXEL_PLUGIN_FILE), 
-			'remove_background_title' = __('Remove Background', 'shortpixel-image-optimiser'),
+			'remove_background_title' => __('Remove Background', 'shortpixel-image-optimiser'),
 	 ];
 
 		wp_localize_script('shortpixel-screen-media', 'spio_mediascreen_settings', $screen_localize_media); 
