@@ -246,7 +246,7 @@ class OptimizeController extends OptimizerBase
   {
     $imageModel = $qItem->imageModel;
     $item_id = $qItem->item_id;
-    $fs = \wpSPIO()->fs(); 
+    $fs = \wpSPIO()->filesystem(); 
     $q = $this->getCurrentQueue($qItem);
     $statsController = StatsController::getInstance();
 
@@ -388,9 +388,7 @@ class OptimizeController extends OptimizerBase
     $item_id = $qItem->item_id; 
     $imageModel = $qItem->imageModel;
 
-
     $is_preview = (is_array($qItem->data()->paramlist) && isset($qItem->data()->paramlist['preview_only'])) ? $qItem->data()->paramlist['preview_only'] : false ; 
-
     $apiStatus = $qItem->result()->apiStatus; 
 
     // @todo When opening all from gutenberg et al, should send the original page / post id and add it to media item.
@@ -401,11 +399,23 @@ class OptimizeController extends OptimizerBase
         if (false === $is_preview)
         {
            // Handle image here / copy etc. 
-         //  $downloadHelper = DownloadHelper::getInstance(); 
+           $downloadHelper = DownloadHelper::getInstance(); 
            $url = $qItem->result()->optimized; 
-          // $tmpFile = $downloadHelper->downloadFile($url);
+           $tmpFile = $downloadHelper->downloadFile($url);
+           $newPostTitle = $qItem->data()->paramlist['newPostTitle'];
 
-           $new_attach_id = media_sideload_image($url, $attached_post_id, '', 'id'); // Add to WP, return attach_id
+           $fileArray = []; 
+
+           $fileArray['name'] = $qItem->data()->paramlist['newFileName']; 
+           $fileArray['tmp_name']= $tmpFile->getFullPath(); 
+           $fileArray['type'] = $tmpFile->getMime();  // @todo 
+           $fileArray['size'] = $tmpFile->getFileSize(); 
+
+
+
+           $new_attach_id = media_handle_sideload($fileArray, $attached_post_id, $newPostTitle); 
+
+         //  $new_attach_id = media_sideload_image($url, $attached_post_id, '', 'id'); // Add to WP, return attach_id
            
            $qItem->addResult(['new_attach_id' => $new_attach_id, 'redirect' => 
             admin_url('post.php?post=' . $new_attach_id . '&action=edit')] );

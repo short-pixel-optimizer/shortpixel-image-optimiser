@@ -120,9 +120,18 @@ class ApiController extends RequestManager
 			'urllist' => $qItem->data()->urls,
 			'lossy' => $qItem->data()->compressionType,
 			'item_id' => $qItem->item_id,
-			'refresh' => false,
-			'bg_remove' => 1, // @todo Fill out this param according to settings.
+			'refresh' => ($qItem->data()->tries == 0) ? $qItem->data()->paramlist['refresh'] : false,
 		];
+
+		if (true === $requestBody['refresh'])
+		{
+			 $this->dumpMediaItem($qItem);
+		}
+
+		if (isset($qItem->data()->paramlist['bg_remove']))
+		{
+			 $requestBody['bg_remove'] = $qItem->data()->paramlist['bg_remove']; 
+		}
 
 		$requestParameters = [
 			'blocking' => true, //(0 == $qItem->data()->tries) ? false : true
@@ -169,7 +178,6 @@ class ApiController extends RequestManager
 		$ret = wp_remote_post($this->apiDumpEndPoint, $request);
 
 		return $ret;
-
 	}
 
 	/**

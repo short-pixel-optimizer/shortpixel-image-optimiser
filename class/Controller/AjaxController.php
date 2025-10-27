@@ -425,12 +425,16 @@ class AjaxController
 		 $json = new \stdClass; 
 		 $json->item_id = $item_id; 
 
+		 $post = get_post($item_id); 
+		
+
 		 
 		 $view = new ViewController();
 		 $view->addData([
 			'originalImage' => $previewImage, 
 			'placeholderImage' => \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'), 
 			'item_id' => $item_id, 
+			'post_title' => $post->post_title, 
 			]
 		 ); 
 
@@ -447,6 +451,10 @@ class AjaxController
 		
 		$backgroundType = isset($_POST['background_type']) ? sanitize_text_field($_POST['background_type']) : 'transparent'; 
 		$backgroundColor = isset($_POST['background_color']) ? sanitize_text_field($_POST['background_color']) : false; 
+		$backgroundTransparency = isset($_POST['background_transparency']) ? sanitize_text_field($_POST['background_transparency']) : '00';
+		$newFileName = isset($_POST['newFileName']) ? sanitize_file_name($_POST['newFileName']) : false; 
+		$newPostTitle = isset($_POST['newPostTitle']) ? sanitize_text_field($_POST['newPostTitle']) : ''; 
+		$refresh = isset($_POST['refresh']) ? filter_var(sanitize_text_field($_POST['refresh']), FILTER_VALIDATE_BOOL) : false;  
 
 		$mediaItem = $this->getMediaItem($item_id, 'media');
 
@@ -458,17 +466,23 @@ class AjaxController
 		$args = []; 
 		
 		$args['do_transparent'] = ('transparent' == $backgroundType) ? true : false; 
+		$args['newFileName'] = $newFileName; 
+		$args['newPostTitle'] = $newPostTitle; 
+		$args['refresh'] = $refresh;
+		
 		if ('solid' == $backgroundType)
 		{
 			 $args['replace_color'] = $backgroundColor; 
+			 $args['replace_transparency'] = $backgroundTransparency; 
 		}
 		
-
+		
 		$qItem->newRemoveBackgroundAction(array_merge(['is_preview' => $is_preview], $args));
 		$optimizer->sendToProcessing($qItem);
 		$optimizer->handleAPIResult($qItem);  
 
 		$result = $qItem->result(); 
+		$qItem->data()->tries++; 
 		
 	//	$state = 'requestAlt'; // mimic here the double task of the Ai gen. 
 		$is_done = false; 
@@ -480,9 +494,11 @@ class AjaxController
 
 			if (false === property_exists($result, 'is_done') || $result->is_done === false)
 			{ 
+				// Any subsequent request *must* be hard refresh no or it hangs.
 
 				$optimizer->sendToProcessing($qItem);
 				$optimizer->handleAPIResult($qItem);  
+				$qItem->data()->tries++; 
 
 				$result = $qItem->result();
 			}
@@ -500,7 +516,15 @@ class AjaxController
 			if ($i >= 15) // safeguard. 
 			{
 				//$this->send((object) $result_json);
+				$result = [
+					'is_error' => true, 
+					'is_done' => true, 
+					'message' => __('Limit of attempts exceeded. Possible connection issue. Try again later. ', 'shortpixel-image-optimiser'),
+				]; 
+				
 				Log::addTemp('Timeout 15x');
+
+				$this->send($result);
 				exit('Timeout');
 				break; 
 			}

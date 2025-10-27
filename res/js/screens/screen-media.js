@@ -55,7 +55,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		var button = document.createElement('button'); 
 
 		button.name = 'removeBackground'; 
-		button.innerHTML = this.strings.remove_background_title; 
+		button.innerHTML = this.settings.remove_background_title; 
 		button.type =  'button'; 
 		button.classList.add('button', 'button-secondary');
 		button.id = id; 
@@ -136,13 +136,13 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 			let previewButton = modal.querySelector('[data-action="media-get-preview"]'); 
 			previewButton.addEventListener('click', () => {
-				 	this.MediaEditorDoAction({ preview: true, 'item_id': item_id, 'modal' : modal});
+				 	this.MediaEditorDoAction({ preview: true, 'item_id': item_id, 'modal' : modal, 'refresh' : true});
 			});
 
 
 			let saveButton = modal.querySelector('[data-action="media-save-button"]'); 
 			saveButton.addEventListener('click', () =>  { 
-				 this.MediaEditorDoAction({ preview: false, 'item_id': item_id, 'modal' : modal});
+				 this.MediaEditorDoAction({ preview: false, 'item_id': item_id, 'modal' : modal, 'refresh' : false});
 			});
 
 
@@ -153,16 +153,40 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 	MediaEditorDoAction(data)
 	{
 		let modal = data.modal;
-		let backgroundType = modal.querySelector('input[name="background_type"]').value; 
+		let backgroundType = modal.querySelector('input[name="background_type"]:checked').value; 
 		let backgroundColor = modal.querySelector('#bg_display_picker').value; 
+		let backgroundTransparency = modal.querySelector('#bg_transparency').value; 
+		let newFileName = modal.querySelector('input[name="new_filename"]').value; 
+		let newPostTitle= modal.querySelector('input[name="new_posttitle"]').value;
+		let spinner = document.querySelector('.load-preview-spinner'); 
+
+		let previewImage = document.querySelector('.modal-wrapper .image-preview i'); 
+		previewImage.style.backgroundImage = 'url(' + previewImage.dataset.placeholder + ')';
+
+
+		if (typeof data.refresh !== 'undefined')
+		{
+			 var refresh = data.refresh;
+		}
+		else
+		{
+			 var refresh = false; 
+		}
+
+		spinner.classList.remove('shortpixel-hide');
+
 
 		let request = {
 			id: data.item_id,
 			type: 'media',
 			screen_action: 'media/getEditorPreview',
 			background_type:  backgroundType, 
-			background_color: backgroundColor, 
+			background_color: backgroundColor,
+			background_transparency: backgroundTransparency,  
+			newFileName: newFileName, 
+			newPostTitle: newPostTitle, 
 			is_preview: data.preview,
+			refresh: refresh, 
 		};
 		request.callback = 'shortpixel.mediaEditorPreviewLoaded';
 		this.processor.AjaxRequest(request);
@@ -191,7 +215,7 @@ console.log('Preview Load', data);
 		 {	
 			 errorElement.classList.add('shortpixel-hide');
 			 let previewImage = document.querySelector('.modal-wrapper .image-preview i'); 
-			 previewImage.style.backgroundImage = 'url("' + data.optimized + '")'; 
+			 previewImage.style.backgroundImage = 'url("' + data.optimized + '?ts=' + Date.now() + '")'; 
 
 		 }
 

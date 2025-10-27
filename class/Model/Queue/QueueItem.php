@@ -539,14 +539,44 @@ class QueueItem
        $defaults = [
             'do_transparant' => true, 
             'replace_color' => null, 
+            'replace_transparency' => '00', 
             'url' => null, 
             'is_preview' => false, 
+            'newFileName' => null, 
+            'newPostTitle' => '', 
+            'refresh' => false, 
        ]; 
 
        $paramlist = []; 
        $args = wp_parse_args($args, $defaults);
 
        $paramlist['preview_only'] = $args['is_preview'];
+       
+       if (true === $args['do_transparent'])
+       { 
+         $paramlist['bg_remove'] = 1; 
+       }
+       else
+       {
+         $color = $args['replace_color']; 
+         $transparency = $args['replace_transparency']; 
+         $paramlist['bg_remove'] = $color . $transparency;
+       }
+
+       if (false === is_null($args['newFileName']) && strlen($args['newFileName']) > 0)
+       {
+          $paramlist['newFileName'] = $args['newFileName']; 
+       }
+       else
+       {
+          $paramlist['newFileName'] = $this->imageModel->getFileBase() . '_nobg' . $this->imageModel->getExtension(); 
+       }
+
+       $paramlist['newPostTitle'] = $args['newPostTitle'];
+
+       $paramlist['refresh'] = $args['refresh']; // When sending item first, do the refresh. This is the mimc the tries = 0 refresh option we don't have here. 
+       
+
        $returndatalist = [$this->imageModel->getImageKey() => $this->imageModel->getFileName()];
        
        $this->data->action = 'remove_background'; 
