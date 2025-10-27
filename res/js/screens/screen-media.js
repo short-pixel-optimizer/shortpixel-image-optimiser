@@ -55,7 +55,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		var button = document.createElement('button'); 
 
 		button.name = 'removeBackground'; 
-		button.innerHTML = "removebg"; 
+		button.innerHTML = this.strings.remove_background_title; 
 		button.type =  'button'; 
 		button.classList.add('button', 'button-secondary');
 		button.id = id; 
@@ -73,7 +73,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 	OpenEditorEvent(event)
 	{
-		 console.log(event);
 		 let item_id = event.target.dataset.item_id; 
 
 		 event.preventDefault(); 
@@ -105,7 +104,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			link.media = 'all';
 			head.appendChild(link);	
 		}
-
 
 		// CloseEvent to close the modal + background
 		var closeEvent = new CustomEvent('shortpixel-media-modal-close', { detail : 
@@ -156,12 +154,14 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 	{
 		let modal = data.modal;
 		let backgroundType = modal.querySelector('input[name="background_type"]').value; 
+		let backgroundColor = modal.querySelector('#bg_display_picker').value; 
 
 		let request = {
 			id: data.item_id,
 			type: 'media',
 			screen_action: 'media/getEditorPreview',
 			background_type:  backgroundType, 
+			background_color: backgroundColor, 
 			is_preview: data.preview,
 		};
 		request.callback = 'shortpixel.mediaEditorPreviewLoaded';
@@ -253,7 +253,6 @@ console.log('Preview Load', data);
 			}
 		}
 		// edit media screen
-		 // = document.getElementById('attachment_alt'); 
 		 let captionFields = ['attachment_caption', 'attachment-details-caption']; 
 		 let descriptionFields = ['attachment_content', 'attachment-details-description']; 
 		 

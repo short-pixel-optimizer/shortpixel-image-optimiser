@@ -16,7 +16,7 @@ $placeholderImage = $this->data['placeholderImage'];
 ?>
 
 <div class="modal-wrapper" id="media-modal" data-item-id="<?php echo $this->data['item_id'] ?>" >
-    <div class="title"><?php __('Remove background', 'shortpixel-image-optimiser'); ?> <span data-action='close'>X</span></div>
+    <div class="title"><?php _e('Remove background', 'shortpixel-image-optimiser'); ?> <span data-action='close'>X</span></div>
 
     <div class="image-wrapper">
             <div class="image-original">
@@ -33,6 +33,7 @@ $placeholderImage = $this->data['placeholderImage'];
     <div class='action-bar'>
 
     <section class="replace_type wrapper">
+		<h3><?php _e("Options", 'shortpixel-image-optimiser'); ?></h3>
 						<label for="transparent_background">
 							<input id="transparent_background" type="radio" name="background_type" value="transparent" <?php checked('transparent', $view->settings['bg_type']); ?> >
 							<?php esc_html_e('Transparent/white background', 'shortpixel-image-optimiser'); ?>
@@ -59,13 +60,14 @@ $placeholderImage = $this->data['placeholderImage'];
 								<input type="hidden"  value="<?php echo esc_attr($view->settings['bg_color']); ?>" name="bg_color" id="bg_color" />
 							</label>
 							<hr>
+							<!--
 							<label for="bg_transparency">
 								<p><?php esc_html_e('Opacity:', 'shortpixel-image-optimiser'); ?>
 									<strong>
 										<span id="transparency_range"><?php echo esc_attr($view->settings['bg_transparency']); ?></span>%</strong>
 								</p>
 								<input type="range" min="0" max="100" value="<?php echo esc_attr($view->settings['bg_transparency']); ?>" id="bg_transparency" />
-							</label>
+							</label> --> 
 						</div>
 				</section>
 
@@ -73,10 +75,12 @@ $placeholderImage = $this->data['placeholderImage'];
         <button class='button' type='button' id='media-get-preview' data-action='media-get-preview'>
 			<?php _e('Preview','shortpixel-image-optimiser'); ?>
 		</button>
-		<button class='button' type='button'  id='media-save-button' data-action='media-save-button'>
-			<?php _e('Save', 'shortpixel-image-optimiser'); ?>
+
+		<span>
+			<button class='button' type='button'  id='media-save-button' data-action='media-save-button'>
+				<?php _e('Save', 'shortpixel-image-optimiser'); ?>
+			</button>
 			<p><?php _e('A new image will be created', 'shortpixel-image-optimiser'); ?></p>
-		</button>
-    
+		</span>
     </div>
 </div>

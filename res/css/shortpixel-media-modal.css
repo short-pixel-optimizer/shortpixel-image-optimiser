@@ -22,7 +22,7 @@
 .shortpixel-media-modal .modal-wrapper {
   z-index: 60;
   width: 80%;
-  height: 80%;
+  height: 80vh;
   background: #fff;
 }
 .shortpixel-media-modal .modal-wrapper .title {
@@ -60,14 +60,27 @@
   top: 45%;
 }
 .shortpixel-media-modal .modal-wrapper .action-bar {
-  height: 10%;
   display: flex;
   width: 100%;
   justify-content: center;
+  align-items: center;
   background: #e6e6e6;
 }
 .shortpixel-media-modal .modal-wrapper .action-bar .replace_type.wrapper {
   display: flex;
+  flex-direction: column;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .replace_type.wrapper label {
+  margin: 4px 0;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .replace_type.wrapper .howto {
+  display: none;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .replace_type.wrapper .button {
+  display: inline-block;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .replace_type.wrapper .bg_transparency {
+  display: none;
 }
 .shortpixel-media-modal .modal-wrapper .load-preview-spinner {
   position: absolute;

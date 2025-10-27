@@ -30,7 +30,7 @@
     {
         z-index: 60; 
         width: 80%; 
-        height: 80%; 
+        height: 80vh; 
        // max-width: 700px; 
         background: #fff;
         .title {
@@ -74,14 +74,34 @@
             
         }
         .action-bar {
-            height: 10%;
+           // height: 10%;
+           // min-height: 400px;
             display: flex; 
             width: 100%;
             justify-content: center;
+            align-items: center; 
             background: darken(#fff, 10%);
+
             .replace_type.wrapper 
             {
                  display: flex; 
+                 flex-direction: column; 
+
+                 label 
+                 {
+                     margin: 4px 0;
+                 }
+                 .howto {
+                    display: none;
+                 }
+                 .button 
+                 {
+                     display: inline-block;
+                 }
+                 .bg_transparency 
+                 {
+                     display: none;
+                 }
                  
             }
         }

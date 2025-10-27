@@ -445,6 +445,8 @@ class AjaxController
 		$is_preview = true; // default to no action 
 		$is_preview = (isset($_POST['is_preview'])) ? filter_var(sanitize_text_field($_POST['is_preview']), FILTER_VALIDATE_BOOL) : $is_preview; 
 		
+		$backgroundType = isset($_POST['background_type']) ? sanitize_text_field($_POST['background_type']) : 'transparent'; 
+		$backgroundColor = isset($_POST['background_color']) ? sanitize_text_field($_POST['background_color']) : false; 
 
 		$mediaItem = $this->getMediaItem($item_id, 'media');
 
@@ -453,9 +455,16 @@ class AjaxController
 		$qItem = QueueItems::getImageItem($mediaItem);
 		$optimizer = $qItem->getApiController('remove_background');
 
-	
+		$args = []; 
+		
+		$args['do_transparent'] = ('transparent' == $backgroundType) ? true : false; 
+		if ('solid' == $backgroundType)
+		{
+			 $args['replace_color'] = $backgroundColor; 
+		}
+		
 
-		$qItem->newRemoveBackgroundAction(array_merge(['is_preview' => $is_preview], []));
+		$qItem->newRemoveBackgroundAction(array_merge(['is_preview' => $is_preview], $args));
 		$optimizer->sendToProcessing($qItem);
 		$optimizer->handleAPIResult($qItem);  
 
@@ -471,6 +480,7 @@ class AjaxController
 
 			if (false === property_exists($result, 'is_done') || $result->is_done === false)
 			{ 
+
 				$optimizer->sendToProcessing($qItem);
 				$optimizer->handleAPIResult($qItem);  
 

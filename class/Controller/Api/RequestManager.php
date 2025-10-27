@@ -209,6 +209,7 @@ abstract class RequestManager
       'apiStatus' => $status,
       'message' => $message,
       'is_error' => true,
+      'is_done' => false, 
   ];
 
     return $result;
@@ -223,7 +224,9 @@ abstract class RequestManager
       */
       $result = [
          'apiStatus' => $status,
-         'message' => $message
+         'message' => $message,
+         'is_error' => false, 
+         'is_done' => false, 
       ];
       return $result;
   }
@@ -241,6 +244,7 @@ abstract class RequestManager
       $result = [
           'apiStatus' => $status,
           'message' => $message,
+          'is_error' => false, 
       ];
 
       if (self::STATUS_SUCCESS === $status)
@@ -251,11 +255,7 @@ abstract class RequestManager
          unset($result['message']);
       }
 
-    /*  if (is_array($file))
-        $result['files'] = $file;
-      else
-        $result['file'] = $file; // this file is being used in imageModel
-*/
+
       $result = array_merge($result, $data);
       return $result;
   }

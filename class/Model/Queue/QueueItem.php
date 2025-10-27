@@ -277,11 +277,9 @@ class QueueItem
 
       ];
 
-
       if (is_null($this->result)) {
          $this->result = new \stdClass;
       }
-
 
       foreach ($data as $name => $value) {
          if (false === in_array($name, $validation)) {
@@ -290,7 +288,6 @@ class QueueItem
 
          $this->result->$name = $value;
       }
-
    }
 
 
@@ -317,8 +314,6 @@ class QueueItem
        if (isset($nextActions))
        {
          $this->data()->next_actions = $nextActions;
-
-
        }
 
       // Always pass
