@@ -43,9 +43,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			this.FetchAltView(undefined, postInput.value);
 			this.InitEditorActions(postInput.value); 
 		}
-
-
-
 	}
 
 	InitEditorActions(item_id)

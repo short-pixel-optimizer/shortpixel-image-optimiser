@@ -280,8 +280,8 @@ class ApiController extends RequestManager
 		$neededURLS = $qItem->data()->urls; // URLS we are waiting for.
 
 
-		if (isset($APIresponse['returndatalist'])) {
-			$returnDataList = (array) $APIresponse['returndatalist'];
+		if (isset($response['returndatalist'])) {
+			$returnDataList = (array) $response['returndatalist'];
 			if (isset($returnDataList['sizes']) && is_object($returnDataList['sizes']))
 				$returnDataList['sizes'] = (array) $returnDataList['sizes'];
 
@@ -294,7 +294,7 @@ class ApiController extends RequestManager
 			if (isset($returnDataList['fileSizes']) && is_object($returnDataList['fileSizes']))
 				$returnDataList['fileSizes'] = (array) $returnDataList['fileSizes'];
 
-			unset($APIresponse['returndatalist']);
+			unset($response['returndatalist']);
 		} else {
 			$returnDataList = [];
 		}
@@ -379,16 +379,16 @@ class ApiController extends RequestManager
 
 				$err = array(
 					"Status" => self::STATUS_FAIL,
-					"Code" => (isset($APIresponse[0]->Status->Code) ? $APIresponse[0]->Status->Code : self::ERR_UNKNOWN),
+					"Code" => (isset($response[0]->Status->Code) ? $response[0]->Status->Code : self::ERR_UNKNOWN),
 					"Message" => __('There was an error and your request was not processed.', 'shortpixel-image-optimiser')
-						. " (" . wp_basename($APIresponse[0]->OriginalURL) . ": " . $APIresponse[0]->Status->Message . ")"
+						. " (" . wp_basename($response[0]->OriginalURL) . ": " . $response[0]->Status->Message . ")"
 				);
 				return $this->returnRetry($err['Code'], $err['Message']);
 			} else {
 				$err = array(
 					"Status" => self::STATUS_FAIL,
 					"Message" => __('There was an error and your request was not processed.', 'shortpixel-image-optimiser'),
-					"Code" => (isset($APIresponse[0]->Status->Code) ? $APIresponse[0]->Status->Code : self::ERR_UNKNOWN)
+					"Code" => (isset($response[0]->Status->Code) ? $response[0]->Status->Code : self::ERR_UNKNOWN)
 				);
 				return $this->returnRetry($err['Code'], $err['Message']);
 			}
