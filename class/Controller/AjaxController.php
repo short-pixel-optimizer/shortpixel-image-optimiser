@@ -426,12 +426,17 @@ class AjaxController
 		 $json->item_id = $item_id; 
 
 		 $post = get_post($item_id); 
-		
 
-		 
+		 $originalImage = $mediaItem; 
+		 if ($mediaItem->isScaled())
+		 {
+			 $originalImage = $mediaItem->getOriginalFile(); 
+		 }
+				 
 		 $view = new ViewController();
 		 $view->addData([
-			'originalImage' => $previewImage, 
+			'previewImage' => $previewImage, 
+			'originalImage' => $originalImage, 
 			'placeholderImage' => \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'), 
 			'item_id' => $item_id, 
 			'post_title' => $post->post_title, 
@@ -524,7 +529,7 @@ class AjaxController
 				
 				Log::addTemp('Timeout 15x');
 
-				$this->send($result);
+				$this->send((object)$result);
 				exit('Timeout');
 				break; 
 			}

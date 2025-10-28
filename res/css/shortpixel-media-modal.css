@@ -26,8 +26,20 @@
   background: #fff;
 }
 .shortpixel-media-modal .modal-wrapper .title {
-  background: green;
-  height: 5%;
+  background: #116C7E;
+  color: white;
+  padding: 6px;
+}
+.shortpixel-media-modal .modal-wrapper .title h3 {
+  margin: 5px 0;
+  text-align: center;
+  color: #fff;
+}
+.shortpixel-media-modal .modal-wrapper .title span {
+  font-size: 16px;
+  font-weight: 700;
+  float: right;
+  cursor: pointer;
 }
 .shortpixel-media-modal .modal-wrapper .image-wrapper {
   height: 85%;
@@ -64,7 +76,7 @@
   width: 100%;
   justify-content: center;
   align-items: center;
-  background: #e6e6e6;
+  background: #F5F5F5;
 }
 .shortpixel-media-modal .modal-wrapper .action-bar .replace_type.wrapper {
   display: flex;

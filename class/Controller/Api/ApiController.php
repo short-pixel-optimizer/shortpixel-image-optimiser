@@ -279,7 +279,6 @@ class ApiController extends RequestManager
 	{
 		$neededURLS = $qItem->data()->urls; // URLS we are waiting for.
 
-
 		if (isset($response['returndatalist'])) {
 			$returnDataList = (array) $response['returndatalist'];
 			if (isset($returnDataList['sizes']) && is_object($returnDataList['sizes']))

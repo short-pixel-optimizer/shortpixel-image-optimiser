@@ -524,7 +524,6 @@ class QueueItem
          $this->data()->returndatalist = $args['returndatalist'];
       }
 
-
       $this->data->remote_id = $remote_id;
       $this->data->tries = 0;
       $this->item_count = 1;
@@ -537,7 +536,7 @@ class QueueItem
        $this->newAction(); 
 
        $defaults = [
-            'do_transparant' => true, 
+            'do_transparent' => true, 
             'replace_color' => null, 
             'replace_transparency' => '00', 
             'url' => null, 
@@ -551,7 +550,15 @@ class QueueItem
        $args = wp_parse_args($args, $defaults);
 
        $paramlist['preview_only'] = $args['is_preview'];
+
+       $originalFile = $this->imageModel; 
+       if ($this->imageModel->isScaled())
+       {
+          $originalFile = $this->imageModel->getOriginalFile(); 
+       }
        
+       $url = $originalFile->getUrl(); 
+
        if (true === $args['do_transparent'])
        { 
          $paramlist['bg_remove'] = 1; 
@@ -569,19 +576,18 @@ class QueueItem
        }
        else
        {
-          $paramlist['newFileName'] = $this->imageModel->getFileBase() . '_nobg' . $this->imageModel->getExtension(); 
+          $paramlist['newFileName'] = $originalFile->getFileBase() . '_nobg' . $original->getExtension(); 
        }
 
        $paramlist['newPostTitle'] = $args['newPostTitle'];
 
        $paramlist['refresh'] = $args['refresh']; // When sending item first, do the refresh. This is the mimc the tries = 0 refresh option we don't have here. 
        
-
        $returndatalist = [$this->imageModel->getImageKey() => $this->imageModel->getFileName()];
        
        $this->data->action = 'remove_background'; 
        $this->data->compressionType = ImageModel::COMPRESSION_LOSSLESS;
-       $this->data->urls = [$this->imageModel->getUrl()];
+       $this->data->urls = [$url];
        $this->data->returndatalist = $returndatalist;
        
        $this->data->paramlist = $paramlist; 

@@ -45,10 +45,9 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		}
 	}
 
-	InitEditorActions(item_id)
+	InitEditorActions(item_id, uiType)
 	{
 		let id = 'shortpixel_removebackground_button';
-
 		var button = document.createElement('button'); 
 
 		button.name = 'removeBackground'; 
@@ -59,10 +58,18 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		button.dataset.item_id = item_id; 
 
 		button.addEventListener('click', this.OpenEditorEvent.bind(this)); 
-
-		var parent = document.querySelector('[id^=media-head]'); 
-
-		parent.append(button);
+		
+			// @todo Probably all should pass uiType. 
+		if (typeof uiType === 'undefined')
+		{
+			var parent = document.querySelector('[id^=media-head]'); 
+			parent.append(button);
+		}
+		else if('gallery' == uiType)
+		{
+			var parent = document.querySelector('.attachment-info .settings')
+			parent.append(button);
+		}
 		
 		window.addEventListener('shortpixel.mediaEditorPreviewLoaded', this.MediaEditorPreviewEvent.bind(this));
 
@@ -484,6 +491,7 @@ console.log('Preview Load', data);
 		this.processor.AjaxRequest(data);
 	}
 
+	// Check the Gallery popup on Media Library 
 	ListenGallery() {
 		var self = this;
 		var next_item_run_process = false; 
@@ -581,6 +589,7 @@ console.log('Preview Load', data);
 				var html = this.doSPIORow(e.detail.media.itemView);
 				$spSpace.after(html);
 
+				self.InitEditorActions(item_id, 'gallery')
 				self.FetchAltView(undefined, item_id); 
 
 			},

@@ -12,6 +12,7 @@ $view->settings['bg_transparency'] = 80;
 
 
 $originalImage = $this->data['originalImage'];
+$previewImage = $this->data['previewImage'];
 $fileName = $originalImage->getFileName();
 $suggesteFileName = $originalImage->getFileBase() . '_nobg.' . $originalImage->getExtension(); 
 $placeholderImage = $this->data['placeholderImage'];
@@ -19,11 +20,11 @@ $post_title = $this->data['post_title'];
 ?>
 
 <div class="modal-wrapper" id="media-modal" data-item-id="<?php echo $this->data['item_id'] ?>" >
-    <div class="title"><?php _e('Remove background', 'shortpixel-image-optimiser'); ?> <span data-action='close'>X</span></div>
+    <div class="title"><h3><?php _e('Remove background', 'shortpixel-image-optimiser'); ?> <span data-action='close'>X</span></h3> </div>
 
     <div class="image-wrapper">
             <div class="image-original">
-                <i style="background-image: url('<?php echo $originalImage->getURL(); ?>');"></i>
+                <i style="background-image: url('<?php echo $previewImage->getURL(); ?>');"></i>
             </div>
             <div class="image-preview">
                 <i data-placeholder="<?php echo $placeholderImage ?>" style="background-image: url('<?php echo $placeholderImage ?>');" ></i>
@@ -39,7 +40,7 @@ $post_title = $this->data['post_title'];
 		<h3><?php _e("Options", 'shortpixel-image-optimiser'); ?></h3>
 		<p><?php __('Note: transparency options only work with supported file formats, such as PNG', 'shortpixel-image-optimiser'); ?></p>
 
-						<label for="transparent_background">,
+						<label for="transparent_background">
 							<input id="transparent_background" type="radio" name="background_type" value="transparent" <?php checked('transparent', $view->settings['bg_type']); ?> checked >
 							<?php esc_html_e('Transparent/white background', 'shortpixel-image-optimiser'); ?>
 						</label>

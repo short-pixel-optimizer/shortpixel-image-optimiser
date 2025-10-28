@@ -1,5 +1,5 @@
 @import 'elements/animation';
-
+@import 'elements/colors'; 
 
 
 .shortpixel-media-modal-shade
@@ -35,8 +35,24 @@
         background: #fff;
         .title {
             
-            background: green; 
-            height: 5%;
+            background: $blue_dark; 
+            color: white; 
+        //    height: 5%;
+            padding: 6px; 
+           // display: flex; 
+
+            h3 {
+                margin: 5px 0;
+                text-align: center;
+                color: #fff;
+            }
+             span 
+            {
+                font-size: 16px; 
+                font-weight: 700;
+                float: right;
+                cursor: pointer;
+            }
         }
         .image-wrapper
         {
@@ -80,7 +96,7 @@
             width: 100%;
             justify-content: center;
             align-items: center; 
-            background: darken(#fff, 10%);
+            background: $color-brokenwhite;
 
             .replace_type.wrapper 
             {
