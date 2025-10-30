@@ -58,18 +58,24 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		button.dataset.item_id = item_id; 
 
 		button.addEventListener('click', this.OpenEditorEvent.bind(this)); 
-		
+		button.dataset.opener = uiType; 
+
 			// @todo Probably all should pass uiType. 
 		if (typeof uiType === 'undefined' || uiType === 'edit')
 		{
 			var parent = document.querySelector('[id^=media-head]'); 
-			button.dataset.opener = 'edit'; 
 			parent.append(button);
 		}
 		else if('gallery' === uiType)
 		{
 			var parent = document.querySelector('.media-modal .attachment-actions')
-			button.dataset.opener = 'gallery'; 
+			parent.append(button);
+		}
+		else if ('gutenberg' == uiType)
+		{
+			var parent = document.querySelector('.attachment-info .details')
+			button.classList.add('button-link');
+			button.style.display = 'inline';
 			parent.append(button);
 		}
 		
@@ -117,7 +123,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				detail.modal.remove();
 				detail.shade.remove(); 
 
-				if ('gallery' == event.detail.opener)
+				if ('gallery' == event.detail.opener || 'gutenberg' == event.detail.opener)
 				{
 						var WPmodals = document.querySelectorAll('#wp-media-modal, .media-modal-backdrop'); 
 						for (let i =0; i < WPmodals.length; i++)
@@ -131,7 +137,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 		backgroundShade.addEventListener('click', () => { document.dispatchEvent(closeEvent)});
 
-		if ('gallery' == opener)
+		if ('gallery' == opener || 'gutenberg' == opener)
 		{
 			var WPmodals = document.querySelectorAll('#wp-media-modal, .media-modal-backdrop'); 
 			for (let i =0; i < WPmodals.length; i++)
@@ -534,12 +540,14 @@ console.log('Preview Load', data);
 
 		// This taken from S3-offload / media.js /  Grid media gallery
 		if (typeof wp.media.view.Attachment.Details.TwoColumn !== 'undefined') {
-			var detailsColumn = wp.media.view.Attachment.Details.TwoColumn;
+			var detailsColumn = wp.media.view.Attachment.Details.TwoColumn; // Media library grid.
 			var twoCol = true;
+			var opener = 'gallery'; 
 		}
 		else {
-			var detailsColumn = wp.media.view.Attachment.Details;
+			var detailsColumn = wp.media.view.Attachment.Details; // Gutenberg
 			var twoCol = false;
+			var opener = 'gutenberg'; 
 		}
 
 		var extended = detailsColumn.extend({
@@ -615,7 +623,7 @@ console.log('modal', this);
 				var html = this.doSPIORow(e.detail.media.itemView);
 				$spSpace.after(html);
 
-				self.InitEditorActions(item_id, 'gallery');
+				self.InitEditorActions(item_id, opener);
 				self.FetchAltView(undefined, item_id); 
 
 			},
