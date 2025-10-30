@@ -10,7 +10,6 @@ $view->settings['bg_type'] = 'placeholder'; // @todo Add something here.
 $view->settings['bg_color'] = '#000';
 $view->settings['bg_transparency'] = 80; 
 
-
 $originalImage = $this->data['originalImage'];
 $previewImage = $this->data['previewImage'];
 $fileName = $originalImage->getFileName();
@@ -28,7 +27,7 @@ $post_title = $this->data['post_title'];
             </div>
             <div class="image-preview">
                 <i data-placeholder="<?php echo $placeholderImage ?>" style="background-image: url('<?php echo $placeholderImage ?>');" ></i>
-				<div class='error-message shortpixel-hide'>Message in error</div>
+				<div class='error-message shortpixel-hide'>&nbsp;</div>
                 <div class='load-preview-spinner'><img class='loadspinner' src="<?php echo esc_url(\wpSPIO()->plugin_url('res/img/bulk/loading-hourglass.svg')); ?>" /></div>
             </div>
 

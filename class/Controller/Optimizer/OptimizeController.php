@@ -417,8 +417,7 @@ class OptimizeController extends OptimizerBase
 
          //  $new_attach_id = media_sideload_image($url, $attached_post_id, '', 'id'); // Add to WP, return attach_id
            
-           $qItem->addResult(['new_attach_id' => $new_attach_id, 'redirect' => 
-            admin_url('post.php?post=' . $new_attach_id . '&action=edit')] );
+           $qItem->addResult(['new_attach_id' => $new_attach_id] );
         }
     }
 

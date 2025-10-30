@@ -1,12 +1,12 @@
 .shortpixel-media-modal-shade {
   position: fixed;
   left: 0;
-  right: 0;
+  right: 25px;
   bottom: 0;
   top: 0;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
-  z-index: 50;
+  z-index: 250;
 }
 
 .shortpixel-media-modal {
@@ -14,15 +14,15 @@
   align-items: center;
   justify-content: center;
   position: absolute;
-  top: 0;
-  bottom: 0;
+  top: 25px;
   left: 0;
   right: 0;
 }
 .shortpixel-media-modal .modal-wrapper {
-  z-index: 60;
+  z-index: 300;
   width: 80%;
   height: 80vh;
+  max-height: 700px;
   background: #fff;
 }
 .shortpixel-media-modal .modal-wrapper .title {

@@ -6,7 +6,7 @@ if (! defined('ABSPATH')) {
 	exit; // Exit if accessed directly.
 }
 
-
+use ShortPixel\Controller\Api\RequestManager;
 use ShortPixel\Controller\View\ListMediaViewController as ListMediaViewController;
 use ShortPixel\Controller\View\OtherMediaViewController as OtherMediaViewController;
 use ShortPixel\Controller\View\OtherMediaFolderViewController as OtherMediaFolderViewController;
@@ -460,6 +460,7 @@ class AjaxController
 		$newFileName = isset($_POST['newFileName']) ? sanitize_file_name($_POST['newFileName']) : false; 
 		$newPostTitle = isset($_POST['newPostTitle']) ? sanitize_text_field($_POST['newPostTitle']) : ''; 
 		$refresh = isset($_POST['refresh']) ? filter_var(sanitize_text_field($_POST['refresh']), FILTER_VALIDATE_BOOL) : false;  
+		$opener = isset($_POST['opener']) ? sanitize_text_field($_POST['opener']) : ''; 
 
 		$mediaItem = $this->getMediaItem($item_id, 'media');
 
@@ -510,10 +511,22 @@ class AjaxController
 			
 			if (property_exists($result, 'is_done') && true === $result->is_done)
 			{
-			//	if (true === $result->is_error) 
-			//	{
+
+				if ($result->apiStatus === RequestManager::STATUS_SUCCESS && false === $is_preview )
+				{
+					$new_attach_id = $qItem->result()->new_attach_id; 
+					if ('edit' == $opener)
+					{
+						$redirect = admin_url('post.php?post=' . $new_attach_id . '&action=edit'); 			 
+					}
+					elseif ('gallery' == $opener)
+					{
+						$redirect = admin_url('upload.php?item=' . $new_attach_id);	 
+					}
+					$qItem->addResult([ 'redirect' => $redirect   ]); 
+					$result = $qItem->result();
+				}
 					$this->send($result);
-			//	}
 								
 				exit();
 			}

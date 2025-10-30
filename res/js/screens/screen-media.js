@@ -41,7 +41,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		{
 			var postInput = document.getElementById('post_ID');
 			this.FetchAltView(undefined, postInput.value);
-			this.InitEditorActions(postInput.value); 
+			this.InitEditorActions(postInput.value, 'edit'); 
 		}
 	}
 
@@ -60,14 +60,16 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		button.addEventListener('click', this.OpenEditorEvent.bind(this)); 
 		
 			// @todo Probably all should pass uiType. 
-		if (typeof uiType === 'undefined')
+		if (typeof uiType === 'undefined' || uiType === 'edit')
 		{
 			var parent = document.querySelector('[id^=media-head]'); 
+			button.dataset.opener = 'edit'; 
 			parent.append(button);
 		}
-		else if('gallery' == uiType)
+		else if('gallery' === uiType)
 		{
-			var parent = document.querySelector('.attachment-info .settings')
+			var parent = document.querySelector('.media-modal .attachment-actions')
+			button.dataset.opener = 'gallery'; 
 			parent.append(button);
 		}
 		
@@ -78,17 +80,10 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 	OpenEditorEvent(event)
 	{
 		 let item_id = event.target.dataset.item_id; 
+		 var opener = event.target.dataset.opener; 
 
 		 event.preventDefault(); 
-		 let data = {
-			id: item_id,
-			type: 'media',
-			screen_action: 'media/getEditorPopup',
-		}
-		data.callback = 'shortpixel.openEditorPopup';
-		this.processor.AjaxRequest(data);
-
-		event.preventDefault();
+		
 		let backgroundShade = document.createElement('div');
 		backgroundShade.id = 'shortpixel-media-modal-shade';
 		backgroundShade.classList.add('shortpixel-media-modal-shade');
@@ -113,17 +108,37 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		var closeEvent = new CustomEvent('shortpixel-media-modal-close', { detail : 
 			 {
 				 modal: modal,
-				 shade: backgroundShade
+				 shade: backgroundShade,
+				 opener: opener, 
 			 }
 		} ); 
 		document.addEventListener('shortpixel-media-modal-close', (event) => {
 				let detail = event.detail; 
 				detail.modal.remove();
 				detail.shade.remove(); 
+
+				if ('gallery' == event.detail.opener)
+				{
+						var WPmodals = document.querySelectorAll('#wp-media-modal, .media-modal-backdrop'); 
+						for (let i =0; i < WPmodals.length; i++)
+						{
+							WPmodals[i].style.display = 'unset'; 
+						}
+		
+				}
 		}, { once: true });
 
 
 		backgroundShade.addEventListener('click', () => { document.dispatchEvent(closeEvent)});
+
+		if ('gallery' == opener)
+		{
+			var WPmodals = document.querySelectorAll('#wp-media-modal, .media-modal-backdrop'); 
+			for (let i =0; i < WPmodals.length; i++)
+			{
+			 	WPmodals[i].style.display = 'none'; 
+			}
+		}
 
 		document.body.append(backgroundShade);
 		document.body.append(modal);
@@ -136,21 +151,31 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				document.dispatchEvent(closeEvent);
 			}, { once: true });
 
-			this.MediaEditorDoAction({ preview: true, 'item_id': item_id, 'modal': modal});
+			this.MediaEditorDoAction({ preview: true, 'item_id': item_id, 'modal': modal, 'opener' : opener});
 
 			let previewButton = modal.querySelector('[data-action="media-get-preview"]'); 
 			previewButton.addEventListener('click', () => {
-				 	this.MediaEditorDoAction({ preview: true, 'item_id': item_id, 'modal' : modal, 'refresh' : true});
+				 	this.MediaEditorDoAction({ preview: true, 'item_id': item_id, 'modal' : modal, 'refresh' : true, 'opener' : opener});
 			});
 
 
 			let saveButton = modal.querySelector('[data-action="media-save-button"]'); 
 			saveButton.addEventListener('click', () =>  { 
-				 this.MediaEditorDoAction({ preview: false, 'item_id': item_id, 'modal' : modal, 'refresh' : false});
+				 this.MediaEditorDoAction({ preview: false, 'item_id': item_id, 'modal' : modal, 'refresh' : false, 'opener' : opener});
 			});
 
 
 		}.bind(this), { once: true });
+
+		// Fire off data load event. 
+		let data = {
+			id: item_id,
+			type: 'media',
+			screen_action: 'media/getEditorPopup',
+		}
+		data.callback = 'shortpixel.openEditorPopup';
+		this.processor.AjaxRequest(data);
+
 
 	}
 
@@ -191,6 +216,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			newPostTitle: newPostTitle, 
 			is_preview: data.preview,
 			refresh: refresh, 
+			opener: data.opener,
 		};
 		request.callback = 'shortpixel.mediaEditorPreviewLoaded';
 		this.processor.AjaxRequest(request);
@@ -570,7 +596,7 @@ console.log('Preview Load', data);
 				if (!e.detail || !e.detail.media || !e.detail.media.itemView) {
 					return;
 				}
-
+console.log('modal', this);
 				var item_id = e.detail.media.id; 
 
 				var $spSpace = this.$el.find('.attachment-info .details');
@@ -589,7 +615,7 @@ console.log('Preview Load', data);
 				var html = this.doSPIORow(e.detail.media.itemView);
 				$spSpace.after(html);
 
-				self.InitEditorActions(item_id, 'gallery')
+				self.InitEditorActions(item_id, 'gallery');
 				self.FetchAltView(undefined, item_id); 
 
 			},
