@@ -420,7 +420,7 @@ class AjaxController
 		 $mediaItem = $this->getMediaItem($item_id, 'media');
 		 $this->checkImageAccess($mediaItem);
 
-		 $previewImage = UiHelper::findBestPreview($mediaItem);
+		 $previewImage = UiHelper::findBestPreview($mediaItem, 600);
 
 		 $json = new \stdClass; 
 		 $json->item_id = $item_id; 
@@ -461,6 +461,7 @@ class AjaxController
 		$newPostTitle = isset($_POST['newPostTitle']) ? sanitize_text_field($_POST['newPostTitle']) : ''; 
 		$refresh = isset($_POST['refresh']) ? filter_var(sanitize_text_field($_POST['refresh']), FILTER_VALIDATE_BOOL) : false;  
 		$opener = isset($_POST['opener']) ? sanitize_text_field($_POST['opener']) : ''; 
+		$attached_post_id = isset($_POST['attached_post_id']) ? intval($_POST['attached_post_id']) : 0; 
 
 		$mediaItem = $this->getMediaItem($item_id, 'media');
 
@@ -475,13 +476,13 @@ class AjaxController
 		$args['newFileName'] = $newFileName; 
 		$args['newPostTitle'] = $newPostTitle; 
 		$args['refresh'] = $refresh;
+		$args['attached_post_id'] = $attached_post_id; 
 		
 		if ('solid' == $backgroundType)
 		{
 			 $args['replace_color'] = $backgroundColor; 
 			 $args['replace_transparency'] = $backgroundTransparency; 
 		}
-		
 		
 		$qItem->newRemoveBackgroundAction(array_merge(['is_preview' => $is_preview], $args));
 		$optimizer->sendToProcessing($qItem);
@@ -523,7 +524,18 @@ class AjaxController
 					{
 						$redirect = admin_url('upload.php?item=' . $new_attach_id);	 
 					}
-					$qItem->addResult([ 'redirect' => $redirect   ]); 
+					elseif ('gutenberg' == $opener)
+					{
+						$redirect = 'gutenberg'; // overload for JS processing
+						$attachment = get_post($new_attach_id); 
+						$js_attach = wp_prepare_attachment_for_js($attachment); 
+						$qItem->addResult(['file' => $js_attach]);
+					}
+
+					if (isset($redirect))
+					{
+						$qItem->addResult([ 'redirect' => $redirect   ]); 
+					}
 					$result = $qItem->result();
 				}
 					$this->send($result);
@@ -1169,7 +1181,6 @@ class AjaxController
 			 $settingsData = [];  // null - empty array
 		}
 
-
 		$result_json = [
 			'error' => __('Something went wrong', 'shortpixel-image-optimiser'), 
 			'is_error' => true, 
@@ -1217,7 +1228,6 @@ class AjaxController
 				if ('requestAlt' === $state)
 				{
 					$remote_id = $result->remote_id; 
-				//	$qItem->retrieveAltAction($remote_id);
 					
 					$result = $optimizer->enqueueItem($qItem, ['preview_only' => true, 'action' => 'retrieveAlt', 'remote_id' => $remote_id]); 
 					$state = 'retrieveAlt';

@@ -16,6 +16,7 @@ use ShortPixel\Model\Converter\Converter as Converter;
 use ShortPixel\Controller\Optimizer\OptimizeController as OptimizeController;
 use ShortPixel\Controller\Optimizer\OptimizeAiController as OptimizeAiController;
 use ShortPixel\Controller\Optimizer\ActionController as ActionController;
+use ShortPixel\Helper\UiHelper;
 use ShortPixel\Model\AiDataModel;
 
 class QueueItem
@@ -544,6 +545,7 @@ class QueueItem
             'newFileName' => null, 
             'newPostTitle' => '', 
             'refresh' => false, 
+            'attached_post_id' => null,
        ]; 
 
        $paramlist = []; 
@@ -551,12 +553,18 @@ class QueueItem
 
        $paramlist['preview_only'] = $args['is_preview'];
 
-       $originalFile = $this->imageModel; 
-       if ($this->imageModel->isScaled())
+       if (true === $args['is_preview'])
        {
-          $originalFile = $this->imageModel->getOriginalFile(); 
+          $originalFile = UIHelper::findBestPreview($this->imageModel, 600); // Speed up previews by using small image (?) 
        }
-       
+       else
+       {
+         $originalFile = $this->imageModel; 
+         if ($this->imageModel->isScaled())
+         {
+            $originalFile = $this->imageModel->getOriginalFile(); 
+         }
+      }
        $url = $originalFile->getUrl(); 
 
        if (true === $args['do_transparent'])
@@ -576,7 +584,12 @@ class QueueItem
        }
        else
        {
-          $paramlist['newFileName'] = $originalFile->getFileBase() . '_nobg' . $original->getExtension(); 
+          $paramlist['newFileName'] = $originalFile->getFileBase() . '_nobg' . $originalFile->getExtension(); 
+       }
+
+       if (! is_null($args['attached_post_id']) && $args['attached_post_id'] > 0)
+       {
+          $paramlist['attached_post_id'] = $args['attached_post_id'];
        }
 
        $paramlist['newPostTitle'] = $args['newPostTitle'];

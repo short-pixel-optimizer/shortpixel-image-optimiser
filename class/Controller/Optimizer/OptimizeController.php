@@ -398,15 +398,22 @@ class OptimizeController extends OptimizerBase
     {
         if (false === $is_preview)
         {
+          $paramlist = $qItem->data()->paramlist; 
+
            // Handle image here / copy etc. 
            $downloadHelper = DownloadHelper::getInstance(); 
            $url = $qItem->result()->optimized; 
            $tmpFile = $downloadHelper->downloadFile($url);
-           $newPostTitle = $qItem->data()->paramlist['newPostTitle'];
+           $newPostTitle = $paramlist['newPostTitle'];
 
+           if (isset($paramlist['attached_post_id']))
+           {
+              $attached_post_id = $paramlist['attached_post_id']; 
+           }
+           
            $fileArray = []; 
 
-           $fileArray['name'] = $qItem->data()->paramlist['newFileName']; 
+           $fileArray['name'] = $paramlist['newFileName']; 
            $fileArray['tmp_name']= $tmpFile->getFullPath(); 
            $fileArray['type'] = $tmpFile->getMime();  // @todo 
            $fileArray['size'] = $tmpFile->getFileSize(); 

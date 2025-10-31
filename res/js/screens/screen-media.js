@@ -74,13 +74,14 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		else if ('gutenberg' == uiType)
 		{
 			var parent = document.querySelector('.attachment-info .details')
-			button.classList.add('button-link');
-			button.style.display = 'inline';
-			parent.append(button);
+			if (null !== parent)
+			{
+				button.classList.add('button-link');
+				button.style.display = 'inline';
+				parent.append(button);
+			}
 		}
 		
-		window.addEventListener('shortpixel.mediaEditorPreviewLoaded', this.MediaEditorPreviewEvent.bind(this));
-
 	}
 
 	OpenEditorEvent(event)
@@ -118,6 +119,9 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				 opener: opener, 
 			 }
 		} ); 
+		
+		modal.closeEvent = closeEvent;  // if works, quite dirty.
+
 		document.addEventListener('shortpixel-media-modal-close', (event) => {
 				let detail = event.detail; 
 				detail.modal.remove();
@@ -134,9 +138,9 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				}
 		}, { once: true });
 
-
 		backgroundShade.addEventListener('click', () => { document.dispatchEvent(closeEvent)});
 
+		// hide underlaying popups for now. 
 		if ('gallery' == opener || 'gutenberg' == opener)
 		{
 			var WPmodals = document.querySelectorAll('#wp-media-modal, .media-modal-backdrop'); 
@@ -164,10 +168,9 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				 	this.MediaEditorDoAction({ preview: true, 'item_id': item_id, 'modal' : modal, 'refresh' : true, 'opener' : opener});
 			});
 
-
 			let saveButton = modal.querySelector('[data-action="media-save-button"]'); 
 			saveButton.addEventListener('click', () =>  { 
-				 this.MediaEditorDoAction({ preview: false, 'item_id': item_id, 'modal' : modal, 'refresh' : false, 'opener' : opener});
+				 this.MediaEditorDoAction({ preview: false, 'item_id': item_id, 'modal' : modal, 'refresh' : true, 'opener' : opener});
 			});
 
 
@@ -198,6 +201,14 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		let previewImage = document.querySelector('.modal-wrapper .image-preview i'); 
 		previewImage.style.backgroundImage = 'url(' + previewImage.dataset.placeholder + ')';
 
+		if ('gutenberg' == data.opener)
+		{
+			let searchParams = new URLSearchParams(window.location.search);
+			if (searchParams.post)
+				{
+					 data.attached_post_id = searchParams.post; 
+				}			 
+		}
 
 		if (typeof data.refresh !== 'undefined')
 		{
@@ -209,7 +220,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		}
 
 		spinner.classList.remove('shortpixel-hide');
-
 
 		let request = {
 			id: data.item_id,
@@ -227,15 +237,17 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		request.callback = 'shortpixel.mediaEditorPreviewLoaded';
 		this.processor.AjaxRequest(request);
 
+		window.addEventListener('shortpixel.mediaEditorPreviewLoaded',  function (event) {
+				this.MediaEditorPreviewEvent(event, modal);
+		}.bind(this), {once:true});
 	}
 
-	MediaEditorPreviewEvent(event)
+	MediaEditorPreviewEvent(event, modal)
 	{
-		 let data = event.detail; 
-console.log('Preview Load', data); 
+		let data = event.detail; 
 
-		let errorElement = document.querySelector('.error-message'); 
-		let spinner = document.querySelector('.load-preview-spinner'); 
+		let errorElement = modal.querySelector('.error-message'); 
+		let spinner = modal.querySelector('.load-preview-spinner'); 
 
 		 if (true === data.is_error)
 		 {
@@ -244,7 +256,10 @@ console.log('Preview Load', data);
 		 }
 		 if (true === data.is_done)
 		 {
-			 spinner.classList.add('shortpixel-hide');
+			if (spinner)
+			{
+				 spinner.classList.add('shortpixel-hide');
+			}
 		 }
 
 		 if (data.optimized)
@@ -252,10 +267,19 @@ console.log('Preview Load', data);
 			 errorElement.classList.add('shortpixel-hide');
 			 let previewImage = document.querySelector('.modal-wrapper .image-preview i'); 
 			 previewImage.style.backgroundImage = 'url("' + data.optimized + '?ts=' + Date.now() + '")'; 
+		}
+
+		 if (typeof data.redirect !== 'undefined' && 'gutenberg' == data.redirect && data.new_attach_id)
+		 {
+
+			// Documentation is media-template.php and media-attachment.js 
+			var lib = wp.media.frame.state().get('library');
+			var file = data.file;
+			lib.add(file);	
+			document.dispatchEvent(modal.closeEvent);
 
 		 }
-
-		 if (typeof data.redirect !== 'undefined')
+		 else if (typeof data.redirect !== 'undefined')
 		 {
 			window.location.href = data.redirect;
 		 }
@@ -663,6 +687,12 @@ console.log('modal', this);
 			return false;
 		}
 		var element = this.GetPageAttachmentAlt();
+
+		if (null == element)
+		{
+			console.warn('Could not attach ID interface here! '); 
+			return false; 
+		}
 
 		var wrapper = document.getElementById('shortpixel-ai-wrapper-' + item_id);
 
