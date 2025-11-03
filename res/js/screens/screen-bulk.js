@@ -159,7 +159,6 @@ class ShortPixelScreen extends ShortPixelScreenBase
 	DoActionEvent(event)
 	{
 		var element = event.target;
-		var action = element.getAttribute('data-action');
 
 		// Might be the child
 		if (element.getAttribute('data-action') == null)
@@ -170,6 +169,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
 		{
 			return false;
 		}
+    
 		var actionName = element.getAttribute('data-action');
 		var isPanelAction = (actionName == 'open-panel');
 

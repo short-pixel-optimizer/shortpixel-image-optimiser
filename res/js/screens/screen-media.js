@@ -119,8 +119,35 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				 opener: opener, 
 			 }
 		} ); 
+
+		var buttonEventUnblock = new CustomEvent('shortpixel-media-modal-buttons-unblock', { detail: {toggle : 'on'}});
+		var buttonEventBlock = new CustomEvent('shortpixel-media-modal-buttons-block', { detail: {toggle : 'off'}});
 		
+
 		modal.closeEvent = closeEvent;  // if works, quite dirty.
+		modal.toggleButtonBlock = buttonEventBlock; 
+		modal.toggleButtonUnblock = buttonEventUnblock; 
+
+		//modal.addEventListener('shortpixel-media-modal-buttons-unblock, shortpixel-media-modal-buttons-block',
+		var buttonEvent = (event) => {
+			var toggle = event.detail.toggle; 
+			console.log('toggle buttons');
+			var buttons = modal.querySelectorAll('button[type="button"]');
+
+			for (var i = 0; i < buttons.length; i++)
+			{
+				if ('on' == toggle)
+				{
+					buttons[i].disabled = false; 
+				}
+				else
+				{
+					buttons[i].disabled = true; 
+				}
+			}
+		}; 
+		modal.addEventListener('shortpixel-media-modal-buttons-unblock', buttonEvent);
+		modal.addEventListener('shortpixel-media-modal-buttons-block', buttonEvent);
 
 		document.addEventListener('shortpixel-media-modal-close', (event) => {
 				let detail = event.detail; 
@@ -201,12 +228,14 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		let previewImage = document.querySelector('.modal-wrapper .image-preview i'); 
 		previewImage.style.backgroundImage = 'url(' + previewImage.dataset.placeholder + ')';
 
+		modal.dispatchEvent(modal.toggleButtonBlock);
+
 		if ('gutenberg' == data.opener)
 		{
 			let searchParams = new URLSearchParams(window.location.search);
-			if (searchParams.post)
+			if (searchParams.has('post'))
 				{
-					 data.attached_post_id = searchParams.post; 
+					 data.attached_post_id = searchParams.get('post'); 
 				}			 
 		}
 
@@ -234,6 +263,12 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			refresh: refresh, 
 			opener: data.opener,
 		};
+
+		if (data.attached_post_id)
+		{
+			request.attached_post_id = data.attached_post_id;
+		}
+
 		request.callback = 'shortpixel.mediaEditorPreviewLoaded';
 		this.processor.AjaxRequest(request);
 
@@ -283,6 +318,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		 {
 			window.location.href = data.redirect;
 		 }
+		 modal.dispatchEvent(modal.toggleButtonUnblock);
 	}
 
 	FetchAltView(aiData, item_id)

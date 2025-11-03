@@ -2,6 +2,7 @@
 namespace ShortPixel;
 
 use ShortPixel\Controller\Optimizer\OptimizeAiController;
+use ShortPixel\Helper\UiHelper;
 
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
@@ -17,13 +18,13 @@ $approx = $this->view->approx;
 				<?php echo  ($this->view->approx->custom->has_custom === true) ? 1 : 0;  ?>
 			</span>
 
+	 <?php $this->loadView('bulk/part-progressbar', false); ?>
+
       <h3 class="heading">
         <?php esc_html_e('ShortPixel Bulk Optimization - Select Images', 'shortpixel-image-optimiser'); ?>
       </h3>
 
       <p class='description'><?php esc_html_e('Select the type of images that ShortPixel should optimize for you.','shortpixel-image-optimiser'); ?></p>
-
-       <?php $this->loadView('bulk/part-progressbar', false); ?>
 
       <div class='load wrapper' >
          <div class='loading'>
@@ -46,25 +47,20 @@ $approx = $this->view->approx;
               <p><?php _e('ShortPixel has detected that there are no more resources available during preparation. The plugin will try to complete the process, but may be slower. Increase memory, disable heavy plugins or reduce the number of prepared items per load.', 'shortpixel-image-optimiser'); ?></p>
 
         </div>
-
-
       </div>
 
        <div class="interface wrapper">
-
 				 <div class="option-block">
 
-					 <h2><?php esc_html_e('Optimize:','shortpixel-image-optimiser'); ?> </h2>
-					 <p><?php printf(esc_html__('ShortPixel has %sestimated%s the number of images that can still be optimized. %sAfter you select the options, the plugin will calculate exactly how many images to optimize.','shortpixel-image-optimiser'), '<b>','</b>', '<br />'); ?></p>
+					<!-- <h2><?php esc_html_e('Optimize:','shortpixel-image-optimiser'); ?> </h2> -->
+				<!--	 <p><?php printf(esc_html__('ShortPixel has %sestimated%s the number of images that can still be optimized. %sAfter you select the options, the plugin will calculate exactly how many images to optimize.','shortpixel-image-optimiser'), '<b>','</b>', '<br />'); ?></p>
 
 					 <?php if ($approx->media->isLimited): ?>
 						 <h4 class='count_limited'><?php esc_html_e('ShortPixel has detected a high number of images. This estimates are limited for performance reasons. On the next step an accurate count will be produced', 'shortpixel-image-optimiser'); ?></h4>
 					 <?php endif; ?>
-
+				 -->
 
 	         <div class="media-library optiongroup">
-
-
 	            <div class='switch_button'>
 	              <label>
 	                <input type="checkbox" class="switch" id="media_checkbox" checked>
@@ -123,7 +119,7 @@ $approx = $this->view->approx;
 
 				</div>	
 
-				<div class='switch_button'>
+				<div class='switch_button indent'>
 				<label>
 		               <input type="checkbox" class="switch" id="aipreserve_checkbox" name="aipreserve_checkbox"
 		                <?php checked(\wpSPIO()->settings()->aiPreserve); ?>  />
@@ -154,20 +150,6 @@ $approx = $this->view->approx;
 	            </div>
 	         </div>
 
-
-			<h2><?php _e('Limit bulk', 'shortpixel-image-optimiser'); ?></h2>
-
-			<div class='bulk-date-picker'>
-				<?php printf(esc_html__('Optimize items between  %s and %s ', 'shortpixel-image-optimiser'), 
-				'<span class="date-picker-container">
-					
-				<label><input type="text" name="start-date" id="bulk-start-date" value="" placeholder="' . __('Select a date' ,'shortpixel-image-optimiser') . '" /></label></span>', 
-				'<span class="date-picker-container">
-				
-				<label><input type="text" name="end-date" id="bulk-end-date" value="" placeholder="' . __('Select a date' ,'shortpixel-image-optimiser') . '" /></label></span>'
-				); ?>
-			</div>
-
 <!--
 			<div class='maximum-items'> 
 			<div class='switch_button'>
@@ -185,9 +167,21 @@ $approx = $this->view->approx;
 			</div>
 			-->			
 
-				</div> <!-- // optimize block -->
+				</div> <!-- // option top block -->
 
-				 <div class="option-block selection-settings">
+				<div class='wrap-collap'>
+
+				<input type="checkbox" id="advanced-settings" class='collap-checkbox'>       
+
+				<label for="advanced-settings">     
+					<span class='collap-arrow'><?php echo UIHelper::getIcon('res/images/icon/chevron.svg'); ?></span> 
+					<span><?php esc_html_e('Advanced Settings', 'shortpixel_image_optimizer'); ?></span>
+					<hr>
+				</label>
+
+				<div class='collap-content'>
+
+				<div class="option-block selection-settings">
 					 <h2><?php esc_html_e('Options','shortpixel-image-optimiser') ?>: </h2>
 						 <p><?php esc_html_e('Enable these options if you also want to create WebP/AVIF files. These options change the global ShortPixel settings of your site.','shortpixel-image-optimiser'); ?></p>
 		         <div class='optiongroup'  >
@@ -255,7 +249,28 @@ $approx = $this->view->approx;
          <p><?php _e('I understand that background optimization may pause if there are no visitors on the website.', 'shortpixel-image-optimiser'); ?></p></div>
 
        </div>
-		 </div> <!-- option block -->
+
+	   <h2><?php _e('Limit bulk', 'shortpixel-image-optimiser'); ?></h2>
+
+<div class='bulk-date-picker'>
+	<?php printf(esc_html__('Optimize items between  %s and %s ', 'shortpixel-image-optimiser'), 
+	'<span class="date-picker-container">
+		
+	<label><input type="text" name="start-date" id="bulk-start-date" value="" placeholder="' . __('Select a date' ,'shortpixel-image-optimiser') . '" /></label></span>', 
+	'<span class="date-picker-container">
+	
+	<label><input type="text" name="end-date" id="bulk-end-date" value="" placeholder="' . __('Select a date' ,'shortpixel-image-optimiser') . '" /></label></span>'
+	); ?>
+</div>
+		</div> <!-- option block -->
+
+
+
+				</div> <!-- COLLAP CONTENT --> 
+				</div> <!--- WRAP COLLAP --> 
+
+				
+
 
  	 	 <div class="option-block">
        <div class='optiongroup' data-check-visibility="false" data-control="data-check-approx-total">

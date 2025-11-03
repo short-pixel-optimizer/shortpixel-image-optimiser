@@ -44,7 +44,7 @@ class BulkViewController extends \ShortPixel\ViewController
     $this->view->stats = $queueController->getStartupData();
     $this->view->approx = $this->getApproxData();
 
-    $this->view->logHeaders = array(__('Images', 'shortpixel_image_optimiser'), __('Errors', 'shortpixel_image_optimizer'), __('Date', 'shortpixel_image_optimizer'));
+    $this->view->logHeaders = array(__('Images', 'shortpixel_image_optimiser'), __('Errors', 'shortpixel_image_optimizer'), __('Date', 'shortpixel_image_optimizer'), '');
     $this->view->logs = $this->getLogs();
 
     $keyControl = ApiKeyController::getInstance();
