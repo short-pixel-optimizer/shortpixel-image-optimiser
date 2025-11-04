@@ -1,6 +1,8 @@
 <?php
 namespace ShortPixel\Controller;
 
+use ShortPixel\Controller\Api\RequestManager;
+
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
@@ -9,7 +11,7 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Model\ResponseModel as ResponseModel;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
-
+use ShortPixel\Controller\Api\ApiController as ApiController;
 
 class ResponseController
 {
@@ -159,7 +161,7 @@ class ResponseController
 
 			switch($item->apiStatus)
 			{
-				  case ApiController::STATUS_FAIL:
+				  case RequestManager::STATUS_FAIL:
 							$text .= sprintf(__('( %s %d ) ', 'shortpixel-image-optimizer'), (strtolower($item->item_type) == 'media') ?  __('Attachment ID ') : __('Custom Type '), $item->item_id);
 					break;
 			}
@@ -187,17 +189,17 @@ class ResponseController
 
 				switch($item->apiStatus)
 				{
-					 case ApiController::STATUS_SUCCESS:
+					 case RequestManager::STATUS_SUCCESS:
 					 	$text = __('Item successfully optimized', 'shortpixel-image-optimiser');
 					 break;
 
-					 case ApiController::STATUS_FAIL:
+					 case RequestManager::STATUS_FAIL:
 					 case ApiController::ERR_TIMEOUT:
 						 if (self::$screenOutput < self::OUTPUT_CLI)
 						 {
 						 }
 					 break;
-           case ApiController::STATUS_NOT_API:
+           case RequestManager::STATUS_NOT_API:
               $action = (property_exists($item, 'action')) ? ucfirst($item->action) : __('Action', 'shortpixel-image-optimiser');
               $filename = (property_exists($item, 'fileName')) ? $item->fileName : '';
               $text = sprintf(__('%s completed for %s'), $action, $item->fileName);
@@ -210,7 +212,6 @@ class ResponseController
            if ($item->tries > 0)
 					      $text .= sprintf(__('(cycle %d)', 'shortpixel-image-optimiser'), intval($item->tries) );
 				}
-
 				return $text;
 		}
 

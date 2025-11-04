@@ -56,7 +56,7 @@ class UncodeController
       $mediaItem = $fs->getImage($media_id, 'media');
       if ($mediaItem->isProcessable())
       {
-          $control = new \Shortpixel\Controller\OptimizeController();
+          $control = new \Shortpixel\Controller\QueueController();
           $control->addItemToQueue($mediaItem);
       }
 

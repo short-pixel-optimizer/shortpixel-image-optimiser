@@ -6,10 +6,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-use ShortPixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\Controller\QueueController as QueueController;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
-
-use ShortPixel\Controller\ApiController as API;
 
 
 // @todo Custom Model for adding files, instead of meta DAO.
@@ -21,8 +19,8 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
     protected $type = 'custom';
 
-    protected $thumbnails = array(); // placeholder, should return empty.
-    protected $retinas = array(); // placeholder, should return empty.
+    protected $thumbnails = []; // placeholder, should return empty.
+    protected $retinas = []; // placeholder, should return empty.
 
     protected $in_db = false;
     protected $is_stub = false;
@@ -41,11 +39,6 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         if ($id > 0)
 				{
           $bool = $this->loadMeta();
-					/*if ($bool)
-					{
-				  	$this->setWebp();
-				  	$this->setAvif();
-					} */
 				}
         else
         {
@@ -71,6 +64,15 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 			$data = $this->getOptimizeData();
 			return array_values($data['urls']);
 
+    }
+
+    /** Is WordPress scaled is always false on custom images.
+     * 
+     * @return false 
+     */
+    public function isScaled()
+    {
+       return false; 
     }
 
     protected function getExcludePatterns()
@@ -155,9 +157,11 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
          case 'avifs':
             $count = count($this->getAvifs());
          break;
+         /*  Never happens / function not here (?)
          case 'retinas':
            $count = count($this->getRetinas());
          break;
+         */
       }
 
 
@@ -169,10 +173,22 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     {
         $bool = parent::isProcessable();
 
+
+        if (true === $bool && false !== $this->checkDateExcluded())
+        {
+          $date_bool = $this->isDateExcluded();
+          if (true === $date_bool)
+          {
+             return false; 
+          }
+        } 
+
 				if($strict)
 				{
 					return $bool;
 				}
+
+
 
 				// The exclude size on the  image - via regex - if fails, prevents the whole thing from optimization.
 				if ($this->processable_status == ImageModel::P_EXCLUDE_SIZE || $this->processable_status == ImageModel::P_EXCLUDE_PATH)
@@ -294,9 +310,6 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 				 $this->setMeta('compressedSize', 0);
 				 $this->setMeta('compressionType', null);
 
-
-        $this->saveMeta();
-
         $webps = $this->getWebps();
         foreach($webps as $webpFile)
             $webpFile->delete();
@@ -304,6 +317,11 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         $avifs = $this->getAvifs();
         foreach($avifs as $avifFile)
             $avifFile->delete();
+
+
+        $this->setMeta('webp', null);
+        $this->setMeta('avif', null);
+        $this->saveMeta();
 			 }
 			 else
 			 {
@@ -390,7 +408,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
       if (! is_numeric($imagerow->message) && ! is_null($imagerow->message))
         $metaObj->errorMessage = $imagerow->message;
 
-      $metaObj->did_keepExif = (intval($imagerow->keep_exif) == 1)  ? true : false;
+      $metaObj->did_keepExif = intval($imagerow->keep_exif);
 
       $metaObj->did_cmyk2rgb = (intval($imagerow->cmyk2rgb) == 1) ? true : false;
 
@@ -498,10 +516,74 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
          return false;
     }
 
+    protected function isDateExcluded()
+    {
+        // @todo Implement
+        $options = $this->checkDateExcluded();
+
+
+        if ($this->getMeta('tsOptimized') > 0)
+          $timestamp = $this->getMeta('tsOptimized');
+        else
+          $timestamp = $this->getMeta('tsAdded');
+
+        $itemDate = new \DateTime();
+        $itemDate->setTimestamp($timestamp);
+
+
+        try{
+          $date = new \DateTime($options['date']); 
+        }
+        catch(\Exception $e)
+        {
+          Log::addError('[Custom] Date exclusion - not valid date'); 
+          return false; 
+        }
+
+        $when = isset($options['when']) ? $options['when'] : 'before'; 
+
+        $bool = false; 
+
+        switch($when)
+        {
+          case 'before':
+            if ($date->format('U') > $itemDate->format('U'))
+            {
+              $bool = true; 
+            }
+          break; 
+          case 'after': 
+          default:
+          if ($date->format('U') < $itemDate->format('U'))
+            {
+              $bool = true; 
+            }
+          break; 
+        }
+
+        if (true === $bool)
+        {
+          $this->processable_status = ImageModel::P_EXCLUDE_DATE; 
+        }
+
+        return $bool; 
+
+    }
+  
+
     // Only one item for now, so it's equal
     public function isSomethingOptimized()
     {
        return $this->isOptimized();
+    }
+
+    public function getSomethingOptimized()
+    {
+      if ($this->isOptimized())
+      {
+        return $this; 
+      } 
+      return false; 
     }
 
     public function resetPrevent()
@@ -560,7 +642,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
             'folder_id' => $this->folder_id,
             'compressed_size' => $metaObj->compressedSize,
             'compression_type' => $metaObj->compressionType,
-            'keep_exif' =>  ($metaObj->did_keepExif) ? 1 : 0,
+            'keep_exif' =>  intval($metaObj->did_keepExif),
             'cmyk2rgb' =>  ($metaObj->did_cmyk2rgb) ? 1 : 0,
             'resize' =>  ($metaObj->resize) ? 1 : 0,
             'resize_width' => $metaObj->resizeWidth,
@@ -642,17 +724,16 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
 			public function dropFromQueue()
 			{
-				 $optimizeController = new OptimizeController();
+				 $queueController = new QueueController();
 
-				 $q = $optimizeController->getQueue($this->type);
-				 $q->dropItem($this->get('id'));
+				 $queue = $queueController->getQueue($this->type);
+				 $queue->dropItem($this->get('id'));
 
 				 // Drop also from bulk if there.
+				 $queueController = new QueueController(['is_bulk' => true]);
 
-				 $optimizeController->setBulk(true);
-
-				 $q = $optimizeController->getQueue($this->type);
-				 $q->dropItem($this->get('id'));
+				 $queue = $queueController->getQueue($this->type);
+				 $queue->dropItem($this->get('id'));
 			}
 
     public function getImprovement($int = false)

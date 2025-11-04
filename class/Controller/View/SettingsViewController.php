@@ -18,8 +18,15 @@ use ShortPixel\Model\ApiKeyModel as ApiKeyModel;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 use ShortPixel\Controller\BulkController as BulkController;
 use ShortPixel\Controller\StatsController as StatsController;
+use ShortPixel\Controller\QuotaController as QuotaController;
+use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
+use ShortPixel\Controller\QueueController as QueueController;
 
-
+use ShortPixel\Controller\CacheController as CacheController;
+use ShortPixel\Controller\Optimizer\OptimizeAiController;
+use ShortPixel\Controller\View\BulkViewController as BulkViewController;
+use ShortPixel\External\Offload\Offloader;
+use ShortPixel\Model\AiDataModel;
 use ShortPixel\NextGenController as NextGenController;
 
 class SettingsViewController extends \ShortPixel\ViewController
@@ -28,7 +35,7 @@ class SettingsViewController extends \ShortPixel\ViewController
      //env
      protected $is_nginx;
      protected $is_htaccess_writable;
-		 protected $is_gd_installed;
+		 protected $has_image_library;
 		 protected $is_curl_installed;
      protected $is_multisite;
      protected $is_mainsite;
@@ -45,11 +52,17 @@ class SettingsViewController extends \ShortPixel\ViewController
      );
 
      protected $display_part = 'overview';
-		 protected $all_display_parts = array('overview', 'dashboard', 'optimisation', 'cloudflare', 'debug', 'tools');
+     protected $all_display_parts = array('overview', 'optimisation','exclusions', 'processing', 'webp','ai', 'integrations', 'debug', 'tools', 'help');
      protected $form_action = 'save-settings';
      protected $view_mode = 'simple'; // advanced or simple
+		 protected $is_ajax_save = false; // checker if saved via ajax ( aka no redirect / json return )
+		 protected $notices_added = []; // Added notices this run, to report via ajax.
+
+     // Array of updated values to be passed back in the settings page
+     protected $returnFormData = []; 
 
 		 protected static $instance;
+     protected $model;
 
       public function __construct()
       {
@@ -63,17 +76,14 @@ class SettingsViewController extends \ShortPixel\ViewController
       // default action of controller
       public function load()
       {
-
         $this->loadEnv();
         $this->checkPost(); // sets up post data
 
-      /*
-         This should be done now in ApiKeyModel
-      if (2 !== $this->model->redirectedSettings)
 
+        if ($this->model->redirectedSettings < 2)
         {
           $this->model->redirectedSettings = 2; // Prevents any redirects after loading settings
-        } */;
+        };
 
         if ($this->is_form_submit)
         {
@@ -83,34 +93,53 @@ class SettingsViewController extends \ShortPixel\ViewController
         $this->load_settings();
       }
 
+			public function saveForm()
+			{
+				 $this->loadEnv();
+
+			}
+
+      public function indicateAjaxSave()
+      {
+           $this->is_ajax_save = true;
+      }
+
       // this is the nokey form, submitting api key
       public function action_addkey()
       {
         $this->loadEnv();
 
-        $this->checkPost();
+        $this->checkPost(false);
 
         if ($this->is_form_submit && isset($_POST['apiKey']))
         {
             $apiKey = sanitize_text_field($_POST['apiKey']);
+
             if (strlen(trim($apiKey)) == 0) // display notice when submitting empty API key
             {
               Notice::addError(sprintf(__("The key you provided has %s characters. The API key should have 20 characters, letters and numbers only.",'shortpixel-image-optimiser'), strlen($apiKey) ));
             }
             else
             {
-              $this->keyModel->resetTried();
-              $this->keyModel->checkKey($apiKey);
+
+            $this->keyModel->resetTried();
+            $this->keyModel->checkKey($apiKey);
             }
         }
 
-        $this->doRedirect();
+        if (true === $this->keyModel->is_verified())
+        {
+          $this->doRedirect('reload');
+        }
+        else {
+          $this->doRedirect();
+        }
       }
 
 			public function action_request_new_key()
 			{
 					$this->loadEnv();
- 	        $this->checkPost();
+ 	        $this->checkPost(false);
 
 					$email = isset($_POST['pluginemail']) ? trim(sanitize_text_field($_POST['pluginemail'])) : null;
 
@@ -121,26 +150,12 @@ class SettingsViewController extends \ShortPixel\ViewController
 						return;
 					}
 
-					// Old code starts here.
-	        if( $this->keyModel->is_verified() === true) {
-	            $this->load(); // already verified?
-							return;
-	        }
 
 					$bodyArgs = array(
 							'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
 							'email' => $email,
 							'ip' => isset($_SERVER["HTTP_X_FORWARDED_FOR"]) ? sanitize_text_field($_SERVER["HTTP_X_FORWARDED_FOR"]) : sanitize_text_field($_SERVER['REMOTE_ADDR']),
 					);
-
-					$affl_id = false;
-					$affl_id = (defined('SHORTPIXEL_AFFILIATE_ID')) ? SHORTPIXEL_AFFILIATE_ID : false;
-					$affl_id = apply_filters('shortpixel/settings/affiliate', $affl_id); // /af/bla35
-
-					if ($affl_id !== false)
-					{
-						 $bodyArgs['affiliate'] = $affl_id;
- 					}
 
 	        $params = array(
 	            'method' => 'POST',
@@ -178,6 +193,8 @@ class SettingsViewController extends \ShortPixel\ViewController
 	                \ShortPixel\Controller\AdminNoticesController::resetAPINotices();
 
 	            }
+							$this->doRedirect('reload');
+
 	        }
 					elseif($body->Status == 'existing')
 					{
@@ -186,30 +203,78 @@ class SettingsViewController extends \ShortPixel\ViewController
 					else
 					{
 						 Notice::addError( __('Unexpected error obtaining the ShortPixel key. Please contact support about this:', 'shortpixel-image-optimiser') . '  ' . json_encode($body) );
-					}
 
+					}
 					$this->doRedirect();
 
 			}
 
+      public function action_end_quick_tour()
+      {
+          $this->loadEnv();
+          $this->checkPost(false);
+
+          $this->model->redirectedSettings = 3;
+
+          $this->doRedirect('reload');
+      }
+
+      public function action_debug_editSetting()
+      {
+
+        $this->loadEnv();
+        $this->checkPost(false);
+
+        $setting_name =  isset($_POST['edit_setting']) ? sanitize_text_field($_POST['edit_setting']) : false;
+        $new_value = isset($_POST['new_value']) ? sanitize_text_field($_POST['new_value']) : false;
+        $submit_name = isset($_POST['Submit']) ? sanitize_text_field($_POST['Submit']) : false; 
+
+      //  $apiKeyModel = (isset($_POST['apiKeySettings']) && 'true' == $_POST['apikeySettings'])  ? true : false;
+
+      // @todo ApiKeyModel will not really work, for no autosave/ public save, only via keychecks. Will be an issue when updating redirectedSettings, probably move back to settings where it was.
+        if ($setting_name !== false && $new_value !== false)
+        {
+        //    $model = ($apiKeyModel) ? $this->keyModel : $this->model;
+            $model = $this->model;
+            if ($model->exists($setting_name))
+            {
+              if ('remove' == $submit_name)
+              {
+                 $this->model->deleteOption($setting_name);
+              }
+              else
+              {
+                 $this->model->$setting_name = $new_value;
+              }
+              
+            }
+        }
+        
+
+        $this->doRedirect();
+      }
+
 			public function action_debug_redirectBulk()
 			{
-				$this->checkPost();
+				$this->checkPost(false);
 
-				OptimizeController::resetQueues();
+				QueueController::resetQueues();
 
 				$action = isset($_REQUEST['bulk']) ? sanitize_text_field($_REQUEST['bulk']) : null;
 
-				if ($action == 'migrate')
+				if ('migrate' == $action)
 				{
 					$this->doRedirect('bulk-migrate');
 				}
-
-				if ($action == 'restore')
+				elseif ('restore' == $action)
 				{
 					$this->doRedirect('bulk-restore');
 				}
-				if ($action == 'removeLegacy')
+        elseif ('restoreAI' == $action)
+        {
+          $this->doRedirect('bulk-restoreAI');
+        }
+				elseif ('removeLegacy' == $action)
 				{
 					 $this->doRedirect('bulk-removeLegacy');
 				}
@@ -219,34 +284,34 @@ class SettingsViewController extends \ShortPixel\ViewController
       public function action_debug_resetStats()
       {
           $this->loadEnv();
-					$this->checkPost();
+					$this->checkPost(false);
           $statsController = StatsController::getInstance();
           $statsController->reset();
-					$this->doRedirect();
+					$this->doRedirect('reload');
       }
 
       public function action_debug_resetquota()
       {
 
           $this->loadEnv();
-					$this->checkPost();
+					$this->checkPost(false);
           $quotaController = QuotaController::getInstance();
           $quotaController->forceCheckRemoteQuota();
-          $this->doRedirect();
+					$this->doRedirect('reload');
       }
 
       public function action_debug_resetNotices()
       {
           $this->loadEnv();
-					$this->checkPost();
+					$this->checkPost(false);
           Notice::resetNotices();
           $nControl = new Notice(); // trigger reload.
-          $this->doRedirect();
+					$this->doRedirect('reload');
       }
 
 			public function action_debug_triggerNotice()
 			{
-				$this->checkPost();
+				$this->checkPost(false);
 				$key = isset($_REQUEST['notice_constant']) ? sanitize_text_field($_REQUEST['notice_constant']) : false;
 
 				if ($key !== false)
@@ -274,16 +339,27 @@ class SettingsViewController extends \ShortPixel\ViewController
 			public function action_debug_resetQueue()
 			{
 				 $queue = isset($_REQUEST['queue']) ? sanitize_text_field($_REQUEST['queue']) : null;
+
 				 $this->loadEnv();
-				 $this->checkPost();
+				 $this->checkPost(false);
+
+         $uninstall = isset($_REQUEST['use_uninstall']) ? true : false;
 
 				 if (! is_null($queue))
 				 {
-					 	 	$opt = new OptimizeController();
+					 	 	$opt = new QueueController();
+
+              if (true === $uninstall)
+              {
+                  Log::addDebug("Using Debug UnInstall");
+                  QueueController::uninstallPlugin();
+                  $this->doRedirect('');
+              }
 				 		 	$statsMedia = $opt->getQueue('media');
 				 			$statsCustom = $opt->getQueue('custom');
 
-				 			$opt->setBulk(true);
+              $opt = new QueueController(['is_bulk' => true]);
+
 
 				 		 	$bulkMedia = $opt->getQueue('media');
 				 			$bulkCustom = $opt->getQueue('custom');
@@ -314,13 +390,13 @@ class SettingsViewController extends \ShortPixel\ViewController
 						 Notice::addSuccess($message);
 			 }
 
-				$this->doRedirect();
+				$this->doRedirect('reload');
 			}
 
 			public function action_debug_removePrevented()
 			{
 				$this->loadEnv();
-				$this->checkPost();
+				$this->checkPost(false);
 
 				global $wpdb;
 				$sql = 'delete from ' . $wpdb->postmeta . ' where meta_key = %s';
@@ -337,12 +413,11 @@ class SettingsViewController extends \ShortPixel\ViewController
 
 			public function action_debug_removeProcessorKey()
 			{
-				//$this->loadEnv();
-				$this->checkPost();
+				$this->checkPost(false);
 
 				$cacheControl = new CacheController();
 				$cacheControl->deleteItem('bulk-secret');
-				exit('reloading settings would cause processorKey to be set again');
+				exit('reloading settings would cause processorKey to be set again. Navigate away');
 			}
 
       protected function processSave()
@@ -352,17 +427,16 @@ class SettingsViewController extends \ShortPixel\ViewController
           {
               $nextgen = NextGenController::getInstance();
               $previous = $this->model->includeNextGen;
-              $nextgen->enableNextGen(true);
+          //    $nextgen->enableNextGen(true);
 
               // Reset any integration notices when updating settings.
               AdminNoticesController::resetIntegrationNotices();
           }
 
-Log::addTemp('PostData', $this->postData);
 					// If the compression type setting changes, remove all queued items to prevent further optimizing with a wrong type.
 					if (intval($this->postData['compressionType']) !== intval($this->model->compressionType))
 					{
-						 OptimizeController::resetQueues();
+						 QueueController::resetQueues();
 					}
 
           if (isset($_POST['apiKey']) && false === $this->keyModel->is_constant())
@@ -379,21 +453,43 @@ Log::addTemp('PostData', $this->postData);
             $this->model->{$name} = $value;
           }
 
+					// Check at the model if any checkboxes are not checked.
+					$data = $this->model->getData();
+
+					foreach($data as $name => $value)
+					{
+							$type = $this->model->getType($name);
+							if ('boolean' === $type )
+							{
+                if( ! isset($this->postData[$name]))
+                {
+								  $this->model->{$name} = false;
+                }
+                else
+                {
+                   $this->model->{$name} = true; 
+                }
+							}
+					}
+
 					// Every save, force load the quota. One reason, because of the HTTP Auth settings refresh.
 					$this->loadQuotaData(true);
           // end
 
-          if ($this->do_redirect)
+					if ($this->do_redirect)
+					{
             $this->doRedirect('bulk');
-          else {
+					}
+					elseif (false === $this->is_ajax_save) {
 
 						$noticeController = Notice::getInstance();
 						$notice = Notice::addSuccess(__('Settings Saved', 'shortpixel-image-optimiser'));
 						$notice->is_removable = false;
 						$noticeController->update();
 
-            $this->doRedirect();
+
           }
+					  $this->doRedirect();
       }
 
       /* Loads the view data and the view */
@@ -423,9 +519,30 @@ Log::addTemp('PostData', $this->postData);
 
          $this->view->allThumbSizes = $excludeOptions;
          $this->view->averageCompression = $statsControl->getAverageCompression();
+
         // $this->view->savedBandwidth = UiHelper::formatBytes( intval($this->view->data->savedSpace) * 10000,2);
 
+         // @todo this might be converted at some point tho view->env or something to divide better. 
+         $offLoader = Offloader::getInstance();
          $this->view->cloudflare_constant = defined('SHORTPIXEL_CFTOKEN') ? true : false;
+         $this->view->is_unlimited =  (!is_null($this->quotaData) && $this->quotaData->unlimited) ? true : false;
+         $this->view->is_wpoffload = $offLoader->isActive('wp-offload');
+
+         require_once( ABSPATH . 'wp-admin/includes/translation-install.php' );
+         $this->view->languages = wp_get_available_translations();
+        
+         $this->view->hide_banner = false; 
+         $bool = apply_filters('shortpixel/settings/no_banner', false);
+         if (true === $bool )
+            $this->view->hide_banner = true; 
+
+         if ( defined('SHORTPIXEL_NO_BANNER') && SHORTPIXEL_NO_BANNER == true)
+         {
+           $this->view->hide_banner = true; 
+         }
+          
+
+         //$this->view->latest_ai = $this->getLatestAIExamples();
 
 				 $this->view->is_unlimited= (!is_null($this->quotaData) && $this->quotaData->unlimited) ? true : false;
 
@@ -436,11 +553,27 @@ Log::addTemp('PostData', $this->postData);
            $this->avifServerCheck();
 
          // Set viewMode
-         $view_mode = get_user_option('shortpixel-settings-mode');
-         if (false === $view_mode)
-          $view_mode = $this->view_mode;
-         $this->view_mode = $view_mode;
-         $this->loadView('view-settings');
+				 if (false === $this->view->key->is_verifiedkey)
+				 {
+					 	$view_mode = 'onboarding';
+						$this->display_part = 'nokey';
+				 }
+         elseif($this->view->data->redirectedSettings < 3 && $this->view->key->is_verifiedkey)
+         {
+            $view_mode = 'page-quick-tour';
+         }
+				 else {
+					 $view_mode = get_user_option('shortpixel-settings-mode');
+	         if (false === $view_mode)
+           {
+	          $view_mode = $this->view_mode;
+           }
+
+				 }
+
+				 $this->view_mode = $view_mode;
+
+				 $this->loadView('view-settings');
       }
 
 
@@ -457,21 +590,57 @@ Log::addTemp('PostData', $this->postData);
         $mainblock->icon = 'ok';
         $mainblock->cocktail = true;
         $mainblock->header = __('Everything running smoothly.', 'shortpixel-image-optimiser');
-        $mainblock->message = __('Stay calm and carry on ', 'shortpixel-image-optimiser');
+        $mainblock->message = __('Keep calm and carry on', 'shortpixel-image-optimiser');
 
         if (false === $this->view->key->is_verifiedkey)
         {
-
-            $mainblock->ok = false;
+						/*
+						$mainblock->ok = false;
             $mainblock->header = __('Issue with API Key', 'shortpixel-image-optimiser');
             $mainblock->message = __('Add your API Key to start optimizing', 'shortpixel-image-optimiser');
             $mainblock->cocktail = false;
             $mainblock->icon = 'alert';
+						*/
+        }
+				else { // If not errors
+						 $statsController = StatsController::getInstance();
 
+						 $media_total = $statsController->find('media', 'images');
+						 $custom_total = $statsController->find('custom', 'images');
+
+						 $custom_text = ($custom_total > 0) ? sprintf(esc_html__('and %s custom images ', 'shortpixel-image-optimiser'), $custom_total) : '';
+            // $mainblock->message = '';
+
+             if ($media_total > 0)
+             {
+						         $mainblock->message = sprintf(esc_html__('%s media items %s optimized', 'shortpixel-image-optimiser'), $media_total, $custom_text);
+                     $total_sum = intval($media_total) + intval($custom_text);
+                     $mainblock->optimized = sprintf(esc_html__('%s', 'shortpixel-image-optimiser'), $total_sum);
+             }
+
+				}
+
+        $BulkViewController = BulkViewController::getInstance();
+
+        $logs = $BulkViewController->getLogs();
+        $date = '';
+
+        if (count($logs) > 0)
+        {
+           $latest = $logs[0];
+           $date = $latest['date'];
         }
 
-        $this->view->dashboard->mainblock = $mainblock;
+        $message = (count($logs) == 0) ? esc_html__('No bulk processing has been performed yet', 'shortpixel-image-optimiser') : sprintf(__('The last bulk processing ran on:  %s','shortpixel-image-optimiser'), '<br>' . $date );
 
+        $bulkblock = new \stdClass;
+        $bulkblock->icon = 'ok';
+        $bulkblock->message = $message;
+        $bulkblock->link = admin_url("upload.php?page=wp-short-pixel-bulk");
+        $bulkblock->show_button = (count($logs) == 0) ? true : false;
+
+        $this->view->dashboard->bulkblock = $bulkblock;
+        $this->view->dashboard->mainblock = $mainblock;
       }
 
 			protected function loadAPiKeyData()
@@ -486,6 +655,7 @@ Log::addTemp('PostData', $this->postData);
 				 $keyObj->is_constant_key = $this->keyModel->is_constant();
 				 $keyObj->hide_api_key = $this->keyModel->is_hidden();
 				 $keyObj->apiKey = $keyController->getKeyForDisplay();
+        // $keyObj->redirectedSettings =
 
 				 $showApiKey = false;
 
@@ -511,13 +681,17 @@ Log::addTemp('PostData', $this->postData);
 
 			protected function avifServerCheck()
       {
+           return;
+           /*
+
+            This has been superseeded in hacky solution in the Model tiself.
     			$noticeControl = AdminNoticesController::getInstance();
 					$notice = $noticeControl->getNoticeByKey('MSG_AVIF_ERROR');
 
           if (is_object($notice))
           {
 					     $notice->check();
-          }
+          } */
       }
 
       /** Checks on things and set them for information. */
@@ -526,7 +700,7 @@ Log::addTemp('PostData', $this->postData);
           $env = wpSPIO()->env();
 
           $this->is_nginx = $env->is_nginx;
-          $this->is_gd_installed = $env->is_gd_installed;
+          $this->has_image_library = ($env->is_gd_installed || $env->is_imagick_installed); // Any library 
           $this->is_curl_installed = $env->is_curl_installed;
 
           $this->is_htaccess_writable = $this->HTisWritable();
@@ -540,19 +714,38 @@ Log::addTemp('PostData', $this->postData);
           $this->display_part = (isset($_GET['part']) && in_array($_GET['part'], $this->all_display_parts) ) ? sanitize_text_field($_GET['part']) : 'overview';
       }
 
-      protected function settingLink($part, $title, $icon = false)
+      protected function settingLink($args)
       {
-          $link = esc_url(admin_url('options-general.php?page=wp-shortpixel-settings&part=' . $part ));
-          $active = ($this->display_part == $part) ? ' class="active" ' : '';
-          if (false !== $icon)
+          $defaults = [
+             'part' => '',
+             'title' => __('Title', 'shortpixel-image-optimiser'),
+             'icon' => false,
+             'icon_position' => 'left',
+             'class' => 'anchor-link',
+
+          ];
+
+          $args = wp_parse_args($args, $defaults);
+
+          $link = esc_url(admin_url('options-general.php?page=wp-shortpixel-settings&part=' . $args['part'] ));
+          $active = ($this->display_part == $args['part']) ? ' active ' : '';
+
+          $title = $args['title'];
+
+          $class = $active . $args['class'];
+
+          if (false !== $args['icon'])
           {
-             $title = '<i class="' . esc_attr($icon) . '"></i>' . $title;
+             $icon  = '<i class="' . esc_attr($args['icon']) . '"></i>';
+             if ($args['icon_position'] == 'left')
+               $title = $icon . $title;
+             else
+               $title = $title . $icon;
           }
-          $html = sprintf('<a href="%s" data-link="%s" %s >%s</a>', $link, $part, $active, $title);
+
+          $html = sprintf('<a href="%s" class="%s" data-menu-link="%s" %s >%s</a>', $link, $class, $args['part'], $active, $title);
 
           return $html;
-
-
       }
 
       /* Temporary function to check if HTaccess is writable.
@@ -618,8 +811,11 @@ Log::addTemp('PostData', $this->postData);
 
       }
 
-      // This is done before handing it off to the parent controller, to sanitize and check against model.
-      protected function processPostData($post, $model = null)
+
+			/** This is done before handing it off to the parent controller, to sanitize and check against model.
+			* @param $post Array (raw) $_POST object
+			**/
+      protected function processPostData($post)
       {
           if (isset($post['display_part']) && strlen($post['display_part']) > 0)
           {
@@ -627,14 +823,14 @@ Log::addTemp('PostData', $this->postData);
           }
 
           // analyse the save button
-          if (isset($post['save_bulk']))
+          if (isset($post['save-bulk']))
           {
             $this->do_redirect = true;
           }
 
           // handle 'reverse' checkbox.
-          $keepExif = isset($post['removeExif']) ? 0 : 1;
-          $post['keepExif'] = $keepExif;
+          $exif = isset($post['exif']) ? 0 : 1;
+          $post['exif'] = $exif;
 
           // checkbox overloading
           $png2jpg = (isset($post['png2jpg']) ? (isset($post['png2jpgForce']) ? 2 : 1): 0);
@@ -649,25 +845,74 @@ Log::addTemp('PostData', $this->postData);
 
 					$check_key = false;
 
-					/*   This can't be here, no actions in the data check, because of actions
-          if (isset($post['apiKey']))
-
+          if (isset($post['apiKey']) && false === $this->keyModel->is_constant())
 					{
 							$check_key = sanitize_text_field($post['apiKey']);
-							unset($post['apiKey']); // unset, since keyModel does the saving.
-					}
+		          $this->keyModel->resetTried(); // reset the tried api keys on a specific post request.
+              $this->keyModel->checkKey($check_key);
 
-					// first save all other settings ( like http credentials etc ), then check
-          if (false === $this->keyModel->is_constant() && $check_key !== false) // don't allow settings key if there is a constant
+            if (false === $this->keyModel->is_verified())
+            {
+                $this->doRedirect('reload');
+            }
+            unset($post['apiKey']); // unset, since keyModel does the saving.
+
+          }
+
+          $post_useCDN = isset($post['useCDN']) ? true : false; 
+          $post_CDNDomain = isset($post['CDNDomain']) ? sanitize_text_field($post['CDNDomain']) : ''; 
+
+          $setting_useCDN = $this->model->useCDN; 
+          $setting_CDNDomain = $this->model->CDNDomain; 
+
+          $CDNcontroller = new \ShortPixel\Controller\Front\CDNController();
+
+          if ($post_useCDN !== $setting_useCDN)
           {
-            $this->keyModel->resetTried(); // reset the tried api keys on a specific post request.
-            $this->keyModel->checkKey($check_key);
-          } */
+              
+              if (true === $post_useCDN)
+              {
+                 $CDNcontroller->registerDomain(); 
+              }
+              else{
+                // Deregister off for now.
+               // $controller->registerDomain(['action' => 'deregister']);
+              }
+          }
 
+          if ($post_useCDN)
+          {
+              $check = $CDNcontroller->validateCDNDomain($post_CDNDomain);
+              if (true !== $check)
+              {
+                 $this->addReturnFormData([
+                    'field' => 'CDNDomain', 
+                    'old_value' => $post_CDNDomain, 
+                    'new_value' => $check, 
+                    'hook_query' => 'info.useCDN', 
+                    'message' => sprintf(__('CDN Domain has been changed from %s to %s . SPIO needs a path component', 'shortpixel-image-optimiser'), $post_CDNDomain, $check),
+                 ]);
+                 $post['CDNDomain'] = $check;
+              }
+          }
+
+        if (false === isset($post['enable_ai']))
+        {
+             if (isset($post['autoAI']))
+             {
+                unset($post['autoAI']);
+             }
+             if (isset($post['autoAIBulk']))
+             {
+                unset($post['autoAIBulk']);
+             }
+        }
+
+        
 				// Field that are in form for other purpososes, but are not part of model and should not be saved.
 					$ignore_fields = array(
 							'display_part',
-							'save_bulk',
+							'save-bulk',
 							'save',
 							'removeExif',
 							'png2jpgForce',
@@ -689,7 +934,14 @@ Log::addTemp('PostData', $this->postData);
 							'tools-nonce',
 							'confirm',
 							'tos',  // toss checkbox in nokey
-							'pluginemail'
+							'pluginemail',
+              'nonce',
+              'action',
+              'form-nonce',
+              'request_url', 
+              'login_apiKey',
+              'ajaxSave',
+              'ai_preview_image_id',
 
 					);
 
@@ -702,6 +954,13 @@ Log::addTemp('PostData', $this->postData);
 					}
 
           parent::processPostData($post);
+
+      }
+
+      protected function addReturnFormData($data)
+      {
+        
+          $this->returnFormData[] = $data; 
 
       }
 
@@ -756,6 +1015,7 @@ Log::addTemp('PostData', $this->postData);
 
         if (false === isset($post['exclusions']))
         {
+					 $post['excludePatterns'] = [];
            return $post;
         }
 
@@ -770,7 +1030,7 @@ Log::addTemp('PostData', $this->postData);
         {
           $pattern = $pair['value'];
           $type = $pair['type'];
-          //$first = substr($pattern, 0,1);
+
           if ($type == 'regex-name' || $type == 'regex-path')
           {
             if ( @preg_match($pattern, false) === false)
@@ -779,84 +1039,114 @@ Log::addTemp('PostData', $this->postData);
                Notice::addWarning(sprintf(__('Regular Expression Pattern %s returned an error. Please check if the expression is correct. %s * Special characters should be escaped. %s * A regular expression must be contained between two slashes  ', 'shortpixel-image-optimiser'), $pattern, "<br>", "<br>" ));
             }
           }
+          if ('date' === $type)
+          { 
+             try {
+              $date = new \DateTime($pattern);
+             }
+             catch (\Exception $e)
+             {
+               Notice::addWarning(sprintf(__('Date format %s return an error %s . Accepted are formats that are valid for PHP dateFormat', 'shortpixel-image-optimiser'), 
+                 $pattern, $e->getMessage()
+             ));
+             }
+          }
         }
 
         $post['excludePatterns'] = $accepted;
 
 
-        return $post; // @todo The switch to check regex patterns or not.
+        return $post; 
 
-        if(isset($post['excludePatterns']) && strlen($post['excludePatterns'])) {
-            $items = explode(',', $post['excludePatterns']);
-            foreach($items as $pat) {
-                $parts = explode(':', $pat);
-                if (count($parts) == 1)
-                {
-                  $type = 'name';
-                  $value = str_replace('\\\\','\\', trim($parts[0]));
-                }
-                else
-                {
-                  $type = trim($parts[0]);
-                  $value = str_replace('\\\\','\\',trim($parts[1]));
-                }
-
-                if (strlen($value) > 0)  // omit faulty empty statements.
-                  $patterns[] = array('type' => $type, 'value' => $value);
-
-            }
-
-        }
-
-
-			  foreach($patterns as $pair)
-				{
-						$pattern = $pair['value'];
-						//$first = substr($pattern, 0,1);
-						if ($type == 'regex-name' || $type == 'regex-path')
-						{
-						  if ( @preg_match($pattern, false) === false)
-							{
-								 Notice::addWarning(sprintf(__('Regular Expression Pattern %s returned an error. Please check if the expression is correct. %s * Special characters should be escaped. %s * A regular expression must be contained between two slashes  ', 'shortpixel-image-optimiser'), $pattern, "<br>", "<br>" ));
-							}
-						}
-				}
-        $post['excludePatterns'] = $patterns;
-        return $post;
       }
 
 
-
+			/**
+			* Each form save / action results in redirect
+			*
+			**/
       protected function doRedirect($redirect = 'self')
       {
-        if ($redirect == 'self')
+
+        $url = null;
+
+
+        if ($redirect == 'self'  || $redirect == 'reload')
         {
-
-          $url = esc_url_raw(add_query_arg('part', $this->display_part));
-          $url = remove_query_arg('noheader', $url); // has url
-          $url = remove_query_arg('sp-action', $url); // has url
-
+          if (true === $this->is_ajax_save)
+          {
+              $url = $this->url;
+          }
+          else {
+            $url = esc_url_raw(add_query_arg('part', $this->display_part, $this->url));
+            $url = remove_query_arg('noheader', $url); // has url
+            $url = remove_query_arg('sp-action', $url); // has url
+          }
         }
-        elseif($redirect == 'bulk')
+        elseif('bulk' == $redirect )
         {
           $url = admin_url("upload.php?page=wp-short-pixel-bulk");
         }
-				elseif($redirect == 'bulk-migrate')
+				elseif('bulk-migrate' == $redirect)
 				{
 					 $url = admin_url('upload.php?page=wp-short-pixel-bulk&panel=bulk-migrate');
 				}
-				elseif ($redirect == 'bulk-restore')
+				elseif ('bulk-restore' == $redirect)
 				{
 						$url = admin_url('upload.php?page=wp-short-pixel-bulk&panel=bulk-restore');
 				}
-				elseif ($redirect == 'bulk-removeLegacy')
+        elseif ('bulk-restoreAI' == $redirect)
+        {
+            $url = admin_url('upload.php?page=wp-short-pixel-bulk&panel=bulk-restoreAI');
+        }
+				elseif ('bulk-removeLegacy' == $redirect)
 				{
 						$url = admin_url('upload.php?page=wp-short-pixel-bulk&panel=bulk-removeLegacy');
+				}
+
+        if (true === $this->is_ajax_save)
+				{
+					$this->handleAjaxSave($redirect, $url);
 				}
 
         wp_redirect($url);
         exit();
       }
+
+			protected function handleAjaxSave($redirect, $url = false)
+			{
+						// Intercept new notices and add them
+						// Return JSON object with status of save action
+						$json = new \stdClass;
+						$json->result = true;
+
+
+						$noticeController = Notice::getInstance();
+
+						$json->notices = $noticeController->getNewNotices();
+						if(count($json->notices) > 0)
+						{
+							$json->display_notices = [];
+							foreach($json->notices as $notice)
+							{
+								$json->display_notices[] = $notice->getForDisplay(['class' => 'is_ajax', 'is_removable' => false]);
+							}
+						}
+						if ($redirect !== 'self')
+						{
+              $json->redirect = ($url !== false && ! is_null($url) ) ? $url : $redirect;
+						}
+
+            if (count($this->returnFormData) > 0)
+            {
+               $json->returnFormData = $this->returnFormData;
+            }
+
+						$noticeController->update(); // dismiss one-time ponies
+						wp_send_json($json);
+						exit();
+			}
+
 
 
 }

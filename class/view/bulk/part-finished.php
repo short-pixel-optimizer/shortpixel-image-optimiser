@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 <section class="panel finished" data-panel="finished">
   <div class="panel-container">
 
-    <h3 class="heading"><span><img src="<?php echo \wpSPIO()->plugin_url('res/img/robo-slider.png'); ?>"></span>
+    <h3 class="heading">
       <?php esc_html_e('The ShortPixel Bulk Processing is finished' ,'shortpixel-image-optimiser'); ?>
 
       <div class='average-optimization'>

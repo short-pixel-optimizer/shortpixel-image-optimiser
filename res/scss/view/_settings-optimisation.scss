@@ -1,6 +1,11 @@
 // Optimisation tab
 .setting-tab
 {
+	.shortpixel-compression {
+		name {
+			margin-bottom: 10px;
+		}
+	}
 	 	.shortpixel-compression-options
 		{
 			  label.lossy span{
@@ -23,10 +28,12 @@
 					display: inline-block;
 			}
 			label {
-					width:158px;
+					width: 30%;
+					max-width: 180px;
 			//		margin: 0 -2px;
 					font-weight: bold;
 					display: inline-block;
+					margin-right: 1px;
 					cursor: pointer;
 			//		border-right: 1px solid #fff;
 					span {
@@ -40,20 +47,32 @@
 					input {
 							display: none;
 							&:checked + span {
-									background-color:$blue_closed;
+									background-color:$blue_dark;
 							}
 					}
 
 			}
 
 		}
-
+		// EXIF Selector
+		select[name="exif_ai"]
+		{
+			border: 1px solid #1ABDCA;
+			color: #116C7E;
+			margin-top: 15px;
+		}
+		i.exif-ai
+		{
+			top: 17px;
+		}
 		.smart-compression-explainer
 		{
 			 display: flex;
 			 background-color: #fff;
+			 border-radius: .4rem;
 			 flex-direction: column;
 			 width: 200px;
+			 float: right;
 
 			 h4 { margin: 6px 0; color: #727272; }
 
@@ -83,7 +102,7 @@
 		{
 
 			 hr {
-				  border: 2px solid $blue_open;
+				  border: 2px solid $blue_light;
 					position: absolute;
 					left: 0;
 					right: 0;
@@ -141,6 +160,21 @@
 		.resize-type-wrap label {
 				display: inline-block;
 				padding: 15px 0 0 0;
+		}
+
+		@include breakpoint(0, 1100px)
+		{
+			 gridbox {
+					display: block;
+			 }
+			 .smart-compression-explainer {
+					width: auto;
+					margin: 20px 0 12px;
+					float: none;
+			 }
+			.shortpixel-compression {
+				max-width: none;
+			}
 		}
 
 } //setting-tab

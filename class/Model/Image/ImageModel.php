@@ -9,10 +9,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Controller\ResponseController as ResponseController;
-use ShortPixel\Controller\ApiController as API;
+use ShortPixel\Controller\Api\ApiController as ApiController;
 
 use ShortPixel\Model\File\FileModel as FileModel;
 use ShortPixel\Model\AccessModel as AccessModel;
+use ShortPixel\Helper\UtilHelper as UtilHelper;
+
 
 use ShortPixel\Model\Converter\Converter as Converter;
 
@@ -49,7 +51,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		const ACTION_SMARTCROPLESS = 101;
 
     // Extension that we process . Minus the one that one MediaLibraryModel should handle, so it doesn't touch the thumbns.
-    const PROCESSABLE_EXTENSIONS = array('jpg', 'jpeg', 'gif', 'png', 'pdf');
+    const PROCESSABLE_EXTENSIONS = array('jpg', 'jpeg', 'gif', 'png', 'pdf', 'webp');
 
     //
     const P_PROCESSABLE = 0;
@@ -65,6 +67,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		const P_DIRECTORY_NOTWRITABLE = 10;
     const P_EXCLUDE_EXTENSION_PDF = 11;
     const P_IMAGE_ZERO_SIZE = 12;
+    const P_EXCLUDE_DATE = 13; 
 
 		// For restorable status
 		const P_RESTORABLE = 109;
@@ -111,7 +114,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     /** @var string */
   	protected $optimizePreventedReason;
 
-		// Public var that can be set by OptimizeController to prevent double queries.
+		// Public var that can be set by QueueController to prevent double queries.
 		/** @var boolean */
 		public $is_in_queue;
 
@@ -128,6 +131,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     abstract protected function preventNextTry($reason = '');
     abstract public function isOptimizePrevented();
     abstract public function resetPrevent(); // to get going.
+    abstract public function getParent();
 
     // Construct
     public function __construct($path)
@@ -147,7 +151,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         $this->setMeta('originalHeight', $this->get('height'));
 
       if (is_null($this->getMeta('tsAdded')))
-        $things->setMeta('tsAdded', time());
+        $this->setMeta('tsAdded', time());
 
       $this->setWebp();
       $this->setAvif();
@@ -196,7 +200,12 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
             }
         }
 
-        if ( $this->isOptimized() || ! $this->exists()  || (! $this->is_virtual() && ! $this->is_writable()) || (! $this->is_virtual() && ! $this->is_directory_writable() || $this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded() )
+        if ( $this->isOptimized() || ! $this->exists()  || (! $this->is_virtual() && ! $this->is_writable()) || 
+        (! $this->is_virtual() && ! $this->is_directory_writable() || 
+        $this->isPathExcluded() || 
+        $this->isExtensionExcluded() || 
+        $this->isSizeExcluded()
+        )
 				|| $this->isOptimizePrevented() !== false
         || ! $this->isFileSizeOK() )
         {
@@ -208,6 +217,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 					{
             $this->processable_status = self::P_DIRECTORY_NOTWRITABLE;
 					}
+
           return false;
         }
         else
@@ -215,6 +225,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 					$this->processable_status = self::P_PROCESSABLE;
           return true;
 				}
+
     }
 
     public function isProcessableFileType($type = 'webp')
@@ -231,6 +242,17 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
         if ($type == 'avif' && ! $settings->createAvif)
             return false;
+        
+        if ('webp' == $type && 'webp' ==  $this->getExtension())
+        {
+           return false;
+        }
+
+        if ('avif' == $type && 'avif' ==  $this->getExtension())
+        {
+           return false;
+        }
+
 
 				// Pdf, no special files.
 				if ($this->getExtension() == 'pdf')
@@ -325,7 +347,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
             $message = __('Image Extension not processable', 'shortpixel-image-optimiser');
          break;
          case self::P_EXCLUDE_EXTENSION_PDF:
-            $message = sprintf(__('PDF processing is not enabled in the %ssettings%s', 'shortpixel-image-optimiser'), '<a href="' .  esc_url(admin_url('options-general.php?page=wp-shortpixel-settings&part=adv-settings')) . '">', '</a>');
+            $message = sprintf(__('PDF processing is not enabled in the %ssettings%s', 'shortpixel-image-optimiser'), '<a href="' .  esc_url(admin_url('options-general.php?page=wp-shortpixel-settings&part=optimisation')) . '">', '</a>');
          break;
          case self::P_EXCLUDE_SIZE:
             $message = __('Image Size Excluded', 'shortpixel-image-optimiser');
@@ -337,7 +359,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
             $message = __('Image is already optimized', 'shortpixel-image-optimiser');
          break;
          case self::P_FILE_NOTWRITABLE:
-            $message = sprintf(__('Image %s is not writable in %s', 'shortpixel-image-optimiser'), $this->getFileName(), (string) $this->getFileDir());
+            $message = sprintf(__('Image %s (or related thumbnails) is not writable in %s', 'shortpixel-image-optimiser'), $this->getFileName(), (string) $this->getFileDir());
          break;
 				 case self::P_DIRECTORY_NOTWRITABLE:
 						$message = sprintf(__('Image directory %s is not writable', 'shortpixel-image-optimiser'), (string) $this->getFileDir());
@@ -366,6 +388,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
          case self::P_IMAGE_ZERO_SIZE:
             $message = __('File seems emtpy, or failure on image size', 'shortpixel-image-optimiser');
          break;
+         case self::P_EXCLUDE_DATE: 
+             $message = __('Date is excluded', 'shortpixel-image-optimiser');
+          break; 
          default:
             $message = __(sprintf('Unknown Issue, Code %s',  $this->processable_status), 'shortpixel-image-optimiser');
          break;
@@ -461,12 +486,11 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 				if (! isset($optimizeData['params']) || ! isset($optimizeData['urls']))
 				{
-					array(array(), 0);
+					array([], 0);
 				}
 
 				$count = 0;
-				$urls = array();
-				$i = 0;
+				$urls = [];
 
 				$params = $optimizeData['params'];
 
@@ -637,7 +661,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
         }
         else
-          return 0;
+          return false;
     }
 
 
@@ -700,12 +724,12 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
               {
                 Log::addError('Backup Not OK - ' . $this->getFileName(), $args);
 
-								$response = array(
+								$response = [
 										'is_error' => true,
 										'issue_type' => ResponseController::ISSUE_BACKUP_CREATE,
 										'message' => __('Could not create backup. Please check file permissions', 'shortpixel-image-optimiser'),
 										'fileName' => $this->getFileName(),
-								);
+                ];
 
 								ResponseController::addData($this->get('id'), $response);
 
@@ -722,7 +746,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 						$originalSize = $this->getFileSize();
 					}
 
-          if ($status == API::STATUS_UNCHANGED || $status == API::STATUS_OPTIMIZED_BIGGER)
+          $stati = [ApiController::STATUS_UNCHANGED, ApiController::STATUS_OPTIMIZED_BIGGER, ApiController::STATUS_NOT_COMPATIBLE];
+          if (true === in_array($status, $stati, true))
           {
             $copyok = true;
             $optimizedSize = $this->getFileSize();
@@ -768,7 +793,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
              $this->setMeta('originalSize', $originalSize);
 
              if ($this->hasMeta('did_keepExif'))
-              $this->setMeta('did_keepExif', $settings->keepExif);
+              $this->setMeta('did_keepExif', UtilHelper::getExifParameter());
              if ($this->hasMeta('did_cmyk2rgb'))
               $this->setMeta('did_cmyk2rgb', $settings->CMYKtoRGBconversion);
 
@@ -780,8 +805,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
              if ($settings->resizeImages)
              {
-               $resizeWidth = $settings->resizeWidth;
-               $resizeHeight = $settings->resizeHeight;
 
 							 $originalWidth = $this->getMeta('originalWidth');
 							 $originalHeight = $this->getMeta('originalHeight');
@@ -789,7 +812,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 							 $width = $this->get('width'); // image width
 							 $height = $this->get('height');
 
-               if ( ($resizeWidth == $width && $width != $originalWidth)  || ($resizeHeight == $height && $height != $originalHeight ) ) // resized.
+               if ($width != $originalWidth  || $height != $originalHeight ) // resized.
                {
                    $this->setMeta('resizeWidth', $width );
                    $this->setMeta('resizeHeight', $height );
@@ -816,20 +839,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
             return false;
           }
+
           return true;
 
-        Log::addWarn('Could not find images of this item in tempfile -' . $this->id . '(' . $this->getFullPath() . ')', array_keys($results) );
-
-				$response = array(
-					 'is_error' => true,
-					 'issue_type' => ResponseController::ISSUE_OPTIMIZED_NOFILE,
-					 'message' => __('Image is reporting as optimized, but file couldn\'t be found in the downloaded files', 'shortpixel-image-optimiser'),
-					 'fileName' => $this->getFileName(),
-				);
-
-				ResponseController::addData($this->get('id'), $response);
-
-        return null;
     }
 
     public function handleOptimizedFileType($downloadResult)
@@ -856,7 +868,11 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
           }
 					elseif(isset($downloadResult['webp']) && isset($downloadResult['webp']['status']))
 					{
-						 if ($downloadResult['webp']['status'] == API::STATUS_OPTIMIZED_BIGGER)
+             if ($downloadResult['webp']['status'] == APIController::STATUS_OPTIMIZED_BIGGER)
+						 {
+							  $this->setMeta('webp', self::FILETYPE_BIGGER);
+						 }
+             elseif ($downloadResult['webp']['status'] == APIController::STATUS_NOT_COMPATIBLE)
 						 {
 							  $this->setMeta('webp', self::FILETYPE_BIGGER);
 						 }
@@ -874,9 +890,13 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 					elseif(isset($downloadResult['avif']) && isset($downloadResult['avif']['status']))
 					{
 
-						 if ($downloadResult['avif']['status'] == API::STATUS_OPTIMIZED_BIGGER)
+             if ($downloadResult['avif']['status'] == APIController::STATUS_OPTIMIZED_BIGGER)
 						 {
 								$this->setMeta('avif', self::FILETYPE_BIGGER);
+						 }
+             elseif ($downloadResult['avif']['status'] == APIController::STATUS_NOT_COMPATIBLE)
+						 {
+							  $this->setMeta('avif', self::FILETYPE_BIGGER);
 						 }
 					}
     }
@@ -1073,7 +1093,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
          $target = $fs->getFile( (string) $fileDir . $this->getFileBase() . '.webp');
 
             // only copy when this constant is set.
-            if( (defined('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION') && SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION) == true ) {
+            if( true === \wpSPIO()->env()->useDoubleWebpExtension() ) {
                  $target = $fs->getFile((string) $fileDir . $this->getFileName() . '.webp'); // double extension, if exists.
             }
 
@@ -1115,7 +1135,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
             $target = $fs->getFile( (string) $fileDir . $this->getFileBase() . '.avif');
 
 						// only copy when this constant is set.
-            if( (defined('SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION') && SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION) == true ) {
+            if( true === \wpSPIO()->env()->useDoubleAvifExtension() ) {
                  $target = $fs->getFile((string) $fileDir . $this->getFileName() . '.avif'); // double extension, if exists.
             }
 
@@ -1137,7 +1157,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         if(!$excludePatterns || !is_array($excludePatterns)) { return false; }
 
         foreach($excludePatterns as $item) {
-            $type = trim($item["type"]);
+            $type = (isset($item['type'])) ? trim($item["type"]) : '';
             if(in_array($type, array("name", "path", 'regex-name','regex-path'))) {
                 $pattern = trim($item["value"]);
                 $target = ($type == "name") ? $this->getFileName() : $this->getFullPath();
@@ -1237,7 +1257,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 			$bool = false;
 
 			foreach($excludePatterns as $item) {
-					$type = trim($item["type"]);
+					$type = (isset($item['type'])) ? trim($item["type"]) : '';
 					if($type == "size") {
 
 							$width = $this->get('width');
@@ -1256,12 +1276,28 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 			 return $bool;
 		}
 
+    protected function checkDateExcluded()
+		{
+			$excludePatterns = $this->getExcludePatterns();
+			if (! $excludePatterns || ! is_array($excludePatterns) ) // no patterns, nothing excluded
+				return false;
+
+			$bool = false;
+
+			foreach($excludePatterns as $item) {
+					$type = (isset($item['type'])) ? trim($item["type"]) : '';
+					if($type == "date") {
+
+              $check_date = ['date' => $item['value'], 'when' => $item['dateWhen']];
+              return $check_date; 
+						}
+			 }
+
+			 return $bool;
+		}
+
     protected function isFileSizeOK()
     {
-      //var_dump($this->getFileName() . ' ' . $this->getFileSize());
-
-    //  clearstatcache();
-      //var_dump(filesize($this->getFullPath())); echo "<BR>";
         if ($this->is_virtual() || $this->getFileSize() > 0 )
         {
 
@@ -1413,68 +1449,82 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		 $hasResizeSizes = (intval($settings->resizeImages) > 0) ? true : false;
 		 $result = array();
 
-		 $useSmartCrop = false;
+		 $useSmartcrop = false;
      $useResize = false;
 
      if ($this->getExtension() !== 'pdf')
      {
     		 if (isset($args['smartcrop']))
     		 {
-    			  $useSmartCrop = $args['smartcrop'];
+    			  $useSmartcrop = $args['smartcrop'];
     		 }
     		 else {
-    		 	 $useSmartCrop = (bool) $settings->useSmartCrop;
+    		 	 $useSmartcrop = (bool) $settings->useSmartcrop;
     		 }
      }
 
      /** This construct. If both resize and smartcrop are on, the smartcrop is applied to cropped images, and resize to the rest. If one or the other is off, apply that setting to all if possible */
      if ($this->getExtension() == 'pdf') // pdf can never be smartcrop
      {
-        $useSmartCrop = false;
+        $useSmartcrop = false;
         if (true === $hasResizeSizes)
         {
           $useResize = true;
         }
      }
-     elseif ( true === $useSmartCrop && true === $hasResizeSizes )
+     elseif ( true === $useSmartcrop && true === $hasResizeSizes )
      {
         $size = is_array($this->sizeDefinition) ? $this->sizeDefinition : false;
 
         if (false === $size) // if there is no size definition, err on the safe side.
         {
            $useResize = true;
-           $useSmartCrop = false;
+           $useSmartcrop = false;
         }
         else {
             if (true == $size['crop'])
             {
+
               $useResize = false;
-              $useSmartCrop = true;
+              $useSmartcrop = true;
+
+              if ($args['main_width'] !== false && $args['main_height'] !== false)
+              {
+                 $ratio_check = round(($args['main_width'] / $args['main_height']),2) - round($this->get('width') / $this->get('height'), 2);
+
+
+                 if ($ratio_check == 0)
+                 {
+                    $useSmartcrop = false;
+                    $useResize = true;
+                 }
+
+              }
             }
             else {
               $useResize = true;
-              $useSmartCrop = false;
+              $useSmartcrop = false;
             }
         }
      }
-		 elseif (true === $useSmartCrop) // these for clarity
+		 elseif (true === $useSmartcrop) // these for clarity
 		 {
-			$useSmartCrop = true;
+			$useSmartcrop = true;
       $useResize = false;
 		 }
 		 elseif (true === $hasResizeSizes)
 		 {
 		 	 $useResize = true;
-       $useSmartCrop = false;
+       $useSmartcrop = false;
 		 }
 
      // Log if this goes wrong, but err on the side of resize if so.
-     if (true === $useSmartCrop && true === $useResize)
+     if (true === $useSmartcrop && true === $useResize)
      {
       Log::addError('Both UseSmartCrop and UseResize are true, this should not be');
      }
 
-     if (true === $useSmartCrop)
+     if (true === $useSmartcrop)
      {
         $resize = 4;
      }
@@ -1489,7 +1539,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
  	 		 $width = $this->get('width');
 			 $height = $this->get('height');
 
-       if (true === $useSmartCrop)
+       if (true === $useSmartcrop)
        {
          $url = $args['main_url'];
        }

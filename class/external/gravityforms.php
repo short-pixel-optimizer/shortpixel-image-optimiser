@@ -48,11 +48,6 @@ class gravityForms
 				 $otherMediaController->addDirectory($gravFolder->getPath());
 			}
 
-      //ShortPixel is monitoring the gravity forms folder, add the image to queue
-     // $uploadDir   = wp_upload_dir();
-      //$localPath = str_replace($uploadDir['baseurl'], SHORTPIXEL_UPLOADS_BASE, $value);
-
-      //return $shortPixelObj->addPathToCustomFolder($localPath, $folder->getId(), 0);
   }
 
 } // class

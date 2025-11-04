@@ -23,11 +23,11 @@ if ( ! defined( 'ABSPATH' ) ) {
             ['name' => 'autoMediaLibrary',
              'checked' => $view->data->autoMediaLibrary,
              'label' => esc_html__('Optimize media on upload','shortpixel-image-optimiser'),
-             'data' => ['data-dashboard="' . __('Not automatically optimizing', 'shortpixel-image-optimiser') . '"'],
+             'data' => ['data-dashboard="' . __('New images are not optimized', 'shortpixel-image-optimiser') . '"'],
             ]);
       ?>
 
-      <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/521-settings-optimize-media-on-upload"></i>
+      <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-optimize-media-on-upload/?target=iframe"></i>
       <name>
 
         <?php esc_html_e('Automatically optimize images after they are uploaded (recommended).','shortpixel-image-optimiser');?>
@@ -45,18 +45,18 @@ if ( ! defined( 'ABSPATH' ) ) {
             ['name' => 'doBackgroundProcess',
              'checked' => $view->data->doBackgroundProcess,
              'label' => esc_html__('Background mode','shortpixel-image-optimiser'),
-             'data' => ['data-toggle="background_warning"', 'data-dashboard="' . __('Recommended background mode', 'shortpixel-image-optimser') . '"'],
+             'data' => ['data-toggle="background_warning"', 'data-dashboard="' . __('Background mode is recommended', 'shortpixel-image-optimser') . '"'],
             ]);
       ?>
 
-     <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/584-background-processing-using-cron-jobs-in-shortpixel-image-optimizer"></i>
+     <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/background-processing-using-cron-jobs-in-shortpixel-image-optimizer/?target=iframe"></i>
 
      <name>
             <?php esc_html_e('Utilize this feature to optimize images without the need to keep a browser window open, using cron jobs.','shortpixel-image-optimiser');?>
      </name>
 
     </content>
-    <warning  id="background_warning">
+    <warning class="background_warning">
         <message>
         <?php _e('I understand that background optimization may pause if there are no visitors on the website.', 'shortpixel-image-optimiser'); ?>
       </message>
@@ -71,18 +71,21 @@ if ( ! defined( 'ABSPATH' ) ) {
               ['name' => 'backupImages',
                'checked' => $view->data->backupImages,
                'label' => esc_html__('Backup Originals','shortpixel-image-optimiser'),
-               'data' => ['data-dashboard="' . __('Strongly recommend turning on backups', 'shortpixel-image-optimiser') . '"'],
+               'data' => ['data-dashboard="' . __('Backups are strongly recommended!', 'shortpixel-image-optimiser') . '"'],
               ]);
         ?>
 
-        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/515-settings-image-backup"></i>
+        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-image-backup/?target=iframe"></i>
         <name>
           <?php esc_html_e('Create a backup of the original images, saved on your server in /wp-content/uploads/ShortpixelBackups/.','shortpixel-image-optimiser');?>
         </name>
 
 
         <info>
-          <?php esc_html_e('You can remove the backup folder at any moment but it is best to keep a local/cloud copy, in case you want to restore the optimized files to originals or re-optimize the images using a different compression type.','shortpixel-image-optimiser');?>
+          <?php printf(esc_html__('You can delete the backup folder at any time, but it is best to %skeep a local or cloud copy.%s This way, you can easily restore the optimized files to their originals or re-optimize the images with a different compression type if needed.','shortpixel-image-optimiser'),
+             '<a href="https://shortpixel.com/knowledge-base/article/where-is-the-backup-folder-located/" target="_blank">','</a>'
+             );
+         ?>
         </info>
       </content>
       <warning id="backup-warning">
@@ -104,7 +107,7 @@ if ( ! defined( 'ABSPATH' ) ) {
       ?>
 
       <name>
-        <?php esc_html_e('Show Custom Media menu item','shortpixel-image-optimiser');?>
+        <?php esc_html_e('Display the Media > Custom Media menu, which allows optimization of images not listed in the Media Library.','shortpixel-image-optimiser');?>
 
       </name>
 

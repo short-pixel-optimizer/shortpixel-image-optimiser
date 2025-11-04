@@ -1,4 +1,11 @@
 
+.fixed .column-wp-spio-ai
+{
+   width: 5.5em 
+   
+}
+
+
 .sp-column-info
 {
   position: relative;
@@ -49,7 +56,7 @@
                       background: #d6d8d9;
 
                       &.checked {
-                        background: #1abdca;
+                        background: #1ABDCA;
                       }
                    }
               }
@@ -67,7 +74,7 @@
   }
   .sp-column-actions
   {
-		 margin: 10px;
+     margin: 0 4px;
      position: relative;
   }
   .thumbs-todo
@@ -99,6 +106,12 @@
   .shortpixel-image-notice {
      border: 1px solid #000;
   }
+  .statusText 
+  {
+     i { 
+       margin-left: 4px;
+     }
+  }
 } // sp-column-info
 
 // The whole column
@@ -124,8 +137,6 @@
     clear: both;
     border-top: 1px solid #dcdcde;
     margin: 12px 0;
-  //  float: left;
-  //  width: 100%;
 
     label {
       min-width: 30%;
@@ -136,6 +147,10 @@
 
     > div { padding-left: 8px; padding-bottom: 8px; }
 
+    @at-root .media-sidebar & {
+      padding-top: 20px;
+      margin-bottom: 0px;
+    }
 }
 
 .edit-attachment-frame .shortpixel-popup-info

@@ -34,6 +34,13 @@ class DownloadHelper
 				}
 			}
 
+      /** Helper to download file from remote. 
+       * 
+       * @param string $url The remote URL to download.
+       * @param array $args  if DestinationPath is included it will try to move file there, otherwise remain in /tmp. 
+       * @return string File Path 
+       */
+      
 			public function downloadFile($url, $args = array())
 			{
 					$defaults = array(
@@ -48,7 +55,7 @@ class DownloadHelper
 
           $methods = array(
               "download_url" => array(array($this, 'downloadURLMethod'), $url, false),
-              "download_url_force" => array(array($this, 'downloadURLMethod'), true),
+              "download_url_force" => array(array($this, 'downloadURLMethod'), $url, true),
               "remote_get" => array(array($this, 'remoteGetMethod'), $url)
           );
 
@@ -132,7 +139,7 @@ class DownloadHelper
 
         if (is_wp_error($tempFile))
         {
-           Log::addError('Failed to Download File ', $tempFile);
+           Log::addError('Failed to Download File from ' . $url , $tempFile);
            Responsecontroller::addData('message', $tempFile->get_error_message());
            return false;
         }
@@ -144,7 +151,9 @@ class DownloadHelper
       {
             //get_temp_dir
             $tmpfname = tempnam(get_temp_dir(), 'spiotmp');
-            $downloadTimeout = max(ini_get('max_execution_time') - 10, 15);
+            $max_exec = ini_get('max_execution_time'); // Like everything, can't be trusted to be a int.
+            $max_exec =  (! is_numeric($max_exec) || $max_exec <= 0) ? 30 : $max_exec;
+            $downloadTimeout = max($max_exec - 10, 15);
 
             $args_for_get = array(
               'stream' => true,

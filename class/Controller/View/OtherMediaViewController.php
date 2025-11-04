@@ -280,7 +280,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           }
 
 
-          $sql  .= ($this->orderby ? " ORDER BY " . $this->orderby . " " . $this->order . " " : "")
+					$sql  .= ($this->orderby ? " ORDER BY " . sanitize_sql_orderby($this->orderby . " " . $this->order) . " " : "")
                   . " LIMIT " . $this->items_per_page . " OFFSET " . ($page - 1) * $this->items_per_page;
 
 
@@ -474,7 +474,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 			public function doActionColumn($item)
 			{
           ?>
-					<div id='sp-msg-<?php echo esc_attr($item->get('id')) ?>'  class='sp-column-info'><?php
+					<div id='shortpixel-data-<?php echo esc_attr($item->get('id')) ?>'  class='sp-column-info'><?php
 							$this->printItemActions($item);
 
             echo "<div>" .  UiHelper::getStatusText($item) . "</div>";

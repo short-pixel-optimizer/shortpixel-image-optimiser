@@ -10,7 +10,7 @@ $settings = \wpSPIO()->settings();
 <section class="panel process" data-panel="process" >
   <div class="panel-container">
 
-    <h3 class="heading"><span><img src="<?php echo esc_url(\wpSPIO()->plugin_url('res/img/robo-slider.png')); ?>"></span>
+    <h3 class="heading">
       <?php esc_html_e('ShortPixel Bulk Process is in progress','shortpixel-image-optimiser'); ?>
 
       <div class='average-optimization'>
@@ -41,7 +41,7 @@ $settings = \wpSPIO()->settings();
       <p class="description">
 
         <?php
-        $link = 'https://shortpixel.com/knowledge-base/article/584-background-processing-using-cron-jobs-in-shortpixel-image-optimizer';
+        $link = 'https://shortpixel.com/knowledge-base/article/background-processing-using-cron-jobs-in-shortpixel-image-optimizer/';
         printf(esc_html('ShortPixel is optimizing your images in the background. You can close this browser window now and reopen it at any time to check the status of the bulk processing. %sLearn more%s','shortpixel-image-optimiser'), '<strong><a href="' . esc_attr($link) . '" target="_blank">','</a></strong>'); ?>
       </p>
     <?php else: ?>
@@ -220,6 +220,16 @@ $settings = \wpSPIO()->settings();
 					</div>
 	      </div> <!-- slidemask -->
 			</div>  <!-- preview wrapper -->
+
+      <div class='ai-preview-wrapper hidden'>
+          <h3><?php _e('AI Generated Data: ', 'shortpixel-image-optimiser'); ?></h3>
+          <ul class='ai-preview-data'>
+
+          </ul>
+      </div>
+
+
+      </div>
     </div>
 
 		<div id="preloader" class="hidden">

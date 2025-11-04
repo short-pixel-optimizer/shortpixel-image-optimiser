@@ -16,6 +16,8 @@ class BulkController
    protected static $instance;
    protected static $logName = 'shortpixel-bulk-logs';
 
+   protected $logs;
+
    public function __construct()
    {
 
@@ -34,10 +36,17 @@ class BulkController
    * @param $customOp String   Not a usual optimize queue, but something else. options:
    * 'bulk-restore', or 'migrate'.
    */
-   public function createNewBulk($type = 'media', $customOp = null)
+   public function createNewBulk($type = 'media', $args = [])
    {
-      $optimizeController = new OptimizeController();
-      $optimizeController->setBulk(true);
+      $defaults = [
+          'customOp' => null, 
+          'filters' => [], 
+
+      ];
+
+      $args = wp_parse_args($args, $defaults); 
+
+      $queueController = new QueueController(['is_bulk' => true]);
 
 			$fs = \wpSPIO()->filesystem();
 			$backupDir = $fs->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
@@ -49,39 +58,39 @@ class BulkController
 				 $current_log->delete();
 			}
 
-      $Q = $optimizeController->getQueue($type);
+      $Q = $queueController->getQueue($type);
 
-      $Q->createNewBulk();
-
-			$Q = $optimizeController->getQueue($type);
-
-      if (! is_null($customOp))
+      if (! is_null($args['customOp']))
       {
-        $options = array();
-        if ($customOp == 'bulk-restore')
+        $customOp = $args['customOp'];
+        
+        if ($customOp == 'bulk-restore' ||  $customOp == 'bulk-undoAI')
         {
-          $options['numitems'] = 5;
-          $options['retry_limit'] = 5;
-          $options['process_timeout'] = 3000;
+          $args['numitems'] = 5;
+          $args['retry_limit'] = 5;
+          $args['process_timeout'] = 3000;
+          
         }
         if ($customOp == 'migrate' || $customOp == 'removeLegacy')
         {
-           $options['numitems'] = 200;
+           $args['numitems'] = 200;
         }
 
-				$options = apply_filters('shortpixel/bulk/custom_options', $options, $customOp);
-        $Q->setCustomBulk($customOp, $options);
+				$args = apply_filters('shortpixel/bulk/custom_options', $args);
+
       }
+
+      
+      $options = $Q->createNewBulk($args);
+
 
       return $Q->getStats();
    }
 
 	 public function isBulkRunning($type = 'media')
 	 {
-       $optimizeControl = new OptimizeController();
-       $optimizeControl->setBulk(true);
-
-		   $queue = $optimizeControl->getQueue($type);
+       $queueControl = new QueueController(['is_bulk' => true]);
+       $queue = $queueControl->getQueue($type);
 
 			 $stats = $queue->getStats();
 
@@ -130,10 +139,8 @@ class BulkController
 
    public function getCustomOperation($qname)
    {
-     $optimizeControl = new OptimizeController();
-     $optimizeControl->setBulk(true);
-
-     $q = $optimizeControl->getQueue($qname);
+     $queueControl = new QueueController(['is_bulk' => true]);
+     $q = $queueControl->getQueue($qname);
 
      $op = $q->getCustomDataItem('customOperation');
      return $op;
@@ -142,27 +149,25 @@ class BulkController
    /*** Start the bulk run. Must deliver all queues at once due to processQueue bundling */
    public function startBulk($types = 'media')
    {
-       $optimizeControl = new OptimizeController();
-       $optimizeControl->setBulk(true);
+       $queueControl = new QueueController(['is_bulk' => true]);
 
 			 if (! is_array($types))
 			 	 $types = array($types);
 
 			 foreach($types as $type)
 			 {
-	       $q = $optimizeControl->getQueue($type);
+         $q = $queueControl->getQueue($type);
 	       $q->startBulk();
 			 }
 
-       return  $q->getStats(); //$optimizeControl->processQueue($types);
+       return  $q->getStats(); 
    }
 
    public function finishBulk($type = 'media')
    {
-     $optimizeControl = new OptimizeController();
-     $optimizeControl->setBulk(true);
+     $queueControl = new QueueController(['is_bulk' => true]);
 
-     $q = $optimizeControl->getQueue($type);
+     $q = $queueControl->getQueue($type);
 
 		 $this->addLog($q);
 
@@ -181,8 +186,12 @@ class BulkController
 
    public function getLogs()
    {
-        $logs = get_option(self::$logName, array());
-        return $logs;
+        if (is_null($this->logs))
+        {
+          $logs = get_option(self::$logName, array());
+          $this->logs = $logs;
+        }
+        return $this->logs;
    }
 
 	 public function getLog($logName)
@@ -197,6 +206,8 @@ class BulkController
 			 	return false;
 	 }
 
+
+
 	 public function getLogData($fileName)
 	 {
 		 		$logs = $this->getLogs();
@@ -204,7 +215,9 @@ class BulkController
 				foreach($logs as $log)
 				{
 					 if (isset($log['logfile']) && $log['logfile'] == $fileName)
+           {
 					 	 return $log;
+           }
 				}
 
 				return false;

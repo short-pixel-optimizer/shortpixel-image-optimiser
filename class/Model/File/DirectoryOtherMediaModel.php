@@ -11,7 +11,7 @@ use ShortPixel\Notices\NoticeController as Notice;
 use \ShortPixel\Model\File\DirectoryModel as DirectoryModel;
 use \ShortPixel\Model\Image\ImageModel as ImageModel;
 
-use ShortPixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\Controller\QueueController as QueueController;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 
 // extends DirectoryModel. Handles ShortPixel_meta database table
@@ -282,9 +282,10 @@ class DirectoryOtherMediaModel extends DirectoryModel
       $stats = $this->getStats();
       $total_before = $stats['total'];
 
-			if (! $this->checkDirectory(true))
+			if (false === $this->checkDirectory(true))
 			{
-				Log::addWarn('Refreshing directory, something wrong in checkDirectory ' . $this->getPath());
+				Log::addWarn('Refreshing directory, something wrong in checkDirectory ' . $this->getPath(), $this->last_message);
+
 				return false;
 			}
 
@@ -310,7 +311,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
       $fs = \wpSPIO()->filesystem();
       $filter = ($time > 0)  ? array('date_newer' => $time) : array();
-      $filter['exclude_files'] = array('.webp', '.avif');
+      $filter['exclude_files'] = array('.avif');
 			$filter['include_files'] = ImageModel::PROCESSABLE_EXTENSIONS;
 
       $files = $fs->getFilesRecursive($this, $filter);
@@ -514,24 +515,21 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
   /** This function is called by OtherMediaController / RefreshFolders. Other scripts should not call it
   * @public
-  * @param Array of CustomMediaImageModel stubs.
+  * @param Array CustomMediaImageModel stubs array.
   */
   public function addImages($files) {
 
-      global $wpdb;
 			if ( apply_filters('shortpixel/othermedia/addfiles', true, $files, $this) === false)
 			{
 				 return false;
 			}
 
-      $values = array();
-
-      $optimizeControl = new OptimizeController();
+      $queueControl = new QueueController();
 			$otherMediaControl = OtherMediaController::getInstance();
 			$activeFolders = $otherMediaControl->getActiveDirectoryIDS();
 
       $fs = \wpSPIO()->filesystem();
-
+			$updated = false;
 
       foreach($files as $fileObj)
       {
@@ -552,13 +550,14 @@ class DirectoryOtherMediaModel extends DirectoryModel
 							 {
 								   $imageObj->setFolderId($this->id);
 									 $imageObj->saveMeta();
+									 $updated = true;
 							 }
 						}
 
 						// If in Db, but not optimized and autoprocess is on; add to queue for optimizing
 						if (\wpSPIO()->env()->is_autoprocess && $imageObj->isProcessable())
 						{
-							 $optimizeControl->addItemToQueue($imageObj);
+							 $queueControl->addItemToQueue($imageObj);
 						}
 
             continue;
@@ -567,16 +566,22 @@ class DirectoryOtherMediaModel extends DirectoryModel
           {
   	         $imageObj->setFolderId($this->id);
              $imageObj->saveMeta();
+						 $updated = true;
 
              if (\wpSPIO()->env()->is_autoprocess)
              {
-                $optimizeControl->addItemToQueue($imageObj);
+                $queueControl->addItemToQueue($imageObj);
              }
           }
           else {
           }
 
       }
+
+			if (true === $updated)
+			{
+				$this->updated = time();
+			}
   }
 
 

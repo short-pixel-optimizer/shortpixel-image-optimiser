@@ -10,8 +10,6 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Model\File\DirectoryOtherMediaModel as DirectoryOtherMediaModel;
 use ShortPixel\Model\File\DirectoryModel as DirectoryModel;
 
-use ShortPixel\Controller\OptimizeController as OptimizeController;
-
 use ShortPixel\Helper\InstallHelper as InstallHelper;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
 
@@ -36,7 +34,7 @@ class OtherMediaController extends \ShortPixel\Controller
     public static function getInstance()
     {
         if (is_null(self::$instance))
-           self::$instance = new OtherMediaController();
+					 self::$instance = new static();
 
         return self::$instance;
     }
@@ -150,7 +148,7 @@ class OtherMediaController extends \ShortPixel\Controller
 				global $wpdb;
 
 				$sql = 'SELECT count(id) as count from ' . $wpdb->prefix . 'shortpixel_meta';
-        $count = $wpdb->get_var($sql); //$this->getFolders(['only_count' => true, 'remove_hidden' => true]);
+        $count = $wpdb->get_var($sql);
 			 }
        if ($count == 0)
         $result = false;
@@ -335,10 +333,10 @@ class OtherMediaController extends \ShortPixel\Controller
 				}
 				elseif ($old_count < $new_count)
 				{
-					$message = printf(__(' %s files added', 'shortpixel-image-optimiser'), ($new_count-$old_count));
+					$message = sprintf(__(' %s files added', 'shortpixel-image-optimiser'), ($new_count-$old_count));
 				}
 				else {
-					$message = printf(__(' %s files removed', 'shortpixel-image-optimiser'), ($old_count-$new_count));
+					$message = sprintf(__(' %s files removed', 'shortpixel-image-optimiser'), ($old_count-$new_count));
 				}
 
 				$return['message'] = $message;
@@ -463,19 +461,6 @@ class OtherMediaController extends \ShortPixel\Controller
       if( $dirObj->exists() ) {
 
           $subdirs = $fs->sortFiles($dirObj->getSubDirectories()); // runs through FS sort.
-
-
-        /*  foreach($subdirs as $index => $dir) // weed out the media library subdirectories.
-          {
-             $dirname = $dir->getName();
-          //   $status = $this->checkifMediaLibrary($dir);
-
-						// @todo This should probably be checked via getBackupDirectory or so, not hardcoded ShortipxelBackups
-            if($dirname == 'ShortpixelBackups' || $this->checkifMediaLibrary($dir) )
-            {
-              // unset($subdirs[$index]);
-            }
-          } */
 
           if( count($subdirs) > 0 ) {
               $i = 0;

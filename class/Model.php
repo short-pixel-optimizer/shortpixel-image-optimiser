@@ -8,15 +8,26 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 abstract class Model
 {
-  protected $model = array();
+  protected $model = [];
 
   public function getData()
   {
     $data = array();
     foreach($this->model as $item => $options)
     {
-      //if (property_exists($this, $item))
-        $data[$item] = $this->{$item};
+      
+        $value = $this->{$item};
+
+        if (isset($this->model[$item]) && $this->model[$item]['s'] == 'string')
+        {
+          if (false === is_null($value))
+          {
+            $value = stripslashes($value);
+          }
+        }
+        
+        $data[$item] = $value; 
+        
     }
     return $data;
   }
@@ -39,9 +50,11 @@ abstract class Model
     {
       case "string":
         $value = $this->sanitizeString($value);
+        $value = $this->checkMaxLength($name, $value);
       break;
       case "int":
         $value = $this->sanitizeInteger($value);
+        $value = $this->checkMax($name, $value); 
       break;
       case "boolean":
         $value = $this->sanitizeBoolean($value);
@@ -132,6 +145,39 @@ abstract class Model
   public function sanitizeInteger($int)
   {
     return intval($int);
+  }
+
+  protected function checkMax($name, $value)
+  {
+      if (false === isset($this->model[$name]['max']))
+      {
+         return $value; 
+      }
+
+      if ($value > $this->model[$name]['max'])
+      {
+         return $this->model[$name]['max'];
+      }
+
+      return $value;
+  }
+
+  protected function checkMaxLength($name, $value)
+  {
+    if (false === isset($this->model[$name]['maxlength']))
+    {
+       return $value; 
+    }
+
+    $maxlength = $this->model[$name]['maxlength']; 
+
+    if (strlen($value) > $maxlength)
+    {
+       $value = substr($value, 0, $maxlength); 
+    }
+
+    return $value; 
+
   }
 
   public function sanitizeBoolean($bool)

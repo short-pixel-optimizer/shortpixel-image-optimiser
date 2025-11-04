@@ -14,13 +14,14 @@
  use ShortPixel\Controller\ResponseController as ResponseController;
 
  use ShortPixel\Helper\DownloadHelper as DownloadHelper;
-
+use ShortPixel\Model\Image\Image;
+use ShortPixel\Model\Queue\QueueItem;
 
 class PNGConverter extends MediaLibraryConverter
 {
 		protected $instance;
 
-    protected $current_image; // The current PHP image resource in memory
+    	protected $current_image; // The current PHP image resource in memory
 		protected $virtual_filesize;
 		protected $replacer; // Replacer class Object.
 
@@ -42,10 +43,10 @@ class PNGConverter extends MediaLibraryConverter
 
 			$this->converterActive = (intval($settings->png2jpg) > 0) ? true : false;
 
-			if ($env->is_gd_installed === false)
+			if ($env->is_gd_installed === false && false === $env->is_imagick_installed)
 			{
 				 $this->converterActive = false;
-				 $this->lastError = __('GD library is not active on this installation. Can\'t convert images to PNG', 'shortpixel-image-optimiser');
+				 $this->lastError = __('No GD or imagick library detected on this installation. Can\'t convert images to PNG', 'shortpixel-image-optimiser');
 			}
 
 			$this->forceConvertTransparent = ($settings->png2jpg == 2) ? true : false;
@@ -96,10 +97,15 @@ class PNGConverter extends MediaLibraryConverter
 			 return false;
 		}
 
-    public function filterQueue($item, $args = array())
+    public function filterQueue(QueueItem $qItem, $args = [])
     {
-       $item->action = 'png2jpg';
-       return $item;
+		$currentAction = $qItem->data()->action; 
+       $qItem->data()->action = 'png2jpg';
+	   $qItem->data()->addNextAction($currentAction);
+		$qItem->data()->addKeepDataArgs(['compressionType', 'smartcrop']);
+
+
+       return $qItem;
     }
 
 		public function convert($args = array())
@@ -149,7 +155,7 @@ class PNGConverter extends MediaLibraryConverter
 			 }
 
 			 Log::addDebug('Starting PNG conversion of #' . $this->imageModel->get('id'));
-			 $bool = $this->run();
+			 $bool = $this->convertFile();
 
 			 if (true === $bool)
 			 {
@@ -191,28 +197,39 @@ class PNGConverter extends MediaLibraryConverter
 		}
 
 
-		protected function run()
+		protected function convertFile()
 		{
 			do_action('shortpixel/image/convertpng2jpg_before', $this->imageModel);
 
-			$img = $this->getPNGImage();
+			//$img = $this->getPNGImage();
 			$fs = \wpSPIO()->filesystem();
 
-			$width = $this->imageModel->get('width');
+			$image = $this->getPNGImage();
+
+			if (false === $image)
+			{
+				return false; 
+			}
+
+		/*	$width = $this->imageModel->get('width');
 			$height = $this->imageModel->get('height');
 
 			// If imageModel doesn't have proper width / height set. This can happen with remote files.
 			if (! is_int($width) && ! $width > 0)
 			{
-				 $width = imagesx($img);
+				 $width = $image->getWidth(); // imagesx($img);
 			}
 			if (! is_int($height) && ! $height > 0)
 			{
-				 $height = imagesy($img);
+				 $height = $image->getHeight(); //imagesy($img);
 			}
+*/
 
+			$width = $image->getWidth(); 
+			$height = $image->getHeight();
 			Log::addDebug("PNG2JPG doConvert width $width height $height", memory_get_usage());
-			$bg = imagecreatetruecolor($width, $height);
+
+			/* $bg = imagecreatetruecolor($width, $height);
 
 			if(false === $bg || false === $img)
 			{
@@ -234,22 +251,18 @@ class PNGConverter extends MediaLibraryConverter
 			imagefill($bg, 0, 0, imagecolorallocate($bg, 255, 255, 255));
 			imagealphablending($bg, 1);
 			imagecopy($bg, $img, 0, 0, 0, 0, $width, $height);
-
+*/
 		//  $fsFile = $fs->getFile($image); // the original png file
-		// @todo Add ResponseController support to here and getReplacementPath.
-			$replacementPath = $this->getReplacementPath();
-			if (false === $replacementPath)
-			{
-				Log::addWarn('Png2Jpg replacement path failed');
-				$this->imageModel->getMeta()->convertMeta()->setError(self::ERROR_PATHFAIL);
 
-				return false; // @todo Add ResponseController something here.
-			}
 
 			// check old filename, replace with uniqued filename.
 
+			$bool = $image->convertPNG();
+
       /** Quality is set to 90 and not using WP defaults (or filter) for good reason. Lower settings very quickly degrade the libraries output quality.  Better to leave this hardcoded at 90 and let the ShortPixel API handle the optimization **/
-			if ($bool = imagejpeg($bg, $replacementPath, 90)) {
+			if (true === $bool) {
+
+					$replacementPath = $image->getReplacementPath();
 					Log::addDebug("PNG2JPG doConvert created JPEG at $replacementPath");
 					$newSize = filesize($replacementPath); // This might invoke wrapper but ok
 
@@ -258,7 +271,14 @@ class PNGConverter extends MediaLibraryConverter
 						 $origSize = $this->virtual_filesize;
 					}
 					else {
-						$origSize = $this->imageModel->getFileSize();
+						if ($this->imageModel->isScaled())
+						{
+							$origSize = $this->imageModel->getOriginalFile()->getFileSize();
+						}
+						else
+						{
+							$origSize = $this->imageModel->getFileSize();
+						}
 					}
 
 					// Reload the file we just wrote.
@@ -278,7 +298,7 @@ class PNGConverter extends MediaLibraryConverter
 					}
 					elseif (! $newFile->exists())
 					{
-						 Log::addWarn('PNG imagejpeg file not written!', $uniqueFile->getFileName() );
+						 Log::addWarn('PNG imagejpeg file not written!', $newFile->getFileName() );
 						 $msg = __('Error - PNG file not written', 'shortpixel-image-optimiser');
 						 ResponseController::addData($this->imageModel->get('id'), 'message', $msg);
 						 $this->imageModel->getMeta()->convertMeta()->setError(self::ERROR_WRITEERROR);
@@ -301,8 +321,8 @@ class PNGConverter extends MediaLibraryConverter
     /**
      *  Function to check if the filesize of the imagetype (webp/avif) is smaller, or within bounds of size to be stored. If not, the webp is not downloaded and uses.
      *
-     * @param  Integer $fileSize                 Filesize of the original
-     * @param  Integer $resultSize               Filesize of the optimized image
+     * @param  int $fileSize                 Filesize of the original
+     * @param  int $resultSize               Filesize of the optimized image
      * @return [type]             [description]
      */
     private function checkFileSizeMargin($fileSize, $resultSize)
@@ -373,17 +393,11 @@ class PNGConverter extends MediaLibraryConverter
     */
 		public function isTransparent() {
 				$isTransparent = false;
-				$transparent_pixel = $bg = false;
+		//		$transparent_pixel = $bg = false;
 
 				$imagePath = $this->imageModel->getFullPath();
 
 				// Check for transparency at the bit path.
-				/* if(ord(file_get_contents($imagePath, false, null, 25, 1)) & 4) {
-						Log::addDebug("PNG2JPG: 25th byte has third bit 1 - transparency");
-						$isTransparent = true;
-						//		return true;
-				} else {
-        */
 						$contents = file_get_contents($imagePath);
 						if (stripos($contents, 'PLTE') !== false && stripos($contents, 'tRNS') !== false) {
 								$isTransparent = true;
@@ -395,21 +409,16 @@ class PNGConverter extends MediaLibraryConverter
 								Log::addDebug("PNG2JPG Image width: " . $width . " height: " . $height . " aprox. size: " . round($width*$height*5/1024/1024) . "M memory limit: " . ini_get('memory_limit') . " USED: " . memory_get_usage());
 
 								$image = $this->getPNGImage();
+
 								if (false === $image)
 								{
 									 return false;
 								}
+
+								$isTransparent = $image->isTransparent(['width' => $width, 'height' => $height]); 
 								Log::addDebug("PNG2JPG width $width height $height. Now checking pixels.");
 										//run through pixels until transparent pixel is found:
-										for ($i = 0; $i < $width; $i++) {
-												for ($j = 0; $j < $height; $j++) {
-														$rgba = imagecolorat($image, $i, $j);
-														if (($rgba & 0x7F000000) >> 24) {
-																$isTransparent = true;
-																break;
-														}
-												}
-											}
+
 						}
 			//	} // non-transparant.
 
@@ -419,7 +428,10 @@ class PNGConverter extends MediaLibraryConverter
 
 		}
 
-		/** Try to load resource and an PNG via library */
+		/** Load PNG via the Image Model
+		 * 
+		 * @return Image 
+		 */
 		protected function getPNGImage()
 		{
 			if (is_object($this->current_image))
@@ -430,9 +442,11 @@ class PNGConverter extends MediaLibraryConverter
 			if ($this->imageModel->isScaled())
 			{
 				$imagePath = $this->imageModel->getOriginalFile()->getFullPath();
+				$imageObj = $this->imageModel->getOriginalFile();
 			}
 			else {
 				$imagePath = $this->imageModel->getFullPath();
+				$imageObj = $this->imageModel;
 			}
 
 			if (true === $this->imageModel->is_virtual())
@@ -440,7 +454,7 @@ class PNGConverter extends MediaLibraryConverter
 				$downloadHelper = DownloadHelper::getInstance();
 				Log::addDebug('PNG converter: Item is remote, attempting to download');
 
-				$tempFile = $downloadHelper->downloadFile($this->imageModel->getURL());
+				$tempFile = $downloadHelper->downloadFile($imageObj->getURL());
 				if (is_object($tempFile))
 				{
 					 $imagePath = $tempFile->getFullPath();
@@ -448,10 +462,30 @@ class PNGConverter extends MediaLibraryConverter
 				}
 			}
 
+			$replacementPath = $this->getReplacementPath();
+			Log::addTemp("replacement path: " . $replacementPath);
 
-			$image = @imagecreatefrompng($imagePath);
-			if (! $image)
+			// @todo Add ResponseController support to here and getReplacementPath.
+			if (false === $replacementPath)
 			{
+				Log::addWarn('Png2Jpg replacement path failed');
+				$this->imageModel->getMeta()->convertMeta()->setError(self::ERROR_PATHFAIL);
+
+				return false; // @todo Add ResponseController something here.
+			}
+
+			$image = new Image($imagePath, $replacementPath); 
+			$image->loadImageResource();
+
+		//	$image = @imagecreatefrompng($imagePath);
+			if (false === $image)
+			{
+
+				$msg = __('Image source failed - Check if source image is PNG and library is working', 'shortpixel-image-optimiser');
+				$this->imageModel->getMeta()->convertMeta()->setError(self::ERROR_LIBRARY);
+				ResponseController::addData($this->imageModel->get('id'), 'message', $msg);
+
+				Log::addError('Image Create from PNG failed!');
 				$this->current_image = false;
 			}
 			else

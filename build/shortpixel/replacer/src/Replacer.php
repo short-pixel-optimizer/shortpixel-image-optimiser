@@ -42,6 +42,7 @@ class Replacer
 			Modules\WpBakery::getInstance();
 			Modules\YoastSeo::getInstance();
 			Modules\Breakdance::getInstance();
+		//	Modules\SmartSlider::getInstance();
 	}
 
 	public function setSource($url)
@@ -92,21 +93,21 @@ class Replacer
 
 	     // Search-and-replace filename in post database
 	     // @todo Check this with scaled images.
-	 		$base_url = parse_url($this->source_url, PHP_URL_PATH);// emr_get_match_url( $this->source_url);
+	 	$base_url = parse_url($this->source_url, PHP_URL_PATH);
 	    $base_url = str_replace('.' . pathinfo($base_url, PATHINFO_EXTENSION), '', $base_url);
 
 	    /** Fail-safe if base_url is a whole directory, don't go search/replace */
-	    if (is_dir($base_url))
+	    if (false === $this->fileIsRestricted($base_url) && is_dir($base_url))
 	    {
 	      Log::addError('Search Replace tried to replace to directory - ' . $base_url);
-				$errors[] = __('Fail Safe :: Source Location seems to be a directory.', 'enable-media-replace');
+				$errors[] = __('Fail Safe :: Source Location seems to be a directory.', 'shortpixel-image-optimiser');
 	      return $errors;
 	    }
 
 	    if (strlen(trim($base_url)) == 0)
 	    {
 	      Log::addError('Current Base URL emtpy - ' . $base_url);
-	      $errors[] = __('Fail Safe :: Source Location returned empty string. Not replacing content','enable-media-replace');
+	      $errors[] = __('Fail Safe :: Source Location returned empty string. Not replacing content','shortpixel-image-optimiser');
 	      return $errors;
 	    }
 
@@ -251,7 +252,7 @@ class Replacer
 
           if ($result === false)
           {
-            Notice::addError('Something went wrong while replacing' .  $result->get_error_message() );
+          // Notice::addError('Something went wrong while replacing' .  $result->get_error_message() );
             Log::addError('WP-Error during post update', $result);
           }
         }
@@ -267,14 +268,40 @@ class Replacer
 	  {
 	    global $wpdb;
 
-	    $meta_options = apply_filters('shortpixel/replacer/metadata_tables', array('post', 'comment', 'term', 'user'));
+	    $meta_options = apply_filters('shortpixel/replacer/metadata_tables', array('post', 'comment', 'term', 'user', 'options'));
 	    $number_of_updates = 0;
 
-	    foreach($meta_options as $type)
+			$meta_default = [
+					'id' => 'meta_id',
+					'value' => 'meta_value',
+			];
+
+			$table_options = [
+					'postmeta' => $meta_default,
+					'commentmeta' => $meta_default,
+					'termmeta' => $meta_default,
+					'usermeta' => $meta_default,
+					'options' => [
+							'id' => 'option_id',
+							'value' => 'option_value',
+					]
+
+			];
+
+			$table_options = apply_filters('shortpixel/replacer/replacement_tables', $table_options );
+
+			// Exeception in user meta table.
+			$table_options['usermeta']['id'] = 'umeta_id';
+
+	    foreach($table_options as $table => $data)
 	    {
-	        switch($type)
+				 	// These must be always defined.
+					$id_field = esc_sql($data['id']);
+					$value_field = esc_sql($data['value']);
+
+	        switch($table)
 	        {
-	          case "post": // special case.
+	          case "postmeta": // special case.
 	              $sql = 'SELECT * FROM ' . $wpdb->postmeta . '
 	                WHERE post_id in (SELECT ID from '. $wpdb->posts . ' where post_status in ("publish", "future", "draft", "pending", "private") ) AND meta_value like %s';
 	              $type = 'post';
@@ -282,34 +309,33 @@ class Replacer
 	              $update_sql = ' UPDATE ' . $wpdb->postmeta . ' SET meta_value = %s WHERE meta_id = %d';
 	          break;
 	          default:
-	              $table = $wpdb->{$type . 'meta'};  // termmeta, commentmeta etc
+	              $wp_table = $wpdb->{$table};  // termmeta, commentmeta etc
 
-	              $meta_id = 'meta_id';
-	              if ($type == 'user')
-	                $meta_id = 'umeta_id';
+	              $sql = "SELECT $id_field , $value_field FROM $wp_table WHERE $value_field like %s";
 
-	              $sql = 'SELECT ' . $meta_id . ' as id, meta_value FROM ' . $table . '
-	                WHERE meta_value like %s';
-
-	              $update_sql = " UPDATE $table set meta_value = %s WHERE $meta_id  = %d ";
+	              $update_sql = " UPDATE $wp_table set $value_field = %s WHERE $id_field  = %d ";
 	          break;
 	        }
 
 	        $sql = $wpdb->prepare($sql, '%' . $url . '%');
 
+					Log::addTemp('Checking -- ', $sql);
+
 	        // This is a desparate solution. Can't find anyway for wpdb->prepare not the add extra slashes to the query, which messes up the query.
 	        $rsmeta = $wpdb->get_results($sql, ARRAY_A);
+
+					Log::addTemp('result', $rsmeta);
 
 	        if (! empty($rsmeta))
 	        {
 	          foreach ($rsmeta as $row)
 	          {
 	            $number_of_updates++;
-	            $content = $row['meta_value'];
+	            $content = $row[$value_field];
 
 							$component = $this->replace_settings['component'];
 
-	            $id = $row['meta_id'];
+	            $id = $row[$id_field];
 
 						 // Content as how it's loading.
 						 $content = apply_filters('shortpixel/replacer/load_meta_value', $content, $row, $component);
@@ -317,7 +343,7 @@ class Replacer
 						 // If content is null, break out of everything and don't replace this.
 						 if (null === $content)
 						 {
-							 	Log::addDebug('Content returned null, aborting this record, meta_id : ' . $id);
+							 	Log::addDebug('Content returned null, aborting this record, meta_id : ' . $id_field);
 						 }
 						 else {
 								 $content = $this->replaceContent($content, $search_urls, $replace_urls);
@@ -333,6 +359,7 @@ class Replacer
 								}
 						 }
 
+							$component = $this->replace_settings['component'];
 
 						} // Loop
 	        } // if
@@ -355,9 +382,15 @@ class Replacer
 	  * @param $in_deep Boolean.  This is use to prevent serialization of sublevels. Only pass back serialized from top.
 	  * @param $strict_check Boolean . If true, remove all classes from serialization check and fail. This should be done on post_content, not on metadata.
 	  */
-	  private function replaceContent($content, $search, $replace, $in_deep = false, $strict_check = false)
+		public function replaceContent($content, $search, $replace, $in_deep = false, $strict_check = false)
 	  {
-	    //$is_serial = false;
+
+			// Since ReplaceContent can now be called directly, this might not be set, set defaults if so
+			if (is_null($this->replace_settings))
+			{
+				 $this->setReplaceSettings([]);
+			}
+
 	    if ( true === is_serialized($content))
 			{
 				$serialized_content = $content; // use to return content back if incomplete classes are found, prevent destroying the original information
@@ -367,7 +400,7 @@ class Replacer
 						$args = array('allowed_classes' => false);
 				}
 				else
-				{
+				{ 
 						$args = array('allowed_classes' => true);
 				}
 
@@ -384,7 +417,7 @@ class Replacer
 	    if ($isJson)
 	    {
 	      $content = json_decode($content);
-	     // Log::addDebug('JSon Content', $content);
+
 	    }
 
 	    if (is_string($content))  // let's check the normal one first.
@@ -443,9 +476,41 @@ class Replacer
 			 			$in_deep === false && (is_array($content) || is_object($content))
 						)
 			{
+				Log::addTemp('Content is array or object - not json, - maybe serializing');
 				$content = maybe_serialize($content);
 			}
 	    return $content;
+	}
+
+	/** Check if path is allowed within openbasedir restrictions. This is an attempt to limit notices in file funtions if so.  Most likely the path will be relative in that case.
+	* @param String Path as String
+	*/
+	private function fileIsRestricted($path)
+	{
+
+		 $basedir = ini_get('open_basedir');
+
+		 if (false === $basedir || strlen($basedir) == 0)
+		 {
+				 return false;
+		 }
+
+		 $restricted = true;
+		 $basedirs = preg_split('/:|;/i', $basedir);
+
+		 foreach($basedirs as $basepath)
+		 {
+					if (strpos($path, $basepath) !== false)
+					{
+						 $restricted = false;
+						 break;
+					}
+		 }
+
+		 // Allow this to be overridden due to specific server configs ( ie symlinks ) might get this flagged falsely.
+		 $restricted = apply_filters('shortpixel/file/basedir_check', $restricted);
+
+		 return $restricted;
 	}
 
 	private function change_key($arr, $set) {

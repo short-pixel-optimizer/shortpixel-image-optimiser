@@ -1,0 +1,140 @@
+.shortpixel-media-modal-shade {
+  position: fixed;
+  left: 0;
+  right: 25px;
+  bottom: 0;
+  top: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  z-index: 250;
+}
+
+.shortpixel-media-modal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 25px;
+  left: 0;
+  right: 0;
+}
+.shortpixel-media-modal .modal-wrapper {
+  z-index: 300;
+  width: 80%;
+  height: 80vh;
+  max-height: 700px;
+  background: #fff;
+}
+.shortpixel-media-modal .modal-wrapper .title {
+  background: #116C7E;
+  color: white;
+  padding: 6px;
+}
+.shortpixel-media-modal .modal-wrapper .title h3 {
+  margin: 5px 0;
+  text-align: center;
+  color: #fff;
+}
+.shortpixel-media-modal .modal-wrapper .title span {
+  font-size: 16px;
+  font-weight: 700;
+  float: right;
+  cursor: pointer;
+}
+.shortpixel-media-modal .modal-wrapper .image-wrapper {
+  height: 85%;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+.shortpixel-media-modal .modal-wrapper .image-wrapper > div {
+  flex: 1;
+  position: relative;
+}
+.shortpixel-media-modal .modal-wrapper .image-wrapper > div:first-child {
+  border-right: 1px solid #000;
+}
+.shortpixel-media-modal .modal-wrapper .image-wrapper i {
+  display: inline-block;
+  height: 100%;
+  width: 100%;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+}
+.shortpixel-media-modal .modal-wrapper .image-wrapper .error-message {
+  position: absolute;
+  display: inline-block;
+  background: #fff;
+  padding: 8px;
+  z-index: 20;
+  left: 0;
+  top: 45%;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+  background: #F5F5F5;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .replace_type.wrapper {
+  display: flex;
+  flex-direction: column;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .replace_type.wrapper label {
+  margin: 4px 0;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .replace_type.wrapper .howto {
+  display: none;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .replace_type.wrapper .button {
+  display: inline-block;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .replace_type.wrapper .bg_transparency {
+  display: none;
+}
+.shortpixel-media-modal .modal-wrapper .load-preview-spinner {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+}
+.shortpixel-media-modal .modal-wrapper .load-preview-spinner .loadspinner {
+  animation: cssload-spin 5000ms infinite linear;
+  -o-animation: cssload-spin 5000ms infinite linear;
+  -ms-animation: cssload-spin 5000ms infinite linear;
+  -webkit-animation: cssload-spin 5000ms infinite linear;
+  -moz-animation: cssload-spin 5000ms infinite linear;
+}
+@keyframes loading-spin {
+  100% {
+    transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@-o-keyframes loading-spin {
+  100% {
+    -o-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@-ms-keyframes loading-spin {
+  100% {
+    -ms-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@-webkit-keyframes loading-spin {
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@-moz-keyframes loading-spin {
+  100% {
+    -moz-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+
+/*# sourceMappingURL=shortpixel-media-modal.css.map */

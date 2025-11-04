@@ -33,8 +33,9 @@ var ShortPixel = function() {
                 + '</option><option value="shortpixel-glossy"> → ' + _spTr.redoGlossy
                 + '</option><option value="shortpixel-lossless"> → ' + _spTr.redoLossless
                 + '</option><option value="shortpixel-restore"> → ' + _spTr.restoreOriginal
-								+ '</option><option value="shortpixel-smartcrop"> → ' + _spTr.redoSmartcrop
-								+ '</option><option value="shortpixel-smartcropless"> → ' + _spTr.redoSmartcropless
+				+ '</option><option value="shortpixel-smartcrop"> → ' + _spTr.redoSmartcrop
+				+ '</option><option value="shortpixel-smartcropless"> → ' + _spTr.redoSmartcropless
+                + '</option><option value="shortpixel-generateai"> → ' + _spTr.generateAI 
                 + '</option><option value="shortpixel-mark-completed"> → ' + _spTr.markCompleted
                 + '</option>');
         }
@@ -42,12 +43,12 @@ var ShortPixel = function() {
         // Extracting the protected Array from within the 0 element of the parent array
         ShortPixel.setOptions(ShortPixelConstants[0]);
 
-				if (jQuery('#shortpixel-form-request-key').length > 0)
+				/*if (jQuery('#shortpixel-form-request-key').length > 0)
 				{
 					  jQuery('#pluginemail').on('change, keyup', jQuery.proxy(this.updateSignupEmail, this));
 						jQuery('#request_key').on('mouseenter', jQuery.proxy(this.updateSignupEmail, this));
 						jQuery('#request_key').on('click', jQuery.proxy(this.newApiKey, this));
-				}
+				} */
 
         if (window.ShortPixelProcessor)
 				{
@@ -57,7 +58,8 @@ var ShortPixel = function() {
 
 				// Move footer notices to the top, where it should be.
 				$headerEnd = jQuery( '.wp-header-end' );
-				jQuery( 'div.shortpixel-notice' ).not( '.inline, .below-h2' ).insertAfter( $headerEnd );
+
+      	jQuery( 'div.shortpixel-notice' ).not( '.inline, .below-h2' ).insertAfter( $headerEnd );
 
 				var settingsPage = document.querySelector('.is-shortpixel-settings-page');
 				if (settingsPage !== null)
@@ -70,12 +72,12 @@ var ShortPixel = function() {
             ShortPixel[opt] = options[opt];
         }
     }
-
+/*
     function isEmailValid(email) {
 				var regex = /^\S+@\S+\.\S+$/;
 				return regex.test(email);
     }
-
+*/
     function updateSignupEmail() {
 
 				clearTimeout( ShortPixel.updateTimer );
@@ -192,10 +194,10 @@ var ShortPixel = function() {
 
     }
 
-    function apiKeyChanged() {
+    /* function apiKeyChanged() {
         jQuery(".wp-shortpixel-options .shortpixel-key-valid").css("display", "none");
         jQuery(".wp-shortpixel-options button#validate").css("display", "inline-block");
-    }
+    } */
 
 
 
@@ -400,6 +402,7 @@ var ShortPixel = function() {
             if(!shown) e.target.parentElement.classList.add("sp-show");
     }
 
+// @todo Comparer should probably move to screen-base js
     function loadComparer(id, type) {
         this.comparerData.origUrl = false;
          if(this.comparerData.cssLoaded === false) {
@@ -419,13 +422,14 @@ var ShortPixel = function() {
             });
             this.comparerData.jsLoaded = 1;
         }
+
         if(this.comparerData.origUrl === false) {
                if (typeof type == 'undefined')
                   var type = 'media';  // default.
             jQuery.ajax({
                 type: "POST",
                 url: ShortPixel.AJAX_URL,
-                data: { action : 'shortpixel_get_comparer_data', id : id, type: type, nonce: ShortPixelConstants[0].nonce_ajaxrequest },
+								data: { action: 'shortpixel_ajaxRequest', screen_action : 'getComparerData', id : id, type: type, nonce: ShortPixelProcessorData.nonce_ajaxrequest },
                 success: function(response) {
                   //  data = JSON.parse(response);
 
@@ -515,12 +519,12 @@ var ShortPixel = function() {
         init                : init,
         didInit             : false,
         setOptions          : setOptions,
-        isEmailValid        : isEmailValid,
+        //isEmailValid        : isEmailValid,
         updateSignupEmail   : updateSignupEmail,
         validateKey         : validateKey,
         enableResize        : enableResize,
         setupGeneralTab     : setupGeneralTab,
-        apiKeyChanged       : apiKeyChanged,
+  //      apiKeyChanged       : apiKeyChanged,
         checkThumbsUpdTotal : checkThumbsUpdTotal,
         initSettings        : initSettings,
       //  switchSettingsTab   : switchSettingsTab,

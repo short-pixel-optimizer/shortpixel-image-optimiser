@@ -13,13 +13,13 @@
         "shortpixel/notices":">=1.3",
         "shortpixel/build" : "@dev",
 				"shortpixel/shortq": ">=1.0",
-				"shortpixel/replacer": ">=1.0"
+				"shortpixel/replacer2": ">=2.0"
     },
     "require-dev": {
 	"phpunit/phpunit": "^9",
 	"mikey179/vfsstream": "^1",
 	"10up/wp_mock": "@dev",
-        "phpunitgen/console": "^6.0"
+        "php-stubs/wp-cli-stubs": "^2.11"
 
     },
    "autoload": {

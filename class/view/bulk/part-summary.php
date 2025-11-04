@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 <section class="panel summary" data-panel="summary">
   <div class="panel-container">
 
-    <h3 class="heading"><span><img src="<?php echo esc_url(\wpSPIO()->plugin_url('res/img/robo-slider.png')); ?>"></span>
+    <h3 class="heading"><span>
       <?php esc_html_e('ShortPixel Bulk Optimization - Summary','shortpixel-image-optimiser'); ?>
     </h3>
 
@@ -38,6 +38,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 						</div>
             <div class='filetypes' data-check-visibility data-control="data-check-has-avif">
 							<span>&nbsp; <?php esc_html_e('+ AVIF images','shortpixel-image-optimiser'); ?> </span><span data-stats-media="images-images_avif" data-check-has-avif>&nbsp;</span>
+						</div>
+            <div class='filetypes' data-check-visibility data-control="data-check-has-ai">
+							<span>&nbsp; <?php esc_html_e('+ AI ','shortpixel-image-optimiser'); ?> </span><span data-stats-media="images-images_ai" data-check-has-ai>&nbsp;</span>
 						</div>
 
 
@@ -133,7 +136,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 			</button>
       <button class="button-primary button" type="button" data-action="StartBulk" data-control="data-check-total-total" data-check-presentation="disable">
 				<span class='dashicons dashicons-arrow-right'></span>
-				<p><?php esc_html_e('Start Bulk Optimization', 'shortpixel-image-optimiser'); ?></p>
+        <?php if ($view->customOperationMedia !== false) 
+        {
+            printf(esc_html('%s Start %s %s', 'shortpixel-image-optimiser'), '<p>', $view->customOperationMedia, '</p>');
+        }
+        else
+        {
+          ?>
+            <p><?php esc_html_e('Start Bulk Optimization', 'shortpixel-image-optimiser'); ?></p>
+          <?php 
+        } ?>
+				
 			</button>
     </nav>
   </div>

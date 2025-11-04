@@ -44,29 +44,38 @@ $disabled = ($view->key->is_editable) ? '' : 'disabled';
       <?php esc_html_e('Join ShortPixel','shortpixel-image-optimiser');?></a>
     </h2> -->
 
-	 <!-- // @todo Inline CSS on whole page-->
-  <h3><?php esc_html_e('Request an API Key:','shortpixel-image-optimiser');?></h3>
-<p><?php esc_html_e('If you don\'t have an API Key, you can request one for free. Just press the "Request Key" button after checking that the e-mail is correct.','shortpixel-image-optimiser');?></p>
-
-<settinglist>
-
   <form method="POST" action="<?php echo esc_url(add_query_arg(array('noheader' => 'true', 'sp-action' => 'action_request_new_key'))) ?>"
       id="shortpixel-form-request-key">
   <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
 
+		<div class='onboarding-join-wrapper'>
+
+	 <!-- // @todo Remove Inline CSS on whole page-->
+
+
+<settinglist class='new-customer now-active'>
+
+	<h3><?php esc_html_e('New user?','shortpixel-image-optimiser');?></h3>
+	<?php echo UiHelper::getIcon('res/images/icon/new-user.svg'); ?>
+	<h2><?php esc_html_e('Create account','shortpixel-image-optimiser');?></h2>
+	<p><?php esc_html_e('If you don\'t have an API Key, you can request one for free. Just press the "Request Key" button after checking that the e-mail is correct.','shortpixel-image-optimiser');?></p>
+
+  <form method="POST" action="<?php echo esc_url(add_query_arg(array('noheader' => 'true', 'sp-action' => 'action_request_new_key'))) ?>"
+      id="shortpixel-form-request-key">
+
   <setting>
-      <name for="pluginemail"><?php esc_html_e('E-mail address:','shortpixel-image-optimiser');?></name>
       <content>
+      <name for="pluginemail"><?php esc_html_e('E-mail address:','shortpixel-image-optimiser');?></name>
               <input name="pluginemail" type="text" id="pluginemail" value="<?php echo esc_attr( sanitize_email($adminEmail) );?>" class="regular-text" <?php echo $disabled ?> />
 
               <span class="spinner" id="pluginemail_spinner" style="float:none;"></span>
-
+<!--
               <button type="submit" id="request_key" class="button button-primary" title="<?php esc_html_e('Request a new API key','shortpixel-image-optimiser');?>"
                  href="https://shortpixel.com/free-sign-up?pluginemail=<?php echo esc_attr( esc_url($adminEmail) );?>"
 								 <?php echo $disabled ?>  >
                  <?php esc_html_e('Request Key','shortpixel-image-optimiser');?>
               </button>
-
+-->
               <info>
                 <p class="settings-info shortpixel-settings-error" style='display:none;' id='pluginemail-error'>
                     <b><?php esc_html_e('Please provide a valid e-mail address.', 'shortpixel-image-optimiser');?></b>
@@ -77,57 +86,75 @@ $disabled = ($view->key->is_editable) ? '' : 'disabled';
                     } else {
                         esc_html_e('Please input your e-mail address and press the Request Key button.','shortpixel-image-optimiser');
                     }
-                    ?><p><span style="position:relative;">
+                    ?>
+                </p>
+                <p>
+                    <label for='tos'>
+                      <span style="position:relative;">
+
                         <input name="tos" type="checkbox" id="tos">
-                        <img id="tos-robo" alt="<?php esc_html_e('ShortPixel logo', 'shortpixel-image-optimiser'); ?>"
+                        <img class="tos-robo" alt="<?php esc_html_e('ShortPixel logo', 'shortpixel-image-optimiser'); ?>"
                              src="<?php echo esc_url(wpSPIO()->plugin_url('res/img/slider.png' ));?>" style="position: absolute;left: -95px;bottom: -26px;display:none;">
-                        <img id="tos-hand" alt="<?php esc_html_e('Hand pointing', 'shortpixel-image-optimiser'); ?>"
+                        <img class="tos-hand" alt="<?php esc_html_e('Hand pointing', 'shortpixel-image-optimiser'); ?>"
                              src="<?php echo esc_url(wpSPIO()->plugin_url('res/img/point.png' ));?>" style="position: absolute;left: -39px;bottom: -9px;display:none;">
+
                     </span>
-                    <label for="tos"><?php printf(esc_html__('I have read and I agree to the %s Terms of Service %s and the %s Privacy Policy %s (%s GDPR compliant %s).','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/tos" target="_blank">', '</a>', '<a href="https://shortpixel.com/privacy" target="_blank">', '</a>', '<a href="https://shortpixel.com/privacy#gdpr" target="_blank">', '</a>');
-                    ?> </label></p>
+                    <?php printf(esc_html__('I have read and I agree to the %s Terms of Service %s and the %s Privacy Policy %s (%s GDPR compliant %s).','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/tos" target="_blank">', '</a>', '<a href="https://shortpixel.com/privacy" target="_blank">', '</a>', '<a href="https://shortpixel.com/privacy#gdpr" target="_blank">', '</a>');
+                    ?></label> </p>
               </info>
       </content>
   </setting>
-  </form>
+
 </settinglist>
 
-<h3>
-    <?php esc_html_e('Already have an API Key:','shortpixel-image-optimiser');?>
-</h3>
-<p>
-    <?php esc_html_e('If you already have an API Key please input it below and press Validate.','shortpixel-image-optimiser');?>
-</p>
+<settinglist class='existing-customer'>
+	<h3>
+			<?php esc_html_e('Already have an account?','shortpixel-image-optimiser');?>
+	</h3>
 
-<settinglist>
-  <form method="POST" action="<?php echo esc_url(add_query_arg(array('noheader' => 'true', 'sp-action' => 'action_addkey'))) ?>" id="shortpixel-form-nokey">
-  <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
+	<?php echo UiHelper::getIcon('res/images/icon/login.svg'); ?>
+	<h2><?php esc_html_e('Login','shortpixel-image-optimiser');?></h2>
 
+	<p>
+	    <?php esc_html_e('Welcome back! If you already have an API Key please input it below and press Validate.','shortpixel-image-optimiser');?>
+	</p>
 
   <setting>
+      <content>
       <name>
           <?php esc_html_e('API Key:','shortpixel-image-optimiser');?>
       </name>
-      <content>
-        <input name="apiKey" type="text" id="key" value="<?php echo esc_attr( $view->key->apiKey );?>"
+        <input name="login_apiKey" type="text" id="new-key" value="<?php echo esc_attr( $view->key->apiKey );?>"
            class="regular-text" <?php echo $disabled ?>>
 
               <input type="hidden" name="validate" id="valid" value="validate"/>
               <span class="spinner" id="pluginemail_spinner" style="float:none;"></span>
-              <button type="submit" id="validate" class="button button-primary" title="<?php esc_html_e('Validate the provided API key','shortpixel-image-optimiser');?>" <?php echo $disabled ?>
+            <!--  <button type="submit" id="validate" class="button button-primary" title="<?php esc_html_e('Validate the provided API key','shortpixel-image-optimiser');?>" <?php echo $disabled ?>
                   >
                   <?php esc_html_e('Validate','shortpixel-image-optimiser');?>
-              </button>
+              </button> -->
       </content>
-			<?php if (isset($error_message)): ?>
-				<error class='display'>
-					<?php echo $error_message; ?>
-				</error>
-			<?php endif; ?>
+
   </setting>
 
-  </form>
 </settinglist>
+
+
+
+
+</div> <!-- // Join Wrapper -->
+
+
+
+  <div class='submit-errors'>
+
+  </div>
+<settinglist class='onboard-submit'>
+
+  <button type="button" name="add-key"><?php esc_html_e('Continue', 'shortpixel-image-optimiser'); ?><span class='dots'>.</span></button>
+
+</settinglist>
+
 
 
 </section>

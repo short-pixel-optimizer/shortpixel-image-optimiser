@@ -1,0 +1,32 @@
+
+@mixin shortpixel-button {
+		color: #fff;
+		background: $blue_default;
+		padding: 10px 12px;
+		border: 0;
+		margin: 4px; // see if this works.
+		font-family: 'Roboto';
+		font-weight: 700;
+		border-radius: 6px;
+		text-decoration: none;
+		transition: all 0.1s ease-in-out;
+		box-shadow: none;  // standard WP adds some on focus.
+		&:hover {
+			background: lighten($blue_default, 10%);
+			//transform: scale(1.02);
+		}
+
+
+		i.switch {
+			 width: 18px;
+			 height: 12px;
+		}
+		i.notifications
+		{
+			 width: 14px;
+			 height: 14px;
+			 filter: brightness(0) saturate(100%) invert(100%) sepia(100%) saturate(0%) hue-rotate(251deg) brightness(108%) contrast(108%);;
+		}
+
+		// @todo probably something for icon left /right here.
+}

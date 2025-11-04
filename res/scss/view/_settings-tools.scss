@@ -1,7 +1,21 @@
 
 #tab-tools
 {
-	.button { min-height: 44px; }
+	.button { min-height: 44px;
+		color: $blue_default;
+		background-color: darken($color-brokenwhite, 5%);
+		//background: linear-gradient(to left, $color-darkest, $color-dark);
+		border-radius: 6px;
+		font-weight: 700;
+		//	 font-size: 16px;
+		letter-spacing: 0.3px;
+		border: none;
+		transition: all 0.1s ease-in-out;
+
+		&:hover {
+			background: lighten($blue_default, 10%);
+			color: #fff;
+		}}
 	.option, setting {
 			clear: both;
 			//display: flex;
@@ -23,12 +37,21 @@
 							font-weight: 700;
 							text-align: center;
 							padding: 6px 8px;
+							transition: all 0.1s ease-in-out;
 							&.danger
 							{
 								 color: #fff;
-								 background: #ff0000;
-								 border: 1px solid #ff0000;
+								 background: darken(#ff0000, 10%);
+								// background: #ff0000;
+								border:none;
+								border-radius: 6px;
+								&:hover {
+									background: #ff0000;
+									//box-shadow: 0 0 7px #ff0000, 0 0 12px #ff8000
+
+								}
 							}
+
 					}
 
 					&.queue-warning
@@ -60,6 +83,39 @@
 	//	 padding: 8px;
 	//	 border: 1px solid #ff0000;
 	}
+
+	.tools-message 
+	{
+		background: #F4FBFC;
+  	 	border-radius: 12px;
+		height: 0; 
+		transition: all 0.2s;
+		font-weight: 700;
+		&.opened
+		{
+			height: auto;	 
+			padding: 16px;
+
+		}
+	}
+
+	.setting-importexport
+	{
+		 textarea {
+			 width: 300px;
+			 height: 150px;
+			 font-weight: 500;
+			 resize: both;
+		 }
+		 .import-textarea 
+		 {
+			height: 75px;
+		 }
+
+	
+	}
+
+	
 
 
 } // Tab tools.

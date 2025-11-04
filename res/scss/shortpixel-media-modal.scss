@@ -1,0 +1,142 @@
+@import 'elements/animation';
+@import 'elements/colors'; 
+
+
+
+
+.shortpixel-media-modal-shade
+{
+    position: fixed;
+    left: 0;
+    right: 25px;
+    bottom: 0;
+    top: 0; 
+    background: rgba(0,0,0, .50) ;
+    display: flex; 
+    z-index: 250;  // z-index inflation
+}
+
+.shortpixel-media-modal
+{
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    position: absolute; 
+    top: 25px;
+  //  bottom: 0;
+    left: 0;
+    right: 0; 
+    
+
+    .modal-wrapper 
+    {
+        z-index: 300; 
+        width: 80%; 
+        height: 80vh; 
+        max-height: 700px;
+       // max-width: 700px; 
+        background: #fff;
+        .title {
+            
+            background: $blue_dark; 
+            color: white; 
+        //    height: 5%;
+            padding: 6px; 
+           // display: flex; 
+
+            h3 {
+                margin: 5px 0;
+                text-align: center;
+                color: #fff;
+            }
+             span 
+            {
+                font-size: 16px; 
+                font-weight: 700;
+                float: right;
+                cursor: pointer;
+            }
+        }
+        .image-wrapper
+        {
+            height: 85%;
+            display: flex;
+            flex-direction: row;
+            align-items: stretch;
+            > div {
+                flex: 1;
+                position: relative; 
+
+                &:first-child
+                {
+                    border-right: 1px solid #000;
+                }
+            }
+            i {
+                display: inline-block;
+                height: 100%;
+                width: 100%;
+                background-repeat: no-repeat;
+                background-size: cover;
+                background-position: center;
+            }
+            .error-message {
+                position: absolute;
+                display: inline-block;
+                background: #fff; 
+                padding: 8px; 
+                z-index: 20;
+                left: 0;
+                top: 45%;
+
+            }
+            
+        }
+        .action-bar {
+           // height: 10%;
+           // min-height: 400px;
+            display: flex; 
+            width: 100%;
+            justify-content: center;
+            align-items: center; 
+            background: $color-brokenwhite;
+
+            .replace_type.wrapper 
+            {
+                 display: flex; 
+                 flex-direction: column; 
+
+                 label 
+                 {
+                     margin: 4px 0;
+                 }
+                 .howto {
+                    display: none;
+                 }
+                 .button 
+                 {
+                     display: inline-block;
+                 }
+                 .bg_transparency 
+                 {
+                     display: none;
+                 }
+                 
+            }
+        }
+
+        .load-preview-spinner
+        {
+            position: absolute; 
+            left: 50%; 
+            top: 50%; 
+
+            .loadspinner {
+                @include loadspinner;
+           }
+        }
+    }
+     
+
+}
+
