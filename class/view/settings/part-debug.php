@@ -273,8 +273,15 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
 
           if (is_array($options))
           {
-              $filters = (is_array($options['filters'])) ? $options['filters'] : ''; 
-              unset($options['filters']); 
+              $filters = []; 
+              
+              if(isset($options['filters']) && is_array($options['filters'])) 
+              {
+                  $filters = $options['filters'];
+                  unset($options['filters']); 
+              }
+              
+              
               $options = array_merge($options, $filters); 
               
               foreach($options as $opt => $val)
