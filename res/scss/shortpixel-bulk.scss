@@ -114,10 +114,12 @@
   }
 
   nav {
-    margin: 45px auto;
+    margin: 45px 0;
     //		margin-top: 45px;
-    width: 80%;
+    //width: 80%;
     min-height: 50px;
+    display: flex;
+    justify-content: center;
 
     .button-primary {
       margin-left: 15px;
@@ -151,6 +153,16 @@
          background: none;   
          border: 0; 
          cursor: pointer;
+      }
+
+      input {
+        background-color: $blue_background;
+        background-image: url($icon_path + 'calendar.svg'); 
+        background-repeat: no-repeat; 
+        background-position: 5px center; 
+        padding: 6px 6px 6px 25px ;
+        margin-left: 8px;
+        margin-top: 25px;
       }
 
   }
@@ -558,8 +570,10 @@
     }
 
     .option-block {
-      margin: 0 auto 35px;
-      width: 80%;
+      margin: 0 auto;
+      width: 90%;
+      background-color: $blue_background;
+      padding: 12px;
 
       h2 {
         font-size: 22px;
@@ -569,6 +583,33 @@
       p {
         margin-left: 0;
       }
+
+    }
+
+    .advanced-label 
+    {
+       display: flex; 
+       background-color: $blue_background;
+       margin: 0 auto 5px;
+       width: 90%;
+       padding: 12px;
+       align-items: center; 
+
+       .title 
+       {
+          white-space: nowrap; 
+          padding: 6px;
+          color: $blue_dark; 
+          text-decoration: underline;
+       }
+       hr {
+          background-color: $blue_default; 
+          height: 1px; 
+          width: 100%; 
+          margin-left: 4px;
+          border: 0;
+
+       }
 
     }
 

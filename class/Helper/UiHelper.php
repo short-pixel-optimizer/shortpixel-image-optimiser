@@ -1007,7 +1007,20 @@ class UiHelper
 
       $icon_url = plugins_url($path, SHORTPIXEL_PLUGIN_FILE);
 
-      $html = sprintf('<img src="%s" class="icon" />', esc_attr($icon_url));
+      $attr = ''; 
+      if (isset($args['width']))
+      {
+         $attr .= ' width="' . $args['width'] . '"'; 
+
+      }
+
+      if (isset($args['height']))
+      {
+         $attr . ' height="' . $args['height'] . '"';
+      }
+
+
+      $html = sprintf('<img src="%s" class="icon"  %s />', esc_attr($icon_url), $attr);
 
       return $html;
 

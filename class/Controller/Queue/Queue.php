@@ -426,7 +426,7 @@ abstract class Queue
                 if ($mediaItem->isProcessable() && 
                     $mediaItem->isOptimizePrevented() === false &&
                      ! $operation &&
-                    true === $queueOptions['doMedia']
+                    (isset($queueOptions['doMedia']) && true === $queueOptions['doMedia'])
                   ) // Checking will be done when processing queue.
                 {
 

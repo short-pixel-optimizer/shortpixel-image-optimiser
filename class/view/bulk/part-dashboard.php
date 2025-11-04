@@ -28,17 +28,17 @@ if ( ! defined( 'ABSPATH' ) ) {
       </div>
 
         <button type="button" class="button-primary button start" id="start-optimize" data-action="open-panel" data-panel="selection" <?php echo ($this->view->error) ? "disabled" : ''; ?>  >
-						<span><?php echo UIHelper::getIcon('res/images/icon/sliders.svg'); ?></span>
+						<span><?php echo UIHelper::getIcon('res/images/icon/shortpixel.svg', ); ?></span>
             <?php esc_html_e('Start Optimization','shortpixel-image-optimiser'); ?>
         </button>
 
 			<div class='dashboard-text'>
          <button class='button button-primary' type="button">
-         <span class='icon white'><?php echo UIHelper::getIcon('res/images/icon/help-circle.svg'); ?></span> 
+         <span class='icon white'><?php echo UIHelper::getIcon('res/images/icon/help-circle.svg', ['width' => '16']); ?></span> 
          <span>Help</span>
          </button> 
          <button class='button' type='button'>
-            <span class='icon'><?php echo UIHelper::getIcon('res/images/icon/heart.svg'); ?></span> 
+            <span class='icon'><?php echo UIHelper::getIcon('res/images/icon/heart.svg', ['width' => '16']); ?></span> 
             <span>Rate ShortPixel</span>
           </button>
       </div>

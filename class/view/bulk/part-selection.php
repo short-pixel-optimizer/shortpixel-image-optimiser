@@ -173,9 +173,9 @@ $approx = $this->view->approx;
 
 				<input type="checkbox" id="advanced-settings" class='collap-checkbox'>       
 
-				<label for="advanced-settings">     
+				<label for="advanced-settings" class='advanced-label'>     
 					<span class='collap-arrow'><?php echo UIHelper::getIcon('res/images/icon/chevron.svg'); ?></span> 
-					<span><?php esc_html_e('Advanced Settings', 'shortpixel_image_optimizer'); ?></span>
+					<span class='title'><?php esc_html_e('Advanced Settings', 'shortpixel_image_optimizer'); ?></span>
 					<hr>
 				</label>
 
@@ -250,16 +250,18 @@ $approx = $this->view->approx;
 
        </div>
 
-	   <h2><?php _e('Limit bulk', 'shortpixel-image-optimiser'); ?></h2>
+	  <!-- <h2><?php _e('Limit bulk', 'shortpixel-image-optimiser'); ?></h2> -->
 
-<div class='bulk-date-picker'>
-	<?php printf(esc_html__('Optimize items between  %s and %s ', 'shortpixel-image-optimiser'), 
+<div class='bulk-date-picker optiongroup'>
+	<?php printf(esc_html__('%s Optimize items between %s  %s and %s ', 'shortpixel-image-optimiser'), 
+	'<h4>', 
+	'</h4>',
 	'<span class="date-picker-container">
 		
-	<label><input type="text" name="start-date" id="bulk-start-date" value="" placeholder="' . __('Select a date' ,'shortpixel-image-optimiser') . '" /></label></span>', 
+	<label><input type="text" name="start-date" id="bulk-start-date" value="" placeholder="' . __('Start date' ,'shortpixel-image-optimiser') . '" /></label></span>', 
 	'<span class="date-picker-container">
 	
-	<label><input type="text" name="end-date" id="bulk-end-date" value="" placeholder="' . __('Select a date' ,'shortpixel-image-optimiser') . '" /></label></span>'
+	<label><input type="text" name="end-date" id="bulk-end-date" value="" placeholder="' . __('End date' ,'shortpixel-image-optimiser') . '" /></label></span>'
 	); ?>
 </div>
 		</div> <!-- option block -->
