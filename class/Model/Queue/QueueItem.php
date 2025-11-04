@@ -609,6 +609,49 @@ class QueueItem
 
    }
 
+   public function newScaleImageAction($args = [])
+   {
+      $this->newAction(); 
+
+      $defaults = [
+           'url' => null, 
+           'is_preview' => false, 
+           'newFileName' => null, 
+           'newPostTitle' => '', 
+           'refresh' => false, 
+           'attached_post_id' => null,
+      ]; 
+
+      $paramlist = []; 
+      $args = wp_parse_args($args, $defaults);
+
+      $paramlist['preview_only'] = $args['is_preview'];
+
+      $originalFile = $this->imageModel; 
+      if ($this->imageModel->isScaled())
+      {
+         $originalFile = $this->imageModel->getOriginalFile(); 
+      }
+      
+      $url = $originalFile->getUrl(); 
+
+      $paramlist['newPostTitle'] = $args['newPostTitle'];
+
+      $paramlist['refresh'] = $args['refresh']; // When sending item first, do the refresh. This is the mimc the tries = 0 refresh option we don't have here. 
+      
+      $returndatalist = [$this->imageModel->getImageKey() => $this->imageModel->getFileName()];
+      
+      $this->data->action = 'scale_image'; 
+      $this->data->compressionType = ImageModel::COMPRESSION_LOSSLESS;
+      $this->data->urls = [$url];
+      $this->data->returndatalist = $returndatalist;
+      
+      $this->data->paramlist = $paramlist; 
+      $this->data->tries = 0;
+      $this->item_count = 1;
+      
+   }
+
    /**
     * Get the ApiController associated to the action performed
     * 
@@ -628,6 +671,7 @@ class QueueItem
          case 'dumpItem':
          case 'convert_api':
          case 'remove_background': 
+         case 'scale_image':
             $api = OptimizeController::getInstance();
          break;
          case 'requestAlt': // @todo Check if this is correct action name,

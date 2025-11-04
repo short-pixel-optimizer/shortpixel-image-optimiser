@@ -120,7 +120,7 @@ class OptimizeController extends OptimizerBase
       $this->api->processMediaItem($qItem, $qItem->imageModel);
     }
 
-    if ('remove_background' === $action) {
+    if ('remove_background' === $action || 'scale_image' === $action ) {
       $this->api->processActionItem($qItem);
     }
   }
