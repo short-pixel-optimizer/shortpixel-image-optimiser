@@ -1677,8 +1677,16 @@ class ShortPixelSettings {
 		if ('date' === setting.type)
 		{
 			let whenOption = this.root.querySelector('.new-exclusion select[name="exclusion-when"]');
-			setting.dateWhen = whenOption.value;
-			this.NewExclusionUpdateType(typeOption);
+			if ('read' == mode)
+			{
+				setting.dateWhen = whenOption.value;
+			}
+			else 
+			{
+				whenOption.value = setting.dateWhen; 
+				this.NewExclusionUpdateType(typeOption);
+
+			}
 
 		}
 
