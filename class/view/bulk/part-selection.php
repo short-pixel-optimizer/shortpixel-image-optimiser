@@ -18,13 +18,7 @@ $approx = $this->view->approx;
 				<?php echo  ($this->view->approx->custom->has_custom === true) ? 1 : 0;  ?>
 			</span>
 
-	 <?php $this->loadView('bulk/part-progressbar', false); ?>
-
-      <h3 class="heading">
-        <?php esc_html_e('ShortPixel Bulk Optimization - Select Images', 'shortpixel-image-optimiser'); ?>
-      </h3>
-
-      <p class='description'><?php esc_html_e('Select the type of images that ShortPixel should optimize for you.','shortpixel-image-optimiser'); ?></p>
+	 <?php $this->loadView('bulk/part-progressbar', false,  ['part' => 'selection']); ?>
 
       <div class='load wrapper' >
          <div class='loading'>
@@ -50,6 +44,12 @@ $approx = $this->view->approx;
       </div>
 
        <div class="interface wrapper">
+
+	   <h3 class="heading">
+        <?php esc_html_e('ShortPixel Bulk Optimization - Select Images', 'shortpixel-image-optimiser'); ?>
+      </h3>
+
+      <p class='description'><?php esc_html_e('Select the type of images that ShortPixel should optimize for you.','shortpixel-image-optimiser'); ?></p>
 				 <div class="option-block">
 
 					<!-- <h2><?php esc_html_e('Optimize:','shortpixel-image-optimiser'); ?> </h2> -->

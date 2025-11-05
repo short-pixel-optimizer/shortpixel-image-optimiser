@@ -1684,9 +1684,9 @@ class ShortPixelSettings {
 			else 
 			{
 				whenOption.value = setting.dateWhen; 
-				this.NewExclusionUpdateType(typeOption);
 
 			}
+			this.NewExclusionUpdateType(typeOption);
 
 		}
 

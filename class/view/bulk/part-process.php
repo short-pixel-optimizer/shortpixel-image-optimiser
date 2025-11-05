@@ -50,7 +50,7 @@ $settings = \wpSPIO()->settings();
       </p>
     <?php endif; ?>
 
-    <?php $this->loadView('bulk/part-progressbar', false); ?>
+    <?php $this->loadView('bulk/part-progressbar', false, ['part' => 'process']); ?>
 
 		<!--- ###### MEDIA ###### -->
 		<span class='hidden' data-check-media-total data-stats-media="total">0</span>
