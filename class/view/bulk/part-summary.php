@@ -1,6 +1,8 @@
 <?php
 namespace ShortPixel;
 
+use ShortPixel\Helper\UiHelper;
+
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
@@ -44,12 +46,12 @@ if ( ! defined( 'ABSPATH' ) ) {
             <div class='filetypes' data-check-visibility data-control="data-check-has-avif">
 							<span>&nbsp; <?php esc_html_e('+ AVIF images','shortpixel-image-optimiser'); ?> </span><span data-stats-media="images-images_avif" data-check-has-avif>&nbsp;</span>
 						</div>
-            <div class='filetypes' data-check-visibility data-control="data-check-has-ai">
+            <!-- <div class='filetypes' data-check-visibility data-control="data-check-has-ai">
 							<span>&nbsp; <?php esc_html_e('+ AI ','shortpixel-image-optimiser'); ?> </span><span data-stats-media="images-images_ai" data-check-has-ai>&nbsp;</span>
-						</div>
+						</div> -->
 
 
-          <div><span><?php esc_html_e('Total from Media Library','shortpixel-image-optimiser'); ?></span><span data-stats-media="images-images">0</span></div>
+          <div><span><?php esc_html_e('Total from Media Library','shortpixel-image-optimiser'); ?></span><span data-stats-media="images-total_images_without_ai">0</span></div>
 
         </div>
       </div>
@@ -91,26 +93,28 @@ if ( ! defined( 'ABSPATH' ) ) {
   </div>
 
 
+  <div class='credits-wrapper'>
+
   <?php
     $quotaData = $this->view->quotaData;
-    ?>
-    <div class="totals">
-		<?php
-        $quotaData->unlimited ? esc_html_e('Total','shortpixel-image-optimiser') : esc_html_e('Total credits needed','shortpixel-image-optimiser');
-        ?>: <span class="number" data-stats-total="images-images" data-check-total-total >0</span>
 
-       <span class='number'></span>
-    </div>
+    if(true === $quotaData->unlimited): ?>
 
-  <?php
-		if(true === $quotaData->unlimited): ?>
 		<div class='credits'>
 				<p><span><?php _e('This site is currently on the ShortPixel Unlimited plan, so you do not have to worry about credits. Enjoy!', 'shortpixel-image-optimiser'); ?></span></p>
 		</div>
 	<?php else: ?>
     <div class="credits">
+
+      <p class='heading totals'><span>
+        
+        <?php   $quotaData->unlimited ? esc_html_e('Total','shortpixel-image-optimiser') : esc_html_e('Total credits needed','shortpixel-image-optimiser');
+              ?>: 
+        </span>
+        <span class="number" data-stats-total="images-total_images_without_ai" data-check-total-total >0</span>
+      </p>
       <p class='heading'><span><?php esc_html_e('Your ShortPixel Credits Available', 'shortpixel-image-optimiser'); ?></span>
-        <span><?php echo esc_html($this->formatNumber($quotaData->total->remaining, 0)) ?></span>
+        <span><b><?php echo esc_html($this->formatNumber($quotaData->total->remaining, 0)) ?></b></span>
 
       </p>
 
@@ -129,10 +133,14 @@ if ( ! defined( 'ABSPATH' ) ) {
          </span>
       </p>
 
-      <p>				<span><a href="<?php echo esc_url($this->view->buyMoreHref) ?>" target="_new" class='button button-primary'><?php esc_html_e('Buy unlimited credits','shortpixel-image-optimiser'); ?></a></span>
+      <p>				<span>
+        <a href="<?php echo esc_url($this->view->buyMoreHref) ?>" target="_new" class='button button-primary unlimited'>
+        <span><?php echo UIHelper::getIcon('res/images/icon/shortpixel.svg', ); ?></span>
+        <?php esc_html_e('Buy unlimited credits','shortpixel-image-optimiser'); ?>
+        </a></span>
       </p>
 
-    </div>
+    </div> <!-- // credits --> 
 
     <div class="over-quota" data-check-visibility="false" data-control="data-quota-remaining" data-control-check="data-check-total-total">
       <span><img src="<?php echo esc_url(wpSPIO()->plugin_url('res/img/bulk/over-quota.svg')) ?>" /></span>
@@ -153,6 +161,29 @@ if ( ! defined( 'ABSPATH' ) ) {
     <div class='no-images' data-check-visibility="false" data-control="data-check-total-total">
         <?php esc_html_e('The current selection contains no images. The bulk process cannot start.', 'shortpixel-image-optimiser'); ?>
     </div>
+
+  <div class='credits ai'>
+
+      <p class='heading totals'><span>
+        
+        <?php   $quotaData->unlimited ? esc_html_e('Total','shortpixel-image-optimiser') : esc_html_e('Total AI credits needed','shortpixel-image-optimiser');
+              ?>: 
+        </span>
+        <span class="number" data-stats-media="image-images-ai" >0</span>
+      </p>
+
+      <p>				
+        <span>
+          <a href="<?php echo esc_url($this->view->buyMoreHref) ?>" target="_new" class='button button-primary unlimited'>
+          <span><?php echo UIHelper::getIcon('res/images/icon/shortpixel.svg', ); ?></span>
+          <?php esc_html_e('Buy unlimited AI credits','shortpixel-image-optimiser'); ?>
+          </a>
+        </span>
+      </p>
+
+  </div>
+
+  </div> <!--- // credits wrapper --> 
 
     <nav>
       <button class="button" type="button" data-action="open-panel" data-panel="selection">

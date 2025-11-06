@@ -10,11 +10,15 @@ $settings = \wpSPIO()->settings();
 <section class="panel process" data-panel="process" >
   <div class="panel-container">
 
+  <?php $this->loadView('bulk/part-progressbar', false, ['part' => 'process']); ?>
+
+
+    <div class='process_heading'>
     <h3 class="heading">
       <?php esc_html_e('ShortPixel Bulk Process is in progress','shortpixel-image-optimiser'); ?>
 
       <div class='average-optimization'>
-          <p><?php esc_html_e('Average this run','shortpixel-image-optimiser'); ?></p>
+         <!-- <p><?php esc_html_e('Average this run','shortpixel-image-optimiser'); ?></p> -->
           <svg class="opt-circle-average" viewBox="-10 0 150 140">
                         <path class="trail" d="
                             M 50,50
@@ -50,7 +54,9 @@ $settings = \wpSPIO()->settings();
       </p>
     <?php endif; ?>
 
-    <?php $this->loadView('bulk/part-progressbar', false, ['part' => 'process']); ?>
+
+    </div>
+
 
 		<!--- ###### MEDIA ###### -->
 		<span class='hidden' data-check-media-total data-stats-media="total">0</span>

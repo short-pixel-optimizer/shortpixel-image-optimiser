@@ -28,13 +28,17 @@ $approx = $this->view->approx;
                <span class="number" data-stats-total="total">x</span> <?php esc_html_e('items found', 'shortpixel-image-optimiser'); ?></p>
            </span>
          </div>
+
+
 				 <div class='loading skip'>
+					<nav>
 					 <span><p><button class='button' data-action="SkipPreparing"><?php _e('Start now', 'shortpixel-image-optimiser'); ?></button></p>
 
 					 </span>
 					 <span>
 	 						 <p><?php _e("Clicking this button will start optimization of the items added to the queue. The remaining items can be processed in a new bulk. After completion, you can start bulk and the system will continue with the unprocessed images.",'shortpixel-image-optimiser'); ?></p>
 						</span>
+					</nav>
 				</div>
 
         <div class='loading overlimit'>

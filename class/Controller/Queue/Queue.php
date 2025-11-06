@@ -657,6 +657,13 @@ abstract class Queue
           }
         }
 
+
+        $count->total_images_without_ai = 0; 
+        if ($count->images_ai > 0)
+        {
+           $count->total_images_without_ai = max(($count->images - $count->images_ai), 0);
+        }
+
         return $count;
     }
 
@@ -800,16 +807,10 @@ abstract class Queue
 
     protected function checkQueueCache($item_id)
     {
-
-      
       if (isset(self::$isInQueue[$item_id]) && false === self::$isInQueue[$item_id])
       {
          unset(self::$isInQueue[$item_id]);
       }
-
-
-
-
     }
 
     public function itemFailed(QueueItem $qItem, $fatal = false)

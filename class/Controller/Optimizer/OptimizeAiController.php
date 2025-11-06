@@ -246,7 +246,7 @@ class OptimizeAiController extends OptimizerBase
     }
     
 
-    $textItems = ['alt', 'caption', 'description'];
+    $textItems = ['alt', 'caption', 'description', 'post_title'];
     foreach($textItems as $textItem)
     {
       
@@ -277,6 +277,7 @@ class OptimizeAiController extends OptimizerBase
         'caption' => 'ai_gen_caption', 
         'description' => 'ai_gen_description',
         'filename' => 'ai_gen_filename',
+        'post_title' => 'ai_gen_post_title', 
         ];
 
         $aiData = $this->formatResultData($aiData, $qItem);
@@ -631,149 +632,7 @@ class OptimizeAiController extends OptimizerBase
         return $text;
   }
 
-  /*
-  protected function getRequestJSON($url, $params = [])
-  { 
-     $settings = $this->getAISettings($params);
-
-     $ignore_fields = (isset($params['ignore_fields'])) ? $params['ignore_fields'] : []; 
-
-     $json = [
-        'url' => $url, 
-        'languages' => $settings['ai_language'], 
-        'context' => $settings['ai_general_context'], 
-
-     ]; 
-
-     // if ($settings['ai_use_post']) // not in API? 
-
-     if ($settings['ai_gen_alt'])
-     {
-        $json['alt'] = [
-                'context' => $settings['ai_alt_context'],
-                'chars' => $settings['ai_limit_alt_chars'],
-        ];
-     }
-
-     if ($settings['ai_gen_caption'])
-     {
-         $json['caption'] = [
-                'context' => $settings['ai_caption_context'], 
-                'chars' => $settings['ai_limit_caption_chars'], 
-         ];
-     }
-
-     if ($settings['ai_gen_description'])
-     {
-         $json['image_description'] = [
-                'context' => $settings['ai_description_context'], 
-                'chars' => $settings['ai_limit_description_chars'],
-         ];
-     }
-
-     if ($settings['ai_gen_filename'])
-     {
-         $json['file'] = [
-                'context' => $settings['ai_filename_context'], 
-                'chars' => $settings['ai_limit_filename_chars'], 
-         ];
-     }
-
-     return $json; 
-  }
-
-  */
-
-  /*
-  public function parseJSONForQItem(QueueItem $qItem, $params = [])
-  {
-        $url = $qItem->data()->url; 
-        $item_id = $qItem->item_id;
-        $settings = \wpSPIO()->settings(); 
-
-        // Note this is also checked in AiDataModel for checking processable.  Might need to sync upon adding fields
-        if (true === $settings->aiPreserve) 
-        { 
-            $returnDataList = $qItem->data()->returndatalist; 
-
-            $aiModel = AiDataModel::getModelByAttachment($item_id, 'media');
-            $current = $aiModel->getCurrentData();
-            $filtered = array_filter($current); // filter out all empty variables
-
-          //  $altdata = $this->getAltData($qItem);
-            $params['ignore_fields'] = array_keys($filtered);
-            
-            foreach($filtered as $key => $filter)
-            {
-                 $returnDataList[$key] = AiDataModel::F_STATUS_EXCLUDE;
-            }
-            $qItem->data()->returndatalist = $returnDataList; 
-        }
-        
-        $json = $this->getRequestJSON($url, $params); 
-
-
-        $qItem->data()->paramlist = $json;
-  }
-        */
-
-/*
-  protected function parseQuestionForQItem(QueueItem $qItem)
-  {
-        $url = $qItem->data()->url; 
-        $item_id = $qItem->item_id;
-        $question = $this->parseQuestion($url, $item_id); 
-        $qItem->data()->url = $question;
-  }
-*/
-  /*
-  private function getAISettings($params = [])
-  {
-    $settings = \wpSPIO()->settings(); 
-
-    $defaults = [
-    'ai_general_context' => $settings->ai_general_context, 
-    'ai_use_post' => $settings->ai_use_post, 
-    'ai_gen_alt' => $settings->ai_gen_alt, 
-    'ai_gen_caption' => $settings->ai_gen_caption, 
-    'ai_gen_description' => $settings->ai_gen_description, 
-    'ai_filename_prefercurrent' => $settings->ai_filename_prefercurrent,
-    'ai_limit_alt_chars' => $settings->ai_limit_alt_chars, 
-    'ai_alt_context' => $settings->ai_alt_context, 
-    'ai_limit_description_chars' => $settings->ai_limit_description_chars, 
-    'ai_description_context' => $settings->ai_description_context, 
-    'ai_limit_caption_chars' => $settings->ai_limit_caption_chars, 
-    'ai_caption_context' => $settings->ai_caption_context, 
-    'ai_gen_filename' => $settings->ai_gen_filename, 
-    'ai_limit_filename_chars' => $settings->ai_limit_filename_chars, 
-    'ai_filename_context' => $settings->ai_filename_context, 
-    'ai_use_exif' => $settings->ai_use_exif, 
-    'ai_language' => $settings->ai_language,
-    'aiPreserve' => $settings->aiPreserve, 
-    ];
-
-    $params = wp_parse_args($params, $defaults);
-
-    return $params; 
-  }
- */
-    
-
-  /*
-  public function isSupported(queueItem $qItem)
-  {
-       $imageModel = $qItem->imageModel; 
-
-        // @todo This should check for animated gifs in the future, for now blanket no. 
-       if('gif' == $imageModel->getExtension())
-       {
-         return false; 
-       }
-       
-       return true; 
-  } */
-
-  // @todo Should be moved to protected / called via sendToProcessing in future ( now also called via ajaxControl )
+   // @todo Should be moved to protected / called via sendToProcessing in future ( now also called via ajaxControl )
   public function undoAltData(QueueItem $qItem)
   {
        $item_id = $qItem->item_id;
