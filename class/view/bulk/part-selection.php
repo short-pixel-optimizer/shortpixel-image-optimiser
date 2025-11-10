@@ -18,13 +18,7 @@ $approx = $this->view->approx;
 				<?php echo  ($this->view->approx->custom->has_custom === true) ? 1 : 0;  ?>
 			</span>
 
-	 <?php $this->loadView('bulk/part-progressbar', false); ?>
-
-      <h3 class="heading">
-        <?php esc_html_e('ShortPixel Bulk Optimization - Select Images', 'shortpixel-image-optimiser'); ?>
-      </h3>
-
-      <p class='description'><?php esc_html_e('Select the type of images that ShortPixel should optimize for you.','shortpixel-image-optimiser'); ?></p>
+	 <?php $this->loadView('bulk/part-progressbar', false,  ['part' => 'selection']); ?>
 
       <div class='load wrapper' >
          <div class='loading'>
@@ -34,13 +28,17 @@ $approx = $this->view->approx;
                <span class="number" data-stats-total="total">x</span> <?php esc_html_e('items found', 'shortpixel-image-optimiser'); ?></p>
            </span>
          </div>
+
+
 				 <div class='loading skip'>
+					<nav>
 					 <span><p><button class='button' data-action="SkipPreparing"><?php _e('Start now', 'shortpixel-image-optimiser'); ?></button></p>
 
 					 </span>
 					 <span>
 	 						 <p><?php _e("Clicking this button will start optimization of the items added to the queue. The remaining items can be processed in a new bulk. After completion, you can start bulk and the system will continue with the unprocessed images.",'shortpixel-image-optimiser'); ?></p>
 						</span>
+					</nav>
 				</div>
 
         <div class='loading overlimit'>
@@ -50,6 +48,12 @@ $approx = $this->view->approx;
       </div>
 
        <div class="interface wrapper">
+
+	   <h3 class="heading">
+        <?php esc_html_e('ShortPixel Bulk Optimization - Select Images', 'shortpixel-image-optimiser'); ?>
+      </h3>
+
+      <p class='description'><?php esc_html_e('Select the type of images that ShortPixel should optimize for you.','shortpixel-image-optimiser'); ?></p>
 				 <div class="option-block">
 
 					<!-- <h2><?php esc_html_e('Optimize:','shortpixel-image-optimiser'); ?> </h2> -->

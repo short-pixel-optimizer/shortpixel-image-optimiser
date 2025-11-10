@@ -132,6 +132,10 @@ class ApiController extends RequestManager
 		{
 			 $requestBody['bg_remove'] = $qItem->data()->paramlist['bg_remove']; 
 		}
+		elseif (isset($qItem->data()->paramlist['scale'])) // @todo This needs to be adepted to unknown api action
+		{
+			 $requestBody[''] = ''; 
+		}
 
 		$requestParameters = [
 			'blocking' => true, //(0 == $qItem->data()->tries) ? false : true

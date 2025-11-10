@@ -341,7 +341,6 @@ class FileSystemController extends \ShortPixel\Controller
         $content_dir = WP_CONTENT_DIR;
         $relative = str_replace(WP_CONTENT_DIR, '', $filepath);
         $url = content_url($relative);
-        //var_dump($url);
       }
 
 

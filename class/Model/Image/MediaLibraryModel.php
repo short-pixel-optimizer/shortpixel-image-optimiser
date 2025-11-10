@@ -1455,7 +1455,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		$settings = \wpSPIO()->settings();
 
-		if (true === $main_bool && false !== $this->checkDateExcluded())
+		if (false !== $this->checkDateExcluded())
 		{
 			$date_bool = $this->isDateExcluded();
 			if (true === $date_bool)

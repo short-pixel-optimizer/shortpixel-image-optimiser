@@ -104,7 +104,7 @@ class ViewController extends Controller
   *
   * @param String View Template in view directory to load. When empty will search for class attribute
   */
-  public function loadView($template = null, $unique = true)
+  public function loadView($template = null, $unique = true, $args = [])
   {
       // load either param or class template.
       $template = (is_null($template)) ? $this->template : $template;
@@ -119,6 +119,7 @@ class ViewController extends Controller
 			}
 
       $view = $this->view;
+      $view->template_args = $args; // local pass only for this view, useful for snippets, not main controllers.
       $controller = $this;
 
       $template_path = \wpSPIO()->plugin_path('class/view/' . $template  . '.php');

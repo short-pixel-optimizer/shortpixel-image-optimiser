@@ -396,7 +396,6 @@ class UiHelper
             }
 			 			if ($mediaItem->isRestorable())
 						{
-
 							 $compressionType = $mediaItem->getMeta('compressionType');
 		           switch($compressionType)
 		           {

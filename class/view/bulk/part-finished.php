@@ -34,7 +34,7 @@ if ( ! defined( 'ABSPATH' ) ) {
       </div>
     </h3>
 
-    <?php $this->loadView('bulk/part-progressbar', false); ?>
+    <?php $this->loadView('bulk/part-progressbar', false, ['part' => 'finished']); ?>
 		<span class='hidden' data-check-media-total data-stats-media="total">0</span>
 
     <span class='hidden' data-check-media-customOperation data-stats-media="isCustomOperation">-1</span>

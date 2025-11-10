@@ -179,9 +179,7 @@ class AiController extends RequestManager
                  'caption' => isset($apiData['caption']) ? sanitize_text_field($apiData['caption']) : null, 
                  'relevance' => isset($apiData['relevance']) ? sanitize_text_field($apiData['relevance']) : null, 
                  'description' => isset($apiData['image_description']) ? sanitize_text_field($apiData['image_description']) : null,
-              ]);
-
-              
+              ]);              
               
               // Switch known Statii 
               switch ($status)
@@ -201,24 +199,10 @@ class AiController extends RequestManager
                   break; 
                   case '2':  // Success of some kind. 
                   default: 
-                    //$apiStatus = RequestManager::STATUS_SUCCESS; 
-                    // @todo Possibly add a fail state here if all AI stuff came back negative / without data (?) 
-                    /*      if (is_null($text) || strlen($text) == 0 || $error !== false)
-                    {
-                        $apiStatus = RequestManager::STATUS_FAIL; 
-                        return $this->returnFailure(RequestManager::STATUS_FAIL, __('AI could not generate text for this image', 'shortpixel-image-optimiser'));
-                    }
-                    else
-                    {
-              */
                       $successData = $this->handleSuccess($aiData, $qItem);
                       return $successData;
-               //     }
-
                   break;
-            //  }
-                             
-               
+   
             }
         }
       return $this->returnFailure(0, 'No remote ID?');

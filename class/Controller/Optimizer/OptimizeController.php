@@ -418,8 +418,6 @@ class OptimizeController extends OptimizerBase
            $fileArray['type'] = $tmpFile->getMime();  // @todo 
            $fileArray['size'] = $tmpFile->getFileSize(); 
 
-
-
            $new_attach_id = media_handle_sideload($fileArray, $attached_post_id, $newPostTitle); 
 
          //  $new_attach_id = media_sideload_image($url, $attached_post_id, '', 'id'); // Add to WP, return attach_id
