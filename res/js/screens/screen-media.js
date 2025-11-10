@@ -57,19 +57,32 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		button.id = id; 
 		button.dataset.item_id = item_id; 
 
-		button.addEventListener('click', this.OpenEditorEvent.bind(this)); 
+		button.addEventListener('click', (event) => { this.OpenEditorEvent(event, 'remove') }); 
 		button.dataset.opener = uiType; 
+		
+
+		var scaleButton = document.createElement('button'); 
+		scaleButton.name = 'scaleBackground'; 
+		scaleButton.innerHTML = this.settings.scale_title; 
+		scaleButton.type = 'button'; 
+		scaleButton.classList.add('button', 'button-secondary'); 
+		scaleButton.id = 'shortpixel_scale_button'; 
+		scaleButton.dataset.item_id = item_id; 
+		
+		scaleButton.addEventListener('click', (event) => { this.OpenEditorEvent(event, 'scale') }); 
+		scaleButton.dataset.opener = uiType; 
+
 
 			// @todo Probably all should pass uiType. 
 		if (typeof uiType === 'undefined' || uiType === 'edit')
 		{
 			var parent = document.querySelector('[id^=media-head]'); 
-			parent.append(button);
+			parent.append(button, scaleButton);
 		}
 		else if('gallery' === uiType)
 		{
 			var parent = document.querySelector('.media-modal .attachment-actions')
-			parent.append(button);
+			parent.append(button, scaleButton);
 		}
 		else if ('gutenberg' == uiType)
 		{
@@ -78,7 +91,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			{
 				button.classList.add('button-link');
 				button.style.display = 'inline';
-				parent.append(button);
+				parent.append(button, scaleButton);
 			}
 		}
 		

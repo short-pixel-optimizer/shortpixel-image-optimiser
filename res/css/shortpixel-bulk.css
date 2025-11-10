@@ -1264,6 +1264,7 @@
 .wrap.is-shortpixel-bulk-page section.panel.finished .image-preview-section {
   background: #F6F9FF;
   border: 1px solid #DFEAFF;
+  border-radius: 16px;
   width: 80%;
   margin: 15px auto;
   position: relative;
@@ -1272,12 +1273,11 @@
 .wrap.is-shortpixel-bulk-page section.panel.finished .image-preview-section .title {
   position: absolute;
   top: 0;
-  width: 300px;
-  background: rgba(15, 106, 125, 0.3137254902);
-  background: linear-gradient(90deg, rgb(15, 106, 125) 0%, rgb(15, 106, 125) 0%, rgba(0, 212, 255, 0) 100%);
+  width: 100%;
+  background-color: #D9F9FF;
   color: #fff;
   font-size: 20px;
-  padding: 15px;
+  padding: 15px 0;
 }
 .wrap.is-shortpixel-bulk-page section.panel.process .image-preview-section .image-preview-line,
 .wrap.is-shortpixel-bulk-page section.panel.finished .image-preview-section .image-preview-line {

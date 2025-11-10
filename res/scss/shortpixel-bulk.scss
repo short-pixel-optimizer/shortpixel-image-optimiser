@@ -1098,6 +1098,7 @@ section.panel.finished {
   .image-preview-section {
     background: #F6F9FF;
     border: 1px solid #DFEAFF;
+    border-radius: 16px;
     width: 80%;
     margin: 15px auto;
     position: relative;
@@ -1105,12 +1106,13 @@ section.panel.finished {
     .title {
       position: absolute;
       top: 0;
-      width: 300px;
-      background: #0f6a7d50;
-      background: linear-gradient(90deg, rgba(15, 106, 125, 1) 0%, rgba(15, 106, 125, 1) 0%, rgba(0, 212, 255, 0) 100%);
+      width: 100%;
+      //background: #0f6a7d50;
+      background-color: $blue_extralight;
+     // background: linear-gradient(90deg, rgba(15, 106, 125, 1) 0%, rgba(15, 106, 125, 1) 0%, rgba(0, 212, 255, 0) 100%);
       color: #fff;
       font-size: 20px;
-      padding: 15px;
+      padding: 15px 0;
 
 
     }
