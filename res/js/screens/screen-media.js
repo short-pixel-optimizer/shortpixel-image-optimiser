@@ -386,8 +386,8 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			}
 		}
 		// edit media screen
-		 let captionFields = ['attachment_caption', 'attachment-details-caption']; 
-		 let descriptionFields = ['attachment_content', 'attachment-details-description']; 
+		 let captionFields = ['attachment_caption', 'attachment-details-caption', 'attachment-details-two-column-caption']; 
+		 let descriptionFields = ['attachment_content', 'attachment-details-description', 'attachment-details-two-column-description']; 
 		 
 		 if (typeof newCaption !== 'undefined' || newCaption < 0)
 		 {
