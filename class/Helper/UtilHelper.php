@@ -190,7 +190,7 @@ class UtilHelper
     'ai_limit_caption_chars' => $settings->ai_limit_caption_chars, 
     'ai_caption_context' => $settings->ai_caption_context, 
     'ai_limit_post_title_chars' => $settings->ai_limit_post_title_chars, 
-    'ai_post_title_content' => $settings->ai_post_title_content, 
+    'ai_post_title_context' => $settings->ai_post_title_context, 
     'ai_gen_filename' => $settings->ai_gen_filename, 
     'ai_limit_filename_chars' => $settings->ai_limit_filename_chars, 
     'ai_filename_context' => $settings->ai_filename_context, 

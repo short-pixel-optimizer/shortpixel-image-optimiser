@@ -403,8 +403,9 @@
   }
 
   section.spio-progressbar {
-    margin: 30px 0;
+    margin: 0 0 30px 0;
     background-color: $blue_background;
+    padding: 16px;
 
     .flex {
       display: flex;
@@ -736,6 +737,7 @@
         flex: 1; 
         border-radius: 16px;
         margin: 0 5%; 
+        max-width: 45%;
 
         h4 {
           font-size: 14px;

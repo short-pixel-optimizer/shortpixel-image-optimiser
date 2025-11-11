@@ -663,6 +663,10 @@ abstract class Queue
         {
            $count->total_images_without_ai = max(($count->images - $count->images_ai), 0);
         }
+        else
+        { 
+          $count->total_images_without_ai = $count->images;
+        }
 
         return $count;
     }
@@ -709,8 +713,13 @@ abstract class Queue
         }
 
         if (is_array($options) && count($options) > 0)
+        {
           $customData->queueOptions = $options;
-
+        }
+        else
+        {
+          $customData->queueOptions  = [] ;
+        }
         $this->getShortQ()->setStatus('custom_data', $customData);
     }
 

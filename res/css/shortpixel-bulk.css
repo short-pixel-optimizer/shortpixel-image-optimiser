@@ -741,8 +741,9 @@
   text-decoration: none;
 }
 .wrap.is-shortpixel-bulk-page section.spio-progressbar {
-  margin: 30px 0;
+  margin: 0 0 30px 0;
   background-color: #F4FBFC;
+  padding: 16px;
 }
 .wrap.is-shortpixel-bulk-page section.spio-progressbar .flex {
   display: flex;
@@ -1002,6 +1003,7 @@
   flex: 1;
   border-radius: 16px;
   margin: 0 5%;
+  max-width: 45%;
 }
 .wrap.is-shortpixel-bulk-page section.panel.summary .summary-list .section-wrapper h4 {
   font-size: 14px;
