@@ -736,14 +736,29 @@
       flex-direction: row;
       //gap: 5%;
       
+      .section-wrapper-ai {
+        background-color: $blue_background;
+        flex: 1; 
+        border-radius: 15px;
+        margin: 0 20px; 
+        //max-width: 45%;
+        float: left;
+        padding-top: 10px;
+      }
 
       .section-wrapper {
         background-color: $blue_background;
         flex: 1; 
         border-radius: 15px;
-        margin: 0 5%; 
-        //max-width: 45%;
+        margin: 0 20px; 
+        max-width: 43%;
+        float: left;
         padding-top: 10px;
+
+        &.ai {
+          max-width: none;
+          margin-left: 27px;
+        }
 
         h4 {
           font-size: 14px;
@@ -752,6 +767,7 @@
           &.totals {
             padding-left: 15px;
             color: #3c434a;
+            min-width: 220px;
           }
 
           .dashicons {
@@ -793,7 +809,7 @@
           >div>span {
             display: table-cell;
             border-bottom: 1px solid #ccc;
-            width: 50%;
+            width: 15%;
             // text-align: center;
             padding: 15px;
             &.totals {
@@ -835,17 +851,23 @@
     .credits-sub-wrapper {
       display: block;
       float: left;
+      max-width: 62%;
+      padding-left: 20px;
+      border-right: 1px solid #1ABDCA;
+      margin-right: 35px;
     }
     .ai-credits-sub-wrapper {
       display: block;
       float: left;
-      //max-width: 33%;
-      border-left: 1px solid #1ABDCA;
+      width: 33%;
+      //border-left: 1px solid #1ABDCA;
+      margin-left: -20px;
     }
 
     .credits {
       display: table;
-      margin: 35px 0 35px 25px;
+      margin: 0 10px;
+      padding-top: 20px;
       //max-width: 66%;
       //margin-left: 10%;
       //margin: 35px 60px;
@@ -1144,11 +1166,14 @@ section.panel.finished {
       //background: #0f6a7d50;
       background-color: $blue_extralight;
      // background: linear-gradient(90deg, rgba(15, 106, 125, 1) 0%, rgba(15, 106, 125, 1) 0%, rgba(0, 212, 255, 0) 100%);
-      color: #fff;
-      font-size: 20px;
+      color: #000;
+      font-size: 18px;
+      font-weight: 600;
       padding: 15px 0;
-
-
+      border-radius: 15px 15px 0 0;
+      span {
+        padding-left: 40px;
+      }
     }
 
     .image-preview-line {

@@ -74,7 +74,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 						<span>&nbsp; <?php esc_html_e('+ AVIF images','shortpixel-image-optimiser'); ?></span><span data-stats-custom="images-images_avif" data-check-has-custom-avif>&nbsp;</span>
 					</div>
 
-        <div><span><?php esc_html_e('Total from Custom Media','shortpixel-image-optimiser'); ?></span><span  data-stats-custom="images-images">0</span></div>
+        <div><h4 class="totals"><?php esc_html_e('Total from Custom Media','shortpixel-image-optimiser'); ?></h4><span class="totals" data-stats-custom="images-images">0</span></div>
       </div>
     </div>
 
@@ -84,7 +84,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     if(true === $quotaData->unlimited): ?>
 
 				<p><span><?php _e('This site is currently on the ShortPixel Unlimited plan, so you do not have to worry about credits. Enjoy!', 'shortpixel-image-optimiser'); ?></span></p>
-		</div>
+	<!--	</div> -->
 	<?php else: ?>
     <div class="credits">
 
@@ -131,13 +131,14 @@ if ( ! defined( 'ABSPATH' ) ) {
   </div>
   <div class='ai-credits-sub-wrapper'>
     <!--- ### AI BOX #### --> 
-    <div class='section-wrapper' data-check-visibility data-control="data-check-has-ai">
+    <div class='section-wrapper ai' data-check-visibility data-control="data-check-has-ai">
     <h4><span class='dashicons dashicons-open-folder'>&nbsp;</span><?php esc_html_e('AI Image SEO', 'shortpixel-image-optimiser') ?></h4>
       <div class="list-table">
 
             <div class='' >
 							<span>&nbsp; <?php esc_html_e('Images ','shortpixel-image-optimiser'); ?> </span><span data-stats-media="images-images_ai" data-check-has-ai>&nbsp;</span>
 						</div>
+        <div><h4 class="totals"><?php esc_html_e('Total images for AI Image SEO','shortpixel-image-optimiser'); ?></h4><span class="totals" data-stats-media="images-images_ai" data-check-has-ai>0</span></div>
 
       </div>
       
@@ -162,7 +163,6 @@ if ( ! defined( 'ABSPATH' ) ) {
         </span>
       </p>
 
-  </div>
   </div>
   </div> <!--- // credits wrapper --> 
 

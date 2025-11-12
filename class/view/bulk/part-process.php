@@ -164,7 +164,7 @@ $settings = \wpSPIO()->settings();
 		</nav>
 
     <div class='image-preview-section hidden'> <!-- /hidden -->
-			 <div class='title'><?php esc_html_e('Just Optimized', 'shortpixel-image-optimiser'); ?></div>
+			 <div class='title'><span><?php esc_html_e('Just Optimized', 'shortpixel-image-optimiser'); ?></span></div>
        <div class="image-preview-line">
         <!-- <strong data-result="queuetype"></strong>  -->
 				<span>&nbsp;</span> <!-- Spacer for flex -->
