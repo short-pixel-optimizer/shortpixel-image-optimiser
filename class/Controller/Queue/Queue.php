@@ -161,7 +161,7 @@ abstract class Queue
             {
               $prepared = $this->prepareBulkRestore();
             }
-            elseif (false !== $custom_operation && 'bulk-undoai' === $custom_operation)
+            elseif (false !== $custom_operation && 'bulk-undoAI' === $custom_operation)
             {
                $prepared = $this->prepareUndoAI(); 
             }
