@@ -742,7 +742,7 @@
         flex: 1; 
         border-radius: 15px;
         margin: 0 5%; 
-        max-width: 45%;
+        //max-width: 45%;
         padding-top: 10px;
 
         h4 {
@@ -828,18 +828,31 @@
 
     .credits-wrapper
     {
-       display: flex;
+       display: block;
        align-items: center; 
 
+    }
+    .credits-sub-wrapper {
+      display: block;
+      float: left;
+    }
+    .ai-credits-sub-wrapper {
+      display: block;
+      float: left;
+      //max-width: 33%;
+      border-left: 1px solid #1ABDCA;
     }
 
     .credits {
       display: table;
-      //margin: 35px 0 35px 25px;
-     // width: 80%;
+      margin: 35px 0 35px 25px;
+      //max-width: 66%;
       //margin-left: 10%;
-      margin: 35px 60px;
-
+      //margin: 35px 60px;
+      &.ai {
+        max-width: 33%;
+        float: left;
+      }
       >p {
         display: table-row
       }
@@ -887,7 +900,7 @@
 
     .credits.ai 
     {
-       border-left: 1px solid $blue_default;
+       //border-left: 1px solid $blue_default;
     }
 
     .button.unlimited 

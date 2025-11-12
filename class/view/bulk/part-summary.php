@@ -27,8 +27,9 @@ if ( ! defined( 'ABSPATH' ) ) {
             <img src="<?php echo esc_url(wpSPIO()->plugin_url('res/img/robo-notes.png')); ?>" style="transform: scale(-1, 1);height: 50px;"/>
         </span> -->
       </h3>
-    <div class='summary-list'>
-      
+
+  <div class='credits-wrapper summary-list'>
+    <div class='credits-sub-wrapper'>
       <!--- ### MEDIA BOX #### --> 
       <div class="section-wrapper" data-check-visibility data-control="data-check-media-total">
       <h4><span class='dashicons dashicons-images-alt2'>&nbsp;</span>
@@ -77,30 +78,11 @@ if ( ! defined( 'ABSPATH' ) ) {
       </div>
     </div>
 
-    <!--- ### AI BOX #### --> 
-    <div class='section-wrapper' data-check-visibility data-control="data-check-has-ai">
-    <h4><span class='dashicons dashicons-open-folder'>&nbsp;</span><?php esc_html_e('AI Image SEO', 'shortpixel-image-optimiser') ?></h4>
-      <div class="list-table">
-
-            <div class='' >
-							<span>&nbsp; <?php esc_html_e('Images ','shortpixel-image-optimiser'); ?> </span><span data-stats-media="images-images_ai" data-check-has-ai>&nbsp;</span>
-						</div>
-
-      </div>
-      
-    </div>
-
-  </div>
-
-
-  <div class='credits-wrapper'>
-
   <?php
     $quotaData = $this->view->quotaData;
 
     if(true === $quotaData->unlimited): ?>
 
-		<div class='credits'>
 				<p><span><?php _e('This site is currently on the ShortPixel Unlimited plan, so you do not have to worry about credits. Enjoy!', 'shortpixel-image-optimiser'); ?></span></p>
 		</div>
 	<?php else: ?>
@@ -140,13 +122,27 @@ if ( ! defined( 'ABSPATH' ) ) {
         </a></span>
       </p>
 
-    </div> <!-- // credits --> 
 
 
 	<?php endif;
 	 ?>
+  </div>
+  </div>
+  <div class='ai-credits-sub-wrapper'>
+    <!--- ### AI BOX #### --> 
+    <div class='section-wrapper' data-check-visibility data-control="data-check-has-ai">
+    <h4><span class='dashicons dashicons-open-folder'>&nbsp;</span><?php esc_html_e('AI Image SEO', 'shortpixel-image-optimiser') ?></h4>
+      <div class="list-table">
 
-  <div class='credits ai' data-check-visibility data-control="data-check-has-ai">
+            <div class='' >
+							<span>&nbsp; <?php esc_html_e('Images ','shortpixel-image-optimiser'); ?> </span><span data-stats-media="images-images_ai" data-check-has-ai>&nbsp;</span>
+						</div>
+
+      </div>
+      
+    </div>
+
+    <div class='credits ai' data-check-visibility data-control="data-check-has-ai">
 
       <p class='heading totals'><span>
         
@@ -166,7 +162,7 @@ if ( ! defined( 'ABSPATH' ) ) {
       </p>
 
   </div>
-
+  </div>
   </div> <!--- // credits wrapper --> 
 
   <?php if (false == $quotaData->unlimited): ?>
@@ -189,6 +185,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         <?php esc_html_e('The current selection contains no images. The bulk process cannot start.', 'shortpixel-image-optimiser'); ?>
     </div>
 
+    </div> <!-- // credits --> 
     <nav>
       <button class="button" type="button" data-action="open-panel" data-panel="selection">
 				<span class='dashicons dashicons-arrow-left' ></span>
