@@ -93,7 +93,8 @@ if ( ! defined( 'ABSPATH' ) ) {
         <?php   $quotaData->unlimited ? esc_html_e('Total','shortpixel-image-optimiser') : esc_html_e('Total credits needed','shortpixel-image-optimiser');
               ?>: 
         </span>
-        <span class="number" data-stats-total="images-total_images_without_ai" data-check-total-total >0</span>
+         <span class='hidden' data-stats-total="images-images" data-check-total-total>0</span>
+        <span class="number" data-stats-total="images-total_images_without_ai" data-check-total-without-ai >0</span>
       </p>
       <p class='heading'><span><?php esc_html_e('Your ShortPixel Credits Available', 'shortpixel-image-optimiser'); ?></span>
         <span><b><?php echo esc_html($this->formatNumber($quotaData->total->remaining, 0)) ?></b></span>
