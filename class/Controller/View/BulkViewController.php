@@ -99,6 +99,9 @@ class BulkViewController extends \ShortPixel\ViewController
           case 'removeLegacy':
             $label = __('Remove Legacy Data', 'shortpixel-image-optimiser');
           break;
+          case 'bulk-undoAI':
+            $label = __('Remove AI Data', 'shortpixel-image-optimiser');           
+          break; 
       }
 
       return $label;
@@ -265,6 +268,9 @@ class BulkViewController extends \ShortPixel\ViewController
 							 case 'removeLegacy':
 								$bulkName = __('Remove Legacy Data', 'shortpixel-image-optimiser');
 							 break;
+               case 'bulk-undoAI':
+                $bulkName  = __('Remove AI Data', 'shortpixel-image-optimiser');           
+               break; 
 							 default:
 							 	 	 $bulkName .= __('Optimization', 'shortpixel-image-optimiser');
 							 break;
