@@ -149,7 +149,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         <?php   $quotaData->unlimited ? esc_html_e('Total','shortpixel-image-optimiser') : esc_html_e('Total AI credits needed','shortpixel-image-optimiser');
               ?>: 
         </span>
-        <span class="number" data-stats-media="image-images-ai" >0</span>
+        <span class="number" data-stats-media="images-images_ai" >0</span>
       </p>
 
       <p>				

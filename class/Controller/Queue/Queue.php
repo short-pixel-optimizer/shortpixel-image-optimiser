@@ -182,7 +182,7 @@ abstract class Queue
 
             if ($prepared['items'] == 0)
             {
-               Log::addDebug( $this->queueName . ' Queue, prepared came back as zero ', array($prepared, $result->items));
+          //     Log::addDebug( $this->queueName . ' Queue, prepared came back as zero ', array($prepared, $result->items));
                if ($prepared['results'] == 0) /// This means no results, empty query.
                {
                 $result->qstatus = self::RESULT_PREPARING_DONE;
@@ -411,22 +411,29 @@ abstract class Queue
 
                 // If autoAi is on the bulk, add operation to the item
                 $enqueueAi = false; 
-                if ('media' === $mediaItem->get('type') && 
-                true === $optimizeAiController->isAiEnabled() && 
-                true === $settings->autoAIBulk &&
-                true === $queueOptions['doAi']
+                $enqueueRegular = true; // basic item processing . 
 
-                )
+                if ('media' === $mediaItem->get('type'))
                 {
-                  $aiDataModel = AiDataModel::getModelByAttachment($mediaItem->get('id'));  
-                  $enqueueAi = $aiDataModel->isProcessable();
+                  if (! isset($queueOptions['doMedia']) || false === $queueOptions['doMedia'] )            
+                  {
+                     $enqueueRegular = false; 
+                  }      
 
+                  if (true === $optimizeAiController->isAiEnabled() && 
+                  true === $settings->autoAIBulk &&
+                  true === $queueOptions['doAi'])
+                  {
+                    $aiDataModel = AiDataModel::getModelByAttachment($mediaItem->get('id'));  
+                    $enqueueAi = $aiDataModel->isProcessable();
+                  }
                 }
 
+                // @todo This whole structure on ai / not-ai for enqueue is getting messy 
                 if ($mediaItem->isProcessable() && 
                     $mediaItem->isOptimizePrevented() === false &&
                      ! $operation &&
-                    (isset($queueOptions['doMedia']) && true === $queueOptions['doMedia'])
+                    true === $enqueueRegular
                   ) // Checking will be done when processing queue.
                 {
 
