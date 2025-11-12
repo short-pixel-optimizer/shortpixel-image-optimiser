@@ -50,9 +50,10 @@
 .shortpixel-media-modal .modal-wrapper .image-wrapper > div {
   flex: 1;
   position: relative;
+  padding: 16px;
 }
 .shortpixel-media-modal .modal-wrapper .image-wrapper > div:first-child {
-  border-right: 1px solid #000;
+  padding-right: 0;
 }
 .shortpixel-media-modal .modal-wrapper .image-wrapper i {
   display: inline-block;
@@ -76,22 +77,44 @@
   width: 100%;
   justify-content: center;
   align-items: center;
-  background: #F5F5F5;
-}
-.shortpixel-media-modal .modal-wrapper .action-bar .replace_type.wrapper {
-  display: flex;
+  background: #F4FBFC;
   flex-direction: column;
 }
-.shortpixel-media-modal .modal-wrapper .action-bar .replace_type.wrapper label {
+.shortpixel-media-modal .modal-wrapper .action-bar .action_wrapper {
+  display: none;
+  opacity: 0;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .action_wrapper.active {
+  display: flex;
+  opacity: 1;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .new_file_title.wrapper {
+  display: flex;
+  color: #000;
+  gap: 25px;
+  margin: 25px 0;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .new_file_title.wrapper input {
+  color: #116C7E;
+  min-width: 300px;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .remove.action_wrapper.active {
+  flex-direction: column;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .remove.action_wrapper.active #solid_selector {
+  display: none;
+  opacity: 0;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .remove.action_wrapper.active label {
   margin: 4px 0;
 }
-.shortpixel-media-modal .modal-wrapper .action-bar .replace_type.wrapper .howto {
+.shortpixel-media-modal .modal-wrapper .action-bar .remove.action_wrapper.active .howto {
   display: none;
 }
-.shortpixel-media-modal .modal-wrapper .action-bar .replace_type.wrapper .button {
+.shortpixel-media-modal .modal-wrapper .action-bar .remove.action_wrapper.active .button {
   display: inline-block;
 }
-.shortpixel-media-modal .modal-wrapper .action-bar .replace_type.wrapper .bg_transparency {
+.shortpixel-media-modal .modal-wrapper .action-bar .remove.action_wrapper.active .bg_transparency {
   display: none;
 }
 .shortpixel-media-modal .modal-wrapper .load-preview-spinner {

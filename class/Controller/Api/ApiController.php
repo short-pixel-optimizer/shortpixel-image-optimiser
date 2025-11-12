@@ -132,9 +132,9 @@ class ApiController extends RequestManager
 		{
 			 $requestBody['bg_remove'] = $qItem->data()->paramlist['bg_remove']; 
 		}
-		elseif (isset($qItem->data()->paramlist['scale'])) // @todo This needs to be adepted to unknown api action
+		elseif (isset($qItem->data()->paramlist['upscale'])) // @todo This needs to be adepted to unknown api action
 		{
-			 $requestBody[''] = ''; 
+			 $requestBody['upscale'] = $qItem->data()->paramlist['upscale']; 
 		}
 
 		$requestParameters = [
@@ -251,6 +251,13 @@ class ApiController extends RequestManager
 				{
 					 return $this->handleActionResponse($qItem, $APIresponse); 
 				}
+				if ('scale_image' == $action)
+				{
+					 return $this->handleActionResponse($qItem, $APIresponse);
+				}
+
+				// Bail out if action is not properly defined 
+				return $this->returnFailure(self::STATUS_FAIL, __('ApiController was not provided with known action'));
 		
 
 		} // ApiResponse[0]

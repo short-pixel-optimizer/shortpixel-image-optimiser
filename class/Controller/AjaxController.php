@@ -420,6 +420,8 @@ class AjaxController
 		 $mediaItem = $this->getMediaItem($item_id, 'media');
 		 $this->checkImageAccess($mediaItem);
 
+		 $action_name = isset($_POST['action_name']) ? sanitize_text_field($_POST['action_name']) : 'replace'; 
+
 		 $previewImage = UiHelper::findBestPreview($mediaItem, 600);
 
 		 $json = new \stdClass; 
@@ -440,10 +442,13 @@ class AjaxController
 			'placeholderImage' => \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'), 
 			'item_id' => $item_id, 
 			'post_title' => $post->post_title, 
+			'action_name' => $action_name, 
 			]
 		 ); 
 
 		 $json->popup = $view->returnView('snippets/media-popup'); 
+		 $json->action_name = $action_name; 
+		 
 
 		 $this->send($json);
 
@@ -453,38 +458,64 @@ class AjaxController
 		$item_id = $data['id'];
 		$is_preview = true; // default to no action 
 		$is_preview = (isset($_POST['is_preview'])) ? filter_var(sanitize_text_field($_POST['is_preview']), FILTER_VALIDATE_BOOL) : $is_preview; 
-		
-		$backgroundType = isset($_POST['background_type']) ? sanitize_text_field($_POST['background_type']) : 'transparent'; 
-		$backgroundColor = isset($_POST['background_color']) ? sanitize_text_field($_POST['background_color']) : false; 
-		$backgroundTransparency = isset($_POST['background_transparency']) ? sanitize_text_field($_POST['background_transparency']) : '00';
-		$newFileName = isset($_POST['newFileName']) ? sanitize_file_name($_POST['newFileName']) : false; 
-		$newPostTitle = isset($_POST['newPostTitle']) ? sanitize_text_field($_POST['newPostTitle']) : ''; 
-		$refresh = isset($_POST['refresh']) ? filter_var(sanitize_text_field($_POST['refresh']), FILTER_VALIDATE_BOOL) : false;  
-		$opener = isset($_POST['opener']) ? sanitize_text_field($_POST['opener']) : ''; 
-		$attached_post_id = isset($_POST['attached_post_id']) ? intval($_POST['attached_post_id']) : 0; 
+
+		$action_name = isset($_POST['action_name']) ? sanitize_text_field($_POST['action_name']) : 'remove'; 
 
 		$mediaItem = $this->getMediaItem($item_id, 'media');
 
 		$this->checkImageAccess($mediaItem);
-
 		$qItem = QueueItems::getImageItem($mediaItem);
-		$optimizer = $qItem->getApiController('remove_background');
 
-		$args = []; 
+		// General needed: 
+		$opener = isset($_POST['opener']) ? sanitize_text_field($_POST['opener']) : ''; 
+		$attached_post_id = isset($_POST['attached_post_id']) ? intval($_POST['attached_post_id']) : 0; 
+		$newFileName = isset($_POST['newFileName']) ? sanitize_file_name($_POST['newFileName']) : false; 
+		$newPostTitle = isset($_POST['newPostTitle']) ? sanitize_text_field($_POST['newPostTitle']) : ''; 
+		$refresh = isset($_POST['refresh']) ? filter_var(sanitize_text_field($_POST['refresh']), FILTER_VALIDATE_BOOL) : false;  
+
+		$args = [
+			'newFileName' => $newFileName, 
+			'newPostTitle' => $newPostTitle, 
+			'refresh' => $refresh, 
+			'attached_post_id' => $attached_post_id, 
+		]; 
+
+		// For remove background : 
+		if ('remove' === $action_name)
+		{
+			$backgroundType = isset($_POST['background_type']) ? sanitize_text_field($_POST['background_type']) : 'transparent'; 
+			$backgroundColor = isset($_POST['background_color']) ? sanitize_text_field($_POST['background_color']) : false; 
+			$backgroundTransparency = isset($_POST['background_transparency']) ? sanitize_text_field($_POST['background_transparency']) : '00';
+			if ('solid' == $backgroundType)
+			{
+				 $args['replace_color'] = $backgroundColor; 
+				 $args['replace_transparency'] = $backgroundTransparency; 
+			}
+
+			$optimizer = $qItem->getApiController('remove_background');
+			$qItem->newRemoveBackgroundAction(array_merge(['is_preview' => $is_preview], $args));
+
+		}
+		elseif ('scale' == $action_name) 		// For image scaling: 		
+		{
+			$args['scale'] = isset($_POST['scale']) ? intval($_POST['scale']) : 2; 
+
+			$optimizer = $qItem->getApiController('scale_image');
+			$qItem->newScaleImageAction(array_merge(['is_preview' => $is_preview], $args));
+		}
+
+
+		//$args = []; 
 		
-		$args['do_transparent'] = ('transparent' == $backgroundType) ? true : false; 
+		/*$args['do_transparent'] = ('transparent' == $backgroundType) ? true : false; 
 		$args['newFileName'] = $newFileName; 
 		$args['newPostTitle'] = $newPostTitle; 
 		$args['refresh'] = $refresh;
 		$args['attached_post_id'] = $attached_post_id; 
+	*/		
+
 		
-		if ('solid' == $backgroundType)
-		{
-			 $args['replace_color'] = $backgroundColor; 
-			 $args['replace_transparency'] = $backgroundTransparency; 
-		}
-		
-		$qItem->newRemoveBackgroundAction(array_merge(['is_preview' => $is_preview], $args));
+
 		$optimizer->sendToProcessing($qItem);
 		$optimizer->handleAPIResult($qItem);  
 

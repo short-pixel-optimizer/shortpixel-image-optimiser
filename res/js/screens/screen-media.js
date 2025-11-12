@@ -77,7 +77,9 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		if (typeof uiType === 'undefined' || uiType === 'edit')
 		{
 			var parent = document.querySelector('[id^=media-head]'); 
-			parent.append(button, scaleButton);
+			let par = document.createElement('p');
+			par.append(button);
+			parent.append(par, scaleButton);
 		}
 		else if('gallery' === uiType)
 		{
@@ -97,7 +99,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		
 	}
 
-	OpenEditorEvent(event)
+	OpenEditorEvent(event, action_name)
 	{
 		 let item_id = event.target.dataset.item_id; 
 		 var opener = event.target.dataset.opener; 
@@ -111,6 +113,9 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		let modal = document.createElement('div'); 
 		modal.id = 'shortpixel-media-modal'; 
 		modal.classList.add('shortpixel-media-modal', 'modal');
+		modal.dataset.opener = opener; 
+		modal.dataset.action_name = action_name; 
+		modal.dataset.item_id = item_id; 
 
 		if (null === document.getElementById('shortpixel-media-modal-css'))
 		{
@@ -196,22 +201,30 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		window.addEventListener('shortpixel.openEditorPopup', function (event) {
 			let previewData = event.detail; 
 
+			let actionName = event.detail.action_name; 
+
 			modal.innerHTML = previewData.popup; 
 			modal.querySelector('[data-action="close"]').addEventListener('click', () => {
 				document.dispatchEvent(closeEvent);
 			}, { once: true });
 
-			this.MediaEditorDoAction({ preview: true, 'item_id': item_id, 'modal': modal, 'opener' : opener});
+			this.MediaEditorDoAction({ preview: true, 'item_id': item_id, 'modal': modal});
 
 			let previewButton = modal.querySelector('[data-action="media-get-preview"]'); 
 			previewButton.addEventListener('click', () => {
-				 	this.MediaEditorDoAction({ preview: true, 'item_id': item_id, 'modal' : modal, 'refresh' : true, 'opener' : opener});
+				 	this.MediaEditorDoAction({ preview: true, 'item_id': item_id, 'modal' : modal, 'refresh' : true});
 			});
 
 			let saveButton = modal.querySelector('[data-action="media-save-button"]'); 
 			saveButton.addEventListener('click', () =>  { 
-				 this.MediaEditorDoAction({ preview: false, 'item_id': item_id, 'modal' : modal, 'refresh' : true, 'opener' : opener});
+				 this.MediaEditorDoAction({ preview: false, 'item_id': item_id, 'modal' : modal, 'refresh' : true});
 			});
+
+			let actionWrapper = modal.querySelector('.' + actionName + '.action_wrapper');
+			if (null !== actionWrapper)
+			{
+				 actionWrapper.classList.add('active');
+			}
 
 
 		}.bind(this), { once: true });
@@ -221,6 +234,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			id: item_id,
 			type: 'media',
 			screen_action: 'media/getEditorPopup',
+			action_name : action_name, 
 		}
 		data.callback = 'shortpixel.openEditorPopup';
 		this.processor.AjaxRequest(data);
@@ -237,13 +251,18 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		let newFileName = modal.querySelector('input[name="new_filename"]').value; 
 		let newPostTitle= modal.querySelector('input[name="new_posttitle"]').value;
 		let spinner = document.querySelector('.load-preview-spinner'); 
+		let scaleOption = document.querySelector('input[name="scale"]:checked').value; 
+
+		let action = modal.dataset.action_name; 
+		let opener = modal.dataset.opener; 
+
 
 		let previewImage = document.querySelector('.modal-wrapper .image-preview i'); 
 		previewImage.style.backgroundImage = 'url(' + previewImage.dataset.placeholder + ')';
 
 		modal.dispatchEvent(modal.toggleButtonBlock);
 
-		if ('gutenberg' == data.opener)
+		if ('gutenberg' == opener)
 		{
 			let searchParams = new URLSearchParams(window.location.search);
 			if (searchParams.has('post'))
@@ -267,15 +286,25 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			id: data.item_id,
 			type: 'media',
 			screen_action: 'media/getEditorPreview',
-			background_type:  backgroundType, 
-			background_color: backgroundColor,
-			background_transparency: backgroundTransparency,  
 			newFileName: newFileName, 
 			newPostTitle: newPostTitle, 
 			is_preview: data.preview,
 			refresh: refresh, 
-			opener: data.opener,
+			opener: opener,
+			action_name: action,
 		};
+
+		if ('replace' == action)
+		{
+			request.background_type =  backgroundType; 
+			request.background_color = backgroundColor; 
+			request.background_transparency = backgroundTransparency;   
+		}
+
+		if ('scale' == action)
+		{
+			request.scale = scaleOption;
+		}
 
 		if (data.attached_post_id)
 		{

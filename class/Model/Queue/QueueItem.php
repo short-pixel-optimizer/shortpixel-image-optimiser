@@ -620,6 +620,7 @@ class QueueItem
            'newPostTitle' => '', 
            'refresh' => false, 
            'attached_post_id' => null,
+           'scale' => null, 
       ]; 
 
       $paramlist = []; 
@@ -638,7 +639,8 @@ class QueueItem
       $paramlist['newPostTitle'] = $args['newPostTitle'];
 
       $paramlist['refresh'] = $args['refresh']; // When sending item first, do the refresh. This is the mimc the tries = 0 refresh option we don't have here. 
-      
+      $paramlist['upscale'] = $args['scale'];
+
       $returndatalist = [$this->imageModel->getImageKey() => $this->imageModel->getFileName()];
       
       $this->data->action = 'scale_image'; 

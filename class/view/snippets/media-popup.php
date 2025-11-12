@@ -13,13 +13,28 @@ $view->settings['bg_transparency'] = 80;
 $originalImage = $this->data['originalImage'];
 $previewImage = $this->data['previewImage'];
 $fileName = $originalImage->getFileName();
-$suggesteFileName = $originalImage->getFileBase() . '_nobg.' . $originalImage->getExtension(); 
 $placeholderImage = $this->data['placeholderImage'];
 $post_title = $this->data['post_title'];
+$action_name = $this->data['action_name'];
+
+switch($action_name)
+{
+	case 'remove': 
+		$modal_title = __('Remove background', 'shortpixel-image-optimiser');
+		$suggesteFileName = $originalImage->getFileBase() . '_nobg.' . $originalImage->getExtension(); 
+
+	break; 
+
+	case 'scale': 
+		$modal_title = __('Scale Image', 'shortpixel-image-optimiser'); 
+		$suggesteFileName = $originalImage->getFileBase() . '_upscale.' . $originalImage->getExtension(); 
+
+	break; 
+}
 ?>
 
-<div class="modal-wrapper" id="media-modal" data-item-id="<?php echo $this->data['item_id'] ?>" >
-    <div class="title"><h3><?php _e('Remove background', 'shortpixel-image-optimiser'); ?> <span data-action='close'>X</span></h3> </div>
+<div class="modal-wrapper" id="media-modal" data-item-id="<?php echo $this->data['item_id'] ?>" data-action-name="<?php echo $action_name ?>" >
+    <div class="title"><h3><?php echo $modal_title ?> <span data-action='close'>X</span></h3> </div>
 
     <div class="image-wrapper">
             <div class="image-original">
@@ -35,7 +50,7 @@ $post_title = $this->data['post_title'];
 
     <div class='action-bar'>
 
-    <section class="replace_type wrapper">
+    <section class="remove action_wrapper">
 		<h3><?php _e("Options", 'shortpixel-image-optimiser'); ?></h3>
 		<p><?php __('Note: transparency options only work with supported file formats, such as PNG', 'shortpixel-image-optimiser'); ?></p>
 
@@ -74,28 +89,47 @@ $post_title = $this->data['post_title'];
 								<input type="range" min="0" max="100" value="<?php echo esc_attr($view->settings['bg_transparency']); ?>" id="bg_transparency" />
 							</label>  
 						</div>
-				</section>
 
-		<span>
-			<?php _e('New File Name', 'shortpixel-image-optimiser'); ?> 
-			<input type="text" name="new_filename" value="<?php echo $suggesteFileName ?>">
-		</span>
 
-		<span>	
-			<?php _e('New Image Title', 'shortpixel-image-optimiser'); ?> 
-			<input type="text" name="new_posttitle" value="<?php echo $post_title ?>"> 
-		</span>
-		
 
-        <button class='button' type='button' id='media-get-preview' data-action='media-get-preview'>
-			<?php _e('Preview','shortpixel-image-optimiser'); ?>
-		</button>
+		</section>
 
-		<span>
-			<button class='button' type='button'  id='media-save-button' data-action='media-save-button'>
-				<?php _e('Save', 'shortpixel-image-optimiser'); ?>
+		<section class='new_file_title wrapper'>
+			<span>
+				<p><?php _e('New File Name', 'shortpixel-image-optimiser'); ?></p>
+				<input type="text" name="new_filename" value="<?php echo $suggesteFileName ?>">
+			</span>
+
+			<span>	
+				<p><?php _e('New Image Title', 'shortpixel-image-optimiser'); ?></p>
+				<input type="text" name="new_posttitle" value="<?php echo $post_title ?>"> 
+			</span>
+
+		</section>
+
+		<section class="scale action_wrapper">
+			<h3><?php _e("Options", 'shortpixel-image-optimiser'); ?></h3>
+			<ul>
+				<li><input type="radio" name="scale" value="2" checked> <?php _e('2x', 'shortpixel-image-optimiser'); ?></li>
+				<li><input type="radio" name="scale" value="3"> <?php _e('3x', 'shortpixel-image-optimiser'); ?></li>
+				<li><input type="radio" name="scale" value="4"> <?php _e('4x', 'shortpixel-image-optimiser'); ?></li>
+			</ul>
+		</section>
+
+
+		<div class='button-wrapper'>
+
+			<span>
+		        <button class='button' type='button' id='media-get-preview' data-action='media-get-preview'>
+				<?php _e('Preview','shortpixel-image-optimiser'); ?>
 			</button>
-			<p><?php _e('A new image will be created', 'shortpixel-image-optimiser'); ?></p>
-		</span>
-    </div>
-</div>
+			</span>
+			<span>
+				<button class='button' type='button button-primary'  id='media-save-button' data-action='media-save-button'>
+					<?php _e('Save', 'shortpixel-image-optimiser'); ?>
+				</button>
+				<p><?php _e('A new image will be created', 'shortpixel-image-optimiser'); ?></p>
+			</span>
+		</div>
+    </div> <!-- // action_bar -->
+</div> <!-- // modal --> 

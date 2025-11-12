@@ -66,10 +66,12 @@
             > div {
                 flex: 1;
                 position: relative; 
+                padding: 16px;
 
                 &:first-child
                 {
-                    border-right: 1px solid #000;
+                    //border-right: 1px solid #000;
+                    padding-right: 0;
                 }
             }
             i {
@@ -99,12 +101,45 @@
             width: 100%;
             justify-content: center;
             align-items: center; 
-            background: $color-brokenwhite;
+            background: $blue_background;
+            flex-direction: column;
 
-            .replace_type.wrapper 
+            .action_wrapper
             {
-                 display: flex; 
+                display: none; 
+                opacity: 0;
+                &.active 
+                {
+                     display: flex; 
+                     opacity: 1;
+                }
+            }
+
+            .new_file_title.wrapper
+            {
+                 display: flex;
+                // flex-direction: column;
+                 color: #000;
+                 gap: 25px; 
+                 margin: 25px 0;
+                 input 
+                 {
+                    color: $blue_dark;
+                    min-width: 300px;
+                 }
+
+            }
+
+            .remove.action_wrapper.active
+            {
+                // display: flex; 
                  flex-direction: column; 
+
+                 #solid_selector 
+                 {
+                     display: none; 
+                     opacity: 0;
+                 }
 
                  label 
                  {
@@ -122,6 +157,11 @@
                      display: none;
                  }
                  
+            }
+
+            .scale.action_wrapper
+            {
+
             }
         }
 
