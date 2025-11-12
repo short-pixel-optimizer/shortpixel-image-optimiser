@@ -51,7 +51,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 						</div> -->
 
 
-          <div><span><?php esc_html_e('Total from Media Library','shortpixel-image-optimiser'); ?></span><span data-stats-media="images-total_images_without_ai">0</span></div>
+          <div><h4 class="totals"><?php esc_html_e('Total from Media Library','shortpixel-image-optimiser'); ?></h4><span class="totals" data-stats-media="images-total_images_without_ai">0</span></div>
 
         </div>
       </div>

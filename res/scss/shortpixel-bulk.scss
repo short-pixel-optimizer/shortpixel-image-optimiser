@@ -60,8 +60,8 @@
     letter-spacing: 0.3px;
     font-weight: 700;
     font-size: 14px;
-    border-radius: 6px;
-    border: none;
+    border-radius: 3px;
+    border: 1px solid $blue_default;
     transition: all 0.1s ease-in-out;
   //  min-height: 44px;
     line-height: 1;
@@ -69,13 +69,9 @@
     
 
     &:hover {
-      background: $color-dark;
+      background: lighten($blue_default, 10%);
       color: #fff;
 
-    }
-
-    &:focus {
-      background: $color-dark;
     }
 
     .dashicons {
@@ -104,7 +100,7 @@
   .button-primary {
     background: $blue_default;
     color: #fff;
-    border-radius: 6px;
+    border-radius: 3px;
     border: none;
     transition: all 0.1s ease-in-out;
 
@@ -427,6 +423,15 @@
             color: #fff;  
             border-color: $blue_background;
           }
+          .outer {
+            background-color: #1ABDCA; 
+            color: #fff;  
+            bordeir-color: $blue_background;
+            height: 47px;
+            width: 47px;
+            margin-top: -46px;
+            border-radius: 50%;
+          }
           .text { 
             color: #1ABDCA; 
             font-weight: 700;
@@ -735,14 +740,19 @@
       .section-wrapper {
         background-color: $blue_background;
         flex: 1; 
-        border-radius: 16px;
+        border-radius: 15px;
         margin: 0 5%; 
         max-width: 45%;
+        padding-top: 10px;
 
         h4 {
           font-size: 14px;
           font-weight: 700;
-          padding-left: 20px;
+          padding-left: 30px;
+          &.totals {
+            padding-left: 15px;
+            color: #3c434a;
+          }
 
           .dashicons {
             color: #1FBEC9;
@@ -754,8 +764,9 @@
         .list-table {
           display: table;
           //border: 1px solid #DFEAFF;
-          width: 90%;
-          margin: 0 4px;
+          width: 95%;
+          margin: 0 10px;
+          padding-bottom: 10px;
 
           > div {
             display: table-row;
@@ -764,12 +775,14 @@
             &.images 
             {
               color: $blue_dark;
+              padding-left: 10px;
             }
 
             &.filetypes {
           //    background: #F5F9FF;
               color: #aaa;
               font-size: 12px;
+              padding-left: 10px;
 
               >span {
                // border: 0;
@@ -782,7 +795,13 @@
             border-bottom: 1px solid #ccc;
             width: 50%;
             // text-align: center;
-            padding: 15px 0 15px 15px;
+            padding: 15px;
+            &.totals {
+               border-bottom: none;
+               font-size: 14px;
+               font-weight: 700;
+               color: #3c434a;
+            }
             &:nth-child(2)
             {
                text-align: right;
