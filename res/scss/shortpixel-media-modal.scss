@@ -1,6 +1,7 @@
 @import 'elements/animation';
 @import 'elements/colors'; 
-
+@import 'elements/mixins'; 
+@import 'elements/fonts'; 
 
 
 
@@ -21,33 +22,37 @@
     display: flex; 
     align-items: center; 
     justify-content: center;
-    position: absolute; 
-    top: 25px;
+    position: fixed; 
+    top: 45px;
   //  bottom: 0;
     left: 0;
     right: 0; 
+    z-index: 300;
     
 
     .modal-wrapper 
     {
         z-index: 300; 
         width: 80%; 
-        height: 80vh; 
-        max-height: 700px;
+        //height: 80vh; 
+        max-height: 100vh;
        // max-width: 700px; 
-        background: #fff;
+       // background: #fff;
         .title {
             
-            background: $blue_dark; 
+            background: $blue_default; 
             color: white; 
         //    height: 5%;
             padding: 6px; 
            // display: flex; 
+           border-top-left-radius: 14px; 
+           border-top-right-radius: 14px;
 
             h3 {
                 margin: 5px 0;
                 text-align: center;
                 color: #fff;
+                font-size: 16px;
             }
              span 
             {
@@ -57,22 +62,85 @@
                 cursor: pointer;
             }
         }
+
+        .modal-content-wrapper 
+        {
+             width: 80%; 
+             padding: 0 10%;
+             background: #fff;
+             border-bottom-left-radius: 14px; 
+             border-bottom-right-radius: 14px;
+
+        }
         .image-wrapper
         {
-            height: 85%;
             display: flex;
             flex-direction: row;
             align-items: stretch;
-            > div {
+            position: relative;
+
+            min-height: 40vh; 
+
+            .image-original, .image-preview {
                 flex: 1;
                 position: relative; 
-                padding: 16px;
+                padding: 16px 0;
 
+                > i  // preview images. 
+                {
+                     border: 1px solid rgba(0,0,0,0.1);  // very light border because white background images look bad
+                }
+
+                span 
+                {
+                    position: absolute; 
+                    top: 30px; 
+                    border-radius: 8px; 
+                    font-size: 16px;
+                    font-weight: 700;
+                    color: #000;
+                    padding: 8px 12px;
+                }
+            }
+            > div 
+            {
                 &:first-child
                 {
                     //border-right: 1px solid #000;
                     padding-right: 0;
+                    padding-left: 0;
+                    span 
+                    {
+                        left: 4px;
+                        background-color: $color_grey_closed;
+                    }
                 }
+                &:last-child 
+                {
+                     padding-right: 0;
+                     span 
+                     {
+                         right: 4px;
+                         background-color: $blue_default;
+                     }
+ 
+                }
+            }
+            
+            .image-arrow 
+            {
+                 width: 35px; 
+                 border: 0;
+                 display: flex; 
+                 align-items: center; 
+                 justify-content: center;
+                 margin: 0 0 0 4px;
+                 i {
+                    width: 25px;
+                    height: 25px; 
+                    filter: $filter_blue_default;
+                 }
+
             }
             i {
                 display: inline-block;
@@ -93,16 +161,20 @@
 
             }
             
-        }
+        } // image-wrapper 
         .action-bar {
            // height: 10%;
            // min-height: 400px;
             display: flex; 
             width: 100%;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center; 
             background: $blue_background;
-            flex-direction: column;
+            flex-direction: row;
+            padding: 16px 36px;
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+            box-sizing: border-box;
 
             .action_wrapper
             {
@@ -118,15 +190,21 @@
             .new_file_title.wrapper
             {
                  display: flex;
-                // flex-direction: column;
+                 flex-direction: column;
                  color: #000;
-                 gap: 25px; 
+                 gap: 15px; 
                  margin: 25px 0;
                  input 
                  {
                     color: $blue_dark;
                     min-width: 300px;
+                    font-weight: 400; 
                  }
+                 p { 
+                    font-weight: 700;
+                    margin: 0;
+                 }
+                
 
             }
 
@@ -161,7 +239,31 @@
 
             .scale.action_wrapper
             {
+                flex-direction: column; 
+            }
+            .filler {
+                width: 10%;
+            }
+        } // action-bar 
 
+        .button-wrapper
+        {
+             display: flex; 
+             background: $blue_background;
+             padding: 8px;
+             width: 100%;
+             box-sizing: border-box;
+             border-bottom-left-radius: 16px;
+             border-bottom-right-radius: 16px;
+
+             .button {
+                @include shortpixel-button;
+                padding: 8px 16px;
+                i {
+                    width: 15px;
+                    height: 15px;
+                    filter: $filter_white;
+                }
             }
         }
 
@@ -175,7 +277,7 @@
                 @include loadspinner;
            }
         }
-    }
+    } // modal-wrapper 
      
 
 }

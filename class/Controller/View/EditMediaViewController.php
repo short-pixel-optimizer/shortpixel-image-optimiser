@@ -110,6 +110,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
          	$this->view->text = UiHelper::getStatusText($this->imageModel);
           $this->view->list_actions = UiHelper::getListActions($this->imageModel);
+          $this->view->image = [ 'width' => $this->imageModel->get('width'), 'height' => $this->imageModel->get('height')];
 
           if ( count($this->view->list_actions) > 0)
             $this->view->list_actions = UiHelper::renderBurgerList($this->view->list_actions, $this->imageModel);

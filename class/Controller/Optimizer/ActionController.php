@@ -284,7 +284,7 @@ class ActionController extends OptimizerBase
       {
          $result = false;
          $queueItem->addResult([
-           'message' => ResponseController::formatItem($imageModel->get('id')),
+           'message' => ResponseController::formatQItem($queueItem),
            'is_error' => true,
            'is_done' => true,
 
@@ -324,7 +324,7 @@ class ActionController extends OptimizerBase
       else
       {
          $queueItem->addResult([
-            'message' => ResponseController::formatItem($imageModel->get('id')),
+            'message' => ResponseController::formatQItem($queueItem),
             'is_done' => true,
             'is_error' => true,
             'fileStatus' => ImageModel::FILE_STATUS_ERROR,
@@ -333,7 +333,7 @@ class ActionController extends OptimizerBase
 
       // no returns here, the result is added to the qItem by reference.
       return $result; // @boolean
-      //return $json;
+      
   }
 
 } // class

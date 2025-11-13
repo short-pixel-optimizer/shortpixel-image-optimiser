@@ -210,6 +210,7 @@ class ApiController extends RequestManager
 				case -102: // Invalid URL
 				case -105: // URL missing
 				case -106: // Url is inaccessible
+				case -111: // File too big ( for upscale ) 
 				case -113: // Too many inaccessible URLs
 				case -201: // Invalid image format
 				case -202: // Invalid image or unsupported format

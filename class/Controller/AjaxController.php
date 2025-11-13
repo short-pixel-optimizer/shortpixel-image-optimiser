@@ -136,6 +136,10 @@ class AjaxController
 		$json->$type->is_optimizable = (false !== $item) ? $item->isProcessable() : false;
 		$json->$type->is_restorable = (false !== $item)  ? $item->isRestorable() : false;
 		$json->$type->id = $id;
+		$json->$type->image = [
+			'width' => $item->get('width'), 
+			'height' => $item->get('height'), 
+		];
 		$json->$type->results = null;
 		$json->$type->is_error = false;
 		$json->status = true;
@@ -513,8 +517,6 @@ class AjaxController
 		$args['refresh'] = $refresh;
 		$args['attached_post_id'] = $attached_post_id; 
 	*/		
-
-		
 
 		$optimizer->sendToProcessing($qItem);
 		$optimizer->handleAPIResult($qItem);  

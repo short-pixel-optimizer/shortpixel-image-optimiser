@@ -12,6 +12,7 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Model\ResponseModel as ResponseModel;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Controller\Api\ApiController as ApiController;
+use ShortPixel\Model\Queue\QueueItem;
 
 class ResponseController
 {
@@ -128,6 +129,8 @@ class ResponseController
 		}
 
 
+		// This is Deprecated 
+		
 		public static function formatItem($item_id)
 		{
 				 $item = self::getResponseItem($item_id); // ResponseMOdel
@@ -140,6 +143,35 @@ class ResponseController
 				 }
 
 				 return $text;
+		}
+
+		public static function formatQItem(QueueItem $queueItem)
+		{
+			$result = $queueItem->result();
+			$data = $queueItem->data(); 
+			$imageModel = $queueItem->imageModel; 
+
+			$item_id = $queueItem->item_id; 
+
+			$responseModel = self::getResponseItem($item_id); 
+
+			//if (is_null($responseModel->item_type))
+			//{
+				 $responseModel->item_type = $imageModel->get('type'); 
+			//}
+
+			foreach($result as $resultName => $resultValue)
+			{
+				if (property_exists($responseModel, $resultName) && false === is_null($responseModel->$resultName))
+				{
+					 $responseModel->$resultName = $resultValue; 
+				}
+			}
+
+			self::updateResponseItem($responseModel);
+
+			return self::formatItem($item_id); 
+
 		}
 
 		private static function formatErrorItem($item, $text)
@@ -155,14 +187,14 @@ class ResponseController
 			switch($item->fileStatus)
 			{
 				  case ImageModel::FILE_STATUS_ERROR:
-							$text .= sprintf(__('( %s %d ) ', 'shortpixel-image-optimizer'), (strtolower($item->item_type) == 'media') ?  __('Attachment ID ') : __('Custom Type '), $item->item_id);
+							$text .= sprintf(__('( %s %d ) ', 'shortpixel-image-optimizer'), (strtolower($item->item_type) == 'media') ?  __('Attachment ID ') : __('Custom # '), $item->item_id);
 					break;
 			}
 
 			switch($item->apiStatus)
 			{
 				  case RequestManager::STATUS_FAIL:
-							$text .= sprintf(__('( %s %d ) ', 'shortpixel-image-optimizer'), (strtolower($item->item_type) == 'media') ?  __('Attachment ID ') : __('Custom Type '), $item->item_id);
+							$text .= sprintf(__('( %s %d ) ', 'shortpixel-image-optimizer'), (strtolower($item->item_type) == 'media') ?  __('Attachment ID ') : __('Custom # '), $item->item_id);
 					break;
 			}
 
@@ -214,12 +246,5 @@ class ResponseController
 				}
 				return $text;
 		}
-
-
-		private function responseStrings()
-		{
-
-		}
-
 
 } // Class

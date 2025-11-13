@@ -636,10 +636,24 @@ class QueueItem
       
       $url = $originalFile->getUrl(); 
 
+      if (false === is_null($args['newFileName']) && strlen($args['newFileName']) > 0)
+      {
+         $paramlist['newFileName'] = $args['newFileName']; 
+      }
+      else
+      {
+         $paramlist['newFileName'] = $originalFile->getFileBase() . '_noscale' . $originalFile->getExtension(); 
+      }
+
       $paramlist['newPostTitle'] = $args['newPostTitle'];
 
       $paramlist['refresh'] = $args['refresh']; // When sending item first, do the refresh. This is the mimc the tries = 0 refresh option we don't have here. 
       $paramlist['upscale'] = $args['scale'];
+
+      if (! is_null($args['attached_post_id']) && $args['attached_post_id'] > 0)
+      {
+         $paramlist['attached_post_id'] = $args['attached_post_id'];
+      }
 
       $returndatalist = [$this->imageModel->getImageKey() => $this->imageModel->getFileName()];
       
@@ -653,6 +667,7 @@ class QueueItem
       $this->item_count = 1;
       
    }
+
 
    /**
     * Get the ApiController associated to the action performed

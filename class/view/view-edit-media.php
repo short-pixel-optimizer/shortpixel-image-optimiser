@@ -6,7 +6,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 ?>
-<div id='shortpixel-data-<?php echo( esc_attr($view->id) );?>' class='column-wp-shortPixel view-edit-media'>
+<div id='shortpixel-data-<?php echo( esc_attr($view->id) );?>' class='column-wp-shortPixel view-edit-media'
+  data-imagewidth="<?php echo $view->image['width'] ?>" data-imageheight="<?php echo $view->image['height'] ?>"
+>
 <?php // Debug Data
 if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->debugInfo) > 0 ):  ?>
       <div class='debugInfo' id='debugInfo'>
@@ -16,19 +18,7 @@ if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->de
 
           <?php
           foreach($view->debugInfo as $index => $item):
-          /* In Time, replace debug with a better loop, with named vars and all.  Also the big items should be switchable view-wiese ( hidden by default ) to help with the clutter
-          foreach($view->debugInfo as $index => $item):
-              $name = $item[0];
-              $value = $item[1];
-              $is_big = (is_object($value) || is_array($value)) ? true : false;
 
-          if ($is_big)
-          {
-             printf('<div><label><strong>%s</strong> <input type="checkbox"> <span><pre>%s</pre></span></label></div>', $name, print_r($value, true));
-          }
-          else {
-             printf('<div><span><strong>%s</strong></span><span>%s</span></div>', $name, $value);
-          } */
         ?>
           <ul class="debug-<?php echo esc_attr($index) ?>">
             <li><strong><?php echo $item[0]; ?></strong>
@@ -51,7 +41,7 @@ if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->de
   <?php if (property_exists($this->view, 'text')): ?>
   <div class='sp-column-info'>
 		<?php
-			    // burger if needed.
+			    // burger if needed.F
 			    echo '<p>' . $this->view->list_actions . '</p>'; ?>
 		<p><?php  echo $this->view->text;  ?></p></div>
 

@@ -40,12 +40,19 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		if (document.getElementById('attachment_alt') !== null)
 		{
 			var postInput = document.getElementById('post_ID');
-			this.FetchAltView(undefined, postInput.value);
-			this.InitEditorActions(postInput.value, 'edit'); 
+			let item_id = postInput.value; 
+			this.FetchAltView(undefined, item_id);
+			let imageDataEl = document.getElementById('shortpixel-data-' + item_id); 
+			let editorArgs = {}; 
+			if (null !== imageDataEl && imageDataEl.dataset.imagewidth)
+			{
+				 editorArgs.image_width= imageDataEl.dataset.imagewidth;
+			}
+			this.InitEditorActions(postInput.value, 'edit', editorArgs); 
 		}
 	}
 
-	InitEditorActions(item_id, uiType)
+	InitEditorActions(item_id, uiType, args)
 	{
 		let id = 'shortpixel_removebackground_button';
 		var button = document.createElement('button'); 
@@ -71,7 +78,12 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		
 		scaleButton.addEventListener('click', (event) => { this.OpenEditorEvent(event, 'scale') }); 
 		scaleButton.dataset.opener = uiType; 
-
+		
+		if (args.image_width && args.image_width > this.settings.upscale_max_width)
+		{
+			scaleButton.disabled = true;
+			scaleButton.title = this.settings.too_big_for_scale_title; 
+		}
 
 			// @todo Probably all should pass uiType. 
 		if (typeof uiType === 'undefined' || uiType === 'edit')
@@ -706,7 +718,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				if (!e.detail || !e.detail.media || !e.detail.media.itemView) {
 					return;
 				}
-console.log('modal', this);
+
 				var item_id = e.detail.media.id; 
 
 				var $spSpace = this.$el.find('.attachment-info .details');
@@ -721,11 +733,16 @@ console.log('modal', this);
 					setTimeout(function () { this.renderSPIOView(e, timed) }.bind(this), 1000);
 				}
 
+				let editorArgs = {}; 
+				if (e.detail.media.image && e.detail.media.image.width) // dottadot
+				{
+					editorArgs.image_width = e.detail.media.image.width; 
+				}
 
 				var html = this.doSPIORow(e.detail.media.itemView);
 				$spSpace.after(html);
 
-				self.InitEditorActions(item_id, opener);
+				self.InitEditorActions(item_id, opener, editorArgs);
 				self.FetchAltView(undefined, item_id); 
 
 			},

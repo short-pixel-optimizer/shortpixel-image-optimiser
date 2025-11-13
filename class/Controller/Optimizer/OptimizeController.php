@@ -204,7 +204,7 @@ class OptimizeController extends OptimizerBase
       {
         $this->handleOptimizeAction($qItem);        
       }
-      elseif ('remove_background' === $action)
+      elseif ('remove_background' === $action || 'scale_image' === $action) 
       {
         $this->handleAction($qItem);
       } 
@@ -228,7 +228,7 @@ class OptimizeController extends OptimizerBase
     }
 
     // For now here, see how that goes
-    $responseMessage = ResponseController::formatItem($item_id);
+    $responseMessage = ResponseController::formatQItem($qItem);
     if ($responseMessage !== false && strlen($responseMessage) > 0) {
       $qItem->addResult([
         'message' => $responseMessage,

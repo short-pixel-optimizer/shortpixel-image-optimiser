@@ -446,6 +446,8 @@ class ShortPixelPlugin {
 			'modalcss' => plugins_url('res/css/shortpixel-media-modal.css', SHORTPIXEL_PLUGIN_FILE), 
 			'remove_background_title' => __('Remove Background', 'shortpixel-image-optimiser'),
 			'scale_title' => __('Scale Image', 'shortpixel-image-optimiser'),
+			'upscale_max_width' => 1500, 
+			'too_big_for_scale_title'  => __('Image too big for scaling', 'shortpixel-image-optimiser'), 
 	 ];
 
 		wp_localize_script('shortpixel-screen-media', 'spio_mediascreen_settings', $screen_localize_media); 
