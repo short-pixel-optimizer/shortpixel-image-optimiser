@@ -75,6 +75,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		scaleButton.classList.add('button', 'button-secondary'); 
 		scaleButton.id = 'shortpixel_scale_button'; 
 		scaleButton.dataset.item_id = item_id; 
+		scaleButton.style.marginLeft = '6px'
 		
 		scaleButton.addEventListener('click', (event) => { this.OpenEditorEvent(event, 'scale') }); 
 		scaleButton.dataset.opener = uiType; 
@@ -90,8 +91,10 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		{
 			var parent = document.querySelector('[id^=media-head]'); 
 			let par = document.createElement('p');
+			let par2 = document.createElement('p');
 			par.append(button);
-			parent.append(par, scaleButton);
+			par2.append(scaleButton); 
+			parent.append(par, par2);
 		}
 		else if('gallery' === uiType)
 		{
@@ -100,12 +103,27 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		}
 		else if ('gutenberg' == uiType)
 		{
-			var parent = document.querySelector('.attachment-info .details')
+			var parent = document.querySelector('.attachment-info .details .edit-attachment');
 			if (null !== parent)
 			{
 				button.classList.add('button-link');
 				button.style.display = 'inline';
-				parent.append(button, scaleButton);
+				button.style.fontSize = '12px'; // hacking in to match Gburg. 
+				button.style.textDecoration = 'none'; 
+				
+				scaleButton.classList.add('button-link'); 
+				scaleButton.style.display = 'inline';
+				scaleButton.style.fontSize = '12px'; // hacking in to match Gburg. 
+				scaleButton.style.textDecoration = 'none'; 
+
+				if (false == scaleButton.disabled)
+				{
+					 parent.after(scaleButton);
+				}
+
+				parent.after(button);
+
+
 			}
 		}
 		
@@ -113,10 +131,10 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 	OpenEditorEvent(event, action_name)
 	{
-		 let item_id = event.target.dataset.item_id; 
-		 var opener = event.target.dataset.opener; 
+		let item_id = event.target.dataset.item_id; 
+		var opener = event.target.dataset.opener; 
 
-		 event.preventDefault(); 
+		event.preventDefault(); 
 		
 		let backgroundShade = document.createElement('div');
 		backgroundShade.id = 'shortpixel-media-modal-shade';
@@ -220,7 +238,10 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				document.dispatchEvent(closeEvent);
 			}, { once: true });
 
-			this.MediaEditorDoAction({ preview: true, 'item_id': item_id, 'modal': modal});
+			if (true == this.settings.popup_load_preview)
+			{
+				this.MediaEditorDoAction({ preview: true, 'item_id': item_id, 'modal': modal});
+			}
 
 			let previewButton = modal.querySelector('[data-action="media-get-preview"]'); 
 			previewButton.addEventListener('click', () => {
@@ -238,10 +259,46 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				 actionWrapper.classList.add('active');
 			}
 
+			// Interface elements for remove backgrounnd
+			let solidInput = modal.querySelectorAll('input[name="background_type"]'); 
+			if (solidInput.length > 0)
+			{
+				let solidSelector = modal.querySelector('#solid_selector'); 
+				for (let i = 0; i < solidInput.length; i++)	
+				{
+					solidInput[i].addEventListener('change', (event) => {
+						 if (event.target.value == 'solid')
+						 {
+							 solidSelector.style.display = 'block'; 
+							 solidSelector.style.opacity = 1; 
+						 }
+						 else
+						 {
+							solidSelector.style.display = 'none'; 
+							solidSelector.style.opacity = 0; 
+						 }
+					}); 
+				}
+			}
+			let bgTransInput = modal.querySelector('#bg_transparency');
+			if (null !== bgTransInput)
+			{
+				bgTransInput.addEventListener('change', (event) => {
+					let value = event.target.value; 
+					let tr = modal.querySelector('#transparency_range'); 
+					if (null !== tr)
+					{ 
+						tr.innerText = value;
+					}
+				});
+			}
+
+			
+
 
 		}.bind(this), { once: true });
 
-		// Fire off data load event. 
+		// Fire off data load event.  This loads the popup content. 
 		let data = {
 			id: item_id,
 			type: 'media',
@@ -306,7 +363,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			action_name: action,
 		};
 
-		if ('replace' == action)
+		if ('remove' == action)
 		{
 			request.background_type =  backgroundType; 
 			request.background_color = backgroundColor; 

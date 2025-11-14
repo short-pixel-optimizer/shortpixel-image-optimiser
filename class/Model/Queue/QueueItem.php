@@ -575,7 +575,18 @@ class QueueItem
        {
          $color = $args['replace_color']; 
          $transparency = $args['replace_transparency']; 
-         $paramlist['bg_remove'] = $color . $transparency;
+
+         $paramlist['bg_remove'] = $color;
+         if ($transparency >= 0 && $transparency < 100)
+			{
+				if ($transparency == 100)
+					$transparency = 'FF';
+
+			  // Strpad for lower than 10 should add 09, 08 etc.
+				 $transparency = str_pad($transparency, 2, '0', STR_PAD_LEFT);
+             $paramlist['bg_remove'] .= $transparency;
+         }
+         
        }
 
        if (false === is_null($args['newFileName']) && strlen($args['newFileName']) > 0)

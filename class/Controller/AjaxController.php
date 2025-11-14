@@ -494,6 +494,11 @@ class AjaxController
 			{
 				 $args['replace_color'] = $backgroundColor; 
 				 $args['replace_transparency'] = $backgroundTransparency; 
+				 $args['do_transparent'] = false;
+			}
+			else
+			{
+				 $args['do_transparent'] = true; 
 			}
 
 			$optimizer = $qItem->getApiController('remove_background');

@@ -56,11 +56,12 @@
   cursor: pointer;
 }
 .shortpixel-media-modal .modal-wrapper .modal-content-wrapper {
-  width: 80%;
+  width: 100%;
   padding: 0 10%;
   background: #fff;
   border-bottom-left-radius: 14px;
   border-bottom-right-radius: 14px;
+  box-sizing: border-box;
 }
 .shortpixel-media-modal .modal-wrapper .image-wrapper {
   display: flex;
@@ -84,25 +85,25 @@
   font-size: 16px;
   font-weight: 700;
   color: #000;
-  padding: 8px 12px;
+  padding: 8px 16px;
+  left: 12px;
+  text-transform: uppercase;
 }
 .shortpixel-media-modal .modal-wrapper .image-wrapper > div:first-child {
   padding-right: 0;
   padding-left: 0;
 }
 .shortpixel-media-modal .modal-wrapper .image-wrapper > div:first-child span {
-  left: 4px;
   background-color: #A9A9A9;
 }
 .shortpixel-media-modal .modal-wrapper .image-wrapper > div:last-child {
   padding-right: 0;
 }
 .shortpixel-media-modal .modal-wrapper .image-wrapper > div:last-child span {
-  right: 4px;
   background-color: #1ABDCA;
 }
 .shortpixel-media-modal .modal-wrapper .image-wrapper .image-arrow {
-  width: 35px;
+  width: 65px;
   border: 0;
   display: flex;
   align-items: center;
@@ -170,12 +171,16 @@
 .shortpixel-media-modal .modal-wrapper .action-bar .remove.action_wrapper.active {
   flex-direction: column;
 }
+.shortpixel-media-modal .modal-wrapper .action-bar .remove.action_wrapper.active h3 {
+  margin: 0;
+}
 .shortpixel-media-modal .modal-wrapper .action-bar .remove.action_wrapper.active #solid_selector {
   display: none;
   opacity: 0;
 }
 .shortpixel-media-modal .modal-wrapper .action-bar .remove.action_wrapper.active label {
   margin: 4px 0;
+  font-weight: 700;
 }
 .shortpixel-media-modal .modal-wrapper .action-bar .remove.action_wrapper.active .howto {
   display: none;
@@ -188,6 +193,12 @@
 }
 .shortpixel-media-modal .modal-wrapper .action-bar .scale.action_wrapper {
   flex-direction: column;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .scale.action_wrapper h3 {
+  margin: 0;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .scale.action_wrapper h4 {
+  margin: 8px 0 0 0;
 }
 .shortpixel-media-modal .modal-wrapper .action-bar .filler {
   width: 10%;

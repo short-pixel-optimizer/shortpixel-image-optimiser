@@ -215,6 +215,7 @@ class ApiController extends RequestManager
 				case -201: // Invalid image format
 				case -202: // Invalid image or unsupported format
 				case -203: // Could not download file
+				case -207: // Invalid parameters
 					return $this->returnFailure(self::STATUS_ERROR, $status->Message);
 					break;
 				case -403: // Quota Exceeded
@@ -238,6 +239,8 @@ class ApiController extends RequestManager
 				case -500: // API in maintenance.
 					//return array("Status" => self::STATUS_MAINTENANCE, "Message" => $APIresponse['Status']->Message);
 					return $this->returnRetry(self::STATUS_MAINTENANCE, $status->Message);
+
+				break; 
 			}
 		}
 

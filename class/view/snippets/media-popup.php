@@ -31,6 +31,30 @@ switch($action_name)
 
 	break; 
 }
+
+$image_width = $originalImage->get('width');
+$scale_sizes =
+ [
+	'2' => 1200, 
+	'3' => 1200, 
+	'4' => 1024,
+ ];
+
+ $scaleOptions = ''; 
+ $checked = 2; // this should be dynamified at some. 
+ foreach($scale_sizes as $scaleName => $max_size)
+ {
+	$checked = ($checked == $scaleName) ? 'checked' : ''; 
+	$disabled = ($max_size <= $image_width) ? ' disabled ' : ''; 
+
+	 $scaleOptions .= sprintf('<li><input type="radio" name="scale" value="%s" %s > %s </li>', 
+	 $scaleName, $checked . $disabled, $scaleName . 'x' 
+	); 
+ }
+
+
+
+
 ?>
 
 <div class="modal-wrapper" id="media-modal" data-item-id="<?php echo $this->data['item_id'] ?>" data-action-name="<?php echo $action_name ?>" >
@@ -49,7 +73,7 @@ switch($action_name)
 				<span><?php _e('After', 'shortpixel-image-optimiser'); ?></span>
                 <i data-placeholder="<?php echo $placeholderImage ?>" style="background-image: url('<?php echo $placeholderImage ?>');" ></i>
 				<div class='error-message shortpixel-hide'>&nbsp;</div>
-                <div class='load-preview-spinner'><img class='loadspinner' src="<?php echo esc_url(\wpSPIO()->plugin_url('res/img/bulk/loading-hourglass.svg')); ?>" /></div>
+                <div class='load-preview-spinner shortpixel-hide'><img class='loadspinner' src="<?php echo esc_url(\wpSPIO()->plugin_url('res/img/bulk/loading-hourglass.svg')); ?>" /></div>
             </div>
     </div>
 
@@ -73,11 +97,13 @@ switch($action_name)
 						</label>
 						<div id="solid_selector">
 							<label for="bg_display_picker">
-								<p><?php esc_html_e('Background Color:','shortpixel-image-optimiser'); ?> <strong>
-									<span style="text-transform: uppercase;" id="color_range">
-										<?php echo esc_attr($view->settings['bg_color']); ?></span>
-									</strong>
-								<input type="color" value="<?php echo esc_attr($view->settings['bg_color']); ?>" name="bg_display_picker" id="bg_display_picker" />
+								<p><?php esc_html_e('Background Color:','shortpixel-image-optimiser'); ?> 
+								<strong>
+								<input type="color" value="<?php echo esc_attr($view->settings['bg_color']); ?>" name="bg_display_picker" id="bg_display_picker" />	
+								<!--<span style="text-transform: uppercase;" id="color_range">										
+									<?php echo esc_attr($view->settings['bg_color']); ?></span> -->
+								</strong>
+
 								<input type="hidden"  value="<?php echo esc_attr($view->settings['bg_color']); ?>" name="bg_color" id="bg_color" />
 								</p>
 							</label>
@@ -86,8 +112,9 @@ switch($action_name)
 								<p><?php esc_html_e('Opacity:', 'shortpixel-image-optimiser'); ?>
 									<strong>
 										<span id="transparency_range"><?php echo esc_attr($view->settings['bg_transparency']); ?></span>%</strong>
+										<input type="range" min="0" max="100" value="<?php echo esc_attr($view->settings['bg_transparency']); ?>" id="bg_transparency" />
 								</p>
-								<input type="range" min="0" max="100" value="<?php echo esc_attr($view->settings['bg_transparency']); ?>" id="bg_transparency" />
+								
 							</label>  
 						</div>
 
@@ -99,9 +126,8 @@ switch($action_name)
 			<h3><?php _e("Options", 'shortpixel-image-optimiser'); ?></h3>
 			<h4><?php _e('Scale image', 'shortpixel-image-optimiser'); ?></h4>
 			<ul>
-				<li><input type="radio" name="scale" value="2" checked> <?php _e('2x', 'shortpixel-image-optimiser'); ?></li>
-				<li><input type="radio" name="scale" value="3"> <?php _e('3x', 'shortpixel-image-optimiser'); ?></li>
-				<li><input type="radio" name="scale" value="4"> <?php _e('4x', 'shortpixel-image-optimiser'); ?></li>
+				<?php echo $scaleOptions ?>
+
 			</ul>
 		</section>
 
@@ -133,8 +159,10 @@ switch($action_name)
 				<i class="shortpixel-icon save"></i>	
 				<?php _e('Save', 'shortpixel-image-optimiser'); ?>
 			</button>
-			<p><?php _e('A new image will be created', 'shortpixel-image-optimiser'); ?></p>
+			<p><strong><?php _e('A new image will be created', 'shortpixel-image-optimiser'); ?></strong></p> 
+		
 		</span>
+		
 	</div> <!-- button-wrapper -->
 </div> <!-- modal-content-wrapper -->
 </div> <!-- // modal --> 
