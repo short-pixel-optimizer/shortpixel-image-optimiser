@@ -247,7 +247,7 @@ class ApiController extends RequestManager
 		if (is_array($APIresponse) && isset($APIresponse[0])) //API returned image details
 		{
 
-				if ('optimize' === $action)
+				if ('optimize' === $action || 'convert_api' === $action)
 				{
 					 return $this->handleOptimizeResponse($qItem, $APIresponse);
 				} 

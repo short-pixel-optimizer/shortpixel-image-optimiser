@@ -105,7 +105,7 @@ class OptimizeController extends OptimizerBase
   {
     $action = $qItem->data()->action;
 
-    if ('optimize' === $action) {
+    if ('optimize' === $action || 'convert_api' ===  $action) {
       $is_processable = $qItem->imageModel->isProcessable();
 
       // Allow processable to be overridden when using the manual optimize button - ignore when this happens already to be in queue.
@@ -198,9 +198,9 @@ class OptimizeController extends OptimizerBase
     }
 
     // easier to reads than a elseif structure. 
-    if (false === $qItem->result->is_error) {
+    if (false === $qItem->result()->is_error) {
 
-      if ('optimize' === $action)
+      if ('optimize' === $action || 'convert_api' === $action)
       {
         $this->handleOptimizeAction($qItem);        
       }
