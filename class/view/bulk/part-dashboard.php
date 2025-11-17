@@ -28,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
       </div>
 
         <button type="button" class="button-primary button start" id="start-optimize" data-action="open-panel" data-panel="selection" <?php echo ($this->view->error) ? "disabled" : ''; ?>  >
-						<span><?php echo UIHelper::getIcon('res/images/icon/shortpixel.svg', ); ?></span>
+						<span ><?php echo UIHelper::getIcon('res/images/icon/shortpixel.svg', ); ?></span>
             <?php esc_html_e('Start Optimization','shortpixel-image-optimiser'); ?>
         </button>
 

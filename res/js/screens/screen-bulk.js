@@ -158,12 +158,13 @@ class ShortPixelScreen extends ShortPixelScreenBase
 
 	DoActionEvent(event)
 	{
-		var element = event.target;
+		var element = event.target; 
+
 
 		// Might be the child
 		if (element.getAttribute('data-action') == null)
 		{
-			var element = element.parentElement;
+			var element = event.currentTarget; // Should perhaps be default when checking action event? 
 		}
 		if (element.disabled == true) // disabled button still register events, prevent going.
 		{

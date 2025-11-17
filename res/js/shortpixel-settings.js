@@ -1898,11 +1898,26 @@ class ShortPixelSettings {
 
 	RemoveExclusion(event) {
 		event.preventDefault();
+		event.stopPropagation();  // Thie propa here is opening the editor which is on the Li 
+
 		var target = event.target;
 		var element = target.closest('li');
+		var exid = element.id; 
 		element.remove();
 
-		this.ShowExclusionSaveWarning();
+		var editorInUse = document.querySelector('input[name="edit-exclusion"][value="' + exid + '"]'); 
+		if (null !== editorInUse)
+		{	
+			var editor = document.querySelector('.new-exclusion'); 
+			if (editor !== null && false == editor.classList.contains('not-visible'))
+			{
+				 editor.classList.add('not-visible');
+			}
+		}
+
+		
+
+		//his.ShowExclusionSaveWarning();
 	}
 
 	ToggleApiFieldEvent(event) {
