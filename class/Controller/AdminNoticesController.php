@@ -259,6 +259,30 @@ class AdminNoticesController extends \ShortPixel\Controller
         }
     }
 
+    /**
+     * 
+     * @var ShortPixel\Controller\functon
+     */
+    public function getRemoteOffer()
+    {
+       $notices = $this->get_remote_notices(); 
+       
+       if (false == $notices)
+       {
+            return false;
+       }
+
+       foreach($notices as $remoteNotice)
+       {
+           if (! isset($remoteNotice->type) || $remoteNotice->type !== 'offer')
+           {
+                continue; 
+           }
+
+           // Perhaps parse some here or not 
+           return $remoteNotice;
+       }
+    }
 
     protected function doRemoteNotices()
     {
@@ -280,6 +304,12 @@ class AdminNoticesController extends \ShortPixel\Controller
 
             if (! isset($remoteNotice->type))
                 $remoteNotice->type = 'notice';
+
+            // Ignore this type in the regular notices. 
+            if ('offer' == $remoteNotice->type)
+            {
+                continue;  
+            }
 
             $message = esc_html($remoteNotice->message);
             $id = sanitize_text_field($remoteNotice->id);

@@ -38,7 +38,6 @@ class BulkViewController extends \ShortPixel\ViewController
     $queueController = new QueueController();
     $bulkController = BulkController::getInstance();
 
-
     $this->view->quotaData = $quota->getQuota();
 
     $this->view->stats = $queueController->getStartupData();
@@ -81,6 +80,10 @@ class BulkViewController extends \ShortPixel\ViewController
     $this->view->customOperationCustom = (false !== $custom_operation_custom) ? $this->getCustomLabel($custom_operation_custom) : false;
     $this->view->customOperationMediaName = $custom_operation_media; 
     $this->view->customerOperationCustomName = $custom_operation_custom;
+
+    $noticesController = AdminNoticesController::getInstance(); 
+
+    $this->view->remoteOffer = $noticesController->getRemoteOffer(); 
 
     $this->loadView();
 
