@@ -43,7 +43,7 @@ class AdminNoticesController extends \ShortPixel\Controller
     );
     protected $adminNotices; // Models
 
-    private $remote_message_endpoint = 'https://dev2api2.shortpixel.com/v2/notices.php'; 
+    private $remote_message_endpoint = 'https://api.shortpixel.com/v2/notices.php'; 
     private $remote_readme_endpoint = 'https://plugins.svn.wordpress.org/shortpixel-image-optimiser/trunk/readme.txt';
 
     private $silent_mode = false;

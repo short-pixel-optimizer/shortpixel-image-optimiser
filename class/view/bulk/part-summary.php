@@ -80,12 +80,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
   <?php
     $quotaData = $this->view->quotaData;
+?>
 
-    if(true === $quotaData->unlimited): ?>
-
-				<p><span><?php _e('This site is currently on the ShortPixel Unlimited plan, so you do not have to worry about credits. Enjoy!', 'shortpixel-image-optimiser'); ?></span></p>
-	<!--	</div> -->
-	<?php else: ?>
     <div class="credits">
 
       <p class='heading totals'><span>
@@ -96,6 +92,13 @@ if ( ! defined( 'ABSPATH' ) ) {
          <span class='hidden' data-stats-total="images-images" data-check-total-total>0</span>
         <span class="number" data-stats-total="images-total_images_without_ai" data-check-total-without-ai >0</span>
       </p>
+  <?php 
+      if(true === $quotaData->unlimited): ?>
+<!--
+				<p><span><?php _e('This site is currently on the ShortPixel Unlimited plan, so you do not have to worry about credits. Enjoy!', 'shortpixel-image-optimiser'); ?></span></p>
+      -->
+      <!--	</div> -->
+	    <?php else: ?>
       <p class='heading'><span><?php esc_html_e('Your ShortPixel Credits Available', 'shortpixel-image-optimiser'); ?></span>
         <span><b><?php echo esc_html($this->formatNumber($quotaData->total->remaining, 0)) ?></b></span>
 
@@ -122,11 +125,10 @@ if ( ! defined( 'ABSPATH' ) ) {
         <?php esc_html_e('Buy unlimited credits','shortpixel-image-optimiser'); ?>
         </a></span>
       </p>
+      <?php endif;
+	    ?>
 
 
-
-	<?php endif;
-	 ?>
   </div>
   </div>
   <div class='ai-credits-sub-wrapper'>
@@ -180,9 +182,11 @@ if ( ! defined( 'ABSPATH' ) ) {
              ?></span>
     </div>
     <?php $this->loadView('snippets/part-upgrade-options'); ?>
-  <?php endif; // check unlimited ?> 
+    
+
+    <?php endif; // check unlimited ?> 
   
-  <div class='no-images' data-check-visibility="false" data-control="data-check-total-total">
+    <div class='no-images' data-check-visibility="false" data-control="data-check-total-total">
         <?php esc_html_e('The current selection contains no images. The bulk process cannot start.', 'shortpixel-image-optimiser'); ?>
     </div>
 
