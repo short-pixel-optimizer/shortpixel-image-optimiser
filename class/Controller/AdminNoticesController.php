@@ -43,7 +43,7 @@ class AdminNoticesController extends \ShortPixel\Controller
     );
     protected $adminNotices; // Models
 
-    private $remote_message_endpoint = 'https://api.shortpixel.com/v2/notices.php'; 
+    private $remote_message_endpoint = 'https://dev2api2.shortpixel.com/v2/notices.php'; 
     private $remote_readme_endpoint = 'https://plugins.svn.wordpress.org/shortpixel-image-optimiser/trunk/readme.txt';
 
     private $silent_mode = false;
@@ -280,6 +280,16 @@ class AdminNoticesController extends \ShortPixel\Controller
            }
 
            $offer = (array) $remoteNotice; 
+
+           if (isset($offer['suppressedafter']))
+           {
+              $time = strtotime($offer['suppressedafter']); 
+              if ($time === false || $time <= time() )
+              {
+                continue; 
+              }
+           }
+
            $offer = array_change_key_case($offer, CASE_LOWER);
            // Perhaps parse some here or not 
            return $offer;
@@ -315,6 +325,8 @@ class AdminNoticesController extends \ShortPixel\Controller
                 continue;  
             }
 
+            
+
             if (property_exists($remoteNotice, 'message'))
             {
                 $message = esc_html($remoteNotice->message);
@@ -326,6 +338,17 @@ class AdminNoticesController extends \ShortPixel\Controller
             else
             {
                  continue; // no message no notice.
+            }
+
+            if (property_exists($remoteNotice, 'message_link'))
+            {
+                $link = $remoteNotice->Link; 
+                $message_link = $remoteNotice->message_link; 
+
+                if (substr_count($message_link, '%s') == 2)
+                {
+                     $message = sprintf($message_link, '<a href="' . $link . '" target="_blank">', '</a>'); 
+                }
             }
             
 

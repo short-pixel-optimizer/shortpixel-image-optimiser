@@ -107,7 +107,7 @@ class BulkViewController extends \ShortPixel\ViewController
          $this->view->dashboard_title = $offer['title'];
          $this->view->dashboard_message = $offer['message'];
 
-      }
+      } 
   }
 
   private function getCustomLabel($operation)

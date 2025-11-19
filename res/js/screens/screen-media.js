@@ -48,6 +48,10 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			{
 				 editorArgs.image_width= imageDataEl.dataset.imagewidth;
 			}
+			if (null !== imageDataEl && imageDataEl.dataset.extension)
+			{
+				 editorArgs.image_ext = imageDataEl.dataset.extension;
+			}
 			this.InitEditorActions(postInput.value, 'edit', editorArgs); 
 		}
 	}
@@ -67,7 +71,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		button.addEventListener('click', (event) => { this.OpenEditorEvent(event, 'remove') }); 
 		button.dataset.opener = uiType; 
 		
-
 		var scaleButton = document.createElement('button'); 
 		scaleButton.name = 'scaleBackground'; 
 		scaleButton.innerHTML = this.settings.scale_title; 
@@ -79,8 +82,12 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		
 		scaleButton.addEventListener('click', (event) => { this.OpenEditorEvent(event, 'scale') }); 
 		scaleButton.dataset.opener = uiType; 
-		
-		if (args.image_width && args.image_width > this.settings.upscale_max_width)
+
+		if (args.image_ext && false == (args.image_ext == 'jpg' || args.image_ext == 'png' || args.image_ext == 'jpeg'))
+		{
+			return; 
+		}
+		else if (args.image_width && args.image_width > this.settings.upscale_max_width)
 		{
 			scaleButton.disabled = true;
 			scaleButton.title = this.settings.too_big_for_scale_title; 
@@ -103,13 +110,14 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		}
 		else if ('gutenberg' == uiType)
 		{
-			var parent = document.querySelector('.attachment-info .details .edit-attachment');
+			var parent = document.querySelector('.attachment-info  ');
 			if (null !== parent)
 			{
 				button.classList.add('button-link');
 				button.style.display = 'inline';
 				button.style.fontSize = '12px'; // hacking in to match Gburg. 
 				button.style.textDecoration = 'none'; 
+				
 				
 				scaleButton.classList.add('button-link'); 
 				scaleButton.style.display = 'inline';
@@ -118,10 +126,11 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 				if (false == scaleButton.disabled)
 				{
-					 parent.after(scaleButton);
+					button.style.marginLeft = '4px';
+					parent.append(scaleButton);
 				}
 
-				parent.after(button);
+				parent.append(button);
 
 
 			}
@@ -808,6 +817,10 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				if (e.detail.media.image && e.detail.media.image.width) // dottadot
 				{
 					editorArgs.image_width = e.detail.media.image.width; 
+				}
+				if (e.detail.media.image && e.detail.media.image.extension) // dottadot
+				{
+					editorArgs.image_ext = e.detail.media.image.extension; 
 				}
 
 				var html = this.doSPIORow(e.detail.media.itemView);

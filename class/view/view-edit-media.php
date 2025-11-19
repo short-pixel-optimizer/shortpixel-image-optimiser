@@ -8,6 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 <div id='shortpixel-data-<?php echo( esc_attr($view->id) );?>' class='column-wp-shortPixel view-edit-media'
   data-imagewidth="<?php echo $view->image['width'] ?>" data-imageheight="<?php echo $view->image['height'] ?>"
+  data-extension="<?php echo $view->image['extension']; ?>"
 >
 <?php // Debug Data
 if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->debugInfo) > 0 ):  ?>

@@ -139,6 +139,7 @@ class AjaxController
 		$json->$type->image = [
 			'width' => $item->get('width'), 
 			'height' => $item->get('height'), 
+			'extension' => $item->getExtension(), 
 		];
 		$json->$type->results = null;
 		$json->$type->is_error = false;
