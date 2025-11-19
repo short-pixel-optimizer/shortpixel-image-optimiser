@@ -325,8 +325,6 @@ class AdminNoticesController extends \ShortPixel\Controller
                 continue;  
             }
 
-            
-
             if (property_exists($remoteNotice, 'message'))
             {
                 $message = esc_html($remoteNotice->message);
@@ -340,14 +338,14 @@ class AdminNoticesController extends \ShortPixel\Controller
                  continue; // no message no notice.
             }
 
-            if (property_exists($remoteNotice, 'message_link'))
+            if (property_exists($remoteNotice, 'link'))
             {
-                $link = $remoteNotice->Link; 
-                $message_link = $remoteNotice->message_link; 
+                $link = $remoteNotice->link; 
+               // $message_link = $remoteNotice->message_link; 
 
-                if (substr_count($message_link, '%s') == 2)
+                if (substr_count($message, '%s') == 2)
                 {
-                     $message = sprintf($message_link, '<a href="' . $link . '" target="_blank">', '</a>'); 
+                     $message = sprintf($message, '<a href="' . $link . '" target="_blank">', '</a>'); 
                 }
             }
             
