@@ -179,6 +179,7 @@ class AiController extends RequestManager
                  'caption' => isset($apiData['caption']) ? sanitize_text_field($apiData['caption']) : null, 
                  'relevance' => isset($apiData['relevance']) ? sanitize_text_field($apiData['relevance']) : null, 
                  'description' => isset($apiData['image_description']) ? sanitize_text_field($apiData['image_description']) : null,
+                 'title' => isset($apiData['title']) ? sanitize_text_field($apiData['title']) : null, 
               ]);              
               
               // Switch known Statii 

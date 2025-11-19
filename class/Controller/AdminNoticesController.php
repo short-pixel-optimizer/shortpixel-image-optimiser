@@ -43,7 +43,7 @@ class AdminNoticesController extends \ShortPixel\Controller
     );
     protected $adminNotices; // Models
 
-    private $remote_message_endpoint = 'https://api.shortpixel.com/v2/notices.php';
+    private $remote_message_endpoint = 'https://api.shortpixel.com/v2/notices.php'; 
     private $remote_readme_endpoint = 'https://plugins.svn.wordpress.org/shortpixel-image-optimiser/trunk/readme.txt';
 
     private $silent_mode = false;
@@ -279,9 +279,13 @@ class AdminNoticesController extends \ShortPixel\Controller
                 continue; 
            }
 
+           $offer = (array) $remoteNotice; 
+           $offer = array_change_key_case($offer, CASE_LOWER);
            // Perhaps parse some here or not 
-           return $remoteNotice;
+           return $offer;
        }
+
+       return false;
     }
 
     protected function doRemoteNotices()
@@ -311,7 +315,20 @@ class AdminNoticesController extends \ShortPixel\Controller
                 continue;  
             }
 
-            $message = esc_html($remoteNotice->message);
+            if (property_exists($remoteNotice, 'message'))
+            {
+                $message = esc_html($remoteNotice->message);
+            }
+            elseif (property_exists($remoteNotice, 'Message'))
+            {
+                $message = esc_html($remoteNotice->Message);
+            }
+            else
+            {
+                 continue; // no message no notice.
+            }
+            
+
             $id = sanitize_text_field($remoteNotice->id);
 
             $noticeController = Notices::getInstance();

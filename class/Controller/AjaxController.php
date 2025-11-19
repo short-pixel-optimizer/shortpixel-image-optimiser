@@ -981,14 +981,14 @@ class AjaxController
 
 		$api = $queueItem->getApiController('getAltData'); 
 
-		$metadata = $api->undoAltData($queueItem);
+		$altData = $api->undoAltData($queueItem);
 
 		if ('redo' == $action_type)
 		{
 			 return $this->requestAlt($json, $data);
 		} 
 
-		//$json->$type->results = [$result];
+		$json->$type = $altData;
 		$json->status = true;
 		
 		return $json;

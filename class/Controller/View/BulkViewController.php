@@ -85,8 +85,29 @@ class BulkViewController extends \ShortPixel\ViewController
 
     $this->view->remoteOffer = $noticesController->getRemoteOffer(); 
 
+    $this->loadDashboard();
+
     $this->loadView();
 
+  }
+
+  private function loadDashboard()
+  {
+      $noticesController = AdminNoticesController::getInstance();
+      $offer = $noticesController->getRemoteOffer(); 
+
+          $this->view->dashboard_icon = plugins_url('res/images/icon/shortpixel.svg', SHORTPIXEL_PLUGIN_FILE); 
+          $this->view->dashboard_link = false; 
+          $this->view->dashboard_title = false; 
+          $this->view->dashboard_message = ''; 
+      if (is_array($offer))
+      {
+         $this->view->dashboard_icon = $offer['icon']; 
+         $this->view->dashboard_link = $offer['link']; 
+         $this->view->dashboard_title = $offer['title'];
+         $this->view->dashboard_message = $offer['message'];
+
+      }
   }
 
   private function getCustomLabel($operation)

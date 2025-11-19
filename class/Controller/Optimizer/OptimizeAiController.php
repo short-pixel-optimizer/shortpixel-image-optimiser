@@ -646,6 +646,7 @@ class OptimizeAiController extends OptimizerBase
             'alt' => $original['alt'], 
             'caption' => $original['caption'], 
             'description' => $original['description'],
+            'post_title' => $original['post_title'], 
             'replace_filebase' => $generated['filebase'],
        ];
     
@@ -665,7 +666,7 @@ class OptimizeAiController extends OptimizerBase
     $this->finishItemProcess($qItem);
 
     
-       return $this->getAltData($qItem); 
+    return $this->getAltData($qItem); 
   }
 
 public function getAltData(QueueItem $qItem)

@@ -67,7 +67,13 @@
                   height: 222px;
                   border-radius: 50%; 
                   background-color: $blue_background;
+                  background-position: center;
+                  background-repeat: no-repeat;
                }
+            }
+            .title-offer 
+            {
+               margin: 0;
             }
        } // bulk wrapper
 
