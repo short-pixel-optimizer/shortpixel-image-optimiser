@@ -223,7 +223,7 @@ if (! defined('ABSPATH')) {
               'checked' => $view->data->ai_gen_post_title,
               'label' => esc_html__('Update image title with an SEO-friendly one', 'shortpixel-image-optimiser'),
               'data' => ['data-toggle="ai_gen_post_title"'],
-              'disabled' => true
+              
             ]
           );
           ?>

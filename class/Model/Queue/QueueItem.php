@@ -43,7 +43,6 @@ class QueueItem
          $this->item_id = intval($args['item_id']);
       }
 
-
       // Init defaults
       $this->data = new QueueItemData(); // init
    }
