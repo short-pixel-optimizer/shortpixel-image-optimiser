@@ -379,6 +379,8 @@ if (! defined('ABSPATH')) {
           <li><label><?php _e('Image ALT tag', 'shortpixel-image-optimiser'); ?>:</label> <span class='alt'></span></li>
           <li><label><?php _e('Image caption', 'shortpixel-image-optimiser'); ?>:</label> <span class='caption'></span></li>
           <li><label><?php _e('Image description', 'shortpixel-image-optimiser'); ?>:</label> <span class='description'></span>
+          <li><label><?php _e('Post Title', 'shortpixel-image-optimiser'); ?>:</label> <span class='post_title'></span>
+
           </li>
         </ul>
       </div>
@@ -391,6 +393,7 @@ if (! defined('ABSPATH')) {
           <li><label><?php _e('Image ALT tag', 'shortpixel-image-optimiser'); ?>:</label> <span class='alt'></span></li>
           <li><label><?php _e('Image caption', 'shortpixel-image-optimiser'); ?>:</label> <span class='caption'></span></li>
           <li><label><?php _e('Image description', 'shortpixel-image-optimiser'); ?>:</label> <span class='description'></span>
+          <li><label><?php _e('Post Title', 'shortpixel-image-optimiser'); ?>:</label> <span class='post_title'></span>
         </ul>
       </div>
 
