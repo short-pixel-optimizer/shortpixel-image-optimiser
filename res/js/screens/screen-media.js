@@ -87,7 +87,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		{
 			return; 
 		}
-		else if (args.image_width && args.image_width > this.settings.upscale_max_width)
+		else if (args.image_width && parseInt(args.image_width) > parseInt(this.settings.upscale_max_width))
 		{
 			scaleButton.disabled = true;
 			scaleButton.title = this.settings.too_big_for_scale_title; 
