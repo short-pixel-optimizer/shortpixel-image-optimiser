@@ -454,7 +454,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			var newAltText = aiData.alt; 
 			var newCaption = aiData.caption;
 			var newDescription = aiData.description;
-			var newTitle = aiData.title;
+			var newTitle = aiData.post_title;
 		}
 
 		if (typeof newAltText !== 'undefined' || newAltText < 0)
@@ -487,7 +487,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		// edit media screen
 		 let captionFields = ['attachment_caption', 'attachment-details-caption', 'attachment-details-two-column-caption']; 
 		 let descriptionFields = ['attachment_content', 'attachment-details-description', 'attachment-details-two-column-description']; 
-		 let postTitleFields = ['title'];
+		 let postTitleFields = ['title', 'attachment-details-title', 'attachment-details-two-column-title'];
 		 
 		 if (typeof newCaption !== 'undefined' || newCaption < 0)
 		 {

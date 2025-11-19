@@ -168,6 +168,9 @@ class AiDataModel
                 case 'filename': 
                     $api_name = 'file';
                 break; 
+                case 'post_title': 
+                    $api_name = 'title';
+                break; 
             }
 
 
