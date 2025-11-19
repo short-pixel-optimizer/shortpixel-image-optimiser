@@ -427,7 +427,7 @@ class AjaxController
 
 		 $action_name = isset($_POST['action_name']) ? sanitize_text_field($_POST['action_name']) : 'replace'; 
 
-		 $previewImage = UiHelper::findBestPreview($mediaItem, 600);
+		 $previewImage = UiHelper::findBestPreview($mediaItem, 800);
 
 		 $json = new \stdClass; 
 		 $json->item_id = $item_id; 

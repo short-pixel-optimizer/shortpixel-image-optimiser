@@ -11,9 +11,9 @@
     left: 0;
     right: 25px;
     bottom: 0;
-    top: 0; 
+    top: 0;
     background: rgba(0,0,0, .50) ;
-    display: flex; 
+    display: flex;
     z-index: 250;  // z-index inflation
 }
 
@@ -27,7 +27,7 @@
   //  bottom: 0;
     left: 0;
     right: 0; 
-    z-index: 300;
+    z-index: 9999;
     
 
     .modal-wrapper 
@@ -42,11 +42,10 @@
             
             background: $blue_default; 
             color: white; 
-        //    height: 5%;
-            padding: 6px; 
+            padding: 8px; 
            // display: flex; 
-           border-top-left-radius: 14px; 
-           border-top-right-radius: 14px;
+            border-top-left-radius: 15px; 
+            border-top-right-radius: 15px;
 
             h3 {
                 margin: 5px 0;
@@ -56,20 +55,21 @@
             }
              span 
             {
-                font-size: 16px; 
+                font-size: 20px; 
                 font-weight: 700;
                 float: right;
                 cursor: pointer;
+                padding-right: 6px;
             }
         }
 
         .modal-content-wrapper 
         {
              width: 100%; 
-             padding: 0 10%;
+             padding: 30px 10%;
              background: #fff;
-             border-bottom-left-radius: 14px; 
-             border-bottom-right-radius: 14px;
+             border-bottom-left-radius: 15px; 
+             border-bottom-right-radius: 15px;
              box-sizing: border-box;
 
         }
@@ -79,13 +79,12 @@
             flex-direction: row;
             align-items: stretch;
             position: relative;
-
             min-height: 40vh; 
 
             .image-original, .image-preview {
                 flex: 1;
                 position: relative; 
-                padding: 16px 0;
+                padding: 10px 0;
 
                 > i  // preview images. 
                 {
@@ -96,11 +95,11 @@
                 {
                     position: absolute; 
                     top: 30px; 
-                    border-radius: 8px; 
+                    border-radius: 15px; 
                     font-size: 16px;
                     font-weight: 700;
                     color: #000;
-                    padding: 8px 16px;
+                    padding: 6px 16px;
                     left: 12px; 
                     text-transform: uppercase; 
                 }
@@ -150,7 +149,7 @@
                 height: 100%;
                 width: 100%;
                 background-repeat: no-repeat;
-                background-size: cover;
+                background-size: contain;
                 background-position: center;
             }
             .error-message {
@@ -175,9 +174,10 @@
             background: $blue_background;
             flex-direction: row;
             padding: 16px 36px;
-            border-top-left-radius: 16px;
-            border-top-right-radius: 16px;
+            margin-top: 25px;
             box-sizing: border-box;
+            border-top-left-radius: 15px; 
+            border-top-right-radius: 15px;
 
             .action_wrapper
             {
@@ -201,7 +201,8 @@
                  {
                     color: $blue_dark;
                     min-width: 300px;
-                    font-weight: 400; 
+                    font-weight: 400;
+                    border: 1px solid $blue_light;
                  }
                  p { 
                     font-weight: 700;
@@ -266,11 +267,11 @@
         {
              display: flex; 
              background: $blue_background;
-             padding: 8px;
+             padding: 15px;
              width: 100%;
              box-sizing: border-box;
-             border-bottom-left-radius: 16px;
-             border-bottom-right-radius: 16px;
+             border-bottom-left-radius: 15px;
+             border-bottom-right-radius: 15px;
 
              .button {
                 @include shortpixel-button;

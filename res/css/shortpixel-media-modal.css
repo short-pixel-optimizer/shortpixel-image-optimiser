@@ -29,7 +29,7 @@
   top: 45px;
   left: 0;
   right: 0;
-  z-index: 300;
+  z-index: 9999;
 }
 .shortpixel-media-modal .modal-wrapper {
   z-index: 300;
@@ -39,9 +39,9 @@
 .shortpixel-media-modal .modal-wrapper .title {
   background: #1ABDCA;
   color: white;
-  padding: 6px;
-  border-top-left-radius: 14px;
-  border-top-right-radius: 14px;
+  padding: 8px;
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
 }
 .shortpixel-media-modal .modal-wrapper .title h3 {
   margin: 5px 0;
@@ -50,17 +50,18 @@
   font-size: 16px;
 }
 .shortpixel-media-modal .modal-wrapper .title span {
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 700;
   float: right;
   cursor: pointer;
+  padding-right: 6px;
 }
 .shortpixel-media-modal .modal-wrapper .modal-content-wrapper {
   width: 100%;
-  padding: 0 10%;
+  padding: 30px 10%;
   background: #fff;
-  border-bottom-left-radius: 14px;
-  border-bottom-right-radius: 14px;
+  border-bottom-left-radius: 15px;
+  border-bottom-right-radius: 15px;
   box-sizing: border-box;
 }
 .shortpixel-media-modal .modal-wrapper .image-wrapper {
@@ -73,7 +74,7 @@
 .shortpixel-media-modal .modal-wrapper .image-wrapper .image-original, .shortpixel-media-modal .modal-wrapper .image-wrapper .image-preview {
   flex: 1;
   position: relative;
-  padding: 16px 0;
+  padding: 10px 0;
 }
 .shortpixel-media-modal .modal-wrapper .image-wrapper .image-original > i, .shortpixel-media-modal .modal-wrapper .image-wrapper .image-preview > i {
   border: 1px solid rgba(0, 0, 0, 0.1);
@@ -81,11 +82,11 @@
 .shortpixel-media-modal .modal-wrapper .image-wrapper .image-original span, .shortpixel-media-modal .modal-wrapper .image-wrapper .image-preview span {
   position: absolute;
   top: 30px;
-  border-radius: 8px;
+  border-radius: 15px;
   font-size: 16px;
   font-weight: 700;
   color: #000;
-  padding: 8px 16px;
+  padding: 6px 16px;
   left: 12px;
   text-transform: uppercase;
 }
@@ -120,7 +121,7 @@
   height: 100%;
   width: 100%;
   background-repeat: no-repeat;
-  background-size: cover;
+  background-size: contain;
   background-position: center;
 }
 .shortpixel-media-modal .modal-wrapper .image-wrapper .error-message {
@@ -140,9 +141,10 @@
   background: #F4FBFC;
   flex-direction: row;
   padding: 16px 36px;
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
+  margin-top: 25px;
   box-sizing: border-box;
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
 }
 .shortpixel-media-modal .modal-wrapper .action-bar .action_wrapper {
   display: none;
@@ -163,6 +165,7 @@
   color: #116C7E;
   min-width: 300px;
   font-weight: 400;
+  border: 1px solid #92D5E3;
 }
 .shortpixel-media-modal .modal-wrapper .action-bar .new_file_title.wrapper p {
   font-weight: 700;
@@ -206,11 +209,11 @@
 .shortpixel-media-modal .modal-wrapper .button-wrapper {
   display: flex;
   background: #F4FBFC;
-  padding: 8px;
+  padding: 15px;
   width: 100%;
   box-sizing: border-box;
-  border-bottom-left-radius: 16px;
-  border-bottom-right-radius: 16px;
+  border-bottom-left-radius: 15px;
+  border-bottom-right-radius: 15px;
 }
 .shortpixel-media-modal .modal-wrapper .button-wrapper .button {
   color: #fff;
@@ -227,7 +230,7 @@
   padding: 8px 16px;
 }
 .shortpixel-media-modal .modal-wrapper .button-wrapper .button:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
 }
 .shortpixel-media-modal .modal-wrapper .button-wrapper .button i.switch {
   width: 18px;

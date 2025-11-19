@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace ShortPixel;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 $view->settings = [];
 $view->settings['bg_type'] = 'placeholder'; // @todo Add something here.
 $view->settings['bg_color'] = '#000';
-$view->settings['bg_transparency'] = 80; 
+$view->settings['bg_transparency'] = 100;
 
 $originalImage = $this->data['originalImage'];
 $previewImage = $this->data['previewImage'];
@@ -19,41 +19,38 @@ $action_name = $this->data['action_name'];
 
 switch($action_name)
 {
-	case 'remove': 
+	case 'remove':
 		$modal_title = __('Remove background', 'shortpixel-image-optimiser');
-		$suggesteFileName = $originalImage->getFileBase() . '_nobg.' . $originalImage->getExtension(); 
+		$suggesteFileName = $originalImage->getFileBase() . '_nobg.' . $originalImage->getExtension();
 
-	break; 
+	break;
 
-	case 'scale': 
-		$modal_title = __('Scale Image', 'shortpixel-image-optimiser'); 
-		$suggesteFileName = $originalImage->getFileBase() . '_upscale.' . $originalImage->getExtension(); 
+	case 'scale':
+		$modal_title = __('Scale Image', 'shortpixel-image-optimiser');
+		$suggesteFileName = $originalImage->getFileBase() . '_upscale.' . $originalImage->getExtension();
 
-	break; 
+	break;
 }
 
 $image_width = $originalImage->get('width');
 $scale_sizes =
  [
-	'2' => 1200, 
-	'3' => 1200, 
+	'2' => 1200,
+	'3' => 1200,
 	'4' => 1024,
  ];
 
- $scaleOptions = ''; 
- $checked = 2; // this should be dynamified at some. 
+ $scaleOptions = '';
+ $checked = 2; // this should be dynamified at some.
  foreach($scale_sizes as $scaleName => $max_size)
  {
-	$checked = ($checked == $scaleName) ? 'checked' : ''; 
-	$disabled = ($max_size <= $image_width) ? ' disabled ' : ''; 
+	$checked = ($checked == $scaleName) ? 'checked' : '';
+	$disabled = ($max_size <= $image_width) ? ' disabled ' : '';
 
-	 $scaleOptions .= sprintf('<li><input type="radio" name="scale" value="%s" %s > %s </li>', 
-	 $scaleName, $checked . $disabled, $scaleName . 'x' 
-	); 
+	 $scaleOptions .= sprintf('<li><input type="radio" name="scale" value="%s" %s > %s </li>',
+	 $scaleName, $checked . $disabled, $scaleName . 'x'
+	);
  }
-
-
-
 
 ?>
 
@@ -80,7 +77,7 @@ $scale_sizes =
     <div class='action-bar'>
 
     <section class="remove action_wrapper">
-		<h3><?php _e("Options", 'shortpixel-image-optimiser'); ?></h3>	
+		<h3><?php _e("Options", 'shortpixel-image-optimiser'); ?></h3>
 		<p><?php __('Note: transparency options only work with supported file formats, such as PNG', 'shortpixel-image-optimiser'); ?></p>
 
 						<label for="transparent_background">
@@ -97,10 +94,10 @@ $scale_sizes =
 						</label>
 						<div id="solid_selector">
 							<label for="bg_display_picker">
-								<p><?php esc_html_e('Background Color:','shortpixel-image-optimiser'); ?> 
+								<p><?php esc_html_e('Background Color:','shortpixel-image-optimiser'); ?>
 								<strong>
-								<input type="color" value="<?php echo esc_attr($view->settings['bg_color']); ?>" name="bg_display_picker" id="bg_display_picker" />	
-								<!--<span style="text-transform: uppercase;" id="color_range">										
+								<input type="color" value="<?php echo esc_attr($view->settings['bg_color']); ?>" name="bg_display_picker" id="bg_display_picker" />
+								<!--<span style="text-transform: uppercase;" id="color_range">
 									<?php echo esc_attr($view->settings['bg_color']); ?></span> -->
 								</strong>
 
@@ -115,7 +112,7 @@ $scale_sizes =
 										<input type="range" min="0" max="100" value="<?php echo esc_attr($view->settings['bg_transparency']); ?>" id="bg_transparency" />
 								</p>
 								
-							</label>  
+							</label>
 						</div>
 
 
@@ -137,9 +134,9 @@ $scale_sizes =
 				<input type="text" name="new_filename" value="<?php echo $suggesteFileName ?>">
 			</span>
 
-			<span>	
+			<span>
 				<p><?php _e('New Image Title', 'shortpixel-image-optimiser'); ?></p>
-				<input type="text" name="new_posttitle" value="<?php echo $post_title ?>"> 
+				<input type="text" name="new_posttitle" value="<?php echo $post_title ?>">
 			</span>
 
 		</section>
@@ -150,19 +147,18 @@ $scale_sizes =
 	<div class='button-wrapper'>
 		<span>
 			<button class='button' type='button' id='media-get-preview' data-action='media-get-preview'>
-			<i class="shortpixel-icon eye"></i>	
-			<?php _e('Preview','shortpixel-image-optimiser'); ?>
-		</button>
+				<i class="shortpixel-icon eye"></i>
+				<?php _e('Preview','shortpixel-image-optimiser'); ?>
+			</button>
 		</span>
 		<span>
 			<button class='button' type='button button-primary'  id='media-save-button' data-action='media-save-button'>
-				<i class="shortpixel-icon save"></i>	
+				<i class="shortpixel-icon save"></i>
 				<?php _e('Save', 'shortpixel-image-optimiser'); ?>
 			</button>
-			<p><strong><?php _e('A new image will be created', 'shortpixel-image-optimiser'); ?></strong></p> 
 		
 		</span>
-		
+		<p><strong><?php _e('A new image will be created and added to the Media Library!', 'shortpixel-image-optimiser'); ?></strong></p>
 	</div> <!-- button-wrapper -->
 </div> <!-- modal-content-wrapper -->
-</div> <!-- // modal --> 
+</div> <!-- // modal -->
