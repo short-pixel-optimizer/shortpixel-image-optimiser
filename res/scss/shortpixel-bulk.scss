@@ -1187,15 +1187,18 @@ section.panel.finished {
       [data-result="filename"] {
         overflow: hidden;
         font-weight: 700;
-        margin-top: -12px;
+        margin-top: -5px;
+        color: #000;
+        z-index: 10;
       }
 
       .opt-circle-image {
-        width: 55px;
-        height: 55px;
+        width: 45px;
+        height: 45px;
         float: right;
-        margin-top: 12px;
+        margin-top: 1px;
         margin-right: 5%;
+        z-index: 1;
 
         //margin-right: 35px;
         .trail {
@@ -1324,8 +1327,12 @@ section.panel.finished {
   }
 
   .ai-preview-wrapper {
+    padding: 15px 40px;
+    border-top: solid 1px $color-grey;
+
     .ai-preview-data strong {
       text-transform: capitalize;
+      color: $blue_dark;
     }
   }
 }

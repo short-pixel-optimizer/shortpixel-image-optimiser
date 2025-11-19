@@ -228,7 +228,7 @@ $settings = \wpSPIO()->settings();
 			</div>  <!-- preview wrapper -->
 
       <div class='ai-preview-wrapper hidden'>
-          <h3><?php _e('AI Generated Data: ', 'shortpixel-image-optimiser'); ?></h3>
+          <h3><i class='shortpixel-icon ai'></i><?php _e('AI Generated Data: ', 'shortpixel-image-optimiser'); ?></h3>
           <ul class='ai-preview-data'>
 
           </ul>
