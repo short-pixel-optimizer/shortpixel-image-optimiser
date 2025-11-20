@@ -453,6 +453,9 @@ abstract class Queue
                    if (true === $enqueueAi)
                    {
                       $qItem->data->addNextAction('requestAlt'); 
+                      // Add count here when adding it to next action otherwise AI count in bulk might be hidden / totally off
+                      $customData->aiCount++;
+
                    }
 
                     $queue[] = $qItem->returnEnqueue(); //array('id' => $media_id, 'value' => $qObject, 'item_count' => $counts->creditCount);
@@ -530,6 +533,7 @@ abstract class Queue
               if (true === $env->IsOverMemoryLimit($i) || true === $env->IsOverTimeLimit())
               {
                  Log::addMemory('PrepareItems: OverLimit! Breaking on index ' . $i);
+                 $this->q->setStatus('custom_data', $customData, false); // save the counts.
                  $this->q->setStatus('last_item_id', $item_id);
                  $return['overlimit'] = true; // lockout return
                  break;
