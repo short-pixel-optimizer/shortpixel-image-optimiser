@@ -14,7 +14,6 @@ class QueueItemData
 {
 
         protected $urls; 
-        protected $url; 
         protected $forceExclusion; 
         protected $action; 
         protected $next_actions; // multiple actions requeue mechanism. 
@@ -68,7 +67,6 @@ class QueueItemData
         {
             if (property_exists($this, $name))
             {
-
                  $this->$name = $value; 
             }             
             else
@@ -200,6 +198,20 @@ class QueueItemData
             }
 
             return $args;
+        }
+
+        public function addCount($new_count)
+        {
+             if (! is_object($this->counts))
+             {
+                 $this->counts = new \stdClass; 
+             }
+
+             foreach($new_count as $name => $value)
+             {
+                 $this->counts->{$name} = $value;
+             }
+
         }
 
         

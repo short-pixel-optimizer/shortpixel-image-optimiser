@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 4.8.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 6.3.5
+Stable tag: 6.4.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -28,7 +28,14 @@ Make an instant <a href="https://shortpixel.com/image-compression-test" target="
 
 == 💡 Why is ShortPixel the best choice for image optimization or PDF compression? ==
 
-### 🆕 New! Freshly added image SEO features ###
+### 🆕 New! Brand new AI features ###
+
+* AI Image Upscale (2x, 3x, 4x) - Upscale smaller images with high-quality AI upscaling, perfect for retina displays and crisp visuals.
+* AI Background Removal - Instantly remove image backgrounds with one click, great for clean product photos or transparent assets.
+* AI Image Titles - In addition to ALT text, captions, and descriptions, you can now generate smart image titles using AI for better SEO.
+* Bulk Remove AI Data - Easily clear all AI-generated image SEO data in one go.
+
+### 🆕 New! Freshly added AI Image SEO features ###
 
 * AI-powered image SEO – Automatically generate ALT text, captions, and image descriptions for all your images.
 * Bulk mode – Mass-generate and update details for all your images.
@@ -38,12 +45,14 @@ Make an instant <a href="https://shortpixel.com/image-compression-test" target="
 * Unlimited credits – AI-generate image titles, captions, and more with our Unlimited plan.
 * Accessibility – Improve website accessibility by generating all the necessary metadata for each image.
 
-### 🆕 New! Freshly added features ###
+### Freshly added features ###
 
 * Compress WebP images – ShortPixel now also <a href="https://shortpixel.com/blog/introducing-smartcompress/" target="_blank">smartly compresses</a> all your existing WebP images.
 * Added support for serving CSS, JS and fonts from our global CDN.
 * Save & Restore option for all settings – ideal for agencies and users managing multiple websites.
 * Decide whether AI bots can use your images for machine learning (ML) training, or <a href="https://shortpixel.com/blog/prevent-ai-data-mining-on-images/" target="_blank">block them entirely</a>.
+* You can now exclude images from optimization based on their upload date, perfect for skipping older or already optimized media.
+* Filter and select images in bulk using date-based criteria, giving you precise control over what gets optimized and when.
 
 ### 🌍 Faster Websites for Global Audiences ###
 
@@ -473,6 +482,37 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 14. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 6.4.0 =
+
+🧠 The Ultimate AI Update
+
+Release Date: November 20, 2025
+
+✨ New Features
+
+* AI Image Upscale (2x, 3x, 4x): Upscale smaller images with high-quality AI upscaling, perfect for retina displays and crisp visuals.
+* AI Background Removal: Instantly remove image backgrounds with one click, great for clean product photos or transparent assets.
+* AI Image Titles: In addition to ALT text, captions, and descriptions, you can now generate smart image titles using AI for better SEO.
+* Date-Based Exclusions: Easily exclude images from processing based on their upload date.
+* Bulk Optimization by Date Interval: Run bulk optimization on a selected date range for precise control over what gets optimized and when.
+
+🔄 Compatibility Updates
+
+* Infinite Uploads Integration: ShortPixel now works seamlessly with the Infinite Uploads plugin.
+* SliceWP Fix: Fixed an error triggered when the REST API of SliceWP was active.
+
+🛠️ Fixes & Improvements
+
+* Bulk UI Redesign: The bulk processing interface has been reworked for a smoother, more intuitive experience.
+* Help Links Fixed: Resolved broken links in help pop-ups throughout the settings.
+* SmartCrop Logic Tweaked: Thumbnails cropped with SmartCrop no longer trigger unnecessary size checks.
+* Notification Scope Limited: Offer-related notifications now only appear on ShortPixel-specific pages like Settings and Bulk.
+* Banner Visibility Control: All banners in the settings can now be hidden using a simple filter, cleaner UI for advanced users.
+* File Conversion Stability: Fixed potential infinite conversion loops when uploading HEIC, TIFF, or BMP files.
+* WP-CLI AI Data Fix: Added checks to prevent regenerating AI image data via WP-CLI when it already exists, saving time and resources.
+
+Update now to unlock powerful new AI features, refined bulk controls, and a cleaner, smarter interface! 🚀
 
 = 6.3.5 =
 

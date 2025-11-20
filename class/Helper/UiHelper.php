@@ -396,7 +396,6 @@ class UiHelper
             }
 			 			if ($mediaItem->isRestorable())
 						{
-
 							 $compressionType = $mediaItem->getMeta('compressionType');
 		           switch($compressionType)
 		           {
@@ -438,7 +437,8 @@ class UiHelper
 
       if (false === is_null($aiDataModel) && $aiDataModel->isProcessable() && 'media' === $mediaItem->get('type') )
       {
-         $list_actions['shortpixel-generateai'] = self::getAction('shortpixel-generateai', $id);
+         if (true === $mediaItem->isSomethingOptimized()) // Prevent displaying this when only the 'optimize now' buttons are visible.
+           $list_actions['shortpixel-generateai'] = self::getAction('shortpixel-generateai', $id);
       }
 
       if(! $quotaControl->hasQuota())
@@ -964,6 +964,7 @@ class UiHelper
           'name' => __('Image Name', 'shortpixel-image-optimiser'),
           'path' => __('Image Path', 'shortpixel-image-optimiser'),
           'size' => __('Image Size', 'shortpixel-image-optimiser'),
+          'date' => __('Date', 'shortpixel-image-optimiser'), 
       );
 
       $exclusion_apply = array(
@@ -1006,7 +1007,20 @@ class UiHelper
 
       $icon_url = plugins_url($path, SHORTPIXEL_PLUGIN_FILE);
 
-      $html = sprintf('<img src="%s" class="icon" />', esc_attr($icon_url));
+      $attr = ''; 
+      if (isset($args['width']))
+      {
+         $attr .= ' width="' . $args['width'] . '"'; 
+
+      }
+
+      if (isset($args['height']))
+      {
+         $attr . ' height="' . $args['height'] . '"';
+      }
+
+
+      $html = sprintf('<img src="%s" class="icon"  %s />', esc_attr($icon_url), $attr);
 
       return $html;
 

@@ -38,13 +38,12 @@ class BulkViewController extends \ShortPixel\ViewController
     $queueController = new QueueController();
     $bulkController = BulkController::getInstance();
 
-
     $this->view->quotaData = $quota->getQuota();
 
     $this->view->stats = $queueController->getStartupData();
     $this->view->approx = $this->getApproxData();
 
-    $this->view->logHeaders = array(__('Images', 'shortpixel_image_optimiser'), __('Errors', 'shortpixel_image_optimizer'), __('Date', 'shortpixel_image_optimizer'));
+    $this->view->logHeaders = array(__('Images', 'shortpixel_image_optimiser'), __('Errors', 'shortpixel_image_optimizer'), __('Date', 'shortpixel_image_optimizer'), '');
     $this->view->logs = $this->getLogs();
 
     $keyControl = ApiKeyController::getInstance();
@@ -82,8 +81,33 @@ class BulkViewController extends \ShortPixel\ViewController
     $this->view->customOperationMediaName = $custom_operation_media; 
     $this->view->customerOperationCustomName = $custom_operation_custom;
 
+    $noticesController = AdminNoticesController::getInstance(); 
+
+    $this->view->remoteOffer = $noticesController->getRemoteOffer(); 
+
+    $this->loadDashboard();
+
     $this->loadView();
 
+  }
+
+  private function loadDashboard()
+  {
+      $noticesController = AdminNoticesController::getInstance();
+      $offer = $noticesController->getRemoteOffer(); 
+
+          $this->view->dashboard_icon = plugins_url('res/images/icon/shortpixel.svg', SHORTPIXEL_PLUGIN_FILE); 
+          $this->view->dashboard_link = false; 
+          $this->view->dashboard_title = false; 
+          $this->view->dashboard_message = ''; 
+      if (is_array($offer))
+      {
+         $this->view->dashboard_icon = $offer['icon']; 
+         $this->view->dashboard_link = $offer['link']; 
+         $this->view->dashboard_title = $offer['title'];
+         $this->view->dashboard_message = $offer['message'];
+
+      } 
   }
 
   private function getCustomLabel($operation)
@@ -99,6 +123,9 @@ class BulkViewController extends \ShortPixel\ViewController
           case 'removeLegacy':
             $label = __('Remove Legacy Data', 'shortpixel-image-optimiser');
           break;
+          case 'bulk-undoAI':
+            $label = __('Remove AI Data', 'shortpixel-image-optimiser');           
+          break; 
       }
 
       return $label;
@@ -138,7 +165,6 @@ class BulkViewController extends \ShortPixel\ViewController
     if (is_array($excludeSizes) && count($excludeSizes) > 0)
     {
       $approx->media->thumbs = $approx->media->thumbs - ($approx->media->items * count($excludeSizes));
-      
     }
 
     // Total optimized items + Total optimized (approx) thumbnails
@@ -266,6 +292,9 @@ class BulkViewController extends \ShortPixel\ViewController
 							 case 'removeLegacy':
 								$bulkName = __('Remove Legacy Data', 'shortpixel-image-optimiser');
 							 break;
+               case 'bulk-undoAI':
+                $bulkName  = __('Remove AI Data', 'shortpixel-image-optimiser');           
+               break; 
 							 default:
 							 	 	 $bulkName .= __('Optimization', 'shortpixel-image-optimiser');
 							 break;

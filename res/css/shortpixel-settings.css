@@ -63,6 +63,7 @@ div.spio-modal {
 div.spio-modal iframe {
   width: 100%;
   height: 625px;
+  background-color: #fff;
 }
 div.spio-modal .spio-close-help-button {
   position: absolute;
@@ -1002,6 +1003,7 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page section#tab-debug .table > div > span {
   display: table-cell;
+  padding: 0 4px;
 }
 .wrap.is-shortpixel-settings-page section#tab-debug .table > div.head > span {
   font-weight: 700;

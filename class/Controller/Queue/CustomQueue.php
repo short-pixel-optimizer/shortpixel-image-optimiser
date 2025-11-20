@@ -54,6 +54,111 @@ class CustomQueue extends Queue
       return $this->prepareItems($items);
    }
 
+   // Not implemented, for abstract.
+   protected function prepareUndoAI()
+   {
+       return []; 
+   }
+
+   public function createNewBulk($args = [])
+   {
+      if (isset($args['filters']))
+      {
+         $this->addFilters($args['filters']); 
+         unset($args['filters']); 
+      } 
+       
+      $options = array_merge($this->options, $args);
+      
+      // Parent should save options as well. 
+       return parent::createNewBulk($options); 
+   }
+
+   /*
+   protected function addFilters($filters)
+   {
+
+      global $wpdb; 
+      $table = $wpdb->prefix . 'shortpixel_meta'; 
+      list($start_date, $end_date) = parent::addFilters($filters);
+
+      
+
+      if (isset($start_date) && false !== $start_date)
+      {
+         $startDateSQL = 'ts_added <= %s '; 
+         $prepare[] = $start_date->format("Y-m-d H:i:s");
+      }
+      if (isset($end_date) && false !== $end_date)
+      {
+         $endDateSQL = 'ts_added >= %s'; 
+         $prepare[] = $end_date->format("Y-m-d H:i:s");
+      }
+
+      $get_start_id = $get_end_id = false; 
+      if (isset($startDateSQL) && isset($endDateSQL))
+      {
+          $dateSQL = $startDateSQL . ' and ' . $endDateSQL; 
+          $get_start_id = true; 
+          $get_end_id = true; 
+      }
+      elseif (isset($startDateSQL) && false === isset($endDateSQL))
+      {
+          $dateSQL = $startDateSQL;
+          $get_start_id = true; 
+      }
+      elseif (false === isset($startDateSQL) && isset($endDateSQL))
+      {
+          $dateSQL = $endDateSQL; 
+          $get_end_id = true; 
+      }
+
+
+      $sql = 'SELECT id from '  . $table . ' WHERE ' . $dateSQL; 
+
+
+      if (true === $get_start_id)
+      {
+          $startSQL = $sql . '  ORDER BY ts_added DESC LIMIT 1'; 
+          $startSQL = $wpdb->prepare($startSQL, $prepare); 
+          $start_id = $wpdb->get_var($startSQL); 
+          if (is_null($start_id))
+          {
+              $start_id = -1; 
+          }
+          $this->options['filters']['start_id'] = $start_id; 
+      }
+
+      if (true === $get_end_id)
+      {
+         $endSQL = $sql . '  ORDER BY ts_added ASC LIMIT 1'; 
+         $endSQL = $wpdb->prepare($endSQL, $prepare); 
+         $end_id = $wpdb->get_var($endSQL); 
+         if (is_null($end_id))
+         {
+             $end_id = -1; 
+         }
+         $this->options['filters']['end_id'] = $end_id; 
+      }
+      
+
+   } */
+
+   protected function getFilterQueryData()
+   {
+      global $wpdb; 
+      $table = $wpdb->prefix . 'shortpixel_meta'; 
+
+      return [
+          'date_field' => 'ts_added', 
+          'base_query' => 'SELECT ID FROM ' . $table . ' WHERE ',
+          'base_prepare' => [], 
+          
+      ];
+   }
+
+
+
    private function queryItems()
    {
      $last_id = $this->getStatus('last_item_id');
@@ -62,6 +167,26 @@ class CustomQueue extends Queue
      $items = array();
      $fastmode = apply_filters('shortpixel/queue/fastmode', false);
 
+     $options = $this->getOptions(); 
+
+     // Filters. 
+    $start_id = $end_id = null; 
+    if (isset($options['filters']))
+    {
+       if (isset($options['filters']['start_id']))
+       {
+         $start_id = $options['filters']['start_id'];
+       }
+       if (isset($options['filters']['end_id']))
+       {
+         $end_id = $options['filters']['end_id'];
+       }
+    }
+
+    if (-1 === $start_id || -1 === $end_id)
+    {
+      return []; 
+    }
 
      global $wpdb;
 
@@ -91,6 +216,17 @@ class CustomQueue extends Queue
      {
         $sql .= " AND id < %d ";
         $prepare [] = intval($last_id);
+     }
+     elseif (false === is_null($start_id))
+     {
+       $sql .= ' and id <= %d ';
+       $prepare[] = intval($start_id);
+     }
+
+     if (false === is_null($end_id))
+     {
+       $sql .= ' and id >= %d '; 
+       $prepare[] = intval($end_id); 
      }
 
 

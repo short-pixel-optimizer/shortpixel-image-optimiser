@@ -44,7 +44,6 @@ class BulkController
 
       ];
 
-
       $args = wp_parse_args($args, $defaults); 
 
       $queueController = new QueueController(['is_bulk' => true]);
@@ -64,8 +63,8 @@ class BulkController
       if (! is_null($args['customOp']))
       {
         $customOp = $args['customOp'];
-        //$args['customOp'] = $customOp;
-        if ($customOp == 'bulk-restore')
+        
+        if ($customOp == 'bulk-restore' ||  $customOp == 'bulk-undoAI')
         {
           $args['numitems'] = 5;
           $args['retry_limit'] = 5;
@@ -82,7 +81,7 @@ class BulkController
       }
 
       
-      $Q->createNewBulk($args);
+      $options = $Q->createNewBulk($args);
 
 
       return $Q->getStats();
@@ -161,7 +160,7 @@ class BulkController
 	       $q->startBulk();
 			 }
 
-       return  $q->getStats(); //$optimizeControl->processQueue($types);
+       return  $q->getStats(); 
    }
 
    public function finishBulk($type = 'media')

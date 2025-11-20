@@ -29,8 +29,10 @@ class AiController extends RequestManager
      $this->main_url = 'https://capi-gpt.shortpixel.com/';
     }
 
-    public function processMediaItem(QueueItem $qItem, ImageModel $imageObj)
+    public function processMediaItem(QueueItem $qItem)
     {
+      $imageObj = $qItem->imageModel; 
+      
       if (! is_object($imageObj))
       {
         $qItem->addResult($this->returnFailure(self::STATUS_FAIL, __('Item seems invalid, removed or corrupted.', 'shortpixel-image-optimiser')));
@@ -48,7 +50,7 @@ class AiController extends RequestManager
 
       if ($qItem->data()->action == 'requestAlt')
       {
-        $requestBody['url'] = $qItem->data()->url;
+        $requestBody['url'] = $qItem->data()->urls[0];
         $paramlist = $qItem->data()->paramlist; 
         if (is_object($paramlist))
         {
@@ -61,6 +63,7 @@ class AiController extends RequestManager
 
         $requestBody = array_merge($requestBody, $paramlist);
         $requestBody['retry'] = '1'; // when requesting alt, always wants a new one (?) 
+        $requestBody['version'] = 'v_2'; 
       }
 
       if ($qItem->data()->action == 'retrieveAlt')
@@ -99,10 +102,8 @@ class AiController extends RequestManager
     protected function handleResponse(QueueItem $qItem, $response)
     {
        $apiData = $this->parseResponse($response);//get the actual response from API, its an array
-   //    Log::addTemp('Response AI ', $response);
-       Log::addTemp('HAndle AI Response! ', $apiData);
+       Log::addInfo('HAndle AI Response! ', $apiData);
 
-       
         // List all the random crap that might return. 
         $id = isset($apiData['id']) ? intval($apiData['id']) : false; 
         $jwt = isset($apiData['jwt']) ? sanitize_text_field($apiData['jwt']) : false; 
@@ -117,7 +118,6 @@ class AiController extends RequestManager
           if (false === $authKey || $jwt !== $authKey)
           {
              set_transient($this->auth_token, $jwt, HOUR_IN_SECONDS);
-             Log::addTemp('Setting auth key trans');
           }
 
         }
@@ -148,7 +148,6 @@ class AiController extends RequestManager
                return $this->returnRetry(RequestManager::STATUS_WAITING, __('Response without result object', 'shortpixel-image-optimiser'));
             }
             
-
             
             if (false !== $id)
             {
@@ -180,9 +179,8 @@ class AiController extends RequestManager
                  'caption' => isset($apiData['caption']) ? sanitize_text_field($apiData['caption']) : null, 
                  'relevance' => isset($apiData['relevance']) ? sanitize_text_field($apiData['relevance']) : null, 
                  'description' => isset($apiData['image_description']) ? sanitize_text_field($apiData['image_description']) : null,
-              ]);
-
-              
+                 'post_title' => isset($apiData['title']) ? sanitize_text_field($apiData['title']) : null, 
+              ]);              
               
               // Switch known Statii 
               switch ($status)
@@ -202,24 +200,10 @@ class AiController extends RequestManager
                   break; 
                   case '2':  // Success of some kind. 
                   default: 
-                    //$apiStatus = RequestManager::STATUS_SUCCESS; 
-                    // @todo Possibly add a fail state here if all AI stuff came back negative / without data (?) 
-                    /*      if (is_null($text) || strlen($text) == 0 || $error !== false)
-                    {
-                        $apiStatus = RequestManager::STATUS_FAIL; 
-                        return $this->returnFailure(RequestManager::STATUS_FAIL, __('AI could not generate text for this image', 'shortpixel-image-optimiser'));
-                    }
-                    else
-                    {
-              */
                       $successData = $this->handleSuccess($aiData, $qItem);
                       return $successData;
-               //     }
-
                   break;
-            //  }
-                             
-               
+   
             }
         }
       return $this->returnFailure(0, 'No remote ID?');

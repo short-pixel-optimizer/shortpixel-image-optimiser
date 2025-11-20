@@ -42,10 +42,13 @@ abstract class Queue
 
     abstract protected function prepare();
     abstract protected function prepareBulkRestore();
+    abstract protected function prepareUndoAI(); 
     abstract public function getType();
+    abstract protected function getFilterQueryData();
 
     protected $queueName = '';
     protected $cacheName; 
+    protected $options = []; 
 
     
     public function createNewBulk($args = [])
@@ -59,7 +62,8 @@ abstract class Queue
         $cache = new CacheController();
         $cache->deleteItem($this->cacheName);
 
-        $this->setCustomBulk($args);
+        $this->setBulkOptions($args);
+        return $args; 
     }
 
     public function startBulk()
@@ -73,7 +77,7 @@ abstract class Queue
        $this->q->cleanQueue();
     }
 
-		public function resetQueue()
+    public function resetQueue()
 		{
 			$this->q->resetQueue();
 		}
@@ -157,6 +161,10 @@ abstract class Queue
             {
               $prepared = $this->prepareBulkRestore();
             }
+            elseif (false !== $custom_operation && 'bulk-undoAI' === $custom_operation)
+            {
+               $prepared = $this->prepareUndoAI(); 
+            }
             else {
 
               $prepared = $this->prepare();
@@ -174,7 +182,7 @@ abstract class Queue
 
             if ($prepared['items'] == 0)
             {
-               Log::addDebug( $this->queueName . ' Queue, prepared came back as zero ', array($prepared, $result->items));
+          //     Log::addDebug( $this->queueName . ' Queue, prepared came back as zero ', array($prepared, $result->items));
                if ($prepared['results'] == 0) /// This means no results, empty query.
                {
                 $result->qstatus = self::RESULT_PREPARING_DONE;
@@ -212,6 +220,125 @@ abstract class Queue
     }
 
 
+    protected function addFilters($filters)
+    {
+         global $wpdb; 
+         $start_date = $end_date = false; 
+        
+
+         // @todo Probably move all of this to global function and only sql statement to child class
+         if (isset($filters['start_date']))
+         {
+            try {
+               $start_date = new \DateTime($filters['start_date']); 
+            }
+            catch (\Exception $e)
+            {
+               Log::addError('Start date bad', $e); 
+               unset($filters['start_date']);
+            }
+         }
+   
+         if (isset($filters['end_date']))
+         {
+            try {
+               $end_date = new \DateTime($filters['end_date']);
+            }
+            catch (\Exception $e)
+            {
+               Log::addError('End Data bad', $e); 
+               unset($filters['end_date']); 
+            }
+         }
+   
+         if (false !== $start_date && false !== $end_date)
+         {
+            // Confusing since we do DESC, so just swap dates if one is higher than other. 
+             if ($start_date->format('U') < $end_date->format('U'))
+             {
+                  $swap_date = $end_date; 
+                  $end_date = $start_date; 
+                  $start_date = $swap_date; 
+             }
+         }
+
+        // Take start date end of this day, since we do DESC and otherwise dates on the day of the start day will be omitted 
+         if (false !== $start_date)
+         {
+          $start_date->modify('+23 hours 59 minutes');
+         }
+
+         $args = $this->getFilterQueryData();
+         $prepare = $args['base_prepare']; 
+         $base_query = $args['base_query'];
+         $prepare = $args['base_prepare']; 
+         $date_field = $args['date_field']; 
+
+         $dateSQL = ''; 
+         //$prepare = []; 
+         
+         if (isset($start_date) && false !== $start_date)
+         {
+            $startDateSQL = $date_field . ' <= %s '; 
+            $prepare[] = $start_date->format("Y-m-d H:i:s");
+         }
+         if (isset($end_date) && false !== $end_date)
+         {
+            $endDateSQL = $date_field . ' >= %s'; 
+            $prepare[] = $end_date->format("Y-m-d H:i:s");
+         }
+   
+         $get_start_id = $get_end_id = false; 
+         if (isset($startDateSQL) && isset($endDateSQL))
+         {
+             $dateSQL = $startDateSQL . ' and ' . $endDateSQL; 
+             $get_start_id = true; 
+             $get_end_id = true; 
+         }
+         elseif (isset($startDateSQL) && false === isset($endDateSQL))
+         {
+             $dateSQL = $startDateSQL;
+             $get_start_id = true; 
+         }
+         elseif (false === isset($startDateSQL) && isset($endDateSQL))
+         {
+             $dateSQL = $endDateSQL; 
+             $get_end_id = true; 
+         }
+
+         $base_query .= $dateSQL;
+   
+            if (true === $get_start_id)
+         {
+             $startSQL = $base_query . '  ORDER BY ' . $date_field . ' DESC LIMIT 1'; 
+             $startSQL = $wpdb->prepare($startSQL, $prepare); 
+             $start_id = $wpdb->get_var($startSQL); 
+             if (is_null($start_id))
+             {
+               $start_id = -1; 
+             }
+   
+             $this->options['filters']['start_id'] = $start_id; 
+         }
+   
+         if (true === $get_end_id)
+         {
+            $endSQL = $base_query . '  ORDER BY ' . $date_field . ' ASC LIMIT 1'; 
+            $endSQL = $wpdb->prepare($endSQL, $prepare); 
+
+            $end_id = $wpdb->get_var($endSQL); 
+            if (is_null($end_id))
+            {
+                $end_id = -1; 
+            }
+            $this->options['filters']['end_id'] = $end_id; 
+   
+         
+         }   
+         
+    }
+
+
     protected function prepareItems($items)
     {
         do_action('shortpixel/queue/prepare_items', $items);
@@ -221,6 +348,7 @@ abstract class Queue
 
 				$settings = \wpSPIO()->settings();
         $env = \wpSPIO()->env();
+        $queueOptions = $this->getOptions();
 
           if (count($items) == 0)
           {
@@ -241,9 +369,12 @@ abstract class Queue
 
           $i = 0;
 
+          $customData = $this->getStatus('custom_data');
+
           // maybe while on the whole function, until certain time has elapsed?
           foreach($items as $item_id)
           {
+              $counterUpdated = false; 
 
 							// Migrate shouldn't load image object at all since that would trigger the conversion.
 							  if ($operation == 'migrate' || $operation == 'removeLegacy')
@@ -280,13 +411,30 @@ abstract class Queue
 
                 // If autoAi is on the bulk, add operation to the item
                 $enqueueAi = false; 
-                if ('media' === $mediaItem->get('type') && true === $optimizeAiController->isAiEnabled() && true === $settings->autoAIBulk)
+                $enqueueRegular = true; // basic item processing . 
+
+                if ('media' === $mediaItem->get('type'))
                 {
-                  $aiDataModel = AiDataModel::getModelByAttachment($mediaItem->get('id'));  
-                  $enqueueAi = $aiDataModel->isProcessable();
+                  if (! isset($queueOptions['doMedia']) || false === $queueOptions['doMedia'] )            
+                  {
+                     $enqueueRegular = false; 
+                  }      
+
+                  if (true === $optimizeAiController->isAiEnabled() && 
+                  true === $settings->autoAIBulk &&
+                  true === $queueOptions['doAi'])
+                  {
+                    $aiDataModel = AiDataModel::getModelByAttachment($mediaItem->get('id'));  
+                    $enqueueAi = $aiDataModel->isProcessable();
+                  }
                 }
 
-                if ($mediaItem->isProcessable() && $mediaItem->isOptimizePrevented() === false && ! $operation) // Checking will be done when processing queue.
+                // @todo This whole structure on ai / not-ai for enqueue is getting messy 
+                if ($mediaItem->isProcessable() && 
+                    $mediaItem->isOptimizePrevented() === false &&
+                     ! $operation &&
+                    true === $enqueueRegular
+                  ) // Checking will be done when processing queue.
                 {
 
 										if ($this->isDuplicateActive($mediaItem, $queue))
@@ -305,6 +453,9 @@ abstract class Queue
                    if (true === $enqueueAi)
                    {
                       $qItem->data->addNextAction('requestAlt'); 
+                      // Add count here when adding it to next action otherwise AI count in bulk might be hidden / totally off
+                      $customData->aiCount++;
+
                    }
 
                     $queue[] = $qItem->returnEnqueue(); //array('id' => $media_id, 'value' => $qObject, 'item_count' => $counts->creditCount);
@@ -312,11 +463,15 @@ abstract class Queue
                     $counts = $qItem->data()->counts; 
 
                     $imageCount += $counts->creditCount;
-                    $webpCount += $counts->webpCount;
-                    $avifCount += $counts->avifCount;
-										$baseCount += $counts->baseCount; // base images (all minus webp/avif) 
+                    // $webpCount += $counts->webpCount;
+                   // $avifCount += $counts->avifCount;
+									 //	$baseCount += $counts->baseCount; // base images (all minus webp/avif) 
 
-                    
+                    $customData->webpCount += $counts->webpCount;
+                    $customData->avifCount += $counts->avifCount;
+                    $customData->baseCount += $counts->baseCount;
+
+                    $counterUpdated = true; 
                     $this->checkQueueCache($item_id);
                     do_action('shortpixel_start_image_optimisation', $mediaItem);
 
@@ -325,6 +480,7 @@ abstract class Queue
                 { // @todo Incorporate these actions here.  . Perhaps operations should all be on top?
                    if($operation !== false)
                    {
+                    // Possibly these should become propert qItems as well when enqueueing (?) 
                       if ($operation == 'bulk-restore')
                       {
                           if ($mediaItem->isRestorable())
@@ -334,12 +490,22 @@ abstract class Queue
                             $queue[] = array('id' => $mediaItem->get('id'), 'value' => $qObject);
                           }
                       }
+                      elseif ('bulk-undoAI' == $operation)
+                      {
+                         $qObject = new \stdClass; 
+                         $qObject->action = 'undoAI'; 
+                         $queue[] = ['id' => $mediaItem->get('id'), 'value' => $qObject];
+                      }
                    }
                    elseif(true === $enqueueAi)
                    {
                           $qItem = QueueItems::getImageItem($mediaItem);
                           $qItem->requestAltAction();
                           $queue[] = $qItem->returnEnqueue();
+
+                          $counts = $qItem->data()->counts; 
+                          $customData->aiCount += $counts->aiCount;
+                          $counterUpdated = true;
                    }
 									 else
 									 {
@@ -367,6 +533,7 @@ abstract class Queue
               if (true === $env->IsOverMemoryLimit($i) || true === $env->IsOverTimeLimit())
               {
                  Log::addMemory('PrepareItems: OverLimit! Breaking on index ' . $i);
+                 $this->q->setStatus('custom_data', $customData, false); // save the counts.
                  $this->q->setStatus('last_item_id', $item_id);
                  $return['overlimit'] = true; // lockout return
                  break;
@@ -378,13 +545,12 @@ abstract class Queue
           $this->q->additems($queue);
           $numitems = $this->q->enqueue();
 
-          $customData = $this->getStatus('custom_data');
+         // Log::addTemp('CustomData', $customData);
 
-          $customData->webpCount += $webpCount;
-          $customData->avifCount += $avifCount;
-					$customData->baseCount += $baseCount;
-
-          $this->q->setStatus('custom_data', $customData, false);
+          if (true === $counterUpdated)
+          {
+            $this->q->setStatus('custom_data', $customData, false);
+          }
 
           // mediaItem should be last_item_id, save this one.
           $this->q->setStatus('last_item_id', $item_id); // enum status to prevent a hang when no items are enqueued, thus last_item_id is not raised. save to DB.
@@ -397,6 +563,7 @@ abstract class Queue
 					*/
           $return['results'] = count($items); // This is the return of the query. Preparing should not be 'done' before the query ends, but it can return 0 on the qcount if all results are already optimized.
 
+          //Log::addTemp('ImageCount '  . $customData->baseCount . ' added : ' . $baseCount .  ' leading to ', $return);
           return $return; // only return real amount.
     }
 
@@ -467,6 +634,7 @@ abstract class Queue
         $stats->images = $this->countQueue();
       }
 
+     // Log::addTemp('GetStats - ' . $this->queueName, $stats);
       return $stats;
     }
 
@@ -487,20 +655,48 @@ abstract class Queue
 
         $count->images_webp = 0;
         $count->images_avif = 0;
+        $count->images_ai = 0; 
+
         if (is_object($customData))
         {
           $count->images_webp = (int) $customData->webpCount;
           $count->images_avif = (int) $customData->avifCount;
 					$count->images_basecount = (int) $customData->baseCount;
+          if (property_exists($customData, 'aiCount'))
+          {
+            $count->images_ai = (int) $customData->aiCount;
+          }
+        }
+
+
+        $count->total_images_without_ai = 0; 
+        if ($count->images_ai > 0)
+        {
+           $count->total_images_without_ai = max(($count->images - $count->images_ai), 0);
+        }
+        else
+        { 
+          $count->total_images_without_ai = $count->images;
         }
 
         return $count;
     }
 
+    /** Get options which the queue was started with.  Formerly custom_data but now for all options. 
+     * 
+     * @return array 
+     */
+    public function getOptions()
+    {
+         $options = $this->getCustomDataItem('queueOptions'); 
+         return $options;
+    }
+
 
     protected function getStatus($name = false)
     {
-        if ($name == 'custom_data')
+       // Slow name and purpose change on this one.
+        if ($name == 'custom_data' || 'options' == $name)
         {
             $customData = $this->q->getStatus('custom_data');
             if (! is_object($customData))
@@ -512,7 +708,7 @@ abstract class Queue
         return $this->q->getStatus($name);
     }
 
-    public function setCustomBulk($options = [] )
+    public function setBulkOptions($options = [] )
     {
         if (0 === count($options))
           return false;
@@ -528,8 +724,13 @@ abstract class Queue
         }
 
         if (is_array($options) && count($options) > 0)
+        {
           $customData->queueOptions = $options;
-
+        }
+        else
+        {
+          $customData->queueOptions  = [] ;
+        }
         $this->getShortQ()->setStatus('custom_data', $customData);
     }
 
@@ -537,7 +738,8 @@ abstract class Queue
 		// Use to give the go processing when out of credits (ie)
 		public function isCustomOperation()
 		{
-			if ($this->getCustomDataItem('customOperation'))
+      $customOp = $this->getCustomDataItem('customOperation');
+			if ($this->getCustomDataItem('customOperation') && false !== $this->getCustomDataItem('customOperation'))
 			{
 				return true;
 			}
@@ -625,16 +827,10 @@ abstract class Queue
 
     protected function checkQueueCache($item_id)
     {
-
-      
       if (isset(self::$isInQueue[$item_id]) && false === self::$isInQueue[$item_id])
       {
          unset(self::$isInQueue[$item_id]);
       }
-
-
-
-
     }
 
     public function itemFailed(QueueItem $qItem, $fatal = false)
@@ -730,6 +926,7 @@ abstract class Queue
         $data->webpCount = 0;
         $data->avifCount = 0;
 				$data->baseCount = 0;
+        $data->aiCount = 0;
         $data->customOperation = false;
 
         return $data;

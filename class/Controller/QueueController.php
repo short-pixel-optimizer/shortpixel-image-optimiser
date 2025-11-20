@@ -368,7 +368,6 @@ class QueueController
             ]);
             
             $Q->itemFailed($qItem, true); 
-
           }
           else
           {
@@ -376,8 +375,8 @@ class QueueController
           }
 
           $item_id = $qItem->item_id;
-
           $imageModel = (! is_null($qItem->imageModel)) ? $qItem->imageModel : $fs->getImage($item_id, $qtype);
+          
           if (is_object($imageModel))
           {
             $qItem->setModel($imageModel);
@@ -830,7 +829,7 @@ class QueueController
   private function logBulk(QueueItem $qItem)
   {
     $item_id = $qItem->item_id;
-    $responseItem = ResponseController::getResponseItem($item_id);
+   // $responseItem = ResponseController::getResponseItem($item_id);
 
     $type = (is_object($qItem->imageModel)) ? $qItem->imageModel->get('type') : false;
 
@@ -845,8 +844,8 @@ class QueueController
 
     $time = UiHelper::formatTs(time());
 
-    $fileName = $responseItem->fileName;
-    $message = ResponseController::formatItem($item_id);
+    $fileName = $qItem->imageModel->getFileName();
+    $message = ResponseController::formatQItem($qItem);
 
     $fileLog->append($time . '|' . $fileName . '| ' . $item_id . '|' . $message . ';' .PHP_EOL);
   }

@@ -43,7 +43,7 @@ class AdminNoticesController extends \ShortPixel\Controller
     );
     protected $adminNotices; // Models
 
-    private $remote_message_endpoint = 'https://api.shortpixel.com/v2/notices.php';
+    private $remote_message_endpoint = 'https://api.shortpixel.com/v2/notices.php'; 
     private $remote_readme_endpoint = 'https://plugins.svn.wordpress.org/shortpixel-image-optimiser/trunk/readme.txt';
 
     private $silent_mode = false;
@@ -142,6 +142,7 @@ class AdminNoticesController extends \ShortPixel\Controller
         $access = AccessModel::getInstance();
         $screen = get_current_screen();
         $screen_id = \wpSPIO()->env()->screen_id;
+        $is_our_screen = \wpSPIO()->env()->is_our_screen; 
 
         $noticeControl = Notices::getInstance();
 
@@ -155,10 +156,15 @@ class AdminNoticesController extends \ShortPixel\Controller
 
                 foreach($notices as $notice)
                 {
-
+                    
                     if ($notice->checkScreen($screen_id) === false)
                     {
                         continue;
+                    }
+                    // Bit hacky; limit global messages to our screens. Next step here @todo would be to include a remotenotice flag in the noticemodel
+                    elseif (strpos($notice->getID(), 'Global') !== false && false === $is_our_screen)
+                    {
+                        continue; 
                     }
                     elseif ($access->noticeIsAllowed($notice))
                     {
@@ -253,6 +259,44 @@ class AdminNoticesController extends \ShortPixel\Controller
         }
     }
 
+    /**
+     * 
+     * @var ShortPixel\Controller\functon
+     */
+    public function getRemoteOffer()
+    {
+       $notices = $this->get_remote_notices(); 
+       
+       if (false == $notices)
+       {
+            return false;
+       }
+
+       foreach($notices as $remoteNotice)
+       {
+           if (! isset($remoteNotice->type) || $remoteNotice->type !== 'offer')
+           {
+                continue; 
+           }
+
+           $offer = (array) $remoteNotice; 
+
+           if (isset($offer['suppressedafter']))
+           {
+              $time = strtotime($offer['suppressedafter']); 
+              if ($time === false || $time <= time() )
+              {
+                continue; 
+              }
+           }
+
+           $offer = array_change_key_case($offer, CASE_LOWER);
+           // Perhaps parse some here or not 
+           return $offer;
+       }
+
+       return false;
+    }
 
     protected function doRemoteNotices()
     {
@@ -275,7 +319,37 @@ class AdminNoticesController extends \ShortPixel\Controller
             if (! isset($remoteNotice->type))
                 $remoteNotice->type = 'notice';
 
-            $message = esc_html($remoteNotice->message);
+            // Ignore this type in the regular notices. 
+            if ('offer' == $remoteNotice->type)
+            {
+                continue;  
+            }
+
+            if (property_exists($remoteNotice, 'message'))
+            {
+                $message = esc_html($remoteNotice->message);
+            }
+            elseif (property_exists($remoteNotice, 'Message'))
+            {
+                $message = esc_html($remoteNotice->Message);
+            }
+            else
+            {
+                 continue; // no message no notice.
+            }
+
+            if (property_exists($remoteNotice, 'link'))
+            {
+                $link = $remoteNotice->link; 
+               // $message_link = $remoteNotice->message_link; 
+
+                if (substr_count($message, '%s') == 2)
+                {
+                     $message = sprintf($message, '<a href="' . $link . '" target="_blank">', '</a>'); 
+                }
+            }
+            
+
             $id = sanitize_text_field($remoteNotice->id);
 
             $noticeController = Notices::getInstance();

@@ -39,16 +39,406 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		// This init only in edit-media and pass the ID for safety. 
 		if (document.getElementById('attachment_alt') !== null)
 		{
-			var postInput = document.getElementById('post_ID')
-			this.FetchAltView(undefined, postInput.value);
+			var postInput = document.getElementById('post_ID');
+			let item_id = postInput.value; 
+			this.FetchAltView(undefined, item_id);
+			let imageDataEl = document.getElementById('shortpixel-data-' + item_id); 
+			let editorArgs = {}; 
+			if (null !== imageDataEl && imageDataEl.dataset.imagewidth)
+			{
+				 editorArgs.image_width= imageDataEl.dataset.imagewidth;
+			}
+			if (null !== imageDataEl && imageDataEl.dataset.extension)
+			{
+				 editorArgs.image_ext = imageDataEl.dataset.extension;
+			}
+			this.InitEditorActions(postInput.value, 'edit', editorArgs); 
+		}
+	}
+
+	InitEditorActions(item_id, uiType, args)
+	{
+		let id = 'shortpixel_removebackground_button';
+		var button = document.createElement('button'); 
+
+		button.name = 'removeBackground'; 
+		button.innerHTML = this.settings.remove_background_title; 
+		button.type =  'button'; 
+		button.classList.add('button', 'button-secondary');
+		button.id = id; 
+		button.dataset.item_id = item_id; 
+
+		button.addEventListener('click', (event) => { this.OpenEditorEvent(event, 'remove') }); 
+		button.dataset.opener = uiType; 
+		
+		var scaleButton = document.createElement('button'); 
+		scaleButton.name = 'scaleBackground'; 
+		scaleButton.innerHTML = this.settings.scale_title; 
+		scaleButton.type = 'button'; 
+		scaleButton.classList.add('button', 'button-secondary'); 
+		scaleButton.id = 'shortpixel_scale_button'; 
+		scaleButton.dataset.item_id = item_id; 
+		scaleButton.style.marginLeft = '6px'
+		
+		scaleButton.addEventListener('click', (event) => { this.OpenEditorEvent(event, 'scale') }); 
+		scaleButton.dataset.opener = uiType; 
+
+		if (args.image_ext && false == (args.image_ext == 'jpg' || args.image_ext == 'png' || args.image_ext == 'jpeg'))
+		{
+			return; 
+		}
+		else if (args.image_width && parseInt(args.image_width) > parseInt(this.settings.upscale_max_width))
+		{
+			scaleButton.disabled = true;
+			scaleButton.title = this.settings.too_big_for_scale_title; 
 		}
 
-		/*this.altInputNames = [
-			'attachment_alt',  //edit-media 
-			'attachment-details-alt-text', // media library upload screen / image select
-			'attachment-details-two-column-alt-text',
+			// @todo Probably all should pass uiType. 
+		if (typeof uiType === 'undefined' || uiType === 'edit')
+		{
+			var parent = document.querySelector('[id^=media-head]'); 
+			let par = document.createElement('p');
+			let par2 = document.createElement('p');
+			par.append(button);
+			par2.append(scaleButton); 
+			parent.append(par, par2);
+		}
+		else if('gallery' === uiType)
+		{
+			var parent = document.querySelector('.media-modal .attachment-actions')
+			parent.append(button, scaleButton);
+		}
+		else if ('gutenberg' == uiType)
+		{
+			var parent = document.querySelector('.attachment-info  ');
+			if (null !== parent)
+			{
+				button.classList.add('button-link');
+				button.style.display = 'inline';
+				button.style.fontSize = '12px'; // hacking in to match Gburg. 
+				button.style.textDecoration = 'none'; 
+				
+				
+				scaleButton.classList.add('button-link'); 
+				scaleButton.style.display = 'inline';
+				scaleButton.style.fontSize = '12px'; // hacking in to match Gburg. 
+				scaleButton.style.textDecoration = 'none'; 
+
+				if (false == scaleButton.disabled)
+				{
+					button.style.marginLeft = '4px';
+					parent.append(scaleButton);
+				}
+
+				parent.append(button);
+
+
+			}
+		}
 		
-		 ]; */
+	}
+
+	OpenEditorEvent(event, action_name)
+	{
+		let item_id = event.target.dataset.item_id; 
+		var opener = event.target.dataset.opener; 
+
+		event.preventDefault(); 
+		
+		let backgroundShade = document.createElement('div');
+		backgroundShade.id = 'shortpixel-media-modal-shade';
+		backgroundShade.classList.add('shortpixel-media-modal-shade');
+		
+		let modal = document.createElement('div'); 
+		modal.id = 'shortpixel-media-modal'; 
+		modal.classList.add('shortpixel-media-modal', 'modal');
+		modal.dataset.opener = opener; 
+		modal.dataset.action_name = action_name; 
+		modal.dataset.item_id = item_id; 
+
+		if (null === document.getElementById('shortpixel-media-modal-css'))
+		{
+			var head  = document.getElementsByTagName('head')[0];
+			var link  = document.createElement('link');
+			link.id   = 'shortpixel-media-modal-css';
+			link.rel  = 'stylesheet';
+			link.type = 'text/css';
+			link.href = this.settings.modalcss;
+			link.media = 'all';
+			head.appendChild(link);	
+		}
+
+		// CloseEvent to close the modal + background
+		var closeEvent = new CustomEvent('shortpixel-media-modal-close', { detail : 
+			 {
+				 modal: modal,
+				 shade: backgroundShade,
+				 opener: opener, 
+			 }
+		} ); 
+
+		var buttonEventUnblock = new CustomEvent('shortpixel-media-modal-buttons-unblock', { detail: {toggle : 'on'}});
+		var buttonEventBlock = new CustomEvent('shortpixel-media-modal-buttons-block', { detail: {toggle : 'off'}});
+		
+
+		modal.closeEvent = closeEvent;  // if works, quite dirty.
+		modal.toggleButtonBlock = buttonEventBlock; 
+		modal.toggleButtonUnblock = buttonEventUnblock; 
+
+		//modal.addEventListener('shortpixel-media-modal-buttons-unblock, shortpixel-media-modal-buttons-block',
+		var buttonEvent = (event) => {
+			var toggle = event.detail.toggle; 
+			console.log('toggle buttons');
+			var buttons = modal.querySelectorAll('button[type="button"]');
+
+			for (var i = 0; i < buttons.length; i++)
+			{
+				if ('on' == toggle)
+				{
+					buttons[i].disabled = false; 
+				}
+				else
+				{
+					buttons[i].disabled = true; 
+				}
+			}
+		}; 
+		modal.addEventListener('shortpixel-media-modal-buttons-unblock', buttonEvent);
+		modal.addEventListener('shortpixel-media-modal-buttons-block', buttonEvent);
+
+		document.addEventListener('shortpixel-media-modal-close', (event) => {
+				let detail = event.detail; 
+				detail.modal.remove();
+				detail.shade.remove(); 
+
+				if ('gallery' == event.detail.opener || 'gutenberg' == event.detail.opener)
+				{
+						var WPmodals = document.querySelectorAll('#wp-media-modal, .media-modal-backdrop'); 
+						for (let i =0; i < WPmodals.length; i++)
+						{
+							WPmodals[i].style.display = 'unset'; 
+						}
+		
+				}
+		}, { once: true });
+
+		backgroundShade.addEventListener('click', () => { document.dispatchEvent(closeEvent)});
+
+		// hide underlaying popups for now. 
+		if ('gallery' == opener || 'gutenberg' == opener)
+		{
+			var WPmodals = document.querySelectorAll('#wp-media-modal, .media-modal-backdrop'); 
+			for (let i =0; i < WPmodals.length; i++)
+			{
+			 	WPmodals[i].style.display = 'none'; 
+			}
+		}
+
+		document.body.append(backgroundShade);
+		document.body.append(modal);
+
+		window.addEventListener('shortpixel.openEditorPopup', function (event) {
+			let previewData = event.detail; 
+
+			let actionName = event.detail.action_name; 
+
+			modal.innerHTML = previewData.popup; 
+			modal.querySelector('[data-action="close"]').addEventListener('click', () => {
+				document.dispatchEvent(closeEvent);
+			}, { once: true });
+
+			if (true == this.settings.popup_load_preview)
+			{
+				this.MediaEditorDoAction({ preview: true, 'item_id': item_id, 'modal': modal});
+			}
+
+			let previewButton = modal.querySelector('[data-action="media-get-preview"]'); 
+			previewButton.addEventListener('click', () => {
+				 	this.MediaEditorDoAction({ preview: true, 'item_id': item_id, 'modal' : modal, 'refresh' : true});
+			});
+
+			let saveButton = modal.querySelector('[data-action="media-save-button"]'); 
+			saveButton.addEventListener('click', () =>  { 
+				 this.MediaEditorDoAction({ preview: false, 'item_id': item_id, 'modal' : modal, 'refresh' : true});
+			});
+
+			let actionWrapper = modal.querySelector('.' + actionName + '.action_wrapper');
+			if (null !== actionWrapper)
+			{
+				 actionWrapper.classList.add('active');
+			}
+
+			// Interface elements for remove backgrounnd
+			let solidInput = modal.querySelectorAll('input[name="background_type"]'); 
+			if (solidInput.length > 0)
+			{
+				let solidSelector = modal.querySelector('#solid_selector'); 
+				for (let i = 0; i < solidInput.length; i++)	
+				{
+					solidInput[i].addEventListener('change', (event) => {
+						 if (event.target.value == 'solid')
+						 {
+							 solidSelector.style.display = 'block'; 
+							 solidSelector.style.opacity = 1; 
+						 }
+						 else
+						 {
+							solidSelector.style.display = 'none'; 
+							solidSelector.style.opacity = 0; 
+						 }
+					}); 
+				}
+			}
+			let bgTransInput = modal.querySelector('#bg_transparency');
+			if (null !== bgTransInput)
+			{
+				bgTransInput.addEventListener('change', (event) => {
+					let value = event.target.value; 
+					let tr = modal.querySelector('#transparency_range'); 
+					if (null !== tr)
+					{ 
+						tr.innerText = value;
+					}
+				});
+			}
+
+			
+
+
+		}.bind(this), { once: true });
+
+		// Fire off data load event.  This loads the popup content. 
+		let data = {
+			id: item_id,
+			type: 'media',
+			screen_action: 'media/getEditorPopup',
+			action_name : action_name, 
+		}
+		data.callback = 'shortpixel.openEditorPopup';
+		this.processor.AjaxRequest(data);
+
+
+	}
+
+	MediaEditorDoAction(data)
+	{
+		let modal = data.modal;
+		let backgroundType = modal.querySelector('input[name="background_type"]:checked').value; 
+		let backgroundColor = modal.querySelector('#bg_display_picker').value; 
+		let backgroundTransparency = modal.querySelector('#bg_transparency').value; 
+		let newFileName = modal.querySelector('input[name="new_filename"]').value; 
+		let newPostTitle= modal.querySelector('input[name="new_posttitle"]').value;
+		let spinner = document.querySelector('.load-preview-spinner'); 
+		let scaleOption = document.querySelector('input[name="scale"]:checked').value; 
+
+		let action = modal.dataset.action_name; 
+		let opener = modal.dataset.opener; 
+
+
+		let previewImage = document.querySelector('.modal-wrapper .image-preview i'); 
+		previewImage.style.backgroundImage = 'url(' + previewImage.dataset.placeholder + ')';
+
+		modal.dispatchEvent(modal.toggleButtonBlock);
+
+		if ('gutenberg' == opener)
+		{
+			let searchParams = new URLSearchParams(window.location.search);
+			if (searchParams.has('post'))
+				{
+					 data.attached_post_id = searchParams.get('post'); 
+				}			 
+		}
+
+		if (typeof data.refresh !== 'undefined')
+		{
+			 var refresh = data.refresh;
+		}
+		else
+		{
+			 var refresh = false; 
+		}
+
+		spinner.classList.remove('shortpixel-hide');
+
+		let request = {
+			id: data.item_id,
+			type: 'media',
+			screen_action: 'media/getEditorPreview',
+			newFileName: newFileName, 
+			newPostTitle: newPostTitle, 
+			is_preview: data.preview,
+			refresh: refresh, 
+			opener: opener,
+			action_name: action,
+		};
+
+		if ('remove' == action)
+		{
+			request.background_type =  backgroundType; 
+			request.background_color = backgroundColor; 
+			request.background_transparency = backgroundTransparency;   
+		}
+
+		if ('scale' == action)
+		{
+			request.scale = scaleOption;
+		}
+
+		if (data.attached_post_id)
+		{
+			request.attached_post_id = data.attached_post_id;
+		}
+
+		request.callback = 'shortpixel.mediaEditorPreviewLoaded';
+		this.processor.AjaxRequest(request);
+
+		window.addEventListener('shortpixel.mediaEditorPreviewLoaded',  function (event) {
+				this.MediaEditorPreviewEvent(event, modal);
+		}.bind(this), {once:true});
+	}
+
+	MediaEditorPreviewEvent(event, modal)
+	{
+		let data = event.detail; 
+
+		let errorElement = modal.querySelector('.error-message'); 
+		let spinner = modal.querySelector('.load-preview-spinner'); 
+
+		 if (true === data.is_error)
+		 {
+			 errorElement.innerText = data.message; 
+			 errorElement.classList.remove('shortpixel-hide');
+		 }
+		 if (true === data.is_done)
+		 {
+			if (spinner)
+			{
+				 spinner.classList.add('shortpixel-hide');
+			}
+		 }
+
+		 if (data.optimized)
+		 {	
+			 errorElement.classList.add('shortpixel-hide');
+			 let previewImage = document.querySelector('.modal-wrapper .image-preview i'); 
+			 previewImage.style.backgroundImage = 'url("' + data.optimized + '?ts=' + Date.now() + '")'; 
+		}
+
+		 if (typeof data.redirect !== 'undefined' && 'gutenberg' == data.redirect && data.new_attach_id)
+		 {
+
+			// Documentation is media-template.php and media-attachment.js 
+			var lib = wp.media.frame.state().get('library');
+			var file = data.file;
+			lib.add(file);	
+			document.dispatchEvent(modal.closeEvent);
+
+		 }
+		 else if (typeof data.redirect !== 'undefined')
+		 {
+			window.location.href = data.redirect;
+		 }
+		 modal.dispatchEvent(modal.toggleButtonUnblock);
 	}
 
 	FetchAltView(aiData, item_id)
@@ -73,6 +463,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			var newAltText = aiData.alt; 
 			var newCaption = aiData.caption;
 			var newDescription = aiData.description;
+			var newTitle = aiData.post_title;
 		}
 
 		if (typeof newAltText !== 'undefined' || newAltText < 0)
@@ -103,9 +494,9 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			}
 		}
 		// edit media screen
-		 // = document.getElementById('attachment_alt'); 
-		 let captionFields = ['attachment_caption', 'attachment-details-caption']; 
-		 let descriptionFields = ['attachment_content', 'attachment-details-description']; 
+		 let captionFields = ['attachment_caption', 'attachment-details-caption', 'attachment-details-two-column-caption']; 
+		 let descriptionFields = ['attachment_content', 'attachment-details-description', 'attachment-details-two-column-description']; 
+		 let postTitleFields = ['title', 'attachment-details-title', 'attachment-details-two-column-title'];
 		 
 		 if (typeof newCaption !== 'undefined' || newCaption < 0)
 		 {
@@ -128,6 +519,18 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				{
 					 descriptionField.value = newDescription; 
 				}
+			}
+		 }
+
+		 if (typeof newTitle !== 'undefined' || newTitle < 0)
+		 {
+			for (var i = 0; i < postTitleFields.length; i++)
+			{
+				 let titleField = document.getElementById(postTitleFields[i]); 
+				 if (null !== titleField)
+				 {
+					 titleField.value = newTitle;
+				 }
 			}
 		 }
 
@@ -314,6 +717,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		this.processor.AjaxRequest(data);
 	}
 
+	// Check the Gallery popup on Media Library 
 	ListenGallery() {
 		var self = this;
 		var next_item_run_process = false; 
@@ -330,12 +734,14 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 		// This taken from S3-offload / media.js /  Grid media gallery
 		if (typeof wp.media.view.Attachment.Details.TwoColumn !== 'undefined') {
-			var detailsColumn = wp.media.view.Attachment.Details.TwoColumn;
+			var detailsColumn = wp.media.view.Attachment.Details.TwoColumn; // Media library grid.
 			var twoCol = true;
+			var opener = 'gallery'; 
 		}
 		else {
-			var detailsColumn = wp.media.view.Attachment.Details;
+			var detailsColumn = wp.media.view.Attachment.Details; // Gutenberg
 			var twoCol = false;
+			var opener = 'gutenberg'; 
 		}
 
 		var extended = detailsColumn.extend({
@@ -407,10 +813,20 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 					setTimeout(function () { this.renderSPIOView(e, timed) }.bind(this), 1000);
 				}
 
+				let editorArgs = {}; 
+				if (e.detail.media.image && e.detail.media.image.width) // dottadot
+				{
+					editorArgs.image_width = e.detail.media.image.width; 
+				}
+				if (e.detail.media.image && e.detail.media.image.extension) // dottadot
+				{
+					editorArgs.image_ext = e.detail.media.image.extension; 
+				}
 
 				var html = this.doSPIORow(e.detail.media.itemView);
 				$spSpace.after(html);
 
+				self.InitEditorActions(item_id, opener, editorArgs);
 				self.FetchAltView(undefined, item_id); 
 
 			},
@@ -450,6 +866,12 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			return false;
 		}
 		var element = this.GetPageAttachmentAlt();
+
+		if (null == element)
+		{
+			console.warn('Could not attach ID interface here! '); 
+			return false; 
+		}
 
 		var wrapper = document.getElementById('shortpixel-ai-wrapper-' + item_id);
 
@@ -567,14 +989,12 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 		wp.data.subscribe(() => {
 			if (wp.data.select('core')) {
-				//const { getMedia } = wp.data.select('core');
 				const { getSelectedBlock } = wp.data.select('core/block-editor');
 		
 				const block = getSelectedBlock();
 			
 				if (block && block.name === 'core/image') {
 					const imageId = block.attributes.id; // Get the image ID
-					//const imageUrl = block.attributes.url; // Get the image URL
 		
 					if (imageId) {
 		
@@ -608,18 +1028,13 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			return false; 
 		}
 
-		console.log(wp.data.select( 'core/block-editor' ));
-
 		let blocks = wp.data.select( 'core/block-editor' ).getBlocks();
-		console.log(blocks);
 		for (let i = 0; i < blocks.length; i++)
 		{
 			let block = blocks[i];
 
 			 if (block.attributes.id == attach_id)
 			 {
-				//block.attributes.alt = "I CAME TO ALT"; 
-				//block.attributes.caption = "CAPTION THIS";
 				let clientId = block.clientId;
 
 				console.log('DATA DISPATCH ', clientId, aiData);				

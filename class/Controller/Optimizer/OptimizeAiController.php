@@ -12,6 +12,7 @@ use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Model\Queue\QueueItem as QueueItem;
 use ShortPixel\Controller\Api\RequestManager as RequestManager;
 use ShortPixel\Controller\Api\AiController;
+use ShortPixel\Controller\Api\ApiController;
 use ShortPixel\Controller\Queue\Queue;
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
 use ShortPixel\Model\AiDataModel;
@@ -51,7 +52,19 @@ class OptimizeAiController extends OptimizerBase
 
   public function sendToProcessing(QueueItem $qItem) { 
 
-/*    if (false == $this->isSupported($qItem))
+
+    $action = $qItem->data()->action; 
+
+    switch($action)
+    {
+      case 'undoAI': 
+          return $this->undoAltData($qItem); 
+      break; 
+      default: 
+        $this->api->processMediaItem($qItem);
+      break; 
+    }
+    /*    if (false == $this->isSupported($qItem))
     {
         // For now only fail here is GIF support, so message is a backstop for now that later should be updated. 
         $qItem->addResult([
@@ -64,7 +77,7 @@ class OptimizeAiController extends OptimizerBase
     }
     else
     { */
-        $this->api->processMediaItem($qItem, $qItem->imageModel);
+       
     //}
  
   }
@@ -233,7 +246,7 @@ class OptimizeAiController extends OptimizerBase
     }
     
 
-    $textItems = ['alt', 'caption', 'description'];
+    $textItems = ['alt', 'caption', 'description', 'post_title'];
     foreach($textItems as $textItem)
     {
       
@@ -257,13 +270,14 @@ class OptimizeAiController extends OptimizerBase
 
   protected function HandleSuccess(QueueItem $qItem)
   {
-        $aiData = $qItem->result->aiData;  
+        $aiData = $qItem->result()->aiData;  
         $settings = \wpSPIO()->settings();
 
         $checks = ['alt' => 'ai_gen_alt', 
         'caption' => 'ai_gen_caption', 
         'description' => 'ai_gen_description',
         'filename' => 'ai_gen_filename',
+        'post_title' => 'ai_gen_post_title', 
         ];
 
         $aiData = $this->formatResultData($aiData, $qItem);
@@ -618,148 +632,7 @@ class OptimizeAiController extends OptimizerBase
         return $text;
   }
 
-  /*
-  protected function getRequestJSON($url, $params = [])
-  { 
-     $settings = $this->getAISettings($params);
-
-     $ignore_fields = (isset($params['ignore_fields'])) ? $params['ignore_fields'] : []; 
-
-     $json = [
-        'url' => $url, 
-        'languages' => $settings['ai_language'], 
-        'context' => $settings['ai_general_context'], 
-
-     ]; 
-
-     // if ($settings['ai_use_post']) // not in API? 
-
-     if ($settings['ai_gen_alt'])
-     {
-        $json['alt'] = [
-                'context' => $settings['ai_alt_context'],
-                'chars' => $settings['ai_limit_alt_chars'],
-        ];
-     }
-
-     if ($settings['ai_gen_caption'])
-     {
-         $json['caption'] = [
-                'context' => $settings['ai_caption_context'], 
-                'chars' => $settings['ai_limit_caption_chars'], 
-         ];
-     }
-
-     if ($settings['ai_gen_description'])
-     {
-         $json['image_description'] = [
-                'context' => $settings['ai_description_context'], 
-                'chars' => $settings['ai_limit_description_chars'],
-         ];
-     }
-
-     if ($settings['ai_gen_filename'])
-     {
-         $json['file'] = [
-                'context' => $settings['ai_filename_context'], 
-                'chars' => $settings['ai_limit_filename_chars'], 
-         ];
-     }
-
-     return $json; 
-  }
-
-  */
-
-  /*
-  public function parseJSONForQItem(QueueItem $qItem, $params = [])
-  {
-        $url = $qItem->data()->url; 
-        $item_id = $qItem->item_id;
-        $settings = \wpSPIO()->settings(); 
-
-        // Note this is also checked in AiDataModel for checking processable.  Might need to sync upon adding fields
-        if (true === $settings->aiPreserve) 
-        { 
-            $returnDataList = $qItem->data()->returndatalist; 
-
-            $aiModel = AiDataModel::getModelByAttachment($item_id, 'media');
-            $current = $aiModel->getCurrentData();
-            $filtered = array_filter($current); // filter out all empty variables
-
-          //  $altdata = $this->getAltData($qItem);
-            $params['ignore_fields'] = array_keys($filtered);
-            
-            foreach($filtered as $key => $filter)
-            {
-                 $returnDataList[$key] = AiDataModel::F_STATUS_EXCLUDE;
-            }
-            $qItem->data()->returndatalist = $returnDataList; 
-        }
-        
-        $json = $this->getRequestJSON($url, $params); 
-
-
-        $qItem->data()->paramlist = $json;
-  }
-        */
-
-/*
-  protected function parseQuestionForQItem(QueueItem $qItem)
-  {
-        $url = $qItem->data()->url; 
-        $item_id = $qItem->item_id;
-        $question = $this->parseQuestion($url, $item_id); 
-        $qItem->data()->url = $question;
-  }
-*/
-  /*
-  private function getAISettings($params = [])
-  {
-    $settings = \wpSPIO()->settings(); 
-
-    $defaults = [
-    'ai_general_context' => $settings->ai_general_context, 
-    'ai_use_post' => $settings->ai_use_post, 
-    'ai_gen_alt' => $settings->ai_gen_alt, 
-    'ai_gen_caption' => $settings->ai_gen_caption, 
-    'ai_gen_description' => $settings->ai_gen_description, 
-    'ai_filename_prefercurrent' => $settings->ai_filename_prefercurrent,
-    'ai_limit_alt_chars' => $settings->ai_limit_alt_chars, 
-    'ai_alt_context' => $settings->ai_alt_context, 
-    'ai_limit_description_chars' => $settings->ai_limit_description_chars, 
-    'ai_description_context' => $settings->ai_description_context, 
-    'ai_limit_caption_chars' => $settings->ai_limit_caption_chars, 
-    'ai_caption_context' => $settings->ai_caption_context, 
-    'ai_gen_filename' => $settings->ai_gen_filename, 
-    'ai_limit_filename_chars' => $settings->ai_limit_filename_chars, 
-    'ai_filename_context' => $settings->ai_filename_context, 
-    'ai_use_exif' => $settings->ai_use_exif, 
-    'ai_language' => $settings->ai_language,
-    'aiPreserve' => $settings->aiPreserve, 
-    ];
-
-    $params = wp_parse_args($params, $defaults);
-
-    return $params; 
-  }
- */
-    
-
-  /*
-  public function isSupported(queueItem $qItem)
-  {
-       $imageModel = $qItem->imageModel; 
-
-        // @todo This should check for animated gifs in the future, for now blanket no. 
-       if('gif' == $imageModel->getExtension())
-       {
-         return false; 
-       }
-       
-       return true; 
-  } */
-
+   // @todo Should be moved to protected / called via sendToProcessing in future ( now also called via ajaxControl )
   public function undoAltData(QueueItem $qItem)
   {
        $item_id = $qItem->item_id;
@@ -767,11 +640,13 @@ class OptimizeAiController extends OptimizerBase
        $original = $aiModel->getOriginalData();
        $generated = $aiModel->getGeneratedData();
 
+       Log::addTEmp('Undo ALT on ' . $item_id);
 
        $aiData = [
             'alt' => $original['alt'], 
             'caption' => $original['caption'], 
             'description' => $original['description'],
+            'post_title' => $original['post_title'], 
             'replace_filebase' => $generated['filebase'],
        ];
     
@@ -781,8 +656,17 @@ class OptimizeAiController extends OptimizerBase
        $this->replaceImageAttributes($qItem, $aiData); 
 
        $aiData = $aiModel->getCurrentData();
+
+       $qItem->addResult([
+        'is_done' => true, 
+        'is_error' => false,
+        'message' => __('AI Data reverted ', 'shortpixel-image-optimiser'), 
+        'apiStatus' => ApiController::STATUS_NOT_API,
+    ]);
+    $this->finishItemProcess($qItem);
+
     
-       return $this->getAltData($qItem); 
+    return $this->getAltData($qItem); 
   }
 
 public function getAltData(QueueItem $qItem)

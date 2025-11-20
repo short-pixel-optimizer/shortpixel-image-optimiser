@@ -305,6 +305,9 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 		return $bool;
 	}
 
+
+
+
 	public function isProcessableFileType($type = 'webp')
 	{
 		// Prevent webp / avif processing for thumbnails if this is off. Exclude main file

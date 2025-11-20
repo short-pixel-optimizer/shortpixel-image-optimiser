@@ -23,6 +23,7 @@ class AiDataModel
         'alt' => null, 
         'caption' => null, 
         'description' => null, 
+        'post_title' =>  null, 
         'filebase' => null, 
     ];
 
@@ -30,12 +31,14 @@ class AiDataModel
         'alt' => null,  
         'caption' => null, 
         'description' => null, 
+        'post_title' => null, 
     ]; 
 
     protected $generated = [
         'alt' => null,  
         'caption' => null, 
         'description' => null,
+        'post_title' => null, 
         'filebase' => null, 
     ]; 
 
@@ -143,7 +146,7 @@ class AiDataModel
 
 
        // $fields = ['ai_gen_alt', 'ai_gen_caption', 'ai_gen_description', 'ai_gen_filename']; 
-        $fields = ['alt', 'caption', 'description', 'filename']; 
+        $fields = ['alt', 'caption', 'description', 'filename', 'post_title']; 
 
         $paramlist = [
             'languages' => $settings->ai_language, 
@@ -164,6 +167,9 @@ class AiDataModel
                 break;
                 case 'filename': 
                     $api_name = 'file';
+                break; 
+                case 'post_title': 
+                    $api_name = 'title';
                 break; 
             }
 
@@ -254,6 +260,12 @@ class AiDataModel
             $post_updated = true; 
         }
 
+        if (isset($data['post_title']) && false !== $data['post_title'] && false === is_int($data['post_title']))
+        {
+             $post->post_title = $data['post_title'];
+             $post_updated = true;
+        }
+
         if (true === $post_updated)
         {
             wp_update_post($post);
@@ -322,6 +334,7 @@ class AiDataModel
 
         $current_description = $post->post_content; 
         $current_caption = $post->post_excerpt; 
+        $current_post_title = $post->post_title; 
 
         /*$this->current = [
              'alt' => $current_alt, 
@@ -332,7 +345,8 @@ class AiDataModel
 
         $this->current['alt'] = $current_alt; 
         $this->current['description'] = $current_description; 
-        $this->current['caption'] = $current_caption; 
+        $this->current['caption'] = $current_caption;
+        $this->current['post_title'] = $current_post_title; 
 
         $this->current_is_set = true; 
 

@@ -248,6 +248,7 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
 		 	$bulkMedia = $opt->getQueue('media');
 			$bulkCustom = $opt->getQueue('custom');
 
+
 			$queues = array('media' => $statsMedia, 'custom' => $statsCustom, 'mediaBulk' => $bulkMedia, 'customBulk' => $bulkCustom);
 
 			?>
@@ -259,21 +260,56 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
 					<span>Fatal</span>
 					<span>Done</span>
 					<span>Total</span>
+          <span>IsCustomOp</span>
 				</div>
 			<?php
 
 			foreach($queues as $name => $queue):
 					$stats = $queue->getStats();
+          $options = $queue->getOptions();
+
+          // Lazy options merger to show in titles. 
+          $options_txt = false; 
+
+          if (is_array($options))
+          {
+              $filters = []; 
+              
+              if(isset($options['filters']) && is_array($options['filters'])) 
+              {
+                  $filters = $options['filters'];
+                  unset($options['filters']); 
+              }
+              
+              
+              $options = array_merge($options, $filters); 
+              
+              foreach($options as $opt => $val)
+              {
+                $options_txt .= " $opt : $val \n"; 
+              }
+          }
+
 					echo "<div>";
-						echo "<span>" .  esc_html($name) . '</span>';
+            if (false !== $options_txt)
+            {
+                echo "<span title='$options_txt' ><u>" .  esc_html($name) . '</u></span>';
+            }
+            else
+            {
+                echo "<span >" .  esc_html($name) . '</span>';
+            }
+
 						echo "<span>" .  esc_html($stats->in_queue) . '</span>';
 						echo "<span>" .  esc_html($stats->in_process) . '</span>';
 						echo "<span>" .  esc_html($stats->errors) . '</span>';
 						echo "<span>" .  esc_html($stats->fatal_errors) . '</span>';
 						echo "<span>" .  esc_html($stats->done) . '</span>';
 						echo "<span>" .  esc_html($stats->total) . '</span>';
-
+            echo "<span>" .  $queue->getCustomDataItem('customOperation') . '</span>';
+            
 					echo "</div>";
+
 				?>
 
 			<?php endforeach; ?>

@@ -23,8 +23,8 @@ abstract class RequestManager
    * @param mixed $response 
    * @return object Return must be one of the returnFail / returnSuccess / returnOk functions!
    */
-  protected abstract function handleResponse(QueueItem $item, $response);
-  public abstract function processMediaItem(QueueItem $item, ImageModel $mediaItem);
+  protected abstract function handleResponse(QueueItem $qItem, $response);
+  public abstract function processMediaItem(QueueItem $qItem);
 
   const STATUS_ENQUEUED = 10;
   const STATUS_PARTIAL_SUCCESS = 3;
@@ -165,7 +165,7 @@ abstract class RequestManager
        $urls = (! is_null($qItem->data()->urls)) ? count($qItem->data()->urls) : 0;
 
        if ($urls == 0 && (! is_null($qItem->data()->url)))
-        $urls = count($qItem->data()->url);
+        $urls = 1;
 
        $flags = $qItem->data()->flags;
 			 $flags = implode("|", $flags);
@@ -209,6 +209,7 @@ abstract class RequestManager
       'apiStatus' => $status,
       'message' => $message,
       'is_error' => true,
+      'is_done' => false, 
   ];
 
     return $result;
@@ -223,7 +224,9 @@ abstract class RequestManager
       */
       $result = [
          'apiStatus' => $status,
-         'message' => $message
+         'message' => $message,
+         'is_error' => false, 
+         'is_done' => false, 
       ];
       return $result;
   }
@@ -241,6 +244,7 @@ abstract class RequestManager
       $result = [
           'apiStatus' => $status,
           'message' => $message,
+          'is_error' => false, 
       ];
 
       if (self::STATUS_SUCCESS === $status)
@@ -251,11 +255,7 @@ abstract class RequestManager
          unset($result['message']);
       }
 
-    /*  if (is_array($file))
-        $result['files'] = $file;
-      else
-        $result['file'] = $file; // this file is being used in imageModel
-*/
+
       $result = array_merge($result, $data);
       return $result;
   }

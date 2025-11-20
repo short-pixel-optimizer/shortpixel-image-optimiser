@@ -21,6 +21,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
 		// Hook up the button and all.
 			this.LoadPanels();
 			this.LoadActions();
+      this.LoadDatePicker(); 
 
 			window.addEventListener('shortpixel.processor.paused', this.TogglePauseNotice.bind(this));
 			window.addEventListener('shortpixel.processor.responseHandled', this.CheckPanelData.bind(this));
@@ -94,6 +95,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
 			{
 				 this.SwitchPanel(shortPixelScreen.panel);
 			}
+
 	}
 
   LoadPanels()
@@ -131,20 +133,44 @@ class ShortPixelScreen extends ShortPixelScreenBase
       });
   }
 
+  LoadDatePicker()
+  {
+    // Used -https://thedatepicker.github.io/thedatepicker/
+    let containers = document.querySelectorAll('.date-picker-container');
+      for (let i = 0; i < containers.length; i++)
+      {
+        let container = containers[i]; 
+        let input = container.querySelector('input'); 
+
+        let datepicker = new TheDatepicker.Datepicker(input);
+        datepicker.options.setMaxDate(new Date());
+
+        datepicker.options.onSelect(function (ev)
+        {
+          let formatDate = datepicker.getSelectedDateFormatted('Y/m/d'); 
+          input.dataset.formatteddate = formatDate; 
+        }); 
+
+        datepicker.render();
+
+      }
+  }
+
 	DoActionEvent(event)
 	{
-		var element = event.target;
-		var action = element.getAttribute('data-action');
+		var element = event.target; 
+
 
 		// Might be the child
 		if (element.getAttribute('data-action') == null)
 		{
-			var element = element.parentElement;
+			var element = event.currentTarget; // Should perhaps be default when checking action event? 
 		}
 		if (element.disabled == true) // disabled button still register events, prevent going.
 		{
 			return false;
 		}
+    
 		var actionName = element.getAttribute('data-action');
 		var isPanelAction = (actionName == 'open-panel');
 
@@ -275,8 +301,27 @@ class ShortPixelScreen extends ShortPixelScreenBase
 
 
 		 if (document.getElementById('thumbnails_checkbox') !== null)
+      {
 		 		data.thumbsActive = (document.getElementById('thumbnails_checkbox').checked) ? true : false;
+      } 
 
+    let startDate = document.getElementById('bulk-start-date'); 
+    if (startDate !== null && startDate.dataset.formatteddate !== null && typeof startDate.dataset.formatteddate !== 'undefined')
+    {
+      data.filter_startdate = startDate.dataset.formatteddate;
+    }
+
+    let endDate = document.getElementById('bulk-end-date'); 
+    if (endDate !== null && endDate.dataset.formatteddate && typeof endDate.dataset.formatteddate !== 'undefined')
+    {
+       data.filter_enddate = endDate.dataset.formatteddate; 
+    }
+    
+
+/*
+    data.doLimitItems = (document.getElementById('limit_items').checked) ? true : false; 
+    data.limitItems = document.getElementById('limit_numitems').value;
+*/
      this.UpdatePanelStatus('loading', 'selection');
 
      // Prepare should happen after selecting what the optimize.
@@ -753,8 +798,8 @@ class ShortPixelScreen extends ShortPixelScreenBase
 	SkipPreparing()
 	{
 		this.processor.StopProcess({ waiting: true });
-		this.SwitchPanel('summary');
-		this.UpdatePanelStatus('loaded', 'selection');
+		this.SwitchPanel('summary'); // switch to summary
+		this.UpdatePanelStatus('loaded', 'selection'); // move back previous screen one step.
 		this.processor.tooltip.ProcessEnd();
 		this.processor.SetInterval(-1); // back to default.
 	}
@@ -788,13 +833,13 @@ class ShortPixelScreen extends ShortPixelScreenBase
      {
         el.style.display = 'block';
         buttonPause.style.display = 'none';
-        buttonResume.style.display = 'inline-block';
+        buttonResume.style.display = 'flex';
 
      }
      else
      {
         el.style.display = 'none';
-        buttonPause.style.display = 'inline-block';
+        buttonPause.style.display = 'flex';
         buttonResume.style.display = 'none';
 
 				// in case this is overquota situation, on unpause, recheck situation, hide the thing.
@@ -984,7 +1029,6 @@ class ShortPixelScreen extends ShortPixelScreenBase
 
     this.RemovePanelFromURL(shortPixelScreen.panel);
 
-
     this.UpdatePanelStatus('loading', 'selection');
     this.SwitchPanel('selection');
 
@@ -993,6 +1037,21 @@ class ShortPixelScreen extends ShortPixelScreenBase
     window.addEventListener('shortpixel.startRestoreAll', this.PrepareBulk.bind(this), {'once': true} );
     window.addEventListener('shortpixel.bulk.onSwitchPanel', this.StartBulk.bind(this), {'once': true});
     this.processor.AjaxRequest(data);
+  }
+  BulkUndoAI(event)
+  {
+    var data = {screen_action: 'startBulkUndoAI', callback: 'shortpixel.startUndoAI'}; //
+
+		this.UpdatePanelStatus('loading', 'selection');
+		this.SwitchPanel('selection');
+
+  	//this.SwitchPanel('process');
+    this.RemovePanelFromURL(shortPixelScreen.panel);
+
+    // Prepare should happen after selecting what the optimize.
+    window.addEventListener('shortpixel.startUndoAI', this.PrepareBulk.bind(this), {'once': true} );
+    window.addEventListener('shortpixel.bulk.onSwitchPanel', this.StartBulk.bind(this), {'once': true});
+    this.processor.AjaxRequest(data);    
   }
 
   BulkMigrateAll(event)
@@ -1046,6 +1105,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
 
   }
 
+  /* Unused ? 
 	StartBulkOperation(event)
 	{
 		this.PrepareBulk();
@@ -1053,7 +1113,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
 		this.UpdatePanelStatus('loading', 'selection');
 		this.SwitchPanel('selection');
 
-	}
+	} */
 
 	// Opening of Log files on the dashboard
 	OpenLog(event)

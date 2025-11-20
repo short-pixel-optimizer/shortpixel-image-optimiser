@@ -67,6 +67,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		const P_DIRECTORY_NOTWRITABLE = 10;
     const P_EXCLUDE_EXTENSION_PDF = 11;
     const P_IMAGE_ZERO_SIZE = 12;
+    const P_EXCLUDE_DATE = 13; 
 
 		// For restorable status
 		const P_RESTORABLE = 109;
@@ -199,7 +200,12 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
             }
         }
 
-        if ( $this->isOptimized() || ! $this->exists()  || (! $this->is_virtual() && ! $this->is_writable()) || (! $this->is_virtual() && ! $this->is_directory_writable() || $this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded() )
+        if ( $this->isOptimized() || ! $this->exists()  || (! $this->is_virtual() && ! $this->is_writable()) || 
+        (! $this->is_virtual() && ! $this->is_directory_writable() || 
+        $this->isPathExcluded() || 
+        $this->isExtensionExcluded() || 
+        $this->isSizeExcluded()
+        )
 				|| $this->isOptimizePrevented() !== false
         || ! $this->isFileSizeOK() )
         {
@@ -382,6 +388,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
          case self::P_IMAGE_ZERO_SIZE:
             $message = __('File seems emtpy, or failure on image size', 'shortpixel-image-optimiser');
          break;
+         case self::P_EXCLUDE_DATE: 
+             $message = __('Date is excluded', 'shortpixel-image-optimiser');
+          break; 
          default:
             $message = __(sprintf('Unknown Issue, Code %s',  $this->processable_status), 'shortpixel-image-optimiser');
          break;
@@ -482,7 +491,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 				$count = 0;
 				$urls = [];
-				$i = 0;
 
 				$params = $optimizeData['params'];
 
@@ -1262,6 +1270,26 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 								}
 							else
 									$bool = false; // continue and check all patterns, there might be multiple.
+						}
+			 }
+
+			 return $bool;
+		}
+
+    protected function checkDateExcluded()
+		{
+			$excludePatterns = $this->getExcludePatterns();
+			if (! $excludePatterns || ! is_array($excludePatterns) ) // no patterns, nothing excluded
+				return false;
+
+			$bool = false;
+
+			foreach($excludePatterns as $item) {
+					$type = (isset($item['type'])) ? trim($item["type"]) : '';
+					if($type == "date") {
+
+              $check_date = ['date' => $item['value'], 'when' => $item['dateWhen']];
+              return $check_date; 
 						}
 			 }
 

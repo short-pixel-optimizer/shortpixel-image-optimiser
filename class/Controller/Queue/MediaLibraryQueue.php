@@ -8,6 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ShortPixel\ShortQ\ShortQ as ShortQ;
 use ShortPixel\Controller\CacheController as CacheController;
 use ShortPixel\Helper\UtilHelper;
+use ShortPixel\Model\AiDataModel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 
@@ -18,6 +19,14 @@ class MediaLibraryQueue extends Queue
 
    protected static $instance;
 
+   protected $options = array(
+      'numitems' => 5,  // amount of items to pull per tick when optimizing
+      'mode' => 'wait',
+      'process_timeout' => 10000, // time between request for the image. (in milisecs)
+      'retry_limit' => 30, // amount of times it will retry without errors before giving up
+      'enqueue_limit' => 200, // amount of items added to the queue when preparing.
+      'filters' => [], 
+   );   
 
    /* MediaLibraryQueue Instance */
    public function __construct($queueName = 'Media')
@@ -26,16 +35,16 @@ class MediaLibraryQueue extends Queue
      $this->q = $shortQ->getQueue($queueName);
      $this->queueName = $queueName;
 
-     $options = array(
-        'numitems' => 5,  // amount of items to pull per tick when optimizing
-        'mode' => 'wait',
-        'process_timeout' => 10000, // time between request for the image. (in milisecs)
-        'retry_limit' => 30, // amount of times it will retry without errors before giving up
-        'enqueue_limit' => 200, // amount of items added to the queue when preparing.
-        'filters' => [], 
-     );
+     $options = $this->getOptions();
+     // If no DB options are set, get the defaults. 
+     if (false === $options)
+     {
+       $options = $this->options; 
+     }
 
-     $options = apply_filters('shortpixel/medialibraryqueue/options', $options);
+     // @todo  Here probably options thing should be replaced by querying custom_data from Q first and then set options
+     $this->options = apply_filters('shortpixel/medialibraryqueue/options', $options);
+
 
      $this->q->setOptions($options);
    }
@@ -57,54 +66,38 @@ class MediaLibraryQueue extends Queue
       return $this->prepareItems($items);
    }
 
+   protected function prepareUndoAI()
+   {
+      $items = $this->queryAiItems(); 
+      return $this->prepareItems($items);
+   }
+
    public function createNewBulk($args = [])
    {
-     /* if (isset($args['filters']))
+      if (isset($args['filters']))
       {
          $this->addFilters($args['filters']); 
-      } */
+         unset($args['filters']); // added to options 
+      } 
        
-      
+      $options = array_merge($this->options, $args);
+
       // Parent should save options as well. 
-       return parent::createNewBulk($args); 
+       return parent::createNewBulk($options); 
    }
 
 
-   protected function addFilters($filters)
+   protected function getFilterQueryData()
    {
-
-      //$start_id = $end_id = null; 
-
-      
       global $wpdb; 
-      
+      $table = $wpdb->posts; 
 
-      $start_date = isset($filters['start_date'])  ? new \DateTime($filters['start_date']) : false; 
-      $end_date = isset($filters['end_date'])  ? new \DateTime($filters['end_date']) : false; 
-
-      if (isset($filters['start_date']))
-      {
-         //$date = UtilHelper::timestampToDB($filters['start_time']); 
-         $date = $start_date->format("Y-m-d H:i:s");
-         $startSQL = 'select max(ID) from wp_posts where post_date <= %s group by post_date order by post_date DESC limit 1';
-         $sql = $wpdb->prepare($startSQL, $date); 
-         $start_id =  $wpdb->get_var($sql); 
-      }
-      if (isset($filters['end_date']))
-      {
-        // $date = UtilHelper::timestampToDB($filters['end_time']); 
-        $date = $end_date->format("Y-m-d H:i:s");
-         $endSQL = 'select MIN(ID) from wp_posts where post_date <= %s group by post_date order by post_date DESC limit 1';
-         $sql = $wpdb->prepare($endSQL, $date); 
-         $end_id =  $wpdb->get_var($sql); 
-      }
-      
-
-
-       //echo "Start $start_id END $end_id";
-       //exit();
-      // IF POST DATE NEEDS 09-20 ( or 23:59:59? )
-      // select post_date, max(ID) from wp_posts where post_date <= '2024-09-21 00:00:00' group by post_date order by post_date DESC limit 100
+      return [
+          'date_field' => 'POST_DATE', 
+          'base_query' => 'SELECT ID FROM ' . $table . ' WHERE post_type = %s AND ',
+          'base_prepare' => ['attachment'], 
+          
+      ];
    }
    
 
@@ -112,8 +105,30 @@ class MediaLibraryQueue extends Queue
    {
      $last_id = $this->getStatus('last_item_id');
      $limit = $this->q->getOption('enqueue_limit');
-     $prepare = array();
 
+     $options = $this->getOptions(); 
+
+      // Filters. 
+     $start_id = $end_id = null; 
+     if (isset($options['filters']))
+     {
+        if (isset($options['filters']['start_id']))
+        {
+          $start_id = $options['filters']['start_id'];
+        }
+        if (isset($options['filters']['end_id']))
+        {
+          $end_id = $options['filters']['end_id'];
+        }
+     }
+
+     if (-1 === $start_id || -1 === $end_id)
+     {
+       return []; 
+     }
+
+
+     $prepare = [];
      $fastmode = apply_filters('shortpixel/queue/fastmode', false);
 
      global $wpdb;
@@ -139,6 +154,17 @@ class MediaLibraryQueue extends Queue
      {
         $sqlmeta .= " and post_id < %d ";
         $prepare[] = intval($last_id);
+     }
+     elseif (false === is_null($start_id))
+     {
+       $sqlmeta .= ' and post_id <= %d ';
+       $prepare[] = intval($start_id);
+     }
+
+     if (false === is_null($end_id))
+     {
+       $sqlmeta .= ' and post_id >= %d '; 
+       $prepare[] = intval($end_id); 
      }
 
      $sqlmeta .= ' order by post_id DESC LIMIT %d ';
@@ -190,6 +216,45 @@ class MediaLibraryQueue extends Queue
      }
 
      return array_filter($items);
+
+   }
+
+
+   private function queryAiItems()
+   {
+       $last_id = $this->getStatus('last_item_id'); 
+
+       $limit = $this->q->getOption('enqueue_limit');
+       $prepare = [];
+       global $wpdb;
+
+       $table = $wpdb->prefix . 'shortpixel_aipostmeta';
+
+       $sql = ' SELECT attach_id from ' . $table . ' WHERE status = %d '; 
+       $prepare[] = AiDataModel::AI_STATUS_GENERATED; 
+
+       if ($last_id > 0)
+       {
+          $sql .= " and attach_id < %d ";
+          $prepare [] = intval($last_id);
+       }
+  
+       $sql .= ' order by attach_id DESC LIMIT %d ';
+       $prepare[] = $limit;
+  
+       $sql = $wpdb->prepare($sql, $prepare);
+  
+       $results = $wpdb->get_col($sql);
+  
+       $items = [];
+  
+       foreach($results as $item_id)
+       {
+          $items[] = $item_id;
+       }
+  
+       return array_filter($items);
+  
 
    }
 

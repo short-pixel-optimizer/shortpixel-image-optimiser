@@ -72,7 +72,6 @@ class ViewController extends Controller
     elseif (! isset($_POST['sp-nonce']) || ! wp_verify_nonce( sanitize_key($_POST['sp-nonce']), $this->form_action))
     {
       // Obscure issue. Detected other plugin that adds information to $_POST without an actual form submit, which would trigger the nonce check on the settings page. In case this happens, be lenient.
-      
       if ( ! isset($_POST['ajaxSave']) || ! isset($_POST['action']) )
       {
          return false; 
@@ -105,7 +104,7 @@ class ViewController extends Controller
   *
   * @param String View Template in view directory to load. When empty will search for class attribute
   */
-  public function loadView($template = null, $unique = true)
+  public function loadView($template = null, $unique = true, $args = [])
   {
       // load either param or class template.
       $template = (is_null($template)) ? $this->template : $template;
@@ -120,6 +119,7 @@ class ViewController extends Controller
 			}
 
       $view = $this->view;
+      $view->template_args = $args; // local pass only for this view, useful for snippets, not main controllers.
       $controller = $this;
 
       $template_path = \wpSPIO()->plugin_path('class/view/' . $template  . '.php');

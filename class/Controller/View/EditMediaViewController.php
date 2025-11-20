@@ -110,6 +110,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
          	$this->view->text = UiHelper::getStatusText($this->imageModel);
           $this->view->list_actions = UiHelper::getListActions($this->imageModel);
+          $this->view->image = [ 'width' => $this->imageModel->get('width'), 'height' => $this->imageModel->get('height'), 'extension' => $this->imageModel->getExtension() ];
 
           if ( count($this->view->list_actions) > 0)
             $this->view->list_actions = UiHelper::renderBurgerList($this->view->list_actions, $this->imageModel);
@@ -279,9 +280,12 @@ class EditMediaViewController extends \ShortPixel\ViewController
              $item->setDebug();
              $item->newOptimizeAction();
 
+             $counts = $item->data()->counts;
+
 						 $returnEnqueue = $item->returnEnqueue();
 
 						 $debugInfo[] = array(__('Image to Queue'), $returnEnqueue );
+             $debugInfo[] = [__('Counts'), $counts];
 
 					}
 

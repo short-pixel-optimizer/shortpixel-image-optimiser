@@ -213,6 +213,39 @@ if (! defined('ABSPATH')) {
 
       </setting>
 
+      <!--- ## Post Title -->
+      <setting class="ai_post_title_setting">
+        <content>
+
+          <?php $this->printSwitchButton(
+            [
+              'name' => 'ai_gen_post_title',
+              'checked' => $view->data->ai_gen_post_title,
+              'label' => esc_html__('Update image title with an SEO-friendly one', 'shortpixel-image-optimiser'),
+              'data' => ['data-toggle="ai_gen_post_title"'],
+              
+            ]
+          );
+          ?>
+        </content>
+
+        <content class='nextline ai_gen_posttitle is-advanced'>
+          <?php
+          $input  = '<input type="number" name="ai_limit_post_title_chars" value="' . $view->data->ai_limit_post_title_chars . '" max="100" min="0">';
+          ?>
+          <name><?php printf(__('Limit image title to %s characters ', 'shortpixel-image-optimiser'), $input); ?></name>
+        </content>
+
+        <content class='nextline ai_gen_filename is-advanced'>
+          <name><?php _e('Additional context for filename generation: ', 'shortpixel-image-optimiser'); ?></name>
+          <textarea name="ai_post_title_context"><?php echo $view->data->ai_post_title_context ?></textarea>
+
+        </content>
+
+      </setting>
+
+
+      <!-- ## Filename -->
       <setting class="ai_filename_setting">
         <content>
 
@@ -256,6 +289,7 @@ if (! defined('ABSPATH')) {
         <content class='nextline'>
             <name><?php printf(esc_html__('This is a feature we are currently evaluating. If you would like to see it implemented in a future version of our plugin, please %svote for it here%s.','shortpixel-image-optimiser'), '<a target="_blank" href="https://ideas.shortpixel.com/update-image-filename-with-an-seo-friendly-one~4cMEvKmvFbosoYTI9T4UgK?from=board">', '</a>' ); ?></name>
         </content>
+      </setting>
 
 
     </gridbox>
@@ -345,6 +379,8 @@ if (! defined('ABSPATH')) {
           <li><label><?php _e('Image ALT tag', 'shortpixel-image-optimiser'); ?>:</label> <span class='alt'></span></li>
           <li><label><?php _e('Image caption', 'shortpixel-image-optimiser'); ?>:</label> <span class='caption'></span></li>
           <li><label><?php _e('Image description', 'shortpixel-image-optimiser'); ?>:</label> <span class='description'></span>
+          <li><label><?php _e('Image Title', 'shortpixel-image-optimiser'); ?>:</label> <span class='post_title'></span>
+
           </li>
         </ul>
       </div>
@@ -357,6 +393,7 @@ if (! defined('ABSPATH')) {
           <li><label><?php _e('Image ALT tag', 'shortpixel-image-optimiser'); ?>:</label> <span class='alt'></span></li>
           <li><label><?php _e('Image caption', 'shortpixel-image-optimiser'); ?>:</label> <span class='caption'></span></li>
           <li><label><?php _e('Image description', 'shortpixel-image-optimiser'); ?>:</label> <span class='description'></span>
+          <li><label><?php _e('Image Title', 'shortpixel-image-optimiser'); ?>:</label> <span class='post_title'></span>
         </ul>
       </div>
 
