@@ -6,6 +6,8 @@ use ShortPixel\Helper\UiHelper;
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
+
+
 ?>
 
 <section class="panel summary" data-panel="summary">
@@ -80,10 +82,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 
   <?php
     $quotaData = $this->view->quotaData;
+    $quotaData->unlimited = true;
 ?>
 
     <div class="credits">
-
       <p class='heading totals'><span>
         
         <?php   $quotaData->unlimited ? esc_html_e('Total','shortpixel-image-optimiser') : esc_html_e('Total credits needed','shortpixel-image-optimiser');
@@ -91,7 +93,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         </span>
          <span class='hidden' data-stats-total="images-images" data-check-total-total>0</span>
         <span class="number" data-stats-total="images-total_images_without_ai" data-check-total-without-ai >0</span>
-      </p>
+      </p>s
   <?php 
       if(true === $quotaData->unlimited): ?>
 <!--
@@ -119,7 +121,7 @@ if ( ! defined( 'ABSPATH' ) ) {
          </span>
       </p>
 
-      <p>				<span>
+      <p>	<span>
         <a href="<?php echo esc_url($this->view->buyMoreHref) ?>" target="_new" class='button button-primary unlimited'>
         <span><?php echo UIHelper::getIcon('res/images/icon/shortpixel.svg', ); ?></span>
         <?php esc_html_e('Buy unlimited credits','shortpixel-image-optimiser'); ?>

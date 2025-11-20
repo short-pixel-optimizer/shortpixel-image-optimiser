@@ -833,13 +833,13 @@ class ShortPixelScreen extends ShortPixelScreenBase
      {
         el.style.display = 'block';
         buttonPause.style.display = 'none';
-        buttonResume.style.display = 'inline-block';
+        buttonResume.style.display = 'flex';
 
      }
      else
      {
         el.style.display = 'none';
-        buttonPause.style.display = 'inline-block';
+        buttonPause.style.display = 'flex';
         buttonResume.style.display = 'none';
 
 				// in case this is overquota situation, on unpause, recheck situation, hide the thing.

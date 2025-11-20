@@ -320,13 +320,15 @@
       top: 4px;
       padding: 8px;
       height: 100%;
-      border: 1px solid #000;
+      border: 1px solid $blue_default;
       width: 80%;
-      margin: 30px auto;
+      margin: 30px auto 30px;
       background: rgba(255, 255, 255, 0.9);
       line-height: 22px;
       max-height: 300px;
       overflow-y: scroll;
+      box-sizing: border-box;
+    
 
       .fatal {
         color: #ff0000;
@@ -426,7 +428,7 @@
           .outer {
             background-color: #1ABDCA; 
             color: #fff;  
-            bordeir-color: $blue_background;
+            border-color: $blue_background;
             height: 47px;
             width: 47px;
             margin-top: -46px;
@@ -845,7 +847,7 @@
     .credits-wrapper
     {
        //display: block;
-       align-items: center; 
+       //align-items: center;  // messes up blocks
 
     }
     .credits-sub-wrapper {
@@ -1008,69 +1010,77 @@ section.panel.finished {
 
      h3 {
       border: 0;
+      text-align: center; 
+      font-weight: 700;
      }
 
-     .average-optimization {
-      position: absolute;
-      top: 0px;
-      right: 0;
-      display: flex;
-      justify-content: center;
-      z-index: 2;
-      background: rgba(255, 255, 255, 0.4);
-  
-      // margin-top: -10px;
-      p {
-        margin: 0;
-        font-size: 13px;
-        position: absolute;
-        //	width: 100%;
-  
-        bottom: 45px;
-        left: -15px;
-        padding: 6px 10px;
-        color: #fff;
-        background: rgba($color-darkest, 0.5);
-        font-weight: 700;
-        border-radius: 3px;
-        white-space: nowrap;
-  
-      }
-  
-      .opt-circle-average {
-        width: 100px;
-        height: 100px;
-        float: right;
-  
-        // margin-right: 35px;
-        .trail {
-          stroke: #ddd;
-        }
-  
-        .path {
-          stroke: $color-dark;
-          stroke-linecap: round;
-          transition: stroke-dashoffset 0.5s ease 0s;
-        }
-  
-        .text {
-  
-          fill: #1FBEC9;
-          font-size: 28px;
-          font-weight: 700;
-          dominant-baseline: middle;
-          text-anchor: middle;
-        }
-      }
-    }
+
   }
 
+  .average-optimization {
+    position: absolute;
+    top: 0px;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    z-index: 2;
+    background: rgba(255, 255, 255, 0.4);
+    align-items: center;
+
+    // margin-top: -10px;
+    p {
+      margin: 0;
+      font-size: 13px;
+      position: absolute;
+      //	width: 100%;
+
+      bottom: 45px;
+      left: -15px;
+      padding: 6px 10px;
+      color: #fff;
+      background: rgba($color-darkest, 0.5);
+      font-weight: 700;
+      border-radius: 3px;
+      white-space: nowrap;
+
+    }
+
+    .opt-circle-average {
+      width: 100px;
+      height: 100px;
+   //   float: right;
+
+      // margin-right: 35px;
+      .trail {
+        stroke: #ddd;
+      }
+
+      .path {
+        stroke: $color-dark;
+        stroke-linecap: round;
+        transition: stroke-dashoffset 0.5s ease 0s;
+      }
+
+      .text {
+
+        fill: #1FBEC9;
+        font-size: 28px;
+        font-weight: 700;
+        dominant-baseline: middle;
+        text-anchor: middle;
+      }
+    }
+  } // optimization circle. 
   
+  h3.heading {
+    text-align: center; 
+    font-weight: 700;
+  }
 
   .bulk-summary {
     display: table;
     width: 80%;
-    margin: 30px auto;
+    margin: 30px auto 0;
     border-radius: 16px;
     background-color: $blue_background;
 
@@ -1082,6 +1092,10 @@ section.panel.finished {
       display: table-cell;
       padding: 16px;
       width: 33%;
+    }
+    p.finished-paragraph
+    {
+       padding: 6px 12px;
     }
 
     .heading {
@@ -1095,6 +1109,10 @@ section.panel.finished {
       .dashicons {
          color: $blue_default;
       }
+    }
+
+    .heading > span:first-child {
+      font-weight: 700;
     }
 
     .line-progressbar {
@@ -1125,7 +1143,7 @@ section.panel.finished {
         width: 10%;
         top: 0;
         bottom: 0;
-        background: $blue_dark;
+        background: $blue_default;
 
       }
 
@@ -1146,6 +1164,28 @@ section.panel.finished {
 
     .display-error-box {
       float: right;
+      input {
+        display: none; 
+        
+        &:checked {
+           .collap-arrow .icon
+           {
+             transform: rotate(180deg); 
+           }
+        }
+      }
+
+      span 
+      {
+         color: $blue_dark; 
+         text-decoration: underline;
+      }
+
+      .collap-arrow 
+      {
+         transition: rotate 1s linear;
+      }
+
     }
   }
 
@@ -1155,9 +1195,10 @@ section.panel.finished {
     background: #F6F9FF;
     border: 1px solid #DFEAFF;
     border-radius: 16px;
-    width: 80%;
+    width: 70%;
     margin: 15px auto;
     position: relative;
+    
 
     .title {
       position: absolute;
@@ -1314,6 +1355,16 @@ section.panel.finished {
       .image.source {
         margin-right: 8px;
       }
+      
+      .image-arrow 
+      {
+
+        i {
+
+           filter: $filter_blue_default;
+        }
+
+      }
 
       .image.result
       {
@@ -1367,8 +1418,65 @@ section.panel.finished {
 
   }
 
+  .average-optimization {
+     position: relative;
+
+     display: flex;
+     justify-content: center;
+     z-index: 2;
+     background: rgba(255, 255, 255, 0.4);
+     align-items: center;
+     flex-direction: column;
+ 
+      // margin-top: -10px;
+     p {
+       //margin: 0;
+       font-size: 13px;
+       position: relative;
+       //	width: 100%;
+ 
+       bottom: 0;
+       left: 0;
+       padding: 6px 10px;
+       color: #fff;
+       background: rgba($color-darkest, 0.5);
+       font-weight: 700;
+       border-radius: 3px;
+       white-space: nowrap;
+ 
+     }
+ 
+     .opt-circle-average {
+       width: 300px;
+       height: 300px;
+    //   float: right;
+ 
+       // margin-right: 35px;
+       .trail {
+         stroke: #ddd;
+       }
+ 
+       .path {
+         stroke: $color-dark;
+         stroke-linecap: round;
+         transition: stroke-dashoffset 0.5s ease 0s;
+       }
+ 
+       .text {
+ 
+         fill: #1FBEC9;
+         font-size: 28px;
+         font-weight: 700;
+         dominant-baseline: middle;
+         text-anchor: middle;
+       }
+     }
+   } // optimization circle. 
+ 
+
   nav {
     text-align: center;
+    margin: 25px auto;
 
     button.finish {
       padding: 12px 60px;
@@ -1384,7 +1492,7 @@ section.panel.finished {
       }
     }
   }
-}
+} // finished
 
 .part-debug {
   background: #000;

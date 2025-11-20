@@ -44,14 +44,14 @@ if ( ! defined( 'ABSPATH' ) ) {
         </button>
 
 			<div class='dashboard-text'>
-         <button class='button button-primary' type="button">
+         <a class='button button-primary' type="button" href="<?php echo admin_url('wp-admin/options-general.php?page=wp-shortpixel-settings&part=help'); ?>" target="_blank">
          <span class='icon white'><?php echo UIHelper::getIcon('res/images/icon/help-circle.svg', ['width' => '16']); ?></span> 
          <span><?php _e('Help','shortpixel-image-optimiser'); ?></span>
-         </button> 
-         <button class='button' type='button'>
+         </a> 
+         <a class='button' type='button' href="https://wordpress.org/support/plugin/shortpixel-image-optimiser/reviews/#new-post" target="_blank">
             <span class='icon'><?php echo UIHelper::getIcon('res/images/icon/heart.svg', ['width' => '16']); ?></span> 
             <span><?php _e('Rate ShortPixel', 'shortpixel-image-optimiser'); ?></span>
-          </button>
+         </a>
       </div>
 
 
