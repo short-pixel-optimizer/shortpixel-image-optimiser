@@ -44,7 +44,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         </button>
 
 			<div class='dashboard-text'>
-         <a class='button button-primary' type="button" href="<?php echo admin_url('wp-admin/options-general.php?page=wp-shortpixel-settings&part=help'); ?>" target="_blank">
+         <a class='button button-primary' type="button" href="<?php echo admin_url('options-general.php?page=wp-shortpixel-settings&part=help'); ?>" target="_blank">
          <span class='icon white'><?php echo UIHelper::getIcon('res/images/icon/help-circle.svg', ['width' => '16']); ?></span> 
          <span><?php _e('Help','shortpixel-image-optimiser'); ?></span>
          </a> 

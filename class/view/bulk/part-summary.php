@@ -157,7 +157,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         <span>
           <a href="<?php echo esc_url($this->view->buyMoreHref) ?>" target="_new" class='button button-primary unlimited'>
           <span><?php echo UIHelper::getIcon('res/images/icon/shortpixel.svg', ); ?></span>
-          <?php esc_html_e('Buy unlimited AI credits','shortpixel-image-optimiser'); ?>
+          <?php esc_html_e('Buy Unlimited AI credits','shortpixel-image-optimiser'); ?>
           </a>
         </span>
       </p>

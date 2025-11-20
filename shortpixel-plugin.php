@@ -448,8 +448,8 @@ class ShortPixelPlugin {
 			'hide_ai' => ! $OptimizeAiController->isAiEnabled(),  // turn around negative setting
 			'hide_spio_in_popups' => apply_filters('shortpixel/js/media/hide_in_popups', false), 
 			'modalcss' => plugins_url('res/css/shortpixel-media-modal.css', SHORTPIXEL_PLUGIN_FILE), 
-			'remove_background_title' => __('Remove Background', 'shortpixel-image-optimiser'),
-			'scale_title' => __('Scale Image', 'shortpixel-image-optimiser'),
+			'remove_background_title' => __('AI Remove Background', 'shortpixel-image-optimiser'),
+			'scale_title' => __('AI Upcale Image', 'shortpixel-image-optimiser'),
 			'upscale_max_width' => 1200, // Scale X and max width pin Pixels.
 			'popup_load_preview' => true, // Upon opening, load Preview or not.
 			'too_big_for_scale_title'  => __('Image too big for scaling', 'shortpixel-image-optimiser'), 
