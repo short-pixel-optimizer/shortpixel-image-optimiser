@@ -46,7 +46,7 @@ use ShortPixel\Helper\UiHelper as UiHelper;
           <h4><?php _e('ShortPixel AI Agent', 'shortpixel-image-optimiser'); ?></h4>
           <p><?php esc_html_e('Our AI-robot would be happy to assist you with simple, optimized questions.', 'shortpixel-image-optimiser'); ?></p>
 
-          <a href="https://shortpixel.com/knowledge-base/" target="_blank" class="button-setting"><?php //echo UIHelper::getIcon('res/images/icon/external.svg'); ?>
+          <a href="#" target="_blank" class="button-setting" setting-action="OpenChatEvent"><?php //echo UIHelper::getIcon('res/images/icon/external.svg'); ?>
              <?php esc_html_e('Try our chatbot', 'shortpixel-image-optimiser'); ?>
            <?php //echo UIHelper::getIcon('res/images/icon/arrow-right.svg'); ?> </a>
       </div>
