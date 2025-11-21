@@ -2,7 +2,7 @@
 Contributors: ShortPixel
 Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 4.8.0
-Tested up to: 6.8
+Tested up to: 6.9
 Requires PHP: 7.4
 Stable tag: 6.4.0
 License: GPLv2 or later
@@ -313,6 +313,12 @@ where `APIKEY` is the API Key received upon sign up.
 
 = Where do I report security bugs found in this plugin? =
 Please report security bugs found in the source code of the ShortPixel Image Optimizer plugin through the [Patchstack Vulnerability Disclosure Program](https://patchstack.com/database/vdp/shortpixel-image-optimiser). The Patchstack team will assist you with verification, CVE assignment, and notify the developers of this plugin.
+
+= Does the plugin use any external services =
+*This plugin integrates with Chatbase ([https://www.chatbase.co](https://www.chatbase.co/)) to provide AI-powered chat support directly within the plugin interface. This integration allows plugin users to ask questions and receive automated assistance. The only data collected is the Country(no city and no exact location) and the message itself.
+
+Chatbase [ToS](https://www.chatbase.co/legal/terms).
+
 
 = I’m stuck. What do I do? =
 
