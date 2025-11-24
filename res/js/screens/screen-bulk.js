@@ -456,12 +456,16 @@ class ShortPixelScreen extends ShortPixelScreenBase
 
              let ul = aiPreviewElement.querySelector('ul'); 
              ul.innerHTML = ''; 
+
+             let labels = (resultItem.aiDataLabels) ? resultItem.aiDataLabels : {}; 
              
              for (var field in resultItem.aiData)
              {  
                 let value = resultItem.aiData[field];
-                 let li = document.createElement('li'); 
-                 li.innerHTML = '<strong>' + field + '</strong>: ' + value; 
+                let li = document.createElement('li'); 
+                let label = (labels[field]) ? labels[field] : field; 
+                  
+                 li.innerHTML = '<strong>' + label + '</strong>: ' + value; 
                  ul.append(li);
              }
           }
