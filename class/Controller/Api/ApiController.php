@@ -290,7 +290,7 @@ class ApiController extends RequestManager
 	}
 	// handleResponse function
 
-	protected function handleOptimizeResponse($qItem, $response)
+	protected function handleOptimizeResponse(QueueItem $qItem, $response)
 	{
 		$neededURLS = $qItem->data()->urls; // URLS we are waiting for.
 
@@ -409,7 +409,7 @@ class ApiController extends RequestManager
 		}
 	}
 
-	protected function handleActionResponse($qItem, $response)
+	protected function handleActionResponse(QueueItem $qItem, $response)
 	{
 		$item = $response[0]; // First File Response of API. 
 		$status_code = intval($item->Status->Code); 
@@ -478,7 +478,6 @@ class ApiController extends RequestManager
 				'status' => self::STATUS_SKIP,
 			),
 		);
-
 
 		$fileType = ($compressionType > 0) ? 'LossyURL' : 'LosslessURL';
 		$fileSize = ($compressionType > 0) ? 'LossySize' : 'LosslessSize';

@@ -86,6 +86,16 @@ class DownloadHelper
 					$fs = \wpSPIO()->filesystem();
 					$file = $fs->getFile($tempFile);
 
+          if ($file->getFileSize() == 0)
+          {
+              Log::addError('Tmp File zero bytes', $tempFile); 
+              ResponseController::addData('is_error', true);
+              Responsecontroller::addData('message', __('Temp file zero bytes', 'shortpixel-image-optimiser'));
+
+              return false; 
+          }
+          
+
           if (! is_null($args['destinationPath']))
           {
              $result = $this->moveDownload($file, $args['destinationPath']);
@@ -109,6 +119,7 @@ class DownloadHelper
           $fs = \wpSPIO()->filesystem();
 
           $destinationFile = $fs->getFile($destinationPath);
+
           // If file is non-existing, check directory and write-permissions.
           if (false == $destinationFile->exists())
           {
@@ -116,7 +127,7 @@ class DownloadHelper
             $dirObj->check(true);
           }
 
-          $result = $fileObj->copy($destinationFile);
+          $result = $fileObj->move($destinationFile);
 
           if ($result === false)
             return false;
@@ -184,6 +195,13 @@ class DownloadHelper
 		          $testURL = 'http://' . SHORTPIXEL_API . '/img/connection-test-image.png';
 		          $result = download_url($testURL, 10);
 		          $settings->downloadProto = is_wp_error( $result ) ? 'https' : 'http';
+
+              // remove test.
+              if (false === is_wp_error($result))
+              {
+                @unlink($result);
+              }
+              
 		      }
 		      return $settings->downloadProto == 'http' ?
 		              str_replace('https://', 'http://', $url) :
