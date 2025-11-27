@@ -94,7 +94,6 @@ class DownloadHelper
 
               return false; 
           }
-          
 
           if (! is_null($args['destinationPath']))
           {
@@ -136,14 +135,24 @@ class DownloadHelper
 
       }
 
-      private function downloadURLMethod($url, $force = false)
+      /** Get a sensible timeout for how long the download should be allowed to take */
+      private function getMaxDownloadTime()
       {
         $executionTime = ini_get('max_execution_time');
         if (! is_numeric($executionTime)) // edge case
         {
            $executionTime = 0;
         }
-        $downloadTimeout = max($executionTime - 10, 15);
+        // min here, so maximum value of downloadtimeout is 25 seconds, which should be more than enough. To prevent hanging downloads eating up server time
+        $downloadTimeout = min($executionTime - 10, 25);
+
+        return $downloadTimeout; 
+      }
+
+      private function downloadURLMethod($url, $force = false)
+      {
+
+        $downloadTimeout = $this->getMaxDownloadTime(); 
 
         $url = $this->setPreferredProtocol(urldecode($url), $force);
         $tempFile = \download_url($url, $downloadTimeout);
@@ -162,9 +171,8 @@ class DownloadHelper
       {
             //get_temp_dir
             $tmpfname = tempnam(get_temp_dir(), 'spiotmp');
-            $max_exec = ini_get('max_execution_time'); // Like everything, can't be trusted to be a int.
-            $max_exec =  (! is_numeric($max_exec) || $max_exec <= 0) ? 30 : $max_exec;
-            $downloadTimeout = max($max_exec - 10, 15);
+
+            $downloadTimeout = $this->getMaxDownloadTime(); 
 
             $args_for_get = array(
               'stream' => true,

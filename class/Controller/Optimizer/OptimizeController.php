@@ -479,7 +479,7 @@ class OptimizeController extends OptimizerBase
         $image['image']['status'] == ApiController::STATUS_SUCCESS ||
         ($image['image']['status'] == ApiController::STATUS_OPTIMIZED_BIGGER && is_object($converter))
       ) {
-        $tempFile = $downloadHelper->downloadFile($image['image']['url']);
+        $tempFile = $downloadHelper->downloadFile($image['image']['url']);      
         if (is_object($tempFile)) {
           $item_files[$imageName]['image'] = $tempFile->getFullPath();
           $imageArray[$imageName]['image']['file'] = $tempFile->getFullPath();
