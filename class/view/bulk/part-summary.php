@@ -38,7 +38,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<?php esc_html_e('Media Library','shortpixel-image-optimiser'); ?> (<span data-stats-media="in_queue">0</span> <?php esc_html_e('items','shortpixel-image-optimiser'); ?>)</h4>
         <div class="list-table">
 
-
 						<div  class='images'><span><?php esc_html_e('Images','shortpixel-image-optimiser'); ?></span>
 								<span data-stats-media="images-images_basecount">n/a</span>
 						</div>
@@ -49,10 +48,6 @@ if ( ! defined( 'ABSPATH' ) ) {
             <div class='filetypes' data-check-visibility data-control="data-check-has-avif">
 							<span>&nbsp; <?php esc_html_e('+ AVIF images','shortpixel-image-optimiser'); ?> </span><span data-stats-media="images-images_avif" data-check-has-avif>&nbsp;</span>
 						</div>
-            <!-- <div class='filetypes' data-check-visibility data-control="data-check-has-ai">
-							<span>&nbsp; <?php esc_html_e('+ AI ','shortpixel-image-optimiser'); ?> </span><span data-stats-media="images-images_ai" data-check-has-ai>&nbsp;</span>
-						</div> -->
-
 
           <div><h4 class="totals"><?php esc_html_e('Total from Media Library','shortpixel-image-optimiser'); ?></h4><span class="totals" data-stats-media="images-total_images_without_ai">0</span></div>
 
@@ -82,23 +77,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 
   <?php
     $quotaData = $this->view->quotaData;
-    $quotaData->unlimited = true;
 ?>
 
     <div class="credits">
       <p class='heading totals'><span>
         
-        <?php   $quotaData->unlimited ? esc_html_e('Total','shortpixel-image-optimiser') : esc_html_e('Total credits needed','shortpixel-image-optimiser');
+        <?php  $quotaData->unlimited ? esc_html_e('Total','shortpixel-image-optimiser') : esc_html_e('Total credits needed','shortpixel-image-optimiser');
               ?>: 
         </span>
          <span class='hidden' data-stats-total="images-images" data-check-total-total>0</span>
         <span class="number" data-stats-total="images-total_images_without_ai" data-check-total-without-ai >0</span>
-      </p>s
+      </p>
   <?php 
       if(true === $quotaData->unlimited): ?>
-<!--
+
 				<p><span><?php _e('This site is currently on the ShortPixel Unlimited plan, so you do not have to worry about credits. Enjoy!', 'shortpixel-image-optimiser'); ?></span></p>
-      -->
+      
       <!--	</div> -->
 	    <?php else: ?>
       <p class='heading'><span><?php esc_html_e('Your ShortPixel Credits Available', 'shortpixel-image-optimiser'); ?></span>
@@ -158,14 +152,16 @@ if ( ! defined( 'ABSPATH' ) ) {
         <span class="number" data-stats-media="images-images_ai" >0</span>
       </p>
 
+      <?php if (false === $quotaData->unlimited): ?>
       <p>				
         <span>
           <a href="<?php echo esc_url($this->view->buyMoreHref) ?>" target="_new" class='button button-primary unlimited'>
           <span><?php echo UIHelper::getIcon('res/images/icon/shortpixel.svg', ); ?></span>
-          <?php esc_html_e('Buy unlimited AI credits','shortpixel-image-optimiser'); ?>
+          <?php esc_html_e('Buy Unlimited AI credits','shortpixel-image-optimiser'); ?>
           </a>
         </span>
       </p>
+      <?php endif;  ?>
 
   </div>
   </div> <!--- // credits wrapper --> 

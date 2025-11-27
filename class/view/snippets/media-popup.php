@@ -20,13 +20,13 @@ $action_name = $this->data['action_name'];
 switch($action_name)
 {
 	case 'remove':
-		$modal_title = __('Remove background', 'shortpixel-image-optimiser');
+		$modal_title = __('AI Background Removal', 'shortpixel-image-optimiser');
 		$suggesteFileName = $originalImage->getFileBase() . '_nobg.' . $originalImage->getExtension();
 
 	break;
 
 	case 'scale':
-		$modal_title = __('Scale Image', 'shortpixel-image-optimiser');
+		$modal_title = __('AI Image Upscale', 'shortpixel-image-optimiser');
 		$suggesteFileName = $originalImage->getFileBase() . '_upscale.' . $originalImage->getExtension();
 
 	break;
@@ -121,7 +121,7 @@ $scale_sizes =
 
 		<section class="scale action_wrapper">
 			<h3><?php _e("Options", 'shortpixel-image-optimiser'); ?></h3>
-			<h4><?php _e('Scale image', 'shortpixel-image-optimiser'); ?></h4>
+			<h4><?php _e('AI Image Upscale', 'shortpixel-image-optimiser'); ?></h4>
 			<ul>
 				<?php echo $scaleOptions ?>
 

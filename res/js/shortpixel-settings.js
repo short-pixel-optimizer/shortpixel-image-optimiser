@@ -600,6 +600,14 @@ class ShortPixelSettings {
 
 	}
 
+	OpenChatEvent(event)
+	{
+		event.preventDefault();
+		var chatBot = document.getElementById('chatbase-bubble-button');
+		var event = new CustomEvent('click'); 
+		chatBot.dispatchEvent(event);
+	}
+
 	ImportSettingsEvent(event) {
 		var data = {};
 		var data = { screen_action: 'settings/importexport' }; //

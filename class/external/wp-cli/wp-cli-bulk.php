@@ -215,8 +215,18 @@ class SpioBulk extends SpioCommandBase
 			 $args['filters'] = $filters; 
 		}
 
+		$mediaArgs = array_merge($args, ['doMedia' => true, 'doAi' => \wpSPIO()->settings()->autoAIBulk]);
+
 		foreach ($queues as $qname) {
-			$stats = $bulkControl->createNewBulk($qname, $args);
+
+			if ('media' == $qname)
+			{
+				$stats = $bulkControl->createNewBulk($qname, $mediaArgs);
+			}			
+			else
+			{
+				$stats = $bulkControl->createNewBulk($qname, $args);
+			}
 
 			$json->$qname->stats = $stats;
 

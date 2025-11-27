@@ -32,19 +32,18 @@ if ( ! defined( 'ABSPATH' ) ) {
       <a class='top-circle' <?php echo $link ?>>
           <div class='the-circle' style='background-image: url("<?php echo $view->dashboard_icon ?>");'>&nbsp;</div>
       </a>
-      <?php if (false !== $view->dashboard_title): ?>
-       <h3 class='title-offer'><?php echo $view->dashboard_title ?></h3>
-      <?php endif; ?>
+      <?php //if (false !== $view->dashboard_title): ?>
+       <h3 class='title-offer'><?php echo ( (false !== $view->dashboard_title) ? $view->dashboard_title : "Ready to start optimizing?"); ?></h3>
+      <?php //endif; ?>
 
 
 
         <button type="button" class="button-primary button start" id="start-optimize" data-action="open-panel" data-panel="selection" <?php echo ($this->view->error) ? "disabled" : ''; ?>  >
-						<span ><?php echo UIHelper::getIcon('res/images/icon/shortpixel.svg', ); ?></span>
             <?php esc_html_e('Start Optimization','shortpixel-image-optimiser'); ?>
         </button>
 
 			<div class='dashboard-text'>
-         <a class='button button-primary' type="button" href="<?php echo admin_url('wp-admin/options-general.php?page=wp-shortpixel-settings&part=help'); ?>" target="_blank">
+         <a class='button button-primary' type="button" href="<?php echo admin_url('options-general.php?page=wp-shortpixel-settings&part=help'); ?>" target="_blank">
          <span class='icon white'><?php echo UIHelper::getIcon('res/images/icon/help-circle.svg', ['width' => '16']); ?></span> 
          <span><?php _e('Help','shortpixel-image-optimiser'); ?></span>
          </a> 

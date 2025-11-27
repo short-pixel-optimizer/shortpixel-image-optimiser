@@ -257,7 +257,7 @@ $approx = $this->view->approx;
 	  <!-- <h2><?php _e('Limit bulk', 'shortpixel-image-optimiser'); ?></h2> -->
 
 <div class='bulk-date-picker optiongroup'>
-	<?php printf(esc_html__('%s Optimize items between %s  %s and %s ', 'shortpixel-image-optimiser'), 
+	<?php printf(esc_html__('%sOptional: Optimize items between %s  %s and %s ', 'shortpixel-image-optimiser'), 
 	'<h4>', 
 	'</h4>',
 	'<span class="date-picker-container">
