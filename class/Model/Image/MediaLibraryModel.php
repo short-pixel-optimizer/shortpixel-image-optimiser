@@ -431,7 +431,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		} else
 			$height = $wpmeta['height'];
 
-		if (isset($wpmeta['filesize'])) {
+		if (isset($wpmeta['filesize']) && intval($wpmeta['filesize']) > 0) {
 			$this->filesize = $wpmeta['filesize'];
 		}
 
@@ -474,7 +474,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						$missingDefinitions[] = $name;
 					}
 
-					if (isset($data['filesize']))
+					if (isset($data['filesize']) && intval($data['filesize']) > 0)
 						$thumbObj->filesize = $data['filesize'];
 
 					$thumbnails[$name] = $thumbObj;

@@ -386,7 +386,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 				 		$message = __('Image is not optimized', 'shortpixel-image-optimiser');
 				 break;
          case self::P_IMAGE_ZERO_SIZE:
-            $message = __('File seems emtpy, or failure on image size', 'shortpixel-image-optimiser');
+            $message = __('File seems empty, or failure on image size', 'shortpixel-image-optimiser');
          break;
          case self::P_EXCLUDE_DATE: 
              $message = __('Date is excluded', 'shortpixel-image-optimiser');
