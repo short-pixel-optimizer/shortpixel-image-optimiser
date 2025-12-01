@@ -753,7 +753,7 @@ public function getAltData(QueueItem $qItem)
 public function formatGenerated($generated, $current, $original)
 {
     
-  $fields = ['alt', 'caption', 'description'];
+  $fields = ['alt', 'caption', 'description', 'post_title'];
   $dataItems = []; 
 
   // Statii from AiDataModel which means generated is not available (replace for original/current?) 
