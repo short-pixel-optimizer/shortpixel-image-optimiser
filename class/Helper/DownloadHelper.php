@@ -83,15 +83,25 @@ class DownloadHelper
 						return false;
 					}
 
+          /*
+          Log::addError('Nulling tempfile to zero for testing!'); 
+          $file = fopen($tempFile, 'r+'); 
+          ftruncate($file,0);
+          fclose($file);
+          */
+
 					$fs = \wpSPIO()->filesystem();
 					$file = $fs->getFile($tempFile);
 
-          if ($file->getFileSize() == 0)
+          
+
+          if ($file->getFileSize() === 0)
           {
               Log::addError('Tmp File zero bytes', $tempFile); 
               ResponseController::addData('is_error', true);
               Responsecontroller::addData('message', __('Temp file zero bytes', 'shortpixel-image-optimiser'));
 
+              $file->delete(); // Prevent it from hanging around 
               return false; 
           }
 

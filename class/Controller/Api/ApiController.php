@@ -17,6 +17,7 @@ use ShortPixel\Helper\UtilHelper as UtilHelper;
 class ApiController extends RequestManager
 {
 	// Moved these numbers higher to prevent conflict with STATUS
+	// @todo Almost none of these are in use ( ERR_TIMEOUT only )
 	const ERR_FILE_NOT_FOUND = -902;
 	const ERR_TIMEOUT = -903;
 	const ERR_SAVE = -904;

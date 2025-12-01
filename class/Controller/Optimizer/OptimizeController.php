@@ -347,7 +347,7 @@ class OptimizeController extends OptimizerBase
           $this->finishItemProcess($qItem);
         }
       }
-    } else {
+    } else { // Not is_done
       if ($qItem->result()->apiStatus == ApiController::STATUS_UNCHANGED || $qItem->result()->apiStatus === Apicontroller::STATUS_PARTIAL_SUCCESS) {
         $qItem->addResult(['fileStatus' => ImageModel::FILE_STATUS_PENDING]);
         $retry_limit = $q->getShortQ()->getOption('retry_limit');
@@ -471,6 +471,7 @@ class OptimizeController extends OptimizerBase
         $item_files[$imageName] = [];
       }
 
+      // @todo Direct call to file_exists, which should be ok, because tmp, but still could be improved.
       if (isset($item_files[$imageName]['image']) && file_exists($item_files[$imageName]['image'])) {
         // All good.
       }
@@ -484,6 +485,12 @@ class OptimizeController extends OptimizerBase
           $item_files[$imageName]['image'] = $tempFile->getFullPath();
           $imageArray[$imageName]['image']['file'] = $tempFile->getFullPath();
         }
+        else
+        {
+          
+           $imageArray[$imageName]['image']['status'] = RequestManager::STATUS_CONNECTION_ERROR;
+        }
+
       }
 
 

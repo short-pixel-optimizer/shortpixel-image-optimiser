@@ -755,8 +755,16 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
           }
           else
           {
-						$tempFile = $fs->getFile($results['image']['file']);
-
+            if (false === isset($results['image']['file']))
+            {
+               Log::addError('ImageModel:  Result image files not set! Uncaught issue. ', $results['image']);
+               $copyok = false; 
+            }
+            else 
+            {
+                $tempFile = $fs->getFile($results['image']['file']);
+            }
+						
             if ($this->is_virtual())
             {
                 $filepath = apply_filters('shortpixel/file/virtual/translate', $this->getFullPath(), $this);
@@ -774,13 +782,12 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                   $this->setVirtualToReal($filepath);
                 }
             }
-            else
+            elseif (isset($tempFile))
             {
                 $copyok = $tempFile->move($this);
+                $this->setImageSize();
+                $optimizedSize  = $tempFile->getFileSize();
             }
-
-             $this->setImageSize();
-             $optimizedSize  = $tempFile->getFileSize();
           } // else
 
           if ($copyok)
