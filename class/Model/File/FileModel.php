@@ -393,6 +393,12 @@ class FileModel extends \ShortPixel\Model
         return false;
       }
 
+      if (false === self::$TRUSTED_MODE && $this->getFileSize() <= 0)
+      {
+         Log::addWarn('Source file in copy has a filesize of zero!');
+         return false;
+      }
+
       $is_new = ($destination->exists()) ? false : true;
       $status = @copy($sourcePath, $destinationPath);
 
