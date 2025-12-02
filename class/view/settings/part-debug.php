@@ -4,6 +4,8 @@ use ShortPixel\Notices\NoticeController as NoticeController;
 use ShortPixel\Controller\StatsController as StatsController;
 use ShortPixel\Controller\QueueController as QueueController;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+
 
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
@@ -18,6 +20,10 @@ $fs = \wpSPIO()->filesystem();
 
 $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->url);
 
+if (Log::isManualDebug())
+{
+  $debugUrl = add_query_arg(['SHORTPIXEL_DEBUG' => sanitize_text_field($_GET['SHORTPIXEL_DEBUG'])], $debugUrl);
+}
 ?>
 
 <section id="tab-debug" class="<?php echo esc_attr(($this->display_part == 'debug') ? 'active setting-tab' :'setting-tab'); ?>" data-part="debug">
