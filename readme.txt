@@ -31,7 +31,7 @@ Make an instant <a href="https://shortpixel.com/image-compression-test" target="
 ### 🆕 New! Brand new AI features ###
 
 * AI Image Upscale (2x, 3x, 4x) - Upscale smaller images with high-quality AI upscaling, perfect for retina displays and crisp visuals.
-* AI Background Removal - Instantly remove image backgrounds with one click, great for clean product photos or transparent assets.
+* AI Background Removal – Instantly remove background from your images with one click, ideal for creating clean product photos. After the background is removed, your image can have a transparent background or be filled with a single solid color.
 * AI Image Titles - In addition to ALT text, captions, and descriptions, you can now generate smart image titles using AI for better SEO.
 * Bulk Remove AI Data - Easily clear all AI-generated image SEO data in one go.
 
