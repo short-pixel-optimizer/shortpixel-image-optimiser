@@ -132,7 +132,6 @@ class ActionController extends OptimizerBase
     $qItem->block(true);
     $queue = $this->getCurrentQueue($qItem);
 
-   
     $queue->updateItem($qItem);
 
     $fs = \wpSPIO()->filesystem();

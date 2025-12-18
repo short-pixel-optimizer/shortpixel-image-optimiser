@@ -2,9 +2,9 @@
 Contributors: ShortPixel
 Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 4.8.0
-Tested up to: 6.8
+Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 6.4.0
+Stable tag: 6.4.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,7 +31,7 @@ Make an instant <a href="https://shortpixel.com/image-compression-test" target="
 ### 🆕 New! Brand new AI features ###
 
 * AI Image Upscale (2x, 3x, 4x) - Upscale smaller images with high-quality AI upscaling, perfect for retina displays and crisp visuals.
-* AI Background Removal - Instantly remove image backgrounds with one click, great for clean product photos or transparent assets.
+* AI Background Removal – Instantly remove background from your images with one click, ideal for creating clean product photos. After the background is removed, your image can have a transparent background or be filled with a single solid color.
 * AI Image Titles - In addition to ALT text, captions, and descriptions, you can now generate smart image titles using AI for better SEO.
 * Bulk Remove AI Data - Easily clear all AI-generated image SEO data in one go.
 
@@ -314,6 +314,11 @@ where `APIKEY` is the API Key received upon sign up.
 = Where do I report security bugs found in this plugin? =
 Please report security bugs found in the source code of the ShortPixel Image Optimizer plugin through the [Patchstack Vulnerability Disclosure Program](https://patchstack.com/database/vdp/shortpixel-image-optimiser). The Patchstack team will assist you with verification, CVE assignment, and notify the developers of this plugin.
 
+= Does the plugin use any external services =
+This plugin integrates with Chatbase ([https://www.chatbase.co](https://www.chatbase.co/)) to provide AI-powered chat support directly within the plugin interface. This integration allows plugin users to ask questions and receive automated assistance. The only data collected is the Country(no city and no exact location) and the message itself.
+
+Chatbase [ToS](https://www.chatbase.co/legal/terms).
+
 = I’m stuck. What do I do? =
 
 The ShortPixel team is here to help. <a href="https://shortpixel.com/contact">Contact us</a>!
@@ -482,6 +487,24 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 14. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 6.4.1 =
+
+🎄 The Christmas Update
+
+Release Date: December 18, 2025
+
+🎁 Fixes & Improvements
+
+* Temporary File Cleanup: Introduced a mechanism to automatically clean up temporary files after optimization, keeping your server tidy.
+* Zero-Byte File Protection: Prevents copying of 0-byte files from the /tmp/ folder in cases of permission errors or low tmp disk space.
+* IIS Compatibility Fix: Resolved a timestamp-related warning on IIS servers using 32-bit PHP environments.
+* Download Timeout Limit: Added a 25-second cap on item downloads to prevent conflicts with PHP's 30-second timeout.
+* Manual Mode Debug Fix: Fixed an issue in the debug menu from the plugin settings when using manual debug mode.
+* Custom CDN Field Fix: Corrected a conflict where the custom CDN field was hidden if the "Premium Add-ons for Elementor" plugin was active.
+* Wording Improvements: Made several small text updates for better clarity throughout the plugin.
+
+Update now and enjoy a smoother, more festive ShortPixel experience! 🎅🚀
 
 = 6.4.0 =
 

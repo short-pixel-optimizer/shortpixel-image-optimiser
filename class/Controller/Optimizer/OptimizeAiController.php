@@ -318,6 +318,10 @@ class OptimizeAiController extends OptimizerBase
         $data = $this->getAltData($qItem); 
         $qItem->addResult(['aiData' => $data['generated']]); // But the generated data in the result.
 
+        // For Bulk, add labels to display in the result set. Default is same as data, can be overridden
+        $qItem->addResult(['aiDataLabels' => $data['labels']
+        ]);
+
         $this->finishItemProcess($qItem);
         return;
   }
@@ -736,13 +740,20 @@ public function getAltData(QueueItem $qItem)
     $metadata['action'] = $qItem->data()->action;
     $metadata['item_id'] = $item_id;
 
+    $metadata['labels'] = [
+      'alt' => __('Alt', 'shortpixel-image-optimiser'), 
+      'caption' => __('Caption', 'shortpixel-image-optimiser'), 
+      'description' => __('Description', 'shortpixel-image-optimiser'), 
+      'post_title' =>  __('Image Title' , 'shortpixel-image-optimiser'), 
+    ];
+
     return $metadata; 
 }
 
 public function formatGenerated($generated, $current, $original)
 {
     
-  $fields = ['alt', 'caption', 'description'];
+  $fields = ['alt', 'caption', 'description', 'post_title'];
   $dataItems = []; 
 
   // Statii from AiDataModel which means generated is not available (replace for original/current?) 

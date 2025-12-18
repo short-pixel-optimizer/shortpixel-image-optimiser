@@ -82,7 +82,9 @@ class QuotaController
           $quotaData = $this->getQuotaData();
           $DateNow = time();
 
-          $DateSubscription = strtotime($quotaData['APILastRenewalDate']);
+          // This check to prevent IIS issue on 32Bit PHP to have complaints (?) .  //https://support.shortpixel.com/conversation/240212
+          $DateSubscription = (isset($quotaData['APILastRenewalDate']) && $quotaData['APILastRenewalDate'] != 0 ) ? 
+                          strtotime($quotaData['APILastRenewalDate']) : false; 
           $DaysToReset =  30 - ( (int) (  ( $DateNow  - $DateSubscription) / DAY_IN_SECONDS) % 30);
 
           $quota = (object) [

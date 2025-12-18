@@ -83,8 +83,27 @@ class DownloadHelper
 						return false;
 					}
 
+          /*
+          Log::addError('Nulling tempfile to zero for testing!'); 
+          $file = fopen($tempFile, 'r+'); 
+          ftruncate($file,0);
+          fclose($file);
+          */
+
 					$fs = \wpSPIO()->filesystem();
 					$file = $fs->getFile($tempFile);
+
+          
+
+          if ($file->getFileSize() === 0)
+          {
+              Log::addError('Tmp File zero bytes', $tempFile); 
+              ResponseController::addData('is_error', true);
+              Responsecontroller::addData('message', __('Temp file zero bytes', 'shortpixel-image-optimiser'));
+
+              $file->delete(); // Prevent it from hanging around 
+              return false; 
+          }
 
           if (! is_null($args['destinationPath']))
           {
@@ -109,6 +128,7 @@ class DownloadHelper
           $fs = \wpSPIO()->filesystem();
 
           $destinationFile = $fs->getFile($destinationPath);
+
           // If file is non-existing, check directory and write-permissions.
           if (false == $destinationFile->exists())
           {
@@ -116,7 +136,7 @@ class DownloadHelper
             $dirObj->check(true);
           }
 
-          $result = $fileObj->copy($destinationFile);
+          $result = $fileObj->move($destinationFile);
 
           if ($result === false)
             return false;
@@ -125,14 +145,24 @@ class DownloadHelper
 
       }
 
-      private function downloadURLMethod($url, $force = false)
+      /** Get a sensible timeout for how long the download should be allowed to take */
+      private function getMaxDownloadTime()
       {
         $executionTime = ini_get('max_execution_time');
         if (! is_numeric($executionTime)) // edge case
         {
            $executionTime = 0;
         }
-        $downloadTimeout = max($executionTime - 10, 15);
+        // min here, so maximum value of downloadtimeout is 25 seconds, which should be more than enough. To prevent hanging downloads eating up server time
+        $downloadTimeout = min($executionTime - 10, 25);
+
+        return $downloadTimeout; 
+      }
+
+      private function downloadURLMethod($url, $force = false)
+      {
+
+        $downloadTimeout = $this->getMaxDownloadTime(); 
 
         $url = $this->setPreferredProtocol(urldecode($url), $force);
         $tempFile = \download_url($url, $downloadTimeout);
@@ -151,9 +181,8 @@ class DownloadHelper
       {
             //get_temp_dir
             $tmpfname = tempnam(get_temp_dir(), 'spiotmp');
-            $max_exec = ini_get('max_execution_time'); // Like everything, can't be trusted to be a int.
-            $max_exec =  (! is_numeric($max_exec) || $max_exec <= 0) ? 30 : $max_exec;
-            $downloadTimeout = max($max_exec - 10, 15);
+
+            $downloadTimeout = $this->getMaxDownloadTime(); 
 
             $args_for_get = array(
               'stream' => true,
@@ -184,6 +213,13 @@ class DownloadHelper
 		          $testURL = 'http://' . SHORTPIXEL_API . '/img/connection-test-image.png';
 		          $result = download_url($testURL, 10);
 		          $settings->downloadProto = is_wp_error( $result ) ? 'https' : 'http';
+
+              // remove test.
+              if (false === is_wp_error($result))
+              {
+                @unlink($result);
+              }
+              
 		      }
 		      return $settings->downloadProto == 'http' ?
 		              str_replace('https://', 'http://', $url) :

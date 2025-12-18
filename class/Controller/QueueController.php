@@ -403,7 +403,9 @@ class QueueController
             ]);
             Log::addWarn('Encountered blocked item, processing success? ', $item_id);
             ResponseController::addData($item_id, 'fileName', $imageModel->getFileName());
+
             $send_to_processing = false; 
+
           }
           else
           {
@@ -424,7 +426,6 @@ class QueueController
             $apiController->handleAPIResult($qItem);  
           }
           
-
           if (true === $qItem->result()->is_error &&  true === $this->args['is_bulk'] )
           {
              $this->LogBulk($qItem);

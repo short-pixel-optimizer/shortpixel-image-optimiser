@@ -17,6 +17,7 @@ use ShortPixel\Helper\UtilHelper as UtilHelper;
 class ApiController extends RequestManager
 {
 	// Moved these numbers higher to prevent conflict with STATUS
+	// @todo Almost none of these are in use ( ERR_TIMEOUT only )
 	const ERR_FILE_NOT_FOUND = -902;
 	const ERR_TIMEOUT = -903;
 	const ERR_SAVE = -904;
@@ -290,7 +291,7 @@ class ApiController extends RequestManager
 	}
 	// handleResponse function
 
-	protected function handleOptimizeResponse($qItem, $response)
+	protected function handleOptimizeResponse(QueueItem $qItem, $response)
 	{
 		$neededURLS = $qItem->data()->urls; // URLS we are waiting for.
 
@@ -409,7 +410,7 @@ class ApiController extends RequestManager
 		}
 	}
 
-	protected function handleActionResponse($qItem, $response)
+	protected function handleActionResponse(QueueItem $qItem, $response)
 	{
 		$item = $response[0]; // First File Response of API. 
 		$status_code = intval($item->Status->Code); 
@@ -478,7 +479,6 @@ class ApiController extends RequestManager
 				'status' => self::STATUS_SKIP,
 			),
 		);
-
 
 		$fileType = ($compressionType > 0) ? 'LossyURL' : 'LosslessURL';
 		$fileSize = ($compressionType > 0) ? 'LossySize' : 'LosslessSize';
