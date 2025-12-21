@@ -10,6 +10,9 @@ use ShortPixel\Helper\UiHelper as UiHelper;
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
+
+
+
 ?>
 
 <section class='dashboard panel active' data-panel="dashboard" style='display: block'  >
@@ -25,24 +28,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 -->
     <div class='bulk-wrapper'>
 
-      <div class='top-circle'>
-          <div class='the-circle'>&nbsp;</div>
-      </div>
+      <?php 
+      $link = (false !== $view->dashboard_link) ? sprintf('title="%s" href="%s" target="_blank"', $view->dashboard_message, $view->dashboard_link) : ''; 
+      ?>
+      <a class='top-circle' <?php echo $link ?>>
+          <div class='the-circle' style='background-image: url("<?php echo $view->dashboard_icon ?>");'>&nbsp;</div>
+      </a>
+      <?php //if (false !== $view->dashboard_title): ?>
+       <h3 class='title-offer'><?php echo ( (false !== $view->dashboard_title) ? $view->dashboard_title : "Ready to start optimizing?"); ?></h3>
+      <?php //endif; ?>
+
+
 
         <button type="button" class="button-primary button start" id="start-optimize" data-action="open-panel" data-panel="selection" <?php echo ($this->view->error) ? "disabled" : ''; ?>  >
-						<span><?php echo UIHelper::getIcon('res/images/icon/shortpixel.svg', ); ?></span>
             <?php esc_html_e('Start Optimization','shortpixel-image-optimiser'); ?>
         </button>
 
 			<div class='dashboard-text'>
-         <button class='button button-primary' type="button">
+         <a class='button button-primary' type="button" href="<?php echo admin_url('options-general.php?page=wp-shortpixel-settings&part=help'); ?>" target="_blank">
          <span class='icon white'><?php echo UIHelper::getIcon('res/images/icon/help-circle.svg', ['width' => '16']); ?></span> 
-         <span>Help</span>
-         </button> 
-         <button class='button' type='button'>
+         <span><?php _e('Help','shortpixel-image-optimiser'); ?></span>
+         </a> 
+         <a class='button' type='button' href="https://wordpress.org/support/plugin/shortpixel-image-optimiser/reviews/#new-post" target="_blank">
             <span class='icon'><?php echo UIHelper::getIcon('res/images/icon/heart.svg', ['width' => '16']); ?></span> 
-            <span>Rate ShortPixel</span>
-          </button>
+            <span><?php _e('Rate ShortPixel', 'shortpixel-image-optimiser'); ?></span>
+         </a>
       </div>
 
 

@@ -63,6 +63,7 @@ div.spio-modal {
 div.spio-modal iframe {
   width: 100%;
   height: 625px;
+  background-color: #fff;
 }
 div.spio-modal .spio-close-help-button {
   position: absolute;
@@ -86,6 +87,11 @@ div.spio-modal-title {
 
 .wrap.is-shortpixel-settings-page {
   /* TABS CONTROLS */
+  /* .submit {
+  	.button {
+  		min-height: 44px;
+  	}
+  } */
   /* In-view notice ( not on top, between the options ) - styled after WP notice */
   /* Specific styles for advanced settings tab */
   /*

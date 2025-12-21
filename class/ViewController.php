@@ -19,8 +19,8 @@ class ViewController extends Controller
   protected $model; // connected model to load.
   protected $template = null; // template name to include when loading.
 
-  protected $data = array(); // data array for usage with databases data and such
-  protected $postData = array(); // data coming from form posts.
+  protected $data = []; // data array for usage with databases data and such
+  protected $postData = []; // data coming from form posts.
 
   protected $mapper; // Mapper is array of View Name => Model Name. Convert between the two
   protected $is_form_submit = false; // Was the form submitted?

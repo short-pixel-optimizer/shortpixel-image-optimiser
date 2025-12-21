@@ -161,7 +161,7 @@ abstract class Queue
             {
               $prepared = $this->prepareBulkRestore();
             }
-            elseif (false !== $custom_operation && 'bulk-undoai' === $custom_operation)
+            elseif (false !== $custom_operation && 'bulk-undoAI' === $custom_operation)
             {
                $prepared = $this->prepareUndoAI(); 
             }
@@ -182,7 +182,7 @@ abstract class Queue
 
             if ($prepared['items'] == 0)
             {
-               Log::addDebug( $this->queueName . ' Queue, prepared came back as zero ', array($prepared, $result->items));
+          //     Log::addDebug( $this->queueName . ' Queue, prepared came back as zero ', array($prepared, $result->items));
                if ($prepared['results'] == 0) /// This means no results, empty query.
                {
                 $result->qstatus = self::RESULT_PREPARING_DONE;
@@ -411,22 +411,29 @@ abstract class Queue
 
                 // If autoAi is on the bulk, add operation to the item
                 $enqueueAi = false; 
-                if ('media' === $mediaItem->get('type') && 
-                true === $optimizeAiController->isAiEnabled() && 
-                true === $settings->autoAIBulk &&
-                true === $queueOptions['doAi']
+                $enqueueRegular = true; // basic item processing . 
 
-                )
+                if ('media' === $mediaItem->get('type'))
                 {
-                  $aiDataModel = AiDataModel::getModelByAttachment($mediaItem->get('id'));  
-                  $enqueueAi = $aiDataModel->isProcessable();
+                  if (! isset($queueOptions['doMedia']) || false === $queueOptions['doMedia'] )            
+                  {
+                     $enqueueRegular = false; 
+                  }      
 
+                  if (true === $optimizeAiController->isAiEnabled() && 
+                  true === $settings->autoAIBulk &&
+                  true === $queueOptions['doAi'])
+                  {
+                    $aiDataModel = AiDataModel::getModelByAttachment($mediaItem->get('id'));  
+                    $enqueueAi = $aiDataModel->isProcessable();
+                  }
                 }
 
+                // @todo This whole structure on ai / not-ai for enqueue is getting messy 
                 if ($mediaItem->isProcessable() && 
                     $mediaItem->isOptimizePrevented() === false &&
                      ! $operation &&
-                    (isset($queueOptions['doMedia']) && true === $queueOptions['doMedia'])
+                    true === $enqueueRegular
                   ) // Checking will be done when processing queue.
                 {
 
@@ -446,6 +453,9 @@ abstract class Queue
                    if (true === $enqueueAi)
                    {
                       $qItem->data->addNextAction('requestAlt'); 
+                      // Add count here when adding it to next action otherwise AI count in bulk might be hidden / totally off
+                      $customData->aiCount++;
+
                    }
 
                     $queue[] = $qItem->returnEnqueue(); //array('id' => $media_id, 'value' => $qObject, 'item_count' => $counts->creditCount);
@@ -523,6 +533,7 @@ abstract class Queue
               if (true === $env->IsOverMemoryLimit($i) || true === $env->IsOverTimeLimit())
               {
                  Log::addMemory('PrepareItems: OverLimit! Breaking on index ' . $i);
+                 $this->q->setStatus('custom_data', $customData, false); // save the counts.
                  $this->q->setStatus('last_item_id', $item_id);
                  $return['overlimit'] = true; // lockout return
                  break;
@@ -663,6 +674,10 @@ abstract class Queue
         {
            $count->total_images_without_ai = max(($count->images - $count->images_ai), 0);
         }
+        else
+        { 
+          $count->total_images_without_ai = $count->images;
+        }
 
         return $count;
     }
@@ -709,8 +724,13 @@ abstract class Queue
         }
 
         if (is_array($options) && count($options) > 0)
+        {
           $customData->queueOptions = $options;
-
+        }
+        else
+        {
+          $customData->queueOptions  = [] ;
+        }
         $this->getShortQ()->setStatus('custom_data', $customData);
     }
 

@@ -17,6 +17,7 @@ use ShortPixel\Helper\UtilHelper as UtilHelper;
 class ApiController extends RequestManager
 {
 	// Moved these numbers higher to prevent conflict with STATUS
+	// @todo Almost none of these are in use ( ERR_TIMEOUT only )
 	const ERR_FILE_NOT_FOUND = -902;
 	const ERR_TIMEOUT = -903;
 	const ERR_SAVE = -904;
@@ -132,9 +133,9 @@ class ApiController extends RequestManager
 		{
 			 $requestBody['bg_remove'] = $qItem->data()->paramlist['bg_remove']; 
 		}
-		elseif (isset($qItem->data()->paramlist['scale'])) // @todo This needs to be adepted to unknown api action
+		elseif (isset($qItem->data()->paramlist['upscale'])) // @todo This needs to be adepted to unknown api action
 		{
-			 $requestBody[''] = ''; 
+			 $requestBody['upscale'] = $qItem->data()->paramlist['upscale']; 
 		}
 
 		$requestParameters = [
@@ -210,10 +211,12 @@ class ApiController extends RequestManager
 				case -102: // Invalid URL
 				case -105: // URL missing
 				case -106: // Url is inaccessible
+				case -111: // File too big ( for upscale ) 
 				case -113: // Too many inaccessible URLs
 				case -201: // Invalid image format
 				case -202: // Invalid image or unsupported format
 				case -203: // Could not download file
+				case -207: // Invalid parameters
 					return $this->returnFailure(self::STATUS_ERROR, $status->Message);
 					break;
 				case -403: // Quota Exceeded
@@ -237,13 +240,15 @@ class ApiController extends RequestManager
 				case -500: // API in maintenance.
 					//return array("Status" => self::STATUS_MAINTENANCE, "Message" => $APIresponse['Status']->Message);
 					return $this->returnRetry(self::STATUS_MAINTENANCE, $status->Message);
+
+				break; 
 			}
 		}
 
 		if (is_array($APIresponse) && isset($APIresponse[0])) //API returned image details
 		{
 
-				if ('optimize' === $action)
+				if ('optimize' === $action || 'convert_api' === $action)
 				{
 					 return $this->handleOptimizeResponse($qItem, $APIresponse);
 				} 
@@ -251,6 +256,13 @@ class ApiController extends RequestManager
 				{
 					 return $this->handleActionResponse($qItem, $APIresponse); 
 				}
+				if ('scale_image' == $action)
+				{
+					 return $this->handleActionResponse($qItem, $APIresponse);
+				}
+
+				// Bail out if action is not properly defined 
+				return $this->returnFailure(self::STATUS_FAIL, __('ApiController was not provided with known action'));
 		
 
 		} // ApiResponse[0]
@@ -279,7 +291,7 @@ class ApiController extends RequestManager
 	}
 	// handleResponse function
 
-	protected function handleOptimizeResponse($qItem, $response)
+	protected function handleOptimizeResponse(QueueItem $qItem, $response)
 	{
 		$neededURLS = $qItem->data()->urls; // URLS we are waiting for.
 
@@ -398,7 +410,7 @@ class ApiController extends RequestManager
 		}
 	}
 
-	protected function handleActionResponse($qItem, $response)
+	protected function handleActionResponse(QueueItem $qItem, $response)
 	{
 		$item = $response[0]; // First File Response of API. 
 		$status_code = intval($item->Status->Code); 
@@ -467,7 +479,6 @@ class ApiController extends RequestManager
 				'status' => self::STATUS_SKIP,
 			),
 		);
-
 
 		$fileType = ($compressionType > 0) ? 'LossyURL' : 'LosslessURL';
 		$fileSize = ($compressionType > 0) ? 'LossySize' : 'LosslessSize';

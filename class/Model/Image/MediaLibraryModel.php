@@ -431,7 +431,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		} else
 			$height = $wpmeta['height'];
 
-		if (isset($wpmeta['filesize'])) {
+		if (isset($wpmeta['filesize']) && intval($wpmeta['filesize']) > 0) {
 			$this->filesize = $wpmeta['filesize'];
 		}
 
@@ -474,7 +474,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						$missingDefinitions[] = $name;
 					}
 
-					if (isset($data['filesize']))
+					if (isset($data['filesize']) && intval($data['filesize']) > 0)
 						$thumbObj->filesize = $data['filesize'];
 
 					$thumbnails[$name] = $thumbObj;
@@ -1698,6 +1698,16 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$originalFile = $fs->getOriginalImage($this->id);
 		$originalFile->setName($this->originalImageKey); // required for named API requests et al.
 		$originalFile->setImageType(self::IMAGE_TYPE_ORIGINAL);
+
+		// WordPress converts by default in new version s HEIC / BMP to JPG, but leaves the originalFile as Heic, ignore it then. 
+		if ($originalFile->getExtension() !== $this->getExtension())
+		{
+			 $difficult_extensions = ['heic', 'heif', 'bmp', 'tiff']; 
+			if (in_array($originalFile->getExtension(), $difficult_extensions))
+			{
+				return false; 
+			}			  
+		} 
 
 		if ($originalFile->exists() && $originalFile->getFullPath() !== $this->getfullPath()) {
 			$this->original_file = $originalFile;

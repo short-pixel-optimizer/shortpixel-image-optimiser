@@ -44,9 +44,6 @@ $disabled = ($view->key->is_editable) ? '' : 'disabled';
       <?php esc_html_e('Join ShortPixel','shortpixel-image-optimiser');?></a>
     </h2> -->
 
-  <form method="POST" action="<?php echo esc_url(add_query_arg(array('noheader' => 'true', 'sp-action' => 'action_request_new_key'))) ?>"
-      id="shortpixel-form-request-key">
-  <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
 
 		<div class='onboarding-join-wrapper'>
 

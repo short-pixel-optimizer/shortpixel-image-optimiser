@@ -136,6 +136,11 @@ class AjaxController
 		$json->$type->is_optimizable = (false !== $item) ? $item->isProcessable() : false;
 		$json->$type->is_restorable = (false !== $item)  ? $item->isRestorable() : false;
 		$json->$type->id = $id;
+		$json->$type->image = [
+			'width' => $item->get('width'), 
+			'height' => $item->get('height'), 
+			'extension' => $item->getExtension(), 
+		];
 		$json->$type->results = null;
 		$json->$type->is_error = false;
 		$json->status = true;
@@ -420,7 +425,9 @@ class AjaxController
 		 $mediaItem = $this->getMediaItem($item_id, 'media');
 		 $this->checkImageAccess($mediaItem);
 
-		 $previewImage = UiHelper::findBestPreview($mediaItem, 600);
+		 $action_name = isset($_POST['action_name']) ? sanitize_text_field($_POST['action_name']) : 'replace'; 
+
+		 $previewImage = UiHelper::findBestPreview($mediaItem, 800);
 
 		 $json = new \stdClass; 
 		 $json->item_id = $item_id; 
@@ -440,10 +447,13 @@ class AjaxController
 			'placeholderImage' => \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'), 
 			'item_id' => $item_id, 
 			'post_title' => $post->post_title, 
+			'action_name' => $action_name, 
 			]
 		 ); 
 
 		 $json->popup = $view->returnView('snippets/media-popup'); 
+		 $json->action_name = $action_name; 
+		 
 
 		 $this->send($json);
 
@@ -453,38 +463,67 @@ class AjaxController
 		$item_id = $data['id'];
 		$is_preview = true; // default to no action 
 		$is_preview = (isset($_POST['is_preview'])) ? filter_var(sanitize_text_field($_POST['is_preview']), FILTER_VALIDATE_BOOL) : $is_preview; 
-		
-		$backgroundType = isset($_POST['background_type']) ? sanitize_text_field($_POST['background_type']) : 'transparent'; 
-		$backgroundColor = isset($_POST['background_color']) ? sanitize_text_field($_POST['background_color']) : false; 
-		$backgroundTransparency = isset($_POST['background_transparency']) ? sanitize_text_field($_POST['background_transparency']) : '00';
-		$newFileName = isset($_POST['newFileName']) ? sanitize_file_name($_POST['newFileName']) : false; 
-		$newPostTitle = isset($_POST['newPostTitle']) ? sanitize_text_field($_POST['newPostTitle']) : ''; 
-		$refresh = isset($_POST['refresh']) ? filter_var(sanitize_text_field($_POST['refresh']), FILTER_VALIDATE_BOOL) : false;  
-		$opener = isset($_POST['opener']) ? sanitize_text_field($_POST['opener']) : ''; 
-		$attached_post_id = isset($_POST['attached_post_id']) ? intval($_POST['attached_post_id']) : 0; 
+
+		$action_name = isset($_POST['action_name']) ? sanitize_text_field($_POST['action_name']) : 'remove'; 
 
 		$mediaItem = $this->getMediaItem($item_id, 'media');
 
 		$this->checkImageAccess($mediaItem);
-
 		$qItem = QueueItems::getImageItem($mediaItem);
-		$optimizer = $qItem->getApiController('remove_background');
 
-		$args = []; 
+		// General needed: 
+		$opener = isset($_POST['opener']) ? sanitize_text_field($_POST['opener']) : ''; 
+		$attached_post_id = isset($_POST['attached_post_id']) ? intval($_POST['attached_post_id']) : 0; 
+		$newFileName = isset($_POST['newFileName']) ? sanitize_file_name($_POST['newFileName']) : false; 
+		$newPostTitle = isset($_POST['newPostTitle']) ? sanitize_text_field($_POST['newPostTitle']) : ''; 
+		$refresh = isset($_POST['refresh']) ? filter_var(sanitize_text_field($_POST['refresh']), FILTER_VALIDATE_BOOL) : false;  
+
+		$args = [
+			'newFileName' => $newFileName, 
+			'newPostTitle' => $newPostTitle, 
+			'refresh' => $refresh, 
+			'attached_post_id' => $attached_post_id, 
+		]; 
+
+		// For remove background : 
+		if ('remove' === $action_name)
+		{
+			$backgroundType = isset($_POST['background_type']) ? sanitize_text_field($_POST['background_type']) : 'transparent'; 
+			$backgroundColor = isset($_POST['background_color']) ? sanitize_text_field($_POST['background_color']) : false; 
+			$backgroundTransparency = isset($_POST['background_transparency']) ? sanitize_text_field($_POST['background_transparency']) : '00';
+			if ('solid' == $backgroundType)
+			{
+				 $args['replace_color'] = $backgroundColor; 
+				 $args['replace_transparency'] = $backgroundTransparency; 
+				 $args['do_transparent'] = false;
+			}
+			else
+			{
+				 $args['do_transparent'] = true; 
+			}
+
+			$optimizer = $qItem->getApiController('remove_background');
+			$qItem->newRemoveBackgroundAction(array_merge(['is_preview' => $is_preview], $args));
+
+		}
+		elseif ('scale' == $action_name) 		// For image scaling: 		
+		{
+			$args['scale'] = isset($_POST['scale']) ? intval($_POST['scale']) : 2; 
+
+			$optimizer = $qItem->getApiController('scale_image');
+			$qItem->newScaleImageAction(array_merge(['is_preview' => $is_preview], $args));
+		}
+
+
+		//$args = []; 
 		
-		$args['do_transparent'] = ('transparent' == $backgroundType) ? true : false; 
+		/*$args['do_transparent'] = ('transparent' == $backgroundType) ? true : false; 
 		$args['newFileName'] = $newFileName; 
 		$args['newPostTitle'] = $newPostTitle; 
 		$args['refresh'] = $refresh;
 		$args['attached_post_id'] = $attached_post_id; 
-		
-		if ('solid' == $backgroundType)
-		{
-			 $args['replace_color'] = $backgroundColor; 
-			 $args['replace_transparency'] = $backgroundTransparency; 
-		}
-		
-		$qItem->newRemoveBackgroundAction(array_merge(['is_preview' => $is_preview], $args));
+	*/		
+
 		$optimizer->sendToProcessing($qItem);
 		$optimizer->handleAPIResult($qItem);  
 
@@ -943,14 +982,14 @@ class AjaxController
 
 		$api = $queueItem->getApiController('getAltData'); 
 
-		$metadata = $api->undoAltData($queueItem);
+		$altData = $api->undoAltData($queueItem);
 
 		if ('redo' == $action_type)
 		{
 			 return $this->requestAlt($json, $data);
 		} 
 
-		//$json->$type->results = [$result];
+		$json->$type = $altData;
 		$json->status = true;
 		
 		return $json;

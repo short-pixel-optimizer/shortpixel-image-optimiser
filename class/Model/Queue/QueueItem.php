@@ -43,7 +43,6 @@ class QueueItem
          $this->item_id = intval($args['item_id']);
       }
 
-
       // Init defaults
       $this->data = new QueueItemData(); // init
    }
@@ -575,7 +574,18 @@ class QueueItem
        {
          $color = $args['replace_color']; 
          $transparency = $args['replace_transparency']; 
-         $paramlist['bg_remove'] = $color . $transparency;
+
+         $paramlist['bg_remove'] = $color;
+         if ($transparency >= 0 && $transparency < 100)
+			{
+				if ($transparency == 100)
+					$transparency = 'FF';
+
+			  // Strpad for lower than 10 should add 09, 08 etc.
+				 $transparency = str_pad($transparency, 2, '0', STR_PAD_LEFT);
+             $paramlist['bg_remove'] .= $transparency;
+         }
+         
        }
 
        if (false === is_null($args['newFileName']) && strlen($args['newFileName']) > 0)
@@ -620,6 +630,7 @@ class QueueItem
            'newPostTitle' => '', 
            'refresh' => false, 
            'attached_post_id' => null,
+           'scale' => null, 
       ]; 
 
       $paramlist = []; 
@@ -635,10 +646,25 @@ class QueueItem
       
       $url = $originalFile->getUrl(); 
 
+      if (false === is_null($args['newFileName']) && strlen($args['newFileName']) > 0)
+      {
+         $paramlist['newFileName'] = $args['newFileName']; 
+      }
+      else
+      {
+         $paramlist['newFileName'] = $originalFile->getFileBase() . '_noscale' . $originalFile->getExtension(); 
+      }
+
       $paramlist['newPostTitle'] = $args['newPostTitle'];
 
       $paramlist['refresh'] = $args['refresh']; // When sending item first, do the refresh. This is the mimc the tries = 0 refresh option we don't have here. 
-      
+      $paramlist['upscale'] = $args['scale'];
+
+      if (! is_null($args['attached_post_id']) && $args['attached_post_id'] > 0)
+      {
+         $paramlist['attached_post_id'] = $args['attached_post_id'];
+      }
+
       $returndatalist = [$this->imageModel->getImageKey() => $this->imageModel->getFileName()];
       
       $this->data->action = 'scale_image'; 
@@ -651,6 +677,7 @@ class QueueItem
       $this->item_count = 1;
       
    }
+
 
    /**
     * Get the ApiController associated to the action performed

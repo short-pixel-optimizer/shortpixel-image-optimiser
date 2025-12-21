@@ -105,7 +105,7 @@ class OptimizeController extends OptimizerBase
   {
     $action = $qItem->data()->action;
 
-    if ('optimize' === $action) {
+    if ('optimize' === $action || 'convert_api' ===  $action) {
       $is_processable = $qItem->imageModel->isProcessable();
 
       // Allow processable to be overridden when using the manual optimize button - ignore when this happens already to be in queue.
@@ -198,13 +198,13 @@ class OptimizeController extends OptimizerBase
     }
 
     // easier to reads than a elseif structure. 
-    if (false === $qItem->result->is_error) {
+    if (false === $qItem->result()->is_error) {
 
-      if ('optimize' === $action)
+      if ('optimize' === $action || 'convert_api' === $action)
       {
         $this->handleOptimizeAction($qItem);        
       }
-      elseif ('remove_background' === $action)
+      elseif ('remove_background' === $action || 'scale_image' === $action) 
       {
         $this->handleAction($qItem);
       } 
@@ -228,7 +228,7 @@ class OptimizeController extends OptimizerBase
     }
 
     // For now here, see how that goes
-    $responseMessage = ResponseController::formatItem($item_id);
+    $responseMessage = ResponseController::formatQItem($qItem);
     if ($responseMessage !== false && strlen($responseMessage) > 0) {
       $qItem->addResult([
         'message' => $responseMessage,
@@ -347,7 +347,7 @@ class OptimizeController extends OptimizerBase
           $this->finishItemProcess($qItem);
         }
       }
-    } else {
+    } else { // Not is_done
       if ($qItem->result()->apiStatus == ApiController::STATUS_UNCHANGED || $qItem->result()->apiStatus === Apicontroller::STATUS_PARTIAL_SUCCESS) {
         $qItem->addResult(['fileStatus' => ImageModel::FILE_STATUS_PENDING]);
         $retry_limit = $q->getShortQ()->getOption('retry_limit');
@@ -423,6 +423,8 @@ class OptimizeController extends OptimizerBase
          //  $new_attach_id = media_sideload_image($url, $attached_post_id, '', 'id'); // Add to WP, return attach_id
            
            $qItem->addResult(['new_attach_id' => $new_attach_id] );
+
+           $tmpFile->delete();
         }
     }
 
@@ -469,6 +471,7 @@ class OptimizeController extends OptimizerBase
         $item_files[$imageName] = [];
       }
 
+      // @todo Direct call to file_exists, which should be ok, because tmp, but still could be improved.
       if (isset($item_files[$imageName]['image']) && file_exists($item_files[$imageName]['image'])) {
         // All good.
       }
@@ -477,11 +480,17 @@ class OptimizeController extends OptimizerBase
         $image['image']['status'] == ApiController::STATUS_SUCCESS ||
         ($image['image']['status'] == ApiController::STATUS_OPTIMIZED_BIGGER && is_object($converter))
       ) {
-        $tempFile = $downloadHelper->downloadFile($image['image']['url']);
+        $tempFile = $downloadHelper->downloadFile($image['image']['url']);      
         if (is_object($tempFile)) {
           $item_files[$imageName]['image'] = $tempFile->getFullPath();
           $imageArray[$imageName]['image']['file'] = $tempFile->getFullPath();
         }
+        else
+        {
+          
+           $imageArray[$imageName]['image']['status'] = RequestManager::STATUS_CONNECTION_ERROR;
+        }
+
       }
 
 

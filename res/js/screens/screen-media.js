@@ -40,12 +40,23 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		if (document.getElementById('attachment_alt') !== null)
 		{
 			var postInput = document.getElementById('post_ID');
-			this.FetchAltView(undefined, postInput.value);
-			this.InitEditorActions(postInput.value, 'edit'); 
+			let item_id = postInput.value; 
+			this.FetchAltView(undefined, item_id);
+			let imageDataEl = document.getElementById('shortpixel-data-' + item_id); 
+			let editorArgs = {}; 
+			if (null !== imageDataEl && imageDataEl.dataset.imagewidth)
+			{
+				 editorArgs.image_width= imageDataEl.dataset.imagewidth;
+			}
+			if (null !== imageDataEl && imageDataEl.dataset.extension)
+			{
+				 editorArgs.image_ext = imageDataEl.dataset.extension;
+			}
+			this.InitEditorActions(postInput.value, 'edit', editorArgs); 
 		}
 	}
 
-	InitEditorActions(item_id, uiType)
+	InitEditorActions(item_id, uiType, args)
 	{
 		let id = 'shortpixel_removebackground_button';
 		var button = document.createElement('button'); 
@@ -57,39 +68,82 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		button.id = id; 
 		button.dataset.item_id = item_id; 
 
-		button.addEventListener('click', this.OpenEditorEvent.bind(this)); 
+		button.addEventListener('click', (event) => { this.OpenEditorEvent(event, 'remove') }); 
 		button.dataset.opener = uiType; 
+		
+		var scaleButton = document.createElement('button'); 
+		scaleButton.name = 'scaleBackground'; 
+		scaleButton.innerHTML = this.settings.scale_title; 
+		scaleButton.type = 'button'; 
+		scaleButton.classList.add('button', 'button-secondary'); 
+		scaleButton.id = 'shortpixel_scale_button'; 
+		scaleButton.dataset.item_id = item_id; 
+		scaleButton.style.marginLeft = '6px'
+		
+		scaleButton.addEventListener('click', (event) => { this.OpenEditorEvent(event, 'scale') }); 
+		scaleButton.dataset.opener = uiType; 
+
+		if (args.image_ext && false == (args.image_ext == 'jpg' || args.image_ext == 'png' || args.image_ext == 'jpeg'))
+		{
+			return; 
+		}
+		else if (args.image_width && parseInt(args.image_width) > parseInt(this.settings.upscale_max_width))
+		{
+			scaleButton.disabled = true;
+			scaleButton.title = this.settings.too_big_for_scale_title; 
+		}
 
 			// @todo Probably all should pass uiType. 
 		if (typeof uiType === 'undefined' || uiType === 'edit')
 		{
 			var parent = document.querySelector('[id^=media-head]'); 
-			parent.append(button);
+			let par = document.createElement('p');
+			let par2 = document.createElement('p');
+			par.append(button);
+			par2.append(scaleButton); 
+			parent.append(par, par2);
 		}
 		else if('gallery' === uiType)
 		{
 			var parent = document.querySelector('.media-modal .attachment-actions')
-			parent.append(button);
+			parent.append(button, scaleButton);
 		}
 		else if ('gutenberg' == uiType)
 		{
-			var parent = document.querySelector('.attachment-info .details')
+			var parent = document.querySelector('.attachment-info  ');
 			if (null !== parent)
 			{
 				button.classList.add('button-link');
 				button.style.display = 'inline';
+				button.style.fontSize = '12px'; // hacking in to match Gburg. 
+				button.style.textDecoration = 'none'; 
+				
+				
+				scaleButton.classList.add('button-link'); 
+				scaleButton.style.display = 'inline';
+				scaleButton.style.fontSize = '12px'; // hacking in to match Gburg. 
+				scaleButton.style.textDecoration = 'none'; 
+
+				if (false == scaleButton.disabled)
+				{
+					button.style.marginLeft = '4px';
+					parent.append(scaleButton);
+				}
+
 				parent.append(button);
+
+
 			}
 		}
 		
 	}
 
-	OpenEditorEvent(event)
+	OpenEditorEvent(event, action_name)
 	{
-		 let item_id = event.target.dataset.item_id; 
-		 var opener = event.target.dataset.opener; 
+		let item_id = event.target.dataset.item_id; 
+		var opener = event.target.dataset.opener; 
 
-		 event.preventDefault(); 
+		event.preventDefault(); 
 		
 		let backgroundShade = document.createElement('div');
 		backgroundShade.id = 'shortpixel-media-modal-shade';
@@ -98,6 +152,9 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		let modal = document.createElement('div'); 
 		modal.id = 'shortpixel-media-modal'; 
 		modal.classList.add('shortpixel-media-modal', 'modal');
+		modal.dataset.opener = opener; 
+		modal.dataset.action_name = action_name; 
+		modal.dataset.item_id = item_id; 
 
 		if (null === document.getElementById('shortpixel-media-modal-css'))
 		{
@@ -183,31 +240,79 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		window.addEventListener('shortpixel.openEditorPopup', function (event) {
 			let previewData = event.detail; 
 
+			let actionName = event.detail.action_name; 
+
 			modal.innerHTML = previewData.popup; 
 			modal.querySelector('[data-action="close"]').addEventListener('click', () => {
 				document.dispatchEvent(closeEvent);
 			}, { once: true });
 
-			this.MediaEditorDoAction({ preview: true, 'item_id': item_id, 'modal': modal, 'opener' : opener});
+			if (true == this.settings.popup_load_preview)
+			{
+				this.MediaEditorDoAction({ preview: true, 'item_id': item_id, 'modal': modal});
+			}
 
 			let previewButton = modal.querySelector('[data-action="media-get-preview"]'); 
 			previewButton.addEventListener('click', () => {
-				 	this.MediaEditorDoAction({ preview: true, 'item_id': item_id, 'modal' : modal, 'refresh' : true, 'opener' : opener});
+				 	this.MediaEditorDoAction({ preview: true, 'item_id': item_id, 'modal' : modal, 'refresh' : true});
 			});
 
 			let saveButton = modal.querySelector('[data-action="media-save-button"]'); 
 			saveButton.addEventListener('click', () =>  { 
-				 this.MediaEditorDoAction({ preview: false, 'item_id': item_id, 'modal' : modal, 'refresh' : true, 'opener' : opener});
+				 this.MediaEditorDoAction({ preview: false, 'item_id': item_id, 'modal' : modal, 'refresh' : true});
 			});
+
+			let actionWrapper = modal.querySelector('.' + actionName + '.action_wrapper');
+			if (null !== actionWrapper)
+			{
+				 actionWrapper.classList.add('active');
+			}
+
+			// Interface elements for remove backgrounnd
+			let solidInput = modal.querySelectorAll('input[name="background_type"]'); 
+			if (solidInput.length > 0)
+			{
+				let solidSelector = modal.querySelector('#solid_selector'); 
+				for (let i = 0; i < solidInput.length; i++)	
+				{
+					solidInput[i].addEventListener('change', (event) => {
+						 if (event.target.value == 'solid')
+						 {
+							 solidSelector.style.display = 'block'; 
+							 solidSelector.style.opacity = 1; 
+						 }
+						 else
+						 {
+							solidSelector.style.display = 'none'; 
+							solidSelector.style.opacity = 0; 
+						 }
+					}); 
+				}
+			}
+			let bgTransInput = modal.querySelector('#bg_transparency');
+			if (null !== bgTransInput)
+			{
+				bgTransInput.addEventListener('change', (event) => {
+					let value = event.target.value; 
+					let tr = modal.querySelector('#transparency_range'); 
+					if (null !== tr)
+					{ 
+						tr.innerText = value;
+					}
+				});
+			}
+
+			
 
 
 		}.bind(this), { once: true });
 
-		// Fire off data load event. 
+		// Fire off data load event.  This loads the popup content. 
 		let data = {
 			id: item_id,
 			type: 'media',
 			screen_action: 'media/getEditorPopup',
+			action_name : action_name, 
 		}
 		data.callback = 'shortpixel.openEditorPopup';
 		this.processor.AjaxRequest(data);
@@ -224,13 +329,18 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		let newFileName = modal.querySelector('input[name="new_filename"]').value; 
 		let newPostTitle= modal.querySelector('input[name="new_posttitle"]').value;
 		let spinner = document.querySelector('.load-preview-spinner'); 
+		let scaleOption = document.querySelector('input[name="scale"]:checked').value; 
+
+		let action = modal.dataset.action_name; 
+		let opener = modal.dataset.opener; 
+
 
 		let previewImage = document.querySelector('.modal-wrapper .image-preview i'); 
 		previewImage.style.backgroundImage = 'url(' + previewImage.dataset.placeholder + ')';
 
 		modal.dispatchEvent(modal.toggleButtonBlock);
 
-		if ('gutenberg' == data.opener)
+		if ('gutenberg' == opener)
 		{
 			let searchParams = new URLSearchParams(window.location.search);
 			if (searchParams.has('post'))
@@ -254,15 +364,25 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			id: data.item_id,
 			type: 'media',
 			screen_action: 'media/getEditorPreview',
-			background_type:  backgroundType, 
-			background_color: backgroundColor,
-			background_transparency: backgroundTransparency,  
 			newFileName: newFileName, 
 			newPostTitle: newPostTitle, 
 			is_preview: data.preview,
 			refresh: refresh, 
-			opener: data.opener,
+			opener: opener,
+			action_name: action,
 		};
+
+		if ('remove' == action)
+		{
+			request.background_type =  backgroundType; 
+			request.background_color = backgroundColor; 
+			request.background_transparency = backgroundTransparency;   
+		}
+
+		if ('scale' == action)
+		{
+			request.scale = scaleOption;
+		}
 
 		if (data.attached_post_id)
 		{
@@ -343,6 +463,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			var newAltText = aiData.alt; 
 			var newCaption = aiData.caption;
 			var newDescription = aiData.description;
+			var newTitle = aiData.post_title;
 		}
 
 		if (typeof newAltText !== 'undefined' || newAltText < 0)
@@ -373,8 +494,9 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			}
 		}
 		// edit media screen
-		 let captionFields = ['attachment_caption', 'attachment-details-caption']; 
-		 let descriptionFields = ['attachment_content', 'attachment-details-description']; 
+		 let captionFields = ['attachment_caption', 'attachment-details-caption', 'attachment-details-two-column-caption']; 
+		 let descriptionFields = ['attachment_content', 'attachment-details-description', 'attachment-details-two-column-description']; 
+		 let postTitleFields = ['title', 'attachment-details-title', 'attachment-details-two-column-title'];
 		 
 		 if (typeof newCaption !== 'undefined' || newCaption < 0)
 		 {
@@ -397,6 +519,18 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				{
 					 descriptionField.value = newDescription; 
 				}
+			}
+		 }
+
+		 if (typeof newTitle !== 'undefined' || newTitle < 0)
+		 {
+			for (var i = 0; i < postTitleFields.length; i++)
+			{
+				 let titleField = document.getElementById(postTitleFields[i]); 
+				 if (null !== titleField)
+				 {
+					 titleField.value = newTitle;
+				 }
 			}
 		 }
 
@@ -664,7 +798,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				if (!e.detail || !e.detail.media || !e.detail.media.itemView) {
 					return;
 				}
-console.log('modal', this);
+
 				var item_id = e.detail.media.id; 
 
 				var $spSpace = this.$el.find('.attachment-info .details');
@@ -679,11 +813,20 @@ console.log('modal', this);
 					setTimeout(function () { this.renderSPIOView(e, timed) }.bind(this), 1000);
 				}
 
+				let editorArgs = {}; 
+				if (e.detail.media.image && e.detail.media.image.width) // dottadot
+				{
+					editorArgs.image_width = e.detail.media.image.width; 
+				}
+				if (e.detail.media.image && e.detail.media.image.extension) // dottadot
+				{
+					editorArgs.image_ext = e.detail.media.image.extension; 
+				}
 
 				var html = this.doSPIORow(e.detail.media.itemView);
 				$spSpace.after(html);
 
-				self.InitEditorActions(item_id, opener);
+				self.InitEditorActions(item_id, opener, editorArgs);
 				self.FetchAltView(undefined, item_id); 
 
 			},

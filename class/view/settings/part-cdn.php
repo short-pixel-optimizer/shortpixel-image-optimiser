@@ -17,6 +17,31 @@ if ( ! defined( 'ABSPATH' ) ) {
     <?php esc_html_e('CDN','shortpixel-image-optimiser');?>
   </h2>
 
+	<setting class='switch'>
+		<content>
+	<?php $this->printSwitchButton(
+				['name' => 'useCDN',
+				 'checked' =>  ($view->data->useCDN > 0) ? 1 : 0,
+				 'label' => esc_html__('Use a CDN to deliver images','shortpixel-image-optimiser'),
+				]);
+	?>
+	</content>
+	<name><?php esc_html_e('CDN Domain', 'shortpixel-image-optimiser'); ?></name>
+	<content>
+			<input type="text" name="CDNDomain" value="<?php echo esc_attr($view->data->CDNDomain) ?>">
+			<i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain/"></i>
+		</content>
+</setting>
+
+	<setting>
+		<name><?php esc_html_e('CDN Domain', 'shortpixel-image-optimiser'); ?></name>
+		<content>
+				<input type="text" name="CDNDomain" value="<?php echo esc_attr($view->data->CDNDomain) ?>">
+				<i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain/"></i>
+			</content>
+		<info><php _esc_html_e('Change this only if you want to use your own CDN or if you want to set up your custom domain. ', 'shortpixel-image-optimiser'); ?></info>
+		</setting>
+
   <setting>
       <name><?php esc_html_e('HTTP AUTH credentials','shortpixel-image-optimiser');?></name>
 

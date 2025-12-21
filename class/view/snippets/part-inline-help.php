@@ -32,6 +32,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 				         $("#spioHelpShade").css("display", "block");
 				         $("#spioHelp .spio-modal-body iframe").attr('src',  evt.target.dataset.link);
 				         $("#spioHelp").removeClass('spio-hide');
+						 
 				     }
 
 				     $.spioHelpClose = function(){

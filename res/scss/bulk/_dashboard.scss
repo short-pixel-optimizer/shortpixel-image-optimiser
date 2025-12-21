@@ -65,9 +65,15 @@
                {
                   width: 222px;
                   height: 222px;
-                  border-radius: 50%; 
-                  background-color: $blue_background;
+                  //border-radius: 50%; 
+                  //background-color: $blue_background;
+                  background-position: center;
+                  background-repeat: no-repeat;
                }
+            }
+            .title-offer 
+            {
+               margin: 0;
             }
        } // bulk wrapper
 
@@ -105,10 +111,10 @@
 
           label 
           {
-             display: inline-block; 
-             text-align: center; 
-             border-bottom: 1px solid $blue_default; 
-             width: 200px; 
+             display: inline-block;
+             text-align: center;
+             border-bottom: 1px solid $blue_light;
+             width: 200px;
 
              h3 {
               //text-align: center; 
@@ -119,6 +125,7 @@
               color: #fff; 
               padding: 6px;
               background: $blue_default; 
+              border-radius: 3px 3px 0 0;
               font-size: 12px;
               .icon {
                  margin: 0 4px; 
@@ -133,8 +140,9 @@
        {
           display: table;
           width: 80%;
-         // max-width: 800px;
-          margin: 0 auto;
+          border-top: 1px solid $blue_light;
+       // max-width: 800px;
+          margin: -1px auto 0 auto;
           h3 { display: table-caption; text-align: center;}
           > div {
             display: table-row;
@@ -142,8 +150,7 @@
           }
           .head
           {
-            background: $blue_light;
-            border-top: 1px solid $blue_dark;
+            background: $blue_extralight;
             text-align: left;
             span {
               font-weight: 700;
@@ -193,7 +200,7 @@
         left: 0;
         right: 0;
         //bottom: 0;
-        top: -100px;
+        //top: -100px;
         width: auto;
         box-sizing: border-box;
         box-shadow: rgba(0, 0, 0, 0.5) 4px 4px 20px;

@@ -158,12 +158,13 @@ class ShortPixelScreen extends ShortPixelScreenBase
 
 	DoActionEvent(event)
 	{
-		var element = event.target;
+		var element = event.target; 
+
 
 		// Might be the child
 		if (element.getAttribute('data-action') == null)
 		{
-			var element = element.parentElement;
+			var element = event.currentTarget; // Should perhaps be default when checking action event? 
 		}
 		if (element.disabled == true) // disabled button still register events, prevent going.
 		{
@@ -455,12 +456,16 @@ class ShortPixelScreen extends ShortPixelScreenBase
 
              let ul = aiPreviewElement.querySelector('ul'); 
              ul.innerHTML = ''; 
+
+             let labels = (resultItem.aiDataLabels) ? resultItem.aiDataLabels : {}; 
              
              for (var field in resultItem.aiData)
              {  
                 let value = resultItem.aiData[field];
-                 let li = document.createElement('li'); 
-                 li.innerHTML = '<strong>' + field + '</strong>: ' + value; 
+                let li = document.createElement('li'); 
+                let label = (labels[field]) ? labels[field] : field; 
+                  
+                 li.innerHTML = '<strong>' + label + '</strong>: ' + value; 
                  ul.append(li);
              }
           }
@@ -832,13 +837,13 @@ class ShortPixelScreen extends ShortPixelScreenBase
      {
         el.style.display = 'block';
         buttonPause.style.display = 'none';
-        buttonResume.style.display = 'inline-block';
+        buttonResume.style.display = 'flex';
 
      }
      else
      {
         el.style.display = 'none';
-        buttonPause.style.display = 'inline-block';
+        buttonPause.style.display = 'flex';
         buttonResume.style.display = 'none';
 
 				// in case this is overquota situation, on unpause, recheck situation, hide the thing.

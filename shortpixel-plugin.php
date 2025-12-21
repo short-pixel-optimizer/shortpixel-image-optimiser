@@ -75,7 +75,7 @@ class ShortPixelPlugin {
 		$admin        = Controller\AdminController::getInstance();
 		$adminNotices = Controller\AdminNoticesController::getInstance(); // Hook in the admin notices.
 
-		$this->initHooks();
+//		$this->initHooks();
 		$this->ajaxHooks();
 
 		if ( defined( 'WP_CLI' ) && \WP_CLI ) {
@@ -83,6 +83,7 @@ class ShortPixelPlugin {
 		}
 
 		add_action ('init', [$this, 'init']);
+		add_action('init', [$this, 'initHooks']);
 		add_action( 'admin_init', [ $this, 'admin_init' ] );
 	}
 
@@ -90,6 +91,30 @@ class ShortPixelPlugin {
 	{
 		Controller\CronController::getInstance();  // cron jobs - must be init to function!
 
+		$access = AccessModel::getInstance();
+
+		$isAdminUser = $access->userIsAllowed('is_admin_user');
+	
+		if ( $isAdminUser ) {
+			// toolbar notifications
+
+			// deactivate conflicting plugins if found
+			add_action( 'admin_post_shortpixel_deactivate_conflict_plugin', array( '\ShortPixel\Helper\InstallHelper', 'deactivateConflictingPlugin' ) );
+
+			// only if the key is not yet valid or the user hasn't bought any credits.
+			// @todo This should not be done here.
+			$settings     = $this->settings();
+			$stats        = $settings->currentStats;
+			$totalCredits = isset( $stats['APICallsQuotaNumeric'] ) ? $stats['APICallsQuotaNumeric'] + $stats['APICallsQuotaOneTimeNumeric'] : 0;
+			$keyControl = ApiKeyController::getInstance();
+
+
+			if ( true || false === $keyControl->keyIsVerified() || $totalCredits < 4000 ) {
+				require_once 'class/view/shortpixel-feedback.php';
+				new ShortPixelFeedback( SHORTPIXEL_PLUGIN_FILE, 'shortpixel-image-optimiser' );
+			}
+		}
+		
 	}
 
 
@@ -166,7 +191,6 @@ class ShortPixelPlugin {
 
 		$admin = AdminController::getInstance();
 		$imageEditor = ImageEditorController::getInstance();
-		$access = AccessModel::getInstance();
 
 		// Handle for EMR
 		add_action( 'wp_handle_replace', array( $admin, 'handleReplaceHook' ) );
@@ -210,7 +234,6 @@ class ShortPixelPlugin {
 			add_filter( 'mpp_generate_metadata', array( $admin, 'handleAiImageUploadHook' ), 9, 2 );
 		}
 
-		$isAdminUser = $access->userIsAllowed('is_admin_user');
 
 		$this->env()->setDefaultViewModeList();// set default mode as list. only @ first run
 
@@ -231,25 +254,6 @@ class ShortPixelPlugin {
 		add_filter('wp_save_image_editor_file', array($imageEditor, 'saveImageFile'), 10, 5);  // hook when saving
 	//	add_action('update_post_meta', array($imageEditor, 'checkUpdateMeta'), 10, 4 );
 
-		if ( $isAdminUser ) {
-			// toolbar notifications
-
-			// deactivate conflicting plugins if found
-			add_action( 'admin_post_shortpixel_deactivate_conflict_plugin', array( '\ShortPixel\Helper\InstallHelper', 'deactivateConflictingPlugin' ) );
-
-			// only if the key is not yet valid or the user hasn't bought any credits.
-			// @todo This should not be done here.
-			$settings     = $this->settings();
-			$stats        = $settings->currentStats;
-			$totalCredits = isset( $stats['APICallsQuotaNumeric'] ) ? $stats['APICallsQuotaNumeric'] + $stats['APICallsQuotaOneTimeNumeric'] : 0;
-			$keyControl = ApiKeyController::getInstance();
-
-
-			if ( true || false === $keyControl->keyIsVerified() || $totalCredits < 4000 ) {
-				require_once 'class/view/shortpixel-feedback.php';
-				new ShortPixelFeedback( SHORTPIXEL_PLUGIN_FILE, 'shortpixel-image-optimiser' );
-			}
-		}
 
 		if (is_admin())
 		{
@@ -444,7 +448,11 @@ class ShortPixelPlugin {
 			'hide_ai' => ! $OptimizeAiController->isAiEnabled(),  // turn around negative setting
 			'hide_spio_in_popups' => apply_filters('shortpixel/js/media/hide_in_popups', false), 
 			'modalcss' => plugins_url('res/css/shortpixel-media-modal.css', SHORTPIXEL_PLUGIN_FILE), 
-			'remove_background_title' => __('Remove Background', 'shortpixel-image-optimiser'),
+			'remove_background_title' => __('AI Background Removal', 'shortpixel-image-optimiser'),
+			'scale_title' => __('AI Image Upscale', 'shortpixel-image-optimiser'),
+			'upscale_max_width' => 1200, // Scale X and max width pin Pixels.
+			'popup_load_preview' => true, // Upon opening, load Preview or not.
+			'too_big_for_scale_title'  => __('Image too big for scaling', 'shortpixel-image-optimiser'), 
 	 ];
 
 		wp_localize_script('shortpixel-screen-media', 'spio_mediascreen_settings', $screen_localize_media); 

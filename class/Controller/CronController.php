@@ -36,6 +36,7 @@ class CronController
        }
 
        $this->custom_scheduler();
+       $this->tools_scheduler();
      }
 
   }
@@ -59,6 +60,7 @@ class CronController
           'interval' => apply_filters('shortpixel/cron/interval', 30 * MINUTE_IN_SECONDS),
           'display' => __('ShortPixel 30 min interval', 'shortpixel-image-optimiser')
         );
+        
 
         return $schedules;
   }
@@ -85,6 +87,7 @@ class CronController
           )
       );
 
+
       foreach($background_crons as $name => $options)
       {
          add_action($options['cron_name'], array(AdminController::getInstance(), 'processCronHook'));
@@ -94,6 +97,8 @@ class CronController
       {
          add_action($options['cron_name'], array(AdminController::getInstance(), 'scanCustomFoldersHook'));
       }
+
+      add_action('spio-remove-backups', [AdminController::getInstance(), 'cronRemoveBackups']);
 
       $this->cron_options = $background_crons;
   }

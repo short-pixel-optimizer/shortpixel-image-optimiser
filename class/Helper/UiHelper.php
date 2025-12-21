@@ -437,7 +437,8 @@ class UiHelper
 
       if (false === is_null($aiDataModel) && $aiDataModel->isProcessable() && 'media' === $mediaItem->get('type') )
       {
-         $list_actions['shortpixel-generateai'] = self::getAction('shortpixel-generateai', $id);
+         if (true === $mediaItem->isSomethingOptimized()) // Prevent displaying this when only the 'optimize now' buttons are visible.
+           $list_actions['shortpixel-generateai'] = self::getAction('shortpixel-generateai', $id);
       }
 
       if(! $quotaControl->hasQuota())

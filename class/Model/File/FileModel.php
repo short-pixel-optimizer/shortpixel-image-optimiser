@@ -393,6 +393,12 @@ class FileModel extends \ShortPixel\Model
         return false;
       }
 
+      if (false === self::$TRUSTED_MODE && $this->getFileSize() <= 0)
+      {
+         Log::addWarn('Source file in copy has a filesize of zero!');
+         return false;
+      }
+
       $is_new = ($destination->exists()) ? false : true;
       $status = @copy($sourcePath, $destinationPath);
 
@@ -550,7 +556,6 @@ class FileModel extends \ShortPixel\Model
 
       if ($directory === false || ! $directory->exists()) // check if exists. FileModel should not attempt to create.
       {
-        //Log::addWarn('Backup Directory not existing ' . $directory-);
         return false;
       }
       elseif ($directory !== false)

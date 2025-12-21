@@ -1,6 +1,8 @@
 <?php
 namespace ShortPixel;
 
+use ShortPixel\Helper\UiHelper;
+
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
@@ -46,7 +48,7 @@ $settings = \wpSPIO()->settings();
 
         <?php
         $link = 'https://shortpixel.com/knowledge-base/article/background-processing-using-cron-jobs-in-shortpixel-image-optimizer/';
-        printf(esc_html('ShortPixel is optimizing your images in the background. You can close this browser window now and reopen it at any time to check the status of the bulk processing. %sLearn more%s','shortpixel-image-optimiser'), '<strong><a href="' . esc_attr($link) . '" target="_blank">','</a></strong>'); ?>
+        printf(esc_html('ShortPixel Bulk is processing in the background. You can close this browser window now and reopen it at any time to check the status of the bulk processing. %sLearn more%s','shortpixel-image-optimiser'), '<strong><a href="' . esc_attr($link) . '" target="_blank">','</a></strong>'); ?>
       </p>
     <?php else: ?>
       <p class='description'>
@@ -62,8 +64,9 @@ $settings = \wpSPIO()->settings();
 		<span class='hidden' data-check-media-total data-stats-media="total">0</span>
     <div class='bulk-summary' data-check-visibility data-control="data-check-media-total">
       <div class='heading'>
-        <span><i class='dashicons dashicons-images-alt2'>&nbsp;</i> <?php esc_html_e('Media Library' ,'shortpixel-image-optimiser'); ?>
-         <?php if (false !== $this->view->customOperationMedia) {
+        <span><i class='dashicons dashicons-format-image'>&nbsp;</i> <?php esc_html_e('Media Library' ,'shortpixel-image-optimiser'); ?>
+              <?php printf(esc_html__('( %s items )', 'shortpixel-image-optimiser'), '<i data-stats-media="total">--</i>'); ?>
+        <?php if (false !== $this->view->customOperationMedia) {
             echo " - <span class='special-op'>" . $this->view->customOperationMedia . "</span>";
          } ?>
         </span>
@@ -86,7 +89,10 @@ $settings = \wpSPIO()->settings();
         <span><?php esc_html_e('Errors','shortpixel-image-optimiser') ?>: <i data-check-media-fatalerrors data-stats-media="fatal_errors" class='error'>0 </i>
 					<span class="display-error-box" data-check-visibility data-control="data-check-media-fatalerrors" ><label title="<?php esc_html_e('Show Errors', 'shortpixel-image-optimiser'); ?>">
 						<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='media' data-event='change'>
-							<?php esc_html_e('Show Errors','shortpixel-image-optimiser'); ?></label>
+						<span><?php esc_html_e('Show Errors','shortpixel-image-optimiser'); ?></span>
+            <span class='collap-arrow'><?php echo UIHelper::getIcon('res/images/icon/chevron.svg'); ?></span> 
+
+            </label>
 				 </span>
 
 				</span>
@@ -152,19 +158,22 @@ $settings = \wpSPIO()->settings();
 
 		<nav>
 			<button class='button stop' type='button' data-action="StopBulk" >
+          <span class='dashicons dashicons-no'></span>  
 					<?php esc_html_e('Stop Bulk Processing' ,'shortpixel-image-optimiser'); ?>
 			</button>
 			<button class='button pause' type='button' data-action="PauseBulk" id="PauseBulkButton">
+        <span class='dashicons dashicons-controls-pause'></span>  
 				<?php esc_html_e('Pause Bulk Processing' ,'shortpixel-image-optimiser') ?>
 			</button>
 			<button class='button button-primary resume' type='button' data-action='ResumeBulk' id="ResumeBulkButton">
+         <span class='dashicons dashicons-controls-play'></span>  
 				<?php esc_html_e('Resume Bulk Processing','shortpixel-image-optimiser'); ?>
 			</button>
 
 		</nav>
 
     <div class='image-preview-section hidden'> <!-- /hidden -->
-			 <div class='title'><?php esc_html_e('Just Optimized', 'shortpixel-image-optimiser'); ?></div>
+			 <div class='title'><span><?php esc_html_e('Just Optimized', 'shortpixel-image-optimiser'); ?></span></div>
        <div class="image-preview-line">
         <!-- <strong data-result="queuetype"></strong>  -->
 				<span>&nbsp;</span> <!-- Spacer for flex -->
@@ -198,7 +207,9 @@ $settings = \wpSPIO()->settings();
 		          <p><?php esc_html_e('Original Image', 'shortpixel-image-optimiser'); ?></p>
 							<?php $this->loadView('snippets/part-svgloader', false); ?>
 		        </div>
-
+            <div class="image-arrow">
+				        <i class="shortpixel-icon arrow-right"></i>
+			      </div>
 		        <div class="image result">
 		          <img src="<?php echo esc_url(\wpSPIO()->plugin_url('res/img/bulk/placeholder.svg')); ?>" >
 						<p><?php esc_html_e('Optimized Image', 'shortpixel-image-optimiser'); ?>
@@ -228,7 +239,7 @@ $settings = \wpSPIO()->settings();
 			</div>  <!-- preview wrapper -->
 
       <div class='ai-preview-wrapper hidden'>
-          <h3><?php _e('AI Generated Data: ', 'shortpixel-image-optimiser'); ?></h3>
+          <h3><i class='shortpixel-icon ai'></i><?php _e('AI Generated Data: ', 'shortpixel-image-optimiser'); ?></h3>
           <ul class='ai-preview-data'>
 
           </ul>

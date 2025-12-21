@@ -110,6 +110,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
          	$this->view->text = UiHelper::getStatusText($this->imageModel);
           $this->view->list_actions = UiHelper::getListActions($this->imageModel);
+          $this->view->image = [ 'width' => $this->imageModel->get('width'), 'height' => $this->imageModel->get('height'), 'extension' => $this->imageModel->getExtension() ];
 
           if ( count($this->view->list_actions) > 0)
             $this->view->list_actions = UiHelper::renderBurgerList($this->view->list_actions, $this->imageModel);
@@ -331,11 +332,14 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
             $debugInfo[] = array(__('Backup Folder'), (string) $backupFile->getFileDir() );
 						if ($imageObj->hasBackup())
+            {
 							$backupText = __('Backup File :');
-						else {
+              $debugInfo[] = array( $backupText, (string) $backupFile . '(' . UiHelper::formatBytes($backupFile->getFileSize()) . ')' );
+            }
+              else {
 							$backupText = __('Target Backup File after optimization (no backup) ');
+              $debugInfo[] = [$backupText, (string) $backupFile];
 						}
-            $debugInfo[] = array( $backupText, (string) $backupFile . '(' . UiHelper::formatBytes($backupFile->getFileSize()) . ')' );
 
             $debugInfo[] =  array(__("No Main File Backup Available"), '');
 

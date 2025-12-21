@@ -270,7 +270,7 @@ class OptimizeAiController extends OptimizerBase
 
   protected function HandleSuccess(QueueItem $qItem)
   {
-        $aiData = $qItem->result->aiData;  
+        $aiData = $qItem->result()->aiData;  
         $settings = \wpSPIO()->settings();
 
         $checks = ['alt' => 'ai_gen_alt', 
@@ -317,6 +317,10 @@ class OptimizeAiController extends OptimizerBase
         // Get generated data which is the final result for the action including exclusions etc. 
         $data = $this->getAltData($qItem); 
         $qItem->addResult(['aiData' => $data['generated']]); // But the generated data in the result.
+
+        // For Bulk, add labels to display in the result set. Default is same as data, can be overridden
+        $qItem->addResult(['aiDataLabels' => $data['labels']
+        ]);
 
         $this->finishItemProcess($qItem);
         return;
@@ -646,6 +650,7 @@ class OptimizeAiController extends OptimizerBase
             'alt' => $original['alt'], 
             'caption' => $original['caption'], 
             'description' => $original['description'],
+            'post_title' => $original['post_title'], 
             'replace_filebase' => $generated['filebase'],
        ];
     
@@ -665,7 +670,7 @@ class OptimizeAiController extends OptimizerBase
     $this->finishItemProcess($qItem);
 
     
-       return $this->getAltData($qItem); 
+    return $this->getAltData($qItem); 
   }
 
 public function getAltData(QueueItem $qItem)
@@ -735,13 +740,20 @@ public function getAltData(QueueItem $qItem)
     $metadata['action'] = $qItem->data()->action;
     $metadata['item_id'] = $item_id;
 
+    $metadata['labels'] = [
+      'alt' => __('Alt', 'shortpixel-image-optimiser'), 
+      'caption' => __('Caption', 'shortpixel-image-optimiser'), 
+      'description' => __('Description', 'shortpixel-image-optimiser'), 
+      'post_title' =>  __('Image Title' , 'shortpixel-image-optimiser'), 
+    ];
+
     return $metadata; 
 }
 
 public function formatGenerated($generated, $current, $original)
 {
     
-  $fields = ['alt', 'caption', 'description'];
+  $fields = ['alt', 'caption', 'description', 'post_title'];
   $dataItems = []; 
 
   // Statii from AiDataModel which means generated is not available (replace for original/current?) 

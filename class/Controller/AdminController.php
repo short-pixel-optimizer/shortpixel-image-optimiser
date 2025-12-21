@@ -18,7 +18,7 @@ use ShortPixel\Model\Image\ImageModel as ImageModel;
 
 use ShortPixel\Model\AccessModel as AccessModel;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
-
+use WP_HTTP_Response;
 
 /* AdminController is meant for handling events, hooks, filters in WordPress where there is *NO* specific or more precise  ShortPixel Page active.
 *

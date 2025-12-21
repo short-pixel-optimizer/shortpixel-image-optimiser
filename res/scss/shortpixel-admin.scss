@@ -58,7 +58,7 @@
 		display: inline-block;
 		height: 20px;
 		width: 40px;
-		background-color: #D7D7D7; // color of bar when not active
+		background-color: $color-grey; // color of bar when not active
 		border-radius: 30px;
 		cursor: pointer;
 		transition: background-color 0.4s;
