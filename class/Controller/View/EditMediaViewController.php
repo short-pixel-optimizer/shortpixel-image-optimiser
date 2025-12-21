@@ -237,15 +237,48 @@ class EditMediaViewController extends \ShortPixel\ViewController
 					{
 						 $debugInfo[] = array(__('To Optimize URLS'),  $urls);
 					}
-					if (isset($optimizeData))
+
+
+          $item = QueueItems::getImageItem($imageObj);
+
+          if ($imageObj->isProcessable())
 					{
-						 $debugInfo[] = array(__('Optimize Data'), $optimizeData);
+						// $queueControl = new QueueController();
 
-						 $optControl = new optimizeController();
-						 $q = $optControl->getQueue($imageObj->get('type'));
 
-						 $debugInfo[] = array(__('Image to Queue'), $q->_debug_imageModelToQueue($imageObj) );
+             $item->setDebug();
+             $item->newOptimizeAction();
+
+             $counts = $item->data()->counts;
+
+						 $returnEnqueue = $item->returnEnqueue();
+
+						 $debugInfo[] = array(__('Image to Queue'), $returnEnqueue );
+             $debugInfo[] = [__('Counts'), $counts];
+
 					}
+
+          if ( $optimizeAiController->isAIEnabled())
+          {
+            $aiDataModel = AiDataModel::getModelByAttachment($this->post_id);
+
+            $aiProcessable = ($aiDataModel->isProcessable()) ? '<span class="green">Yes</span>' : '<span class="red">No</span> ';
+
+            $debugInfo[] = ['AI - is Processable', $aiProcessable]; 
+
+            if (true === $aiDataModel->isProcessable())
+            {
+              $debugInfo[] = ['Ai - Paramlist ', $aiDataModel->getOptimizeData() ];
+            }
+            else
+            {
+               $debugInfo[] = ['Ai - Reason', $aiDataModel->getProcessableReason()];
+            }
+            if (true === $aiDataModel->isSomeThingGenerated())
+            {
+              $debugInfo[] = ['Ai -Generated ', $aiDataModel->getGeneratedData()];
+            }
+          }
 
           $debugInfo['imagemetadata'] = array(__('ImageModel Metadata (ShortPixel)'), $imageObj);
 					$debugInfo[] = array('', '<hr>');
@@ -263,11 +296,14 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
             $debugInfo[] = array(__('Backup Folder'), (string) $backupFile->getFileDir() );
 						if ($imageObj->hasBackup())
+            {
 							$backupText = __('Backup File :');
-						else {
+              $debugInfo[] = array( $backupText, (string) $backupFile . '(' . UiHelper::formatBytes($backupFile->getFileSize()) . ')' );
+            }
+              else {
 							$backupText = __('Target Backup File after optimization (no backup) ');
+              $debugInfo[] = [$backupText, (string) $backupFile];
 						}
-            $debugInfo[] = array( $backupText, (string) $backupFile . '(' . UiHelper::formatBytes($backupFile->getFileSize()) . ')' );
 
             $debugInfo[] =  array(__("No Main File Backup Available"), '');
 

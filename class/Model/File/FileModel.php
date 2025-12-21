@@ -550,7 +550,6 @@ class FileModel extends \ShortPixel\Model
 
       if ($directory === false || ! $directory->exists()) // check if exists. FileModel should not attempt to create.
       {
-        //Log::addWarn('Backup Directory not existing ' . $directory-);
         return false;
       }
       elseif ($directory !== false)

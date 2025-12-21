@@ -2272,10 +2272,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				return true;
 	}
 
-  /** This function will recreate thumbnails. This is -only- needed for very special cases, i.e. offload */
-  public function wpCreateImageSizes()
-  {
-    add_filter('as3cf_wait_for_generate_attachment_metadata', array($this, 'returnTrue'));
+	/** This function will recreate thumbnails. This is -only- needed for very special cases, i.e. offload */
+	public function wpCreateImageSizes()
+	{
+		add_filter('as3cf_wait_for_generate_attachment_metadata', '__return_true');
 
     $fullpath = $this->getFullPath();
     if ($this->isScaled()) // if scaled, the original file is the main file for thumbnail base
@@ -2285,13 +2285,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
     }
     $res = \wp_create_image_subsizes($fullpath, $this->id);
 
-    remove_filter('as3cf_wait_for_generate_attachment_metadata', array($this, 'returnTrue'));
-  }
-
-  public function returnTrue()
-  {
-     return true;
-  }
+		remove_filter('as3cf_wait_for_generate_attachment_metadata', '__return_true');
+	}
 
 	// Function to remove all shortpixel related data
 	// It's separated from the private function.

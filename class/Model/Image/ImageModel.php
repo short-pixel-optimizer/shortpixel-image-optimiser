@@ -884,6 +884,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     public function isRestorable()
     {
 
+      
 			// Check for both optimized and hasBackup, because even if status for some reason is not optimized, but backup is there, restore anyhow.
         if (! $this->isOptimized() && ! $this->hasBackup())
         {

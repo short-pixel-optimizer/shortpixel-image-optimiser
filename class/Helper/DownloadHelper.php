@@ -75,9 +75,20 @@ class DownloadHelper
 						//Responsecontroller::addData('message', $tempFile->get_error_message());
 						return false;
 					}
+         
 
 					$fs = \wpSPIO()->filesystem();
 					$file = $fs->getFile($tempFile);
+
+          if ($file->getFileSize() === 0)
+          {
+              Log::addError('Tmp File zero bytes', $tempFile); 
+              ResponseController::addData('is_error', true);
+              Responsecontroller::addData('message', __('Temp file zero bytes', 'shortpixel-image-optimiser'));
+
+              $file->delete(); // Prevent it from hanging around 
+              return false; 
+          }
 
           if (! is_null($args['destinationPath']))
           {

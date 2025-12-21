@@ -36,6 +36,7 @@ class CronController
        }
 
        $this->custom_scheduler();
+       $this->tools_scheduler();
      }
   }
 
@@ -58,6 +59,7 @@ class CronController
           'interval' => apply_filters('shortpixel/cron/interval', 30 * MINUTE_IN_SECONDS),
           'display' => __('ShortPixel 30 min interval', 'shortpixel-image-optimiser')
         );
+        
 
         return $schedules;
   }
@@ -84,6 +86,7 @@ class CronController
           )
       );
 
+
       foreach($background_crons as $name => $options)
       {
          add_action($options['cron_name'], array(AdminController::getInstance(), 'processCronHook'));
@@ -93,6 +96,8 @@ class CronController
       {
          add_action($options['cron_name'], array(AdminController::getInstance(), 'scanCustomFoldersHook'));
       }
+
+      add_action('spio-remove-backups', [AdminController::getInstance(), 'cronRemoveBackups']);
 
       $this->cron_options = $background_crons;
   }
@@ -161,6 +166,48 @@ class CronController
       }
 
   }
+
+  /** Scheduler for tools tasks, like remove backups */
+  protected function tools_scheduler($unschedule = false)
+  {
+     $name = 'spio-remove-backups';
+     $is_scheduled = wp_next_scheduled($name, []);
+
+     $remove_backups = apply_filters('shortpixel/cron/remove_backups', false);
+     $remove_time = apply_filters('shortpixel/cron/remove_backups_timestamps', time() - YEAR_IN_SECONDS);
+
+     if (false === $is_scheduled && true === $remove_backups && false === $unschedule)
+     {
+        wp_schedule_event(HOUR_IN_SECONDS, 'daily', $name, []);
+     }
+     elseif (false !== $is_scheduled)
+     {
+        wp_unschedule_event(wp_next_scheduled($name, []), $name, []);
+     }
+
+  }
+
+  protected function removeLegacyCron()
+  {
+      $name = 'spio-refresh-dir';
+      $args = ['args' => [
+        'amount' => 10]
+      ];
+
+      wp_unschedule_event(wp_next_scheduled($name, $args), $name, $args);
+
+      $name = 'spio-single-cron';
+      $args = array('bulk' => false);
+
+      wp_unschedule_event(wp_next_scheduled($name, $args), $name, $args);
+
+
+      $name = 'spio-bulk-cron';
+      $args = array('bulk' => true);
+
+      wp_unschedule_event(wp_next_scheduled($name, $args), $name, $args);
+  }
+
 
   protected function bulkScheduleEvent($queue_type, $options, $args)
   {

@@ -17,7 +17,7 @@ use ShortPixel\Model\Image\ImageModel as ImageModel;
 
 use ShortPixel\Model\AccessModel as AccessModel;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
-
+use WP_HTTP_Response;
 
 /* AdminController is meant for handling events, hooks, filters in WordPress where there is *NO* specific or more precise  ShortPixel Page active.
 *
@@ -258,6 +258,13 @@ class AdminController extends \ShortPixel\Controller
 				}
 		}
 
+    public function cronRemoveBackups()
+    {
+        // Check Settings and get time, 
+        // Possibly move this how thing to a BackupController (?) 
+    }
+
+
     public function scanCustomFoldersHook($args = array() )
     {
       $defaults = array(
@@ -292,6 +299,68 @@ class AdminController extends \ShortPixel\Controller
         }
 
       }
+
+    }
+
+    /** Add webp / avif data for rest requests if this media is optimized for that 
+     *  @hook rest_post_dispatch 
+     * @param WP_HTTP_Respone $result HTTP Result
+     * @return WP_HTTP_Response;
+     */
+    public function checkRestMedia($result, $server, $request )
+    {
+      $data = $result->data; 
+      if (! is_array($data) || ! isset($data['type']) || $data['type'] !== 'attachment') // check if for us. 
+      {
+         return $result; 
+      }
+
+      $attach_id = $data['id'];
+       
+      $fs = \wpSPIO()->filesystem();
+			$mediaImage = $fs->getImage($attach_id, 'media');
+
+      if (false === $mediaImage)
+      {
+         return $result; 
+      }
+
+      $urls = $mediaImage->getAllUrls(); 
+      $webps = $urls['webp']; 
+      $avifs = $urls['avif']; 
+
+      if (count($webps) == 0 && count($avifs) == 0)
+      {
+         return $result; 
+      }
+
+      $mainKey = $mediaImage->getImageKey('main'); 
+
+
+      if (isset($webps[$mainKey]))
+      {
+        $result->data['source_url_webp'] = $webps[$mainKey];
+      }
+
+      if (isset($avifs[$mainKey]))
+      {
+        $result->data['source_url_avif'] = $avifs[$mainKey];
+      }
+
+      foreach($data['media_details']['sizes'] as $sizeName => $sizeData )
+      {
+          if (isset($webps[$sizeName]))
+          {
+             $result->data['media_details']['sizes'][$sizeName]['source_url_webp'] = $webps[$sizeName];
+          }
+          if (isset($avifs[$sizeName]))
+          {
+             $result->data['media_details']['sizes'][$sizeName]['source_url_avif'] = $avifs[$sizeName];
+          }
+      }
+
+
+      return $result; 
 
     }
 
