@@ -18,7 +18,6 @@ class ApiKeyModel extends \ShortPixel\Model
   protected $apiKey;
   protected $apiKeyTried;  // stop retrying the same key over and over if not valid.
   protected $verifiedKey;
-  protected $redirectedSettings;
 
   // states
   // key is verified is set by checkKey *after* checks and validation
@@ -40,9 +39,7 @@ class ApiKeyModel extends \ShortPixel\Model
        'verifiedKey' => array('s' => 'boolean',
                           'key' => 'wp-short-pixel-verifiedKey',
                        ),
-       'redirectedSettings' => array('s' => 'int',
-                            'key' => 'wp-short-pixel-redirected-settings',
-                        ),
+
   );
 
 	protected $model = array(
@@ -52,8 +49,6 @@ class ApiKeyModel extends \ShortPixel\Model
        ),
        'verifiedKey' => array('s' => 'boolean',
        ),
-       'redirectedSettings' => array('s' => 'int',
-        ),
   );
 
 	private $option_name =  'spio_key';
@@ -77,26 +72,22 @@ class ApiKeyModel extends \ShortPixel\Model
 		{
 			$this->apiKey = get_option($this->legacy_model['apiKey']['key'], false);
 	    $this->verifiedKey = get_option($this->legacy_model['verifiedKey']['key'], false);
-	    $this->redirectedSettings = get_option($this->legacy_model['redirectedSettings']['key'], false);
 	    $this->apiKeyTried = get_option($this->legacy_model['apiKeyTried']['key'], false);
 
 				$apikeySettings = [
 						'apiKey' => $this->apiKey,
 						'verifiedKey' => $this->verifiedKey,
-						'redirectedSettings' => $this->redirectedSettings,
 						'apiKeyTried' => $this->apiKeyTried,
 				];
 			 delete_option($this->legacy_model['apiKey']['key']);
 			 delete_option($this->legacy_model['verifiedKey']['key']);
-			 delete_option($this->legacy_model['redirectedSettings']['key']);
 			 delete_option($this->legacy_model['apiKeyTried']['key']);
 
 			 $this->update();
 		}
 
 		$this->apiKey = isset($apikeySettings['apiKey']) ? $apikeySettings['apiKey'] : '';
-		$this->verifiedKey = $apikeySettings['verifiedKey'];
-		$this->redirectedSettings = $apikeySettings['redirectedSettings'];
+    $this->verifiedKey = isset($apikeySettings['verifiedKey']) ? $apikeySettings['verifiedKey'] : false; 
 		$this->apiKeyTried = $apikeySettings['apiKeyTried'];
 
 
@@ -119,21 +110,14 @@ class ApiKeyModel extends \ShortPixel\Model
 
   protected function update()
   {
-      /*update_option($this->model['apiKey']['key'], trim($this->apiKey));
-      update_option($this->model['verifiedKey']['key'], $this->verifiedKey);
-      update_option($this->model['redirectedSettings']['key'], $this->redirectedSettings);
-      update_option($this->model['apiKeyTried']['key'], $this->apiKeyTried); */
-
 			$apikeySettings = [
 					'apiKey' => trim($this->apiKey),
 					'verifiedKey' => $this->verifiedKey,
-					'redirectedSettings' => $this->redirectedSettings,
 					'apiKeyTried' => $this->apiKeyTried,
 			];
 
 
 			$res = update_option($this->option_name, $apikeySettings, true);
-
 			return $res;
   }
 
@@ -163,7 +147,6 @@ class ApiKeyModel extends \ShortPixel\Model
   public function checkKey($key)
   {
 			$valid = false;
-
       if (is_null($key) || strlen($key) == 0)
       {
         // first-timers, redirect to nokey screen
@@ -185,7 +168,7 @@ class ApiKeyModel extends \ShortPixel\Model
       elseif (strlen($key) <> 20 && $key != $this->apiKeyTried)
       {
         $this->NoticeApiKeyLength($key);
-        Log::addDebug('Key Wrong Length');
+        Log::addDebug('Key Wrong Length: ' . $key);
 
 				// Don't validate is wrong key is constant.
 				if (false === $this->key_is_constant)
@@ -258,11 +241,9 @@ class ApiKeyModel extends \ShortPixel\Model
 		// Remove them all
 		delete_option($this->legacy_model['apiKey']['key']);
 		delete_option($this->legacy_model['verifiedKey']['key']);
-		delete_option($this->legacy_model['redirectedSettings']['key']);
 		delete_option($this->legacy_model['apiKeyTried']['key']);
 
     delete_option($this->option_name);
-   // $this->update();
 
   }
 
@@ -288,8 +269,8 @@ class ApiKeyModel extends \ShortPixel\Model
         $this->verifiedKey = $checked_key;
         $this->processNewKey($quotaData);
         $this->update();
-     }
-     return $this->verifiedKey;
+     }    
+      return $this->verifiedKey;
   }
 
   /** Process some things when key has been added. This is from original wp-short-pixel.php */
@@ -328,9 +309,9 @@ class ApiKeyModel extends \ShortPixel\Model
       return;
 
     $KeyLength = strlen($key);
-    $notice =  sprintf(__("The key you provided has %s characters. The API key should have 20 characters, letters and numbers only.",'shortpixel-image-optimiser'), $KeyLength)
+    $notice =  sprintf(__("The API Key you provided has %s characters, but it should contain exactly 20 characters, using only letters and numbers.",'shortpixel-image-optimiser'), $KeyLength)
                . "<BR> <b>"
-               . __('Please check that the API key is the same as the one you received in your confirmation email.','shortpixel-image-optimiser')
+               . __('Please check that the API Key is the same as the one you received in your sign-up email.','shortpixel-image-optimiser')
                . "</b><BR> "
                . __('If this problem persists, please contact us at ','shortpixel-image-optimiser')
                . "<a href='mailto:help@shortpixel.com?Subject=API Key issues' target='_top'>help@shortpixel.com</a>"
@@ -352,10 +333,18 @@ class ApiKeyModel extends \ShortPixel\Model
 
   protected function checkRedirect()
   {
+    $redirectedSettings =  \wpSPIO()->settings()->redirectedSettings;
+    if(! \wpSPIO()->env()->is_ajaxcall && !$redirectedSettings && !$this->verifiedKey && (!function_exists("is_multisite") || ! is_multisite())) {
+      
+      \wpSPIO()->settings()->redirectedSettings = 1;
 
-    if(! \wpSPIO()->env()->is_ajaxcall && !$this->redirectedSettings && !$this->verifiedKey && (!function_exists("is_multisite") || ! is_multisite())) {
-      $this->redirectedSettings = 1;
-      $this->update();
+      if (isset($_GET['page']) && 'wp-shortpixel-settings' === $_GET['page'])
+      {
+         Log::addError('Panic! RedirectSettings failed setting!');
+         return false; 
+      }
+
+  //    $this->update();
       wp_safe_redirect(admin_url("options-general.php?page=wp-shortpixel-settings"));
       exit();
     }

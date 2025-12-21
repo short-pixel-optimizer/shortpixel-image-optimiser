@@ -1,0 +1,285 @@
+
+#tab-exclusions
+{
+
+  .exclude-thumbnail-setting
+  {
+    content
+    {
+
+      column-count: 3;
+      column-width: 220px;
+      max-width: 100%;
+      box-sizing: border-box;
+      > span {
+         margin-right: 20px;
+         white-space:nowrap;
+         line-height: 24px;
+
+         font-size: 12px;
+         color: $blue_dark;
+         input { margin-right: 8px; }
+
+      }
+
+      @include breakpoint(0, 1400px)
+      {
+         column-count: 2;
+      }
+    }
+
+  } // setting
+  .thumbnail-select {
+       border-bottom: 1px solid $blue_default;
+       & hr {
+               border-top: 1px solid $blue_default;
+               margin-top: 10px;
+               margin-bottom: -10px;
+       }
+  }
+  .grid-thumbnails
+  {
+      column-count: 3;
+      column-width: 220px;
+      padding: 5px 10px;
+    > span {
+       margin-right: 20px;
+       white-space:nowrap;
+       line-height: 24px;
+       display: inherit;
+       font-size: 12px;
+       color: $blue_dark;
+       input { margin-right: 8px; }
+    }
+
+  }
+
+  .exclude-patterns-setting
+  {
+    name
+    {
+       label
+       {
+         float: right;
+         margin-right: 12px;
+       }
+    }
+    info
+    {
+       .exclude-settings-expanded p {
+	  margin: 5px 0;
+       }
+    }
+    .new-exclusion-button {
+    //   float: left;
+    //   margin-right: 8px;
+      width: 100%;
+      display: block;
+    //  height: 250px;
+      border: 4px dashed #ccc;
+      font-size: 20px;
+      background: #fff;
+      color: $blue_light;
+    }
+    select, input {
+       border: 1px solid $blue_default;
+       color: $blue_dark;
+    }
+    ul.exclude-list {
+       // min-height: 30px;
+         li {
+          //  display: flex;
+          //  justify-content: space-between;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+	    color: $blue_dark;
+		b {
+			margin-bottom: 4px;
+		}
+
+            div {
+            }
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid $blue_default;
+	    padding: 8px 12px;
+            background: #fff;
+            border-radius: 8px;
+            margin: 8px 8px 0 0;
+            cursor: pointer;
+            .regular-container {
+               display: none;
+            }
+            &.no-exclusion-item
+            {
+               cursor: default;
+            }
+            span {
+              margin-left: 6px;
+
+            }
+            &.has-error {
+              //background: #ff0000;
+            //  border-color: #ff0000;
+              border: 2px solid #ff0000;
+            }
+            &.is-regex {
+            //  border-right: green;
+            //  border-right-width: 10px;
+              //border-style: solid;
+              .regular-container {
+                display: inline;
+              }
+            }
+	    .shortpixel-icon
+		{
+			width: 30px;
+			height: 30px;
+		}
+
+         }
+         margin: 20px 0;
+         .not-visible {
+            display: none;
+         }
+    }
+
+    .new-exclusion
+    {
+        border: 1px solid $blue_default;
+	border-radius: 8px;
+        padding: 16px;
+        display: inline-block;
+        background: #fff;
+        position: relative;
+        width: 100%;
+        box-sizing: border-box;
+
+        .grid
+        {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          grid-template-rows: 1fr 1fr;
+        }
+
+        h3 {
+            padding: 8px 16px;
+            border-bottom: 1px solid $blue_light;
+            margin: 0;
+        }
+        +.new-exclusion-button
+        {
+           display: none;
+        }
+        &.not-visible
+        {
+           display: none;
+
+           + .new-exclusion-button
+           {
+              display: block;
+           }
+        }
+
+         div
+        {
+           margin: 5px 0;
+           height: auto;
+	   color: $blue_dark;
+           label
+           {
+              min-width: 110px;
+              display: inline-block;
+	      color: $blue_dark;
+           }
+	   .width input {
+		background: url("../images/icon/arrows-left-right.svg") 4px center no-repeat #fff;
+		padding-left: 20px;
+	   }
+	   .height input {
+		background: url("../images/icon/arrows-up-down.svg") 4px center no-repeat #fff;
+		padding-left: 20px;
+	   }
+           input, select {
+              //min-width: 250px;
+              &.small {
+                width: 100px;
+                min-width: 0;
+              }
+              &.not-validated {
+                 border: 1px solid #ff0000;
+              }
+           }
+           &.validation-message
+           {
+              color: #ff0000;
+              margin-left: 120px;
+              transition: all 500ms;
+           }
+           button {
+            // margin-left: 104px;
+             min-width: 75px;
+             padding: 5px 6px;
+             i {
+               width: 15px;
+               height: 15px;
+             }
+             &[name="removeExclusion"]
+             {
+                background: #ff0000;
+                border-color: #ff0000;
+                padding: 4px;
+                position: absolute;
+                top: 10px;
+                right: 10px;
+             }
+             &[name="cancelEditExclusion"] i
+            {
+               filter: brightness(0%) invert(1);
+            }
+            &[name="updateExclusion"]
+            {
+               padding: 5px 12px;
+            }
+           }
+        }
+
+        .not-visible
+        {
+           visibility: hidden;
+           height: 0;
+           transition: 500ms height;
+        }
+
+        .size-option
+        {
+           > div {
+              margin: 8px 0;
+           }
+           div label
+           {
+              min-width: 110px;
+	      color: $blue_dark;
+           }
+        }
+        .thumbnail-option:not(.not-visible) {
+           height: 150px;
+           margin-left: 12px;
+           &:hover {
+              color: #000;
+           }
+        }
+
+
+    }
+  } // setting
+
+
+
+  .exclusion-save-reminder
+  {
+     margin: 10px 0;
+     font-weight: 500;
+  }
+
+}

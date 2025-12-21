@@ -1,3 +1,197 @@
+= 5.4.3 =
+Release date: September 28, 2023
+* Fix: in some very isolated cases, the previous security fix could result in corrupted data for PNG2JPG in some page builders;
+* Language: 0 new strings added, 0 updated, 0 fuzzed, and 0 deprecated.
+
+= 5.4.2 =
+Release date: September 14, 2023
+* Fix: A possible PHP Object Injection was patched, which could be exploited under certain conditions;
+* Fix: added another fix for WebP path for old multisite setups still using blogs.dir folder structure;
+* Language: 0 new strings added, 0 updated, 0 fuzzed, and 0 deprecated.
+
+= 5.4.1 =
+Release date: September 4, 2023
+* Compat: a filter has been added that allows customizing the metadata migration paramaters;
+* Fix: a missing space broke the HTML structure in some cases when using the PICTURE tag delivery method for next generation images;
+* Fix: added fix for WebP path for old multisite setups still using blogs.dir folder structure;
+* Fix: custom uploads folders (by using constants) are now handled correctly in all cases;
+* Fix: added supplemental checks to prevent some isolated JS errors that occurred only in certain cases;
+* Fix: the plugin now only displays fatal errors when debug mode is enabled;
+* Fix: the Shortpixel typos are now corrected in ShortPixel;
+* Language: 0 new strings added, 4 updated, 0 fuzzed, and 0 deprecated.
+
+= 5.4.0 =
+Release date: August 1, 2023
+* New: Images are now processed directly on the "Add New Media" screen;
+* New: Support for WordPress image editing functions; a notification is now displayed when you use the editing features;
+* New: PNG-to-JPG conversion now replaces posts in states other than published, such as scheduled, pending, draft, etc;
+* Compat: Added additional checks when WP Offload Media is used together with Enable Media Replace;
+* Compat: Added integration with Total theme, thanks @AJ for the great support;
+* Fix: Improved the way the ShortPixel box loads on different screens;
+* Fix: Empty ALT tags on images are now preserved when using the PICTURE tag delivery method for next generation images;
+* Fix: The PICTURE tag delivery generated invalid HTML code due to a missing space (thanks @kittmedia for pointing these two out!);
+* Fix: Several minor fixes and improvements related to PNG-to-JPG conversion;
+* Fix: Resize information was not written corectly when using WP Offload Media and backups were not enabled;
+* Fix: Restoring backups when Offload is disabled now works without affecting image metadata;
+* Fix: When object cache was enabled, transients used for processing were recreated too often;
+* Fix: Improved thumbnail handling for SmartCropping: only cropped thumbnails are now send for SmartCropping;
+* Language: 1 new string added, 6 updated, 0 fuzzed, and 3 deprecated.
+
+= 5.3.0 =
+Release date: June 27, 2023
+* New: Added the ShortPixel box on the Media Library Grid view;
+* New: Added the option to re-optimize an image with or without Smart Cropping;
+* New: Added the images with errors to the Media Library filters, for easier retries;
+* New: Added an option in the plugin tools to reset the optimization errors;
+* Compat: Added integration with WordPress image editing features (crop, flip, rotate etc.);
+* Compat: Added integration for <a target="_blank" href="https://github.com/humanmade/S3-Uploads">S3 Uploads by HumanMade</a>;
+* Compat: Fixed integration with LiteSpeed Cache version 5.4 and older. Read more about it in our <a target="_blank" href="https://shortpixel.com/knowledge-base/article/how-to-deliver-the-webps-generated-with-shortpixel-with-the-litespeed-cache-plugin/">knowledge base article</a>;
+* Compat: Fixed bulk processing when WP Media Recovery plugin is active;
+* Fix: ABSPATH die statement added to each file, for increased security;
+* Fix: Improved bulk processing statistics for large installations;
+* Fix: Improved the text and output of WP-CLI commands;
+* Fix: In some cases the transient used for bulk processing could get stuck and prevent automatic optimization;
+* Fix: When processing a non-optimized image with Bulk Actions from the Media Library, it was not optimized with the correct compression level;
+* Fix: Do not add `.htaccess` files in folders where it is not strictly necessary;
+* Fix: Interaction with the the database was improved and optimized when using an offloading solution;
+* Fix: In some cases an error was displayed when debug mode was enabled;
+* Fix: Not all file statuses were displayed correctly in the ShortPixel box of the Media Library;
+* Fix: Various text and layout improvements on the plugin pages;
+* Language: 24 new strings added, 3 updated, 0 fuzzed, and 0 deprecated.
+
+= 5.2.3 =
+Release date: May 26, 2023
+* Fix: an error was displayed when an image had only a `srcset` (and no `src`) and the PICTURE tag delivery mode was enabled;
+* Fix: a warning was displayed for lazy-loaded images using `data-src`;
+* Fix: if the optimization queue contained an item that was added a long time ago, an error caused the optimization to crash;
+* Fix: If duplicate thumbnails are no longer present in WordPress, they are ignored when trying to optimize;
+* Fix: a typo when checking an array caused an error in certain cases;
+* Fix: text changes on the settings page related to AVIF generation for the Unlimited plan;
+* Fix: in case of a failed backup, the retry mechanism did not actually retry the optimization in all cases;
+* Tweak: the optimization error notification system will only trigger when the plugin's debug mode is enabled;
+* Language: 1 new string added, 1 updated, 0 fuzzed, and 0 deprecated.
+
+= 5.2.2 =
+Release date: May 10, 2023
+* New: If a 5xx error is thrown during optimization, the plugin will attempt to output it for easier debugging;
+* Fix: Added multiple fixes and improvements of the PICTURE tag delivery method, including a more stable fallback mechanism in case WebP/AVIF isn't available;
+* Fix: In some cases, the PICTURE tag delivery wasn't working properly when WP Offload Media was active;
+* Fix: Added a check for old items stuck in the queue to avoid potential errors after plugin updates;
+* Fix: In some cases, when WP Offload Media is active, a "Not processable: Image processable" message was displayed;
+* Fix: Added a check to prevent the main file to be passed as a thumbnail because that could crash the de-duplication mechanism;
+* Tweak: Added a "Trusted mode" for file systems that respond very slowly and slow down or freeze the Media Library;
+* Tweak: Added a button to start earler the optimization for huge sites, where preparing the bulk optimization queue can take a very long time;
+* Tweak: updated styling for various notices to make it unitary;
+* Tweak: thumbnails with ~0% optimization will be grouped toghether and displayed only once;
+* Compat: Fixed a bunch of deprecation notices and warnings on PHP 8.1 and PHP 8.2;
+* Language: 8 new strings added, 0 updated, 0 fuzzed, and 0 deprecated.
+
+= 5.2.1 =
+Release date February 21, 2023
+* Fix: an error was displayed when trying to migrate PNG files saved in the old optimization format;
+* Fix: in some strange cases, the JS worker URL was called with `http` instead of `https`, blocking plugin functionalities;
+* Fix: a JS error affected optimization when another plugin defined prototypes;
+* Fix: if the main image was also detected as a thumbnail an error was thrown;
+* Language: 0 new strings added, 0 updated, 0 fuzzed, and 0 deprecated.
+
+= 5.2.0 =
+Release date February 15, 2023
+* New: added support for automatic conversion of HEIC files (Apple image format for iOS devices) to JPG;
+* New: the conversion from PNG to JPG has been completely reworked, making it more robust and stable;
+* Compat: the integration with WP Offload Media has been updated, according to the latest version;
+* Compat: fully tested and working with PHP 8.1;
+* Tweak: fractional optimization is now possible, especially useful for images with many thumbnails;
+* Tweak: Custom Media stats are now retrieved with only one DB query, speeding up the settings page;
+* Tweak: if a PNG is not converted, there is now a reason in the ShortPixel box on the Edit Media screen;
+* Tweak: notifications are no longer reset when the plugin is activated/updated, preventing the same notifications from reappearing;
+* Fix: security hardening for the settings controller and debug functions;
+* Fix: a 4-digit Custom Media folder could not be added due to Media Library exclusions;
+* Fix: a check is now performed before adding a NextGen gallery to Custom Media, to avoid duplicates;
+* Fix: a failed PNG conversion to JPG can now be retried;
+* Fix: credits can no longer be purchased from a sub-account;
+* Fix: when converting a large PNG to JPG, the resulting scaled JPG was not optimized properly; 
+* Fix: size exclusions work as expected again;
+* Fix: when credits are insufficient for the entire bulk, a notification is displayed again;
+* Fix: page selection on the Custom Media screen now works as expected again;
+* Fix: NextGen Gallery pages no longer crash due to jQuery errors;
+* Fix: NextGen galleries are no longer added twice, a check for double slashes has been added;
+* Fix: if a PNG image has the same filename as a JPG image after conversion, it's now renamed correctly to avoid conflicts;
+* Fix: when an image is deleted from NextGen Gallery, the WebP/AVIF files are also removed;
+* Fix: if an optimized image is in a folder without write permissions, WebP/AVIF generation is no longer attempted;
+* Fix: when entering a very long email address, the browser no longer hangs;
+* Fix: notification for list view mode in Media Library works again;
+* Fix: various fixes and updates to the plugin's CSS and text;
+* Language: 31 new strings added, 8 updated, 0 fuzzed, and 15 deprecated.
+
+= 5.1.6 =
+Release date December 31, 2022
+* Fix: in some cases, AVIF files were not cropped correctly;
+* Language: 0 new strings added, 0 updated, 0 fuzzed, and 0 deprecated.
+
+= 5.1.5 =
+Release date November 29, 2022
+* Fix: WebP/AVIF delivery now works correctly, without affecting SVG files or other images or requests (e.g. in WooCommerce). Sorry about this!;
+* Fix: a PHP warning was displayed if no valid API key was added;
+* Fix: error in Custom Media if the folder is not in the root directory;
+* Language: 0 new strings added, 0 updated, 0 fuzzed, and 0 deprecated.
+
+= 5.1.4 =
+Release date November 28, 2022
+* New: added a filter to force a file check for WebP/AVIF if they were manually deleted from disk;
+* Fix: if only small WebPs are available, include the JPG version in the `picture` tag to avoid blurry images;
+* Fix: the notification about unlisted thumbnails incorrectly reported WebP and AVIF files;
+* Fix: improved integration with WP Offload Media by including Retina images in virtual/offload file checks;
+* Fix: if the main file was optimized but some thumbnails did not have WebP/AVIF, it was not displayed correctly in the UI;
+* Fix: added a % margin when generating WebPs/AVIF, so that files that are only a few bytes larger are also generated;
+* Fix: when running WP-CLI, the percentage of finished items in the total was calculated incorrectly;
+* Fix: the settings page crashed in certain cases for new accounts;
+* Tweak: various CSS fixes and improvements on the Media Library, especially for cases with many thumbnails;
+* Language: 2 new strings added, 2 updated, 0 fuzzed, and 0 deprecated.
+
+= 5.1.3 =
+Release date November 9, 2022
+* Fix: a typo related to Custom Media that caused an error when adding a new Custom Media folder;
+* Fix: some minor cosmetic fixes on the settings and bulk processing pages for new plans;
+* Fix: the notification about the ShortPixel column in List view is now displayed when you switch back to the Grid view in Media Library;
+* Language: 1 new string added, 0 updated, 0 fuzzed, and 0 deprecated.
+
+= 5.1.2 =
+Release date November 7, 2022
+* Fix: when converting PNG to JPG, the PNG path was saved in the post editor, which could result in broken images;
+* Fix: the bulk restore of Custom Media was performed without saving it to the previous bulks history;
+* Fix: various wording updates and fixes throughout the plugin code;
+* Fix: PNG to JPG conversion failed under certain Windows environments due to wrong path construction;
+* Fix: the plugin now works with thumbs that have a numeric name (e.g. `0`);
+* Fix: on certain hosting restrictions, requesting a new API key caused a fatal error;
+* Fix: the original image was not processed when thumbnail processing was turned off;
+* Compat: added compatibility with the Uncode theme's adaptive images feature;
+* Tweak: minor updates to the settings and Media Library layout for new plans that will be introduced soon;
+* Tweak: added filter/constant that can be used by affiliates;
+* Tweak: reworked plugin notification system to make it more robust and reliable;
+* Language: 44 new strings added, 2 updated, 0 fuzzed, and 39 deprecated.
+
+= 5.1.1 =
+Release date October 20th, 2022
+* Fix: a fatal error for PHP 7.2 and lower was discovered and fixed by @KZeni, thanks!
+* Language: 0 new strings added, 0 updated, 0 fuzzed, and 0 deprecated.
+
+= 5.1.0 =
+Release date October 20th, 2022
+* New: added SmartCropping, especially useful for eCommerce sites;
+* New: if the WebP/AVIF files are larger than the JPG/PNG/GIF version, they are no longer generated to ensure that the smallest file is always delivered;
+* Fix: various DB-related settings were adjusted for files with very long names and to keep AVIF/WebP optimization data correct;
+* Fix: bulk processing history was lost when deleting the plugin;
+* Fix: the file name in the bulk preview was added back;
+* Fix: various situations and edge cases with WPML are now fixed;
+* Fix: when a Custom Media item was excluded, there was no clear message next to it;
+* Fix: added a check to prevent re-optimization when using bulk actions in the Media Library;
+* Fix: the deactivation pop-up is also displayed in a multisite environment;
+* Fix: minor wording and CSS fixes in the plugin settings and notifications;
+* Fix: if there are still images to optimize and/or generate, all of them are counted and displayed correctly in the Media Library;
+* Tweak: added check of necessary GD library functions to use PNG to JPG conversion;
+* Compat: in some very special cases an error was triggered when the YITH Watermark Premium plugin was enabled;
+* Language: 20 new strings added, 2 updated, 1 fuzzed, and 2 deprecated.
+
 = 5.0.9 =
 Release date August 29th, 2022
 * Fix: one of the processing queues was flooded in certain situations, on sites with many concurrent editors;

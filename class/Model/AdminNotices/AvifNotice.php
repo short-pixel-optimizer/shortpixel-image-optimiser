@@ -17,25 +17,13 @@ class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 	protected $error_message;
 	protected $error_detail;
 
-	// Remove this.
-	public function __construct()
-	{
-		$this->callback = array($this, 'function_crash');
 
-		 parent::__construct();
-	}
-
-/*
-	public function function_crash()
-	{
-		echo 'Yall';
-		  return false;
-	}
-*/
 	protected function checkTrigger()
 	{
-			// No Automatic Trigger.
-		 return false;
+		// No Automatic Trigger.
+		// Disabled the notification and this check mechanism
+		//$this->check(); // @todo Hacky solution to have this retry functionality available. @todo Fix into better structure with auto-check.
+		return false;
 	}
 
 	public function check()
@@ -56,7 +44,6 @@ class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 			 $this->error_message = __('AVIF server test failed. Your server may not be configured to display AVIF files correctly. Serving AVIF might cause your images not to load. Check your images, disable the AVIF option, or update your web server configuration.', 'shortpixel-image-optimiser');
 			 $this->error_detail = __('The request did not return valid HTTP headers. Check if the plugin is allowed to access ' . $url, 'shortpixel-image-optimiser');
 
-			 $contentType = null;
 			 $response = $headers[0];
 
 			 if (is_array($headers) )
@@ -73,7 +60,7 @@ class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 							}
 					}
 
-					// http not ok, redirect etc. Shouldn't happen.
+ 					 // http not ok, redirect etc. Shouldn't happen.
 					 if (is_null($response) || strpos($response, '200') === false)
 					 {
 						 $this->error_detail = sprintf(__('AVIF check could not be completed because the plugin could not retrieve %s %s %s. %s Please check the security/firewall settings and try again', 'shortpixel-image-optimiser'), '<a href="' . $url . '">', $url, '</a>', '<br>');
@@ -112,7 +99,14 @@ class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 	protected function getMessage()
 	{
 			$headers = $this->getData('headers');
+
+
 			$message = '<h4>' . $this->error_message . '</h4><p>' . $this->error_detail . '</p><p class="small">' . __('Returned headers for:<br>', 'shortpixel-image-optimiser') . print_r($headers, true) .  '</p>';
+
+      $message .= '<div>
+        <button class="button button-primary notice-dismiss-action" data-dismisstype="remove" type="button" id="shortpixel-upgrade-advice" style="margin-right:10px;"><strong>' .  __('Dismiss and try again on next page load', 'shortpixel-image-optimiser') . '</strong></button>
+        </div>';
+
 			return $message;
 	}
 }

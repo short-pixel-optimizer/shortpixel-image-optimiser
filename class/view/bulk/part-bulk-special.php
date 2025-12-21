@@ -118,3 +118,30 @@ use \ShortPixel\Controller\BulkController as BulkController;
 	  </nav>
 	</div>
 </section>
+
+
+<section class='panel bulk-restoreAI' data-panel="bulk-restoreAI"  >
+  <h3 class='heading'>
+    <?php esc_html_e("Bulk Undo AI", 'shortpixel-image-optimiser'); ?>
+  </h3>
+
+
+	<div class='bulk-special-wrapper'>
+
+	  <h4 class='warning'><?php esc_html_e('Warning', 'shortpixel-image-optimiser'); ?></h4>
+
+	  <p><?php printf(esc_html__('By starting the %s Bulk undo AI %s process, the plugin will try to revert %s all AI-generated texts %s to the original state. This will impact post and post content and metadata of your installation.  ', 'shortpixel-image-optimiser'), '<b>', '</b>', '<b>', '</b>'); ?></p>
+
+		<p class='warning'><?php esc_html_e('It is strongly advised to create a full backup before starting this process.', 'shortpixel-image-optimiser'); ?></p>
+
+
+	  <p class='optiongroup' ><input type="checkbox" id="bulk-restore-agree" value="agree" data-action="ToggleButton" data-target="bulk-restoreAI-button"> <?php esc_html_e('I want to undo all the AI-generated data. I understand this action is permanent and nonreversible', 'shortpixel-image-optimiser'); ?></p>
+
+	  <nav>
+    	<button type="button" class="button" data-action="open-panel" data-panel="dashboard"><?php esc_html_e('Back','shortpixel-image-optimiser'); ?></button>
+
+			<button type="button" class="button button-primary disabled" id='bulk-restoreAI-button' data-action="BulkUndoAI" disabled><?php esc_html_e('Bulk Undo AI data', 'shortpixel-image-optimiser') ?></button>
+	  </nav>
+
+</div>
+</section>

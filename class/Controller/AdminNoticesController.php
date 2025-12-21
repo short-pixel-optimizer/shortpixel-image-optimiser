@@ -39,10 +39,11 @@ class AdminNoticesController extends \ShortPixel\Controller
 		//		'HeicFeatureNotice',
         'NewExclusionFormat',
         'LitespeedCache',
+        'SpaiCDN',
     );
     protected $adminNotices; // Models
 
-    private $remote_message_endpoint = 'https://api.shortpixel.com/v2/notices.php';
+    private $remote_message_endpoint = 'https://api.shortpixel.com/v2/notices.php'; 
     private $remote_readme_endpoint = 'https://plugins.svn.wordpress.org/shortpixel-image-optimiser/trunk/readme.txt';
 
     private $silent_mode = false;
@@ -82,8 +83,11 @@ class AdminNoticesController extends \ShortPixel\Controller
 		public static function resetOldNotices()
 		{
 			Notices::removeNoticeByID('MSG_FEATURE_SMARTCROP');
-      Notices::removeNoticeByID('MSG_FEATURE_HEIC');
+			Notices::removeNoticeByID('MSG_FEATURE_HEIC');
+			Notices::removeNoticeByID('MSG_AVIF_ERROR');
 
+      // This one is not old,
+      Notices::removeNoticeByID('MSG_AVIF_ERROR');
 		}
 
     /** Triggered when plugin is activated */
@@ -103,7 +107,7 @@ class AdminNoticesController extends \ShortPixel\Controller
     {
         Notices::removeNoticeByID('MSG_UPGRADE_MONTH');
         Notices::removeNoticeByID('MSG_UPGRADE_BULK');
-        Notices::removeNoticeBYID('MSG_QUOTA_REACHED');
+        Notices::removeNoticeByID('MSG_QUOTA_REACHED');
     }
 
     public static function resetIntegrationNotices()
@@ -126,20 +130,22 @@ class AdminNoticesController extends \ShortPixel\Controller
         if (! \wpSPIO()->env()->is_screen_to_use)
         {
             if(get_current_screen()->base !== 'dashboard') // ugly exception for dashboard.
+            {
                 return; // suppress all when not our screen.
+            }
+            else {
+              \wpSPIO()->load_style('shortpixel-notices');
+              \wpSPIO()->load_style('notices-module');
+            }
         }
 
         $access = AccessModel::getInstance();
         $screen = get_current_screen();
         $screen_id = \wpSPIO()->env()->screen_id;
+        $is_our_screen = \wpSPIO()->env()->is_our_screen; 
 
         $noticeControl = Notices::getInstance();
-        $noticeControl->loadIcons(array(
-            'normal' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/slider.png', SHORTPIXEL_PLUGIN_FILE) . '">',
-            'success' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/robo-cool.png', SHORTPIXEL_PLUGIN_FILE) . '">',
-            'warning' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/robo-scared.png', SHORTPIXEL_PLUGIN_FILE) . '">',
-            'error' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/robo-scared.png', SHORTPIXEL_PLUGIN_FILE) . '">',
-        ));
+
 
         if ($noticeControl->countNotices() > 0)
         {
@@ -147,16 +153,18 @@ class AdminNoticesController extends \ShortPixel\Controller
             $notices = $noticeControl->getNoticesForDisplay();
             if (count($notices) > 0)
             {
-                \wpSPIO()->load_style('shortpixel-notices');
-								\wpSPIO()->load_style('notices-module');
-
 
                 foreach($notices as $notice)
                 {
-
+                    
                     if ($notice->checkScreen($screen_id) === false)
                     {
                         continue;
+                    }
+                    // Bit hacky; limit global messages to our screens. Next step here @todo would be to include a remotenotice flag in the noticemodel
+                    elseif (strpos($notice->getID(), 'Global') !== false && false === $is_our_screen)
+                    {
+                        continue; 
                     }
                     elseif ($access->noticeIsAllowed($notice))
                     {
@@ -167,10 +175,10 @@ class AdminNoticesController extends \ShortPixel\Controller
                         continue;
                     }
 
-                    // @Todo change this to new keys
-                    if ($notice->getID() == 'MSG_QUOTA_REACHED' || $notice->getID() == 'MSG_UPGRADE_MONTH') //|| $notice->getID() == AdminNoticesController::MSG_UPGRADE_BULK
+
+                    if ($notice->getID() == 'MSG_QUOTA_REACHED' || $notice->getID() == 'MSG_UPGRADE_MONTH')
                     {
-                        // @todo check if this is still needed.
+                        // This is still needed
                         wp_enqueue_script('jquery.knob.min.js');
                         wp_enqueue_script('shortpixel');
                     }
@@ -196,11 +204,21 @@ class AdminNoticesController extends \ShortPixel\Controller
     {
         foreach($this->definedNotices as $className)
         {
-
             $ns = '\ShortPixel\Model\AdminNotices\\' . $className;
             $class = new $ns();
+
             $this->adminNotices[$class->getKey()] = $class;
         }
+
+        // Init the notice icons
+        $noticeControl = Notices::getInstance();
+        $noticeControl->loadIcons(array(
+            'normal' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/slider.png', SHORTPIXEL_PLUGIN_FILE) . '">',
+            'success' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/robo-cool.png', SHORTPIXEL_PLUGIN_FILE) . '">',
+            'warning' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/robo-scared.png', SHORTPIXEL_PLUGIN_FILE) . '">',
+            'error' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/robo-scared.png', SHORTPIXEL_PLUGIN_FILE) . '">',
+        ));
+
     }
 
 		protected function loadNotices()
@@ -208,8 +226,10 @@ class AdminNoticesController extends \ShortPixel\Controller
 			 foreach($this->adminNotices as $key => $class)
 			 {
 				  $class->load();
-					$this->doRemoteNotices();
 			 }
+
+       $this->doRemoteNotices();
+
 		}
 
     public function getNoticeByKey($key)
@@ -239,9 +259,53 @@ class AdminNoticesController extends \ShortPixel\Controller
         }
     }
 
+    /**
+     * 
+     * @var ShortPixel\Controller\functon
+     */
+    public function getRemoteOffer()
+    {
+       $notices = $this->get_remote_notices(); 
+       
+       if (false == $notices)
+       {
+            return false;
+       }
+
+       foreach($notices as $remoteNotice)
+       {
+           if (! isset($remoteNotice->type) || $remoteNotice->type !== 'offer')
+           {
+                continue; 
+           }
+
+           $offer = (array) $remoteNotice; 
+
+           if (isset($offer['suppressedafter']))
+           {
+              $time = strtotime($offer['suppressedafter']); 
+              if ($time === false || $time <= time() )
+              {
+                continue; 
+              }
+           }
+
+           $offer = array_change_key_case($offer, CASE_LOWER);
+           // Perhaps parse some here or not 
+           return $offer;
+       }
+
+       return false;
+    }
 
     protected function doRemoteNotices()
     {
+         // Don't load on ajax, or other complicated things
+        if (! \wpSPIO()->env()->is_screen_to_use)
+        {
+           return;
+        }
+
         $notices = $this->get_remote_notices();
 
         if ($notices == false)
@@ -255,7 +319,37 @@ class AdminNoticesController extends \ShortPixel\Controller
             if (! isset($remoteNotice->type))
                 $remoteNotice->type = 'notice';
 
-            $message = esc_html($remoteNotice->message);
+            // Ignore this type in the regular notices. 
+            if ('offer' == $remoteNotice->type)
+            {
+                continue;  
+            }
+
+            if (property_exists($remoteNotice, 'message'))
+            {
+                $message = esc_html($remoteNotice->message);
+            }
+            elseif (property_exists($remoteNotice, 'Message'))
+            {
+                $message = esc_html($remoteNotice->Message);
+            }
+            else
+            {
+                 continue; // no message no notice.
+            }
+
+            if (property_exists($remoteNotice, 'link'))
+            {
+                $link = $remoteNotice->link; 
+               // $message_link = $remoteNotice->message_link; 
+
+                if (substr_count($message, '%s') == 2)
+                {
+                     $message = sprintf($message, '<a href="' . $link . '" target="_blank">', '</a>'); 
+                }
+            }
+            
+
             $id = sanitize_text_field($remoteNotice->id);
 
             $noticeController = Notices::getInstance();
@@ -339,7 +433,7 @@ class AdminNoticesController extends \ShortPixel\Controller
         $transient_duration = DAY_IN_SECONDS;
 
         if (\wpSPIO()->env()->is_debug)
-            $transient_duration = 30;
+            $transient_duration = 180;
 
         $keyControl = new apiKeyController();
         //$keyControl->loadKey();
@@ -368,6 +462,7 @@ class AdminNoticesController extends \ShortPixel\Controller
             }
             else
             {
+                Log::addError('Error in fetching Remote Notices!', $notices_response);
                 set_transient( $transient_name, false, $transient_duration );
             }
         }

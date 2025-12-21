@@ -29,11 +29,16 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
 	public function initWebpHooks()
   {
     $webp_option = \wpSPIO()->settings()->deliverWebp;
-Log::addTemp('Picture, webp option ' .  $webp_option);
+    if (false === $this->shouldConvert())
+    {
+       return false;
+    }
+
+
 		if ($webp_option ) {  // @tood Replace this function with the one in ENV.
         if(UtilHelper::shortPixelIsPluginActive('shortpixel-adaptive-images/short-pixel-ai.php')) {
             Notices::addWarning(__('Please deactivate the ShortPixel Image Optimizer\'s
-                <a href="options-general.php?page=wp-shortpixel-settings&part=adv-settings">Deliver the next generation versions of the images in the front-end</a>
+                <a href="options-general.php?page=wp-shortpixel-settings&part=webp">Serve WebP/AVIF images from locally hosted files (without using a CDN)</a>
                 option when the ShortPixel Adaptive Images plugin is active.','shortpixel-image-optimiser'), true);
         }
         elseif( $webp_option == self::WEBP_GLOBAL ){
@@ -42,7 +47,7 @@ Log::addTemp('Picture, webp option ' .  $webp_option);
 						$this->startOutputBuffer('convertImgToPictureAddWebp');
 
         } else {
-						Log::addTemp('Setting Filters');
+
             add_filter( 'the_content', array($this, 'convertImgToPictureAddWebp'), 10000 ); // priority big, so it will be executed last
             add_filter( 'the_excerpt', array($this, 'convertImgToPictureAddWebp'), 10000 );
             add_filter( 'post_thumbnail_html', array($this,'convertImgToPictureAddWebp') );
@@ -57,11 +62,16 @@ Log::addTemp('Picture, webp option ' .  $webp_option);
   */
   public function convertImgToPictureAddWebp($content) {
 
+			if (false === $this->checkPreProcess())
+			{
+				 return $content;
+			}
       if(function_exists('amp_is_request') && amp_is_request()) {
           //for AMP pages the <picture> tag is not allowed
 					// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
           return $content . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG is AMP -->' : '');
       }
+
       $content = $this->convert($content);
       return $content;
   }
@@ -93,8 +103,9 @@ Log::addTemp('Picture, webp option ' .  $webp_option);
         return $content;
       }
 
-    //	preg_match_all
-      $content = preg_replace_callback('/<img[^>]*>/i', array($this, 'convertImage'), $content);
+
+      $pattern = '/<img[^>]*>/i';
+      $content = preg_replace_callback($pattern, array($this, 'convertImage'), $content);
 
       // [BS] No callback because we need preg_match_all
       $content = $this->testInlineStyle($content);
@@ -102,36 +113,6 @@ Log::addTemp('Picture, webp option ' .  $webp_option);
       return $content;
   }
 
-  /** If lazy loading is happening, get source (src) from those values
-  * Otherwise pass back image data in a regular way.
-  */
-  private function lazyGet($img, $type)
-  {
-
-    $value = false;
-    $prefix = false;
-
-     if (isset($img['data-lazy-' . $type]) && strlen($img['data-lazy-' . $type]) > 0)
-     {
-         $value = $img['data-lazy-' . $type];
-         $prefix = 'data-lazy-';
-     }
-     elseif( isset($img['data-' . $type]) && strlen($img['data-' . $type]) > 0)
-     {
-        $value = $img['data-' . $type];
-        $prefix = 'data-';
-     }
-     elseif(isset($img[$type]) && strlen($img[$type]) > 0)
-     {
-        $value = $img[$type];
-        $prefix = '';
-     }
-
-    return array(
-      'value' => $value,
-      'prefix' => $prefix,
-     );
-  }
 
   /* Find image tags within picture definitions and make sure they are converted only by block, */
   private function testPictures($content)
@@ -317,7 +298,8 @@ Log::addTemp('Picture, webp option ' .  $webp_option);
   protected function testInlineStyle($content)
   {
     //preg_match_all('/background.*[^:](url\(.*\))[;]/isU', $content, $matches);
-    preg_match_all('/url\(.*\)/isU', $content, $matches);
+    // Pattern : Find the URL() from CSS, save any extra background information ( position, repeat etc ) in second group and terminal at ; or " (hopefully end of line)
+    preg_match_all('/url\(.*\)(.*)(?:;|\"|\')/isU', $content, $matches);
 
     if (count($matches) == 0)
       return $content;
@@ -343,15 +325,19 @@ Log::addTemp('Picture, webp option ' .  $webp_option);
     {
       $item = $matches[0][$i];
 
+      $image_data = '';
+      if (isset($matches[1][$i]) && strlen(trim($matches[1][$i])) > 0)
+      {
+          $image_data = trim($matches[1][$i]);
+      }
+
       preg_match('/url\(\'(.*)\'\)/imU', $item, $match);
       if (! isset($match[1]))
+      {
         continue;
-
+      }
       $url = $match[1];
-      //$parsed_url = parse_url($url);
       $filename = basename($url);
-
-      $fileonly = pathinfo($url, PATHINFO_FILENAME);
       $ext = pathinfo($url, PATHINFO_EXTENSION);
 
       if (! in_array($ext, $allowed_exts))
@@ -397,10 +383,15 @@ Log::addTemp('Picture, webp option ' .  $webp_option);
       {
           // if webp, then add another URL() def after the targeted one.  (str_replace old full URL def, with new one on main match?
           $target_urldef = $matches[0][$i];
+          
+          // The target_urldef should remain original to be picked up by str_replace, but the original_definitions are what goes back of the original stuff and should be filtered. 
+         // $original_definitions = $this->filterForbiddenInline($target_urldef);
+          
           if (! isset($converted[$target_urldef])) // if the same image is on multiple elements, this replace might go double. prevent.
           {
             $converted[] = $target_urldef;
-            $new_urldef = "url('" . $checkedFile . "'), " . $target_urldef;
+            // Fix: The originals are not being put anymore because this would lead to double images and that's not a good thing.
+            $new_urldef = "url('" . $checkedFile . "') $image_data ;";
             $content = str_replace($target_urldef, $new_urldef, $content);
           }
       }
@@ -408,6 +399,23 @@ Log::addTemp('Picture, webp option ' .  $webp_option);
     }
 
     return $content;
+  }
+
+
+  /**
+   * FilterForbiddenInline
+   * 
+   * Filter tags like !important for the targetstring that should not be duplicated or causes issues otherwise. 
+   *
+   * @param [String] $targetString
+   * @return String
+   */
+  protected function filterForbiddenInline($targetString)
+  {
+        $search = ['!important'];
+        $targetString = str_replace($search, '', $targetString); 
+        
+        return $targetString;
   }
 
 } // class

@@ -11,7 +11,7 @@ use ShortPixel\Model\AccessModel as AccessModel;
 
 class ViewController extends Controller
 {
-  protected static $controllers = array();
+ // protected static $controllers = array();
 	protected static $viewsLoaded = array();
 
   protected static $instance;
@@ -32,10 +32,12 @@ class ViewController extends Controller
 
   public static function init()
   {
-    foreach (get_declared_classes() as $class) {
+	 /*
+	 Not sure why this is here
+	 foreach (get_declared_classes() as $class) {
       if (is_subclass_of($class, 'ShortPixel\Controller') )
         self::$controllers[] = $class;
-    }
+		} */
   }
 
   public function __construct()
@@ -58,9 +60,9 @@ class ViewController extends Controller
 
   /* Check if postData has been submitted.
   * This function should always be called at any ACTION function ( load, load_$action etc ).
-	* @param Object Model  Alternate model to check form values against.
+	*
   */
-  protected function checkPost()
+  protected function checkPost($processPostData = true)
   {
 
 		if(count($_POST) === 0) // no post, nothing to check, return silent.
@@ -69,17 +71,25 @@ class ViewController extends Controller
 		}
     elseif (! isset($_POST['sp-nonce']) || ! wp_verify_nonce( sanitize_key($_POST['sp-nonce']), $this->form_action))
     {
+      // Obscure issue. Detected other plugin that adds information to $_POST without an actual form submit, which would trigger the nonce check on the settings page. In case this happens, be lenient.
+      if ( ! isset($_POST['ajaxSave']) || ! isset($_POST['action']) )
+      {
+         return false; 
+      }
       Log::addInfo('Check Post fails nonce check, action : ' . $this->form_action, array($_POST) );
 			exit('Nonce Failed');
-      return false;
+      return true;
     }
     elseif (isset($_POST) && count($_POST) > 0)
     {
       check_admin_referer( $this->form_action, 'sp-nonce' ); // extra check, when we are wrong here, it dies.
 
-Log::addTemp($_POST);
       $this->is_form_submit = true;
-      $this->processPostData($_POST);
+      if (true === $processPostData) // only processData on form save.
+      {
+          $this->processPostData($_POST);
+      }
+
 
     }
 		return true;
@@ -94,7 +104,7 @@ Log::addTemp($_POST);
   *
   * @param String View Template in view directory to load. When empty will search for class attribute
   */
-  public function loadView($template = null, $unique = true)
+  public function loadView($template = null, $unique = true, $args = [])
   {
       // load either param or class template.
       $template = (is_null($template)) ? $this->template : $template;
@@ -109,6 +119,7 @@ Log::addTemp($_POST);
 			}
 
       $view = $this->view;
+      $view->template_args = $args; // local pass only for this view, useful for snippets, not main controllers.
       $controller = $this;
 
       $template_path = \wpSPIO()->plugin_path('class/view/' . $template  . '.php');
@@ -122,7 +133,44 @@ Log::addTemp($_POST);
         include($template_path);
 				self::$viewsLoaded[] = $template;
       }
+      else {
 
+      }
+
+  }
+
+  /** Manually add data to this viewcontroller
+   * 
+   * @param array $data  Data to add. 
+   * @return void 
+   */
+  public function addData($data)
+  {
+      $this->data = array_merge($this->data, $data);
+  }
+
+  /** Loads a view and then returns it as html string. Handy for passing back snippets in JSON and other things. 
+   * 
+   * @param string $template Name of template
+   * @return string HTML string of view loaded.  
+   */
+  public function returnView($template = null)
+  {
+     $bool = ob_start();
+     $html = ''; 
+
+     if (true === $bool)
+     {
+        $this->loadView($template, false); 
+        $html = ob_get_contents();
+        ob_end_clean();
+     }
+     else
+     {
+       Log::addError('Output buffer failed requesting returnView!' . $template);
+     }
+
+     return $html; 
   }
 
   protected function printInlineHelp($url)
@@ -140,6 +188,7 @@ Log::addTemp($_POST);
         'checked' => false,
         'label' => '',
         'switch_class' => false,
+        'input_class' => 'switch', 
         'data' => [],
         'disabled' => false,
     );
@@ -147,20 +196,24 @@ Log::addTemp($_POST);
     $args = wp_parse_args($args, $defaults);
 
     $switchclass = ($args['switch_class'] !== false) ? 'class="' . $args['switch_class'] . '"' : '';
+    $inputclass = $args['input_class'];
     $checked = checked($args['checked'], true, false);
     $name = esc_attr($args['name']);
     $label = esc_attr($args['label']);
 
+
     $data = implode(' ', $args['data']);
-    $disabled = (true === $args['disabled']) ? 'disabled' : '';
+    
+    $disabled = $args['disabled'];
+    $disabled = (true === $disabled) ? 'disabled' : '';
 
     $output = sprintf('<switch %s>
       <label>
-        <input type="checkbox" class="switch" name="%s" value="1" %s %s %s>
+        <input type="checkbox" class="%s" name="%s" value="1" %s %s %s>
         <div class="the_switch">&nbsp;</div>
         %s
       </label>
-    </switch>', $switchclass, $name, $checked, $disabled, $data, $label);
+    </switch>', $switchclass, $inputclass, $name, $checked, $disabled, $data, $label);
 
     echo $output;
   }

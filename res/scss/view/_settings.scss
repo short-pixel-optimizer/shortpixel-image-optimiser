@@ -5,7 +5,7 @@
 
 	}
 	p {
-		font-size: 14px;
+	//	font-size: 14px;
 	}
 
 	.new {
@@ -14,27 +14,21 @@
   	margin-left: 2px;
 	}
 
-
-
 	.shortpixel-key-valid {
 	  //  font-weight: bold;
 		//	margin-left: 25px;
-		margin-top: 16px;
+		//margin-top: 16px;
 		display: inline-block;
 
 	}
 
-
 	/* TABS CONTROLS */
-	.sp-column-actions-template + .sp-column-info {
-	    display: none;
-	}
 
 
 	.button-primary, .button-primary:focus {
-		background-color: $color-darkest;
-		border-color: $color-darkest;
-		color: #fff;
+		//background-color: $color-darkest;
+		//border-color: $color-darkest;
+		//color: #fff;
 		&:hover
 		{
 			background-color: $color-dark;
@@ -48,75 +42,82 @@
 		 cursor:pointer;
 	}
 
-	/* .submit {
-		.button {
-			min-height: 44px;
-		}
-	} */
-  .top-menu
+
+  .upgrade-banner
   {
-      font-size: 18px;
-	  display: flex;
-	  width: 100%;
-	  min-height: 50px;
-	  align-items: center;
-	  margin: 15px 0;
-	  position: relative;
-	  @include breakpoint(0, 1200px)
-	  {
-		  margin-bottom: 50px;
+	  //height: 180px;
+	  width: 220px;
+	  height: 305px;
+	  margin: 16px 9px 7px 2px;
+	  border-radius: 0.7rem;
+	  background-color: $blue_background;
+
+	  .robo-container {
+		  display: flex;
+		  flex-direction: row;
+		  align-items: center;
+
+	  }
+	  	.robo-from-banner{
+			margin: 0 16px;
+		}
+
+	  	h2{
+			font-family: Roboto, serif;
+			font-weight: 700;
+			color: $blue_dark;
+		}
+
+	  .banner-line-container {
+
+		  display: flex;
+		  flex-direction: row;
+		  align-items: center;
+		  height: 30px;
+		  font-family: Roboto, serif;
+		  font-weight: 400;
+		  color: $blue_dark;
 	  }
 
-		.links
+		  .shortpixel-icon.ok {
+			  width: 17px;
+			  height: 18px;
+			  margin-right: 8px;
+			  margin-left: 10px;
+		  }
+
+	   	.button {
+			padding: 10px 12px;
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			width: max-content;
+			height: 40px;
+			font-size: 14px;
+			//top: 160px;
+			margin: 13px auto;
+			background: darken(#ff0000, 10%);
+			//background: #ED3; // just for check ctrl+shift reload worked :)
+			&:hover {
+				background: #ff0000;
+				//transform: scale(1.05);
+			}
+
+	  }
+		.shortpixel-icon.cart{
+			height: 18px;
+			width: 18px;
+			margin-right: 8px;
+		}
+
+		@include breakpoint(0, 1200px)
 		{
-	    	a { font-size: 18px; margin-right: 8px; white-space: nowrap; line-height: 26px;}
-			padding-right: 195px;
-			flex: 12 4 auto;
+			max-width: 200px;
+			width: 100%;
+			margin: 0;
 		}
-		.quota-remaining
-		{
-			font-size: 13px;
-		}
-	    .spio-status-box {
-			text-align: center;
-			position: absolute;
-			top: -49px;
-			right: 0;
-			padding: 5px 10px;
-			background: white;
-			box-shadow: 0 3px 3px rgba(0,0,0,0.1);
-			z-index: 1;
-		}
-		.pie-wrapper
-		{
-			flex: 4 2 auto;
-			min-width: 100px;
-			display: inline-block;
-		}
-		div.sp-bulk-summary {
 
-				z-index: 10;
-
-
-				span {
-					margin: 0;
-					font-size: 12px;
-					padding: 4px 8px;
-					font-weight: 700;
-					border-radius: 3px;
-					white-space: nowrap;
-					color: #0f6a7d;
-				}
-				@include breakpoint(0,1500px)
-				{
-
-					.opt-circle-average {
-							width: 100px;
-							height: 100px;
-					}
-				}
-		} // optimized thing
-  } // top menu
+  }
 
 
   .red {
@@ -140,6 +141,66 @@
 	{
 	    text-decoration: none;
 	    margin-top: -1px;
+	}
+
+	.ajax-save-done
+	{
+		 position: fixed;
+		 bottom: 2em;
+		 width: 60%;
+		 height: 47px;
+		 background-color: #fff;
+		 border: 0px solid #000;
+		 left: 20%;
+	//	 border-radius-all: 25px;
+		 border-radius: 0.7rem;
+		 box-shadow: 0 0.3rem 0.8rem 0.3rem grey;
+		 display: flex;
+		 flex-direction: row;
+		 padding: 5px;
+		 z-index: 10;
+		 transition: all 1s ease-out;
+		 margin-bottom: -100px;
+		 &.show {
+			 margin: 0;
+			 transition: all 200ms ease-in;
+
+		 }
+		.icon-container
+        {
+			display: flex;
+			justify-content: left;
+			align-items: center;
+		}
+
+      	.shortpixel-icon.ok
+      	{
+			width: 27px;
+			height: 29px;
+			margin: 15px 6px 15px 12px;
+			//margin-right: 0.2rem;
+      	}
+
+      	.text-container
+      	{
+		  	display: flex;
+		  	flex-direction: column;
+		  	justify-content: center;
+		  	width: 100%;
+		  	padding-left: 0.5rem;
+			font-family: Roboto, sans-serif;
+      	}
+		h2 {
+			//font-size: 14px;
+			font-weight: 600;
+		 	margin: 0;
+		 	color: $green_highlight;
+		}
+		h3 {
+			font-weight: 400;
+			margin: 0;
+			color: $blue_dark;
+		}
 	}
 
   //tabs
@@ -168,7 +229,7 @@
 				.toggleTarget.is-visible
 				{
 					display: block;
-					opacity: 1;
+		//			opacity: 1;
 					height: auto;
 
 				}
@@ -176,9 +237,61 @@
 
   }
 
+  // cancel out toggleTarget if the field is also only for advanced, and simple mode is active.
+  &.simple section.setting-tab .toggleTarget.is-advanced 
+  {
+	 display: none; 
+  }
+
+  section#tab-optimisation
+  {
+	content.exif-ai img.icon {
+		height: 40px;
+		margin-bottom: -25px;
+		margin-left: 20px;
+
+		@include breakpoint(0, 768px) {
+			height: 25px;
+			float: right;
+			margin-top: -70px;
+			margin-right: -5px;
+		}
+	}
+  }
+
+  section#tab-webp
+  {
+	img.icon {
+		height: 40px;
+		margin-bottom: -20px;
+		margin-left: 30px;
+
+		@include breakpoint(0, 768px) {
+			height: 30px;
+			float: right;
+			margin-top: -30px;
+			margin-right: -5px;
+		}
+	}
+	content input[name="CDNDomain"] {
+		border: 1px solid $blue_default;
+		background-color: #fff;
+		height: 36px;
+		width: 290px;
+	}
+	content ul li input {
+		width: 1rem;
+		height: 1rem;
+		opacity: 1;
+		display: inline-block;
+	}
+	img#exifviewer-img-1 {
+		margin-bottom: -7px;
+	}
+  }
   section#tab-debug
   {
-			h2 { left: 738px; }
+		h2 { left: 738px; }
      .flex {
        display: flex;
      }
@@ -197,6 +310,7 @@
             display: table-row;
             >span {
               display: table-cell;
+			  padding: 0 4px;
             }
             &.head > span { font-weight: 700; }
         }
@@ -222,6 +336,9 @@
      margin-bottom: 45px;
      position: relative;
 
+     @include breakpoint(0, 768px) {
+//	flex-direction: column;
+     }
 
      span {
        text-align: center;
@@ -298,7 +415,6 @@
     display: none;
   }
 
-	// average optimization graphic circle
 	.opt-circle-average {
 			width: 100px;
 			height: 100px;
@@ -320,3 +436,55 @@
 			}
 
 	}
+
+	#tab-help
+	{
+		  	.help-center
+				{
+					background: $blue_background;
+					border-radius: 8px;
+					width: 100%;
+					//padding: 18px;
+					display: flex;
+					//flex-wrap: wrap;
+					//margin-top: 16px;
+
+					@include breakpoint(0, 768px) {
+						flex-direction: column;
+					}
+
+						> div {
+							//	background: $blue_background;
+								border-right: 2px solid $blue_light;
+								margin: 16px 10px;
+								display: flex;
+								padding: 0 4px;
+
+								flex-direction: column;
+								align-items: center;
+								width: 33%;
+							//	min-width: 250px;
+								text-align: center;
+								justify-content: flex-end;
+								.main-icon .icon {
+									 width: 40px;
+
+								}
+								p { min-height: 60px; }
+								&:last-child
+								{
+									 border: 0;
+								}
+							@include breakpoint(0, 768px) {
+								width: 98%;
+								margin: 20px 0;
+								padding-bottom: 20px;
+								border-right: 0;
+								border-bottom: 2px solid $blue_light;
+								position: relative;
+							}
+						}
+				}
+
+
+	} // tab-help

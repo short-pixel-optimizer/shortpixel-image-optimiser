@@ -45,9 +45,9 @@ class WPQ implements Queue
     $this->options->numitems = 1; //amount to dequeue
     $this->options->mode = 'direct'; // direct | wait
     $this->options->enqueue_limit = 1000; // amount of items to deliver to DataProvider in one go.
-    $this->options->process_timeout = 10000; //How long to wait 'IN_PROCESS' for a retry to happen (until retry_limit)
+    $this->options->process_timeout = 10000; //How long to wait 'IN_PROCESS' for a retry to happen (until retry_limit) in MS
     $this->options->retry_limit = 5;
-    $this->options->timeout_recount = 20000; // Time to recount and check stuff from datasource in MS
+    $this->options->timeout_recount = 180; // Time to recount and check stuff from datasource in Seconds
     $this->options->is_debug = false;
 
   }
@@ -94,7 +94,6 @@ class WPQ implements Queue
 
         if (isset($item['item_count']))
           $itemObj->item_count = intval($item['item_count']);
-
 
         if (isset($item['order']))
             $itemObj->list_order = $item['order'];
@@ -455,12 +454,17 @@ class WPQ implements Queue
       }
 
       $count = $this->getStatus($name);
-      if ($count + $change < 0)
+      // Check for regular timeout on refreshing the counts.
+      $last_count = time() - $this->getStatus('last_count_time');
+      $timeout = ($last_count > $this->options->timeout_recount) ? true : false;
+
+      if ($count + $change < 0 || true === $timeout)
       {
        // Weird problem that would trigger sometimes with background active.
        $this->resetInternalCounts();
        $count = $this->getStatus($name);
       }
+
       return $this->setStatus($name, $count + $change, $savenow);
   }
 
@@ -528,7 +532,17 @@ class WPQ implements Queue
 			 }
 			 $status['queues'][$this->qName]  = $currentStatus;
 		 }
-     $res = update_option($this->statusName, $status);
+
+     if (count($status['queues']) == 0)
+     {
+
+       $res = delete_option($this->statusName);
+     }
+     else {
+        $res = update_option($this->statusName, $status);
+     }
+
+
      wp_cache_delete($this->statusName, 'options');
   }
 
@@ -629,6 +643,7 @@ class WPQ implements Queue
      $this->setStatus('in_process', $num_in_process, false);
      $this->setStatus('errors', $num_errors, false);
      $this->setStatus('fatal_errors', $num_fatal, false);
+     $this->setStatus('last_count_time', time());
 
      $this->saveStatus();
      // direct, to prevent loop.
@@ -661,18 +676,11 @@ class WPQ implements Queue
   public function unInstall()
   {
       // Remove the Queued Items
-
       $this->DataProvider->removeRecords(array('all' => true, 'check_safe' => true));
 
       // Unset the WP Option queue
-      //unset($this->status
-      unset($this->status['queues'][$this->qName]);
-
-      if (count($this->status['queues']) == 0)
-        delete_option($this->statusName);
-      else
-        $this->saveStatus();
-
+      $this->currentStatus = false;
+      $this->saveStatus();
 
       // Signal to DataProvider to check if the whole thing can be removed. Won't happen when there are still records.
       $this->DataProvider->uninstall();

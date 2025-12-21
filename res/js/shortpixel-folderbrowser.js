@@ -96,7 +96,6 @@ class ShortPixelFolderTree
         ul.dataset.loadpath = data.folder.relpath;
 
         folders.forEach(function(element) {
-            //  console.log(element);
               var li = document.createElement('li');
               li.dataset.relpath = element.relpath;
               li.classList.add('folder','closed');

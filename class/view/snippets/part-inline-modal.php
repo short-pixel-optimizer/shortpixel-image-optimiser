@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 					 <div class="spio-modal-title">
 							 <button type="button" class="spio-close-help-button" onclick="jQuery.spioHelpClose()">&times;</button>
 					 </div>
-					 <div class="spio-modal-body" style="height:auto;min-height:400px;padding:0;">
+           <div class="spio-modal-body" style="height:90%;min-height:400px;padding:0;">
 
 					 </div>
 			 </div>

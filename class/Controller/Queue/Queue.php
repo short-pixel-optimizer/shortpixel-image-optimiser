@@ -8,11 +8,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\CacheController as CacheController;
+use ShortPixel\Controller\Optimizer\OptimizeAiController;
 use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\Model\Converter\Converter as Converter;
+use ShortPixel\Controller\Queue\QueueItems as QueueItems;
+use ShortPixel\Model\Queue\QueueItem as QueueItem;
+
 
 use ShortPixel\Helper\UiHelper as UiHelper;
-
+use ShortPixel\Model\AiDataModel;
 use ShortPixel\ShortQ\ShortQ as ShortQ;
 
 abstract class Queue
@@ -20,6 +24,7 @@ abstract class Queue
     protected $q;
 //    protected static $instance;
     protected static $results;
+    protected static $isInQueue = [];
 
     const PLUGIN_SLUG = 'SPIO';
 
@@ -37,9 +42,16 @@ abstract class Queue
 
     abstract protected function prepare();
     abstract protected function prepareBulkRestore();
+    abstract protected function prepareUndoAI(); 
     abstract public function getType();
+    abstract protected function getFilterQueryData();
 
-    public function createNewBulk()
+    protected $queueName = '';
+    protected $cacheName; 
+    protected $options = []; 
+
+    
+    public function createNewBulk($args = [])
     {
 				$this->resetQueue();
 
@@ -49,6 +61,9 @@ abstract class Queue
 
         $cache = new CacheController();
         $cache->deleteItem($this->cacheName);
+
+        $this->setBulkOptions($args);
+        return $args; 
     }
 
     public function startBulk()
@@ -62,7 +77,7 @@ abstract class Queue
        $this->q->cleanQueue();
     }
 
-		public function resetQueue()
+    public function resetQueue()
 		{
 			$this->q->resetQueue();
 		}
@@ -75,6 +90,7 @@ abstract class Queue
 
     /** Enqueues a single items into the urgent queue list
     *   - Should not be used for bulk images
+    *   @todo This function is deprecated.
     * @param ImageModel $mediaItem An ImageModel (CustomImageModel or MediaLibraryModel) object
     * @return mixed
     */
@@ -83,37 +99,42 @@ abstract class Queue
 
        $defaults = array(
           'forceExclusion' => false,
+          'action' => 'optimize',
+          'remote_id' => null, // for retrieveAltAction
        );
        $args = wp_parse_args($args, $defaults);
 
-       $qItem = $this->imageModelToQueue($imageModel);
-       $counts = $qItem->counts;
-
-			 $media_id = $imageModel->get('id');
-			 // Check if this is a duplicate existing.
-			 if ($imageModel->getParent() !== false)
-			 {
-				  $media_id = $imageModel->getParent();
-			 }
-
-       if (count($args) > 0)
-       {
-          $qItem->options = $args;
-       }
+       $qItem = QueueItems::getImageItem($imageModel);
 
 			 $result = new \stdClass;
 
-       $item = array('id' => $media_id, 'value' => $qItem, 'item_count' => $counts->creditCount);
-
-
-       $this->q->addItems(array($item), false);
+       $this->q->addItems([$qItem->returnEnqueue()], false);
        $numitems = $this->q->withRemoveDuplicates()->enqueue(); // enqueue returns numitems
 
-       $result = $this->getQStatus($result, $numitems);
+       $this->checkQueueCache($imageModel->get('id'));
+
+       $result->qstatus = $this->getQStatus($numitems);
        $result->numitems = $numitems;
 
        do_action('shortpixel_start_image_optimisation', $imageModel->get('id'), $imageModel);
        return $result;
+    }
+
+    public function addQueueItem(QueueItem $qItem)
+    {
+      $this->q->addItems([$qItem->returnEnqueue()], false);
+      $item_id = $qItem->item_id; 
+      $numitems = $this->q->withRemoveDuplicates()->enqueue(); // enqueue returns numitems
+
+      $result = new \stdClass;
+      $result->qstatus = $this->getQStatus($numitems);
+      $result->numitems = $numitems;
+
+      $this->checkQueueCache($item_id);
+      
+
+      do_action('shortpixel_start_image_optimisation', $item_id, $qItem->imageModel);
+      return $result;
     }
 
 		/** Drop Item if it needs dropping. This can be needed in case of image alteration and it's in the queue */
@@ -140,6 +161,10 @@ abstract class Queue
             {
               $prepared = $this->prepareBulkRestore();
             }
+            elseif (false !== $custom_operation && 'bulk-undoAI' === $custom_operation)
+            {
+               $prepared = $this->prepareUndoAI(); 
+            }
             else {
 
               $prepared = $this->prepare();
@@ -157,7 +182,7 @@ abstract class Queue
 
             if ($prepared['items'] == 0)
             {
-               Log::addDebug( $this->queueName . ' Queue, prepared came back as zero ', array($prepared, $result->items));
+          //     Log::addDebug( $this->queueName . ' Queue, prepared came back as zero ', array($prepared, $result->items));
                if ($prepared['results'] == 0) /// This means no results, empty query.
                {
                 $result->qstatus = self::RESULT_PREPARING_DONE;
@@ -186,7 +211,7 @@ abstract class Queue
 
        if (isset($items)) // did a dequeue.
        {
-          $result = $this->getQStatus($result, count($items));
+          $result->qstatus = $this->getQStatus(count($items));
           $result->items = $items;
 
        }
@@ -195,13 +220,135 @@ abstract class Queue
     }
 
 
+    protected function addFilters($filters)
+    {
+         global $wpdb; 
+         $start_date = $end_date = false; 
+        
+
+         // @todo Probably move all of this to global function and only sql statement to child class
+         if (isset($filters['start_date']))
+         {
+            try {
+               $start_date = new \DateTime($filters['start_date']); 
+            }
+            catch (\Exception $e)
+            {
+               Log::addError('Start date bad', $e); 
+               unset($filters['start_date']);
+            }
+         }
+   
+         if (isset($filters['end_date']))
+         {
+            try {
+               $end_date = new \DateTime($filters['end_date']);
+            }
+            catch (\Exception $e)
+            {
+               Log::addError('End Data bad', $e); 
+               unset($filters['end_date']); 
+            }
+         }
+   
+         if (false !== $start_date && false !== $end_date)
+         {
+            // Confusing since we do DESC, so just swap dates if one is higher than other. 
+             if ($start_date->format('U') < $end_date->format('U'))
+             {
+                  $swap_date = $end_date; 
+                  $end_date = $start_date; 
+                  $start_date = $swap_date; 
+             }
+         }
+
+        // Take start date end of this day, since we do DESC and otherwise dates on the day of the start day will be omitted 
+         if (false !== $start_date)
+         {
+          $start_date->modify('+23 hours 59 minutes');
+         }
+
+         $args = $this->getFilterQueryData();
+         $prepare = $args['base_prepare']; 
+         $base_query = $args['base_query'];
+         $prepare = $args['base_prepare']; 
+         $date_field = $args['date_field']; 
+
+         $dateSQL = ''; 
+         //$prepare = []; 
+         
+         if (isset($start_date) && false !== $start_date)
+         {
+            $startDateSQL = $date_field . ' <= %s '; 
+            $prepare[] = $start_date->format("Y-m-d H:i:s");
+         }
+         if (isset($end_date) && false !== $end_date)
+         {
+            $endDateSQL = $date_field . ' >= %s'; 
+            $prepare[] = $end_date->format("Y-m-d H:i:s");
+         }
+   
+         $get_start_id = $get_end_id = false; 
+         if (isset($startDateSQL) && isset($endDateSQL))
+         {
+             $dateSQL = $startDateSQL . ' and ' . $endDateSQL; 
+             $get_start_id = true; 
+             $get_end_id = true; 
+         }
+         elseif (isset($startDateSQL) && false === isset($endDateSQL))
+         {
+             $dateSQL = $startDateSQL;
+             $get_start_id = true; 
+         }
+         elseif (false === isset($startDateSQL) && isset($endDateSQL))
+         {
+             $dateSQL = $endDateSQL; 
+             $get_end_id = true; 
+         }
+
+         $base_query .= $dateSQL;
+   
+            if (true === $get_start_id)
+         {
+             $startSQL = $base_query . '  ORDER BY ' . $date_field . ' DESC LIMIT 1'; 
+             $startSQL = $wpdb->prepare($startSQL, $prepare); 
+             $start_id = $wpdb->get_var($startSQL); 
+             if (is_null($start_id))
+             {
+               $start_id = -1; 
+             }
+   
+             $this->options['filters']['start_id'] = $start_id; 
+         }
+   
+         if (true === $get_end_id)
+         {
+            $endSQL = $base_query . '  ORDER BY ' . $date_field . ' ASC LIMIT 1'; 
+            $endSQL = $wpdb->prepare($endSQL, $prepare); 
+
+            $end_id = $wpdb->get_var($endSQL); 
+            if (is_null($end_id))
+            {
+                $end_id = -1; 
+            }
+            $this->options['filters']['end_id'] = $end_id; 
+   
+         
+         }   
+         
+    }
+
+
     protected function prepareItems($items)
     {
-        do_action('shortpixel/queue/prepare_items');
+        do_action('shortpixel/queue/prepare_items', $items);
+
         $return = array('items' => 0, 'images' => 0, 'results' => 0,
       'overlimit' => false);
+
 				$settings = \wpSPIO()->settings();
         $env = \wpSPIO()->env();
+        $queueOptions = $this->getOptions();
 
           if (count($items) == 0)
           {
@@ -222,30 +369,72 @@ abstract class Queue
 
           $i = 0;
 
+          $customData = $this->getStatus('custom_data');
+
           // maybe while on the whole function, until certain time has elapsed?
           foreach($items as $item_id)
           {
+              $counterUpdated = false; 
 
 							// Migrate shouldn't load image object at all since that would trigger the conversion.
 							  if ($operation == 'migrate' || $operation == 'removeLegacy')
 								{
-                    $qObject = new \stdClass;
-                    $qObject->action = $operation;
-                    $queue[] = array('id' => $item_id, 'value' => $qObject, 'item_count' => 1);
+                    //$qObject = new \stdClass;
+                    //$qObject->action = $operation;
+                    $item = QueueItems::getEmptyItem($item_id, $this->getType());
+                    if ('migrate' == $operation)
+                    {
+                        $item->newMigrateAction();
+                    }
+                    if ('removeLegacy' == $operation)
+                    {
+                       $item->newRemoveLegacyAction();
+                    }
+                    $queue[] = $item->returnEnqueue(); //array('id' => $item_id, 'value' => $qObject, 'item_count' => 1);
 
 										continue;
 								}
 
-								$mediaItem = $fs->getImage($item_id, $this->getType() );
+
+                $mediaItem = $fs->getImage($item_id, $this->getType() );
+
 
             //checking if the $mediaItem actually exists
             if ( is_object($mediaItem) ) {
 
-                if ('pdf' === $mediaItem->getExtension() && false === $settings->optimizePdfs)
+              if ('pdf' === $mediaItem->getExtension() && false === $settings->optimizePdfs)
+              {
+                  continue;
+              }
+              
+                $optimizeAiController = OptimizeAiController::getInstance(); 
+
+                // If autoAi is on the bulk, add operation to the item
+                $enqueueAi = false; 
+                $enqueueRegular = true; // basic item processing . 
+
+                if ('media' === $mediaItem->get('type'))
                 {
-                    continue;
+                  if (! isset($queueOptions['doMedia']) || false === $queueOptions['doMedia'] )            
+                  {
+                     $enqueueRegular = false; 
+                  }      
+
+                  if (true === $optimizeAiController->isAiEnabled() && 
+                  true === $settings->autoAIBulk &&
+                  true === $queueOptions['doAi'])
+                  {
+                    $aiDataModel = AiDataModel::getModelByAttachment($mediaItem->get('id'));  
+                    $enqueueAi = $aiDataModel->isProcessable();
+                  }
                 }
-                elseif ($mediaItem->isProcessable() && $mediaItem->isOptimizePrevented() === false && ! $operation) // Checking will be done when processing queue.
+
+                // @todo This whole structure on ai / not-ai for enqueue is getting messy 
+                if ($mediaItem->isProcessable() && 
+                    $mediaItem->isOptimizePrevented() === false &&
+                     ! $operation &&
+                    true === $enqueueRegular
+                  ) // Checking will be done when processing queue.
                 {
 
 										if ($this->isDuplicateActive($mediaItem, $queue))
@@ -253,30 +442,45 @@ abstract class Queue
 											 continue;
 										}
 
-                    $qObject = $this->imageModelToQueue($mediaItem);
+                    $qItem = QueueItems::getImageItem($mediaItem);
+                    $qItem->newOptimizeAction();
 
-                    $counts = $qObject->counts;
-
-									 $media_id = $mediaItem->get('id');
 									 if ($mediaItem->getParent() !== false)
 						 			 {
 						 				  $media_id = $mediaItem->getParent();
 						 			 }
 
-                    $queue[] = array('id' => $media_id, 'value' => $qObject, 'item_count' => $counts->creditCount);
+                   if (true === $enqueueAi)
+                   {
+                      $qItem->data->addNextAction('requestAlt'); 
+                      // Add count here when adding it to next action otherwise AI count in bulk might be hidden / totally off
+                      $customData->aiCount++;
+
+                   }
+
+                    $queue[] = $qItem->returnEnqueue(); //array('id' => $media_id, 'value' => $qObject, 'item_count' => $counts->creditCount);
+
+                    $counts = $qItem->data()->counts; 
 
                     $imageCount += $counts->creditCount;
-                    $webpCount += $counts->webpCount;
-                    $avifCount += $counts->avifCount;
-										$baseCount += $counts->baseCount; // base images (all minus webp/avif)
+                    // $webpCount += $counts->webpCount;
+                   // $avifCount += $counts->avifCount;
+									 //	$baseCount += $counts->baseCount; // base images (all minus webp/avif) 
 
-                    do_action('shortpixel_start_image_optimisation', $media_id, $mediaItem);
+                    $customData->webpCount += $counts->webpCount;
+                    $customData->avifCount += $counts->avifCount;
+                    $customData->baseCount += $counts->baseCount;
+
+                    $counterUpdated = true; 
+                    $this->checkQueueCache($item_id);
+                    do_action('shortpixel_start_image_optimisation', $mediaItem);
 
                 }
                 else
-                {
+                { // @todo Incorporate these actions here.  . Perhaps operations should all be on top?
                    if($operation !== false)
                    {
+                    // Possibly these should become propert qItems as well when enqueueing (?) 
                       if ($operation == 'bulk-restore')
                       {
                           if ($mediaItem->isRestorable())
@@ -286,9 +490,22 @@ abstract class Queue
                             $queue[] = array('id' => $mediaItem->get('id'), 'value' => $qObject);
                           }
                       }
+                      elseif ('bulk-undoAI' == $operation)
+                      {
+                         $qObject = new \stdClass; 
+                         $qObject->action = 'undoAI'; 
+                         $queue[] = ['id' => $mediaItem->get('id'), 'value' => $qObject];
+                      }
                    }
-                   elseif($mediaItem->isOptimized())
+                   elseif(true === $enqueueAi)
                    {
+                          $qItem = QueueItems::getImageItem($mediaItem);
+                          $qItem->requestAltAction();
+                          $queue[] = $qItem->returnEnqueue();
+
+                          $counts = $qItem->data()->counts; 
+                          $customData->aiCount += $counts->aiCount;
+                          $counterUpdated = true;
                    }
 									 else
 									 {
@@ -316,6 +533,7 @@ abstract class Queue
               if (true === $env->IsOverMemoryLimit($i) || true === $env->IsOverTimeLimit())
               {
                  Log::addMemory('PrepareItems: OverLimit! Breaking on index ' . $i);
+                 $this->q->setStatus('custom_data', $customData, false); // save the counts.
                  $this->q->setStatus('last_item_id', $item_id);
                  $return['overlimit'] = true; // lockout return
                  break;
@@ -327,13 +545,12 @@ abstract class Queue
           $this->q->additems($queue);
           $numitems = $this->q->enqueue();
 
-          $customData = $this->getStatus('custom_data');
+         // Log::addTemp('CustomData', $customData);
 
-          $customData->webpCount += $webpCount;
-          $customData->avifCount += $avifCount;
-					$customData->baseCount += $baseCount;
-
-          $this->q->setStatus('custom_data', $customData, false);
+          if (true === $counterUpdated)
+          {
+            $this->q->setStatus('custom_data', $customData, false);
+          }
 
           // mediaItem should be last_item_id, save this one.
           $this->q->setStatus('last_item_id', $item_id); // enum status to prevent a hang when no items are enqueued, thus last_item_id is not raised. save to DB.
@@ -346,6 +563,7 @@ abstract class Queue
 					*/
           $return['results'] = count($items); // This is the return of the query. Preparing should not be 'done' before the query ends, but it can return 0 on the qcount if all results are already optimized.
 
+          //Log::addTemp('ImageCount '  . $customData->baseCount . ' added : ' . $baseCount .  ' leading to ', $return);
           return $return; // only return real amount.
     }
 
@@ -356,25 +574,26 @@ abstract class Queue
     }
 
 
-    public function getQStatus($result, $numitems)
+    protected function getQStatus($numitems)
     {
+
       if ($numitems == 0)
       {
         if ($this->getStatus('items') == 0 && $this->getStatus('errors') == 0 && $this->getStatus('in_process') == 0) // no items, nothing waiting in retry. Signal finished.
         {
-          $result->qstatus = self::RESULT_QUEUE_EMPTY;
+          $qstatus = self::RESULT_QUEUE_EMPTY;
         }
         else
         {
-          $result->qstatus = self::RESULT_EMPTY;
+          $qstatus = self::RESULT_EMPTY;
         }
       }
       else
       {
-        $result->qstatus = self::RESULT_ITEMS;
+        $qstatus = self::RESULT_ITEMS;
       }
 
-      return $result;
+      return $qstatus;
     }
 
 
@@ -415,6 +634,7 @@ abstract class Queue
         $stats->images = $this->countQueue();
       }
 
+     // Log::addTemp('GetStats - ' . $this->queueName, $stats);
       return $stats;
     }
 
@@ -435,20 +655,48 @@ abstract class Queue
 
         $count->images_webp = 0;
         $count->images_avif = 0;
+        $count->images_ai = 0; 
+
         if (is_object($customData))
         {
           $count->images_webp = (int) $customData->webpCount;
           $count->images_avif = (int) $customData->avifCount;
 					$count->images_basecount = (int) $customData->baseCount;
+          if (property_exists($customData, 'aiCount'))
+          {
+            $count->images_ai = (int) $customData->aiCount;
+          }
+        }
+
+
+        $count->total_images_without_ai = 0; 
+        if ($count->images_ai > 0)
+        {
+           $count->total_images_without_ai = max(($count->images - $count->images_ai), 0);
+        }
+        else
+        { 
+          $count->total_images_without_ai = $count->images;
         }
 
         return $count;
     }
 
+    /** Get options which the queue was started with.  Formerly custom_data but now for all options. 
+     * 
+     * @return array 
+     */
+    public function getOptions()
+    {
+         $options = $this->getCustomDataItem('queueOptions'); 
+         return $options;
+    }
+
 
     protected function getStatus($name = false)
     {
-        if ($name == 'custom_data')
+       // Slow name and purpose change on this one.
+        if ($name == 'custom_data' || 'options' == $name)
         {
             $customData = $this->q->getStatus('custom_data');
             if (! is_object($customData))
@@ -460,16 +708,29 @@ abstract class Queue
         return $this->q->getStatus($name);
     }
 
-    public function setCustomBulk($type = null, $options = array() )
+    public function setBulkOptions($options = [] )
     {
-        if (is_null($type))
+        if (0 === count($options))
           return false;
 
         $customData = $this->getStatus('custom_data');
-        $customData->customOperation = $type;
-        if (is_array($options) && count($options) > 0)
-          $customData->queueOptions = $options;
 
+
+        if (isset($options['customOp']))
+        {
+           $customOp = $options['customOp'];   
+           $customData->customOperation = $customOp;
+           unset($options['customOp']);
+        }
+
+        if (is_array($options) && count($options) > 0)
+        {
+          $customData->queueOptions = $options;
+        }
+        else
+        {
+          $customData->queueOptions  = [] ;
+        }
         $this->getShortQ()->setStatus('custom_data', $customData);
     }
 
@@ -477,7 +738,8 @@ abstract class Queue
 		// Use to give the go processing when out of credits (ie)
 		public function isCustomOperation()
 		{
-			if ($this->getCustomDataItem('customOperation'))
+      $customOp = $this->getCustomDataItem('customOperation');
+			if ($this->getCustomDataItem('customOperation') && false !== $this->getCustomDataItem('customOperation'))
 			{
 				return true;
 			}
@@ -504,157 +766,56 @@ abstract class Queue
 
     protected function queueToMediaItem($qItem)
     {
-        $item = new \stdClass;
+        /* $item = new \stdClass;
         $item = $qItem->value;
-        $item->_queueItem = $qItem;
+        $item->_queueItem = $qItem; */
 
-        $item->item_id = $qItem->item_id;
-        $item->tries = $qItem->tries;
+//        $item->item_id = $qItem->item_id;
+//        $item->tries = $qItem->tries;
 
-				if (property_exists($item, 'files'))
-				{ // This must be array & shite.
+        $item = QueueItems::getEmptyItem($qItem->item_id, $this->getType());
+        $item->setFromData($qItem->value);
+        $item->setData('tries', $qItem->tries);
+        $item->setData('queue_list_order', $qItem->list_order);
+        $item->data()->addKeepDataArgs('queue_list_order'); 
+        $item->set('queueItem', $qItem);
+
+				/* Dunno about this, the decode should handle arrays properly
+				if (property_exists($item->data(), 'files'))
+				{ // This must be array.
 					$item->files = json_decode(json_encode($item->files), true);
-				}
-
+				} */
         return $item;
     }
 
-    protected function mediaItemToQueue($item)
+    protected function mediaItemToQueue(QueueItem $item)
     {
-        $mediaItem = clone $item;  // clone here, not to loose referenced data.
-        unset($mediaItem->item_id);
-        unset($mediaItem->tries);
-
-        $qItem = $mediaItem->_queueItem;
-
-        unset($mediaItem->_queueItem);
-
-        $qItem->value = $mediaItem;
-        return $qItem;
+        // @todo Test this assumption
+        return $item->getQueueItem();
     }
 
-    // This is a general implementation - This should be done only once!
-    // The 'avif / webp left imp. is commented out since both API / and OptimizeController don't play well with this.
-    protected function imageModelToQueue(ImageModel $imageModel, $args = array())
+    public function getItem($item_id)
     {
-        $defaults = array(
-            'debug_active' => false, // prevent write actions if called via debugger
-        );
-
-        $args = wp_parse_args($args, $defaults);
-
-        $item = new \stdClass;
-        $item->compressionType = \wpSPIO()->settings()->compressionType;
-
-				$data = $imageModel->getOptimizeData();
-				$urls = $data['urls'];
-				$params = $data['params'];
-
-				list($u, $baseCount) = $imageModel->getCountOptimizeData('thumbnails');
-				list($u, $webpCount) = $imageModel->getCountOptimizeData('webp');
-				list($u, $avifCount) = $imageModel->getCountOptimizeData('avif');
-
-        $counts = new \stdClass;
-        $counts->creditCount = $baseCount + $webpCount + $avifCount;  // count the used credits for this item.
-				$counts->baseCount = $baseCount; // count the base images.
-        $counts->avifCount = $avifCount;
-        $counts->webpCount = $webpCount;
-
-			 	$removeKeys = array('image', 'webp', 'avif'); // keys not native to API / need to be removed.
-
-				// Is UI info, not for processing.
-				if (isset($data['params']['paths']))
-				{
-					 unset($data['params']['paths']);
-				}
-
-				foreach($data['params'] as $sizeName => $param)
-				{
-						$plus = false;
-						$convertTo = array();
-						if ($param['image'] === true)
-						{
-							 $plus = true;
-						}
-					  if ($param['webp'] === true)
-						{
-							 $convertTo[] = ($plus === true) ? '+webp' : 'webp';
-						}
-						if ($param['avif'] === true)
-						{
-							$convertTo[] = ($plus === true) ? '+avif' : 'avif';
-						}
-
-						foreach($removeKeys as $key)
-						{
-							 if (isset($param[$key]))
-							 {
-								  unset($data['params'][$sizeName][$key]);
-							 }
-						}
-
-						if (count($convertTo) > 0)
-						{
-							$convertTo = implode('|', $convertTo);
-							$data['params'][$sizeName]['convertto'] = $convertTo;
-						}
-				}
-
-				// CompressionType can be integer, but not empty string. In cases empty string might happen, causing lossless optimization, which is not correct.
-        if (! is_null($imageModel->getMeta('compressionType')) && is_numeric($imageModel->getMeta('compressionType')))
-				{
-          $item->compressionType = $imageModel->getMeta('compressionType');
-				}
-
-        // Former securi function, add timestamp to all URLS, for cache busting.
-        $urls = $this->timestampURLS( array_values($urls), $imageModel->get('id'));
-
-        $item->urls = apply_filters('shortpixel_image_urls', $urls, $imageModel->get('id'));
-				if (count($data['params']) > 0)
-				{
-					$item->paramlist= array_values($data['params']);
-				}
-
-				if (count($data['returnParams']) > 0)
-				{
-					 $item->returndatalist = $data['returnParams'];
-				}
-		//		$item->preview = $imagePreviewURL;
-        $item->counts = $counts;
-
-        // Converter can alter the data for this item, based on conversion needs
-        $converter = Converter::getConverter($imageModel, true);
-        if ($baseCount > 0 && is_object($converter) && $converter->isConvertable())
+        $itemObj = $this->q->getItem($item_id); 
+        if (false === is_object($itemObj))
         {
-           $converter->filterQueue($item, $args);
+           return $itemObj; // probably boolean / not found. 
         }
 
-        return $item;
-    }
-
-		// @internal
-		public function _debug_imageModelToQueue($imageModel)
-		{
-			 return $this->imageModelToQueue($imageModel, ['debug_active' => true]);
-		}
-
-    protected function timestampURLS($urls, $id)
-    {
-      // https://developer.wordpress.org/reference/functions/get_post_modified_time/
-      $time = get_post_modified_time('U', false, $id );
-      foreach($urls as $index => $url)
-      {
-        $urls[$index] = add_query_arg('ver', $time, $url); //has url
-      }
-
-      return $urls;
+        return $this->queueToMediaItem(($itemObj));
     }
 
 
 		// Check if item is in queue. Considered not in queue if status is done.
 		public function isItemInQueue($item_id)
 		{
+        if (isset(self::$isInQueue[$item_id]))
+        {
+           return self::$isInQueue[$item_id];
+        }
+
 				$itemObj = $this->q->getItem($item_id);
+        self::$isInQueue[$item_id] = $itemObj; // cache this, since interface requests this X amount of times.
 
 				$notQ = array(ShortQ::QSTATUS_DONE, ShortQ::QSTATUS_FATAL);
 				if (is_object($itemObj) && in_array(floor($itemObj->status), $notQ) === false )
@@ -664,15 +825,30 @@ abstract class Queue
 				return false;
 		}
 
-    public function itemFailed($item, $fatal = false)
+    protected function checkQueueCache($item_id)
+    {
+      if (isset(self::$isInQueue[$item_id]) && false === self::$isInQueue[$item_id])
+      {
+         unset(self::$isInQueue[$item_id]);
+      }
+    }
+
+    public function itemFailed(QueueItem $qItem, $fatal = false)
     {
 			  if ($fatal)
 			  {
-					 Log::addError('Item failed while optimizing', $item);
+					 Log::addError('Item failed while optimizing', $qItem->result());
 				}
-        $qItem = $this->mediaItemToQueue($item); // convert again
-        $this->q->itemFailed($qItem, $fatal);
-        $this->q->updateItemValue($qItem);
+
+          // It can happen that the item is not in the queue yet ( directAction doing ) 
+        $item = $this->mediaItemToQueue($qItem);
+        if (false === $item)
+        {
+           return;
+        }
+
+        $this->q->itemFailed($item, $fatal);
+        $this->q->updateItemValue($item);
     }
 
 		public function updateItem($item)
@@ -750,6 +926,7 @@ abstract class Queue
         $data->webpCount = 0;
         $data->avifCount = 0;
 				$data->baseCount = 0;
+        $data->aiCount = 0;
         $data->customOperation = false;
 
         return $data;

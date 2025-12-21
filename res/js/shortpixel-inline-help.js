@@ -44,6 +44,7 @@ document.addEventListener("DOMContentLoaded", function(){
        document.body.appendChild(helpShade);
        document.body.appendChild(helpMain);
 
+       frame.style.height = (helpMain.clientHeight - 38) + 'px';
    }
 
    function CloseHelpEvent(event)

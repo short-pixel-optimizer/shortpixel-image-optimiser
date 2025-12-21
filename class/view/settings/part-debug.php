@@ -2,14 +2,16 @@
 namespace ShortPixel;
 use ShortPixel\Notices\NoticeController as NoticeController;
 use ShortPixel\Controller\StatsController as StatsController;
-use ShortPixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\Controller\QueueController as QueueController;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+
 
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
-$opt = new OptimizeController();
+$opt = new QueueController();
 
 $q = $opt->getQueue('media');
 
@@ -17,6 +19,11 @@ $env = \wpSPIO()->env();
 $fs = \wpSPIO()->filesystem();
 
 $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->url);
+
+if (Log::isManualDebug())
+{
+  $debugUrl = add_query_arg(['SHORTPIXEL_DEBUG' => sanitize_text_field($_GET['SHORTPIXEL_DEBUG'])], $debugUrl);
+}
 ?>
 
 <section id="tab-debug" class="<?php echo esc_attr(($this->display_part == 'debug') ? 'active setting-tab' :'setting-tab'); ?>" data-part="debug">
@@ -49,6 +56,7 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
     </div>
 		<div class='flex'>
 			<span>GD Installed</span><span><?php var_export($env->is_gd_installed); ?></span>
+      <span>Imagick Installed</span><span><?php var_export($env->is_imagick_installed); ?></span>
 			<span>Curl Installed</span><span><?php var_export($env->is_curl_installed); ?></span>
 		</div>
 
@@ -56,7 +64,7 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
 				<span>Uploads Base</span><span><?php echo esc_html((defined('SHORTPIXEL_UPLOADS_BASE')) ? SHORTPIXEL_UPLOADS_BASE : 'not defined'); ?></span>
 				<span>Uploads Name</span><span><?php echo esc_html((defined('SHORTPIXEL_UPLOADS_NAME')) ? SHORTPIXEL_UPLOADS_NAME : 'not defined'); ?></span>
 				<span>Backup Folder</span><span><?php echo esc_html((defined('SHORTPIXEL_BACKUP_FOLDER')) ? SHORTPIXEL_BACKUP_FOLDER : 'not defined'); ?></span>
-				<span>Backup URL</span><span><?php echo esc_html((defined('SHORTPIXEL_BACKUP_URL')) ? SHORTPIXEL_BACKUP_URL : 'not defined'); ?></span>
+			
 
         <span>
 
@@ -78,9 +86,38 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
   <div class='settings'>
     <h3><?php esc_html_e('Settings', 'shortpixel'); ?></h3>
     <?php $local = $this->view->key;
+
       $local->apiKey = strlen($local->apiKey) . ' chars'; ?>
+       <h4>ApiKeySettings</h4>
     <pre><?php var_export($local); ?></pre>
+
+    <h4>ApiKeyModel</h4>
+ <pre><?php var_export($this->keyModel->getData()); ?></pre>
+
+
+    <?php $settings = (array) $this->view->data;
+     ksort($settings);
+    ?>
+    <h4>Settings</h4>
+    <pre><?php var_export($settings); ?></pre>
+
+  	<form method="POST" action="<?php echo esc_url(add_query_arg(['sp-action' => 'action_debug_editSetting'],$debugUrl)) ?>">
+
+      <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
+
+      <select name="edit_setting">
+          <option value="">&nbsp;</option>
+      <?php foreach($settings as $name => $value): ?>
+        <option value="<?php echo $name ?>"><?php echo $name  ?></option>
+      <?php endforeach; ?>
+    </select>
+      New Value <input name="new_value" value="">
+
+    <button class='button' type='submit' name="Submit" value="update">Update</button>
+    <button class='button' type='submit' name="Submit" value="remove">Remove</button>
+</form>
   </div>
+
 
   <div class='quotadata'>
     <h3><?php esc_html_e('Quota Data', 'shortpixel'); ?></h3>
@@ -130,7 +167,7 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
 
   <div class='debug-stats'>
     <form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_resetStats'), $debugUrl)) ?>"
-      id="shortpixel-form-debug-stats">
+      >
 			<?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
       <button class='button' type='submit'>Clear statistics cache</button>
       </form>
@@ -172,7 +209,7 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
 
   <div class='debug-notices'>
     <form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_resetNotices'), $debugUrl)) ?>"
-      id="shortpixel-form-debug-stats">
+      >
 			<?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
       <button class='button' type='submit'>Reset Notices</button>
       </form>
@@ -180,7 +217,7 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
 
 	<div class='trigger-notices'>
 		<form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_triggerNotice'), $debugUrl)) ?>"
-      id="shortpixel-form-debug-stats">
+      >
 			<?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
 			<?php
 				$controller = AdminNoticesController::getInstance();
@@ -207,15 +244,16 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
 
 	<div class='table queue-stats'>
 		<?php
-			$opt = new OptimizeController();
+      $opt = new QueueController();
 
 		 	$statsMedia = $opt->getQueue('media');
 			$statsCustom = $opt->getQueue('custom');
 
-			$opt->setBulk(true);
+      $opt = new QueueController(['is_bulk' => true]);
 
 		 	$bulkMedia = $opt->getQueue('media');
 			$bulkCustom = $opt->getQueue('custom');
+
 
 			$queues = array('media' => $statsMedia, 'custom' => $statsCustom, 'mediaBulk' => $bulkMedia, 'customBulk' => $bulkCustom);
 
@@ -228,21 +266,56 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
 					<span>Fatal</span>
 					<span>Done</span>
 					<span>Total</span>
+          <span>IsCustomOp</span>
 				</div>
 			<?php
 
 			foreach($queues as $name => $queue):
 					$stats = $queue->getStats();
+          $options = $queue->getOptions();
+
+          // Lazy options merger to show in titles. 
+          $options_txt = false; 
+
+          if (is_array($options))
+          {
+              $filters = []; 
+              
+              if(isset($options['filters']) && is_array($options['filters'])) 
+              {
+                  $filters = $options['filters'];
+                  unset($options['filters']); 
+              }
+              
+              
+              $options = array_merge($options, $filters); 
+              
+              foreach($options as $opt => $val)
+              {
+                $options_txt .= " $opt : $val \n"; 
+              }
+          }
+
 					echo "<div>";
-						echo "<span>" .  esc_html($name) . '</span>';
+            if (false !== $options_txt)
+            {
+                echo "<span title='$options_txt' ><u>" .  esc_html($name) . '</u></span>';
+            }
+            else
+            {
+                echo "<span >" .  esc_html($name) . '</span>';
+            }
+
 						echo "<span>" .  esc_html($stats->in_queue) . '</span>';
 						echo "<span>" .  esc_html($stats->in_process) . '</span>';
 						echo "<span>" .  esc_html($stats->errors) . '</span>';
 						echo "<span>" .  esc_html($stats->fatal_errors) . '</span>';
 						echo "<span>" .  esc_html($stats->done) . '</span>';
 						echo "<span>" .  esc_html($stats->total) . '</span>';
-
+            echo "<span>" .  $queue->getCustomDataItem('customOperation') . '</span>';
+            
 					echo "</div>";
+
 				?>
 
 			<?php endforeach; ?>
@@ -260,14 +333,18 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
 					}
 					?>
 			</select>
+      <label><input type="checkbox" name="use_uninstall">Uninstall</label>
       </form>
   </div>
 </div> <!--- stats -->
 
 <p></p>
+
+
+
 <div class='debug-key'>
 	<form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_removeProcessorKey'),$debugUrl)) ?>"
-		id="shortpixel-form-debug-stats">
+		>
 		<?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
 		<button class='button' type='submit'>Reset Processor Key</button>
 		</form>

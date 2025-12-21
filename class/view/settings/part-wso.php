@@ -5,12 +5,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
-$bool = apply_filters('shortpixel/settings/no_banner', true);
-if (! $bool )
-  return;
-
-if ( defined('SHORTPIXEL_NO_BANNER') && SHORTPIXEL_NO_BANNER == true)
-  return;
+if (true === $view->hide_banner)
+{
+   return;
+}
 
 ?>
 
@@ -29,6 +27,6 @@ if ( defined('SHORTPIXEL_NO_BANNER') && SHORTPIXEL_NO_BANNER == true)
      </h3>
    </span> -->
   <span class="button-wrap">
-      <a href="https://fastpixel.io/?utm_source=SPIO" target="_blank" class='button' ><?php _e('TRY NOW!', 'shortpixel-image-optimiser'); ?></a>
+      <a href="<?php echo esc_url('https://test.fastpixel.io/result/' . parse_url(home_url(), PHP_URL_HOST)); ?>" target="_blank" class='button' ><?php _e('TRY NOW!', 'shortpixel-image-optimiser'); ?></a>
   </span>
 </section>

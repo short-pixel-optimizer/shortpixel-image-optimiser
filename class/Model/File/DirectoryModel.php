@@ -8,6 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Helper\UtilHelper as UtilHelper;
+use ShortPixel\Model\Image\CustomImageModel;
 
 /* Model for Directories
 *
@@ -277,8 +278,19 @@ class DirectoryModel extends \ShortPixel\Model
         Log::addInfo('Directory does not exists. Try to create recursive ' . $this->path . ' with '  . $permission);
 
 
-        $result = @mkdir($this->path, $permission , true);
-				chmod ($this->path, $permission );
+        try {
+          $result = @mkdir($this->path, $permission , true);
+        }
+        catch (\Exception $e)
+        {
+          Log::addWarning('Mkdir failed on ' . $this->path, $e);
+        }
+       
+        if (true === $result)
+        {
+          chmod ($this->path, $permission );
+        }
+				
 
         if (! $result)
         {
@@ -333,11 +345,11 @@ class DirectoryModel extends \ShortPixel\Model
   public function getFiles($args = array())
   {
 
-    $defaults = array(
+    $defaults = [
         'date_newer' => null,
         'exclude_files' => null,
 				'include_files' => null,
-    );
+    ];
     $args = wp_parse_args($args, $defaults);
 
     // if all filters are set to null, so point in checking those.
@@ -346,12 +358,11 @@ class DirectoryModel extends \ShortPixel\Model
     if ( ! $this->exists() || ! $this->is_readable() )
       return false;
 
-    $fileArray = array();
+    $fileArray = [];
 
     if ($handle = opendir($this->path)) {
         while (false !== ($entry = readdir($handle))) {
             if ( ($entry != "." && $entry != "..") && ! is_dir($this->path . $entry) ) {
-
 
 								$fileObj = new FileModel($this->path . $entry);
 								if ($has_filters)
@@ -411,6 +422,26 @@ class DirectoryModel extends \ShortPixel\Model
              $filter = false;
         }
      }
+
+     // Filter Avif / Webp files if there is a filebase exists ( i.e. there is a jgp / png file present )
+    if ($filter === true && ('webp' === $file->getExtension() || 'avif' === $file->getExtension()))
+    {
+      
+      $base = $file->getFileDir() . $file->getFileBase(); 
+
+      $extensions = implode(',', CustomImageModel::PROCESSABLE_EXTENSIONS);
+      $glob_pattern = $base . '.{' . $extensions . '}';
+
+
+      $otherFiles = glob($glob_pattern, \GLOB_BRACE);
+
+      // This should always match because the current file (ie webp) is also a processable. More than that -> no. 
+      if (count($otherFiles) > 1)
+      {
+         $filter = false; 
+      }
+
+    }     
 
      return $filter;
   }

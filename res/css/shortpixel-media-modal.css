@@ -1,0 +1,292 @@
+@font-face {
+  src: url("../fonts/Roboto-Regular.ttf") format("truetype");
+  font-family: "Roboto";
+  font-style: normal;
+  font-weight: 400;
+}
+@font-face {
+  src: url("../fonts/Roboto-Bold.ttf") format("truetype");
+  font-family: "Roboto";
+  font-style: normal;
+  font-weight: 700;
+}
+.shortpixel-media-modal-shade {
+  position: fixed;
+  left: 0;
+  right: 25px;
+  bottom: 0;
+  top: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  z-index: 250;
+}
+
+.shortpixel-media-modal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: 45px;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+}
+.shortpixel-media-modal .modal-wrapper {
+  z-index: 300;
+  width: 80%;
+  max-height: 100vh;
+}
+.shortpixel-media-modal .modal-wrapper .title {
+  background: #1ABDCA;
+  color: white;
+  padding: 8px;
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
+}
+.shortpixel-media-modal .modal-wrapper .title h3 {
+  margin: 5px 0;
+  text-align: center;
+  color: #fff;
+  font-size: 16px;
+}
+.shortpixel-media-modal .modal-wrapper .title span {
+  font-size: 20px;
+  font-weight: 700;
+  float: right;
+  cursor: pointer;
+  padding-right: 6px;
+}
+.shortpixel-media-modal .modal-wrapper .modal-content-wrapper {
+  width: 100%;
+  padding: 30px 10%;
+  background: #fff;
+  border-bottom-left-radius: 15px;
+  border-bottom-right-radius: 15px;
+  box-sizing: border-box;
+}
+.shortpixel-media-modal .modal-wrapper .image-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  position: relative;
+  min-height: 40vh;
+}
+.shortpixel-media-modal .modal-wrapper .image-wrapper .image-original, .shortpixel-media-modal .modal-wrapper .image-wrapper .image-preview {
+  flex: 1;
+  position: relative;
+  padding: 10px 0;
+}
+.shortpixel-media-modal .modal-wrapper .image-wrapper .image-original > i, .shortpixel-media-modal .modal-wrapper .image-wrapper .image-preview > i {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+.shortpixel-media-modal .modal-wrapper .image-wrapper .image-original span, .shortpixel-media-modal .modal-wrapper .image-wrapper .image-preview span {
+  position: absolute;
+  top: 30px;
+  border-radius: 15px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #000;
+  padding: 6px 16px;
+  left: 12px;
+  text-transform: uppercase;
+}
+.shortpixel-media-modal .modal-wrapper .image-wrapper > div:first-child {
+  padding-right: 0;
+  padding-left: 0;
+}
+.shortpixel-media-modal .modal-wrapper .image-wrapper > div:first-child span {
+  background-color: #A9A9A9;
+}
+.shortpixel-media-modal .modal-wrapper .image-wrapper > div:last-child {
+  padding-right: 0;
+}
+.shortpixel-media-modal .modal-wrapper .image-wrapper > div:last-child span {
+  background-color: #1ABDCA;
+}
+.shortpixel-media-modal .modal-wrapper .image-wrapper .image-arrow {
+  width: 65px;
+  border: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 0 0 4px;
+}
+.shortpixel-media-modal .modal-wrapper .image-wrapper .image-arrow i {
+  width: 25px;
+  height: 25px;
+  filter: brightness(0) saturate(100%) invert(53%) sepia(82%) saturate(452%) hue-rotate(136deg) brightness(100%) contrast(89%);
+}
+.shortpixel-media-modal .modal-wrapper .image-wrapper i {
+  display: inline-block;
+  height: 100%;
+  width: 100%;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+}
+.shortpixel-media-modal .modal-wrapper .image-wrapper .error-message {
+  position: absolute;
+  display: inline-block;
+  background: #fff;
+  padding: 8px;
+  z-index: 20;
+  left: 0;
+  top: 45%;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  background: #F4FBFC;
+  flex-direction: row;
+  padding: 16px 36px;
+  margin-top: 25px;
+  box-sizing: border-box;
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .action_wrapper {
+  display: none;
+  opacity: 0;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .action_wrapper.active {
+  display: flex;
+  opacity: 1;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .new_file_title.wrapper {
+  display: flex;
+  flex-direction: column;
+  color: #000;
+  gap: 15px;
+  margin: 25px 0;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .new_file_title.wrapper input {
+  color: #116C7E;
+  min-width: 300px;
+  font-weight: 400;
+  border: 1px solid #92D5E3;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .new_file_title.wrapper p {
+  font-weight: 700;
+  margin: 0;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .remove.action_wrapper.active {
+  flex-direction: column;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .remove.action_wrapper.active h3 {
+  margin: 0;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .remove.action_wrapper.active #solid_selector {
+  display: none;
+  opacity: 0;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .remove.action_wrapper.active label {
+  margin: 4px 0;
+  font-weight: 700;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .remove.action_wrapper.active .howto {
+  display: none;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .remove.action_wrapper.active .button {
+  display: inline-block;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .remove.action_wrapper.active .bg_transparency {
+  display: none;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .scale.action_wrapper {
+  flex-direction: column;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .scale.action_wrapper h3 {
+  margin: 0;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .scale.action_wrapper h4 {
+  margin: 8px 0 0 0;
+}
+.shortpixel-media-modal .modal-wrapper .action-bar .filler {
+  width: 10%;
+}
+.shortpixel-media-modal .modal-wrapper .button-wrapper {
+  display: flex;
+  background: #F4FBFC;
+  padding: 15px;
+  width: 100%;
+  box-sizing: border-box;
+  border-bottom-left-radius: 15px;
+  border-bottom-right-radius: 15px;
+}
+.shortpixel-media-modal .modal-wrapper .button-wrapper .button {
+  color: #fff;
+  background: #1ABDCA;
+  padding: 10px 12px;
+  border: 0;
+  margin: 4px;
+  font-family: "Roboto";
+  font-weight: 700;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: all 0.1s ease-in-out;
+  box-shadow: none;
+  padding: 8px 16px;
+}
+.shortpixel-media-modal .modal-wrapper .button-wrapper .button:hover {
+  background: #32d7e5;
+}
+.shortpixel-media-modal .modal-wrapper .button-wrapper .button i.switch {
+  width: 18px;
+  height: 12px;
+}
+.shortpixel-media-modal .modal-wrapper .button-wrapper .button i.notifications {
+  width: 14px;
+  height: 14px;
+  filter: brightness(0) saturate(100%) invert(100%) sepia(100%) saturate(0%) hue-rotate(251deg) brightness(108%) contrast(108%);
+}
+.shortpixel-media-modal .modal-wrapper .button-wrapper .button i {
+  width: 15px;
+  height: 15px;
+  filter: brightness(0) saturate(100%) invert(100%) sepia(100%) saturate(20%) hue-rotate(283deg) brightness(105%) contrast(105%);
+}
+.shortpixel-media-modal .modal-wrapper .load-preview-spinner {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+}
+.shortpixel-media-modal .modal-wrapper .load-preview-spinner .loadspinner {
+  animation: cssload-spin 5000ms infinite linear;
+  -o-animation: cssload-spin 5000ms infinite linear;
+  -ms-animation: cssload-spin 5000ms infinite linear;
+  -webkit-animation: cssload-spin 5000ms infinite linear;
+  -moz-animation: cssload-spin 5000ms infinite linear;
+}
+@keyframes loading-spin {
+  100% {
+    transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@-o-keyframes loading-spin {
+  100% {
+    -o-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@-ms-keyframes loading-spin {
+  100% {
+    -ms-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@-webkit-keyframes loading-spin {
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@-moz-keyframes loading-spin {
+  100% {
+    -moz-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+
+/*# sourceMappingURL=shortpixel-media-modal.css.map */

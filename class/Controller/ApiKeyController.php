@@ -21,6 +21,10 @@ class ApiKeyController extends \ShortPixel\Controller
       $this->load();
     }
 
+    /** Get instace of ApiKeyController
+     * 
+     * @return ApiKeyController
+     */
     public static function getInstance()
     {
         if (is_null(self::$instance))

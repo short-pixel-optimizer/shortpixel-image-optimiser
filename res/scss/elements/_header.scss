@@ -1,46 +1,44 @@
 // The Header
 header
 {
-
     background: #fff;
     text-align: center;
     display: flex;
-    padding: 8px 16px;
     justify-content: space-between;
     align-items: center;
+    //width: 95%;
+    margin: 10px auto;
+    //border-radius: 16px;
+    margin-left: -22px;
+    margin-top: -10px;
+    margin-right: -20px;
+    margin-bottom: 10px;
+    padding: 8px 16px;
+    box-shadow: 0px 1px 4px 0px rgba(0, 0, 0, 0.1);
 
     h1 {
       line-height: 50px;
     }
     img {
       vertical-align: bottom;
+      padding-bottom: 5px;
       margin-right: 8px;
+      margin-left: 1.1em;
     }
-		.top-buttons
-		{
-			// Items for whole page, including header.
-			button {
-					color: #fff;
-					background: $blue_default;
-					padding: 8px 6px;
-					border: 0;
-					margin: 4px; // see if this works.
-					font-family: 'Roboto';
-					font-weight: 700;
-					border-radius: 6px;
-					i.switch {
-						 width: 18px;
-						 height: 12px;
-					}
-					i.notifications
-					{
-						 width: 14px;
-						 height: 14px;
-						 filter: brightness(0) saturate(100%) invert(100%) sepia(100%) saturate(0%) hue-rotate(251deg) brightness(108%) contrast(108%);;
-					}
-
-					// @todo probably something for icon left /right here.
-			}
-		}
-
+    .top-buttons {
+	margin-right: 4em;
+	// Items for whole page, including header.
+      	a, button {
+		@include shortpixel-button;
+      	}
+      	.header-button {
+          i {
+            filter: $filter_white;
+            margin-right: 4px;
+            height: 15px;
+	    width: 15px;
+	    vertical-align: text-top;
+          }
+      	}
+    }
 }

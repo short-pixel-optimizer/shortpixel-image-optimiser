@@ -6,6 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+use ShortPixel\Model\Queue\QueueItem as QueueItem; 
 use ShortPixel\Helper\UtilHelper as UtilHelper;
 
 class BMPConverter extends MediaLibraryConverter
@@ -26,7 +27,7 @@ class BMPConverter extends MediaLibraryConverter
     return false;
   }
 
-  public function filterQueue($item, $args = array())
+  public function filterQueue(QueueItem $item, $args = array())
   {
     // Create backup and such.
     $conversion_args = array(
@@ -74,13 +75,13 @@ class BMPConverter extends MediaLibraryConverter
     {
       // Error, but can also be multiple other thumbs returning.
        Log::addDebug('MainFile not set (so far?) ');
-       return $successData;
+       return $optimizeData;
     }
 
     if (! isset($mainFile['image']) || ! isset($mainFile['image']['file']))
     {
       Log::addDebug('MainFile not set (so far?) ');
-      return $successData;
+      return $optimizeData;
     }
 
     $tempFile = $fs->getFile($mainFile['image']['file']);

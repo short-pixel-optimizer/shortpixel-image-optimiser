@@ -57,7 +57,7 @@ class QuotaController
         if (! $cacheData->exists() )
         {
             $quotaData = $this->getRemoteQuota();
-						if (! $this->hasQuota())
+            if (false === $this->hasQuota())
 							$timeout = MINUTE_IN_SECONDS;
 						else {
 							$timeout = HOUR_IN_SECONDS;
@@ -82,7 +82,9 @@ class QuotaController
           $quotaData = $this->getQuotaData();
           $DateNow = time();
 
-          $DateSubscription = strtotime($quotaData['APILastRenewalDate']);
+          // This check to prevent IIS issue on 32Bit PHP to have complaints (?) .  //https://support.shortpixel.com/conversation/240212
+          $DateSubscription = (isset($quotaData['APILastRenewalDate']) && $quotaData['APILastRenewalDate'] != 0 ) ? 
+                          strtotime($quotaData['APILastRenewalDate']) : false; 
           $DaysToReset =  30 - ( (int) (  ( $DateNow  - $DateSubscription) / DAY_IN_SECONDS) % 30);
 
           $quota = (object) [
@@ -173,7 +175,6 @@ class QuotaController
 				{
 						AdminNoticesController::resetQuotaNotices();
 				}
-		//		Log::addDebug('Reset Quota Exceeded and reset Notices');
        	$settings->quotaExceeded = 0;
     }
 
@@ -285,7 +286,6 @@ class QuotaController
               $response = wp_remote_get($requestURL, $args);
               $comm['C: ' . (number_format(microtime(true) - $time, 2))] = array("sent" => "POST: " . $requestURL, "args" => $args, "received" => $response);
           }
-    //      Log::addInfo("API STATUS COMM: " . json_encode($comm));
 
           $defaultData = array(
               "APIKeyValid" => false,
@@ -358,7 +358,7 @@ class QuotaController
               $this->setQuotaExceeded();
 					}
 
-          Log::addDebug('GetQuotaInformation Result ', $dataArray);
+        //  Log::addDebug('GetQuotaInformation Result ', $dataArray);
           return $dataArray;
     }
 

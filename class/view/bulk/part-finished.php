@@ -1,5 +1,6 @@
 <?php
 namespace ShortPixel;
+use ShortPixel\Helper\UiHelper as UiHelper;
 
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
@@ -7,34 +8,41 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 <section class="panel finished" data-panel="finished">
   <div class="panel-container">
+  
+  <?php $this->loadView('bulk/part-progressbar', false, ['part' => 'finished']); ?>
 
-    <h3 class="heading"><span><img src="<?php echo \wpSPIO()->plugin_url('res/img/robo-slider.png'); ?>"></span>
-      <?php esc_html_e('The ShortPixel Bulk Processing is finished' ,'shortpixel-image-optimiser'); ?>
 
       <div class='average-optimization'>
-          <p><?php esc_html_e('Average Optimization','shortpixel-image-optimiser'); ?></p>
-          <svg class="opt-circle-average" viewBox="-10 0 150 140">
+          <p><?php esc_html_e('Your images are now this much smaller on average: ','shortpixel-image-optimiser'); ?></p>
+          <svg class="opt-circle-average" viewBox="-10 0 130 100">
                         <path class="trail" d="
                             M 50,50
                             m 0,-46
                             a 46,46 0 1 1 0,92
                             a 46,46 0 1 1 0,-92
-                            " stroke-width="16" fill-opacity="0">
+                            " stroke-width="10" fill-opacity="0">
                         </path>
                         <path class="path" d="
                             M 50,50
                             m 0,-46
                             a 46,46 0 1 1 0,92
                             a 46,46 0 1 1 0,-92
-                            " stroke-width="16" fill-opacity="0" style="stroke-dasharray: 289.027px, 289.027px; stroke-dashoffset: 180px;">
+                            " stroke-width="10" fill-opacity="0" style="stroke-dasharray: 289.027px, 289.027px; stroke-dashoffset: 180px;">
                         </path>
                         <text class="text" x="50" y="50"><?php esc_html_e('N/A', 'shortpixel-image-optimiser'); ?></text>
             </svg>
 
       </div>
+    <h3 class="heading">
+       <?php esc_html_e('The ShortPixel Bulk Processing is finished' ,'shortpixel-image-optimiser'); ?>
     </h3>
 
-    <?php $this->loadView('bulk/part-progressbar', false); ?>
+      <div class='dashboard-text'>
+         <a class='button' type='button' href="https://wordpress.org/support/plugin/shortpixel-image-optimiser/reviews/#new-post" target="_blank">
+            <span class='icon'><?php echo UIHelper::getIcon('res/images/icon/heart.svg', ['width' => '16']); ?></span> 
+            <span><?php _e('Rate ShortPixel', 'shortpixel-image-optimiser'); ?></span>
+         </a>
+      </div>
 		<span class='hidden' data-check-media-total data-stats-media="total">0</span>
 
     <span class='hidden' data-check-media-customOperation data-stats-media="isCustomOperation">-1</span>
@@ -43,14 +51,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<p class='finished-paragraph'>
 			<?php printf(__('Congratulations, ShortPixel has optimized %s %s images and thumbs %s for your website! Yay to faster loading websites! %s', 'shortpixel-image-optimiser'), '<b>', '<span data-stats-total="total"></span>','</b>', '&#x1F389;');
 			?>
-			<br>
+<!--			<br>
 			<?php
 			printf(__('ShortPixel plugins are installed on hundreds of thousands of websites and we save our users over 500 GB by optimizing over 15 million images. Each and every day! %s', 'shortpixel-image-optimiser'), '&#x1F4AA;');
 			?>
 			<br>
 		<?php
 			printf(__('We have been working on improving ShortPixel every day for over 7 years. It is very motivating for us when customers take a minute to leave us a %sreview%s. We thank you for that! %s', 'shortpixel-image-optimiser'), '<a href="https://wordpress.org/support/plugin/shortpixel-image-optimiser/reviews/?filter=5" target="_blank">','</a>', '&#x1F64C;');
-		?>
+		?> -->
 		</p>
 	</div>
 

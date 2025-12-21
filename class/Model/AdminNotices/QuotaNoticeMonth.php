@@ -15,8 +15,14 @@ class QuotaNoticeMonth extends \ShortPixel\Model\AdminNoticeModel
 
 	public function load()
 	{
-		 $this->callback = array(AdminNoticesController::getInstance(), 'proposeUpgradePopup');
-		 parent::load();
+    $bool = parent::load();
+
+  //	 $this->callback = array(AdminNoticesController::getInstance(), 'proposeUpgradePopup');
+    if (true === $bool && is_object($this->notice))
+    {
+       AdminNoticesController::getInstance()->proposeUpgradePopup();
+    }
+
 	}
 
 	protected function checkTrigger()
@@ -52,22 +58,6 @@ class QuotaNoticeMonth extends \ShortPixel\Model\AdminNoticeModel
 		$message .= '  <button class="button button-primary" id="shortpixel-upgrade-advice" onclick="ShortPixel.proposeUpgrade()" style="margin-right:10px;"><strong>' .  __('Show me the best available options', 'shortpixel-image-optimiser') . '</strong></button>';
 
 		return $message;
-	}
-
-	protected function CheckUpgradeNeeded($quotaData)
-	{
-			if  (isset($quotaData->monthly->total) && !$quotaData->unlimited)
-			{
-					$monthAvg = $this->getMonthAvg($quotaData);
-					// +20 I suspect to not trigger on very low values of monthly use(?)
-					$threshold = $quotaData->monthly->total + ($quotaData->onetime->remaining / 6 ) +20;
-
-					if ($monthAvg > $threshold)
-					{
-							return true;
-					}
-			}
-			return false;
 	}
 
 	protected function getMonthAverage() {

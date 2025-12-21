@@ -90,9 +90,6 @@ class StatsModel
   {
     $settings = \wpSPIO()->settings();
 
-  //  $this->totalOptimized = $settings->totalOptimized;
-  //  $this->totalOriginal = $settings->totalOriginal;
-
     $stats = $settings->currentStats;
 		if (! is_array($stats))
 		{
@@ -142,9 +139,9 @@ class StatsModel
   public function add($stat)
   {
      if (property_exists($stat, 'images'))
-         $this->stats[$stat->type][$images] += $stats->images;
+         $this->stats[$stat->type]['images'] += $stat->images;
      if (property_exists($stat, 'items'))
-        $this->stats[$stat->type][$items] += $stats->items;
+        $this->stats[$stat->type]['items'] += $stat->items;
 
 
   }
@@ -162,7 +159,9 @@ class StatsModel
       $this->currentStat = null;
       if (isset($this->stats[$type]))
       {
-         $this->currentStat = $this->stats[$type];
+         $stat = $this->stats[$type];
+
+         $this->currentStat = $this->checkInt($stat);
          $this->path = [$type];
       }
 
@@ -176,16 +175,17 @@ class StatsModel
 
        if (is_array($this->currentStat) && array_key_exists($data, $this->currentStat))
        {
-          $this->currentStat = $this->currentStat[$data];
+          $this->currentStat = $this->checkInt($this->currentStat[$data]);
           $this->path[] = $data;
        }
 
 
        if (! is_array($this->currentStat))
        {
+
          if ($this->currentStat === -1)
          {
-            $this->currentStat = $this->fetchStatdata();  // if -1 stat might not be loaded, load.
+            $this->currentStat = $this->checkInt($this->fetchStatdata());  // if -1 stat might not be loaded, load.
          }
 
         return $this->currentStat;
@@ -308,6 +308,16 @@ class StatsModel
 
   }
 
+  private function checkInt($var)
+  {
+    if (is_numeric($var) && gettype($var) !== 'integer')
+    {
+       $var = intval($var);
+    }
+    return $var;
+
+  }
+
 
   // suboptimal over full stats implementation, but faster.
   private function countMediaThumbnails($args = array())
@@ -395,6 +405,7 @@ class StatsModel
 			if (is_null($count) && strpos($wpdb->last_error, 'exist') !== false)
 			{
 				 InstallHelper::checkTables();
+         Log::addError('StatsModel WPDB error', $wpdb->last_error);
 				 return 0;
 			}
 

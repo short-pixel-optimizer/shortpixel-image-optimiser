@@ -80,7 +80,8 @@ class StatsController extends \ShortPixel\Controller
       else {
 
           global $wpdb;
-          $sql = 'select round(AVG(100-(compressed_size / original_size * 100))) from ' . $wpdb->prefix  . 'shortpixel_postmeta where status = %d  order by id desc limit 1000';
+          $sql = 'select round(AVG(100-(compressed_size / original_size * 100))) from ' . $wpdb->prefix  . 'shortpixel_postmeta 
+                  where status = %d and compressed_size > 0 and original_size > 0 order by id desc limit 1000';
           $sql = $wpdb->prepare($sql, ImageModel::FILE_STATUS_SUCCESS);
 
           $result = $wpdb->get_var($sql);
@@ -92,18 +93,8 @@ class StatsController extends \ShortPixel\Controller
           }
       }
 
+      return 0;
 
-    /*  $totalOptimized = $this->model->get('totalOptimized');
-      $totalOriginal = $this->model->get('totalOriginal');
-
-			$average = 0;
-
-			if ($totalOptimized > 0 && $totalOriginal > 0)
-			{
-				 $average = round(( 1 -  ( $totalOptimized / $totalOriginal ) ) * 100, 2);
-			}
-
-      return $average; */
     }
 
     // This is not functional @todo

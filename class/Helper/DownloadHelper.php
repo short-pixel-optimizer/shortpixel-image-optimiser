@@ -34,6 +34,13 @@ class DownloadHelper
 				}
 			}
 
+      /** Helper to download file from remote. 
+       * 
+       * @param string $url The remote URL to download.
+       * @param array $args  if DestinationPath is included it will try to move file there, otherwise remain in /tmp. 
+       * @return string File Path 
+       */
+      
 			public function downloadFile($url, $args = array())
 			{
 					$defaults = array(
@@ -48,7 +55,7 @@ class DownloadHelper
 
           $methods = array(
               "download_url" => array(array($this, 'downloadURLMethod'), $url, false),
-              "download_url_force" => array(array($this, 'downloadURLMethod'), true),
+              "download_url_force" => array(array($this, 'downloadURLMethod'), $url, true),
               "remote_get" => array(array($this, 'remoteGetMethod'), $url)
           );
 
@@ -77,8 +84,17 @@ class DownloadHelper
 					}
          
 
+          /*
+          Log::addError('Nulling tempfile to zero for testing!'); 
+          $file = fopen($tempFile, 'r+'); 
+          ftruncate($file,0);
+          fclose($file);
+          */
+
 					$fs = \wpSPIO()->filesystem();
 					$file = $fs->getFile($tempFile);
+
+          
 
           if ($file->getFileSize() === 0)
           {
@@ -113,6 +129,7 @@ class DownloadHelper
           $fs = \wpSPIO()->filesystem();
 
           $destinationFile = $fs->getFile($destinationPath);
+
           // If file is non-existing, check directory and write-permissions.
           if (false == $destinationFile->exists())
           {
@@ -120,7 +137,7 @@ class DownloadHelper
             $dirObj->check(true);
           }
 
-          $result = $fileObj->copy($destinationFile);
+          $result = $fileObj->move($destinationFile);
 
           if ($result === false)
             return false;
@@ -129,21 +146,31 @@ class DownloadHelper
 
       }
 
-      private function downloadURLMethod($url, $force = false)
+      /** Get a sensible timeout for how long the download should be allowed to take */
+      private function getMaxDownloadTime()
       {
         $executionTime = ini_get('max_execution_time');
         if (! is_numeric($executionTime)) // edge case
         {
            $executionTime = 0;
         }
-        $downloadTimeout = max($executionTime - 10, 15);
+        // min here, so maximum value of downloadtimeout is 25 seconds, which should be more than enough. To prevent hanging downloads eating up server time
+        $downloadTimeout = min($executionTime - 10, 25);
+
+        return $downloadTimeout; 
+      }
+
+      private function downloadURLMethod($url, $force = false)
+      {
+
+        $downloadTimeout = $this->getMaxDownloadTime(); 
 
         $url = $this->setPreferredProtocol(urldecode($url), $force);
         $tempFile = \download_url($url, $downloadTimeout);
 
         if (is_wp_error($tempFile))
         {
-           Log::addError('Failed to Download File ', $tempFile);
+           Log::addError('Failed to Download File from ' . $url , $tempFile);
            Responsecontroller::addData('message', $tempFile->get_error_message());
            return false;
         }
@@ -155,7 +182,8 @@ class DownloadHelper
       {
             //get_temp_dir
             $tmpfname = tempnam(get_temp_dir(), 'spiotmp');
-            $downloadTimeout = max(ini_get('max_execution_time') - 10, 15);
+
+            $downloadTimeout = $this->getMaxDownloadTime(); 
 
             $args_for_get = array(
               'stream' => true,
@@ -186,6 +214,13 @@ class DownloadHelper
 		          $testURL = 'http://' . SHORTPIXEL_API . '/img/connection-test-image.png';
 		          $result = download_url($testURL, 10);
 		          $settings->downloadProto = is_wp_error( $result ) ? 'https' : 'http';
+
+              // remove test.
+              if (false === is_wp_error($result))
+              {
+                @unlink($result);
+              }
+              
 		      }
 		      return $settings->downloadProto == 'http' ?
 		              str_replace('https://', 'http://', $url) :

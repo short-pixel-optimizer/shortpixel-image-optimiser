@@ -6,6 +6,7 @@ class ShortPixelScreenBase
 	isMedia = true;
 	processor;
 	strings = [];
+	settings;
 
 	// ImageModel Constants
 	imageConstants = {
@@ -26,6 +27,7 @@ class ShortPixelScreenBase
 	// Function for subclasses to add more init. Seperated because of screens that need to call Process functions when starting.
 	Init()
 	{
+
 	}
 
 //	var message = {status: false, http_status: response.status, http_text: text, status_text: response.statusText };
@@ -51,6 +53,35 @@ class ShortPixelScreenBase
 	HandleItemError(result)
 	{
 
+	}
+
+	// Add notices that are coming for ajax responses to the place required.
+	AppendNotices(notices,element)
+	{
+			if (null === element)
+			{
+						console.error('Element is null, cannot display notices');
+						return;
+			}
+
+			for (let i = 0; i < notices.length; i++)
+			{
+				let notice = notices[i];
+
+				// Parse Dom
+				const parser = new DOMParser();
+				var dom = parser.parseFromString(notice, 'text/html');
+				var noticeDom = dom.body.firstChild;
+				if (noticeDom.classList.contains('is-dismissible'))
+				{
+					 //  Add close Event
+					let button = noticeDom.querySelector('button.notice-dismiss'); 
+					button.addEventListener('click', this.EventCloseErrorNotice.bind(this)); // Might be renamed
+
+				}
+			//	element.insertAdjacentHTML('afterend', notices[i]);
+			element.after(noticeDom); // Add to top
+			}
 	}
 
 	HandleErrorStop()
@@ -147,31 +178,13 @@ class ShortPixelScreenBase
 			el.style.opacity = 0;
 			el.style.display = 'none';
 
-			/*
-			el.style.opacity = 1;
-			(function fade() {
-					if ((el.style.opacity -= .1) < 0) {
-							el.style.display = "none";
-							el.style.opacity = 0;
-
-					} else {
-							requestAnimationFrame(fade);
-					}
-			})(); */
 	};
 
 	// ** FADE IN FUNCTION **
 	 FadeIn(el, display) {
 			el.style.opacity = 1;
 			el.style.display = "block";
-			/*
-			(function fade() {
-					var val = parseFloat(el.style.opacity);
-					if (!((val += .1) > 1)) {
-							el.style.opacity = val;
-							requestAnimationFrame(fade);
-					}
-			})(); */
+
 	};
 
 	Show(el)

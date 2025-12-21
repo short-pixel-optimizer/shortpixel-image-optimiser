@@ -25,7 +25,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
         if (data.custom)
         {
             var id = data.custom.id;
-            var element = document.getElementById('sp-msg-' + id);
+            var element = document.getElementById('shortpixel-data-' + id);
             element.outerHTML = data.custom.itemView;
 
             var isOptimizable = data.custom.is_optimizable;
@@ -33,9 +33,10 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
 
             var inputSelect = document.querySelector('.item-' + id + ' input[name="select[]"]');
 
-            if (null === inputSelect)
+            if (null === inputSelect) // This happens on NGG 
             {
                console.warn('Checkbox not found ' + id);
+               return; 
             }
 
             inputSelect.classList.remove('is-optimizable', 'is-restorable');
@@ -135,9 +136,17 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
                  else {
                    console.error('Row Element not found for '  + folder_id);
                  }
-
              }
           }
+
+					if (data.folder.updated)
+					{
+						var el = document.querySelector('.shortpixel-other-media .item.item-' + folder_id + ' .updated');
+						if (null !== el)
+						{
+							 el.innerText = data.folder.updated;
+						}
+					}
 
        }
 
@@ -318,6 +327,15 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
       // @todo FadeOut function here
       var picker = document.querySelector('.shortpixel-modal.modal-folder-picker');
       this.Hide(picker);
+
+			var message = picker.querySelector('.folder-message');
+			this.Hide(message);
+
+			var notices = picker.querySelectorAll('.shortpixel-notice');
+			for (var i = 0; i < notices.length; i++ )
+			{
+				 notices[i].remove();
+			}
     }
 
     AddNewFolderEvent(event)
@@ -335,8 +353,11 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
            if ( false == messageEl.classList.contains('hidden'))
            {
                messageEl.classList.add('hidden');
+							 this.Hide(messageEl);
            }
+
       }
+
 
       window.addEventListener('shortpixel.folder.AddNewDirectory', this.UpdateFolderViewEvent.bind(this), {'once':true});
 
@@ -381,6 +402,17 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
            {
                messageEl.textContent = data.folder.message;
                messageEl.classList.remove('hidden');
+							 this.Show(messageEl);
+           }
+           if (data.display_notices)
+           {
+                 //var element = document.querySelector('.modal-folder-picker .description');
+                 this.AppendNotices(data.display_notices, messageEl);
+           }
+           if (data.display_notices)
+           {
+                 //var element = document.querySelector('.modal-folder-picker .description');
+                 this.AppendNotices(data.display_notices, messageEl);
            }
         }
 

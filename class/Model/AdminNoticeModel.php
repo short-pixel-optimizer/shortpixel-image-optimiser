@@ -15,7 +15,7 @@ abstract class AdminNoticeModel
 	 protected $key; // abstract
 	 protected $notice;
 
-	 protected $errorLevel = 'normal';
+	 protected $errorLevel = 'normal';  // normal, warning, error
 	 protected $suppress_delay = YEAR_IN_SECONDS;
 	 protected $callback;
 
@@ -40,6 +40,7 @@ abstract class AdminNoticeModel
 		 $noticeController = Notices::getInstance();
 		 $notice = $noticeController->getNoticeByID($this->key);
 
+
 		 if (is_object($notice))
 		 {
 		 	$this->notice = $notice;
@@ -57,7 +58,9 @@ abstract class AdminNoticeModel
 		 elseif ( is_object($this->notice) && $this->checkReset() === true)
 		 {
 			  $this->reset();
+        return false;
 		 }
+     return true;
 	 }
 
 	 public function getKey()
@@ -69,6 +72,7 @@ abstract class AdminNoticeModel
 	 {
 		  $key = (is_null($key)) ? $this->key : $key;
 		 	Notices::removeNoticeByID($key);
+      $this->notice = null;
 	 }
 
 	 protected function checkReset()
@@ -110,6 +114,9 @@ abstract class AdminNoticeModel
 			 case 'warning':
 			 	$notice = Notices::addWarning($this->getMessage());
 			 break;
+       case 'error':
+        $notice = Notices::addError($this->getMessage());
+       break;
 			 case 'normal';
 			 default:
 			 	$notice = Notices::addNormal($this->getMessage());
@@ -127,6 +134,7 @@ abstract class AdminNoticeModel
 		 {
 			 $notice->limitScreens('include', $this->include_screens);
 		 }
+
 
 		 if (! is_null($this->callback))
 		 	Notices::makePersistent($notice, $this->key, $this->suppress_delay, $this->callback);

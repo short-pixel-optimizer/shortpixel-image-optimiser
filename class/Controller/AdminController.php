@@ -5,6 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
+use ShortPixel\Controller\Optimizer\OptimizeAiController;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 use ShortPixel\Controller\Queue\Queue as Queue;
@@ -36,8 +37,6 @@ class AdminController extends \ShortPixel\Controller
 
       return self::$instance;
     }
-
-
 
     public function addAttachmentHook($post_id)
     {
@@ -121,15 +120,52 @@ class AdminController extends \ShortPixel\Controller
 							$meta = $converter->getUpdatedMeta();
 
               //do_action('shortpixel/converter/prevent-offload-off', $id);
-					}
+           }
 
-        	$control = new OptimizeController();
-        	$control->addItemToQueue($mediaItem);
+         // $autoAi = $settings->
+         $optimizeAiController = OptimizeAiController::getInstance(); 
+         $queueController = new QueueController();
+
+        /* if ($optimizeAiController->isAutoAiEnabled())
+         {
+            $args = ['action' => 'requestAlt'];
+            $queueController->addItemToQueue($mediaItem, $args); 
+         } */
+                 
+          
+        	$queueController->addItemToQueue($mediaItem);
 				}
 				else {
 					Log::addWarn('Passed mediaItem is not processable', $mediaItem);
 				}
         return $meta; // It's a filter, otherwise no thumbs
+    }
+
+    public function handleAiImageUploadHook($meta, $id)
+    {
+              // Media only hook
+				if ( in_array($id, self::$preventUploadHook))
+				{
+					 return $meta;
+				}
+
+        $fs = \wpSPIO()->filesystem();
+				$fs->flushImageCache(); // it's possible file just changed by external plugin.
+        $mediaItem = $fs->getImage($id, 'media');
+
+				if ($mediaItem === false)
+				{
+					 Log::addError('Handle Image Upload Hook triggered, by error in image :' . $id );
+					 return $meta;
+				}
+
+         $queueController = new QueueController();
+
+        
+        $args = ['action' => 'requestAlt'];
+        $queueController->addItemToQueue($mediaItem, $args); 
+         
+        return $meta;
     }
 
 
@@ -174,6 +210,12 @@ class AdminController extends \ShortPixel\Controller
     /* Function to process Hook coming from the WP cron system */
     public function processCronHook($bulk)
     {
+       // Cron shenenigans
+        if (is_array($bulk) && isset($bulk['bulk']))
+        {
+           $bulk = $bulk['bulk'];
+        }
+
         $args = array(
             'max_runs' => 10,
             'run_once' => false,
@@ -182,6 +224,7 @@ class AdminController extends \ShortPixel\Controller
             'timelimit' => 50,
             'wait' => 1,
         );
+
 
         return $this->processQueueHook($args);
     }
@@ -206,14 +249,15 @@ class AdminController extends \ShortPixel\Controller
 				$args = wp_parse_args($args, $defaults);
         $args = apply_filters('shortpixel/process_hook/options', $args);
 
-
-			  $control = new OptimizeController();
-        $env = \wpSPIO()->env();
-
-				if ($args['bulk'] === true)
+        $queueArgs = []; 
+				if (true == $args['bulk'])
 				{
-					 $control->setBulk(true);
+					 $queueArgs['is_bulk'] = true;
 				}
+
+
+			  $control = new QueueController($queueArgs);
+        $env = \wpSPIO()->env();
 
 			 	if ($args['run_once'] === true)
 				{
@@ -258,14 +302,7 @@ class AdminController extends \ShortPixel\Controller
 				}
 		}
 
-    public function cronRemoveBackups()
-    {
-        // Check Settings and get time, 
-        // Possibly move this how thing to a BackupController (?) 
-    }
-
-
-    public function scanCustomFoldersHook($args = array() )
+    public function scanCustomFoldersHook($args = array())
     {
       $defaults = array(
         'force' => false,
@@ -277,6 +314,12 @@ class AdminController extends \ShortPixel\Controller
       $args = wp_parse_args($args, $defaults);
 
       $otherMediaController = OtherMediaController::getInstance();
+      if (false === $otherMediaController->hasCustomImages())
+      {
+         return false;
+      }
+
+
 
       $args = apply_filters('shortpixel/othermedia/scan_custom_folder', $args);
 
@@ -302,11 +345,6 @@ class AdminController extends \ShortPixel\Controller
 
     }
 
-    /** Add webp / avif data for rest requests if this media is optimized for that 
-     *  @hook rest_post_dispatch 
-     * @param WP_HTTP_Respone $result HTTP Result
-     * @return WP_HTTP_Response;
-     */
     public function checkRestMedia($result, $server, $request )
     {
       $data = $result->data; 
@@ -363,7 +401,6 @@ class AdminController extends \ShortPixel\Controller
       return $result; 
 
     }
-
 		// WP functions that are not loaded during Cron Time.
 		protected function loadCronCompat()
 		{
@@ -427,12 +464,12 @@ class AdminController extends \ShortPixel\Controller
              break;
              case 'unoptimized':
               // The parent <> %d exclusion is meant to also deselect duplicate items ( translations ) since they don't have a status, but shouldn't be in a list like this.
-                $sql = " AND " . $wpdb->posts . '.ID not in ( SELECT attach_id FROM ' . $tableName . " WHERE (parent = %d and status = %d) OR parent <> %d ) ";
+                $sql = " AND " . $wpdb->posts . '.ID not in ( SELECT  attach_id FROM ' . $tableName . " WHERE (parent = %d and status = %d) OR parent <> %d ) ";
   					    $where .= $wpdb->prepare($sql, MediaLibraryModel::IMAGE_TYPE_MAIN, ImageModel::FILE_STATUS_SUCCESS, MediaLibraryModel::IMAGE_TYPE_MAIN);
              break;
              case 'optimized':
-                $sql = ' AND ' . $wpdb->posts . '.ID in ( SELECT attach_id FROM ' . $tableName . ' WHERE parent = %d and status = %d) ';
-   					    $where .= $wpdb->prepare($sql, MediaLibraryModel::IMAGE_TYPE_MAIN, ImageModel::FILE_STATUS_SUCCESS);
+								$sql = ' AND ' . $wpdb->posts . '.ID in ( SELECT distinct attach_id FROM ' . $tableName . ' WHERE status = %d) ';
+   					    $where .= $wpdb->prepare($sql, ImageModel::FILE_STATUS_SUCCESS);
              break;
              case 'prevented':
 
@@ -560,7 +597,7 @@ class AdminController extends \ShortPixel\Controller
 				$fields["shortpixel-image-optimiser"] = array(
 							"label" => esc_html__("ShortPixel", "shortpixel-image-optimiser"),
 							"input" => "html",
-							"html" => '<div id="sp-msg-' . $post->ID . '">--</div>',
+							"html" => '<div id="shortpixel-data-' . $post->ID . '">--</div>',
 						);
 
 				return $fields;

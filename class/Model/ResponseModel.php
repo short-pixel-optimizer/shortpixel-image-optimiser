@@ -31,7 +31,7 @@ class ResponseModel
 
 	public $issue_type; // Optional - if there is any issue to report.
  	public $message; // This can be base text, but decision textually is within responsecontroller.
-  public $action; // Custom Operations use this ( i.e. migrate ) 
+  	public $action; // Custom Operations use this ( i.e. migrate ) 
 
 //	public $queueName;
 

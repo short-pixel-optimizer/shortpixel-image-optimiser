@@ -12,9 +12,10 @@ use ShortPixel\Helper\UtilHelper as UtilHelper;
 
 
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
+use ShortPixel\Controller\Optimizer\OptimizeAiController;
 use ShortPixel\Controller\QuotaController as QuotaController;
-use ShortPixel\Controller\OptimizeController as OptimizeController;
-
+use ShortPixel\Controller\QueueController as QueueController;
+use ShortPixel\Model\AiDataModel;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Model\Image\MediaLibraryModel as MediaLibraryModel;
 
@@ -38,123 +39,10 @@ class ListMediaViewController extends \ShortPixel\ViewController
 			$fs = \wpSPIO()->filesystem();
 			$fs->startTrustedMode();
 
-			$this->checkAction(); // bulk action checkboxes, y'all
       $this->loadHooks();
   }
 
-	/** Check if a bulk action (checkboxes) was requested
-	*/
-	protected function checkAction()
-	{
-	   $wp_list_table = _get_list_table('WP_Media_List_Table');
-     $action = $wp_list_table->current_action();
-
-		 if (! $action)
-		 		return;
-
-		if(strpos($action, 'shortpixel') === 0 ) {
-		 		check_admin_referer('bulk-media');
-		}
-
-    // Nothing selected, nothing doin'
-    if (! isset($_GET['media']) || ! is_array($_GET['media']))
-      return;
-
-		// In general this code superceded by javascript handling if that works properly. @todo remove if so
-		return;
-
-		 $fs = \wpSPIO()->filesystem();
-		 $optimizeController = new OptimizeController();
-		 $items = array_filter($_GET['media'], 'intval');
-
-		 $numItems = count($items);
-	   $plugin_action = str_replace('shortpixel-', '', $action);
-
-		 $targetCompressionType = $targetCrop = null;
-
-		 switch ($plugin_action)
-		 {
-			  case "glossy":
-					 $targetCompressionType = ImageModel::COMPRESSION_GLOSSY;
-				break;
-				case "lossy":
-					 $targetCompressionType = ImageModel::COMPRESSION_LOSSY;
-				break;
-				case "lossless":
-					  $targetCompressionType = ImageModel::COMPRESSION_LOSSLESS;
-				break;
-				case 'smartcrop':
-						$targetCrop = ImageModel::ACTION_SMARTCROP;
-				break;
-				case 'smartcropless':
-						$targetCrop = ImageModel::ACTION_SMARTCROPLESS;
-				break;
-		 }
-
-		 foreach($items as $item_id)
-		 {
-			 	 $mediaItem = $fs->getMediaImage($item_id);
-
-			   switch($plugin_action)
-				 {
-					 	case 'optimize':
-							 if ($mediaItem->isProcessable())
-							 	$res = $optimizeController->addItemToQueue($mediaItem);
-						break;
-						case 'smartcrop':
-						case 'smartcropless':
-								if ($mediaItem->isOptimized())
-								{
-										$targetCompressionType = $mediaItem->getMeta('compressionType');
-								}
-								else {
-									$targetCompressionType = \wpSPIO()->settings()->compressionType;
-								}
-						case 'glossy':
-						case 'lossy':
-						case 'lossless':
-
-								if ($mediaItem->isOptimized() && $mediaItem->getMeta('compressionType') == $targetCompressionType && is_null($targetCrop)  )
-								{
-									// do nothing if already done w/ this compression.
-								}
-								elseif(! $mediaItem->isOptimized())
-								{
-									$mediaItem->setMeta('compressionType', $targetCompressionType);
-									if (! is_null($targetCrop))
-									{
-										 $mediaItem->doSetting('smartcrop', $targetCrop);
-									}
-									$res = $optimizeController->addItemToQueue($mediaItem);
-								}
-								else
-								{
-									$args = array();
-									if (! is_null($targetCrop))
-									{
-										 $args = array('smartcrop' => $targetCrop);
-									}
-
-							 		$res = $optimizeController->reOptimizeItem($mediaItem, $targetCompressionType, $args);
-								}
-						break;
-						case 'restore';
-								if ($mediaItem->isOptimized())
-									$res = $optimizeController->restoreItem($mediaItem);
-						break;
-            case 'mark-completed':
-                 if ($mediaItem->isProcessable())
-                 {
-                   $mediaItem->markCompleted(__('This item has been manually marked as completed', 'shortpixel-image-optimiser'), ImageModel::FILE_STATUS_MARKED_DONE);
-                 }
-            break;
-				 }
-
-		 }
-
-	}
-
-
+	
   /** Hooks for the MediaLibrary View */
   protected function loadHooks()
   {
@@ -173,6 +61,7 @@ class ListMediaViewController extends \ShortPixel\ViewController
   {
     $defaults['wp-shortPixel'] = __('ShortPixel Compression', 'shortpixel-image-optimiser');
 
+
     return $defaults;
   }
 
@@ -183,21 +72,21 @@ class ListMediaViewController extends \ShortPixel\ViewController
        $this->view = new \stdClass; // reset every row
        $this->view->id = $id;
        $this->loadItem($id);
-
-	     $this->loadView(null, false);
+       $this->loadView(null, false);
+      
      }
+
+
 
   }
 
-  public function loadItem($id)
+  protected function loadItem($id)
   {
      $fs = \wpSPIO()->filesystem();
      $mediaItem = $fs->getMediaImage($id);
-     $keyControl = ApiKeyController::getInstance();
-     $quotaControl = QuotaController::getInstance();
 
 		 // Asking for something non-existing.
-		 if ($mediaItem === false)
+	 if ($mediaItem === false)
      {
        $this->view->text = __('File Error. This could be not an image or the file is missing', 'shortpixel-image-optimiser');
 		 	 return;
@@ -207,9 +96,21 @@ class ListMediaViewController extends \ShortPixel\ViewController
      $actions = array();
      $list_actions = array();
 
+     $optimizeAiController = OptimizeAiController::getInstance(); 
+
+
+     if (true === $optimizeAiController->isAiEnabled())
+     {
+        $aiDataModel = $this->loadAiItem($id);
+     }
+     else
+     {
+        $aiDataModel = null; 
+     }
+
     $this->view->text = UiHelper::getStatusText($mediaItem);
 
-		$list_actions = UiHelper::getListActions($mediaItem);
+		$list_actions = UiHelper::getListActions($mediaItem, $aiDataModel);
     $this->view->list_actions = $list_actions;
 
     if ( count($this->view->list_actions) > 0)
@@ -241,6 +142,11 @@ class ListMediaViewController extends \ShortPixel\ViewController
 				$checkBoxActions[] = 'is-restorable';
 		}
 
+    if (array_key_exists('shortpixel-generateai', $allActions))
+    {
+       $checkBoxActions[] = 'ai-action'; 
+    }
+
 		$infoData  = array(); // stuff to write as data-tag.
 
 		if ($mediaItem->isOptimized())
@@ -263,6 +169,36 @@ class ListMediaViewController extends \ShortPixel\ViewController
       $this->view->actions = array();
       $this->view->list_actions = '';
     }
+
+  }
+
+  protected function loadAiItem($item_id)
+  {
+     $AiDataModel = AiDataModel::getModelByAttachment($item_id); 
+     $this->view->item_id = $item_id;
+
+     $generated_data = $AiDataModel->getGeneratedData(); 
+     if ($AiDataModel->isSomeThingGenerated())
+     {
+        if (isset($generated_data['filebase']))
+        {
+           unset($generated_data['filebase']);
+        }
+        $generated_fields = implode(',', array_keys(array_filter($generated_data)));
+        $this->view->ai_icon = 'ai'; 
+        $this->view->ai_title = sprintf(__('AI-generated image SEO data: %s', 'shortpixel-image-optimiser'), $generated_fields); 
+
+     }
+     else
+     {
+       $this->view->ai_icon = 'no-ai'; 
+       $this->view->ai_title = __('No AI-generated SEO data for this image', 'shortpixel-image-optimiser'); 
+
+     }
+
+     return $AiDataModel;
+
+
   }
 
   public function loadComparer()

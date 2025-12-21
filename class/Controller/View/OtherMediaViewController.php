@@ -474,7 +474,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 			public function doActionColumn($item)
 			{
           ?>
-					<div id='sp-msg-<?php echo esc_attr($item->get('id')) ?>'  class='sp-column-info'><?php
+					<div id='shortpixel-data-<?php echo esc_attr($item->get('id')) ?>'  class='sp-column-info'><?php
 							$this->printItemActions($item);
 
             echo "<div>" .  UiHelper::getStatusText($item) . "</div>";

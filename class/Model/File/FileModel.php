@@ -393,6 +393,12 @@ class FileModel extends \ShortPixel\Model
         return false;
       }
 
+      if (false === self::$TRUSTED_MODE && $this->getFileSize() <= 0)
+      {
+         Log::addWarn('Source file in copy has a filesize of zero!');
+         return false;
+      }
+
       $is_new = ($destination->exists()) ? false : true;
       $status = @copy($sourcePath, $destinationPath);
 
@@ -763,7 +769,8 @@ class FileModel extends \ShortPixel\Model
 		 *   Use translate filter to correct filepath when needed.
 		 * Return could be true, or fileModel virtual constant
 		 */
-     $result = apply_filters('shortpixel/image/urltopath', false, $url);
+
+     $result = apply_filters('shortpixel/image/urltopath', false, $url, $this->getRawFullPath());
 
 		 if ($result === false)
 		 {
