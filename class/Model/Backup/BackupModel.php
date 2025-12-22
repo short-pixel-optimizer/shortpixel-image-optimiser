@@ -5,6 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
+use ShortPixel\Model\File\FileModel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
  // Model to keep the backups of one item with many variables into one piece.  This should be the whole backup for one image item 
@@ -20,9 +21,9 @@ abstract class BackupModel
     protected $controller; 
     protected $mediaItem; 
 
-    abstract function create();
-    abstract function restore();
-    abstract function hasBackup(); 
+    abstract function create(FileModel $sourceFile);
+    abstract function restore(FileModel $sourceFile);
+    abstract function hasBackup(FileModel $sourceFile); 
 
     
 

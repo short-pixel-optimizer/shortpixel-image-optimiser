@@ -13,12 +13,12 @@ class LocalBackupModel extends BackupModel
 
   
     // This must be able to create backup for images one-by-one. 
-     public function create(FileModel $fileObj)
+     public function create(FileModel $sourceFile)
      {
         // Safety: It should absolutely not be possible to overwrite a backup file.
-        if ($this->hasBackup())
+        if ($this->hasBackup($sourceFile))
         {
-           $backupFile = $this->getBackupFile($fileObj);
+           $backupFile = $this->getBackupFile($sourceFile);
  
            // If backupfile is bigger (indicating original file)
            if ($backupFile->getFileSize() == $fileObj->getFileSize())
