@@ -264,6 +264,7 @@ class FileModel extends \ShortPixel\Model
     return filemtime($this->fullpath);
   }
 
+    // @todo This moved to BackupModel.
   public function hasBackup()
   {
       $directory = $this->getBackupDirectory();
@@ -279,6 +280,7 @@ class FileModel extends \ShortPixel\Model
       }
   }
 
+  /** @todo Moved to backupModel  */
   /** Tries to retrieve an *existing* BackupFile. Returns false if not present.
   * This file might not be writable.
   * To get writable directory reference to backup, use FileSystemController
@@ -291,6 +293,7 @@ class FileModel extends \ShortPixel\Model
        return false;
   }
 
+  /* @todo moved to Backupmodel 
 	/** Function returns the filename for the backup.  This is an own function so it's possible to manipulate backup file name if needed, i.e. conversion or enumeration */
 	public function getBackupFileName()
 	{
@@ -536,6 +539,11 @@ class FileModel extends \ShortPixel\Model
 
     return $this->mime;
   }
+
+  /*
+    @todo  This moved to BackupModel! 
+  */
+
   /* Util function to get location of backup Directory.
 	* @param Create - If true will try to create directory if it doesn't exist.
   * @return Boolean | DirectModel  Returns false if directory is not properly set, otherwhise with a new directoryModel

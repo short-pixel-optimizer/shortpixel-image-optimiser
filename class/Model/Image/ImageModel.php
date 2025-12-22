@@ -1360,6 +1360,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     }
 
 
+    /* @todo - This move to backupModel */
     protected function createBackup()
     {
         // Safety: It should absolutely not be possible to overwrite a backup file.
@@ -1400,6 +1401,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
           }
           exit('Fatal error, createbackup protection - this should never reach');
        }
+
        $directory = $this->getBackupDirectory(true);
        $fs = \wpSPIO()->filesystem();
 

@@ -5,12 +5,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
  // Model to keep the backups of one item with many variables into one piece.  This should be the whole backup for one image item 
 abstract class BackupModel
 {
 
-//    protected $backup_files = []; 
+    protected $backup_files = []; 
+    protected $backupDirectory;
 
 //    protected $type; 
 //    protected $id; 
@@ -21,6 +23,7 @@ abstract class BackupModel
     abstract function create();
     abstract function restore();
     abstract function hasBackup(); 
+
     
 
     public function __construct($controller, $mediaItem)
@@ -28,6 +31,15 @@ abstract class BackupModel
         $this->controller = $controller; 
         $this->mediaItem = $mediaItem;      
     }
+
+    	/** Function returns the filename for the backup.  This is an own function so it's possible to manipulate backup file name if needed, i.e. conversion or enumeration */
+	public function getBackupFileName()
+	{
+        // This can't be mediaItem directly, needs to either use main / thumbs or whatever is requested here. 
+		 return $this->mediaItem->getFileName();
+	}
+
+
 
 
     

@@ -675,7 +675,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		$optimized = [];
 
-		// Main file has a  index.
+		// Main file has a index.
+		// @todo In future, he probably should be checked if backup should only be mainfile, or as well the thumbs.
 		$mainFile = (isset($files) && isset($files[$this->mainImageKey])) ? $files[$this->mainImageKey] : false;
 
 		// If converted and not using regular backup as leading.

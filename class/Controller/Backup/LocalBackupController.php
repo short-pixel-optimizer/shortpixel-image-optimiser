@@ -1,6 +1,9 @@
 <?php
 namespace ShortPixel\Controller;
 
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+
+
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
@@ -8,8 +11,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class LocalBackupController extends BackupController
 {
-    private $backupDirectory; // main backup directory location ;
+    //private $backupDirectory; // main backup directory location ;
 
-    
+
 
 }

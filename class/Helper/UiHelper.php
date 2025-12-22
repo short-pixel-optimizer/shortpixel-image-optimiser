@@ -127,11 +127,8 @@ class UiHelper
 			 $improvs = array();
 
 				 uasort($improvements['thumbnails'], function ($a, $b) {
-					 	//return $b[0] <=> $a[0]; // @todo Efficient code to use once PHP 5 support is done.
-						if ($a == $b) {
-							return 0;
-						}
-						return ($b < $a) ? -1 : 1;
+					 	return $b[0] <=> $a[0]; // @todo Efficient code to use once PHP 5 support is done.
+
 				 });
 
 			 $cutoff = false;

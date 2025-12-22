@@ -11,7 +11,6 @@ if (! defined('ABSPATH')) {
 }
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-
 use \ShortPixel\Model\File\FileModel as FileModel;
 
 // Represent a thumbnail image / limited image in mediaLibrary.

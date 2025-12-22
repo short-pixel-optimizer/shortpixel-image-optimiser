@@ -280,8 +280,11 @@ class FileSystemController extends \ShortPixel\Controller
   }
 
 
-
-  /** Not in use yet, do not use. Future replacement. */
+  /** Used in ApiKeyModel for installation testing 
+   * 
+   * @param mixed $folder 
+   * @return bool 
+   */
   public function checkBackUpFolder($folder = SHORTPIXEL_BACKUP_FOLDER)
   {
     $dirObj = $this->getDirectory($folder);

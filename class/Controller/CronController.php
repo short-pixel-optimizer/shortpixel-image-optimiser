@@ -36,7 +36,7 @@ class CronController
        }
 
        $this->custom_scheduler();
-       $this->tools_scheduler();
+     //  $this->tools_scheduler();
      }
 
   }

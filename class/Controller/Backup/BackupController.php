@@ -2,6 +2,8 @@
 namespace ShortPixel\Controller;
 
 use ShortPixel\Model\File\FileModel;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+
 
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
@@ -17,7 +19,6 @@ BackupController, need to implement the following :
 3) RemoveBackups older than X functionality and Cron Handler. 
 4) Implement it's possible to store only main file as backup (with checks and what not) and if so, on restore regenerate the thumbnails back . Need checking for special filetypes such as pnh, heic etc 
 5) Should pave the way for remote/cloud backups as well(?)
-
 */
 
 
@@ -25,7 +26,6 @@ abstract class BackupController
 {
     protected static $instance;
 
-    
     protected static $models = []; 
 
 
@@ -63,7 +63,7 @@ abstract class BackupController
         
         if (! isset(self::$models[$type]) || ! isset(self::$models[$type][$id]))
         {
-            $model = new BackupModel(self::$instance, $mediaItem, $type);
+            $model = new BackupModel(self::$instance, $mediaItem);
 
             if (! isset(self::$models[$type]))
             {
