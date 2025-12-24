@@ -33,11 +33,11 @@ class LocalBackupModel extends BackupModel
      public function hasBackup(ImageModel $sourceFile)
      {
       $is_main_file = $sourceFile->get('is_main_file');
-      $image_size = $sourceFile->get('size');
+      $imageName = $sourceFile->get('name');
 
-      if (isset($this->backup_files[$image_size]))
+      if (isset($this->backup_files[$imageName]))
       {
-        $backupData = $this->backup_files[$image_size];
+        $backupData = $this->backup_files[$imageName];
         if (isset($backupData['has_backup']))
         {
            return $backupData['has_backup'];
@@ -55,14 +55,13 @@ class LocalBackupModel extends BackupModel
         
         if (file_exists($backupFile) && ! is_dir($backupFile) )
         {
-
           $bool = true;
         }
         else {
           $bool = false;
         }
 
-        $this->backup_files[$image_size]  = [
+        $this->backup_files[$imageName]  = [
           'has_backup' => $bool, 
           'file' => $backupFile,    
         ];
@@ -113,9 +112,12 @@ class LocalBackupModel extends BackupModel
     public function getBackupFile(ImageModel $sourceFile)
     {
 
-       if (true === $this->hasBackup($sourceFile))
+      $imageName = $sourceFile->get('name');
+      
+      if (true === $this->hasBackup($sourceFile))
        {
-          //$file = $this->backup_files[]
+          $file = $this->backup_files[$imageName]['file']; 
+          return $file; 
        }    //      return new FileModel($this->getBackupDirectory() . $this->getBackupFileName() );
        else
        {

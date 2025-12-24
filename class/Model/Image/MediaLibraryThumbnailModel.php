@@ -338,7 +338,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 		return (! \wpSPIO()->settings()->processThumbnails);
 	}
 
-	public function hasBackup($args = array())
+	public function hasBackup($args = [])
 	{
 		$defaults = array(
 			'forceConverted' => false,
@@ -346,14 +346,13 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 		);
 		$args = wp_parse_args($args, $defaults);
 
-		// @todo This can probably go.
 		if (true === $args['noConversionCheck']) {
-			return parent::hasBackup();
+			return $this->backupModel->hasBackup($this);
 		}
 
 		$mainFile = ($this->is_main_file) ? $this : $this->getMainFile();
 		if (false == $mainFile) {
-			return parent::hasBackup();
+			return $this->backupModel->hasBackup($this);
 		}
 
 		// When main file and converted and omitBackup is true ( only original backup ) and not forced.
@@ -361,8 +360,8 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 			false === $mainFile->getMeta()->convertMeta()->omitBackup()) && false === $args['forceConverted'];
 
 		if (true === $loadRegular) {
-			return parent::hasBackup();
-		} else {
+			return $this->backupModel->hasBackup($this);
+		} else { 
 			$directory = $this->getBackupDirectory();
 			$converted_ext = $mainFile->getMeta()->convertMeta()->getFileFormat();
 
