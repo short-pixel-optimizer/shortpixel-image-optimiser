@@ -10,7 +10,7 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\Controller\Api\ApiController as ApiController;
-
+use ShortPixel\Controller\BackupController;
 use ShortPixel\Model\File\FileModel as FileModel;
 use ShortPixel\Model\AccessModel as AccessModel;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
@@ -910,8 +910,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     public function isRestorable()
     {
-
-      
+     
 			// Check for both optimized and hasBackup, because even if status for some reason is not optimized, but backup is there, restore anyhow.
         if (! $this->isOptimized() && ! $this->hasBackup())
         {
@@ -1363,8 +1362,11 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     /* @todo - This move to backupModel */
     protected function createBackup()
     {
+
+        $backupModel = $this->backupModel;
+       
         // Safety: It should absolutely not be possible to overwrite a backup file.
-       if ($this->hasBackup())
+       if ($backupModel->hasBackup($this))
        {
           $backupFile = $this->getBackupFile();
 
@@ -1419,6 +1421,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
           $this->error_message = __('Could not create backup Directory', 'shortpixel-image-optimiser');
           return false;
        }
+
+       
 
        $backupFile = $fs->getFile($directory . $this->getBackupFileName());
 

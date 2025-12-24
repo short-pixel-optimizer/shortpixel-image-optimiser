@@ -1,5 +1,5 @@
 <?php
-namespace ShortPixel\Controller;
+namespace ShortPixel\Controller\Backup;
 
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.

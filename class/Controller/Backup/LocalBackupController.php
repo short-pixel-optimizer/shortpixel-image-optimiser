@@ -1,5 +1,5 @@
 <?php
-namespace ShortPixel\Controller;
+namespace ShortPixel\Controller\Backup;
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 

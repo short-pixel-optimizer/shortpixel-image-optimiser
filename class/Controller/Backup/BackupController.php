@@ -1,6 +1,8 @@
 <?php
-namespace ShortPixel\Controller;
+namespace ShortPixel\Controller\Backup;
 
+use ShortPixel\Model\Backup\BackupModel;
+use ShortPixel\Model\Backup\LocalBackupModel;
 use ShortPixel\Model\File\FileModel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
@@ -8,8 +10,6 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
-
-
 
 /** 
 BackupController, need to implement the following : 
@@ -27,6 +27,8 @@ abstract class BackupController
     protected static $instance;
 
     protected static $models = []; 
+    protected static $model; 
+
 
 
     public function __construct()
@@ -36,17 +38,19 @@ abstract class BackupController
 
     public static function getBackupController()
     {
-      $settings = \wpSPIO()->settings; 
+      $settings = \wpSPIO()->settings(); 
 
       if (is_null(self::$instance))
       {
         if (false === $settings->backupImages)
         {
           self::$instance = new NoBackupController();  
+          
         } 
         else
         {
           self::$instance = new LocalBackupController();
+          self::$model = '\ShortPixel\Model\Backup\LocalBackupModel'; 
         }
         // Here check with settings which backup method is active 
 
@@ -63,7 +67,7 @@ abstract class BackupController
         
         if (! isset(self::$models[$type]) || ! isset(self::$models[$type][$id]))
         {
-            $model = new BackupModel(self::$instance, $mediaItem);
+            $model = new self::$model(self::$instance, $mediaItem);
 
             if (! isset(self::$models[$type]))
             {

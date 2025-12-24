@@ -9,6 +9,7 @@ if (! defined('ABSPATH')) {
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
+use ShortPixel\Controller\Backup\BackupController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 
 use ShortPixel\Controller\QueueController as QueueController;
@@ -22,7 +23,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 {
 
 	/** @var array */
-	protected $thumbnails = array(); // thumbnails of this // MediaLibraryThumbnailModel .
+	protected $thumbnails = []; // thumbnails of this // MediaLibraryThumbnailModel .
 
 	/** @var array */
 	protected $retinas; // retina files - MediaLibraryThumbnailModel (or retina / webp and move to thumbnail? )
@@ -71,6 +72,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 	const PROCESSABLE_EXTENSIONS = array('jpg', 'jpeg', 'gif', 'png', 'pdf', 'bmp', 'tiff', 'tif', 'webp');
 
+	protected $backupModel; 
 
 	public function __construct($post_id, $path)
 	{
@@ -95,6 +97,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		if (false === $this->isExtensionExcluded()) {
 			$this->checkUnlistedForNotice();
 		}
+
+		$backupController = BackupController::getBackupController(); 
+		$backupModel = $backupController->getModel($this);
+
+		$this->backupModel = $backupModel;
 	}
 
 	public function getOptimizeUrls()
