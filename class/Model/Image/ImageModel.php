@@ -10,7 +10,7 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\Controller\Api\ApiController as ApiController;
-use ShortPixel\Controller\BackupController;
+use ShortPixel\Controller\Backup\BackupController;
 use ShortPixel\Model\File\FileModel as FileModel;
 use ShortPixel\Model\AccessModel as AccessModel;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
@@ -100,7 +100,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     protected $error_message;
 
 		/** @var int */
-    protected $id;
+    protected $id; // ID of the load image, unique only combined with type. 
 
 		/** @var string */
 		protected $imageType;
@@ -329,6 +329,23 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 			 return $this->getProcessableReason($status);
 		}
+    
+    /** Find the backupmodel that combines with this file
+     * 
+     * @return object|boolean  The backup model or false  
+     */
+    protected function getBackupModel()
+    {
+      if (property_exists($this, 'backupModel'))
+      {
+         return $this->backupModel; 
+      }
+
+      $backupController = BackupController::getBackupController();
+      $backupModel = $backupController->getModelById($this->id, $this->type);       
+       
+      return $backupModel;
+    }
 
     public function getProcessableReason($status = null)
     {
@@ -910,14 +927,15 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     public function isRestorable()
     {
-     
+        $backupModel = $this->getBackupModel(); 
+
 			// Check for both optimized and hasBackup, because even if status for some reason is not optimized, but backup is there, restore anyhow.
-        if (! $this->isOptimized() && ! $this->hasBackup())
+        if (! $this->isOptimized() && ! $backupModel->hasBackup($this))
         {
 					 $this->restorable_status = self::P_NOT_OPTIMIZED;
            return false;  // not optimized, done.
         }
-        elseif ($this->hasBackup() && ($this->is_virtual() || ($this->is_writable() && $this->is_directory_writable()) ))
+        elseif ($backupModel->hasBackup($this) && ($this->is_virtual() || ($this->is_writable() && $this->is_directory_writable()) ))
         {
 					$this->restorable_status = self::P_RESTORABLE;
           return true;
@@ -954,7 +972,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 							$this->restorable_status = self::P_DIRECTORY_NOTWRITABLE;
 							Log::addWarn('Restore - Directory not Writable ' . $this->getFileDir() );
 					}
-          elseif (false ===  $this->hasBackup())
+          elseif (false ===  $backupModel->hasBackup($this))
 					{
 						$this->restorable_status = self::P_BACKUP_NOT_EXISTS;
 						$response = array(
@@ -981,7 +999,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
             return false; // no backup / everything not writable.
         }
 
-        $backupFile = $this->getBackupFile();
+        $backupModel = $this->getBackupModel(); 
+        $backupFile = $backupModel->getBackupFile($this);
+      //  $backupFile = $this->getBackupFile();
 				$type = $this->get('type');
 				$id = $this->get('id');
 
@@ -1062,6 +1082,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     */
     public function onDelete()
     {
+        // @todo This delete should go to backupModel, probably on main item.
         if ($this->hasBackup())
         {
 

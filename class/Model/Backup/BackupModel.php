@@ -5,6 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
+use ShortPixel\Controller\Backup\BackupController;
 use ShortPixel\Model\Image\ImageModel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
@@ -15,9 +16,6 @@ abstract class BackupModel
     protected $backup_files = []; 
     protected $backupDirectory;
 
-//    protected $type; 
-//    protected $id; 
-
     protected $controller; 
     protected $mediaItem; 
 
@@ -26,8 +24,14 @@ abstract class BackupModel
     abstract function restore(ImageModel $sourceFile);
     abstract function hasBackup(ImageModel $sourceFile); 
 
+    /* Implement below functions, these things can be done all at the same time. Use Model as 'all' loop. */
+    abstract function loadAll(ImageModel $sourceFile); 
+    abstract function restoreAll(ImageModel $sourceFile); 
+    abstract function onDeleteAll(ImageModel $sourceFile); 
 
-    public function __construct($controller, $mediaItem)
+
+
+    public function __construct(BackupController $controller, ImageModel $mediaItem)
     {
         $this->controller = $controller; 
         $this->mediaItem = $mediaItem;      

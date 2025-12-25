@@ -65,18 +65,29 @@ abstract class BackupController
         $id = $mediaItem->get('id');
         $type = $mediaItem->get('type');
         
-        if (! isset(self::$models[$type]) || ! isset(self::$models[$type][$id]))
-        {
-            $model = new self::$model(self::$instance, $mediaItem);
+        return $this->getModelById($id, $type, $mediaItem);
+    }
 
-            if (! isset(self::$models[$type]))
-            {
-              self::$models[$type] = []; 
-            }
-            self::$models[$type][$id] = $model; 
-        }
-        
-        return self::$models[$type][$id];
+    public function getModelById($id, $type = 'media', $mediaItem = null)
+    {
+      if (! isset(self::$models[$type]) || ! isset(self::$models[$type][$id]))
+      {
+          if (is_null($mediaItem))
+          {
+             $fs = \wpSPIO()->filesystem();
+             $mediaItem = $fs->getImage($id, $type); 
+          }
+          
+          $model = new self::$model(self::$instance, $mediaItem);
+
+          if (! isset(self::$models[$type]))
+          {
+            self::$models[$type] = []; 
+          }
+          self::$models[$type][$id] = $model; 
+      }
+      
+      return self::$models[$type][$id];
     }
 
     public function withItem($mediaItem)

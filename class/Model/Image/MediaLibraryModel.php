@@ -1745,7 +1745,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	}
 
 
-	// Check if this Image has a Parent indicating it's a WPML Duplicate.
+	/**
+	 * Check if this Image has a Parent indicating it's a WPML Duplicate.
+	 *
+	 * @return boolean
+	 */ 
 	public function getParent()
 	{
 		if (is_null($this->parent)) {

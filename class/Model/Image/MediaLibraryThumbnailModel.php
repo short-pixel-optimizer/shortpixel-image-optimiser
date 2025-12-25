@@ -29,6 +29,10 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 	protected $size; // size name of image in WP, if applicable.
 	protected $sizeDefinition; // size width / height / crop according to WordPress
 
+	/** @var string **/
+	protected $type = 'media';
+
+
 	public function __construct($path, $id, $size)
 	{
 
@@ -346,13 +350,15 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 		);
 		$args = wp_parse_args($args, $defaults);
 
+		$backupModel = $this->getBackupModel();
+
 		if (true === $args['noConversionCheck']) {
-			return $this->backupModel->hasBackup($this);
+			return $backupModel->hasBackup($this);
 		}
 
 		$mainFile = ($this->is_main_file) ? $this : $this->getMainFile();
 		if (false == $mainFile) {
-			return $this->backupModel->hasBackup($this);
+			return $backupModel->hasBackup($this);
 		}
 
 		// When main file and converted and omitBackup is true ( only original backup ) and not forced.
@@ -360,7 +366,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 			false === $mainFile->getMeta()->convertMeta()->omitBackup()) && false === $args['forceConverted'];
 
 		if (true === $loadRegular) {
-			return $this->backupModel->hasBackup($this);
+			return $backupModel->hasBackup($this);
 		} else { 
 			$directory = $this->getBackupDirectory();
 			$converted_ext = $mainFile->getMeta()->convertMeta()->getFileFormat();
