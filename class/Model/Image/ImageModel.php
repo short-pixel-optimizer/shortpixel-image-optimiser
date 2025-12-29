@@ -1050,6 +1050,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 						 return false;
 				 }
 
+         // @todo Should call restore function on Model.
 				$bool = $backupFile->move($this);
 
         if ($bool !== true)

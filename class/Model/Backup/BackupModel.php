@@ -14,6 +14,7 @@ abstract class BackupModel
 {
 
     protected $backup_files = []; 
+    protected $full_backup_loaded = false; 
     protected $backupDirectory;
 
     protected $controller; 
@@ -25,9 +26,9 @@ abstract class BackupModel
     abstract function hasBackup(ImageModel $sourceFile); 
 
     /* Implement below functions, these things can be done all at the same time. Use Model as 'all' loop. */
-    abstract function loadAll(ImageModel $sourceFile); 
-    abstract function restoreAll(ImageModel $sourceFile); 
-    abstract function onDeleteAll(ImageModel $sourceFile); 
+    abstract protected function loadAll(); 
+    abstract public function restoreAll(); 
+    abstract public function onDeleteAll(); 
 
 
 

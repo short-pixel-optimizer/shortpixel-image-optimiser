@@ -133,7 +133,54 @@ class LocalBackupModel extends BackupModel
       }
 
 
-    
+      protected function getAll()
+      {
+        
+        $objects = $this->mediaItem->get('thumbnails');
+        if ($this->mediaItem->isScaled()) {
+          $objects[$this->mediaItem->getImageKey('original')] = $this->mediaItem->getOriginalFile();
+        }
+        
+        return $objects; 
 
+      }
+      
+   
+      protected function loadAll()
+      {
+
+        $objects = $this->getAll();
+        foreach ($objects as $obj)
+        {
+           $this->hasBackup($obj); 
+        }
+
+        $this->full_backup_loaded = true; 
+        
+      }
+
+      // @todo This one in restore in ImageModel 
+      public function restoreAll()
+      {
+         foreach($this->backup_files as $backupData)
+         {
+            if (true === $backupData['has_backup'])
+            {
+                $this->restore($backupData['file']);
+            }
+         }
+      }
+
+      // @todo This one hook into ImageModel, on the pyshical file delete. 
+      public function onDeleteAll()
+      {
+         foreach($this->backup_files as $backupData)
+         {
+            if (true === $backupData['has_backup'])
+            {
+                $backupData['file']->delete(); 
+            }
+         }
+      }
 
 }
