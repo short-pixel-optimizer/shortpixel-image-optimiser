@@ -236,8 +236,8 @@ if (! defined('ABSPATH')) {
           <name><?php printf(__('Limit image title to %s characters ', 'shortpixel-image-optimiser'), $input); ?></name>
         </content>
 
-        <content class='nextline ai_gen_filename is-advanced'>
-          <name><?php _e('Additional context for filename generation: ', 'shortpixel-image-optimiser'); ?></name>
+        <content class='nextline ai_gen_posttitle is-advanced'>
+          <name><?php _e('Additional context for image title generation: ', 'shortpixel-image-optimiser'); ?></name>
           <textarea name="ai_post_title_context"><?php echo $view->data->ai_post_title_context ?></textarea>
 
         </content>
