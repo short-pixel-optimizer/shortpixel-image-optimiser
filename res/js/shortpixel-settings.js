@@ -983,12 +983,6 @@ class ShortPixelSettings {
 		});
 	}
 
-DashBoardWarningEvent(warning, matches)
-{
-	 console.log(warning, matches);
-	 var dashBox = warning[0];
-	 var status = (true === matches.allMatches) ? 'alert' : (true === matches.someMatch) ? 'warning' : 'ok';
-
 	async DoAjaxRequest(formData, responseOkCallBack, responseErrorCallback) {
 
 		formData.append('action', 'shortpixel_settingsRequest');

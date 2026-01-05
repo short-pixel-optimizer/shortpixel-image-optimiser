@@ -12,8 +12,8 @@ class CronController
 
   private static $instance;
 
-  protected $cron_options = array();
-  protected $cron_hooks = array();
+  protected $cron_options = [];
+  protected $cron_hooks = [];
 
   protected $background_is_active = false;
 
@@ -36,7 +36,7 @@ class CronController
        }
 
        $this->custom_scheduler();
-     //  $this->tools_scheduler();
+       $this->tools_scheduler();
      }
 
   }
@@ -168,6 +168,25 @@ class CronController
 
   }
 
+  protected function tools_scheduler($unschedule = false)
+  {
+     $name = 'spio-remove-backups'; 
+
+     $scheduled = wp_next_scheduled($name);
+
+     $add_cron = (false == \wpSPIO()->settings()->autoRemoveBackups) ? false : true;
+     
+     if (false == $scheduled && true === $add_cron && false === $unschedule)
+     {
+               wp_schedule_event(time(), 'daily', $name);
+     }
+     elseif(false !== $scheduled && (false === $add_cron || true == $unschedule) )
+     {
+          wp_unschedule_event(wp_next_scheduled($name), $name);
+     }
+
+  }
+
   protected function removeLegacyCron()
   {
       $name = 'spio-refresh-dir';
@@ -187,7 +206,6 @@ class CronController
       $args = array('bulk' => true);
 
       wp_unschedule_event(wp_next_scheduled($name, $args), $name, $args);
-
 
   }
 
@@ -212,6 +230,11 @@ class CronController
 
   }
 
+  /**
+   * Remove all Cron Events.
+   *
+   * @return void
+   */
   protected function bulkRemoveAll()
   {
     foreach($this->cron_options as $type => $options)
@@ -255,7 +278,6 @@ class CronController
 
       $queueController = new QueueController($args);
       return $queueController->getStartUpData();
-
 
   }
 
