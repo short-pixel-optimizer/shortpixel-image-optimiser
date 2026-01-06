@@ -25,6 +25,8 @@ class SettingsModel extends \ShortPixel\Model
 	'useSmartcrop' => ['s' => 'boolean', 'default' => false],
         'smartCropIgnoreSizes' => ['s' => 'boolean', 'default' => false],
         'backupImages' => ['s' => 'boolean', 'default' => true], // checkbox
+        'autoRemoveBackups' => ['s' => 'boolean', 'default' => false], 
+        'autoRemoveBackupsTimestamp' => ['s' => 'boolean', 'default' => null],
     //    'keepExif' => ['s' => 'int', 'default' => 0], // checkbox
         'resizeImages' => ['s' => 'boolean', 'default' => false],
         'resizeType' => ['s' => 'string', 'default' => null],

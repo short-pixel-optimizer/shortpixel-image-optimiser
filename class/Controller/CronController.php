@@ -5,6 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
+use ShortPixel\Controller\Backup\BackupController;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 class CronController
@@ -98,7 +99,7 @@ class CronController
          add_action($options['cron_name'], array(AdminController::getInstance(), 'scanCustomFoldersHook'));
       }
 
-      add_action('spio-remove-backups', [AdminController::getInstance(), 'cronRemoveBackups']);
+      add_action('spio-remove-backups', [BackupController::getBackupController(), 'cronRemoveBackups']);
 
       $this->cron_options = $background_crons;
   }
@@ -170,7 +171,7 @@ class CronController
 
   protected function tools_scheduler($unschedule = false)
   {
-     $name = 'spio-remove-backups'; 
+     $name = 'spio-remove-backups';  
 
      $scheduled = wp_next_scheduled($name);
 

@@ -29,7 +29,7 @@ abstract class BackupController
     protected static $models = []; 
     protected static $model; 
 
-
+    abstract protected function autoRemoveBackups();
 
     public function __construct()
     {
@@ -95,6 +95,57 @@ abstract class BackupController
         
     }
 
+    
+    /** Hook function for Cron. Should only handle cron, all functionality should be separate. 
+     * 
+     * @return void 
+     */
+    public function cronRemoveBackups()
+    {
+        $bool = $this->checkRemoveBackups();
+        if (false === $bool || $bool !== true)
+        {
+          return false; 
+        }
+
+        $this->autoRemoveBackups();
+        
+    }
+
+    protected function checkRemoveBackups()
+    {
+        $settings = \wpSPIO()->settings(); 
+        $bool = false; 
+
+        $removeBackups = $settings->autoRemoveBackups; 
+        $removeTimestamp = $settings->autoRemoveBackupsTimestamp; 
+
+        if (true !== $removeBackups)
+        {
+           return false; 
+        }
+
+        if (is_null($removeTimestamp) || false === is_int($removeTimestamp))
+        {
+           return false; 
+        }
+
+        if ($removeTimestamp > time() || ($removeTimestamp > time()) - ($removeTimestamp + 2 * DAY_IN_SECONDS))
+        { 
+           return false; 
+        }
+
+        // After many double checks, -better fail than fault- perhaps return true. 
+        if (is_int($removeTimestamp) && true === $removeBackups)
+        {
+           return true;
+        }
+
+        return false;         
+        
+    }
+
+    
 
 
 } // class
