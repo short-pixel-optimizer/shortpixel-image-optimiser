@@ -278,7 +278,7 @@ $approx = $this->view->approx;
 				
 
 
- 	 	 <div class="option-block">
+ 	 	 <div class="option-block all-round">
        <div class='optiongroup' data-check-visibility="false" data-control="data-check-approx-total">
           <h3><?php esc_html_e('No images found', 'shortpixel-image-optimiser'); ?></h3>
           <p><?php esc_html_e('ShortPixel Bulk couldn\'t find any optimizable images.','shortpixel-image-optimiser'); ?></p>
