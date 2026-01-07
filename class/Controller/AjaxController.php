@@ -1213,7 +1213,9 @@ class AjaxController
 		if (! is_null($settingsData))
 		{
 			 $json = json_decode(stripslashes($settingsData), true);
-			 $settingsData = array_map('sanitize_text_field', $json); 
+			 $settings = \wpSPIO()->settings(); 
+			 //$settingsData = array_map('sanitize_text_field', $json); 
+			 $settingsData = $settings->getSanitizedData($json, false);
 		}
 		else
 		{
@@ -1280,7 +1282,7 @@ class AjaxController
 						$aiModel = AiDataModel::getModelByAttachment($qItem->item_id, 'media');
 
 						 $aiData = $optimizer->formatResultData($result->aiData, $qItem);
-						 list($items, $aiData) = $optimizer->formatGenerated($aiData, $aiModel->getCurrentData(), $aiModel->getOriginalData());
+						 list($items, $aiData) = $optimizer->formatGenerated($aiData, $aiModel->getCurrentData(), $aiModel->getOriginalData(), true);
 						 $aiData['item_id'] = $qItem->item_id;
 						 $aiData['time_generated'] = time(); 
 

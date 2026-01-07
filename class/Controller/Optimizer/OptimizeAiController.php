@@ -750,7 +750,7 @@ public function getAltData(QueueItem $qItem)
     return $metadata; 
 }
 
-public function formatGenerated($generated, $current, $original)
+public function formatGenerated($generated, $current, $original, $isPreview = false)
 {
     
   $fields = ['alt', 'caption', 'description', 'post_title'];
@@ -774,7 +774,12 @@ public function formatGenerated($generated, $current, $original)
        }
        if (is_int($value) && in_array($value, $statii))
        {
-          if (isset($current[$name]))
+         // If preview don't fall back on other stuff, just leave it empty. 
+          if (true === $isPreview)
+          {
+             $value = ''; 
+          }
+          elseif (isset($current[$name]))
           {
                $value = $current[$name];
           }
