@@ -784,9 +784,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
             }
             elseif (isset($tempFile))
             {
+                $optimizedSize  = $tempFile->getFileSize();
                 $copyok = $tempFile->move($this);
                 $this->setImageSize();
-                $optimizedSize  = $tempFile->getFileSize();
             }
           } // else
 
