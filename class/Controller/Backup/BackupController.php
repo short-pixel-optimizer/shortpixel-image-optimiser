@@ -31,6 +31,7 @@ abstract class BackupController
 
     abstract protected function autoRemoveBackups();
 
+
     public function __construct()
     {
          
@@ -112,31 +113,37 @@ abstract class BackupController
         
     }
 
+    public function cliRemoveBackups()
+    {
+      $bool = $this->checkRemoveBackups();
+      if (false === $bool || $bool !== true)
+      {
+        return false; 
+      }
+
+      $this->autoRemoveBackups();
+    }
+
     protected function checkRemoveBackups()
     {
         $settings = \wpSPIO()->settings(); 
         $bool = false; 
 
         $removeBackups = $settings->autoRemoveBackups; 
-        $removeTimestamp = $settings->autoRemoveBackupsTimestamp; 
+        $removePeriod = $settings->autoRemoveBackupsPeriod; 
 
         if (true !== $removeBackups)
         {
            return false; 
         }
 
-        if (is_null($removeTimestamp) || false === is_int($removeTimestamp))
+        if (is_null($removePeriod))
         {
            return false; 
         }
 
-        if ($removeTimestamp > time() || ($removeTimestamp > time()) - ($removeTimestamp + 2 * DAY_IN_SECONDS))
-        { 
-           return false; 
-        }
-
         // After many double checks, -better fail than fault- perhaps return true. 
-        if (is_int($removeTimestamp) && true === $removeBackups)
+        if (is_string($removePeriod) && true === $removeBackups)
         {
            return true;
         }

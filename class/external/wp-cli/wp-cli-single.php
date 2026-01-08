@@ -47,7 +47,6 @@ class SpioSingle extends SpioCommandBase
    */
   public function restore($args, $assoc_args)
   {
-      //$controller = new QueueController();
       $fs = \wpSPIO()->filesystem();
 
       if (! isset($args[0]))
@@ -76,12 +75,8 @@ class SpioSingle extends SpioCommandBase
       $qItem->newRestoreAction();
 
       $queueController = $this->getQueueController();
-      //$optimiser = $qItem->getApiController();
-      //$optimiser->restoreItem($qItem);
 
       $result  = $queueController->addItemToQueue($imageModel, ['action' => 'restore']);
-
-      //$result = $qItem->result();
 
 			$this->showResponses();
 

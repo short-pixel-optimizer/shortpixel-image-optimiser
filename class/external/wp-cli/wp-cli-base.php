@@ -14,6 +14,7 @@ use ShortPixel\Controller\BulkController as BulkController;
 
 use ShortPixel\Controller\Queue\Queue as Queue;
 use ShortPixel\Controller\Api\ApiController as ApiController;
+use ShortPixel\Controller\Backup\BackupController;
 use ShortPixel\Controller\ResponseController as ResponseController;
 
 use ShortPixel\Helper\UiHelper as UiHelper;
@@ -475,6 +476,24 @@ class SpioCommandBase
 		$items[] = array('setting' => 'Creates Avif', 'value' =>  $this->textBoolean($settings->createAvif));
 
 		\WP_CLI\Utils\format_items('table', $items, $fields);
+	}
+
+	 /**
+	 * Auto-removes backups according to settings. Use with care. 
+	 *
+	 *
+	 * ---
+	 *
+	 * ## EXAMPLES
+	 *
+	 *   wp spio removebackups
+	 *
+	 */
+	public function removebackups()
+	{
+		$backupController = BackupController::getBackupController();
+		$backupController->cliRemoveBackups();
+		
 	}
 
 	/**

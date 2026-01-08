@@ -182,7 +182,7 @@ class FileSystemController extends \ShortPixel\Controller
     if (! function_exists('get_home_path')) {
       require_once(ABSPATH . 'wp-admin/includes/file.php');
     }
-    $wp_home = \get_home_path();
+    //$wp_home = \get_home_path();
     $filepath = $file->getFullPath();
 
     if ($file->is_virtual()) {

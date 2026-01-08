@@ -541,11 +541,8 @@ class SettingsViewController extends \ShortPixel\ViewController
            $this->view->hide_banner = true; 
          }
           
-
          //$this->view->latest_ai = $this->getLatestAIExamples();
-
 				 $this->view->is_unlimited= (!is_null($this->quotaData) && $this->quotaData->unlimited) ? true : false;
-
 
          $settings = \wpSPIO()->settings();
 

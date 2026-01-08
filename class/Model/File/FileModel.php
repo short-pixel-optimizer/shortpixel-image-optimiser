@@ -264,6 +264,11 @@ class FileModel extends \ShortPixel\Model
     return filemtime($this->fullpath);
   }
 
+  public function getCreated()
+  {
+    return filectime($this->fullpath);
+  }
+
     // @todo This moved to BackupModel.
   public function hasBackup()
   {

@@ -22,11 +22,11 @@ class SettingsModel extends \ShortPixel\Model
         'resizeWidth' => ['s' => 'int' , 'default' => 0], // int
         'resizeHeight' => ['s' => 'int', 'default' => 0], // int
         'processThumbnails' => ['s' => 'boolean', 'default' => true], // checkbox
-	'useSmartcrop' => ['s' => 'boolean', 'default' => false],
+	      'useSmartcrop' => ['s' => 'boolean', 'default' => false],
         'smartCropIgnoreSizes' => ['s' => 'boolean', 'default' => false],
         'backupImages' => ['s' => 'boolean', 'default' => true], // checkbox
         'autoRemoveBackups' => ['s' => 'boolean', 'default' => false], 
-        'autoRemoveBackupsTimestamp' => ['s' => 'boolean', 'default' => null],
+        'autoRemoveBackupsPeriod' => ['s' => 'string', 'default' => null],
     //    'keepExif' => ['s' => 'int', 'default' => 0], // checkbox
         'resizeImages' => ['s' => 'boolean', 'default' => false],
         'resizeType' => ['s' => 'string', 'default' => null],

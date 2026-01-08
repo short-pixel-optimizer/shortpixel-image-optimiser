@@ -347,6 +347,8 @@ class DirectoryModel extends \ShortPixel\Model
 
     $defaults = [
         'date_newer' => null,
+        'date_older' => null, 
+        'date_created_older' => null, 
         'exclude_files' => null,
 				'include_files' => null,
     ];
@@ -411,9 +413,22 @@ class DirectoryModel extends \ShortPixel\Model
      if (! is_null($args['date_newer']))
      {
        $modified = $file->getModified();
-       if ($modified < $args['date_newer'] )
+       if (false === $modified || $modified < $args['date_newer'] )
           $filter = false;
      }
+     if (! is_null($args['date_older']))
+     {
+      $modified = $file->getModified();
+      if (false === $modified || $modified > $args['date_older'] )
+         $filter = false;
+     }
+     if (! is_null($args['date_created_older']))
+     {
+      $created = $file->getCreated();
+      if ($created === false || $created > $args['date_created_older'] )
+         $filter = false;
+     }
+
      if (! is_null($args['exclude_files']))
      {
         foreach($args['exclude_files'] as $ex)
