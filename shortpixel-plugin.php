@@ -720,7 +720,7 @@ class ShortPixelPlugin {
 					case 'upload':
                   $controller = '\ShortPixel\Controller\View\ListMediaViewController';
                         break;
-					case 'attachment'; // edit-media
+					case 'attachment': // edit-media
                    $controller = '\ShortPixel\Controller\View\EditMediaViewController';
                      break;
                 }
