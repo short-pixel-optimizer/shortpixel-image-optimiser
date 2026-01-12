@@ -158,7 +158,6 @@ class AiDataModel
         foreach($fields as $field_name)
         {
             $api_name = $field_name; 
-            //$paramlist[$api_name] = [];
 
             switch($api_name)
             {

@@ -401,7 +401,7 @@
 .wrap.is-shortpixel-bulk-page section.panel.dashboard .dashboard-modal .close {
   position: absolute;
   right: 10px;
-  top: 3px;
+  top: 6px;
   color: white;
   font-size: 18px;
   font-weight: 700;
@@ -444,7 +444,7 @@
 }
 .wrap.is-shortpixel-bulk-page section.panel.dashboard .dashboard-modal .content .table-wrapper > div > span {
   display: table-cell;
-  padding: 4px 8px;
+  padding: 8px;
 }
 .wrap.is-shortpixel-bulk-page section.panel.dashboard .dashboard-modal .content .table-wrapper > div > span:first-child {
   white-space: nowrap;
@@ -453,13 +453,12 @@
   color: #1ABDCA;
 }
 .wrap.is-shortpixel-bulk-page h3.heading {
-  margin: 15px 0 15px 0px;
-  padding-left: 15px;
-  padding-bottom: 12px;
-  font-size: 20px;
-  font-weight: 400;
+  width: 90%;
+  margin: 0 auto;
+  padding-left: 10px;
+  font-size: 24px;
+  font-weight: 600;
   line-height: 42px;
-  border-bottom: 1px solid #ccc;
   position: relative;
 }
 .wrap.is-shortpixel-bulk-page h3.heading span {
@@ -470,8 +469,13 @@
   font-style: normal;
 }
 .wrap.is-shortpixel-bulk-page p.description {
-  font-size: 14px;
-  margin: 15px 0 15px 15px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #116C7E;
+  margin: 0 auto;
+  padding-left: 10px;
+  width: 90%;
+  display: block;
 }
 .wrap.is-shortpixel-bulk-page .button {
   display: flex;
@@ -743,14 +747,15 @@
   text-decoration: none;
 }
 .wrap.is-shortpixel-bulk-page section.spio-progressbar {
-  margin: 0 0 30px 0;
+  width: 90%;
+  margin: 20px auto;
   background-color: #F4FBFC;
   padding: 16px;
+  border-radius: 15px;
 }
 .wrap.is-shortpixel-bulk-page section.spio-progressbar .flex {
   display: flex;
   flex-direction: row;
-  width: 90%;
   justify-content: space-around;
   margin: 0 auto;
 }
@@ -856,7 +861,7 @@
   color: #ccc;
   font-weight: 700;
   align-items: center;
-  width: 90%;
+  width: 80%;
   margin: auto;
 }
 .wrap.is-shortpixel-bulk-page section.panel.selection .load.wrapper .loading > span {
@@ -916,25 +921,41 @@
   color: #646970;
 }
 .wrap.is-shortpixel-bulk-page section.panel.selection .option-block {
-  margin: 0 auto;
-  width: 88%;
+  margin: 10px auto 0 auto;
+  width: 90%;
   background-color: #F4FBFC;
   padding: 12px;
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
+}
+.wrap.is-shortpixel-bulk-page section.panel.selection .option-block.all-round {
+  border-radius: 15px;
 }
 .wrap.is-shortpixel-bulk-page section.panel.selection .option-block h2 {
   font-size: 22px;
-  color: #555;
+  color: #000;
+  padding-left: 5px;
+}
+.wrap.is-shortpixel-bulk-page section.panel.selection .option-block h3 {
+  font-size: 20px;
+  color: #000;
+  padding-left: 5px;
 }
 .wrap.is-shortpixel-bulk-page section.panel.selection .option-block p {
-  margin-left: 0;
+  margin-left: 5px;
+}
+.wrap.is-shortpixel-bulk-page section.panel.selection .option-block .approx {
+  margin-left: 5px;
 }
 .wrap.is-shortpixel-bulk-page section.panel.selection .advanced-label {
   display: flex;
   background-color: #F4FBFC;
   margin: 0 auto 5px;
-  width: 88%;
+  width: 90%;
   padding: 12px;
   align-items: center;
+  border-bottom-left-radius: 15px;
+  border-bottom-right-radius: 15px;
 }
 .wrap.is-shortpixel-bulk-page section.panel.selection .advanced-label .title {
   white-space: nowrap;
@@ -949,6 +970,9 @@
   margin-left: 4px;
   border: 0;
 }
+.wrap.is-shortpixel-bulk-page section.panel.selection .optiongroup.ai-images > .switch_button:first-child {
+  width: 100%;
+}
 .wrap.is-shortpixel-bulk-page section.panel.selection .optiongroup .switch_button {
   display: inline-block;
 }
@@ -959,6 +983,7 @@
   font-size: 14px;
   font-weight: 700;
   display: inline-block;
+  padding-left: 5px;
 }
 .wrap.is-shortpixel-bulk-page section.panel.selection .optiongroup h4 > label {
   padding: 0;
