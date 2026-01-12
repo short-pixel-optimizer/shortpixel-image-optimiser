@@ -378,7 +378,6 @@ class ShortPixelSettings {
 		
 			}
 
-
 			var button = document.querySelector('button[name="refresh_ai_preview"]'); 
 			button.addEventListener('click', function () {
 
@@ -420,12 +419,12 @@ class ShortPixelSettings {
 					type: 'media',
 					screen_action: 'settings/getNewAiImagePreview',
 					settingsData : JSON.stringify(settingsData),
-					callback : 'shortpixelSettings.UpdateAiExampleEvent',
+					callback : 'shortpixelSettings.AiImageSet',
 					
 				}
 				window.ShortPixelProcessor.AjaxRequest(data); 
 
-				/*window.addEventListener('shortpixelSettings.AiImageSet', function (response) {
+				window.addEventListener('shortpixelSettings.AiImageSet', function (response) {
 
 					var json = response.detail; 
 					// If aiData is not loaded, show loading message. 
@@ -442,10 +441,10 @@ class ShortPixelSettings {
 							'response' : response, 
 						}});
 						// If aiData is loaded, updated Ai texts. 
-						window.dispatchEvent(triggerEvent); 
+						window.dispatchEvent(triggerLoadEvent); 
 					}
 					
-				}, {once: true}); */
+				}, {once: true}); 
 
 			});
 
@@ -468,18 +467,18 @@ class ShortPixelSettings {
 						id: attachment.id,
 						type: 'media',
 						screen_action: 'settings/setAiImageId',
-						callback : 'shortpixelSettings.AiWindowLoadEvent',
+						callback : 'shortpixelSettings.AiImageSet',
 						
 					}
 
 					window.ShortPixelProcessor.AjaxRequest(data); 
 
-				/*	window.addEventListener('shortpixelSettings.AiImageSet', function (response) {
+					window.addEventListener('shortpixelSettings.AiImageSet', function (response) {
 						
 						window.dispatchEvent(triggerLoadEvent); 
 					}, {once: true});
 
-				*/
+				
 
 				}); 
 		
@@ -564,6 +563,10 @@ class ShortPixelSettings {
 							else
 							{
 								var val = data[field];
+								if (Number.isInteger(val) && val < 0)
+								{
+									val = '&nbsp;';
+								}
 							}
 							element.innerHTML = val;
 						}
