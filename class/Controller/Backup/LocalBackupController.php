@@ -32,6 +32,12 @@ class LocalBackupController extends BackupController
          
          $period = $this->getPeriodAr();
 
+         if (false === is_array($period))
+         {
+            Log::addError('Period in Remove backup came back empty', $period);
+             return false; 
+         }
+
          // Check all files in the root backupdir (in case of uploads in root)
          $this->checkFilesinDirectory($rootBackupDir, $period['date']);
 
@@ -61,7 +67,7 @@ class LocalBackupController extends BackupController
              // Every month number that is lower (older) than month
              if (strlen($name) == 2 && $name < $month)
              {
-                 Log::addWarn('Automatic Backup Removal of month, removing ', $subdir->getFullPath()); 
+                 Log::addWarn('Automatic Backup Removal of month, removing ', $subdir->getPath()); 
              }     
 
         }
