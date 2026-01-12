@@ -734,15 +734,26 @@ class ShortPixelScreen extends ShortPixelScreenBase
 
 			errorBoxes.forEach(function(errorbox)
 			{
+				// Detect the previous div to cancel the border radius when errors are displayed
+				let prev = errorbox.previousElementSibling;
+
+				while (prev && !prev.classList.contains('bulk-summary')) {
+					prev = prev.previousElementSibling;
+				}
+
 				if (checked === true)
 				{
 				 	errorbox.style.opacity = 1;
 					errorbox.style.display = 'block';
+					prev.style.borderBottomRightRadius = '0px';
+					prev.style.borderBottomLeftRadius = '0px';
 				}
 				else
 				{
 					errorbox.opacity = 0;
 					errorbox.style.display = 'none';
+					prev.style.borderBottomRightRadius = '15px';
+					prev.style.borderBottomLeftRadius = '15px';
 				}
 			}); //foreach
 

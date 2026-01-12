@@ -90,7 +90,7 @@ $settings = \wpSPIO()->settings();
 					<span class="display-error-box" data-check-visibility data-control="data-check-media-fatalerrors" ><label title="<?php esc_html_e('Show Errors', 'shortpixel-image-optimiser'); ?>">
 						<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='media' data-event='change'>
 						<span><?php esc_html_e('Show Errors','shortpixel-image-optimiser'); ?></span>
-            <span class='collap-arrow'><?php echo UIHelper::getIcon('res/images/icon/chevron.svg'); ?></span> 
+            <span class='collap-arrow'><?php echo UIHelper::getIcon('res/images/icon/chevron.svg'); ?></span>
 
             </label>
 				 </span>
@@ -138,7 +138,10 @@ $settings = \wpSPIO()->settings();
         <span><?php esc_html_e('Errors') ?>: <i data-check-custom-fatalerrors  data-stats-custom="fatal_errors" class='error'>-</i>
 
 					<span class="display-error-box" data-check-visibility data-control="data-check-custom-fatalerrors" ><label title="<?php esc_html_e('Show Errors', 'shortpixel-image-optimiser'); ?>">
-						<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='custom' data-event='change'><?php esc_html_e('Show Errors','shortpixel-image-optimiser'); ?></label>
+						<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='custom' data-event='change'><?php esc_html_e('Show Errors','shortpixel-image-optimiser'); ?>
+            <span class='collap-arrow'><?php echo UIHelper::getIcon('res/images/icon/chevron.svg'); ?></span>
+
+		</label>
 				 </span>
 				</span>
 

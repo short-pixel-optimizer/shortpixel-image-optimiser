@@ -681,21 +681,24 @@
   transition: 1s all;
   opacity: 0;
   display: none;
-  right: 10px;
-  top: 4px;
-  padding: 8px;
+  padding: 16px;
   height: 100%;
-  border: 1px solid #1ABDCA;
+  border-top: 1px solid #D7D7D7;
   width: 80%;
-  margin: 30px auto 30px;
-  background: rgba(255, 255, 255, 0.9);
+  margin: 0 auto;
+  background-color: #F4FBFC;
   line-height: 22px;
   max-height: 300px;
   overflow-y: scroll;
   box-sizing: border-box;
+  border-bottom-right-radius: 15px;
+  border-bottom-left-radius: 15px;
 }
 .wrap.is-shortpixel-bulk-page .panel .errorbox .fatal {
   color: #ff0000;
+}
+.wrap.is-shortpixel-bulk-page .panel .errorbox > div {
+  background-color: white;
 }
 .wrap.is-shortpixel-bulk-page .processor-paused {
   display: none;
@@ -1032,7 +1035,9 @@
 }
 .wrap.is-shortpixel-bulk-page section.panel.summary .summary-list {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: center;
 }
 .wrap.is-shortpixel-bulk-page section.panel.summary .summary-list .section-wrapper-ai {
   background-color: #F4FBFC;
@@ -1053,7 +1058,6 @@
 }
 .wrap.is-shortpixel-bulk-page section.panel.summary .summary-list .section-wrapper.ai {
   max-width: none;
-  margin-left: 27px;
 }
 .wrap.is-shortpixel-bulk-page section.panel.summary .summary-list .section-wrapper h4 {
   font-size: 14px;
@@ -1102,6 +1106,25 @@
 .wrap.is-shortpixel-bulk-page section.panel.summary .summary-list .section-wrapper .list-table > div > span:nth-child(2) {
   text-align: right;
 }
+@media (max-width: 1315px) {
+  .wrap.is-shortpixel-bulk-page section.panel.summary .summary-list .section-wrapper {
+    margin: 15px auto;
+    max-width: 100%;
+    float: none;
+  }
+  .wrap.is-shortpixel-bulk-page section.panel.summary .summary-list .section-wrapper.ai {
+    float: left;
+    margin: 0 auto;
+  }
+}
+@media (max-width: 695px) {
+  .wrap.is-shortpixel-bulk-page section.panel.summary .summary-list .section-wrapper {
+    float: none;
+  }
+  .wrap.is-shortpixel-bulk-page section.panel.summary .summary-list .section-wrapper.ai {
+    float: none;
+  }
+}
 .wrap.is-shortpixel-bulk-page section.panel.summary .totals {
   font-size: 14px;
   color: #116C7E;
@@ -1111,18 +1134,16 @@
   margin-left: 35px;
 }
 .wrap.is-shortpixel-bulk-page section.panel.summary .credits-sub-wrapper {
-  display: block;
-  float: left;
-  max-width: 62%;
-  padding-left: 20px;
-  border-right: 1px solid #1ABDCA;
-  margin-right: 35px;
+  flex: 0 0 100%;
+  margin: 15px 0;
+  padding: 15px 0;
+  border-bottom: 1px solid #1ABDCA;
 }
 .wrap.is-shortpixel-bulk-page section.panel.summary .ai-credits-sub-wrapper {
-  display: block;
-  float: left;
-  width: 33%;
-  margin-left: -20px;
+  flex: 0 0 100%;
+  margin-top: 15px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid #1ABDCA;
 }
 .wrap.is-shortpixel-bulk-page section.panel.summary .credits {
   display: table;
@@ -1147,6 +1168,11 @@
   color: #000;
   font-size: 16px;
   font-weight: 500;
+}
+@media (max-width: 1315px) {
+  .wrap.is-shortpixel-bulk-page section.panel.summary .credits {
+    margin: 0 auto;
+  }
 }
 .wrap.is-shortpixel-bulk-page section.panel.summary .button.unlimited {
   color: #116C7E;
@@ -1223,7 +1249,7 @@
   right: 0;
   display: flex;
   justify-content: center;
-  z-index: 2;
+  z-index: -1;
   background: rgba(255, 255, 255, 0.4);
   align-items: center;
 }
@@ -1243,8 +1269,8 @@
 }
 .wrap.is-shortpixel-bulk-page section.panel.process .average-optimization .opt-circle-average,
 .wrap.is-shortpixel-bulk-page section.panel.finished .average-optimization .opt-circle-average {
-  width: 100px;
-  height: 100px;
+  width: 130px;
+  height: 130px;
 }
 .wrap.is-shortpixel-bulk-page section.panel.process .average-optimization .opt-circle-average .trail,
 .wrap.is-shortpixel-bulk-page section.panel.finished .average-optimization .opt-circle-average .trail {
@@ -1268,6 +1294,7 @@
 .wrap.is-shortpixel-bulk-page section.panel.finished h3.heading {
   text-align: center;
   font-weight: 700;
+  margin-bottom: 20px;
 }
 .wrap.is-shortpixel-bulk-page section.panel.process .bulk-summary,
 .wrap.is-shortpixel-bulk-page section.panel.finished .bulk-summary {
@@ -1377,8 +1404,8 @@
   background: #F6F9FF;
   border: 1px solid #DFEAFF;
   border-radius: 16px;
-  width: 70%;
-  margin: 15px auto;
+  width: 80%;
+  margin: 30px auto;
   position: relative;
 }
 .wrap.is-shortpixel-bulk-page section.panel.process .image-preview-section .title,

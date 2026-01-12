@@ -86,7 +86,10 @@ if ( ! defined( 'ABSPATH' ) ) {
         <span><?php esc_html_e('Images Left','shortpixel-image-optimiser'); ?>: <i data-stats-media="in_queue">0</i></span>
         <span><?php esc_html_e('Errors','shortpixel-image-optimiser'); ?>: <i data-check-media-fatalerrors data-stats-media="fatal_errors" class='error'>0 </i>
 					<span class="display-error-box" data-check-visibility data-control="data-check-media-fatalerrors" ><label title="<?php esc_html_e('Show Errors', 'shortpixel-image-optimiser'); ?>">
-						<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='media' data-event='change'><?php esc_html_e('Show Errors','shortpixel-image-optimiser'); ?></label>
+						<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='media' data-event='change'><?php esc_html_e('Show Errors','shortpixel-image-optimiser'); ?>
+            <span class='collap-arrow'><?php echo UIHelper::getIcon('res/images/icon/chevron.svg'); ?></span>
+
+        </label>
 				 </span>
         </span>
 
@@ -129,7 +132,10 @@ if ( ! defined( 'ABSPATH' ) ) {
         <span><?php esc_html_e('Images Left', 'shortpixel-image-optimiser') ?>: <i data-stats-custom="in_queue">-</i></span>
         <span><?php esc_html_e('Errors','shortpixel-image-optimiser') ?>: <i data-check-custom-fatalerrors  data-stats-custom="fatal_errors" class='error'>-</i>
 								<span class="display-error-box" data-check-visibility data-control="data-check-custom-fatalerrors" ><label title="<?php esc_html_e('Show Errors', 'shortpixel-image-optimiser'); ?>">
-									<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='custom' data-event='change'>Show Errors</label>
+									<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='custom' data-event='change'><?php esc_html_e('Show Errors','shortpixel-image-optimiser'); ?>
+            <span class='collap-arrow'><?php echo UIHelper::getIcon('res/images/icon/chevron.svg'); ?></span>
+
+				</label>
 							 </span>
 				</span>
 
