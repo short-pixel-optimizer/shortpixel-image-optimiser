@@ -166,7 +166,8 @@ class LocalBackupModel extends BackupModel
          {
             if (true === $backupData['has_backup'])
             {
-                $this->restore($backupData['file']);
+                $fileObj = $backupData['file'];
+                $fileObj->restore(); // for now invoke it on the imageModel 
             }
          }
       }
