@@ -15,8 +15,8 @@ Class Image extends \ShortPixel\Model\File\FileModel
         protected $image; // The image resource
         protected $useLib = 'gd'; 
         protected $replacementPath; 
-        protected $width;
-        protected $height;
+        /*protected $width;
+        protected $height; */
 
         protected $error = []; 
 
@@ -32,17 +32,27 @@ Class Image extends \ShortPixel\Model\File\FileModel
         protected function checkLibrary()
         {
             $env = \wpSPIO()->env(); 
-            if ($env->is_gd_installed)
-            {
-                $this->useLib = 'gd'; 
-            }
-            elseif ($env->is_imagick_installed)
+            if ($env->is_imagick_installed)
             {
                 $this->useLib = 'imagick'; 
+            }
+            elseif ($env->is_gd_installed)
+            {
+                $this->useLib = 'gd'; 
             }
 
             Log::addTemp('Replace PNG Library used - ' . $this->useLib);
              
+        }
+
+        public function checkImageLoaded()
+        {
+            if (! is_null($this->image) && false !== $this->image)
+            {
+                return true; 
+            }
+
+            return false; 
         }
 
         // Must be declared explicit because it's resource-intensive, fills memory 
@@ -61,28 +71,6 @@ Class Image extends \ShortPixel\Model\File\FileModel
                 
             }
         }
-
-    /*    public function setWidth($width)
-        {
-            if (! is_int($width))
-            {
-                Log::addWarn('Image not given int width ', $width);
-                 return false; 
-            }
-
-             $this->width = $width;
-        }
-
-        public function setHeight($height)
-        {
-            if (! is_int($height))
-            {
-                Log::addWarn('Image not given int width ', $height);
-                 return false; 
-            }
-
-             $this->height = $height;
-        } */
 
         public function getWidth()
         {
@@ -168,28 +156,25 @@ Class Image extends \ShortPixel\Model\File\FileModel
         protected function loadImagickImage()
         {
              // Create a new Imagick object
-            $this->image = new \Imagick($this->getFullPath());
+            try {
+                $this->image = new \Imagick($this->getFullPath());
+            } catch (\ImagickException $e) {
+                Log::addWarn("Imagick error: " . $e->getMessage());
+            } catch (\Exception $e) {
+                Log::addWarn("Imagick error: " . $e->getMessage());
+            }
             
         }
 
         protected function loadGDImage()
         {
-
-           /* if (strpos($this->getFullPath(), ' ') !== false )
-            {
-                $target = sys_get_temp_dir() . '/nospace.png';
-                copy($this->getFullPath(), $target);
-                Log::addTemp('Target Path', $target); 
-
-            }
-            else
-            {
-                $target = $this->getFullPath(); 
-            } */
-            
+          
             $image = @imagecreatefrompng($this->getFullPath());
-            $this->image = $image; 
 
+            if (false !== $image)
+            {
+                $this->image = $image; 
+            }
         }
 
         protected function convertImagick()
@@ -235,7 +220,7 @@ Class Image extends \ShortPixel\Model\File\FileModel
         {
              if ('gd' == $this->useLib)
              {
-                 
+                 $this->image = null;
              }
              if ('imagick' == $this->useLib)
              {
