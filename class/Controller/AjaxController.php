@@ -1287,6 +1287,8 @@ class AjaxController
 						 $aiData['time_generated'] = time(); 
 
 						 set_transient('spio_settings_ai_example', $aiData, MONTH_IN_SECONDS);
+						 set_transient('spio_settings_ai_example_id', $qItem->item_id, MONTH_IN_SECONDS); 
+						 
 						 $aiData['aiData'] = true; // for the JS check
 						 $this->send((object) $aiData);
 						 $is_done = true; 
