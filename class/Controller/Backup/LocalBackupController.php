@@ -122,11 +122,18 @@ class LocalBackupController extends BackupController
 
         $dateNow->sub($interval); 
 
+        $timestamp = $dateNow->getTimestamp();
         // @todo Add a sanity check here if month / year returns are reliable. 
+
+        //  To make sure backup is removed as period + 1 month, because the current month minus the interval will be between (and thus newer than) the dates and we are doing directory-based deleted. Not for the timestamp though
+       // $dateMonth = clone $dateNow; 
+        $monthInterval = new \DateInterval('P1M');
+        $dateNow->sub($monthInterval);
         $month = $dateNow->format('m');
         $year = $dateNow->format('Y');
 
-        return ['month' => $month, 'year' => $year, 'date' => $dateNow->getTimestamp()]; 
+
+        return ['month' => $month, 'year' => $year, 'date' => $timestamp]; 
 
     }
 

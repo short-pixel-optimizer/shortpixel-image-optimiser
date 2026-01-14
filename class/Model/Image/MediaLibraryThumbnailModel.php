@@ -2,6 +2,7 @@
 
 namespace ShortPixel\Model\Image;
 
+use ShortPixel\Controller\Backup\BackupController;
 use ShortPixel\Helper\DownloadHelper as DownloadHelper;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
 
@@ -29,6 +30,9 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 	protected $size; // size name of image in WP, if applicable.
 	protected $sizeDefinition; // size width / height / crop according to WordPress
 
+	protected $backupModel; 
+
+	
 	/** @var string **/
 	protected $type = 'media';
 
@@ -41,6 +45,11 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 		$this->id = $id;
 		$this->imageType = self::IMAGE_TYPE_THUMB;
 		$this->size = $size;
+
+		$backupController = BackupController::getBackupController(); 
+		$backupModel = $backupController->getModel($this);
+
+		$this->backupModel = $backupModel;
 	}
 
 

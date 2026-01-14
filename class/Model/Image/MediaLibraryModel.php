@@ -72,8 +72,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 	const PROCESSABLE_EXTENSIONS = array('jpg', 'jpeg', 'gif', 'png', 'pdf', 'bmp', 'tiff', 'tif', 'webp');
 
-	protected $backupModel; 
-
 	public function __construct($post_id, $path)
 	{
 		$this->id = $post_id;

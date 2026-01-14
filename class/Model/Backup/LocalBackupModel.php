@@ -25,6 +25,7 @@ class LocalBackupModel extends BackupModel
      }
 
      // This one should probably do the whole procedure. 
+     // Problem - how to find all the file items here. 
      public function restore(FileModel $fileObj)
      {
 
