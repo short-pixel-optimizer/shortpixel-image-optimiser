@@ -503,6 +503,7 @@ Release Date: January 15, 2026
 * AI SEO Preview Fix: Prevented display of incorrect data in the AI SEO Preview section within plugin settings.
 * SmartCrop Percentage Display: Fixed the issue where SmartCrop could show a negative improvement percentage if the cropped image ended up larger in size.
 * JPG to PNG Conversion Fix: Resolved a rare error when JPG files saved as PNG conflicted with the PNG-to-JPG conversion setting.
+* PHP 8.5 Deprecation Fix: Fixed a deprecation warning added in PHP 8.5, thanks to @mondalaci.
 * Text & Typo Corrections: Polished various texts and corrected typos on the Bulk and Settings pages.
 
 Update now for clearer stats, smarter previews, and a smoother optimization experience across the board! 🚀
