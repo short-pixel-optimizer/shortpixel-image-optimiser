@@ -355,10 +355,7 @@ class ShortPixelSettings {
 			else {
 				actions[i].addEventListener('click', this[method].bind(this));
 			}
-
-
 		}
-
 	}
 
 	InitAiEvents()
@@ -375,7 +372,6 @@ class ShortPixelSettings {
 			if (this.current_tab == 'ai')
 			{
 				window.dispatchEvent(triggerLoadEvent);
-		
 			}
 
 			var button = document.querySelector('button[name="refresh_ai_preview"]'); 

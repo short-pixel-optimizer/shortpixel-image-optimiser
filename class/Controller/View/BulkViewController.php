@@ -118,13 +118,13 @@ class BulkViewController extends \ShortPixel\ViewController
             $label = __('Bulk Restore', 'shortpixel-image-optimiser');
           break;
           case 'migrate':
-            $label = __('Migrate data', 'shortpixel-image-optimiser');
+            $label = __('Bulk Migrate Optimization Data', 'shortpixel-image-optimiser');
           break;
           case 'removeLegacy':
-            $label = __('Remove Legacy Data', 'shortpixel-image-optimiser');
+            $label = __('Bulk Remove Legacy Data', 'shortpixel-image-optimiser');
           break;
           case 'bulk-undoAI':
-            $label = __('Remove AI Data', 'shortpixel-image-optimiser');           
+            $label = __('Bulk Remove AI Data', 'shortpixel-image-optimiser');           
           break; 
       }
 
@@ -284,19 +284,19 @@ class BulkViewController extends \ShortPixel\ViewController
 					switch($op)
 					{
 							 case 'bulk-restore':
-							 		 $bulkName .= __('Restore', 'shortpixel-image-optimiser');
+							 	$bulkName .= __('Restore', 'shortpixel-image-optimiser');
 							 break;
 							 case 'migrate':
-							 		 $bulkName .= __('Migrate old Metadata', 'shortpixel-image-optimiser');
+							 	$bulkName .= __('Migrate old Metadata', 'shortpixel-image-optimiser');
 							 break;
 							 case 'removeLegacy':
 								$bulkName = __('Remove Legacy Data', 'shortpixel-image-optimiser');
 							 break;
-               case 'bulk-undoAI':
-                $bulkName  = __('Remove AI Data', 'shortpixel-image-optimiser');           
-               break; 
+							 case 'bulk-undoAI':
+								$bulkName  = __('Bulk Remove AI Data', 'shortpixel-image-optimiser');
+							 break;
 							 default:
-							 	 	 $bulkName .= __('Optimization', 'shortpixel-image-optimiser');
+							 	$bulkName .= __('Optimization', 'shortpixel-image-optimiser');
 							 break;
 					}
 
