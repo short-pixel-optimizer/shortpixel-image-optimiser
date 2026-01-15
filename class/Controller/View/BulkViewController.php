@@ -114,7 +114,7 @@ class BulkViewController extends \ShortPixel\ViewController
   {
       switch($operation)
       {
-          case 'bulk-restore';
+          case 'bulk-restore':
             $label = __('Bulk Restore', 'shortpixel-image-optimiser');
           break;
           case 'migrate':
