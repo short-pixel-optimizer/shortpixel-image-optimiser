@@ -19,7 +19,7 @@ $settings = \wpSPIO()->settings();
     <h3 class="heading">
       <?php esc_html_e('ShortPixel Bulk Process is in progress','shortpixel-image-optimiser'); ?>
 
-      <div class='average-optimization'>
+      <div class='average-optimization  shortpixel-hide'>
          <!-- <p><?php esc_html_e('Average this run','shortpixel-image-optimiser'); ?></p> -->
           <svg class="opt-circle-average" viewBox="-10 0 150 140">
                         <path class="trail" d="
@@ -175,14 +175,15 @@ $settings = \wpSPIO()->settings();
 
 		</nav>
 
+    <!--- ***** IMAGE PREVIEW SECTION **** *--> 
     <div class='image-preview-section hidden'> <!-- /hidden -->
-			 <div class='title'><span><?php esc_html_e('Just Optimized', 'shortpixel-image-optimiser'); ?></span></div>
+			 <div class='title'><span><?php esc_html_e('Just Processed', 'shortpixel-image-optimiser'); ?></span></div>
        <div class="image-preview-line">
         <!-- <strong data-result="queuetype"></strong>  -->
 				<span>&nbsp;</span> <!-- Spacer for flex -->
 				<span data-result="filename">&nbsp;</span>
-
-        <svg class="opt-circle-image" viewBox="0 0 100 100">
+        <span>
+        <svg class="opt-circle-image improvement-item " viewBox="0 0 100 100">
                       <path class="trail" d="
                           M 50,50
                           m 0,-46
@@ -199,6 +200,7 @@ $settings = \wpSPIO()->settings();
                       </path>
                       <text class="text" x="50" y="50">-- %</text>
                   </svg>
+    </span>
       </div>
 
       <div class="preview-wrapper">
@@ -233,7 +235,7 @@ $settings = \wpSPIO()->settings();
 							<div class="image result">
 								<img src="<?php echo esc_url(\wpSPIO()->plugin_url('res/img/bulk/placeholder.svg')); ?>" >
 								<?php $this->loadView('snippets/part-svgloader', false); ?>
-							<p><?php esc_html_e('Optimized Image','shortpixel-image-optimiser'); ?>
+							<p class='improvement-item'><?php esc_html_e('Optimized Image','shortpixel-image-optimiser'); ?>
 								- <span data-result="improvements-totalpercentage"></span>% <?php _e('smaller', 'shortpixel-image-optimiser'); ?>
 							</p>
 							</div>

@@ -396,6 +396,8 @@ class ShortPixelScreen extends ShortPixelScreenBase
 
     var apiName = (typeof resultItem.apiName !== 'undefined') ? resultItem.apiName : 'optimize'; 
     var aiPreviewElement = document.querySelector('.ai-preview-wrapper'); 
+    var imagePreviewSection = document.querySelector('.image-preview-section');
+
     if (false === aiPreviewElement.classList.contains('hidden'))
     {
        aiPreviewElement.classList.add('hidden');
@@ -405,18 +407,25 @@ class ShortPixelScreen extends ShortPixelScreenBase
       if ( this.processor.fStatus[resultItem.fileStatus] == 'FILE_DONE')
       {
 
-        if (document.querySelector('.image-preview-section').classList.contains('hidden')  )
-          {
-            document.querySelector('.image-preview-section').classList.remove('hidden');
-          }
-
-          
+        if (imagePreviewSection.classList.contains('hidden'))
+        {
+             imagePreviewSection.classList.remove('hidden');
+        }
+        /*
+        if (false === resultItem.improvements)
+        {
+           imagePreviewSection.classList.add('hidden');
+        } */
+        
+        
      //   if ('ai' !== apiName)
       //  {
             this.UpdateData('result', resultItem);
 
-
             this.HandleImageEffect(resultItem.original, resultItem.optimized);
+
+            var improvementItems = imagePreviewSection.querySelectorAll('.improvement-item');
+            var showImp = false; 
 
             if (resultItem.improvements && resultItem.improvements.totalpercentage)
             {
@@ -442,7 +451,26 @@ class ShortPixelScreen extends ShortPixelScreenBase
                 }
 
                 this.AddAverageOptimization(resultItem.improvements.totalpercentage);
+                showImp = true; 
             }
+            else
+            {
+              showImp = false; 
+            }
+
+            for( var i = 0; i < improvementItems.length; i++)
+            {
+                let item = improvementItems[i]; 
+                if (true === showImp && item.classList.contains('hidden'))
+                {
+                   item.classList.remove('hidden');
+                }
+                else if (false === showImp && false === item.classList.contains('hidden'))
+                {
+                  item.classList.add('hidden');
+                }
+            }
+
      //     }
           if ('ai' === apiName)
           {            
@@ -539,6 +567,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
 
 			// There are circles on process and finished.
 			var circles = document.querySelectorAll('.opt-circle-average');
+      var elements = document.querySelectorAll('.average-optimization');
 
 			circles.forEach(function (circle)
 			{
@@ -560,6 +589,16 @@ class ShortPixelScreen extends ShortPixelScreenBase
 					 }
 				}
 			}); // circles;
+
+      // Show them only when a values enters. 
+      for(var i = 0; i < elements.length; elements++)
+      {
+          if (elements[i].classList.contains('shortpixel-hide'))
+          {
+             elements[i].classList.remove('shortpixel-hide');
+          }
+      }
+
 	}
 
 
@@ -571,7 +610,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
   // dataName refers to domain of data i.e. stats, result. Those are mentioned in UI with data-stats-media="total" or data-result
   UpdateData(dataName, data, type)
   {
-      console.log('updating Data :',  dataName, data, type);
+      console.log('updating Data :',  dataName + ' ' + type, data);
 
       if (typeof type == 'undefined')
       {
