@@ -667,6 +667,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
             {
                return 0; 
             }
+            return $number;
         }
         else
           return false;
