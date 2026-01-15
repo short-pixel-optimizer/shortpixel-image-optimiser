@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 4.8.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 6.4.1
+Stable tag: 6.4.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -487,6 +487,25 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 14. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 6.4.2 =
+
+📊 The Optimization Update
+
+Release Date: January 15, 2026
+
+🛠️ Fixes & Improvements
+
+* Media Library Optimization Display: Fixed an issue where optimized images were always shown as "bonus optimization" — the stats now reflect actual results.
+* Bulk UI Improvements: Cleaned up the layout of the bulk processing screen when only a few options are selected, for a more focused experience.
+* Percentace Hidden for Non-Optimization Actions: Removed the optimization percentage display when running bulk operations like restore or data migration (that don't involve actual image optimization).
+* AVIF via .htaccess for WebPs: Added support for AVIF delivery using the .htaccess method for images added directly in the WebP format.
+* AI SEO Preview Fix: Prevented display of incorrect data in the AI SEO Preview section within plugin settings.
+* SmartCrop Percentage Display: Fixed the issue where SmartCrop could show a negative improvement percentage if the cropped image ended up larger in size.
+* JPG to PNG Conversion Fix: Resolved a rare error when JPG files saved as PNG conflicted with the PNG-to-JPG conversion setting.
+* Text & Typo Corrections: Polished various texts and corrected typos on the Bulk and Settings pages.
+
+Update now for clearer stats, smarter previews, and a smoother optimization experience across the board! 🚀
 
 = 6.4.1 =
 
