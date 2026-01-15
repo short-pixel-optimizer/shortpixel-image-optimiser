@@ -1283,21 +1283,28 @@ section.panel.finished {
       //  margin: 15px auto;
       //   max-width: 300px;
 
+      > span 
+      {
+        z-index: 10;
+        &:last-child{
+           margin-right: 5%; 
+        }
+      }
+
       [data-result="filename"] {
         overflow: hidden;
         font-weight: 700;
         margin-top: -5px;
         color: #000;
-        z-index: 10;
       }
+
 
       .opt-circle-image {
         width: 45px;
         height: 45px;
         float: right;
         margin-top: 1px;
-        margin-right: 5%;
-        z-index: 1;
+
 
         //margin-right: 35px;
         .trail {

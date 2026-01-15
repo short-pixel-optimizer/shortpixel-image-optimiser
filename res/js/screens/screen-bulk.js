@@ -430,7 +430,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
             if (resultItem.improvements && resultItem.improvements.totalpercentage)
             {
                 // Opt-Circle-Image is average of the file itself.
-                var circle = document.querySelector('.opt-circle-image');
+                var circle = imagePreviewSection.querySelector('.opt-circle-image');
 
                 var total_circle = 289.027;
                 if(resultItem.improvements.totalpercentage >0 ) {
