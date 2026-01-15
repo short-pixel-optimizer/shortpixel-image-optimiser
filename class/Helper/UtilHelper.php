@@ -236,21 +236,23 @@ class UtilHelper
            ##### Directives for delivering AVIF files, if they exist #####
            # Does the browser support avif?
            RewriteCond %{HTTP_ACCEPT} image/avif
-           # AND is the request a jpg or png? (also grab the basepath %1 to match in the next rule)
-           RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png|gif)$
+           # AND is the request a JPG, PNG, or WebP? (no GIFs because the animation is sometimes lost in AVIF);
+		   # (also grab the basepath %1 to match in the next rule)
+           RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png|webp)$
            # AND does a .avif image exist?
            RewriteCond %{DOCUMENT_ROOT}/%1.avif -f
            # THEN send the avif image and set the env var avif
-           RewriteRule (.+)\.(?:jpe?g|png)$ $1.avif [NC,T=image/avif,E=avif,L]
+           RewriteRule (.+)\.(?:jpe?g|png|webp)$ $1.avif [NC,T=image/avif,E=avif,L]
 
-					 # Does the browser support avif?
-					 RewriteCond %{HTTP_ACCEPT} image/avif
-					 # AND is the request a jpg or png? (also grab the basepath %1 to match in the next rule)
-					 RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png|gif)$
-					 # AND does a .jpg.avif image exist?
-					 RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI}.avif -f
-					 # THEN send the avif image and set the env var avif
-					 RewriteRule ^(.+)$ $1.avif [NC,T=image/avif,E=avif,L]
+           # Does the browser support avif?
+           RewriteCond %{HTTP_ACCEPT} image/avif
+           # AND is the request a JPG, PNG, or WebP? (no GIFs because the animation is sometimes lost in AVIF);
+		   # (also grab the basepath %1 to match in the next rule)
+           RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png|webp)$
+           # AND does a .jpg.avif image exist?
+           RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI}.avif -f
+           # THEN send the avif image and set the env var avif
+           RewriteRule ^(.+)$ $1.avif [NC,T=image/avif,E=avif,L]
 
            </IfModule>
            <IfModule mod_headers.c>
@@ -258,11 +260,11 @@ class UtilHelper
            Header append Vary Accept env=REDIRECT_avif
 
            <FilesMatch ".(webp)$">
-              Header set Cache-Control "max-age=31536000, public"
+               Header set Cache-Control "max-age=31536000, public"
            </FilesMatch>
            </IfModule>
            <IfModule mod_mime.c>
-           AddType image/avif .avif
+               AddType image/avif .avif
            </IfModule>
                  ';
 
@@ -272,13 +274,13 @@ class UtilHelper
              ##### TRY FIRST the file appended with .webp (ex. test.jpg.webp) #####
              # Is the browser Chrome?
              RewriteCond %{HTTP_USER_AGENT} Chrome [OR]
-             # OR Is request from Page Speed
+             # OR Is this request from Page Speed
              RewriteCond %{HTTP_USER_AGENT} "Google Page Speed Insights" [OR]
              # OR does this browser explicitly support webp
              RewriteCond %{HTTP_ACCEPT} image/webp
              # AND NOT MS EDGE 42/17 - doesnt work.
              RewriteCond %{HTTP_USER_AGENT} !Edge/17
-             # AND is the request a jpg, png or gif?
+             # AND is the request a jpg, png, or gif?
              RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png|gif)$
              # AND does a .ext.webp image exist?
              RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI}.webp -f
@@ -289,7 +291,7 @@ class UtilHelper
              RewriteCond %{HTTP_USER_AGENT} "Google Page Speed Insights" [OR]
              RewriteCond %{HTTP_ACCEPT} image/webp
              RewriteCond %{HTTP_USER_AGENT} !Edge/17
-             # AND is the request a jpg, png or gif? (also grab the basepath %1 to match in the next rule)
+             # AND is the request a jpg, png, or gif? (also grab the basepath %1 to match in the next rule)
              RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png|gif)$
              # AND does a .webp image exist?
              RewriteCond %{DOCUMENT_ROOT}/%1.webp -f
@@ -299,9 +301,9 @@ class UtilHelper
            <IfModule mod_headers.c>
              # If REDIRECT_webp env var exists, append Accept to the Vary header
              Header append Vary Accept env=REDIRECT_webp
-              <FilesMatch ".(avif)$">
-                Header set Cache-Control "max-age=31536000, public"
-              </FilesMatch>
+             <FilesMatch ".(avif)$">
+               Header set Cache-Control "max-age=31536000, public"
+             </FilesMatch>
            </IfModule>
            <IfModule mod_mime.c>
              AddType image/webp .webp

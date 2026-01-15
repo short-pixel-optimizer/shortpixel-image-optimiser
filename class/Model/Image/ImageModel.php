@@ -655,10 +655,19 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
               return null;
 
             if (! $int)
-              return round(100.0 * (1.0 - $optimized / $original), 2);
+            {
+              $number = round(100.0 * (1.0 - $optimized / $original), 2);
+            }
             else
-              return $original - $optimized;
+            {
+              $number =  $original - $optimized;
+            }
 
+            if ($number < 0) // It can be optimized in smaller in some cases with smartcrop etc
+            {
+               return 0; 
+            }
+            return $number;
         }
         else
           return false;
@@ -784,9 +793,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
             }
             elseif (isset($tempFile))
             {
+                $optimizedSize  = $tempFile->getFileSize();
                 $copyok = $tempFile->move($this);
                 $this->setImageSize();
-                $optimizedSize  = $tempFile->getFileSize();
             }
           } // else
 

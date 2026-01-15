@@ -209,7 +209,7 @@
         .close {
           position: absolute;
           right: 10px;
-          top: 3px;
+          top: 6px;
           color: white;
           font-size: 18px;
           font-weight: 700;
@@ -259,7 +259,7 @@
     
             >div>span {
               display: table-cell;
-              padding: 4px 8px;
+              padding: 8px;
     
               &:first-child {
                 white-space: nowrap;

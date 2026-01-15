@@ -477,10 +477,11 @@ class PNGConverter extends MediaLibraryConverter
 			$image = new Image($imagePath, $replacementPath); 
 			$image->loadImageResource();
 
-		//	$image = @imagecreatefrompng($imagePath);
-			if (false === $image)
-			{
+			$bool = $image->checkImageLoaded();
 
+		//	$image = @imagecreatefrompng($imagePath);
+			if (false === $bool)
+			{
 				$msg = __('Image source failed - Check if source image is PNG and library is working', 'shortpixel-image-optimiser');
 				$this->imageModel->getMeta()->convertMeta()->setError(self::ERROR_LIBRARY);
 				ResponseController::addData($this->imageModel->get('id'), 'message', $msg);
