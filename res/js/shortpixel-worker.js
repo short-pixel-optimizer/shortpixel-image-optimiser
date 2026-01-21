@@ -163,7 +163,4 @@ var SpWorker = {
       this.action = 'shortpixel_image_processing';
       this.Fetch(data);
    }
-
-
-
 } // worker

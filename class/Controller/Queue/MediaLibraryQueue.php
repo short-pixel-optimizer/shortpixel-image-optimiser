@@ -189,7 +189,7 @@ class MediaLibraryQueue extends Queue
      $last_id = $this->getStatus('last_item_id');
 
      $limit = $this->q->getOption('enqueue_limit');
-     $prepare = array();
+     $prepare = [];
      global $wpdb;
 
      $sql = 'SELECT distinct attach_id from ' . $wpdb->prefix . 'shortpixel_postmeta where status = %d ';
@@ -208,7 +208,7 @@ class MediaLibraryQueue extends Queue
 
      $results = $wpdb->get_col($sql);
 
-     $items = array();
+     $items = [];
 
      foreach($results as $item_id)
      {
@@ -216,7 +216,6 @@ class MediaLibraryQueue extends Queue
      }
 
      return array_filter($items);
-
    }
 
 
@@ -255,7 +254,6 @@ class MediaLibraryQueue extends Queue
   
        return array_filter($items);
   
-
    }
 
 }

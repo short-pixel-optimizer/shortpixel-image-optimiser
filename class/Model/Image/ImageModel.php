@@ -1073,7 +1073,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     {
         if ($this->hasBackup())
         {
-
            $file = $this->getBackupFile();
            $file->delete();
         }
@@ -1091,7 +1090,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
            $avif->delete();
         }
     }
-
 
     protected function handleWebp(FileModel $tempFile)
     {
@@ -1133,7 +1131,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
          return false;
     }
-
 
     protected function handleAvif(FileModel $tempFile)
     {

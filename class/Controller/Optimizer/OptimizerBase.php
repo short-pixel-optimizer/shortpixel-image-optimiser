@@ -23,7 +23,7 @@ abstract class OptimizerBase
     protected $currentQueue;  // trying to keep minimum, but optimize needs to speak to queue for items.
     protected $queueController; // Needed to keep track of bulk /non-bulk
 
-    public abstract function enqueueItem(QueueItem $qItem, $args = []);
+    public abstract function enqueueItem(QueueItem $qItem, $args = []); // Enqueue Single Item (not for bulk)
     public abstract function handleAPIResult(QueueItem $qItem);
     protected abstract function HandleItemError(QueueItem $qItem);
     public abstract function sendToProcessing(QueueItem $qItem);

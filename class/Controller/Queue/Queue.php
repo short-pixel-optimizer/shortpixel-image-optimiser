@@ -170,7 +170,6 @@ abstract class Queue
               $prepared = $this->prepare();
             }
 
-
             $result->qstatus = self::RESULT_PREPARING;
             $result->items = $prepared['items']; // number of items.
             $result->images = $prepared['images'];
@@ -368,7 +367,6 @@ abstract class Queue
 						$operation = false;
 
           $i = 0;
-
           $customData = $this->getStatus('custom_data');
 
           // maybe while on the whole function, until certain time has elapsed?
@@ -395,9 +393,7 @@ abstract class Queue
 										continue;
 								}
 
-
                 $mediaItem = $fs->getImage($item_id, $this->getType() );
-
 
             //checking if the $mediaItem actually exists
             if ( is_object($mediaItem) ) {
@@ -545,8 +541,6 @@ abstract class Queue
           $this->q->additems($queue);
           $numitems = $this->q->enqueue();
 
-         // Log::addTemp('CustomData', $customData);
-
           if (true === $counterUpdated)
           {
             $this->q->setStatus('custom_data', $customData, false);
@@ -563,7 +557,6 @@ abstract class Queue
 					*/
           $return['results'] = count($items); // This is the return of the query. Preparing should not be 'done' before the query ends, but it can return 0 on the qcount if all results are already optimized.
 
-          //Log::addTemp('ImageCount '  . $customData->baseCount . ' added : ' . $baseCount .  ' leading to ', $return);
           return $return; // only return real amount.
     }
 
@@ -774,7 +767,7 @@ abstract class Queue
 //        $item->tries = $qItem->tries;
 
         $item = QueueItems::getEmptyItem($qItem->item_id, $this->getType());
-        $item->setFromData($qItem->value);
+        $item->setFromQueueData($qItem->value);
         $item->setData('tries', $qItem->tries);
         $item->setData('queue_list_order', $qItem->list_order);
         $item->data()->addKeepDataArgs('queue_list_order'); 

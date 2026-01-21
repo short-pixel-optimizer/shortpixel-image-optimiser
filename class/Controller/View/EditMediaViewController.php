@@ -269,14 +269,10 @@ class EditMediaViewController extends \ShortPixel\ViewController
 						 $debugInfo[] = array(__('To Optimize URLS'),  $urls);
 					}
 
-
           $item = QueueItems::getImageItem($imageObj);
 
           if ($imageObj->isProcessable())
 					{
-						// $queueControl = new QueueController();
-
-
              $item->setDebug();
              $item->newOptimizeAction();
 
@@ -299,11 +295,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
             if (true === $aiDataModel->isProcessable())
             {
-              //$item->requestAltAction();
-             // $optimizeAiController->parseJsonForQItem($item); 
-              $debugInfo[] = ['Ai - Paramlist ', $aiDataModel->getOptimizeData() ];
-   //           $debugInfo[] = ['Ai - returnDataList' , $item->data()->returndatalist];
-              
+              $debugInfo[] = ['Ai - Paramlist ', $aiDataModel->getOptimizeData() ];            
             }
             else
             {
@@ -315,8 +307,6 @@ class EditMediaViewController extends \ShortPixel\ViewController
             }
 
           }
-
-
 
           $debugInfo['imagemetadata'] = array(__('ImageModel Metadata (ShortPixel)'), $imageObj);
 					$debugInfo[] = array('', '<hr>');
@@ -339,8 +329,6 @@ class EditMediaViewController extends \ShortPixel\ViewController
             $debugInfo[] = array( $backupText, (string) $backupFile . '(' . UiHelper::formatBytes($backupFile->getFileSize()) . ')' );
 
             $debugInfo[] =  array(__("No Main File Backup Available"), '');
-
-
 
 					if ($imageObj->getMeta()->convertMeta()->isConverted())
 					{

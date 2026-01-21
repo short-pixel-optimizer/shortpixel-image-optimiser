@@ -77,7 +77,6 @@ class ActionController extends OptimizerBase
    */
   public function enqueueItem(QueueItem $qItem, $args = [])
   {
-      
    $queue = $this->getCurrentQueue($qItem);
    $directAction = true; // By default, execute Actions directly ( not via queue sys )
    
@@ -93,7 +92,6 @@ class ActionController extends OptimizerBase
       break; 
    }
 
-
     if (true === $directAction)
     {
        // The directActions give back booleans, but the whole function must return an queue result object with qstatus and numitems
@@ -108,21 +106,18 @@ class ActionController extends OptimizerBase
          $result->qstatus = Queue::RESULT_EMPTY;
          $result->numitems = 1;
       }
-
     }
     else
     {
       $result = $queue->addQueueItem($qItem);
     }
 
-   
     return $result;
   }
 
   /**
    * Try to convert a PNGfile to JPG. This is done on the local server.  The file should be converted and then re-added to the queue to be processed as a JPG ( if success ) or continue as PNG ( if not success )
    * @param  Object $item                 Queued item
-   * @param  Object $mediaQ               Queue object
    * @return boolean Returns success status.
    */
   // @todo Via actions to Optimizers
@@ -192,7 +187,6 @@ class ActionController extends OptimizerBase
     $queueController = $this->getQueueController();
     $result = $queueController->addItemToQueue($imageObj, $keepData );
  
-
     return $bool;
   }
 

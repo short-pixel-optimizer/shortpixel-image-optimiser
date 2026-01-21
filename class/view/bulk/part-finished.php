@@ -11,7 +11,6 @@ if ( ! defined( 'ABSPATH' ) ) {
   
   <?php $this->loadView('bulk/part-progressbar', false, ['part' => 'finished']); ?>
 
-
       <div class='average-optimization shortpixel-hide'>
           <p><?php esc_html_e('Your images are now this much smaller on average: ','shortpixel-image-optimiser'); ?></p>
           <svg class="opt-circle-average" viewBox="-10 0 130 100">

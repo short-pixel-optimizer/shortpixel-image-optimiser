@@ -22,15 +22,12 @@ use ShortPixel\Controller\Api\ApiController as ApiController;
 
 use ShortPixel\Helper\UiHelper as UiHelper;
 
-
-
-// Controls,  the glue between the Queue and the Optimisers.
+// Controller,  the glue between the Queue and the Optimizers.
 class QueueController
 {
 
   const IN_QUEUE_ACTION_ADDED = 1; 
   const IN_QUEUE_SKIPPED = 2; 
-
 
   protected static $lastId; // Last item_id received / send. For catching errors.
   protected $lastQStatus; // last status for reporting purposes.
@@ -282,7 +279,7 @@ class QueueController
           $json->message =   __('Quota Exceeded','shortpixel-image-optimiser');
           return $json;
         }
-      }
+      } // No Quota Check 
 
       // @todo Here prevent bulk from running when running flag is off
       // @todo Here prevent a runTick is the queue is empty and done already ( reliably )
@@ -356,7 +353,6 @@ class QueueController
           $apiController = $qItem->getAPIController($action);
           $send_to_processing = true; 
 
-
           if (is_null($apiController))
           {
             Log::addError('No optimiser found for this action, or action missing!', $qItem);
@@ -377,7 +373,8 @@ class QueueController
           $item_id = $qItem->item_id;
           $imageModel = (! is_null($qItem->imageModel)) ? $qItem->imageModel : $fs->getImage($item_id, $qtype);
           
-          if (is_object($imageModel))
+          // Set the ImageModel if not set. 
+          if (is_null($qItem->imageModel) && is_object($imageModel))
           {
             $qItem->setModel($imageModel);
           }
@@ -405,7 +402,6 @@ class QueueController
             ResponseController::addData($item_id, 'fileName', $imageModel->getFileName());
 
             $send_to_processing = false; 
-
           }
           else
           {
@@ -447,7 +443,7 @@ class QueueController
    * Get Queue Object for adding items to it.  This is dependent on the type of image. 
    *
    * @param [string] $type
-   * @return Object|boolean Queue object
+   * @return Object|boolean Queue object, false if wrong type was given
    */
   public function getQueue($type)
   {
@@ -469,7 +465,7 @@ class QueueController
         return false;
       }
 
-      $options = $queue->getCustomDataItem('queueOptions');
+      $options = $queue->getOptions();
       if ($options !== false)
       {
           $queue->setOptions($options);
@@ -497,15 +493,12 @@ class QueueController
     $json->status = null;
     $json->result = null;
     $json->results = null;
-//      $json->actions = null;
-  //  $json->has_error = false;// probably unused
     $json->message = null;
 
     return $json;
   }
 
-  /** f a result Queue Stdclass to a JSON send Object */
-  // Q
+  /** If a result Queue Stdclass to a JSON send Object */
   protected function queueToJson($result, $json = false)
   {
       if (! $json)
@@ -541,7 +534,6 @@ class QueueController
         break;
       }
       $json->qstatus = $result->qstatus;
-      //$json->
 
       if (property_exists($result, 'stats'))
         $json->stats = $result->stats;
@@ -574,7 +566,10 @@ class QueueController
       }
   }
 
-  // Q
+  /** On Uninstall plugin, remove all queue data of this plugin
+   * 
+   * @return void 
+   */
   public static function uninstallPlugin()
   {
 
@@ -659,8 +654,9 @@ class QueueController
              }
              elseif(is_bool($object->stats->$key))
              {
-                // True > False in total since this status is true for one of the items.
-                if ($value === true && $object->stats->$key === false)
+                // True > False in total since this status is true for one of the items. Except for is_finished, only when BOTH are finished. 
+                // @todo This logic should perhaps be revised somehow. 
+                if ($value === true && $object->stats->$key === false && $key !== 'is_finished')
                    $object->stats->$key = true;
              }
              elseif (is_object($object->stats->$key)) // bulk object, only numbers.
@@ -704,10 +700,6 @@ class QueueController
                }
 
               $results->$qn->stats->$key = $value;
-            /*	if (! property_exists($results->$qn->stats, 'raw'))
-                $results->$qn->stats->raw = new \stdClass;
-
-              $results->$qn->stats->raw->$key = $raw_value; */
           }
         }
      }
@@ -830,8 +822,6 @@ class QueueController
   private function logBulk(QueueItem $qItem)
   {
     $item_id = $qItem->item_id;
-   // $responseItem = ResponseController::getResponseItem($item_id);
-
     $type = (is_object($qItem->imageModel)) ? $qItem->imageModel->get('type') : false;
 
     if (false === $type)
