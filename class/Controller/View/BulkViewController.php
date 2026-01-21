@@ -260,7 +260,7 @@ class BulkViewController extends \ShortPixel\ViewController
 
           if ($logFile->exists())
 					{
-            $errors = '<a data-action="OpenLog" data-file="' . $logFile->getFileName() . '" href="' . $fs->pathToUrl($logFile) . '">' . $errors . '</a>';
+            $errors = '<a data-action="OpenLog" data-file="' . $logFile->getFileBase() . '" href="' . $fs->pathToUrl($logFile) . '">' . $errors . '</a>';
 					}
 
 					$op = (isset($logData['operation'])) ? $logData['operation'] : false;

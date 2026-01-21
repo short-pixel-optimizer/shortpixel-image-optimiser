@@ -1676,7 +1676,7 @@ class AjaxController
 
 	protected function loadLogFile($json, $data)
 	{
-		$logFile = $data['logFile'];
+		$logFile = $data['logFile'] . '.log';
 		$type = $data['type'];
 		$fs = \wpSPIO()->filesystem();
 
@@ -1694,7 +1694,7 @@ class AjaxController
 
 		$json->$type->logType = $logType;
 
-		if (! $log) {
+		if (false === $log) {
 			$json->$type->is_error = true;
 			$json->$type->result = __('Log file does not exist', 'shortpixel-image-optimiser');
 			return $json;

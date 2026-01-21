@@ -1225,14 +1225,15 @@ class ShortPixelScreen extends ShortPixelScreenBase
 			return [modal, title, content, wrapper];
 	}
 
-	ShowLogModal(event)
+	ShowLogModal(event) 
 	{
 			var log = event.detail.log;
 
 			if (log.is_error == true)
 			{
 				console.error(log);
-				this.CloseModal();
+				this.CloseModal(event);
+        return;
 			}
 
 			var shade = document.getElementById('LogModal-Shade');
@@ -1310,7 +1311,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
 
 	CloseModal(event)
 	{
-		 event.preventDefault();
+		 event.preventDefault(); // event can be multiple events. 
  		 var modal = document.getElementById('LogModal');
 		 modal.classList.add('shortpixel-hide');
 
