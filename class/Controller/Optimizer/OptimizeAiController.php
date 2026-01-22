@@ -5,9 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
-
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Model\Queue\QueueItem as QueueItem;
 use ShortPixel\Controller\Api\RequestManager as RequestManager;
@@ -18,7 +16,6 @@ use ShortPixel\Controller\Queue\QueueItems as QueueItems;
 use ShortPixel\Model\AiDataModel;
 use ShortPixel\Replacer\Replacer;
 use ShortPixel\ViewController as ViewController;
-
 
 // Class for AI Operations.  In time split off OptimizeController / Optimize actions to a main queue runner seperately.
 class OptimizeAiController extends OptimizerBase
@@ -740,12 +737,6 @@ public function getAltData(QueueItem $qItem)
     $metadata['action'] = $qItem->data()->action;
     $metadata['item_id'] = $item_id;
 
-    $metadata['labels'] = [
-      'alt' => __('Alt', 'shortpixel-image-optimiser'), 
-      'caption' => __('Caption', 'shortpixel-image-optimiser'), 
-      'description' => __('Description', 'shortpixel-image-optimiser'), 
-      'post_title' =>  __('Image Title' , 'shortpixel-image-optimiser'), 
-    ];
 
     return $metadata; 
 }
@@ -755,6 +746,13 @@ public function formatGenerated($generated, $current, $original, $isPreview = fa
     
   $fields = ['alt', 'caption', 'description', 'post_title'];
   $dataItems = []; 
+
+  $labels = [
+    'alt' => __('Alt', 'shortpixel-image-optimiser'), 
+    'caption' => __('Caption', 'shortpixel-image-optimiser'), 
+    'description' => __('Description', 'shortpixel-image-optimiser'), 
+    'post_title' =>  __('Image Title' , 'shortpixel-image-optimiser'), 
+  ];
 
   // Statii from AiDataModel which means generated is not available (replace for original/current?) 
   $statii = [AiDataModel::F_STATUS_PREVENTOVERRIDE, AiDataModel::F_STATUS_EXCLUDESETTING];
@@ -770,7 +768,8 @@ public function formatGenerated($generated, $current, $original, $isPreview = fa
 
        if (false === is_null($value) && false === is_int($value) && strlen($value) > 1)
        {
-          $dataItems[] = ucfirst($name); 
+
+          $dataItems[] = isset($labels[$name]) ? $labels[$name] : ucfirst($name); 
        }
        if (is_int($value) && in_array($value, $statii))
        {

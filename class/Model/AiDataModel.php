@@ -141,9 +141,9 @@ class AiDataModel
         if (true === $settings->aiPreserve)
         {
             $currentData = $this->getCurrentData(); 
-            $ignore_fields = array_keys(array_filter($currentData));
+            $ignore_fields = array_diff(array_keys( array_filter($currentData) ), ['post_title']);
+            // Exception via array_diff :: post_title always overwrite because it is always filled
         }
-
 
        // $fields = ['ai_gen_alt', 'ai_gen_caption', 'ai_gen_description', 'ai_gen_filename']; 
         $fields = ['alt', 'caption', 'description', 'filename', 'post_title']; 
