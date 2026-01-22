@@ -117,7 +117,7 @@ abstract class AdminNoticeModel
        case 'error':
         $notice = Notices::addError($this->getMessage());
        break;
-			 case 'normal';
+			 case 'normal':
 			 default:
 			 	$notice = Notices::addNormal($this->getMessage());
 

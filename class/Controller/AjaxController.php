@@ -331,7 +331,7 @@ class AjaxController
 				$this->checkActionAccess($action, 'is_editor');
 				$json = $this->scanNextFolder($json, $data);
 				break;
-			case 'resetScanFolderChecked';
+			case 'resetScanFolderChecked':
 				$this->checkActionAccess($action, 'is_editor');
 				$json = $this->resetScanFolderChecked($json, $data);
 				break;
