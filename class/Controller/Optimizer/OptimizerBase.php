@@ -151,6 +151,7 @@ abstract class OptimizerBase
     {
         $queue = $this->getCurrentQueue($qItem); 
         $fs = \wpSPIO()->filesystem();
+        
         // If the action is passed as direct action / out of queue, there might be no queueItem in DB
         if (is_object($qItem->getQueueItem()))
         {

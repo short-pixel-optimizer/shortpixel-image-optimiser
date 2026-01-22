@@ -451,12 +451,12 @@ class QueueController
 
       if ($type == 'media')
       {
-          $queueName = ($this->args['is_bulk'] == true) ? 'media' : 'mediaSingle';
+          $queueName = (true == $this->args['is_bulk']) ? 'media' : 'mediaSingle';
           $queue = new MediaLibraryQueue($queueName);
       }
       elseif ($type == 'custom')
       {
-        $queueName = ($this->args['is_bulk'] == true) ? 'custom' : 'customSingle';
+        $queueName = (true == $this->args['is_bulk']) ? 'custom' : 'customSingle';
         $queue = new CustomQueue($queueName);
       }
       else

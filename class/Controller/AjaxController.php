@@ -159,7 +159,7 @@ class AjaxController
 
 		// Notice that POST variables are always string, so 'true', not true.
 		// phpcs:ignore -- Nonce is checked
-		$isBulk = (isset($_POST['isBulk']) && $_POST['isBulk'] === 'true') ? true : false;
+		$isBulk = (isset($_POST['isBulk']) && $_POST['isBulk'] == 'true') ? true : false;
 		// phpcs:ignore -- Nonce is checked
 		$queue = (isset($_POST['queues'])) ? sanitize_text_field($_POST['queues']) : 'media,custom';
 

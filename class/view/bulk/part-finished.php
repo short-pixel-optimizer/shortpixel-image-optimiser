@@ -44,7 +44,7 @@ if ( ! defined( 'ABSPATH' ) ) {
       </div>
 		<span class='hidden' data-check-media-total data-stats-media="total">0</span>
 
-    <span class='hidden' data-check-media-customOperation data-stats-media="isCustomOperation">-1</span>
+    <span class='hidden' data-check-media-customOperation data-stats-total="isCustomOperation">-1</span>
 
 		<div class='bulk-summary' data-check-visibility="false" data-control='data-check-media-customOperation'>
 		<p class='finished-paragraph'>
