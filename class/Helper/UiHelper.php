@@ -503,7 +503,6 @@ class UiHelper
 
 		$access = AccessModel::getInstance();
 
-
     if (! $keyControl->keyIsVerified())
     {
       $text = __('Invalid API Key. <a href="options-general.php?page=wp-shortpixel-settings">Check your Settings</a>','shortpixel-image-optimiser');

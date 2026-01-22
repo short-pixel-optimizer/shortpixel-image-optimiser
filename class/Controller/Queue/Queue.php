@@ -804,16 +804,18 @@ abstract class Queue
 		{
         if (isset(self::$isInQueue[$item_id]))
         {
-           return self::$isInQueue[$item_id];
+           $itemObj = self::$isInQueue[$item_id];
         }
-
-				$itemObj = $this->q->getItem($item_id);
-        self::$isInQueue[$item_id] = $itemObj; // cache this, since interface requests this X amount of times.
+        else
+        {
+          $itemObj = $this->q->getItem($item_id);
+          self::$isInQueue[$item_id] = $itemObj; // cache this, since interface requests this X amount of times.  
+        }
 
 				$notQ = array(ShortQ::QSTATUS_DONE, ShortQ::QSTATUS_FATAL);
 				if (is_object($itemObj) && in_array(floor($itemObj->status), $notQ) === false )
 				{
-					return true;
+          return true;
 				}
 				return false;
 		}

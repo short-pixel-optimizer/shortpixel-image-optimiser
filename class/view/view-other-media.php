@@ -80,7 +80,6 @@ $this->loadView('custom/part-othermedia-top');
 
         foreach($this->view->items as $item):
 
-
         ?>
 
         <div class='item item-<?php echo esc_attr($item->get('id')) ?>'>
@@ -145,7 +144,8 @@ $this->loadView('custom/part-othermedia-top');
 								   	<a href="<?php echo $link ?>" <?php echo esc_attr($newtab); ?> class="<?php echo $classes ?>"><?php echo $action['text'] ?></a>
 								    <?php
 										$i++;
-								  endforeach;UiHelper::getActions($item);
+								  endforeach;
+                  UiHelper::getActions($item);
 
 								endif;
                 ?>
