@@ -243,7 +243,8 @@ class OptimizeAiController extends OptimizerBase
     }
     
 
-    $textItems = ['alt', 'caption', 'description', 'post_title'];
+    // removed  'post_title' here because in image title doens't look good. 
+    $textItems = ['alt', 'caption', 'description'];
     foreach($textItems as $textItem)
     {
       
