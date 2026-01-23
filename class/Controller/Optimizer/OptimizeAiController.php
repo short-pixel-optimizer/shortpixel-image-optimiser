@@ -266,6 +266,18 @@ class OptimizeAiController extends OptimizerBase
     return $aiData; 
   }
 
+  private function getDataLabels()
+  {
+    $labels = [
+      'alt' => __('Alt', 'shortpixel-image-optimiser'), 
+      'caption' => __('Caption', 'shortpixel-image-optimiser'), 
+      'description' => __('Description', 'shortpixel-image-optimiser'), 
+      'post_title' =>  __('Image Title' , 'shortpixel-image-optimiser'), 
+    ];
+
+    return $labels;
+  }
+
   protected function HandleSuccess(QueueItem $qItem)
   {
         $aiData = $qItem->result()->aiData;  
@@ -316,9 +328,8 @@ class OptimizeAiController extends OptimizerBase
         $data = $this->getAltData($qItem); 
         $qItem->addResult(['aiData' => $data['generated']]); // But the generated data in the result.
 
-        // For Bulk, add labels to display in the result set. Default is same as data, can be overridden
-        $qItem->addResult(['aiDataLabels' => $data['labels']
-        ]);
+        // For Bulk, add labels to display in the result set. Default is same as data, can be overridden . Used in Bulk JS
+        $qItem->addResult(['aiDataLabels' => $this->getDataLabels()  ]);
 
         $this->finishItemProcess($qItem);
         return;
@@ -737,7 +748,7 @@ public function getAltData(QueueItem $qItem)
     $metadata['current'] = $current; 
     $metadata['action'] = $qItem->data()->action;
     $metadata['item_id'] = $item_id;
-
+    $metadata['labels']  = $dataItems; // Used in bulk JS 
 
     return $metadata; 
 }
@@ -748,12 +759,7 @@ public function formatGenerated($generated, $current, $original, $isPreview = fa
   $fields = ['alt', 'caption', 'description', 'post_title'];
   $dataItems = []; 
 
-  $labels = [
-    'alt' => __('Alt', 'shortpixel-image-optimiser'), 
-    'caption' => __('Caption', 'shortpixel-image-optimiser'), 
-    'description' => __('Description', 'shortpixel-image-optimiser'), 
-    'post_title' =>  __('Image Title' , 'shortpixel-image-optimiser'), 
-  ];
+  $labels = $this->getDataLabels();
 
   // Statii from AiDataModel which means generated is not available (replace for original/current?) 
   $statii = [AiDataModel::F_STATUS_PREVENTOVERRIDE, AiDataModel::F_STATUS_EXCLUDESETTING];
@@ -775,7 +781,9 @@ public function formatGenerated($generated, $current, $original, $isPreview = fa
        if (is_int($value) && in_array($value, $statii))
        {
          // If preview don't fall back on other stuff, just leave it empty. 
-          if (true === $isPreview)
+          $value = __('AI generation disabled', 'shortpixel-image-optimiser');
+
+          /*if (true === $isPreview)
           {
              $value = ''; 
           }
@@ -786,7 +794,7 @@ public function formatGenerated($generated, $current, $original, $isPreview = fa
           elseif(isset($original[$name]))
           {
                $value = $original[$name];
-          }
+          } */
           $generated[$name] = $value;
        }
   } 
