@@ -1474,7 +1474,7 @@ section.panel.finished {
 
   .spio-progressbar .result {
     .line {
-      @include line-active();
+      background: linear-gradient(90deg, #1fbec9 0%, #1fbec9 49.9%, white 50%, white 100%);
     }
 
 
