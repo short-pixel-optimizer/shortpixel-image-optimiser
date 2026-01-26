@@ -281,14 +281,14 @@ class OptimizeAiController extends OptimizerBase
   protected function HandleSuccess(QueueItem $qItem)
   {
         $aiData = $qItem->result()->aiData;  
-        $settings = \wpSPIO()->settings();
+        // $settings = \wpSPIO()->settings();
 
-        $checks = ['alt' => 'ai_gen_alt', 
+        /* $checks = ['alt' => 'ai_gen_alt', 
         'caption' => 'ai_gen_caption', 
         'description' => 'ai_gen_description',
         'filename' => 'ai_gen_filename',
         'post_title' => 'ai_gen_post_title', 
-        ];
+        ]; */
 
         $aiData = $this->formatResultData($aiData, $qItem);
 

@@ -502,4 +502,69 @@ class FileSystemController extends \ShortPixel\Controller
       DirectoryModel::$TRUSTED_MODE = false;
     }
   }
-}
+
+  public function moveLogFiles($args = [])
+  {
+    $defaults = [
+      'to_temp' => true, 
+    ];
+
+    $args = wp_parse_args($args, $defaults); 
+
+    $tempDir = trailingslashit(sys_get_temp_dir());
+    $tmpLocation = $tempDir . 'logmove'; 
+
+    if (true === $args['to_temp'])
+    {
+      $sourcePath = SHORTPIXEL_BACKUP_FOLDER; 
+      $targetPath = $tmpLocation;
+    }
+    else
+    {
+      $sourcePath = $tmpLocation; 
+      $targetPath = SHORTPIXEL_BACKUP_FOLDER;
+    }
+
+    $logFiles = $files = glob(trailingslashit($sourcePath) . "*.log");
+
+
+
+    if (false !== $logFiles && is_array($logFiles) && count($logFiles) > 0)
+    {
+        $sourceDir = $this->getDirectory($sourcePath);
+        $sourceDir->check(); // Check if not create, will be needed if backup dir is removed. 
+    
+        $destinationDir = $this->getDirectory($targetPath);
+        $destinationDir->check();
+
+       foreach($logFiles as $filePath)
+       {
+         $file = $this->getFile($filePath); 
+         $fileName = $file->getFileName(); 
+         
+         $targetFile = $this->getFile($destinationDir->getPath() . $fileName); 
+
+         $bool = $file->move($targetFile); 
+         
+         if ( false === $bool )
+         {
+           Log::addWarn('FAILED moving LogFile from '  . $file->getFullPath() . ' to ' . $targetFile->getFullPath());
+         }
+         else
+         {
+          Log::addInfo('LogFile moved from '  . $file->getFullPath() . ' to ' . $targetFile->getFullPath() );
+         }
+       }
+
+    } 
+
+    if (false === $args['to_temp'])
+    {
+       rmdir($tmpLocation); //cleanup
+    }
+
+
+    return false; 
+  }
+
+} // class 

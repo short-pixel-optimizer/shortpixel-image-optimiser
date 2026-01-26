@@ -1700,8 +1700,6 @@ class AjaxController
 			return $json;
 		}
 
-		//	$date = UiHelper::formatTS($log->date);
-		//$logData = $bulkController->getLogData($logFile); // starts from options.
 		$date = (isset($logData['date'])) ? UiHelper::formatTS($logData['date']) : false;
 		$content = trim($log->getContents());
 		$lines = array_filter(explode(';', $content));
@@ -1860,10 +1858,17 @@ class AjaxController
 
 	private function removeBackup($json, $data)
 	{
+		if (wp_verify_nonce($_POST['tools-nonce'], 'empty-backup')) {			
 
-		if (wp_verify_nonce($_POST['tools-nonce'], 'empty-backup')) {
+			$fs = \wpSPIO()->filesystem(); 
+			
+			$fs->moveLogFiles(); 
+
 			$dir = \wpSPIO()->filesystem()->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
-			$dir->recursiveDelete();
+			$dir->recursiveDelete(); 
+
+			$fs->moveLogFiles(['to_temp' => false]);
+
 			$json->settings->results = __('The backups have been removed. You can close the window', 'shortpixel-image-optimiser');
 		} else {
 			$json->settings->results = __('Error: Invalid Nonce in empty backups', 'shortpixel-image-optimiser');
