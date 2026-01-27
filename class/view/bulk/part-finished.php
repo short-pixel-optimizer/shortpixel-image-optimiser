@@ -65,7 +65,7 @@ if ( ! defined( 'ABSPATH' ) ) {
       <div class='heading'>
         <span><i class='dashicons dashicons-images-alt2'>&nbsp;</i> <?php esc_html_e('Media Library','shortpixel-image-optimiser'); ?>
           <?php if (false !== $this->view->customOperationMedia) {
-             echo " - <span class='special-op'>" . $this->view->customOperationMedia . "</span>";
+             echo "</br><span class='special-op'>" . $this->view->customOperationMedia . "</span>";
           } ?>
         </span>
 
@@ -113,7 +113,7 @@ if ( ! defined( 'ABSPATH' ) ) {
       <div class='heading'>
         <span><i class='dashicons dashicons-open-folder'>&nbsp;</i> <?php esc_html_e('Custom Media','shortpixel-image-optimiser'); ?>
           <?php if (false !== $this->view->customOperationCustom) {
-             echo " - <span class='special-op'>" . $this->view->customOperationCustom . "</span>";
+             echo "</br><span class='special-op'>" . $this->view->customOperationCustom . "</span>";
           } ?>
         </span>
         <span>
