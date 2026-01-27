@@ -68,6 +68,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     const P_EXCLUDE_EXTENSION_PDF = 11;
     const P_IMAGE_ZERO_SIZE = 12;
     const P_EXCLUDE_DATE = 13; 
+    const P_EXCLUDE_FILESIZE = 14;
 
 		// For restorable status
 		const P_RESTORABLE = 109;
@@ -204,7 +205,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         (! $this->is_virtual() && ! $this->is_directory_writable() || 
         $this->isPathExcluded() || 
         $this->isExtensionExcluded() || 
-        $this->isSizeExcluded()
+        $this->isSizeExcluded() ||
+        $this->isFileSizeExcluded()
         )
 				|| $this->isOptimizePrevented() !== false
         || ! $this->isFileSizeOK() )
@@ -352,6 +354,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
          case self::P_EXCLUDE_SIZE:
             $message = __('Image Size Excluded', 'shortpixel-image-optimiser');
          break;
+         case self::P_EXCLUDE_FILESIZE: 
+            $message = __('Image Filesize excluded', 'shortpixel-image-optimiser');
+          break;
          case self::P_EXCLUDE_PATH:
             $message = __('Image Excluded', 'shortpixel-image-optimiser');
          break;
@@ -1290,6 +1295,60 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 			 return $bool;
 		}
 
+    private function isFileSizeExcluded()
+    {
+        $excludePatterns = $this->getExcludePatterns();
+
+        if(!$excludePatterns || !is_array($excludePatterns)) { return false; }
+
+        $bool = false; 
+        // Support for operators, more characters should be first in array
+        $operators = ['<=', '>=', '<', '>' ]; 
+        
+        foreach($excludePatterns as $item)
+        {
+           $type = (isset($item['type'])) ? trim($item["type"]) : '';
+           if ('filesize' === $type)
+           {  
+               $filesize =  $this->getFileSize(); 
+
+               // This indicates remote files / virtual / will not work with that. 
+               if ($filesize <= 0)
+               {
+                  return false;   
+               }
+
+               $item_value = $item['value'];
+               $operator = ">";
+               
+               foreach($operators as $this_operator)
+               {
+                  if (strpos($item_value, $this_operator) !== false)
+                  {
+                     // Allow this operator. 
+                     $operator = $this_operator; 
+                     // Remove it from string 
+                     $item_value = str_replace($this_operator, '', $item_value); 
+                  }
+               }
+
+               $compare_bytes = (int) UtilHelper::convertExclusionFileSizeToBytes($item_value);          
+               
+               // About version_compare for this 
+              $bool = version_compare($compare_bytes, $filesize, $operator);
+              //$bool2 = 
+              
+              if (true === $bool)
+              {
+                $this->processable_status = self::P_EXCLUDE_FILESIZE; 
+                return $bool; 
+              }
+           }
+        }
+        // Convert fileSize to bytes. 
+        
+    }
+
     protected function checkDateExcluded()
 		{
 			$excludePatterns = $this->getExcludePatterns();
@@ -1314,7 +1373,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     {
         if ($this->is_virtual() || $this->getFileSize() > 0 )
         {
-
            return true;
         }
         else {

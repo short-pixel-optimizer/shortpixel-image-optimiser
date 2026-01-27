@@ -61,6 +61,8 @@ class UtilHelper
     return $sizes;
   }
 
+
+
   // wp_normalize_path doesn't work for windows installs in some situations, so we can use it, but we still want some of the functions.
   public static function spNormalizePath($path)
   {
@@ -202,6 +204,20 @@ class UtilHelper
     $params = wp_parse_args($params, $defaults);
 
     return $params; 
+  }
+
+  public static function convertExclusionFileSizeToBytes($value)
+  { 
+    return preg_replace_callback('/^\s*(\d+)\s*(?:([kmgt]?)b?)?\s*$/i', function ($m) {
+      switch (strtolower($m[2])) {
+        case 't': $m[1] *= 1024;
+        case 'g': $m[1] *= 1024;
+        case 'm': $m[1] *= 1024;
+        case 'k': $m[1] *= 1024;
+      }
+      return $m[1];
+    }, $value);
+
   }
 
   public static function alterHtaccess($webp = false, $avif = false)

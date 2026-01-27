@@ -172,6 +172,9 @@ if ( ! defined( 'ABSPATH' ) ) {
                         case 'size':
                           $field_name = $typeStrings['size']; // __('Size', 'shortpixel-image-optimiser');
                         break;
+                        case 'filesize': 
+                          $field_name = $typeStrings['filesize'];
+                        break; 
                         case 'date': 
                           $field_name = $typeStrings['date']; // ??   
                         break; 
@@ -217,7 +220,6 @@ if ( ! defined( 'ABSPATH' ) ) {
                  }
                  echo "</ul>";
 
-
          ?>
                      <div class='new-exclusion not-visible'>
                          <!-- HEADER -->
@@ -225,19 +227,18 @@ if ( ! defined( 'ABSPATH' ) ) {
                          <h3 class='new-title not-visible'><?php _e('Add New Exclusion' ,'shortpixel-image-optimiser'); ?></h3>
                          <h3 class='edit-title not-visible'><?php _e('Edit Exclusion' ,'shortpixel-image-optimiser'); ?></h3>
 
-
                          <div>
                            <label><?php _e('Type:', 'shortpixel-image-optimiser'); ?></label>
                             <select name="exclusion-type" class='new-exclusion-type'>
                                <option value='name'><?php _e('Image Name', 'shortpixel-image-optimiser'); ?></option>
                                <option value='path' data-example="/path/"><?php _e('Image Path', 'shortpixel-image-optimiser'); ?></option>
                                <option value='size' data-example="widthXheight-widthXheight"><?php _e('Image Size', 'shortpixel-image-optimiser'); ?></option>
+                               <option value='filesize' data-example="500KB / 1MB"><?php _e('Image Filesize', 'shortpixel-image-optimiser'); ?></option>
                                <option value='date' data-example="YYYY-MM-DD"><?php _e('Date', 'shortpixel-image-optimiser') ?></option> 
                            </select>
                          </div>
 
                          <div class='value-and-size'>
-
                              <div class='value-option '>
                                <label><?php _e('Value:', 'shortpixel-image-optimiser'); ?></label>
                                <input type="text" name="exclusion-value" value="">
@@ -281,8 +282,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 
                         <div class='date-option not-visible'>
                         <label><?php _e('Date Options:', 'shortpixel-image-optimiser'); ?></label>
-
-                          
                               <select name='exclusion-when'>
                                 <option value='before'><?php _e('Before this date', 'shortpixel-image-optimiser'); ?></option>
                                 <option value='after'><?php _e('After this date', 'shortpixel-image-optimiser'); ?></option>

@@ -963,6 +963,7 @@ class UiHelper
           'name' => __('Image Name', 'shortpixel-image-optimiser'),
           'path' => __('Image Path', 'shortpixel-image-optimiser'),
           'size' => __('Image Size', 'shortpixel-image-optimiser'),
+          'filesize' => __('Image File Size', 'shortpixel-image-optimiser'),
           'date' => __('Date', 'shortpixel-image-optimiser'), 
       );
 
