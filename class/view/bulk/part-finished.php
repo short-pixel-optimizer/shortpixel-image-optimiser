@@ -60,6 +60,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 		?> -->
 		</p>
 	</div>
+  
 
     <div class='bulk-summary' data-check-visibility data-control="data-check-media-total">
       <div class='heading'>

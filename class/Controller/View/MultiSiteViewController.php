@@ -21,6 +21,7 @@ class MultiSiteViewController extends \ShortPixel\ViewController
 
       public function __construct()
       {
+         parent::__construct(); 
          $this->model = new MultiSettingsModel();
       }
 

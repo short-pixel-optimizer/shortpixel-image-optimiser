@@ -324,7 +324,6 @@ class QueueController
 
       $data->total = $this->calculateStatsTotals($data);
       $data = $this->numberFormatStats($data);
-
       return $data;
   }
 

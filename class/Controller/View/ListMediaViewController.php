@@ -29,11 +29,6 @@ class ListMediaViewController extends \ShortPixel\ViewController
   protected $template = 'view-list-media';
 //  protected $model = 'image';
 
-  public function __construct()
-  {
-    parent::__construct();
-  }
-
   public function load()
   {
 			$fs = \wpSPIO()->filesystem();

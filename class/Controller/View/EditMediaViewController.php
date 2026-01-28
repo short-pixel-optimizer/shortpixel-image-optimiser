@@ -32,12 +32,6 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
 			protected static $instance;
 
-
-      public function __construct()
-      {
-        parent::__construct();
-      }
-
       protected function loadHooks()
       {
             add_action( 'add_meta_boxes_attachment', array( $this, 'addMetaBox') );

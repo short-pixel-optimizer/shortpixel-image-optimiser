@@ -84,6 +84,7 @@ class BulkViewController extends \ShortPixel\ViewController
     // Not in use : 
     //$this->view->customOperationMediaName = $custom_operation_media; 
     //$this->view->customerOperationCustomName = $custom_operation_custom;
+    
 
     $noticesController = AdminNoticesController::getInstance(); 
 
