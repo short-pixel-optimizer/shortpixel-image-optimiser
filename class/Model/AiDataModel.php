@@ -152,6 +152,16 @@ class AiDataModel
             'languages' => $settings->ai_language, 
             'context' => $settings->ai_general_context, 
         ]; 
+
+        if (true === $settings->ai_use_post)
+        {
+            $parent_title = $this->getConnectedPostTitle(); 
+            if (false !== $parent_title && false === is_null($parent_title))
+            {
+                 $paramlist['parentTitle'] = $parent_title;
+            }
+        }
+
         $returnDataList = []; 
         $field_status = false; // check if there are any fields to process / not all excluded. 
 
@@ -322,6 +332,24 @@ class AiDataModel
          }
          return true;
         
+    }
+
+    protected function getConnectedPostTitle()
+    {
+         $attach_id = $this->attach_id; 
+         $post_parent = get_post_parent($attach_id); 
+         if (! is_null($post_parent))
+         {
+            $post = get_post($post_parent); 
+            if (false === is_null($post))
+            {
+                $post_title = $post->post_title; 
+                return $post_title; 
+            }
+         }
+
+         return false;
+         
     }
 
     // Should return the current situation. If not stored in the database - or different from meta - uh something should be returned. 
