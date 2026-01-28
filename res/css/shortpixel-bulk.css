@@ -788,7 +788,7 @@
   font-weight: 700;
 }
 .wrap.is-shortpixel-bulk-page section.spio-progressbar .flex > div.result .line {
-  background: linear-gradient(90deg, rgb(204, 204, 204) 0%, rgb(204, 204, 204) 49.9%, rgb(255, 255, 255) 51%, rgb(255, 255, 255) 100%);
+  background: linear-gradient(90deg, rgb(204, 204, 204) 0%, rgb(204, 204, 204) 49.9%, #f4fbfc 51%, #f4fbfc 100%);
 }
 .wrap.is-shortpixel-bulk-page section.spio-progressbar .flex > div.select .line {
   left: 50%;
