@@ -158,7 +158,8 @@ class AiDataModel
             $parent_title = $this->getConnectedPostTitle(); 
             if (false !== $parent_title && false === is_null($parent_title))
             {
-                 $paramlist['parentTitle'] = $parent_title;
+                $paramlist['use_parent_post_title'] = true; 
+                $paramlist['parent_post_title'] = $parent_title;
             }
         }
 
