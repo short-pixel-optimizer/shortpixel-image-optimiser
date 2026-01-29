@@ -159,7 +159,7 @@ class AjaxController
 
 		// Notice that POST variables are always string, so 'true', not true.
 		// phpcs:ignore -- Nonce is checked
-		$isBulk = (isset($_POST['isBulk']) && $_POST['isBulk'] === 'true') ? true : false;
+		$isBulk = (isset($_POST['isBulk']) && $_POST['isBulk'] == 'true') ? true : false;
 		// phpcs:ignore -- Nonce is checked
 		$queue = (isset($_POST['queues'])) ? sanitize_text_field($_POST['queues']) : 'media,custom';
 
@@ -1676,7 +1676,7 @@ class AjaxController
 
 	protected function loadLogFile($json, $data)
 	{
-		$logFile = $data['logFile'];
+		$logFile = $data['logFile'] . '.log';
 		$type = $data['type'];
 		$fs = \wpSPIO()->filesystem();
 
@@ -1694,14 +1694,12 @@ class AjaxController
 
 		$json->$type->logType = $logType;
 
-		if (! $log) {
+		if (false === $log) {
 			$json->$type->is_error = true;
 			$json->$type->result = __('Log file does not exist', 'shortpixel-image-optimiser');
 			return $json;
 		}
 
-		//	$date = UiHelper::formatTS($log->date);
-		//$logData = $bulkController->getLogData($logFile); // starts from options.
 		$date = (isset($logData['date'])) ? UiHelper::formatTS($logData['date']) : false;
 		$content = trim($log->getContents());
 		$lines = array_filter(explode(';', $content));
@@ -1860,10 +1858,17 @@ class AjaxController
 
 	private function removeBackup($json, $data)
 	{
+		if (wp_verify_nonce($_POST['tools-nonce'], 'empty-backup')) {			
 
-		if (wp_verify_nonce($_POST['tools-nonce'], 'empty-backup')) {
+			$fs = \wpSPIO()->filesystem(); 
+			
+			$fs->moveLogFiles(); 
+
 			$dir = \wpSPIO()->filesystem()->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
-			$dir->recursiveDelete();
+			$dir->recursiveDelete(); 
+
+			$fs->moveLogFiles(['to_temp' => false]);
+
 			$json->settings->results = __('The backups have been removed. You can close the window', 'shortpixel-image-optimiser');
 		} else {
 			$json->settings->results = __('Error: Invalid Nonce in empty backups', 'shortpixel-image-optimiser');

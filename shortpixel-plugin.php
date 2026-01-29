@@ -304,7 +304,7 @@ class ShortPixelPlugin {
 
 	public function admin_network_pages()
 	{
-		  	add_menu_page(__('Shortpixel MU', 'shortpixel-image-optimiser'), __('Shortpixel', 'shortpixel_image_optimiser'), 'manage_sites', 'shortpixel-network-settings', [$this, 'route'], $this->plugin_url('res/img/shortpixel.png') );
+	//	  	add_menu_page(__('Shortpixel MU', 'shortpixel-image-optimiser'), __('Shortpixel', 'shortpixel_image_optimiser'), 'manage_sites', 'shortpixel-network-settings', [$this, 'route'], $this->plugin_url('res/img/shortpixel.png') );
 	}
 
 	/** All scripts should be registed, not enqueued here (unless global wp-admin is needed )
@@ -694,9 +694,9 @@ class ShortPixelPlugin {
 						$controller = 'ShortPixel\Controller\View\SettingsViewController';
 						wp_enqueue_media();
         	break;
-					 case 'shortpixel-network-settings':
+			case 'shortpixel-network-settings':
 					 	$controller = 'ShortPixel\Controller\View\MultiSiteViewController';
-					break;
+			break;
           case 'wp-short-pixel-custom': // other media
 						if ('folders'  === $template_part )
 						{

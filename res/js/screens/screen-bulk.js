@@ -360,6 +360,9 @@ class ShortPixelScreen extends ShortPixelScreenBase
 				  this.processor.SetInterval(-1); // back to default.
 
       }
+      // There is an issue with bulkr-estore that gets return a total of 0 here when bulk restore is done for some reason, 
+      // which should not be. 
+      // Also the combined of is_finished ( true / false ) on total becomes true, while should be false if anything is still running. 
       if (qStatus == 'QUEUE_EMPTY')
       {
 					// @todo Pre-release fix, not clean. Fix.
@@ -369,7 +372,6 @@ class ShortPixelScreen extends ShortPixelScreenBase
 						var pattern = new RegExp("\\.|\\,", '');
 						total = total.replace(pattern, '');
 					}
-
 
           if (total > 0)
           {
@@ -1223,14 +1225,15 @@ class ShortPixelScreen extends ShortPixelScreenBase
 			return [modal, title, content, wrapper];
 	}
 
-	ShowLogModal(event)
+	ShowLogModal(event) 
 	{
 			var log = event.detail.log;
 
 			if (log.is_error == true)
 			{
 				console.error(log);
-				this.CloseModal();
+				this.CloseModal(event);
+        return;
 			}
 
 			var shade = document.getElementById('LogModal-Shade');
@@ -1308,7 +1311,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
 
 	CloseModal(event)
 	{
-		 event.preventDefault();
+		 event.preventDefault(); // event can be multiple events. 
  		 var modal = document.getElementById('LogModal');
 		 modal.classList.add('shortpixel-hide');
 

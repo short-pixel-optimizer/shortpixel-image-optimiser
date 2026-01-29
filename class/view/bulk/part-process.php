@@ -67,7 +67,7 @@ $settings = \wpSPIO()->settings();
         <span><i class='dashicons dashicons-format-image'>&nbsp;</i> <?php esc_html_e('Media Library' ,'shortpixel-image-optimiser'); ?>
               <?php printf(esc_html__('( %s items )', 'shortpixel-image-optimiser'), '<i data-stats-media="total">--</i>'); ?>
         <?php if (false !== $this->view->customOperationMedia) {
-            echo " - <span class='special-op'>" . $this->view->customOperationMedia . "</span>";
+            echo "</br><span class='special-op'>" . $this->view->customOperationMedia . "</span>";
          } ?>
         </span>
         <span>
@@ -117,7 +117,7 @@ $settings = \wpSPIO()->settings();
       <div class='heading'>
         <span><i class='dashicons dashicons-open-folder'>&nbsp;</i> <?php esc_html_e('Custom Media', 'shortpixel-image-optimiser'); ?>
           <?php if (false !== $this->view->customOperationCustom) {
-             echo " - <span class='special-op'>" . $this->view->customOperationCustom . "</span>";
+             echo "</br><span class='special-op'>" . $this->view->customOperationCustom . "</span>";
           } ?>
         </span>
         <span>

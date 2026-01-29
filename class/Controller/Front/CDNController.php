@@ -391,7 +391,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		//  $replace_function = ($this->replace_method == 'preg') ? 'pregReplaceContent' : 'stringReplaceContent';
 
 		$replace_function = 'pregReplaceByString'; // undercooked, will defer to next version
-	//	$replace_function = 'stringReplaceContent';
 		$imageIndexes = array_column($replaceBlocks, 'imageId');
 
 		array_multisort($imageIndexes, SORT_ASC, $replaceBlocks); 
@@ -518,7 +517,12 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 	protected function fetchImageMatches($content, $args = [])
 	{
-		$number = preg_match_all('/<img[^>]*>|<source srcset="[^>]*">/i', $content, $matches);
+		// Previous pattern 
+		//$number = preg_match_all('/<img[^>]*>|<source srcset="[^>]*">/i', $content, $matches);
+
+		// Updated pattern via - https://github.com/short-pixel-optimizer/shortpixel-image-optimiser/issues/159
+		$number = preg_match_all('/<img[^>]*>|<source\s+srcset="[^"]*"[^>]*>/i', $content, $matches);
+
 		$matches = $matches[0];
 		return $matches;
 	}

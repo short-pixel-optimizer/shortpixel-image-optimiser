@@ -23,7 +23,6 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
   public function __construct()
   {
 			add_action('init', [$this, 'initWebpHooks']);
-//			$this->initWebpHooks();
   }
 
 	public function initWebpHooks()
@@ -48,9 +47,28 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
 
         } else {
 
+            $filters = [
+                'the_content' => 10000, 
+                'the_excerpt' => 10000, 
+                'post_thumbnail_html' => 10, 
+                'wp_get_attachment_image' => 10, 
+            ];
+
+            $hook = [$this, 'convertImgToPictureAddWebp'];
+
+            $filters = apply_filters('shortpixel/front/picture_webp_filters', $filters);
+            
+            foreach($filters as $filter => $priority)
+            {
+                  add_filter($filter, $hook, $priority);
+            }
+
+            /*
             add_filter( 'the_content', array($this, 'convertImgToPictureAddWebp'), 10000 ); // priority big, so it will be executed last
             add_filter( 'the_excerpt', array($this, 'convertImgToPictureAddWebp'), 10000 );
             add_filter( 'post_thumbnail_html', array($this,'convertImgToPictureAddWebp') );
+            add_filter( 'wp_get_attachment_image', array($this,'convertImgToPictureAddWebp'));
+            */
         }
     }
   }

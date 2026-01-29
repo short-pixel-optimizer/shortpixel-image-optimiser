@@ -197,6 +197,19 @@ class BulkController
   		 $fs = \wpSPIO()->filesystem();
 			 $backupDir = $fs->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
 
+       $backupDir = $fs->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
+       $backupPath = realpath($backupDir->getPath());
+   
+       // Construct the full path
+       $fullPath = $backupDir->getPath() . $logName; // .log not passed  anymore
+       $resolvedPath = realpath($fullPath);
+   
+       // Ensure the resolved path is within the backup directory
+       if ($resolvedPath === false || strpos($resolvedPath, $backupPath) !== 0) {
+           return false;  // Path traversal attempt detected
+       }
+   
+
 			 $log = $fs->getFile($backupDir->getPath() . $logName);
 			 if ($log->exists())
 			 	 return $log;

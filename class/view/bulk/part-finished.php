@@ -11,7 +11,6 @@ if ( ! defined( 'ABSPATH' ) ) {
   
   <?php $this->loadView('bulk/part-progressbar', false, ['part' => 'finished']); ?>
 
-
       <div class='average-optimization shortpixel-hide'>
           <p><?php esc_html_e('Your images are now this much smaller on average: ','shortpixel-image-optimiser'); ?></p>
           <svg class="opt-circle-average" viewBox="-10 0 130 100">
@@ -45,9 +44,9 @@ if ( ! defined( 'ABSPATH' ) ) {
       </div>
 		<span class='hidden' data-check-media-total data-stats-media="total">0</span>
 
-    <span class='hidden' data-check-media-customOperation data-stats-media="isCustomOperation">-1</span>
+    <span class='hidden' data-check-total-customOperation data-stats-total="isCustomOperation">-1</span>
 
-		<div class='bulk-summary' data-check-visibility="false" data-control='data-check-media-customOperation'>
+		<div class='bulk-summary' data-check-visibility="false" data-control='data-check-total-customOperation'>
 		<p class='finished-paragraph'>
 			<?php printf(__('Congratulations, ShortPixel has optimized %s %s images and thumbs %s for your website! Yay to faster loading websites! %s', 'shortpixel-image-optimiser'), '<b>', '<span data-stats-total="total"></span>','</b>', '&#x1F389;');
 			?>
@@ -61,12 +60,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 		?> -->
 		</p>
 	</div>
+  
 
     <div class='bulk-summary' data-check-visibility data-control="data-check-media-total">
       <div class='heading'>
         <span><i class='dashicons dashicons-images-alt2'>&nbsp;</i> <?php esc_html_e('Media Library','shortpixel-image-optimiser'); ?>
           <?php if (false !== $this->view->customOperationMedia) {
-             echo " - <span class='special-op'>" . $this->view->customOperationMedia . "</span>";
+             echo "</br><span class='special-op'>" . $this->view->customOperationMedia . "</span>";
           } ?>
         </span>
 
@@ -114,7 +114,7 @@ if ( ! defined( 'ABSPATH' ) ) {
       <div class='heading'>
         <span><i class='dashicons dashicons-open-folder'>&nbsp;</i> <?php esc_html_e('Custom Media','shortpixel-image-optimiser'); ?>
           <?php if (false !== $this->view->customOperationCustom) {
-             echo " - <span class='special-op'>" . $this->view->customOperationCustom . "</span>";
+             echo "</br><span class='special-op'>" . $this->view->customOperationCustom . "</span>";
           } ?>
         </span>
         <span>
