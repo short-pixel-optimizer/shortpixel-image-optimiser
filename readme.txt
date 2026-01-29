@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 4.8.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 6.4.2
+Stable tag: 6.4.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -488,6 +488,32 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 
 == Changelog ==
 
+= 6.4.3 =
+
+❄️ The Snowy Update
+
+Release Date: January 29, 2026
+
+🛡️ Security Fix
+
+* Editor-Level Access Patch: Fixed a potential vulnerability (responsibly reported by the WordFence team) where an authenticated Editor user could access arbitrary files.
+
+🛠️ Fixes & Improvements
+
+* Bulk Restore Display Fix: Resolved an issue where the final step of the bulk restore process wasn't being shown.
+* Bulk Labels Added: Each bulk action (restore, legacy migration, etc.) now shows a clear label for better tracking and transparency.
+* Custom Media Queue Info: Added more detailed status info for Custom Media items in the queue, now similar to what's shown in the Media Library.
+* Respect Image Title Overrides: The AI will no longer overwrite image titles if the "Preserve existing data" option is enabled.
+* No Period on AI Titles: Removed the automatic period added at the end of AI-generated image titles.
+* New Picture Tag Filter: Developers can now hook into a new filter for customizing how next-gen images are delivered via the <picture> tag.
+* Improved CDN Detection: Enhanced logic to detect images declared across multiple lines when replacing with CDN links.
+* Disabled AI Fields Visibility: AI fields that are disabled in settings are now clearly marked in both the Settings preview and the Bulk Processing preview.
+* Bulk Logs Preserved: Logs from bulk processing are now retained even when backups are cleared via the Tools menu.
+* Multisite Settings Hidden: Temporarily hid the multisite settings menu due to related errors - it will return in a future release.
+* Correct Parent Page Context: Ensured that the parent post/page context of an image is properly sent to the AI API for better SEO relevance.
+
+Update now for a more secure, transparent, and intelligent optimization experience! 🚀
+
 = 6.4.2 =
 
 📊 The Optimization Update
@@ -498,7 +524,7 @@ Release Date: January 15, 2026
 
 * Media Library Optimization Display: Fixed an issue where optimized images were always shown as "bonus optimization" — the stats now reflect actual results.
 * Bulk UI Improvements: Cleaned up the layout of the bulk processing screen when only a few options are selected, for a more focused experience.
-* Percentace Hidden for Non-Optimization Actions: Removed the optimization percentage display when running bulk operations like restore or data migration (that don't involve actual image optimization).
+* Percentage Hidden for Non-Optimization Actions: Removed the optimization percentage display when running bulk operations like restore or data migration (that don't involve actual image optimization).
 * AVIF via .htaccess for WebPs: Added support for AVIF delivery using the .htaccess method for images added directly in the WebP format.
 * AI SEO Preview Fix: Prevented display of incorrect data in the AI SEO Preview section within plugin settings.
 * SmartCrop Percentage Display: Fixed the issue where SmartCrop could show a negative improvement percentage if the cropped image ended up larger in size.
