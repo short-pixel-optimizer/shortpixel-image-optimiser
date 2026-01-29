@@ -233,16 +233,15 @@ if ( ! defined( 'ABSPATH' ) ) {
                                <option value='name'><?php _e('Image Name', 'shortpixel-image-optimiser'); ?></option>
                                <option value='path' data-example="/path/"><?php _e('Image Path', 'shortpixel-image-optimiser'); ?></option>
                                <option value='size' data-example="widthXheight-widthXheight"><?php _e('Image Size', 'shortpixel-image-optimiser'); ?></option>
-                               <option value='filesize' data-example="500KB / 1MB"><?php _e('Image Filesize', 'shortpixel-image-optimiser'); ?></option>
+                          <!--     <option value='filesize' data-example="500KB / 1MB"><?php _e('Image Filesize', 'shortpixel-image-optimiser'); ?></option> -->
                                <option value='date' data-example="YYYY-MM-DD"><?php _e('Date', 'shortpixel-image-optimiser') ?></option> 
                            </select>
                          </div>
 
-                         <div class='value-and-size'>
                              <div class='value-option '>
                                <label><?php _e('Value:', 'shortpixel-image-optimiser'); ?></label>
                                <input type="text" name="exclusion-value" value="">
-                             </div>
+                         </div>
 
                              <div class='size-option not-visible'>
                                  <div class='exact-option'>
@@ -278,7 +277,6 @@ if ( ! defined( 'ABSPATH' ) ) {
                                     </div>
                                  </div>
                              </div>
-                        </div> <!-- value / size container -->
 
                         <div class='date-option not-visible'>
                         <label><?php _e('Date Options:', 'shortpixel-image-optimiser'); ?></label>
@@ -287,9 +285,23 @@ if ( ! defined( 'ABSPATH' ) ) {
                                 <option value='after'><?php _e('After this date', 'shortpixel-image-optimiser'); ?></option>
                               </select>
                             
-                </div>
+                        </div>
+                        <div class='operator-option not-visible'>
+                          <label>&nbsp;</label>
+                          <input type="number" name="exclusion-filesize-value" value='' class='small'>
+                          <select name="exclusion-filesize-denom">
+                            <option value="B"><?php _e('Bytes', 'shortpixel-image-optimiser'); ?></option>
+                            <option value="K" selected><?php _e('Kilobytes (KB)', 'shortpixel-image-optimiser'); ?></option>
+                            <option value="M"><?php _e('Megabytes (MB)', 'shortpixel-image-optimiser'); ?></option>
+                          </select>
+                          <select name='exclusion-filesize-operator'>
+                              <option value='lower'><?php _e('Exclude smaller than given filesize', 'shortpixel-image-optimiser'); ?></option>
+                              <option value='higher' selected><?php _e('Exclude higher than given filesize', 'shortpixel-image-optimiser'); ?></option>
+                          </select>
 
-                         <div>
+                        </div>
+
+                         <div class='applyto-option' >
                            <label><?php _e('Apply To:', 'shortpixel-image-optimiser'); ?></label>
                            <select name='apply-select' class='thumbnail-type-option'>
                                <option value='all'><?php _e('All Images', 'shortpixel-image-optimiser'); ?></option>
