@@ -1499,47 +1499,72 @@ class ShortPixelSettings {
 		if (typeof example == 'undefined') {
 			example = '';
 		}
-
-		var valueOption = this.root.querySelector('.new-exclusion .value-option');
-		var sizeOption = this.root.querySelector('.new-exclusion .size-option');
-		var dateOption = this.root.querySelector('.new-exclusion .date-option');
-		var regexOption = this.root.querySelector('.regex-option');
-		var switchExactOption = this.root.querySelector('.exact-option');
-		var applyOption = this.root.querySelector('.new-exclusion select[name="apply-select"]');
-
-
-		if (value == 'size') {
-			valueOption.classList.add('not-visible');
-			sizeOption.classList.remove('not-visible');
-			switchExactOption.classList.remove('not-visible');
-			regexOption.classList.add('not-visible');
-		}
-		else {
-			valueOption.classList.remove('not-visible');
-			sizeOption.classList.add('not-visible');
-			switchExactOption.classList.add('not-visible');
-			regexOption.classList.remove('not-visible');
-		}
-
-		if ('date' === value)
-		{
-			dateOption.classList.remove('not-visible'); 
-			regexOption.classList.add('not-visible');
-			applyOption.value = 'all';
-			applyOption.disabled = true; 
-		}
-		else
-		{
-			dateOption.classList.add('not-visible');
-			regexOption.classList.remove('not-visible');
-			applyOption.disabled = false; 
-		}
 		
+		var options = this.GetAllExclusionOptions(); 
+		
+		var show = [];
+
+		switch(value)
+		{
+			 case 'size':
+				show =  ['sizeOption', 'switchExactOption', 'applyOption'];
+			 break; 
+			 case 'date': 
+				show = ['dateOption', 'valueOption']; 
+			 break; 
+			 case 'filesize': 
+				show = ['applyOption', 'operatorOption'];
+			 break; 
+			 default: 
+				show = ['valueOption', 'applyOption', 'regexOption']; 
+			 
+		}
+
+		for (const optKey in options)
+			{
+				console.log(optKey, options[optKey]);
+				if (show.indexOf(optKey) >= 0)
+				{
+					if (options[optKey].classList.contains('not-visible'))
+					{
+						options[optKey].classList.remove('not-visible');
+					}
+				}	
+				else if (false === options[optKey].classList.contains('not-visible'))
+				{
+					 options[optKey].classList.add('not-visible');
+				}
+						
+			}
+
+		for (let i = 0; i < options.length; i++)
+		{
+
+
+			 options[show[i]].classList.remove('not-visible');
+		}		
 
 		var valueInput = this.root.querySelector('input[name="exclusion-value"]');
 		if (null !== valueInput) {
 			valueInput.placeholder = example;
 		}
+	}
+
+	/* Get all options for exclusions */
+	GetAllExclusionOptions()
+	{
+		var options = {
+			'valueOption' : this.root.querySelector('.new-exclusion .value-option'), 
+			'sizeOption'  : this.root.querySelector('.new-exclusion .size-option'),
+			'dateOption'  :this.root.querySelector('.new-exclusion .date-option'),
+			'regexOption' : this.root.querySelector('.new-exclusion .regex-option'),
+			'switchExactOption' : this.root.querySelector('.new-exclusion .exact-option'),
+			'applyOption' : this.root.querySelector('.new-exclusion .applyto-option'),
+			'operatorOption' : this.root.querySelector('.new-exclusion .operator-option '),
+
+		}; 
+
+		return options; 
 	}
 
 	NewExclusionUpdateThumbType(element) {
@@ -1581,7 +1606,7 @@ class ShortPixelSettings {
 		var valueOption = this.root.querySelector('.new-exclusion input[name="exclusion-value"]');
 		var applyOption = this.root.querySelector('.new-exclusion select[name="apply-select"]');
 		var regexOption = this.root.querySelector('.new-exclusion input[name="exclusion-regex"]');
-
+		
 		if ('read' === mode) {
 			setting.type = typeOption.value;
 			setting.value = valueOption.value;
@@ -1682,10 +1707,47 @@ class ShortPixelSettings {
 				}
 
 				this.NewExclusionUpdateType(typeOption)
-				//		this.NewExclusionToggleSizeOption(exactOption);
 			}
 			this.NewExclusionToggleSizeOption(exactOption);
 
+		} // Size Option
+		else if ('filesize' === setting.type)
+		{
+			var the_value = this.root.querySelector('.new-exclusion input[name="exclusion-filesize-value"]');
+			var denom = this.root.querySelector('.new-exclusion select[name="exclusion-filesize-denom"]');
+			var operator = this.root.querySelector('.new-exclusion select[name="exclusion-filesize-operator"]');
+
+			if ('read' === mode)
+			{
+				setting.value = operator.options[operator.selectedIndex].value.trim() + " " + the_value.value.trim() + " " + denom.options[denom.selectedIndex].value.trim(); 
+				validateInput.push(the_value);
+
+			}
+			else if ('write' === mode)
+			{
+				var split = setting.value.split(" ");
+				operator.value = split[0]; 
+				the_value.value = split[1]; 
+				denom.value = split[2];
+
+				for(let i = 0; i < operator.options; i++)
+				{
+					if(operator.options[i].value == split[0])
+					{
+						operator.selectedIndex = i;
+					}
+				}
+				for(let i = 0; i < denom.options; i++)
+					{
+						if(denom.options[i].value == split[2])
+						{
+							denom.selectedIndex = i;
+						}
+					}
+
+				this.NewExclusionUpdateType(typeOption);
+
+			}
 		}
 		else {
 			validateInput.push(valueOption);

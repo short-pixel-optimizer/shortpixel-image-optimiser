@@ -80,6 +80,11 @@ class QueueController
          $qItem->data()->returndatalist = $args['returndatalist'];
       }
 
+      if (true === $args['forceExclusion']) 
+      {
+         $qItem->data()->forceExclusion = $args['forceExclusion'];
+      }
+
       $queue = $this->getQueue($imageModel->get('type'));
 
       $args = array_filter($args, function ($value) {
