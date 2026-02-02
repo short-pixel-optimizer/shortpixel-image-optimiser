@@ -1397,18 +1397,13 @@ class ShortPixelSettings {
 			button.classList.remove('hidden', 'not-visible');
 		}
 		else {
-			var mode = 'edit';
-
+			//var mode = 'edit';
 			let mainEl = event.target.closest('li');
 			var id = mainEl.id;
 
-
-			var exclusionModal = this.root.querySelector('.new-exclusion');
-			//	event.target.closest('li').after(exclusionModal);
-			//exclusionModal.parentElement = event.target.closest('li').after(exclusionModal);
+			//var exclusionModal = this.root.querySelector('.new-exclusion');
 
 			var title = this.root.querySelector('.new-exclusion h3.edit-title');
-			//var button = this.root.querySelector('.new-exclusion .button-actions button[name="removeExclusion"]');
 			var input = this.root.querySelector('.new-exclusion input[name="edit-exclusion"]')
 
 			updateButton.classList.remove('not-visible', 'hidden');
@@ -1421,8 +1416,6 @@ class ShortPixelSettings {
 		}
 
 		title.classList.remove('not-visible', 'hidden');
-		//button.classList.remove('not-visible', 'hidden');
-
 	}
 
 	//** When compressiontype changes, also update the information
@@ -1716,7 +1709,7 @@ class ShortPixelSettings {
 			var the_value = this.root.querySelector('.new-exclusion input[name="exclusion-filesize-value"]');
 			var denom = this.root.querySelector('.new-exclusion select[name="exclusion-filesize-denom"]');
 			var operator = this.root.querySelector('.new-exclusion select[name="exclusion-filesize-operator"]');
-
+console.log(demon.selectedIndex);
 			if ('read' === mode)
 			{
 				setting.value = operator.options[operator.selectedIndex].value.trim() + " " + the_value.value.trim() + " " + denom.options[denom.selectedIndex].value.trim(); 
@@ -1928,7 +1921,15 @@ class ShortPixelSettings {
 		for (var i = 0; i < inputs.length; i++) {
 			var input = inputs[i];
 			if (input.tagName == 'SELECT') {
-				input.selectedIndex = 0;
+				input.selectedIndex = 0; // First reset blindly 
+				for (var j = 0; j < input.options.length; j++)
+				{
+					 if (true === input.options[j].defaultSelected)
+					 {
+						input.selectedIndex = j; 
+						break;
+					 }
+				}
 			}
 			else if (input.type == 'checkbox') {
 				input.checked = false;
