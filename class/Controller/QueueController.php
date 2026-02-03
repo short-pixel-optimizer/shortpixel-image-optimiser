@@ -671,6 +671,10 @@ class QueueController
                 }
              }
           }
+          else // If key does not exist, still add value from media to totals. 
+          {
+            $object->stats->$key = $value; 
+          }
       }
 
 

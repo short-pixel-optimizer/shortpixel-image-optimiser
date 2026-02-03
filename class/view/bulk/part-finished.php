@@ -50,17 +50,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<p class='finished-paragraph'>
 			<?php printf(__('Congratulations, ShortPixel has optimized %s %s images and thumbs %s for your website! Yay to faster loading websites! %s', 'shortpixel-image-optimiser'), '<b>', '<span data-stats-total="total"></span>','</b>', '&#x1F389;');
 			?>
-<!--			<br>
-			<?php
-			printf(__('ShortPixel plugins are installed on hundreds of thousands of websites and we save our users over 500 GB by optimizing over 15 million images. Each and every day! %s', 'shortpixel-image-optimiser'), '&#x1F4AA;');
-			?>
-			<br>
-		<?php
-			printf(__('We have been working on improving ShortPixel every day for over 7 years. It is very motivating for us when customers take a minute to leave us a %sreview%s. We thank you for that! %s', 'shortpixel-image-optimiser'), '<a href="https://wordpress.org/support/plugin/shortpixel-image-optimiser/reviews/?filter=5" target="_blank">','</a>', '&#x1F64C;');
-		?> -->
 		</p>
 	</div>
-  
+  <div class='bulk-summary' data-check-visibility="true" data-control='data-check-total-customOperation'>
+		<p class='finished-paragraph'>
+			<?php printf(__('ShortPixel has completed the %s task', 'shortpixel-image-optimiser'), '<span data-stats-total="customOperation">&nbsp;</span>');
+			?>
+		</p>
+	</div>
 
     <div class='bulk-summary' data-check-visibility data-control="data-check-media-total">
       <div class='heading'>
