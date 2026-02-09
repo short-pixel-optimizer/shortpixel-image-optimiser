@@ -268,8 +268,6 @@ class BulkViewController extends \ShortPixel\ViewController
 				$kblink = UIHelper::getKBSearchLink($message);
 				$kbinfo = '<span class="kbinfo"><a href="' . $kblink . '" target="_blank" ><span class="dashicons dashicons-editor-help">&nbsp;</span></a></span>';
 
-
-
 				$output .= '<div class="fatal">';
 				$output .= $date . ': ';
 				if ($message)

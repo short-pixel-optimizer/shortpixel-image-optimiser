@@ -565,7 +565,6 @@ class SettingsViewController extends \ShortPixel\ViewController
       }
 
 
-// Basically this whole premise is impossible.
       public function loadDashBoardInfo()
       {
         $bulkController = BulkController::getInstance();
