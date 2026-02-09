@@ -500,7 +500,6 @@ class UiHelper
 
 		$access = AccessModel::getInstance();
 
-
     if (! $keyControl->keyIsVerified())
     {
       $text = __('Invalid API Key. <a href="options-general.php?page=wp-shortpixel-settings">Check your Settings</a>','shortpixel-image-optimiser');
@@ -961,6 +960,7 @@ class UiHelper
           'name' => __('Image Name', 'shortpixel-image-optimiser'),
           'path' => __('Image Path', 'shortpixel-image-optimiser'),
           'size' => __('Image Size', 'shortpixel-image-optimiser'),
+          'filesize' => __('Image File Size', 'shortpixel-image-optimiser'),
           'date' => __('Date', 'shortpixel-image-optimiser'), 
       );
 

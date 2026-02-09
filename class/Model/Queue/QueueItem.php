@@ -18,6 +18,7 @@ use ShortPixel\Controller\Optimizer\OptimizeAiController as OptimizeAiController
 use ShortPixel\Controller\Optimizer\ActionController as ActionController;
 use ShortPixel\Helper\UiHelper;
 use ShortPixel\Model\AiDataModel;
+use stdClass;
 
 class QueueItem
 {
@@ -47,13 +48,23 @@ class QueueItem
       $this->data = new QueueItemData(); // init
    }
 
+   /** Sets required ImageModel to the QueueItem
+    * 
+    * @param ImageModel $imageModel 
+    * @return void 
+    */
    public function setModel(ImageModel $imageModel)
    {
       $this->imageModel = $imageModel;
       $this->item_id = $imageModel->get('id');
    }
 
-   public function setFromData($data)
+   /** Sets the data in QueueItem from data coming from the Shortpixel Queue 
+    * 
+    * @param mixed $data 
+    * @return void 
+    */
+   public function setFromQueueData($data)
    {
       foreach($data as $name => $value)
       {
@@ -61,11 +72,22 @@ class QueueItem
       }
    }
 
+   /** Sets information to the (persistent) data object, which is saved in ShortPixel Queue
+    * 
+    * @param string $name 
+    * @param mixed $value 
+    * @return void 
+    */
    public function setData($name, $value)
    {
       $this->data->$name = $value;
    }
 
+   /** Without parameters returns the current block status of this item, otherwise applied required block ( true / false )
+    * 
+    * @param boolean $block 
+    * @return boolean|void     
+    */
    public function block($block = null)
    {
       if (is_null($block)) {
@@ -75,11 +97,19 @@ class QueueItem
       }
    }
 
+   /** Returns QueueItemData object for functions requiring this information 
+    * 
+    * @return QueueItemData 
+    */
    public function data()
    {
       return $this->data;
    }
 
+   /** Returns result object which can be interpreted by UI . Creates it if null 
+    * 
+    * @return stdClass 
+    */
    public function result()
    {
 
@@ -108,6 +138,12 @@ class QueueItem
       return $result;
    }
 
+   /** Sets value of a property. 
+    * 
+    * @param string $name 
+    * @param mixed $value 
+    * @return void 
+    */
    public function set($name, $value)
    {
       if (property_exists($this, $name)) {
@@ -134,6 +170,11 @@ class QueueItem
       return $qItem;
    }
 
+   /** Gets property value by name, null if does not exists. 
+    * 
+    * @param mixed $name 
+    * @return mixed 
+    */
    public function __get($name)
    {
       if (property_exists($this, $name)) {
@@ -144,27 +185,10 @@ class QueueItem
       return null;
    }
 
-   public function returnArray()
-   {
-      $array = [
-         'item_id' => $this->item_id,
-         'result' => $this->result,
-         'data' => $this->data->toObject(),
-      ];
-
-      return $array;
-   }
-
-   public function returnObject()
-   {
-      $object = new \stdClass;
-      $object->item_id = $this->item_id;
-      $object->result = $this->result;
-      $object->data = $this->data->toObject();
-
-      return $object;
-   }
-
+   /** Return Array representation of this object, which is used to enqueue the Item.
+    * 
+    * @return array{id: int, value: object, item_count: mixed, order: mixed} 
+    */
    public function returnEnqueue()
    {
       $value = $this->data->toObject();
@@ -187,11 +211,19 @@ class QueueItem
       
    }
 
+   /** Set debug flag, used in edit-media debug info.
+    * 
+    * @return void 
+    */
    public function setDebug()
    {
       $this->debug_active = true;
    }
 
+   /** Initiate new migrate action
+    * 
+    * @return void 
+    */
    public function newMigrateAction()
    {
       $this->newAction(); 

@@ -89,6 +89,7 @@ if (! defined('ABSPATH')) {
             'name' => 'aiPreserve',
             'checked' => $view->data->aiPreserve,
             'label' => esc_html__('Preserve existing Image SEO data', 'shortpixel-image-optimiser'),
+            'data' => ['data-toggle="ai_overwrite_warning"']
           ]
         );
         ?>
@@ -241,7 +242,11 @@ if (! defined('ABSPATH')) {
           <textarea name="ai_post_title_context"><?php echo $view->data->ai_post_title_context ?></textarea>
 
         </content>
-
+        <warning class="ai_overwrite_warning">
+           <message>
+          <?php _e('SPIO may still write image title when preserving data, since image title is always set', 'shortpixel-image-optimiser'); ?>
+          </message>
+        </warning>
       </setting>
 
 

@@ -11,7 +11,6 @@ if ( ! defined( 'ABSPATH' ) ) {
   
   <?php $this->loadView('bulk/part-progressbar', false, ['part' => 'finished']); ?>
 
-
       <div class='average-optimization shortpixel-hide'>
           <p><?php esc_html_e('Your images are now this much smaller on average: ','shortpixel-image-optimiser'); ?></p>
           <svg class="opt-circle-average" viewBox="-10 0 130 100">
@@ -45,20 +44,18 @@ if ( ! defined( 'ABSPATH' ) ) {
       </div>
 		<span class='hidden' data-check-media-total data-stats-media="total">0</span>
 
-    <span class='hidden' data-check-media-customOperation data-stats-media="isCustomOperation">-1</span>
+    <span class='hidden' data-check-total-customOperation data-stats-total="isCustomOperation">-1</span>
 
-		<div class='bulk-summary' data-check-visibility="false" data-control='data-check-media-customOperation'>
+		<div class='bulk-summary' data-check-visibility="false" data-control='data-check-total-customOperation'>
 		<p class='finished-paragraph'>
 			<?php printf(__('Congratulations, ShortPixel has optimized %s %s images and thumbs %s for your website! Yay to faster loading websites! %s', 'shortpixel-image-optimiser'), '<b>', '<span data-stats-total="total"></span>','</b>', '&#x1F389;');
 			?>
-<!--			<br>
-			<?php
-			printf(__('ShortPixel plugins are installed on hundreds of thousands of websites and we save our users over 500 GB by optimizing over 15 million images. Each and every day! %s', 'shortpixel-image-optimiser'), '&#x1F4AA;');
+		</p>
+	</div>
+  <div class='bulk-summary' data-check-visibility="true" data-control='data-check-total-customOperation'>
+		<p class='finished-paragraph'>
+			<?php printf(__('ShortPixel has completed the %s task', 'shortpixel-image-optimiser'), '<span data-stats-total="customOperation">&nbsp;</span>');
 			?>
-			<br>
-		<?php
-			printf(__('We have been working on improving ShortPixel every day for over 7 years. It is very motivating for us when customers take a minute to leave us a %sreview%s. We thank you for that! %s', 'shortpixel-image-optimiser'), '<a href="https://wordpress.org/support/plugin/shortpixel-image-optimiser/reviews/?filter=5" target="_blank">','</a>', '&#x1F64C;');
-		?> -->
 		</p>
 	</div>
 
@@ -66,7 +63,7 @@ if ( ! defined( 'ABSPATH' ) ) {
       <div class='heading'>
         <span><i class='dashicons dashicons-images-alt2'>&nbsp;</i> <?php esc_html_e('Media Library','shortpixel-image-optimiser'); ?>
           <?php if (false !== $this->view->customOperationMedia) {
-             echo " - <span class='special-op'>" . $this->view->customOperationMedia . "</span>";
+             echo "</br><span class='special-op'>" . $this->view->customOperationMedia . "</span>";
           } ?>
         </span>
 
@@ -114,7 +111,7 @@ if ( ! defined( 'ABSPATH' ) ) {
       <div class='heading'>
         <span><i class='dashicons dashicons-open-folder'>&nbsp;</i> <?php esc_html_e('Custom Media','shortpixel-image-optimiser'); ?>
           <?php if (false !== $this->view->customOperationCustom) {
-             echo " - <span class='special-op'>" . $this->view->customOperationCustom . "</span>";
+             echo "</br><span class='special-op'>" . $this->view->customOperationCustom . "</span>";
           } ?>
         </span>
         <span>

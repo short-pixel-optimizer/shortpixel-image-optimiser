@@ -68,6 +68,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     const P_EXCLUDE_EXTENSION_PDF = 11;
     const P_IMAGE_ZERO_SIZE = 12;
     const P_EXCLUDE_DATE = 13; 
+    const P_EXCLUDE_FILESIZE = 14;
 
 		// For restorable status
 		const P_RESTORABLE = 109;
@@ -204,7 +205,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         (! $this->is_virtual() && ! $this->is_directory_writable() || 
         $this->isPathExcluded() || 
         $this->isExtensionExcluded() || 
-        $this->isSizeExcluded()
+        $this->isSizeExcluded() ||
+        $this->isFileSizeExcluded()
         )
 				|| $this->isOptimizePrevented() !== false
         || ! $this->isFileSizeOK() )
@@ -290,6 +292,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         $reasons = array(
             self::P_EXCLUDE_PATH,
             self::P_EXCLUDE_SIZE,
+            self::P_EXCLUDE_FILESIZE,
         );
 
         if (in_array($this->processable_status, $reasons))
@@ -369,6 +372,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
          case self::P_EXCLUDE_SIZE:
             $message = __('Image Size Excluded', 'shortpixel-image-optimiser');
          break;
+         case self::P_EXCLUDE_FILESIZE: 
+            $message = __('Image Filesize excluded', 'shortpixel-image-optimiser');
+          break;
          case self::P_EXCLUDE_PATH:
             $message = __('Image Excluded', 'shortpixel-image-optimiser');
          break;
@@ -421,7 +427,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     public function isImage()
     {
         if (! $this->exists())
+        {
           return false;
+        }
         if ($this->is_virtual()) // if virtual, don't filecheck on image.
         {
             if (! $this->isExtensionExcluded() )
@@ -430,27 +438,27 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
               return false;
         }
 
-				if (! is_null($this->mime))
-				{
-					return true;
-				}
 
-				if (\wpSPIO()->env()->is_function_usable('finfo_open')) // Faster function for getting mime types
+				if (is_null($this->mime) && \wpSPIO()->env()->is_function_usable('finfo_open')) // Faster function for getting mime types
 					 {
 						 $fileinfo = finfo_open(FILEINFO_MIME_TYPE);
 						 $this->mime = finfo_file($fileinfo, $this->getFullPath());
-						 finfo_close($fileinfo);
+             // Deprecated from version 8.5
+             if (false === \wpSPIO()->env()->checkPHPversion('8.5') )
+             {
+						  finfo_close($fileinfo);
+             }
 					 	 //FILEINFO_MIME_TYPE
 					}
-					elseif(\wpSPIO()->env()->is_function_usable('mime_content_type')) {
+					elseif(is_null($this->mime) && \wpSPIO()->env()->is_function_usable('mime_content_type')) {
 						$this->mime = mime_content_type($this->getFullPath());
 					}
-					else {
+					elseif(is_null($this->mime)) {
 						return true; // assume without check, that extension says what it is.
 						// @todo This should probably trigger a notice in adminNoticesController.
 					}
 
-	        if (strpos($this->mime, 'image') >= 0)
+	        if (strpos($this->mime, 'image') !== false)
 	           return true;
 	        else
 	          return false;
@@ -1095,7 +1103,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         // @todo This delete should go to backupModel, probably on main item.
         if ($this->hasBackup())
         {
-
            $file = $this->getBackupFile();
            $file->delete();
         }
@@ -1113,7 +1120,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
            $avif->delete();
         }
     }
-
 
     protected function handleWebp(FileModel $tempFile)
     {
@@ -1155,7 +1161,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
          return false;
     }
-
 
     protected function handleAvif(FileModel $tempFile)
     {
@@ -1315,6 +1320,68 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 			 return $bool;
 		}
 
+    private function isFileSizeExcluded()
+    {
+        $excludePatterns = $this->getExcludePatterns();
+
+        if(!$excludePatterns || !is_array($excludePatterns)) { return false; }
+
+        $bool = false; 
+        // Support for operators, more characters should be first in array
+       // $operators = ['<=', '>=', '<', '>' ]; 
+        
+        foreach($excludePatterns as $item)
+        {
+           $type = (isset($item['type'])) ? trim($item["type"]) : '';
+           if ('filesize' === $type)
+           {  
+               $filesize =  $this->getFileSize(); 
+
+               // This indicates remote files / virtual / will not work with that. 
+               if ($filesize <= 0)
+               {
+                  return false;   
+               }
+
+               $item_value = explode(' ', $item['value']);
+               if (! is_array($item_value) && count($item_value) <> 3)
+               {
+                 return false; 
+               }
+               
+               $operator = $item_value[0]; 
+               $value = $item_value[1]; 
+               $bytes = $item_value[2]; 
+              
+               if ('B' == $bytes)
+               {
+                 $compare_bytes = $value; 
+               }
+               else
+               {
+                $compare_bytes = (int) UtilHelper::convertExclusionFileSizeToBytes($value . $bytes);          
+               }
+               // About version_compare for this 
+              if ('>' == $operator &&  $filesize > $compare_bytes)
+              {
+                 $bool = true; 
+              }
+              elseif ('<' == $operator &&  $filesize < $compare_bytes)
+              {
+                 $bool = true; 
+              }
+              
+              if (true === $bool)
+              {
+                $this->processable_status = self::P_EXCLUDE_FILESIZE; 
+                return $bool; 
+              }
+           }
+        }
+        // Convert fileSize to bytes. 
+        
+    }
+
     protected function checkDateExcluded()
 		{
 			$excludePatterns = $this->getExcludePatterns();
@@ -1339,7 +1406,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     {
         if ($this->is_virtual() || $this->getFileSize() > 0 )
         {
-
            return true;
         }
         else {

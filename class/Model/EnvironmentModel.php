@@ -97,7 +97,6 @@ class EnvironmentModel extends \ShortPixel\Model
 
 	public function checkPHPVersion($needed)
 	{
-
 		 if (version_compare(PHP_VERSION, $needed) >= 0 )
 		 {
 			 return true;

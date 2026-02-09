@@ -199,6 +199,19 @@ class BulkController
   		 $fs = \wpSPIO()->filesystem();
 			 $backupDir = $fs->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
 
+       $backupDir = $fs->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
+       $backupPath = realpath($backupDir->getPath());
+   
+       // Construct the full path
+       $fullPath = $backupDir->getPath() . $logName; // .log not passed  anymore
+       $resolvedPath = realpath($fullPath);
+   
+       // Ensure the resolved path is within the backup directory
+       if ($resolvedPath === false || strpos($resolvedPath, $backupPath) !== 0) {
+           return false;  // Path traversal attempt detected
+       }
+   
+
 			 $log = $fs->getFile($backupDir->getPath() . $logName);
 			 if ($log->exists())
 			 	 return $log;
@@ -225,10 +238,8 @@ class BulkController
 
    protected function addLog($q)
    {
-        //$data = (array) $stats;
 				$stats = $q->getStats(); // for the log
 				$type = $q->getType();
-			//	$customData = $q->getCustomDataItem('');
 
         if ($stats->done == 0 && $stats->fatal_errors == 0)
 				{
@@ -261,8 +272,6 @@ class BulkController
         if (count($logs) == 10) // remove logs if more than 10.
         {
           $log = array_shift($logs);
-          //$log_date = $log['date'];
-					//$log_type = $log['type'];
 					if (isset($data['logfile']))
 					{
 						$logfile = $data['logfile'];

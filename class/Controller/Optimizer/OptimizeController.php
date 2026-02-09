@@ -493,7 +493,6 @@ class OptimizeController extends OptimizerBase
 
       }
 
-
       if (!isset($item_files[$imageName]['webp']) && $image['webp']['status'] == ApiController::STATUS_SUCCESS) {
         $tempFile = $downloadHelper->downloadFile($image['webp']['url']);
         if (is_object($tempFile)) {

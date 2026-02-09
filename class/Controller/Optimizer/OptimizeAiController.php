@@ -5,9 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
-
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Model\Queue\QueueItem as QueueItem;
 use ShortPixel\Controller\Api\RequestManager as RequestManager;
@@ -18,7 +16,6 @@ use ShortPixel\Controller\Queue\QueueItems as QueueItems;
 use ShortPixel\Model\AiDataModel;
 use ShortPixel\Replacer\Replacer;
 use ShortPixel\ViewController as ViewController;
-
 
 // Class for AI Operations.  In time split off OptimizeController / Optimize actions to a main queue runner seperately.
 class OptimizeAiController extends OptimizerBase
@@ -246,7 +243,8 @@ class OptimizeAiController extends OptimizerBase
     }
     
 
-    $textItems = ['alt', 'caption', 'description', 'post_title'];
+    // removed  'post_title' here because in image title doens't look good. 
+    $textItems = ['alt', 'caption', 'description'];
     foreach($textItems as $textItem)
     {
       
@@ -268,17 +266,29 @@ class OptimizeAiController extends OptimizerBase
     return $aiData; 
   }
 
+  private function getDataLabels()
+  {
+    $labels = [
+      'alt' => __('Alt', 'shortpixel-image-optimiser'), 
+      'caption' => __('Caption', 'shortpixel-image-optimiser'), 
+      'description' => __('Description', 'shortpixel-image-optimiser'), 
+      'post_title' =>  __('Image Title' , 'shortpixel-image-optimiser'), 
+    ];
+
+    return $labels;
+  }
+
   protected function HandleSuccess(QueueItem $qItem)
   {
         $aiData = $qItem->result()->aiData;  
-        $settings = \wpSPIO()->settings();
+        // $settings = \wpSPIO()->settings();
 
-        $checks = ['alt' => 'ai_gen_alt', 
+        /* $checks = ['alt' => 'ai_gen_alt', 
         'caption' => 'ai_gen_caption', 
         'description' => 'ai_gen_description',
         'filename' => 'ai_gen_filename',
         'post_title' => 'ai_gen_post_title', 
-        ];
+        ]; */
 
         $aiData = $this->formatResultData($aiData, $qItem);
 
@@ -318,9 +328,8 @@ class OptimizeAiController extends OptimizerBase
         $data = $this->getAltData($qItem); 
         $qItem->addResult(['aiData' => $data['generated']]); // But the generated data in the result.
 
-        // For Bulk, add labels to display in the result set. Default is same as data, can be overridden
-        $qItem->addResult(['aiDataLabels' => $data['labels']
-        ]);
+        // For Bulk, add labels to display in the result set. Default is same as data, can be overridden . Used in Bulk JS
+        $qItem->addResult(['aiDataLabels' => $this->getDataLabels()  ]);
 
         $this->finishItemProcess($qItem);
         return;
@@ -739,13 +748,7 @@ public function getAltData(QueueItem $qItem)
     $metadata['current'] = $current; 
     $metadata['action'] = $qItem->data()->action;
     $metadata['item_id'] = $item_id;
-
-    $metadata['labels'] = [
-      'alt' => __('Alt', 'shortpixel-image-optimiser'), 
-      'caption' => __('Caption', 'shortpixel-image-optimiser'), 
-      'description' => __('Description', 'shortpixel-image-optimiser'), 
-      'post_title' =>  __('Image Title' , 'shortpixel-image-optimiser'), 
-    ];
+    $metadata['labels']  = $dataItems; // Used in bulk JS 
 
     return $metadata; 
 }
@@ -755,6 +758,8 @@ public function formatGenerated($generated, $current, $original, $isPreview = fa
     
   $fields = ['alt', 'caption', 'description', 'post_title'];
   $dataItems = []; 
+
+  $labels = $this->getDataLabels();
 
   // Statii from AiDataModel which means generated is not available (replace for original/current?) 
   $statii = [AiDataModel::F_STATUS_PREVENTOVERRIDE, AiDataModel::F_STATUS_EXCLUDESETTING];
@@ -770,12 +775,15 @@ public function formatGenerated($generated, $current, $original, $isPreview = fa
 
        if (false === is_null($value) && false === is_int($value) && strlen($value) > 1)
        {
-          $dataItems[] = ucfirst($name); 
+
+          $dataItems[] = isset($labels[$name]) ? $labels[$name] : ucfirst($name); 
        }
        if (is_int($value) && in_array($value, $statii))
        {
          // If preview don't fall back on other stuff, just leave it empty. 
-          if (true === $isPreview)
+          $value = __('AI generation disabled', 'shortpixel-image-optimiser');
+
+          /*if (true === $isPreview)
           {
              $value = ''; 
           }
@@ -786,7 +794,7 @@ public function formatGenerated($generated, $current, $original, $isPreview = fa
           elseif(isset($original[$name]))
           {
                $value = $original[$name];
-          }
+          } */
           $generated[$name] = $value;
        }
   } 

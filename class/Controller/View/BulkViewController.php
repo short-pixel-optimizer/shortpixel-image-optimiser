@@ -76,10 +76,15 @@ class BulkViewController extends \ShortPixel\ViewController
     $custom_operation_media = $bulkController->getCustomOperation('media');
     $custom_operation_custom = $bulkController->getCustomOperation('custom');
 
+    $custom_operation_media = (false === $custom_operation_media) ? $this->checkBulkViaPanelArg() : $custom_operation_media; 
+    $custom_operation_custom = (false === $custom_operation_custom) ? $this->checkBulkViaPanelArg() : $custom_operation_custom;
+
     $this->view->customOperationMedia = (false !== $custom_operation_media) ? $this->getCustomLabel($custom_operation_media) : false;
     $this->view->customOperationCustom = (false !== $custom_operation_custom) ? $this->getCustomLabel($custom_operation_custom) : false;
-    $this->view->customOperationMediaName = $custom_operation_media; 
-    $this->view->customerOperationCustomName = $custom_operation_custom;
+    // Not in use : 
+    //$this->view->customOperationMediaName = $custom_operation_media; 
+    //$this->view->customerOperationCustomName = $custom_operation_custom;
+    
 
     $noticesController = AdminNoticesController::getInstance(); 
 
@@ -114,7 +119,7 @@ class BulkViewController extends \ShortPixel\ViewController
   {
       switch($operation)
       {
-          case 'bulk-restore';
+          case 'bulk-restore':
             $label = __('Bulk Restore', 'shortpixel-image-optimiser');
           break;
           case 'migrate':
@@ -129,6 +134,41 @@ class BulkViewController extends \ShortPixel\ViewController
       }
 
       return $label;
+  }
+  
+  /** This function has no other purpose than the map the Panel get argument to the proper bulk action. Reason this exists is because at the time the bulk screen is loaded, the bulk hasn't started, thus the specialOPeration is not in place, not showing the text in process / finished
+   * @todo Harmonize the panel name, bulk action name etc so this function is not needed to display string
+   * @return false|string 
+   */
+  private function checkBulkViaPanelArg()
+  {
+      $panel = isset($_GET['panel']) ? sanitize_text_field($_GET['panel']) : null;
+
+      if (is_null($panel))
+      {
+         return false; 
+      }
+
+      $action = false; 
+
+      switch($panel)
+      {
+         case 'bulk-migrate': 
+            $action = 'migrate'; 
+         break;
+         case 'bulk-restore':
+            $action = 'bulk-restore'; 
+         break; 
+         case 'bulk-restoreAI':
+            $action = 'bulk-undoAI';
+         break; 
+         case 'bulk-removeLegacy': 
+            $action = 'removeLegacy'; 
+         break; 
+      }
+
+      return $action;
+
   }
 
 	// Double with ApiNotice . @todo Fix.
@@ -228,8 +268,6 @@ class BulkViewController extends \ShortPixel\ViewController
 				$kblink = UIHelper::getKBSearchLink($message);
 				$kbinfo = '<span class="kbinfo"><a href="' . $kblink . '" target="_blank" ><span class="dashicons dashicons-editor-help">&nbsp;</span></a></span>';
 
-
-
 				$output .= '<div class="fatal">';
 				$output .= $date . ': ';
 				if ($message)
@@ -260,7 +298,7 @@ class BulkViewController extends \ShortPixel\ViewController
 
           if ($logFile->exists())
 					{
-            $errors = '<a data-action="OpenLog" data-file="' . $logFile->getFileName() . '" href="' . $fs->pathToUrl($logFile) . '">' . $errors . '</a>';
+            $errors = '<a data-action="OpenLog" data-file="' . $logFile->getFileBase() . '" href="' . $fs->pathToUrl($logFile) . '">' . $errors . '</a>';
 					}
 
 					$op = (isset($logData['operation'])) ? $logData['operation'] : false;
