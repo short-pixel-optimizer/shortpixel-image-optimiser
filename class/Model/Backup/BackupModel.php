@@ -20,7 +20,7 @@ abstract class BackupModel
     protected $controller; 
     protected $mediaItem; 
 
-    abstract function getBackupDirectory($create = false);
+    abstract protected function getBackupDirectory($create = false);
     abstract function createBackupFile(ImageModel $sourceFile);
     abstract function restore(ImageModel $sourceFile);
     abstract function hasBackup(ImageModel $sourceFile); 

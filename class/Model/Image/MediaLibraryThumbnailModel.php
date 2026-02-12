@@ -166,8 +166,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 		return $bool;
 	}
 
-
-
 	protected function setMetaObj($metaObj)
 	{
 		$this->image_meta = clone $metaObj;
@@ -231,7 +229,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 	{
 		return parent::getImprovements();
 	}
-
 
 	public function getBackupFileName()
 	{
@@ -299,8 +296,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 			return false;
 	}
 
-
-
 	// !Important . This doubles as  checking excluded image sizes.
 	protected function isSizeExcluded()
 	{
@@ -316,9 +311,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
 		return $bool;
 	}
-
-
-
 
 	public function isProcessableFileType($type = 'webp')
 	{
@@ -338,11 +330,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 		);
 
 		// @todo Find a way to cache IsProcessable perhaps due to amount of checks being done.  Should be release in flushOptimizeCache or elsewhere (?)
-
-		//    $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
-
 		$patterns = UtilHelper::getExclusions($args);
-		//  echo "<PRE>"; print_r($args); print_r($patterns); echo "</PRE>";
 		return $patterns;
 	}
 
@@ -377,7 +365,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 		if (true === $loadRegular) {
 			return $backupModel->hasBackup($this);
 		} else { 
-			$directory = $this->getBackupDirectory();
+			$directory = $backupModel->getBackupDirectory();
 			$converted_ext = $mainFile->getMeta()->convertMeta()->getFileFormat();
 
 			if (! $directory)
@@ -453,31 +441,33 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 	 */
 	public function getBackupFile($args = array())
 	{
-
-		$defaults = array(
+		$defaults = [
 			'forceConverted' => false,
 			'noConversionCheck' => false,  // do not check on mainfile, this loops when used in loadMeta / legacyConversion
-		);
+		];
 		$args = wp_parse_args($args, $defaults);
 
+		$backupModel = $this->getBackupModel();
+		$backupFile = $backupModel->getBackupFile($this);
+
 		if (true === $args['noConversionCheck']) {
-			return parent::getBackupFile();
+			return $backupModel::getBackupFile($this);
 		}
 
 		$mainFile = ($this->is_main_file) ? $this : $this->getMainFile();
 		if (false == $mainFile) {
-			return parent::getBackupFile();
+			return $backupFile;
 		}
 		// When main file and converted and omitBackup is true ( only original backup ) and not forced.
 		$loadRegular = (false === $mainFile->getMeta()->convertMeta()->isConverted() ||
 			false === $mainFile->getMeta()->convertMeta()->omitBackup()) && false === $args['forceConverted'];
 
 		if (true === $loadRegular) {
-			return parent::getBackupFile();
+			return $backupFile;
 		} else {
 			if ($this->hasBackup($args)) {
 
-				$directory = $this->getBackupDirectory();
+				$directory = $backupModel->getBackupDirectory();
 				$converted_ext = $mainFile->getMeta()->convertMeta()->getFileFormat();
 
 				$backupFile = $directory . $this->getFileBase() . '.' . $converted_ext;
@@ -493,6 +483,10 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 		}
 	}
 
+	/** Create backup for media image. 
+	 * 
+	 * @return mixed 
+	 */
 	protected function createBackup()
 	{
 		if ($this->is_virtual()) // download remote file to backup.
@@ -512,11 +506,11 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 					$fileExists = false;
 				}
 
-				if (false === $fileExists) {
+			if (false === $fileExists) {
 					$downloadHelper = DownloadHelper::getInstance();
 					$url = $this->getURL();
 					$result = $downloadHelper->downloadFile($url, array('destinationPath' => $filepath));
-				}
+			}
 			} elseif ($this->virtual_status == self::$VIRTUAL_STATELESS) {
 				$result = $filepath;
 			} else {

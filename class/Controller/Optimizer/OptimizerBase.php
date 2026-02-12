@@ -10,6 +10,7 @@ use Shortpixel\Controller\Api\RequestManager as RequestManager;
 use ShortPixel\Controller\QueueController;
 use ShortPixel\Helper\UiHelper;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
+use ShortPixel\Model\Queue\QueueItemResult;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use stdClass;
 
@@ -23,7 +24,7 @@ abstract class OptimizerBase
     protected $currentQueue;  // trying to keep minimum, but optimize needs to speak to queue for items.
     protected $queueController; // Needed to keep track of bulk /non-bulk
 
-    public abstract function enqueueItem(QueueItem $qItem, $args = []); // Enqueue Single Item (not for bulk)
+    public abstract function enqueueItem(QueueItem $qItem, $args = []) : \stdClass; // Enqueue Single Item (not for bulk)
     public abstract function handleAPIResult(QueueItem $qItem);
     protected abstract function HandleItemError(QueueItem $qItem);
     public abstract function sendToProcessing(QueueItem $qItem);
@@ -55,7 +56,6 @@ abstract class OptimizerBase
 
         return self::$instances[$calledClass];
     }
-
 
     /** Standard fields for JSON response. 
     * 
@@ -147,7 +147,7 @@ abstract class OptimizerBase
      * @param QueueItem $qItem 
      * @return Object Result Object
      */
-    protected function finishItemProcess(QueueItem $qItem, $args = [])
+    protected function finishItemProcess(QueueItem $qItem, $args = []) : QueueItemResult
     {
         $queue = $this->getCurrentQueue($qItem); 
         $fs = \wpSPIO()->filesystem();
@@ -158,9 +158,7 @@ abstract class OptimizerBase
            $queue->itemDone($qItem); 
         }
 
-         Log::addTemp('FinishItemProcess: ', $qItem->data());
         // Can happen with actions outside queue / direct action 
-
         if (true === $qItem->data()->hasNextAction())
         {
             $action = $qItem->data()->popNextAction(); 

@@ -19,16 +19,59 @@ class LocalBackupModel extends BackupModel
     } */
 
     // This must be able to create backup for images one-by-one. 
-     public function createBackupFile(FileModel $sourceFile)
+     public function createBackupFile(ImageModel $sourceFile)
      {
+        $directory = $this->getBackupDirectory(true);
+        $fs = \wpSPIO()->filesystem();
+        $imageName = $sourceFile->get('name');
+
+        if (! $directory)
+        {
+          Log::addWarn('Could not create Backup Directory for ' . $sourceFile->getFullPath());
+         // $this->error_message = __('Could not create backup Directory', 'shortpixel-image-optimiser');
+          return false;
+        }
+        
+        $backupFile = $fs->getFile($directory . $this->getBackupFileName($sourceFile));
+
+        // Same file exists as backup already, don't overwrite in that case.
+        if ($backupFile->exists() && $this->hasBackup($sourceFile) && $backupFile->getFileSize() == $sourceFile->getFileSize())
+        {
+          $result = true;
+        }
+        else
+        {
+          $result = $sourceFile->copy($backupFile);
+
+          // Remove the cache if there, since it will re-ask this to check copy success.
+          if (isset($this->backup_files[$imageName])) 
+          {
+             unset ($this->backup_files[$imageName]); 
+          }
+        }
+
+        if (! $result)
+        {
+          Log::addWarn('Creating Backup File failed for ' . $sourceFile->getFullPath());
+          return false;
+        }
+
+        if ($this->hasBackup($sourceFile))
+          return true;
+        else
+        {
+          Log::addWarn('FileModel returns no Backup File for (failed) ' . $sourceFile->getFullPath());
+          return false;
+        }
 
      }
 
      // This one should probably do the whole procedure. 
      // Problem - how to find all the file items here. 
-     public function restore(FileModel $fileObj)
+     public function restore(FileModel $targetFile)
      {
-
+         $backupFile = $this->getBackupFile($targetFile); 
+         return $backupFile->move($targetFile);
      }
 
      public function hasBackup(ImageModel $sourceFile)
@@ -46,7 +89,7 @@ class LocalBackupModel extends BackupModel
 
       }
 
-        $directory = $this->getBackupDirectory();
+        $directory = $this->getBackupDirectory(false);
         if (false === $directory)
         {
           return false;
@@ -78,7 +121,7 @@ class LocalBackupModel extends BackupModel
      * @param bool $create  Create if the backupdirectory not exists yet ( i.e. month structure when it's the first )
      * @return object|boolean  The backupdirectory or false on failure.  
      */
-    public function getBackupDirectory($create = false)
+    protected function getBackupDirectory($create = false)
     {
         
         if (is_null($this->mediaItem->getFileDir()))
@@ -118,7 +161,8 @@ class LocalBackupModel extends BackupModel
       if (true === $this->hasBackup($sourceFile))
        {
           $file = $this->backup_files[$imageName]['file']; 
-          return $file; 
+          $fileObj = new FileModel($file); 
+          return $fileObj; 
        }    //      return new FileModel($this->getBackupDirectory() . $this->getBackupFileName() );
        else
        {

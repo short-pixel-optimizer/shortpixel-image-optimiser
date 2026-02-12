@@ -101,41 +101,24 @@ class QueueItem
     * 
     * @return QueueItemData 
     */
-   public function data()
+   public function data() : QueueItemData
    {
       return $this->data;
    }
 
    /** Returns result object which can be interpreted by UI . Creates it if null 
     * 
-    * @return stdClass 
+    * @return QueueItemResult 
     */
-   public function result()
+   public function result() : QueueItemResult
    {
-
       if (is_null($this->result))
       {
-         $this->result = new \stdClass;
+         $this->result = new QueueItemResult($this->item_id);
       }
 
-      // check / set defaults.
-      if (false === property_exists($this->result, 'item_id')) {
-         $this->result->item_id = $this->item_id;
-      }
-
-      if (false === property_exists($this->result, 'is_error')) {
-         $this->result->is_error = false;
-      }
-
-      if (false === property_exists($this->result, 'is_done')) {
-         $this->result->is_done = false;
-      }
-
-      $result = $this->result;
-
-      $result->_debug_is_qItemResult = true;
-
-      return $result;
+      Log::addTemp('Returning Result', $this->result);
+      return $this->result;
    }
 
    /** Sets value of a property. 
@@ -208,7 +191,6 @@ class QueueItem
       }
 
       return $enqueue; 
-      
    }
 
    /** Set debug flag, used in edit-media debug info.
@@ -267,9 +249,7 @@ class QueueItem
        if (isset($args['compressionType'])) 
        {
           $this->data()->compressionType = $args['compressionType'];
-       }
-
-       
+       }       
    }
 
    public function newRemoveLegacyAction()
@@ -280,10 +260,11 @@ class QueueItem
       $this->item_count = 1;
    }
 
+   // @todo This should be moved to QueueItemResult as some point with validation
    public function addResult($data = [])
    {
       // Should list every possible item, arrayfilter out.
-      $validation = [
+/*      $validation = [
          'apiStatus', 
          'message',
          'is_error',
@@ -308,18 +289,12 @@ class QueueItem
          'aiData',   // Returning AI Data
 
       ];
-
-      if (is_null($this->result)) {
-         $this->result = new \stdClass;
-      }
+*/
 
       foreach ($data as $name => $value) {
-         if (false === in_array($name, $validation)) {
-            Log::addWarn("Result $name not in validation");
-         }
-
-         $this->result->$name = $value;
+         $this->result()->$name = $value;
       }
+
    }
 
 
@@ -330,7 +305,7 @@ class QueueItem
     */
    protected function newAction()
    {
-       $this->result = new \stdClass; // new action, new results 
+       $this->result = new QueueItemResult($this->item_id); // new action, new results 
 
        if ($this->data()->hasNextAction()) // Keep this at all times / not optimal still
        {

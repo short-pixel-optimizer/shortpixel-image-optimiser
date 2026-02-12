@@ -7,7 +7,6 @@ if (!defined('ABSPATH')) {
 
 // Handler for QueueItem Data stuff
 
-use ShortPixel\Helper\UtilHelper as UtilHelper;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 class QueueItemData

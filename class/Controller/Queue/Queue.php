@@ -126,15 +126,15 @@ abstract class Queue
       $item_id = $qItem->item_id; 
       $numitems = $this->q->withRemoveDuplicates()->enqueue(); // enqueue returns numitems
 
-      $result = new \stdClass;
-      $result->qstatus = $this->getQStatus($numitems);
-      $result->numitems = $numitems;
+      $qResult = new \stdClass;
+      $qResult->qstatus = $this->getQStatus($numitems);
+      $qResult->numitems = $numitems;
 
       $this->checkQueueCache($item_id);
       
 
       do_action('shortpixel_start_image_optimisation', $item_id, $qItem->imageModel);
-      return $result;
+      return $qResult;
     }
 
 		/** Drop Item if it needs dropping. This can be needed in case of image alteration and it's in the queue */

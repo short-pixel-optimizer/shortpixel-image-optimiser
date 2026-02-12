@@ -270,6 +270,7 @@ class FileModel extends \ShortPixel\Model
   }
 
     // @todo This moved to BackupModel.
+    /*
   public function hasBackup()
   {
       $directory = $this->getBackupDirectory();
@@ -283,13 +284,14 @@ class FileModel extends \ShortPixel\Model
       else {
         return false;
       }
-  }
+  } */
 
   /** @todo Moved to backupModel  */
   /** Tries to retrieve an *existing* BackupFile. Returns false if not present.
   * This file might not be writable.
   * To get writable directory reference to backup, use FileSystemController
   */
+  /*
   public function getBackupFile()
   {
      if ($this->hasBackup())
@@ -297,7 +299,7 @@ class FileModel extends \ShortPixel\Model
      else
        return false;
   }
-
+*/
   /* @todo moved to Backupmodel 
 	/** Function returns the filename for the backup.  This is an own function so it's possible to manipulate backup file name if needed, i.e. conversion or enumeration */
 	public function getBackupFileName()
@@ -553,6 +555,7 @@ class FileModel extends \ShortPixel\Model
 	* @param Create - If true will try to create directory if it doesn't exist.
   * @return Boolean | DirectModel  Returns false if directory is not properly set, otherwhise with a new directoryModel
   */
+  /*
   protected function getBackupDirectory($create = false)
   {
 
@@ -582,7 +585,7 @@ class FileModel extends \ShortPixel\Model
     }
 
     return $this->backupDirectory;
-  }
+  } */
 
   /* Internal function to check if path is a real path
   *  - Test for URL's based on http / https

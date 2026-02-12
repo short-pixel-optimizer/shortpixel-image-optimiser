@@ -99,7 +99,7 @@ class OptimizeAiController extends OptimizerBase
       return $is_processable;
   }
 
-  public function enqueueItem(QueueItem $qItem, $args = [])
+  public function enqueueItem(QueueItem $qItem, $args = []) : \stdClass
   {
 
     $action = $args['action']; 

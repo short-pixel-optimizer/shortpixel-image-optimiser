@@ -190,6 +190,8 @@ class QueueController
 
       }
 
+      $result = $qItem->result();
+
       return $qItem->result();
   }
 

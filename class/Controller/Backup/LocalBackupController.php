@@ -1,6 +1,7 @@
 <?php
 namespace ShortPixel\Controller\Backup;
 
+use DateInvalidOperationException;
 use ShortPixel\Model\File\DirectoryModel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
@@ -83,6 +84,11 @@ class LocalBackupController extends BackupController
         
     }
 
+    /** Get periods of automatic backup period
+     * 
+     * @return null|array{month: string, year: string, date: int} 
+     * @throws DateInvalidOperationException 
+     */
     private function getPeriodAr()
     {
         $settings = \wpSPIO()->settings(); 
@@ -132,9 +138,7 @@ class LocalBackupController extends BackupController
         $month = $dateNow->format('m');
         $year = $dateNow->format('Y');
 
-
         return ['month' => $month, 'year' => $year, 'date' => $timestamp]; 
-
     }
 
     private function getBackupBaseDirectory()

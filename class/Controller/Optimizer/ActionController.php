@@ -75,10 +75,6 @@ class ActionController extends OptimizerBase
       {
          $this->finishItemProcess($qItem);
       }
-    
-
-     // return;
-
   }
 
 
@@ -89,12 +85,13 @@ class ActionController extends OptimizerBase
    * @param array $args
    * @return Object
    */
-  public function enqueueItem(QueueItem $qItem, $args = [])
+  public function enqueueItem(QueueItem $qItem, $args = []) : \stdClass
   {
    $queue = $this->getCurrentQueue($qItem);
    $directAction = true; // By default, execute Actions directly ( not via queue sys )
-   
-   switch($args['action'])
+   $action = $args['action'];
+
+   switch($action)
    {
        case 'restore':
           $qItem->newRestoreAction(); // This doesn't do much really.
@@ -111,24 +108,29 @@ class ActionController extends OptimizerBase
        // The directActions give back booleans, but the whole function must return an queue result object with qstatus and numitems
        $process_result = $this->sendToProcessing($qItem);
 
-    //   $result = new \stdClass;
-     //  $result->qstatus = RequestManager::STATUS_NOT_API;
-
-      // The assumption here that will work always because of requeue in reOptimizeItem, should not respond with NO_API response, but with continue process 
-/*      if (is_object($process_result))
-      {
-         $result->qstatus = Queue::RESULT_EMPTY;
-         $result->numitems = 1;
-      } */
-
       $this->handleAPIResult($qItem);  
+
+      // Mimic Qresult from Queue.php, which is expected by queueController enqueueItem. 
+      $qStatus = new \stdClass; 
+      $qStatus->qstatus = RequestManager::STATUS_NOT_API; 
+      
+      if ('reoptimize' == $action && false === $qItem->result()->is_done)
+      {
+            $qStatus->qstatus = RequestManager::STATUS_ENQUEUED; 
+            $qStatus->numitems = 1; 
+      }
+
+      return $qStatus;
     }
+
+    
     /*else
     {
       $result = $queue->addQueueItem($qItem);
     } */
 
-    //return $result;
+    // This function needs to return result object for QueueController
+   // return $result;
   }
 
   /**

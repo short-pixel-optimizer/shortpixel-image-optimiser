@@ -38,7 +38,7 @@ class OptimizeController extends OptimizerBase
     $this->apiName = 'optimize';
   }
 
-  public function enQueueItem(QueueItem $qItem, $args = [])
+  public function enQueueItem(QueueItem $qItem, $args = []) : \stdClass
   {
     $queue = $this->getCurrentQueue($qItem);
 

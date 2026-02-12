@@ -10,7 +10,7 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\Controller\Api\ApiController as ApiController;
-use ShortPixel\Controller\Backup\BackupController;
+use ShortPixel\Controller\Backup\BackupController as BackupController;
 use ShortPixel\Model\File\FileModel as FileModel;
 use ShortPixel\Model\AccessModel as AccessModel;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
@@ -339,7 +339,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
      */
     protected function getBackupModel()
     {
-      if (property_exists($this, 'backupModel'))
+      if (property_exists($this, 'backupModel') &&  false === is_null($this->backupModel))
       {
          return $this->backupModel; 
       }
@@ -1022,13 +1022,13 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 				$type = $this->get('type');
 				$id = $this->get('id');
 
-        if (! $backupFile)
+        if (false === $backupFile || false === is_object($backupFile))
         {
           Log::addWarn('Issue with restoring BackupFile, probably missing - ', $backupFile);
           return false; //error
         }
 
-        if (! $backupFile->is_readable())
+        if (false === $backupFile->is_readable())
         {
 						Log::addError('BackupFile not readable' . $backupFile->getFullPath());
 						$response = array(
@@ -1040,7 +1040,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
            return false; //error
          }
-				 elseif (! $backupFile->is_writable())
+				 elseif (false === $backupFile->is_writable())
 				 {
  						Log::addError('BackupFile not writable' . $backupFile->getFullPath());
 						 $response = array(
@@ -1052,7 +1052,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 						 ResponseController::addData($this->get('id'), $response);
             return false; //error
 				 }
-				 if (! $this->is_writable())
+				 if (false === $this->is_writable())
 				 {
 					 	 Log::addError('Target File not writable' . $this->getFullPath());
 
@@ -1085,7 +1085,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 					$this->width = null;
 					$this->height = null;
 					$this->mime = null;
-
 				}
 
         // Reset statii
@@ -1101,6 +1100,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     public function onDelete()
     {
         // @todo This delete should go to backupModel, probably on main item.
+        
         if ($this->hasBackup())
         {
            $file = $this->getBackupFile();
@@ -1460,12 +1460,12 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     protected function createBackup()
     {
 
-        $backupModel = $this->backupModel;
-       
+        $backupModel = $this->getBackupModel();
+
         // Safety: It should absolutely not be possible to overwrite a backup file.
        if ($backupModel->hasBackup($this))
        {
-          $backupFile = $this->getBackupFile();
+          $backupFile = $backupModel->getBackupFile($this);
 
           // If backupfile is bigger (indicating original file)
           if ($backupFile->getFileSize() == $this->getFileSize())
@@ -1482,11 +1482,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 								$this->error_message = __('Backup already exists, but image is recoverable and the plugin will rollback. Will retry to optimize again. ', 'shortpixel-image-optimiser');
             }
-/*						elseif ($backupFile->getFileSize() > $this->getFileSize() && ! $backupFile->is_virtual() ) // Where there is a backup and it's bigger, assume some hickup, but there is backup so hooray
-						{
-						 		Log::addWarn('Backup already exists. Backup file is bigger, so assume that all is good with backup and proceed');
-							 return true; // ok it.
-						} */
             else
             {
               $this->preventNextTry(__('Fatal Issue: The Backup file already exists. The backup seems not restorable, or the original file is bigger than the backup, indicating an error.', 'shortpixel-image-optimiser'));
@@ -1501,6 +1496,12 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
           exit('Fatal error, createbackup protection - this should never reach');
        }
 
+       if(apply_filters('shortpixel/image/skip_backup', false, $this->getFullPath(), $this->is_main_file)){
+        return true;
+    }
+
+      return $backupModel->createBackupFile($this);
+/*
        $directory = $this->getBackupDirectory(true);
        $fs = \wpSPIO()->filesystem();
 
@@ -1508,9 +1509,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
        if(apply_filters('shortpixel_skip_backup', false, $this->getFullPath(), $this->is_main_file)){
            return true;
        }
-       if(apply_filters('shortpixel/image/skip_backup', false, $this->getFullPath(), $this->is_main_file)){
-           return true;
-       }
+
 
        if (! $directory)
        {
@@ -1518,9 +1517,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
           $this->error_message = __('Could not create backup Directory', 'shortpixel-image-optimiser');
           return false;
        }
-
        
-
        $backupFile = $fs->getFile($directory . $this->getBackupFileName());
 
        // Same file exists as backup already, don't overwrite in that case.
@@ -1545,7 +1542,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
        {
           Log::addWarn('FileModel returns no Backup File for (failed) ' . $this->getFullPath());
           return false;
-       }
+       } */
     }
 
     protected function fs()

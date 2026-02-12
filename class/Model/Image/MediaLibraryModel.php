@@ -9,7 +9,7 @@ if (! defined('ABSPATH')) {
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
-use ShortPixel\Controller\Backup\BackupController;
+use ShortPixel\Controller\Backup\BackupController as BackupController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 
 use ShortPixel\Controller\QueueController as QueueController;
@@ -125,7 +125,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	// Path will only return the filepath.  For reasons, see getOptimizeFileType
 	public function getOptimizeData()
 	{
-
 		// The thumbnails included in the parent ImageModels are the ones that are not converted and thus also optimize all thumbnails.  Prevent adding thumbnails in the optimizeData if not so.
 		$include_thumbs = true;
 		if (false === in_array($this->getExtension(), ImageModel::PROCESSABLE_EXTENSIONS)) {
@@ -195,8 +194,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		}
 
 		$thumbObjs = $this->getThumbObjects();
-
-		$unProcessable = array();
+		$unProcessable = [];
 
 		foreach ($thumbObjs as $name => $thumbObj) {
 			if ($thumbObj->isThumbnailProcessable() || ($thumbObj->isProcessableAnyFileType() && $thumbObj->isOptimized())) {
@@ -264,7 +262,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			}
 		}
 
-
 		$this->optimizeData = $parameters;
 		return $parameters;
 	}
@@ -274,7 +271,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$this->optimizeData = null;
 	}
 
-	// Overwrite a settin for optimization
+	// Overwrite a setting for optimization
 	public function doSetting($setting, $value)
 	{
 		$this->forceSettings[$setting] = $value;
@@ -294,7 +291,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return $url;
 	}
 
-
 	public function getImageKey($key = 'main')
 	{
 		 if ('main' == $key)
@@ -312,7 +308,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	{
 		$urls = array();
 		$urls[$this->mainImageKey] = $this->getUrl();
-
 
 		if ($this->isScaled())
 		{
@@ -355,7 +350,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$urls = array();
 		$urls[$this->mainImageKey] = $this;
 
-
 		if ($this->isScaled())
 		{
 			 $urls[$this->originalImageKey]  = $this->getOriginalFile();
@@ -364,7 +358,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$thumbs = $this->getThumbObjects();
 		foreach ($thumbs as $thumbName => $thumbObj) {
 			$urls[$thumbName] = $thumbObj;
-
 		}
 
 	$results = [
@@ -377,8 +370,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$webps = $this->getWebps();
 		$avifs = $this->getAvifs(); 
 		
-		//$base_url = trailingslashit(str_replace($this->getFileName(), '', $this->getURL()));
-
 		foreach($webps as $webpName => $webpObj)
 		{
 			$results['webp'][$webpName]  =  $webpObj; 
@@ -1361,9 +1352,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			}
 		}
 
+		// @todo . Probably this should all be removed and moved to a general OnDelete in the BackupModels.
 		if ($fileDelete === true)
 			parent::onDelete($fileDelete);
-
 
 		foreach ($this->thumbnails as $thumbObj) {
 			if ($fileDelete === true)
@@ -1384,23 +1375,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			}
 		}
 
-
 		$this->removeLegacy();
 		$this->deleteMeta();
 		$this->dropFromQueue();
 
-		$current_id = $this->id;
-
-		/* perhaps not needed if (is_array($WPMLduplicates) && count($WPMLduplicates) > 0)
-			{
-				foreach($WPMLduplicates as $duplicate_id)
-				{
-					  $this->id = $duplicate_id;
-						$this->removeLegacy();
-						$this->deleteMeta();
-						$this->dropFromQueue();
-				}
-			} */
 	}
 
 	/* Check if the metadata of this image has changed or not since load. */
@@ -1943,7 +1921,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 	/** Removed the current attachment, with hopefully removing everything we set.
 	 */
-	public function restore($args = array())
+	public function restore($args = [])
 	{
 		/* Removing this, should be processes in Optimizers
 		$defaults = array(
@@ -1957,13 +1935,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		do_action('shortpixel_before_restore_image', $this->get('id'));
 		do_action('shortpixel/image/before_restore', $this);
 
-
 		$cleanRestore = true;
 		$wpmeta = wp_get_attachment_metadata($this->get('id'));
 
 		// Get them early in case the filename changes ( ie png to jpg ) because it will stop getting it.
 		$WPMLduplicates = $this->getWPMLDuplicates();
-
 
 		$is_resized = $this->getMeta('resize');
 		$convertMeta = $this->getMeta()->convertMeta();
@@ -2006,7 +1982,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			$cleanRestore = false;
 		}
 
-		$restored = array();
+		$restored = [];
 
 		foreach ($this->thumbnails as $thumbObj) {
 			$filebase = $thumbObj->getFileBase();
@@ -2161,7 +2137,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		// ImageModel restore, restored png file to .jpg file ( due to $this)
 		// File has just been restored, but it will be wrong extension in uploads
 		//
-		//	$backupFile = //$this->getBackupFile(); // Should return as PNG file
 
 		$destination = $fs->getFile($this->getFileDir() . $this->getFileBase() . '.' . $ext);
 
@@ -2185,13 +2160,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			}
 
 			$toRemove[] = $this;
-		} elseif (true === $destination->exists() && $destination->extension() == $ext) {
+		} elseif (true === $destination->exists() && $destination->getExtension() == $ext) {
 			Log::addInfo('Destination exists, but is of correct extension, so fine?');
 		} else {
 			Log::addError('Restoring Converted image not possible, target already exists');
 			ResponseController::addData('message', __('Restore PNG2JPG : Restoring to target that already exists', 'shortpixel-image-optimiser'));
 			ResponseController::addData('is_error', true);
-
 			return false;
 		}
 

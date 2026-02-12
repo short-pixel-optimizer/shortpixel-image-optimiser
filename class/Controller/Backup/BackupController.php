@@ -6,7 +6,6 @@ use ShortPixel\Model\Backup\LocalBackupModel;
 use ShortPixel\Model\File\FileModel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
-
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
@@ -21,7 +20,6 @@ BackupController, need to implement the following :
 5) Should pave the way for remote/cloud backups as well(?)
 */
 
-
 abstract class BackupController 
 {
     protected static $instance;
@@ -30,7 +28,6 @@ abstract class BackupController
     protected static $model; 
 
     abstract protected function autoRemoveBackups();
-
 
     public function __construct()
     {
@@ -54,7 +51,6 @@ abstract class BackupController
           self::$model = '\ShortPixel\Model\Backup\LocalBackupModel'; 
         }
         // Here check with settings which backup method is active 
-
       }
 
       return self::$instance; 
@@ -150,9 +146,6 @@ abstract class BackupController
 
         return false;         
         
-    }
-
-    
-
+    }  
 
 } // class
