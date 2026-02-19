@@ -521,7 +521,11 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		//$number = preg_match_all('/<img[^>]*>|<source srcset="[^>]*">/i', $content, $matches);
 
 		// Updated pattern via - https://github.com/short-pixel-optimizer/shortpixel-image-optimiser/issues/159
-		$number = preg_match_all('/<img[^>]*>|<source\s+srcset="[^"]*"[^>]*>/i', $content, $matches);
+		//$number = preg_match_all('/<img[^>]*>|<source\s+srcset="[^"]*"[^>]*>/i', $content, $matches);
+
+
+		// Updated pattern via - https://support.shortpixel.com/conversation/242094?folder_id=43  ( not only spaces / words in between)
+		$number = preg_match_all('/<img[^>]*>|<source.*srcset="[^"]*"[^>]*>/i', $content, $matches);
 
 		$matches = $matches[0];
 		return $matches;
