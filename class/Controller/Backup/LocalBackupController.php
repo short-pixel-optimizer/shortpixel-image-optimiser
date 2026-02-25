@@ -141,6 +141,10 @@ class LocalBackupController extends BackupController
         return ['month' => $month, 'year' => $year, 'date' => $timestamp]; 
     }
 
+    /** Get the backup base-directory. 
+     * 
+     * @return DirectoryModel 
+     */
     private function getBackupBaseDirectory()
     {
         $fs = \wpSPIO()->filesystem(); 

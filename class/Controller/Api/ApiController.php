@@ -194,7 +194,6 @@ class ApiController extends RequestManager
 		$APIresponse = $this->parseResponse($response);//get the actual response from API, its an array
 		$action = $qItem->data()->action;
 
-		Log::addTemp('ApiResponse', $APIresponse);
 		// Don't know if it's this or that.
 		$status = false;
 		if (isset($APIresponse['Status'])) {

@@ -9,8 +9,6 @@ if (!defined('ABSPATH')) {
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 
-use ShortPixel\Controller\Api\ApiController as ApiController;
-use ShortPixel\Controller\Api\RequestManager as RequestManager;
 use ShortPixel\Model\Converter\Converter as Converter;
 
 use ShortPixel\Controller\Optimizer\OptimizeController as OptimizeController;
@@ -117,7 +115,6 @@ class QueueItem
          $this->result = new QueueItemResult($this->item_id);
       }
 
-      Log::addTemp('Returning Result', $this->result);
       return $this->result;
    }
 

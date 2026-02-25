@@ -284,7 +284,6 @@ class AiDataModel
 
     protected function updateWpMeta($data)
     {
-        Log::addTemp('Update WpMeta', $data);
         if (isset($data['alt']) && false !== $data['alt'] && false === is_int($data['alt']))
         {
             $bool = update_post_meta($this->attach_id, '_wp_attachment_image_alt', $data['alt']);
@@ -639,7 +638,6 @@ class AiDataModel
         }
         else
         {
-             Log::addTemp('Ai MODEL not found in cache!', $attach_id);
         }
 
     }

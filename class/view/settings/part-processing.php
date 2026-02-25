@@ -96,6 +96,26 @@ if ( ! defined( 'ABSPATH' ) ) {
       </warning>
     </setting>
 
+
+    <!-- Single File Backup --> 
+    <setting class='switch'> 
+          <content>
+          <?php $this->printSwitchButton(
+            ['name' => 'singleFileBackup',
+             'checked' => $view->data->singleFileBackup,
+             'label' => esc_html__('Backup only main file and regenerate thumbnails when restoring','shortpixel-image-optimiser'),
+             'data' => ['data-toggle="backup-single-warning"'],
+            ]);
+      ?>
+          </content>
+          <warning class="backup-single-warning">
+            <?php esc_html_e('This option will use less disk space, but only stores the main file. In case of unusual configurations, missing thumbnail definitions might cause data loss or issues with restoring the original image.' , 'shortpixel-image-optimiser') ?>
+          </warning>
+
+
+    </setting>
+
+    <!--- AUTO REMOVE BACKUP --> 
     <setting class='switch'> 
           <content>
           <?php $this->printSwitchButton(
@@ -106,8 +126,8 @@ if ( ! defined( 'ABSPATH' ) ) {
             ]);
       ?>
           </content>
-          <warning id="backup-autoremove-warning">
-            <?php esc_html_e('This will free up disk space. Might lead to dataloss, make sure the original images are available elsewhere.', 'shortpixel-image-optimiser') ?>
+          <warning id="backup-autoremove-warning" class='autoremovebackups toggleTarget'>
+            <?php esc_html_e('This will free up disk space, but might lead to data loss, make sure the original images are available elsewhere.', 'shortpixel-image-optimiser') ?>
           </warning>
 
       <content class='autoremovebackups toggleTarget'>

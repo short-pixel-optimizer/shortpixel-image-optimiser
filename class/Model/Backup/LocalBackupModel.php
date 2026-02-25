@@ -5,6 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
+use ShortPixel\Controller\ResponseController;
 use ShortPixel\Model\File\FileModel;
 use ShortPixel\Model\Image\ImageModel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
@@ -12,18 +13,14 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 class LocalBackupModel extends BackupModel
 {
 
-  
-    /*public function createBackupDirectory()
-    {
-
-    } */
-
     // This must be able to create backup for images one-by-one. 
      public function createBackupFile(ImageModel $sourceFile)
      {
         $directory = $this->getBackupDirectory(true);
         $fs = \wpSPIO()->filesystem();
         $imageName = $sourceFile->get('name');
+        $settings = \wpSPIO()->settings();
+        $is_main_file = $sourceFile->get('is_main_file');
 
         if (! $directory)
         {
@@ -34,33 +31,49 @@ class LocalBackupModel extends BackupModel
         
         $backupFile = $fs->getFile($directory . $this->getBackupFileName($sourceFile));
 
+        $singleBackup = $settings->singleFileBackup; 
+
         // Same file exists as backup already, don't overwrite in that case.
-        if ($backupFile->exists() && $this->hasBackup($sourceFile) && $backupFile->getFileSize() == $sourceFile->getFileSize())
+        if ($backupFile->exists() && $backupFile->getFileSize() == $sourceFile->getFileSize())
         {
           $result = true;
+          $this->statusCode = self::STATUS_BACKUP_OK;
+        }
+        elseif(true === $singleBackup && false === $is_main_file)
+        {
+          $mainFile = $this->getMainFile(); 
+           if (false === $this->hasBackup($mainFile))
+           {
+               $bool = $this->createBackupFile($mainFile); 
+           }
+           $this->statusCode = self::STATUS_IGNORED; 
         }
         else
         {
           $result = $sourceFile->copy($backupFile);
-
-          // Remove the cache if there, since it will re-ask this to check copy success.
-          if (isset($this->backup_files[$imageName])) 
-          {
-             unset ($this->backup_files[$imageName]); 
-          }
         }
 
-        if (! $result)
+          // Remove the cache if there, since it will re-ask this to check copy success.
+        if (isset($this->backup_files[$imageName])) 
+        {
+            unset ($this->backup_files[$imageName]); 
+        }
+
+        if (false === $result)
         {
           Log::addWarn('Creating Backup File failed for ' . $sourceFile->getFullPath());
+          $this->statusCode = self::ERR_COPY_FAILED; 
           return false;
         }
 
-        if ($this->hasBackup($sourceFile))
+        if ($this->hasBackup($sourceFile)) // This check should check if system returns backup ok for this file. 
+        {
           return true;
+        }
         else
         {
           Log::addWarn('FileModel returns no Backup File for (failed) ' . $sourceFile->getFullPath());
+          $this->statusCode = self::ERR_COPY_FAILED; 
           return false;
         }
 
@@ -68,13 +81,84 @@ class LocalBackupModel extends BackupModel
 
      // This one should probably do the whole procedure. 
      // Problem - how to find all the file items here. 
-     public function restore(FileModel $targetFile)
+     public function restore(ImageModel $targetFile) : bool 
      {
          $backupFile = $this->getBackupFile($targetFile); 
-         return $backupFile->move($targetFile);
+         $imageName = $targetFile->get('name');
+
+        
+
+        if (false === $backupFile || false === is_object($backupFile))
+        {
+          // If not own file, but main file is in play, return OK but this needs a regenerate. 
+          if (false === $this->backup_files[$imageName]['has_own_file'])
+          {
+              return true; 
+          }
+          Log::addWarn('Issue with restoring BackupFile, probably missing - ', $backupFile);
+          return false; //error
+        }
+
+        if (false === $backupFile->is_readable())
+        {
+						Log::addError('BackupFile not readable' . $backupFile->getFullPath());
+						$response = array(
+								'is_error' => true,
+								'issue_type' => ResponseController::ISSUE_BACKUP_EXISTS,
+								'message' => __('BackupFile not readable. Check file and/or file permissions', 'shortpixel-image-optimiser'),
+						);          
+						ResponseController::addData($this->mediaItem->get('id'), $response);
+
+           return false; //error
+         }
+				 elseif (false === $backupFile->is_writable())
+				 {
+ 						Log::addError('BackupFile not writable' . $backupFile->getFullPath());
+						 $response = array(
+								 'is_error' => true,
+								 'issue_type' => ResponseController::ISSUE_FILE_NOTWRITABLE,
+								 'message' => __('The backup file is not writable. Check file and/or file permissions', 'shortpixel-image-optimiser'),
+
+						 );
+						 ResponseController::addData($this->mediaItem->get('id'), $response);
+            return false; //error
+				 }
+				 if (false === $targetFile->is_writable())
+				 {
+					 	 Log::addError('Target File not writable' . $targetFile->getFullPath());
+
+						 $response = array(
+								 'is_error' => true,
+								 'issue_type' => ResponseController::ISSUE_FILE_NOTWRITABLE,
+								 'message' => __('Target file not writable. Check file permissions', 'shortpixel-image-optimiser'),
+
+						 );
+						 ResponseController::addData($this->mediaItem->get('id'), $response);
+
+						 return false;
+				 }
+
+				$bool = $backupFile->move($targetFile);
+        return $bool;
      }
 
-     public function hasBackup(ImageModel $sourceFile)
+    public function getBackupData()
+    {
+      if (false === $this->full_backup_loaded)
+      {
+         $this->loadAll(); 
+      }
+
+      return $this->backup_files;
+    }
+
+     /** Checks if there is a backup 
+      * 
+      * @param ImageModel $sourceFile 
+      * @param bool $strict .  Don't look for mainFile. Check used for determine file / prevent loops. 
+      * @return bool 
+      */
+     public function hasBackup(ImageModel $sourceFile, $strict = false) : bool
      {
       $is_main_file = $sourceFile->get('is_main_file');
       $imageName = $sourceFile->get('name');
@@ -86,7 +170,6 @@ class LocalBackupModel extends BackupModel
         {
            return $backupData['has_backup'];
         }
-
       }
 
         $directory = $this->getBackupDirectory(false);
@@ -95,7 +178,7 @@ class LocalBackupModel extends BackupModel
           return false;
         }
 
-        $backupFile =  $directory . $sourceFile->getBackupFileName();
+        $backupFile =  $directory . $this->getBackupFileName($sourceFile);
         
         if (file_exists($backupFile) && ! is_dir($backupFile) )
         {
@@ -105,16 +188,55 @@ class LocalBackupModel extends BackupModel
           $bool = false;
         }
 
+        // Check if the backup is at the main level. 
+        // Only possible with mediaLibraryModel 
+        $has_own_file = true; 
+        if (false === $bool)
+        {
+          $backupFile = false; 
+          $has_own_file = false; 
+
+          // Check if main has a backup and use that if needed. 
+          // @todo - This main file, can be originalfile as well, which is then not marked as main :/ 
+          if (false === $strict && false === $is_main_file && $sourceFile->isOptimized())
+          {
+           $mainFile = $this->getMainFile();
+           $bool = $this->hasBackup($mainFile, true);
+          }
+        }  
+
         $this->backup_files[$imageName]  = [
           'has_backup' => $bool, 
-          'file' => $backupFile,    
+          'file' => $backupFile,
+          'has_own_file' => $has_own_file, 
         ];
 
         return $bool;
 
      }
 
-         /**
+     public function onDelete(ImageModel $sourceFile)
+     {
+       $isConverted = $this->isConverted; 
+       $name = $sourceFile->get('name');
+       
+       if (true === $this->hasBackup($sourceFile))
+       {
+          $backupFile = $this->getBackupFile($sourceFile);
+          if (is_object($backupFile))
+          {
+             $backupFile->delete();
+          }
+          
+       }
+       
+      
+       return true;
+
+     }
+
+
+     /**
      * Function to get the backupDirectory from the file structure 
      * 
      * @param mixed $fileObj The fileModel 
@@ -153,80 +275,61 @@ class LocalBackupModel extends BackupModel
         return $this->backupDirectory;
     }
 
+    /** Get the backup file
+     * 
+     * @param ImageModel $sourceFile 
+     * @return FileModel|false 
+     */
     public function getBackupFile(ImageModel $sourceFile)
     {
-
       $imageName = $sourceFile->get('name');
       
       if (true === $this->hasBackup($sourceFile))
        {
-          $file = $this->backup_files[$imageName]['file']; 
-          $fileObj = new FileModel($file); 
-          return $fileObj; 
-       }    //      return new FileModel($this->getBackupDirectory() . $this->getBackupFileName() );
+          if (true === $this->backup_files[$imageName]['has_own_file']) // only if own file is set, otherwise file is empty, refering to directory.
+          {
+            $file = $this->backup_files[$imageName]['file']; 
+            $fileObj = new FileModel($file); 
+            return $fileObj; 
+          }
+          else
+          {
+             return false; 
+          }
+       }
        else
        {
          return false;
        }
     }
 
-    	/** Function returns the filename for the backup.  This is an own function so it's possible to manipulate backup file name if needed, i.e. conversion or enumeration */
-      public function getBackupFileName(FileModel $fileObj)
+  
+      protected function loadAll()
       {
-            // This can't be mediaItem directly, needs to either use main / thumbs or whatever is requested here. 
-         return $fileObj->getFileName();
-      }
-
-
-      protected function getAll()
-      {
-        
         $objects = $this->mediaItem->get('thumbnails');
         if ($this->mediaItem->isScaled()) {
           $objects[$this->mediaItem->getImageKey('original')] = $this->mediaItem->getOriginalFile();
         }
-        
-        return $objects; 
-
-      }
       
-   
-      protected function loadAll()
-      {
-
-        $objects = $this->getAll();
         foreach ($objects as $obj)
         {
            $this->hasBackup($obj); 
         }
 
         $this->full_backup_loaded = true; 
-        
       }
 
-      // @todo This one in restore in ImageModel 
-      public function restoreAll()
-      {
-         foreach($this->backup_files as $backupData)
-         {
-            if (true === $backupData['has_backup'])
-            {
-                $fileObj = $backupData['file'];
-                $fileObj->restore(); // for now invoke it on the imageModel 
-            }
-         }
-      }
 
-      // @todo This one hook into ImageModel, on the pyshical file delete. 
-      public function onDeleteAll()
+      private function getMainFile()
       {
-         foreach($this->backup_files as $backupData)
-         {
-            if (true === $backupData['has_backup'])
-            {
-                $backupData['file']->delete(); 
-            }
-         }
+          if ($this->mediaItem->hasOriginal())
+          {
+             return $this->mediaItem->getOriginalFile(); 
+          }
+          else
+          {
+             return $this->mediaItem; 
+          }
       }
 
 }

@@ -171,7 +171,6 @@ abstract class OptimizerBase
             $keepArgs = $qItem->data()->getKeepDataArgs();
             if (true === $qItem->data()->hasNextAction())
             {
-               Log::addTemp('Finishing, next actions: ', $qItem->data()->next_actions);
                 $args['next_actions'] = $qItem->data()->next_actions; 
             }
             $args = array_merge($args, $keepArgs);

@@ -48,7 +48,6 @@ class FileSystemController extends \ShortPixel\Controller
    */
   public function getMediaImage($id, $useCache = true, $cacheOnly = false)
   {
-
     if (! is_numeric($id)) {
       Log::addWarn('Get Media Image called without valid ID', $id);
       return false;

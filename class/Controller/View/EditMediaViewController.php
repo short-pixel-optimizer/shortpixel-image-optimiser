@@ -1,6 +1,7 @@
 <?php
 namespace ShortPixel\Controller\View;
 
+use ShortPixel\Controller\Backup\BackupController;
 use ShortPixel\Controller\Front\CDNController;
 use ShortPixel\Controller\Optimizer\OptimizeAiController;
 use ShortPixel\Controller\QueueController;
@@ -301,6 +302,14 @@ class EditMediaViewController extends \ShortPixel\ViewController
             }
 
           }
+
+          $backupController = BackupController::getBackupController(); 
+          
+          $backupModel = $backupController->getModel($imageObj);
+          $backupData = $backupModel->getBackupData(); 
+
+          $debugInfo['backupData'] = ['BackupData', $backupData]; 
+
 
           $debugInfo['imagemetadata'] = array(__('ImageModel Metadata (ShortPixel)'), $imageObj);
 					$debugInfo[] = array('', '<hr>');

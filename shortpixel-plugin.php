@@ -686,7 +686,11 @@ class ShortPixelPlugin {
 
 		$controller = false;
 
-		$url       = menu_page_url( $plugin_page, false );
+		$url = '';
+		if (! is_null($plugin_page))
+		{
+			$url       = menu_page_url( $plugin_page, false );
+		}
 		$screen_id = \wpSPIO()->env()->screen_id;
 
         switch ( $plugin_page ) {

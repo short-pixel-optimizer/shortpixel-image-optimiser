@@ -631,7 +631,7 @@ class WPQ implements Queue
 	           case ShortQ::QSTATUS_ERROR:
 	             $num_errors = $count;
 	           break;
-	           case ShortQ::QSTATUS_FATAL;
+	           case ShortQ::QSTATUS_FATAL:
 	              $num_fatal = $count;
 	           break;
 	         }

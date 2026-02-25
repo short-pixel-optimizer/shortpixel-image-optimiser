@@ -4,6 +4,7 @@ namespace ShortPixel\Controller\Backup;
 use ShortPixel\Model\Backup\BackupModel;
 use ShortPixel\Model\Backup\LocalBackupModel;
 use ShortPixel\Model\File\FileModel;
+use ShortPixel\Model\Image\ImageModel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -57,7 +58,7 @@ abstract class BackupController
     }
 
 
-    public function getModel($mediaItem)
+    public function getModel(ImageModel $mediaItem)
     {
         $id = $mediaItem->get('id');
         $type = $mediaItem->get('type');

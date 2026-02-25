@@ -536,8 +536,6 @@ class AjaxController
 
 		while (false === $is_done)
 		{
-			Log::addTemp('Result', $result);
-
 			if (false === property_exists($result, 'is_done') || $result->is_done === false)
 			{ 
 				// Any subsequent request *must* be hard refresh no or it hangs.
@@ -591,8 +589,6 @@ class AjaxController
 					'message' => __('Limit of attempts exceeded. Possible connection issue. Try again later. ', 'shortpixel-image-optimiser'),
 				]; 
 				
-				Log::addTemp('Timeout 15x');
-
 				$this->send((object)$result);
 				exit('Timeout');
 				break; 
@@ -1034,7 +1030,6 @@ class AjaxController
 		if (true === $has_filters)
 		{ 
 			$args['filters'] = $filters; 
-			Log::addTemp('Queue starting with filters: ', $filters);
 		}
 
 		
@@ -1276,7 +1271,6 @@ class AjaxController
 				}
 				if ('retrieveAlt' === $state)
 				{
-					Log::addTemp('Result', $result); 
 					if (property_exists($result, 'aiData'))
 					{
 						$aiModel = AiDataModel::getModelByAttachment($qItem->item_id, 'media');

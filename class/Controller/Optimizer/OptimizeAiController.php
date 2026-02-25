@@ -207,7 +207,6 @@ class OptimizeAiController extends OptimizerBase
       elseif (property_exists($qItem->result(), 'remote_id'))
       {
           $remote_id = $qItem->result()->remote_id;
-          Log::addTemp('Remote ID fetched: ' . $remote_id);
           
           $this->finishItemProcess($qItem, ['remote_id' => $remote_id]);
       }
@@ -489,7 +488,6 @@ class OptimizeAiController extends OptimizerBase
              } 
         }
 
-        Log::addTemp('New Metadata after replace: ', $metadata);
         wp_update_attachment_metadata($item_id, $metadata);
         
   }
@@ -652,8 +650,6 @@ class OptimizeAiController extends OptimizerBase
        $aiModel = AiDataModel::getModelByAttachment($item_id, 'media');
        $original = $aiModel->getOriginalData();
        $generated = $aiModel->getGeneratedData();
-
-       Log::addTEmp('Undo ALT on ' . $item_id);
 
        $aiData = [
             'alt' => $original['alt'], 

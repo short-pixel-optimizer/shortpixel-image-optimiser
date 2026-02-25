@@ -26,21 +26,22 @@ class InstallHelper
 		self::deactivatePlugin();
 
 		$env = wpSPIO()->env();
+		$settings = \wpSPIO()->settings();
 
-		if (\WPShortPixelSettings::getOpt('deliverWebp') == 3 && ! $env->is_nginx) {
+		if ($settings->deliverWebp == 3 && ! $env->is_nginx) {
 			UtilHelper::alterHtaccess(true, true); //add the htaccess lines. Both are true because even if one option is now off in the past both fileformats could have been generated.
 		}
 
 		self::checkTables();
 
 		AdminNoticesController::resetOldNotices();
-		\WPShortPixelSettings::onActivate();
 
 		$queueController = new QueueController();
 		$q = $queueController->getQueue('media');
 		$q->getShortQ()->install(); // create table.
 
-		$settings = \wpSPIO()->settings();
+
+		$settings->onActivate();
 		$settings->currentVersion = SHORTPIXEL_IMAGE_OPTIMISER_VERSION;
 
 		wp_cache_flush();
@@ -48,8 +49,9 @@ class InstallHelper
 
 	public static function deactivatePlugin()
 	{
-		$settings = new \WPShortPixelSettings(); // \wpSPIO()->settings();
-		$settings::onDeactivate();
+
+		$settings = \wpSPIO()->settings();
+		$settings->onDeactivate(); 
 
 		$env = wpSPIO()->env();
 
@@ -88,7 +90,7 @@ class InstallHelper
 	public static function hardUninstall()
 	{
 		$env = \wpSPIO()->env();
-		$settings = new \WPShortPixelSettings();
+		$settings = \wpSPIO()->settings();
 
 		$nonce = (isset($_POST['tools-nonce'])) ? sanitize_key($_POST['tools-nonce']) : null;
 		if (! wp_verify_nonce($nonce, 'remove-all')) {
@@ -101,12 +103,8 @@ class InstallHelper
 		// Bulk Log
 		BulkController::uninstallPlugin();
 
-		$settings::resetOptions();
-    // new settings
-    delete_option('spio_settings');
+		$settings->deleteAll();
 
-		// new settings
-		delete_option('spio_settings');
 
 		if (! $env->is_nginx) {
 			insert_with_markers(get_home_path() . '.htaccess', 'ShortPixelWebp', '');

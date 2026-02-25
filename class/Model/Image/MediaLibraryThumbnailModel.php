@@ -45,11 +45,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 		$this->id = $id;
 		$this->imageType = self::IMAGE_TYPE_THUMB;
 		$this->size = $size;
-
-		$backupController = BackupController::getBackupController(); 
-		$backupModel = $backupController->getModel($this);
-
-		$this->backupModel = $backupModel;
 	}
 
 
@@ -230,6 +225,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 		return parent::getImprovements();
 	}
 
+	/*
 	public function getBackupFileName()
 	{
 		$mainFile = ($this->is_main_file) ? $this : $this->getMainFile();
@@ -249,7 +245,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 		}
 
 		return parent::getBackupFileName();
-	}
+	} */
 
 
 	protected function preventNextTry($reason = '')
@@ -339,6 +335,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 		return (! \wpSPIO()->settings()->processThumbnails);
 	}
 
+	/* @todo All these filesystem checks at some point need to be moved to BackupModel somehow */
 	public function hasBackup($args = [])
 	{
 		$defaults = array(
@@ -538,10 +535,4 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 		return parent::createBackup();
 	}
 
-	// @todo This is a breach of pattern to realize checking for changes to the main image path on conversion / duplicates.
-	private function getMainFile()
-	{
-		$fs = \wpSPIO()->filesystem();
-		return $fs->getMediaImage($this->id, true, true);
-	}
 } // class

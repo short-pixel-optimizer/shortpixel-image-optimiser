@@ -13,7 +13,6 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 class QueueItemResult implements JsonSerializable
 {
 
-
    protected $item_id; 
    protected $is_done = false;  // Flag is whole item is done with, finish. 
    protected $is_error = false;  // If there is an error in this item 

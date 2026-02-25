@@ -300,12 +300,7 @@ class FileModel extends \ShortPixel\Model
        return false;
   }
 */
-  /* @todo moved to Backupmodel 
-	/** Function returns the filename for the backup.  This is an own function so it's possible to manipulate backup file name if needed, i.e. conversion or enumeration */
-	public function getBackupFileName()
-	{
-		 return $this->getFileName();
-	}
+
 
   /** Returns the Directory Model this file resides in
   *

@@ -25,6 +25,7 @@ class SettingsModel extends \ShortPixel\Model
 	      'useSmartcrop' => ['s' => 'boolean', 'default' => false],
         'smartCropIgnoreSizes' => ['s' => 'boolean', 'default' => false],
         'backupImages' => ['s' => 'boolean', 'default' => true], // checkbox
+        'singleFileBackup' => ['s' => 'boolean', 'default' => false],
         'autoRemoveBackups' => ['s' => 'boolean', 'default' => false], 
         'autoRemoveBackupsPeriod' => ['s' => 'string', 'default' => null],
     //    'keepExif' => ['s' => 'int', 'default' => 0], // checkbox
@@ -90,9 +91,6 @@ class SettingsModel extends \ShortPixel\Model
         'ai_filename_context' => ['s' => 'string', 'default' => '', 'maxlength' => 200],
         'ai_use_exif' => ['s' => 'boolean', 'default' => true],
         'ai_language' => ['s' => 'string', 'default' => 'callback'],
-     
- 
-
     );
 
   //  const EXIF_REMOVE = 0;
@@ -290,11 +288,86 @@ class SettingsModel extends \ShortPixel\Model
 				}
 		}
 
-
     public function deleteAll()
     {
         delete_option($this->option_name);
+        $this->updated = false; // prevent any save request going here. 
     }
+
+    public function onActivate()
+    {
+      // Legacy 
+      update_option( 'wp-short-pixel-activation-date', time(), 'no');
+      delete_option( 'wp-short-pixel-current-total-files');
+    }
+
+    public function onDeactivate()
+    {
+        delete_option('wp-short-pixel-activation-notice');
+				delete_option('wp-short-pixel-bulk-last-status'); // legacy shizzle
+				delete_option('wp-short-pixel-current-total-files');
+				delete_option('wp-short-pixel-remove-settings-on-delete-plugin');
+
+				// Bulk State machine legacy
+				$bulkLegacyOptions = array(
+						'wp-short-pixel-bulk-type',
+						'wp-short-pixel-bulk-last-status',
+						'wp-short-pixel-query-id-start',
+						'wp-short-pixel-query-id-stop',
+						'wp-short-pixel-bulk-count',
+						'wp-short-pixel-bulk-previous-percent',
+						'wp-short-pixel-bulk-processed-items',
+						'wp-short-pixel-bulk-done-count',
+						'wp-short-pixel-last-bulk-start-time',
+						'wp-short-pixel-last-bulk-success-time',
+						'wp-short-pixel-bulk-running-time',
+						'wp-short-pixel-cancel-pointer',
+						'wp-short-pixel-skip-to-custom',
+						'wp-short-pixel-bulk-ever-ran',
+						'wp-short-pixel-flag-id',
+						'wp-short-pixel-failed-imgs',
+						'bulkProcessingStatus',
+						'wp-short-pixel-prioritySkip',
+				);
+
+				$removedStats = array(
+						'wp-short-pixel-helpscout-optin',
+						'wp-short-pixel-activation-notice',
+						'wp-short-pixel-dismissed-notices',
+						'wp-short-pixel-media-alert',
+				);
+
+				$removedOptions = array(
+						'wp-short-pixel-remove-settings-on-delete-plugin',
+						'wp-short-pixel-custom-bulk-paused',
+						'wp-short-pixel-last-back-action',
+						'wp-short-pixel-front-bootstrap',
+				);
+
+        // Settings completely removed during the settings redo
+        $settingsRevamp = [
+          'wp-short-pixel-cloudflareAPIEmail',
+          'wp-short-pixel-cloudflareAuthKey',
+          'wp-short-pixel-front-bootstrap',
+					'wp-short-pixel-api-retries',
+					'wp-short-pixel-total-optimized',
+					'wp-short-pixel-total-original',
+					'wp-short-pixel-download-archive',
+					'wp-short-pixel-converted-png2jpg',
+          'wp-short-pixel-savedSpace',
+          'wp-short-pixel-fileCount',
+          'wp-short-pixel-files-under-5-percent',
+        ];
+
+				$toRemove = array_merge($bulkLegacyOptions, $removedStats, $removedOptions, $settingsRevamp);
+
+				foreach($toRemove as $option)
+				{
+					 delete_option($option);
+				}
+    
+    }
+
 
     /**
      * PHP shutdown function, check if settings are updated and save on closing time.

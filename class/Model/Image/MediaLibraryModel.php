@@ -96,10 +96,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			$this->checkUnlistedForNotice();
 		}
 
-		$backupController = BackupController::getBackupController(); 
-		$backupModel = $backupController->getModel($this);
-
-		$this->backupModel = $backupModel;
 	}
 
 	public function getOptimizeUrls()
@@ -345,6 +341,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return $results;
 	}
 
+	/** Get all files contained within this object. 
+	 * @return Array 
+	 */
 	public function getAllFiles()
 	{
 		$urls = array();
@@ -601,7 +600,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	}
 
 	// @todo Needs unit test.
-	public function count($type, $args = array())
+	public function count($type, $args = [])
 	{
 		$defaults = array(
 			'thumbs_only' => false,
@@ -1324,8 +1323,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		// Load before removing meta.
 		$isConverted = $this->getMeta()->convertMeta()->isConverted();
 
+		$backupModel = $this->getBackupModel();
 
 		// If file is converted, the backup path can live somewhere else ( on the converted item ), so search in this context instead of imagemodel which will only look for same extension backups.
+		
+		
+		/** @TODO THIS IS A JOB OF BACKUP MODEL / CONTROLLER TO DETECT CONVERSIONS AND ACT.  */
 		if (true === $isConverted) {
 			$args = array('forceConverted' => true);
 			if ($this->hasBackup($args)) {
@@ -1505,7 +1508,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return $bool;
 	}
 
-	public function isRestorable()
+	public function isRestorable() : bool
 	{
 		$bool = true;
 		$bool = parent::isRestorable();
@@ -1699,7 +1702,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		}
 	}
 
-	public function hasOriginal()
+	public function hasOriginal() : bool
 	{
 		if ($this->original_file)
 			return true;
@@ -1722,7 +1725,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 
 	/**
-	 * Check if this Image has a Parent indicating it's a WPML Duplicate.
+	 * Check if this Image has a Parent indicating it's a WPML Duplicate. 
 	 *
 	 * @return boolean
 	 */ 
@@ -1923,13 +1926,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	 */
 	public function restore($args = [])
 	{
-		/* Removing this, should be processes in Optimizers
-		$defaults = array(
-			'keep_in_queue' => false, // used for bulk restore.
-		); */
-
-		//$args = wp_parse_args($args, $defaults);
-
 		$fs = \wpSPIO()->filesystem();
 
 		do_action('shortpixel_before_restore_image', $this->get('id'));
@@ -1976,7 +1972,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				return $bool;
 			}
 		}
-
 
 		if (! $bool) {
 			$cleanRestore = false;
@@ -2067,15 +2062,23 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		// Any legacy will have false information by now; remove.
 		$this->removeLegacy();
 
-		if ($cleanRestore) {
+		/* If some backup where not present (ie single file backup ), the thumbs need to be regenerated. 
+		*  Issue with that is that metadata will stop corresponding with saved SPIO meta, so this needs to be wiped.
+		* Anything with 'cleanRestore' would need to be solved by this. 
+		*/
+		$backupModel = $this->getBackupModel(); 
+		if (true === $backupModel->needsRegenerate())
+		{
+			$this->generateThumbnails();
+			$wpmeta = wp_get_attachment_metadata($this->get('id'));
+			$cleanRestore = true; 
+		}
+
+		if (true === $cleanRestore) {
 			$this->deleteMeta();
 		} else {
 			$this->saveMeta(); // Save if something is not restored.
 		}
-
-		/*if ($args['keep_in_queue'] === false) {
-			$this->dropFromQueue();
-		} */
 
 		update_post_meta($this->get('id'), '_wp_attachment_metadata', $wpmeta);
 
@@ -2087,7 +2090,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 			foreach ($WPMLduplicates as $duplicate_id) {
 				$this->id = $duplicate_id;
-				$this->removeLegacy();
+				//$this->removeLegacy(); // RemoveLegacy upwards already removed.
 
 				$duplicate_meta = wp_get_attachment_metadata($duplicate_id);
 				$duplicate_meta = array_merge($duplicate_meta, $wpmeta);
@@ -2257,7 +2260,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	}
 
 	/** Utility function to create a loopable object of thumbnails, retinas and scaled (if so) and other object with thumbnailModel . Goal is to prevent several functions having to do the same operation on array with different names ( optimized, getOptimizeUrl, etc )
-	 * @return Object Iterator
+	 * @return Array
 	 */
 	private function getThumbObjects()
 	{
@@ -2268,7 +2271,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			foreach ($retinas as $retinaObj) {
 				$objects['retina_' . $retinaObj->get('name')] = $retinaObj;
 			}
-			//				 $objects = array_merge($objects, $this->retinas);
 		}
 		if ($this->isScaled()) {
 			$objects[$this->originalImageKey] = $this->getOriginalFile();
@@ -2454,6 +2456,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 			$this->image_meta->did_keepExif = $exifkept;
 
+			// @todo  This should be checked! 
 			if ($this->hasBackup(array('noConversionCheck' => true))) {
 				$backup = $this->getBackupFile(array('noConversionCheck' => true));
 				if (is_object($backup))

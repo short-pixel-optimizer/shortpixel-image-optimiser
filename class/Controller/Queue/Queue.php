@@ -627,7 +627,6 @@ abstract class Queue
         $stats->images = $this->countQueue();
       }
 
-     // Log::addTemp('GetStats - ' . $this->queueName, $stats);
       return $stats;
     }
 

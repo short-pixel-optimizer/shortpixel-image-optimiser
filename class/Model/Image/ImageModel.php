@@ -14,8 +14,7 @@ use ShortPixel\Controller\Backup\BackupController as BackupController;
 use ShortPixel\Model\File\FileModel as FileModel;
 use ShortPixel\Model\AccessModel as AccessModel;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
-
-
+use ShortPixel\Model\Backup\BackupModel;
 use ShortPixel\Model\Converter\Converter as Converter;
 
 /* ImageModel class.
@@ -730,7 +729,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                     [status] => 2
                 )
 		*/
-    public function handleOptimized($results, $args = array())
+    public function handleOptimized($results, $args = [])
     {
         $settings = \wpSPIO()->settings();
         $fs = \wpSPIO()->filesystem();
@@ -942,7 +941,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 					}
     }
 
-    public function isRestorable()
+    public function isRestorable() : bool
     {
         $backupModel = $this->getBackupModel(); 
 
@@ -1017,58 +1016,12 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         }
 
         $backupModel = $this->getBackupModel(); 
-        $backupFile = $backupModel->getBackupFile($this);
+       // $backupFile = $backupModel->getBackupFile($this); // @todo This crossref is probalby not productive.
       //  $backupFile = $this->getBackupFile();
 				$type = $this->get('type');
 				$id = $this->get('id');
 
-        if (false === $backupFile || false === is_object($backupFile))
-        {
-          Log::addWarn('Issue with restoring BackupFile, probably missing - ', $backupFile);
-          return false; //error
-        }
-
-        if (false === $backupFile->is_readable())
-        {
-						Log::addError('BackupFile not readable' . $backupFile->getFullPath());
-						$response = array(
-								'is_error' => true,
-								'issue_type' => ResponseController::ISSUE_BACKUP_EXISTS,
-								'message' => __('BackupFile not readable. Check file and/or file permissions', 'shortpixel-image-optimiser'),
-						);
-						ResponseController::addData($this->get('id'), $response);
-
-           return false; //error
-         }
-				 elseif (false === $backupFile->is_writable())
-				 {
- 						Log::addError('BackupFile not writable' . $backupFile->getFullPath());
-						 $response = array(
-								 'is_error' => true,
-								 'issue_type' => ResponseController::ISSUE_FILE_NOTWRITABLE,
-								 'message' => __('The backup file is not writable. Check file and/or file permissions', 'shortpixel-image-optimiser'),
-
-						 );
-						 ResponseController::addData($this->get('id'), $response);
-            return false; //error
-				 }
-				 if (false === $this->is_writable())
-				 {
-					 	 Log::addError('Target File not writable' . $this->getFullPath());
-
-						 $response = array(
-								 'is_error' => true,
-								 'issue_type' => ResponseController::ISSUE_FILE_NOTWRITABLE,
-								 'message' => __('Target file not writable. Check file permissions', 'shortpixel-image-optimiser'),
-
-						 );
-						 ResponseController::addData($this->get('id'), $response);
-
-						 return false;
-				 }
-
-         // @todo Should call restore function on Model.
-				$bool = $backupFile->move($this);
+        $bool = $backupModel->restore($this); 
 
         if ($bool !== true)
         {
@@ -1100,12 +1053,14 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     public function onDelete()
     {
         // @todo This delete should go to backupModel, probably on main item.
+        $backupModel = $this->getBackupModel();
         
-        if ($this->hasBackup())
-        {
-           $file = $this->getBackupFile();
-           $file->delete();
-        }
+     //   if ($this->hasBackup($this))
+      //  {
+           $backupModel->onDelete($this); 
+           //$file = $this->getBackupFile();
+           //$file->delete();
+      //  }
 
         $webp = $this->getWebp();
         $avif = $this->getAvif();
@@ -1456,93 +1411,41 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     }
 
 
-    /* @todo - This move to backupModel */
     protected function createBackup()
     {
-
         $backupModel = $this->getBackupModel();
 
-        // Safety: It should absolutely not be possible to overwrite a backup file.
-       if ($backupModel->hasBackup($this))
-       {
-          $backupFile = $backupModel->getBackupFile($this);
-
-          // If backupfile is bigger (indicating original file)
-          if ($backupFile->getFileSize() == $this->getFileSize())
-          {
-             return true;
-          }
-          else
-          {
-            // Return the backup for a retry.
-            if ($this->isRestorable() && ($backupFile->getFileSize() > $this->getFileSize()))
-            {
-                Log::addWarn('Backup Failed, File is restorable, try to recover. ' . $this->getFullPath() );
-                $this->restore();
-
-								$this->error_message = __('Backup already exists, but image is recoverable and the plugin will rollback. Will retry to optimize again. ', 'shortpixel-image-optimiser');
-            }
-            else
-            {
-              $this->preventNextTry(__('Fatal Issue: The Backup file already exists. The backup seems not restorable, or the original file is bigger than the backup, indicating an error.', 'shortpixel-image-optimiser'));
-
-              Log::addError('The backup file already exists and it is bigger than the original file. BackupFile Size: ' . $backupFile->getFileSize() . ' This Filesize: ' . $this->getFileSize(), $this->fullpath);
-
-              $this->error_message = __('Backup not possible: it already exists and the original file is bigger.', 'shortpixel-image-optimiser');
-            }
-
-            return false;
-          }
-          exit('Fatal error, createbackup protection - this should never reach');
-       }
 
        if(apply_filters('shortpixel/image/skip_backup', false, $this->getFullPath(), $this->is_main_file)){
         return true;
-    }
-
-      return $backupModel->createBackupFile($this);
-/*
-       $directory = $this->getBackupDirectory(true);
-       $fs = \wpSPIO()->filesystem();
-
-       // @Deprecated
-       if(apply_filters('shortpixel_skip_backup', false, $this->getFullPath(), $this->is_main_file)){
-           return true;
        }
 
+        $bool = $backupModel->createBackupFile($this); 
 
-       if (! $directory)
-       {
-          Log::addWarn('Could not create Backup Directory for ' . $this->getFullPath());
-          $this->error_message = __('Could not create backup Directory', 'shortpixel-image-optimiser');
-          return false;
-       }
-       
-       $backupFile = $fs->getFile($directory . $this->getBackupFileName());
+        $statusCode = $backupModel->statusCode; 
 
-       // Same file exists as backup already, don't overwrite in that case.
-       if ($backupFile->exists() && $this->hasBackup() && $backupFile->getFileSize() == $this->getFileSize())
-       {
-          $result = true;
-       }
-       else
-       {
-         $result = $this->copy($backupFile);
-       }
-
-       if (! $result)
-       {
-          Log::addWarn('Creating Backup File failed for ' . $this->getFullPath());
-          return false;
-       }
-
-       if ($this->hasBackup())
-         return true;
-       else
-       {
-          Log::addWarn('FileModel returns no Backup File for (failed) ' . $this->getFullPath());
-          return false;
-       } */
+        if (false === $bool)
+        {
+           
+           switch($statusCode)
+           {
+              default: 
+                  case BackupModel::ERR_COPY_FAILED: 
+                    $this->preventNextTry(__('Issue: The Backup file failed to copy. Check file permissions and retry', 'shortpixel-image-optimiser'));
+                    Log::addError('The backup file already exists and it is bigger than the original file. BackupFile Size: ' . $backupFile->getFileSize() . ' This Filesize: ' . $this->getFileSize(), $this->fullpath);
+                    $this->error_message = __('Backup not possible: Copy failed!.', 'shortpixel-image-optimiser');
+                  break; 
+                  case BackupModel::ERR_BACKUP_EXISTS:
+                    $this->preventNextTry(__('Fatal Issue: The Backup file already exists. The backup seems not restorable, or the original file is bigger than the backup, indicating an error.', 'shortpixel-image-optimiser'));
+                    Log::addError('The backup file already exists and it is bigger than the original file. BackupFile Size: ' . $backupFile->getFileSize() . ' This Filesize: ' . $this->getFileSize(), $this->fullpath);
+                    $this->error_message = __('Backup not possible: it already exists and the original file is bigger.', 'shortpixel-image-optimiser');
+                  break; 
+            
+              break; 
+           }
+        }
+      
+        return $bool;
     }
 
     protected function fs()

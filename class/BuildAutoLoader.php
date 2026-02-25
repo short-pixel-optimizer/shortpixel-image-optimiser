@@ -28,11 +28,6 @@ class BuildAutoLoader
   public static function getFiles()
   {
     $main = array(
-      // 'shortpixel_api.php',
-      // 'class/wp-short-pixel.php',
-       'class/wp-shortpixel-settings.php',
-      // 'class/view/shortpixel_view.php',
-       'class/front/img-to-picture-webp.php',
     );
 
     $models = array(
@@ -40,7 +35,6 @@ class BuildAutoLoader
 
     $externals = array(
       'class/external/cloudflare.php',
-      //'class/external/gravityforms.php',
       'class/external/nextgen/nextGenController.php',
       'class/external/nextgen/nextGenViewController.php',
       'class/external/visualcomposer.php',
