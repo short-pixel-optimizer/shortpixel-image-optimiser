@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
-use ShortPixel\Controller\Backup\BackupController as BackupController;
+use ShortPixel\Controller\Backup\BackupController;
 use ShortPixel\Model\Image\ImageModel;
 
  // Model to keep the backups of one item with many variables into one piece.  This should be the whole backup for one image item 
@@ -23,10 +23,11 @@ abstract class BackupModel
     protected $isConverted; 
 
     abstract protected function getBackupDirectory($create = false);
-    abstract public function createBackupFile(ImageModel $sourceFile);
+    abstract public function createBackupFile(ImageModel $sourceFile) : bool;
     abstract public function restore(ImageModel $sourceFile);
     abstract public function hasBackup(ImageModel $sourceFile, $strict = false) : bool; 
     abstract public function onDelete(ImageModel $sourceFile) : bool;
+    abstract public function getBackupFile(ImageModel $sourceFile);
 
     /* Implement below functions, these things can be done all at the same time. Use Model as 'all' loop. */
     abstract protected function loadAll(); 
@@ -44,21 +45,15 @@ abstract class BackupModel
     {
         $this->controller = $controller; 
         $this->mediaItem = $mediaItem;      
-
+    
         $this->isConverted = $this->mediaItem->getMeta()->convertMeta()->isConverted();
+
 
     }
 
-    	/** Function returns the filename for the backup.  This is an own function so it's possible to manipulate backup file name if needed, i.e. conversion or enumeration */
-	/*public function getBackupFileName()
-	{
-        // This can't be mediaItem directly, needs to either use main / thumbs or whatever is requested here. 
-		 return $this->mediaItem->getFileName();
-	} */
-
     public function __get($name)
     {
-         if (isset($this, $name))
+         if (property_exists($this, $name))
          {
              return $this->$name; 
          }
@@ -72,7 +67,7 @@ abstract class BackupModel
     {
          foreach($this->backup_files as $name => $fileAr)
          {
-              if (true === $fileAr[$name]['has_backup'] && false === $fileAr[$name]['has_own_file'] )
+              if (true === $fileAr['has_backup'] && false === $fileAr['has_own_file'] )
               {
                 return true; 
               }
@@ -82,10 +77,9 @@ abstract class BackupModel
     }
 
     /** Function returns the filename for the backup.  This is an own function so it's possible to manipulate backup file name if needed, i.e. conversion or enumeration */
-	public function getBackupFileName(ImageModel $sourceFile)
+	public function getBackupFileName(ImageModel $sourceFile) : string
 	{
         $is_main_file = $sourceFile->get('is_main_file'); 
-
 
         // NOTE -- Based on that in old source  this first statement never possible, false == mainfile, so commented. 
         /*
@@ -97,13 +91,19 @@ abstract class BackupModel
         // Assertion here that for convert-types, there is no scaled- happening
         $mainFile = (true === $is_main_file) ? $sourceFile : $this->mediaItem;
 
-		if ($mainFile->getMeta()->convertMeta()->getReplacementImageBase() !== false) {
-			if ($this->is_main_file)
-				return $mainFile->getMeta()->convertMeta()->getReplacementImageBase() . '.' . $sourceFile->getExtension();
+		if (true === $this->isConverted) {
+			if ($is_main_file)
+            {
+                $imageBase = $mainFile->getMeta()->convertMeta()->getReplacementImageBase(); 
+                $extension = $mainFile->getMeta()->convertMeta()->getFileFormat();
+                if (0 === strlen(trim($imageBase)))
+                {
+                     $imageBase = $mainFile->getFileBase(); 
+                }
+				return $imageBase . '.' . $extension;
+            }
 			else {
-				//					 $fileBaseNoSize =
-				$name = str_replace($mainFile->getFileBase(), $mainFile->getMeta()->convertMeta()->getReplacementImageBase(), $this->getFileName());
-
+				$name = str_replace($mainFile->getFileBase(), $mainFile->getMeta()->convertMeta()->getReplacementImageBase(), $sourceFile->getFileName());
 				return $name;
 			}
 		}

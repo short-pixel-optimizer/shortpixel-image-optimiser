@@ -7,12 +7,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use ShortPixel\Model\Queue\QueueItem as QueueItem;
 use Shortpixel\Controller\Api\RequestManager as RequestManager;
+use ShortPixel\Controller\Backup\BackupController;
 use ShortPixel\Controller\QueueController;
 use ShortPixel\Helper\UiHelper;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Model\Queue\QueueItemResult;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-use stdClass;
 
 abstract class OptimizerBase
 {
@@ -198,12 +198,13 @@ abstract class OptimizerBase
 
       $original = $optimized = false;
 
+      $backupModel = BackupController::getBackupModel($imageModel); 
+
       if ($showItem->getExtension() == 'pdf') // non-showable formats here
       {
-        //								 $item->result->original = false;
-//								 $item->result->optimized = false;
-      } elseif ($showItem->hasBackup()) {
-        $backupFile = $showItem->getBackupFile(); // attach backup for compare in bulk
+
+      } elseif ($backupModel->hasBackup($showItem)) {
+        $backupFile = $backupModel->getBackupFile($showItem); // attach backup for compare in bulk
         $backup_url = $fs->pathToUrl($backupFile);
         $original = $backup_url;
         $optimized = $fs->pathToUrl($showItem);

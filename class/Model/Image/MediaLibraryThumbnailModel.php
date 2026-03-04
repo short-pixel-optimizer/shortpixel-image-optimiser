@@ -53,10 +53,10 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 	protected function saveMeta() {}
 
 	// Implementing this because it's abstract. Should not really be used.
-	public function getParent()
+	/*public function getParent()
 	{
 		return $this->getMainFile()->getParent();
-	}
+	} */
 
 	public function __debugInfo()
 	{
@@ -336,7 +336,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 	}
 
 	/* @todo All these filesystem checks at some point need to be moved to BackupModel somehow */
-	public function hasBackup($args = [])
+	/* public function hasBackup($args = [])
 	{
 		$defaults = array(
 			'forceConverted' => false,
@@ -381,7 +381,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 				return false;
 			}
 		}
-	}
+	} */
 
 	public function hasDBRecord()
 	{
@@ -436,6 +436,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 	 * This file might not be writable.
 	 * To get writable directory reference to backup, use FileSystemController
 	 */
+	/*
 	public function getBackupFile($args = array())
 	{
 		$defaults = [
@@ -469,7 +470,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
 				$backupFile = $directory . $this->getFileBase() . '.' . $converted_ext;
 
-				/* Because WP doesn't support big PNG with scaled for some reason, it's possible it doesn't create them. Which means we end up with a scaled images without backup */
+				// Because WP doesn't support big PNG with scaled for some reason, it's possible it doesn't create them. Which means we end up with a scaled images without backup 
 				if (! file_exists($backupFile) && $mainFile->isScaled()) {
 					$backupFile = $directory . $mainFile->getOriginalFile()->getFileBase() . '.' . $converted_ext;
 				}
@@ -478,7 +479,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 			} else
 				return false;
 		}
-	}
+	} */
 
 	/** Create backup for media image. 
 	 * 

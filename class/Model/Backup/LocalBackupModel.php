@@ -14,13 +14,14 @@ class LocalBackupModel extends BackupModel
 {
 
     // This must be able to create backup for images one-by-one. 
-     public function createBackupFile(ImageModel $sourceFile)
+     public function createBackupFile(ImageModel $sourceFile) : bool
      {
         $directory = $this->getBackupDirectory(true);
         $fs = \wpSPIO()->filesystem();
         $imageName = $sourceFile->get('name');
         $settings = \wpSPIO()->settings();
-        $is_main_file = $sourceFile->get('is_main_file');
+        //$is_main_file = $sourceFile->get('is_main_file');
+        $mainFile = $this->getMainFile(); 
 
         if (! $directory)
         {
@@ -30,7 +31,6 @@ class LocalBackupModel extends BackupModel
         }
         
         $backupFile = $fs->getFile($directory . $this->getBackupFileName($sourceFile));
-
         $singleBackup = $settings->singleFileBackup; 
 
         // Same file exists as backup already, don't overwrite in that case.
@@ -39,18 +39,25 @@ class LocalBackupModel extends BackupModel
           $result = true;
           $this->statusCode = self::STATUS_BACKUP_OK;
         }
-        elseif(true === $singleBackup && false === $is_main_file)
+        elseif(true === $singleBackup && $mainFile->getFullPath() !== $sourceFile->getFullPath() )
         {
-          $mainFile = $this->getMainFile(); 
-           if (false === $this->hasBackup($mainFile))
+           
+           if (false === $this->hasBackup($mainFile, true))
            {
                $bool = $this->createBackupFile($mainFile); 
+               $result = $bool;
            }
+           else
+           {
+            $result = true; // Ok 
+           }
+
            $this->statusCode = self::STATUS_IGNORED; 
         }
         else
         {
           $result = $sourceFile->copy($backupFile);
+          
         }
 
           // Remove the cache if there, since it will re-ask this to check copy success.
@@ -66,16 +73,9 @@ class LocalBackupModel extends BackupModel
           return false;
         }
 
-        if ($this->hasBackup($sourceFile)) // This check should check if system returns backup ok for this file. 
-        {
-          return true;
-        }
-        else
-        {
-          Log::addWarn('FileModel returns no Backup File for (failed) ' . $sourceFile->getFullPath());
-          $this->statusCode = self::ERR_COPY_FAILED; 
-          return false;
-        }
+
+        /* Seemingly doing with backup.  Important here is that hasBackup is not fully 'functional' in checking main-file since during optimizationHandling the thumbnail in question is not optimized yet ( status-wise ) */
+        return true;
 
      }
 
@@ -84,9 +84,7 @@ class LocalBackupModel extends BackupModel
      public function restore(ImageModel $targetFile) : bool 
      {
          $backupFile = $this->getBackupFile($targetFile); 
-         $imageName = $targetFile->get('name');
-
-        
+         $imageName = $targetFile->get('name'); 
 
         if (false === $backupFile || false === is_object($backupFile))
         {
@@ -200,8 +198,11 @@ class LocalBackupModel extends BackupModel
           // @todo - This main file, can be originalfile as well, which is then not marked as main :/ 
           if (false === $strict && false === $is_main_file && $sourceFile->isOptimized())
           {
-           $mainFile = $this->getMainFile();
-           $bool = $this->hasBackup($mainFile, true);
+           $mainFile = $this->getMainFile(); // This main file can be different than is_main_file, in case of -scaled 
+           if ($mainFile->getFullPath() !== $sourceFile->getFullPath())
+           {
+            $bool = $this->hasBackup($mainFile, true);
+           }
           }
         }  
 
@@ -215,7 +216,7 @@ class LocalBackupModel extends BackupModel
 
      }
 
-     public function onDelete(ImageModel $sourceFile)
+     public function onDelete(ImageModel $sourceFile) : bool
      {
        $isConverted = $this->isConverted; 
        $name = $sourceFile->get('name');
@@ -230,7 +231,6 @@ class LocalBackupModel extends BackupModel
           
        }
        
-      
        return true;
 
      }
@@ -310,8 +310,11 @@ class LocalBackupModel extends BackupModel
         if ($this->mediaItem->isScaled()) {
           $objects[$this->mediaItem->getImageKey('original')] = $this->mediaItem->getOriginalFile();
         }
+
+        $filesArray = $this->mediaItem->getAllFiles();
+        $files = $filesArray['files'];
       
-        foreach ($objects as $obj)
+        foreach ($files as $obj)
         {
            $this->hasBackup($obj); 
         }

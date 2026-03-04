@@ -176,9 +176,11 @@ class QueueItem
       $item_id = $this->item_id; 
 
       // ImageModel could not be set i.e. migrate or other special actions.
+      // @note This code doesn't do anything with media_id ? 
+      /*
       if (is_object($this->imageModel) && $this->imageModel->getParent() !== false) {
          $media_id = $this->imageModel->getParent();
-      }
+      } */
 
       $enqueue = ['id' => $item_id, 'value' => $value, 'item_count' => $this->item_count];
       

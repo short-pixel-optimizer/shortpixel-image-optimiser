@@ -500,11 +500,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	}
 
 
-	protected function getRetinas()
+	protected function getRetinas() : array
 	{
 		// Don't load retina's if option is off.
 		if (! \wpSPIO()->settings()->optimizeRetina)
-			return;
+			return [];
 
 		if (! is_null($this->retinas)) {
 			return $this->retinas;
@@ -538,9 +538,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return $this->retinas;
 	}
 
-	protected function getWebps()
+	protected function getWebps() : array
 	{
-		$webps = array();
+		$webps = [];
 
 		$main = $this->getWebp();
 		if ($main)
@@ -568,9 +568,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return $webps;
 	}
 
-	protected function getAvifs()
+	protected function getAvifs() : array
 	{
-		$avifs = array();
+		$avifs = [];
 		$main = $this->getAvif();
 
 		if ($main)
@@ -1325,11 +1325,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		$backupModel = $this->getBackupModel();
 
+
 		// If file is converted, the backup path can live somewhere else ( on the converted item ), so search in this context instead of imagemodel which will only look for same extension backups.
 		
 		
 		/** @TODO THIS IS A JOB OF BACKUP MODEL / CONTROLLER TO DETECT CONVERSIONS AND ACT.  */
-		if (true === $isConverted) {
+		/*if (true === $isConverted) {
 			$args = array('forceConverted' => true);
 			if ($this->hasBackup($args)) {
 				$file = $this->getBackupFile($args);
@@ -1346,7 +1347,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					}
 				}
 			}
-		}
+		} */
+
 
 		if (true === $this->getMeta()->convertMeta()->hasPlaceHolder()) {
 			$placeholderFile = $fs->getFile($this->getFileDir() . $this->getMeta()->convertMeta()->getReplacementImageBase() . '.jpg');
@@ -2065,9 +2067,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		/* If some backup where not present (ie single file backup ), the thumbs need to be regenerated. 
 		*  Issue with that is that metadata will stop corresponding with saved SPIO meta, so this needs to be wiped.
 		* Anything with 'cleanRestore' would need to be solved by this. 
+		* - Check for was_converted, because unconverting also runs news thumbnails.
 		*/
 		$backupModel = $this->getBackupModel(); 
-		if (true === $backupModel->needsRegenerate())
+		if (true === $backupModel->needsRegenerate() && false === $was_converted)
 		{
 			$this->generateThumbnails();
 			$wpmeta = wp_get_attachment_metadata($this->get('id'));
@@ -2173,10 +2176,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		}
 
 		$thumbObjs = $this->getThumbObjects();
+		$backupModel = $this->getBackupModel();
 
 		foreach ($thumbObjs as $thumbObj) {
-			if ($thumbObj->hasBackup()) {
-				$backupFile = $thumbObj->getBackupFile();
+			if ($backupModel->hasBackup($thumbObj)) {
+				$backupFile = $backupModel->getBackupFile($thumbObj);
 
 				if (is_object($backupFile)) {
 					// This should delete in restore function.
@@ -2321,8 +2325,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	// Function to be called only by migrate all bulk and certain debug cases.
 	public function migrate()
 	{
-		//$this->resetPrevent();
-
 		// Don't double.
 		if ($this->justConverted === true)
 			return;
@@ -2330,8 +2332,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		delete_post_meta($this->id, '_shortpixel_was_converted');
 		$result = $this->checkLegacy();
 
+		$backupModel = $this->getBackupModel();
+
 		// Check the whole thing to find any images that have a backup, but are not marked as optimized, and just mark them.
-		if (! $this->isOptimized() && $this->hasBackup()) {
+		if (! $this->isOptimized() && $backupModel->hasBackup($this)) {
 			$this->setMeta('status', self::FILE_STATUS_SUCCESS);
 			$result = true;
 		}
@@ -2344,7 +2348,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		}
 		if (is_array($this->thumbnails) && count($this->thumbnails) > 0) {
 			foreach ($this->thumbnails as $thumbObj) {
-				if (! $thumbObj->isOptimized() && $thumbObj->hasBackup()) {
+				if (! $thumbObj->isOptimized() && $backupModel->hasBackup($thumbObj)) {
 					$thumbObj->setMeta('status', self::FILE_STATUS_SUCCESS);
 					$result = true;
 				}
@@ -2352,7 +2356,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		}
 		if (is_array($this->retinas) && count($this->retinas) > 0) {
 			foreach ($this->retinas as $retinaObj) {
-				if (! $retinaObj->isOptimized() && $retinaObj->hasBackup()) {
+				if (! $retinaObj->isOptimized() && $backupModel->hasBackup($retinaObj)) {
 					$retinaObj->setMeta('status', self::FILE_STATUS_SUCCESS);
 					$result = true;
 				}
@@ -2387,11 +2391,14 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			return false;
 		}
 
+		$backupModel = $this->getBackupModel();
+
 		// This is a switch to prevent converted items to reconvert when the new metadata is removed ( i.e. restore )
 		$was_converted = get_post_meta($this->id, '_shortpixel_was_converted', true);
 		if ($was_converted == true || is_numeric($was_converted)) {
 			$updateTs = 1656892800; // July 4th 2022 - 00:00 GMT
-			if ($was_converted < $updateTs && $this->hasBackup(array('noConversionCheck' => true))) {
+			// Noconversioncheck was mentioned here in the past
+			if ($was_converted < $updateTs && $backupModel->hasBackup($this) )  {
 				$this->resetPrevent();  // reset any prevented optimized. This would have prob. thrown a backup issue.
 				if ($this->isProcessable()) {
 					$this->deleteMeta();
@@ -2445,20 +2452,20 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 			$this->image_meta->wasConverted = true;
 			$this->image_meta->status = $status;
-			//$this->image_meta->type = $type;
 			$this->image_meta->improvement = $improvement;
 			$this->image_meta->compressionType = $type;
 			$this->image_meta->compressedSize = $this->getFileSize();
-			//  $this->image_meta->retries = $retries;
 			$this->image_meta->tsAdded = $tsAdded;
-			//  $this->image_meta->has_backup = $this->hasBackup();
 			$this->image_meta->errorMessage = $error_message;
-
 			$this->image_meta->did_keepExif = $exifkept;
 
 			// @todo  This should be checked! 
-			if ($this->hasBackup(array('noConversionCheck' => true))) {
-				$backup = $this->getBackupFile(array('noConversionCheck' => true));
+			/*
+						if ($this->hasBackup(array('noConversionCheck' => true))) {
+				$backup = $this->getBackupFile(array('noConversionCheck' => true));*/
+
+			if ($backupModel->hasBackup($this)) {
+				$backup = $backupModel->getBackupFile($this);
 				if (is_object($backup))
 					$this->image_meta->originalSize = $backup->getFileSize();
 			} elseif (isset($metadata['ShortPixelImprovement'])) {
@@ -2467,7 +2474,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				if ($imp > 0)
 					$this->image_meta->originalSize = ($this->getFileSize() / (100 - $imp)) * 100;
 			}
-
 
 			$this->image_meta->webp = $this->checkLegacyFileTypeFileName($this, 'webp');
 			$this->image_meta->avif = $this->checkLegacyFileTypeFileName($this, 'avif');
@@ -2484,10 +2490,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			$this->image_meta->did_png2jpg = true; //setMeta('did_png2jpg', true);
 			$this->getMeta()->convertMeta()->setFileFormat('png');
 			$this->getMeta()->convertMeta()->setConversionDone();
-			$did_jpg2png = true;
-		} else
-			$did_jpg2png = false;
-
+		}
 
 		foreach ($this->thumbnails as $thumbname => $thumbnailObj) // ThumbnailModel
 		{
@@ -2495,25 +2498,18 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				continue;
 			}
 
-			if (in_array($thumbnailObj->getFileName(), $optimized_thumbnails) || $thumbnailObj->hasBackup(array('noConversionCheck' => true))) {
+			if (in_array($thumbnailObj->getFileName(), $optimized_thumbnails) || $backupModel->hasBackup($thumbnailObj)) {
 				$thumbnailObj->image_meta->status = $status;
 				$thumbnailObj->image_meta->compressionType = $type;
 				$thumbnailObj->image_meta->compressedSize = $thumbnailObj->getFileSize();
-				/*if (true == $did_jpg2png)
-							{
-								$thumbnailObj->convertMeta()->setConversionDone();
-							}*/
 
-
-				//    $thumbnailObj->image_meta->improvement = -1; // n/a
-				if ($thumbnailObj->hasBackup(array('noConversionCheck' => true))) {
-					$backup = $thumbnailObj->getBackupFile(array('noConversionCheck' => true));
+				$thumbnailObj->has_backup = false;
+				if ($backupModel->hasBackup($thumbnailObj)) {
+					$backup = $backupModel->getBackupFile($thumbnailObj);
 					if (is_object($backup)) {
 						$thumbnailObj->image_meta->originalSize = $backup->getFileSize();
 						$thumbnailObj->has_backup = true;
 					}
-				} else {
-					$thumbnailObj->has_backup = false;
 				}
 
 				$thumbnailObj->image_meta->tsAdded = $tsAdded;
@@ -2536,24 +2532,20 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		if ($this->isScaled() && $this->original_file->hasDBRecord() === false) {
 			$originalFile = $this->original_file;
 
-			if (isset($metadata['original_image']) || $originalFile->hasBackup(array('noConversionCheck' => true))) {
+			if (isset($metadata['original_image']) || $backupModel->hasBackup($originalFile)) {
 
 				$originalFile->image_meta->status = $status;
 				$originalFile->image_meta->compressionType = $type;
 				$originalFile->image_meta->compressedSize = $originalFile->getFileSize();
-				/*if (true == $did_jpg2png)
-					 {
-						 $originalFile->convertMeta()->setConversionDone();
-					 } */
 
-				if ($originalFile->hasBackup(array('noConversionCheck' => true))) {
-					$backup = $originalFile->getBackupFile(array('noConversionCheck' => true));
+	 			 $originalFile->has_backup = false;
+
+				if ($backupModel->hasBackup($originalFile)) {
+					$backup = $backupModel->getBackupFile($originalFile);
 					if (is_object($backup)) {
 						$originalFile->image_meta->originalSize = $backup->getFileSize();
 						$originalFile->has_backup = true;
 					}
-				} else {
-					$originalFile->has_backup = false;
 				}
 
 				$originalFile->image_meta->tsAdded = $tsAdded;
@@ -2592,7 +2584,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					// Check if thumbnail ('parent') is Optimized, if so, then retina probably should be optimized as well.
 					if ((isset($this->thumbnails[$index]) &&
 						is_object($this->thumbnails[$index]) &&
-						$this->thumbnails[$index]->isOptimized) || $retinaObj->hasBackup(array('noConversionCheck' => true))) {
+						$this->thumbnails[$index]->isOptimized) || $backupModel->hasBackup($retinaObj)) {
 						$retinaObj->image_meta->status = $status;
 						$retinaObj->image_meta->compressionType = $type;
 						if ($status == self::FILE_STATUS_SUCCESS)
@@ -2605,15 +2597,16 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 							$retinaObj->image_meta->tsOptimized = $tsOptimized;
 						}
 
-						/*if (true == $did_jpg2png)
-										{
-											$retinaObj->convertMeta()->setConversionDone();
-										} */
-
-						if ($retinaObj->hasBackup(array('noConversionCheck' => true))) {
+						if ($backupModel->hasBackup($retinaObj)) {
 							$retinaObj->has_backup = true;
 							if ($status == self::FILE_STATUS_SUCCESS)
-								$retinaObj->image_meta->originalSize = $retinaObj->getBackupFile(array('noConversionCheck' => true))->getFileSize();
+							{	
+								$backupFile = $backupModel->getBackupFile($retinaObj);
+								if (is_object($backupFile))
+								{
+									$retinaObj->image_meta->originalSize = $backupFile->getFileSize();
+								}
+							}
 						}
 
 						$retinaObj->recordChanged(true);

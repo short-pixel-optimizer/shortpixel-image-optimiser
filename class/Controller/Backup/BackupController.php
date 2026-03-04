@@ -4,7 +4,9 @@ namespace ShortPixel\Controller\Backup;
 use ShortPixel\Model\Backup\BackupModel;
 use ShortPixel\Model\Backup\LocalBackupModel;
 use ShortPixel\Model\File\FileModel;
+use ShortPixel\Model\Image\CustomImageModel;
 use ShortPixel\Model\Image\ImageModel;
+use ShortPixel\Model\Image\MediaLibraryModel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -57,8 +59,20 @@ abstract class BackupController
       return self::$instance; 
     }
 
+    public static function getBackupModel(ImageModel $imageItem)
+    {
+      //MediaLibraryModel|CustomImageModel
+      if (! ($imageItem instanceof MediaLibraryModel) && ! ($imageItem instanceof CustomImageModel))
+      {
+        throw new \Exception('BackupController - BackupModel initialization class must be of the highest level either media or custom');
+      } 
 
-    public function getModel(ImageModel $mediaItem)
+      $backupController = self::getBackupController();
+
+      return $backupController->getModel($imageItem);
+    }
+
+    public function getModel(MediaLibraryModel $mediaItem)
     {
         $id = $mediaItem->get('id');
         $type = $mediaItem->get('type');

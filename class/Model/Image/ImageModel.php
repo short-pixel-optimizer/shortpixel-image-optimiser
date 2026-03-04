@@ -131,7 +131,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     abstract protected function preventNextTry($reason = '');
     abstract public function isOptimizePrevented();
     abstract public function resetPrevent(); // to get going.
-    abstract public function getParent();
+    //abstract public function getParent(); // needed for top-class only.
 
     // Construct
     public function __construct($path)
@@ -1421,23 +1421,29 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
        }
 
         $bool = $backupModel->createBackupFile($this); 
-
         $statusCode = $backupModel->statusCode; 
 
         if (false === $bool)
         {
+
+          $backupFile = $backupModel->getBackupFile($this); 
+          $backup_filesize = -1; 
+          if (is_object($backupFile))
+          {
+            $backup_filesize = $backupFile->getFileSize(); 
+          }
            
            switch($statusCode)
            {
               default: 
                   case BackupModel::ERR_COPY_FAILED: 
                     $this->preventNextTry(__('Issue: The Backup file failed to copy. Check file permissions and retry', 'shortpixel-image-optimiser'));
-                    Log::addError('The backup file already exists and it is bigger than the original file. BackupFile Size: ' . $backupFile->getFileSize() . ' This Filesize: ' . $this->getFileSize(), $this->fullpath);
+                    Log::addError('The backup file already exists and it is bigger than the original file. BackupFile Size: ' . $backup_filesize . ' This Filesize: ' . $this->getFileSize(), $this->fullpath);
                     $this->error_message = __('Backup not possible: Copy failed!.', 'shortpixel-image-optimiser');
                   break; 
                   case BackupModel::ERR_BACKUP_EXISTS:
                     $this->preventNextTry(__('Fatal Issue: The Backup file already exists. The backup seems not restorable, or the original file is bigger than the backup, indicating an error.', 'shortpixel-image-optimiser'));
-                    Log::addError('The backup file already exists and it is bigger than the original file. BackupFile Size: ' . $backupFile->getFileSize() . ' This Filesize: ' . $this->getFileSize(), $this->fullpath);
+                    Log::addError('The backup file already exists and it is bigger than the original file. BackupFile Size: ' . $backup_filesize . ' This Filesize: ' . $this->getFileSize(), $this->fullpath);
                     $this->error_message = __('Backup not possible: it already exists and the original file is bigger.', 'shortpixel-image-optimiser');
                   break; 
             

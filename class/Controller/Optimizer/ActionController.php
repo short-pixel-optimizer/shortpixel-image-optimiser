@@ -103,8 +103,8 @@ class ActionController extends OptimizerBase
       break; 
    }
 
-    if (true === $directAction)
-    {
+ //   if (true === $directAction)
+  //  {
        // The directActions give back booleans, but the whole function must return an queue result object with qstatus and numitems
        $process_result = $this->sendToProcessing($qItem);
 
@@ -121,7 +121,7 @@ class ActionController extends OptimizerBase
       }
 
       return $qStatus;
-    }
+  //  }
 
     
     /*else

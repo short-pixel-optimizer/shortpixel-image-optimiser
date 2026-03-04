@@ -439,7 +439,6 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 						 $this->setMeta('avif', $data['avifStatus']);
 					}
 
-
 				}
 
         $this->image_meta = $metaObj;
