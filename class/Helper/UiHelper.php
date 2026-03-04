@@ -382,9 +382,12 @@ class UiHelper
                 $showCompare = true;
                 if ($mediaItem->getExtension() == 'pdf')
                 {
+                      $backupModel = $mediaItem->getBackupModel();
   				            if (! $mediaItem->getThumbnail('full'))
+                      {
   					               $showCompare = false;
-  				            elseif(! $mediaItem->getThumbnail('full')->hasBackup())
+                      }
+  				            elseif(! $backupModel->hasBackup($mediaItem->getThumbnail('full')) )
   					             $showCompare = false;
   			         }
 
