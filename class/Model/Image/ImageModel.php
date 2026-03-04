@@ -336,7 +336,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
      * 
      * @return object|boolean  The backup model or false  
      */
-    protected function getBackupModel()
+    public function getBackupModel()
     {
       if (property_exists($this, 'backupModel') &&  false === is_null($this->backupModel))
       {
