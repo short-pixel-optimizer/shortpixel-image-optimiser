@@ -2268,8 +2268,20 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 	private function generateThumbnails()
 	{
-		$metadata = wp_generate_attachment_metadata($this->get('id'), $this->getFullPath());
+		// Generate not of the -scaled item, then it creates wrong thumbnails. 
+		if (true === $this->hasOriginal())
+		{
+			 $originalFile = $this->getOriginalFile();
+			 $fullPath = $originalFile->getFullPath(); 
+		}
+		else 
+		{
+			 $fullPath = $this->getFullPath();
+		}
+		$metadata = wp_generate_attachment_metadata($this->get('id'), $fullPath);
+		Log::addTemp('Generated New Metadata', $metadata);
 		return $metadata;
+
 	}
 
 	// Check and remove legacy data.
