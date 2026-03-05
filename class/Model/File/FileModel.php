@@ -699,6 +699,9 @@ class FileModel extends \ShortPixel\Model
         $restricted = true;
         $basedirs = preg_split('/:|;/i', $basedir);
 
+        // Remove blanket dirs like / from here since that could cause false positives on the strpos check on the path
+        $basedirs = array_diff($basedirs, ['/', '//', '.', '..']); 
+
         foreach($basedirs as $basedir)
         {
            // check realpath for symlinked shared hosts and this kind of fun, to prevent false positives
@@ -839,26 +842,31 @@ class FileModel extends \ShortPixel\Model
 
       if (strpos($path, $uploadDir->getPath()) !== false) // If upload Dir is feature in path, consider it ok.
       {
-        return $path;
+        $fullpath = $path;
       }
       elseif (file_exists($abspath->getPath() . $path)) // If upload dir is abspath plus return path. Exceptions.
       {
-        return $abspath->getPath() . $path;
+        $fullpath = $abspath->getPath() . ltrim($path, '/');
       }
       elseif(file_exists($uploadDir->getPath() . $path)) // This happens when upload_dir is not properly prepended in get_attachment_file due to WP errors
       {
-          return $uploadDir->getPath() . $path;
+        $fullpath = $uploadDir->getPath() . ltrim($path, '/');
       }
-
+      else  // Default if nothing else. 
+      {
+        $path = ltrim($path, '/');
+        $fullpath = $abspath->getPath() . $path; 
+      }
       // this is probably a bit of a sharp corner to take.
       // if path starts with / remove it due to trailingslashing ABSPATH
-      $path = ltrim($path, '/');
-      $fullpath = $abspath->getPath() . $path;
 
       // We can't test for file_exists here, since file_model allows non-existing files.
       // Test if directory exists, perhaps. Otherwise we are in for a failure anyhow.
       //if (is_dir(dirname($fullpath)))
-          return $fullpath;
+
+      // File is restricted is cached, otherwise leading to double check on relativepath.
+      $this->is_restricted = false; 
+      return $fullpath;
       //else
       //    return $originalPath;
   }
