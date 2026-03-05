@@ -1016,8 +1016,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         }
 
         $backupModel = $this->getBackupModel(); 
-       // $backupFile = $backupModel->getBackupFile($this); // @todo This crossref is probalby not productive.
-      //  $backupFile = $this->getBackupFile();
+
 				$type = $this->get('type');
 				$id = $this->get('id');
 
@@ -1054,13 +1053,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     {
         // @todo This delete should go to backupModel, probably on main item.
         $backupModel = $this->getBackupModel();
-        
-     //   if ($this->hasBackup($this))
-      //  {
-           $backupModel->onDelete($this); 
-           //$file = $this->getBackupFile();
-           //$file->delete();
-      //  }
+        $backupModel->onDelete($this); 
 
         $webp = $this->getWebp();
         $avif = $this->getAvif();

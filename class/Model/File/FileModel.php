@@ -269,37 +269,7 @@ class FileModel extends \ShortPixel\Model
     return filectime($this->fullpath);
   }
 
-    // @todo This moved to BackupModel.
-    /*
-  public function hasBackup()
-  {
-      $directory = $this->getBackupDirectory();
-      if (! $directory)
-        return false;
-
-      $backupFile =  $directory . $this->getBackupFileName();
-
-      if (file_exists($backupFile) && ! is_dir($backupFile) )
-        return true;
-      else {
-        return false;
-      }
-  } */
-
-  /** @todo Moved to backupModel  */
-  /** Tries to retrieve an *existing* BackupFile. Returns false if not present.
-  * This file might not be writable.
-  * To get writable directory reference to backup, use FileSystemController
-  */
-  /*
-  public function getBackupFile()
-  {
-     if ($this->hasBackup())
-        return new FileModel($this->getBackupDirectory() . $this->getBackupFileName() );
-     else
-       return false;
-  }
-*/
+  
 
 
   /** Returns the Directory Model this file resides in

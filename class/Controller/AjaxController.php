@@ -1420,9 +1420,9 @@ class AjaxController
 			}
 		}
 
+		$backupModel = $imageObj->getBackupModel(); 
 
-
-		$backupFile = $imageObj->getBackupFile();
+		$backupFile = $backupModel->getBackupFile($imageObj);
 		if (is_object($backupFile))
 			$backup_url = $fs->pathToUrl($backupFile);
 		else

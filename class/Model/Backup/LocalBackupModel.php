@@ -284,7 +284,7 @@ class LocalBackupModel extends BackupModel
     {
       $imageName = $sourceFile->get('name');
       
-      if (true === $this->hasBackup($sourceFile))
+      if (true === $this->hasBackup($sourceFile, true))
        {
           if (true === $this->backup_files[$imageName]['has_own_file']) // only if own file is set, otherwise file is empty, refering to directory.
           {

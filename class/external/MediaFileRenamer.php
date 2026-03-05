@@ -30,9 +30,9 @@ class MediaFileRenamer
      //$backupModel = BackupController
 
      // @todo This needs to figure out somehow which file (by name) is being changed here. 
-     if ($oldFile->hasBackup())
+     if ($backupModel->hasBackup($oldFile))
      {
-         $backupFile = $oldFile->getBackupFile();
+         $backupFile = $backupModel->getBackupFile($oldFile);
 
          $newFile = $fs->getFile($newpath);
          $newBackupFile =  $fs->getFile($fs->getBackupDirectory($newFile, true) . $newFile->getFileName());

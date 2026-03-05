@@ -1327,28 +1327,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 
 		// If file is converted, the backup path can live somewhere else ( on the converted item ), so search in this context instead of imagemodel which will only look for same extension backups.
-		
-		
-		/** @TODO THIS IS A JOB OF BACKUP MODEL / CONTROLLER TO DETECT CONVERSIONS AND ACT.  */
-		/*if (true === $isConverted) {
-			$args = array('forceConverted' => true);
-			if ($this->hasBackup($args)) {
-				$file = $this->getBackupFile($args);
-				if ($file->exists())
-					$file->delete();
-			}
-
-			$thumbObjs = $this->getThumbObjects();
-			foreach ($thumbObjs as $thumbObj) {
-				if ($thumbObj->hasBackup($args)) {
-					$file = $thumbObj->getBackupFile($args);
-					if ($file->exists()) {
-						$file->delete();
-					}
-				}
-			}
-		} */
-
 
 		if (true === $this->getMeta()->convertMeta()->hasPlaceHolder()) {
 			$placeholderFile = $fs->getFile($this->getFileDir() . $this->getMeta()->convertMeta()->getReplacementImageBase() . '.jpg');
@@ -1599,18 +1577,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$args = wp_parse_args($args, $defaults);
 
 		if ($settings->backupImages == 1) {
-			// When failed, delete the backups. This can't be done via restore since image is not optimized.
-			$backupFile = $this->getBackupFile();
-			if (is_object($backupFile) && $backupFile->exists()) {
-				$backupFile->delete();
-			}
 
+			$backupModel = $this->getBackupModel(); 
+
+			// When failed, delete the backups. This can't be done via restore since image is not optimized.
+			$backupModel->onDelete($this);
+			
 			$thumbObjs = $this->getThumbObjects();
 			foreach ($thumbObjs as $thumbnail) {
-				$backupFile = $thumbnail->getBackupFile();
-				// check if there is backup and if file exists.
-				if (is_object($backupFile) && $backupFile->exists())
-					$backupFile->delete();
+				$backupModel->onDelete($thumbnail);
 			}
 		}
 		// Prevent from retrying next time, since stuff will be requeued.
@@ -2460,10 +2435,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			$this->image_meta->did_keepExif = $exifkept;
 
 			// @todo  This should be checked! 
-			/*
-						if ($this->hasBackup(array('noConversionCheck' => true))) {
-				$backup = $this->getBackupFile(array('noConversionCheck' => true));*/
-
 			if ($backupModel->hasBackup($this)) {
 				$backup = $backupModel->getBackupFile($this);
 				if (is_object($backup))

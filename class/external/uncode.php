@@ -16,16 +16,20 @@ class UncodeController
 
 	 protected function addHooks()
 	 {
-		  add_action('uncode_delete_crop_image', array($this, 'removedMetaData'), 10, 2);
-      add_action( 'uncode_after_new_crop', array($this, 'after_new_crop'), 10, 5 );
+	    add_action('uncode_delete_crop_image', array($this, 'removedMetaData'), 10, 2);
+      	add_action( 'uncode_after_new_crop', array($this, 'after_new_crop'), 10, 5 );
 	 }
 
 	 public function removedMetaData($attach_id, $filePath)
 	 {
 		  	$fs = \wpSPIO()->filesystem();
 				$imageObj = $fs->getImage($attach_id, 'media', false);
+				
 				$imageObj->saveMeta();
+				
+				$backupModel = $imageObj->getBackupModel();
 
+				// @todo This works on file level, should work on imageModel level minimal
 				$fileObj = $fs->getFile($filePath);
 				if ($fileObj->hasBackup())
 				{
@@ -33,6 +37,7 @@ class UncodeController
 						$backupObj->delete();
 				}
 
+				// @todo If we get this on imageModel level, we can use ImageModel deletes here for this filetypes. 
 				// Check Webp
 				$webpObj = $fs->getFile( (string) $fileObj->getFileDir() . $fileObj->getFileBase() . '.webp');
 				if ($webpObj->exists())

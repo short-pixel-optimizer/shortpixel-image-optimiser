@@ -788,7 +788,6 @@ class QueueController
       $settings = \wpSPIO()->settings();
       $imageObj = $fs->getMediaImage($post_id);
 
-
       if ($imageObj->isScaled())
       {
         $imageObj->setMeta('status', ImageModel::FILE_STATUS_UNPROCESSED);
@@ -809,11 +808,16 @@ class QueueController
         $imageObj->setmeta('originalHeight', null);
         $imageObj->setmeta('tsOptimized', null);
 
+        $backupModel = $imageObj->getBackupModel(); 
 
-        if ($imageObj->hasBackup())
+        if ($backupModel->hasBackup($imageObj))
         {
-           $backup = $imageObj->getBackupFile();
-           $backup->delete();
+           $backup = $backupModel->getBackupFile($imageObj);
+           if (is_object($backup))
+           {
+              $backup->delete();
+           }
+
         }
       }
 
