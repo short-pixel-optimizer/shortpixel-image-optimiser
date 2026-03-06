@@ -1403,6 +1403,7 @@ class AjaxController
 		$ret = array();
 		$fs = \wpSPIO()->filesystem();
 		$imageObj = $fs->getImage($id, $type);
+		$mainImage = clone $imageObj;
 
 		$this->checkImageAccess($imageObj);
 
@@ -1421,6 +1422,10 @@ class AjaxController
 		}
 
 		$backupModel = $imageObj->getBackupModel(); 
+		
+		// @todo Here - The MainBackupFile needs getting if the choosen thumbnail backup doesn't exist. 
+		$mainBackupFile = $backupModel->getBackupFile($mainImage);
+
 
 		$backupFile = $backupModel->getBackupFile($imageObj);
 		if (is_object($backupFile))
