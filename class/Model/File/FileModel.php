@@ -702,6 +702,12 @@ class FileModel extends \ShortPixel\Model
         // Remove blanket dirs like / from here since that could cause false positives on the strpos check on the path
         $basedirs = array_diff($basedirs, ['/', '//', '.', '..']); 
 
+        // If the only openbasedir is broad, then just don't check further. 
+        if (0 === count($basedirs))
+        {
+           return false; 
+        }
+
         foreach($basedirs as $basedir)
         {
            // check realpath for symlinked shared hosts and this kind of fun, to prevent false positives
@@ -844,11 +850,11 @@ class FileModel extends \ShortPixel\Model
       {
         $fullpath = $path;
       }
-      elseif (file_exists($abspath->getPath() . $path)) // If upload dir is abspath plus return path. Exceptions.
+      elseif (file_exists($abspath->getPath() . ltrim($path, '/')) ) // If upload dir is abspath plus return path. Exceptions.
       {
         $fullpath = $abspath->getPath() . ltrim($path, '/');
       }
-      elseif(file_exists($uploadDir->getPath() . $path)) // This happens when upload_dir is not properly prepended in get_attachment_file due to WP errors
+      elseif(file_exists($uploadDir->getPath() . ltrim($path, '/')) ) // This happens when upload_dir is not properly prepended in get_attachment_file due to WP errors
       {
         $fullpath = $uploadDir->getPath() . ltrim($path, '/');
       }
@@ -857,6 +863,7 @@ class FileModel extends \ShortPixel\Model
         $path = ltrim($path, '/');
         $fullpath = $abspath->getPath() . $path; 
       }
+
       // this is probably a bit of a sharp corner to take.
       // if path starts with / remove it due to trailingslashing ABSPATH
 
