@@ -568,7 +568,7 @@ class OptimizeAiController extends OptimizerBase
             if (count($sources) > 0 && count($replaces) > 0)
             {
                 Log::addInfo('Running Ai Replace : ', [$aiData, $sources, $replaces]); 
-                $content = $replacer2->replaceContent($content, $sources, $replaces);
+                $content = $replacer2->replaceContent($content, $sources, $replaces, false, true);
                 $replacer2->Updater()->updatePost($post_id, $content); 
             }
         }
