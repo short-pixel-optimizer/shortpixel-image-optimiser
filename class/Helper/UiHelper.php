@@ -387,7 +387,7 @@ class UiHelper
                       {
   					               $showCompare = false;
                       }
-  				            elseif(! $backupModel->hasBackup($mediaItem->getThumbnail('full')) )
+  				            elseif(! $backupModel->hasBackup($mediaItem->getThumbnail('full'), true) )
   					             $showCompare = false;
   			         }
 

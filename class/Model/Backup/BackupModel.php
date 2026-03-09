@@ -28,6 +28,7 @@ abstract class BackupModel
     abstract public function hasBackup(ImageModel $sourceFile, $strict = false) : bool; 
     abstract public function onDelete(ImageModel $sourceFile) : bool;
     abstract public function getBackupFile(ImageModel $sourceFile);
+    abstract public function getMainBackupFile(); 
 
     /* Implement below functions, these things can be done all at the same time. Use Model as 'all' loop. */
     abstract protected function loadAll(); 
@@ -47,7 +48,6 @@ abstract class BackupModel
         $this->mediaItem = $mediaItem;      
     
         $this->isConverted = $this->mediaItem->getMeta()->convertMeta()->isConverted();
-
 
     }
 

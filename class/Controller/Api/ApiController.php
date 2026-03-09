@@ -358,10 +358,10 @@ class ApiController extends RequestManager
 
 				// Previous check here was for Item->files[$imageName] , not sure if currently needed.
 				// Check if image is not already in fileData.
-				if (is_null($fileData) || false === property_exists($fileData, $imageName)) {
+				// 06/03/26 - changing during testing this to isset since data()->files seems array?
+				if (is_null($fileData) || false === isset($fileData[$imageName]) ) {
 					$imageList[$imageName] = $this->handleNewSuccess($qItem, $imageObject, $data);
-				} else {
-				}
+				} 
 			}
 
 		}
@@ -384,7 +384,6 @@ class ApiController extends RequestManager
 				return $this->returnSuccess($data, self::STATUS_PARTIAL_SUCCESS, false);
 			}
 		} elseif ($analyze['waiting'] > 0) {
-
 			return $this->returnOK(self::STATUS_UNCHANGED, sprintf(__('Item is waiting', 'shortpixel-image-optimiser')));
 		} else {
 			// Theoretically this should not be needed.

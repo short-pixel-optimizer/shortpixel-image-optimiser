@@ -213,7 +213,6 @@ class LocalBackupModel extends BackupModel
         ];
 
         return $bool;
-
      }
 
      public function onDelete(ImageModel $sourceFile) : bool
@@ -227,12 +226,9 @@ class LocalBackupModel extends BackupModel
           if (is_object($backupFile))
           {
              $backupFile->delete();
-          }
-          
+          }   
        }
-       
        return true;
-
      }
 
 
@@ -303,6 +299,14 @@ class LocalBackupModel extends BackupModel
        }
     }
 
+    public function getMainBackupFile()
+    {
+        $mainFile = $this->getMainFile(); 
+        $backupFile = $this->getBackupFile($mainFile); 
+
+        return $backupFile; 
+    }
+
   
       protected function loadAll()
       {
@@ -325,7 +329,7 @@ class LocalBackupModel extends BackupModel
 
       private function getMainFile()
       {
-          if ($this->mediaItem->hasOriginal())
+          if ('media' === $this->mediaItem->get('type') && $this->mediaItem->hasOriginal())
           {
              return $this->mediaItem->getOriginalFile(); 
           }

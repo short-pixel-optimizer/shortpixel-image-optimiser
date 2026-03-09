@@ -1424,14 +1424,20 @@ class AjaxController
 		$backupModel = $imageObj->getBackupModel(); 
 		
 		// @todo Here - The MainBackupFile needs getting if the choosen thumbnail backup doesn't exist. 
-		$mainBackupFile = $backupModel->getBackupFile($mainImage);
+		$mainBackupFile = $backupModel->getMainBackupFile();
 
 
 		$backupFile = $backupModel->getBackupFile($imageObj);
 		if (is_object($backupFile))
 			$backup_url = $fs->pathToUrl($backupFile);
+		elseif (is_object($mainBackupFile))
+		{
+			$backup_url = $fs->pathToUrl($mainBackupFile);
+		}
 		else
+		{
 			$backup_url = '';
+		}
 
 		$ret['origUrl'] = $backup_url; // $backupUrl . $urlBkPath . $meta->getName();
 
@@ -1555,7 +1561,6 @@ class AjaxController
 		}
 
 		$noticeController = Notices::getInstance();
-
 		$json->notices = $noticeController->getNewNotices();
 
 		if (count($json->notices) > 0) {
@@ -1565,7 +1570,6 @@ class AjaxController
 			}
 		}
 		$noticeController->update(); // dismiss one-time ponies
-
 		return $json;
 	}
 

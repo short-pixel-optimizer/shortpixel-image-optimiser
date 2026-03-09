@@ -72,7 +72,7 @@ abstract class BackupController
       return $backupController->getModel($imageItem);
     }
 
-    public function getModel(MediaLibraryModel $mediaItem)
+    public function getModel(ImageModel $mediaItem)
     {
         $id = $mediaItem->get('id');
         $type = $mediaItem->get('type');

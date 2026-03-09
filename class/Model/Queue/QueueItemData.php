@@ -20,7 +20,7 @@ class QueueItemData
         protected $remote_id; // for Ai 
         protected $returndatalist; // Datalist to return unharmed
         protected $paramlist;  // Parameter list being used in the API 
-        protected $files; 
+        protected $files;  // File Array from the optimizer - Array
         protected $flags; 
         protected $compressionType;  // Compressiontype used for item
         protected $compressionTypeRequested; // When converting, this is the compressiontype to be used after converting ( conversion lossless )

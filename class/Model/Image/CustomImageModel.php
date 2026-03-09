@@ -236,8 +236,10 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 			 		return $bool;
 				}
 
+        $backupModel = $this->getBackupModel();
+
 				// If not, check this..
-				if ($this->hasBackup() && $this->getMeta('status') == self::FILE_STATUS_PREVENT)
+				if ($backupModel->hasBackup($this, true) && $this->getMeta('status') == self::FILE_STATUS_PREVENT)
 				{
 					 	return true;
 				}
@@ -583,8 +585,9 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
     public function resetPrevent()
     {
+        $backupModel = $this->getBackupModel(); 
 
-				if ($this->hasBackup())
+				if ($backupModel->hasBackup($this, true))
 					$this->setMeta('status', self::FILE_STATUS_SUCCESS);
 				else
         	$this->setMeta('status', self::FILE_STATUS_UNPROCESSED);
@@ -633,6 +636,8 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 				 $extra_info = null;
 			}
 
+      $backupModel = $this->getBackupModel();
+
        $data = array(
             'folder_id' => $this->folder_id,
             'compressed_size' => $metaObj->compressedSize,
@@ -642,7 +647,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
             'resize' =>  ($metaObj->resize) ? 1 : 0,
             'resize_width' => $metaObj->resizeWidth,
             'resize_height' => $metaObj->resizeHeight,
-            'backup' => ($this->hasBackup()) ? 1 : 0,
+            'backup' => ($backupModel->hasBackup($this, true)) ? 1 : 0,
             'status' => $metaObj->status,
             'retries' => 0, // this is unused / legacy
             'message' => $message, // this is used for improvement line.
