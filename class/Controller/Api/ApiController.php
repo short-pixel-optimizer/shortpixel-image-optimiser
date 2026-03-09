@@ -359,7 +359,15 @@ class ApiController extends RequestManager
 				// Previous check here was for Item->files[$imageName] , not sure if currently needed.
 				// Check if image is not already in fileData.
 				// 06/03/26 - changing during testing this to isset since data()->files seems array?
-				if (is_null($fileData) || false === isset($fileData[$imageName]) ) {
+				// 09/03 - Issue here is probably json_encode / decode saving of this data, which enteres as array first, but from record it becomes object. Check for that.
+
+				if (is_array($fileData))
+				{
+					 $fileData = (object) $fileData;
+				}
+
+
+				if (is_null($fileData) || false === property_exists($fileData,$imageName) ) {
 					$imageList[$imageName] = $this->handleNewSuccess($qItem, $imageObject, $data);
 				} 
 			}

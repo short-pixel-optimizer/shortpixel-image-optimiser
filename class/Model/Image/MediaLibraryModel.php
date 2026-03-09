@@ -535,6 +535,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			}
 		}
 
+		if (is_null($this->retinas))
+		{
+			 $this->retinas = []; 
+		}
+
 		return $this->retinas;
 	}
 
@@ -2110,6 +2115,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 	/** New Setup of RestorePNG2JPG. Runs after copying backupfile back to uploads.
 	 * Important: The metadata will be CLEARED already
+	 * In time this should probably be moved to the backupModel logic, but it complicated not due to thumbsObj loop. 
 	 */
 	protected function restoreConversion($convertMeta, $converter)
 	{

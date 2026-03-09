@@ -180,7 +180,12 @@ class DirectoryModel extends \ShortPixel\Model
 		// not used anywhere in directory.
     // $upload_dir = wp_upload_dir(null, false);
 
-     $install_dir = get_home_path();
+    if (false === function_exists('get_home_path'))
+    {
+      require_once ABSPATH . 'wp-admin/includes/file.php';
+    }
+
+     $install_dir = \get_home_path();
      if($install_dir == '/') {
        $install_dir = \wpSPIO()->filesystem()->getWPAbsPath();
      }

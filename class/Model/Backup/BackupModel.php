@@ -89,30 +89,50 @@ abstract class BackupModel
 		} 
         */
         // Assertion here that for convert-types, there is no scaled- happening
-        $mainFile = (true === $is_main_file) ? $sourceFile : $this->mediaItem;
+        $mainFile = $this->mediaItem;
 
 		if (true === $this->isConverted) {
-			if ($is_main_file)
-            {
-                $imageBase = $mainFile->getMeta()->convertMeta()->getReplacementImageBase(); 
-                $extension = $mainFile->getMeta()->convertMeta()->getFileFormat();
-                if (0 === strlen(trim($imageBase)))
+        
+            $extension = $mainFile->getMeta()->convertMeta()->getFileFormat();
+            $replaceBase = $mainFile->getMeta()->convertMeta()->getReplacementImageBase(); 
+
+// Seems this always needs to be checked against file, and use imagebase if this is in the convertmeta. 
+			//if ($is_main_file)
+            //{
+               // $imageBase = $mainFile->getMeta()->convertMeta()->getReplacementImageBase(); 
+                //$extension = $mainFile->getMeta()->convertMeta()->getFileFormat();
+
+                if (strlen(trim($replaceBase)) > 0)
                 {
-                     $imageBase = $mainFile->getFileBase(); 
+                   //  $imageBase = $sourceFile->getFileBase(); 
+                   if ($is_main_file)
+                    {
+                        $backupFileName = $replaceBase . '.' . $extension; 
+                    }
+                    else
+                    {
+                        $backupFileName = str_replace($mainFile->getFileBase(), $replaceBase, $sourceFile->getFileName());
+                    }
                 }
-				return $imageBase . '.' . $extension;
-            }
-			else {
-				$name = str_replace($mainFile->getFileBase(), $mainFile->getMeta()->convertMeta()->getReplacementImageBase(), $sourceFile->getFileName());
-				return $name;
-			}
+                elseif (strlen($extension) > 0)
+                {
+                    $backupFileName = $sourceFile->getFileBase() . '.' . $extension; 
+                }
+                else  // This probably should not happen.
+                {
+                    $backupFileName = $sourceFile->getFileName();
+                }
+
+
 		}
         else
         {
-            return $sourceFile->getFileName();
+            $backupFileName = $sourceFile->getFileName();
         }
 
 
+
+        return $backupFileName; 
 	}
 
 
