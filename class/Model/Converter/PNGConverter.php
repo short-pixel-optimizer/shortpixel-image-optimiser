@@ -211,52 +211,11 @@ class PNGConverter extends MediaLibraryConverter
 				return false; 
 			}
 
-		/*	$width = $this->imageModel->get('width');
-			$height = $this->imageModel->get('height');
-
-			// If imageModel doesn't have proper width / height set. This can happen with remote files.
-			if (! is_int($width) && ! $width > 0)
-			{
-				 $width = $image->getWidth(); // imagesx($img);
-			}
-			if (! is_int($height) && ! $height > 0)
-			{
-				 $height = $image->getHeight(); //imagesy($img);
-			}
-*/
-
 			$width = $image->getWidth(); 
 			$height = $image->getHeight();
 			Log::addDebug("PNG2JPG doConvert width $width height $height", memory_get_usage());
 
-			/* $bg = imagecreatetruecolor($width, $height);
-
-			if(false === $bg || false === $img)
-			{
-				Log::addError('ImageCreateTrueColor failed');
-				if (false === $bg)
-				{
-					$msg = __('Creating an TrueColor Image failed - Possible library error', 'shortpixel-image-optimiser');
-				}
-				elseif (false === $img)
-				{
-					$msg = __('Image source failed - Check if source image is PNG and library is working', 'shortpixel-image-optimiser');
-				}
-
-				$this->imageModel->getMeta()->convertMeta()->setError(self::ERROR_LIBRARY);
-				ResponseController::addData($this->imageModel->get('id'), 'message', $msg);
-				return false;
-			}
-
-			imagefill($bg, 0, 0, imagecolorallocate($bg, 255, 255, 255));
-			imagealphablending($bg, 1);
-			imagecopy($bg, $img, 0, 0, 0, 0, $width, $height);
-*/
-		//  $fsFile = $fs->getFile($image); // the original png file
-
-
 			// check old filename, replace with uniqued filename.
-
 			$bool = $image->convertPNG();
 
       /** Quality is set to 90 and not using WP defaults (or filter) for good reason. Lower settings very quickly degrade the libraries output quality.  Better to leave this hardcoded at 90 and let the ShortPixel API handle the optimization **/
@@ -283,7 +242,6 @@ class PNGConverter extends MediaLibraryConverter
 
 					// Reload the file we just wrote.
 					$newFile = $fs->getFile($replacementPath);
-
 
 					if(false === $this->checkFileSizeMargin($origSize, $newSize)) {
 							//if the image is not 5% smaller, don't bother.

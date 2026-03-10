@@ -45,9 +45,10 @@ abstract class BackupModel
     public function __construct(BackupController $controller, ImageModel $mediaItem)
     {
         $this->controller = $controller; 
-        $this->mediaItem = $mediaItem;      
+        $this->mediaItem = clone $mediaItem;       // Read-ony copy, no referencing here. 
     
         $this->isConverted = $this->mediaItem->getMeta()->convertMeta()->isConverted();
+        //$this->convertMeta = clone $this->mediaItem->getMeta()->convertMeta(); // Cache this Readonly, because restore wipes data .
 
     }
 
@@ -65,6 +66,18 @@ abstract class BackupModel
     
     public function needsRegenerate() : bool
     {
+         if ($this->isConverted)
+         {
+            $mainFile = $this->mediaItem;
+            $extension = $mainFile->getMeta()->convertMeta()->getFileFormat();
+            $replaceBase = $mainFile->getMeta()->convertMeta()->getReplacementImageBase(); 
+
+            if ('png' === $extension) // For now this is supported, check if others can also use this regen method.
+            {
+                return true;
+            }
+         }
+
          foreach($this->backup_files as $name => $fileAr)
          {
               if (true === $fileAr['has_backup'] && false === $fileAr['has_own_file'] )
@@ -122,15 +135,11 @@ abstract class BackupModel
                 {
                     $backupFileName = $sourceFile->getFileName();
                 }
-
-
 		}
         else
         {
             $backupFileName = $sourceFile->getFileName();
         }
-
-
 
         return $backupFileName; 
 	}

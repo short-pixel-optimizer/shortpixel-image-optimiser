@@ -1953,7 +1953,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				Log::addWarn('Restoring with conversion, but parent was not restored correctly');
 				return $bool;
 			}
-		}
+		} 
+
+		// In lieue of above, now this needs to be done still.  Does search / replace / other things. 
+		/*if ($was_converted)
+		{
+			 $converter->restore();
+		} */
 
 		if (! $bool) {
 			$cleanRestore = false;
@@ -2050,7 +2056,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		* - Check for was_converted, because unconverting also runs news thumbnails.
 		*/
 		$backupModel = $this->getBackupModel(); 
-		if (true === $backupModel->needsRegenerate() && false === $was_converted)
+		if (true === $backupModel->needsRegenerate())
 		{
 			$this->generateThumbnails();
 			$wpmeta = wp_get_attachment_metadata($this->get('id'));
@@ -2123,44 +2129,44 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$ext = $convertMeta->getFileFormat();
 		// ImageModel restore, restored png file to .jpg file ( due to $this)
 		// File has just been restored, but it will be wrong extension in uploads
-		//
 
 		$destination = $fs->getFile($this->getFileDir() . $this->getFileBase() . '.' . $ext);
 
 		// If scaled in the name, revert to originalFile.
-		if ($this->isScaled()) {
+		/*if ($this->isScaled()) {
 			$originalFile = $this->getOriginalFile();
 			$destination = $fs->getFile($this->getFileDir() . $originalFile->getFileBase() . '.' . $ext);
-		}
+		} */
 
 		// We can't remove files until the end of process because some plugins will block it.
 		$toRemove = array();
-
+		$toRemove[] = $this;
 		// Destination is image.png, the original.
-		if (! $destination->exists()) {
+		/*if (false === $destination->exists()) { */
 			// This is a PNG content file, that has been restored as a .jpg file which is now main.
-			$copyok = $this->copy($destination);
+		/*	$copyok = $this->copy($destination);
 			if (false === $copyok) {
 				Log::addError('Copy to destination failed!');
 				ResponseController::addData('message', __('Restore PNG2JPG : Copying PNG to destination failed', 'shortpixel-image-optimiser'));
 				ResponseController::addData('is_error', true);
-			}
+			} */
 
-			$toRemove[] = $this;
-		} elseif (true === $destination->exists() && $destination->getExtension() == $ext) {
-			Log::addInfo('Destination exists, but is of correct extension, so fine?');
-		} else {
+			
+		/*} elseif (true === $destination->exists() && $destination->getExtension() == $ext) {
+			Log::addInfo('Destination exists, but is of correct extension, so fine?'); */
+		/* } else { 
 			Log::addError('Restoring Converted image not possible, target already exists');
 			ResponseController::addData('message', __('Restore PNG2JPG : Restoring to target that already exists', 'shortpixel-image-optimiser'));
 			ResponseController::addData('is_error', true);
 			return false;
-		}
+		}  */
 
 		$thumbObjs = $this->getThumbObjects();
 		$backupModel = $this->getBackupModel();
 
+		// @todo MOve this logic to BackuModel. Also remove the backup_files entry when deleting files keeping consistency
 		foreach ($thumbObjs as $thumbObj) {
-			if ($backupModel->hasBackup($thumbObj)) {
+			/*if ($backupModel->hasBackup($thumbObj)) {
 				$backupFile = $backupModel->getBackupFile($thumbObj);
 
 				if (is_object($backupFile)) {
@@ -2172,7 +2178,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						$backupFileJPG->delete();
 					}
 				}
-			}
+			} */
 
 			$toRemove[] = $thumbObj;
 		}

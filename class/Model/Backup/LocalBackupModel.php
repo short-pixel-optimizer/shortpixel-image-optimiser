@@ -81,10 +81,20 @@ class LocalBackupModel extends BackupModel
 
      // This one should probably do the whole procedure. 
      // Problem - how to find all the file items here. 
-     public function restore(ImageModel $targetFile) : bool 
+     public function restore(ImageModel $sourceFile) : bool 
      {
-         $backupFile = $this->getBackupFile($targetFile); 
-         $imageName = $targetFile->get('name'); 
+         $fs = \wpSPIO()->filesystem();
+         $backupFile = $this->getBackupFile($sourceFile); 
+         $imageName = $sourceFile->get('name'); 
+        
+         $mainFile = $this->getMainFile();
+         // If converted, and the thumbnail will be generated anyhow, then just remove it. 
+         if ($this->isConverted && $this->needsRegenerate() && $mainFile->getFullPath() !== $sourceFile->getFullPath())
+         {
+            return $this->onDelete($sourceFile); 
+         }
+
+         $targetFile = $fs->getFile( (string) $sourceFile->getFileDir() .  $backupFile->getFileName() );
 
         if (false === $backupFile || false === is_object($backupFile))
         {
@@ -136,6 +146,9 @@ class LocalBackupModel extends BackupModel
 						 return false;
 				 }
 
+         // Attempt for easy support of different file-extensions / conversions, move backupfile back based on it's own file
+
+         
 				$bool = $backupFile->move($targetFile);
         return $bool;
      }
@@ -217,8 +230,8 @@ class LocalBackupModel extends BackupModel
 
      public function onDelete(ImageModel $sourceFile) : bool
      {
-       $isConverted = $this->isConverted; 
-       $name = $sourceFile->get('name');
+       //$isConverted = $this->isConverted; 
+       //$name = $sourceFile->get('name');
        
        if (true === $this->hasBackup($sourceFile))
        {
@@ -241,7 +254,6 @@ class LocalBackupModel extends BackupModel
      */
     protected function getBackupDirectory($create = false)
     {
-        
         if (is_null($this->mediaItem->getFileDir()))
         {
             Log::addWarn('Could not establish FileDir ' . $this->mediaItem->getFullPath());

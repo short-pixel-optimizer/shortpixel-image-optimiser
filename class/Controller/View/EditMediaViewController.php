@@ -307,6 +307,9 @@ class EditMediaViewController extends \ShortPixel\ViewController
           $backupModel = $backupController->getModel($imageObj);
           $backupData = $backupModel->getBackupData(); 
 
+          $needs_regen = ($backupModel->needsRegenerate()) ? '<span class="green">Yes</span>' : '<span class="red">No</span> ';
+
+          $debugInfo[] = ['Backup thumbnails needs regenerate', $needs_regen]; 
           $debugInfo['backupData'] = ['BackupData', $backupData]; 
 
 
