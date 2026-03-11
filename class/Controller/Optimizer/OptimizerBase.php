@@ -204,7 +204,11 @@ abstract class OptimizerBase
       {
 
       } elseif ($backupModel->hasBackup($showItem)) {
-        $backupFile = $backupModel->getBackupFile($showItem); // attach backup for compare in bulk
+        $backupFile = $backupModel->getBackupFile($showItem); 
+        if (false === is_object($backupFile))
+        {
+           $backupFile = $backupModel->getMainBackupFile();
+        } // attach backup for compare in bulk
         $backup_url = $fs->pathToUrl($backupFile);
         $original = $backup_url;
         $optimized = $fs->pathToUrl($showItem);

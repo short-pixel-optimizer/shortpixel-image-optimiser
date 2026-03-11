@@ -320,8 +320,14 @@ class EditMediaViewController extends \ShortPixel\ViewController
 					$debugInfo[] = array('', '<hr>');
 
 
-						if ($backupModel->hasBackup($imageObj))
+						if ($backupModel->hasBackup($imageObj) )
+            {
             	$backupFile = $backupModel->getBackupFile($imageObj);
+              if (false === is_object($backupFile))
+              {
+                 $backupFile = $backupModel->getMainBackupFile();
+              }
+            }
 						else {
 							 $backupFile = $fs->getFile($fs->getBackupDirectory($imageObj) . $backupModel->getBackupFileName($imageObj));
 						}
@@ -331,6 +337,8 @@ class EditMediaViewController extends \ShortPixel\ViewController
             {
 							$backupText = __('Backup File :');
               $debugInfo[] = array( $backupText, (string) $backupFile . '(' . UiHelper::formatBytes($backupFile->getFileSize()) . ')' );
+
+              $debugInfo[] = ['Main Backup:', (string) $backupModel->getMainBackupFile()];
             }
               else {
 							$backupText = __('Target Backup File after optimization (no backup) ');

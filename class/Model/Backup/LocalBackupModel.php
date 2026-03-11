@@ -94,18 +94,23 @@ class LocalBackupModel extends BackupModel
             return $this->onDelete($sourceFile); 
          }
 
-         $targetFile = $fs->getFile( (string) $sourceFile->getFileDir() .  $backupFile->getFileName() );
-
-        if (false === $backupFile || false === is_object($backupFile))
-        {
-          // If not own file, but main file is in play, return OK but this needs a regenerate. 
-          if (false === $this->backup_files[$imageName]['has_own_file'])
-          {
+         if (false === $backupFile || false === is_object($backupFile))
+         {
+           // If not own file, but main file is in play, return OK but this needs a regenerate. 
+           if (false === $this->backup_files[$imageName]['has_own_file'])
+           {
+             // If needs generate, not mainfile, remove the file.
+              if ($this->needsRegenerate() && $mainFile->getFullPath() !== $sourceFile->getFullPath())
+              {
+                 $sourceFile->delete();
+              }
               return true; 
-          }
-          Log::addWarn('Issue with restoring BackupFile, probably missing - ', $backupFile);
-          return false; //error
-        }
+           }
+           Log::addWarn('Issue with restoring BackupFile, probably missing - ', $backupFile);
+           return false; //error
+         }
+
+         $targetFile = $fs->getFile( (string) $sourceFile->getFileDir() .  $backupFile->getFileName() );
 
         if (false === $backupFile->is_readable())
         {
@@ -163,7 +168,12 @@ class LocalBackupModel extends BackupModel
       return $this->backup_files;
     }
 
-     /** Checks if there is a backup 
+    public function backupIsMain()
+    {
+
+    }
+
+     /** Checks if there is a backup . This is simplest / less intensive check, should be used for overviews etc
       * 
       * @param ImageModel $sourceFile 
       * @param bool $strict .  Don't look for mainFile. Check used for determine file / prevent loops. 
@@ -209,9 +219,10 @@ class LocalBackupModel extends BackupModel
 
           // Check if main has a backup and use that if needed. 
           // @todo - This main file, can be originalfile as well, which is then not marked as main :/ 
-          if (false === $strict && false === $is_main_file && $sourceFile->isOptimized())
+          $mainFile = $this->getMainFile(); // This main file can be different than is_main_file, in case of -scaled 
+          if (false === $strict && $sourceFile->isOptimized() && $mainFile->getFullPath() !== $sourceFile->getFullPath())
           {
-           $mainFile = $this->getMainFile(); // This main file can be different than is_main_file, in case of -scaled 
+
            if ($mainFile->getFullPath() !== $sourceFile->getFullPath())
            {
             $bool = $this->hasBackup($mainFile, true);

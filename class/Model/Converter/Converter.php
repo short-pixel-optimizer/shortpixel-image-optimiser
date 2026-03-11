@@ -56,7 +56,8 @@ abstract class Converter
 		switch ($ext) {
 			case 'png':
 				$converter = new PNGConverter($imageModel);
-				break;
+			break;
+			
 			case 'heic':
 			case 'tiff':
 			case 'tif':
