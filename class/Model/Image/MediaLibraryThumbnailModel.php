@@ -485,7 +485,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 	 * 
 	 * @return mixed 
 	 */
-	protected function createBackup()
+	public function checkVirtualForBackup()
 	{
 		if ($this->is_virtual()) // download remote file to backup.
 		{
@@ -533,7 +533,8 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 			$this->setVirtualToReal($filepath);
 		}
 
-		return parent::createBackup();
+		return true; 
+		//return parent::createBackup();
 	}
 
 } // class

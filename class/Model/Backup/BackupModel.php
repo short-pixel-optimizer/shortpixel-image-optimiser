@@ -6,7 +6,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use ShortPixel\Controller\Backup\BackupController;
+use ShortPixel\Helper\DownloadHelper;
 use ShortPixel\Model\Image\ImageModel;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+
 
  // Model to keep the backups of one item with many variables into one piece.  This should be the whole backup for one image item 
 abstract class BackupModel
@@ -144,6 +147,5 @@ abstract class BackupModel
 
         return $backupFileName; 
 	}
-
 
 } // class 

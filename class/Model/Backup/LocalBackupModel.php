@@ -16,6 +16,8 @@ class LocalBackupModel extends BackupModel
     // This must be able to create backup for images one-by-one. 
      public function createBackupFile(ImageModel $sourceFile) : bool
      {
+
+
         $directory = $this->getBackupDirectory(true);
         $fs = \wpSPIO()->filesystem();
         $imageName = $sourceFile->get('name');
@@ -56,7 +58,20 @@ class LocalBackupModel extends BackupModel
         }
         else
         {
-          $result = $sourceFile->copy($backupFile);
+          $check = true; 
+          if (method_exists($sourceFile, 'checkVirtualForBackup'))
+          {
+              $check = $sourceFile->checkVirtualForBackup();  
+          }
+
+          if (true === $check)
+          {
+              $result = $sourceFile->copy($backupFile);   
+          }
+          else 
+          {
+             $result = false; 
+          }
           
         }
 

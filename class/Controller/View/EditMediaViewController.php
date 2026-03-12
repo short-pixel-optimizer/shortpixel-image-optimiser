@@ -395,7 +395,8 @@ class EditMediaViewController extends \ShortPixel\ViewController
                 continue;
               }
 
-              $url = $thumbObj->getURL(); 
+            //  $url = $thumbObj->getURL(); 
+              $url = $fs->pathToUrl($thumbObj);
               $filename = $thumbObj->getFullPath();
               $fileDir = $thumbObj->getFileDir();
 

@@ -11,6 +11,7 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\Controller\Api\ApiController as ApiController;
 use ShortPixel\Controller\Backup\BackupController as BackupController;
+use ShortPixel\Helper\DownloadHelper;
 use ShortPixel\Model\File\FileModel as FileModel;
 use ShortPixel\Model\AccessModel as AccessModel;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
@@ -807,6 +808,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                 {
                     $virtualFile->delete();
                 }
+                $optimizedSize = $tempFile->getFileSize();
+
+
                 $copyok = $tempFile->move($virtualFile);
 
                 // File has been copied to local system, set the path to real to be able to get file and image sizes.
@@ -1402,7 +1406,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     {
         return $this->image_meta->toClass();
     }
-
 
     protected function createBackup()
     {
