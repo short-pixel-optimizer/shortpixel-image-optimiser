@@ -105,7 +105,7 @@ abstract class RequestManager
    // Log::addTemp('ShortPixel API Request sent to ' . $this->apiEndPoint , $requestParameters);
 
 		//only if $Blocking is true analyze the response
-		if ( $requestParameters['blocking'] )
+        if ( $requestParameters['blocking'] )
 		{
 				if ( is_object($response) && get_class($response) == 'WP_Error' )
 				{
@@ -142,8 +142,18 @@ abstract class RequestManager
 				}
 				elseif ( isset($response['response']['code']) && $response['response']['code'] <> 200 )
 				{
-						$errorMessage = $response['response']['code'] . " - " . $response['response']['message'];
 						$errorCode = $response['response']['code'];
+
+            // try to extract a more useful error message from JSON body (if any)
+                    // (like the one sent from ApiGpt via commons),
+            // still there is fallback to the generic "code - Message" string :)
+            $errorMessage = $response['response']['code'] . " - " . $response['response']['message'];
+            if (isset($response['body']) && is_string($response['body']) && $response['body'] !== '') {
+                $body = json_decode($response['body'], true);
+                if (is_array($body) && isset($body['error']) && is_string($body['error']) && $body['error'] !== '') {
+                    $errorMessage = $body['error'];
+                }
+            }
 
             $qItem->addResult($this->returnFailure($errorCode, $errorMessage));
 				}
