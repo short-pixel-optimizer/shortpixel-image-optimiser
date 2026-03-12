@@ -74,9 +74,9 @@ class wpOffload
 		add_action('shortpixel/converter/prevent-offload', array($this, 'preventOffload'), 10);
 		add_action('shortpixel/converter/prevent-offload-off', array($this, 'preventOffloadOff'), 10);
 
-		add_filter('as3cf_attachment_file_paths', array($this, 'add_webp_paths'));
+		add_filter('as3cf_attachment_file_paths', array($this, 'add_webp_paths'), 10, 3);
 
-		add_filter('as3cf_remove_source_files_from_provider', array($this, 'remove_webp_paths'));
+	//	add_filter('as3cf_remove_source_files_from_provider', array($this, 'remove_webp_paths'));
 
 
 		add_filter('as3cf_pre_update_attachment_metadata', array($this, 'preventUpdateMetaData'), 10, 4);
@@ -175,6 +175,11 @@ class wpOffload
 		$remove = \DeliciousBrains\WP_Offload_Media\Items\Remove_Provider_Handler::get_item_handler_key_name();
 		$itemHandler = $this->as3cf->get_item_handler($remove);
 
+		// Given option prevents offload pro from downloading, then re-uploading left webp files etc. (see core-pro.php)
+		$itemHandler->handle($a3cfItem, ['verify_exists_on_local' => null]);
+
+
+		return true; 
 
 	}
 
@@ -599,18 +604,20 @@ class wpOffload
 	/**  Get Webp Paths that might be generated and offload them as well.
 	 * Paths - size : path values
 	 */
-	public function add_webp_paths($paths)
-	{
+	
+	public function add_webp_paths($paths, $attachment_id, $meta)
+	{ // @todo Check if this works.
 		$paths = $this->getWebpPaths($paths, true);
 		return $paths;
 	}
 
-
+	/*
 	public function remove_webp_paths($paths)
 	{
 		$paths = $this->getWebpPaths($paths, false);
 		return $paths;
 	}
+	*/
 
 	// GetbyURL can't find thumbnails, only the main image. Check via extrainfo method if we can find needed filetype
 	// @param $bool Boolean
