@@ -94,8 +94,6 @@ class DownloadHelper
 					$fs = \wpSPIO()->filesystem();
 					$file = $fs->getFile($tempFile);
 
-          
-
           if ($file->getFileSize() === 0)
           {
               Log::addError('Tmp File zero bytes', $tempFile); 

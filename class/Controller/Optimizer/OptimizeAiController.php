@@ -778,6 +778,7 @@ public function formatGenerated($generated, $current, $original, $isPreview = fa
        {
          // If preview don't fall back on other stuff, just leave it empty. 
           $value = __('AI generation disabled', 'shortpixel-image-optimiser');
+         //$value = '';
 
           /*if (true === $isPreview)
           {

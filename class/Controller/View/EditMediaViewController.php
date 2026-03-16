@@ -16,6 +16,7 @@ use ShortPixel\Helper\UiHelper as UiHelper;
 
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
 use ShortPixel\Model\AiDataModel;
+use ShortPixel\Model\File\DirectoryModel;
 use ShortPixel\Model\File\FileModel as FileModel;
 
 
@@ -100,6 +101,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 						$this->loadView();
 						return false;
 					}
+
 
           $this->view->status_message = null;
 

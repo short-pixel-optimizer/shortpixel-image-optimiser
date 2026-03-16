@@ -396,7 +396,7 @@ class EnvironmentModel extends \ShortPixel\Model
           if ($limit <= 0)
             return false;
 
-          $elapsed = time() - $start;
+          $elapsed = time() - $start; // Seconds elapsed since start of the process.
 
           if ($elapsed <= 0)
           {
