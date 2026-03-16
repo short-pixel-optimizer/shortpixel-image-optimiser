@@ -46,8 +46,9 @@ class DirectoryModel extends \ShortPixel\Model
       $fs = \wpSPIO()->filesystem();
 
       // Test if path actually has someting, otherwise just bail.
-      if (strlen(trim($path)) == 0)
+      if (strlen(trim($path ?? '')) == 0)
       {
+        $this->path = ''; // prevent various PHP string-function errors
          return false;
       }
 
@@ -128,7 +129,7 @@ class DirectoryModel extends \ShortPixel\Model
 
   public function getModified()
   {
-    return filemtime($this->path);
+    return filemtime($this->path ?? '');
   }
 
   /**
