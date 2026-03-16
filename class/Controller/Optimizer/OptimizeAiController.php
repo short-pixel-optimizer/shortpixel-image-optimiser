@@ -781,20 +781,14 @@ public function formatGenerated($generated, $current, $original, $isPreview = fa
        if (is_int($value) && in_array($value, $statii))
        {
          // If preview don't fall back on other stuff, just leave it empty. 
-          $value = __('AI generation disabled', 'shortpixel-image-optimiser');
+         
+         $value = ''; 
+          
+          if (true === $isPreview)
+          {
+            $value = __('AI generation disabled', 'shortpixel-image-optimiser');
+          }
 
-          /*if (true === $isPreview)
-          {
-             $value = ''; 
-          }
-          elseif (isset($current[$name]))
-          {
-               $value = $current[$name];
-          }
-          elseif(isset($original[$name]))
-          {
-               $value = $original[$name];
-          } */
           $generated[$name] = $value;
        }
   } 
