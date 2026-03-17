@@ -314,6 +314,7 @@ class ShortPixelPlugin {
 	public function admin_scripts( $hook_suffix ) {
 
 		$settings       = \wpSPIO()->settings();
+		$env = \wpSPIO()->env();
 		$ajaxController = AjaxController::getInstance();
 
 		$secretKey = $ajaxController->getProcessorKey();
@@ -399,7 +400,6 @@ class ShortPixelPlugin {
             array(
 				'bulkSecret'        => $secretKey,
 				'isBulkPage'        => (bool) $is_bulk_page,
-				'screenURL'         => false,
 				'workerURL'         => plugins_url( 'res/js/shortpixel-worker.js', SHORTPIXEL_PLUGIN_FILE ),
 				'nonce_process'     => wp_create_nonce( 'processing' ),
 				'nonce_exit'        => wp_create_nonce( 'exit_process' ),
@@ -453,6 +453,7 @@ class ShortPixelPlugin {
 			'upscale_max_width' => 1200, // Scale X and max width pin Pixels.
 			'popup_load_preview' => true, // Upon opening, load Preview or not.
 			'too_big_for_scale_title'  => __('Image too big for scaling', 'shortpixel-image-optimiser'), 
+			'wp_screen_id' => $env->screen_id, 
 	 ];
 
 		wp_localize_script('shortpixel-screen-media', 'spio_mediascreen_settings', $screen_localize_media); 

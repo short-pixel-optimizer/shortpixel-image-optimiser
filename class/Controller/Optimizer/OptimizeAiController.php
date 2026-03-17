@@ -753,6 +753,15 @@ public function getAltData(QueueItem $qItem)
     return $metadata; 
 }
 
+/**
+ * Generate the AI Data so that it can be shown public-facing. 
+ * 
+ * @param mixed $generated 
+ * @param mixed $current 
+ * @param mixed $original 
+ * @param bool $isPreview 
+ * @return (string[]|mixed)[] 
+ */
 public function formatGenerated($generated, $current, $original, $isPreview = false)
 {
     
@@ -783,13 +792,7 @@ public function formatGenerated($generated, $current, $original, $isPreview = fa
          // If preview don't fall back on other stuff, just leave it empty. 
          
          $value = ''; 
-          
-          if (true === $isPreview)
-          {
-            $value = __('AI generation disabled', 'shortpixel-image-optimiser');
-          }
-
-          $generated[$name] = $value;
+         $generated[$name] = $value;
        }
   } 
 
