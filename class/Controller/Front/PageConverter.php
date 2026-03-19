@@ -85,6 +85,11 @@ class PageConverter extends \ShortPixel\Controller
        return false;
     }
 
+    if (isset($_GET['oxygen']) && 'builder' === $_GET['oxygen'])
+    {
+       return false;
+    }
+
     if (false === \wpSPIO()->env()->is_front) // if is front.
     {
        return false; 
@@ -303,7 +308,12 @@ class PageConverter extends \ShortPixel\Controller
 // https://stackoverflow.com/questions/276516/parsing-domain-from-a-url
 private function getDomain($url)
 {
-    preg_match("/[a-z0-9\-]{1,63}\.[a-z\.]{2,6}$/", parse_url($url, PHP_URL_HOST), $_domain_tld);
+    $matches = preg_match("/[a-z0-9\-]{1,63}\.[a-z\.]{2,63}$/", parse_url($url, PHP_URL_HOST), $_domain_tld);
+    if (false === $matches || 0 === $matches) // If pattern fails. 
+    {
+       return parse_url($url, PHP_URL_HOST); 
+    }    
+
     return $_domain_tld[0];
 }
 

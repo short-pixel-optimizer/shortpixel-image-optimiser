@@ -21,13 +21,13 @@ switch($action_name)
 {
 	case 'remove':
 		$modal_title = __('AI Background Removal', 'shortpixel-image-optimiser');
-		$suggesteFileName = $originalImage->getFileBase() . '_nobg.' . $originalImage->getExtension();
+		$suggestedFileName = $originalImage->getFileBase() . '_nobg.' . $originalImage->getExtension();
 
 	break;
 
 	case 'scale':
 		$modal_title = __('AI Image Upscale', 'shortpixel-image-optimiser');
-		$suggesteFileName = $originalImage->getFileBase() . '_upscale.' . $originalImage->getExtension();
+		$suggestedFileName = $originalImage->getFileBase() . '_upscale.' . $originalImage->getExtension();
 
 	break;
 }
@@ -54,13 +54,13 @@ $scale_sizes =
 
 ?>
 
-<div class="modal-wrapper" id="media-modal" data-item-id="<?php echo $this->data['item_id'] ?>" data-action-name="<?php echo $action_name ?>" >
+<div class="modal-wrapper" id="media-modal" data-item-id="<?php echo intval($this->data['item_id']) ?>" data-action-name="<?php echo esc_attr($action_name) ?>" >
     <div class="title"><h3><?php echo $modal_title ?> <span data-action='close'>X</span></h3> </div>
 	<div class='modal-content-wrapper'>
 
     <div class="image-wrapper">
             <div class="image-original">
-                <i style="background-image: url('<?php echo $previewImage->getURL(); ?>');"></i>
+                <i style="background-image: url('<?php echo esc_url($previewImage->getURL()); ?>');"></i>
 				<span><?php _e('Before', 'shortpixel-image-optimiser'); ?>
             </div>
 			<div class="image-arrow">
@@ -68,7 +68,7 @@ $scale_sizes =
 			</div>
             <div class="image-preview">
 				<span><?php _e('After', 'shortpixel-image-optimiser'); ?></span>
-                <i data-placeholder="<?php echo $placeholderImage ?>" style="background-image: url('<?php echo $placeholderImage ?>');" ></i>
+                <i data-placeholder="<?php echo esc_url($placeholderImage) ?>" style="background-image: url('<?php echo esc_url($placeholderImage) ?>');" ></i>
 				<div class='error-message shortpixel-hide'>&nbsp;</div>
                 <div class='load-preview-spinner shortpixel-hide'><img class='loadspinner' src="<?php echo esc_url(\wpSPIO()->plugin_url('res/img/bulk/loading-hourglass.svg')); ?>" /></div>
             </div>
@@ -131,12 +131,12 @@ $scale_sizes =
 		<section class='new_file_title wrapper'>
 			<span>
 				<p><?php _e('New File Name', 'shortpixel-image-optimiser'); ?></p>
-				<input type="text" name="new_filename" value="<?php echo $suggesteFileName ?>">
+				<input type="text" name="new_filename" value="<?php echo esc_attr($suggestedFileName) ?>">
 			</span>
 
 			<span>
 				<p><?php _e('New Image Title', 'shortpixel-image-optimiser'); ?></p>
-				<input type="text" name="new_posttitle" value="<?php echo $post_title ?>">
+				<input type="text" name="new_posttitle" value="<?php echo esc_attr($post_title) ?>">
 			</span>
 
 		</section>

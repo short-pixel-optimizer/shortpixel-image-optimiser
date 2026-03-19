@@ -251,7 +251,6 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
                 if (! $thisfile->exists())
                 {
                   // FILTER: boolean, object, string, filedir
-
 								 // Return fileObj if you want to live.
                   $thisfile = $fileWebp_exists = apply_filters('shortpixel/front/webp_notfound', false, $thisfile, $image_url, $imageBase);
                 }
@@ -299,7 +298,7 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
           return $raw_image;
       }
 
-      $args = array();
+      $args = [];
 
       if ($webpCount > 0)
         $args['webp'] = $srcsetWebP;
