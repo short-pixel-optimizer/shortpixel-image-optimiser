@@ -14,6 +14,7 @@ use ShortPixel\Controller\Api\ApiController;
 use ShortPixel\Controller\Queue\Queue;
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
 use ShortPixel\Model\AiDataModel;
+use ShortPixel\Model\Queue\QueueItemResult;
 use ShortPixel\Replacer\Replacer;
 use ShortPixel\ViewController as ViewController;
 
@@ -99,7 +100,7 @@ class OptimizeAiController extends OptimizerBase
       return $is_processable;
   }
 
-  public function enqueueItem(QueueItem $qItem, $args = []) : \stdClass
+  public function enqueueItem(QueueItem $qItem, $args = [])
   {
 
     $action = $args['action']; 
