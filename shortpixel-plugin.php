@@ -329,6 +329,8 @@ class ShortPixelPlugin {
 
 		$OptimizeAiController = OptimizeAiController::getInstance(); 
 
+		$args_footer_async = ['strategy' => 'async', 'in_footer' => true];
+
 	 wp_register_script('shortpixel-folderbrowser', plugins_url('/res/js/shortpixel-folderbrowser.js', SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
 	 wp_localize_script('shortpixel-folderbrowser', 'spio_folderbrowser', array(
@@ -370,7 +372,8 @@ class ShortPixelPlugin {
 		wp_register_script('shortpixel-media', plugins_url('res/js/shortpixel-media.js',  SHORTPIXEL_PLUGIN_FILE), array('jquery'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
 		wp_register_script('shortpixel-inline-help', plugins_url('res/js/shortpixel-inline-help.js',  SHORTPIXEL_PLUGIN_FILE), [], SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
-		wp_register_script('shortpixel-chatbot', apply_filters('shortpixel/plugin/nohelp', 'https://spcdn.shortpixel.ai/assets/js/ext/ai-chat-agent.js'), [], SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
+		wp_register_script('shortpixel-chatbot', 
+			apply_filters('shortpixel/plugin/nohelp', 'https://spcdn.shortpixel.ai/assets/js/ext/ai-chat-agent.js'), [], SHORTPIXEL_IMAGE_OPTIMISER_VERSION, $args_footer_async);
 
 		// This filter is from ListMediaViewController for the media library grid display, executive script in shortpixel-media.js.
 
