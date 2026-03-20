@@ -14,14 +14,27 @@ use ShortPixel\Helper\InstallHelper as InstallHelper;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
 
 
-// Future contoller for the edit media metabox view.
+/**
+ * Controller for the Custom (Other) Media directory management.
+ *
+ * Manages the custom folder and custom image tables, handles adding directories and
+ * individual images, folder scanning/refresh cycles, and the folder-browser UI data.
+ *
+ * @package ShortPixel\Controller
+ */
 class OtherMediaController extends \ShortPixel\Controller
 {
+    /** @var array|null Cached list of active folder IDs, populated on first request */
     private $folderIDCache;
+
+    /** @var bool|null Cached flag indicating whether the shortpixel_folders table exists */
     private static $hasFoldersTable;
+
+    /** @var bool|null Cached flag indicating whether any custom images exist in the database */
     private static $hasCustomImages;
 
 
+    /** @var OtherMediaController|null Singleton instance */
     protected static $instance;
 
 
@@ -31,27 +44,46 @@ class OtherMediaController extends \ShortPixel\Controller
         parent::__construct();
     }
 
+    /**
+     * Return the singleton instance, creating it on first call.
+     *
+     * @return static The singleton OtherMediaController instance.
+     */
     public static function getInstance()
     {
         if (is_null(self::$instance))
-					 self::$instance = new static();
+				 self::$instance = new static();
 
         return self::$instance;
     }
 
+    /**
+     * Return the fully-qualified name of the custom folders database table.
+     *
+     * @return string Table name including the wpdb prefix.
+     */
     public function getFolderTable()
     {
         global $wpdb;
         return $wpdb->prefix . 'shortpixel_folders';
     }
 
+    /**
+     * Return the fully-qualified name of the custom media meta database table.
+     *
+     * @return string Table name including the wpdb prefix.
+     */
     public function getMetaTable()
     {
         global $wpdb;
         return  $wpdb->prefix . 'shortpixel_meta';
     }
 
-    // Get CustomFolder for usage.
+    /**
+     * Retrieve all registered custom folders (including hidden/removed ones).
+     *
+     * @return DirectoryOtherMediaModel[] Array of directory model objects for all folders.
+     */
     public function getAllFolders()
     {
         $folders = $this->getFolders();
@@ -59,12 +91,23 @@ class OtherMediaController extends \ShortPixel\Controller
         //return $folders;
     }
 
+    /**
+     * Retrieve only active (non-hidden) custom folders.
+     *
+     * @return DirectoryOtherMediaModel[] Array of directory model objects for active folders.
+     */
     public function getActiveFolders()
     {
       $folders = $this->getFolders(array('remove_hidden' => true));
       return $this->loadFoldersFromResult($folders);
     }
 
+    /**
+     * Convert raw database result rows into DirectoryOtherMediaModel objects.
+     *
+     * @param array $folders Array of database row objects returned by getFolders().
+     * @return DirectoryOtherMediaModel[] Array of directory model objects.
+     */
     private function loadFoldersFromResult($folders)
     {
        $dirFolders = array();
@@ -76,6 +119,13 @@ class OtherMediaController extends \ShortPixel\Controller
        return $dirFolders;
     }
 
+    /**
+     * Return an array of IDs for all active (non-removed) custom folders.
+     *
+     * Results are cached in memory after the first call to avoid repeated queries.
+     *
+     * @return array Array of folder ID strings from the database.
+     */
     public function getActiveDirectoryIDS()
     {
       if (! is_null($this->folderIDCache))
@@ -90,6 +140,11 @@ class OtherMediaController extends \ShortPixel\Controller
       return $this->folderIDCache;
     }
 
+    /**
+     * Return an array of IDs for all hidden (status = -1) custom folders.
+     *
+     * @return array Array of folder ID strings from the database.
+     */
 		public function getHiddenDirectoryIDS()
 		{
       global $wpdb;
@@ -100,6 +155,12 @@ class OtherMediaController extends \ShortPixel\Controller
 			return $results;
 		}
 
+    /**
+     * Retrieve a single custom folder by its database ID.
+     *
+     * @param int $id The folder's database ID.
+     * @return DirectoryOtherMediaModel|false The folder model, or false if not found.
+     */
     public function getFolderByID($id)
     {
         $folders = $this->getFolders(array('id' => $id));
@@ -112,12 +173,27 @@ class OtherMediaController extends \ShortPixel\Controller
         return false;
     }
 
+    /**
+     * Return a DirectoryOtherMediaModel for the given filesystem path.
+     *
+     * @param string $path Full filesystem path to the folder.
+     * @return DirectoryOtherMediaModel The directory model for the given path.
+     */
     public function getFolderByPath($path)
     {
        $folder = new DirectoryOtherMediaModel($path);
        return $folder;
     }
 
+    /**
+     * Look up a custom image model by its filesystem path.
+     *
+     * Queries the meta table for a matching path; if found, returns the full image model.
+     * If not found in the database, returns a stub model for the path.
+     *
+     * @param string $path Full filesystem path to the image file.
+     * @return CustomImageModel A loaded custom image model or a stub model when not in DB.
+     */
     public function getCustomImageByPath($path)
     {
          global $wpdb;
@@ -135,7 +211,13 @@ class OtherMediaController extends \ShortPixel\Controller
             return $fs->getCustomStub($path); // stub
     }
 
-    /* Check if installation has custom image, or anything. To show interface */
+    /**
+     * Check whether any custom images are present in the database.
+     *
+     * Result is cached statically to prevent repeated queries in the same request.
+     *
+     * @return bool True if at least one custom image record exists, false otherwise.
+     */
     public function hasCustomImages()
     {
        if (! is_null(self::$hasCustomImages)) // prevent repeat
@@ -160,6 +242,11 @@ class OtherMediaController extends \ShortPixel\Controller
       return $result;
     }
 
+    /**
+     * Determine whether the Custom Media admin menu item should be shown.
+     *
+     * @return bool True when the 'showCustomMedia' setting is enabled.
+     */
 		public function showMenuItem()
 		{
 			  $settings = \wpSPIO()->settings();
@@ -170,6 +257,16 @@ class OtherMediaController extends \ShortPixel\Controller
 				return false;
 		}
 
+    /**
+     * Register a filesystem directory as a custom media folder.
+     *
+     * Validates the directory and all subdirectories before saving. If the directory
+     * is already registered and active, it is refreshed rather than re-added. If it
+     * was previously removed, it is restored and refreshed.
+     *
+     * @param string $path Full filesystem path to the directory to add.
+     * @return DirectoryOtherMediaModel|false The saved directory model, or false on failure.
+     */
 	   public function addDirectory($path)
     {
        $fs = \wpSPIO()->filesystem();
@@ -210,7 +307,15 @@ class OtherMediaController extends \ShortPixel\Controller
         return false;
     }
 
-		// Recursive check if any of the directories is not addable. If so cancel the whole thing.
+    /**
+     * Recursively verify that a directory and all its subdirectories are eligible for addition.
+     *
+     * Returns false as soon as any directory in the tree fails the eligibility check,
+     * preventing partial additions.
+     *
+     * @param DirectoryOtherMediaModel $directory The root directory to check.
+     * @return bool True if all directories in the tree are allowed, false otherwise.
+     */
 		public function checkDirectoryRecursive($directory)
 		{
 				 if ($directory->checkDirectory() === false)
@@ -239,7 +344,21 @@ class OtherMediaController extends \ShortPixel\Controller
 				 return true;
 		}
 
-    // Main function to add a path to the Custom Media.
+    /**
+     * Add a single image file to the custom media system.
+     *
+     * Accepts either a file path string or a FileModel object. The parent folder is
+     * created in the database if it does not yet exist. Supports marking the folder
+     * as a NextGEN Gallery source via args.
+     *
+     * @param string|\ShortPixel\Model\File\FileModel $path_or_file Full path or FileModel of the image to add.
+     * @param array $args {
+     *     Optional. Additional arguments.
+     *
+     *     @type bool $is_nextgen Whether this image belongs to a NextGEN Gallery folder. Default false.
+     * }
+     * @return void
+     */
     public function addImage($path_or_file, $args = array())
     {
         $defaults = array(
@@ -252,8 +371,8 @@ class OtherMediaController extends \ShortPixel\Controller
 
         if (is_object($path_or_file)) // assume fileObject
         {
-					  $file = $path_or_file;
-				}
+				  $file = $path_or_file;
+			}
         else
         {
            $file = $fs->getFile($path_or_file);
@@ -273,11 +392,21 @@ class OtherMediaController extends \ShortPixel\Controller
 
     }
 
-		/* New structure for folder refresing based on checked value in database + interval.  Via Scan interface
-		*
-		* @param $args Array  ( force true / false )
-		* @return Array - Should return folder_id, folder_path, amount of new files / result / warning
-		*/
+    /**
+     * Refresh the next custom folder that is due for a content scan.
+     *
+     * Selects the folder with the oldest (or null) ts_checked timestamp that has not
+     * exceeded the configured interval, refreshes it, and returns a summary of changes.
+     *
+     * @param array $args {
+     *     Optional. Arguments controlling the refresh behaviour.
+     *
+     *     @type bool $force    Force a refresh even if the interval has not elapsed. Default false.
+     *     @type int  $interval Minimum seconds between refreshes. Default HOUR_IN_SECONDS.
+     * }
+     * @return array|false Associative array with keys folder_id, old_count, new_count, path, message;
+     *                     or false when no folder needs refreshing.
+     */
 		public function doNextRefreshableFolder($args = array())
 		{
 				$defaults = array(
@@ -344,6 +473,11 @@ class OtherMediaController extends \ShortPixel\Controller
 				return $return;
 		}
 
+    /**
+     * Reset all ts_checked timestamps to NULL so every folder will be rescanned on the next tick.
+     *
+     * @return void
+     */
 		public function resetCheckedTimestamps()
 		{
 				global $wpdb;
@@ -355,8 +489,13 @@ class OtherMediaController extends \ShortPixel\Controller
 		}
 
 		/**
-		 * Function to clean the folders and meta from unused stuff
-		*/
+		 * Remove orphaned folder and meta records from the database.
+		 *
+		 * Deletes folder rows with a removed status (status < 0) that have no associated
+		 * images remaining in the meta table.
+		 *
+		 * @return void
+		 */
 		protected function cleanUp()
 		{
 			 global $wpdb;
@@ -378,7 +517,16 @@ class OtherMediaController extends \ShortPixel\Controller
         return $status;
     }
 
-    /* Check if this directory is part of the MediaLibrary */
+    /**
+     * Check whether a given directory is part of the WordPress Media Library upload structure.
+     *
+     * Returns true only for year-based direct subdirectories of the uploads folder (e.g.
+     * /wp-content/uploads/2024/), which are managed by WordPress and should not be added
+     * as custom folders.
+     *
+     * @param DirectoryModel $directory The directory to test.
+     * @return bool True if the directory is a WP Media Library year folder, false otherwise.
+     */
     public function checkifMediaLibrary(DirectoryModel $directory)
     {
       $fs = \wpSPIO()->filesystem();
@@ -421,6 +569,16 @@ class OtherMediaController extends \ShortPixel\Controller
 			}
     }
 
+    /**
+     * Return the list of subdirectories under a given path for the folder-browser UI.
+     *
+     * Validates that the requested path is within the WordPress file base, then builds
+     * an array of folder descriptors (relative path, name, active/disabled state) for
+     * each immediate subdirectory. Returns an error array on permission or path failures.
+     *
+     * @param string|null $postDir URL-encoded relative path submitted by the browser UI.
+     * @return array Array of folder descriptor arrays, or an error array with is_error and message keys.
+     */
     public function browseFolder($postDir)
     {
       $error = array('is_error' => true, 'message' => '');
@@ -525,10 +683,25 @@ class OtherMediaController extends \ShortPixel\Controller
       return $folders;
     }
 
-    /* Get the custom Folders from DB, put them in model
-    @return Array  Array database result
-    @todo Has been replaced by getItems in FoldersViewController
-    */
+    /**
+     * Query the custom folders table with optional filters and return raw result rows.
+     *
+     * Supports filtering by ID, path, and hidden status, as well as count-only queries
+     * and limit/offset pagination. Returns an empty array (or 0 for count queries) when
+     * the folders table does not exist.
+     *
+     * @param array $args {
+     *     Optional. Query arguments.
+     *
+     *     @type int|false    $id            Filter by folder ID. Default false.
+     *     @type bool         $remove_hidden Exclude folders with status = -1. Default true.
+     *     @type string|false $path          Filter by exact folder path. Default false.
+     *     @type bool         $only_count    Return an integer count instead of rows. Default false.
+     *     @type int|false    $limit         Limit the number of results. Default false.
+     *     @type int|false    $offset        Offset for paginated results. Default false.
+     * }
+     * @return array|int Array of result row objects, or an integer count when only_count is true.
+     */
     private function getFolders($args = array())
     {
       global $wpdb;
@@ -591,6 +764,11 @@ class OtherMediaController extends \ShortPixel\Controller
     }
 
 
+      /**
+       * Check whether the shortpixel_folders database table exists.
+       *
+       * @return bool True if the table exists, false otherwise.
+       */
       private function hasFoldersTable()
       {
 				return InstallHelper::checkTableExists('shortpixel_folders');

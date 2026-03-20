@@ -11,24 +11,82 @@ use ShortPixel\Notices\NoticeController as Notice;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 
+/**
+ * Manages loading, validation, storage and removal of the ShortPixel API key.
+ *
+ * Handles key constants defined in wp-config.php, legacy option migration,
+ * remote validation via QuotaController, and related admin notices.
+ *
+ * @package ShortPixel\Model
+ */
 class ApiKeyModel extends \ShortPixel\Model
 {
 
-  // variables
+  /**
+   * The current API key string.
+   *
+   * @var string
+   */
   protected $apiKey;
+
+  /**
+   * The last API key that was submitted for validation, used to prevent
+   * repeated server requests for the same invalid key.
+   *
+   * @var string|null
+   */
   protected $apiKeyTried;  // stop retrying the same key over and over if not valid.
+
+  /**
+   * Persisted flag indicating whether the stored key was previously verified.
+   *
+   * @var bool
+   */
   protected $verifiedKey;
 
   // states
   // key is verified is set by checkKey *after* checks and validation
+  /**
+   * Runtime flag: true after checkKey() confirms the key is valid this request.
+   *
+   * @var bool
+   */
   protected $key_is_verified = false; // this state doesn't have to be the same as the verifiedKey field in DB.
+
+  /**
+   * True when no API key is currently set.
+   *
+   * @var bool
+   */
   protected $key_is_empty = false;
+
+  /**
+   * True when the API key is supplied via the SHORTPIXEL_API_KEY constant.
+   *
+   * @var bool
+   */
   protected $key_is_constant = false;
+
+  /**
+   * True when the API key should be hidden from the settings UI (SHORTPIXEL_HIDE_API_KEY).
+   *
+   * @var bool
+   */
   protected $key_is_hidden = false;
 
+  /**
+   * Tracks which notices have already been emitted this request to avoid duplicates.
+   *
+   * @var array<string, bool>
+   */
   protected static $notified = array();
 
 
+  /**
+   * Field definitions for migrating the legacy per-option storage format.
+   *
+   * @var array<string, array<string, string>>
+   */
   protected $legacy_model = array(
        'apiKey' => array('s' => 'string',
                           'key' => 'wp-short-pixel-apiKey',
@@ -42,6 +100,11 @@ class ApiKeyModel extends \ShortPixel\Model
 
   );
 
+  /**
+   * Field definitions for the current consolidated option storage format.
+   *
+   * @var array<string, array<string, string>>
+   */
 	protected $model = array(
        'apiKey' => array('s' => 'string',
        ),
@@ -51,6 +114,11 @@ class ApiKeyModel extends \ShortPixel\Model
        ),
   );
 
+  /**
+   * WordPress option name used to store all key data as a single serialised array.
+   *
+   * @var string
+   */
 	private $option_name =  'spio_key';
 
   /** Constructor. Check for constants, load the key */
@@ -63,6 +131,11 @@ class ApiKeyModel extends \ShortPixel\Model
 
   /** Load the key from storage. This can be a constant, or the database. Check if key is valid.
   *
+  * Migrates legacy per-option values to the consolidated option on first run.
+  * If SHORTPIXEL_API_KEY is defined, any database-stored key is cleared and the
+  * constant value is used instead.
+  *
+  * @return bool True when a valid, verified key is available, false otherwise.
   */
   public function loadKey()
   {
@@ -87,7 +160,7 @@ class ApiKeyModel extends \ShortPixel\Model
 		}
 
 		$this->apiKey = isset($apikeySettings['apiKey']) ? $apikeySettings['apiKey'] : '';
-    $this->verifiedKey = isset($apikeySettings['verifiedKey']) ? $apikeySettings['verifiedKey'] : false; 
+    $this->verifiedKey = isset($apikeySettings['verifiedKey']) ? $apikeySettings['verifiedKey'] : false;
 		$this->apiKeyTried = $apikeySettings['apiKeyTried'];
 
 
@@ -108,6 +181,13 @@ class ApiKeyModel extends \ShortPixel\Model
     return $valid;
   }
 
+  /**
+   * Persist the current key state to the WordPress options table.
+   *
+   * Trims the API key before saving.
+   *
+   * @return bool True on successful update, false otherwise.
+   */
   protected function update()
   {
 			$apikeySettings = [
@@ -124,6 +204,8 @@ class ApiKeyModel extends \ShortPixel\Model
   /** Resets the last APIkey that was attempted with validation
   *
   *  The last apikey tried is saved to prevent server and notice spamming when using a constant key, or a wrong key in the database without updating.
+  *
+  * @return void
   */
   public function resetTried()
   {
@@ -137,8 +219,8 @@ class ApiKeyModel extends \ShortPixel\Model
   }
 
   /** Checks the API key to see if we have a validated situation
-  *  @param $key String The 20-character ShortPixel API Key or empty string
-  *  @return boolean Returns a boolean indicating valid key or not
+  *  @param string $key The 20-character ShortPixel API Key or empty string.
+  *  @return bool Returns a boolean indicating valid key or not.
   *
   * An Api key can be removed from the system by passing an empty string when the key is not hidden.
   * If the key has changed from stored key, the function will pass a validation request to the server
@@ -201,31 +283,24 @@ class ApiKeyModel extends \ShortPixel\Model
       return $this->key_is_verified; // first time this is set! *after* this function
   }
 
-  public function is_verified()
-  {
-      return $this->key_is_verified;
-  }
-
-  public function is_constant()
-  {
-      return $this->key_is_constant;
-  }
-
-  public function is_hidden()
-  {
-      return $this->key_is_hidden;
-  }
-
-  public function getKey()
-  {
-      return $this->apiKey;
-  }
-
+  /**
+   * Remove all API key data from the database and reset all related state.
+   *
+   * Clears the consolidated option, the legacy per-option values, and resets
+   * all quota and API-related admin notices.
+   *
+   * @return void
+   */
 	public function uninstall()
 	{
 		 $this->clearApiKey();
 	}
 
+  /**
+   * Clear the stored API key and reset all key-related state and notices.
+   *
+   * @return void
+   */
   protected function clearApiKey()
   {
     $this->key_is_empty = true;
@@ -247,6 +322,15 @@ class ApiKeyModel extends \ShortPixel\Model
 
   }
 
+  /**
+   * Send the key to the ShortPixel API for remote validation.
+   *
+   * On success stores the key and triggers processNewKey().  On failure adds an
+   * error notice.
+   *
+   * @param string $key The 20-character API key to validate.
+   * @return bool True if the remote server confirms the key is valid.
+   */
   protected function validateKey($key)
   {
     Log::addDebug('Validating Key ' . $key);
@@ -269,11 +353,18 @@ class ApiKeyModel extends \ShortPixel\Model
         $this->verifiedKey = $checked_key;
         $this->processNewKey($quotaData);
         $this->update();
-     }    
+     }
       return $this->verifiedKey;
   }
 
-  /** Process some things when key has been added. This is from original wp-short-pixel.php */
+  /** Process some things when key has been added. This is from original wp-short-pixel.php
+   *
+   * Shows success or domain-accessibility notices, verifies the backup folder,
+   * and resets any pending API notices.
+   *
+   * @param array<string, mixed> $quotaData Quota/validation data returned by the remote API.
+   * @return void
+   */
   protected function processNewKey($quotaData)
   {
 
@@ -302,6 +393,14 @@ class ApiKeyModel extends \ShortPixel\Model
     AdminNoticesController::resetAPINotices();
   }
 
+  /**
+   * Emit a one-time admin notice when the provided API key is not exactly 20 characters.
+   *
+   * Uses $notified to prevent the same notice appearing twice per request.
+   *
+   * @param string $key The malformed API key that triggered this notice.
+   * @return void
+   */
   protected function NoticeApiKeyLength($key)
   {
       // repress double warning.
@@ -321,6 +420,12 @@ class ApiKeyModel extends \ShortPixel\Model
     Notice::addError($notice);
   }
 
+  /**
+   * Delegate remote key validation to the QuotaController.
+   *
+   * @param string $key The API key to validate remotely.
+   * @return array<string, mixed> Quota/validation response data from the API.
+   */
   // Does remote Validation of key. In due time should be replaced with something more lean.
   private function remoteValidate($key)
   {
@@ -331,17 +436,25 @@ class ApiKeyModel extends \ShortPixel\Model
 
   }
 
+  /**
+   * Redirect first-time visitors (no API key) to the settings page.
+   *
+   * Only fires on non-AJAX single-site requests when the settings page has not
+   * already been redirected to and the key is not yet verified.
+   *
+   * @return bool|void False if the redirect cannot proceed; exits on successful redirect.
+   */
   protected function checkRedirect()
   {
     $redirectedSettings =  \wpSPIO()->settings()->redirectedSettings;
     if(! \wpSPIO()->env()->is_ajaxcall && !$redirectedSettings && !$this->verifiedKey && (!function_exists("is_multisite") || ! is_multisite())) {
-      
+
       \wpSPIO()->settings()->redirectedSettings = 1;
 
       if (isset($_GET['page']) && 'wp-shortpixel-settings' === $_GET['page'])
       {
          Log::addError('Panic! RedirectSettings failed setting!');
-         return false; 
+         return false;
       }
 
   //    $this->update();

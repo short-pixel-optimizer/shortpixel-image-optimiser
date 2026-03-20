@@ -8,17 +8,36 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\QuotaController as QuotaController;
 
-// Central place for user / access checking, roles etc.
+/**
+ * Central place for user / access checking, roles and capabilities.
+ *
+ * Manages SPIO-specific capabilities and maps them to WordPress user roles,
+ * providing a single point of truth for permission checks throughout the plugin.
+ *
+ * @package ShortPixel\Model
+ */
 class AccessModel
 {
 
-  // Instance of class
+  /**
+   * Singleton instance of this class.
+   *
+   * @var AccessModel|null
+   */
 	private static $instance;
 
-  // Array of known SPIO Capabilities mapped to WordPress variants
+  /**
+   * Array of known SPIO capabilities mapped to WordPress role/cap equivalents.
+   *
+   * @var array<string, string|array>
+   */
 	private $caps;
 
-  // int  . The current user id
+  /**
+   * The current WordPress user ID.
+   *
+   * @var int
+   */
 	private $current_user_id;
 
 
@@ -27,6 +46,14 @@ class AccessModel
 		 $this->setDefaultPermissions();
 	}
 
+	/**
+	 * Defines the default mapping between SPIO capabilities and WordPress capabilities.
+	 *
+	 * Applies the 'shortpixel/init/permissions' filter so third parties can
+	 * extend or override the capability map.
+	 *
+	 * @return void
+	 */
 	protected function setDefaultPermissions()
 	{
 
@@ -48,6 +75,11 @@ class AccessModel
 
 	}
 
+	/**
+	 * Returns the singleton instance, creating it if necessary.
+	 *
+	 * @return AccessModel
+	 */
 	public static function getInstance()
 	{
 			 if (is_null(self::$instance))
@@ -59,7 +91,8 @@ class AccessModel
 	}
 
 	/** Check for allowing a notice
-	*  @param $notice Object of type notice.
+	*  @param object $notice Notice object to evaluate.
+	*  @return bool True if the current user has the capability to see notices.
 	*/
 	public function noticeIsAllowed($notice)
 	{
@@ -67,15 +100,27 @@ class AccessModel
 			return $this->user()->has_cap($cap);
 	}
 
-	/*
-	@param SPIO capability to check again the user WordPress permissions.
-	*/
+	/**
+	 * Check whether the current user holds a given SPIO capability.
+	 *
+	 * @param string $cap SPIO capability slug to check against WordPress permissions.
+	 * @return bool True if the current user has the mapped WordPress capability.
+	 */
 	public function userIsAllowed($cap)
 	{
 			$cap = $this->getCap($cap);
 			return $this->user()->has_cap($cap);
 	}
 
+	/**
+	 * Determine whether the current user may edit a given media/custom image item.
+	 *
+	 * Checks either the 'custom_all' or 'image_all'/'image_user' capability
+	 * depending on the item type.
+	 *
+	 * @param object $mediaItem An image model object exposing get('type') and get('id').
+	 * @return bool True if the current user may edit the item, false otherwise.
+	 */
 	public function imageIsEditable($mediaItem)
 	{
 			$type = $mediaItem->get('type');
@@ -93,6 +138,14 @@ class AccessModel
 			return false;
 	}
 
+	/**
+	 * Check whether a named plugin feature is available on the current installation.
+	 *
+	 * Supports feature flags such as 'avif' and 'webp'.
+	 *
+	 * @param string $name Feature name to check (e.g. 'avif', 'webp').
+	 * @return bool True if the feature is available, false otherwise.
+	 */
 	public function isFeatureAvailable($name)
 	{
 		 $available = true;
@@ -120,6 +173,11 @@ class AccessModel
 	}
 
 
+	/**
+	 * Returns the current WordPress user object.
+	 *
+	 * @return \WP_User
+	 */
 	protected function user()
 	{
 				return wp_get_current_user();
@@ -129,8 +187,10 @@ class AccessModel
 	*
 	* This translates a SPIO capability into the associated cap that is registered within WordPress.
 	*
-	* @param $cap The required Capability
-	* @param $default The default value if not found. This is defaults to an admin cap to prevent access leaking.
+	* @param string $cap    The required SPIO capability slug.
+	* @param string $default The default WordPress capability to return when the slug is not found.
+	*                        Defaults to 'manage_options' to prevent unintended access leaking.
+	* @return string The WordPress capability string.
 	*/
 	protected function getCap($cap, $default = 'manage_options')
 	{

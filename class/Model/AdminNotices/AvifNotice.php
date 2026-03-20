@@ -8,16 +8,32 @@ if ( ! defined( 'ABSPATH' ) ) {
 use \ShortPixel\Controller\CacheController as CacheController;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
-
+/**
+ * Admin notice shown when the server is not configured to serve AVIF files correctly.
+ *
+ * @package ShortPixel\Model\AdminNotices
+ */
 class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 {
+	/** @var string Unique notice key. */
 	protected $key = 'MSG_AVIF_ERROR';
+
+	/** @var string Severity level for this notice. */
 	protected $errorLevel = 'error';
 
+	/** @var string|null Human-readable summary of the AVIF error. */
 	protected $error_message;
+
+	/** @var string|null Detailed explanation of the AVIF error. */
 	protected $error_detail;
 
 
+	/**
+	 * Checks whether this notice should be automatically triggered.
+	 * Currently disabled; use check() directly to test AVIF support.
+	 *
+	 * @return bool Always false.
+	 */
 	protected function checkTrigger()
 	{
 		// No Automatic Trigger.
@@ -26,6 +42,13 @@ class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 		return false;
 	}
 
+	/**
+	 * Performs an HTTP request to the test AVIF file and verifies the server returns
+	 * the correct Content-Type header. Shows or resets the notice based on the result.
+	 * Result is cached for one month on success to avoid repeated checks.
+	 *
+	 * @return void
+	 */
 	public function check()
 	{
 		$cache = new CacheController();
@@ -96,6 +119,12 @@ class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 
 	}
 
+	/**
+	 * Builds the HTML message describing the AVIF server configuration error,
+	 * including the raw response headers and a dismiss/retry button.
+	 *
+	 * @return string HTML message string.
+	 */
 	protected function getMessage()
 	{
 			$headers = $this->getData('headers');

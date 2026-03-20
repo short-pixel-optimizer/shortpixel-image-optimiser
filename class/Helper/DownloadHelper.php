@@ -8,121 +8,166 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\ResponseController as ResponseController;
 
+/**
+ * Helper class for downloading remote files to the server.
+ *
+ * Provides a unified interface for fetching remote URLs, trying multiple
+ * download methods in sequence (WordPress download_url(), download_url() with
+ * protocol reset, and wp_remote_get()). Handles temporary file management and
+ * optional moving of downloaded files to a destination path.
+ *
+ * @package ShortPixel\Helper
+ */
 class DownloadHelper
 {
+		/**
+		 * Singleton instance.
+		 *
+		 * @var DownloadHelper|null
+		 */
 		  private static $instance;
 
-			public function __construct()
-			{
-					$this->checkEnv();
+		public function __construct()
+		{
+				$this->checkEnv();
+		}
+
+		/**
+		 * Returns the singleton instance, creating it if necessary.
+		 *
+		 * @return DownloadHelper
+		 */
+		public static function getInstance()
+		{
+			 if (is_null(self::$instance))
+			 {
+				  self::$instance = new DownloadHelper();
+			 }
+
+			 return self::$instance;
+		}
+
+		/**
+		 * Ensures the WordPress download_url() function is available by loading the
+		 * required wp-admin file if it has not yet been included.
+		 *
+		 * @return void
+		 */
+		protected function checkEnv()
+		{
+			if ( ! function_exists( 'download_url' ) ) {
+					require_once ABSPATH . 'wp-admin/includes/file.php';
 			}
+		}
 
-			public static function getInstance()
-			{
-				 if (is_null(self::$instance))
-				 {
-					  self::$instance = new DownloadHelper();
-				 }
-
-				 return self::$instance;
-			}
-
-			protected function checkEnv()
-			{
-				if ( ! function_exists( 'download_url' ) ) {
-						require_once ABSPATH . 'wp-admin/includes/file.php';
-				}
-			}
-
-      /** Helper to download file from remote. 
-       * 
-       * @param string $url The remote URL to download.
-       * @param array $args  if DestinationPath is included it will try to move file there, otherwise remain in /tmp. 
-       * @return string File Path 
+      /** Helper to download file from remote.
+       *
+       * Attempts three strategies in order: download_url(), download_url() with a
+       * forced protocol reset, and wp_remote_get(). On success, validates the
+       * downloaded file is non-empty and optionally moves it to a destination path.
+       *
+       * @param string $url  The remote URL to download.
+       * @param array  $args {
+       *     Optional arguments.
+       *
+       *     @type int|null    $expectedSize    Expected file size in bytes for validation. Default null.
+       *     @type string|null $destinationPath If set, the downloaded file will be moved here. Default null.
+       * }
+       * @return \ShortPixel\Model\File\FileModel|false File object on success, false on failure.
        */
-      
-			public function downloadFile($url, $args = array())
-			{
-					$defaults = array(
-						'expectedSize' => null,
-            'destinationPath' => null,
-					);
 
-					$args = wp_parse_args($args, $defaults);
-          $success = false;
+		public function downloadFile($url, $args = array())
+		{
+				$defaults = array(
+					'expectedSize' => null,
+          'destinationPath' => null,
+				);
 
-					Log::addDebug('Downloading file :' . $url, $args);
+				$args = wp_parse_args($args, $defaults);
+        $success = false;
 
-          $methods = array(
-              "download_url" => array(array($this, 'downloadURLMethod'), $url, false),
-              "download_url_force" => array(array($this, 'downloadURLMethod'), $url, true),
-              "remote_get" => array(array($this, 'remoteGetMethod'), $url)
-          );
+				Log::addDebug('Downloading file :' . $url, $args);
 
-          foreach($methods as $name => $data)
-          {
-             $function = $data[0];
-             if (is_callable($function))
-             {
-                $result = call_user_func_array($function, array_slice($data, 1) );
+        $methods = array(
+            "download_url" => array(array($this, 'downloadURLMethod'), $url, false),
+            "download_url_force" => array(array($this, 'downloadURLMethod'), $url, true),
+            "remote_get" => array(array($this, 'remoteGetMethod'), $url)
+        );
 
-                if (false !== $result)
-                {
-                   $tempFile = $result;
-                   $success = true;
-                   break;
-                }
-             }
-          }
+        foreach($methods as $name => $data)
+        {
+           $function = $data[0];
+           if (is_callable($function))
+           {
+              $result = call_user_func_array($function, array_slice($data, 1) );
 
-					if (false === $success)
-					{
-						Log::addError('Failed to download File', $result);
-						ResponseController::addData('is_error', true);
-						//Responsecontroller::addData('message', $tempFile->get_error_message());
-						return false;
-					}
+              if (false !== $result)
+              {
+                 $tempFile = $result;
+                 $success = true;
+                 break;
+              }
+           }
+        }
 
-          /*
-          Log::addError('Nulling tempfile to zero for testing!'); 
-          $file = fopen($tempFile, 'r+'); 
-          ftruncate($file,0);
-          fclose($file);
-          */
+				if (false === $success)
+				{
+					Log::addError('Failed to download File', $result);
+					ResponseController::addData('is_error', true);
+					//Responsecontroller::addData('message', $tempFile->get_error_message());
+					return false;
+				}
 
-					$fs = \wpSPIO()->filesystem();
-					$file = $fs->getFile($tempFile);
+        /*
+        Log::addError('Nulling tempfile to zero for testing!');
+        $file = fopen($tempFile, 'r+');
+        ftruncate($file,0);
+        fclose($file);
+        */
 
-          
+				$fs = \wpSPIO()->filesystem();
+				$file = $fs->getFile($tempFile);
 
-          if ($file->getFileSize() === 0)
-          {
-              Log::addError('Tmp File zero bytes', $tempFile); 
-              ResponseController::addData('is_error', true);
-              Responsecontroller::addData('message', __('Temp file zero bytes', 'shortpixel-image-optimiser'));
 
-              $file->delete(); // Prevent it from hanging around 
-              return false; 
-          }
 
-          if (! is_null($args['destinationPath']))
-          {
-             $result = $this->moveDownload($file, $args['destinationPath']);
-             if (false === $result)
-             {
-               Log::addError('Failed to move Download', $args);
-               ResponseController::addData('is_error', true);
-               Responsecontroller::addData('message', __('Failed to move download to destination!', 'shortpixel-image-optimiser'));
-               return false;
-             }
-             else {
-               $file = $result;
-             }
-          }
+        if ($file->getFileSize() === 0)
+        {
+            Log::addError('Tmp File zero bytes', $tempFile);
+            ResponseController::addData('is_error', true);
+            Responsecontroller::addData('message', __('Temp file zero bytes', 'shortpixel-image-optimiser'));
 
-					return $file;
-			}
+            $file->delete(); // Prevent it from hanging around
+            return false;
+        }
 
+        if (! is_null($args['destinationPath']))
+        {
+           $result = $this->moveDownload($file, $args['destinationPath']);
+           if (false === $result)
+           {
+             Log::addError('Failed to move Download', $args);
+             ResponseController::addData('is_error', true);
+             Responsecontroller::addData('message', __('Failed to move download to destination!', 'shortpixel-image-optimiser'));
+             return false;
+           }
+           else {
+             $file = $result;
+           }
+        }
+
+				return $file;
+		}
+
+      /**
+       * Moves a downloaded temporary file to the specified destination path.
+       *
+       * Creates the destination directory if it does not exist, then moves the
+       * file object to the target location.
+       *
+       * @param \ShortPixel\Model\File\FileModel $fileObj         The temporary file object to move.
+       * @param string                           $destinationPath Absolute path to the desired destination.
+       * @return \ShortPixel\Model\File\FileModel|false The destination file object on success, false on failure.
+       */
       protected function moveDownload($fileObj, $destinationPath)
       {
           $fs = \wpSPIO()->filesystem();
@@ -145,7 +190,14 @@ class DownloadHelper
 
       }
 
-      /** Get a sensible timeout for how long the download should be allowed to take */
+      /**
+       * Calculates a sensible maximum number of seconds to allow for a download.
+       *
+       * Derived from PHP's max_execution_time, capped at 25 seconds so that
+       * hanging downloads do not consume the entire server execution budget.
+       *
+       * @return int Maximum download timeout in seconds.
+       */
       private function getMaxDownloadTime()
       {
         $executionTime = ini_get('max_execution_time');
@@ -156,13 +208,24 @@ class DownloadHelper
         // min here, so maximum value of downloadtimeout is 25 seconds, which should be more than enough. To prevent hanging downloads eating up server time
         $downloadTimeout = min($executionTime - 10, 25);
 
-        return $downloadTimeout; 
+        return $downloadTimeout;
       }
 
+      /**
+       * Attempts to download a URL using WordPress's download_url() function.
+       *
+       * Optionally resets the preferred protocol before downloading (used as a
+       * fallback when the first attempt fails). Returns the temporary file path
+       * on success, or false on error.
+       *
+       * @param string $url   The URL to download.
+       * @param bool   $force Whether to force a protocol reset before downloading. Default false.
+       * @return string|false Temporary file path on success, false on WP_Error.
+       */
       private function downloadURLMethod($url, $force = false)
       {
 
-        $downloadTimeout = $this->getMaxDownloadTime(); 
+        $downloadTimeout = $this->getMaxDownloadTime();
 
         $url = $this->setPreferredProtocol(urldecode($url), $force);
         $tempFile = \download_url($url, $downloadTimeout);
@@ -177,12 +240,22 @@ class DownloadHelper
         return $tempFile;
       }
 
+      /**
+       * Attempts to download a URL using wp_remote_get() with file streaming.
+       *
+       * Creates a temporary file via tempnam() and streams the response body
+       * directly to it. Returns the temporary file path on HTTP 200, or false
+       * if the request fails or returns a non-200 status.
+       *
+       * @param string $url The URL to download.
+       * @return string|false Temporary file path on success, false on failure.
+       */
       private function remoteGetMethod($url)
       {
             //get_temp_dir
             $tmpfname = tempnam(get_temp_dir(), 'spiotmp');
 
-            $downloadTimeout = $this->getMaxDownloadTime(); 
+            $downloadTimeout = $this->getMaxDownloadTime();
 
             $args_for_get = array(
               'stream' => true,
@@ -204,7 +277,18 @@ class DownloadHelper
             return false;
       }
 
-			private function setPreferredProtocol($url, $reset = false) {
+		/**
+		 * Rewrites the URL protocol to match the preferred (working) protocol for the API host.
+		 *
+		 * On the first call or when $reset is true, performs a test download to determine
+		 * whether HTTP or HTTPS is functional and saves the result in settings. Subsequent
+		 * calls reuse the cached protocol.
+		 *
+		 * @param string $url   The URL to rewrite.
+		 * @param bool   $reset Whether to force re-detection of the working protocol. Default false.
+		 * @return string The URL with the preferred protocol applied.
+		 */
+		private function setPreferredProtocol($url, $reset = false) {
 		      //switch protocol based on the formerly detected working protocol
 		      $settings = \wpSPIO()->settings();
 
@@ -219,7 +303,7 @@ class DownloadHelper
               {
                 @unlink($result);
               }
-              
+
 		      }
 		      return $settings->downloadProto == 'http' ?
 		              str_replace('https://', 'http://', $url) :
