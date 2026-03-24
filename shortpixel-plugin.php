@@ -314,6 +314,7 @@ class ShortPixelPlugin {
 	public function admin_scripts( $hook_suffix ) {
 
 		$settings       = \wpSPIO()->settings();
+		$env = \wpSPIO()->env();
 		$ajaxController = AjaxController::getInstance();
 
 		$secretKey = $ajaxController->getProcessorKey();
@@ -327,6 +328,8 @@ class ShortPixelPlugin {
 		$quotaController = QuotaController::getInstance();
 
 		$OptimizeAiController = OptimizeAiController::getInstance(); 
+
+		$args_footer_async = ['strategy' => 'async', 'in_footer' => true];
 
 	 wp_register_script('shortpixel-folderbrowser', plugins_url('/res/js/shortpixel-folderbrowser.js', SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
@@ -370,7 +373,7 @@ class ShortPixelPlugin {
 
 		wp_register_script('shortpixel-inline-help', plugins_url('res/js/shortpixel-inline-help.js',  SHORTPIXEL_PLUGIN_FILE), [], SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 		wp_register_script('shortpixel-chatbot', 
-			apply_filters('shortpixel/plugin/nohelp', 'https://spcdn.shortpixel.ai/assets/js/ext/ai-chat-agent.js'), [], SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
+			apply_filters('shortpixel/plugin/nohelp', 'https://spcdn.shortpixel.ai/assets/js/ext/ai-chat-agent.js'), [], SHORTPIXEL_IMAGE_OPTIMISER_VERSION, $args_footer_async);
 
 		// This filter is from ListMediaViewController for the media library grid display, executive script in shortpixel-media.js.
 
@@ -399,7 +402,6 @@ class ShortPixelPlugin {
             array(
 				'bulkSecret'        => $secretKey,
 				'isBulkPage'        => (bool) $is_bulk_page,
-				'screenURL'         => false,
 				'workerURL'         => plugins_url( 'res/js/shortpixel-worker.js', SHORTPIXEL_PLUGIN_FILE ),
 				'nonce_process'     => wp_create_nonce( 'processing' ),
 				'nonce_exit'        => wp_create_nonce( 'exit_process' ),
@@ -453,6 +455,7 @@ class ShortPixelPlugin {
 			'upscale_max_width' => 1200, // Scale X and max width pin Pixels.
 			'popup_load_preview' => true, // Upon opening, load Preview or not.
 			'too_big_for_scale_title'  => __('Image too big for scaling', 'shortpixel-image-optimiser'), 
+			'wp_screen_id' => $env->screen_id, 
 	 ];
 
 		wp_localize_script('shortpixel-screen-media', 'spio_mediascreen_settings', $screen_localize_media); 

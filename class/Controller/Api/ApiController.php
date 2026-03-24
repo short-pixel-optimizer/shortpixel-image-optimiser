@@ -359,6 +359,12 @@ class ApiController extends RequestManager
 
 				// Previous check here was for Item->files[$imageName] , not sure if currently needed.
 				// Check if image is not already in fileData.
+
+				if (is_array($fileData))
+				{
+					 $fileData = (object) $fileData;
+				}
+
 				if (is_null($fileData) || false === property_exists($fileData, $imageName)) {
 					$imageList[$imageName] = $this->handleNewSuccess($qItem, $imageObject, $data);
 				} else {

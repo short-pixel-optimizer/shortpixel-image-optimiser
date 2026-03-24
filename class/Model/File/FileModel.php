@@ -47,7 +47,7 @@ class FileModel extends \ShortPixel\Model
 
   protected $backupDirectory;
 
-  private $basedirs; // cache basedirs
+  private static $basedirs; // cache basedirs - static so for all objects during this run.
 
   const FILE_OK = 1;
   const FILE_UNKNOWN_ERROR = 2;
@@ -66,6 +66,7 @@ class FileModel extends \ShortPixel\Model
 		if (is_null($path))
 		{
 			 Log::addWarn('FileModel: Loading null path! ');
+       $this->fullpath = '';
 			 return false;
 		}
 
@@ -678,11 +679,10 @@ class FileModel extends \ShortPixel\Model
        return $this->is_restricted;
     }
 
-
-      if (! is_null($this->basedirs))
+      if (! is_null(self::$basedirs) && false === self::$basedirs)
       {
-         $basedirs = $this->basedirs;
-         if (false === $basedirs) // if no restrictions are set, return false.
+         $basedirs = self::$basedirs;
+         if (false === $basedirs) // if no restrictions are set, return false. otherwise use set basedirs for check.s
          {
             return false;
          }
@@ -692,24 +692,35 @@ class FileModel extends \ShortPixel\Model
 
         if (false === $basedir || strlen($basedir) == 0)
         {
-            $this->basedirs = false;
+            self::$basedirs = false;
             return false;
         }
 
         $restricted = true;
         $basedirs = preg_split('/:|;/i', $basedir);
 
+        // Remove blanket dirs like / from here since that could cause false positives on the strpos check on the path
+        $basedirs = array_diff($basedirs, ['/', '//', '.', '..']); 
+
+        // If the only openbasedir is broad, then restricted is false
+        if (0 === count($basedirs))
+        {
+           $restricted = false; 
+        }
+
         foreach($basedirs as $basedir)
         {
-           // check realpath for symlinked shared hosts and this kind of fun, to prevent false positives
-           $realdir = trailingslashit(realpath($basedir));
-           if (! in_array($realdir, $basedirs))
+           // check realpath for symlinked shared hosts and this kind of fun, to prevent false positives\
+           // Fixes - Don't trailingslashit because it adds all paths if basedir has a config with last slashes 
+           // Fixes - Check for false on realpath. 
+           $realdir = realpath($basedir);
+           if ($realdir !== false && false === in_array($realdir, $basedirs))
            {
-             $basedirs[] = $realdir;
+             $basedirs[] = trailingslashit($realdir);
            }
         }
 
-        $this->basedirs = $basedirs;
+        self::$basedirs = $basedirs;
 
       }
 
@@ -723,7 +734,6 @@ class FileModel extends \ShortPixel\Model
      }
 
      $restricted = apply_filters('shortpixel/file/basedir_check', $restricted, $path, $basedirs);
-
      $this->is_restricted = $restricted;
 
      return $restricted;
@@ -839,29 +849,55 @@ class FileModel extends \ShortPixel\Model
 
       if (strpos($path, $uploadDir->getPath()) !== false) // If upload Dir is feature in path, consider it ok.
       {
-        return $path;
+        $fullpath = $path;
       }
-      elseif (file_exists($abspath->getPath() . $path)) // If upload dir is abspath plus return path. Exceptions.
+      elseif (file_exists($abspath->getPath() . ltrim($path, '/')) ) // If upload dir is abspath plus return path. Exceptions.
       {
-        return $abspath->getPath() . $path;
+        $fullpath = $abspath->getPath() . ltrim($path, '/');
       }
-      elseif(file_exists($uploadDir->getPath() . $path)) // This happens when upload_dir is not properly prepended in get_attachment_file due to WP errors
+      elseif(file_exists($uploadDir->getPath() . ltrim($path, '/')) ) // This happens when upload_dir is not properly prepended in get_attachment_file due to WP errors
       {
-          return $uploadDir->getPath() . $path;
+        $fullpath = $uploadDir->getPath() . ltrim($path, '/');
+      }
+      else  // Default if nothing else. 
+      {
+        /* Check if the last part of abspath and first part of path are overlapping.  This can happen at sites where the 
+        app path is relative to root, but also included in the abspath ( ie /app/etc ) on bedrock installs. Try to remove the overlap */
+        $overlap = null;
+        $maxOverlap = min(strlen($abspath), strlen($path));
+        for ($i = $maxOverlap; $i > 0; $i--) {
+            if (substr($abspath, -$i) === substr($path, 0, $i)) {
+                $overlap = $i;
+                break;
+            }
+        }
+        // Combine paths, removing the overlap
+        if ($overlap !== null && is_int($overlap))
+        {
+          $fullpath = rtrim($abspath) . substr($path, $overlap);
+        }
+        else  // just glue then. 
+        {
+          $path = ltrim($path, '/');
+          $fullpath = $abspath->getPath() . $path; 
+        }
       }
 
       // this is probably a bit of a sharp corner to take.
       // if path starts with / remove it due to trailingslashing ABSPATH
-      $path = ltrim($path, '/');
-      $fullpath = $abspath->getPath() . $path;
 
       // We can't test for file_exists here, since file_model allows non-existing files.
       // Test if directory exists, perhaps. Otherwise we are in for a failure anyhow.
       //if (is_dir(dirname($fullpath)))
-          return $fullpath;
+
+      // File is restricted is cached, otherwise leading to double check on relativepath.
+      $this->is_restricted = false; 
+      return $fullpath;
       //else
       //    return $originalPath;
   }
+
+
 
 	public function getPermissions()
   {

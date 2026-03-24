@@ -83,7 +83,7 @@ class cacheRemover
 
         // important - first check the available cache plugins
         $this->checkCaches();
-
+        
         $bool = apply_filters('shortpixel/external/flush_cache', true, $post_id, $imageItem);
         if (false === $bool)
         {
@@ -164,7 +164,9 @@ class cacheRemover
       }
 
 			$urls = $imageItem->getAllUrls();
-      $urls = array_values($urls['urls']);
+      
+      // The URLS part doesn't return in the customImageModel, use the whole array instead. 
+      $urls = array_values($urls['urls'] ?? $urls);
 			foreach($urls as $url)
 			{
 				 do_action('litespeed_purge_url', $url, false, true);

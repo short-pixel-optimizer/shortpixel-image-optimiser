@@ -292,6 +292,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         $reasons = array(
             self::P_EXCLUDE_PATH,
             self::P_EXCLUDE_SIZE,
+            self::P_EXCLUDE_FILESIZE,
         );
 
         if (in_array($this->processable_status, $reasons))
@@ -409,7 +410,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     public function isImage()
     {
         if (! $this->exists())
+        {
           return false;
+        }
         if ($this->is_virtual()) // if virtual, don't filecheck on image.
         {
             if (! $this->isExtensionExcluded() )
@@ -418,27 +421,27 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
               return false;
         }
 
-				if (! is_null($this->mime))
-				{
-					return true;
-				}
 
-				if (\wpSPIO()->env()->is_function_usable('finfo_open')) // Faster function for getting mime types
+				if (is_null($this->mime) && \wpSPIO()->env()->is_function_usable('finfo_open')) // Faster function for getting mime types
 					 {
 						 $fileinfo = finfo_open(FILEINFO_MIME_TYPE);
 						 $this->mime = finfo_file($fileinfo, $this->getFullPath());
-						 finfo_close($fileinfo);
+             // Deprecated from version 8.5
+             if (false === \wpSPIO()->env()->checkPHPversion('8.5') )
+             {
+						  finfo_close($fileinfo);
+             }
 					 	 //FILEINFO_MIME_TYPE
 					}
-					elseif(\wpSPIO()->env()->is_function_usable('mime_content_type')) {
+					elseif(is_null($this->mime) && \wpSPIO()->env()->is_function_usable('mime_content_type')) {
 						$this->mime = mime_content_type($this->getFullPath());
 					}
-					else {
+					elseif(is_null($this->mime)) {
 						return true; // assume without check, that extension says what it is.
 						// @todo This should probably trigger a notice in adminNoticesController.
 					}
 
-	        if (strpos($this->mime, 'image') >= 0)
+	        if (strpos($this->mime, 'image') !== false)
 	           return true;
 	        else
 	          return false;
@@ -1303,7 +1306,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
         $bool = false; 
         // Support for operators, more characters should be first in array
-        $operators = ['<=', '>=', '<', '>' ]; 
+       // $operators = ['<=', '>=', '<', '>' ]; 
         
         foreach($excludePatterns as $item)
         {
@@ -1318,25 +1321,33 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                   return false;   
                }
 
-               $item_value = $item['value'];
-               $operator = ">";
-               
-               foreach($operators as $this_operator)
+               $item_value = explode(' ', $item['value']);
+               if (! is_array($item_value) && count($item_value) <> 3)
                {
-                  if (strpos($item_value, $this_operator) !== false)
-                  {
-                     // Allow this operator. 
-                     $operator = $this_operator; 
-                     // Remove it from string 
-                     $item_value = str_replace($this_operator, '', $item_value); 
-                  }
+                 return false; 
                }
-
-               $compare_bytes = (int) UtilHelper::convertExclusionFileSizeToBytes($item_value);          
                
+               $operator = $item_value[0]; 
+               $value = $item_value[1]; 
+               $bytes = $item_value[2]; 
+              
+               if ('B' == $bytes)
+               {
+                 $compare_bytes = $value; 
+               }
+               else
+               {
+                $compare_bytes = (int) UtilHelper::convertExclusionFileSizeToBytes($value . $bytes);          
+               }
                // About version_compare for this 
-              $bool = version_compare($compare_bytes, $filesize, $operator);
-              //$bool2 = 
+              if ('>' == $operator &&  $filesize > $compare_bytes)
+              {
+                 $bool = true; 
+              }
+              elseif ('<' == $operator &&  $filesize < $compare_bytes)
+              {
+                 $bool = true; 
+              }
               
               if (true === $bool)
               {

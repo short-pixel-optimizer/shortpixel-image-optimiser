@@ -568,7 +568,7 @@ class OptimizeAiController extends OptimizerBase
             if (count($sources) > 0 && count($replaces) > 0)
             {
                 Log::addInfo('Running Ai Replace : ', [$aiData, $sources, $replaces]); 
-                $content = $replacer2->replaceContent($content, $sources, $replaces);
+                $content = $replacer2->replaceContent($content, $sources, $replaces, false, true);
                 $replacer2->Updater()->updatePost($post_id, $content); 
             }
         }
@@ -753,6 +753,15 @@ public function getAltData(QueueItem $qItem)
     return $metadata; 
 }
 
+/**
+ * Generate the AI Data so that it can be shown public-facing. 
+ * 
+ * @param mixed $generated 
+ * @param mixed $current 
+ * @param mixed $original 
+ * @param bool $isPreview 
+ * @return (string[]|mixed)[] 
+ */
 public function formatGenerated($generated, $current, $original, $isPreview = false)
 {
     
@@ -781,21 +790,9 @@ public function formatGenerated($generated, $current, $original, $isPreview = fa
        if (is_int($value) && in_array($value, $statii))
        {
          // If preview don't fall back on other stuff, just leave it empty. 
-          $value = __('AI generation disabled', 'shortpixel-image-optimiser');
-
-          /*if (true === $isPreview)
-          {
-             $value = ''; 
-          }
-          elseif (isset($current[$name]))
-          {
-               $value = $current[$name];
-          }
-          elseif(isset($original[$name]))
-          {
-               $value = $original[$name];
-          } */
-          $generated[$name] = $value;
+         
+         $value = ''; 
+         $generated[$name] = $value;
        }
   } 
 

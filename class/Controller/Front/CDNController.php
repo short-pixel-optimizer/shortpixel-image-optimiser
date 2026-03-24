@@ -678,7 +678,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 	protected function stringReplaceContent($content, $urls, $new_urls)
 	{
 		$replacer = new Replacer();
-		$content = $replacer->replaceContent($content, $urls, $new_urls);
+		$content = $replacer->replaceContent($content, $urls, $new_urls, false, true);
 
 		return $content;
 	}

@@ -236,10 +236,8 @@ class BulkController
 
    protected function addLog($q)
    {
-        //$data = (array) $stats;
 				$stats = $q->getStats(); // for the log
 				$type = $q->getType();
-			//	$customData = $q->getCustomDataItem('');
 
         if ($stats->done == 0 && $stats->fatal_errors == 0)
 				{
@@ -272,8 +270,6 @@ class BulkController
         if (count($logs) == 10) // remove logs if more than 10.
         {
           $log = array_shift($logs);
-          //$log_date = $log['date'];
-					//$log_type = $log['type'];
 					if (isset($data['logfile']))
 					{
 						$logfile = $data['logfile'];

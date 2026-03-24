@@ -80,6 +80,11 @@ class QueueController
          $qItem->data()->returndatalist = $args['returndatalist'];
       }
 
+      if (true === $args['forceExclusion']) 
+      {
+         $qItem->data()->forceExclusion = $args['forceExclusion'];
+      }
+
       $queue = $this->getQueue($imageModel->get('type'));
 
       $args = array_filter($args, function ($value) {
@@ -665,6 +670,10 @@ class QueueController
                     $object->stats->$key->$bKey += $bValue;
                 }
              }
+          }
+          else // If key does not exist, still add value from media to totals. 
+          {
+            $object->stats->$key = $value; 
           }
       }
 

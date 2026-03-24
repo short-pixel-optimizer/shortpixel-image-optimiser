@@ -118,7 +118,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				button.style.fontSize = '12px'; // hacking in to match Gburg. 
 				button.style.textDecoration = 'none'; 
 				
-				
 				scaleButton.classList.add('button-link'); 
 				scaleButton.style.display = 'inline';
 				scaleButton.style.fontSize = '12px'; // hacking in to match Gburg. 
@@ -131,11 +130,8 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				}
 
 				parent.append(button);
-
-
 			}
 		}
-		
 	}
 
 	OpenEditorEvent(event, action_name)
@@ -448,6 +444,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			 return;
 		}
 		var attachmentAlt = this.GetPageAttachmentAlt();
+
 		if (null === attachmentAlt) // No attach alt around
 		{
 			return; 
@@ -457,6 +454,9 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			console.error('Item_id not passed');
 			return; 
 		}
+
+		var wp_screen_id = this.settings.wp_screen_id;
+
 
 		if (typeof aiData !== 'undefined')
 		{
@@ -496,7 +496,13 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		// edit media screen
 		 let captionFields = ['attachment_caption', 'attachment-details-caption', 'attachment-details-two-column-caption']; 
 		 let descriptionFields = ['attachment_content', 'attachment-details-description', 'attachment-details-two-column-description']; 
-		 let postTitleFields = ['title', 'attachment-details-title', 'attachment-details-two-column-title'];
+		
+		 let postTitleFields = ['attachment-details-title', 'attachment-details-two-column-title'];
+		 // This check: the edit-post screen also has a name title field, but this is for the post, not attachment. only replace in attachment screen
+		 if ('attachment' == wp_screen_id)
+	 	 {	
+			postTitleFields.push('title');
+		 }
 		 
 		 if (typeof newCaption !== 'undefined' || newCaption < 0)
 		 {

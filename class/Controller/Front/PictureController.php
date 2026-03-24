@@ -251,7 +251,6 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
                 if (! $thisfile->exists())
                 {
                   // FILTER: boolean, object, string, filedir
-
 								 // Return fileObj if you want to live.
                   $thisfile = $fileWebp_exists = apply_filters('shortpixel/front/webp_notfound', false, $thisfile, $image_url, $imageBase);
                 }
@@ -299,7 +298,7 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
           return $raw_image;
       }
 
-      $args = array();
+      $args = [];
 
       if ($webpCount > 0)
         $args['webp'] = $srcsetWebP;
@@ -316,13 +315,24 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
   protected function testInlineStyle($content)
   {
     //preg_match_all('/background.*[^:](url\(.*\))[;]/isU', $content, $matches);
-    // Pattern : Find the URL() from CSS, save any extra background information ( position, repeat etc ) in second group and terminal at ; or " (hopefully end of line)
-    preg_match_all('/url\(.*\)(.*)(?:;|\"|\')/isU', $content, $matches);
+    // Pattern : Find the URL() from CSS, save any extra background information ( position, repeat etc ) in second group and terminate at ; or " (hopefully end of line)
+    // Old pattern - /url\(.*\)(.*)(?:;|\"|\')/isU
+    $pattern = '/(url\(.*?\))(.*?)(?:;|\"|\')/is';
+    preg_match_all($pattern, $content, $matches);
 
-    if (count($matches) == 0)
+    if (count($matches) == 0 || count($matches[1]) == 0)
+    {
       return $content;
+    }
 
-    $content = $this->convertInlineStyle($matches, $content);
+    $filtered = []; 
+    // Create a name array to make code clearer. First match (item) is url(xx).  Imagedata is shorthand properties that might follow but before end of background declararation.
+    for ($i = 0; $i < count($matches[1]); $i++)
+    {
+      $filtered[] = ['item' => $matches[1][$i], 'imagedata' => $matches[2][$i]];
+    }
+
+    $content = $this->convertInlineStyle($filtered, $content);
     return $content;
   }
 
@@ -330,31 +340,31 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
   /** Function to convert inline CSS backgrounds to webp
   * @param $match Regex match for inline style
   * @return String Replaced (or not) content for webp.
-  * @author Bas Schuiling
   */
   protected function convertInlineStyle($matches, $content)
   {
-
     $fs = \wpSPIO()->filesystem();
     $allowed_exts = array('jpg', 'jpeg', 'gif', 'png');
     $converted = array();
 
-    for($i = 0; $i < count($matches[0]); $i++)
+    foreach($matches as $match)
     {
-      $item = $matches[0][$i];
+       $item = $match['item'];
+       $image_data = ''; 
+       if (isset($match['imagedata']) && strlen(trim($match['imagedata'])) > 0)
+       {
+         $image_data = $match['imagedata'];
+       }
 
-      $image_data = '';
-      if (isset($matches[1][$i]) && strlen(trim($matches[1][$i])) > 0)
-      {
-          $image_data = trim($matches[1][$i]);
-      }
-
-      preg_match('/url\(\'(.*)\'\)/imU', $item, $match);
-      if (! isset($match[1]))
+      //preg_match('/url\(\'(.*)\'\)/imU', $item, $url_match);
+      // Fix: backgrounds might not have ' ' in URL area. 
+      preg_match('/url\((.*)\)/imU', $item, $url_match);
+      if (! isset($url_match[1]))
       {
         continue;
       }
-      $url = $match[1];
+      // Remove any removing " ' to get the pure URL. 
+      $url = str_replace(['\'', '"'],'', $url_match[1]);
       $filename = basename($url);
       $ext = pathinfo($url, PATHINFO_EXTENSION);
 
@@ -400,7 +410,7 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
       if ($checkedFile)
       {
           // if webp, then add another URL() def after the targeted one.  (str_replace old full URL def, with new one on main match?
-          $target_urldef = $matches[0][$i];
+          $target_urldef = $item; //$match[0][$i];
           
           // The target_urldef should remain original to be picked up by str_replace, but the original_definitions are what goes back of the original stuff and should be filtered. 
          // $original_definitions = $this->filterForbiddenInline($target_urldef);
@@ -409,13 +419,15 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
           {
             $converted[] = $target_urldef;
             // Fix: The originals are not being put anymore because this would lead to double images and that's not a good thing.
-            $new_urldef = "url('" . $checkedFile . "') $image_data ;";
+            //            $new_urldef = "url('" . $checkedFile . "') $image_data ;";
+            // Fix2 :: The image_data should not be matched anymore via main match, perhaps it works in all cases to leave it alone? 
+            $new_urldef = "url('" . $checkedFile . "') ";
             $content = str_replace($target_urldef, $new_urldef, $content);
           }
       }
 
-    }
-
+    } // FOREACH
+ 
     return $content;
   }
 
