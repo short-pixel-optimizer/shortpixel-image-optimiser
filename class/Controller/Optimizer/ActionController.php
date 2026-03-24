@@ -177,7 +177,8 @@ class ActionController extends OptimizerBase
     }
 
     // Regardless if it worked or not, requeue the item otherwise it will keep trying to convert due to the flag.
-    $imageObj = $fs->getMediaImage($qItem->item_id);
+    $imageObj = $fs->getMediaImage($qItem->item_id, false);
+    $qItem->setModel($imageObj); // Also reset the QItem.
 
     // Keep compressiontype from object, set in queue, imageModelToQueue
 

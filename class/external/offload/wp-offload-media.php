@@ -505,6 +505,8 @@ class wpOffload
 
 		$updated = false;
 
+		self::$sources = [];  // Wipe the source cache to prevent lingering stuff. 
+
 		// If image is replaced with another name, the original soruce path will not match.  This could also happen when an image is with -scaled as main is replaced by an image that doesn't have it.  In all cases update the table to reflect proper changes.
 		if (wp_basename($wp_original) !== wp_basename($original_path)) {
 

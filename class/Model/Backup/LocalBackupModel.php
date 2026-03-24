@@ -106,7 +106,8 @@ class LocalBackupModel extends BackupModel
          // If converted, and the thumbnail will be generated anyhow, then just remove it. 
          if ($this->isConverted && $this->needsRegenerate() && $mainFile->getFullPath() !== $sourceFile->getFullPath())
          {
-            return $this->onDelete($sourceFile); 
+          Log::addTemp('Restore would delete ' . $sourceFile->getFullPath());
+        //    return $this->onDelete($sourceFile); 
          }
 
          if (false === $backupFile || false === is_object($backupFile))
@@ -264,6 +265,7 @@ class LocalBackupModel extends BackupModel
           $backupFile = $this->getBackupFile($sourceFile);
           if (is_object($backupFile))
           {
+             Log::addTemp('BackModel, Removing: ' . $backupFile->getFullPath());
              $backupFile->delete();
           }   
        }

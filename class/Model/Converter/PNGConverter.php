@@ -407,6 +407,8 @@ class PNGConverter extends MediaLibraryConverter
 				$imageObj = $this->imageModel;
 			}
 
+			$replacementPath = $this->getReplacementPath();
+
 			if (true === $this->imageModel->is_virtual())
 			{
 				$downloadHelper = DownloadHelper::getInstance();
@@ -418,10 +420,13 @@ class PNGConverter extends MediaLibraryConverter
 					 $imagePath = $tempFile->getFullPath();
 					 $this->virtual_filesize = $tempFile->getFileSize();
 				}
+
+				$replacementPath = apply_filters('shortpixel/file/virtual/translate', $replacementPath);
 			}
 
-			$replacementPath = $this->getReplacementPath();
-			Log::addTemp("replacement path: " . $replacementPath);
+			Log::addInfo("PNG Replacement Path: " . $replacementPath);
+
+
 
 			// @todo Add ResponseController support to here and getReplacementPath.
 			if (false === $replacementPath)

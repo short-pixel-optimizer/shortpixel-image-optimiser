@@ -181,6 +181,7 @@ abstract class OptimizerBase
 
             $queueController = $this->getQueueController(); 
             $result = $queueController->addItemToQueue($imageModel, $args); 
+            Log::addTemp('Finish Result', $result);
         }
 
         if (! isset($result))

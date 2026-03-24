@@ -405,6 +405,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 			$fs = \wpSPIO()->filesystem();
 			$filepath = apply_filters('shortpixel/file/virtual/translate', $this->getFullPath(), $this);
 
+			Log::addTemp('Setting VirtualToReal ' . $filepath);
 			$this->setVirtualToReal($filepath);
 		}
 
