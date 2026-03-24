@@ -239,7 +239,7 @@ class AiController extends RequestManager
          }
       }
       
-      return $this->returnSuccess(['aiData' => $aiData], RequestManager::STATUS_SUCCESS, __('Retrieved AI image SEO data', 'shortpixel-image-optimiser')); ;
+      return $this->returnSuccess(['aiData' => $aiData], RequestManager::STATUS_SUCCESS, __('Retrieved AI Image SEO data', 'shortpixel-image-optimiser')); ;
     }
 
     protected function doRequest(QueueItem $item, $requestParameters)
