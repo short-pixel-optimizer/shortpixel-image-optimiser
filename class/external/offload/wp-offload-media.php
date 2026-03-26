@@ -137,6 +137,7 @@ class wpOffload
 	public function preventUpdateMetaData($bool, $data, $post_id, $old_provider_object)
 	{
 		if (isset(self::$offloadPrevented[$post_id])) {
+			Log::addDebug('Offloading of updated metadata prevented for ' . $post_id);
 			return true; // return true to cancel.
 		}
 
@@ -157,6 +158,8 @@ class wpOffload
 			return false;
 		}
 
+		Log::addTemp('Signal for Offload Restore on ' . $id); 
+
 		// If there are excluded sizes, there are not in backups. might not be left on remote, or ( if delete ) on server, so just generate the images and move them.
 		$mediaItem->wpCreateImageSizes();
 
@@ -171,6 +174,8 @@ class wpOffload
 			Log::addDebug('S3-Offload MediaItem not remote - ' . $id);
 			return false;
 		}
+
+		Log::addTemp('Signal for Remove Remote on ' . $id); 
 
 		$remove = \DeliciousBrains\WP_Offload_Media\Items\Remove_Provider_Handler::get_item_handler_key_name();
 		$itemHandler = $this->as3cf->get_item_handler($remove);
@@ -431,9 +436,12 @@ class wpOffload
 		// Add Web/Avifs back under new method.
 		$this->shouldPrevent = false;
 
+		Log::addTemp('Signal for Offload Upload on ' . $id); 
 		// The Handler doesn't work properly /w local removal if not the exact correct files are passed (?) . Offload does this probably via update metadata function, so let them sort it out with this . (until it breaks)
 		$meta = wp_get_attachment_metadata($id);
 		wp_update_attachment_metadata($id, $meta);
+
+		Log::addTemp('Offloading Meta', $meta); 
 
 		$this->shouldPrevent = true;
 	}

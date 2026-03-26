@@ -23,7 +23,6 @@ class PNGConverter extends MediaLibraryConverter
 
     	protected $current_image; // The current PHP image resource in memory
 		protected $virtual_filesize;
-		protected $replacer; // Replacer class Object.
 
 		protected $converterActive = false;
 		protected $forceConvertTransparent = false;
@@ -333,6 +332,8 @@ class PNGConverter extends MediaLibraryConverter
 				 $oldFileName = $this->imageModel->getOriginalFile()->getFileName();
 				 $newFileName = $this->imageModel->getOriginalFile()->getFileBase() . '.png';
 			}
+Log::addTemp('PNGCONVER RESTORE Filedir ', $this->imageModel->getFileDir());
+
 
 			$fsNewFile = $fs->getFile($this->imageModel->getFileDir() . $newFileName);
 

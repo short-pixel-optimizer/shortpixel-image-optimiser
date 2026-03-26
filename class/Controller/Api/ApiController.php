@@ -239,7 +239,6 @@ class ApiController extends RequestManager
 				case -500: // API in maintenance.
 					//return array("Status" => self::STATUS_MAINTENANCE, "Message" => $APIresponse['Status']->Message);
 					return $this->returnRetry(self::STATUS_MAINTENANCE, $status->Message);
-
 				break; 
 			}
 		}

@@ -76,10 +76,11 @@ abstract class BackupModel
             $extension = $mainFile->getMeta()->convertMeta()->getFileFormat();
             $replaceBase = $mainFile->getMeta()->convertMeta()->getReplacementImageBase(); 
 
-            if ('png' === $extension) // For now this is supported, check if others can also use this regen method.
+            // Generate is also done in Converter - Restore - UpdateMetadata, might bite with this on offload.
+            /*if ('png' === $extension) // For now this is supported, check if others can also use this regen method.
             {
                 return true;
-            }
+            }  */
          }
 
          foreach($this->backup_files as $name => $fileAr)

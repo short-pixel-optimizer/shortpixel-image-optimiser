@@ -1922,10 +1922,31 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$is_resized = $this->getMeta('resize');
 		$convertMeta = $this->getMeta()->convertMeta();
 		$was_converted = $convertMeta->isConverted() && true == $convertMeta->omitBackup();
-		$converter = Converter::getConverter(clone $this); // ugly, but no way around.
 
 		// ** Warning - This will also reset metadata ****
-		$bool = parent::restore();
+		$bool = $is_main_restore_ok =  parent::restore();
+
+		// @todo The restoreConversion here - which does call for the replacer is probably the reason only the main file is replaced back
+		// Should probably be after the needsgenerate call has finished? 
+		// This needs to be here, to be able to translate NewFile to path still (?) 
+		if ($was_converted) {
+			if ($is_main_restore_ok) {
+
+				$mediaModel = clone $this; 
+				$mediaModel->getMeta()->convertMeta()->fromClass($convertMeta);
+
+				$converter = Converter::getConverter(clone $this); // ugly, but no way around.
+				
+				$bool = $this->restoreConversion($convertMeta, $converter);
+
+				$wpmeta = wp_get_attachment_metadata($this->get('id')); // png2jpg resets WP metadata.
+				$this->resetStatus();
+				$this->setFileInfo();
+			} else {
+				Log::addWarn('Restoring with conversion, but parent was not restored correctly');
+				return $bool;
+			}
+		} 
 
 		// From ThumbnailModel, prevent cleaning all metadata if there is converted item.
 		if (true === $this->getMeta()->convertMeta()->isConverted() && false === $this->getMeta()->convertMeta()->omitBackup()) {
@@ -1942,24 +1963,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$webps = $this->getWebps();
 		$avifs = $this->getAvifs();
 
-		if ($was_converted) {
-			if ($bool) {
-				$bool = $this->restoreConversion($convertMeta, $converter);
-
-				$wpmeta = wp_get_attachment_metadata($this->get('id')); // png2jpg resets WP metadata.
-				$this->resetStatus();
-				$this->setFileInfo();
-			} else {
-				Log::addWarn('Restoring with conversion, but parent was not restored correctly');
-				return $bool;
-			}
-		} 
-
-		// In lieue of above, now this needs to be done still.  Does search / replace / other things. 
-		/*if ($was_converted)
-		{
-			 $converter->restore();
-		} */
 
 		if (! $bool) {
 			$cleanRestore = false;
@@ -2058,10 +2061,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$backupModel = $this->getBackupModel(); 
 		if (true === $backupModel->needsRegenerate())
 		{
+			
 			$this->generateThumbnails();
 			$wpmeta = wp_get_attachment_metadata($this->get('id'));
 			$cleanRestore = true; 
 		}
+
 
 		if (true === $cleanRestore) {
 			$this->deleteMeta();
@@ -2070,7 +2075,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		}
 
 		update_post_meta($this->get('id'), '_wp_attachment_metadata', $wpmeta);
+		$flushded = update_postmeta_cache([$this->id]); // attempt to flush cache because offload refetches again
 
+		Log::addTemp('DoAction After_restore ' . $this->id);
 		do_action('shortpixel_after_restore_image', $this->id, $cleanRestore); // legacy
 		do_action('shortpixel/image/after_restore', $this, $this->id, $cleanRestore);
 

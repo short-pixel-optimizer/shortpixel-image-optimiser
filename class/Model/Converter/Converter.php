@@ -101,7 +101,6 @@ abstract class Converter
 		$extension = $imageModel->getExtension();
 
 		$converter = false;
-
 		$converter = self::getConverterByExt($extension, $imageModel);
 
 		// No Support (yet)
