@@ -17,10 +17,9 @@ class LocalBackupModel extends BackupModel
      public function createBackupFile(ImageModel $sourceFile) : bool
      {
 
-
         $directory = $this->getBackupDirectory(true);
         $fs = \wpSPIO()->filesystem();
-        $imageName = $sourceFile->get('name');
+        $imageName = $this->getBackupName($sourceFile->get('name'), $sourceFile);
         $settings = \wpSPIO()->settings();
         //$is_main_file = $sourceFile->get('is_main_file');
         $mainFile = $this->getMainFile(); 
@@ -100,7 +99,7 @@ class LocalBackupModel extends BackupModel
      {
          $fs = \wpSPIO()->filesystem();
          $backupFile = $this->getBackupFile($sourceFile); 
-         $imageName = $sourceFile->get('name'); 
+         $imageName = $this->getBackupName($sourceFile->get('name'), $sourceFile); 
         
          $mainFile = $this->getMainFile();
          // If converted, and the thumbnail will be generated anyhow, then just remove it. 
@@ -198,7 +197,10 @@ class LocalBackupModel extends BackupModel
      public function hasBackup(ImageModel $sourceFile, $strict = false) : bool
      {
       $is_main_file = $sourceFile->get('is_main_file');
-      $imageName = $sourceFile->get('name');
+      $imageName = $this->getBackupname($sourceFile->get('name'), $sourceFile);
+      $imageType = $sourceFile->get('imageType');
+
+      
 
       if (isset($this->backup_files[$imageName]))
       {
@@ -318,7 +320,7 @@ class LocalBackupModel extends BackupModel
      */
     public function getBackupFile(ImageModel $sourceFile)
     {
-      $imageName = $sourceFile->get('name');
+      $imageName = $this->getBackupName($sourceFile->get('name'), $sourceFile);
       
       if (true === $this->hasBackup($sourceFile, true))
        {
@@ -350,11 +352,6 @@ class LocalBackupModel extends BackupModel
   
       protected function loadAll()
       {
-        $objects = $this->mediaItem->get('thumbnails');
-        if ($this->mediaItem->isScaled()) {
-          $objects[$this->mediaItem->getImageKey('original')] = $this->mediaItem->getOriginalFile();
-        }
-
         $filesArray = $this->mediaItem->getAllFiles();
         $files = $filesArray['files'];
       
@@ -377,6 +374,19 @@ class LocalBackupModel extends BackupModel
           {
              return $this->mediaItem; 
           }
+      }
+
+      private function getBackupName($imageName, $sourceFile) : string
+      {
+         $imageType = $sourceFile->get('imageType'); 
+         
+
+        if (ImageModel::IMAGE_TYPE_RETINA === $imageType)
+        {
+            $imageName = 'retina_' . $imageName; 
+        }
+
+        return $imageName; 
       }
 
 }
