@@ -417,15 +417,13 @@ class PNGConverter extends MediaLibraryConverter
 
 								$isTransparent = $image->isTransparent(['width' => $width, 'height' => $height]); 
 								Log::addDebug("PNG2JPG width $width height $height. Now checking pixels.");
-										//run through pixels until transparent pixel is found:
+								//run through pixels until transparent pixel is found:
 
 						}
 			//	} // non-transparant.
 
 				Log::addDebug("PNG2JPG is " . (false ===  $isTransparent ? " not" : "") . " transparent");
-
 				return $isTransparent;
-
 		}
 
 		/** Load PNG via the Image Model
