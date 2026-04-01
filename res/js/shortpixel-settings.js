@@ -1709,7 +1709,7 @@ class ShortPixelSettings {
 			var the_value = this.root.querySelector('.new-exclusion input[name="exclusion-filesize-value"]');
 			var denom = this.root.querySelector('.new-exclusion select[name="exclusion-filesize-denom"]');
 			var operator = this.root.querySelector('.new-exclusion select[name="exclusion-filesize-operator"]');
-console.log(demon.selectedIndex);
+
 			if ('read' === mode)
 			{
 				setting.value = operator.options[operator.selectedIndex].value.trim() + " " + the_value.value.trim() + " " + denom.options[denom.selectedIndex].value.trim(); 

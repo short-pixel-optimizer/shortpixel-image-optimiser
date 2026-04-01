@@ -438,31 +438,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
               return false;
         }
 
-
-				if (is_null($this->mime) && \wpSPIO()->env()->is_function_usable('finfo_open')) // Faster function for getting mime types
-					 {
-						 $fileinfo = finfo_open(FILEINFO_MIME_TYPE);
-						 $this->mime = finfo_file($fileinfo, $this->getFullPath());
-             // Deprecated from version 8.5
-             if (false === \wpSPIO()->env()->checkPHPversion('8.5') )
-             {
-						  finfo_close($fileinfo);
-             }
-					 	 //FILEINFO_MIME_TYPE
-					}
-					elseif(is_null($this->mime) && \wpSPIO()->env()->is_function_usable('mime_content_type')) {
-						$this->mime = mime_content_type($this->getFullPath());
-					}
-					elseif(is_null($this->mime)) {
-						return true; // assume without check, that extension says what it is.
-						// @todo This should probably trigger a notice in adminNoticesController.
-					}
-
-	        if (strpos($this->mime, 'image') !== false)
-	           return true;
-	        else
-	          return false;
-
+        return parent::isImage();  
     }
 
     public function get($name)

@@ -104,6 +104,16 @@ class DownloadHelper
               return false; 
           }
 
+          if (false === $file->isImage())
+          {
+            Log::addError('Download: File can back as not being an image! ', $file);
+            $file->delete();
+            ResponseController::addData('is_error', true);
+            Responsecontroller::addData('message', __('File Download failed - seems not an image.', 'shortpixel-image-optimiser'));
+
+            return false; 
+          }
+
           if (! is_null($args['destinationPath']))
           {
              $result = $this->moveDownload($file, $args['destinationPath']);

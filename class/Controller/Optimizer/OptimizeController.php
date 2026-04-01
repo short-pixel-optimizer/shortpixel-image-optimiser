@@ -487,7 +487,6 @@ class OptimizeController extends OptimizerBase
         }
         else
         {
-          
            $imageArray[$imageName]['image']['status'] = RequestManager::STATUS_CONNECTION_ERROR;
         }
 
