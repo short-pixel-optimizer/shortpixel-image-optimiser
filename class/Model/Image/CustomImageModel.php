@@ -26,6 +26,8 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     protected $is_stub = false;
 
     protected $is_main_file = true;
+    
+    public $name = ImageModel::IMAGE_TYPE_MAIN; 
 
 		/** @var array */
 		protected $forceSettings = array();  // option derives from setting or otherwise, request to be forced upon via UI to use specific value.
