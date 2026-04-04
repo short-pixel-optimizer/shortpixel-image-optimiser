@@ -122,7 +122,7 @@ $queueRunning = $bulk->isAnyBulkRunning();
                   <?php esc_html_e('Search and Migrate All', 'shortpixel-image-optimiser'); ?>
               </a>
 
-    <h3><?php _e('Settings import / export', 'shortpixel-image-optimiser'); ?></h3>
+    <h3><?php _e('Settings Import / Export', 'shortpixel-image-optimiser'); ?></h3>
     <settinglist class='setting-importexport'>
       <setting>
         <name><?php _e('Export all settings', 'shortpixel-image-optimiser'); ?></name>
@@ -130,6 +130,9 @@ $queueRunning = $bulk->isAnyBulkRunning();
           <button class='button secondary' setting-action="ExportSettingsEvent"><?php _e('Export','shortpixel-image-optimiser'); ?></button>
         </content>
       </setting>
+
+      <div id='settings-importexport-message' class='tools-message export-message'>&nbsp;</div>
+
       <setting>
         <name><?php _e('Import settings', 'shortpixel-image-optimiser'); ?></name>
         <content>
@@ -141,9 +144,6 @@ $queueRunning = $bulk->isAnyBulkRunning();
         <warning><message>This will remove all current settings!</message></warning>
       
       </setting>
-
-      <div id='settings-importexport-message' class='tools-message export-message'>&nbsp;</div>
-
     </settinglist>
 
 		<hr />

@@ -391,7 +391,7 @@ if (! defined('ABSPATH')) {
       </div>
       <div class='icon'><i class='shortpixel-icon chevron rotate_right'></i>&nbsp;</div>
       <div class='result result_info'>
-        <h3><?php _e('Generated AI image SEO data', 'shortpixel-image-optimiser'); ?></h3>
+        <h3><?php _e('Generated AI Image SEO data', 'shortpixel-image-optimiser'); ?></h3>
         <ul>
 <!--          <li><label><?php _e('Image filemame', 'shortpixel-image-optimiser'); ?>:</label> <span class='filename'></span>
           </li> -->

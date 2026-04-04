@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 4.8.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 6.4.3
+Stable tag: 6.4.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -487,6 +487,43 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 14. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 6.4.4 =
+
+🌿 The Spring Update
+
+Release Date: March 24, 2026
+
+✨ New Feature
+
+* Exclusions by Filesize: You can now exclude images from optimization based on their file size, giving you even more precise control over what gets processed.
+
+🛠️ Fixes
+
+* Bulk Operation Messaging: When running bulk actions other than optimization, the correct descriptive text is now displayed.
+* PICTURE Tag Fixes:
+  - Fixed issues with certain background images not being handled correctly.
+  - Multiple improvements to ensure correct paths and compatibility with Bedrock setups.
+* Long Domain Handling: Fixed cases where very long domains caused CDN URL replacement to fail.
+* Invalid API Key Feedback: A proper message is now shown in the AI settings preview when an invalid API key is used.
+* AI Disabled Notice Scope: "AI generation disabled" message now appears only in the settings preview to avoid conflicts (especially with the Classic Editor).
+* Async Chatbot Loading: The chatbot now loads asynchronously in settings to prevent slowdowns when CDN responses are delayed.
+* JS Worker Stability: The JavaScript worker no longer stops if invalid JSON is received from the backend.
+* LS Cache Compatibility: Fixed incompatibilities with LiteSpeed Cache and certain custom media folder setups.
+* Custom Media Errors: Resolved errors occurring during optimization of specific custom media folders.
+* open_basedir Improvements: Additional safeguards to prevent warnings with strict open_basedir configurations.
+* PHP 8.4 Deprecation Fix: Fixed a rare deprecation warning on PHP 8.4.
+
+🛡️ Security Fixes
+
+* PHP Object Injection: Patched a potential vulnerability related to AI-generated SEO data (reported by PatchStack).
+* Stored XSS (Author+): Fixed an authenticated stored XSS vulnerability when using AI features (reported by WordFence).
+
+✨ Tweaks & Improvements
+
+* Wording & Layout Updates: Small improvements to texts and settings layout for a cleaner and clearer experience.
+
+Update now for stronger security, improved compatibility, and smarter control over your optimization workflows! 🚀
 
 = 6.4.3 =
 
