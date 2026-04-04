@@ -232,6 +232,8 @@ class ShortPixelPlugin {
 			// Run one hit earlier than optimization, to do this action first if needed.
 			add_filter( 'wp_generate_attachment_metadata', array( $admin, 'handleAiImageUploadHook' ), 4, 2 );
 			add_filter( 'mpp_generate_metadata', array( $admin, 'handleAiImageUploadHook' ), 9, 2 );
+			add_action( 'enable-media-replace-upload-done', array( $admin, 'handleAiReplaceEnqueue' ), 10, 3 );
+
 		}
 
 

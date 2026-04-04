@@ -847,6 +847,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
           else
           {
             Log::addError('Copy failed for  ' . $this->getFullPath() );
+            $responseItem = ResponseController::getResponseItem($this->get('id')); 
+
 
 						$response = array(
 								'is_error' => true,
@@ -855,7 +857,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 								'fileName' => $this->getFileName(),
 						);
 
-						ResponseController::addData($this->get('id'), $response);;
+						ResponseController::addData($this->get('id'), $response);
 
             return false;
           }
@@ -1272,7 +1274,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                }
 
                $item_value = explode(' ', $item['value']);
-               if (! is_array($item_value) && count($item_value) <> 3)
+               if (! is_array($item_value) || count($item_value) <> 3)
                {
                  return false; 
                }

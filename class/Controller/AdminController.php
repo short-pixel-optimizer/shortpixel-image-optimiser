@@ -537,7 +537,7 @@ class AdminController extends \ShortPixel\Controller
 
     }
 
-		/** This function is bound to enable-media-replace hook and fire when a file was replaced
+		/** This function is bound to enable-media-replace hook and fired when a file was replaced
 		*
 		*
 		*/
@@ -547,6 +547,18 @@ class AdminController extends \ShortPixel\Controller
 				$this->handleImageUploadHook(array(), $post_id);
 
 		}
+
+    /** This function is bound to enable-media-replace hook and fired when a file was replaced
+		*
+		*
+		*/
+    public function handleAiReplaceEnqueue($target, $source, $post_id)
+		{
+				// Delegate this to the hook, so all checks are done there.
+				$this->handleAiImageUploadHook(array(), $post_id);
+
+		}
+
 
     public function generatePluginLinks($links) {
         $in = '<a href="options-general.php?page=wp-shortpixel-settings">Settings</a>';

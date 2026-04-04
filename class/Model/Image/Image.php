@@ -141,7 +141,6 @@ Class Image extends \ShortPixel\Model\File\FileModel
             if ('imagick' == $this->useLib)
             {
             //    $isTransparent = $this->image->getImageAlphaChannel();
-
             }
 
             return $isTransparent;

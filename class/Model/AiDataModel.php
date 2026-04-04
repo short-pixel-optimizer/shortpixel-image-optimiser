@@ -726,16 +726,19 @@ class AiDataModel
      */
     public function revert()
     {   
+        $this->onDelete(); 
+
+        $this->updateWPPost($this->original);
+        $this->updateWpMeta($this->original);
+    }
+
+    public function onDelete()
+    {
         if (true === $this->has_record)
         {
             global $wpdb; 
             $wpdb->delete(self::getTableName(), ['id' => $this->id], ['%s']);
-
         }
-
-        $this->updateWPPost($this->original);
-        $this->updateWpMeta($this->original);
-   
     }
 
     /**

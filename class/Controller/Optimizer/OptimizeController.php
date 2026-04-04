@@ -404,6 +404,15 @@ class OptimizeController extends OptimizerBase
            $downloadHelper = DownloadHelper::getInstance(); 
            $url = $qItem->result()->optimized; 
            $tmpFile = $downloadHelper->downloadFile($url);
+
+           if (false === $tmpFile)
+            {
+                ResponseController::addData($item_id, 'message', $downloadHelper->getLastError() ); 
+                ResponseController::addData($item_id, 'is_error', true  ); 
+
+                return false; 
+            }
+
            $newPostTitle = $paramlist['newPostTitle'];
 
            if (isset($paramlist['attached_post_id']))
@@ -423,7 +432,6 @@ class OptimizeController extends OptimizerBase
          //  $new_attach_id = media_sideload_image($url, $attached_post_id, '', 'id'); // Add to WP, return attach_id
            
            $qItem->addResult(['new_attach_id' => $new_attach_id] );
-
            $tmpFile->delete();
         }
     }
@@ -487,6 +495,8 @@ class OptimizeController extends OptimizerBase
         }
         else
         {
+          ResponseController::addData($item_id, 'message', $downloadHelper->getLastError() ); 
+          ResponseController::addData($item_id, 'is_error', true  ); 
            $imageArray[$imageName]['image']['status'] = RequestManager::STATUS_CONNECTION_ERROR;
         }
 

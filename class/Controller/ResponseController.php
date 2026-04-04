@@ -81,7 +81,7 @@ class ResponseController
 					 $item = self::$items[$itemType][$item_id];
 				}
 				else {
-						$item = new ResponseModel($item_id, $itemType);
+					$item = new ResponseModel($item_id, $itemType);
 				}
 
 				return $item;
@@ -97,6 +97,10 @@ class ResponseController
 		//
 		public static function addData($item_id, $name, $value = null)
 		{
+			if (false === is_numeric($item_id))
+			{
+			    Log::addWarn('ResponseController issue - first parameter should be item_id' . $item_id, $name);			 
+			}
 			if (! is_array($name) && ! is_object($name) )
 			{
 				$data = array($name => $value);

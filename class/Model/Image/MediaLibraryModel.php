@@ -16,7 +16,7 @@ use ShortPixel\Controller\QueueController as QueueController;
 
 use ShortPixel\Helper\InstallHelper as InstallHelper;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
-
+use ShortPixel\Model\AiDataModel;
 use ShortPixel\Model\Converter\Converter as Converter;
 
 class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailModel
@@ -443,7 +443,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$this->width = $width;
 		$this->height = $height;
 
-		$thumbnails = array();
+		$thumbnails = [];
 
 		if (isset($wpmeta['sizes'])) {
 			$meta_sizes = $wpmeta['sizes'];
@@ -1362,6 +1362,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				}
 			}
 		}
+
+		$aiModel = AiDataModel::getModelByAttachment($this->id);
+		$aiModel->onDelete();
 
 		$this->removeLegacy();
 		$this->deleteMeta();

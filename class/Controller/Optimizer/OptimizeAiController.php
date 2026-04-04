@@ -184,7 +184,7 @@ class OptimizeAiController extends OptimizerBase
       $qItem->addResult(['apiName' => $this->apiName]);
       $apiStatus = $qItem->result()->apiStatus;
 
-      if ($qItem->result()->is_error)  {
+      if (true === $qItem->result()->is_error)  {
        
         if (true === $qItem->result()->is_done )
         {
@@ -194,7 +194,7 @@ class OptimizeAiController extends OptimizerBase
         }
         else // Do nothing for now / retry (?)
         {
-
+            Log::addTemp('Ai is_error but not fatal?');
         }
 
         return; 
@@ -205,7 +205,7 @@ class OptimizeAiController extends OptimizerBase
       {
         return; 
       }
-      elseif (property_exists($qItem->result(), 'remote_id'))
+      elseif (property_exists($qItem->result(), 'remote_id') && is_numeric($qItem->result()->remote_id) && $qItem->result()->remote_id > 0 )
       {
           $remote_id = $qItem->result()->remote_id;
           
@@ -223,12 +223,10 @@ class OptimizeAiController extends OptimizerBase
       }
 
       // Result for retrieveAlt
-      if (property_exists($qItem->result(), 'aiData'))
+      if (property_exists($qItem->result(), 'aiData') && false === is_null($qItem->result()->aiData))
       {
             return $this->HandleSuccess($qItem);
       }
-
-
   }
 
   public function formatResultData($aiData, $qItem)
