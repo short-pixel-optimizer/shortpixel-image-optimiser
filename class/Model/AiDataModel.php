@@ -518,7 +518,10 @@ class AiDataModel
      */
     private function isExifProcesssable()
     {
-        $fs = \wpSPIO()->filesystem(); 
+        // Change: Exif processing changed on API, allowing this - https://app.asana.com/1/18694759100379/project/1200110778640816/task/1213564895578597 
+       return true; 
+
+        /*$fs = \wpSPIO()->filesystem(); 
         $imageModel = $fs->getMediaImage($this->attach_id); 
 
         if (false === $imageModel->isSomethingOptimized())
@@ -538,7 +541,7 @@ class AiDataModel
         }
 
         $this->processable_status = self::P_EXIFAI;
-        return false; 
+        return false;  */
 
     }
 
