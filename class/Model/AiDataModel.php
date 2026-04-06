@@ -739,6 +739,9 @@ class AiDataModel
             global $wpdb; 
             $wpdb->delete(self::getTableName(), ['id' => $this->id], ['%s']);
         }
+
+        $this->has_record = false; 
+        self::flushModelCache($this->id);
     }
 
     /**

@@ -36,6 +36,7 @@ class QueueItemResult implements JsonSerializable
    protected $apiName; // NAme of the handling api, for JS / Response to show different results.
    protected $remote_id; 
    protected $aiData;   // Returning AI Data
+   protected $aiDataLabels; // Returning Data Labels for screens like bulk
    
 
    public function __construct($item_id)

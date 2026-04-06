@@ -486,7 +486,7 @@ class QueueItem
          $preview_only = true; 
       } 
 
-      $aiDataModel = new AiDataModel($item_id);
+      $aiDataModel = AiDataModel::getModelByAttachment($item_id, $this->imageModel->get('type'));
       
       $data = $aiDataModel->getOptimizeData($args);
 

@@ -169,7 +169,7 @@ class AdminController extends \ShortPixel\Controller
 
         
         $args = ['action' => 'requestAlt'];
-        $queueController->addItemToQueue($mediaItem, $args); 
+        $result = $queueController->addItemToQueue($mediaItem, $args); 
          
         return $meta;
     }

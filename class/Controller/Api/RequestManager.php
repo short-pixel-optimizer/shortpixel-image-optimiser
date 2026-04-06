@@ -174,9 +174,6 @@ abstract class RequestManager
        
        $urls = (! is_null($qItem->data()->urls)) ? count($qItem->data()->urls) : 0;
 
-       if ($urls == 0 && (! is_null($qItem->data()->url)))
-        $urls = 1;
-
        $flags = $qItem->data()->flags;
 			 $flags = implode("|", $flags);
        $text = sprintf(__('New item #%d sent for processing ( %d URLS %s)  ', 'shortpixel-image-optimiser'), $qItem->item_id, $urls, $flags );

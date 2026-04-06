@@ -350,10 +350,14 @@ class OptimizeAiController extends OptimizerBase
             }
 
              // Replacer Part 
-             $url = $qItem->data()->url; 
-             if (is_null($url)) // can be empty on restore action 
+             $urls = $qItem->data()->urls; 
+             if (is_null($urls)) // can be empty on restore action 
              {
                  $url = $qItem->imageModel->getUrl(); 
+             }
+             else 
+             {
+                $url = $urls[0];
              }
 
              $replacer2 = \ShortPixel\Replacer\Replacer::getInstance(); 
