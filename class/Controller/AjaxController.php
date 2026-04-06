@@ -866,7 +866,15 @@ class AjaxController
 		$this->checkImageAccess($imageModel);
 
 		$queueController = new QueueController();
-		$result  = $queueController->addItemToQueue($imageModel, ['action' => 'restore']);
+		$is_in_queue = $queueController->isItemInQueue($imageModel, null);
+
+		if (true === $is_in_queue)
+		{
+			$queue = $queueController->getQueue($imageModel->get('type')); 
+			$queue->dropItem($id);
+		}
+
+		$result = $queueController->addItemToQueue($imageModel, ['action' => 'restore']);
 
 		$json->$type->results = [$result];
 		$json->status = true;

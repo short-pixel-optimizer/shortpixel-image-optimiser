@@ -144,6 +144,11 @@ abstract class Queue
 						'item_id' => $item_id,
 				));
 
+        // Remove from cache
+        if (self::$isInQueue[$item_id]) 
+        {
+           unset(self::$isInQueue[$item_id]);
+        }
 		}
 
 

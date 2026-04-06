@@ -133,10 +133,10 @@ class AdminController extends \ShortPixel\Controller
          } */
                  
           
-        	$queueController->addItemToQueue($mediaItem);
+        	$result = $queueController->addItemToQueue($mediaItem);
 				}
 				else {
-					Log::addWarn('Passed mediaItem is not processable', $mediaItem);
+					Log::addWarn('Passed mediaItem is not processable', $id);
 				}
         return $meta; // It's a filter, otherwise no thumbs
     }

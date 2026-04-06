@@ -58,7 +58,6 @@ class QueueItems
       return self::$items[$type][$id]; */
     }
 
-
     /*
       @param int $id of the item
       @param string $type Custom / Media
@@ -66,7 +65,7 @@ class QueueItems
     public static function getImageItemByID($id, $type)
     {
         $fs = \wpSPIO()->filesystem();
-         $image = $fs->getMediaImage($id, $type);
+        $image = $fs->getMediaImage($id, $type);
          if (false !== $image)
          {
             return self::getImageItem($image);
@@ -76,7 +75,5 @@ class QueueItems
          }
 
     }
-
-
 
 } // class

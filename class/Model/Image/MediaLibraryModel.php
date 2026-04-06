@@ -2299,6 +2299,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		{
 			 $fullPath = $this->getFullPath();
 		}
+
+		do_action('shortpixel-thumbnails-before-regenerate', $this->get('id'));
 		$metadata = wp_generate_attachment_metadata($this->get('id'), $fullPath);
 		return $metadata;
 
