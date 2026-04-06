@@ -331,6 +331,8 @@ class ShortPixelPlugin {
 
 		$OptimizeAiController = OptimizeAiController::getInstance(); 
 
+		$wp_script_debug = ( defined("SCRIPT_DEBUG") && true === \SCRIPT_DEBUG) ? true : false;
+
 		$args_footer_async = ['strategy' => 'async', 'in_footer' => true];
 
 	 wp_register_script('shortpixel-folderbrowser', plugins_url('/res/js/shortpixel-folderbrowser.js', SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
@@ -346,7 +348,7 @@ class ShortPixelPlugin {
 				),
 	 ));
 
-		wp_register_script( 'jquery.knob.min.js', plugins_url( '/res/js/jquery.knob.min.js', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
+		wp_register_script( 'jquery.knob.min.js', plugins_url( ($wp_script_debug) ? '/res/js/jquery.knob.js' : '/res/js/jquery.knob.min.js', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
 		wp_register_script( 'shortpixel-debug', plugins_url( '/res/js/debug.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'jquery-ui-draggable' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 

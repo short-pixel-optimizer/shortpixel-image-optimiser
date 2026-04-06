@@ -917,6 +917,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 							'validate', // validate button from nokey part
 							'new-index',
 							'edit-exclusion',
+              'exclusions', 
 							'exclusion-type',
 							'exclusion-value',
 							'exclusion-minwidth',
@@ -928,6 +929,7 @@ class SettingsViewController extends \ShortPixel\ViewController
               'exclusion-filesize-value',
               'exclusion-filesize-denom',
               'exclusion-filesize-operator',
+              'exclusion-when',
 							'apply-select',
 							'screen_action',
 							'tools-nonce',
@@ -941,6 +943,7 @@ class SettingsViewController extends \ShortPixel\ViewController
               'login_apiKey',
               'ajaxSave',
               'ai_preview_image_id',
+              'offload-active', 
 
 					);
 

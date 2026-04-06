@@ -2,7 +2,7 @@
  * Short Pixel WordPress Plugin javascript
  */
 // init checks bulkProcess on each page. initSettings is when the settings View is being loaded.
-jQuery(document).ready(function(){ShortPixel.init(); });
+jQuery(function(){ShortPixel.init(); });
 
 function delayedInit() {
     if(typeof ShortPixel !== 'undefined' && ShortPixel.didInit == false) {
@@ -72,12 +72,7 @@ var ShortPixel = function() {
             ShortPixel[opt] = options[opt];
         }
     }
-/*
-    function isEmailValid(email) {
-				var regex = /^\S+@\S+\.\S+$/;
-				return regex.test(email);
-    }
-*/
+
     function updateSignupEmail() {
 
 				clearTimeout( ShortPixel.updateTimer );
@@ -194,13 +189,6 @@ var ShortPixel = function() {
 
     }
 
-    /* function apiKeyChanged() {
-        jQuery(".wp-shortpixel-options .shortpixel-key-valid").css("display", "none");
-        jQuery(".wp-shortpixel-options button#validate").css("display", "inline-block");
-    } */
-
-
-
     function checkThumbsUpdTotal(el) {
         var total = jQuery("#" +(el.checked ? "total" : "main")+ "ToProcess").val();
         jQuery("div.bulk-play span.total").text(total);
@@ -218,56 +206,11 @@ var ShortPixel = function() {
             ShortPixel.switchSettingsTab( theID );
         });
 
-				// Init active tab
-			/*	var activeTab = document.querySelector('section.sel-tab');
-				if (activeTab !== null);
-				ShortPixel.switchSettingsTab(activeTab.getAttribute('id')); */
     }
 
-    // Switch between settings tabs.
-    /*function switchSettingsTab(target){
+   
 
-        var tab = target.replace("tab-",""),
-            beacon = "",
-            section = jQuery("section#" +target);
-
-				if (section.length == 0)
-				{
-					 tab = 'settings'; // if tab does not exist.
-				}
-        jQuery('input[name="display_part"]').val(tab);
-        var uri = window.location.href.toString();
-        if (uri.indexOf("?") > 0) {
-            var clean_uri = uri.substring(0, uri.indexOf("?"));
-            clean_uri += '?' + jQuery.param({'page':'wp-shortpixel-settings', 'part': tab});
-          //  window.history.replaceState({}, document.title, clean_uri);
-        }
-
-        if(section.length > 0){
-            jQuery("section").removeClass("sel-tab");
-            jQuery('section .wp-shortpixel-tab-content').fadeOut(50);
-            jQuery(section).addClass("sel-tab");
-
-            jQuery(section).find('.wp-shortpixel-tab-content').fadeIn(50, ShortPixel.adjustSettingsTabs);
-
-						var event = new CustomEvent('shortpixel.ui.settingsTabLoad', { detail : {tabName: tab, section: section }});
-						window.dispatchEvent(event);
-
-        }
-    } */
-
-    // Fixes the height of the current active tab.
-  /*  function adjustSettingsTabsHeight(){
-        jQuery('.wso.banner').css('opacity', 1);
-    } */
-
-  /*  function closeHelpPane() {
-        jQuery('#shortpixel-hs-button-blind').remove();
-        jQuery('#shortpixel-hs-tools').remove();
-        jQuery('#hs-beacon').remove();
-        jQuery('#botbutton').remove();
-        jQuery('#shortpixel-hs-blind').remove();
-    } */
+    
 
     function checkQuota() {
         var data = {
@@ -416,7 +359,7 @@ var ShortPixel = function() {
             this.comparerData.cssLoaded = 2;
         }
         if(this.comparerData.jsLoaded === false) {
-             jQuery.getScript(this.WP_PLUGIN_URL + '/res/js/jquery.twentytwenty.min.js', function(){
+             jQuery.getScript(this.WP_PLUGIN_URL + '/res/js/jquery.twentytwenty.js', function(){
                 ShortPixel.comparerData.jsLoaded = 2;
 
             });
@@ -477,7 +420,6 @@ var ShortPixel = function() {
 
         // Close Options
         jQuery(".sp-close-button").on('click',  { modal: modal}, ShortPixel.closeComparerPopup);
-        jQuery(document).on('keyup.sp_modal_active', { modal: modal}, ShortPixel.closeComparerPopup );
         jQuery('.sp-modal-shade').on('click', { modal: modal},  ShortPixel.closeComparerPopup, );
 
         //change images srcs
@@ -487,7 +429,7 @@ var ShortPixel = function() {
         setTimeout(function(){
             jQuery(window).trigger('resize');
         }, 1000);
-        imgOpt.load(function(){
+        imgOpt.on('load', function(){
             jQuery(window).trigger('resize');
         });
         imgOpt.attr("src", imgOptimized);
@@ -498,7 +440,6 @@ var ShortPixel = function() {
 
 				e.data.modal.addClass('shortpixel-hide');
         jQuery('.sp-modal-shade').hide();
-        jQuery(document).unbind('keyup.sp_modal_active');
         jQuery('.sp-modal-shade').off('click');
         jQuery(".sp-close-button").off('click');
 

@@ -40,8 +40,6 @@ Class Image extends \ShortPixel\Model\File\FileModel
             {
                 $this->useLib = 'gd'; 
             }
-
-            Log::addTemp('Replace PNG Library used - ' . $this->useLib);
              
         }
 

@@ -536,9 +536,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		$number = preg_match_all('/url(\(((?:[^()]+|(?1))+)\))/m', $content, $matches); 
 		$matches = $matches[2]; 
 		
-		//$matches = str_replace('\'', '', $matches);
-	//	Log::addTemp('Inline Matches', $matches);
-
 		$replaceBlocks = []; 
 		foreach($matches as $url)
 		{
@@ -704,7 +701,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			return '/(?<!(\/|[a-z]|[0-9]))' . preg_quote($url, '/') . '(?!(\/|[a-z]|[0-9]))/mi'; 
 		}, $urls);
 
-		//Log::addTemp('Patterns X replacecount ', $patterns );
 		$content = preg_replace($patterns, $new_urls, $content);
 
 		return $content;

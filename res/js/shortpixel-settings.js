@@ -1515,7 +1515,7 @@ class ShortPixelSettings {
 
 		for (const optKey in options)
 			{
-				console.log(optKey, options[optKey]);
+
 				if (show.indexOf(optKey) >= 0)
 				{
 					if (options[optKey].classList.contains('not-visible'))

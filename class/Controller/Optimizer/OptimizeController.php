@@ -41,9 +41,7 @@ class OptimizeController extends OptimizerBase
   public function enQueueItem(QueueItem $qItem, $args = []) : \stdClass
   {
     $queue = $this->getCurrentQueue($qItem);
-
     $qItem->newOptimizeAction($args);
-
 
     $status = $queue->addQueueItem($qItem);
     return $status;
@@ -460,7 +458,7 @@ class OptimizeController extends OptimizerBase
 
     $qItem->block(true);
 
-    $q = $this->currentQueue;
+    $q = $this->getCurrentQueue($qItem);
     $q->updateItem($qItem);
 
     $item_id = $qItem->item_id;

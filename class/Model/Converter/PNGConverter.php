@@ -332,8 +332,6 @@ class PNGConverter extends MediaLibraryConverter
 				 $oldFileName = $this->imageModel->getOriginalFile()->getFileName();
 				 $newFileName = $this->imageModel->getOriginalFile()->getFileBase() . '.png';
 			}
-Log::addTemp('PNGCONVER RESTORE Filedir ', $this->imageModel->getFileDir());
-
 
 			$fsNewFile = $fs->getFile($this->imageModel->getFileDir() . $newFileName);
 

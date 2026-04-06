@@ -2078,9 +2078,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		}
 
 		update_post_meta($this->get('id'), '_wp_attachment_metadata', $wpmeta);
-		$flushded = update_postmeta_cache([$this->id]); // attempt to flush cache because offload refetches again
+		$flushed = update_postmeta_cache([$this->id]); // attempt to flush cache because offload refetches again
 
-		Log::addTemp('DoAction After_restore ' . $this->id);
 		do_action('shortpixel_after_restore_image', $this->id, $cleanRestore); // legacy
 		do_action('shortpixel/image/after_restore', $this, $this->id, $cleanRestore);
 
@@ -2301,7 +2300,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			 $fullPath = $this->getFullPath();
 		}
 		$metadata = wp_generate_attachment_metadata($this->get('id'), $fullPath);
-		Log::addTemp('Generated New Metadata', $metadata);
 		return $metadata;
 
 	}

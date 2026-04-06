@@ -102,7 +102,6 @@ abstract class RequestManager
 	{
 		$response = wp_remote_post($this->apiEndPoint, $requestParameters );
     Log::addDebug('ShortPixel API Request sent to ' . $this->apiEndPoint , $requestParameters['body']);
-   // Log::addTemp('ShortPixel API Request sent to ' . $this->apiEndPoint , $requestParameters);
 
 		//only if $Blocking is true analyze the response
         if ( $requestParameters['blocking'] )
@@ -135,7 +134,6 @@ abstract class RequestManager
             }
             else
             {
-              Log::addTemp('ReturnRetry?');
               $qItem->addResult($this->returnRetry($errorCode, $errorMessage));
             }
             

@@ -194,7 +194,6 @@ class OptimizeAiController extends OptimizerBase
         }
         else // Do nothing for now / retry (?)
         {
-            Log::addTemp('Ai is_error but not fatal?');
         }
 
         return; 
