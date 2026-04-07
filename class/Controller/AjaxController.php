@@ -878,7 +878,6 @@ class AjaxController
 
 		$json->$type->results = [$result];
 		$json->status = true;
-
 		return $json;
 	}
 

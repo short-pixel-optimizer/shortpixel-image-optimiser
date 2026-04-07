@@ -213,7 +213,6 @@ class OptimizeController extends OptimizerBase
 
     Log::addDebug('Optimizecontrol - QueueItem has a result ', $debugItem->result());
 
-
     ResponseController::addData($item_id, [
       'is_error' => $qItem->result()->is_error,
       'is_done' => $qItem->result()->is_done,
@@ -449,17 +448,16 @@ class OptimizeController extends OptimizerBase
    * @param  [array] $successData               [all successdata received so far]
    * @return int           status integer, one of apicontroller status constants
    */
-  protected function handleOptimizedItem($qItem, $imageModel)
+  protected function handleOptimizedItem(QueueItem $qItem, $imageModel)
   {
     $imageArray = $qItem->result()->files;
 
     $downloadHelper = DownloadHelper::getInstance();
     $converter = Converter::getConverter($imageModel, true);
 
-    $qItem->block(true);
-
     $q = $this->getCurrentQueue($qItem);
-    $q->updateItem($qItem);
+    $this->blockItem($qItem);
+
 
     $item_id = $qItem->item_id;
 
@@ -557,8 +555,7 @@ class OptimizeController extends OptimizerBase
       }
     }
 
-    $qItem->block(false);
-    $q->updateItem($qItem);
+    $this->unBlockItem($qItem);
 
     return $status;
   }

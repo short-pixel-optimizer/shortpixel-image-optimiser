@@ -50,6 +50,11 @@ class AiController extends RequestManager
 
       if ($qItem->data()->action == 'requestAlt')
       {
+        if (is_null($qItem->data()->urls))
+        {
+            $qItem->addResult($this->returnFailure(self::STATUS_FAIL, __('No URL given when starting to request AI Data', 'shortpixel-image-optimiser')));
+            return; 
+        }
         $requestBody['url'] = $qItem->data()->urls[0];
         $paramlist = $qItem->data()->paramlist; 
         if (is_object($paramlist))
@@ -71,7 +76,6 @@ class AiController extends RequestManager
         $requestBody['id'] = $qItem->data()->remote_id;
       }
 
-      
       $token = get_transient($this->auth_token);
       // Token doesn't seem to work normally.
       /*if ($token !== false)
@@ -82,7 +86,6 @@ class AiController extends RequestManager
       { */
         $auth = 'ApiKey ' . $keyControl->forceGetApiKey();
      // }
-
 
       // Should always check the results
       $requestParameters = [

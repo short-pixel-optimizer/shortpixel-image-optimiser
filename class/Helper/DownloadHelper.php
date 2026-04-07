@@ -171,6 +171,10 @@ class DownloadHelper
         }
         // min here, so maximum value of downloadtimeout is 25 seconds, which should be more than enough. To prevent hanging downloads eating up server time
         $downloadTimeout = min($executionTime - 10, 25);
+        if ($downloadTimeout < 10) // asume something went wrong here, or edge case up, allow minimum 10 seconds for download.
+        {
+            $downloadTimeout = 10; 
+        }
 
         return $downloadTimeout; 
       }

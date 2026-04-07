@@ -141,20 +141,18 @@ class ActionController extends OptimizerBase
   // @todo Via actions to Optimizers
   protected function convertPNG(QueueItem $qItem)
   {
-    $qItem->block(true);
-    $queue = $this->getCurrentQueue($qItem);
-
-    $queue->updateItem($qItem);
-
     $fs = \wpSPIO()->filesystem();
-
     $imageObj = $qItem->imageModel;
 
-     if ($imageObj === false) // not exist error.
-     {
-       $qItem->block(false);
-       $queue->updateItem($qItem);
-     }
+    if ($imageObj === false) // not exist error.
+    {
+         ResponseController::addData($qItem->item_id, 'message', __('PNG2JPG not converted: Could NOT load image!', 'shortpixel-image-optimiser'));
+         ResponseController::addData($qItem->item_id, 'is_error', true);
+         Log::addError('Cannot load Image for ConvertPNG');
+         return false; 
+    }
+
+    $this->blockItem($qItem); 
 
       $converter = Converter::getConverter($imageObj, true);
       $bool = false; // init
@@ -182,7 +180,7 @@ class ActionController extends OptimizerBase
 
     // Keep compressiontype from object, set in queue, imageModelToQueue
 
-    $qItem->block(false);
+    $this->unBlockItem($qItem);
    // $this->finishItemProcess($qItem);
 
     $qItem->addResult([

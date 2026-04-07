@@ -24,7 +24,7 @@ abstract class OptimizerBase
     protected $currentQueue;  // trying to keep minimum, but optimize needs to speak to queue for items.
     protected $queueController; // Needed to keep track of bulk /non-bulk
 
-    
+    protected static $blockedItems; // Keeping track of process blocks here. 
 
     public abstract function enqueueItem(QueueItem $qItem, $args = []) ; // Enqueue Single Item (not for bulk)
     public abstract function handleAPIResult(QueueItem $qItem);
@@ -43,6 +43,7 @@ abstract class OptimizerBase
     public function __construct()
     {
        $this->response = $this->getJsonResponse();
+       register_shutdown_function([$this, 'checkBlockedItems']);
     }
 
 
@@ -98,6 +99,41 @@ abstract class OptimizerBase
       }
 
       return true;
+
+    }
+
+    protected function blockItem(QueueItem $qItem)
+    {
+       $qItem->block(true);
+       $q = $this->getCurrentQueue($qItem);
+       $q->updateItem($qItem);
+
+       self::$blockedItems[$qItem->item_id] = $qItem;        
+    }
+
+    protected function unBlockItem(QueueItem $qItem)
+    {
+       $qItem->block(false);
+       $q = $this->getCurrentQueue($qItem);
+       $q->updateItem($qItem);
+
+       if (isset(self::$blockedItems[$qItem->item_id]))
+       {
+          unset(self::$blockedItems[$qItem->item_id]);
+       }
+    }
+
+    protected function checkBlockedItems()
+    {
+        if (is_null(self::$blockedItems) || count(self::$blockedItems) == 0)
+        {
+           return;     
+        }
+
+        foreach(self::$blockedItems as $blockedItem) // end of process, unblock hanging items. 
+        {
+             $this->unBlockItem($blockedItem);     
+        }
 
     }
 
