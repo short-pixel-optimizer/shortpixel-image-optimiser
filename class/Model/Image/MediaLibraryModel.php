@@ -1864,6 +1864,33 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 	}
 
+	/* @deprecated 
+	*  This compat function is only for RTA old version. Remove in due time. DO NOT USE!
+	*/ 
+	public function hasBackup()
+	{
+		Log::addWarn('Has Backup called on MediaLibraryModel - This should not happen');
+		 $backupModel = $this->getBackupModel();		 
+		 return $backupModel->hasBackup($this); 
+	}
+
+	public function getBackupFile()
+	{
+		Log::addWarn('GetBackupFile called on MediaLibraryModel - This should not happen');
+		 $backupModel = $this->getBackupModel();
+		 $file = $backupModel->hasBackup($this); 
+
+		 if (false === is_object($file))
+		 {
+			 return false;	 
+		 }
+
+		 return $file;
+		 
+	}
+
+
+
 	// Check if anything is optimized. Main image can't be relied upon as in the past since it can be excluded, so anything optimized is the check to show the optimized options like restore.
 	public function isSomethingOptimized()
 	{

@@ -37,13 +37,13 @@ abstract class OptimizerBase
     * @return boolean 
     */
     public abstract function checkItem(QueueItem $qItem);
+    public $shutdown_registered = false;  // bool . Only start the shutdown function when doing blocks, otherwise it might fatal error upon update/ plugin-deactivation
 
     static $instances = []; 
 
     public function __construct()
     {
        $this->response = $this->getJsonResponse();
-       register_shutdown_function([$this, 'checkBlockedItems']);
     }
 
 
@@ -108,7 +108,13 @@ abstract class OptimizerBase
        $q = $this->getCurrentQueue($qItem);
        $q->updateItem($qItem);
 
-       self::$blockedItems[$qItem->item_id] = $qItem;        
+       self::$blockedItems[$qItem->item_id] = $qItem;      
+       
+       if (false === $this->shutdown_registered)
+         {
+            register_shutdown_function([$this, 'checkBlockedItems']);
+            $this->shutdown_registered = true;
+         }
     }
 
     protected function unBlockItem(QueueItem $qItem)
@@ -132,6 +138,7 @@ abstract class OptimizerBase
 
         foreach(self::$blockedItems as $blockedItem) // end of process, unblock hanging items. 
         {
+            Log::addWarn('Shutdown unblocking Item: ', $blockedItem);
              $this->unBlockItem($blockedItem);     
         }
 

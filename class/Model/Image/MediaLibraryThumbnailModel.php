@@ -335,53 +335,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 		return (! \wpSPIO()->settings()->processThumbnails);
 	}
 
-	/* @todo All these filesystem checks at some point need to be moved to BackupModel somehow */
-	/* public function hasBackup($args = [])
-	{
-		$defaults = array(
-			'forceConverted' => false,
-			'noConversionCheck' => false,  // do not check on mainfile, this loops when used in loadMeta / legacyConversion
-		);
-		$args = wp_parse_args($args, $defaults);
-
-		$backupModel = $this->getBackupModel();
-
-		if (true === $args['noConversionCheck']) {
-			return $backupModel->hasBackup($this);
-		}
-
-		$mainFile = ($this->is_main_file) ? $this : $this->getMainFile();
-		if (false == $mainFile) {
-			return $backupModel->hasBackup($this);
-		}
-
-		// When main file and converted and omitBackup is true ( only original backup ) and not forced.
-		$loadRegular = (false === $mainFile->getMeta()->convertMeta()->isConverted() ||
-			false === $mainFile->getMeta()->convertMeta()->omitBackup()) && false === $args['forceConverted'];
-
-		if (true === $loadRegular) {
-			return $backupModel->hasBackup($this);
-		} else { 
-			$directory = $backupModel->getBackupDirectory();
-			$converted_ext = $mainFile->getMeta()->convertMeta()->getFileFormat();
-
-			if (! $directory)
-				return false;
-
-
-			$backupFile =  $directory . $this->getFileBase() . '.' . $converted_ext;
-
-			// Issue with PNG not being scaled on the main file.
-			if (! file_exists($backupFile) && $mainFile->isScaled()) {
-				$backupFile = $directory . $mainFile->getOriginalFile()->getFileBase() . '.' . $converted_ext;
-			}
-			if (file_exists($backupFile) && ! is_dir($backupFile))
-				return true;
-			else {
-				return false;
-			}
-		}
-	} */
+	
 
 	public function hasDBRecord()
 	{
@@ -432,54 +386,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 		return $bool;
 	}
 
-	/** Tries to retrieve an *existing* BackupFile. Returns false if not present.
-	 * This file might not be writable.
-	 * To get writable directory reference to backup, use FileSystemController
-	 */
-	/*
-	public function getBackupFile($args = array())
-	{
-		$defaults = [
-			'forceConverted' => false,
-			'noConversionCheck' => false,  // do not check on mainfile, this loops when used in loadMeta / legacyConversion
-		];
-		$args = wp_parse_args($args, $defaults);
-
-		$backupModel = $this->getBackupModel();
-		$backupFile = $backupModel->getBackupFile($this);
-
-		if (true === $args['noConversionCheck']) {
-			return $backupModel::getBackupFile($this);
-		}
-
-		$mainFile = ($this->is_main_file) ? $this : $this->getMainFile();
-		if (false == $mainFile) {
-			return $backupFile;
-		}
-		// When main file and converted and omitBackup is true ( only original backup ) and not forced.
-		$loadRegular = (false === $mainFile->getMeta()->convertMeta()->isConverted() ||
-			false === $mainFile->getMeta()->convertMeta()->omitBackup()) && false === $args['forceConverted'];
-
-		if (true === $loadRegular) {
-			return $backupFile;
-		} else {
-			if ($this->hasBackup($args)) {
-
-				$directory = $backupModel->getBackupDirectory();
-				$converted_ext = $mainFile->getMeta()->convertMeta()->getFileFormat();
-
-				$backupFile = $directory . $this->getFileBase() . '.' . $converted_ext;
-
-				// Because WP doesn't support big PNG with scaled for some reason, it's possible it doesn't create them. Which means we end up with a scaled images without backup 
-				if (! file_exists($backupFile) && $mainFile->isScaled()) {
-					$backupFile = $directory . $mainFile->getOriginalFile()->getFileBase() . '.' . $converted_ext;
-				}
-
-				return new FileModel($backupFile);
-			} else
-				return false;
-		}
-	} */
 
 	/** Create backup for media image. 
 	 * 
