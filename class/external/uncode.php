@@ -29,25 +29,40 @@ class UncodeController
 				
 				$backupModel = $imageObj->getBackupModel();
 
-				// @todo This works on file level, should work on imageModel level minimal
-				$fileObj = $fs->getFile($filePath);
-				if ($fileObj->hasBackup())
+				$thumbs = $imageObj->getAllFiles(); 
+
+				foreach($thumbs['files'] as $name => $fileObj)
 				{
-						$backupObj = $fileObj->getBackupFile();
-						$backupObj->delete();
+					if ($filePath == $fileObj->getFullPath())
+					{
+						$thumbObj = $fileObj;
+						break;
+					}			 
 				}
 
-				// @todo If we get this on imageModel level, we can use ImageModel deletes here for this filetypes. 
+				if (false === is_object($thumbObj))
+				{
+					Log::addWarn('Uncode remove - thumbnail not found for ' . $filePath);
+					return false;
+				}
+
 				// Check Webp
-				$webpObj = $fs->getFile( (string) $fileObj->getFileDir() . $fileObj->getFileBase() . '.webp');
-				if ($webpObj->exists())
-					 $webpObj->delete();
+				$webpObj = $thumbObj->getImageType('webp'); 
+				if (false !== $webpObj)
+				{
+					$webpObj->delete();
+				}
+				
+				$avifObj = $thumbObj->getImageType('avif'); 
+				if (false !== $avifObj)
+				{
+					$avifObj->delete();
+				}
 
-			  // Check Avif
- 				$avifObj = $fs->getFile( (string) $fileObj->getFileDir() . $fileObj->getFileBase() . '.avif');
- 				if ($avifObj->exists())
- 					 $avifObj->delete();
-
+				if ($backupModel->hasBackup($thumbObj))
+				{
+						$backupObj = $backupModel->OnDelete($thumbObj);
+				}
 	 }
 
    public function after_new_crop( $media_id, $url, $width, $height,  $attachment_key ) {
