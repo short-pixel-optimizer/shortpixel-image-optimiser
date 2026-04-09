@@ -260,7 +260,6 @@ abstract class RequestManager
          unset($result['message']);
       }
 
-
       $result = array_merge($result, $data);
       return $result;
   }

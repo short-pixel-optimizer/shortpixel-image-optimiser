@@ -237,7 +237,7 @@ class AiController extends RequestManager
             }
             if (! isset($aiData[$name]) && isset($data['status']))
             { 
-                $aiData[$name]  = $data['status']; 
+                $aiData[$name] = $data['status']; 
             }
          }
       }

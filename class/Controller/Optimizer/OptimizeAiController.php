@@ -287,6 +287,8 @@ class OptimizeAiController extends OptimizerBase
         'post_title' => 'ai_gen_post_title', 
         ]; */
 
+        $aiData = apply_filters('shortpixel/ai/success', $aiData, $qItem); 
+
         $aiData = $this->formatResultData($aiData, $qItem);
 
         // Description : From POST CONTENT 

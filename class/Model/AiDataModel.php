@@ -232,6 +232,8 @@ class AiDataModel
             $this->processable_status = self::P_NOJOB; 
         }
 
+        $paramlist = apply_filters('shortpixel/aidatamodel/paramlist', $paramlist, $this->attach_id);
+
         return ['paramlist' => $paramlist, 'returndatalist' => $returnDataList]; 
 
     }

@@ -268,7 +268,7 @@ class OptimizeController extends OptimizerBase
               'fileStatus' => ImageModel::FILE_STATUS_SUCCESS
             ]);
 
-            do_action('shortpixel_image_optimised', $item_id);
+            do_action('shortpixel_image_optimised', $item_id); // Deprecated 
             do_action('shortpixel/image/optimised', $imageModel);
           } elseif (RequestManager::STATUS_CONVERTED == $status) {
             $qItem->addResult([

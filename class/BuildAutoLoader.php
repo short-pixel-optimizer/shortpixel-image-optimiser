@@ -55,6 +55,7 @@ class BuildAutoLoader
       'class/external/themes/total-theme.php',
       'class/external/MediaFileRenamer.php',
       'class/external/formidable.php',
+      'class/external/wpml.php', 
       
     );
 
