@@ -6,6 +6,8 @@ if (! defined('ABSPATH')) {
   exit; // Exit if accessed directly.
 }
 
+use ShortPixel\Controller\Backup\BackupController;
+use ShortPixel\Model\Backup\BackupModel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Model\File\DirectoryModel as DirectoryModel;
@@ -74,6 +76,13 @@ class FileSystemController extends \ShortPixel\Controller
     }
 
     return $imageObj;
+  }
+
+  public function getBackupModel($id, $type = 'media') : BackupModel
+  {
+      $backupController = BackupController::getBackupController();
+      $backupModel = $backupController->getModelById($id, $type);       
+      return $backupModel; 
   }
 
 

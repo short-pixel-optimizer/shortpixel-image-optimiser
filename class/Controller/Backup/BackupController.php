@@ -80,7 +80,7 @@ abstract class BackupController
         return $this->getModelById($id, $type, $mediaItem);
     }
 
-    public function getModelById($id, $type = 'media', $mediaItem = null)
+    public function getModelById($id, $type = 'media', $mediaItem = null) : BackupModel
     {
       if (! isset(self::$models[$type]) || ! isset(self::$models[$type][$id]))
       {
