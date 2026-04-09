@@ -162,7 +162,28 @@ class AiDataModel
         if (true === $settings->aiPreserve)
         {
             $currentData = $this->getCurrentData(); 
-            $ignore_fields = array_diff(array_keys( array_filter($currentData) ), ['post_title']);
+            $ignore_fields = array_diff(array_keys( array_filter($currentData) ), []);
+
+            $fs = \wpSPIO()->filesystem(); 
+            $mediaItem = $fs->getMediaImage($this->attach_id); 
+            if (false !== $mediaItem && true === $mediaItem->hasOriginal())
+            {
+                $mediaItem = $mediaItem->getOriginalFile(); 
+            }
+
+            $fileName = $mediaItem->getFileName(); 
+            $extension = $mediaItem->getExtension(); 
+            
+            $fileName = str_replace('.' . $extension, '', $fileName);
+
+            if ($currentData['post_title'] == $fileName)
+            {
+                if (in_array('post_title', $ignore_fields))
+                {
+                    $ignore_fields = array_diff($ignore_fields, ['post_title']);
+                }
+            }
+            
             // Exception via array_diff :: post_title always overwrite because it is always filled
         }
 
