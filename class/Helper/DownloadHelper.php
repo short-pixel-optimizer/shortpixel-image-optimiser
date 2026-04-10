@@ -190,7 +190,9 @@ class DownloadHelper
         if (is_wp_error($tempFile))
         {
            Log::addError('Failed to Download File from ' . $url , $tempFile);
-           Responsecontroller::addData('message', $tempFile->get_error_message());
+          // Responsecontroller::addData('message', $tempFile->get_error_message());
+           $this->last_download_error = $tempFile->get_error_message();
+
            return false;
         }
 

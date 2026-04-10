@@ -158,11 +158,15 @@ class wpOffload
 			return false;
 		}
 
+		$result = $this->remove_remote($id);
+
+		if (false === $this->isActive())
+		{
+			return false; 
+		}
 
 		// If there are excluded sizes, there are not in backups. might not be left on remote, or ( if delete ) on server, so just generate the images and move them.
-		$mediaItem->wpCreateImageSizes();
-
-		$result = $this->remove_remote($id);
+		$mediaItem->wpCreateImageSizes();		
 		$this->image_upload($mediaItem);
 	}
 

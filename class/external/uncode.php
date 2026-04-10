@@ -23,46 +23,33 @@ class UncodeController
 	 public function removedMetaData($attach_id, $filePath)
 	 {
 		  	$fs = \wpSPIO()->filesystem();
-				$imageObj = $fs->getImage($attach_id, 'media', false);
+				//$imageObj = $fs->getImage($attach_id, 'media', false);
 				
-				$imageObj->saveMeta();
-				
-				$backupModel = $imageObj->getBackupModel();
+//				$imageObj->saveMeta();
 
-				$thumbs = $imageObj->getAllFiles(); 
 
-				foreach($thumbs['files'] as $name => $fileObj)
+				// We can't do this via the usual methods, because the filter is deleted before the filter hits, thus not loading in the Models anymore
+				// Just rough n dirty here. 
+
+				$fileObj = $fs->getFile($filePath);
+
+				$avifFile = $fs->getFile($fileObj->getFileDir() . $fileObj->getFileBase() . '.avif');
+				$webpFile = $fs->getFile($fileObj->getFileDir() . $fileObj->getFileBase() . '.webp');
+				$backupFile = $fs->getFile($fs->getBackupDirectory($fileObj, true) . $fileObj->getFileName()); 
+
+				if ($avifFile->exists())
 				{
-					if ($filePath == $fileObj->getFullPath())
-					{
-						$thumbObj = $fileObj;
-						break;
-					}			 
+					$avifFile->delete();
 				}
-
-				if (false === is_object($thumbObj))
+				if ($webpFile->exists())
 				{
-					Log::addWarn('Uncode remove - thumbnail not found for ' . $filePath);
-					return false;
+				    $webpFile->delete();
 				}
-
-				// Check Webp
-				$webpObj = $thumbObj->getImageType('webp'); 
-				if (false !== $webpObj)
+				if ($backupFile->exists())
 				{
-					$webpObj->delete();
+					$backupFile->delete();
 				}
 				
-				$avifObj = $thumbObj->getImageType('avif'); 
-				if (false !== $avifObj)
-				{
-					$avifObj->delete();
-				}
-
-				if ($backupModel->hasBackup($thumbObj))
-				{
-						$backupObj = $backupModel->OnDelete($thumbObj);
-				}
 	 }
 
    public function after_new_crop( $media_id, $url, $width, $height,  $attachment_key ) {
