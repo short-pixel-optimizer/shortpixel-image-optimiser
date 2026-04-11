@@ -211,7 +211,7 @@ class OptimizeController extends OptimizerBase
     // Cleaning up the debugger.
     $debugItem = clone $qItem;
 
-    Log::addDebug('Optimizecontrol - QueueItem has a result ', $debugItem->result());
+    Log::addDebug('Optimizecontrol - QueueItem has a result ', $debugItem->result()->forReturn());
 
     ResponseController::addData($item_id, [
       'is_error' => $qItem->result()->is_error,

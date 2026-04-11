@@ -61,7 +61,7 @@ class Replacer
 		Modules\WpBakery::getInstance();
 		Modules\YoastSeo::getInstance();
 		Modules\Breakdance::getInstance();
-		Modules\SmartSlider::getInstance();
+		Modules\SmartSlider::getInstance($this);
 	}
 
 	public function setSource($url)
@@ -210,7 +210,7 @@ class Replacer
 		Log::addDebug('Doing meta search and replace -', array($search_urls, $replace_urls));
 		Log::addDebug('Searching with BaseuRL ' . $base_url);
 
-		do_action('shortpixel/replacer/replace_urls', $search_urls, $replace_urls);
+		do_action('shortpixel/replacer/replace_urls', $search_urls, $replace_urls, $base_url);
 		$updated = 0;
 
 		$updated += $this->doReplaceQuery($base_url, $search_urls, $replace_urls);
@@ -511,9 +511,6 @@ class Replacer
 			'source' => array('url' => $this->source_url, 'metadata' => $this->getFilesFromMetadata($this->source_metadata)),
 			'target' => array('url' => $this->target_url, 'metadata' => $this->getFilesFromMetadata($this->target_metadata)),
 		);
-
-		//  Log::addDebug('Source Metadata', $this->source_metadata);
-		//    Log::addDebug('Target Metadata', $this->target_metadata);
 
 		$result = array();
 
