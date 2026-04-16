@@ -337,7 +337,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                    $name = isset($data['nice-name']) ? $data['nice-name'] : ucfirst($key);
                                    $label = $name . " ( $width &times $height )";
 
-                                printf('<span><label><input type="checkbox" name="thumbnail-select[]" value="%s" > %s </label></span>', $key, $label);
+                                printf('<span><label><input type="checkbox" name="thumbnail-select[]" value="%s" > %s </label></span>', esc_attr($key), esc_html($label));
                                } ?>
                           </div>
                          </div>

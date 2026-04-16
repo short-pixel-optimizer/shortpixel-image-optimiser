@@ -112,7 +112,7 @@ if (! defined('ABSPATH')) {
       <content>
         <name><?php _e('General site context', 'shortpixel-image-optimiser'); ?></name>
         <info><?php _e('This is a general context that will be passed to the AI model to provide more relevant data for your website.', 'shortpixel-image-optimiser'); ?></info>
-        <textarea class="ai_general_context" name="ai_general_context" maxlength="500"><?php echo $view->data->ai_general_context; ?></textarea>
+        <textarea class="ai_general_context" name="ai_general_context" maxlength="500"><?php echo esc_textarea($view->data->ai_general_context); ?></textarea>
       </content>
 
     </setting>
@@ -148,7 +148,7 @@ if (! defined('ABSPATH')) {
 
         <content class='toggleTarget ai_gen_alt is-advanced'>
           <name> <?php _e('Additional context for generating ALT Tags:', 'shortpixel-image-optimiser'); ?></name>
-          <textarea name="ai_alt_context" maxlength="500"><?php echo $view->data->ai_alt_context ?></textarea>
+          <textarea name="ai_alt_context" maxlength="500"><?php echo esc_textarea($view->data->ai_alt_context); ?></textarea>
         </content>
 
       </setting>
@@ -177,7 +177,7 @@ if (! defined('ABSPATH')) {
 
         <content class='toggleTarget ai_gen_description is-advanced'>
           <name> <?php _e('Additional context for generating image description', 'shortpixel-image-optimiser'); ?></name>
-          <textarea name='ai_description_context' maxlength="500"><?php echo $view->data->ai_description_context ?></textarea>
+          <textarea name='ai_description_context' maxlength="500"><?php echo esc_textarea($view->data->ai_description_context); ?></textarea>
         </content>
 
 
@@ -209,7 +209,7 @@ if (! defined('ABSPATH')) {
 
         <content class='toggleTarget ai_gen_caption is-advanced'>
           <name> <?php _e('Additional context for generating image caption', 'shortpixel-image-optimiser'); ?></name>
-          <textarea name='ai_caption_context' maxlength="500"><?php echo $view->data->ai_caption_context ?></textarea>
+          <textarea name='ai_caption_context' maxlength="500"><?php echo esc_textarea($view->data->ai_caption_context); ?></textarea>
         </content>
 
       </setting>
@@ -239,7 +239,7 @@ if (! defined('ABSPATH')) {
 
         <content class='nextline ai_gen_posttitle is-advanced'>
           <name><?php _e('Additional context for image title generation: ', 'shortpixel-image-optimiser'); ?></name>
-          <textarea name="ai_post_title_context" maxlength="500"><?php echo $view->data->ai_post_title_context ?></textarea>
+          <textarea name="ai_post_title_context" maxlength="500"><?php echo esc_textarea($view->data->ai_post_title_context); ?></textarea>
 
         </content>
         <warning class="ai_overwrite_warning">
@@ -275,7 +275,7 @@ if (! defined('ABSPATH')) {
 
         <content class='nextline ai_gen_filename is-advanced'>
           <name><?php _e('Additional context for filename generation: ', 'shortpixel-image-optimiser'); ?></name>
-          <textarea name="ai_filename_context" maxlength="500"><?php echo $view->data->ai_filename_context ?></textarea>
+          <textarea name="ai_filename_context" maxlength="500"><?php echo esc_textarea($view->data->ai_filename_context); ?></textarea>
 
         </content>
 

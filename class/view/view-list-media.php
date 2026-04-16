@@ -13,13 +13,13 @@ if (property_exists($this->view, 'infoData'))
 
 	 foreach($this->view->infoData as $key => $data)
 	 {
-		 	$datastring .= ' data-' . $key . '="' . $data . '"';
+		 	$datastring .= ' data-' . esc_attr($key) . '="' . esc_attr($data) . '"';
 	 }
 }
 
 ?>
 
-<div class='sp-column-info <?php echo property_exists($this->view, 'infoClass') ? $this->view->infoClass : '' ?>'
+<div class='sp-column-info <?php echo property_exists($this->view, 'infoClass') ? esc_attr($this->view->infoClass) : '' ?>'
 	 	  <?php echo $datastring; ?>
 			id='shortpixel-data-<?php echo esc_attr($this->view->id );?>'>
 <?php	if (isset($this->view->list_actions))

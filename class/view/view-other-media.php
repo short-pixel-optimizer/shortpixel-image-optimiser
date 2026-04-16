@@ -61,7 +61,7 @@ $this->loadView('custom/part-othermedia-top');
              }
              elseif (true === $view->hasFilter )
              {
-               printf(esc_html__('Filter didn\'t yield any results.  %s Show all Items %s ', 'shortpixel-image-optimiser'), "<a href='$this->url'>",'</a>');
+               printf(esc_html__('Filter didn\'t yield any results.  %s Show all Items %s ', 'shortpixel-image-optimiser'), '<a href="' . esc_url($this->url) . '">', '</a>');
              }
              else
              {
@@ -114,7 +114,7 @@ $this->loadView('custom/part-othermedia-top');
               $item_class = ' class="' . implode(' ', $checkBoxActions) . '" ';
 
             ?>
-            <span><input type='checkbox' name='select[]' value="<?php echo $item->get('id'); ?>" <?php echo $item_class ?>/></span>
+            <span><input type='checkbox' name='select[]' value="<?php echo esc_attr($item->get('id')); ?>" <?php echo $item_class ?>/></span>
             <span><a href="<?php echo esc_attr($img_url); ?>" target="_blank">
                 <div class='thumb' <?php if($is_heavy)
 								{
@@ -141,7 +141,7 @@ $this->loadView('custom/part-othermedia-top');
 										if ($i > 0)
 											echo "|";
 								    ?>
-								   	<a href="<?php echo $link ?>" <?php echo esc_attr($newtab); ?> class="<?php echo $classes ?>"><?php echo $action['text'] ?></a>
+								   	<a href="<?php echo esc_attr($link); ?>" <?php echo esc_attr($newtab); ?> class="<?php echo esc_attr($classes); ?>"><?php echo esc_html($action['text']); ?></a>
 								    <?php
 										$i++;
 								  endforeach;

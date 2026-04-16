@@ -21,7 +21,7 @@ foreach($this->view->actions as $actionName => $action):
 
   $link = ($action['type'] == 'js') ? 'javascript:' . $action['function'] : $action['function'];
 
-  $title = isset($action['title']) ? ' title="' . $action['title'] . '" ' : '';
+  $title = isset($action['title']) ? ' title="' . esc_attr($action['title']) . '" ' : '';
 
   if ($layout && $layout == 'paragraph')
   {

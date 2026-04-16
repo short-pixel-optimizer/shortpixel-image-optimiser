@@ -26,7 +26,7 @@ $bulkblock = $dashboard->bulkblock;
   <div class='wrapper top-row step-highlight-1'>
      <div class='panel first-panel'>
 
-       <div class="first-line <?php echo $mainblock->icon ?>">
+       <div class="first-line <?php echo esc_attr($mainblock->icon); ?>">
          <i class='shortpixel-icon mainblock-status '></i>
 
 					<div class='status-ok'>
@@ -46,7 +46,7 @@ $bulkblock = $dashboard->bulkblock;
          <hr>
          <div class="second-line">
         <?php if (property_exists($mainblock, 'optimized')): ?>
-         <div class="optimized"><?php echo $mainblock->optimized ?></div>
+         <div class="optimized"><?php echo esc_html($mainblock->optimized); ?></div>
              <i class='shortpixel-icon file'></i>
              <div class="optimized-message"><?php esc_html_e('Optimized images and thumbnails from the Media Library and Custom Media', 'shortpixel-image-optimiser'); ?></div>
         <?php endif; ?>
@@ -81,7 +81,7 @@ $bulkblock = $dashboard->bulkblock;
                              " stroke-width="16" fill-opacity="0" style="stroke-dasharray: 289.027px, 289.027px; stroke-dashoffset: <?php echo $total_circle ?>px;">
                          </path>
                          <text class="text" x="50" y="50"><?php
-                         echo $view->averageCompression;
+                         echo esc_html($view->averageCompression);
                           ?> %</text>
              </svg>
        <?php endif; ?>
@@ -123,8 +123,8 @@ $bulkblock = $dashboard->bulkblock;
         <span class='status-wrapper'>
           <span class='status-line'>
 
-            <?php echo $bulkblock->message ?>
-            <i class='shortpixel-icon status-icon <?php echo $bulkblock->icon ?>'></i>
+            <?php echo esc_html($bulkblock->message); ?>
+            <i class='shortpixel-icon status-icon <?php echo esc_attr($bulkblock->icon); ?>'></i>
           </span>
       </span>
 

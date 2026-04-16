@@ -6,9 +6,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 ?>
-<div id='shortpixel-data-<?php echo( esc_attr($view->id) );?>' class='column-wp-shortPixel view-edit-media'
-  data-imagewidth="<?php echo $view->image['width'] ?>" data-imageheight="<?php echo $view->image['height'] ?>"
-  data-extension="<?php echo $view->image['extension']; ?>"
+<div id='shortpixel-data-<?php echo esc_attr($view->id); ?>' class='column-wp-shortPixel view-edit-media'
+  data-imagewidth="<?php echo esc_attr($view->image['width']); ?>" data-imageheight="<?php echo esc_attr($view->image['height']); ?>"
+  data-extension="<?php echo esc_attr($view->image['extension']); ?>"
 >
 <?php // Debug Data
 if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->debugInfo) > 0 ):  ?>
@@ -44,7 +44,7 @@ if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->de
 		<?php
 			    // burger if needed.F
 			    echo '<p>' . $this->view->list_actions . '</p>'; ?>
-		<p><?php  echo $this->view->text;  ?></p></div>
+<p><?php echo esc_html($this->view->text); ?></p></div>
 
 <?php endif; ?>
 
@@ -63,7 +63,7 @@ if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->de
     <ul class='edit-media-stats'>
     <?php foreach($view->stats as $index => $data)
     { ?>
-       <li><span><?php echo $data[0] ?></span> <span><?php echo $data[1] ?></span></li>
+       <li><span><?php echo esc_html($data[0]); ?></span> <span><?php echo esc_html($data[1]); ?></span></li>
     <?php } ?>
     </ul>
     <?php endif; ?>
