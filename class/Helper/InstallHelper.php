@@ -190,7 +190,10 @@ class InstallHelper
 				'size' => 'size',
 				'status' => 'status',
 				'compression_type' => 'compression_type'
-			)
+			), 
+			'shortpixel_aipostmeta' => [
+				'attach_id' => 'attach_id', 
+			],
 		);
 
 		foreach ($definitions as $raw_tableName => $indexes) {

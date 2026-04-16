@@ -122,7 +122,7 @@ class AccessModel
 
 	protected function user()
 	{
-				return wp_get_current_user();
+		return wp_get_current_user();
 	}
 
 	/** Find the needed capability
