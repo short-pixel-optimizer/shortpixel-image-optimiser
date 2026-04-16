@@ -108,6 +108,8 @@ $settings = \wpSPIO()->settings();
 				echo esc_html($this->view->mediaErrorLog);
         }
     ?>
+    </div> 
+
 		<!-- ****** CUSTOM ********  --->
 		<span class='hidden' data-check-custom-total data-stats-custom="total">0</span>
 
@@ -156,6 +158,8 @@ $settings = \wpSPIO()->settings();
 				echo esc_html($this->view->customErrorLog);
       }
       ?>
+    </div>
+    
 		<nav>
 			<button class='button stop' type='button' data-action="StopBulk" >
           <span class='dashicons dashicons-no'></span>  

@@ -66,6 +66,20 @@ class InstallHelper
 		if ($log->exists())
 			$log->delete();
 
+		// Known Transients in system, deleting this way for caches etc : 
+		$transients = [
+			'spio_settings_ai_example_id',  // settings - example ai 
+			'bulk-secret',  // cachecontroller in ajaxcontroller
+			'average_compression',  // average compression in system 
+			'quotaData', // the cached quota data.
+		];
+
+		foreach($transients as $transient)
+		{
+				 delete_transient($transient); 
+		}
+
+		/** We still have to do a hard database delete because the plugin has dynamically names transients we can't predict the name of  */
 		global $wpdb;
 		$sql = "delete from " . $wpdb->options . " where option_name like '%_transient_shortpixel%' or option_name like '%_transient_timeout_shortpixel%'";
 		$wpdb->query($sql); // remove transients.

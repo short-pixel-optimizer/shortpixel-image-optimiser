@@ -28,7 +28,7 @@ foreach($this->view->actions as $actionName => $action):
      echo "<P>";
   }
   ?>
-  <a href="<?php echo $link ?>" <?php echo $title ?> class="<?php echo esc_attr($classes) ?>"><?php echo esc_html($action['text']) ?></a>
+  <a href="<?php echo $link ?>" <?php echo $title ?> class="<?php echo esc_attr($classes) ?>"><?php echo wp_kses_post($action['text']) ?></a>
 
   <?php
     if ($layout && $layout == 'paragraph')
