@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
   <div class='top-buttons'>
       <a class='header-button' href="https://wordpress.org/support/plugin/shortpixel-image-optimiser/reviews/?filter=5#new-post" target="_blank">
-          <i class='shortpixel-icon heart'></i><name><?php esc_html_e('Rate Us','shortpixel-image-optimiser'); ?></name>
+          <i class='shortpixel-icon star'></i><name><?php esc_html_e('Rate Us','shortpixel-image-optimiser'); ?></name>
       </a>
 
     <?php if ( !$view->key->hide_api_key ) { ?>

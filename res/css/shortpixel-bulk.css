@@ -80,6 +80,9 @@
   width: 15px;
   vertical-align: text-top;
 }
+.wrap.is-shortpixel-bulk-page header .top-buttons .header-button .shortpixel-icon.star {
+  filter: brightness(0) saturate(100%) invert(90%) sepia(54%) saturate(7093%) hue-rotate(314deg) brightness(117%) contrast(93%);
+}
 .wrap.is-shortpixel-bulk-page .shortpixel-icon {
   width: 25px;
   height: 25px;
@@ -215,6 +218,9 @@
 }
 .wrap.is-shortpixel-bulk-page .shortpixel-icon.shortpixel {
   background-image: url("../images/icon/shortpixel.svg");
+}
+.wrap.is-shortpixel-bulk-page .shortpixel-icon.star {
+  background-image: url("../images/icon/star.svg");
 }
 .wrap.is-shortpixel-bulk-page .shortpixel-illustration {
   display: inline-block;

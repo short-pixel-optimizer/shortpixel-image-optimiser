@@ -309,6 +309,10 @@
   background-image: url("../images/icon/shortpixel.svg");
 }
 
+.shortpixel-icon.star {
+  background-image: url("../images/icon/star.svg");
+}
+
 .shortpixel-illustration {
   display: inline-block;
   background-repeat: no-repeat;
