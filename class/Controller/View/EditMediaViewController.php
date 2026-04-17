@@ -103,6 +103,10 @@ class EditMediaViewController extends \ShortPixel\ViewController
 						return false;
 					}
 
+          $item = AiDataModel::getModelByAttachment($this->post_id);
+          echo "<PRE>"; var_dump($item); echo "</PRE>"; 
+          print_r($item->getCurrentData());
+
           $this->view->status_message = null;
 
          	$this->view->text = UiHelper::getStatusText($this->imageModel);

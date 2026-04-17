@@ -1276,9 +1276,9 @@ class AjaxController
 					$state = 'retrieveAlt';
 					
 				}
-				if ('retrieveAlt' === $state)
+				elseif ('retrieveAlt' === $state)
 				{
-					if (property_exists($result, 'aiData'))
+					if (property_exists($result, 'aiData') && false === is_null($result->aiData))
 					{
 						$aiModel = AiDataModel::getModelByAttachment($qItem->item_id, 'media');
 
@@ -1362,14 +1362,15 @@ class AjaxController
 			$generated = $item->getGeneratedData();
 		  }
 
-		  if ($item->isSomeThingGenerated())
+	 	 // Change 17/04/26 - Current SEO data should always use 'current data' ? 
+		 /* if ($item->isSomeThingGenerated())
 		  {
           	$original = $item->getOriginalData();
 		  }
 		  else
-		  {
+		  { */
 			 $original = $item->getCurrentData();
-		  }
+		 // }
         }
 
 

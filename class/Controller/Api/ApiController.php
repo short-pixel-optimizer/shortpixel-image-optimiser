@@ -207,6 +207,7 @@ class ApiController extends RequestManager
 			// Check for known errors. : https://shortpixel.com/api-docs
 			Log::addDebug('Api Response Status :' . $status->Code);
 			switch ($status->Code) {
+				case -2:   // Wrong URL for ApiKey
 				case -102: // Invalid URL
 				case -105: // URL missing
 				case -106: // Url is inaccessible

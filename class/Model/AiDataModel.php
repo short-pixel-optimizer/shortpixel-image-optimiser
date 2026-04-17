@@ -159,7 +159,10 @@ class AiDataModel
         $settings = (object) UtilHelper::getAiSettings($params); 
 
         $ignore_fields = []; 
-        if (true === $settings->aiPreserve)
+        $preview_only = isset($params['preview_only']) ? $params['preview_only'] : false; 
+
+        // Ignore this on preview only (settings), otherwise we might get empty preview, which is not the point.
+        if (true === $settings->aiPreserve && false === $preview_only)
         {
             $currentData = $this->getCurrentData(); 
             $ignore_fields = array_diff(array_keys( array_filter($currentData) ), []);
