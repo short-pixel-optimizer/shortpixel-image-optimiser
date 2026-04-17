@@ -127,8 +127,6 @@ class ShortPixelPlugin {
 			$notices             = Notices::getInstance(); // This hooks the ajax listener
 			$quotaController = QuotaController::getInstance();
 			$quotaController->getQuota();
-
-			/* load_plugin_textdomain( 'shortpixel-image-optimiser', false, plugin_basename( dirname( SHORTPIXEL_PLUGIN_FILE ) ) . '/lang' ); */
 	}
 
 	/** Function to get plugin settings
@@ -385,7 +383,7 @@ class ShortPixelPlugin {
 					'all' => __('Any ShortPixel State', 'shortpixel-image-optimiser'),
 					'optimized' => __('Optimized', 'shortpixel-image-optimiser'),
 					'unoptimized' => __('Unoptimized', 'shortpixel-image-optimiser'),
-					'prevented' => __('Optimization Error', 'shortpixer-image-optimiser'),
+					'prevented' => __('Optimization Error', 'shortpixel-image-optimiser'),
 		));
 
 		$editor_localize = ImageEditorController::localizeScript();

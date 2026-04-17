@@ -513,7 +513,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
                 'all' => __('Any ShortPixel State', 'shortpixel-image-optimiser'),
                 'optimized' => __('Optimized', 'shortpixel-image-optimiser'),
                 'unoptimized' => __('Unoptimized', 'shortpixel-image-optimiser'),
-                'prevented' => __('Optimization Error', 'shortpixer-image-optimiser'),
+                'prevented' => __('Optimization Error', 'shortpixel-image-optimiser'),
 
             );
 

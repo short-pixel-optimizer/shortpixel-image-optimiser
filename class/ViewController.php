@@ -77,7 +77,7 @@ class ViewController extends Controller
          return false; 
       }
       Log::addInfo('Check Post fails nonce check, action : ' . $this->form_action, array($_POST) );
-			exit('Nonce Failed');
+			wp_die('Nonce Failed');
       return true;
     }
     elseif (isset($_POST) && count($_POST) > 0)
