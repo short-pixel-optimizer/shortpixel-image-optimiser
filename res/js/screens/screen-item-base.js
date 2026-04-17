@@ -42,7 +42,7 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 
 			this.UpdateMessage(resultItem, message, isError);
 		}
-		else if ('ai' == apiName && null !== element)
+		else if ('ai' == apiName && null !== element && typeof message !== 'undefined')
 		{
 			this.UpdateMessage(resultItem, message, isError);
 		}
