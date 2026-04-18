@@ -1745,8 +1745,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			$sql = "select element_id from " . $wpdb->prefix . "icl_translations where trid in (select trid from " . $wpdb->prefix . "icl_translations where element_id = %d) and element_id <> %d";
 
 			$sql = $wpdb->prepare($sql, $this->id, $this->id);
-
-
 			$results = $wpdb->get_results($sql);
 
 			if (is_array($results)) {
@@ -1787,7 +1785,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		Log::addWarn($this->get('id') . ' preventing next try: ' . $reason);
 
 		update_post_meta($this->id, '_shortpixel_prevent_optimize', $reason);
-		//  update_post_meta($this->id, '_shortpixel_prevent_optimize_status', $status);
 		$this->setMeta('status', $status);
 		$this->saveMeta();
 	}

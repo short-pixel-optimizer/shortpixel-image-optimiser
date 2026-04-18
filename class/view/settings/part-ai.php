@@ -151,6 +151,16 @@ if (! defined('ABSPATH')) {
           <textarea name="ai_alt_context" maxlength="500"><?php echo esc_textarea($view->data->ai_alt_context); ?></textarea>
         </content>
 
+        <content class='toggleTarget ai_gen_alt is-advanced'>
+          <name> <?php _e('Prefix for ALT tag:', 'shortpixel-image-optimiser'); ?></name>
+          <input type="text" name="ai_alt_prefix" maxlength="50" value="<?php echo esc_attr($view->data->ai_alt_prefix); ?>" />
+        </content>
+
+        <content class='toggleTarget ai_gen_alt is-advanced'>
+          <name> <?php _e('Postfix for ALT tag:', 'shortpixel-image-optimiser'); ?></name>
+          <input type="text" name="ai_alt_postfix" maxlength="50" value="<?php echo esc_attr($view->data->ai_alt_postfix); ?>" />
+        </content>
+
       </setting>
 
       <!-- Ai Gen Description -->
@@ -180,6 +190,15 @@ if (! defined('ABSPATH')) {
           <textarea name='ai_description_context' maxlength="500"><?php echo esc_textarea($view->data->ai_description_context); ?></textarea>
         </content>
 
+        <content class='toggleTarget ai_gen_description is-advanced'>
+          <name> <?php _e('Prefix for description:', 'shortpixel-image-optimiser'); ?></name>
+          <input type="text" name='ai_description_prefix' maxlength="50" value="<?php echo esc_attr($view->data->ai_description_prefix); ?>" />
+        </content>
+
+        <content class='toggleTarget ai_gen_description is-advanced'>
+          <name> <?php _e('Postfix for description:', 'shortpixel-image-optimiser'); ?></name>
+          <input type="text" name='ai_description_postfix' maxlength="50" value="<?php echo esc_attr($view->data->ai_description_postfix); ?>" />
+        </content>
 
       </setting>
 
@@ -212,6 +231,16 @@ if (! defined('ABSPATH')) {
           <textarea name='ai_caption_context' maxlength="500"><?php echo esc_textarea($view->data->ai_caption_context); ?></textarea>
         </content>
 
+        <content class='toggleTarget ai_gen_caption is-advanced'>
+          <name> <?php _e('Prefix for caption:', 'shortpixel-image-optimiser'); ?></name>
+          <input type="text" name='ai_caption_prefix' maxlength="50" value="<?php echo esc_attr($view->data->ai_caption_prefix); ?>" />
+        </content>
+
+        <content class='toggleTarget ai_gen_caption is-advanced'>
+          <name> <?php _e('Postfix for caption:', 'shortpixel-image-optimiser'); ?></name>
+          <input type="text" name='ai_caption_postfix' maxlength="50" value="<?php echo esc_attr($view->data->ai_caption_postfix); ?>" />
+        </content>
+
       </setting>
 
       <!--- ## Post Title -->
@@ -242,6 +271,17 @@ if (! defined('ABSPATH')) {
           <textarea name="ai_post_title_context" maxlength="500"><?php echo esc_textarea($view->data->ai_post_title_context); ?></textarea>
 
         </content>
+
+        <content class='nextline ai_gen_posttitle is-advanced'>
+          <name><?php _e('Prefix for image title:', 'shortpixel-image-optimiser'); ?></name>
+          <input type="text" name="ai_post_title_prefix" maxlength="50" value="<?php echo esc_attr($view->data->ai_post_title_prefix); ?>" />
+        </content>
+
+        <content class='nextline ai_gen_posttitle is-advanced'>
+          <name><?php _e('Postfix for image title:', 'shortpixel-image-optimiser'); ?></name>
+          <input type="text" name="ai_post_title_postfix" maxlength="50" value="<?php echo esc_attr($view->data->ai_post_title_postfix); ?>" />
+        </content>
+
         <warning class="ai_overwrite_warning">
            <message>
           <?php _e('SPIO may still write image title when preserving data, since image title is always set', 'shortpixel-image-optimiser'); ?>
@@ -277,6 +317,16 @@ if (! defined('ABSPATH')) {
           <name><?php _e('Additional context for filename generation: ', 'shortpixel-image-optimiser'); ?></name>
           <textarea name="ai_filename_context" maxlength="500"><?php echo esc_textarea($view->data->ai_filename_context); ?></textarea>
 
+        </content>
+
+        <content class='nextline ai_gen_filename is-advanced'>
+          <name><?php _e('Prefix for filename:', 'shortpixel-image-optimiser'); ?></name>
+          <input type="text" name="ai_filename_prefix" maxlength="50" value="<?php echo esc_attr($view->data->ai_filename_prefix); ?>" />
+        </content>
+
+        <content class='nextline ai_gen_filename is-advanced'>
+          <name><?php _e('Postfix for filename:', 'shortpixel-image-optimiser'); ?></name>
+          <input type="text" name="ai_filename_postfix" maxlength="50" value="<?php echo esc_attr($view->data->ai_filename_postfix); ?>" />
         </content>
 
         <content class='nextline ai_gen_filename is-advanced'>

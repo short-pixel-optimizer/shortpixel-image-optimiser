@@ -239,6 +239,7 @@ class OptimizeAiController extends OptimizerBase
          $aiData['filebase'] = $aiData['original_filebase']; 
     }
     
+    $settings = \wpSPIO()->settings();
 
     // removed  'post_title' here because in image title doens't look good. 
     $textItems = ['alt', 'caption', 'description'];
@@ -255,6 +256,29 @@ class OptimizeAiController extends OptimizerBase
             $aiData[$textItem] = ''; 
          }
     }   
+
+    // Apply prefix and postfix to each field
+    $prefixPostfixMap = [
+        'alt' => ['prefix' => 'ai_alt_prefix', 'postfix' => 'ai_alt_postfix'],
+        'caption' => ['prefix' => 'ai_caption_prefix', 'postfix' => 'ai_caption_postfix'],
+        'description' => ['prefix' => 'ai_description_prefix', 'postfix' => 'ai_description_postfix'],
+        'post_title' => ['prefix' => 'ai_post_title_prefix', 'postfix' => 'ai_post_title_postfix'],
+    //   'filebase' => ['prefix' => 'ai_filename_prefix', 'postfix' => 'ai_filename_postfix'],
+    ];
+
+    foreach ($prefixPostfixMap as $field => $affixes) {
+        if (isset($aiData[$field]) && !empty($aiData[$field])) {
+            $prefix = $settings->{$affixes['prefix']};
+            $postfix = $settings->{$affixes['postfix']};
+            
+            if (!empty($prefix)) {
+                $aiData[$field] = $prefix . ' ' . $aiData[$field];
+            }
+            if (!empty($postfix)) {
+                $aiData[$field] = $aiData[$field] . ' ' . $postfix;
+            }
+        }
+    }
 
     // Re-add Result after formatting so it passed back
     //$qItem->addResult(['aiData' => $aiData]);
