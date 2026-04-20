@@ -27,7 +27,11 @@ class WPML
 
         if (is_array($languages) && isset($languages['locale']))
 		{
-			$data['languages'] = $languages['locale'];
+            // This can happen if WPML is not fully configured. 
+            if (false === is_null($languages['locale']) && false !== $languages['locale'])
+            {
+			    $data['languages'] = $languages['locale'];
+            }
 		}
                 
         $data = apply_filters('shortpixel/wpml/paramlist', $data); 

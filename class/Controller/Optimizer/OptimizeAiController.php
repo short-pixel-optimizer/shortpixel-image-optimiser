@@ -813,9 +813,9 @@ public function formatGenerated($generated, $current, $original, $isPreview = fa
        }
        if (is_int($value) && in_array($value, $statii))
        {
-         // If preview don't fall back on other stuff, just leave it empty. 
          
-         $value = ''; 
+         // Preview needs to know if generated or excluded. -3 should be capture in the UX!
+         $value = -3; 
          $generated[$name] = $value;
        }
   } 

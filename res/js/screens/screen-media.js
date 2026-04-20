@@ -465,10 +465,17 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			var newDescription = aiData.description;
 			var newTitle = aiData.post_title;
 		}
+		
+		console.log(aiData);
 
-		if (typeof newAltText !== 'undefined' || newAltText < 0)
+		if (typeof newAltText !== 'undefined')
 		{
 			var inputs = this.altInputNames;
+
+			if (typeof newAltText == 'number')
+			{
+				newAltText = ''; 
+			}
 	
 			for (var i = 0; i < inputs.length; i++)
 			{
@@ -488,9 +495,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 					   {
 						   altInput.innerText = newAltText; 	
 					   }
-					   
 				   }
-					   
 			}
 		}
 		// edit media screen
@@ -504,8 +509,13 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			postTitleFields.push('title');
 		 }
 		 
-		 if (typeof newCaption !== 'undefined' || newCaption < 0)
+		 if (typeof newCaption !== 'undefined')
 		 {
+			if (typeof newCaption === 'number')
+			{
+				newCaption = ''; 
+			}
+
 			for (var i = 0; i < captionFields.length; i++)
 			{
 				let captionField = document.getElementById(captionFields[i]); 
@@ -516,8 +526,12 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			}
 		 }
 
-		 if (typeof newDescription !== 'undefined' || newDescription < 0)
+		 if (typeof newDescription !== 'undefined')
 		 {
+			if (typeof(newDescription) === 'number')
+			{
+				newDescription = ''; 
+			}
 			for (var i = 0; i < descriptionFields.length; i++)
 			{
 				let descriptionField = document.getElementById(descriptionFields[i]);
@@ -528,8 +542,10 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			}
 		 }
 
-		 if (typeof newTitle !== 'undefined' || newTitle < 0)
+		 if (typeof newTitle !== 'undefined' && typeof newTitle !== 'number')
 		 {
+
+
 			for (var i = 0; i < postTitleFields.length; i++)
 			{
 				 let titleField = document.getElementById(postTitleFields[i]); 

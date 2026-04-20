@@ -207,10 +207,10 @@ class ApiController extends RequestManager
 			// Check for known errors. : https://shortpixel.com/api-docs
 			Log::addDebug('Api Response Status :' . $status->Code);
 			switch ($status->Code) {
-				case -2:   // Wrong URL for ApiKey
 				case -102: // Invalid URL
 				case -105: // URL missing
 				case -106: // Url is inaccessible
+				case -108:   // Wrong URL for ApiKey
 				case -111: // File too big ( for upscale ) 
 				case -113: // Too many inaccessible URLs
 				case -201: // Invalid image format
@@ -218,7 +218,7 @@ class ApiController extends RequestManager
 				case -203: // Could not download file
 				case -207: // Invalid parameters
 					return $this->returnFailure(self::STATUS_ERROR, $status->Message);
-					break;
+				break;
 				case -403: // Quota Exceeded
 				case -301: // The file is larger than remaining quota
 					// legacy
@@ -226,20 +226,21 @@ class ApiController extends RequestManager
 					QuotaController::getInstance()->setQuotaExceeded();
 
 					return $this->returnRetry(self::STATUS_QUOTA_EXCEEDED, __('Quota exceeded.', 'shortpixel-image-optimiser'));
-					break;
+				break;
 			    case -302: 
 					return $this->returnFailure(self::STATUS_FAIL, __('File no longer available on remote system', 'shortpixel-image-optimiser'));
 				break; 
 				case -306:
 					return $this->returnFailure(self::STATUS_FAIL, __('Files need to be from a single domain per request.', 'shortpixel-image-optimiser'));
-					break;
+				break;
 				case -401: // Invalid Api Key
 				case -402: // Wrong API key
 					return $this->returnFailure(self::STATUS_NO_KEY, $status->Message);
-					break;
+				break;
 				case -404: // Maximum number in optimization queue (remote)
 					//return array("Status" => self::STATUS_QUEUE_FULL, "Message" => $APIresponse['Status']->Message);
 					return $this->returnRetry(self::STATUS_QUEUE_FULL, $status->Message);
+				break;
 				case -500: // API in maintenance.
 					//return array("Status" => self::STATUS_MAINTENANCE, "Message" => $APIresponse['Status']->Message);
 					return $this->returnRetry(self::STATUS_MAINTENANCE, $status->Message);

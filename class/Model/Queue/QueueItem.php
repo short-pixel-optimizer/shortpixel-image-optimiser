@@ -387,6 +387,7 @@ class QueueItem
       $this->data->action = 'optimize'; 
 
       $optimizeData = $imageModel->getOptimizeData();
+      Log::addTemp('OptimizeData', $optimizeData); 
       $urls = $optimizeData['urls'];
 
       list($u, $baseCount) = $imageModel->getCountOptimizeData('thumbnails');

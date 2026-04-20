@@ -169,6 +169,7 @@ class AiDataModel
 
             $fs = \wpSPIO()->filesystem(); 
             $mediaItem = $fs->getMediaImage($this->attach_id); 
+
             if (false !== $mediaItem && true === $mediaItem->hasOriginal())
             {
                 $mediaItem = $mediaItem->getOriginalFile(); 
