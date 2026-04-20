@@ -84,7 +84,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
           return $fields;
       }
 
-      public function dometaBox($post)
+       public function dometaBox($post)
       {
           $this->post_id = $post->ID;
 					$this->view->debugInfo = array();

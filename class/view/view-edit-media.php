@@ -42,9 +42,13 @@ if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->de
   <?php if (property_exists($this->view, 'text')): ?>
   <div class='sp-column-info'>
 		<?php
-			    // burger if needed.F
+			    // burger if needed.
 			    echo '<p>' . $this->view->list_actions . '</p>'; ?>
-<p><?php echo wp_kses_post($this->view->text); ?></p></div>
+<p><?php 
+// Here no escape, this has javascript links in them via UiHelper - actions 
+echo $this->view->text;
+
+?></p></div>
 
 <?php endif; ?>
 

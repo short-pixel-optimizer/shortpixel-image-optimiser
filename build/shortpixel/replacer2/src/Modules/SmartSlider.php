@@ -13,6 +13,7 @@ class SmartSlider
 
     protected $base_url;
     protected $subdir;
+    protected $basedir; 
 
     public static function getInstance($replacer)
     {
@@ -35,7 +36,11 @@ class SmartSlider
         $uploads_dir = \wp_upload_dir(); 
 
         $this->base_url = str_replace($uploads_dir['subdir'], '', $uploads_dir['baseurl']); 
+        /** THIS fatally doesn't work because subdir in uploads dir is *current month*, not the month of the file-upload per-se 
+         *  So would need to find a way to get this part without current upload dir. 
+         */
         $this->subdir = $uploads_dir['subdir'];
+        $this->basedir = $uploads_dir['basedir']; 
 
         add_action('shortpixel/replacer/replace_urls', [$this, 'doReplaceQueries'], 10, 3);
     }
@@ -46,12 +51,14 @@ class SmartSlider
         global $wpdb; 
         $table = $wpdb->prefix . 'nextend2_smartslider3_slides'; 
 
-        $base_url = $this->fixUploadString($base_url);
-        $search_urls = array_map([$this, 'fixUploadString'], $search_urls); 
-        $replace_urls = array_map([$this, 'fixUploadString'], $replace_urls); 
+        $base_url = $this->convertToFormat($base_url);
+        $search_urls = array_map([$this, 'convertToFormat'], $search_urls); 
+        $replace_urls = array_map([$this, 'convertToFormat'], $replace_urls); 
 
+        Log::addTemp('BaseURL', $base_url); 
+        Log::addTemp('SearchU', $search_urls);
+        
         $select_sql = 'SELECT * FROM %i where %i like %s OR %i like %s'; 
-
 
             $prepared_select = $wpdb->prepare($select_sql, [
                 $table, 
@@ -97,6 +104,24 @@ class SmartSlider
       //  $value = str_replace($this->base_url, '$uploads$', $value); 
         return $value; 
     }
+
+    protected function convertToFormat($relpath) {
+        $basedir = $this->basedir; 
+    // Get just the directory name of the uploads folder from basedir
+    $uploadsDirName = basename($basedir);  // 'uploads'
+    
+    // Find where uploads/ appears in relpath and get everything after it
+    $uploadsPos = strpos($relpath, $uploadsDirName . '/');
+    
+    if ($uploadsPos !== false) {
+        // Get the portion after 'uploads/'
+        $filePortion = substr($relpath, $uploadsPos + strlen($uploadsDirName) + 1);
+        $result = '$upload$/' . $filePortion;
+        return $result;
+    }
+    
+    return null; // Path doesn't contain uploads directory
+}
 
     
 }
