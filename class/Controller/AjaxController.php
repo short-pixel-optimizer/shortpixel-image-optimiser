@@ -1265,7 +1265,7 @@ class AjaxController
 				// If is done and is error, bail out. 
 				if (true === $result->is_error) 
 				{
-					$this->send($result);
+					$this->send($result->forReturn());
 				}
 				
 				if ('requestAlt' === $state)
@@ -1300,7 +1300,7 @@ class AjaxController
 					
 					if ($result->is_done)
 					{
-					 $this->send($result); 
+					 $this->send($result->forReturn()); 
 					 break;
 					}
 				}
@@ -1314,6 +1314,7 @@ class AjaxController
 
 			if ($i >= 30) // safeguard. 
 			{
+				Log::addError('Ai Preview bailed after safeguard! ');
 				$this->send((object) $result_json);
 				break; 
 			}

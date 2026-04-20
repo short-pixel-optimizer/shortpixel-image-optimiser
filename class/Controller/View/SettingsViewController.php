@@ -905,7 +905,7 @@ class SettingsViewController extends \ShortPixel\ViewController
         }
 
         
-				// Field that are in form for other purpososes, but are not part of model and should not be saved.
+				// Field that are in form for other purposes, but are not part of model and should not be saved.
 					$ignore_fields = array(
 							'display_part',
 							'save-bulk',
@@ -943,7 +943,7 @@ class SettingsViewController extends \ShortPixel\ViewController
               'login_apiKey',
               'ajaxSave',
               'ai_preview_image_id',
-              'offload-active', 
+              'offload-active',
 
 					);
 
