@@ -77,6 +77,7 @@ class SmartSlider
                 $row_id = $data['id']; 
                 $thumbnail = $this->replacer->replaceContent($data['thumbnail'], $search_urls, $replace_urls); 
                 $params = $this->replacer->replaceContent($data['params'], $search_urls, $replace_urls); 
+                $slide = $this->replacer->replaceContent($data['slide'], $search_urls, $replace_urls); 
 
                 if ($thumbnail != $data['thumbnail'])
                 {
@@ -86,7 +87,11 @@ class SmartSlider
                 {
                     $update['params'] = $params; 
                 }
-                
+                if ($slide !== $data['slide'])
+                {
+                    $update['slide'] = $slide; 
+                }
+
                 Log::addTemp('Update Ar', $update);
                 if (count($update) > 0)
                 {
