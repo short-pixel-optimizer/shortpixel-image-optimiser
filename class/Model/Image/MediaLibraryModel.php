@@ -1942,7 +1942,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		$cleanRestore = true;
 		$wpmeta = wp_get_attachment_metadata($this->get('id'));
+		$restored = [];
 
+		
 		// Get them early in case the filename changes ( ie png to jpg ) because it will stop getting it.
 		$WPMLduplicates = $this->getWPMLDuplicates();
 
@@ -1959,14 +1961,25 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		if ($was_converted) {
 			if ($is_main_restore_ok) {
 
+				// The scaled needs to be restored before the replacer can work
+				if ($this->isScaled()) {
+					$originalFile = $this->getOriginalFile();
+					if ($originalFile->isRestorable()) {
+					$restored[$originalFile->getFileBase()] = true; 	
+					$bool = $originalFile->restore();		
+					}
+				}
+
 				$mediaModel = clone $this; 
 				$mediaModel->getMeta()->convertMeta()->fromClass($convertMeta);
 
 				$converter = Converter::getConverter(clone $this); // ugly, but no way around.
 				
+				// @ TODO !! The problem lies here, the restoreConversion doesn't change the filepath back to PNG as it used to.
 				$bool = $this->restoreConversion($convertMeta, $converter);
 
 				$wpmeta = wp_get_attachment_metadata($this->get('id')); // png2jpg resets WP metadata.
+
 				$this->resetStatus();
 				$this->setFileInfo();
 			} else {
@@ -1994,8 +2007,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		if (! $bool) {
 			$cleanRestore = false;
 		}
-
-		$restored = [];
 
 		foreach ($this->thumbnails as $thumbObj) {
 			$filebase = $thumbObj->getFileBase();
@@ -2057,7 +2068,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		if ($this->isScaled()) {
 			$originalFile = $this->getOriginalFile();
-			if ($originalFile->isRestorable()) {
+			if ($originalFile->isRestorable() && false === isset($restored[$originalFile->getFileBase()]) ) {
 				$bool = $originalFile->restore();
 			}
 		}
@@ -2088,7 +2099,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$backupModel = $this->getBackupModel(); 
 		if (true === $backupModel->needsRegenerate())
 		{
-			
 			$this->generateThumbnails();
 			$wpmeta = wp_get_attachment_metadata($this->get('id'));
 			$cleanRestore = true; 
@@ -2760,6 +2770,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			'id' => $this->id,
 			'exists' => ($this->exists()) ? 'yes' : 'no',
 			'is_virtual' => ($this->is_virtual()) ? 'yes' : 'no',
+			'fullpath' => $this->getFullPath(), 
 			'width' => $this->get('width'),
 			'height' => $this->get('height'),
 			'image_meta' => $this->image_meta,

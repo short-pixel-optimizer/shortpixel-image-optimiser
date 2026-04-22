@@ -166,11 +166,10 @@ class LocalBackupModel extends BackupModel
 				 }
 
          // Attempt for easy support of different file-extensions / conversions, move backupfile back based on it's own file
-
-         
 				$bool = $backupFile->move($targetFile);
+
         return $bool;
-     }
+    }
 
     public function getBackupData()
     {
@@ -198,8 +197,6 @@ class LocalBackupModel extends BackupModel
       $is_main_file = $sourceFile->get('is_main_file');
       $imageName = $this->getBackupname($sourceFile->get('name'), $sourceFile);
       $imageType = $sourceFile->get('imageType');
-
-      
 
       if (isset($this->backup_files[$imageName]))
       {

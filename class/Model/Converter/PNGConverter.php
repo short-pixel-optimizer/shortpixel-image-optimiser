@@ -322,7 +322,7 @@ class PNGConverter extends MediaLibraryConverter
 			);
 			$fs = \wpSPIO()->filesystem();
 
-			$this->setupReplacer();
+			$this->setupReplacer(); // Sets the source for Replacer. 
 
 			$oldFileName = $this->imageModel->getFileName(); // Old File Name, Still .jpg
 			$newFileName =  $this->imageModel->getFileBase() . '.png';
@@ -336,9 +336,9 @@ class PNGConverter extends MediaLibraryConverter
 			$fsNewFile = $fs->getFile($this->imageModel->getFileDir() . $newFileName);
 
 			$this->newFile = $fsNewFile;
-			$this->setTarget($fsNewFile);
+			$this->setTarget($fsNewFile); // Sets the target base file 
 
-			$this->updateMetaData($params);
+			$this->updateMetaData($params); // Triggers update of new Metadata - Sets the targets 
 			$result = $this->replacer->replace();
 
 			$fs->flushImageCache();

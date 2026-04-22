@@ -7,6 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use ShortPixel\Controller\Backup\BackupController;
 use ShortPixel\Helper\DownloadHelper;
+use ShortPixel\Model\File\FileModel;
 use ShortPixel\Model\Image\ImageModel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
@@ -23,7 +24,7 @@ abstract class BackupModel
     protected $controller; 
     protected $mediaItem; 
 
-    protected $isConverted; 
+    protected $isConverted;  // Was the file converted? 
 
     abstract protected function getBackupDirectory($create = false);
     abstract public function createBackupFile(ImageModel $sourceFile) : bool;
@@ -33,6 +34,7 @@ abstract class BackupModel
     abstract public function getBackupFile(ImageModel $sourceFile);
     abstract public function backupIsMain();
     abstract public function getMainBackupFile(); 
+    
 
     /* Implement below functions, these things can be done all at the same time. Use Model as 'all' loop. */
     abstract protected function loadAll(); 
@@ -100,8 +102,10 @@ abstract class BackupModel
 			return $sourceFile->getFileName();
 		} 
         */
-        // Assertion here that for convert-types, there is no scaled- happening
+        // Assertion here that for convert-types, there is no scaled- happening - Wrong! 
+        
         $mainFile = $this->mediaItem;
+        
 
 		if (true === $this->isConverted) {
         
@@ -142,5 +146,6 @@ abstract class BackupModel
 
         return $backupFileName; 
 	}
+
 
 } // class 

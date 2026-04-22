@@ -55,9 +55,9 @@ class SmartSlider
         $search_urls = array_map([$this, 'convertToFormat'], $search_urls); 
         $replace_urls = array_map([$this, 'convertToFormat'], $replace_urls); 
 
-        Log::addTemp('BaseURL', $base_url); 
-        Log::addTemp('SearchU', $search_urls);
-        
+        Log::addTemp('BaseURL', $base_url);
+        Log::addTEmp('SearchURLS', $search_urls);
+
         $select_sql = 'SELECT * FROM %i where %i like %s OR %i like %s'; 
 
             $prepared_select = $wpdb->prepare($select_sql, [
@@ -73,11 +73,11 @@ class SmartSlider
             foreach($results as $index => $data)
             {
 
+                $update = []; // prevent hanging updates from previous records
                 $row_id = $data['id']; 
                 $thumbnail = $this->replacer->replaceContent($data['thumbnail'], $search_urls, $replace_urls); 
                 $params = $this->replacer->replaceContent($data['params'], $search_urls, $replace_urls); 
 
-                $update = []; 
                 if ($thumbnail != $data['thumbnail'])
                 {
                     $update['thumbnail'] = $thumbnail; 
@@ -116,7 +116,7 @@ class SmartSlider
     if ($uploadsPos !== false) {
         // Get the portion after 'uploads/'
         $filePortion = substr($relpath, $uploadsPos + strlen($uploadsDirName) + 1);
-        $result = '$upload$/' . $filePortion;
+        $result = '$uploads$/' . $filePortion;
         return $result;
     }
     
