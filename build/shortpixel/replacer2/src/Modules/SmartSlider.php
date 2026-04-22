@@ -58,13 +58,15 @@ class SmartSlider
         Log::addTemp('BaseURL', $base_url);
         Log::addTEmp('SearchURLS', $search_urls);
 
-        $select_sql = 'SELECT * FROM %i where %i like %s OR %i like %s'; 
+        $select_sql = 'SELECT * FROM %i where %i like %s OR %i like %s OR %i LIKE %s'; 
 
             $prepared_select = $wpdb->prepare($select_sql, [
                 $table, 
                 'thumbnail', 
                 '%' . $base_url . '%', 
                 'params', 
+                '%' . $base_url . '%',
+                'slide', 
                 '%' . $base_url . '%',
             ]);              
                         
