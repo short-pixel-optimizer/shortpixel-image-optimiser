@@ -21,6 +21,8 @@ class WPQ implements Queue
   // statistics and status
   protected $current_ask = 0;
 
+  protected static $itemCache = []; // cache items to prevent multiple database calls
+
   /*
   * @param qName - Name of the Queue requested by parent
   */
@@ -291,6 +293,7 @@ class WPQ implements Queue
 			 else
 			 {
 			 	$updated += $this->DataProvider->itemUpdate($item, array('status' => ShortQ::QSTATUS_WAITING, 'tries' => $item->tries));
+        $this->clearItemcache($item);
 			 }
     }
 
@@ -324,6 +327,7 @@ class WPQ implements Queue
       $this->saveStatus();
 
       $this->DataProvider->itemUpdate($item, array('status' => ShortQ::QSTATUS_DONE));
+      $this->clearItemCache($item); 
   }
 
   public function itemFailed(Item $item, $fatal = false)
@@ -347,6 +351,7 @@ class WPQ implements Queue
 
     $item->tries++;
     $this->DataProvider->itemUpdate($item, array('status' => $status, 'tries' => $item->tries));
+    $this->clearItemCache($item); 
 
 		$this->saveStatus();
   }
@@ -357,14 +362,54 @@ class WPQ implements Queue
       {
           return false;
       }
+      $this->clearItemCache($item); 
 
       return $this->DataProvider->itemUpdate($item, array('value' => $item->getRaw('value') ));
   }
 
   public function getItem($item_id)
   {
-     return $this->DataProvider->getItem($item_id);
+     if (isset(self::$itemCache[$item_id]))
+     {
+       return self::$itemCache[$item_id];
+     }
 
+     $item =  $this->DataProvider->getItem($item_id);
+
+     if (false !== $item)
+     {
+        self::$itemCache[$item->$item_id]  = $item; 
+     }
+     
+     return $item;
+
+  }
+
+  /** Clear Item from cache (if possible)
+   * 
+   * This clears the item from the cache which should be done when the status of the item changes. 
+   * @param object|int $item
+   * @return void 
+   */
+  protected function clearItemCache($item)
+  {
+     if (is_object($item))
+     {
+       $item_id = $item->item_id; 
+     }
+     elseif(is_int($item))
+     {
+       $item_id = $item; 
+     }
+     else
+     {
+      return;
+     }
+
+     if (isset(self::$itemCache[$item_id]))
+     {
+        unset(self::$itemCache[$item_id]); 
+     }
   }
 
   public function hasItems()
@@ -578,6 +623,8 @@ class WPQ implements Queue
       foreach($error_items as $errItem)
       {
         $errid = $errItem->item_id;
+        
+
         if ($errItem->tries < $this->options->retry_limit)
         {
           //$retry_array = $erritem->id;
@@ -587,6 +634,7 @@ class WPQ implements Queue
            $this->DataProvider->itemUpdate($errItem, array('status' => ShortQ::QSTATUS_FATAL));
 
         }
+        $this->clearItemCache($errItem); 
       }
     } // tasks_errors
 

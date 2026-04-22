@@ -116,7 +116,7 @@ class SmartSlider
     if ($uploadsPos !== false) {
         // Get the portion after 'uploads/'
         $filePortion = substr($relpath, $uploadsPos + strlen($uploadsDirName) + 1);
-        $result = '$uploads$/' . $filePortion;
+        $result = '$upload$/' . $filePortion;
         return $result;
     }
     
