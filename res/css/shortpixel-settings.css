@@ -707,7 +707,7 @@ div.spio-modal-title {
   font-weight: 700;
 }
 .wrap.is-shortpixel-settings-page .setting-tab input[name=resizeWidth], .wrap.is-shortpixel-settings-page .setting-tab input[name=resizeHeight] {
-  width: 100px;
+  width: 100px !important;
   background: url("../images/icon/arrows-left-right.svg") 4px center no-repeat #fff;
   padding-left: 25px;
   border: 1px solid #1ABDCA;
