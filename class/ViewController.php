@@ -32,12 +32,7 @@ class ViewController extends Controller
 
   public static function init()
   {
-	 /*
-	 Not sure why this is here
-	 foreach (get_declared_classes() as $class) {
-      if (is_subclass_of($class, 'ShortPixel\Controller') )
-        self::$controllers[] = $class;
-		} */
+
   }
 
   public function __construct()

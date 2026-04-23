@@ -34,6 +34,7 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
   {
     parent::__construct();
 
+
     $fs = \wpSPIO()->filesystem();
 
 		$this->controller = OtherMediaController::getInstance();

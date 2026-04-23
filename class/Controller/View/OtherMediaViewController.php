@@ -26,6 +26,8 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 
 			protected static $instance;
 
+    	const OTHER_MEDIA_PER_PAGE_OPTION = 'shortpixel_custom_media_per_page';
+
       // Pagination .
       protected $items_per_page = 20;
       protected $currentPage = 1;
@@ -52,6 +54,8 @@ class OtherMediaViewController extends \ShortPixel\ViewController
         $this->search =  (isset($_GET["s"]) && strlen($_GET["s"]) > 0)  ? sanitize_text_field( wp_unslash($_GET['s'])) : false;
 				// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
 				$this->show_hidden = isset($_GET['show_hidden']) ? sanitize_text_field(wp_unslash($_GET['show_hidden'])) : false;
+
+        $this->items_per_page = $this->loadScreenPerPageOption(self::OTHER_MEDIA_PER_PAGE_OPTION, $this->items_per_page );
 
       }
 
@@ -114,6 +118,22 @@ class OtherMediaViewController extends \ShortPixel\ViewController
         return $headings;
       }
 
+         	public function addOtherMediaScreenOptions() {
+      add_screen_option( 'per_page', array(
+        'label'   => __( 'Items per page', 'shortpixel-image-optimiser' ),
+        'default' => 20,
+        'option'  => self::OTHER_MEDIA_PER_PAGE_OPTION,
+      ) );
+  	}
+
+    public function setScreenOption( $status, $option, $value ) {
+      if ( self::OTHER_MEDIA_PER_PAGE_OPTION === $option ) {
+        return intval( $value );
+      }
+
+      return $status;
+    }
+
       protected function getItems()
       {
           $fs = \wpSPIO()->filesystem();
@@ -144,6 +164,22 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 
           return $items;
       }
+
+     protected function loadScreenPerPageOption( $option_name, $default = 20 )
+    {
+      if ( ! function_exists( 'get_user_option' ) ) {
+          return $default;
+      }
+
+      $value = get_user_option( $option_name );
+      $value = intval( $value );
+
+      if ( $value > 0 ) {
+          return $value;
+      }
+
+      return $default;
+    }
 
       protected function getItemFolders($items)
       {

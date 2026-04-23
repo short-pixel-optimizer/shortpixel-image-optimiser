@@ -20,7 +20,7 @@ use ShortPixel\NextGenController as NextGenController;
 
 use ShortPixel\Controller\Queue\MediaLibraryQueue as MediaLibraryQueue;
 use ShortPixel\Controller\Queue\CustomQueue as CustomQueue;
-
+use ShortPixel\Controller\View\OtherMediaViewController;
 use ShortPixel\Helper\InstallHelper as InstallHelper;
 use ShortPixel\Helper\UiHelper as UiHelper;
 
@@ -31,6 +31,7 @@ use ShortPixel\Model\SettingsModel as SettingsModel;
  * This class is meant for: WP Hooks, init of runtime and Controller Routing.
  */
 class ShortPixelPlugin {
+
 
 	private static $instance;
 	protected static $modelsLoaded = array(); // don't require twice, limit amount of require looksups..
@@ -174,6 +175,7 @@ class ShortPixelPlugin {
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_styles' ) ); // admin styles
 		add_action( 'admin_enqueue_scripts', array( $this, 'load_admin_scripts' ), 90 ); // loader via route.
 		add_action( 'enqueue_block_assets', array($this, 'load_admin_scripts'), 90);
+
 		// defer notices a little to allow other hooks ( notable adminnotices )
 
 		$queueController = new QueueController();
@@ -258,6 +260,9 @@ class ShortPixelPlugin {
 		if (is_admin())
 		{
 			  add_filter('pre_get_posts', array($admin, 'filter_listener'));
+
+			add_action( 'load-media_page_wp-short-pixel-custom', array( OtherMediaViewController::getInstance(), 'addOtherMediaScreenOptions' ) );
+		    add_filter( 'set-screen-option', array( OtherMediaViewController::getInstance() , 'setScreenOption' ), 10, 3 );
 		}
 
 		if ($this->env()->is_multisite)
@@ -284,6 +289,8 @@ class ShortPixelPlugin {
 		add_action( 'wp_ajax_shortpixel_settingsRequest', array( AjaxController::getInstance(), 'settingsRequest'));
 
 	}
+
+
 
 	/** Hook in our admin pages */
 	public function admin_pages() {
