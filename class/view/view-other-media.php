@@ -23,14 +23,13 @@ $this->loadView('custom/part-othermedia-top');
   <span>
     <select name='bulk-actions'>
      <option><?php _e('Bulk Actions', 'shortpixel-image-optimiser'); ?></option>
-     <option value='optimize'><?php _e('Optimize','shortpixel-image-optimiser'); ?></option>
-     <option value='restore'><?php _e('Restore', 'shortpixel-image-optimiser'); ?></option>
-     <option value="mark-completed"><?php _e('Mark completed', 'shortpixel-image-optimiser'); ?></option>
+
+    <?php $this->printBulkActions(); ?>
    </select> <button class='button' type='button' name='doBulkAction'><?php _e('Apply', 'shortpixel-image-optimiser'); ?></button>
   </span>
 
   <span class='custom-filter'>
-    <form method="get" action="<?php echo $this->url ?>" >
+    <form method="get" action="<?php echo esc_attr($this->url) ?>" >
       <input type='hidden' name='page' value='wp-short-pixel-custom'>
     <?php $this->printFilter(); ?>
      <button class='button' type='submit'><?php _e('Filter', 'shortpixel-image-optimiser'); ?></button>
@@ -88,6 +87,8 @@ $this->loadView('custom/part-othermedia-top');
               $allActions = array_merge(UiHelper::getActions($item), UiHelper::getListActions($item));
 
               $checkBoxActions = array();
+              $checkBoxData = []; 
+
               if (array_key_exists('optimize', $allActions))
               {
                   $checkBoxActions[] = 'is-optimizable';
@@ -97,12 +98,16 @@ $this->loadView('custom/part-othermedia-top');
                   $checkBoxActions[] = 'is-restorable';
               }
 
+              if ($item->isOptimized())
+              {
+                 $checkBoxData['type'] = $item->getMeta('compressionType');
+              }
+
               $filesize = $item->getFileSize();
               $display_date = $this->getDisplayDate($item);
               $folder_id = $item->get('folder_id');
 
               $rowActions = $this->getRowActions($item);
-
 
               $folder = isset($folders[$folder_id]) ? $folders[$folder_id] : false;
               $media_type = ($folder && $folder->get('is_nextgen')) ? __('Nextgen', 'shortpixel-image-optimiser') : __('Custom', 'shortpixel_image_optimiser');
@@ -113,8 +118,17 @@ $this->loadView('custom/part-othermedia-top');
               if (count($checkBoxActions) > 0)
               $item_class = ' class="' . implode(' ', $checkBoxActions) . '" ';
 
+              $item_data = ''; 
+              if (count($checkBoxData) > 0) 
+              {
+                 foreach($checkBoxData as $name => $value )
+                  {
+                     $item_data .= ' data-' . esc_attr($name) . '="' . esc_attr($value) . '" ';
+                  }
+              }
+
             ?>
-            <span><input type='checkbox' name='select[]' value="<?php echo esc_attr($item->get('id')); ?>" <?php echo $item_class ?>/></span>
+            <span><input type='checkbox' name='select[]' value="<?php echo esc_attr($item->get('id')); ?>" <?php echo $item_class; echo $item_data ?>/></span>
             <span><a href="<?php echo esc_attr($img_url); ?>" target="_blank">
                 <div class='thumb' <?php if($is_heavy)
 								{

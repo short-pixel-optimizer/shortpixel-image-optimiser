@@ -360,6 +360,7 @@ The screen IDS seem to be have changed, trying a more definitive solution
 
 
 
+  /* Seems not in use 
   public function updateImageSize($nggId, $path) {
 
       $image = $this->getNGImageByID($nggId);
@@ -369,7 +370,7 @@ The screen IDS seem to be have changed, trying a more definitive solution
       $image->meta_data = array_merge($image->meta_data, $size_meta);
       $image->meta_data['full'] = $size_meta;
       $this->saveToNextGen($image);
-  }
+  } */
 
   protected function getNGImageByID($nggId)
   {
@@ -388,6 +389,7 @@ The screen IDS seem to be have changed, trying a more definitive solution
   }
 
   /* @param NextGen Image */
+  /* Seems not in use 
   protected function saveToNextGen($image)
   {
     if (true === $this->is_legacy)
@@ -402,7 +404,7 @@ The screen IDS seem to be have changed, trying a more definitive solution
       $imageMapper->save_entity($image);
     }
 
-  }
+  } */
 
   protected function getImageAbspath($image, $size = 'full') {
 

@@ -17,6 +17,7 @@ use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Controller\Queue\CustomQueue as CustomQueue;
 
 use ShortPixel\Helper\UiHelper as UiHelper;
+use ShortPixel\Model\Image\CustomImageModel;
 
 // Future contoller for the edit media metabox view.
 class OtherMediaViewController extends \ShortPixel\ViewController
@@ -134,7 +135,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
       return $status;
     }
 
-      protected function getItems()
+      protected function getItems() : array
       {
           $fs = \wpSPIO()->filesystem();
 
@@ -561,6 +562,21 @@ class OtherMediaViewController extends \ShortPixel\ViewController
             }
             echo "</select>";
 
+      }
+
+      public function printBulkActions()
+      {
+          $bulkActions =  ['shortpixel-optimize' => __('Optimize','shortpixel-image-optimiser'),
+          'shortpixel-restore' => __('Restore', 'shortpixel-image-optimiser'), 
+          'shortpixel-lossy' => __( 'Re-optimize Lossy', 'shortpixel-image-optimiser' ), 
+          'shortpixel-glossy' => __( 'Re-optimize Glossy', 'shortpixel-image-optimiser' ), 
+          'shortpixel-lossless' => __( 'Re-optimize Lossless', 'shortpixel-image-optimiser' ),   
+          'shortpixel-mark-completed' => __('Mark completed', 'shortpixel-image-optimiser'),
+          ];
+
+          array_walk($bulkActions, function ($text, $name) {
+              echo '<option value="' . esc_attr($name) . '">' . esc_html($text) . '</option>';
+          });
       }
 
 

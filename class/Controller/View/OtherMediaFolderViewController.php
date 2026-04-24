@@ -122,7 +122,6 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
      ));
 
      $actions = array_merge($actions, $refreshAction, $removeAction, $showFilesAction);
-//     $actions = array_merge($actions, );
 
      return $actions;
   }
