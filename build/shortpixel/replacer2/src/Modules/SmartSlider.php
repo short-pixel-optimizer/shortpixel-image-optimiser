@@ -55,9 +55,6 @@ class SmartSlider
         $search_urls = array_map([$this, 'convertToFormat'], $search_urls); 
         $replace_urls = array_map([$this, 'convertToFormat'], $replace_urls); 
 
-        Log::addTemp('BaseURL', $base_url);
-        Log::addTEmp('SearchURLS', $search_urls);
-
         $select_sql = 'SELECT * FROM %i where %i like %s OR %i like %s OR %i LIKE %s'; 
 
             $prepared_select = $wpdb->prepare($select_sql, [
@@ -94,7 +91,6 @@ class SmartSlider
                     $update['slide'] = $slide; 
                 }
 
-                Log::addTemp('Update Ar', $update);
                 if (count($update) > 0)
                 {
                     $res = $wpdb->update($table, $update, ['id' => $row_id], '%s', '%d' );

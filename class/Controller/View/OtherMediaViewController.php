@@ -118,7 +118,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
         return $headings;
       }
 
-         	public function addOtherMediaScreenOptions() {
+        	public function addOtherMediaScreenOptions() {
       add_screen_option( 'per_page', array(
         'label'   => __( 'Items per page', 'shortpixel-image-optimiser' ),
         'default' => 20,
