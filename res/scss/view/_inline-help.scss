@@ -11,6 +11,9 @@ i.documentation {
   &.down {
     top: 10px;
   }
+  &.right {
+    float: right;
+  }
 } // question
 
 .update-nag {

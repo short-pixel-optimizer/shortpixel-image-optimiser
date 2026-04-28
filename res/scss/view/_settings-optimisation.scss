@@ -54,8 +54,8 @@
 			}
 
 		}
-		// EXIF Selector
-		select[name="exif_ai"]
+		// EXIF Selector & Backup auto-remove selector
+		select[name="exif_ai"], select[name="autoRemoveBackupsPeriod"]
 		{
 			border: 1px solid #1ABDCA;
 			color: #116C7E;
