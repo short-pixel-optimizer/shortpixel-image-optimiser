@@ -230,7 +230,7 @@
   padding: 8px 16px;
 }
 .shortpixel-media-modal .modal-wrapper .button-wrapper .button:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
 }
 .shortpixel-media-modal .modal-wrapper .button-wrapper .button i.switch {
   width: 18px;

@@ -627,7 +627,7 @@ class SettingsViewController extends \ShortPixel\ViewController
            $date = $latest['date'];
         }
 
-        $message = (count($logs) == 0) ? esc_html__('No bulk processing has been performed yet', 'shortpixel-image-optimiser') : sprintf(__('The last bulk processing ran on:  %s','shortpixel-image-optimiser'), '<br>' . $date );
+        $message = (count($logs) == 0) ? esc_html__('No bulk processing has been performed yet', 'shortpixel-image-optimiser') : sprintf(__('The last bulk processing ran on:  %s','shortpixel-image-optimiser'), $date );
 
         $bulkblock = new \stdClass;
         $bulkblock->icon = 'ok';

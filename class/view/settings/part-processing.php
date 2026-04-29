@@ -109,7 +109,7 @@ if ( ! defined( 'ABSPATH' ) ) {
       ?>
           </content>
           <warning class="backup-single-warning">
-            <?php esc_html_e('This option will use less disk space, but only stores the main file. In case of unusual configurations, missing thumbnail definitions might cause data loss or issues with restoring the original image.' , 'shortpixel-image-optimiser') ?>
+            <?php esc_html_e('This option uses less disk space by storing only the main file. However, in certain edge cases such as unusual configurations or missing thumbnail definitions, it may lead to data loss or problems when restoring the original image.' , 'shortpixel-image-optimiser') ?>
           </warning>
 
 
@@ -127,21 +127,21 @@ if ( ! defined( 'ABSPATH' ) ) {
       ?>
           </content>
           <warning id="backup-autoremove-warning" class='autoremovebackups toggleTarget'>
-            <?php esc_html_e('This will free up disk space, but might lead to data loss, make sure the original images are available elsewhere.', 'shortpixel-image-optimiser') ?>
+            <?php esc_html_e('This will free up disk space, but it may lead to data loss. Make sure the original images are backed up or available elsewhere.', 'shortpixel-image-optimiser') ?>
           </warning>
 
       <content class='autoremovebackups toggleTarget'>
         <name>
-          <?php printf(esc_html__('Period of removal', 'shortpixel-image-optimiser')); ?>
+          <?php printf(esc_html__('Remove backups older than:', 'shortpixel-image-optimiser')); ?>
         </name>
         <?php
           $removeperiods = [
-            'month'  =>  __('Month', 'shortpixel-image-optimiser'), 
+            'month'  =>  __('1 Month', 'shortpixel-image-optimiser'), 
             '3month' => __('3 Months', 'shortpixel-image-optimiser'),
             '6month' => __('6 Months', 'shortpixel-image-optimiser'), 
             '1year' =>  __('1 year', 'shortpixel-image-optimiser'),
-            '2year' => __('2 year', 'shortpixel-image-optimiser'),
-            '5year' => __('3 year', 'shortpixel-image-optimiser'), 
+            '2year' => __('2 years', 'shortpixel-image-optimiser'),
+            '5year' => __('5 years', 'shortpixel-image-optimiser'), 
           ]; 
 
         ?>
