@@ -35,6 +35,7 @@ class LocalBackupController extends BackupController
 
          if (false === is_array($period))
          {
+
             Log::addError('Period in Remove backup came back empty', $period);
              return false; 
          }
@@ -48,7 +49,8 @@ class LocalBackupController extends BackupController
             $dirName = $dir->getName();
             if (strlen($dirName) === 4 && $dirName < $period['year'])
             {
-                Log::addWarn('Automatic Backup Removal, removing dir: ', $dir->getPath()); 
+                Log::addInfo('Automatic Backup Removal, removing dir: ', $dir->getPath()); 
+                $dir->delete(); 
             }
             elseif(strlen($dirName) === 4 && $period['year'] === $dirName)
             {
@@ -68,7 +70,8 @@ class LocalBackupController extends BackupController
              // Every month number that is lower (older) than month
              if (strlen($name) == 2 && $name < $month)
              {
-                 Log::addWarn('Automatic Backup Removal of month, removing ', $subdir->getPath()); 
+                $subdir->delete();
+                 Log::addInfo('Automatic Backup Removal of month, removing ', $subdir->getPath()); 
              }     
 
         }
@@ -79,7 +82,8 @@ class LocalBackupController extends BackupController
         $files = $directory->getFiles(['date_created_older' => $date]);
         foreach($files as $fileObj)
         {
-            Log::addWarning('Removing file ' . $fileObj->getFullPath());
+            $fileObj->delete();
+            Log::addInfo('Removing file ' . $fileObj->getFullPath());
         }
         
     }
