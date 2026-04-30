@@ -2334,8 +2334,16 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			 $fullPath = $this->getFullPath();
 		}
 
-		do_action('shortpixel-thumbnails-before-regenerate', $this->get('id'));
-		$metadata = wp_generate_attachment_metadata($this->get('id'), $fullPath);
+		$item_id = $this->get('id');
+		// Prevent Offload here, otherwise it won't offload anymore when all is done or restored.
+		do_action('shortpixel/converter/prevent-offload', $item_id);
+
+		Log::addTemp('Generate Thumbs -- ' . $item_id);
+		do_action('shortpixel-thumbnails-before-regenerate', $item_id);
+		$metadata = wp_generate_attachment_metadata($item_id, $fullPath);
+
+		do_action('shortpixel/converter/prevent-offload-off', $item_id);
+
 		return $metadata;
 
 	}

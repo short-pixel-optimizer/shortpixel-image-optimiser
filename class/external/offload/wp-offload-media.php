@@ -78,7 +78,6 @@ class wpOffload
 
 	//	add_filter('as3cf_remove_source_files_from_provider', array($this, 'remove_webp_paths'));
 
-
 		add_filter('as3cf_pre_update_attachment_metadata', array($this, 'preventUpdateMetaData'), 10, 4);
 		add_filter('as3cf_pre_handle_item_upload', array($this, 'preventInitialUploadHandler'), 10, 3);
 
@@ -487,6 +486,12 @@ class wpOffload
 			$error = new \WP_Error('upload-prevented', 'No offloading at this time, thanks');
 			return $error;
 		}
+
+		if (true === $bool)
+		{
+			Log::addDebug('Offload Prevented via bool for ' . $post_id);
+		}
+		
 
 		return $bool;
 	}
