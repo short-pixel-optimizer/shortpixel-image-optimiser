@@ -21,7 +21,7 @@ class LocalBackupModel extends BackupModel
         $fs = \wpSPIO()->filesystem();
         $imageName = $this->getBackupName($sourceFile->get('name'), $sourceFile);
         $settings = \wpSPIO()->settings();
-        //$is_main_file = $sourceFile->get('is_main_file');
+
         $mainFile = $this->getMainFile(); 
 
         if (! $directory)

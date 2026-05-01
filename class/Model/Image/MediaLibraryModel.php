@@ -1674,7 +1674,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		// WordPress converts by default in new version s HEIC / BMP to JPG, but leaves the originalFile as Heic, ignore it then. 
 		if ($originalFile->getExtension() !== $this->getExtension())
 		{
-			 $difficult_extensions = ['heic', 'heif', 'bmp', 'tiff']; 
+			// $difficult_extensions = ['heic', 'heif', 'bmp', 'tiff']; 
+			// Heic / Heif removes here because of backup conflicts ( WP created all thumbnails, but not the main file which is problematic)
+			$difficult_extensions = ['bmp', 'tiff']; 
 			if (in_array($originalFile->getExtension(), $difficult_extensions))
 			{
 				return false; 
