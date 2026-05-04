@@ -86,8 +86,9 @@ class ListviewNotice extends \ShortPixel\Model\AdminNoticeModel
 
 	protected function getMessage()
 	{
-
-		$message = sprintf(__('Now you can see ShortPixel Image Optimizer\'s actions and optimization data in Grid view too! Click on any image below and you can see the ShortPixel actions and menus in the popup that opens. However, the list view provides a better experience. Click now to %sswitch to the list view%s. ', 'shortpixel-image-optimiser'), '<a href="' . admin_url('upload.php?mode=list') . '">','</a>');
+		$message = '<p><h3>' .  __('ShortPixel actions in grid view', 'shortpixel-image-optimiser') . '</h3></p>';
+		$message .= __('Now you can see ShortPixel Image Optimizer\'s actions and optimization data in Grid view too! Click on any image below and you can see the ShortPixel actions and menus in the popup that opens. However, the list view provides a better experience. Click now to %sswitch to the list view%s. ', 'shortpixel-image-optimiser');
+		$message = sprintf($message, '<a href="' . admin_url('upload.php?mode=list') . '">','</a>');
 
 		return $message;
 

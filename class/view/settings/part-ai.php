@@ -67,11 +67,11 @@ if (! defined('ABSPATH')) {
             'name' => 'autoAIBulk',
             'checked' => $view->data->autoAIBulk,
             'label' => esc_html__('Generate image SEO data during Bulk Processing', 'shortpixel-image-optimiser'),
+            'tooltip_link' => 'https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/#2-toc-title?target=iframe',
           ]
         );
         ?>
 
-        <i class='documentation right dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe#2-toc-title"></i>
         <name>
 
           <?php esc_html_e('Automatically generate image SEO data using AI for all the images queued during the Bulk Processing. The settings below will be taken into account when running the bulk.', 'shortpixel-image-optimiser'); ?>
@@ -250,7 +250,7 @@ if (! defined('ABSPATH')) {
       </setting>
 
       <!--- ## Post Title -->
-      <setting class="ai_post_title_setting">
+      <setting class="switch">
         <content>
 
           <?php $this->printSwitchButton(
@@ -265,36 +265,31 @@ if (! defined('ABSPATH')) {
           ?>
         </content>
 
-        <content class='nextline ai_gen_posttitle is-advanced'>
+        <content class='toggleTarget ai_gen_post_title is-advanced'>
           <?php
           $input  = '<input type="number" name="ai_limit_post_title_chars" value="' . $view->data->ai_limit_post_title_chars . '" max="100" min="0">';
           ?>
           <name><?php printf(__('Limit image title to %s characters ', 'shortpixel-image-optimiser'), $input); ?></name>
         </content>
 
-        <content class='nextline ai_gen_posttitle is-advanced'>
+        <content class='toggleTarget ai_gen_post_title is-advanced'>
           <name><?php _e('Additional context for image title generation: ', 'shortpixel-image-optimiser'); ?></name>
           <textarea name="ai_post_title_context" maxlength="500"><?php echo esc_textarea($view->data->ai_post_title_context); ?></textarea>
 
         </content>
 
-        <content class='nextline ai_gen_posttitle is-advanced'>
+        <content class='toggleTarget ai_gen_post_title is-advanced'>
           <i class='documentation right dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe#4-toc-title"></i>
           <name><?php _e('Fixed prefix for image title:', 'shortpixel-image-optimiser'); ?></name>
           <input type="text" name="ai_post_title_prefix" maxlength="50" value="<?php echo esc_attr($view->data->ai_post_title_prefix); ?>" />
         </content>
 
-        <content class='nextline ai_gen_posttitle is-advanced'>
+        <content class='toggleTarget ai_gen_post_title is-advanced'>
           <i class='documentation right dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe#4-toc-title"></i>
           <name><?php _e('Fixed suffix for image title:', 'shortpixel-image-optimiser'); ?></name>
           <input type="text" name="ai_post_title_postfix" maxlength="50" value="<?php echo esc_attr($view->data->ai_post_title_postfix); ?>" />
         </content>
 
-        <warning class="ai_overwrite_warning">
-           <message>
-          <?php _e('SPIO may still write image title when preserving data, since image title is always set', 'shortpixel-image-optimiser'); ?>
-          </message>
-        </warning>
       </setting>
 
 

@@ -186,6 +186,7 @@ class ViewController extends Controller
         'input_class' => 'switch', 
         'data' => [],
         'disabled' => false,
+        'tooltip_link' => '',
     );
 
     $args = wp_parse_args($args, $defaults);
@@ -196,6 +197,10 @@ class ViewController extends Controller
     $name = esc_attr($args['name']);
     $label = esc_attr($args['label']);
 
+    $tooltip = '';
+    if (! empty($args['tooltip_link'])) {
+        $tooltip = sprintf('<i class="documentation dashicons dashicons-editor-help" data-link="%s"></i>', esc_attr($args['tooltip_link']));
+    }
 
     $data = implode(' ', $args['data']);
     
@@ -206,9 +211,9 @@ class ViewController extends Controller
       <label>
         <input type="checkbox" class="%s" name="%s" value="1" %s %s %s>
         <div class="the_switch">&nbsp;</div>
-        %s
+        %s%s
       </label>
-    </switch>', $switchclass, $inputclass, $name, $checked, $disabled, $data, $label);
+    </switch>', $switchclass, $inputclass, $name, $checked, $disabled, $data, $label, $tooltip);
 
     echo $output;
   }
