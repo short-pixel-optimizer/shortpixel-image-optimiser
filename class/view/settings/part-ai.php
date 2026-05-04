@@ -153,13 +153,13 @@ if (! defined('ABSPATH')) {
 
         <content class='toggleTarget ai_gen_alt is-advanced'>
           <i class='documentation right dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe#4-toc-title"></i>
-          <name> <?php _e('Fixed prefix for ALT tag:', 'shortpixel-image-optimiser'); ?></name>
+          <name> <?php _e('Always add before ALT tag:', 'shortpixel-image-optimiser'); ?></name>
           <input type="text" name="ai_alt_prefix" maxlength="50" value="<?php echo esc_attr($view->data->ai_alt_prefix); ?>" />
         </content>
 
         <content class='toggleTarget ai_gen_alt is-advanced'>
           <i class='documentation right dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe#4-toc-title"></i>
-          <name> <?php _e('Fixed suffix for ALT tag:', 'shortpixel-image-optimiser'); ?></name>
+          <name> <?php _e('Always add adter ALT tag:', 'shortpixel-image-optimiser'); ?></name>
           <input type="text" name="ai_alt_postfix" maxlength="50" value="<?php echo esc_attr($view->data->ai_alt_postfix); ?>" />
         </content>
 
@@ -194,13 +194,13 @@ if (! defined('ABSPATH')) {
 
         <content class='toggleTarget ai_gen_description is-advanced'>
           <i class='documentation right dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe#4-toc-title"></i>
-          <name> <?php _e('Fixed prefix for description:', 'shortpixel-image-optimiser'); ?></name>
+          <name> <?php _e('Always add before description:', 'shortpixel-image-optimiser'); ?></name>
           <input type="text" name='ai_description_prefix' maxlength="50" value="<?php echo esc_attr($view->data->ai_description_prefix); ?>" />
         </content>
 
         <content class='toggleTarget ai_gen_description is-advanced'>
           <i class='documentation right dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe#4-toc-title"></i>
-          <name> <?php _e('Fixed suffix for description:', 'shortpixel-image-optimiser'); ?></name>
+          <name> <?php _e('Always add after description:', 'shortpixel-image-optimiser'); ?></name>
           <input type="text" name='ai_description_postfix' maxlength="50" value="<?php echo esc_attr($view->data->ai_description_postfix); ?>" />
         </content>
 
@@ -237,13 +237,13 @@ if (! defined('ABSPATH')) {
 
         <content class='toggleTarget ai_gen_caption is-advanced'>
           <i class='documentation right dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe#4-toc-title"></i>
-          <name> <?php _e('Fixed prefix for caption:', 'shortpixel-image-optimiser'); ?></name>
+          <name> <?php _e('Always add before caption:', 'shortpixel-image-optimiser'); ?></name>
           <input type="text" name='ai_caption_prefix' maxlength="50" value="<?php echo esc_attr($view->data->ai_caption_prefix); ?>" />
         </content>
 
         <content class='toggleTarget ai_gen_caption is-advanced'>
           <i class='documentation right dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe#4-toc-title"></i>
-          <name> <?php _e('Fixed suffix for caption:', 'shortpixel-image-optimiser'); ?></name>
+          <name> <?php _e('Always add after caption:', 'shortpixel-image-optimiser'); ?></name>
           <input type="text" name='ai_caption_postfix' maxlength="50" value="<?php echo esc_attr($view->data->ai_caption_postfix); ?>" />
         </content>
 
@@ -280,13 +280,13 @@ if (! defined('ABSPATH')) {
 
         <content class='toggleTarget ai_gen_post_title is-advanced'>
           <i class='documentation right dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe#4-toc-title"></i>
-          <name><?php _e('Fixed prefix for image title:', 'shortpixel-image-optimiser'); ?></name>
+          <name><?php _e('Always add before image title:', 'shortpixel-image-optimiser'); ?></name>
           <input type="text" name="ai_post_title_prefix" maxlength="50" value="<?php echo esc_attr($view->data->ai_post_title_prefix); ?>" />
         </content>
 
         <content class='toggleTarget ai_gen_post_title is-advanced'>
           <i class='documentation right dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe#4-toc-title"></i>
-          <name><?php _e('Fixed suffix for image title:', 'shortpixel-image-optimiser'); ?></name>
+          <name><?php _e('Always add after image title:', 'shortpixel-image-optimiser'); ?></name>
           <input type="text" name="ai_post_title_postfix" maxlength="50" value="<?php echo esc_attr($view->data->ai_post_title_postfix); ?>" />
         </content>
 
@@ -324,13 +324,13 @@ if (! defined('ABSPATH')) {
 
         <content class='nextline ai_gen_filename is-advanced'>
           <i class='documentation right dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe#4-toc-title"></i>
-          <name><?php _e('Fixed prefix for filename:', 'shortpixel-image-optimiser'); ?></name>
+          <name><?php _e('Always add before filename:', 'shortpixel-image-optimiser'); ?></name>
           <input type="text" name="ai_filename_prefix" maxlength="50" value="<?php echo esc_attr($view->data->ai_filename_prefix); ?>" />
         </content>
 
         <content class='nextline ai_gen_filename is-advanced'>
           <i class='documentation right dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe#4-toc-title"></i>
-          <name><?php _e('Fixed suffix for filename:', 'shortpixel-image-optimiser'); ?></name>
+          <name><?php _e('Always add after filename:', 'shortpixel-image-optimiser'); ?></name>
           <input type="text" name="ai_filename_postfix" maxlength="50" value="<?php echo esc_attr($view->data->ai_filename_postfix); ?>" />
         </content>
 
