@@ -236,18 +236,22 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
 
        var actionValue = selectedAction.value;
 
+			  var bulkActions = []; 
+			  var bulkItems = []; 
 
        for (var i = 0; i < items.length; i++)
        {
            var item = items[i];
+           var actionPushed = false; 
+
            if (false == item.checked) // failsafe
            {
               continue;
            }
            var item_id = item.value;
 
-           var is_restorable = item.classList.contains('is-restorable'); 
-           var is_optimizable = item.classList.contains('is-optimizable');
+           var restorable = item.classList.contains('is-restorable'); 
+           var optimizable = item.classList.contains('is-optimizable');
 
            if (item.dataset.type)
            {
@@ -261,8 +265,9 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
            
 				switch (actionValue) {
 					case 'shortpixel-optimize':
-						if (is_optimizable) {
-							this.Optimize(item_id);
+						if (optimizable) {
+							bulkActions.push( this.AddDelayedAction('Optimize', item_id) );
+							actionPushed = true; 
 						}
 						break;
 					case 'shortpixel-glossy':
@@ -297,25 +302,56 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
 							compressionType = compression;
 						}
 
-						if (is_restorable && compressionType >= 0) {
-							this.ReOptimize(item_id, compressionType, action);
+						if (restorable) {
+							bulkActions.push( this.AddDelayedAction('ReOptimize',item_id, compressionType, action));
+							actionPushed = true; 
+							//this.ReOptimize(media_id, compressionType, action);
 						}
+
 
 						break;
 					case 'shortpixel-restore':
-						if (is_restorable) {
-							this.RestoreItem(item_id);
+						if (restorable) {
+							bulkActions.push( this.AddDelayedAction('RestoreItem', item_id) );
+							actionPushed = true; 
+							//this.RestoreItem(media_id);
 						}
 						break;
 					case 'shortpixel-mark-completed':
-							if (is_optimizable) {
-								this.MarkCompleted(item_id);
+							if (optimizable) {
+								bulkActions.push( this.AddDelayedAction('MarkCompleted', item_id) );
+								actionPushed = true; 
+								//this.MarkCompleted(media_id);
 							}
 					break; 
       }
-           item.checked = false;
-
+				if (false === actionPushed)
+				{
+					items[i].checked = false;
+				}
+				else 
+				{
+					 bulkItems.push(items[i]);
+				}
       }
+
+			// Timeout: delay a little bit each item to prevent hammering server. 
+			var i = 0; 
+			if (bulkActions.length > 0)
+			{
+
+				var inv = setInterval(() => {
+
+							var item = bulkItems.shift(); 
+							item.checked = false; 
+							bulkActions[i]();
+							i++; 
+							if (i === bulkActions.length)
+							{
+								clearInterval(inv);
+							}
+						}, 1000 );
+			}
 
        var selectAll = document.querySelector('input[name="select-all"]');
        selectAll.checked = false;

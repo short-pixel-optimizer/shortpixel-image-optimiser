@@ -114,11 +114,15 @@ class ActionController extends OptimizerBase
       $qStatus = new \stdClass; 
       $qStatus->qstatus = RequestManager::STATUS_NOT_API; 
       
-      if ('reoptimize' == $action && false === $qItem->result()->is_done)
+
+      // This should normally do an optimization, so start the queue. Otherwise processor won't start process /keep it's interval
+      if ('reoptimize' == $action)
       {
-            $qStatus->qstatus = RequestManager::STATUS_ENQUEUED; 
+            $qStatus->qstatus = Queue::RESULT_ITEMS; 
             $qStatus->numitems = 1; 
       }
+
+      Log::addTEmp('Returning actoin: ' . $action, $qStatus);
 
       return $qStatus;
   //  }
@@ -212,13 +216,12 @@ class ActionController extends OptimizerBase
         // Mark Item ( for results ) as ongoing and such
         $queueItem->addResult([
             'fileStatus' => ImageModel::FILE_STATUS_PENDING, 
-            'is_done' => true, 
+            'is_done' => true,  
             'message' => __('Image being reoptimized', 'shortpixel-image-optimiser'), 
         ]);
 
-         // $result = $this->finishItemProcess($queueItem);
-
-          return true;
+        // Process is being finished in HandieApiResult,  optimize is 'next action'
+        return true;
     }
     else
     {

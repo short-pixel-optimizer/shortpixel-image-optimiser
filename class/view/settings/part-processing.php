@@ -73,7 +73,7 @@ if ( ! defined( 'ABSPATH' ) ) {
               ['name' => 'backupImages',
                'checked' => $view->data->backupImages,
                'label' => esc_html__('Backup Originals','shortpixel-image-optimiser'),
-               'data' => ['data-dashboard="' . __('Backups are strongly recommended!', 'shortpixel-image-optimiser') . '"'],
+               'data' => ['data-toggle="backup-options"', 'data-dashboard="' . __('Backups are strongly recommended!', 'shortpixel-image-optimiser') . '"'],
               ]);
         ?>
 
@@ -98,7 +98,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 
     <!-- Single File Backup --> 
-    <setting class='switch'> 
+    <setting class='switch backup-options toggleTarget'> 
           <content>
           <?php $this->printSwitchButton(
             ['name' => 'singleFileBackup',
@@ -116,7 +116,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     </setting>
 
     <!--- AUTO REMOVE BACKUP --> 
-    <setting class='switch'> 
+    <setting class='switch '> 
           <content>
           <?php $this->printSwitchButton(
             ['name' => 'autoRemoveBackups',
