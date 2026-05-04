@@ -15,7 +15,6 @@ i.documentation {
   color: #1caecb;
   cursor: pointer;
   position: relative;
-  top: 3px;
 }
 i.documentation.up {
   top: -3px;
