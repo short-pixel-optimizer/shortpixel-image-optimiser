@@ -511,6 +511,8 @@
   font-size: 26px;
   height: 26px;
   margin-right: 8px;
+  margin-top: -5px;
+  color: #0f6a7d;
 }
 .wrap.is-shortpixel-bulk-page .button .icon {
   margin-right: 4px;
