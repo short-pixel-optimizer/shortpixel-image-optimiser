@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 4.8.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 6.5.0
+Stable tag: 6.5.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -490,6 +490,19 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 14. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 6.5.1 =
+
+🛠️ The Hotfix Update
+
+Release Date: May 5, 2026
+
+🐛 Fixes
+
+* Settings Page Fix: Resolved an issue affecting the Settings page in certain edge cases.
+* Backups System Fix: Fixed an issue related to the new backups system that could appear in specific scenarios.
+
+A small but important update to keep everything running smoothly! 🚀
 
 = 6.5.0 =
 
