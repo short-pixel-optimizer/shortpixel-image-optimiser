@@ -115,7 +115,12 @@ $queueRunning = $bulk->isAnyBulkRunning();
       
     </settinglist>
 
+        <setting>
 
+            <content>
+              <a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'migrate', 'noheader' => true), $url)); ?>" class="button">
+                  <?php esc_html_e('Search and Migrate All', 'shortpixel-image-optimiser'); ?>
+              </a>
 
     <h3><?php _e('Settings Import / Export', 'shortpixel-image-optimiser'); ?></h3>
     <settinglist class='setting-importexport'>

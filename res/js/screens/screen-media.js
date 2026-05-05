@@ -465,10 +465,17 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			var newDescription = aiData.description;
 			var newTitle = aiData.post_title;
 		}
+		
+		console.log(aiData);
 
-		if (typeof newAltText !== 'undefined' || newAltText < 0)
+		if (typeof newAltText !== 'undefined')
 		{
 			var inputs = this.altInputNames;
+
+			if (typeof newAltText == 'number')
+			{
+				newAltText = ''; 
+			}
 	
 			for (var i = 0; i < inputs.length; i++)
 			{
@@ -488,9 +495,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 					   {
 						   altInput.innerText = newAltText; 	
 					   }
-					   
 				   }
-					   
 			}
 		}
 		// edit media screen
@@ -504,8 +509,13 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			postTitleFields.push('title');
 		 }
 		 
-		 if (typeof newCaption !== 'undefined' || newCaption < 0)
+		 if (typeof newCaption !== 'undefined')
 		 {
+			if (typeof newCaption === 'number')
+			{
+				newCaption = ''; 
+			}
+
 			for (var i = 0; i < captionFields.length; i++)
 			{
 				let captionField = document.getElementById(captionFields[i]); 
@@ -516,8 +526,12 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			}
 		 }
 
-		 if (typeof newDescription !== 'undefined' || newDescription < 0)
+		 if (typeof newDescription !== 'undefined')
 		 {
+			if (typeof(newDescription) === 'number')
+			{
+				newDescription = ''; 
+			}
 			for (var i = 0; i < descriptionFields.length; i++)
 			{
 				let descriptionField = document.getElementById(descriptionFields[i]);
@@ -528,8 +542,10 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			}
 		 }
 
-		 if (typeof newTitle !== 'undefined' || newTitle < 0)
+		 if (typeof newTitle !== 'undefined' && typeof newTitle !== 'number')
 		 {
+
+
 			for (var i = 0; i < postTitleFields.length; i++)
 			{
 				 let titleField = document.getElementById(postTitleFields[i]); 
@@ -605,19 +621,26 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			event.preventDefault();
 			var items = document.querySelectorAll('input[name="media[]"]:checked');
 
+			var bulkActions = []; 
+			var bulkItems = []; 
+			
 			for (var i = 0; i < items.length; i++) {
+
 				var media_id = items[i].value;
 				var column = document.getElementById('shortpixel-data-' + media_id);
 				var optimizable = column.classList.contains('is-optimizable');
 				var restorable = column.classList.contains('is-restorable');
 				var aiAction = column.classList.contains('ai-action');
-
+				
 				var compressionType = column.dataset.compression;
-
+				var actionPushed = false; 
+				
 				switch (actionValue) {
 					case 'shortpixel-optimize':
 						if (optimizable) {
-							this.Optimize(media_id);
+							bulkActions.push( this.AddDelayedAction('Optimize', media_id));
+							actionPushed = true; 
+							//this.Optimize(media_id);
 						}
 						break;
 					case 'shortpixel-glossy':
@@ -653,30 +676,66 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 						}
 
 						if (restorable) {
-							this.ReOptimize(media_id, compressionType, action);
+							bulkActions.push( this.AddDelayedAction('ReOptimize', media_id, compressionType, action) );
+							actionPushed = true; 
+
+							//this.ReOptimize(media_id, compressionType, action);
 						}
 
 						break;
 					case 'shortpixel-restore':
 						if (restorable) {
-							this.RestoreItem(media_id);
+							bulkActions.push( this.AddDelayedAction('RestoreItem', media_id) );
+							actionPushed = true; 
+							//this.RestoreItem(media_id);
 						}
 						break;
 					case 'shortpixel-mark-completed':
 							if (optimizable) {
-								this.MarkCompleted(media_id);
+								bulkActions.push( this.AddDelayedAction('MarkCompleted', media_id) );
+								actionPushed = true; 
+								//this.MarkCompleted(media_id);
 							}
 					break; 
 					case 'shortpixel-generateai':
 						if (aiAction)
 						{
-							 this.RequestAlt(media_id);
+							bulkActions.push( this.AddDelayedAction('RequestAlt', media_id) );
+							actionPushed = true; 
+							 //this.RequestAlt(media_id);
 						}
 					break; 
 				}
-				items[i].checked = false;
 
-			} // for Loop
+				if (false === actionPushed)
+				{
+					items[i].checked = false;
+				}
+				else 
+				{
+					 bulkItems.push(items[i]);
+				}
+			} // for Loop 
+
+
+			// Timeout: delay a little bit each item to prevent hammering server. 
+			var i = 0; 
+			if (bulkActions.length > 0)
+			{
+
+				var inv = setInterval(() => {
+
+							var item = bulkItems.shift(); 
+							item.checked = false; 
+							bulkActions[i]();
+							i++; 
+							if (i === bulkActions.length)
+							{
+								clearInterval(inv);
+							}
+						}, 1000 );
+			}
+
 
 			var selectAllCheck = document.getElementById('cb-select-all-1');
 			selectAllCheck.checked = false;

@@ -80,6 +80,9 @@
   width: 15px;
   vertical-align: text-top;
 }
+.wrap.is-shortpixel-bulk-page header .top-buttons .header-button .shortpixel-icon.star {
+  filter: brightness(0) saturate(100%) invert(90%) sepia(54%) saturate(7093%) hue-rotate(314deg) brightness(117%) contrast(93%);
+}
 .wrap.is-shortpixel-bulk-page .shortpixel-icon {
   width: 25px;
   height: 25px;
@@ -150,6 +153,9 @@
 .wrap.is-shortpixel-bulk-page .shortpixel-icon.feedback {
   background-image: url("../images/icon/feedback.svg");
 }
+.wrap.is-shortpixel-bulk-page .shortpixel-icon.heart {
+  background-image: url("../images/icon/heart.svg");
+}
 .wrap.is-shortpixel-bulk-page .shortpixel-icon.help {
   background-image: url("../images/icon/help.svg");
 }
@@ -212,6 +218,9 @@
 }
 .wrap.is-shortpixel-bulk-page .shortpixel-icon.shortpixel {
   background-image: url("../images/icon/shortpixel.svg");
+}
+.wrap.is-shortpixel-bulk-page .shortpixel-icon.star {
+  background-image: url("../images/icon/star.svg");
 }
 .wrap.is-shortpixel-bulk-page .shortpixel-illustration {
   display: inline-block;
@@ -502,6 +511,8 @@
   font-size: 26px;
   height: 26px;
   margin-right: 8px;
+  margin-top: -5px;
+  color: #0f6a7d;
 }
 .wrap.is-shortpixel-bulk-page .button .icon {
   margin-right: 4px;

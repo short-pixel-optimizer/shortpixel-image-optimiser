@@ -234,12 +234,11 @@ class CustomQueue extends Queue
      $prepare[] = $limit;
 
      $sql = $wpdb->prepare($sql, $prepare);
-
      $results = $wpdb->get_col($sql);
 
      foreach($results as $item_id)
      {
-          $items[] = $item_id; //$fs->getImage($item_id, 'custom');
+          $items[] = $item_id; 
      }
 
      return array_filter($items);

@@ -4,12 +4,15 @@ i.documentation {
   color: #1caecb;
   cursor: pointer;
   position:relative;
-  top: 3px;
+  //top: 3px;
   &.up {
     top: -3px;
   }
   &.down {
     top: 10px;
+  }
+  &.right {
+    float: right;
   }
 } // question
 

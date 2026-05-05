@@ -103,7 +103,7 @@
             }
           });
       } else {
-          container.mousemove(function(e) {
+          container.on('mousemove', function(e) {
               sliderPct = (sliderOrientation === 'vertical') 
                   ? (e.pageY-container.offset().top)/beforeImg.height() 
                   : (e.pageX-container.offset().left)/beforeImg.width();

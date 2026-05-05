@@ -16,33 +16,40 @@ class UncodeController
 
 	 protected function addHooks()
 	 {
-		  add_action('uncode_delete_crop_image', array($this, 'removedMetaData'), 10, 2);
-      add_action( 'uncode_after_new_crop', array($this, 'after_new_crop'), 10, 5 );
+	    add_action('uncode_delete_crop_image', array($this, 'removedMetaData'), 10, 2);
+      	add_action( 'uncode_after_new_crop', array($this, 'after_new_crop'), 10, 5 );
 	 }
 
 	 public function removedMetaData($attach_id, $filePath)
 	 {
 		  	$fs = \wpSPIO()->filesystem();
-				$imageObj = $fs->getImage($attach_id, 'media', false);
-				$imageObj->saveMeta();
+				//$imageObj = $fs->getImage($attach_id, 'media', false);
+				
+//				$imageObj->saveMeta();
+
+
+				// We can't do this via the usual methods, because the filter is deleted before the filter hits, thus not loading in the Models anymore
+				// Just rough n dirty here. 
 
 				$fileObj = $fs->getFile($filePath);
-				if ($fileObj->hasBackup())
+
+				$avifFile = $fs->getFile($fileObj->getFileDir() . $fileObj->getFileBase() . '.avif');
+				$webpFile = $fs->getFile($fileObj->getFileDir() . $fileObj->getFileBase() . '.webp');
+				$backupFile = $fs->getFile($fs->getBackupDirectory($fileObj, true) . $fileObj->getFileName()); 
+
+				if ($avifFile->exists())
 				{
-						$backupObj = $fileObj->getBackupFile();
-						$backupObj->delete();
+					$avifFile->delete();
 				}
-
-				// Check Webp
-				$webpObj = $fs->getFile( (string) $fileObj->getFileDir() . $fileObj->getFileBase() . '.webp');
-				if ($webpObj->exists())
-					 $webpObj->delete();
-
-			  // Check Avif
- 				$avifObj = $fs->getFile( (string) $fileObj->getFileDir() . $fileObj->getFileBase() . '.avif');
- 				if ($avifObj->exists())
- 					 $avifObj->delete();
-
+				if ($webpFile->exists())
+				{
+				    $webpFile->delete();
+				}
+				if ($backupFile->exists())
+				{
+					$backupFile->delete();
+				}
+				
 	 }
 
    public function after_new_crop( $media_id, $url, $width, $height,  $attachment_key ) {

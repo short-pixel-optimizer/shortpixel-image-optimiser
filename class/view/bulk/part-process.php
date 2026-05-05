@@ -105,10 +105,10 @@ $settings = \wpSPIO()->settings();
 		<div data-error-media="message" data-presentation="append" class='errorbox media'>
 				<?php if(property_exists($this->view, 'mediaErrorLog') && $this->view->mediaErrorLog !== false)
 				{
-					echo $this->view->mediaErrorLog;
-				}
-				?>
-		</div>
+				echo esc_html($this->view->mediaErrorLog);
+        }
+    ?>
+    </div> 
 
 		<!-- ****** CUSTOM ********  --->
 		<span class='hidden' data-check-custom-total data-stats-custom="total">0</span>
@@ -117,8 +117,9 @@ $settings = \wpSPIO()->settings();
       <div class='heading'>
         <span><i class='dashicons dashicons-open-folder'>&nbsp;</i> <?php esc_html_e('Custom Media', 'shortpixel-image-optimiser'); ?>
           <?php if (false !== $this->view->customOperationCustom) {
-             echo "</br><span class='special-op'>" . $this->view->customOperationCustom . "</span>";
-          } ?>
+             echo "</br><span class='special-op'>" . esc_html($this->view->customOperationCustom) . "</span>";
+          } 
+        ?>
         </span>
         <span>
               <span class='line-progressbar'>
@@ -154,11 +155,11 @@ $settings = \wpSPIO()->settings();
     <div data-error-custom="message" data-presentation="append" class='errorbox custom'>
 			<?php if(property_exists($this->view, 'customErrorLog') && $this->view->customErrorLog !== false)
 			{
-					echo $this->view->customErrorLog;
-			}
-			?>
-		</div>
-
+				echo esc_html($this->view->customErrorLog);
+      }
+      ?>
+    </div>
+    
 		<nav>
 			<button class='button stop' type='button' data-action="StopBulk" >
           <span class='dashicons dashicons-no'></span>  

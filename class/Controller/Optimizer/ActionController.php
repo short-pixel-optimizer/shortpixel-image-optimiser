@@ -75,10 +75,6 @@ class ActionController extends OptimizerBase
       {
          $this->finishItemProcess($qItem);
       }
-    
-
-     // return;
-
   }
 
 
@@ -89,12 +85,13 @@ class ActionController extends OptimizerBase
    * @param array $args
    * @return Object
    */
-  public function enqueueItem(QueueItem $qItem, $args = [])
+  public function enqueueItem(QueueItem $qItem, $args = []) : \stdClass
   {
    $queue = $this->getCurrentQueue($qItem);
    $directAction = true; // By default, execute Actions directly ( not via queue sys )
-   
-   switch($args['action'])
+   $action = $args['action'];
+
+   switch($action)
    {
        case 'restore':
           $qItem->newRestoreAction(); // This doesn't do much really.
@@ -106,29 +103,38 @@ class ActionController extends OptimizerBase
       break; 
    }
 
-    if (true === $directAction)
-    {
+ //   if (true === $directAction)
+  //  {
        // The directActions give back booleans, but the whole function must return an queue result object with qstatus and numitems
        $process_result = $this->sendToProcessing($qItem);
 
-    //   $result = new \stdClass;
-     //  $result->qstatus = RequestManager::STATUS_NOT_API;
-
-      // The assumption here that will work always because of requeue in reOptimizeItem, should not respond with NO_API response, but with continue process 
-/*      if (is_object($process_result))
-      {
-         $result->qstatus = Queue::RESULT_EMPTY;
-         $result->numitems = 1;
-      } */
-
       $this->handleAPIResult($qItem);  
-    }
+
+      // Mimic Qresult from Queue.php, which is expected by queueController enqueueItem. 
+      $qStatus = new \stdClass; 
+      $qStatus->qstatus = RequestManager::STATUS_NOT_API; 
+      
+
+      // This should normally do an optimization, so start the queue. Otherwise processor won't start process /keep it's interval
+      if ('reoptimize' == $action)
+      {
+            $qStatus->qstatus = Queue::RESULT_ITEMS; 
+            $qStatus->numitems = 1; 
+      }
+
+      Log::addTEmp('Returning actoin: ' . $action, $qStatus);
+
+      return $qStatus;
+  //  }
+
+    
     /*else
     {
       $result = $queue->addQueueItem($qItem);
     } */
 
-    //return $result;
+    // This function needs to return result object for QueueController
+   // return $result;
   }
 
   /**
@@ -139,20 +145,18 @@ class ActionController extends OptimizerBase
   // @todo Via actions to Optimizers
   protected function convertPNG(QueueItem $qItem)
   {
-    $qItem->block(true);
-    $queue = $this->getCurrentQueue($qItem);
-
-    $queue->updateItem($qItem);
-
     $fs = \wpSPIO()->filesystem();
-
     $imageObj = $qItem->imageModel;
 
-     if ($imageObj === false) // not exist error.
-     {
-       $qItem->block(false);
-       $queue->updateItem($qItem);
-     }
+    if ($imageObj === false) // not exist error.
+    {
+         ResponseController::addData($qItem->item_id, 'message', __('PNG2JPG not converted: Could NOT load image!', 'shortpixel-image-optimiser'));
+         ResponseController::addData($qItem->item_id, 'is_error', true);
+         Log::addError('Cannot load Image for ConvertPNG');
+         return false; 
+    }
+
+    $this->blockItem($qItem); 
 
       $converter = Converter::getConverter($imageObj, true);
       $bool = false; // init
@@ -175,11 +179,12 @@ class ActionController extends OptimizerBase
     }
 
     // Regardless if it worked or not, requeue the item otherwise it will keep trying to convert due to the flag.
-    $imageObj = $fs->getMediaImage($qItem->item_id);
+    $imageObj = $fs->getMediaImage($qItem->item_id, false);
+    $qItem->setModel($imageObj); // Also reset the QItem.
 
     // Keep compressiontype from object, set in queue, imageModelToQueue
 
-    $qItem->block(false);
+    $this->unBlockItem($qItem);
    // $this->finishItemProcess($qItem);
 
     $qItem->addResult([
@@ -211,13 +216,12 @@ class ActionController extends OptimizerBase
         // Mark Item ( for results ) as ongoing and such
         $queueItem->addResult([
             'fileStatus' => ImageModel::FILE_STATUS_PENDING, 
-            'is_done' => true, 
+            'is_done' => true,  
             'message' => __('Image being reoptimized', 'shortpixel-image-optimiser'), 
         ]);
 
-         // $result = $this->finishItemProcess($queueItem);
-
-          return true;
+        // Process is being finished in HandieApiResult,  optimize is 'next action'
+        return true;
     }
     else
     {

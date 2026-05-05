@@ -62,6 +62,7 @@ class SettingsViewController extends \ShortPixel\ViewController
      protected $returnFormData = []; 
 
 		 protected static $instance;
+     protected $model;
 
       public function __construct()
       {
@@ -438,6 +439,14 @@ class SettingsViewController extends \ShortPixel\ViewController
 						 QueueController::resetQueues();
 					}
 
+          if (isset($_POST['apiKey']) && false === $this->keyModel->is_constant())
+          // first save all other settings ( like http credentials etc ), then check
+          {
+              $check_key = sanitize_text_field($_POST['apiKey']);
+              $this->keyModel->resetTried(); // reset the tried api keys on a specific post request.
+              $this->keyModel->checkKey($check_key);
+          }
+
           // write checked and verified post data to model. With normal models, this should just be call to update() function
           foreach($this->postData as $name => $value)
           {
@@ -532,8 +541,8 @@ class SettingsViewController extends \ShortPixel\ViewController
            $this->view->hide_banner = true; 
          }
           
-
          //$this->view->latest_ai = $this->getLatestAIExamples();
+				 $this->view->is_unlimited= (!is_null($this->quotaData) && $this->quotaData->unlimited) ? true : false;
 
          $settings = \wpSPIO()->settings();
 
@@ -618,7 +627,7 @@ class SettingsViewController extends \ShortPixel\ViewController
            $date = $latest['date'];
         }
 
-        $message = (count($logs) == 0) ? esc_html__('No bulk processing has been performed yet', 'shortpixel-image-optimiser') : sprintf(__('The last bulk processing ran on:  %s','shortpixel-image-optimiser'), '<br>' . $date );
+        $message = (count($logs) == 0) ? esc_html__('No bulk processing has been performed yet', 'shortpixel-image-optimiser') : sprintf(__('The last bulk processing ran on:  %s','shortpixel-image-optimiser'), $date );
 
         $bulkblock = new \stdClass;
         $bulkblock->icon = 'ok';
@@ -896,7 +905,7 @@ class SettingsViewController extends \ShortPixel\ViewController
         }
 
         
-				// Field that are in form for other purpososes, but are not part of model and should not be saved.
+				// Field that are in form for other purposes, but are not part of model and should not be saved.
 					$ignore_fields = array(
 							'display_part',
 							'save-bulk',
@@ -908,6 +917,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 							'validate', // validate button from nokey part
 							'new-index',
 							'edit-exclusion',
+              'exclusions', 
 							'exclusion-type',
 							'exclusion-value',
 							'exclusion-minwidth',
@@ -919,6 +929,7 @@ class SettingsViewController extends \ShortPixel\ViewController
               'exclusion-filesize-value',
               'exclusion-filesize-denom',
               'exclusion-filesize-operator',
+              'exclusion-when',
 							'apply-select',
 							'screen_action',
 							'tools-nonce',
@@ -932,6 +943,7 @@ class SettingsViewController extends \ShortPixel\ViewController
               'login_apiKey',
               'ajaxSave',
               'ai_preview_image_id',
+              'offload-active',
 
 					);
 

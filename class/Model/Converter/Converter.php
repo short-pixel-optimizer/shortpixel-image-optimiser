@@ -56,7 +56,8 @@ abstract class Converter
 		switch ($ext) {
 			case 'png':
 				$converter = new PNGConverter($imageModel);
-				break;
+			break;
+			
 			case 'heic':
 			case 'tiff':
 			case 'tif':
@@ -100,7 +101,6 @@ abstract class Converter
 		$extension = $imageModel->getExtension();
 
 		$converter = false;
-
 		$converter = self::getConverterByExt($extension, $imageModel);
 
 		// No Support (yet)

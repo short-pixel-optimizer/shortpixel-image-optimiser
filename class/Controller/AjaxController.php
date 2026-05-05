@@ -536,8 +536,6 @@ class AjaxController
 
 		while (false === $is_done)
 		{
-			Log::addTemp('Result', $result);
-
 			if (false === property_exists($result, 'is_done') || $result->is_done === false)
 			{ 
 				// Any subsequent request *must* be hard refresh no or it hangs.
@@ -577,7 +575,7 @@ class AjaxController
 					}
 					$result = $qItem->result();
 				}
-					$this->send($result);
+					$this->send($result->forReturn());
 								
 				exit();
 			}
@@ -591,9 +589,7 @@ class AjaxController
 					'message' => __('Limit of attempts exceeded. Possible connection issue. Try again later. ', 'shortpixel-image-optimiser'),
 				]; 
 				
-				Log::addTemp('Timeout 15x');
-
-				$this->send((object)$result);
+				$this->send($result->forReturn());
 				exit('Timeout');
 				break; 
 			}
@@ -870,11 +866,18 @@ class AjaxController
 		$this->checkImageAccess($imageModel);
 
 		$queueController = new QueueController();
-		$result  = $queueController->addItemToQueue($imageModel, ['action' => 'restore']);
+		$is_in_queue = $queueController->isItemInQueue($imageModel, null);
+
+		if (true === $is_in_queue)
+		{
+			$queue = $queueController->getQueue($imageModel->get('type')); 
+			$queue->dropItem($id);
+		}
+
+		$result = $queueController->addItemToQueue($imageModel, ['action' => 'restore']);
 
 		$json->$type->results = [$result];
 		$json->status = true;
-
 		return $json;
 	}
 
@@ -1034,7 +1037,6 @@ class AjaxController
 		if (true === $has_filters)
 		{ 
 			$args['filters'] = $filters; 
-			Log::addTemp('Queue starting with filters: ', $filters);
 		}
 
 		
@@ -1263,7 +1265,7 @@ class AjaxController
 				// If is done and is error, bail out. 
 				if (true === $result->is_error) 
 				{
-					$this->send($result);
+					$this->send($result->forReturn());
 				}
 				
 				if ('requestAlt' === $state)
@@ -1274,10 +1276,9 @@ class AjaxController
 					$state = 'retrieveAlt';
 					
 				}
-				if ('retrieveAlt' === $state)
+				elseif ('retrieveAlt' === $state)
 				{
-					Log::addTemp('Result', $result); 
-					if (property_exists($result, 'aiData'))
+					if (property_exists($result, 'aiData') && false === is_null($result->aiData))
 					{
 						$aiModel = AiDataModel::getModelByAttachment($qItem->item_id, 'media');
 
@@ -1286,10 +1287,11 @@ class AjaxController
 						 $aiData['item_id'] = $qItem->item_id;
 						 $aiData['time_generated'] = time(); 
 
-						 set_transient('spio_settings_ai_example', $aiData, MONTH_IN_SECONDS);
 						 set_transient('spio_settings_ai_example_id', $qItem->item_id, MONTH_IN_SECONDS); 
+						 set_transient('spio_settings_ai_example', $aiData, MONTH_IN_SECONDS);
 						 
 						 $aiData['aiData'] = true; // for the JS check
+
 						 $this->send((object) $aiData);
 						 $is_done = true; 
 						 break;  // safe guards.
@@ -1298,7 +1300,7 @@ class AjaxController
 					
 					if ($result->is_done)
 					{
-					 $this->send($result); 
+					 $this->send($result->forReturn()); 
 					 break;
 					}
 				}
@@ -1312,6 +1314,7 @@ class AjaxController
 
 			if ($i >= 30) // safeguard. 
 			{
+				Log::addError('Ai Preview bailed after safeguard! ');
 				$this->send((object) $result_json);
 				break; 
 			}
@@ -1360,14 +1363,15 @@ class AjaxController
 			$generated = $item->getGeneratedData();
 		  }
 
-		  if ($item->isSomeThingGenerated())
+	 	 // Change 17/04/26 - Current SEO data should always use 'current data' ? 
+		 /* if ($item->isSomeThingGenerated())
 		  {
           	$original = $item->getOriginalData();
 		  }
 		  else
-		  {
+		  { */
 			 $original = $item->getCurrentData();
-		  }
+		 // }
         }
 
 
@@ -1408,6 +1412,7 @@ class AjaxController
 		$ret = array();
 		$fs = \wpSPIO()->filesystem();
 		$imageObj = $fs->getImage($id, $type);
+		$mainImage = clone $imageObj;
 
 		$this->checkImageAccess($imageObj);
 
@@ -1425,13 +1430,23 @@ class AjaxController
 			}
 		}
 
+		$backupModel = $imageObj->getBackupModel(); 
+		
+		// @todo Here - The MainBackupFile needs getting if the choosen thumbnail backup doesn't exist. 
+		$mainBackupFile = $backupModel->getMainBackupFile();
 
 
-		$backupFile = $imageObj->getBackupFile();
+		$backupFile = $backupModel->getBackupFile($imageObj);
 		if (is_object($backupFile))
 			$backup_url = $fs->pathToUrl($backupFile);
+		elseif (is_object($mainBackupFile))
+		{
+			$backup_url = $fs->pathToUrl($mainBackupFile);
+		}
 		else
+		{
 			$backup_url = '';
+		}
 
 		$ret['origUrl'] = $backup_url; // $backupUrl . $urlBkPath . $meta->getName();
 
@@ -1555,7 +1570,6 @@ class AjaxController
 		}
 
 		$noticeController = Notices::getInstance();
-
 		$json->notices = $noticeController->getNewNotices();
 
 		if (count($json->notices) > 0) {
@@ -1565,7 +1579,6 @@ class AjaxController
 			}
 		}
 		$noticeController->update(); // dismiss one-time ponies
-
 		return $json;
 	}
 
@@ -1829,6 +1842,11 @@ class AjaxController
 
 	protected function send($json)
 	{
+		// Cast before sending anything to a simple stdclass, to prevent issues with adding json and processorkey to output 
+		if (is_object($json) && false === $json instanceof \stdClass)
+		{
+			$json = (object) $json; 
+		}
 		$callback = isset($_POST['callback']) ? sanitize_text_field($_POST['callback']) : false;
 		if ($callback)
 			$json->callback = $callback; // which type of request we just fullfilled ( response processing )

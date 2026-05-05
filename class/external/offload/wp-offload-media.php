@@ -74,10 +74,9 @@ class wpOffload
 		add_action('shortpixel/converter/prevent-offload', array($this, 'preventOffload'), 10);
 		add_action('shortpixel/converter/prevent-offload-off', array($this, 'preventOffloadOff'), 10);
 
-		add_filter('as3cf_attachment_file_paths', array($this, 'add_webp_paths'));
+		add_filter('as3cf_attachment_file_paths', array($this, 'add_webp_paths'), 10, 3);
 
-		add_filter('as3cf_remove_source_files_from_provider', array($this, 'remove_webp_paths'));
-
+	//	add_filter('as3cf_remove_source_files_from_provider', array($this, 'remove_webp_paths'));
 
 		add_filter('as3cf_pre_update_attachment_metadata', array($this, 'preventUpdateMetaData'), 10, 4);
 		add_filter('as3cf_pre_handle_item_upload', array($this, 'preventInitialUploadHandler'), 10, 3);
@@ -137,6 +136,7 @@ class wpOffload
 	public function preventUpdateMetaData($bool, $data, $post_id, $old_provider_object)
 	{
 		if (isset(self::$offloadPrevented[$post_id])) {
+			Log::addDebug('Offloading of updated metadata prevented for ' . $post_id);
 			return true; // return true to cancel.
 		}
 
@@ -157,10 +157,15 @@ class wpOffload
 			return false;
 		}
 
-		// If there are excluded sizes, there are not in backups. might not be left on remote, or ( if delete ) on server, so just generate the images and move them.
-		$mediaItem->wpCreateImageSizes();
-
 		$result = $this->remove_remote($id);
+
+		if (false === $this->isActive())
+		{
+			return false; 
+		}
+
+		// If there are excluded sizes, there are not in backups. might not be left on remote, or ( if delete ) on server, so just generate the images and move them.
+		$mediaItem->wpCreateImageSizes();		
 		$this->image_upload($mediaItem);
 	}
 
@@ -172,9 +177,15 @@ class wpOffload
 			return false;
 		}
 
+
 		$remove = \DeliciousBrains\WP_Offload_Media\Items\Remove_Provider_Handler::get_item_handler_key_name();
 		$itemHandler = $this->as3cf->get_item_handler($remove);
 
+		// Given option prevents offload pro from downloading, then re-uploading left webp files etc. (see core-pro.php)
+		$itemHandler->handle($a3cfItem, ['verify_exists_on_local' => null]);
+
+
+		return true; 
 
 	}
 
@@ -430,6 +441,7 @@ class wpOffload
 		$meta = wp_get_attachment_metadata($id);
 		wp_update_attachment_metadata($id, $meta);
 
+
 		$this->shouldPrevent = true;
 	}
 
@@ -475,6 +487,12 @@ class wpOffload
 			return $error;
 		}
 
+		if (true === $bool)
+		{
+			Log::addDebug('Offload Prevented via bool for ' . $post_id);
+		}
+		
+
 		return $bool;
 	}
 
@@ -499,6 +517,8 @@ class wpOffload
 		$wp_source = trim(get_attached_file($post_id, apply_filters('emr_unfiltered_get_attached_file', true)));
 
 		$updated = false;
+
+		self::$sources = [];  // Wipe the source cache to prevent lingering stuff. 
 
 		// If image is replaced with another name, the original soruce path will not match.  This could also happen when an image is with -scaled as main is replaced by an image that doesn't have it.  In all cases update the table to reflect proper changes.
 		if (wp_basename($wp_original) !== wp_basename($original_path)) {
@@ -599,18 +619,20 @@ class wpOffload
 	/**  Get Webp Paths that might be generated and offload them as well.
 	 * Paths - size : path values
 	 */
-	public function add_webp_paths($paths)
-	{
+	
+	public function add_webp_paths($paths, $attachment_id, $meta)
+	{ // @todo Check if this works.
 		$paths = $this->getWebpPaths($paths, true);
 		return $paths;
 	}
 
-
+	/*
 	public function remove_webp_paths($paths)
 	{
 		$paths = $this->getWebpPaths($paths, false);
 		return $paths;
 	}
+	*/
 
 	// GetbyURL can't find thumbnails, only the main image. Check via extrainfo method if we can find needed filetype
 	// @param $bool Boolean

@@ -12,6 +12,8 @@ class DownloadHelper
 {
 		  private static $instance;
 
+      protected $last_download_error; 
+
 			public function __construct()
 			{
 					$this->checkEnv();
@@ -38,7 +40,7 @@ class DownloadHelper
        * 
        * @param string $url The remote URL to download.
        * @param array $args  if DestinationPath is included it will try to move file there, otherwise remain in /tmp. 
-       * @return string File Path 
+       * @return Object|bool File Object or false 
        */
       
 			public function downloadFile($url, $args = array())
@@ -78,7 +80,8 @@ class DownloadHelper
 					if (false === $success)
 					{
 						Log::addError('Failed to download File', $result);
-						ResponseController::addData('is_error', true);
+            $this->last_download_error = $tempFile->get_error_message();
+						//ResponseController::addData('is_error', true);
 						//Responsecontroller::addData('message', $tempFile->get_error_message());
 						return false;
 					}
@@ -93,16 +96,24 @@ class DownloadHelper
 					$fs = \wpSPIO()->filesystem();
 					$file = $fs->getFile($tempFile);
 
-          
-
           if ($file->getFileSize() === 0)
           {
               Log::addError('Tmp File zero bytes', $tempFile); 
-              ResponseController::addData('is_error', true);
-              Responsecontroller::addData('message', __('Temp file zero bytes', 'shortpixel-image-optimiser'));
+              $this->last_download_error =__('Temp file zero bytes', 'shortpixel-image-optimiser'); 
 
               $file->delete(); // Prevent it from hanging around 
               return false; 
+          }
+
+          $allowed_exts = ['pdf'];  // other than 'image' . 
+
+          if (false === in_array($file->getExtension(), $allowed_exts) && false === $file->isImage())
+          {
+            Log::addError('Download: File came back as not being an image! ', $file);
+            $file->delete();
+            $this->last_download_error = __('File Download failed - seems not an image.', 'shortpixel-image-optimiser'); 
+
+            return false; 
           }
 
           if (! is_null($args['destinationPath']))
@@ -111,8 +122,8 @@ class DownloadHelper
              if (false === $result)
              {
                Log::addError('Failed to move Download', $args);
-               ResponseController::addData('is_error', true);
-               Responsecontroller::addData('message', __('Failed to move download to destination!', 'shortpixel-image-optimiser'));
+               $this->last_download_error = __('Failed to move download to destination!', 'shortpixel-image-optimiser'); 
+
                return false;
              }
              else {
@@ -122,6 +133,11 @@ class DownloadHelper
 
 					return $file;
 			}
+
+      public function getLastError()
+      {
+          return $this->last_download_error;
+      }
 
       protected function moveDownload($fileObj, $destinationPath)
       {
@@ -155,6 +171,10 @@ class DownloadHelper
         }
         // min here, so maximum value of downloadtimeout is 25 seconds, which should be more than enough. To prevent hanging downloads eating up server time
         $downloadTimeout = min($executionTime - 10, 25);
+        if ($downloadTimeout < 10) // asume something went wrong here, or edge case up, allow minimum 10 seconds for download.
+        {
+            $downloadTimeout = 10; 
+        }
 
         return $downloadTimeout; 
       }
@@ -170,7 +190,9 @@ class DownloadHelper
         if (is_wp_error($tempFile))
         {
            Log::addError('Failed to Download File from ' . $url , $tempFile);
-           Responsecontroller::addData('message', $tempFile->get_error_message());
+          // Responsecontroller::addData('message', $tempFile->get_error_message());
+           $this->last_download_error = $tempFile->get_error_message();
+
            return false;
         }
 

@@ -17,6 +17,7 @@ use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Controller\Queue\CustomQueue as CustomQueue;
 
 use ShortPixel\Helper\UiHelper as UiHelper;
+use ShortPixel\Model\Image\CustomImageModel;
 
 // Future contoller for the edit media metabox view.
 class OtherMediaViewController extends \ShortPixel\ViewController
@@ -25,6 +26,8 @@ class OtherMediaViewController extends \ShortPixel\ViewController
       protected $template = 'view-other-media';
 
 			protected static $instance;
+
+    	const OTHER_MEDIA_PER_PAGE_OPTION = 'shortpixel_custom_media_per_page';
 
       // Pagination .
       protected $items_per_page = 20;
@@ -52,6 +55,8 @@ class OtherMediaViewController extends \ShortPixel\ViewController
         $this->search =  (isset($_GET["s"]) && strlen($_GET["s"]) > 0)  ? sanitize_text_field( wp_unslash($_GET['s'])) : false;
 				// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
 				$this->show_hidden = isset($_GET['show_hidden']) ? sanitize_text_field(wp_unslash($_GET['show_hidden'])) : false;
+
+        $this->items_per_page = $this->loadScreenPerPageOption(self::OTHER_MEDIA_PER_PAGE_OPTION, $this->items_per_page );
 
       }
 
@@ -114,7 +119,23 @@ class OtherMediaViewController extends \ShortPixel\ViewController
         return $headings;
       }
 
-      protected function getItems()
+        	public function addOtherMediaScreenOptions() {
+      add_screen_option( 'per_page', array(
+        'label'   => __( 'Items per page', 'shortpixel-image-optimiser' ),
+        'default' => 20,
+        'option'  => self::OTHER_MEDIA_PER_PAGE_OPTION,
+      ) );
+  	}
+
+    public function setScreenOption( $status, $option, $value ) {
+      if ( self::OTHER_MEDIA_PER_PAGE_OPTION === $option ) {
+        return intval( $value );
+      }
+
+      return $status;
+    }
+
+      protected function getItems() : array
       {
           $fs = \wpSPIO()->filesystem();
 
@@ -144,6 +165,22 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 
           return $items;
       }
+
+     protected function loadScreenPerPageOption( $option_name, $default = 20 )
+    {
+      if ( ! function_exists( 'get_user_option' ) ) {
+          return $default;
+      }
+
+      $value = get_user_option( $option_name );
+      $value = intval( $value );
+
+      if ( $value > 0 ) {
+          return $value;
+      }
+
+      return $default;
+    }
 
       protected function getItemFolders($items)
       {
@@ -513,7 +550,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
                 'all' => __('Any ShortPixel State', 'shortpixel-image-optimiser'),
                 'optimized' => __('Optimized', 'shortpixel-image-optimiser'),
                 'unoptimized' => __('Unoptimized', 'shortpixel-image-optimiser'),
-                'prevented' => __('Optimization Error', 'shortpixer-image-optimiser'),
+                'prevented' => __('Optimization Error', 'shortpixel-image-optimiser'),
 
             );
 
@@ -525,6 +562,21 @@ class OtherMediaViewController extends \ShortPixel\ViewController
             }
             echo "</select>";
 
+      }
+
+      public function printBulkActions()
+      {
+          $bulkActions =  ['shortpixel-optimize' => __('Optimize','shortpixel-image-optimiser'),
+          'shortpixel-restore' => __('Restore', 'shortpixel-image-optimiser'), 
+          'shortpixel-lossy' => __( 'Re-optimize Lossy', 'shortpixel-image-optimiser' ), 
+          'shortpixel-glossy' => __( 'Re-optimize Glossy', 'shortpixel-image-optimiser' ), 
+          'shortpixel-lossless' => __( 'Re-optimize Lossless', 'shortpixel-image-optimiser' ),   
+          'shortpixel-mark-completed' => __('Mark completed', 'shortpixel-image-optimiser'),
+          ];
+
+          array_walk($bulkActions, function ($text, $name) {
+              echo '<option value="' . esc_attr($name) . '">' . esc_html($text) . '</option>';
+          });
       }
 
 

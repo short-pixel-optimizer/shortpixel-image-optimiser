@@ -1,6 +1,8 @@
 <?php
 namespace ShortPixel;
 
+use ShortPixel\Helper\UiHelper;
+
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
@@ -70,19 +72,18 @@ if ( ! defined( 'ABSPATH' ) ) {
         <?php $this->printSwitchButton(
               ['name' => 'backupImages',
                'checked' => $view->data->backupImages,
-               'label' => esc_html__('Backup Originals','shortpixel-image-optimiser'),
-               'data' => ['data-dashboard="' . __('Backups are strongly recommended!', 'shortpixel-image-optimiser') . '"'],
+               'label' => esc_html__('Backup original files','shortpixel-image-optimiser'),
+               'data' => ['data-toggle="backup-options"', 'data-dashboard="' . __('Backups are strongly recommended!', 'shortpixel-image-optimiser') . '"'],
               ]);
         ?>
 
         <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-image-backup/?target=iframe"></i>
         <name>
-          <?php esc_html_e('Create a backup of the original images, saved on your server in /wp-content/uploads/ShortpixelBackups/.','shortpixel-image-optimiser');?>
+          <?php esc_html_e('Keep a copy of your original files so you can restore them later if needed. Copies are stored in /wp-content/uploads/ShortpixelBackups/.','shortpixel-image-optimiser');?>
         </name>
 
-
         <info>
-          <?php printf(esc_html__('You can delete the backup folder at any time, but it is best to %skeep a local or cloud copy.%s This way, you can easily restore the optimized files to their originals or re-optimize the images with a different compression type if needed.','shortpixel-image-optimiser'),
+          <?php printf(esc_html__('Backups are saved on your server. For extra safety, we recommend also keeping a %local or cloud copy.%s','shortpixel-image-optimiser'),
              '<a href="https://shortpixel.com/knowledge-base/article/where-is-the-backup-folder-located/" target="_blank">','</a>'
              );
          ?>
@@ -94,7 +95,74 @@ if ( ! defined( 'ABSPATH' ) ) {
         </message>
       </warning>
     </setting>
-  <!-- // Backup -->
+
+
+    <!-- Single File Backup --> 
+    <setting class='switch backup-options toggleTarget'> 
+          <content>
+          <?php $this->printSwitchButton(
+            ['name' => 'singleFileBackup',
+             'checked' => $view->data->singleFileBackup,
+             'label' => esc_html__('Smart backup','shortpixel-image-optimiser'),
+             'data' => ['data-toggle="backup-single-warning"'],
+            ]);
+      ?>
+        <name>
+          <?php esc_html_e('Back up only the main file and regenerate thumbnails when restoring.','shortpixel-image-optimiser');?>
+        </name>
+
+        <info>
+          <?php esc_html_e('Use this only if you want to save disk space. In some cases, restored thumbnails may not look exactly like the originals.','shortpixel-image-optimiser');?>
+        </info>
+          </content>
+    </setting>
+
+    <!--- AUTO REMOVE BACKUP --> 
+    <setting class='switch '> 
+          <content>
+          <?php $this->printSwitchButton(
+            ['name' => 'autoRemoveBackups',
+             'checked' => $view->data->autoRemoveBackups,
+             'label' => esc_html__('Automatic backup cleanup','shortpixel-image-optimiser'),
+             'data' => ['data-toggle="autoremovebackups"'],
+            ]);
+      ?>
+        <name>
+          <?php esc_html_e('Automatically remove old backups after the selected time to save disk space.','shortpixel-image-optimiser');?>
+        </name>
+          </content>
+          <warning id="backup-autoremove-warning" class='autoremovebackups toggleTarget'>
+            <?php esc_html_e('Once removed, backups cannot be restored from this plugin. Make sure you have another copy if you need the originals.', 'shortpixel-image-optimiser') ?>
+          </warning>
+
+      <content class='autoremovebackups toggleTarget'>
+        <name>
+          <?php printf(esc_html__('Delete backups older than:', 'shortpixel-image-optimiser')); ?>
+        </name>
+        <?php
+          $removeperiods = [
+            'month'  =>  __('1 month', 'shortpixel-image-optimiser'), 
+            '3month' => __('3 months', 'shortpixel-image-optimiser'),
+            '6month' => __('6 months', 'shortpixel-image-optimiser'), 
+            '1year' =>  __('1 year', 'shortpixel-image-optimiser'),
+            '2year' => __('2 years', 'shortpixel-image-optimiser'),
+            '5year' => __('5 years', 'shortpixel-image-optimiser'), 
+          ]; 
+
+        ?>
+
+        <select name="autoRemoveBackupsPeriod">
+          <?php foreach ($removeperiods as $value => $name) {
+            $checked = ($value == $view->data->autoRemoveBackupsPeriod) ? 'selected' : '';
+            printf('<option value="%s" %s>%s</option>', $value, $checked,  $name);
+          }
+          ?>
+
+        </select>
+      </content>
+
+    </setting>
+<!-- // Backup -->
 
   <!-- Custom Media Folders -->
   <setting class='switch'>

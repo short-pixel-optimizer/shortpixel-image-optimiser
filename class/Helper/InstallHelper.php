@@ -26,21 +26,22 @@ class InstallHelper
 		self::deactivatePlugin();
 
 		$env = wpSPIO()->env();
+		$settings = \wpSPIO()->settings();
 
-		if (\WPShortPixelSettings::getOpt('deliverWebp') == 3 && ! $env->is_nginx) {
+		if ($settings->deliverWebp == 3 && ! $env->is_nginx) {
 			UtilHelper::alterHtaccess(true, true); //add the htaccess lines. Both are true because even if one option is now off in the past both fileformats could have been generated.
 		}
 
 		self::checkTables();
 
 		AdminNoticesController::resetOldNotices();
-		\WPShortPixelSettings::onActivate();
 
 		$queueController = new QueueController();
 		$q = $queueController->getQueue('media');
 		$q->getShortQ()->install(); // create table.
 
-		$settings = \wpSPIO()->settings();
+
+		$settings->onActivate();
 		$settings->currentVersion = SHORTPIXEL_IMAGE_OPTIMISER_VERSION;
 
 		wp_cache_flush();
@@ -48,8 +49,9 @@ class InstallHelper
 
 	public static function deactivatePlugin()
 	{
-		$settings = new \WPShortPixelSettings(); // \wpSPIO()->settings();
-		$settings::onDeactivate();
+
+		$settings = \wpSPIO()->settings();
+		$settings->onDeactivate(); 
 
 		$env = wpSPIO()->env();
 
@@ -64,6 +66,20 @@ class InstallHelper
 		if ($log->exists())
 			$log->delete();
 
+		// Known Transients in system, deleting this way for caches etc : 
+		$transients = [
+			'spio_settings_ai_example_id',  // settings - example ai 
+			'bulk-secret',  // cachecontroller in ajaxcontroller
+			'average_compression',  // average compression in system 
+			'quotaData', // the cached quota data.
+		];
+
+		foreach($transients as $transient)
+		{
+				 delete_transient($transient); 
+		}
+
+		/** We still have to do a hard database delete because the plugin has dynamically names transients we can't predict the name of  */
 		global $wpdb;
 		$sql = "delete from " . $wpdb->options . " where option_name like '%_transient_shortpixel%' or option_name like '%_transient_timeout_shortpixel%'";
 		$wpdb->query($sql); // remove transients.
@@ -88,7 +104,7 @@ class InstallHelper
 	public static function hardUninstall()
 	{
 		$env = \wpSPIO()->env();
-		$settings = new \WPShortPixelSettings();
+		$settings = \wpSPIO()->settings();
 
 		$nonce = (isset($_POST['tools-nonce'])) ? sanitize_key($_POST['tools-nonce']) : null;
 		if (! wp_verify_nonce($nonce, 'remove-all')) {
@@ -101,10 +117,8 @@ class InstallHelper
 		// Bulk Log
 		BulkController::uninstallPlugin();
 
-		$settings::resetOptions();
+		$settings->deleteAll();
 
-		// new settings
-		delete_option('spio_settings');
 
 		if (! $env->is_nginx) {
 			insert_with_markers(get_home_path() . '.htaccess', 'ShortPixelWebp', '');
@@ -190,7 +204,10 @@ class InstallHelper
 				'size' => 'size',
 				'status' => 'status',
 				'compression_type' => 'compression_type'
-			)
+			), 
+			'shortpixel_aipostmeta' => [
+				'attach_id' => 'attach_id', 
+			],
 		);
 
 		foreach ($definitions as $raw_tableName => $indexes) {

@@ -234,45 +234,124 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
        var selectedAction = selectBox.options[selectBox.selectedIndex];
        selectBox.selectedIndex = 0; // Return to default
 
-       var action = selectedAction.value;
+       var actionValue = selectedAction.value;
 
+			  var bulkActions = []; 
+			  var bulkItems = []; 
 
        for (var i = 0; i < items.length; i++)
        {
            var item = items[i];
+           var actionPushed = false; 
+
            if (false == item.checked) // failsafe
            {
               continue;
            }
            var item_id = item.value;
 
-           if ('optimize' === action)
-           {
-              if (item.classList.contains('is-optimizable'))
-              {
-               this.Optimize(item_id);
-              }
-           }
-           else if ('restore' === action)
-           {
-              if (item.classList.contains('is-restorable'))
-              {
-                this.RestoreItem(item_id);
-              }
-           }
-           else if ('mark-completed' === action)
-           {
-             if (item.classList.contains('is-optimizable'))
-             {
-               this.MarkCompleted(item_id);
-             }
+           var restorable = item.classList.contains('is-restorable'); 
+           var optimizable = item.classList.contains('is-optimizable');
 
+           if (item.dataset.type)
+           {
+              var compressionType = item.dataset.type; 
            }
-           else {
+           else 
+           {
+             var compressionType = -1;
            }
 
-           item.checked = false;
-       }
+           
+				switch (actionValue) {
+					case 'shortpixel-optimize':
+						if (optimizable) {
+							bulkActions.push( this.AddDelayedAction('Optimize', item_id) );
+							actionPushed = true; 
+						}
+						break;
+					case 'shortpixel-glossy':
+					case 'shortpixel-lossy':
+					case 'shortpixel-lossless':
+					case 'shortpixel-smartcrop':
+					case 'shortpixel-smartcropless':
+
+						switch (actionValue) {
+							case 'shortpixel-glossy':
+								var compression = this.imageConstants.COMPRESSION_GLOSSY;
+								break;
+							case 'shortpixel-lossless':
+								var compression = this.imageConstants.COMPRESSION_LOSSLESS;
+								break;
+							case 'shortpixel-lossy':
+								var compression = this.imageConstants.COMPRESSION_LOSSY;
+								break;
+							case 'shortpixel-smartcrop':
+								var action = this.imageConstants.ACTION_SMARTCROP;
+								break;
+							case 'shortpixel-smartcropless':
+								var action = this.imageConstants.ACTION_SMARTCROPLESS;
+							break;
+						}
+
+						if (typeof action === 'undefined' && compressionType == compression) {
+							items.checked = false
+							continue; // no need for compression. Should probably not work when actionstuff is happening.
+						}
+						else {
+							compressionType = compression;
+						}
+
+						if (restorable) {
+							bulkActions.push( this.AddDelayedAction('ReOptimize',item_id, compressionType, action));
+							actionPushed = true; 
+							//this.ReOptimize(media_id, compressionType, action);
+						}
+
+
+						break;
+					case 'shortpixel-restore':
+						if (restorable) {
+							bulkActions.push( this.AddDelayedAction('RestoreItem', item_id) );
+							actionPushed = true; 
+							//this.RestoreItem(media_id);
+						}
+						break;
+					case 'shortpixel-mark-completed':
+							if (optimizable) {
+								bulkActions.push( this.AddDelayedAction('MarkCompleted', item_id) );
+								actionPushed = true; 
+								//this.MarkCompleted(media_id);
+							}
+					break; 
+      }
+				if (false === actionPushed)
+				{
+					items[i].checked = false;
+				}
+				else 
+				{
+					 bulkItems.push(items[i]);
+				}
+      }
+
+			// Timeout: delay a little bit each item to prevent hammering server. 
+			var i = 0; 
+			if (bulkActions.length > 0)
+			{
+
+				var inv = setInterval(() => {
+
+							var item = bulkItems.shift(); 
+							item.checked = false; 
+							bulkActions[i]();
+							i++; 
+							if (i === bulkActions.length)
+							{
+								clearInterval(inv);
+							}
+						}, 1000 );
+			}
 
        var selectAll = document.querySelector('input[name="select-all"]');
        selectAll.checked = false;

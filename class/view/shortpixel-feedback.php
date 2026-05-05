@@ -232,7 +232,7 @@ class ShortPixelFeedback {
                         }
                         $('html,body').animate({ scrollTop: Math.max(0, offset.top - 50) });
                     }});
-                    formContainer.html( '<?php echo $html; ?>');
+                    formContainer.html( <?php echo json_encode($html); ?> );
 
                     formContainer.on( 'change', 'input[type=radio]', function(){
 

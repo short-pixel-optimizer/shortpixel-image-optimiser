@@ -39,6 +39,10 @@ header
 	    width: 15px;
 	    vertical-align: text-top;
           }
+
+          .shortpixel-icon.star {
+               filter: $filter_gold;
+          }
       	}
     }
 }

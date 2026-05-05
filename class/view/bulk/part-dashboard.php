@@ -1,15 +1,11 @@
 <?php
 namespace ShortPixel;
-
-use PHPCSExtra\Universal\Sniffs\CodeAnalysis\NoEchoSprintfSniff;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Helper\UiHelper as UiHelper;
 
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
-
-
 
 ?>
 
@@ -27,13 +23,13 @@ if ( ! defined( 'ABSPATH' ) ) {
     <div class='bulk-wrapper'>
 
       <?php 
-      $link = (false !== $view->dashboard_link) ? sprintf('title="%s" href="%s" target="_blank"', $view->dashboard_message, $view->dashboard_link) : ''; 
+      $link = (false !== $view->dashboard_link) ? sprintf('title="%s" href="%s" target="_blank"', esc_attr($view->dashboard_message), esc_url($view->dashboard_link)) : ''; 
       ?>
       <a class='top-circle' <?php echo $link ?>>
-          <div class='the-circle' style='background-image: url("<?php echo $view->dashboard_icon ?>");'>&nbsp;</div>
+          <div class='the-circle' style='background-image: url("<?php echo esc_url($view->dashboard_icon); ?>");'>&nbsp;</div>
       </a>
       <?php //if (false !== $view->dashboard_title): ?>
-       <h3 class='title-offer'><?php echo ( (false !== $view->dashboard_title) ? $view->dashboard_title : "Ready to start optimizing?"); ?></h3>
+       <h3 class='title-offer'><?php echo ( (false !== $view->dashboard_title) ? esc_html($view->dashboard_title) : esc_html__("Ready to start optimizing?", 'shortpixel-image-optimiser')); ?></h3>
       <?php //endif; ?>
 
 
@@ -57,7 +53,7 @@ if ( ! defined( 'ABSPATH' ) ) {
    <?php if ($this->view->error): ?>
      <div class='bulk error'>
         <h3><?php echo esc_html($this->view->errorTitle); ?></h3>
-        <p><?php echo $this->view->errorContent; ?></p>
+        <p><?php echo wp_kses_post($this->view->errorContent); ?></p>
         <?php if (property_exists($this->view, 'errorText')): ?>
             <p class='text'><?php echo esc_html($this->view->errorText) ?></p>
         <?php endif; ?>

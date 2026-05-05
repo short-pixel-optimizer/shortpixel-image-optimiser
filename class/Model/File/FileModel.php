@@ -265,38 +265,47 @@ class FileModel extends \ShortPixel\Model
     return filemtime($this->fullpath);
   }
 
-  public function hasBackup()
+  public function getCreated()
   {
-      $directory = $this->getBackupDirectory();
-      if (! $directory)
-        return false;
-
-      $backupFile =  $directory . $this->getBackupFileName();
-
-      if (file_exists($backupFile) && ! is_dir($backupFile) )
-        return true;
-      else {
-        return false;
-      }
+    return filectime($this->fullpath);
   }
 
-  /** Tries to retrieve an *existing* BackupFile. Returns false if not present.
-  * This file might not be writable.
-  * To get writable directory reference to backup, use FileSystemController
-  */
-  public function getBackupFile()
+  public function isImage()
   {
-     if ($this->hasBackup())
-        return new FileModel($this->getBackupDirectory() . $this->getBackupFileName() );
-     else
-       return false;
+        if (! $this->exists())
+        {
+          return false;
+        }
+
+        if (is_null($this->mime) && \wpSPIO()->env()->is_function_usable('finfo_open')) // Faster function for getting mime types
+          {
+            $fileinfo = finfo_open(FILEINFO_MIME_TYPE);
+            $this->mime = finfo_file($fileinfo, $this->getFullPath());
+            // Deprecated from version 8.5
+            if (false === \wpSPIO()->env()->checkPHPversion('8.5') )
+            {
+            finfo_close($fileinfo);
+            }
+            //FILEINFO_MIME_TYPE
+        }
+        elseif(is_null($this->mime) && \wpSPIO()->env()->is_function_usable('mime_content_type')) {
+          $this->mime = mime_content_type($this->getFullPath());
+        }
+        elseif(is_null($this->mime)) {
+          return true; // assume without check, that extension says what it is.
+          // @todo This should probably trigger a notice in adminNoticesController.
+        }
+
+        if (strpos($this->mime, 'image') !== false)
+            return true;
+        else
+          return false;
+
   }
 
-	/** Function returns the filename for the backup.  This is an own function so it's possible to manipulate backup file name if needed, i.e. conversion or enumeration */
-	public function getBackupFileName()
-	{
-		 return $this->getFileName();
-	}
+
+  
+
 
   /** Returns the Directory Model this file resides in
   *
@@ -537,10 +546,16 @@ class FileModel extends \ShortPixel\Model
 
     return $this->mime;
   }
+
+  /*
+    @todo  This moved to BackupModel! 
+  */
+
   /* Util function to get location of backup Directory.
 	* @param Create - If true will try to create directory if it doesn't exist.
   * @return Boolean | DirectModel  Returns false if directory is not properly set, otherwhise with a new directoryModel
   */
+  /*
   protected function getBackupDirectory($create = false)
   {
 
@@ -557,7 +572,6 @@ class FileModel extends \ShortPixel\Model
 
       if ($directory === false || ! $directory->exists()) // check if exists. FileModel should not attempt to create.
       {
-        //Log::addWarn('Backup Directory not existing ' . $directory-);
         return false;
       }
       elseif ($directory !== false)
@@ -571,7 +585,7 @@ class FileModel extends \ShortPixel\Model
     }
 
     return $this->backupDirectory;
-  }
+  } */
 
   /* Internal function to check if path is a real path
   *  - Test for URL's based on http / https

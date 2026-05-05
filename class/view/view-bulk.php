@@ -37,8 +37,8 @@ if ( ! defined( 'ABSPATH' ) ) {
         $alt = '';
     }
     ?>
-    <?php echo $title ?>
-    <p class='small'><?php echo $alt ?></p>
+    <?php echo esc_html($title); ?>
+    <p class='small'><?php echo esc_html($alt); ?></p>
   </div>
 
   <div id="processorOverQuota" class="processor-overquota">

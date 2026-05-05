@@ -8,7 +8,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ShortPixel\Helper\InstallHelper;
 use ShortPixel\Helper\UtilHelper;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-use ShortPixel\Notices\NoticeController as Notice;
 
 // Class to handle the Database Table Data, store AI relevant data etc. 
 class AiDataModel
@@ -71,6 +70,12 @@ class AiDataModel
     const F_STATUS_PREVENTOVERRIDE = -4;
     
 
+    /**
+     * Constructor to initialize AiDataModel.
+     *
+     * @param int $attach_id The attachment/media ID.
+     * @param string $type The type of record (default: 'media').
+     */
     public function __construct($attach_id, $type = 'media')
     {
           $this->attach_id = $attach_id; 
@@ -82,6 +87,13 @@ class AiDataModel
           $this->fetchRecord($this->attach_id, $this->type);
     }
 
+    /**
+     * Fetch the AI data record from the database.
+     *
+     * @param int $attach_id The attachment ID.
+     * @param int $type The post type constant.
+     * @return bool|void False if table doesn't exist, void otherwise.
+     */
     protected function fetchRecord($attach_id, $type)
     {
            global $wpdb; 
@@ -115,6 +127,12 @@ class AiDataModel
 
     }
 
+    /**
+     * Validate and decode JSON row data.
+     *
+     * @param string $json The JSON string to validate and decode.
+     * @return array The decoded data or empty array if invalid JSON.
+     */
     private function checkRowData($json)
     {
         $bool = UtilHelper::ValidateJSON($json);
@@ -129,19 +147,47 @@ class AiDataModel
 
     }
 
-    /** Get all data needed to send API for generating AI texts, depending on settings. This includes all settings minus URL 
-     * 
-     * @return array{paramlist: array<string, array{context: mixed, chars: mixed}>, returndatalist: array<string, array<string, int>>} 
+    /**
+     * Get all data needed to send API for generating AI texts, depending on settings.
+     * This includes all settings minus URL.
+     *
+     * @param array $params Optional parameters to override settings.
+     * @return array{paramlist: array<string, array{context: mixed, chars: mixed}>, returndatalist: array<string, array<string, int>>} Parameters and return data list for API.
      */
     public function getOptimizeData($params = [])
     {
         $settings = (object) UtilHelper::getAiSettings($params); 
 
         $ignore_fields = []; 
-        if (true === $settings->aiPreserve)
+        $preview_only = isset($params['preview_only']) ? $params['preview_only'] : false; 
+
+        // Ignore this on preview only (settings), otherwise we might get empty preview, which is not the point.
+        if (true === $settings->aiPreserve && false === $preview_only)
         {
             $currentData = $this->getCurrentData(); 
-            $ignore_fields = array_diff(array_keys( array_filter($currentData) ), ['post_title']);
+            $ignore_fields = array_diff(array_keys( array_filter($currentData) ), []);
+
+            $fs = \wpSPIO()->filesystem(); 
+            $mediaItem = $fs->getMediaImage($this->attach_id); 
+
+            if (false !== $mediaItem && true === $mediaItem->hasOriginal())
+            {
+                $mediaItem = $mediaItem->getOriginalFile(); 
+            }
+
+            $fileName = $mediaItem->getFileName(); 
+            $extension = $mediaItem->getExtension(); 
+            
+            $fileName = str_replace('.' . $extension, '', $fileName);
+
+            if ($currentData['post_title'] == $fileName)
+            {
+                if (in_array('post_title', $ignore_fields))
+                {
+                    $ignore_fields = array_diff($ignore_fields, ['post_title']);
+                }
+            }
+            
             // Exception via array_diff :: post_title always overwrite because it is always filled
         }
 
@@ -211,10 +257,18 @@ class AiDataModel
             $this->processable_status = self::P_NOJOB; 
         }
 
+        $paramlist = apply_filters('shortpixel/aidatamodel/paramlist', $paramlist, $this->attach_id);
+
         return ['paramlist' => $paramlist, 'returndatalist' => $returnDataList]; 
 
     }
 
+    /**
+     * Handle and process new AI generated data.
+     *
+     * @param array $data The newly generated AI data.
+     * @return void
+     */
     public function handleNewData($data)
     {   
         // Save to Database
@@ -253,6 +307,12 @@ class AiDataModel
 
     }
 
+    /**
+     * Update WordPress post fields with AI generated data.
+     *
+     * @param array $data The generated data to update the post with.
+     * @return void
+     */
     protected function updateWPPost($data)
     {
         $post = get_post($this->attach_id); 
@@ -282,31 +342,55 @@ class AiDataModel
         }
     }
 
+    /**
+     * Update WordPress post meta fields with AI generated data.
+     *
+     * @param array $data The generated data to update post meta with.
+     * @return void
+     */
     protected function updateWpMeta($data)
     {
-        Log::addTemp('Update WpMeta', $data);
         if (isset($data['alt']) && false !== $data['alt'] && false === is_int($data['alt']))
         {
             $bool = update_post_meta($this->attach_id, '_wp_attachment_image_alt', $data['alt']);
         }
     }
 
-    // Should return our results, from the AI only
+    /**
+     * Get the AI generated data results.
+     *
+     * @return array The generated data array.
+     */
     public function getGeneratedData()
     {
         return $this->generated;
     }
 
+    /**
+     * Get the current AI status.
+     *
+     * @return int The AI status constant.
+     */
     public function getStatus()
     {
          return $this->status;
     }
 
+    /**
+     * Get the attachment ID.
+     *
+     * @return int The attachment ID.
+     */
     public function getAttachId()
     {
          return $this->attach_id;
     }
 
+    /**
+     * Check if current data differs from generated data.
+     *
+     * @return bool True if data differs, false otherwise.
+     */
     public function currentIsDifferent()
     {
          $this->setCurrentData(); 
@@ -323,6 +407,12 @@ class AiDataModel
          return false; 
     }
 
+    /**
+     * Filter callback to map relevant WordPress variable keys.
+     *
+     * @param string $key The array key to check.
+     * @return bool True if key is relevant, false otherwise.
+     */
     private function mapWPVars($key)
     {
          $fields = ['alt', 'caption', 'description']; 
@@ -335,6 +425,11 @@ class AiDataModel
         
     }
 
+    /**
+     * Get the title of the post connected to this attachment.
+     *
+     * @return string|bool The connected post title or false if not found.
+     */
     protected function getConnectedPostTitle()
     {
          $attach_id = $this->attach_id; 
@@ -353,7 +448,11 @@ class AiDataModel
          
     }
 
-    // Should return the current situation. If not stored in the database - or different from meta - uh something should be returned. 
+    /**
+     * Set the current data from WordPress post and post meta.
+     *
+     * @return void
+     */
     protected function setCurrentData()
     {
         $attach_id = $this->attach_id;      
@@ -380,6 +479,11 @@ class AiDataModel
 
     }
 
+    /**
+     * Get the current data from the database.
+     *
+     * @return array The current data array.
+     */
     public function getCurrentData()
     {
           if (false === $this->current_is_set)
@@ -390,13 +494,21 @@ class AiDataModel
           return $this->current;
     }
 
-    // This should return originals, or what the system thinks is the last user-generated content here. 
+    /**
+     * Get the original data from the database.
+     *
+     * @return array The original data array.
+     */
     public function getOriginalData()
     {
         return $this->original; 
     }
 
-    // Check if the stored data still correlates to reality
+    /**
+     * Check if the stored data still correlates to current WordPress data.
+     *
+     * @return void
+     */
     public function checkStoredData()
     {
         if (false === $this->has_record)
@@ -408,9 +520,10 @@ class AiDataModel
                  
     }
 
-    /** Function to check if on this item there is something to AI 
-     * 
-     * @return boolean 
+    /**
+     * Check if this item can be processed by AI.
+     *
+     * @return bool True if processable, false otherwise.
      */
     public function isProcessable()
     {
@@ -425,10 +538,17 @@ class AiDataModel
         return $processable; 
     }
 
-
+    /**
+     * Check if EXIF settings allow AI processing.
+     *
+     * @return bool True if EXIF allows processing, false otherwise.
+     */
     private function isExifProcesssable()
     {
-        $fs = \wpSPIO()->filesystem(); 
+        // Change: Exif processing changed on API, allowing this - https://app.asana.com/1/18694759100379/project/1200110778640816/task/1213564895578597 
+       return true; 
+
+        /*$fs = \wpSPIO()->filesystem(); 
         $imageModel = $fs->getMediaImage($this->attach_id); 
 
         if (false === $imageModel->isSomethingOptimized())
@@ -448,10 +568,16 @@ class AiDataModel
         }
 
         $this->processable_status = self::P_EXIFAI;
-        return false; 
+        return false;  */
 
     }
 
+    /**
+     * Get the reason why an item is not processable.
+     *
+     * @param bool $returnStatus Whether to return status code instead of message.
+     * @return string|int The processing status message or code.
+     */
     public function getProcessableReason($returnStatus = false )
     {
         $message = false; 
@@ -486,6 +612,11 @@ class AiDataModel
         return $message;
     }
 
+    /**
+     * Check if file extension is supported for AI processing.
+     *
+     * @return bool True if extension is supported, false otherwise.
+     */
     protected function isExtensionIncluded()
     {
         $fs = \wpSPIO()->filesystem(); 
@@ -503,6 +634,11 @@ class AiDataModel
         return false; 
     }
 
+    /**
+     * Check if there are fields to generate.
+     *
+     * @return bool True if there is something generatable, false otherwise.
+     */
     protected function hasSomethingGeneratable()
     {
         $optimizeData = $this->getOptimizeData(); 
@@ -515,6 +651,11 @@ class AiDataModel
         return true; 
     }
 
+    /**
+     * Check if any data has been generated for this item.
+     *
+     * @return bool True if data has been generated, false otherwise.
+     */
     public function isSomeThingGenerated()
     {
         if (false === $this->has_record)
@@ -529,12 +670,23 @@ class AiDataModel
         return false;
     }
 
+    /**
+     * Get the database table name for AI post meta.
+     *
+     * @return string The full table name with prefix.
+     */
     private static function getTableName()
     {
          global $wpdb; 
          return $wpdb->prefix . 'shortpixel_aipostmeta';
     }
 
+    /**
+     * Update or insert the AI data record in the database.
+     *
+     * @param array $data Optional data to update (unused in current implementation).
+     * @return void
+     */
     protected function updateRecord($data = [])
     {
         global $wpdb; 
@@ -562,6 +714,12 @@ class AiDataModel
 
     }
 
+    /**
+     * Migrate data from legacy AI data format.
+     *
+     * @param array $data The legacy data to migrate.
+     * @return bool True if migration was successful, false otherwise.
+     */
     public function migrate($data)
     {
         $updated = false; 
@@ -591,20 +749,36 @@ class AiDataModel
         return true;
     }
 
+    /**
+     * Revert AI generated data and restore original data.
+     *
+     * @return void
+     */
     public function revert()
     {   
+        $this->onDelete(); 
+
+        $this->updateWPPost($this->original);
+        $this->updateWpMeta($this->original);
+    }
+
+    public function onDelete()
+    {
         if (true === $this->has_record)
         {
             global $wpdb; 
             $wpdb->delete(self::getTableName(), ['id' => $this->id], ['%s']);
-
         }
 
-        $this->updateWPPost($this->original);
-        $this->updateWpMeta($this->original);
-   
+        $this->has_record = false; 
+        self::flushModelCache($this->id);
     }
 
+    /**
+     * Get the most recently updated AI data model.
+     *
+     * @return AiDataModel|bool The most recent model or false if none exists.
+     */
     public static function getMostRecent()
     {
         global $wpdb; 
@@ -619,7 +793,14 @@ class AiDataModel
         return new AiDataModel($attach_id);
     }
 
-    
+    /**
+     * Get or create an AiDataModel for a specific attachment.
+     * Uses caching to avoid duplicate instances.
+     *
+     * @param int $attach_id The attachment ID.
+     * @param string $type The record type (default: 'media').
+     * @return AiDataModel The model instance.
+     */
     public static function getModelByAttachment($attach_id, $type = 'media')
     {
         if (false === isset(self::$models[$attach_id]))
@@ -629,8 +810,15 @@ class AiDataModel
 
         return self::$models[$attach_id];
 
-    } 
+    }
 
+    /**
+     * Clear the cached model for a specific attachment.
+     *
+     * @param int $attach_id The attachment ID.
+     * @param string $type The record type (default: 'media').
+     * @return void
+     */
     public static function flushModelCache($attach_id, $type = 'media')
     {
         if (isset(self::$models[$attach_id]))
@@ -639,12 +827,9 @@ class AiDataModel
         }
         else
         {
-             Log::addTemp('Ai MODEL not found in cache!', $attach_id);
         }
 
     }
-
-
 
 
 } // class

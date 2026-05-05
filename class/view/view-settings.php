@@ -16,7 +16,12 @@ if ( ! defined( 'ABSPATH' ) ) {
   <h1>
       <?php echo UIHelper::getIcon('res/images/illustration/logo_settings.svg'); ?>
   </h1>
+
   <div class='top-buttons'>
+      <a class='header-button' href="https://wordpress.org/support/plugin/shortpixel-image-optimiser/reviews/?filter=5#new-post" target="_blank">
+          <i class='shortpixel-icon star'></i><name><?php esc_html_e('Rate Us','shortpixel-image-optimiser'); ?></name>
+      </a>
+
     <?php if ( !$view->key->hide_api_key ) { ?>
       <a class='header-button' href="https://shortpixel.com/<?php
         echo esc_attr(($view->key->apiKey ? "login/". $view->key->apiKey . "/dashboard" : "login"));

@@ -23,7 +23,6 @@ class PNGConverter extends MediaLibraryConverter
 
     	protected $current_image; // The current PHP image resource in memory
 		protected $virtual_filesize;
-		protected $replacer; // Replacer class Object.
 
 		protected $converterActive = false;
 		protected $forceConvertTransparent = false;
@@ -211,52 +210,11 @@ class PNGConverter extends MediaLibraryConverter
 				return false; 
 			}
 
-		/*	$width = $this->imageModel->get('width');
-			$height = $this->imageModel->get('height');
-
-			// If imageModel doesn't have proper width / height set. This can happen with remote files.
-			if (! is_int($width) && ! $width > 0)
-			{
-				 $width = $image->getWidth(); // imagesx($img);
-			}
-			if (! is_int($height) && ! $height > 0)
-			{
-				 $height = $image->getHeight(); //imagesy($img);
-			}
-*/
-
 			$width = $image->getWidth(); 
 			$height = $image->getHeight();
 			Log::addDebug("PNG2JPG doConvert width $width height $height", memory_get_usage());
 
-			/* $bg = imagecreatetruecolor($width, $height);
-
-			if(false === $bg || false === $img)
-			{
-				Log::addError('ImageCreateTrueColor failed');
-				if (false === $bg)
-				{
-					$msg = __('Creating an TrueColor Image failed - Possible library error', 'shortpixel-image-optimiser');
-				}
-				elseif (false === $img)
-				{
-					$msg = __('Image source failed - Check if source image is PNG and library is working', 'shortpixel-image-optimiser');
-				}
-
-				$this->imageModel->getMeta()->convertMeta()->setError(self::ERROR_LIBRARY);
-				ResponseController::addData($this->imageModel->get('id'), 'message', $msg);
-				return false;
-			}
-
-			imagefill($bg, 0, 0, imagecolorallocate($bg, 255, 255, 255));
-			imagealphablending($bg, 1);
-			imagecopy($bg, $img, 0, 0, 0, 0, $width, $height);
-*/
-		//  $fsFile = $fs->getFile($image); // the original png file
-
-
 			// check old filename, replace with uniqued filename.
-
 			$bool = $image->convertPNG();
 
       /** Quality is set to 90 and not using WP defaults (or filter) for good reason. Lower settings very quickly degrade the libraries output quality.  Better to leave this hardcoded at 90 and let the ShortPixel API handle the optimization **/
@@ -283,7 +241,6 @@ class PNGConverter extends MediaLibraryConverter
 
 					// Reload the file we just wrote.
 					$newFile = $fs->getFile($replacementPath);
-
 
 					if(false === $this->checkFileSizeMargin($origSize, $newSize)) {
 							//if the image is not 5% smaller, don't bother.
@@ -365,7 +322,7 @@ class PNGConverter extends MediaLibraryConverter
 			);
 			$fs = \wpSPIO()->filesystem();
 
-			$this->setupReplacer();
+			$this->setupReplacer(); // Sets the source for Replacer. 
 
 			$oldFileName = $this->imageModel->getFileName(); // Old File Name, Still .jpg
 			$newFileName =  $this->imageModel->getFileBase() . '.png';
@@ -379,9 +336,9 @@ class PNGConverter extends MediaLibraryConverter
 			$fsNewFile = $fs->getFile($this->imageModel->getFileDir() . $newFileName);
 
 			$this->newFile = $fsNewFile;
-			$this->setTarget($fsNewFile);
+			$this->setTarget($fsNewFile); // Sets the target base file 
 
-			$this->updateMetaData($params);
+			$this->updateMetaData($params); // Triggers update of new Metadata - Sets the targets 
 			$result = $this->replacer->replace();
 
 			$fs->flushImageCache();
@@ -417,15 +374,13 @@ class PNGConverter extends MediaLibraryConverter
 
 								$isTransparent = $image->isTransparent(['width' => $width, 'height' => $height]); 
 								Log::addDebug("PNG2JPG width $width height $height. Now checking pixels.");
-										//run through pixels until transparent pixel is found:
+								//run through pixels until transparent pixel is found:
 
 						}
 			//	} // non-transparant.
 
 				Log::addDebug("PNG2JPG is " . (false ===  $isTransparent ? " not" : "") . " transparent");
-
 				return $isTransparent;
-
 		}
 
 		/** Load PNG via the Image Model
@@ -449,6 +404,8 @@ class PNGConverter extends MediaLibraryConverter
 				$imageObj = $this->imageModel;
 			}
 
+			$replacementPath = $this->getReplacementPath();
+
 			if (true === $this->imageModel->is_virtual())
 			{
 				$downloadHelper = DownloadHelper::getInstance();
@@ -460,10 +417,13 @@ class PNGConverter extends MediaLibraryConverter
 					 $imagePath = $tempFile->getFullPath();
 					 $this->virtual_filesize = $tempFile->getFileSize();
 				}
+
+				$replacementPath = apply_filters('shortpixel/file/virtual/translate', $replacementPath);
 			}
 
-			$replacementPath = $this->getReplacementPath();
-			Log::addTemp("replacement path: " . $replacementPath);
+			Log::addInfo("PNG Replacement Path: " . $replacementPath);
+
+
 
 			// @todo Add ResponseController support to here and getReplacementPath.
 			if (false === $replacementPath)

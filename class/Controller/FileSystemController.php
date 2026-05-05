@@ -6,6 +6,8 @@ if (! defined('ABSPATH')) {
   exit; // Exit if accessed directly.
 }
 
+use ShortPixel\Controller\Backup\BackupController;
+use ShortPixel\Model\Backup\BackupModel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Model\File\DirectoryModel as DirectoryModel;
@@ -48,7 +50,6 @@ class FileSystemController extends \ShortPixel\Controller
    */
   public function getMediaImage($id, $useCache = true, $cacheOnly = false)
   {
-
     if (! is_numeric($id)) {
       Log::addWarn('Get Media Image called without valid ID', $id);
       return false;
@@ -76,6 +77,15 @@ class FileSystemController extends \ShortPixel\Controller
 
     return $imageObj;
   }
+
+  public function getBackupModel($id, $type = 'media') : BackupModel
+  {
+      $backupController = BackupController::getBackupController();
+      $backupModel = $backupController->getModelById($id, $type);       
+      return $backupModel; 
+  }
+
+
 
   /**
    * @param int $id
@@ -182,7 +192,7 @@ class FileSystemController extends \ShortPixel\Controller
     if (! function_exists('get_home_path')) {
       require_once(ABSPATH . 'wp-admin/includes/file.php');
     }
-    $wp_home = \get_home_path();
+    //$wp_home = \get_home_path();
     $filepath = $file->getFullPath();
 
     if ($file->is_virtual()) {
@@ -280,8 +290,11 @@ class FileSystemController extends \ShortPixel\Controller
   }
 
 
-
-  /** Not in use yet, do not use. Future replacement. */
+  /** Used in ApiKeyModel for installation testing 
+   * 
+   * @param mixed $folder 
+   * @return bool 
+   */
   public function checkBackUpFolder($folder = SHORTPIXEL_BACKUP_FOLDER)
   {
     $dirObj = $this->getDirectory($folder);

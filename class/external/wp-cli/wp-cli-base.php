@@ -14,6 +14,7 @@ use ShortPixel\Controller\BulkController as BulkController;
 
 use ShortPixel\Controller\Queue\Queue as Queue;
 use ShortPixel\Controller\Api\ApiController as ApiController;
+use ShortPixel\Controller\Backup\BackupController;
 use ShortPixel\Controller\ResponseController as ResponseController;
 
 use ShortPixel\Helper\UiHelper as UiHelper;
@@ -396,7 +397,6 @@ class SpioCommandBase
 
 	protected function displayStatsLine($name, $stats)
 	{
-
 		$line = sprintf('Current Status for %s : (%s\%s) Done (%s%%), %s awaiting %s errors --', $name, ($stats->done + $stats->fatal_errors), $stats->total, $stats->percentage_done, ($stats->awaiting), $stats->fatal_errors);
 
 		\WP_CLI::line($line);
@@ -475,6 +475,24 @@ class SpioCommandBase
 		$items[] = array('setting' => 'Creates Avif', 'value' =>  $this->textBoolean($settings->createAvif));
 
 		\WP_CLI\Utils\format_items('table', $items, $fields);
+	}
+
+	 /**
+	 * Auto-removes backups according to settings. Use with care. 
+	 *
+	 *
+	 * ---
+	 *
+	 * ## EXAMPLES
+	 *
+	 *   wp spio removebackups
+	 *
+	 */
+	public function removebackups()
+	{
+		$backupController = BackupController::getBackupController();
+		$backupController->cliRemoveBackups();
+		
 	}
 
 	/**

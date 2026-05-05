@@ -371,7 +371,7 @@ class ShortPixelSettings {
 
 			if (this.current_tab == 'ai')
 			{
-				window.dispatchEvent(triggerLoadEvent);		
+				window.dispatchEvent(triggerLoadEvent);
 			}
 
 			var button = document.querySelector('button[name="refresh_ai_preview"]'); 
@@ -1515,7 +1515,7 @@ class ShortPixelSettings {
 
 		for (const optKey in options)
 			{
-				console.log(optKey, options[optKey]);
+
 				if (show.indexOf(optKey) >= 0)
 				{
 					if (options[optKey].classList.contains('not-visible'))
@@ -1709,7 +1709,7 @@ class ShortPixelSettings {
 			var the_value = this.root.querySelector('.new-exclusion input[name="exclusion-filesize-value"]');
 			var denom = this.root.querySelector('.new-exclusion select[name="exclusion-filesize-denom"]');
 			var operator = this.root.querySelector('.new-exclusion select[name="exclusion-filesize-operator"]');
-console.log(demon.selectedIndex);
+
 			if ('read' === mode)
 			{
 				setting.value = operator.options[operator.selectedIndex].value.trim() + " " + the_value.value.trim() + " " + denom.options[denom.selectedIndex].value.trim(); 

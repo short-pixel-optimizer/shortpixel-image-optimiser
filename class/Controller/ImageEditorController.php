@@ -32,18 +32,11 @@ class ImageEditorController
 		  $local = array(
 			);
 
-			$fs = \wpSPIO()->filesystem();
-
-				//		$local['is_restorable'] = ($mediaImage->isRestorable() ) ? 'true' : 'false';
-      //      $local['is_optimized'] = ($mediaImage->isOptimized()) ? 'true' : 'false';
-			//			$local['post_id'] = $post_id;
-
-						$local['optimized_text'] = sprintf(__('This image has been optimized by ShortPixel. It is strongly %s recommended %s to restore the image from the backup (if any) before editing it, because after saving the image all optimization data will be lost. If the image is not restored and ShortPixel re-optimizes the new image, this may result in a loss of quality. After you have finished editing, please optimize the image again by clicking "Optimize Now" as this will not happen automatically.', 'shortpixel-image-optimiser'), '<strong>', '</strong>');
+			$local['optimized_text'] = sprintf(__('This image has been optimized by ShortPixel. It is strongly %s recommended %s to restore the image from the backup (if any) before editing it, because after saving the image all optimization data will be lost. If the image is not restored and ShortPixel re-optimizes the new image, this may result in a loss of quality. After you have finished editing, please optimize the image again by clicking "Optimize Now" as this will not happen automatically.', 'shortpixel-image-optimiser'), '<strong>', '</strong>');
 
             $local['restore_link']  = 'javascript:window.ShortPixelProcessor.screen.RestoreItem(#post_id#)';
 	 			    $local['restore_link_text'] = __('Restore the backup now.', 'shortpixel-image-optimiser');
             $local['restore_link_text_unrestorable'] = __(' (This item is not restorable) ', 'shortpixel-image-optimiser');
-
 
 			return $local;
 	}
@@ -54,27 +47,45 @@ class ImageEditorController
 	*/
 	public function getImageForEditor( $filepath, $attachment_id, $size)
 	{
-
 		$fs = \wpSPIO()->filesystem();
 		$mediaImage = $fs->getImage($attachment_id, 'media');
 
 		// Not an image, let's not get into this.
 		if (false === $mediaImage)
+		{
 			return $filepath;
+		}
 
 		$imagepath = false;
+		$backupModel = $mediaImage->getBackupModel(); 
+		
 		if ($size == 'full')
 		{
-				$optimized_and_backup = ($mediaImage->isOptimized() && $mediaImage->hasBackup());
+				$optimized_and_backup = ($mediaImage->isOptimized() && $backupModel->hasBackup($mediaImage));
+
 				if ( true === $optimized_and_backup)
-					$imagepath = $mediaImage->getBackupFile()->getFullPath();
+				{
+					$backupFile = $backupModel->getBackupFile($mediaImage); 
+					$imagepath = $backupFile->getFullPath();
+				}
 		}
 		elseif (false !== $mediaImage->getThumbNail($size)) {
 			 	$thumbObj = $mediaImage->getThumbNail($size);
-				$optimized_and_backup = ($thumbObj->isOptimized() && $thumbObj->hasBackup());
+				$optimized_and_backup = ($thumbObj->isOptimized() && $backupModel->hasBackup($thumbObj));
 
 				if (true === $optimized_and_backup)
-					$imagepath = $thumbObj->getBackupFile()->getFullPath();
+				{
+					$backupFile = $backupModel->getBackupFile($thumbObj);
+					if (is_object($backupFile))
+					{
+						$imagepath = $backupFile->getFullPath();
+					}
+					else 
+					{
+						$optimized_and_backup = false;
+					}
+
+				}
 		}
 
 		if (true === $optimized_and_backup)

@@ -21,14 +21,14 @@ foreach($this->view->actions as $actionName => $action):
 
   $link = ($action['type'] == 'js') ? 'javascript:' . $action['function'] : $action['function'];
 
-  $title = isset($action['title']) ? ' title="' . $action['title'] . '" ' : '';
+  $title = isset($action['title']) ? ' title="' . esc_attr($action['title']) . '" ' : '';
 
   if ($layout && $layout == 'paragraph')
   {
      echo "<P>";
   }
   ?>
-  <a href="<?php echo $link ?>" <?php echo $title ?> class="<?php echo esc_attr($classes) ?>"><?php echo esc_html($action['text']) ?></a>
+  <a href="<?php echo $link ?>" <?php echo $title ?> class="<?php echo esc_attr($classes) ?>"><?php echo wp_kses_post($action['text']) ?></a>
 
   <?php
     if ($layout && $layout == 'paragraph')

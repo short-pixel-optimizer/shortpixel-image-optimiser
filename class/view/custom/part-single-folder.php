@@ -53,7 +53,7 @@ if ($item->get('is_nextgen') && $view->settings->includeNextGen == 1)
           if ($i > 0)
             echo "|";
           ?>
-          <a href="<?php echo $link ?>" class="<?php echo $classes ?>"><?php echo $action['text'] ?></a>
+          <a href="<?php echo esc_attr($link); ?>" class="<?php echo esc_attr($classes); ?>"><?php echo esc_html($action['text']); ?></a>
           <?php
           $i++;
         endforeach;
@@ -65,7 +65,7 @@ if ($item->get('is_nextgen') && $view->settings->includeNextGen == 1)
 
     </span>
     <span>
-        <?php echo $type_display; ?>
+        <?php echo esc_html($type_display); ?>
     </span>
     <span>
 

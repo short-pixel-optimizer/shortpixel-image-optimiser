@@ -32,17 +32,14 @@ Class Image extends \ShortPixel\Model\File\FileModel
         protected function checkLibrary()
         {
             $env = \wpSPIO()->env(); 
-            if ($env->is_imagick_installed)
-            {
-                $this->useLib = 'imagick'; 
-            }
-            elseif ($env->is_gd_installed)
+            if ($env->is_gd_installed)
             {
                 $this->useLib = 'gd'; 
             }
-
-            Log::addTemp('Replace PNG Library used - ' . $this->useLib);
-             
+            elseif ($env->is_imagick_installed)
+            {
+                $this->useLib = 'imagick'; 
+            }
         }
 
         public function checkImageLoaded()
@@ -140,8 +137,7 @@ Class Image extends \ShortPixel\Model\File\FileModel
 
             if ('imagick' == $this->useLib)
             {
-                $isTransparent = $this->image->getImageAlphaChannel();
-
+               $isTransparent = $this->image->getImageAlphaChannel();
             }
 
             return $isTransparent;

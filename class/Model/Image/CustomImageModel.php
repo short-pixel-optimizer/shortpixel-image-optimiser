@@ -26,6 +26,8 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     protected $is_stub = false;
 
     protected $is_main_file = true;
+    
+    public $name = ImageModel::IMAGE_TYPE_MAIN; 
 
 		/** @var array */
 		protected $forceSettings = array();  // option derives from setting or otherwise, request to be forced upon via UI to use specific value.
@@ -188,15 +190,11 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 					return $bool;
 				}
 
-
-
 				// The exclude size on the  image - via regex - if fails, prevents the whole thing from optimization.
 				if ($this->processable_status == ImageModel::P_EXCLUDE_SIZE || $this->processable_status == ImageModel::P_EXCLUDE_PATH)
 				{
 					 return $bool;
 				}
-
-
 
       /*  if ($bool === false && $strict === false)
         {
@@ -229,7 +227,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         return $bool;
     }
 
-		public function isRestorable()
+		public function isRestorable() : bool
 		{
 
 			 $bool = parent::isRestorable();
@@ -240,8 +238,10 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 			 		return $bool;
 				}
 
+        $backupModel = $this->getBackupModel();
+
 				// If not, check this..
-				if ($this->hasBackup() && $this->getMeta('status') == self::FILE_STATUS_PREVENT)
+				if ($backupModel->hasBackup($this, true) && $this->getMeta('status') == self::FILE_STATUS_PREVENT)
 				{
 					 	return true;
 				}
@@ -443,7 +443,6 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 						 $this->setMeta('avif', $data['avifStatus']);
 					}
 
-
 				}
 
         $this->image_meta = $metaObj;
@@ -588,8 +587,9 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
     public function resetPrevent()
     {
+        $backupModel = $this->getBackupModel(); 
 
-				if ($this->hasBackup())
+				if ($backupModel->hasBackup($this, true))
 					$this->setMeta('status', self::FILE_STATUS_SUCCESS);
 				else
         	$this->setMeta('status', self::FILE_STATUS_UNPROCESSED);
@@ -638,6 +638,8 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 				 $extra_info = null;
 			}
 
+      $backupModel = $this->getBackupModel();
+
        $data = array(
             'folder_id' => $this->folder_id,
             'compressed_size' => $metaObj->compressedSize,
@@ -647,7 +649,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
             'resize' =>  ($metaObj->resize) ? 1 : 0,
             'resize_width' => $metaObj->resizeWidth,
             'resize_height' => $metaObj->resizeHeight,
-            'backup' => ($this->hasBackup()) ? 1 : 0,
+            'backup' => ($backupModel->hasBackup($this, true)) ? 1 : 0,
             'status' => $metaObj->status,
             'retries' => 0, // this is unused / legacy
             'message' => $message, // this is used for improvement line.

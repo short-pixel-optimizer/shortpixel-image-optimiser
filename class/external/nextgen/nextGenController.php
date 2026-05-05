@@ -22,6 +22,8 @@ class NextGenController
 	private $enableOverride = false; // when activating NG will not report active yet, but try to refresh folders. Do so.
 	private $is_ngg_screen = false; // is current screen NGG.
 
+  protected $is_legacy = false; // assume the best. 
+
 // ngg_created_new_gallery
   public function __construct()
   {
@@ -56,9 +58,13 @@ class NextGenController
       add_filter( 'ngg_manage_images_column_7_content', array( $this, 'loadNextGenItem' ), 10,2 );
 			add_filter('ngg_manage_gallery_fields', array($this, 'refreshFolderOnLoad'), 10, 2);
 
-    }
-
-		add_action('current_screen', array($this, 'checkCurrentScreen'), 50);
+      if (false === class_exists('\Imagely\NGG\DataStorage\Manager'))
+      {
+        $this->is_legacy = true;
+      }
+  
+      add_action('current_screen', array($this, 'checkCurrentScreen'), 50);
+   }
 
 
 
@@ -354,6 +360,7 @@ The screen IDS seem to be have changed, trying a more definitive solution
 
 
 
+  /* Seems not in use 
   public function updateImageSize($nggId, $path) {
 
       $image = $this->getNGImageByID($nggId);
@@ -363,32 +370,70 @@ The screen IDS seem to be have changed, trying a more definitive solution
       $image->meta_data = array_merge($image->meta_data, $size_meta);
       $image->meta_data['full'] = $size_meta;
       $this->saveToNextGen($image);
-  }
+  } */
 
   protected function getNGImageByID($nggId)
   {
-    $mapper = \C_Image_Mapper::get_instance();
-    $image = $mapper->find($nggId);
-    return $image;
+    if (true === $this->is_legacy)
+    {
+      $mapper = \C_Image_Mapper::get_instance();
+      $image = $mapper->find($nggId);
+      return $image;
+    }
+    
+    $class = '\Imagely\NGG\DataMappers\Image';
+    $imageMapper = $class::get_instance(); 
+
+    return $imageMapper->find($nggId);
+
   }
 
   /* @param NextGen Image */
+  /* Seems not in use 
   protected function saveToNextGen($image)
   {
-    $mapper = \C_Image_Mapper::get_instance();
-    $mapper->save($image);
-  }
+    if (true === $this->is_legacy)
+    {
+      $mapper = \C_Image_Mapper::get_instance();
+      $mapper->save($image);
+    }
+    else
+    {
+      $class = '\Imagely\NGG\DataMappers\Image';
+      $imageMapper = $class::get_instance(); 
+      $imageMapper->save_entity($image);
+    }
+
+  } */
 
   protected function getImageAbspath($image, $size = 'full') {
-      $storage = \C_Gallery_Storage::get_instance();
-      return $storage->get_image_abspath($image, $size);
+
+      if (true === $this->is_legacy)
+      {
+        $storage = \C_Gallery_Storage::get_instance();
+        return $storage->get_image_abspath($image, $size);
+      }
+
+      $class = '\Imagely\NGG\DataStorage\Manager'; 
+      $galleryManager = $class::get_instance(); 
+
+      return $galleryManager->get_image_abspath($image, $size); 
+
   }
 
   protected function getImageSizes($image)
 	{
-		 $storage = \C_Gallery_Storage::get_instance();
+     if (true === $this->is_legacy)
+     {
+		    $storage = \C_Gallery_Storage::get_instance();
+		    return $storage->get_image_sizes($image);
+     }
 
-		 return $storage->get_image_sizes($image);
+      $class = '\Imagely\NGG\DataStorage\Manager'; 
+      $galleryManager = $class::get_instance(); 
+
+      return $galleryManager->get_image_sizes($image); 
+
 	}
 
 } // class.

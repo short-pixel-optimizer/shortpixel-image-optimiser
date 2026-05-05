@@ -7,11 +7,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use ShortPixel\Model\Queue\QueueItem as QueueItem;
 use Shortpixel\Controller\Api\RequestManager as RequestManager;
+use ShortPixel\Controller\Backup\BackupController;
 use ShortPixel\Controller\QueueController;
 use ShortPixel\Helper\UiHelper;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
+use ShortPixel\Model\Queue\QueueItemResult;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-use stdClass;
 
 abstract class OptimizerBase
 {
@@ -23,7 +24,9 @@ abstract class OptimizerBase
     protected $currentQueue;  // trying to keep minimum, but optimize needs to speak to queue for items.
     protected $queueController; // Needed to keep track of bulk /non-bulk
 
-    public abstract function enqueueItem(QueueItem $qItem, $args = []); // Enqueue Single Item (not for bulk)
+    protected static $blockedItems; // Keeping track of process blocks here. 
+
+    public abstract function enqueueItem(QueueItem $qItem, $args = []) ; // Enqueue Single Item (not for bulk)
     public abstract function handleAPIResult(QueueItem $qItem);
     protected abstract function HandleItemError(QueueItem $qItem);
     public abstract function sendToProcessing(QueueItem $qItem);
@@ -34,6 +37,7 @@ abstract class OptimizerBase
     * @return boolean 
     */
     public abstract function checkItem(QueueItem $qItem);
+    public $shutdown_registered = false;  // bool . Only start the shutdown function when doing blocks, otherwise it might fatal error upon update/ plugin-deactivation
 
     static $instances = []; 
 
@@ -55,7 +59,6 @@ abstract class OptimizerBase
 
         return self::$instances[$calledClass];
     }
-
 
     /** Standard fields for JSON response. 
     * 
@@ -96,6 +99,48 @@ abstract class OptimizerBase
       }
 
       return true;
+
+    }
+
+    protected function blockItem(QueueItem $qItem)
+    {
+       $qItem->block(true);
+       $q = $this->getCurrentQueue($qItem);
+       $q->updateItem($qItem);
+
+       self::$blockedItems[$qItem->item_id] = $qItem;      
+       
+       if (false === $this->shutdown_registered)
+         {
+            register_shutdown_function([$this, 'checkBlockedItems']);
+            $this->shutdown_registered = true;
+         }
+    }
+
+    protected function unBlockItem(QueueItem $qItem)
+    {
+       $qItem->block(false);
+       $q = $this->getCurrentQueue($qItem);
+       $q->updateItem($qItem);
+
+       if (isset(self::$blockedItems[$qItem->item_id]))
+       {
+          unset(self::$blockedItems[$qItem->item_id]);
+       }
+    }
+
+    protected function checkBlockedItems()
+    {
+        if (is_null(self::$blockedItems) || count(self::$blockedItems) == 0)
+        {
+           return;     
+        }
+
+        foreach(self::$blockedItems as $blockedItem) // end of process, unblock hanging items. 
+        {
+            Log::addWarn('Shutdown unblocking Item: ', $blockedItem);
+             $this->unBlockItem($blockedItem);     
+        }
 
     }
 
@@ -147,7 +192,7 @@ abstract class OptimizerBase
      * @param QueueItem $qItem 
      * @return Object Result Object
      */
-    protected function finishItemProcess(QueueItem $qItem, $args = [])
+    protected function finishItemProcess(QueueItem $qItem, $args = []) : QueueItemResult
     {
         $queue = $this->getCurrentQueue($qItem); 
         $fs = \wpSPIO()->filesystem();
@@ -158,9 +203,7 @@ abstract class OptimizerBase
            $queue->itemDone($qItem); 
         }
 
-         Log::addTemp('FinishItemProcess: ', $qItem->data());
         // Can happen with actions outside queue / direct action 
-
         if (true === $qItem->data()->hasNextAction())
         {
             $action = $qItem->data()->popNextAction(); 
@@ -173,7 +216,6 @@ abstract class OptimizerBase
             $keepArgs = $qItem->data()->getKeepDataArgs();
             if (true === $qItem->data()->hasNextAction())
             {
-               Log::addTemp('Finishing, next actions: ', $qItem->data()->next_actions);
                 $args['next_actions'] = $qItem->data()->next_actions; 
             }
             $args = array_merge($args, $keepArgs);
@@ -201,12 +243,17 @@ abstract class OptimizerBase
 
       $original = $optimized = false;
 
+      $backupModel = BackupController::getBackupModel($imageModel); 
+
       if ($showItem->getExtension() == 'pdf') // non-showable formats here
       {
-        //								 $item->result->original = false;
-//								 $item->result->optimized = false;
-      } elseif ($showItem->hasBackup()) {
-        $backupFile = $showItem->getBackupFile(); // attach backup for compare in bulk
+
+      } elseif ($backupModel->hasBackup($showItem)) {
+        $backupFile = $backupModel->getBackupFile($showItem); 
+        if (false === is_object($backupFile))
+        {
+           $backupFile = $backupModel->getMainBackupFile();
+        } // attach backup for compare in bulk
         $backup_url = $fs->pathToUrl($backupFile);
         $original = $backup_url;
         $optimized = $fs->pathToUrl($showItem);

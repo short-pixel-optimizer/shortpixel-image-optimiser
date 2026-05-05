@@ -2,9 +2,9 @@
 Contributors: ShortPixel
 Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 4.8.0
-Tested up to: 6.9
+Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 6.4.4
+Stable tag: 6.5.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -34,6 +34,7 @@ Make an instant <a href="https://shortpixel.com/image-compression-test" target="
 * AI Background Removal – Instantly remove background from your images with one click, ideal for creating clean product photos. After the background is removed, your image can have a transparent background or be filled with a single solid color.
 * AI Image Titles - In addition to ALT text, captions, and descriptions, you can now generate smart image titles using AI for better SEO.
 * Bulk Remove AI Data - Easily clear all AI-generated image SEO data in one go.
+* You can now add fixed text before/after AI-generated image SEO data for full consistency across your site.
 
 ### 🆕 New! Freshly added AI Image SEO features ###
 
@@ -47,11 +48,13 @@ Make an instant <a href="https://shortpixel.com/image-compression-test" target="
 
 ### Freshly added features ###
 
+* Smart Backups: Save disk space by backing up only the main image. When restoring, thumbnails are automatically regenerated based on current settings.
+* Automatic Backup Cleanup: Set rules to automatically delete old backups after a chosen period.
 * Compress WebP images – ShortPixel now also <a href="https://shortpixel.com/blog/introducing-smartcompress/" target="_blank">smartly compresses</a> all your existing WebP images.
 * Added support for serving CSS, JS and fonts from our global CDN.
 * Save & Restore option for all settings – ideal for agencies and users managing multiple websites.
 * Decide whether AI bots can use your images for machine learning (ML) training, or <a href="https://shortpixel.com/blog/prevent-ai-data-mining-on-images/" target="_blank">block them entirely</a>.
-* You can now exclude images from optimization based on their upload date, perfect for skipping older or already optimized media.
+* You can now exclude images from optimization based on their file zie, perfect for skipping very small images or large images that photographers need to keep in their original, full format.
 * Filter and select images in bulk using date-based criteria, giving you precise control over what gets optimized and when.
 
 ### 🌍 Faster Websites for Global Audiences ###
@@ -487,6 +490,51 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 14. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 6.5.0 =
+
+🧠 The Smart Backups & AI Control Update
+
+Release Date: May 5, 2026
+
+✨ New Features
+
+* Smart Backups: Save disk space by backing up only the main image. When restoring, thumbnails are automatically regenerated based on current settings.
+* Automatic Backup Cleanup: Set rules to automatically delete old backups after a chosen period.
+* Consistent prefix/suffix for AI SEO Data: You can now add fixed text before/after AI-generated image SEO data for full consistency across your site.
+* Custom Media Re-Optimization: Re-optimize images directly from Custom Media bulk actions.
+* Custom Media Pagination: Navigate large media sets more easily with new pagination controls.
+
+⚙️ Improvements
+
+* Smarter Title Replacement: Image titles are only replaced with AI-generated ones if they haven’t been manually edited (when overwrite protection is enabled).
+* Better Error Messaging: Improved the “401 Unauthorized” message in the AI SEO Preview for clearer feedback.
+* PNG Handling Improved: Improved the PNG to JPG conversion to better handle alpha channels.
+* AI Context Limits: Added proper limits to AI context fields to prevent truncation issues.
+* Bulk Stability: Introduced slight delays in Media Library bulk actions to avoid server overload.
+* Paused Processing Logic: Restoring an item now cancels any paused processing to avoid unnecessary actions.
+* UI Enhancements: Improved text clarity and layout across settings, bulk processing, and the ShortPixel panel in wp-admin.
+
+🔄 Compatibility Updates
+
+* NextGen Gallery (Imagely): Integration restored using updated hooks and filters.
+* AI with EXIF Restrictions: AI generation now works even if EXIF blocks training (alternative data retrieval is used).
+* Offload Media Support: Improved compatibility with offloading plugins, including full support for the new Smart Backups.
+* Enable Media Replace: Image SEO data is now cleared when an image is replaced.
+* WPML Support: Manually generate AI SEO data in different languages for multilingual sites.
+
+🛠️ Fixes
+
+* Backup System Refactor: Fixed multiple edge cases and improved reliability across all backup scenarios.
+* Long Processing Safeguards: Added checks for images that take too long to process or become unavailable.
+* Alias API Key Handling: Prevent unnecessary re-queuing for domains not allowed by Alias API keys.
+* AI Disabled Message Cleanup: Removed misleading “AI Generation Disabled” responses to avoid conflicts with editors/builders.
+* Database Optimization: Added indexes for the aipostmeta table for better performance.
+* Queue Stability: Ensure blocked items are released properly on shutdown to avoid stuck processes.
+* JS & jQuery Fixes: Resolved deprecation warnings and improved frontend stability.
+* Filesize Exclusion Fix: Fixed a JavaScript issue that prevented filesize-based exclusions from working correctly.
+
+Update now to unlock smarter backups, better AI control, and improved compatibility across your entire workflow! 🚀
 
 = 6.4.4 =
 

@@ -18,7 +18,7 @@ use ShortPixel\Model\Image\ImageModel as ImageModel;
 
 use ShortPixel\Model\AccessModel as AccessModel;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
-
+use WP_HTTP_Response;
 
 /* AdminController is meant for handling events, hooks, filters in WordPress where there is *NO* specific or more precise  ShortPixel Page active.
 *
@@ -133,10 +133,10 @@ class AdminController extends \ShortPixel\Controller
          } */
                  
           
-        	$queueController->addItemToQueue($mediaItem);
+        	$result = $queueController->addItemToQueue($mediaItem);
 				}
 				else {
-					Log::addWarn('Passed mediaItem is not processable', $mediaItem);
+					Log::addWarn('Passed mediaItem is not processable', $id);
 				}
         return $meta; // It's a filter, otherwise no thumbs
     }
@@ -166,10 +166,9 @@ class AdminController extends \ShortPixel\Controller
 				}
 
          $queueController = new QueueController();
-
         
         $args = ['action' => 'requestAlt'];
-        $queueController->addItemToQueue($mediaItem, $args); 
+        $result = $queueController->addItemToQueue($mediaItem, $args); 
          
         return $meta;
     }
@@ -537,7 +536,7 @@ class AdminController extends \ShortPixel\Controller
 
     }
 
-		/** This function is bound to enable-media-replace hook and fire when a file was replaced
+		/** This function is bound to enable-media-replace hook and fired when a file was replaced
 		*
 		*
 		*/
@@ -547,6 +546,18 @@ class AdminController extends \ShortPixel\Controller
 				$this->handleImageUploadHook(array(), $post_id);
 
 		}
+
+    /** This function is bound to enable-media-replace hook and fired when a file was replaced
+		*
+		*
+		*/
+    public function handleAiReplaceEnqueue($target, $source, $post_id)
+		{
+				// Delegate this to the hook, so all checks are done there.
+				$this->handleAiImageUploadHook(array(), $post_id);
+
+		}
+
 
     public function generatePluginLinks($links) {
         $in = '<a href="options-general.php?page=wp-shortpixel-settings">Settings</a>';

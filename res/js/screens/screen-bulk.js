@@ -492,6 +492,12 @@ class ShortPixelScreen extends ShortPixelScreenBase
              for (var field in resultItem.aiData)
              {  
                 let value = resultItem.aiData[field];
+
+                if (typeof value === 'number')
+                {
+                  continue; 
+                }
+
                 let li = document.createElement('li'); 
                 let label = (labels[field]) ? labels[field] : field; 
                   

@@ -6,9 +6,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 ?>
-<div id='shortpixel-data-<?php echo( esc_attr($view->id) );?>' class='column-wp-shortPixel view-edit-media'
-  data-imagewidth="<?php echo $view->image['width'] ?>" data-imageheight="<?php echo $view->image['height'] ?>"
-  data-extension="<?php echo $view->image['extension']; ?>"
+<div id='shortpixel-data-<?php echo esc_attr($view->id); ?>' class='column-wp-shortPixel view-edit-media'
+  data-imagewidth="<?php echo esc_attr($view->image['width']); ?>" data-imageheight="<?php echo esc_attr($view->image['height']); ?>"
+  data-extension="<?php echo esc_attr($view->image['extension']); ?>"
 >
 <?php // Debug Data
 if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->debugInfo) > 0 ):  ?>
@@ -42,9 +42,13 @@ if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->de
   <?php if (property_exists($this->view, 'text')): ?>
   <div class='sp-column-info'>
 		<?php
-			    // burger if needed.F
+			    // burger if needed.
 			    echo '<p>' . $this->view->list_actions . '</p>'; ?>
-		<p><?php  echo $this->view->text;  ?></p></div>
+<p><?php 
+// Here no escape, this has javascript links in them via UiHelper - actions 
+echo $this->view->text;
+
+?></p></div>
 
 <?php endif; ?>
 
@@ -63,7 +67,7 @@ if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->de
     <ul class='edit-media-stats'>
     <?php foreach($view->stats as $index => $data)
     { ?>
-       <li><span><?php echo $data[0] ?></span> <span><?php echo $data[1] ?></span></li>
+       <li><span><?php echo wp_kses_post($data[0]); ?></span> <span><?php echo wp_kses_post($data[1]); ?></span></li>
     <?php } ?>
     </ul>
     <?php endif; ?>
@@ -73,7 +77,7 @@ if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->de
 
   <div id="sp-message-<?php echo( esc_attr($this->view->id) ); ?>" class='spio-message'>
   <?php if (! is_null($view->status_message)): ?>
-  <?php echo esc_html($view->status_message); ?>
+  <?php echo wp_kses_post($view->status_message); ?>
   <?php endif; ?>
   </div>
 

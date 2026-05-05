@@ -7,10 +7,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
+use ShortPixel\Controller\Backup\BackupController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Controller\QueueController as QueueController;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-
 
 use ShortPixel\Model\AccessModel as AccessModel;
 use ShortPixel\Model\AiDataModel;
@@ -127,11 +127,8 @@ class UiHelper
 			 $improvs = array();
 
 				 uasort($improvements['thumbnails'], function ($a, $b) {
-					 	//return $b[0] <=> $a[0]; // @todo Efficient code to use once PHP 5 support is done.
-						if ($a == $b) {
-							return 0;
-						}
-						return ($b < $a) ? -1 : 1;
+					 	return $b[0] <=> $a[0]; // @todo Efficient code to use once PHP 5 support is done.
+
 				 });
 
 			 $cutoff = false;
@@ -385,9 +382,12 @@ class UiHelper
                 $showCompare = true;
                 if ($mediaItem->getExtension() == 'pdf')
                 {
+                      $backupModel = $mediaItem->getBackupModel();
   				            if (! $mediaItem->getThumbnail('full'))
+                      {
   					               $showCompare = false;
-  				            elseif(! $mediaItem->getThumbnail('full')->hasBackup())
+                      }
+  				            elseif(! $backupModel->hasBackup($mediaItem->getThumbnail('full'), true) )
   					             $showCompare = false;
   			         }
 
@@ -834,6 +834,9 @@ class UiHelper
 	{
 		 	$closestObj = $imageItem;
 
+      $backupController = BackupController::getBackupController();
+      $backupModel = $backupController->getModel($imageItem);
+
 			// set the standard.
 			if ($imageItem->getExtension() == 'pdf') // try not to select non-showable extensions.
 				$bestdiff = 0;
@@ -849,7 +852,7 @@ class UiHelper
 
 			foreach($thumbnails as $thumbnail)
 			{
-				 if (! $preload && (! $thumbnail->isOptimized() || ! $thumbnail->hasBackup()))
+				 if (! $preload && (! $thumbnail->isOptimized() || ! $backupModel->hasBackup($thumbnail) || ! $backupModel->getBackupFile($thumbnail) ))
 				 	continue;
 
 					$diff = abs($thumbnail->get('width') - $size);

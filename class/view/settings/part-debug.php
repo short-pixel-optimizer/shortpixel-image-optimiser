@@ -108,7 +108,7 @@ if (Log::isManualDebug())
       <select name="edit_setting">
           <option value="">&nbsp;</option>
       <?php foreach($settings as $name => $value): ?>
-        <option value="<?php echo $name ?>"><?php echo $name  ?></option>
+        <option value="<?php echo esc_attr($name); ?>"><?php echo esc_html($name); ?></option>
       <?php endforeach; ?>
     </select>
       New Value <input name="new_value" value="">
@@ -198,14 +198,11 @@ if (Log::isManualDebug())
       <span><?php echo ($noticeObj->isDone()) ? 'Y' : 'N'; ?> </span>
       <span><?php echo ($noticeObj->isDismissed()) ? 'Y' : 'N'; ?> </span>
       <span><?php echo ($noticeObj->isPersistent()) ? 'Y' : 'N'; ?> </span>
-			<span><?php echo $exclude ?></span>
-			<span><?php echo $include ?></span>
-
+			 <span><?php echo esc_html($exclude); ?></span>
+			 <span><?php echo esc_html($include); ?></span>
   </div>
 
-
-  <?php endforeach ?>
-  </div>
+  <?php endforeach; ?>
 
   <div class='debug-notices'>
     <form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_resetNotices'), $debugUrl)) ?>"

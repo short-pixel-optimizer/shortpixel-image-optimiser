@@ -197,6 +197,11 @@ class ShortPixelScreenBase
 		el.style.display = 'none';
 	}
 
+	/** This can be used to add function calls to an array and then via setTimeout do a delayed execution. See BulkActionEvent */
+	AddDelayedAction(action, ...args)
+	{
+		return () => { this[ action ].apply(this,  args ) };	 
+	}
 
 
 } // class

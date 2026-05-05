@@ -15,13 +15,15 @@ i.documentation {
   color: #1caecb;
   cursor: pointer;
   position: relative;
-  top: 3px;
 }
 i.documentation.up {
   top: -3px;
 }
 i.documentation.down {
   top: 10px;
+}
+i.documentation.right {
+  float: right;
 }
 
 .update-nag {
@@ -30,22 +32,15 @@ i.documentation.down {
 }
 
 div.spio-modal-shade {
-  position: fixed;
-  /* Stay in place */
-  z-index: 10;
-  /* Sit on top - zindex wars  */
+  position: fixed; /* Stay in place */
+  z-index: 10; /* Sit on top - zindex wars  */
   left: 0;
   top: 0;
-  width: 100%;
-  /* Full width */
-  height: 100%;
-  /* Full height */
-  overflow: auto;
-  /* Enable scroll if needed */
-  background-color: black;
-  /* Fallback color */
-  background-color: rgba(0, 0, 0, 0.4);
-  /* Black w/ opacity */
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0, 0, 0); /* Fallback color */
+  background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
 }
 
 div.spio-modal {
@@ -56,13 +51,10 @@ div.spio-modal {
   background-position: center;
   padding: 20px 16px 6px 16px;
   border: 1px solid #888;
-  width: 40%;
-  /* Could be more or less, depending on screen size */
+  width: 40%; /* Could be more or less, depending on screen size */
   max-width: 100%;
-  min-width: 300px;
-  /* Could be more or less, depending on screen size */
-  z-index: 100;
-  /* Proper z-index */
+  min-width: 300px; /* Could be more or less, depending on screen size */
+  z-index: 100; /* Proper z-index */
   position: fixed;
   top: 10%;
   left: 30%;
@@ -144,7 +136,7 @@ div.spio-modal-title {
   box-shadow: none;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings button:hover, .wrap.is-shortpixel-settings-page .shortpixel-settings .button-setting:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings button i.switch, .wrap.is-shortpixel-settings-page .shortpixel-settings .button-setting i.switch {
   width: 18px;
@@ -250,7 +242,7 @@ div.spio-modal-title {
   filter: brightness(0%) invert(1);
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab .save-buttons.saving button.save {
-  background-color: #0e6870;
+  background-color: rgb(14.3684210526, 104.4473684211, 111.6315789474);
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab .save-buttons.saving button.save i {
   animation: cssload-spin 5000ms infinite linear;
@@ -471,7 +463,7 @@ div.spio-modal-title {
   box-shadow: none;
 }
 .wrap.is-shortpixel-settings-page header .top-buttons a:hover, .wrap.is-shortpixel-settings-page header .top-buttons button:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
 }
 .wrap.is-shortpixel-settings-page header .top-buttons a i.switch, .wrap.is-shortpixel-settings-page header .top-buttons button i.switch {
   width: 18px;
@@ -488,6 +480,9 @@ div.spio-modal-title {
   height: 15px;
   width: 15px;
   vertical-align: text-top;
+}
+.wrap.is-shortpixel-settings-page header .top-buttons .header-button .shortpixel-icon.star {
+  filter: brightness(0) saturate(100%) invert(90%) sepia(54%) saturate(7093%) hue-rotate(314deg) brightness(117%) contrast(93%);
 }
 .wrap.is-shortpixel-settings-page .shortpixel-icon {
   width: 25px;
@@ -559,6 +554,9 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page .shortpixel-icon.feedback {
   background-image: url("../images/icon/feedback.svg");
 }
+.wrap.is-shortpixel-settings-page .shortpixel-icon.heart {
+  background-image: url("../images/icon/heart.svg");
+}
 .wrap.is-shortpixel-settings-page .shortpixel-icon.help {
   background-image: url("../images/icon/help.svg");
 }
@@ -622,6 +620,9 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page .shortpixel-icon.shortpixel {
   background-image: url("../images/icon/shortpixel.svg");
 }
+.wrap.is-shortpixel-settings-page .shortpixel-icon.star {
+  background-image: url("../images/icon/star.svg");
+}
 .wrap.is-shortpixel-settings-page .shortpixel-illustration {
   display: inline-block;
   background-repeat: no-repeat;
@@ -680,7 +681,7 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page .setting-tab .shortpixel-compression-options label input:checked + span {
   background-color: #116C7E;
 }
-.wrap.is-shortpixel-settings-page .setting-tab select[name=exif_ai] {
+.wrap.is-shortpixel-settings-page .setting-tab select[name=exif_ai], .wrap.is-shortpixel-settings-page .setting-tab select[name=autoRemoveBackupsPeriod] {
   border: 1px solid #1ABDCA;
   color: #116C7E;
   margin-top: 15px;
@@ -708,7 +709,7 @@ div.spio-modal-title {
   font-weight: 700;
 }
 .wrap.is-shortpixel-settings-page .setting-tab input[name=resizeWidth], .wrap.is-shortpixel-settings-page .setting-tab input[name=resizeHeight] {
-  width: 100px;
+  width: 100px !important;
   background: url("../images/icon/arrows-left-right.svg") 4px center no-repeat #fff;
   padding-left: 25px;
   border: 1px solid #1ABDCA;
@@ -987,7 +988,6 @@ div.spio-modal-title {
   width: 1rem;
   height: 1rem;
   opacity: 1;
-  display: inline-block;
 }
 .wrap.is-shortpixel-settings-page section#tab-webp img#exifviewer-img-1 {
   margin-bottom: -7px;
@@ -1204,7 +1204,7 @@ div.spio-modal-title {
   box-shadow: none;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper .dashboard-button:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper .dashboard-button i.switch {
   width: 18px;
@@ -2157,7 +2157,7 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page #tab-tools .button {
   min-height: 44px;
   color: #1ABDCA;
-  background-color: #e8e8e8;
+  background-color: rgb(232.25, 232.25, 232.25);
   border-radius: 6px;
   font-weight: 700;
   letter-spacing: 0.3px;
@@ -2165,7 +2165,7 @@ div.spio-modal-title {
   transition: all 0.1s ease-in-out;
 }
 .wrap.is-shortpixel-settings-page #tab-tools .button:hover {
-  background: #32d7e5;
+  background: rgb(50.3421052632, 215.4868421053, 228.6578947368);
   color: #fff;
 }
 .wrap.is-shortpixel-settings-page #tab-tools .option, .wrap.is-shortpixel-settings-page #tab-tools setting {

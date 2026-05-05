@@ -54,8 +54,8 @@
 			}
 
 		}
-		// EXIF Selector
-		select[name="exif_ai"]
+		// EXIF Selector & Backup auto-remove selector
+		select[name="exif_ai"], select[name="autoRemoveBackupsPeriod"]
 		{
 			border: 1px solid #1ABDCA;
 			color: #116C7E;
@@ -85,7 +85,7 @@
 		// Resize inputs
 		input[name="resizeWidth"], input[name="resizeHeight"]
 		{
-			 width: 100px;
+			 width: 100px !important;
 			 background: url('../images/icon/arrows-left-right.svg') 4px center no-repeat  #fff;
 			 padding-left: 25px;
 			 border: 1px solid $blue_default;

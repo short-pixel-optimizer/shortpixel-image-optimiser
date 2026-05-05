@@ -669,6 +669,7 @@ window.ShortPixelProcessor =
           {
             console.log('Qstatus Preparing or items returns');
              this.timesEmpty = 0;
+             this.SetInterval(-1); // restore interval
              this.RunProcess();
           }
           if (qstatus == 'QUEUE_WAITING')

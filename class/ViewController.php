@@ -19,8 +19,8 @@ class ViewController extends Controller
   protected $model; // connected model to load.
   protected $template = null; // template name to include when loading.
 
-  protected $data = array(); // data array for usage with databases data and such
-  protected $postData = array(); // data coming from form posts.
+  protected $data = []; // data array for usage with databases data and such
+  protected $postData = []; // data coming from form posts.
 
   protected $mapper; // Mapper is array of View Name => Model Name. Convert between the two
   protected $is_form_submit = false; // Was the form submitted?
@@ -32,12 +32,7 @@ class ViewController extends Controller
 
   public static function init()
   {
-	 /*
-	 Not sure why this is here
-	 foreach (get_declared_classes() as $class) {
-      if (is_subclass_of($class, 'ShortPixel\Controller') )
-        self::$controllers[] = $class;
-		} */
+
   }
 
   public function __construct()
@@ -77,7 +72,7 @@ class ViewController extends Controller
          return false; 
       }
       Log::addInfo('Check Post fails nonce check, action : ' . $this->form_action, array($_POST) );
-			exit('Nonce Failed');
+			wp_die('Nonce Failed');
       return true;
     }
     elseif (isset($_POST) && count($_POST) > 0)
@@ -191,6 +186,7 @@ class ViewController extends Controller
         'input_class' => 'switch', 
         'data' => [],
         'disabled' => false,
+        'tooltip_link' => '',
     );
 
     $args = wp_parse_args($args, $defaults);
@@ -201,6 +197,10 @@ class ViewController extends Controller
     $name = esc_attr($args['name']);
     $label = esc_attr($args['label']);
 
+    $tooltip = '';
+    if (! empty($args['tooltip_link'])) {
+        $tooltip = sprintf('<i class="documentation dashicons dashicons-editor-help" data-link="%s"></i>', esc_attr($args['tooltip_link']));
+    }
 
     $data = implode(' ', $args['data']);
     
@@ -211,9 +211,9 @@ class ViewController extends Controller
       <label>
         <input type="checkbox" class="%s" name="%s" value="1" %s %s %s>
         <div class="the_switch">&nbsp;</div>
-        %s
+        %s%s
       </label>
-    </switch>', $switchclass, $inputclass, $name, $checked, $disabled, $data, $label);
+    </switch>', $switchclass, $inputclass, $name, $checked, $disabled, $data, $label, $tooltip);
 
     echo $output;
   }
@@ -237,7 +237,7 @@ class ViewController extends Controller
       }
     }
 
-    if (is_null($this->model))
+    if (is_null($this->model) && is_null($model))
     {
       foreach($post as $name => $value )
       {

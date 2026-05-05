@@ -182,6 +182,8 @@ class BulkController
      $q->resetQueue();
    }
 
+
+
    public function getLogs()
    {
         if (is_null($this->logs))

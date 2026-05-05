@@ -38,12 +38,10 @@ class OptimizeController extends OptimizerBase
     $this->apiName = 'optimize';
   }
 
-  public function enQueueItem(QueueItem $qItem, $args = [])
+  public function enQueueItem(QueueItem $qItem, $args = []) : \stdClass
   {
     $queue = $this->getCurrentQueue($qItem);
-
     $qItem->newOptimizeAction($args);
-
 
     $status = $queue->addQueueItem($qItem);
     return $status;
@@ -213,8 +211,7 @@ class OptimizeController extends OptimizerBase
     // Cleaning up the debugger.
     $debugItem = clone $qItem;
 
-    Log::addDebug('Optimizecontrol - QueueItem has a result ', $debugItem->result());
-
+    Log::addDebug('Optimizecontrol - QueueItem has a result ', $debugItem->result()->forReturn());
 
     ResponseController::addData($item_id, [
       'is_error' => $qItem->result()->is_error,
@@ -271,7 +268,7 @@ class OptimizeController extends OptimizerBase
               'fileStatus' => ImageModel::FILE_STATUS_SUCCESS
             ]);
 
-            do_action('shortpixel_image_optimised', $item_id);
+            do_action('shortpixel_image_optimised', $item_id); // Deprecated 
             do_action('shortpixel/image/optimised', $imageModel);
           } elseif (RequestManager::STATUS_CONVERTED == $status) {
             $qItem->addResult([
@@ -404,6 +401,15 @@ class OptimizeController extends OptimizerBase
            $downloadHelper = DownloadHelper::getInstance(); 
            $url = $qItem->result()->optimized; 
            $tmpFile = $downloadHelper->downloadFile($url);
+
+           if (false === $tmpFile)
+            {
+                ResponseController::addData($item_id, 'message', $downloadHelper->getLastError() ); 
+                ResponseController::addData($item_id, 'is_error', true  ); 
+
+                return false; 
+            }
+
            $newPostTitle = $paramlist['newPostTitle'];
 
            if (isset($paramlist['attached_post_id']))
@@ -423,7 +429,6 @@ class OptimizeController extends OptimizerBase
          //  $new_attach_id = media_sideload_image($url, $attached_post_id, '', 'id'); // Add to WP, return attach_id
            
            $qItem->addResult(['new_attach_id' => $new_attach_id] );
-
            $tmpFile->delete();
         }
     }
@@ -443,17 +448,16 @@ class OptimizeController extends OptimizerBase
    * @param  [array] $successData               [all successdata received so far]
    * @return int           status integer, one of apicontroller status constants
    */
-  protected function handleOptimizedItem($qItem, $imageModel)
+  protected function handleOptimizedItem(QueueItem $qItem, $imageModel)
   {
     $imageArray = $qItem->result()->files;
 
     $downloadHelper = DownloadHelper::getInstance();
     $converter = Converter::getConverter($imageModel, true);
 
-    $qItem->block(true);
+    $q = $this->getCurrentQueue($qItem);
+    $this->blockItem($qItem);
 
-    $q = $this->currentQueue;
-    $q->updateItem($qItem);
 
     $item_id = $qItem->item_id;
 
@@ -487,7 +491,8 @@ class OptimizeController extends OptimizerBase
         }
         else
         {
-          
+          ResponseController::addData($item_id, 'message', $downloadHelper->getLastError() ); 
+          ResponseController::addData($item_id, 'is_error', true  ); 
            $imageArray[$imageName]['image']['status'] = RequestManager::STATUS_CONNECTION_ERROR;
         }
 
@@ -550,8 +555,7 @@ class OptimizeController extends OptimizerBase
       }
     }
 
-    $qItem->block(false);
-    $q->updateItem($qItem);
+    $this->unBlockItem($qItem);
 
     return $status;
   }

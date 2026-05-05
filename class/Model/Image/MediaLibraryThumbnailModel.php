@@ -2,6 +2,7 @@
 
 namespace ShortPixel\Model\Image;
 
+use ShortPixel\Controller\Backup\BackupController;
 use ShortPixel\Helper\DownloadHelper as DownloadHelper;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
 
@@ -11,7 +12,6 @@ if (! defined('ABSPATH')) {
 }
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-
 use \ShortPixel\Model\File\FileModel as FileModel;
 
 // Represent a thumbnail image / limited image in mediaLibrary.
@@ -30,6 +30,13 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 	protected $size; // size name of image in WP, if applicable.
 	protected $sizeDefinition; // size width / height / crop according to WordPress
 
+	protected $backupModel; 
+
+	
+	/** @var string **/
+	protected $type = 'media';
+
+
 	public function __construct($path, $id, $size)
 	{
 
@@ -46,10 +53,10 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 	protected function saveMeta() {}
 
 	// Implementing this because it's abstract. Should not really be used.
-	public function getParent()
+	/*public function getParent()
 	{
 		return $this->getMainFile()->getParent();
-	}
+	} */
 
 	public function __debugInfo()
 	{
@@ -154,8 +161,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 		return $bool;
 	}
 
-
-
 	protected function setMetaObj($metaObj)
 	{
 		$this->image_meta = clone $metaObj;
@@ -220,7 +225,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 		return parent::getImprovements();
 	}
 
-
+	/*
 	public function getBackupFileName()
 	{
 		$mainFile = ($this->is_main_file) ? $this : $this->getMainFile();
@@ -240,7 +245,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 		}
 
 		return parent::getBackupFileName();
-	}
+	} */
 
 
 	protected function preventNextTry($reason = '')
@@ -287,8 +292,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 			return false;
 	}
 
-
-
 	// !Important . This doubles as  checking excluded image sizes.
 	protected function isSizeExcluded()
 	{
@@ -304,9 +307,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
 		return $bool;
 	}
-
-
-
 
 	public function isProcessableFileType($type = 'webp')
 	{
@@ -326,11 +326,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 		);
 
 		// @todo Find a way to cache IsProcessable perhaps due to amount of checks being done.  Should be release in flushOptimizeCache or elsewhere (?)
-
-		//    $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
-
 		$patterns = UtilHelper::getExclusions($args);
-		//  echo "<PRE>"; print_r($args); print_r($patterns); echo "</PRE>";
 		return $patterns;
 	}
 
@@ -339,51 +335,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 		return (! \wpSPIO()->settings()->processThumbnails);
 	}
 
-	public function hasBackup($args = array())
-	{
-		$defaults = array(
-			'forceConverted' => false,
-			'noConversionCheck' => false,  // do not check on mainfile, this loops when used in loadMeta / legacyConversion
-		);
-		$args = wp_parse_args($args, $defaults);
-
-		// @todo This can probably go.
-		if (true === $args['noConversionCheck']) {
-			return parent::hasBackup();
-		}
-
-		$mainFile = ($this->is_main_file) ? $this : $this->getMainFile();
-		if (false == $mainFile) {
-			return parent::hasBackup();
-		}
-
-		// When main file and converted and omitBackup is true ( only original backup ) and not forced.
-		$loadRegular = (false === $mainFile->getMeta()->convertMeta()->isConverted() ||
-			false === $mainFile->getMeta()->convertMeta()->omitBackup()) && false === $args['forceConverted'];
-
-		if (true === $loadRegular) {
-			return parent::hasBackup();
-		} else {
-			$directory = $this->getBackupDirectory();
-			$converted_ext = $mainFile->getMeta()->convertMeta()->getFileFormat();
-
-			if (! $directory)
-				return false;
-
-
-			$backupFile =  $directory . $this->getFileBase() . '.' . $converted_ext;
-
-			// Issue with PNG not being scaled on the main file.
-			if (! file_exists($backupFile) && $mainFile->isScaled()) {
-				$backupFile = $directory . $mainFile->getOriginalFile()->getFileBase() . '.' . $converted_ext;
-			}
-			if (file_exists($backupFile) && ! is_dir($backupFile))
-				return true;
-			else {
-				return false;
-			}
-		}
-	}
+	
 
 	public function hasDBRecord()
 	{
@@ -434,53 +386,12 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 		return $bool;
 	}
 
-	/** Tries to retrieve an *existing* BackupFile. Returns false if not present.
-	 * This file might not be writable.
-	 * To get writable directory reference to backup, use FileSystemController
+
+	/** Create backup for media image. 
+	 * 
+	 * @return mixed 
 	 */
-	public function getBackupFile($args = array())
-	{
-
-		$defaults = array(
-			'forceConverted' => false,
-			'noConversionCheck' => false,  // do not check on mainfile, this loops when used in loadMeta / legacyConversion
-		);
-		$args = wp_parse_args($args, $defaults);
-
-		if (true === $args['noConversionCheck']) {
-			return parent::getBackupFile();
-		}
-
-		$mainFile = ($this->is_main_file) ? $this : $this->getMainFile();
-		if (false == $mainFile) {
-			return parent::getBackupFile();
-		}
-		// When main file and converted and omitBackup is true ( only original backup ) and not forced.
-		$loadRegular = (false === $mainFile->getMeta()->convertMeta()->isConverted() ||
-			false === $mainFile->getMeta()->convertMeta()->omitBackup()) && false === $args['forceConverted'];
-
-		if (true === $loadRegular) {
-			return parent::getBackupFile();
-		} else {
-			if ($this->hasBackup($args)) {
-
-				$directory = $this->getBackupDirectory();
-				$converted_ext = $mainFile->getMeta()->convertMeta()->getFileFormat();
-
-				$backupFile = $directory . $this->getFileBase() . '.' . $converted_ext;
-
-				/* Because WP doesn't support big PNG with scaled for some reason, it's possible it doesn't create them. Which means we end up with a scaled images without backup */
-				if (! file_exists($backupFile) && $mainFile->isScaled()) {
-					$backupFile = $directory . $mainFile->getOriginalFile()->getFileBase() . '.' . $converted_ext;
-				}
-
-				return new FileModel($backupFile);
-			} else
-				return false;
-		}
-	}
-
-	protected function createBackup()
+	public function checkVirtualForBackup()
 	{
 		if ($this->is_virtual()) // download remote file to backup.
 		{
@@ -499,11 +410,11 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 					$fileExists = false;
 				}
 
-				if (false === $fileExists) {
+			if (false === $fileExists) {
 					$downloadHelper = DownloadHelper::getInstance();
 					$url = $this->getURL();
 					$result = $downloadHelper->downloadFile($url, array('destinationPath' => $filepath));
-				}
+			}
 			} elseif ($this->virtual_status == self::$VIRTUAL_STATELESS) {
 				$result = $filepath;
 			} else {
@@ -528,13 +439,8 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 			$this->setVirtualToReal($filepath);
 		}
 
-		return parent::createBackup();
+		return true; 
+		//return parent::createBackup();
 	}
 
-	// @todo This is a breach of pattern to realize checking for changes to the main image path on conversion / duplicates.
-	private function getMainFile()
-	{
-		$fs = \wpSPIO()->filesystem();
-		return $fs->getMediaImage($this->id, true, true);
-	}
 } // class

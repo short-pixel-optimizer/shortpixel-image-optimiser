@@ -71,6 +71,16 @@ abstract class MediaLibraryConverter extends Converter
 			return false;
 		}
 
+		if (true === $newFile->is_virtual())
+		{
+			// @todo This doesn't translate, perhaps because it is after a remove remote call on offload. 
+			// But we still need the local path for newfile to be able to generateNewMetaData. 
+				$fs = \wpSPIO()->filesystem();
+				$newfilepath = apply_filters('shortpixel/file/virtual/translate', $newFile->getFullPath(), $newFile);
+				$newFile = $fs->getFile($newfilepath); 
+		}
+		
+
 		$attach_id = $this->imageModel->get('id');
 
 		$WPMLduplicates = $this->imageModel->getWPMLDuplicates();
