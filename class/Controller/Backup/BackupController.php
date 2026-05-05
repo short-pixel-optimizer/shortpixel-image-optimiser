@@ -90,7 +90,10 @@ abstract class BackupController
              $mediaItem = $fs->getImage($id, $type); 
           }
           
-          $model = new self::$model(self::$instance, $mediaItem);
+          // PHP 8 didn't like the self::$model reference to be dynamic here. 
+          //$model = new self::$model(self::$instance, $mediaItem);
+          $model = new \ShortPixel\Model\Backup\LocalBackupModel(self::$instance, $mediaItem);
+
 
           if (! isset(self::$models[$type]))
           {
