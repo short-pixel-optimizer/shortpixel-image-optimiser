@@ -43,6 +43,8 @@ abstract class BackupController
 
       if (is_null(self::$instance))
       {
+
+      // @todo  The problem here is perhaps that the localBackupModel is not set, but reference in getBackup by ID. 
         if (false === $settings->backupImages)
         {
           self::$instance = new NoBackupController();  
@@ -90,7 +92,10 @@ abstract class BackupController
              $mediaItem = $fs->getImage($id, $type); 
           }
           
-          $model = new self::$model(self::$instance, $mediaItem);
+          // The issue here is when the backups are off, the model var isn't loaded properly, leading to crash 
+          //$model = new self::$model(self::$instance, $mediaItem);
+          $model = new \ShortPixel\Model\Backup\LocalBackupModel(self::$instance, $mediaItem);
+
 
           if (! isset(self::$models[$type]))
           {
