@@ -60,6 +60,7 @@ class QueueController
         'smartcrop' => null, 
         'next_actions' => [], 
         'returndatalist' => [], 
+        'recent_upload' => false, 
       );
       $args = wp_parse_args($args, $defaults);
 
@@ -84,6 +85,8 @@ class QueueController
       {
          $qItem->data()->forceExclusion = $args['forceExclusion'];
       }
+
+
 
       $queue = $this->getQueue($imageModel->get('type'));
 

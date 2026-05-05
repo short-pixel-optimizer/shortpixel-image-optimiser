@@ -28,6 +28,7 @@ class QueueItemData
         protected $block; // Block indicates this item is being processing somewhere and should be ignored during that process
         protected $counts; // Amount of items, for UI counters
         protected $queue_list_order;  // optional from Queue class, the place of the queue. This might prevent 'next-action' to end up way at the bottom. 
+        protected $recent_upload;  // Check if this file is recently uploaded (aka new / via uploadhook ) 
         
         public function __construct()
         {

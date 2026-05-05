@@ -302,15 +302,6 @@ class OptimizeAiController extends OptimizerBase
   protected function HandleSuccess(QueueItem $qItem)
   {
         $aiData = $qItem->result()->aiData;  
-        // $settings = \wpSPIO()->settings();
-
-        /* $checks = ['alt' => 'ai_gen_alt', 
-        'caption' => 'ai_gen_caption', 
-        'description' => 'ai_gen_description',
-        'filename' => 'ai_gen_filename',
-        'post_title' => 'ai_gen_post_title', 
-        ]; */
-
         $aiData = apply_filters('shortpixel/ai/success', $aiData, $qItem); 
 
         $aiData = $this->formatResultData($aiData, $qItem);
@@ -324,7 +315,6 @@ class OptimizeAiController extends OptimizerBase
         $aiModel->handleNewData($aiData);
 
         $qItem->addResult([
-//          'retrievedText' => $text,
           'apiStatus' => RequestManager::STATUS_SUCCESS,
           'fileStatus' => ImageModel::FILE_STATUS_SUCCESS
         ]);
@@ -476,6 +466,7 @@ class OptimizeAiController extends OptimizerBase
             }
 
             $result = $sourceFile->move($targetFileObj);
+            $this->createSymlink($sourceFile, $targetFileObj); 
       }
 
       $replacer = new Replacer(); 
@@ -488,6 +479,17 @@ class OptimizeAiController extends OptimizerBase
 
       $this->replaceMetaData($item_id, $base_filename, $newFileName );
       return false; 
+
+  }
+
+  private function createSymlink($sourceObj, $targetObj)
+  {
+        $settings = \wpSPIO()->settings(); 
+
+        if (true === $settings->aifilename_addsymlink )
+        {
+        
+        }
 
   }
 

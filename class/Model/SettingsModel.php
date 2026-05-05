@@ -77,7 +77,6 @@ class SettingsModel extends \ShortPixel\Model
         'ai_gen_caption' => ['s' => 'boolean', 'default' => true],
         'ai_gen_description' => ['s' => 'boolean', 'default' => true],
         'ai_gen_post_title' => ['s' => 'boolean', 'default' => true], 
-        'ai_filename_prefercurrent' => ['s' => 'boolean', 'default' => false],
         'ai_limit_alt_chars' => ['s' => 'int', 'default' => 100, 'max' => 200],
         'ai_alt_context' => ['s' => 'string', 'default' => '', 'maxlength' => 500],
         'ai_alt_prefix' => ['s' => 'string', 'default' => '', 'maxlength' => 200],
@@ -99,6 +98,8 @@ class SettingsModel extends \ShortPixel\Model
         'ai_filename_context' => ['s' => 'string', 'default' => '', 'maxlength' => 500],
         'ai_filename_prefix' => ['s' => 'string', 'default' => '', 'maxlength' => 200],
         'ai_filename_postfix' => ['s' => 'string', 'default' => '', 'maxlength' => 200],
+        'ai_filename_prefercurrent' => ['s' => 'boolean', 'default' => false],
+        'ai_filename_addsymlink' => ['s' => 'boolean', 'default' => true], 
         'ai_use_exif' => ['s' => 'boolean', 'default' => true],
         'ai_language' => ['s' => 'string', 'default' => 'callback'],
     );

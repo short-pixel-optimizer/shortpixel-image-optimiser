@@ -118,22 +118,15 @@ class AdminController extends \ShortPixel\Controller
 							$mediaItem = $fs->getImage($id, 'media', false);
 
 							$meta = $converter->getUpdatedMeta();
-
-              //do_action('shortpixel/converter/prevent-offload-off', $id);
            }
 
-         // $autoAi = $settings->
-         $optimizeAiController = OptimizeAiController::getInstance(); 
          $queueController = new QueueController();
-
-        /* if ($optimizeAiController->isAutoAiEnabled())
-         {
-            $args = ['action' => 'requestAlt'];
-            $queueController->addItemToQueue($mediaItem, $args); 
-         } */
-                 
+                
+          $args = [
+            'recent_upload' => true, 
+          ];
           
-        	$result = $queueController->addItemToQueue($mediaItem);
+        	$result = $queueController->addItemToQueue($mediaItem, $args);
 				}
 				else {
 					Log::addWarn('Passed mediaItem is not processable', $id);
@@ -167,7 +160,7 @@ class AdminController extends \ShortPixel\Controller
 
          $queueController = new QueueController();
         
-        $args = ['action' => 'requestAlt'];
+        $args = ['action' => 'requestAlt', 'recent_upload' => true];
         $result = $queueController->addItemToQueue($mediaItem, $args); 
          
         return $meta;

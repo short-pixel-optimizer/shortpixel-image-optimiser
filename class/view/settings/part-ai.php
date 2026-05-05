@@ -303,7 +303,7 @@ if (! defined('ABSPATH')) {
               'checked' => $view->data->ai_gen_filename,
               'label' => esc_html__('Update image filename with an SEO-friendly one', 'shortpixel-image-optimiser'),
               'data' => ['data-toggle="ai_gen_filename"'],
-              'disabled' => true
+              'disabled' => false
             ]
           );
           ?>
@@ -340,7 +340,16 @@ if (! defined('ABSPATH')) {
               'name' => 'ai_filename_prefercurrent',
               'checked' => $view->data->ai_filename_prefercurrent,
               'label' => esc_html__('Prefer keeping current filename if relevant', 'shortpixel-image-optimiser'),
-              'disabled' => true
+            ]
+          );
+          ?>
+        </content>
+        <content class='nextline ai_gen_filename is-advanced'>
+          <?php $this->printSwitchButton(
+            [
+              'name' => 'ai_filename_addsymlink',
+              'checked' => $view->data->ai_filename_addsymlink,
+              'label' => esc_html__('When renaming the file, add a symlink from the old file to the new (SEO)', 'shortpixel-image-optimiser'),
             ]
           );
           ?>

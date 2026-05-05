@@ -500,6 +500,11 @@ class QueueItem
          $this->data()->addKeepDataArgs('returndatalist');
       }
 
+      if (isset($args['recent_upload']) && true === $args['recent_upload'])
+      {
+         $this->data()->addKeepDataArgs(['recent_upload']);
+      }
+
       $this->data->addCount(['aiCount' => 1]); // @todo Check if this is really a one credito operation.
 
       $this->data->action = 'requestAlt'; // For Queue
