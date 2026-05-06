@@ -55,7 +55,7 @@ class QueueItemResult implements JsonSerializable
        }
        else
        {
-           Log::addWarn('QueueItemResult Field requested not foudn: ' . $name);
+           Log::addWarn('QueueItemResult Field requested not found: ' . $name);
        }
        return null;
    }

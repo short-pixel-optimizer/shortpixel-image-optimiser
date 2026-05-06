@@ -575,7 +575,7 @@ class AjaxController
 					}
 					$result = $qItem->result();
 				}
-					$this->send($result);
+					$this->send($result->forReturn());
 								
 				exit();
 			}
@@ -589,7 +589,7 @@ class AjaxController
 					'message' => __('Limit of attempts exceeded. Possible connection issue. Try again later. ', 'shortpixel-image-optimiser'),
 				]; 
 				
-				$this->send((object)$result);
+				$this->send($result->forReturn());
 				exit('Timeout');
 				break; 
 			}
@@ -1842,6 +1842,11 @@ class AjaxController
 
 	protected function send($json)
 	{
+		// Cast before sending anything to a simple stdclass, to prevent issues with adding json and processorkey to output 
+		if (is_object($json) && false === $json instanceof \stdClass)
+		{
+			$json = (object) $json; 
+		}
 		$callback = isset($_POST['callback']) ? sanitize_text_field($_POST['callback']) : false;
 		if ($callback)
 			$json->callback = $callback; // which type of request we just fullfilled ( response processing )
