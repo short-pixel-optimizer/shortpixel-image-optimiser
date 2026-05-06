@@ -32,7 +32,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
                <?php
                $excludeSizes = property_exists($view->data, 'excludeSizes') ? $view->data->excludeSizes : array();
-               $checked = in_array($sizeKey, $excludeSizes) ? 'checked' : '';
+               $checked = is_array($excludeSizes) && in_array($sizeKey, $excludeSizes) ? 'checked' : '';
                $width = isset($sizeVal['width']) ? $sizeVal['width'] : '*';
                $height = isset($sizeVal['height']) ? $sizeVal['height'] : '*';
 
