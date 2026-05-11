@@ -11,6 +11,7 @@
  * Domain Path: /lang
  */
 
+use ShortPixel\ShortPixelPlugin;
 
  if ( ! defined( 'ABSPATH' ) ) {
  	exit('No Direct Access'); // Exit if accessed directly.
@@ -96,7 +97,7 @@ if (false === defined( 'WP_CLI' ) || false === WP_CLI)
 */
 
 if (! function_exists("wpSPIO"))	{
-  function wpSPIO()
+  function wpSPIO() : ShortPixelPlugin
   {
      return \ShortPixel\ShortPixelPlugin::getInstance();
   }

@@ -1,6 +1,7 @@
 <?php
 namespace ShortPixel\Controller;
 
+use LiteSpeed\Object_Cache;
 use ShortPixel\Controller\Api\RequestManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -21,6 +22,7 @@ use ShortPixel\Controller\Queue\Queue as Queue;
 use ShortPixel\Controller\Api\ApiController as ApiController;
 
 use ShortPixel\Helper\UiHelper as UiHelper;
+use stdClass;
 
 // Controller,  the glue between the Queue and the Optimizers.
 class QueueController
@@ -203,7 +205,7 @@ class QueueController
    * @param ImageModel $mediaItem 
    * @return mixed 
    */
-  public function isItemInQueue(ImageModel $mediaItem, $action = null)
+  public function isItemInQueue(ImageModel $mediaItem, $action = null) : bool
   {
       $type = $mediaItem->get('type');
 
@@ -319,7 +321,7 @@ class QueueController
   }
 
 
-  public function getStartupData()
+  public function getStartupData() : object 
   {
       $mediaQ = $this->getQueue('media');
       $customQ = $this->getQueue('custom');
@@ -495,7 +497,7 @@ class QueueController
       }
   }
 
-  protected function getJsonResponse()
+  protected function getJsonResponse() : object
   {
 
     $json = new \stdClass;

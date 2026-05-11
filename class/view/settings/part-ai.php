@@ -295,6 +295,7 @@ if (! defined('ABSPATH')) {
 
       <!-- ## Filename -->
       <setting class="ai_filename_setting">
+          <input type="hidden" name="ai_symlink_checked" value="<?php echo esc_attr($view->data->ai_symlink_checked); ?>">
         <content>
 
           <?php $this->printSwitchButton(

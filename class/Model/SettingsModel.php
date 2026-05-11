@@ -100,6 +100,7 @@ class SettingsModel extends \ShortPixel\Model
         'ai_filename_postfix' => ['s' => 'string', 'default' => '', 'maxlength' => 200],
         'ai_filename_prefercurrent' => ['s' => 'boolean', 'default' => false],
         'ai_filename_addsymlink' => ['s' => 'boolean', 'default' => true], 
+        'ai_symlink_checked' => ['s' => 'boolean', 'default' => false], 
         'ai_use_exif' => ['s' => 'boolean', 'default' => true],
         'ai_language' => ['s' => 'string', 'default' => 'callback'],
     );

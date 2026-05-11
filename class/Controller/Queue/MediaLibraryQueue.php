@@ -235,7 +235,7 @@ class MediaLibraryQueue extends Queue
        if ($last_id > 0)
        {
           $sql .= " and attach_id < %d ";
-          $prepare [] = intval($last_id);
+          $prepare[] = intval($last_id);
        }
   
        $sql .= ' order by attach_id DESC LIMIT %d ';

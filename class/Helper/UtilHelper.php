@@ -61,8 +61,6 @@ class UtilHelper
     return $sizes;
   }
 
-
-
   // wp_normalize_path doesn't work for windows installs in some situations, so we can use it, but we still want some of the functions.
   public static function spNormalizePath($path)
   {
@@ -171,6 +169,55 @@ class UtilHelper
       }
     }
     return $bool;
+  }
+
+  public static function testSymlink() : bool 
+  {
+     $fs = \wpSPIO()->filesystem(); 
+
+     $base = $fs->getWPUploadBase();
+
+     $test_file = $base . 'test_file.txt'; 
+     $symlink_file = $base . 'test_symlink.txt'; 
+
+     if (file_exists($test_file))
+     {
+         unlink($test_file); 
+     }
+     if (file_exists($symlink_file))
+     {
+         unlink($symlink_file); 
+     }
+
+
+     touch($test_file);
+
+     symlink($test_file, $symlink_file); 
+
+     if (false === file_exists($symlink_file))
+     {
+        unlink($test_file);
+        return false;    
+     }
+
+     $content_check = '12345';  // Check if symlink is linked. 
+     file_put_contents($symlink_file, $content_check); 
+
+     if (file_get_contents($test_file) != file_get_contents($symlink_file))
+     {
+        $bool = false; 
+     }
+     else 
+     { 
+        $bool = true; 
+     }
+
+     
+     unlink($test_file);
+     unlink($symlink_file); 
+
+     
+     return $bool;
   }
 
   public static function getAiSettings($params = [])

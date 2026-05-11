@@ -253,13 +253,9 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 	public function processScript($src, $handle)
 	{
-		// @todo check here if file is JS / CSS at all. 
-		
-
 		if (false === $this->checkPreProcess()) {
 			return $src;
 		}
-
 
 		if (! is_string($src) || strlen($src) == 0) {
 			return $src;
@@ -285,8 +281,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		if (count($replaceBlocks) == 0) {
 			return $src;
 		}
-
-		//$this->setCDNArgument('version', 'v_' . $version);
 
 		$replaceBlocks = $this->filterOtherDomains($replaceBlocks);
 
@@ -329,7 +323,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			$src = $replaceBlocks[0]->replace_url;
 		}
 
-	//	$this->setCDNArgument('retauto', null);
 		return $src;
 	}
 
@@ -637,7 +630,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 	// @todo Transform these functions to 1 check each, so each combination can use it's own mix/match of checks / transforms ( image, css, javascript  ) . Possibly with URL as argument and parsed_url as non-optional second param.
 	// @return True of URL was changed, false if not.
-	protected function checkDomain($replaceBlock)
+	protected function checkDomain($replaceBlock) : bool
 	{
 		if (! isset($replaceBlock->parsed['host'])) {
 			$original_url = $replaceBlock->url;

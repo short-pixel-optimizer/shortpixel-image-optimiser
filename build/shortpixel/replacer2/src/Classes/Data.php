@@ -47,7 +47,6 @@ abstract class Data
 				$result[$index][$name] =  $baseurl . wp_basename($filename); // filename can have a path like 19/08 etc.
 			}
 		}
-		//    Log::addDebug('Relative URLS', $result);
 		return $result;
     }
 

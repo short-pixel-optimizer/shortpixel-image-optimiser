@@ -154,7 +154,7 @@ class AiDataModel
      * @param array $params Optional parameters to override settings.
      * @return array{paramlist: array<string, array{context: mixed, chars: mixed}>, returndatalist: array<string, array<string, int>>} Parameters and return data list for API.
      */
-    public function getOptimizeData($params = [])
+    public function getOptimizeData($params = []) : array
     {
         $settings = (object) UtilHelper::getAiSettings($params); 
 

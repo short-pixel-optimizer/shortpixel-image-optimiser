@@ -269,6 +269,13 @@ class LocalBackupModel extends BackupModel
        return true;
      }
 
+     public function renameBackup()
+     {
+          $this->loadAll();
+          
+          $data = $this->getBackupData();
+     }
+
 
      /**
      * Function to get the backupDirectory from the file structure 

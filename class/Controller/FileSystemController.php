@@ -205,8 +205,6 @@ class FileSystemController extends \ShortPixel\Controller
     }
 
     $fileDir = $file->getFileDir();
-
-
     $backup_subdir = $fileDir->getRelativePath();
 
     /*if ($backup_subdir === false)
@@ -217,7 +215,6 @@ class FileSystemController extends \ShortPixel\Controller
     $backup_fulldir = SHORTPIXEL_BACKUP_FOLDER . '/' . $backup_subdir;
 
     $directory = $this->getDirectory($backup_fulldir);
-
     $directory = apply_filters("shortpixel/file/backup_folder", $directory, $file);
 
     if ($create === false && $directory->exists())
@@ -539,8 +536,6 @@ class FileSystemController extends \ShortPixel\Controller
     }
 
     $logFiles = $files = glob(trailingslashit($sourcePath) . "*.log");
-
-
 
     if (false !== $logFiles && is_array($logFiles) && count($logFiles) > 0)
     {

@@ -25,6 +25,7 @@ use ShortPixel\Helper\InstallHelper as InstallHelper;
 use ShortPixel\Helper\UiHelper as UiHelper;
 
 use ShortPixel\Model\AccessModel as AccessModel;
+use ShortPixel\Model\EnvironmentModel;
 use ShortPixel\Model\SettingsModel as SettingsModel;
 
 /** Plugin class
@@ -88,7 +89,7 @@ class ShortPixelPlugin {
 		add_action( 'admin_init', [ $this, 'admin_init' ] );
 	}
 
-	public function init()
+	public function init() : void
 	{
 		Controller\CronController::getInstance();  // cron jobs - must be init to function!
 
@@ -124,7 +125,6 @@ class ShortPixelPlugin {
 			// This runs activation thing. Should be -after- init
 			$this->check_plugin_version();
 
-
 			$notices             = Notices::getInstance(); // This hooks the ajax listener
 			$quotaController = QuotaController::getInstance();
 			$quotaController->getQuota();
@@ -134,7 +134,8 @@ class ShortPixelPlugin {
      *
      * @return SettingsModel The settings model object.
      */
-	public function settings() {
+	public function settings() : SettingsModel
+	{
 			return SettingsModel::getInstance();
 	}
 
@@ -142,15 +143,17 @@ class ShortPixelPlugin {
      *
      * @return EnvironmentModel
      */
-	public function env() {
+	public function env() : EnvironmentModel
+	{
 		return Model\EnvironmentModel::getInstance();
 	}
 
 	/** Get the SPIO FileSystemController
 	 * 
-	 * @return FileSystemController 
+	 * @return FileSystemController  FileSystemController Object 
 	 */
-	public function fileSystem() {
+	public function fileSystem() : FileSystemController
+	{
 		return new Controller\FileSystemController();
 	}
 

@@ -263,7 +263,7 @@ class OptimizeAiController extends OptimizerBase
         'caption' => ['prefix' => 'ai_caption_prefix', 'postfix' => 'ai_caption_postfix'],
         'description' => ['prefix' => 'ai_description_prefix', 'postfix' => 'ai_description_postfix'],
         'post_title' => ['prefix' => 'ai_post_title_prefix', 'postfix' => 'ai_post_title_postfix'],
-    //   'filebase' => ['prefix' => 'ai_filename_prefix', 'postfix' => 'ai_filename_postfix'],
+        'filebase' => ['prefix' => 'ai_filename_prefix', 'postfix' => 'ai_filename_postfix'],
     ];
 
     foreach ($prefixPostfixMap as $field => $affixes) {
@@ -323,12 +323,17 @@ class OptimizeAiController extends OptimizerBase
 
         $this->replaceImageAttributes($qItem, $aiData); 
 
-       /* Feature off for now - This DOES NOT YET work 
-        if ($qItem->result()->filename)
+       /* Feature off for now - This DOES NOT YET work  */;
+        // If the file was just uploaded, assume it's not already widely linked and doesn't need replacing / symlinking 
+        // ( Maybe just replacing? )
+        if (isset($aiData['filename'])) // ?? 
         {
-            $this->replaceFiles($qItem, $qItem->result()->filename);
+            $args = [
+                'dry_run' => true, 
+                'recent_upload' => $qItem->data()->recent_upload, 
+            ];
+            $this->replaceFiles($qItem, $qItem->result()->filename, $args);
         }
-        */
 
         $imageModel = $qItem->imageModel;
         $qItem->addResult(['improvements' => $imageModel->getImprovements()]); // Improvements for bulk UX. 
@@ -390,8 +395,28 @@ class OptimizeAiController extends OptimizerBase
 
   }
 
-  protected function replaceFiles($qItem, $newFileName)
+  /* @todo  The file mover should: 
+  *  - If Offloaded! download the files, move them, re-upload them.
+  *  - Move the files
+  *  - Update Metadata
+  *  - Move Backups 
+  *  - Create Symlinks 
+  ( This might warrant a class of it's own due to complexity, or hooking into converter Models )
+  */
+  protected function replaceFiles($qItem, $newFileName, $args = [])
   {
+      $defaults = [
+         'recent_upload' => false, 
+         'dry_run' => false, 
+      ];
+
+      $args = wp_parse_args($args, $defaults); 
+
+      // Remove extension ( @todo is this needed? )
+      $newFileName = substr($newFileName,0, strrpos($newFileName, '.')  );
+
+      Log::addTemp('Replace File with Args', $args);
+
       $imageModel = $qItem->imageModel; 
       $item_id = $qItem->item_id; 
 
@@ -465,9 +490,29 @@ class OptimizeAiController extends OptimizerBase
                 continue;      
             }
 
-            $result = $sourceFile->move($targetFileObj);
-            $this->createSymlink($sourceFile, $targetFileObj); 
+            if (false === $args['dry_run'])
+            {
+                $result = $sourceFile->move($targetFileObj);
+            }
+            else
+            {
+                Log::addInfo('[Dry-run] Would have moved file : ' . $sourceFile->getFullPath() . ' to ' . $targetFileObj->getFullPath());
+            }
+
+            if (false === $args['recent_upload'])
+            {
+                if (false === $args['dry_run'])
+                {
+                    $this->createSymlink($sourceFile, $targetFileObj);     
+                }
+                else 
+                {
+                    Log::addInfo('[Dry-run] Would have symlinked ' . $sourceFile->getFullPath()  . ' to ' . $targetFileObj->getFullpath());
+                }
+            }
       }
+
+      // @Todo  Here probably we should check the backup and move that as well.
 
       $replacer = new Replacer(); 
       $replacer->setSource($source_url);
@@ -475,22 +520,36 @@ class OptimizeAiController extends OptimizerBase
       $replacer->setSourceMeta($searchArray); 
       $replacer->setTargetMeta($replaceArray);
       
-      $replacer->replace();
+      if (false === $args['dry_run'])
+      {
+        $replacer->replace();
+      }
+      else 
+      {
+         Log::addInfo('Dry-Run Replacer', $searchArray);
+         Log::addInfo('ReplaceArray ', $replaceArray); 
+      }
 
       $this->replaceMetaData($item_id, $base_filename, $newFileName );
       return false; 
 
   }
 
-  private function createSymlink($sourceObj, $targetObj)
+  private function createSymlink($sourceObj, $targetObj) : bool
   {
         $settings = \wpSPIO()->settings(); 
 
-        if (true === $settings->aifilename_addsymlink )
+        if (true === $settings->ai_filename_addsymlink && true === $settings->ai_symlink_checked )
         {
-        
+            $res = symlink($sourceObj->getFullPath(), $targetObj->getFullPath()); 
+            if (false === $res)
+            {
+                Log::addError('Symlink failed : ' . $targetObj->getFullPath());            
+            }
+            return $res; 
         }
 
+        return false; 
   }
 
   protected function replaceMetaData($item_id, $old_file, $new_file)
@@ -693,6 +752,8 @@ class OptimizeAiController extends OptimizerBase
        AiDataModel::flushModelCache($item_id);
 
        $this->replaceImageAttributes($qItem, $aiData); 
+       
+       // @todo This probably needs to reverse file renaming as well? 
 
        $aiData = $aiModel->getCurrentData();
 

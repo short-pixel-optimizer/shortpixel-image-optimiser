@@ -447,6 +447,26 @@ class SettingsViewController extends \ShortPixel\ViewController
               $this->keyModel->checkKey($check_key);
           }
 
+          if (isset($this->postData['ai_filename_addsymlink']) && true === $this->postData['ai_filename_addsymlink'])
+          {
+              $symlink_checked = isset($this->postData['ai_symlink_checked']) ? $this->postData['ai_symlink_checked'] : false; 
+              if (false === $symlink_checked)
+              {
+                 $symlinkTest = UtilHelper::testSymlink(); 
+
+                // If failed, turn this option off again. 
+                if (false === $symlinkTest)
+                {
+                 Notice::addError(__('Test: Symlink could not be created. This means the symlink AI feature will not work. Please check your server configuration', 'shortpixel-image-optimiser'), true);
+                 $this->postData['ai_filename_addsymlink'] = false; 
+                }
+                elseif (true === $symlinkTest) // If Ok, don't repeat check.
+                {
+                  $this->postData['ai_symlink_checked'] = true; 
+                }
+              }
+          }
+
           // write checked and verified post data to model. With normal models, this should just be call to update() function
           foreach($this->postData as $name => $value)
           {

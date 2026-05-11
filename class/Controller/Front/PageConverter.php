@@ -110,7 +110,7 @@ class PageConverter extends \ShortPixel\Controller
 	}
 
 	// Function to check just before doing the conversion if anything popped up that should prevent it.
-	protected function checkPreProcess()
+	protected function checkPreProcess() : bool
 	{
 
 		 if (404 == $this->status_header)

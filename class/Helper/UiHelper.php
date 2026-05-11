@@ -33,9 +33,11 @@ class UiHelper
     $id = $imageObj->get('id');
     $primary = isset($actions['optimizethumbs']) ? 'button-primary' : '';
 
+    
+
     $output .= "<div class='sp-column-actions '>
                     <div class='sp-dropdown'>
-                        <button onclick='ShortPixel.openImageMenu(event);' class='sp-dropbtn button dashicons dashicons-menu $primary' title='ShortPixel Actions'></button>";
+                        <button type='button' onclick='ShortPixel.openImageMenu(event);' class='sp-dropbtn button dashicons dashicons-menu $primary' title='" . __('ShortPixel Actions', 'shortpixel-image-optimiser') . "'></button>";
     $output .= "<div id='sp-dd-$id' class='sp-dropdown-content'>";
 
     foreach($actions as $actionName => $actionData)

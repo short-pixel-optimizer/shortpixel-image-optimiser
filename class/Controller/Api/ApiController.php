@@ -28,8 +28,6 @@ class ApiController extends RequestManager
 	const ERR_POSTMETA_CORRUPT = -909;
 	const ERR_UNKNOWN = -999;
 
-	const DOWNLOAD_ARCHIVE = 7;
-
 	//private $apiEndPoint;
 	private $apiDumpEndPoint;
 
@@ -133,7 +131,7 @@ class ApiController extends RequestManager
 		{
 			 $requestBody['bg_remove'] = $qItem->data()->paramlist['bg_remove']; 
 		}
-		elseif (isset($qItem->data()->paramlist['upscale'])) // @todo This needs to be adepted to unknown api action
+		elseif (isset($qItem->data()->paramlist['upscale'])) 
 		{
 			 $requestBody['upscale'] = $qItem->data()->paramlist['upscale']; 
 		}
