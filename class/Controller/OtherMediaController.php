@@ -59,12 +59,7 @@ class OtherMediaController extends \ShortPixel\Controller
         //return $folders;
     }
 
-    public function getActiveFolders()
-    {
-      $folders = $this->getFolders(array('remove_hidden' => true));
-      return $this->loadFoldersFromResult($folders);
-    }
-
+ 
     private function loadFoldersFromResult($folders)
     {
        $dirFolders = array();
@@ -368,15 +363,6 @@ class OtherMediaController extends \ShortPixel\Controller
 			 $result = $wpdb->query($sql);
 
 		}
-
-    private function checkDirStatus()
-    {
-        $status = 0;
-
-
-
-        return $status;
-    }
 
     /* Check if this directory is part of the MediaLibrary */
     public function checkifMediaLibrary(DirectoryModel $directory)

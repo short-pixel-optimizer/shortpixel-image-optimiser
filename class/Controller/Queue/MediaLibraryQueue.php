@@ -42,9 +42,7 @@ class MediaLibraryQueue extends Queue
        $options = $this->options; 
      }
 
-     // @todo  Here probably options thing should be replaced by querying custom_data from Q first and then set options
      $this->options = apply_filters('shortpixel/medialibraryqueue/options', $options);
-
 
      $this->q->setOptions($options);
    }

@@ -22,7 +22,6 @@ use ShortPixel\Helper\UtilHelper;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Model\AccessModel as AccessModel;
 
-// @todo This should probably become settingscontroller, for saving
 use ShortPixel\Controller\View\SettingsViewController as SettingsViewController;
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
 use ShortPixel\Model\AiDataModel;
@@ -301,9 +300,6 @@ class AjaxController
 				$this->checkActionAccess($action, 'is_admin_user');
 				$json = $this->removeBackup($json, $data);
 				break;
-			case 'request_new_api_key': // @todo Dunnoo why empty, should go if not here.
-
-			break;
 			case "loadLogFile":
 				$this->checkActionAccess($action, 'is_editor');
 				$data['logFile'] = isset($_POST['loadFile']) ? sanitize_text_field($_POST['loadFile']) : null;
@@ -582,14 +578,13 @@ class AjaxController
 
 			if ($i >= 15) // safeguard. 
 			{
-				//$this->send((object) $result_json);
 				$result = [
 					'is_error' => true, 
 					'is_done' => true, 
 					'message' => __('Limit of attempts exceeded. Possible connection issue. Try again later. ', 'shortpixel-image-optimiser'),
 				]; 
 				
-				$this->send($result->forReturn());
+				$this->send($result);
 				exit('Timeout');
 				break; 
 			}
@@ -900,7 +895,6 @@ class AjaxController
 			$args['smartcrop'] = $actionType;
 		}
 
-		// @todo Ideally this should go to QueueController - addItemToQueue, but issue with arguments. Leaving it for now.
 		$queueController = new QueueController();
 		$result  = $queueController->addItemToQueue($imageModel, $args);
 
@@ -973,14 +967,7 @@ class AjaxController
 		$this->checkImageAccess($imageModel);
 
 
-		// @todo Should e.v be moved to QItem hop. 
-		/*$queueController = new QueueController();
-		$action = ('redo' == $action_type) ? 'redoAI' : 'undoAI'; 
-		
-		$result  = $queueController->addItemToQueue($imageModel, ['action' => $action]);
-*/
 		$queueItem = new QueueItem(['imageModel' => $imageModel]);
-
 		$queueItem->getAltDataAction(); 
 
 		$api = $queueItem->getApiController('getAltData'); 
@@ -1430,11 +1417,8 @@ class AjaxController
 			}
 		}
 
-		$backupModel = $imageObj->getBackupModel(); 
-		
-		// @todo Here - The MainBackupFile needs getting if the choosen thumbnail backup doesn't exist. 
+		$backupModel = $imageObj->getBackupModel(); 	
 		$mainBackupFile = $backupModel->getMainBackupFile();
-
 
 		$backupFile = $backupModel->getBackupFile($imageObj);
 		if (is_object($backupFile))

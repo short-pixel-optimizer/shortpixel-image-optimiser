@@ -80,7 +80,6 @@ class OptimizeAiController extends OptimizerBase
  
   }
 
-// @todo Probably here should check if Alt item is already generated . 
   public function checkItem(QueueItem $qItem) 
   {     
 
@@ -113,7 +112,6 @@ class OptimizeAiController extends OptimizerBase
     {
         case 'requestAlt': 
            $qItem->requestAltAction($args);
-          // $this->parseJSONForQItem($qItem, $args); 
            $directAction = false; 
         break;
         case 'retrieveAlt':  // This might be deprecated, since retrieve will be called via next_action. 
@@ -136,7 +134,6 @@ class OptimizeAiController extends OptimizerBase
         $directAction = true;
     }
 
-    // @todo This is probably out of use for good, already. 
     if (true === $directAction)
     {
        // The directActions give back booleans, but the whole function must return an queue result object with qstatus and numitems

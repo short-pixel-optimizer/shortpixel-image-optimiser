@@ -77,7 +77,7 @@ class AiController extends RequestManager
       }
 
       $token = get_transient($this->auth_token);
-      // Token doesn't seem to work normally.
+      // This still doesn't work / may 2026
       /*if ($token !== false)
       {
          $auth = $token; 
@@ -85,7 +85,7 @@ class AiController extends RequestManager
       else
       { */
         $auth = 'ApiKey ' . $keyControl->forceGetApiKey();
-     // }
+      //}
 
       // Should always check the results
       $requestParameters = [
