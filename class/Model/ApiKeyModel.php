@@ -218,6 +218,8 @@ class ApiKeyModel extends \ShortPixel\Model
     Log::addDebug('Reset Tried', $this->apiKeyTried);
   }
 
+
+
   /** Checks the API key to see if we have a validated situation
   *  @param string $key The 20-character ShortPixel API Key or empty string.
   *  @return bool Returns a boolean indicating valid key or not.
@@ -282,6 +284,28 @@ class ApiKeyModel extends \ShortPixel\Model
 
       return $this->key_is_verified; // first time this is set! *after* this function
   }
+
+
+  public function is_verified()
+  {
+      return $this->key_is_verified;
+  }
+
+  public function is_constant()
+  {
+      return $this->key_is_constant;
+  }
+
+  public function is_hidden()
+  {
+      return $this->key_is_hidden;
+  }
+
+  public function getKey()
+  {
+      return $this->apiKey;
+  }
+
 
   /**
    * Remove all API key data from the database and reset all related state.

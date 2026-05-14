@@ -471,6 +471,27 @@ class AiDataModel
     }
 
     /**
+     * Get the current AI status.
+     *
+     * @return int The AI status constant.
+     */
+    public function getStatus()
+    {
+         return $this->status;
+    }
+
+    /**
+     * Get the attachment ID.
+     *
+     * @return int The attachment ID.
+     */
+    public function getAttachId()
+    {
+         return $this->attach_id;
+    }
+
+
+    /**
      * Check whether the current WordPress field values differ from the generated ones.
      *
      * Compares alt, caption and description only (fields that exist in WP).

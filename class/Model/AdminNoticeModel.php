@@ -148,6 +148,11 @@ abstract class AdminNoticeModel
       $this->notice = null;
 	 }
 
+	 public function getKey()
+	 {
+		  return $this->key;
+	 }
+
 	 /**
 	  * Determine whether the notice should be reset/removed.
 	  *
