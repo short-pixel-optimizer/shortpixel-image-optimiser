@@ -11,19 +11,42 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
+/**
+ * Abstract base class for all ShortPixel API communication controllers.
+ *
+ * Provides shared infrastructure for building, sending, and interpreting HTTP
+ * requests to ShortPixel API endpoints. Concrete subclasses implement the
+ * handleResponse() and processMediaItem() methods for their specific API flavour.
+ *
+ * @package ShortPixel\Controller\Api
+ */
 abstract class RequestManager
 {
 
+  /** @var static[] Singleton instances indexed by called class name. */
   protected static $instances;
+
+  /** @var string Full URL of the API endpoint to post requests to. */
   protected $apiEndPoint;
 
   /**
-   * 
-   * @param QueueItem $item 
-   * @param mixed $response 
-   * @return object Return must be one of the returnFail / returnSuccess / returnOk functions!
+   * Processes and interprets a raw API response for the given queue item.
+   *
+   * Must be implemented by each concrete subclass. The return value must be
+   * one of the returnFailure / returnSuccess / returnOk result arrays.
+   *
+   * @param QueueItem $qItem    The queue item being processed.
+   * @param mixed     $response The raw HTTP response from wp_remote_post().
+   * @return array Result array produced by one of the return* helper methods.
    */
   protected abstract function handleResponse(QueueItem $qItem, $response);
+
+  /**
+   * Builds the API request body and dispatches it for the given queue item.
+   *
+   * @param QueueItem $qItem The queue item to send to the API.
+   * @return void
+   */
   public abstract function processMediaItem(QueueItem $qItem);
 
   const STATUS_ENQUEUED = 10;
@@ -48,21 +71,35 @@ abstract class RequestManager
 	const STATUS_CONNECTION_ERROR = -503; // Not official, error connection in WP.
   const STATUS_NOT_API = -1000; // Not an API process, i.e restore / migrate. Don't handle as optimized
 
+  /**
+   * Returns the singleton instance of the called (sub)class.
+   *
+   * Uses late static binding so each concrete subclass gets its own instance.
+   *
+   * @return static
+   */
 	public static function getInstance()
 	{
-    $calledClass = get_called_class(); 
+    $calledClass = get_called_class();
           if (! isset(static::$instances[$calledClass]))
           {
-             static::$instances[$calledClass] = new $calledClass(); 
+             static::$instances[$calledClass] = new $calledClass();
           }
-    
+
      return self::$instances[$calledClass];
 	}
 
 
-  /** Builds RequestData for wp_remote_get.
-    @param Array RequestBody What to send to remote API, the arguments.
-    @param Array RequestParams
+  /**
+   * Builds the wp_remote_post() argument array for a ShortPixel API request.
+   *
+   * Merges the provided request body and parameter overrides with sensible
+   * defaults (timeout, SSL verify, JSON encoding, etc.). The SSL-verify argument
+   * is omitted entirely for plain HTTP to avoid unnecessary overhead.
+   *
+   * @param array $requestBody       Associative array of API payload fields (e.g. key, urllist).
+   * @param array $requestParameters Optional overrides: 'blocking' (bool) and 'headers' (array).
+   * @return array Argument array ready to pass to wp_remote_post().
    */
   protected function getRequest($requestBody = [], $requestParameters = [])
   {
@@ -79,7 +116,7 @@ abstract class RequestManager
         'blocking' => isset($requestParameters['blocking']) ? $requestParameters['blocking'] : true,
         'headers' => isset($requestParameters['headers']) ? $requestParameters['headers'] : [],
         'body' => json_encode($requestBody, JSON_UNESCAPED_UNICODE),
-        'cookies' => [], 
+        'cookies' => [],
     );
 
     //add this explicitely only for https, otherwise (for http) it slows down the request
@@ -91,13 +128,17 @@ abstract class RequestManager
   }
 
 
-
-	/** DoRequest : Does a remote_post to the API
-	*
-	* @param Object $item  The QueueItemObject
-	* @param Array $requestParameters  The HTTP parameters for the remote post (arguments in getRequest)
-  * @return void
-	*/
+  /**
+   * Performs a wp_remote_post() to the configured API endpoint and stores the result on the queue item.
+   *
+   * When the request is blocking, WP_Error objects and non-200 HTTP codes are mapped to
+   * failure/retry results; successful responses are passed to handleResponse(). Non-blocking
+   * (first-send) requests are immediately marked as enqueued without waiting for a response.
+   *
+   * @param QueueItem $qItem             The queue item that will receive the result via addResult().
+   * @param array     $requestParameters HTTP argument array produced by getRequest().
+   * @return void
+   */
   protected function doRequest(QueueItem $qItem, $requestParameters )
 	{
 		$response = wp_remote_post($this->apiEndPoint, $requestParameters );
@@ -110,7 +151,7 @@ abstract class RequestManager
 				{
 						$errorMessage = $response->errors['http_request_failed'][0];
 						$errorCode = self::STATUS_CONNECTION_ERROR;
-            $is_fatal = false; 
+            $is_fatal = false;
 
             if (strpos($errorMessage, 'cURL error 28') !== false)
             {
@@ -119,13 +160,13 @@ abstract class RequestManager
             if (strpos($errorMessage, 'cURL error 60') !== false)
             {
                $errorMessage = __('Server error, please contact support ( ' . $errorMessage. ')');
-               $is_fatal = true; 
+               $is_fatal = true;
 
             }
             if (strpos($errorMessage, 'cURL error 6') !== false)
             {
               $errorMessage = __('Host error, please check configuration or contact support ( ' . $errorMessage. ')');
-              $is_fatal = true; 
+              $is_fatal = true;
             }
 
             if (true === $is_fatal)
@@ -136,7 +177,7 @@ abstract class RequestManager
             {
               $qItem->addResult($this->returnRetry($errorCode, $errorMessage));
             }
-            
+
 				}
 				elseif ( isset($response['response']['code']) && $response['response']['code'] <> 200 )
 				{
@@ -169,7 +210,7 @@ abstract class RequestManager
           Log::addWarn('DOREQUEST sent item non-blocking with multiple tries!', $qItem);
 			 }
 
-       
+
        $urls = (! is_null($qItem->data()->urls)) ? count($qItem->data()->urls) : 0;
 
        $flags = $qItem->data()->flags;
@@ -182,6 +223,15 @@ abstract class RequestManager
 	}
 
 
+  /**
+   * Returns a terminal-failure result array (is_error=true, is_done=true).
+   *
+   * Use this when the error is permanent and the item should not be retried.
+   *
+   * @param int|string $status  API or HTTP status code describing the error.
+   * @param string     $message Human-readable error message.
+   * @return array Result array with is_error and is_done both set to true.
+   */
   protected function returnFailure($status, $message)
   {
   /*      $result = $this->getResultObject();
@@ -200,7 +250,15 @@ abstract class RequestManager
         return $result;  // fatal.
   }
 
-  // Temporary Error, retry.
+  /**
+   * Returns a temporary-error result array (is_error=true, is_done=false).
+   *
+   * Use this when the error is transient and the item should be retried later.
+   *
+   * @param int|string $status  API or HTTP status code describing the transient error.
+   * @param string     $message Human-readable error message.
+   * @return array Result array with is_error=true and is_done=false.
+   */
   protected function returnRetry($status, $message)
   {
 
@@ -214,12 +272,22 @@ abstract class RequestManager
       'apiStatus' => $status,
       'message' => $message,
       'is_error' => true,
-      'is_done' => false, 
+      'is_done' => false,
   ];
 
     return $result;
   }
 
+  /**
+   * Returns a non-error, non-done status result (e.g. still processing or enqueued).
+   *
+   * Use this for intermediate states such as STATUS_UNCHANGED or STATUS_ENQUEUED
+   * where no error has occurred but the item is not yet finished.
+   *
+   * @param int    $status  One of the STATUS_* constants (defaults to STATUS_UNCHANGED).
+   * @param string|false $message Optional human-readable status message.
+   * @return array Result array with is_error=false and is_done=false.
+   */
   protected function returnOK($status = self::STATUS_UNCHANGED, $message = false)
   {
       /* $result = $this->getResultObject();
@@ -230,26 +298,30 @@ abstract class RequestManager
       $result = [
          'apiStatus' => $status,
          'message' => $message,
-         'is_error' => false, 
-         'is_done' => false, 
+         'is_error' => false,
+         'is_done' => false,
       ];
       return $result;
   }
 
-  /** Returns a success status. This is succeseption, each file gives it's own status, bundled. 
-
-  @param array $data sends the data to be included in the success result.
-  @param int $status Status code of the return ( success by default ) 
-  @param string $message Message to add to the result. 
-  @return Array The result array 
-  */
+  /**
+   * Returns a success result array, optionally marking the item as done.
+   *
+   * Merges the provided data array into the result. The is_done flag is only added
+   * when the status equals STATUS_SUCCESS. A false message is omitted from the result.
+   *
+   * @param array      $data    Additional data to merge into the result (e.g. files, aiData).
+   * @param int        $status  Status code; defaults to STATUS_SUCCESS.
+   * @param string|false $message Optional human-readable success message.
+   * @return array The merged result array.
+   */
   protected function returnSuccess($data, $status = self::STATUS_SUCCESS, $message = false)
   {
 
       $result = [
           'apiStatus' => $status,
           'message' => $message,
-          'is_error' => false, 
+          'is_error' => false,
       ];
 
       if (self::STATUS_SUCCESS === $status)
@@ -264,11 +336,21 @@ abstract class RequestManager
       return $result;
   }
 
+  /**
+   * Decodes the JSON body from a wp_remote_post() response.
+   *
+   * Falls back to extracting the first valid JSON object from the raw body string
+   * when json_decode() returns null (e.g. when the response contains extra data
+   * outside the JSON structure).
+   *
+   * @param array $response Raw wp_remote_post() response array with a 'body' key.
+   * @return array Decoded response data as an associative array.
+   */
   protected function parseResponse($response)
   {
     $data = $response['body'];
 
-    $raw_data = $data; 
+    $raw_data = $data;
 
     $data = json_decode($data);
     if (is_null($data)) // null means failure on return
@@ -284,6 +366,15 @@ abstract class RequestManager
     return (array)$data;
   }
 
+  /**
+   * Extracts all valid JSON object strings from a raw text payload.
+   *
+   * Uses a recursive regex to find top-level curly-brace blocks and validates each
+   * one before returning the list of well-formed JSON strings.
+   *
+   * @param string $text Raw response body that may contain one or more JSON objects.
+   * @return string[] Array of valid JSON object strings found in the text.
+   */
   // Temporary!  (not sure what temporary means here)
   private function getJsonStrings(string $text): array
   {

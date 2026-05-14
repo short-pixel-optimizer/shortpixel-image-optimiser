@@ -12,12 +12,30 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 /* Abstract base to use for image converters. Handles media library related functions ( replacing )  */
 
+/**
+ * Abstract converter base that handles WordPress Media Library integration.
+ *
+ * Manages URL replacement (via Replacer) and WordPress attachment metadata
+ * updates when a file is converted to a different format.
+ *
+ * @package ShortPixel\Model\Converter
+ */
 abstract class MediaLibraryConverter extends Converter
 {
+	/** @var string|null Source URL of the original image, used by the replacer. */
 	protected $source_url;
+
+	/** @var Replacer|null Replacer instance used to update URLs across the database. */
 	protected $replacer; // Replacer class Object.
+
+	/** @var FileModel|null The replacement file object produced by the conversion. */
 	protected $newFile; // The newFile Object.
 
+	/**
+	 * Retrieves the latest WordPress attachment metadata for the image being converted.
+	 *
+	 * @return array WordPress attachment metadata array.
+	 */
 	public function getUpdatedMeta()
 	{
 		$id = $this->imageModel->get('id');
@@ -25,6 +43,12 @@ abstract class MediaLibraryConverter extends Converter
 		return $meta;
 	}
 
+	/**
+	 * Initialises the Replacer instance with the source URL of the current image,
+	 * accounting for scaled originals and attaching the existing WP metadata.
+	 *
+	 * @return void
+	 */
 	protected function setupReplacer()
 	{
 		$this->replacer = new Replacer();
@@ -43,7 +67,14 @@ abstract class MediaLibraryConverter extends Converter
 		$this->replacer->setSourceMeta($this->imageModel->getWPMetaData());
 	}
 
-	protected function setTarget(FileModel $newFile)
+	/**
+	 * Sets the target replacement file on the replacer, calculating the new URL
+	 * by substituting the original filename with the new one.
+	 *
+	 * @param FileModel $newFile The destination file object after conversion.
+	 * @return void
+	 */
+	protected function setTarget($newFile)
 	{
 		$fs = \wpSPIO()->filesystem();
 		$this->newFile = $newFile; // set target newFile.
@@ -54,6 +85,20 @@ abstract class MediaLibraryConverter extends Converter
 		$this->replacer->setTarget($newUrl);
 	}
 
+	/**
+	 * Updates all WordPress attachment records after a successful conversion or restore.
+	 *
+	 * Handles: updating the attached file path, post MIME type and GUID, regenerating
+	 * (or patching) attachment metadata, and propagating changes to WPML duplicates.
+	 *
+	 * @param array $params {
+	 *     Conversion parameters.
+	 *     @type bool $success           True when the conversion succeeded.
+	 *     @type bool $restore           True when restoring to the original format.
+	 *     @type bool $generate_metadata Whether to regenerate WP attachment metadata.
+	 * }
+	 * @return bool|void False on failure, void on success.
+	 */
 	protected function updateMetaData($params)
 	{
 		$defaults = array(

@@ -14,6 +14,16 @@ use ShortPixel\Model\Image\ImageModel as ImageModel;
 
 use ShortPixel\Helper\UtilHelper as UtilHelper;
 
+/**
+ * Communicates with the ShortPixel image optimisation API (v2/reducer) to send images
+ * for optimisation and process the returned results.
+ *
+ * Handles standard media optimisation, special API actions (background removal, upscale),
+ * and cache-dump requests. Interprets API status codes and maps them to internal result
+ * structures for further processing by the optimizer layer.
+ *
+ * @package ShortPixel\Controller\Api
+ */
 class ApiController extends RequestManager
 {
 	// Moved these numbers higher to prevent conflict with STATUS
@@ -29,9 +39,14 @@ class ApiController extends RequestManager
 	const ERR_UNKNOWN = -999;
 
 	//private $apiEndPoint;
+
+	/** @var string URL of the ShortPixel cache-dump (cleanup) endpoint. */
 	private $apiDumpEndPoint;
 
+	/** @var array Temporary files created during a request, keyed by identifier. */
 	protected static $temporaryFiles = array();
+
+	/** @var array Temporary directories created during a request, keyed by identifier. */
 	protected static $temporaryDirs = array();
 
 	public function __construct()
@@ -41,13 +56,20 @@ class ApiController extends RequestManager
 		$this->apiDumpEndPoint = $settings->httpProto . '://' . SHORTPIXEL_API . '/v2/cleanup.php';
 	}
 
-	/*
-	 * @param Object $item Item of stdClass
-	 * @return Returns same Item with Result of request
+	/**
+	 * Builds and sends an image-optimisation request to the ShortPixel API.
+	 *
+	 * Validates the image model and URL list on the queue item, assembles the full
+	 * request body (compression, resize, format-conversion flags, etc.), and calls
+	 * doRequest(). On a terminal error the item is immediately dumped from the
+	 * remote cache.
+	 *
+	 * @param QueueItem $qItem Queue item containing the image model, URLs, and optimisation settings.
+	 * @return void
 	 */
 	public function processMediaItem(QueueItem $qItem)
 	{
-		$imageModel = $qItem->imageModel; 
+		$imageModel = $qItem->imageModel;
 
 		if (!is_object($imageModel)) {
 			$qItem->addResult($this->returnFailure(self::STATUS_FAIL, __('Item seems invalid, removed or corrupted.', 'shortpixel-image-optimiser')));
@@ -67,7 +89,7 @@ class ApiController extends RequestManager
 
 		$settings = \wpSPIO()->settings();
 		$keyControl = ApiKeyController::getInstance();
-		$flags = $qItem->data()->flags; 
+		$flags = $qItem->data()->flags;
 		$convertTo = implode("|", $flags);
 
 		$requestBody = [
@@ -109,6 +131,16 @@ class ApiController extends RequestManager
 
 	}
 
+	/**
+	 * Builds and sends a special-action API request (e.g. background removal, upscale).
+	 *
+	 * Similar to processMediaItem() but always uses blocking mode and applies
+	 * action-specific parameters from the item's paramlist. On terminal error the
+	 * item is dumped from the remote cache.
+	 *
+	 * @param QueueItem $qItem Queue item with the action type and URL list.
+	 * @return void
+	 */
 	public function processActionItem(QueueItem $qItem)
 	{
 		$keyControl = ApiKeyController::getInstance();
@@ -129,11 +161,11 @@ class ApiController extends RequestManager
 
 		if (isset($qItem->data()->paramlist['bg_remove']))
 		{
-			 $requestBody['bg_remove'] = $qItem->data()->paramlist['bg_remove']; 
+			 $requestBody['bg_remove'] = $qItem->data()->paramlist['bg_remove'];
 		}
 		elseif (isset($qItem->data()->paramlist['upscale'])) 
 		{
-			 $requestBody['upscale'] = $qItem->data()->paramlist['upscale']; 
+			 $requestBody['upscale'] = $qItem->data()->paramlist['upscale'];
 		}
 
 		$requestParameters = [
@@ -147,16 +179,22 @@ class ApiController extends RequestManager
 
 		$request = $this->getRequest($requestBody, $requestParameters);
 		$this->doRequest($qItem, $request);
-		
+
 		if ($qItem->result()->is_error === true && $qItem->result()->is_done === true) {
 			$this->dumpMediaItem($qItem); // item failed, directly dump anything from server.
 		}
 
 	}
 
-	/* Ask to remove the items from the remote cache.
-		 @param $item Must be object, with URLS set as array of urllist. - Secretly not a mediaItem - shame
-	   */
+	/**
+	 * Asks the ShortPixel API to evict the item's URLs from the remote server cache.
+	 *
+	 * Should be called after a terminal error or before re-submitting an item so that
+	 * the API does not serve stale cached results for those URLs.
+	 *
+	 * @param QueueItem $qItem Queue item whose URLs should be purged. Must have a non-empty urls array.
+	 * @return false|mixed False when the item has no URLs, otherwise the raw wp_remote_post() return value.
+	 */
 	public function dumpMediaItem(QueueItem $qItem)
 	{
 		$settings = \wpSPIO()->settings();
@@ -184,8 +222,17 @@ class ApiController extends RequestManager
 	}
 
 	/**
+	 * Dispatches the parsed API response to the appropriate handler based on the queue item's action.
 	 *
-	 **/
+	 * Inspects the Status object returned by the API and maps known error codes to
+	 * internal result states (quota exceeded, invalid key, maintenance, etc.). When
+	 * the response contains image data it delegates to handleOptimizeResponse() or
+	 * handleActionResponse() according to the action type.
+	 *
+	 * @param QueueItem $qItem    The queue item being processed.
+	 * @param mixed     $response The raw HTTP response array from wp_remote_post().
+	 * @return array Result array from one of the return* helper methods.
+	 */
 	protected function handleResponse(QueueItem $qItem, $response)
 	{
 
@@ -242,7 +289,8 @@ class ApiController extends RequestManager
 				case -500: // API in maintenance.
 					//return array("Status" => self::STATUS_MAINTENANCE, "Message" => $APIresponse['Status']->Message);
 					return $this->returnRetry(self::STATUS_MAINTENANCE, $status->Message);
-				break; 
+
+				break;
 			}
 		}
 
@@ -252,19 +300,19 @@ class ApiController extends RequestManager
 				if ('optimize' === $action || 'convert_api' === $action)
 				{
 					 return $this->handleOptimizeResponse($qItem, $APIresponse);
-				} 
+				}
 				if ('remove_background' === $action)
 				{
-					 return $this->handleActionResponse($qItem, $APIresponse); 
+					 return $this->handleActionResponse($qItem, $APIresponse);
 				}
 				if ('scale_image' == $action)
 				{
 					 return $this->handleActionResponse($qItem, $APIresponse);
 				}
 
-				// Bail out if action is not properly defined 
+				// Bail out if action is not properly defined
 				return $this->returnFailure(self::STATUS_FAIL, __('ApiController was not provided with known action'));
-		
+
 
 		} // ApiResponse[0]
 
@@ -292,6 +340,18 @@ class ApiController extends RequestManager
 	}
 	// handleResponse function
 
+	/**
+	 * Processes an API response containing optimised image data for a standard optimise action.
+	 *
+	 * Iterates over each returned image object, checks its status (waiting, success, etc.),
+	 * dispatches successful items to handleNewSuccess(), and assembles a combined result
+	 * reflecting the number of ready, waiting, and total images. Returns a partial-success
+	 * result when only a subset of images have finished.
+	 *
+	 * @param QueueItem $qItem    The queue item being processed.
+	 * @param array     $response The decoded API response array (indexed by image).
+	 * @return array Result array from one of the return* helper methods.
+	 */
 	protected function handleOptimizeResponse(QueueItem $qItem, $response)
 	{
 		$neededURLS = $qItem->data()->urls; // URLS we are waiting for.
@@ -338,11 +398,11 @@ class ApiController extends RequestManager
 				$analyze['ready']++;
 				$imageName = $imageNames[$index];
 				$fileName = $fileNames[$index];
-				$paramlist = $qItem->data()->paramlist; 
+				$paramlist = $qItem->data()->paramlist;
 
-				// Here add paramList items that are possible needed for success checks 
-				$params = isset($paramlist[$index]) ? (array) $paramlist[$index] : []; 
-				
+				// Here add paramList items that are possible needed for success checks
+				$params = isset($paramlist[$index]) ? (array) $paramlist[$index] : [];
+
 
 				$data = array(
 					'fileName' => $fileName,
@@ -356,7 +416,7 @@ class ApiController extends RequestManager
 					$data['fileSize'] = $returnDataList['fileSizes'][$imageName];
 				}
 
-				$fileData = $qItem->data()->files; 
+				$fileData = $qItem->data()->files;
 
 				// Previous check here was for Item->files[$imageName] , not sure if currently needed.
 				// Check if image is not already in fileData.
@@ -418,33 +478,49 @@ class ApiController extends RequestManager
 		}
 	}
 
+	/**
+	 * Processes an API response for a single-file action (background removal, upscale, etc.).
+	 *
+	 * Checks the status code of the first returned image object and returns an
+	 * "unchanged/waiting" result when the server has not finished, or a success result
+	 * containing the optimised and original image URLs when complete.
+	 *
+	 * @param QueueItem $qItem    The queue item being processed.
+	 * @param array     $response The decoded API response array.
+	 * @return array|void Result array, or void when the status is not handled.
+	 */
 	protected function handleActionResponse(QueueItem $qItem, $response)
 	{
-		$item = $response[0]; // First File Response of API. 
-		$status_code = intval($item->Status->Code); 
-		
+		$item = $response[0]; // First File Response of API.
+		$status_code = intval($item->Status->Code);
+
 		if (in_array($status_code, [self::STATUS_UNCHANGED, self::STATUS_WAITING] ))
 		{
 			return $this->returnOK(self::STATUS_UNCHANGED, sprintf(__('Item is waiting', 'shortpixel-image-optimiser')));
 		}
 		if (self::STATUS_SUCCESS == $status_code)
-		{	
-			$image = $item->LosslessURL; 
+		{
+			$image = $item->LosslessURL;
 			$imageData = [
-				'optimized' => $image, 
-				'original' => $item->OriginalURL, 
+				'optimized' => $image,
+				'original' => $item->OriginalURL,
 			];
 			return $this->returnSuccess($imageData);
 		}
-	
+
 	}
 
 	/**
 	 * When API signals it's done optimizing an image.
-	 * @param  Object $item                   Queue Item object with all settings
-	 * @param  Object $fileData               API response with image URLS
-	 * @param  Array $data                   Data is filename, imagename, filesize (optionally) from returnDataList
-	 * @return Array           Array with processed image data (url, size, webp, avif)
+	 *
+	 * Builds the per-image result structure (main image, WebP, AVIF) from the API
+	 * response object, applies the file-size margin check, and returns an array
+	 * describing download URLs, sizes, and statuses for each format variant.
+	 *
+	 * @param QueueItem $qItem    Queue item object with all settings.
+	 * @param object    $fileData API response object for a single image with URL and size properties.
+	 * @param array     $data     Contextual data: fileName, imageName, and optionally fileSize and resize.
+	 * @return array Array with processed image data (image, webp, avif sub-arrays with url, size, status).
 	 */
 	protected function handleNewSuccess(QueueItem $qItem, $fileData, $data)
 	{
@@ -507,8 +583,8 @@ class ApiController extends RequestManager
 		$checkFileSize = intval($fileData->$fileSize); // Size of optimized image to check against Avif/Webp
 
 		if (false === $this->checkFileSizeMargin($originalFileSize, $checkFileSize)) {
-			
-			// Prevent this check if smartcrop is active on this image. 
+
+			// Prevent this check if smartcrop is active on this image.
 			if (isset($data['resize']) && 4 <> $data['resize'] )
 			{
 				$image['image']['status'] = self::STATUS_OPTIMIZED_BIGGER;
@@ -522,7 +598,7 @@ class ApiController extends RequestManager
 
 			if ($fileData->$type == 'NC')
 			{
-				 $image['webp']['status'] = self::STATUS_NOT_COMPATIBLE; 
+				 $image['webp']['status'] = self::STATUS_NOT_COMPATIBLE;
 			}
 			elseif ($fileData->$type != 'NA') {
 				$image['webp']['url'] = $fileData->$type;
@@ -540,7 +616,7 @@ class ApiController extends RequestManager
 
 			if ($fileData->$type == 'NC')
 			{
-				 $image['avif']['status'] = self::STATUS_NOT_COMPATIBLE; 
+				 $image['avif']['status'] = self::STATUS_NOT_COMPATIBLE;
 			}
 			elseif ($fileData->$type != 'NA') {
 				$image['avif']['url'] = $fileData->$type;
@@ -559,11 +635,17 @@ class ApiController extends RequestManager
 
 
 	/**
-	 *  Function to check if the filesize of the imagetype (webp/avif) is smaller, or within bounds of size to be stored. If not, the webp is not downloaded and uses.
+	 * Checks whether the optimised file size is within an acceptable margin of the original.
 	 *
-	 * @param  int $fileSize                 Filesize of the original
-	 * @param  int $resultSize               Filesize of the optimized image
-	 * @return [type]             [description]
+	 * Returns true when the result is smaller than or equal to the original, when the
+	 * original size is zero, when the configured margin percentage is negative (disabled),
+	 * when the size increase is within the allowed percentage, or when smartcrop with
+	 * "ignore sizes" is active. Returns false when the optimised result is bigger by
+	 * more than the allowed margin.
+	 *
+	 * @param int $fileSize   Original file size in bytes.
+	 * @param int $resultSize Optimised file size in bytes.
+	 * @return bool True if the result is acceptable; false if the result is too large.
 	 */
 	private function checkFileSizeMargin($fileSize, $resultSize)
 	{

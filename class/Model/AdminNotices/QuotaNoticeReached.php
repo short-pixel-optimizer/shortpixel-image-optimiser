@@ -11,12 +11,25 @@ use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 
 
+/**
+ * Admin notice shown when the user's ShortPixel API quota has been exhausted.
+ *
+ * @package ShortPixel\Model\AdminNotices
+ */
 class QuotaNoticeReached extends \ShortPixel\Model\AdminNoticeModel
 {
+	/** @var string Unique notice key. */
 	protected $key = 'MSG_QUOTA_REACHED';
+
+	/** @var string Severity level for this notice. */
 	protected $errorLevel = 'error';
 
 
+	/**
+	 * Loads the notice and triggers the upgrade popup when the quota-reached notice is active.
+	 *
+	 * @return void
+	 */
 	public function load()
 	{
     // $this->callback = array(AdminNoticesController::getInstance(), 'proposeUpgradePopup');
@@ -27,6 +40,11 @@ class QuotaNoticeReached extends \ShortPixel\Model\AdminNoticeModel
      }
 	}
 
+	/**
+	 * Checks whether the quota has been reached and resets the monthly/bulk upgrade notices.
+	 *
+	 * @return bool True when quota is exhausted, false if quota is still available.
+	 */
 	protected function checkTrigger()
 	{
 			$quotaController = QuotaController::getInstance();
@@ -40,6 +58,12 @@ class QuotaNoticeReached extends \ShortPixel\Model\AdminNoticeModel
 
 	}
 
+	/**
+	 * Builds the detailed HTML message showing credits consumed, images still pending,
+	 * an average compression dial, and action buttons to upgrade or confirm new credits.
+	 *
+	 * @return string HTML message string.
+	 */
 	protected function getMessage()
 	{
 		$statsControl = StatsController::getInstance();

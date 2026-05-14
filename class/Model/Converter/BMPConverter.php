@@ -6,15 +6,30 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-use ShortPixel\Model\Queue\QueueItem as QueueItem; 
+use ShortPixel\Model\Queue\QueueItem as QueueItem;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
 
+/**
+ * Converter for BMP images using the WordPress-native image pipeline.
+ *
+ * Handles conversion of BMP files by leveraging existing media library
+ * infrastructure, creating a backup before processing and updating
+ * WordPress metadata on completion.
+ *
+ * @package ShortPixel\Model\Converter
+ */
 class BMPConverter extends MediaLibraryConverter
 {
 
+	/** @var array File extensions this converter handles. */
   const CONVERTABLE_EXTENSIONS = array( 'bmp');
 
 
+	/**
+	 * Determines whether the current image can be converted by this converter.
+	 *
+	 * @return bool True for BMP images, false for all others.
+	 */
   public function isConvertable()
   {
     $extension = $this->imageModel->getExtension();
@@ -27,6 +42,13 @@ class BMPConverter extends MediaLibraryConverter
     return false;
   }
 
+	/**
+	 * Prepares the queue item for BMP conversion by triggering a conversion backup.
+	 *
+	 * @param QueueItem $item The queue item to prepare.
+	 * @param array     $args Additional arguments; 'debug_active' skips the backup step.
+	 * @return QueueItem The (unmodified) queue item.
+	 */
   public function filterQueue(QueueItem $item, $args = array())
   {
     // Create backup and such.
@@ -41,6 +63,15 @@ class BMPConverter extends MediaLibraryConverter
     return $item;
   }
 
+	/**
+	 * Handles the optimized file returned by the optimizer after a BMP conversion.
+	 *
+	 * Copies the returned file to the replacement path, updates WordPress metadata,
+	 * runs the URL replacer, and marks the conversion as successful.
+	 *
+	 * @param array $optimizeData Data returned by the optimizer, containing 'files' and 'data' keys.
+	 * @return array The original $optimizeData array (pass-through).
+	 */
   public function handleConvertedFilter($optimizeData)
   {
     $this->setupReplacer();
@@ -105,16 +136,33 @@ class BMPConverter extends MediaLibraryConverter
   } // handleConverterFilter
 
 
+	/**
+	 * Returns a fixed checksum indicating whether a conversion has been attempted.
+	 *
+	 * @return int Always 1.
+	 */
   public function getCheckSum()
   {
      return 1; // done or not.
   }
 
+	/**
+	 * Conversion entry point. Not implemented for BMP; conversion happens via the API pipeline.
+	 *
+	 * @param array $args Unused arguments.
+	 * @return void
+	 */
   public function convert($args = [])
   {
 
   }
 
+	/**
+	 * Restores the image to its original BMP format by updating WordPress metadata
+	 * to point back to the .bmp file and running the URL replacer.
+	 *
+	 * @return void
+	 */
   public function restore()
   {
     $params = array(

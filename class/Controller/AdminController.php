@@ -20,14 +20,21 @@ use ShortPixel\Model\AccessModel as AccessModel;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
 use WP_HTTP_Response;
 
-/* AdminController is meant for handling events, hooks, filters in WordPress where there is *NO* specific or more precise  ShortPixel Page active.
-*
-* This should be a delegation class connection global hooks and such to the best shortpixel handler.
-*/
+/**
+ * Handles WordPress events, hooks, and filters when no specific ShortPixel admin page is active.
+ *
+ * Acts as a delegation class connecting global WordPress hooks to the appropriate
+ * ShortPixel handler. Covers upload events, attachment lifecycle, REST API
+ * enrichment, media-library filtering, and the admin toolbar icon.
+ *
+ * @package ShortPixel\Controller
+ */
 class AdminController extends \ShortPixel\Controller
 {
+    /** @var AdminController|null Singleton instance. */
     protected static $instance;
 
+    /** @var int[] Post IDs for which the upload hook should be suppressed. */
 		private static $preventUploadHook = array();
 
     public static function getInstance()
@@ -38,6 +45,16 @@ class AdminController extends \ShortPixel\Controller
       return self::$instance;
     }
 
+    /**
+     * Fires on add_attachment to trigger conversion check before any offload plugin acts.
+     *
+     * Retrieves the newly uploaded media item and, when a converter is available and the
+     * item is convertable, dispatches the prevent-offload action so offload plugins
+     * defer moving the file.
+     *
+     * @param int $post_id WordPress attachment post ID.
+     * @return void
+     */
     public function addAttachmentHook($post_id)
     {
           $fs = \wpSPIO()->filesystem();
@@ -58,9 +75,19 @@ class AdminController extends \ShortPixel\Controller
     }
 
 
-    /** Handling upload actions
-    * @hook wp_generate_attachment_metadata
-    */
+    /**
+     * Handles the wp_generate_attachment_metadata filter to enqueue newly uploaded images for optimization.
+     *
+     * Skips processing when the post ID is in the prevent-list, when the attachment is
+     * not a valid/processable image, or when PDF optimization is disabled. Runs format
+     * conversion if applicable, then adds the item to the optimization queue.
+     *
+     * @hook wp_generate_attachment_metadata
+     *
+     * @param array $meta WordPress attachment metadata array.
+     * @param int   $id   Attachment post ID.
+     * @return array The (possibly updated) attachment metadata.
+     */
     public function handleImageUploadHook($meta, $id)
     {
 
@@ -134,11 +161,15 @@ class AdminController extends \ShortPixel\Controller
         return $meta; // It's a filter, otherwise no thumbs
     }
 
-    /** Handle AI processing on upload image 
-     * 
-     * @param mixed $meta 
-     * @param mixed $id 
-     * @return mixed 
+    /**
+     * Handles the upload hook to enqueue a newly uploaded image for AI alt-text generation.
+     *
+     * Skips IDs listed in the prevent-hook array. On success the item is added to the
+     * queue with the requestAlt action.
+     *
+     * @param array $meta WordPress attachment metadata.
+     * @param int   $id   Attachment post ID.
+     * @return array The unchanged attachment metadata.
      */
     public function handleAiImageUploadHook($meta, $id)
     {
@@ -177,7 +208,18 @@ class AdminController extends \ShortPixel\Controller
 			  self::$preventUploadHook[] = $id;
 		}
 
-		// Placeholder function for heic and such, return placeholder URL in image to help w/ database replacements after conversion.
+		/**
+		 * Returns a placeholder URL (with a .jpg extension) for convertable image formats such as HEIC.
+		 *
+		 * Helps downstream database-replacement operations find the correct URL after a
+		 * format conversion has produced a JPEG stand-in. Returns the original URL unchanged
+		 * when the extension is not in the list of convertable types or when no placeholder
+		 * has been set on the media item.
+		 *
+		 * @param string $url     The original attachment URL.
+		 * @param int    $post_id The attachment post ID.
+		 * @return string The (possibly rewritten) attachment URL.
+		 */
 		public function checkPlaceHolder($url, $post_id)
 		{
 
@@ -205,7 +247,16 @@ class AdminController extends \ShortPixel\Controller
 			return $url;
 		}
 
-    /* Function to process Hook coming from the WP cron system */
+    /**
+     * Processes image optimization triggered by the WP-Cron system.
+     *
+     * Normalises the bulk argument passed by WP-Cron and delegates to
+     * processQueueHook() with sensible cron-specific defaults (10 max runs,
+     * 50-second time limit, 1-second sleep between rounds).
+     *
+     * @param array|bool $bulk Cron argument array (may contain a 'bulk' key) or a bool.
+     * @return void
+     */
     public function processCronHook($bulk)
     {
        // Cron shenenigans
@@ -227,6 +278,26 @@ class AdminController extends \ShortPixel\Controller
         return $this->processQueueHook($args);
     }
 
+	/**
+	 * Runs the image-optimization queue in a loop until it is empty or a limit is reached.
+	 *
+	 * Supports optional time limits, maximum run counts, and single-pass mode. Loads
+	 * cron-compatibility functions when called from within WP-Cron. Applies the
+	 * shortpixel/process_hook/options filter so external code can adjust the behaviour.
+	 *
+	 * @param array $args {
+	 *     Optional runtime options.
+	 *
+	 *     @type int        $wait      Seconds to sleep between rounds. Default 3.
+	 *     @type bool       $run_once  When true, process the queue only once. Default false.
+	 *     @type string[]   $queues    Queue names to process. Default ['media','custom'].
+	 *     @type bool       $bulk      Whether this is a bulk run. Default false.
+	 *     @type int        $max_runs  Maximum iterations; -1 means unlimited. Default -1.
+	 *     @type string     $source    Caller identifier used by filters. Default 'hook'.
+	 *     @type int|false  $timelimit Hard time limit in seconds, or false. Default false.
+	 * }
+	 * @return void
+	 */
 		public function processQueueHook($args = array())
 		{
 				$defaults = array(
@@ -300,6 +371,22 @@ class AdminController extends \ShortPixel\Controller
 				}
 		}
 
+    /**
+     * Iterates over custom (other-media) folders that are due for a content refresh.
+     *
+     * Skips execution when no custom images are registered. Loops until no refreshable
+     * folder is found, the amount limit is reached, or the caller breaks out.
+     *
+     * @param array $args {
+     *     Optional runtime options.
+     *
+     *     @type bool  $force    Force refresh even when not due. Default false.
+     *     @type int   $wait     Seconds to sleep between folder scans. Default 3.
+     *     @type int   $amount   Maximum number of folders to refresh; -1 means unlimited. Default -1.
+     *     @type int   $interval Minimum age in seconds before a folder is re-scanned. Default 6 hours.
+     * }
+     * @return false|void Returns false when there are no custom images; otherwise void.
+     */
     public function scanCustomFoldersHook($args = array())
     {
       $defaults = array(
@@ -343,6 +430,18 @@ class AdminController extends \ShortPixel\Controller
 
     }
 
+    /**
+     * Enriches REST API attachment responses with WebP and AVIF source URLs.
+     *
+     * Hooked into the REST response pipeline; only acts on attachment post types that
+     * have at least one optimized WebP or AVIF variant. Adds source_url_webp /
+     * source_url_avif fields at the top level and inside each media_details size entry.
+     *
+     * @param \WP_REST_Response $result The current REST response object.
+     * @param \WP_REST_Server   $server The REST server instance.
+     * @param \WP_REST_Request  $request The REST request object.
+     * @return \WP_REST_Response The (possibly enriched) REST response.
+     */
     public function checkRestMedia($result, $server, $request )
     {
       $data = $result->data; 
@@ -398,7 +497,15 @@ class AdminController extends \ShortPixel\Controller
       return $result; 
     }
 
-		// WP functions that are not loaded during Cron Time.
+		/**
+		 * Includes WordPress admin functions that are not loaded during cron execution.
+		 *
+		 * Conditionally includes wp-admin/includes/admin.php and image.php so that
+		 * functions like download_url() and wp_generate_attachment_metadata() are
+		 * available when the plugin runs inside a cron or AJAX context.
+		 *
+		 * @return void
+		 */
 		protected function loadCronCompat()
 		{
 			  if (false === function_exists('download_url'))
@@ -445,6 +552,17 @@ class AdminController extends \ShortPixel\Controller
       return $query;
     }
 
+    /**
+     * Appends WHERE clauses to the media-library query to implement the ShortPixel status filter.
+     *
+     * Handles three filter values: 'unoptimized' (items without a success record),
+     * 'optimized' (items with at least one success record), and 'prevented' (items
+     * explicitly excluded from optimization). Has no effect when the filter is 'all'.
+     *
+     * @param string    $where The current WHERE SQL fragment.
+     * @param \WP_Query $query The active WP_Query instance.
+     * @return string The (possibly extended) WHERE SQL fragment.
+     */
     public function filter_add_where ($where, $query)
     {
         global $wpdb;
@@ -508,10 +626,17 @@ class AdminController extends \ShortPixel\Controller
   	}
 
     /**
-		* When replacing happens.
-    * @hook wp_handle_replace
-		* @integration Enable Media Replace
-    */
+     * Clears ShortPixel optimization data when an attachment is replaced via Enable Media Replace.
+     *
+     * Deletes the existing optimization records for the attachment so that the
+     * replacement file is treated as a fresh upload.
+     *
+     * @hook wp_handle_replace
+     * @integration Enable Media Replace
+     *
+     * @param array $params Hook parameters; must contain a 'post_id' key.
+     * @return void
+     */
     public function handleReplaceHook($params)
     {
       if(isset($params['post_id'])) { //integration with EnableMediaReplace - that's an upload for replacing an existing ID
@@ -529,10 +654,17 @@ class AdminController extends \ShortPixel\Controller
 
     }
 
-		/** This function is bound to enable-media-replace hook and fired when a file was replaced
-		*
-		*
-		*/
+		/**
+		 * Re-enqueues an attachment for optimization after it has been replaced via Enable Media Replace.
+		 *
+		 * Delegates to handleImageUploadHook() so all the standard upload checks and
+		 * queue logic are reused.
+		 *
+		 * @param string $target   Path to the replacement (new) file.
+		 * @param string $source   Path to the original (old) file.
+		 * @param int    $post_id  Attachment post ID of the replaced item.
+		 * @return void
+		 */
 		public function handleReplaceEnqueue($target, $source, $post_id)
 		{
 				// Delegate this to the hook, so all checks are done there.
@@ -558,9 +690,15 @@ class AdminController extends \ShortPixel\Controller
         return $links;
     }
 
-    /** Allow certain mime-types if we will be using those.
-    *
-    */
+    /**
+     * Extends the WordPress allowed MIME type list to include WebP, AVIF, HEIC, and HEIF.
+     *
+     * Only adds WebP and AVIF when the corresponding generation settings are enabled.
+     * HEIC and HEIF are always added to allow uploads of those source formats.
+     *
+     * @param array<string,string> $mimes Existing MIME type map (extension => mime type).
+     * @return array<string,string> Extended MIME type map.
+     */
     public function addMimes($mimes)
     {
         $settings = \wpSPIO()->settings();
