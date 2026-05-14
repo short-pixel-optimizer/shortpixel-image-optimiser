@@ -39,7 +39,7 @@ abstract class Converter
 	abstract protected function updateMetaData($params);
 	abstract public function getUpdatedMeta();
 	abstract protected function setupReplacer();
-	abstract protected function setTarget($file);
+	abstract protected function setTarget(FileModel $file);
 
 	// Prepare item for adding to queue, adding data, doing backup perhaps.
 	abstract public function filterQueue(QueueItem $item, $args = array());
@@ -137,12 +137,12 @@ abstract class Converter
 	}
 
 	/** Own function to get a unique filename since the WordPress wp_unique_filename seems to not function properly w/ thumbnails */
-	protected function unique_file(DirectoryModel $dir, FileModel $file, $number = 0)
+	protected function unique_file(DirectoryModel $dir, FileModel $file, $number = 0) : FileModel
 	{
-		if (! $file->exists())
+		if (false === $file->exists())
 			return $file;
 
-		if ($file->is_virtual()) {
+		if (true === $file->is_virtual()) {
 			return $file;
 		}
 

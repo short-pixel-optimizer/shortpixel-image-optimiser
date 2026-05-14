@@ -106,8 +106,8 @@ abstract class BackupModel
         // Assertion here that for convert-types, there is no scaled- happening - Wrong! 
         
         $mainFile = $this->mediaItem;
+        $replaceBase = $mainFile->getMeta()->convertMeta()->getReplacementImageBase(); 
         
-
 		if (true === $this->isConverted) {
         
             $extension = $mainFile->getMeta()->convertMeta()->getFileFormat();
@@ -142,7 +142,16 @@ abstract class BackupModel
 		}
         else
         {
-            $backupFileName = $sourceFile->getFileName();
+            // This happens when the conversion is in progress. ReplaceBase compensates for Unique Filename. 
+            if (false !== $replaceBase)
+            {
+                $backupFileName = $replaceBase . '.' . $sourceFile->getExtension();
+            }
+            else
+            {
+                $backupFileName = $sourceFile->getFileName();
+            }
+            
         }
 
         return $backupFileName; 

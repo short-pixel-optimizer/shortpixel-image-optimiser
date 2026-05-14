@@ -6,6 +6,7 @@ if (! defined('ABSPATH')) {
 	exit; // Exit if accessed directly.
 }
 
+use ShortPixel\Model\File\FileModel;
 use ShortPixel\Replacer\Replacer as Replacer;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
@@ -42,7 +43,7 @@ abstract class MediaLibraryConverter extends Converter
 		$this->replacer->setSourceMeta($this->imageModel->getWPMetaData());
 	}
 
-	protected function setTarget($newFile)
+	protected function setTarget(FileModel $newFile)
 	{
 		$fs = \wpSPIO()->filesystem();
 		$this->newFile = $newFile; // set target newFile.

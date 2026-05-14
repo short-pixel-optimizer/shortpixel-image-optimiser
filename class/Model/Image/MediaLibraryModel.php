@@ -1522,7 +1522,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return $bool;
 	}
 
-	public function conversionPrepare($args = array())
+	public function conversionPrepare($args = [])
 	{
 		$settings = \wpSPIO()->settings();
 		$bool = false;
@@ -1655,7 +1655,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$fs->flushImageCache();
 		$this->flushOptimizeData();
 		$this->getMeta()->convertMeta()->setTried($args['checksum']);
-		$this->getMeta()->convertMeta()->setReplacementImageBase(false);
+	// Commented this, unclear why replaceBase is removed after succesfull conversion?
+	//	$this->getMeta()->convertMeta()->setReplacementImageBase(false);
 
 		$this->saveMeta();
 	}

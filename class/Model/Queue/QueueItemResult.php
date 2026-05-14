@@ -22,7 +22,7 @@ class QueueItemResult implements JsonSerializable
    protected $file;  // should probably be merged these two.
    protected $files;
    protected $fileStatus;
-   //protected $filename; // @todo Where this is used for?  
+   protected $filename; // Used for AI filename replace result
    protected $error;  // might in time better be called error_code or so
    protected $new_attach_id; // new attach id for background remove.
    protected $success; // new

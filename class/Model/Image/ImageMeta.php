@@ -12,7 +12,7 @@ class ImageMeta extends ImageThumbnailMeta
   public $errorMessage;
   public $wasConverted = false; // Was converted from legacy format
 
-	protected $convertMeta;
+  protected $convertMeta;
 
 
 	public function __construct()
