@@ -72,6 +72,27 @@ class CacheModel
     $this->expires = $time;
   }
 
+  public function setValue($value)
+  {
+    $this->value = $value;
+  }
+
+  public function exists()
+  {
+    return $this->exists;
+  }
+
+  public function getValue()
+  {
+      return $this->value;
+  }
+
+  public function getName()
+  {
+      return $this->name;
+  }
+
+
   /**
    * Persist the current value as a WordPress transient.
    *
