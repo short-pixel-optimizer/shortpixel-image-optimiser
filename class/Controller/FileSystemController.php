@@ -17,15 +17,23 @@ use ShortPixel\Model\Image\MediaLibraryModel as MediaLibraryModel;
 use ShortPixel\Model\Image\MediaLibraryThumbnailModel as MediaLibraryThumbnailModel;
 use ShortPixel\Model\Image\CustomImageModel as CustomImageModel;
 
-/** Controller for FileSystem operations
+/**
+ * Controller for FileSystem operations.
  *
- * This controller is used for -compound- ( complex ) FS operations, using the provided models File en Directory.
- * USE via \wpSPIO()->filesystem();
+ * This controller is used for compound (complex) FS operations, using the provided
+ * models File and Directory. USE via \wpSPIO()->filesystem();
+ *
+ * @package ShortPixel\Controller
  */
 class FileSystemController extends \ShortPixel\Controller
 {
+  /** @var object Environment object from wpSPIO */
   protected $env;
+
+  /** @var array Static cache of loaded MediaLibraryModel objects, keyed by post ID */
   static $mediaItems = array();
+
+  /** @var array Static cache of loaded CustomImageModel objects, keyed by ID */
   static $customItems = array();
 
   public function __construct()
@@ -35,7 +43,7 @@ class FileSystemController extends \ShortPixel\Controller
 
   /** Get FileModel for a certain path. This can exist or not
    *
-   * @param String Path Full Path to the file
+   * @param string $path Full Path to the file
    * @return FileModel FileModel Object. If file does not exist, not all values are set.
    */
   public function getFile($path)
@@ -43,10 +51,13 @@ class FileSystemController extends \ShortPixel\Controller
     return new FileModel($path);
   }
 
-  /** Get MediaLibraryModel for a Post_id
-   * @param int $id
-   * @param bool $useCache  If false then it will require a fresh copt from database. Use when meta has changed / saved
-   * @param bool $cacheOnly Prevent fetching from Database. Used for checkLegacy and other places where conflicts with mainFile arise, checking for backups.
+  /**
+   * Get MediaLibraryModel for a given attachment post ID.
+   *
+   * @param int  $id        The WordPress attachment post ID.
+   * @param bool $useCache  If false, bypasses the static cache and fetches fresh data from the database.
+   * @param bool $cacheOnly If true, only returns the item when it exists in cache; prevents a database fetch.
+   * @return MediaLibraryModel|false The image model, or false if ID is invalid or file path could not be determined.
    */
   public function getMediaImage($id, $useCache = true, $cacheOnly = false)
   {
@@ -88,7 +99,11 @@ class FileSystemController extends \ShortPixel\Controller
 
 
   /**
-   * @param int $id
+   * Get CustomImageModel for a given custom media item ID.
+   *
+   * @param int  $id       The custom media item ID.
+   * @param bool $useCache Whether to use the static in-memory cache.
+   * @return CustomImageModel The custom image model object.
    */
   public function getCustomImage($id, $useCache = true)
   {
@@ -105,8 +120,14 @@ class FileSystemController extends \ShortPixel\Controller
     return $imageObj;
   }
 
-  // Use sporadically, every time an angel o performance dies.
-  // Required for files that change i.e. enable media replace or other filesystem changing operation.
+  /**
+   * Flush all cached image objects from static caches.
+   *
+   * Use sparingly — required for files that change (e.g. Enable Media Replace or
+   * other filesystem-changing operations). Every call has a performance cost.
+   *
+   * @return void
+   */
   public function flushImageCache()
   {
     self::$mediaItems = array();
@@ -114,6 +135,12 @@ class FileSystemController extends \ShortPixel\Controller
     MediaLibraryModel::onFlushImageCache();
   }
 
+  /**
+   * Remove a single image object from the static cache.
+   *
+   * @param MediaLibraryModel|CustomImageModel $imageObj The image model to evict from cache.
+   * @return void
+   */
   public function flushImage($imageObj)
   {
     $id = $imageObj->get('id');
@@ -128,9 +155,15 @@ class FileSystemController extends \ShortPixel\Controller
     }
   }
 
-  /** Gets a custom Image Model without being in the database. This is used to check if path is a proper customModel path ( not mediaLibrary ) and see if the file should be included per excusion rules 
-   * 
-   * @return CustomImageModel 
+  /**
+   * Get a CustomImageModel stub for a path that is not yet in the database.
+   *
+   * Used to check whether a path qualifies as a custom-media path (not media library)
+   * and whether the file should be included according to exclusion rules.
+   *
+   * @param string $path Full filesystem path to the image.
+   * @param bool   $load Whether to load file metadata on the stub.
+   * @return CustomImageModel A stub model with ID 0, not persisted to the database.
    */
   public function getCustomStub($path, $load = true)
   {
@@ -139,9 +172,14 @@ class FileSystemController extends \ShortPixel\Controller
     return $imageObj;
   }
 
-  /** Generic function to get the correct image Object, to prevent many switches everywhere
-   * int $id
-   * string $type
+  /**
+   * Generic helper that returns the correct image model based on type, avoiding
+   * repeated type switches throughout the codebase.
+   *
+   * @param int    $id       The image ID (attachment post ID for media, custom ID for custom).
+   * @param string $type     The image type: 'media' or 'custom'.
+   * @param bool   $useCache Whether to use the static in-memory cache.
+   * @return MediaLibraryModel|CustomImageModel|false The image model, or false on failure.
    */
   public function getImage($id,  $type, $useCache = true)
   {
@@ -158,10 +196,15 @@ class FileSystemController extends \ShortPixel\Controller
   }
 
 
-  /* wp_get_original_image_path with specific ShortPixel filter
-		* @param int $id
-    * @return MediaLibraryThumbnailModel;
-     */
+  /**
+   * Get a thumbnail model for the original (pre-scaling) image of an attachment.
+   *
+   * Wraps wp_get_original_image_path() and applies a ShortPixel-specific filter
+   * before returning the model.
+   *
+   * @param int $id The WordPress attachment post ID.
+   * @return MediaLibraryThumbnailModel Thumbnail model representing the original image file.
+   */
   public function getOriginalImage($id)
   {
     $filepath = \wp_get_original_image_path($id);
@@ -171,7 +214,7 @@ class FileSystemController extends \ShortPixel\Controller
 
   /** Get DirectoryModel for a certain path. This can exist or not
    *
-   * @param String $path Full Path to the Directory.
+   * @param string $path Full Path to the Directory.
    * @return DirectoryModel Object with status set on current directory.
    */
   public function getDirectory($path)
@@ -179,13 +222,16 @@ class FileSystemController extends \ShortPixel\Controller
     return new DirectoryModel($path);
   }
 
-  /** Get the BackupLocation for a FileModel. FileModel should be not a backup itself or it will recurse
+  /**
+   * Resolve and return the backup directory for a given file.
    *
-   *  For now this function should only be used for *new* backup files. Retrieving backup files via this method
-   *  doesn't take into account legacy ways of storage.
+   * Intended for new backup files only; does not account for legacy storage layouts.
+   * If the file is virtual (e.g. offloaded), the path is translated before resolving.
    *
-   * @param FileModel $file FileModel with file that needs a backup.
-   * @return DirectoryModel | Boolean DirectoryModel pointing to the backup directory. Returns false if the directory could not be created, or initialized.
+   * @param FileModel $file   The file whose backup directory should be found.
+   * @param bool      $create Whether to create the backup directory if it does not yet exist.
+   * @return DirectoryModel|false DirectoryModel pointing to the backup directory, or false if
+   *                              the directory could not be created or initialised.
    */
   public function getBackupDirectory(FileModel $file, $create = false)
   {
@@ -229,8 +275,13 @@ class FileSystemController extends \ShortPixel\Controller
     }
   }
 
-  /** Get the base folder from where custom paths are possible (from WP-base / sitebase)
-
+  /**
+   * Get the base directory from which custom media paths are resolved.
+   *
+   * Returns ABSPATH for the main site, or the uploads base directory for subsites in
+   * a multisite network.
+   *
+   * @return DirectoryModel The resolved WP file base directory.
    */
   public function getWPFileBase()
   {
@@ -247,9 +298,10 @@ class FileSystemController extends \ShortPixel\Controller
     return $dir;
   }
 
-  /** This function returns the WordPress Basedir for uploads ( without date and such )
-   * Normally this would point to /wp-content/uploads.
-   * @returns DirectoryModel
+  /**
+   * Return the WordPress uploads base directory (e.g. /wp-content/uploads).
+   *
+   * @return DirectoryModel DirectoryModel pointing to the uploads base directory.
    */
   public function getWPUploadBase()
   {
@@ -258,10 +310,14 @@ class FileSystemController extends \ShortPixel\Controller
     return $this->getDirectory($upload_dir['basedir']);
   }
 
-  /** This function returns the Absolute Path of the WordPress installation where the **CONTENT** directory is located.
-   * Normally this would be the same as ABSPATH, but there are installations out there with -cough- alternative approaches
-   * The Abspath is uses to replace against the domain URL ( home_url ).
-   * @returns DirectoryModel  Either the ABSPATH or where the WP_CONTENT_DIR is located
+  /**
+   * Return the absolute path of the WordPress installation where the content directory lives.
+   *
+   * Normally identical to ABSPATH, but handles non-standard installations where wp-content
+   * is placed outside the document root. The returned path is used to convert file paths
+   * to URLs by replacing it with home_url().
+   *
+   * @return DirectoryModel Either ABSPATH or the directory that contains WP_CONTENT_DIR.
    */
   public function getWPAbsPath()
   {
@@ -303,9 +359,16 @@ class FileSystemController extends \ShortPixel\Controller
   }
 
 
-  /** Utility function that tries to convert a file-path to a webURL.
+  /**
+   * Attempt to convert a filesystem path to a web-accessible URL.
    *
-   * If possible, rely on other better methods to find URL ( e.g. via WP functions ).
+   * Handles standard uploads, multisite sub-directory and sub-domain setups,
+   * legacy pre-2.7 upload paths, and protocol-relative or scheme-less URLs.
+   * When possible, prefer WordPress-native functions or WP attachment functions
+   * over this utility.
+   *
+   * @param FileModel $file The file whose URL should be determined.
+   * @return string|false The absolute URL string, or false if it could not be resolved.
    */
   public function pathToUrl(FileModel $file)
   {
@@ -349,7 +412,7 @@ class FileSystemController extends \ShortPixel\Controller
     // This happens when file is outside of wp_uploads_dir
     if (strpos($url, $wp_home_path) !== false) {
 
-      // Check if content URL and dir are defined, go look there. 
+      // Check if content URL and dir are defined, go look there.
       if (defined('WP_CONTENT_URL') && defined('WP_CONTENT_DIR')) {
         $content_dir = WP_CONTENT_DIR;
         $relative = str_replace(WP_CONTENT_DIR, '', $filepath);
@@ -396,6 +459,12 @@ class FileSystemController extends \ShortPixel\Controller
     return false;
   }
 
+  /**
+   * Ensure a URL is absolute by prepending the site URL when needed, then apply filters.
+   *
+   * @param string $url The URL or path to normalise.
+   * @return string The verified, filter-applied URL.
+   */
   public function checkURL($url)
   {
     if (! $this->pathIsURL($url)) {
@@ -408,10 +477,14 @@ class FileSystemController extends \ShortPixel\Controller
     return apply_filters('shortpixel/filesystem/url', $url);
   }
 
-  /** Utility function to check if a path is an URL
-   *  Checks if this path looks like an URL.
-   * @param $path String  Path to check
-   * @return Boolean If path seems domain.
+  /**
+   * Check if a given string looks like a URL rather than a filesystem path.
+   *
+   * Detects http/https prefixes, protocol-relative URLs (//), and custom schemes
+   * such as those used by S3 offload plugins.
+   *
+   * @param string $path The path or URL string to check.
+   * @return bool True if the string appears to be a URL, false otherwise.
    */
   public function pathIsUrl($path)
   {
@@ -426,8 +499,12 @@ class FileSystemController extends \ShortPixel\Controller
       return false;
   }
 
-  /** Sort files / directories in a certain way.
-   * Future dev to include options via arg.
+  /**
+   * Sort an array of FileModel or DirectoryModel objects alphabetically by name.
+   *
+   * @param array $array Array of FileModel or DirectoryModel objects to sort.
+   * @param array $args  Optional future arguments for alternative sort modes (currently unused).
+   * @return array The sorted array, or the original array if it is empty.
    */
   public function sortFiles($array, $args = array())
   {
@@ -453,11 +530,13 @@ class FileSystemController extends \ShortPixel\Controller
   }
 
 
-  /** Get all files from a directory tree, starting at given dir.
-   * @param DirectoryModel $dir to recursive into
-   * @param Array $filters Collection of optional filters as accepted by FileFilter in directoryModel
-   * @return Array Array of FileModel Objects
-   **/
+  /**
+   * Recursively collect all files under a directory tree.
+   *
+   * @param DirectoryModel $dir     The root directory to start from.
+   * @param array          $filters Optional filter arguments as accepted by DirectoryModel::getFiles().
+   * @return array Array of FileModel objects found under the given directory tree.
+   */
   public function getFilesRecursive(DirectoryModel $dir, $filters = array())
   {
     $fileArray = array();
@@ -477,7 +556,15 @@ class FileSystemController extends \ShortPixel\Controller
     return $fileArray;
   }
 
-  // Url very sparingly.
+  /**
+   * Check whether a remote URL responds with an HTTP 200 status code.
+   *
+   * Uses cURL. Returns null when cURL is not available. Use sparingly as each call
+   * makes a live HTTP request.
+   *
+   * @param string $url The URL to check.
+   * @return bool|null True if the URL is reachable with HTTP 200, false otherwise, or null if cURL is unavailable.
+   */
   public function url_exists($url)
   {
     if (! \wpSPIO()->env()->is_function_usable('curl_init')) {
@@ -497,8 +584,14 @@ class FileSystemController extends \ShortPixel\Controller
     }
   }
 
-  /** Any files / directories loaded while this is active will not check for exists or other filesystem operations
+  /**
+   * Enable trusted mode for filesystem models.
    *
+   * While active, FileModel and DirectoryModel instances skip existence checks and
+   * other filesystem operations for performance. Only activates when the environment
+   * reports that trusted mode is allowed.
+   *
+   * @return void
    */
   public function startTrustedMode()
   {
@@ -508,6 +601,11 @@ class FileSystemController extends \ShortPixel\Controller
     }
   }
 
+  /**
+   * Disable trusted mode, restoring normal filesystem validation in models.
+   *
+   * @return void
+   */
   public function endTrustedMode()
   {
     if (\wpSPIO()->env()->useTrustedMode()) {
@@ -516,25 +614,39 @@ class FileSystemController extends \ShortPixel\Controller
     }
   }
 
+  /**
+   * Move log files between the backup folder and a temporary directory, or vice versa.
+   *
+   * Used to preserve log files across operations that clear the backup folder (e.g.
+   * plugin reinstallation). Pass `to_temp => true` to move logs to the system temp
+   * directory, or `to_temp => false` to move them back.
+   *
+   * @param array $args {
+   *     Optional. Arguments controlling the move direction.
+   *
+   *     @type bool $to_temp True to move from backup folder to temp (default), false for the reverse.
+   * }
+   * @return false Always returns false.
+   */
   public function moveLogFiles($args = [])
   {
     $defaults = [
-      'to_temp' => true, 
+      'to_temp' => true,
     ];
 
-    $args = wp_parse_args($args, $defaults); 
+    $args = wp_parse_args($args, $defaults);
 
     $tempDir = trailingslashit(sys_get_temp_dir());
-    $tmpLocation = $tempDir . 'logmove'; 
+    $tmpLocation = $tempDir . 'logmove';
 
     if (true === $args['to_temp'])
     {
-      $sourcePath = SHORTPIXEL_BACKUP_FOLDER; 
+      $sourcePath = SHORTPIXEL_BACKUP_FOLDER;
       $targetPath = $tmpLocation;
     }
     else
     {
-      $sourcePath = $tmpLocation; 
+      $sourcePath = $tmpLocation;
       $targetPath = SHORTPIXEL_BACKUP_FOLDER;
     }
 
@@ -545,20 +657,20 @@ class FileSystemController extends \ShortPixel\Controller
     if (false !== $logFiles && is_array($logFiles) && count($logFiles) > 0)
     {
         $sourceDir = $this->getDirectory($sourcePath);
-        $sourceDir->check(); // Check if not create, will be needed if backup dir is removed. 
-    
+        $sourceDir->check(); // Check if not create, will be needed if backup dir is removed.
+
         $destinationDir = $this->getDirectory($targetPath);
         $destinationDir->check();
 
        foreach($logFiles as $filePath)
        {
-         $file = $this->getFile($filePath); 
-         $fileName = $file->getFileName(); 
-         
-         $targetFile = $this->getFile($destinationDir->getPath() . $fileName); 
+         $file = $this->getFile($filePath);
+         $fileName = $file->getFileName();
 
-         $bool = $file->move($targetFile); 
-         
+         $targetFile = $this->getFile($destinationDir->getPath() . $fileName);
+
+         $bool = $file->move($targetFile);
+
          if ( false === $bool )
          {
            Log::addWarn('FAILED moving LogFile from '  . $file->getFullPath() . ' to ' . $targetFile->getFullPath());
@@ -569,7 +681,7 @@ class FileSystemController extends \ShortPixel\Controller
          }
        }
 
-    } 
+    }
 
     if (false === $args['to_temp'])
     {
@@ -577,7 +689,7 @@ class FileSystemController extends \ShortPixel\Controller
     }
 
 
-    return false; 
+    return false;
   }
 
-} // class 
+} // class

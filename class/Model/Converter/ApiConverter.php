@@ -12,13 +12,32 @@ use ShortPixel\Helper\UtilHelper as UtilHelper;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Model\Queue\QueueItem as QueueItem;
 
+/**
+ * Converter that delegates format conversion to the ShortPixel API.
+ *
+ * Handles HEIC, TIFF, TIF, and BMP images by sending them to the remote API,
+ * placing a local placeholder while the API processes the file, and then
+ * writing the returned JPG back to disk on completion.
+ *
+ * @package ShortPixel\Model\Converter
+ */
 class ApiConverter extends MediaLibraryConverter
 {
 
+	/** @var array File extensions that this converter can handle. */
 	const CONVERTABLE_EXTENSIONS = array('heic', 'tiff', 'tif', 'bmp');
 
+	/** @var bool Whether to request thumbnails from the API alongside the main image. */
 	protected $requestAPIthumbnails = true;
 
+	/**
+	 * Determines whether the current image can be converted by this converter.
+	 *
+	 * Returns true for supported extensions, or when a placeholder has been set
+	 * (indicating an in-progress API conversion).
+	 *
+	 * @return bool True if convertable, false otherwise.
+	 */
 	public function isConvertable()
 	{
 		$fs = \wpSPIO()->filesystem();
@@ -40,27 +59,37 @@ class ApiConverter extends MediaLibraryConverter
 		}
 	}
 
-
+	/**
+	 * Modifies the queue item before it is submitted to the API.
+	 *
+	 * Strips any local 'convertto' parameters, inserts a 'convert_api' action,
+	 * forces lossless compression to avoid double-compression on thumbnails,
+	 * resets image credit counts, and calls prepareQueue() to create the placeholder.
+	 *
+	 * @param QueueItem $qItem The queue item to modify.
+	 * @param array     $args  Additional arguments; 'debug_active' suppresses prepareQueue.
+	 * @return void
+	 */
 	public function filterQueue(QueueItem $qItem, $args = [])
 	{
 		foreach ($qItem->data()->paramlist as $index => $data) {
 			if (isset($qItem->data()->paramlist[$index]['convertto'])) {
-				$paramlist = $qItem->data()->paramlist; 
+				$paramlist = $qItem->data()->paramlist;
 				unset($paramlist[$index]['convertto']);
 				$qItem->data()->paramlist = $paramlist;
 //				$item->data()->paramlist[$index]['convertto'] = 'jpg';
 			}
 		}
 
-		$prev_action = $qItem->data()->action; 
-		$qItem->data()->action = 'convert_api'; 
+		$prev_action = $qItem->data()->action;
+		$qItem->data()->action = 'convert_api';
 		$qItem->data()->addNextAction(($prev_action));
 		/*
 		if (false === is_null($qItem->data()->next_actions))
 		{
 			$qItem->data()->next_actions = array_merge($qItem->data()->next_actions, [$prev_action]);
 		}
-		else 
+		else
 		{
 			$qItem->data()->next_actions = [$prev_action];
 		} */
@@ -220,11 +249,25 @@ class ApiConverter extends MediaLibraryConverter
 			$fs->flushImageCache(); */
 	}
 
+	/**
+	 * Returns a fixed checksum indicating whether a conversion has been attempted.
+	 *
+	 * @return int Always 1.
+	 */
 	public function getCheckSum()
 	{
 		return 1; // done or not.
 	}
 
+	/**
+	 * Handles the optimized file returned by the API after a successful conversion.
+	 *
+	 * Removes the placeholder, copies the API-returned JPG to the replacement path,
+	 * updates WordPress metadata, runs the URL replacer, and marks the conversion as complete.
+	 *
+	 * @param array $optimizeData Data returned by the optimizer, containing 'files' and 'data' keys.
+	 * @return bool True on success, false on any failure.
+	 */
 	public function handleConverted($optimizeData)
 	{
 		$this->setupReplacer();

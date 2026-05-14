@@ -5,15 +5,33 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
+/**
+ * Admin notice prompting the user to migrate legacy (pre-5.0) optimization metadata.
+ *
+ * @package ShortPixel\Model\AdminNotices
+ */
 class LegacyNotice extends \ShortPixel\Model\AdminNoticeModel
 {
+	/** @var string Unique notice key. */
 	protected $key = 'MSG_CONVERT_LEGACY';
 
+	/**
+	 * Checks whether this notice should be automatically triggered.
+	 * Currently disabled; must be triggered manually.
+	 *
+	 * @return bool Always false.
+	 */
 	protected function checkTrigger()
 	{
 		 return false;
 	}
 
+	/**
+	 * Builds the HTML message explaining the legacy data format and providing
+	 * a link to the bulk migration tool.
+	 *
+	 * @return string HTML message string.
+	 */
 	protected function getMessage()
 	{
 		$message = '<p><strong>' .  __('ShortPixel has found items in the media library with an outdated optimization format!', 'shortpixel-image-optimiser') . '</strong></p>';
