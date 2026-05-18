@@ -74,6 +74,12 @@ abstract class BackupController
       return $backupController->getModel($imageItem);
     }
 
+    /**
+     * Get BackupModel via mediaItem. This saves getting the image via filesystemcontroller.
+     *
+     * @param ImageModel $mediaItem
+     * @return void
+     */
     public function getModel(ImageModel $mediaItem)
     {
         $id = $mediaItem->get('id');
@@ -82,7 +88,14 @@ abstract class BackupController
         return $this->getModelById($id, $type, $mediaItem);
     }
 
-    public function getModelById($id, $type = 'media', $mediaItem = null) : BackupModel
+    /** Get BackupModel via ID and Type.  This should be called via getModel or static function. No direct access, because the FS getImage might result in an init loop via MediaLibraryModel / CustomImageModel 
+     * 
+     * @param int $id 
+     * @param string $type 
+     * @param mixed $mediaItem 
+     * @return BackupModel 
+     */
+    protected function getModelById(int $id, $type = 'media', $mediaItem = null) : BackupModel
     {
       if (! isset(self::$models[$type]) || ! isset(self::$models[$type][$id]))
       {
