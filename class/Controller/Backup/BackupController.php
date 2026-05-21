@@ -99,7 +99,8 @@ abstract class BackupController
     {
       if (! isset(self::$models[$type]) || ! isset(self::$models[$type][$id]))
       {
-          if (is_null($mediaItem))
+          // It needs to be the main MediaItem here, because it checks ConvertMeta for IsConvertered, which is only set there.
+          if (is_null($mediaItem) || false === $mediaItem->get('is_main_file'))
           {
              $fs = \wpSPIO()->filesystem();
              $mediaItem = $fs->getImage($id, $type); 
