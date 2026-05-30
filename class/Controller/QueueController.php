@@ -96,8 +96,19 @@ class QueueController
         return $value !== null;
       });
 
-        
-      // These checks are across all actions. 
+      // When generating AI data for WPML duplicates, queue each language variant separately.
+      if ($args['action'] === 'requestAlt' && $imageModel->get('type') !== 'custom' && method_exists($imageModel, 'getWPMLDuplicates'))
+      {
+          $WPMLduplicates = call_user_func([$imageModel, 'getWPMLDuplicates']);
+          if (is_array($WPMLduplicates) && count($WPMLduplicates) > 0)
+          {
+            // @todo This probably not the way,  use the same function to add or something like this? 
+            // @todo Also calls duplicates function twice, should fix.  Move the Add WPML to WPML.php via filter here or something like this? 
+              return $this->addWpmlAiItemsToQueue($imageModel, $args);
+          }
+      }
+
+      // These checks are across all actions.
       if ($queue->isDuplicateActive($imageModel))
       {
         $qItem->addResult([
@@ -198,6 +209,67 @@ class QueueController
       $result = $qItem->result();
 
       return $qItem->result();
+  }
+
+  /**
+   * Enqueue the selected item and all WPML language duplicates for AI generation.
+   *
+   * Each WPML duplicate is a separate attachment record and needs its own AI request.
+   *
+   * @param ImageModel $imageModel
+   * @param array $args
+   * @return object
+   */
+  protected function addWpmlAiItemsToQueue(ImageModel $imageModel, $args)
+  {
+      $duplicateIds = method_exists($imageModel, 'getWPMLDuplicates') ? call_user_func([$imageModel, 'getWPMLDuplicates']) : [];
+      $itemIds = array_unique(array_merge([$imageModel->get('id')], $duplicateIds));
+      $queue = $this->getQueue($imageModel->get('type'));
+      $totalItems = 0;
+      $skippedItems = 0;
+
+      $resultItem = QueueItems::getImageItem($imageModel);
+
+      foreach ($itemIds as $itemId)
+      {
+          $mediaItem = \wpSPIO()->filesystem()->getImage($itemId, $imageModel->get('type'));
+          if (! is_object($mediaItem)) {
+              continue;
+          }
+
+          $inQueue = $this->isItemInQueue($mediaItem, 'requestAlt');
+          if (self::IN_QUEUE_ACTION_ADDED === $inQueue || self::IN_QUEUE_SKIPPED === $inQueue) {
+              $skippedItems++;
+              continue;
+          }
+
+          $qItem = QueueItems::getImageItem($mediaItem);
+          $qItem->requestAltAction($args);
+          $status = $queue->addQueueItem($qItem);
+          $this->lastQStatus = $status->qstatus;
+          $totalItems += $status->numitems;
+      }
+
+      if ($totalItems > 0) {
+          $message = sprintf(__('%d AI language variants added to the queue.', 'shortpixel-image-optimiser'), $totalItems);
+      } else {
+          $message = __('No AI items were added to the queue because all language variants were already active.', 'shortpixel-image-optimiser');
+      }
+
+      if ($skippedItems > 0) {
+          $message .= ' ' . sprintf(_n('%d language variant was already active.', '%d language variants were already active.', $skippedItems, 'shortpixel-image-optimiser'), $skippedItems);
+      }
+
+      $resultItem->addResult([
+          'fileStatus' => ImageModel::FILE_STATUS_UNPROCESSED,
+          'is_error' => false,
+          'is_done' => ($totalItems === 0),
+          'message' => trim($message),
+          'qstatus' => $this->lastQStatus,
+          'numitems' => $totalItems,
+      ]);
+
+      return $resultItem->result();
   }
 
   /** Check if item and action is already listed in the queue 

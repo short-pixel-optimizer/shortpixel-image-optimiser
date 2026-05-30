@@ -350,6 +350,37 @@ class OptimizeAiController extends OptimizerBase
         return;
   }
 
+  /**
+   * Get post IDs for the same WPML language as the given attachment.
+   *
+   * @param int $item_id
+   * @return int[]
+   */
+  protected function getWpmlLanguagePostIds($item_id)
+  {
+      if (!\wpSPIO()->env()->plugin_active('wpml')) {
+          return [];
+      }
+
+      $language = apply_filters('wpml_post_language_details', null, $item_id);
+      if (!is_array($language) || empty($language['language_code'])) {
+          return [];
+      }
+
+      global $wpdb;
+      $post_ids = $wpdb->get_col(
+          $wpdb->prepare(
+              "SELECT DISTINCT element_id FROM {$wpdb->prefix}icl_translations WHERE language_code = %s AND element_type LIKE %s AND element_type <> %s",
+              $language['language_code'],
+              'post_%',
+              'post_attachment'
+          )
+      );
+
+      return array_map('intval', $post_ids);
+  }
+
+
   /** Replace Image Attributes ( others? ) on images via BaseURL 
    * 
    * The finder is passed a callback to which the results will be returned.  
@@ -382,13 +413,14 @@ class OptimizeAiController extends OptimizerBase
              $setup->forSearch()->URL()->addData($url);
              
              $base_url = $setup->forSearch()->URL()->getBaseURL();
+             $post_ids = $this->getWpmlLanguagePostIds($qItem->item_id);
      
              $finder = $replacer2->Finder(['base_url' => $base_url, 'callback' => [$this, 'handleReplace'], 'return_data' => [
                  'aiData' => $aiData, 
                  'qItem' => $qItem,
-             ]]);
+             ]]); 
      
-             $finder->posts();
+             $finder->posts(['post_ids' => $post_ids]);
 
   }
 
