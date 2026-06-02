@@ -30,7 +30,7 @@ class LocalBackupModel extends BackupModel
          // $this->error_message = __('Could not create backup Directory', 'shortpixel-image-optimiser');
           return false;
         }
-        
+      
         $backupFile = $fs->getFile($directory . $this->getBackupFileName($sourceFile));
         $singleBackup = $settings->singleFileBackup; 
 
@@ -39,6 +39,7 @@ class LocalBackupModel extends BackupModel
         {
           $result = true;
           $this->statusCode = self::STATUS_BACKUP_OK;
+          Log::addTemp('BackupFile Already Exists and is same size');
         }
         elseif(true === $singleBackup && $mainFile->getFullPath() !== $sourceFile->getFullPath() )
         {

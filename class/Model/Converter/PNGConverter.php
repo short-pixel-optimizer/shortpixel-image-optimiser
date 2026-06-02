@@ -138,6 +138,8 @@ class PNGConverter extends MediaLibraryConverter
 			 Log::addDebug('Image replacement base : ' . $replaceFile->getFileBase());
 			 $this->imageModel->getMeta()->convertMeta()->setReplacementImageBase($replaceFile->getFileBase());
 
+			 
+
 			 $prepared = $this->imageModel->conversionPrepare($conversionArgs);
  			 if (false === $prepared)
  			 {

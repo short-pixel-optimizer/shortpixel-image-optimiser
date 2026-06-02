@@ -89,12 +89,15 @@ class FileSystemController extends \ShortPixel\Controller
     return $imageObj;
   }
 
+  /** Disabling this because it seems not used / more risky */
+  /*
   public function getBackupModel($id, $type = 'media') : BackupModel
   {
       $backupController = BackupController::getBackupController();
       $backupModel = $backupController->getModelById($id, $type);       
       return $backupModel; 
   }
+  */
 
 
 

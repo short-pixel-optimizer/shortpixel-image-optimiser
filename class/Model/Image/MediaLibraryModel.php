@@ -1534,6 +1534,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		);
 		$args = wp_parse_args($args, $defaults);
 
+		$backupModel = $this->getBackupModel();
+		$backupModel->loadMediaItem($this); // Passes the replacementImageBase if this is different than the current.
+		
 		if (1 == $settings->backupImages) {
 			// only one file needed.
 			if ($this->isScaled()) {

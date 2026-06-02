@@ -17,10 +17,10 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 Class Image extends \ShortPixel\Model\File\FileModel
 {
 
-        /** @var resource|\Imagick|null The loaded image resource, or null if not yet loaded. */
+        /** @var resource|\Imagick|GdImage|null The loaded image resource, or null if not yet loaded. */
         protected $image; // The image resource
         /** @var string Image library to use: 'gd' or 'imagick'. */
-        protected $useLib = 'gd';
+        protected $useLib;
         /** @var string Absolute filesystem path where the converted output file will be written. */
         protected $replacementPath;
         /*protected $width;
@@ -162,6 +162,9 @@ Class Image extends \ShortPixel\Model\File\FileModel
             {
                 return $this->convertImagick();
             }
+
+            Log::addWarn('No Image Library found, conversion not possible!');
+            return false; 
 
         }
 

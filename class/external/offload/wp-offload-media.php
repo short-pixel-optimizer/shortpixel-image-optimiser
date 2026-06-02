@@ -30,9 +30,14 @@ class wpOffload
 	protected $is_cname = false;
 	protected $cname;
 
-	private static $sources; // cache for url > source_id lookup, to prevent duplicate queries.
+	private static $sources = []; // cache for url > source_id lookup, to prevent duplicate queries.
+	private static $paths = []; 
+	private static $itemCache = [];
 
 	private static $offloadPrevented = array();
+
+	private static $instance; 
+	private $pid; 
 
 	// if might have to do these checks many times for each thumbnails, keep it fastish.
 	//protected $retrievedCache = array();
@@ -40,7 +45,18 @@ class wpOffload
 	public function __construct($as3cf)
 	{
 		// This must be called before WordPress' init.
+		$this->pid = getmypid();
 		$this->init($as3cf);
+	}
+
+	public static function getInstance($as3cf)
+	{
+		if (is_null(self::$instance))
+		{
+		 	self::$instance = new wpOffload($as3cf);
+		}
+
+		return self::$instance;
 	}
 
 	public function init($as3cf)
@@ -84,7 +100,7 @@ class wpOffload
 		add_filter('shortpixel_get_original_image_path', array($this, 'checkScaledUrl'), 10, 2);
 
 		add_filter('shortpixel/image/urltopath', array($this, 'checkIfOffloaded'), 10, 3);
-		add_filter('shortpixel/file/virtual/translate', array($this, 'getLocalPathByURL'));
+		add_filter('shortpixel/file/virtual/translate', array($this, 'getLocalPathByURL'), 10, 2);
 
 		// for webp picture paths rendered via output
 		add_filter('shortpixel/front/webp_notfound', array($this, 'fixWebpRemotePath'), 10, 4);
@@ -374,12 +390,47 @@ class wpOffload
 
 	// @param s3 based URL that which is needed for finding local path
 	// @return String Filepath.  Translated file path
-	public function getLocalPathByURL($url)
+	public function getLocalPathByURL($url, $imageModel = null)
 	{
 		$source_id = $this->getSourceIDByURL($url);
 
 		if ($source_id === false) {
 			return false;
+		}
+
+		if (false === is_null($imageModel) && is_object($imageModel))
+		{
+			$size = $imageModel->get('size'); 
+			$name = $imageModel->get('name');
+			
+			// First trick, try to find the ImageModel Thumbnail name from the paths cache. 
+			if (null !== $size && isset(static::$paths[$source_id]) && isset(static::$paths[$source_id][$size]))
+			{
+				return static::$paths[$source_id][$size];
+			}
+			
+			/*elseif (null !== $name && isset(static::$paths[$source_id]) && isset(static::$paths[$source_id][$name])) 
+			{
+				return static::$paths[$source_id][$name];
+			} */
+		}
+
+		/*$position = array_search(basename($url), self::$paths); 
+		if (in_array(basename($url), self::$paths))
+		{
+			
+		} */
+
+		if (isset(self::$paths[$source_id]))
+		{
+			$base_url = basename($url); 
+			foreach(self::$paths[$source_id] as $key => $path)
+			{
+				if (true === str_contains($path, $base_url))
+				{
+					return self::$paths[$source_id][$key];
+				}
+			}
 		}
 
 		$item = $this->getItemById($source_id);
@@ -622,7 +673,14 @@ class wpOffload
 	
 	public function add_webp_paths($paths, $attachment_id, $meta)
 	{ // @todo Check if this works.
+		if (isset(self::$paths[$attachment_id]))
+		{
+			return self::$paths[$attachment_id];
+		}
+
 		$paths = $this->getWebpPaths($paths, true);
+
+		self::$paths[$attachment_id] = $paths; 
 		return $paths;
 	}
 

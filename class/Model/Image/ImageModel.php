@@ -119,6 +119,10 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		/** @var boolean */
 		public $is_in_queue;
 
+    
+    protected $backupModel; 
+
+
     abstract public function getOptimizeUrls();
     abstract protected function saveMeta();
     abstract protected function loadMeta();
@@ -339,14 +343,20 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
      */
     public function getBackupModel()
     {
+      // BackupModel not set on all images. 
       if (property_exists($this, 'backupModel') &&  false === is_null($this->backupModel))
       {
          return $this->backupModel; 
       }
 
       $backupController = BackupController::getBackupController();
-      $backupModel = $backupController->getModelById($this->id, $this->type);       
+      $backupModel = $backupController->getModel($this);    
        
+      if (property_exists($this, 'backupModel'))
+      {
+         $this->backupModel = $backupModel; 
+      }
+
       return $backupModel;
     }
 
