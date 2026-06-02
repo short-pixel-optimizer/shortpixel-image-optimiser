@@ -108,7 +108,6 @@ class OptimizeController extends OptimizerBase
 
       // Allow processable to be overridden when using the manual optimize button - ignore when this happens already to be in queue.
       if (false === $is_processable) {
-        // @todo This should be checked.
         if (! is_null($qItem->data()->forceExclusion) && true == $qItem->data()->forceExclusion) {
           $qItem->imageModel->cancelUserExclusions();
         }

@@ -88,8 +88,6 @@ class QueueController
          $qItem->data()->forceExclusion = $args['forceExclusion'];
       }
 
-
-
       $queue = $this->getQueue($imageModel->get('type'));
 
       $args = array_filter($args, function ($value) {
@@ -99,12 +97,12 @@ class QueueController
       // When generating AI data for WPML duplicates, queue each language variant separately.
       if ($args['action'] === 'requestAlt' && $imageModel->get('type') !== 'custom' && method_exists($imageModel, 'getWPMLDuplicates'))
       {
-          $WPMLduplicates = call_user_func([$imageModel, 'getWPMLDuplicates']);
+          $WPMLduplicates = $imageModel->getWPMLDuplicates(); 
           if (is_array($WPMLduplicates) && count($WPMLduplicates) > 0)
           {
             // @todo This probably not the way,  use the same function to add or something like this? 
             // @todo Also calls duplicates function twice, should fix.  Move the Add WPML to WPML.php via filter here or something like this? 
-              return $this->addWpmlAiItemsToQueue($imageModel, $args);
+              $this->addWpmlAiItemsToQueue($imageModel, $WPMLduplicates, $args);
           }
       }
 
@@ -148,7 +146,6 @@ class QueueController
         }
 
         return $qItem->result();
-
       }
 
       $optimizer = $qItem->getApiController($args['action']);
@@ -207,8 +204,7 @@ class QueueController
       }
 
       $result = $qItem->result();
-
-      return $qItem->result();
+      return $result;
   }
 
   /**
@@ -220,19 +216,19 @@ class QueueController
    * @param array $args
    * @return object
    */
-  protected function addWpmlAiItemsToQueue(ImageModel $imageModel, $args)
+  protected function addWpmlAiItemsToQueue(ImageModel $imageModel, array $duplicateIds, $args)
   {
-      $duplicateIds = method_exists($imageModel, 'getWPMLDuplicates') ? call_user_func([$imageModel, 'getWPMLDuplicates']) : [];
-      $itemIds = array_unique(array_merge([$imageModel->get('id')], $duplicateIds));
+//      $itemIds = array_unique(array_merge([$imageModel->get('id')], $duplicateIds));
       $queue = $this->getQueue($imageModel->get('type'));
+      $fs = \wpSPIO()->filesystem(); 
       $totalItems = 0;
       $skippedItems = 0;
 
       $resultItem = QueueItems::getImageItem($imageModel);
 
-      foreach ($itemIds as $itemId)
+      foreach ($duplicateIds as $itemId)
       {
-          $mediaItem = \wpSPIO()->filesystem()->getImage($itemId, $imageModel->get('type'));
+          $mediaItem = $fs->getImage($itemId, $imageModel->get('type'));
           if (! is_object($mediaItem)) {
               continue;
           }

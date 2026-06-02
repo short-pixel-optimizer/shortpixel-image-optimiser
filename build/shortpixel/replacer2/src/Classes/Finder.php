@@ -70,6 +70,7 @@ class Finder
 			// @todo before this filter results?  pass results to some worker
 			call_user_func_array($this->callback, ['results' => $rs, 'args' => $this->return_data]);
 
+			return $rs;
 		}
 
 		public function postmeta()

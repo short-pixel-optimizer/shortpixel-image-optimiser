@@ -1739,7 +1739,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	public function getWPMLDuplicates()
 	{
 		global $wpdb;
-		$fs = \wpSPIO()->filesystem();
 		$env = \wpSPIO()->env();
 
 		$duplicates = array();

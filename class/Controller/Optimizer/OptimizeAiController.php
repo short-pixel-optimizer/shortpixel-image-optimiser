@@ -318,7 +318,8 @@ class OptimizeAiController extends OptimizerBase
 
         $aiData['replace_filebase'] = $aiData['original_filebase'];
 
-        $this->replaceImageAttributes($qItem, $aiData); 
+        $results = $this->replaceImageAttributes($qItem, $aiData); 
+        $resultCount = count($results); 
 
        /* Feature off for now - This DOES NOT YET work  */;
         // If the file was just uploaded, assume it's not already widely linked and doesn't need replacing / symlinking 
@@ -328,6 +329,7 @@ class OptimizeAiController extends OptimizerBase
             $args = [
                 'dry_run' => true, 
                 'recent_upload' => $qItem->data()->recent_upload, 
+                'imagePostCount' => $resultCount, // Amount of records this image is used in.
             ];
             $this->replaceFiles($qItem, $qItem->result()->filename, $args);
         }
@@ -387,7 +389,7 @@ class OptimizeAiController extends OptimizerBase
    * 
    * @param QueueItem $qItem 
    * @param mixed $new_text The new text 
-   * @return void 
+   * @return array 
    */
   protected function replaceImageAttributes(QueueItem $qItem, $aiData)
   {
@@ -420,8 +422,8 @@ class OptimizeAiController extends OptimizerBase
                  'qItem' => $qItem,
              ]]); 
      
-             $finder->posts(['post_ids' => $post_ids]);
-
+            $results = $finder->posts(['post_ids' => $post_ids]);
+            return $results; 
   }
 
   /* @todo  The file mover should: 
@@ -643,12 +645,10 @@ class OptimizeAiController extends OptimizerBase
             foreach($matches as $match)
             {
 
-            // @todo The result of the post, should parse the content somehow via regex, then load.
              $frontImage = new \ShortPixel\Model\FrontImage($match); 
-
              $src = $frontImage->src; 
+          
              // Only replace in post content the image we did
-
              $pattern = '/' . preg_quote($image_filebase, '/') . '(-\d+x\d+\.|\.|-scaled\.)' . $imageModel->getExtension() . '/i';
              if (preg_match($pattern, $src ) !== 1)
              {
@@ -780,7 +780,9 @@ class OptimizeAiController extends OptimizerBase
        $aiModel->revert();
        AiDataModel::flushModelCache($item_id);
 
+       // The results is what the system finds on used images in the database for this base url. 
        $this->replaceImageAttributes($qItem, $aiData); 
+
        
        // @todo This probably needs to reverse file renaming as well? 
 
