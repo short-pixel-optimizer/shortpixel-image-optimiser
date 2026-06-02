@@ -327,7 +327,7 @@ class OptimizeAiController extends OptimizerBase
         if (isset($aiData['filename'])) // ?? 
         {
             $args = [
-                'dry_run' => true, 
+            //    'dry_run' => true, 
                 'recent_upload' => $qItem->data()->recent_upload, 
                 'imagePostCount' => $resultCount, // Amount of records this image is used in.
             ];
@@ -439,9 +439,17 @@ class OptimizeAiController extends OptimizerBase
       $defaults = [
          'recent_upload' => false, 
          'dry_run' => false, 
+         'imagePostCount' => 0, 
+         'imageThreshold' => 1, // How much references before not replacing this image.
       ];
 
       $args = wp_parse_args($args, $defaults); 
+
+      if (isset($args['imagePostCount']) && intval($args['imagePostCount']) >= $args['imageThreshold'])
+      {
+         Log::addInfo('AI Replace File: Image is mentioned - ' . $qItem->item_id);
+            return false ;
+      }
 
       // Remove extension ( @todo is this needed? )
       $newFileName = substr($newFileName,0, strrpos($newFileName, '.')  );
