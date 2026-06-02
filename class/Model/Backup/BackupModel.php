@@ -141,7 +141,7 @@ abstract class BackupModel
                         $backupFileName = str_replace($mainFileBase, $replaceBase, $sourceFile->getFileName());
                     }
                 }
-                elseif (strlen($extension) > 0)
+                elseif (false === is_null($extension) && strlen($extension) > 0)
                 {
                     $backupFileName = $sourceFile->getFileBase() . '.' . $extension; 
                 }
