@@ -325,7 +325,7 @@ class LocalBackupModel extends BackupModel
                     $newFileName = str_replace($oldBaseFileName, $newBaseFileName, $oldFileName);
                     
                     // Build the full path for the new backup file
-                    $newBackupPath = $backupDirectory->getFullPath() . $newFileName;
+                    $newBackupPath = $backupDirectory->getPath() . $newFileName;
                     $newBackupFile = $fs->getFile($newBackupPath);
                     
                     // Prevent conflicts - if target already exists, log and skip

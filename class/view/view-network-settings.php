@@ -1,112 +1,136 @@
 <?php
 namespace ShortPixel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+use ShortPixel\Helper\UiHelper as UiHelper;
 
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
-
+$createAvifEnabled = $this->access()->isFeatureAvailable('avif');
+$deliverWebpType = ($view->data->deliverWebp >= 1 && $view->data->deliverWebp <= 2) ? 'deliverWebpAltered' : 'deliverWebpUnaltered';
+$deliverWebpAlteringType = ($view->data->deliverWebp == 2) ? 'deliverWebpAlteredWP' : 'deliverWebpAlteredGlobal';
 ?>
 
 <div class="wrap is-shortpixel-settings-page multi-site-settings">
-<h1>
-    <img src="<?php echo esc_url(\wpSPIO()->plugin_url('res/img/svg/sp-logo-regular.svg')) ?>" width="50" />
-    <?php esc_html_e('ShortPixel Network Settings','shortpixel-image-optimiser');?>
-</h1>
+  <h1>
+      <img src="<?php echo esc_url(\wpSPIO()->plugin_url('res/img/svg/sp-logo-regular.svg')) ?>" width="50" />
+      <?php esc_html_e('ShortPixel Network Settings','shortpixel-image-optimiser'); ?>
+  </h1>
 
-<hr class='wp-header-end'>
+  <hr class='wp-header-end'>
 
-<article id="shortpixel-settings-tabs" class="sp-tabs">
-  <div class='section-wrapper'>
-    <form name='wp_shortpixel_options' action='<?php echo esc_url(add_query_arg('noheader', 'true')) ?>'  method='post' id='wp_shortpixel_options'>
-      <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
-      <section id="multi-site" class="clearfix sel-tab">
-        <h2>&nbsp;</h2>
+  <article class="shortpixel-settings">
+    <div class='section-wrapper'>
+      <form name='wp_shortpixel_network_options' action='<?php echo esc_url(add_query_arg('noheader', 'true')) ?>' method='post' id='wp_shortpixel_network_options'>
+        <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
 
-        <h4>Deliver the next generation versions of the images in the front-end: </h4>
-        <hr>
+        <section id="network-settings" class="setting-tab active" data-part="network">
+          <h2><?php esc_html_e('Network-wide settings', 'shortpixel-image-optimiser'); ?></h2>
 
-        <settinglist>
-          <setting>
-            <name>
-                &nbsp;
-            </name>
-            <content>
-              <?php $this->printSwitchButton(
-                    ['name' => 'delivery_enable',
-                     'checked' => $delivery_settings['delivery_enable'],
-                     'label' => esc_html__('Enable site-wide settings','shortpixel-image-optimiser')
+          <settinglist>
+            <setting class='switch'>
+              <content>
+                <?php $this->printSwitchButton([
+                      'name' => 'disable_site_settings_page',
+                      'checked' => $view->data->disable_site_settings_page,
+                      'label' => esc_html__('Disable the ShortPixel settings page for individual sites', 'shortpixel-image-optimiser'),
                     ]);
-              ?>
-              <?php $this->printInlineHelp("https://shortpixel.com/knowledge-base/article/which-webp-files-delivery-method-is-the-best-for-me/");
-              ?>
-            </content>
-          </setting>
+                ?>
+              </content>
+              <info>
+                <?php esc_html_e('Hide ShortPixel admin settings from regular site dashboards and manage those options only from the network admin screen.', 'shortpixel-image-optimiser'); ?>
+              </info>
+            </setting>
+          </settinglist>
 
-        </settinglist>
+          <h2><?php esc_html_e('Image delivery options', 'shortpixel-image-optimiser'); ?></h2>
 
-        <div class='delivery-options-wrapper flex option'>
+          <settinglist>
+            <setting class='switch'>
+              <content>
+                <?php $this->printSwitchButton([
+                      'name' => 'createWebp',
+                      'checked' => $view->data->createWebp,
+                      'label' => esc_html__('Generate WebP images across the network', 'shortpixel-image-optimiser'),
+                    ]);
+                ?>
+              </content>
+              <info><?php esc_html_e('Enable WebP generation for all sites managed by this network.', 'shortpixel-image-optimiser'); ?></info>
+            </setting>
 
-        </div>
+            <setting class='switch'>
+              <content>
+                <?php $this->printSwitchButton([
+                      'name' => 'createAvif',
+                      'checked' => ($view->data->createAvif == 1 && $createAvifEnabled),
+                      'label' => esc_html__('Generate AVIF images across the network', 'shortpixel-image-optimiser'),
+                      'disabled' => ! $createAvifEnabled,
+                    ]);
+                ?>
+              </content>
+              <info>
+                <?php if ($createAvifEnabled): ?>
+                  <?php esc_html_e('Enable AVIF generation for all network sites.', 'shortpixel-image-optimiser'); ?>
+                <?php else: ?>
+                  <?php esc_html_e('AVIF is not available for your current license.', 'shortpixel-image-optimiser'); ?>
+                <?php endif; ?>
+              </info>
+            </setting>
 
+            <setting class='switch'>
+              <content>
+                <?php $this->printSwitchButton([
+                      'name' => 'useCDN',
+                      'checked' => ($view->data->useCDN > 0),
+                      'label' => esc_html__('Deliver images using the ShortPixel CDN', 'shortpixel-image-optimiser'),
+                    ]);
+                ?>
+              </content>
+              <info><?php esc_html_e('Serve next-generation images via ShortPixel CDN instead of local delivery.', 'shortpixel-image-optimiser'); ?></info>
+            </setting>
+
+            <setting class='switch'>
+              <content>
+                <?php $this->printSwitchButton([
+                      'name' => 'deliverWebp',
+                      'checked' => ($view->data->deliverWebp > 0),
+                      'label' => esc_html__('Serve WebP/AVIF images locally', 'shortpixel-image-optimiser'),
+                    ]);
+                ?>
+              </content>
+              <info><?php esc_html_e('Use local WebP/AVIF delivery on each site without the CDN.', 'shortpixel-image-optimiser'); ?></info>
+            </setting>
 
             <ul class="deliverWebpTypes toggleTarget" id="deliverTypes">
-                <li>
-                    <input type="radio" name="deliverWebpType" id="deliverWebpAltered" <?php checked( ($delivery_settings['deliver_picture'] == true), true); ?> <?php echo esc_attr( $deliverWebpAlteredDisabled );?> value="deliverWebpAltered" data-toggle="deliverAlteringTypes">
-                    <label for="deliverWebpAltered">
-                        <?php esc_html_e('Using the &lt;PICTURE&gt; tag syntax','shortpixel-image-optimiser');?>
-                    </label>
+              <li>
+                <input type="radio" name="deliverWebpType" id="deliverWebpAltered" <?php checked($deliverWebpType, 'deliverWebpAltered'); ?> value="deliverWebpAltered" data-toggle="deliverAlteringTypes">
+                <label for="deliverWebpAltered"><?php esc_html_e('Deliver using the <picture> tag', 'shortpixel-image-optimiser'); ?></label>
 
-                    <?php if($deliverWebpAlteredDisabledNotice){ ?>
-                        <p class="sp-notice">
-                            <?php esc_html_e('After the option to work on .htaccess was selected, the .htaccess file has become unaccessible / read-only. Please make the .htaccess file writeable again to be able to further set this option up.','shortpixel-image-optimiser')?>
-                        </p>
-                    <?php } ?>
-
-                    <p class="settings-info">
-                         <?php esc_html_e('Each &lt;img&gt; will be replaced with a &lt;picture&gt; tag that will also provide AVIF and WebP images for browsers that support it.  You don\'t need to activate this if you\'re using the Cache Enabler plugin because your AVIF\WebP images are already handled by this plugin. <strong>Please run some tests before using this option!</strong> If the styles that your theme is using rely on the position of your &lt;img&gt; tags, you may experience display problems.','shortpixel-image-optimiser'); ?>
-                        <strong><?php esc_html_e('You can revert anytime to the previous state just by deactivating the option.','shortpixel-image-optimiser'); ?></strong>
-                    </p>
-
-                    <ul class="deliverWebpAlteringTypes toggleTarget" id="deliverAlteringTypes">
-                        <li>
-
-                            <input type="radio" name="deliverWebpAlteringType" id="deliverWebpAlteredWP" <?php checked( ($delivery_settings['deliver_picture'] == true && $delivery_settings['delivery_method'] == 'hooks'), true);?> value="deliverWebpAlteredWP">
-                            <label for="deliverWebpAlteredWP">
-                                <?php esc_html_e('Only via Wordpress hooks (like the_content, the_excerpt, etc)');?>
-                            </label>
-                        </li>
-                        <li>
-                            <input type="radio" name="deliverWebpAlteringType" id="deliverWebpAlteredGlobal" <?php checked(($delivery_settings['deliver_picture'] == true && $delivery_settings['delivery_method'] == 'global'),true)?>  value="deliverWebpAlteredGlobal">
-                            <label for="deliverWebpAlteredGlobal">
-                                <?php esc_html_e('Global (processes the whole output buffer before sending the HTML to the browser)','shortpixel-image-optimiser');?>
-                            </label>
-                        </li>
-                    </ul>
-                </li>
-                <li>
-                    <input type="radio" name="deliverWebpType" id="deliverWebpUnaltered" <?php checked($delivery_settings['deliver_htaccess'], true);?> <?php echo esc_attr( $deliverWebpUnalteredDisabled );?> value="deliverWebpUnaltered" data-toggle="deliverAlteringTypes" data-toggle-reverse>
-
-                    <label for="deliverWebpUnaltered">
-                        <?php esc_html_e('Without altering the page code (via .htaccess)','shortpixel-image-optimiser')?>
-                    </label>
-                    <?php if(strlen($deliverWebpUnalteredLabel)){ ?>
-                        <p class="sp-notice sp-notice-warning"><strong>
-                            <?php echo( $deliverWebpUnalteredLabel );?>
-                          </strong>
-                        </p>
-                    <?php } ?>
-                </li>
+                <ul class="deliverWebpAlteringTypes toggleTarget" id="deliverAlteringTypes">
+                  <li>
+                    <input type="radio" name="deliverWebpAlteringType" id="deliverWebpAlteredWP" <?php checked($deliverWebpAlteringType, 'deliverWebpAlteredWP'); ?> value="deliverWebpAlteredWP">
+                    <label for="deliverWebpAlteredWP"><?php esc_html_e('WordPress hooks only', 'shortpixel-image-optimiser'); ?></label>
+                  </li>
+                  <li>
+                    <input type="radio" name="deliverWebpAlteringType" id="deliverWebpAlteredGlobal" <?php checked($deliverWebpAlteringType, 'deliverWebpAlteredGlobal'); ?> value="deliverWebpAlteredGlobal">
+                    <label for="deliverWebpAlteredGlobal"><?php esc_html_e('Global output buffering', 'shortpixel-image-optimiser'); ?></label>
+                  </li>
+                </ul>
+              </li>
+              <li>
+                <input type="radio" name="deliverWebpType" id="deliverWebpUnaltered" <?php checked($deliverWebpType, 'deliverWebpUnaltered'); ?> value="deliverWebpUnaltered">
+                <label for="deliverWebpUnaltered"><?php esc_html_e('Use server rules (.htaccess / nginx) where possible', 'shortpixel-image-optimiser'); ?></label>
+              </li>
             </ul>
+          </settinglist>
 
-      </section> <!-- //tab -->
+          <p class="submit">
+            <button type="submit" class="button button-primary"><?php esc_html_e('Save Network Settings', 'shortpixel-image-optimiser'); ?></button>
+          </p>
+        </section>
+      </form>
+    </div>
+  </article>
+</div>
 
-    </form>
-  </div> <!-- /section-wrapper -->
-
-
-</article>
-
-
-</div> <!--- // settings -->

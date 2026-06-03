@@ -43,6 +43,7 @@ class Finder
 
 
 			$base_url = $this->base_url;
+			$prepare = []; 
 			/* Search and replace in WP_POSTS */
 			// Removed $wpdb->remove_placeholder_escape from here, not compatible with WP 4.8
 	
@@ -61,7 +62,7 @@ class Finder
 				$prepare = array_merge($prepare, $post_ids);
 			}
 
-			$wpdb->prepare($posts_sql, $prepare); 
+			$posts_sql = $wpdb->prepare($posts_sql, $prepare); 
 
 	
 			$rs = $wpdb->get_results($posts_sql, ARRAY_A);

@@ -298,8 +298,19 @@ class ShortPixelPlugin {
 	/** Hook in our admin pages */
 	public function admin_pages() {
 		$admin_pages = array();
+
+		$show_site_settings = true;
+		if ($this->env()->is_multisite && ! is_network_admin()) {
+			$network_settings = get_site_option('spio_wpmu', array());
+			if ( isset($network_settings['disable_site_settings_page']) && $network_settings['disable_site_settings_page'] ) {
+				$show_site_settings = false;
+			}
+		}
+
 		// settings page
-		$admin_pages[] = add_options_page( __( 'ShortPixel Settings', 'shortpixel-image-optimiser' ), 'ShortPixel', 'manage_options', 'wp-shortpixel-settings', array( $this, 'route' ) );
+		if ( $show_site_settings ) {
+			$admin_pages[] = add_options_page( __( 'ShortPixel Settings', 'shortpixel-image-optimiser' ), 'ShortPixel', 'manage_options', 'wp-shortpixel-settings', array( $this, 'route' ) );
+		}
 
 		$otherMediaController = OtherMediaController::getInstance();
 		if ( $otherMediaController->showMenuItem() ) {
@@ -314,7 +325,15 @@ class ShortPixelPlugin {
 
 	public function admin_network_pages()
 	{
-	//	  	add_menu_page(__('Shortpixel MU', 'shortpixel-image-optimiser'), __('Shortpixel', 'shortpixel_image_optimiser'), 'manage_sites', 'shortpixel-network-settings', [$this, 'route'], $this->plugin_url('res/img/shortpixel.png') );
+		return; // @todo Need to check this work.
+		add_submenu_page(
+			'settings.php',
+			__( 'ShortPixel Network Settings', 'shortpixel-image-optimiser' ),
+			__( 'ShortPixel', 'shortpixel-image-optimiser' ),
+			'manage_network_options',
+			'shortpixel-network-settings',
+			[ $this, 'route' ]
+		);
 	}
 
 	/** All scripts should be registed, not enqueued here (unless global wp-admin is needed )

@@ -12,48 +12,37 @@ use ShortPixel\Helper\UiHelper as UiHelper;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
 use ShortPixel\Model\MultiSettingsModel as MultiSettingsModel;
 
-class MultiSiteViewController extends \ShortPixel\ViewController
+class MultiSiteViewController extends SettingsViewController
 {
 
       protected $template = 'view-network-settings'; // template name to include when loading.
       protected $form_action = 'save-multi-settings';
 
-
       public function __construct()
       {
-         parent::__construct(); 
+         parent::__construct();
          $this->model = new MultiSettingsModel();
       }
 
       public function load()
       {
-        //  $this->view->settings = $this->loadSettings();
+          $this->loadEnv();
+          $this->checkPost();
 
+          if ($this->is_form_submit)
+          {
+              $this->processSave();
+          }
+
+          $this->load_network_settings();
+      }
+
+      protected function load_network_settings()
+      {
+          $this->view->data = (object) $this->model->getData();
+          $this->loadAPiKeyData();
+          $this->loadDashBoardInfo();
           $this->loadView();
       }
-
-      protected function loadSettings()
-      {
-        $settings = array();
-
-        //  $site_delivery =
-        $delivery_defaults =
-          array(
-             'delivery_enable' => false,
-
-             'deliver_method' => 'htaccess',
-             'picture_method' => 'hooks',
-          );
-
-        $delivery = get_site_option('spio_site_delivery');
-
-        $delivery = wp_parse_args($delivery_defaults, $delivery);
-
-        $settings['delivery'] = $delivery;
-
-        return $settings;
-
-      }
-
 
 }
