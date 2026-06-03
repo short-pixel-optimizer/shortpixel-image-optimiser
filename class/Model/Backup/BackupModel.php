@@ -34,7 +34,7 @@ abstract class BackupModel
     abstract public function getBackupFile(ImageModel $sourceFile);
     abstract public function backupIsMain();
     abstract public function getMainBackupFile(); 
-    abstract public function renameBackup();
+    abstract public function renameBackup($newBaseFileName) : bool;
     
 
     /* Implement below functions, these things can be done all at the same time. Use Model as 'all' loop. */

@@ -270,11 +270,101 @@ class LocalBackupModel extends BackupModel
        return true;
      }
 
-     public function renameBackup()
+     /**
+      * Rename backup files to match a new base filename.
+      * Handles both single file and multi-file backups (thumbnails, retina, etc.)
+      * Used when renaming the original image file (e.g., via AI rename feature)
+      *
+      * @param string $newBaseFileName The new base filename (without extension)
+      * @return bool True on success, false on failure
+      */
+     public function renameBackup($newBaseFileName) : bool
      {
           $this->loadAll();
           
-          $data = $this->getBackupData();
+          $fs = \wpSPIO()->filesystem();
+          $backupDirectory = $this->getBackupDirectory(false);
+          
+          if (false === $backupDirectory)
+          {
+               Log::addWarn('Backup directory not found for ' . $this->mediaItem->getFullPath());
+               return false;
+          }
+          
+          $mainFile = $this->getMainFile();
+          $oldBaseFileName = $mainFile->getFileBase();
+          $newBackupFiles = [];
+          $success = true;
+          
+          // Iterate through all existing backups and rename them
+          foreach ($this->backup_files as $imageName => $backupData)
+          {
+               if (false === $backupData['has_backup'] || false === $backupData['has_own_file'])
+               {
+                    continue; // Skip backups that don't have their own files
+               }
+               
+               $oldBackupPath = $backupData['file'];
+               if (false === $oldBackupPath)
+               {
+                    continue;
+               }
+               
+               try
+               {
+                    $oldBackupFile = $fs->getFile($oldBackupPath);
+                    
+                    if (false === $oldBackupFile->exists())
+                    {
+                         Log::addWarn('Backup file not found: ' . $oldBackupPath);
+                         continue;
+                    }
+                    
+                    // Construct the new backup filename by replacing the old base name
+                    $oldFileName = $oldBackupFile->getFileName();
+                    $newFileName = str_replace($oldBaseFileName, $newBaseFileName, $oldFileName);
+                    
+                    // Build the full path for the new backup file
+                    $newBackupPath = $backupDirectory->getFullPath() . $newFileName;
+                    $newBackupFile = $fs->getFile($newBackupPath);
+                    
+                    // Prevent conflicts - if target already exists, log and skip
+                    if ($newBackupFile->exists())
+                    {
+                         Log::addWarn('Target backup file already exists: ' . $newBackupPath);
+                         $success = false;
+                         continue;
+                    }
+                    
+                    // Perform the rename/move
+                    if (false === $oldBackupFile->move($newBackupFile))
+                    {
+                         Log::addError('Failed to rename backup file from ' . $oldBackupPath . ' to ' . $newBackupPath);
+                         $success = false;
+                         continue;
+                    }
+                    
+                    Log::addTemp('Renamed backup file: ' . $oldFileName . ' to ' . $newFileName);
+                    
+                    // Update the cache with the new backup file path
+                    $newImageName = str_replace($oldBaseFileName, $newBaseFileName, $imageName);
+                    $newBackupFiles[$newImageName] = [
+                         'has_backup' => $backupData['has_backup'],
+                         'file' => $newBackupPath,
+                         'has_own_file' => $backupData['has_own_file'],
+                    ];
+               }
+               catch (\Exception $e)
+               {
+                    Log::addError('Exception while renaming backup: ' . $e->getMessage());
+                    $success = false;
+               }
+          }
+          
+          // Update the backup_files cache with renamed entries
+          $this->backup_files = $newBackupFiles;
+          
+          return $success;
      }
 
 

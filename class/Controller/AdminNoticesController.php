@@ -32,6 +32,7 @@ class AdminNoticesController extends \ShortPixel\Controller
         'ApiNotice',
         'ApiNoticeRepeat',
         'ApiNoticeRepeatLong',
+        'ReviewNotice',
         'NextgenNotice',
    //     'SmartcropNotice',
         'LegacyNotice',

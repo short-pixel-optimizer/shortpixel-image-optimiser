@@ -13,6 +13,7 @@ use ShortPixel\Controller\Api\AiController;
 use ShortPixel\Controller\Api\ApiController;
 use ShortPixel\Controller\Queue\Queue;
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
+use ShortPixel\Controller\Backup\BackupController;
 use ShortPixel\Model\AiDataModel;
 use ShortPixel\Model\Queue\QueueItemResult;
 use ShortPixel\Replacer\Replacer;
@@ -324,14 +325,15 @@ class OptimizeAiController extends OptimizerBase
        /* Feature off for now - This DOES NOT YET work  */;
         // If the file was just uploaded, assume it's not already widely linked and doesn't need replacing / symlinking 
         // ( Maybe just replacing? )
-        if (isset($aiData['filename'])) // ?? 
+        // Generic number of strlen here. Disallow filename not to be very short, because because. 
+        if (isset($aiData['filename']) && is_string($aiData['filename']) && strlen($aiData['filename']) > 5) // ?? 
         {
             $args = [
-            //    'dry_run' => true, 
+                //'dry_run' => true,  // @todo TEST dry run - doesn't perform any operations.
                 'recent_upload' => $qItem->data()->recent_upload, 
                 'imagePostCount' => $resultCount, // Amount of records this image is used in.
             ];
-            $this->replaceFiles($qItem, $qItem->result()->filename, $args);
+            $this->replaceFiles($qItem, $aiData['filename'], $args);
         }
 
         $imageModel = $qItem->imageModel;
@@ -438,7 +440,7 @@ class OptimizeAiController extends OptimizerBase
   {
       $defaults = [
          'recent_upload' => false, 
-         'dry_run' => false, 
+         'dry_run' => false, // @todo Need to dry-run this more, because it seems the newFileName bugs somehow
          'imagePostCount' => 0, 
          'imageThreshold' => 1, // How much references before not replacing this image.
       ];
@@ -451,8 +453,6 @@ class OptimizeAiController extends OptimizerBase
             return false ;
       }
 
-      // Remove extension ( @todo is this needed? )
-      $newFileName = substr($newFileName,0, strrpos($newFileName, '.')  );
 
       Log::addTemp('Replace File with Args', $args);
 
@@ -489,8 +489,9 @@ class OptimizeAiController extends OptimizerBase
           $replaceArray[$key] = $base_url . $newFileName . '.' . $fileObj->getExtension(); 
           $sourceFiles[$key] = $fileObj; 
           
+          // The Str replace leaves the extension intact here.
           $filename = str_replace($base_filename, $newFileName, $fileObj->getFileName());
-          $targetFiles[$key] = $fileObj->getFileDir() . $filename . '.' . $fileObj->getExtension(); 
+          $targetFiles[$key] = $fileObj->getFileDir() . $filename; 
 
       }
 
@@ -505,6 +506,16 @@ class OptimizeAiController extends OptimizerBase
           }
       }
 
+      if (count($files['avif']) > 0)
+      {
+         foreach($files['avif'] as $key => $fileObj)
+         {
+            $searchArray['avif_' . $key] = $base_url . $fileObj->getFileName(); 
+            $replaceArray['avif_' . $key] = $base_url . $newFileName . $fileObj->getExtension(); 
+            $sourceFiles['avif_' . $key] = $fileObj; 
+            $targetFiles['avif_' . $key] =  $fileObj->getFileDir() . $newFileName . '.' . $fileObj->getExtension();
+          }
+      }
 
       $targetFileObjs = []; // if we have to check them all anyhow, store it for moving / deleting. 
       foreach($targetFiles as $key => $target_path)
@@ -552,6 +563,16 @@ class OptimizeAiController extends OptimizerBase
       }
 
       // @Todo  Here probably we should check the backup and move that as well.
+      $backupController = BackupController::getBackupController();
+      $backupModel = $backupController->getModel($imageModel);
+      if (false === $args['dry_run'])
+      {
+          $backupModel->renameBackup($newFileName);
+      }
+      else
+      {
+          Log::addInfo('[Dry-run] Would have renamed backup files to: ' . $newFileName);
+      }
 
       $replacer = new Replacer(); 
       $replacer->setSource($source_url);
@@ -569,7 +590,8 @@ class OptimizeAiController extends OptimizerBase
          Log::addInfo('ReplaceArray ', $replaceArray); 
       }
 
-      $this->replaceMetaData($item_id, $base_filename, $newFileName );
+      
+      $this->replaceMetaData($item_id, $base_filename, $newFileName, $args['dry_run'] );
       return false; 
 
   }
@@ -591,13 +613,21 @@ class OptimizeAiController extends OptimizerBase
         return false; 
   }
 
-  protected function replaceMetaData($item_id, $old_file, $new_file)
+  protected function replaceMetaData($item_id, $old_file, $new_file, $dry_run = false)
   {
         $metadata = wp_get_attachment_metadata($item_id); 
         if (isset($metadata['file']) && strpos($metadata['file'], $old_file) !== false)
         {
              $metadata['file'] = str_replace($old_file, $new_file, $metadata['file']); 
-             update_attached_file($item_id, $metadata['file']);
+             if (true === $dry_run)
+             {
+                Log::addInfo('Dry Run, would update metadata', $metadata['file']);
+             }
+             else
+            {
+                 update_attached_file($item_id, $metadata['file']);
+            }
+            
         }
 
         if (isset($metadata['original_image']) && strpos($metadata['original_image'], $old_file) !== false)
@@ -616,7 +646,15 @@ class OptimizeAiController extends OptimizerBase
              } 
         }
 
-        wp_update_attachment_metadata($item_id, $metadata);
+        if (true === $dry_run)
+        {
+            Log::addInfo('Dry Run - Would have updated attachment metadata', $metadata); 
+        }
+        else
+        {
+            wp_update_attachment_metadata($item_id, $metadata);
+        }
+        
         
   }
 

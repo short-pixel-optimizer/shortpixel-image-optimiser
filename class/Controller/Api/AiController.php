@@ -209,7 +209,7 @@ class AiController extends RequestManager
         if ($qItem->data()->action == 'retrieveAlt')
         {
               $aiData = array_filter([
-                 'filename' => isset($apiData['file_name']) ? sanitize_text_field($apiData['file_name']) : null,
+                 'filename' => isset($apiData['generated_file_name']) ? sanitize_text_field($apiData['generated_file_name']) : null,
                  'alt' => isset($apiData['alt']) ? sanitize_text_field($apiData['alt']) : null,
                  'caption' => isset($apiData['caption']) ? sanitize_text_field($apiData['caption']) : null,
                  'relevance' => isset($apiData['relevance']) ? sanitize_text_field($apiData['relevance']) : null,
