@@ -5,11 +5,24 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
+/**
+ * Admin notice that warns about plugins known to conflict with ShortPixel.
+ *
+ * @package ShortPixel\Model\AdminNotices
+ */
 class CompatNotice extends \ShortPixel\Model\AdminNoticeModel
 {
+	/** @var string Unique notice key. */
 	protected $key = 'MSG_COMPAT';
+
+	/** @var string Severity level for this notice. */
 	protected $errorLevel = 'warning';
 
+	/**
+	 * Checks whether the notice should be triggered by detecting active conflicting plugins.
+	 *
+	 * @return bool True when at least one conflicting plugin is active, false otherwise.
+	 */
 	protected function checkTrigger()
 	{
 			$conflictPlugins = $this->getConflictingPlugins();
@@ -24,6 +37,11 @@ class CompatNotice extends \ShortPixel\Model\AdminNoticeModel
 			}
 	}
 
+	/**
+	 * Builds the HTML message listing each conflicting plugin with a deactivation link.
+	 *
+	 * @return string HTML message string.
+	 */
 	protected function getMessage()
 	{
 		$conflicts = $this->getData('conflicts');
@@ -49,6 +67,12 @@ class CompatNotice extends \ShortPixel\Model\AdminNoticeModel
 		return $message;
 	}
 
+	/**
+	 * Checks whether the notice should be reset.
+	 * Returns true when no conflicting plugins are active.
+	 *
+	 * @return bool True to reset the notice, false to keep it.
+	 */
   protected function checkReset()
   {
       $conflictPlugins = $this->getConflictingPlugins();
@@ -59,6 +83,12 @@ class CompatNotice extends \ShortPixel\Model\AdminNoticeModel
       return false;
   }
 
+	/**
+	 * Builds the list of known conflicting plugins and returns only those currently active.
+	 * Includes conditional checks (e.g. Jetpack Photon, Swift Performance image optimisation).
+	 *
+	 * @return array List of active conflicting plugins, each with keys: name, action, path, href, page, details.
+	 */
 	protected function getConflictingPlugins() {
 			$settings = \wpSPIO()->settings();
 
@@ -222,6 +252,11 @@ class CompatNotice extends \ShortPixel\Model\AdminNoticeModel
 			return $found;
 	}
 
+	/**
+	 * Checks whether Swift Performance's image optimisation option is enabled.
+	 *
+	 * @return bool True if Swift's image optimisation is active, false otherwise.
+	 */
   private function checkSwiftActive()
   {
      if ( function_exists('swift3_check_option') && true == swift3_check_option('optimize-images', 'on'))

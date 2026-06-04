@@ -52,7 +52,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 				// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
         $this->order = ( ! empty($_GET['order'] ) ) ? sanitize_text_field( wp_unslash($_GET['order'])) : 'desc'; // If no order, default to asc
 				// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
-        $this->search =  (isset($_GET["s"]) && strlen($_GET["s"]) > 0)  ? sanitize_text_field( wp_unslash($_GET['s'])) : false;
+        $this->search =  (isset($_GET["s"]) && is_string($_GET['s']) && strlen($_GET["s"]) > 0)  ? sanitize_text_field( wp_unslash($_GET['s'])) : false;
 				// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
 				$this->show_hidden = isset($_GET['show_hidden']) ? sanitize_text_field(wp_unslash($_GET['show_hidden'])) : false;
 

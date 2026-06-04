@@ -8,13 +8,27 @@ if (! defined('ABSPATH')) {
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
-
+/**
+ * Front-end controller that bootstraps the active front-end delivery sub-controller.
+ *
+ * Selects the appropriate sub-controller (CDN or picture-tag WebP delivery) based on
+ * the plugin settings during construction. Follows the singleton pattern.
+ *
+ * @package ShortPixel\Controller
+ */
 class FrontController extends \ShortPixel\Controller
 {
 
+	/** @var FrontController|null Singleton instance */
 	private static $instance;
+
+	/** @var Front\CDNController|Front\PictureController|null The active front-end sub-controller */
 	protected $controller;
 
+	/**
+	 * Initialise the front-end controller by selecting and instantiating the correct
+	 * delivery sub-controller based on current plugin settings.
+	 */
 	public function __construct()
 	{
 
@@ -28,6 +42,11 @@ class FrontController extends \ShortPixel\Controller
 //		}
 	}
 
+	/**
+	 * Return the singleton instance, creating it on first call.
+	 *
+	 * @return static The singleton FrontController instance.
+	 */
 	public static function getInstance()
 	{
 		if (is_null(self::$instance))

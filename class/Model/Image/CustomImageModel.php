@@ -10,30 +10,56 @@ use ShortPixel\Controller\QueueController as QueueController;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
 
 
+/**
+ * Image model for files managed through the ShortPixel custom-folders feature.
+ *
+ * Represents a single image that lives outside the WordPress media library and is
+ * tracked in the plugin's own `shortpixel_meta` database table. Unlike
+ * MediaLibraryModel, this class has no thumbnails and stores all metadata directly
+ * in the custom table rather than WordPress post-meta.
+ *
+ * @package ShortPixel\Model\Image
+ */
 // @todo Custom Model for adding files, instead of meta DAO.
 class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 {
 
+    /** @var int|null ID of the custom folder this image belongs to. */
     protected $folder_id;
+    /** @var string|null MD5 hash of the image's full filesystem path (legacy field). */
     protected $path_md5;
 
+    /** @var string Queue/type identifier used when interacting with QueueController. */
     protected $type = 'custom';
 
+    /** @var array Placeholder – custom images have no thumbnail variants. */
     protected $thumbnails = []; // placeholder, should return empty.
+    /** @var array Placeholder – custom images have no retina variants. */
     protected $retinas = []; // placeholder, should return empty.
 
+    /** @var bool Whether this image has a corresponding record in the database. */
     protected $in_db = false;
+    /** @var bool Whether this object is a stub (not yet persisted) awaiting insertion. */
     protected $is_stub = false;
 
+    /** @var bool Always true for custom images; there is no parent/thumbnail hierarchy. */
     protected $is_main_file = true;
     
     public $name = ImageModel::IMAGE_TYPE_MAIN; 
 
-		/** @var array */
+		/** @var array Settings overrides applied by the UI (e.g. forced smartcrop value). */
 		protected $forceSettings = array();  // option derives from setting or otherwise, request to be forced upon via UI to use specific value.
 
 
-		// @param int $id
+		/**
+		 * Load (or stub) a CustomImageModel by its database ID.
+		 *
+		 * When $id is greater than zero the record is fetched from the database via
+		 * loadMeta(). Passing zero or a negative value creates an empty stub that can
+		 * be populated later with setStub().
+		 *
+		 * @param int $id Database ID from the shortpixel_meta table, or 0 for a new stub.
+		 */
     public function __construct($id)
     {
         $this->id = $id;
@@ -60,6 +86,11 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     }
 
 
+    /**
+     * Return a flat array of URLs to be submitted for optimization.
+     *
+     * @return array List of image URLs ready for the ShortPixel API.
+     */
     public function getOptimizeUrls()
     {
 
@@ -77,6 +108,11 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
        return false; 
     }
 
+    /**
+     * Retrieve the active exclusion patterns applicable to custom-folder images.
+     *
+     * @return array Array of exclusion pattern definitions from UtilHelper::getExclusions().
+     */
     protected function getExcludePatterns()
     {
         $args = array(
@@ -88,6 +124,14 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         return $patterns;
     }
 
+    /**
+     * Build the full optimization data payload for this image.
+     *
+     * Returns an array with 'urls', 'params', and 'returnParams' keys that describe
+     * the single image (custom images never have thumbnails) to be sent to the API.
+     *
+     * @return array{urls: array, params: array, returnParams: array}
+     */
 		public function getOptimizeData()
 		{
 				$parameters = array(
@@ -130,21 +174,47 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 				return $parameters;
 		}
 
+    /**
+     * Override a specific optimization setting for this image (e.g. force smartcrop on/off).
+     *
+     * @param string $setting Setting key (e.g. 'smartcrop').
+     * @param mixed  $value   Setting value (e.g. ImageModel::ACTION_SMARTCROP).
+     * @return void
+     */
 		public function doSetting($setting, $value)
 		{
 			  $this->forceSettings[$setting] = $value;
 		}
 
+		/**
+		 * Return the public-facing URL of this custom image.
+		 *
+		 * @return string|false URL string, or false if it cannot be determined.
+		 */
 		public function getURL()
 		{
 			  return \wpSPIO()->filesystem()->pathToUrl($this);
 		}
 
+    /**
+     * Return all public URLs associated with this image (always a single-element array).
+     *
+     * @return array
+     */
     public function getAllUrls()
     {
         return array($this->getURL());
     }
 
+    /**
+     * Count associated files of a given type for this custom image.
+     *
+     * Custom images have no thumbnails (always returns 0 for that type). WebP and AVIF
+     * counts reflect whether those companion files exist.
+     *
+     * @param string $type One of 'thumbnails', 'webps', or 'avifs'.
+     * @return int
+     */
     public function count($type)
     {
       // everything is 1 on 1 in the customModel

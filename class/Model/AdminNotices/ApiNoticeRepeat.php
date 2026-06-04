@@ -8,11 +8,28 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 
+/**
+ * Second-stage repeat notice reminding the user to activate their API key.
+ * Shown after the original notice has been dismissed and 6 hours have elapsed.
+ *
+ * @package ShortPixel\Model\AdminNotices
+ */
 class ApiNoticeRepeat extends \ShortPixel\Model\AdminNoticeModel
 {
+	/** @var string Unique notice key. */
 	protected $key = 'MSG_NO_APIKEY_REPEAT';
+
+	/** @var string Severity level for this notice. */
 	protected $errorLevel = 'warning';
 
+	/**
+	 * Checks whether the repeat notice should be triggered.
+	 *
+	 * Conditions: no API key verified, activation date recorded, original notice
+	 * has been dismissed, and at least 6 hours have passed since activation.
+	 *
+	 * @return bool True to show the notice, false to suppress it.
+	 */
 	protected function checkTrigger()
 	{
 			$keyControl = ApiKeyController::getInstance();
@@ -49,6 +66,11 @@ class ApiNoticeRepeat extends \ShortPixel\Model\AdminNoticeModel
 			return true;
 	}
 
+	/**
+	 * Builds the HTML message prompting the user to activate their API key.
+	 *
+	 * @return string HTML message string.
+	 */
 	protected function getMessage()
 	{
 		$message = __("Action required! Please <a href='https://shortpixel.com/wp-apikey' target='_blank'>get your API key</a> to activate your ShortPixel plugin.",'shortpixel-image-optimiser');

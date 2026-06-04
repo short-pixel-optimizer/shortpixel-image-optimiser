@@ -5,17 +5,36 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
+/**
+ * Admin notice informing the user that unregistered thumbnails were found
+ * alongside the regular media library images.
+ *
+ * @package ShortPixel\Model\AdminNotices
+ */
 class UnlistedNotice extends \ShortPixel\Model\AdminNoticeModel
 {
 
+	/** @var string Unique notice key. */
 	protected $key = 'MSG_UNLISTED_FOUND';
 
+	/**
+	 * Checks whether this notice should be automatically triggered.
+	 * Must be triggered manually via addManual().
+	 *
+	 * @return bool Always false.
+	 */
 	protected function checkTrigger()
 	{
 		return false;
 	}
 
 // @todo This message is not properly stringF'ed.
+	/**
+	 * Builds the HTML message describing the unlisted thumbnails that were found
+	 * and linking to the setting to enable optimization of unlisted thumbnails.
+	 *
+	 * @return string HTML message string.
+	 */
 	protected function getMessage()
 	{
 		$settings = \wpSPIO()->settings();

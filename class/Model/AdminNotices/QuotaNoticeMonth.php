@@ -9,10 +9,22 @@ use ShortPixel\Controller\StatsController as StatsController;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 
+/**
+ * Admin notice suggesting a plan upgrade when the user's monthly image usage
+ * is projected to exceed the current plan quota.
+ *
+ * @package ShortPixel\Model\AdminNotices
+ */
 class QuotaNoticeMonth extends \ShortPixel\Model\AdminNoticeModel
 {
+	/** @var string Unique notice key. */
 	protected $key = 'MSG_UPGRADE_MONTH';
 
+	/**
+	 * Loads the notice and triggers the upgrade popup when the notice is active.
+	 *
+	 * @return void
+	 */
 	public function load()
 	{
     $bool = parent::load();
@@ -25,6 +37,12 @@ class QuotaNoticeMonth extends \ShortPixel\Model\AdminNoticeModel
 
 	}
 
+	/**
+	 * Checks whether the notice should be triggered based on monthly usage projections.
+	 * Stores the calculated average and quota data for use in getMessage().
+	 *
+	 * @return void
+	 */
 	protected function checkTrigger()
 	{
 			$quotaController = QuotaController::getInstance();
@@ -43,6 +61,11 @@ class QuotaNoticeMonth extends \ShortPixel\Model\AdminNoticeModel
 
 	}
 
+	/**
+	 * Builds the HTML message showing quota usage statistics and an upgrade prompt button.
+	 *
+	 * @return string HTML message string.
+	 */
 	protected function getMessage()
 	{
 		$quotaController = QuotaController::getInstance();
@@ -60,6 +83,11 @@ class QuotaNoticeMonth extends \ShortPixel\Model\AdminNoticeModel
 		return $message;
 	}
 
+	/**
+	 * Calculates the average number of images added per active month over the last four months.
+	 *
+	 * @return float Average image count per active month.
+	 */
 	protected function getMonthAverage() {
 			$stats = StatsController::getInstance();
 
@@ -76,6 +104,12 @@ class QuotaNoticeMonth extends \ShortPixel\Model\AdminNoticeModel
 			return ($stats->find('period', 'months', 1) + $stats->find('period', 'months', 2) + $stats->find('period', 'months', 3) + $stats->find('period', 'months', 4) / max(1,$count));
 	}
 
+	/**
+	 * Determines whether the user's average monthly image count exceeds the plan threshold.
+	 *
+	 * @param object $quotaData Quota data object containing monthly and one-time credit information.
+	 * @return bool True if an upgrade is likely needed, false otherwise.
+	 */
 	protected function monthlyUpgradeNeeded($quotaData)
 	{
 			if  (isset($quotaData->monthly->total))

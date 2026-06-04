@@ -15,18 +15,52 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Model\AccessModel as AccessModel;
 use ShortPixel\Model\AiDataModel;
 
+/**
+ * Static helper class providing UI rendering and data-formatting utilities.
+ *
+ * Centralises all HTML output helpers, action-array builders, status text generators,
+ * and number/date formatting functions used across the plugin's admin views.
+ *
+ * @package ShortPixel\Helper
+ */
 class UiHelper
 {
 
+	/**
+	 * Controls how output is rendered (e.g. 'admin', 'cli').
+	 *
+	 * @var string
+	 */
 	private static $outputMode = 'admin';
 
+	/**
+	 * Base URL for the ShortPixel knowledge-base article on bulk-processing errors.
+	 *
+	 * @var string
+	 */
 	private static $knowledge_url = 'https://shortpixel.com/knowledge-base/article/common-shortpixel-bulk-processing-errors/'; // the URL of all knowledge.
 
+	/**
+	 * Sets the active output handler/mode name.
+	 *
+	 * @param string $name The output mode identifier (e.g. 'admin', 'cli').
+	 * @return void
+	 */
 	public static function setOutputHandler($name)
 	{
 		 	self::$outputMode = $name;
 	}
 
+  /**
+   * Renders a dropdown "burger" action menu for a media item in the Media Library list table.
+   *
+   * Iterates over the provided actions array and builds an HTML dropdown containing
+   * anchor links for each action (JavaScript or direct URL).
+   *
+   * @param array                                        $actions   Associative array of action name => action data (keys: 'type', 'function', 'text').
+   * @param \ShortPixel\Model\Image\MediaLibraryModel    $imageObj  The image model object the actions apply to.
+   * @return string HTML string for the burger/dropdown column.
+   */
   public static function renderBurgerList($actions, $imageObj)
   {
     $output = "";
@@ -48,11 +82,21 @@ class UiHelper
     return $output;
   }
 
+  /**
+   * Builds the HTML success/stats block shown after an image has been optimized.
+   *
+   * Displays the compression percentage, compression type, thumbnail stats with a
+   * visual bar chart, retina count, WebP count, AVIF count, and any remaining
+   * thumbnails/WebP/AVIF files that still need processing.
+   *
+   * @param \ShortPixel\Model\Image\MediaLibraryModel $imageObj The optimized image model.
+   * @return string HTML string, or void/empty string when no meaningful data is available.
+   */
   public static function renderSuccessText($imageObj)
   {
     $output = '';
     //$percent = $imageObj->getMeta('improvement');
-    $percent = $imageObj->getImprovement(); 
+    $percent = $imageObj->getImprovement();
 
     if (false === $percent || $percent < 5)
     {
@@ -65,7 +109,7 @@ class UiHelper
         $percent = 999; // dunno what is this, but bail out
     }
 
-    if($percent == 999) 
+    if($percent == 999)
     {
        return ;
     }
@@ -124,75 +168,75 @@ class UiHelper
        elseif ($thumbsDone > 0)
          $output .= '<div class="totals">' . sprintf(__('+%s thumbnails optimized','shortpixel-image-optimiser'), self::formatNumber($thumbsDone, 0)) . ' ' . $excluded . '</div>';
 
-			 $improvs = array();
+		 $improvs = array();
 
 				 uasort($improvements['thumbnails'], function ($a, $b) {
-					 	return $b[0] <=> $a[0]; // @todo Efficient code to use once PHP 5 support is done.
+					 	return $b[0] <=> $a[0]; 
 
 				 });
 
-			 $cutoff = false;
-			 $thumbCount = count($improvements['thumbnails']);
-			 if ($thumbCount > 20)
-			 {
-				  $improvements['thumbnails'] =  array_slice($improvements['thumbnails'], 0, 15, true);
-					$cutoff = true;
-			 }
+		 $cutoff = false;
+		 $thumbCount = count($improvements['thumbnails']);
+		 if ($thumbCount > 20)
+		 {
+			  $improvements['thumbnails'] =  array_slice($improvements['thumbnails'], 0, 15, true);
+				$cutoff = true;
+		 }
 
 
-			 // Quality Check
-			 foreach($improvements['thumbnails'] as $thumbName => $thumbStat)
-			 {
-				  $stat = $thumbStat[0];
-				 	if (is_numeric($stat) && $stat >= 0)
-					{
-						 $improvs[$thumbName] = $stat; //self::formatNumber($stat,2);
-					}
-			 }
-
-			 if (count($improvs) > 0)
-			 {
-		       $output .= "<div class='thumb-wrapper'>";
-					 $lowrating = 0;
-		       foreach($improvs as $thumbName => $stat)
-		       {
-						   $statText = self::formatNumber($stat, 2);
-		           $title =  sprintf(__('%s : %s', 'shortpixel-image-optimiser'), $thumbName, $statText . '%');
-		           $rating = ceil( round($stat) / 10);
-							 if (0 == $rating)
-							 {
-								 	$lowrating++;
-									continue;
-							 }
-
-		           $blocks_on = str_repeat('<span class="point checked">&nbsp;</span>', $rating);
-		           $blocks_off = str_repeat('<span class="point">&nbsp;</span>', (10- $rating));
-
-		           $output .= "<div class='thumb " . $thumbName . "' title='" . $title . "'>"
-		                       . "<span class='thumb-name'>" .  $thumbName . '</span>' .
-		                        "<span class='optimize-bar'>" . $blocks_on . $blocks_off . "</span>
-		                      </div>";
-		       }
-
-					 if ($lowrating > 0)
-					 {
-						 $blocks_off = str_repeat('<span class="point">&nbsp;</span>', 10);
-
-						 $output .= "<div class='thumb'>"
-												 . "<span class='thumb-name'>" . sprintf(__('+ %d thumbnails ', 'shortpixel-image-optimiser'), $lowrating) . '</span>' .
-													"<span class='optimize-bar'>" . $blocks_off . "</span>
-												</div>";
-					 }
-
-					 if (true === $cutoff)
-					 {
-						 $output .= '<div class="thumb"><span class="cutoff">' . sprintf(__('+ %d more', 'shortpixel-image-optimiser'), ($thumbCount - 15)) . '</span></div>';
-					 }
-
-
-		       $output .=  "</div> <!-- /thumb-wrapper -->";
+		 // Quality Check
+		 foreach($improvements['thumbnails'] as $thumbName => $thumbStat)
+		 {
+			  $stat = $thumbStat[0];
+			 	if (is_numeric($stat) && $stat >= 0)
+				{
+					 $improvs[$thumbName] = $stat; //self::formatNumber($stat,2);
 				}
-				$output .= "</div> <!-- /thumb optimized -->";
+		 }
+
+		 if (count($improvs) > 0)
+		 {
+	       $output .= "<div class='thumb-wrapper'>";
+				 $lowrating = 0;
+	       foreach($improvs as $thumbName => $stat)
+	       {
+					   $statText = self::formatNumber($stat, 2);
+	           $title =  sprintf(__('%s : %s', 'shortpixel-image-optimiser'), $thumbName, $statText . '%');
+	           $rating = ceil( round($stat) / 10);
+						 if (0 == $rating)
+						 {
+							 	$lowrating++;
+								continue;
+						 }
+
+	           $blocks_on = str_repeat('<span class="point checked">&nbsp;</span>', $rating);
+	           $blocks_off = str_repeat('<span class="point">&nbsp;</span>', (10- $rating));
+
+	           $output .= "<div class='thumb " . $thumbName . "' title='" . $title . "'>"
+	                       . "<span class='thumb-name'>" .  $thumbName . '</span>' .
+	                        "<span class='optimize-bar'>" . $blocks_on . $blocks_off . "</span>
+	                      </div>";
+	       }
+
+				 if ($lowrating > 0)
+				 {
+					 $blocks_off = str_repeat('<span class="point">&nbsp;</span>', 10);
+
+					 $output .= "<div class='thumb'>"
+											 . "<span class='thumb-name'>" . sprintf(__('+ %d thumbnails ', 'shortpixel-image-optimiser'), $lowrating) . '</span>' .
+												"<span class='optimize-bar'>" . $blocks_off . "</span>
+											</div>";
+				 }
+
+				 if (true === $cutoff)
+				 {
+					 $output .= '<div class="thumb"><span class="cutoff">' . sprintf(__('+ %d more', 'shortpixel-image-optimiser'), ($thumbCount - 15)) . '</span></div>';
+				 }
+
+
+	       $output .=  "</div> <!-- /thumb-wrapper -->";
+			}
+			$output .= "</div> <!-- /thumb optimized -->";
     }
 
     if ($retinasDone > 0)
@@ -211,27 +255,27 @@ class UiHelper
     if ($imageObj->isSomethingOptimized() && $imageObj->isProcessable())
     {
         list($urls, $optimizable) = $imageObj->getCountOptimizeData('thumbnails');
-				list($webpUrls, $webpCount)   =  $imageObj->getCountOptimizeData('webp');
-				list($avifUrls, $avifCount)   =  $imageObj->getCountOptimizeData('avif');
+			list($webpUrls, $webpCount)   =  $imageObj->getCountOptimizeData('webp');
+			list($avifUrls, $avifCount)   =  $imageObj->getCountOptimizeData('avif');
 
 
-				$maxList = 10;
+			$maxList = 10;
 
-			 if (count($urls) > $maxList)
-			 {
-				  $urls = array_slice($urls, 0, $maxList, true);
-					$urls[] = '...';
-			 }
-			 if (count($webpUrls) > $maxList)
-			 {
-				  $webpUrls = array_slice($webpUrls, 0, $maxList, true);
-					$webpUrls[] = '...';
-			 }
-			 if (count($avifUrls) > $maxList)
-			 {
-				  $avifUrls = array_slice($avifUrls, 0, $maxList, true);
-					$avifUrls[] = '...';
-			 }
+		 if (count($urls) > $maxList)
+		 {
+			  $urls = array_slice($urls, 0, $maxList, true);
+				$urls[] = '...';
+		 }
+		 if (count($webpUrls) > $maxList)
+		 {
+			  $webpUrls = array_slice($webpUrls, 0, $maxList, true);
+				$webpUrls[] = '...';
+		 }
+		 if (count($avifUrls) > $maxList)
+		 {
+			  $avifUrls = array_slice($avifUrls, 0, $maxList, true);
+				$avifUrls[] = '...';
+		 }
 
         if ($optimizable > 0)
         {
@@ -239,9 +283,9 @@ class UiHelper
              $output .= "<span>";
                foreach($urls as $optObj)
                {
-								 if ($optObj === '...')
-									$output .= $optObj;
-								 else
+							 if ($optObj === '...')
+								$output .= $optObj;
+							 else
                   $output .= substr($optObj, strrpos($optObj, '/')+1) . '<br>';
                }
              $output .= "</span>";
@@ -255,9 +299,9 @@ class UiHelper
              $output .= "<span>";
                foreach($webpUrls as $optObj)
                {
-								  if ($optObj === '...')
-									 $output .= $optObj;
-									else
+							  if ($optObj === '...')
+								 $output .= $optObj;
+								else
                   	$output .= self::convertImageTypeName(substr($optObj, strrpos($optObj, '/')+1), 'webp') . '<br>';
                }
              $output .= "</span>";
@@ -280,6 +324,12 @@ class UiHelper
 
   }
 
+  /**
+   * Converts an ImageModel compression type constant to a human-readable translated string.
+   *
+   * @param int $type One of ImageModel::COMPRESSION_LOSSLESS, COMPRESSION_LOSSY, or COMPRESSION_GLOSSY.
+   * @return string Translated compression type label.
+   */
   public static function compressionTypeToText($type)
   {
 
@@ -296,61 +346,72 @@ class UiHelper
         break;
         default:
             $text = __('No compression', 'shortpixel-image-optimiser');
-        break; 
+        break;
      }
 
 
       return $text;
   }
 
+  /**
+   * Builds the list of secondary (burger-menu) actions available for a media item.
+   *
+   * Considers the item's optimization state, restoration eligibility, quota availability,
+   * AI data model state, and user access permissions to determine which actions to include.
+   * Returns an empty array when the API key is unverified or the item is not editable.
+   *
+   * @param \ShortPixel\Model\Image\MediaLibraryModel $mediaItem   The media item to build actions for.
+   * @param AiDataModel|null                          $aiDataModel Optional AI data model for the item. Default null.
+   * @return array<string, array> Associative array of action name => action data array.
+   */
   public static function getListActions($mediaItem, $aiDataModel = null)
   {
       $list_actions = array();
       $id = $mediaItem->get('id');
 
-		  $keyControl = ApiKeyController::getInstance();
-			if (! $keyControl->keyIsVerified())
-			{
-				return []; // nothing
-			}
+	  $keyControl = ApiKeyController::getInstance();
+		if (! $keyControl->keyIsVerified())
+		{
+			return []; // nothing
+		}
 
       $quotaControl = QuotaController::getInstance();
 
-			$access = AccessModel::getInstance();
-			if (! $access->imageIsEditable($mediaItem))
-			{
-				 return [];
-			}
+		$access = AccessModel::getInstance();
+		if (! $access->imageIsEditable($mediaItem))
+		{
+			 return [];
+		}
 
       if ($id === 0)
       {
-				return [];
+			return [];
       }
 
       if ($mediaItem->isSomethingOptimized() )
       {
-						list($u, $optimizable) = $mediaItem->getCountOptimizeData('thumbnails');
-						list($u, $optimizableWebp)   =  $mediaItem->getCountOptimizeData('webp');
-						list($u, $optimizableAvif)   =  $mediaItem->getCountOptimizeData('avif');
+					list($u, $optimizable) = $mediaItem->getCountOptimizeData('thumbnails');
+					list($u, $optimizableWebp)   =  $mediaItem->getCountOptimizeData('webp');
+					list($u, $optimizableAvif)   =  $mediaItem->getCountOptimizeData('avif');
 
            if ($mediaItem->isProcessable() && ! $mediaItem->isOptimizePrevented())
            {
              $action = self::getAction('optimizethumbs', $id);
              if ($optimizable > 0)
              {
-							 $total = $optimizable + $optimizableWebp + $optimizableAvif;
-               $thumbObj = $mediaItem->getSomethingOptimized(); 
+						 $total = $optimizable + $optimizableWebp + $optimizableAvif;
+               $thumbObj = $mediaItem->getSomethingOptimized();
                if (false !== $thumbObj)
                {
-                  $compressionType = $thumbObj->getMeta('compressionType'); 
+                  $compressionType = $thumbObj->getMeta('compressionType');
                   $action = self::getAction('optimizethumbs', $id, ['compressionType' => $compressionType]);
                }
 
-							 if ($optimizableWebp > 0 || $optimizableAvif > 0)
-							 	   $itemText = __('items', 'shortpixel-image-optimiser');
-								else {
-									 $itemText = __('thumbnails', 'shortpixel-image-optimiser');
-								}
+						 if ($optimizableWebp > 0 || $optimizableAvif > 0)
+						 	   $itemText = __('items', 'shortpixel-image-optimiser');
+							else {
+								 $itemText = __('thumbnails', 'shortpixel-image-optimiser');
+							}
                $action['text']  = sprintf(__('Optimize %s  %s','shortpixel-image-optimiser'),$total, $itemText);
 
 
@@ -394,44 +455,44 @@ class UiHelper
   				       if ($showCompare)
                    $list_actions['comparer'] = self::getAction('compare', $id);
             }
-			 			if ($mediaItem->isRestorable())
-						{
-							 $compressionType = $mediaItem->getMeta('compressionType');
-		           switch($compressionType)
-		           {
-		               case ImageModel::COMPRESSION_LOSSLESS:
-		                 $list_actions['reoptimize-lossy'] = self::getAction('reoptimize-lossy', $id);
-		                 $list_actions['reoptimize-glossy'] = self::getAction('reoptimize-glossy', $id);
+		 			if ($mediaItem->isRestorable())
+					{
+						 $compressionType = $mediaItem->getMeta('compressionType');
+	           switch($compressionType)
+	           {
+	               case ImageModel::COMPRESSION_LOSSLESS:
+	                 $list_actions['reoptimize-lossy'] = self::getAction('reoptimize-lossy', $id);
+	                 $list_actions['reoptimize-glossy'] = self::getAction('reoptimize-glossy', $id);
 
-		               break;
-		               case ImageModel::COMPRESSION_LOSSY:
-		                 $list_actions['reoptimize-lossless'] = self::getAction('reoptimize-lossless', $id);
-		                 $list_actions['reoptimize-glossy'] = self::getAction('reoptimize-glossy', $id);
+	               break;
+	               case ImageModel::COMPRESSION_LOSSY:
+	                 $list_actions['reoptimize-lossless'] = self::getAction('reoptimize-lossless', $id);
+	                 $list_actions['reoptimize-glossy'] = self::getAction('reoptimize-glossy', $id);
 
-		               break;
-		               case ImageModel::COMPRESSION_GLOSSY:
-		                 $list_actions['reoptimize-lossy'] = self::getAction('reoptimize-lossy', $id);
-		                 $list_actions['reoptimize-lossless'] = self::getAction('reoptimize-lossless', $id);
-		               break;
-		           }
+	               break;
+	               case ImageModel::COMPRESSION_GLOSSY:
+	                 $list_actions['reoptimize-lossy'] = self::getAction('reoptimize-lossy', $id);
+	                 $list_actions['reoptimize-lossless'] = self::getAction('reoptimize-lossless', $id);
+	               break;
+	           }
 
-							 if ($mediaItem->get('type') === 'media')
-							 {
-							 		$list_actions['reoptimize-smartcrop'] = self::getAction('reoptimize-smartcrop', $id, array('compressionType' => $compressionType));
-							 		$list_actions['reoptimize-smartcropless'] = self::getAction('reoptimize-smartcropless', $id, array('compressionType' => $compressionType));
-								}
-		          		$list_actions['restore'] = self::getAction('restore', $id);
-							} // isRestorable
-						else
-						{
+						 if ($mediaItem->get('type') === 'media')
+						 {
+						 		$list_actions['reoptimize-smartcrop'] = self::getAction('reoptimize-smartcrop', $id, array('compressionType' => $compressionType));
+						 		$list_actions['reoptimize-smartcropless'] = self::getAction('reoptimize-smartcropless', $id, array('compressionType' => $compressionType));
+							}
+	          		$list_actions['restore'] = self::getAction('restore', $id);
+						} // isRestorable
+					else
+					{
 
-						}
+					}
         } // hasBackup
 
-				if (\wpSPIO()->env()->is_debug && $mediaItem->get('type') == 'media')
-				{
-					 $list_actions['redo_legacy'] = self::getAction('redo_legacy', $id);
-				}
+			if (\wpSPIO()->env()->is_debug && $mediaItem->get('type') == 'media')
+			{
+				 $list_actions['redo_legacy'] = self::getAction('redo_legacy', $id);
+			}
       } //isOptimized
 
 
@@ -450,6 +511,17 @@ class UiHelper
       return $list_actions;
   }
 
+  /**
+   * Builds the list of primary (column) actions for a media item.
+   *
+   * Returns quota-extension actions when quota is exhausted, an Optimize Now
+   * button when the item is unoptimized and processable, or a force-optimize
+   * button when the item is user-excluded. Returns an empty array when the API
+   * key is unverified or the item is not editable.
+   *
+   * @param \ShortPixel\Model\Image\MediaLibraryModel $mediaItem The media item to build actions for.
+   * @return array<string, array> Associative array of action name => action data array.
+   */
   public static function getActions($mediaItem)
   {
     $actions = [];
@@ -457,21 +529,21 @@ class UiHelper
     $quotaControl = QuotaController::getInstance();
     $queueController = new QueueController();
 
-		$keyControl = ApiKeyController::getInstance();
-		if (! $keyControl->keyIsVerified())
-		{
-			return []; // nothing
-		}
+	$keyControl = ApiKeyController::getInstance();
+	if (! $keyControl->keyIsVerified())
+	{
+		return []; // nothing
+	}
 
-		$access = AccessModel::getInstance();
-		if (! $access->imageIsEditable($mediaItem))
-		{
-			 return [];
-		}
+	$access = AccessModel::getInstance();
+	if (! $access->imageIsEditable($mediaItem))
+	{
+		 return [];
+	}
 
-		if ($id === 0)
+	if ($id === 0)
     {
-			return [];
+		return [];
     }
 
     if(! $quotaControl->hasQuota())
@@ -493,6 +565,15 @@ class UiHelper
     return $actions;
   }
 
+  /**
+   * Generates the HTML status text string shown in the media item's ShortPixel column.
+   *
+   * Handles all possible item states: invalid API key, untracked item, optimized,
+   * not processable, missing file, error status, queued, and optimization-prevented.
+   *
+   * @param \ShortPixel\Model\Image\MediaLibraryModel $mediaItem The media item to describe.
+   * @return string HTML status text.
+   */
   public static function getStatusText($mediaItem)
   {
     $keyControl = ApiKeyController::getInstance();
@@ -501,21 +582,21 @@ class UiHelper
 
     $text = '';
 
-		$access = AccessModel::getInstance();
+	$access = AccessModel::getInstance();
 
     if (! $keyControl->keyIsVerified())
     {
       $text = __('Invalid API Key. <a href="options-general.php?page=wp-shortpixel-settings">Check your Settings</a>','shortpixel-image-optimiser');
     }
-		// This basically happens when a NextGen gallery is not added to Custom Media.
-		elseif ($mediaItem->get('id') === 0)
-		{
-			 if ($mediaItem->isProcessable(true) === false)
-			 {
-				 $text = __('Not Processable: ','shortpixel_image_optimiser');
-				 $text  .= $mediaItem->getProcessableReason();
-			 }
-			 else {
+	// This basically happens when a NextGen gallery is not added to Custom Media.
+	elseif ($mediaItem->get('id') === 0)
+	{
+		 if ($mediaItem->isProcessable(true) === false)
+		 {
+			 $text = __('Not Processable: ','shortpixel_image_optimiser');
+			 $text  .= $mediaItem->getProcessableReason();
+		 }
+		 else {
          if (\wpSPIO()->env()->has_nextgen && false == $settings->includeNextGen)
          {
            $text = __('This image was not found in our database. Enable "Optimize nextgen galleries" in the settings, or add this folder manually. ', 'shortpixel-image-optimiser');
@@ -523,8 +604,8 @@ class UiHelper
          else {
            $text = __('This image was not found in our database. Refresh folders, or add this gallery', 'shortpixel-image-optimiser');
          }
-			 }
-		}
+		 }
+	}
     elseif ($mediaItem->isSomethingOptimized())
     {
        $text = UiHelper::renderSuccessText($mediaItem);
@@ -543,36 +624,36 @@ class UiHelper
       $text = $mediaItem->getMeta('errorMessage');
     }
     elseif( $queueController->isItemInQueue($mediaItem) === true)
-		{
-			 $text = '<p>' . __('This item is waiting to be processed', 'shortpixel-image-optimiser') . '</p>';
-			 $action = self::getAction('cancelOptimize', $mediaItem->get('id'));
+	{
+		 $text = '<p>' . __('This item is waiting to be processed', 'shortpixel-image-optimiser') . '</p>';
+		 $action = self::getAction('cancelOptimize', $mediaItem->get('id'));
 
-			 if ($access->imageIsEditable($mediaItem))
-			 {
-			 	$text .= '<p><a href="javascript:' . $action['function'] . '">' . $action['text'] . '</a></p>';
-		 	 }
-		}
+		 if ($access->imageIsEditable($mediaItem))
+		 {
+		 	$text .= '<p><a href="javascript:' . $action['function'] . '">' . $action['text'] . '</a></p>';
+	 	 }
+	}
 
     if ($mediaItem->isOptimizePrevented() !== false)
     {
           $retry = self::getAction('retry', $mediaItem->get('id'));
           $unmark = self::getAction('unMarkCompleted', $mediaItem->get('id'));
-					$redo_legacy = false;
+				$redo_legacy = false;
 
-					if ($mediaItem->get('type') == 'media')
+				if ($mediaItem->get('type') == 'media')
+				{
+ 					$was_converted = get_post_meta($mediaItem->get('id'), '_shortpixel_was_converted', true);
+					$updateTs = 1656892800; // July 4th 2022 - 00:00 GMT
+
+					if ($was_converted < $updateTs)
 					{
-	 					$was_converted = get_post_meta($mediaItem->get('id'), '_shortpixel_was_converted', true);
-						$updateTs = 1656892800; // July 4th 2022 - 00:00 GMT
-
-						if ($was_converted < $updateTs)
+						$meta = $mediaItem->getWPMetaData();
+						if (is_array($meta) && isset($meta['ShortPixel']))
 						{
-							$meta = $mediaItem->getWPMetaData();
-							if (is_array($meta) && isset($meta['ShortPixel']))
-							{
-								$redo_legacy = self::getAction('redo_legacy', $mediaItem->get('id'));
-							}
+							$redo_legacy = self::getAction('redo_legacy', $mediaItem->get('id'));
 						}
 					}
+				}
 
           $status = $mediaItem->getMeta('status');
           $text = ''; // reset text
@@ -592,19 +673,29 @@ class UiHelper
 
 
 
-					if ($redo_legacy !== false)
-					{
-						$text .= "<div class='shortpixel-image-error'><span class='shortpixel-error-reset'>";
+				if ($redo_legacy !== false)
+				{
+					$text .= "<div class='shortpixel-image-error'><span class='shortpixel-error-reset'>";
 
-						$text .= sprintf(esc_html__('It seems you have older converted legacy data, which might cause this issue. You can try to %s %s %s . If nothing changes, this is not the cause. ','shortpixel-image-optimiser'), '<a href="javascript:' . $redo_legacy['function'] . '">', $redo_legacy['text'], '</a>');
-						$text .= "</span></div>";
-					}
+					$text .= sprintf(esc_html__('It seems you have older converted legacy data, which might cause this issue. You can try to %s %s %s . If nothing changes, this is not the cause. ','shortpixel-image-optimiser'), '<a href="javascript:' . $redo_legacy['function'] . '">', $redo_legacy['text'], '</a>');
+					$text .= "</span></div>";
+				}
 
       }
 
     return $text;
   }
 
+  /**
+   * Decodes a numeric EXIF setting value into its component boolean flags and a display line.
+   *
+   * The integer encodes three independent flags (removed, AI allowed, SEO allowed) via
+   * a bitmask-style scheme. Returns false for invalid input.
+   *
+   * @param int $exif The numeric EXIF setting value (0–7).
+   * @return array{removed: bool, ai: bool|null, seo: bool|null, line: string}|false
+   *         Status array on success, false if $exif is not a valid integer in range.
+   */
   public static function getExifDisplayValues($exif)
   {
       if (! is_numeric($exif) || $exif < 0 ||$exif > 7 )
@@ -644,13 +735,25 @@ class UiHelper
 
   }
 
+  /**
+   * Returns an action data array for a named UI action.
+   *
+   * Acts as a registry/factory for all possible admin UI actions. Each action
+   * array contains at minimum: 'function' (JS call or URL), 'type' ('js' or 'button'),
+   * 'text' (translated label), and 'display' (button style hint).
+   *
+   * @param string $name The action identifier (e.g. 'optimize', 'restore', 'compare').
+   * @param int    $id   The media item ID the action applies to.
+   * @param array  $args Optional extra arguments (e.g. 'compressionType' for reoptimize actions).
+   * @return array Action data array with keys: function, type, text, display, and possibly others.
+   */
   // Defines all possible actions in the Ui
   public static function getAction($name, $id, $args = array())
   {
      $action = array('function' => '', 'type' => '', 'text' => '', 'display' => '');
      $keyControl = ApiKeyController::getInstance();
 
-		 $compressionType = isset($args['compressionType']) ? $args['compressionType'] : null;
+	 $compressionType = isset($args['compressionType']) ? $args['compressionType'] : null;
 
     switch($name)
     {
@@ -668,12 +771,12 @@ class UiHelper
         $action['display'] = 'button';
         $action['is-optimizable'] = true;
       break;
-			case 'cancelOptimize':
-				 $action['function'] = 'window.ShortPixelProcessor.screen.CancelOptimizeItem(' . $id . ')';
-				 $action['type']  = 'js';
-				 $action['text'] = __('Cancel item optimization', 'shortpixel-image-optimiser');
-				 $action['display'] = 'button';
-			break;
+		case 'cancelOptimize':
+			 $action['function'] = 'window.ShortPixelProcessor.screen.CancelOptimizeItem(' . $id . ')';
+			 $action['type']  = 'js';
+			 $action['text'] = __('Cancel item optimization', 'shortpixel-image-optimiser');
+			 $action['display'] = 'button';
+		break;
       case 'markCompleted':
           $action['function'] = 'window.ShortPixelProcessor.screen.MarkCompleted(' . $id . ')';
           $action['type']  = 'js';
@@ -710,12 +813,12 @@ class UiHelper
          $action['display'] = 'button';
          $action['is-optimizable'] = true;
      break;
-		 case 'redo_legacy':
-		 			$action['function'] = 'window.ShortPixelProcessor.screen.RedoLegacy(' . $id . ');';
-		 			$action['type']  = 'js';
-		 			$action['text'] = __('Redo Conversion', 'shortpixel-image-optimiser') ;
-		 			$action['display'] = 'button';
-		 break;
+	 case 'redo_legacy':
+	 			$action['function'] = 'window.ShortPixelProcessor.screen.RedoLegacy(' . $id . ');';
+	 			$action['type']  = 'js';
+	 			$action['text'] = __('Redo Conversion', 'shortpixel-image-optimiser') ;
+	 			$action['display'] = 'button';
+	 break;
 
      case 'restore':
          $action['function'] = 'window.ShortPixelProcessor.screen.RestoreItem(' . $id . ');';
@@ -755,24 +858,24 @@ class UiHelper
         $action['text'] = __('Re-optimize Lossless','shortpixel-image-optimiser');
         $action['display'] = 'inline';
      break;
-		 case 'reoptimize-smartcrop':
+	 case 'reoptimize-smartcrop':
         $action['function'] = 'window.ShortPixelProcessor.screen.ReOptimize(' . $id . ',' . $compressionType . ',' . ImageModel::ACTION_SMARTCROP . ')';
         $action['type'] = 'js';
         $action['text'] = __('Re-optimize with SmartCrop','shortpixel-image-optimiser');
         $action['display'] = 'inline';
      break;
-		 case 'reoptimize-smartcropless':
+	 case 'reoptimize-smartcropless':
         $action['function'] = 'window.ShortPixelProcessor.screen.ReOptimize(' . $id . ',' . $compressionType . ',' . ImageModel::ACTION_SMARTCROPLESS . ')';
         $action['type'] = 'js';
         $action['text'] = __('Re-optimize without SmartCrop','shortpixel-image-optimiser');
         $action['display'] = 'inline';
      break;
-     case 'shortpixel-generateai': 
+     case 'shortpixel-generateai':
       $action['function'] = 'window.ShortPixelProcessor.screen.RequestAlt(' . $id . ')';
       $action['type'] = 'js';
-      $action['text'] = __('Generate image SEO data','shortpixel-image-optimiser');     
+      $action['text'] = __('Generate image SEO data','shortpixel-image-optimiser');
       $action['ai-action'] = true;
-      break; 
+      break;
      case 'extendquota':
         $action['function'] = 'https://shortpixel.com/login/'. $keyControl->getKeyForDisplay();
         $action['type'] = 'button';
@@ -790,6 +893,12 @@ class UiHelper
    return $action;
   }
 
+	/**
+	 * Converts a numeric image-conversion error code to a translated human-readable message.
+	 *
+	 * @param int $error The error code returned by the conversion process (negative integer).
+	 * @return string Translated error message prefixed with "Not converted: ".
+	 */
 	public static function getConvertErrorReason($error)
 	{
 		switch($error)
@@ -822,11 +931,29 @@ class UiHelper
 		return $message;
 	}
 
+	/**
+	 * Returns an escaped URL linking to the ShortPixel knowledge-base search.
+	 *
+	 * @param string $subject Search subject (currently unused; KB search is disabled).
+	 * @return string Escaped URL string.
+	 */
 	public static function getKBSearchLink($subject)
 	{
 			return esc_url(self::$knowledge_url); // . sanitize_text_field($subject)); //the KB search doesn't work anymore
 	}
 
+	/**
+	 * Finds the thumbnail of a media item whose width is closest to the requested preview size.
+	 *
+	 * Skips thumbnails that have not been optimized or have no backup unless $preload is true.
+	 * Falls back to the original image object if no suitable thumbnail is found.
+	 *
+	 * @param \ShortPixel\Model\Image\MediaLibraryModel $imageItem The parent media item.
+	 * @param int                                       $size      Target width in pixels. Default 800.
+	 * @param bool                                      $preload   When true, includes non-optimized thumbnails as candidates. Default false.
+	 * @return \ShortPixel\Model\Image\ThumbnailModel|\ShortPixel\Model\Image\MediaLibraryModel
+	 *         The thumbnail or original image object closest to the requested size.
+	 */
 	// @param MediaLibraryModel Object $imageItem
 	// @param String $size  Preferred size
 	// @param String Preload The preloader tries to guess what the preview might be for a more smooth process. Ignore optimize / backup
@@ -855,34 +982,49 @@ class UiHelper
 				 if (! $preload && (! $thumbnail->isOptimized() || ! $backupModel->hasBackup($thumbnail) || ! $backupModel->getBackupFile($thumbnail) ))
 				 	continue;
 
-					$diff = abs($thumbnail->get('width') - $size);
-					if ($diff < $bestdiff)
-					{
-						 $closestObj = $thumbnail;
-						 $bestdiff = $diff;
-					}
+				$diff = abs($thumbnail->get('width') - $size);
+				if ($diff < $bestdiff)
+				{
+					 $closestObj = $thumbnail;
+					 $bestdiff = $diff;
+				}
 			}
 
 			return $closestObj;
 	}
 
+  /**
+   * Formats a Unix timestamp into a localised date/time string using the site's date and time formats.
+   *
+   * Uses wp_date() when available (WP 5.3+), falling back to date_i18n().
+   *
+   * @param int $ts Unix timestamp.
+   * @return string Formatted date string, e.g. "2024/01/15 @ 10:30 AM".
+   */
   public static function formatTS($ts)
   {
       //$format = get_option('date_format') .' @ ' . date_i18n(get_option('time_format');
-			if (function_exists('wp_date'))
-			{
+		if (function_exists('wp_date'))
+		{
       	$date = wp_date(get_option('date_format'), $ts);
-				$date .= ' @ ' . wp_date(get_option('time_format'), $ts);
-			}
-			else
-			{
+			$date .= ' @ ' . wp_date(get_option('time_format'), $ts);
+		}
+		else
+		{
       	$date = date_i18n(get_option('date_format'), $ts);
-				$date .= ' @ ' . date_i18n(get_option('time_format'), $ts);
+			$date .= ' @ ' . date_i18n(get_option('time_format'), $ts);
 
-			}
+		}
       return $date;
   }
 
+  /**
+   * Formats a byte count into a human-readable size string with the appropriate unit.
+   *
+   * @param int $bytes     The number of bytes to format.
+   * @param int $precision Number of decimal places. Default 2.
+   * @return string Formatted size string, e.g. "1.23 MB".
+   */
   public static function formatBytes($bytes, $precision = 2) {
       $units = array('B', 'KB', 'MB', 'GB', 'TB');
 
@@ -895,6 +1037,16 @@ class UiHelper
       return number_format_i18n(round($bytes, $precision), $precision) . ' ' . $units[$pow];
   }
 
+	/**
+	 * Formats a number for locale-aware display, stripping trailing decimal zeroes.
+	 *
+	 * Replaces non-breaking space thousand separators with regular spaces for
+	 * compatibility with JavaScript and CLI output.
+	 *
+	 * @param int|float $number    The number to format.
+	 * @param int       $precision Maximum decimal places. Default 2.
+	 * @return string Formatted number string.
+	 */
 	public static function formatNumber($number, $precision = 2)
 	{
 			global $wp_locale;
@@ -913,6 +1065,15 @@ class UiHelper
 		  return $number;
 	}
 
+	/**
+	 * Formats a DateTime object into a human-readable relative or absolute date string.
+	 *
+	 * Returns a relative string (e.g. "5 minutes ago") for dates within the last 24 hours,
+	 * or a Y/m/d formatted date for older dates. Returns an empty string for zero dates.
+	 *
+	 * @param \DateTime $date The date object to format.
+	 * @return string Human-readable date string.
+	 */
 	public static function formatDate( $date ) {
 
 	if ( '0000-00-00 00:00:00' === $date->format('Y-m-d ') ) {
@@ -933,6 +1094,16 @@ class UiHelper
 	return $h_time;
 }
 
+	/**
+	 * Converts an image filename to use the given next-generation format extension.
+	 *
+	 * Depending on the environment setting for double extensions (e.g. image.jpg.webp),
+	 * either appends the new type or replaces the existing extension.
+	 *
+	 * @param string $name The original image filename (basename only).
+	 * @param string $type The target format extension, e.g. 'webp' or 'avif'.
+	 * @return string The converted filename.
+	 */
 	protected static function convertImageTypeName($name, $type)
 	{
 		if ($type == 'webp')
@@ -955,6 +1126,16 @@ class UiHelper
 
 	}
 
+  /**
+   * Returns localisation strings used on the settings page by both PHP and JavaScript.
+   *
+   * Includes translated option labels for exclusion types, exclusion apply scopes,
+   * dashboard status indicators, and AI SEO data UI strings. When $name is provided
+   * and matches a known key, returns only that subset.
+   *
+   * @param string|false $name Optional key to retrieve a specific string group. Default false (all groups).
+   * @return array<string, array>|array The full strings array, or a single group if $name is valid.
+   */
   /* Strings on settings page that need to be available for both JS and PHP  */
   public static function getSettingsStrings($name = false)
   {
@@ -967,7 +1148,7 @@ class UiHelper
           'path' => __('Image Path', 'shortpixel-image-optimiser'),
           'size' => __('Image Size', 'shortpixel-image-optimiser'),
           'filesize' => __('Image File Size', 'shortpixel-image-optimiser'),
-          'date' => __('Date', 'shortpixel-image-optimiser'), 
+          'date' => __('Date', 'shortpixel-image-optimiser'),
       );
 
       $exclusion_apply = array(
@@ -984,7 +1165,7 @@ class UiHelper
       ];
 
       $ai_string = [
-            'imagemodaltitle' => __('Select an image for AI SEO data preview', 'shortpixel-image-optimiser'), 
+            'imagemodaltitle' => __('Select an image for AI SEO data preview', 'shortpixel-image-optimiser'),
             'selectimage' => __('Use this image', 'shortpixel-image-optimiser'),
             'preview_requested' => __('Working on your AI SEO data preview. This may take a while ... ', 'shortpixel-image-optimiser'),
       ];
@@ -992,7 +1173,7 @@ class UiHelper
       $strings['exclusion_types'] = $exclusion_types;
       $strings['exclusion_apply'] = $exclusion_apply;
       $strings['dashboard_strings'] = $dashboard_string;
-      $strings['ai_strings'] = $ai_string; 
+      $strings['ai_strings'] = $ai_string;
 
       if ($name !== false && isset($strings[$name]))
       {
@@ -1002,6 +1183,21 @@ class UiHelper
       return $strings;
   }
 
+  /**
+   * Returns an HTML <img> tag for a plugin asset icon.
+   *
+   * Resolves the icon URL relative to the plugin file and optionally applies
+   * width and height attributes.
+   *
+   * @param string $path Relative path to the icon file from the plugin root.
+   * @param array  $args {
+   *     Optional display attributes.
+   *
+   *     @type int $width  Width attribute value in pixels.
+   *     @type int $height Height attribute value in pixels.
+   * }
+   * @return string HTML <img> string for the icon.
+   */
   public static function getIcon($path, $args = array())
   {
       $defaults = array(
@@ -1010,10 +1206,10 @@ class UiHelper
 
       $icon_url = plugins_url($path, SHORTPIXEL_PLUGIN_FILE);
 
-      $attr = ''; 
+      $attr = '';
       if (isset($args['width']))
       {
-         $attr .= ' width="' . $args['width'] . '"'; 
+         $attr .= ' width="' . $args['width'] . '"';
 
       }
 

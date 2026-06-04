@@ -9,13 +9,28 @@ use ShortPixel\ShortQ\ShortQ as ShortQ;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 
+/**
+ * Queue implementation for custom (non-media-library) image folders.
+ *
+ * Manages preparation and processing of images stored in custom folders
+ * tracked via the shortpixel_meta database table.
+ *
+ * @package ShortPixel\Controller\Queue
+ */
 class CustomQueue extends Queue
 {
 
+   /** @var string Cache key used when preparing queue items. */
    protected $cacheName = 'CustomCache'; // When preparing, write needed data to cache.
 
+   /** @var static Singleton instance. */
    protected static $instance;
 
+   /**
+    * Initialises the underlying ShortQ queue with custom-folder defaults.
+    *
+    * @param string $queueName Internal queue name passed to ShortQ.
+    */
    public function __construct($queueName = 'Custom')
    {
      $shortQ = new ShortQ(static::PLUGIN_SLUG);
@@ -34,12 +49,22 @@ class CustomQueue extends Queue
      $this->q->setOptions($options);
    }
 
+   /**
+    * Returns the queue type identifier.
+    *
+    * @return string Always 'custom'.
+    */
    public function getType()
    {
       return 'custom';
    }
 
 
+   /**
+    * Queries unoptimised custom items and enqueues them for bulk optimisation.
+    *
+    * @return array Preparation result with item counts and overlap flags.
+    */
    protected function prepare()
    {
       $items = $this->queryItems();
@@ -47,6 +72,11 @@ class CustomQueue extends Queue
       return $this->prepareItems($items);
    }
 
+   /**
+    * Queries successfully optimised custom items and enqueues them for bulk restore.
+    *
+    * @return array Preparation result with item counts and overlap flags.
+    */
    protected function prepareBulkRestore()
    {
       $items = $this->queryOptimizedItems();
@@ -57,108 +87,124 @@ class CustomQueue extends Queue
    // Not implemented, for abstract.
    protected function prepareUndoAI()
    {
-       return []; 
+       return [];
    }
 
+   /**
+    * Initialises a new bulk run, applying any provided filters before delegating to the parent.
+    *
+    * @param array $args Optional arguments including a 'filters' key for date/ID range filters.
+    * @return array The merged options passed to the parent bulk initialisation.
+    */
    public function createNewBulk($args = [])
    {
       if (isset($args['filters']))
       {
-         $this->addFilters($args['filters']); 
-         unset($args['filters']); 
-      } 
-       
+         $this->addFilters($args['filters']);
+         unset($args['filters']);
+      }
+
       $options = array_merge($this->options, $args);
-      
-      // Parent should save options as well. 
-       return parent::createNewBulk($options); 
+
+      // Parent should save options as well.
+       return parent::createNewBulk($options);
    }
 
    /*
    protected function addFilters($filters)
    {
 
-      global $wpdb; 
-      $table = $wpdb->prefix . 'shortpixel_meta'; 
+      global $wpdb;
+      $table = $wpdb->prefix . 'shortpixel_meta';
       list($start_date, $end_date) = parent::addFilters($filters);
 
-      
+
 
       if (isset($start_date) && false !== $start_date)
       {
-         $startDateSQL = 'ts_added <= %s '; 
+         $startDateSQL = 'ts_added <= %s ';
          $prepare[] = $start_date->format("Y-m-d H:i:s");
       }
       if (isset($end_date) && false !== $end_date)
       {
-         $endDateSQL = 'ts_added >= %s'; 
+         $endDateSQL = 'ts_added >= %s';
          $prepare[] = $end_date->format("Y-m-d H:i:s");
       }
 
-      $get_start_id = $get_end_id = false; 
+      $get_start_id = $get_end_id = false;
       if (isset($startDateSQL) && isset($endDateSQL))
       {
-          $dateSQL = $startDateSQL . ' and ' . $endDateSQL; 
-          $get_start_id = true; 
-          $get_end_id = true; 
+          $dateSQL = $startDateSQL . ' and ' . $endDateSQL;
+          $get_start_id = true;
+          $get_end_id = true;
       }
       elseif (isset($startDateSQL) && false === isset($endDateSQL))
       {
           $dateSQL = $startDateSQL;
-          $get_start_id = true; 
+          $get_start_id = true;
       }
       elseif (false === isset($startDateSQL) && isset($endDateSQL))
       {
-          $dateSQL = $endDateSQL; 
-          $get_end_id = true; 
+          $dateSQL = $endDateSQL;
+          $get_end_id = true;
       }
 
 
-      $sql = 'SELECT id from '  . $table . ' WHERE ' . $dateSQL; 
+      $sql = 'SELECT id from '  . $table . ' WHERE ' . $dateSQL;
 
 
       if (true === $get_start_id)
       {
-          $startSQL = $sql . '  ORDER BY ts_added DESC LIMIT 1'; 
-          $startSQL = $wpdb->prepare($startSQL, $prepare); 
-          $start_id = $wpdb->get_var($startSQL); 
+          $startSQL = $sql . '  ORDER BY ts_added DESC LIMIT 1';
+          $startSQL = $wpdb->prepare($startSQL, $prepare);
+          $start_id = $wpdb->get_var($startSQL);
           if (is_null($start_id))
           {
-              $start_id = -1; 
+              $start_id = -1;
           }
-          $this->options['filters']['start_id'] = $start_id; 
+          $this->options['filters']['start_id'] = $start_id;
       }
 
       if (true === $get_end_id)
       {
-         $endSQL = $sql . '  ORDER BY ts_added ASC LIMIT 1'; 
-         $endSQL = $wpdb->prepare($endSQL, $prepare); 
-         $end_id = $wpdb->get_var($endSQL); 
+         $endSQL = $sql . '  ORDER BY ts_added ASC LIMIT 1';
+         $endSQL = $wpdb->prepare($endSQL, $prepare);
+         $end_id = $wpdb->get_var($endSQL);
          if (is_null($end_id))
          {
-             $end_id = -1; 
+             $end_id = -1;
          }
-         $this->options['filters']['end_id'] = $end_id; 
+         $this->options['filters']['end_id'] = $end_id;
       }
-      
+
 
    } */
 
+   /**
+    * Returns the table and field information required to build date-range filter queries.
+    *
+    * @return array Associative array with keys: date_field, base_query, base_prepare.
+    */
    protected function getFilterQueryData()
    {
-      global $wpdb; 
-      $table = $wpdb->prefix . 'shortpixel_meta'; 
+      global $wpdb;
+      $table = $wpdb->prefix . 'shortpixel_meta';
 
       return [
-          'date_field' => 'ts_added', 
+          'date_field' => 'ts_added',
           'base_query' => 'SELECT ID FROM ' . $table . ' WHERE ',
-          'base_prepare' => [], 
-          
+          'base_prepare' => [],
+
       ];
    }
 
 
-
+   /**
+    * Queries shortpixel_meta for custom items that have not yet been successfully optimised,
+    * respecting active folders, optional ID range filters and the enqueue limit.
+    *
+    * @return array Array of integer item IDs ready for enqueuing.
+    */
    private function queryItems()
    {
      $last_id = $this->getStatus('last_item_id');
@@ -167,10 +213,10 @@ class CustomQueue extends Queue
      $items = array();
      $fastmode = apply_filters('shortpixel/queue/fastmode', false);
 
-     $options = $this->getOptions(); 
+     $options = $this->getOptions();
 
-     // Filters. 
-    $start_id = $end_id = null; 
+     // Filters.
+    $start_id = $end_id = null;
     if (isset($options['filters']))
     {
        if (isset($options['filters']['start_id']))
@@ -185,7 +231,7 @@ class CustomQueue extends Queue
 
     if (-1 === $start_id || -1 === $end_id)
     {
-      return []; 
+      return [];
     }
 
      global $wpdb;
@@ -225,8 +271,8 @@ class CustomQueue extends Queue
 
      if (false === is_null($end_id))
      {
-       $sql .= ' and id >= %d '; 
-       $prepare[] = intval($end_id); 
+       $sql .= ' and id >= %d ';
+       $prepare[] = intval($end_id);
      }
 
 
@@ -244,6 +290,12 @@ class CustomQueue extends Queue
      return array_filter($items);
    }
 
+   /**
+    * Queries shortpixel_meta for items that have already been successfully optimised,
+    * used when preparing a bulk restore operation.
+    *
+    * @return array Array of integer item IDs ready for enqueuing.
+    */
    private function queryOptimizedItems()
    {
      global $wpdb;

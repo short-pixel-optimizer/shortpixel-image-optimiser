@@ -74,7 +74,7 @@ class Offloader
 	{
 		if (is_null(self::$offload_instance)) {
 			$this->offloadName = 'wp-offload';
-			self::$offload_instance = new wpOffload($as3cf);
+			self::$offload_instance = wpOffload::getInstance($as3cf);
 		} else {
 			Log::addError('Instance is not null - other virtual component has loaded! (' . $this->offloadName . ')');
 		}

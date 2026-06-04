@@ -51,11 +51,14 @@ abstract class BackupModel
     public function __construct(BackupController $controller, ImageModel $mediaItem)
     {
         $this->controller = $controller; 
-        $this->mediaItem = clone $mediaItem;       // Read-ony copy, no referencing here. 
-    
-        $this->isConverted = $this->mediaItem->getMeta()->convertMeta()->isConverted();
-        //$this->convertMeta = clone $this->mediaItem->getMeta()->convertMeta(); // Cache this Readonly, because restore wipes data .
+        $this->loadMediaItem($mediaItem);
+    }
 
+    // Load Top-item of ImageModel structure only!  Needs the convertMeta. Public function because converter needs to be able to reset (clone)
+    public function loadMediaItem(ImageModel $mediaItem)
+    {
+        $this->mediaItem = clone $mediaItem;       // Read-ony copy, no referencing here. 
+        $this->isConverted = $this->mediaItem->getMeta()->convertMeta()->isConverted();
     }
 
     public function __get($name)
@@ -105,9 +108,17 @@ abstract class BackupModel
         // Assertion here that for convert-types, there is no scaled- happening - Wrong! 
         
         $mainFile = $this->mediaItem;
+        if (true === $mainFile->isScaled())
+        { 
+             $mainFileBase = $this->mediaItem->getOriginalFile()->getFileBase(); 
+        }
+        else
+        {
+            $mainFileBase = $this->mediaItem->getFileBase();
+        }
         
-
-		if (true === $this->isConverted) {
+        // Cannot test here for isConverted, because conversion could be in process and needs to correctly check ReplacementImageBase
+		//if (true === $this->isConverted) {
         
             $extension = $mainFile->getMeta()->convertMeta()->getFileFormat();
             $replaceBase = $mainFile->getMeta()->convertMeta()->getReplacementImageBase(); 
@@ -118,7 +129,7 @@ abstract class BackupModel
                // $imageBase = $mainFile->getMeta()->convertMeta()->getReplacementImageBase(); 
                 //$extension = $mainFile->getMeta()->convertMeta()->getFileFormat();
 
-                if (strlen(trim($replaceBase)) > 0)
+                if (false === is_null($replaceBase) && strlen(trim($replaceBase)) > 0)
                 {
                    //  $imageBase = $sourceFile->getFileBase(); 
                    if ($is_main_file)
@@ -127,22 +138,22 @@ abstract class BackupModel
                     }
                     else
                     {
-                        $backupFileName = str_replace($mainFile->getFileBase(), $replaceBase, $sourceFile->getFileName());
+                        $backupFileName = str_replace($mainFileBase, $replaceBase, $sourceFile->getFileName());
                     }
                 }
-                elseif (strlen($extension) > 0)
+                elseif (false === is_null($extension) && strlen($extension) > 0)
                 {
                     $backupFileName = $sourceFile->getFileBase() . '.' . $extension; 
                 }
-                else  // This probably should not happen.
+                else  // No replaceBase. 
                 {
                     $backupFileName = $sourceFile->getFileName();
                 }
-		}
-        else
+		//}
+        /*else
         {
             $backupFileName = $sourceFile->getFileName();
-        }
+        } */
 
         return $backupFileName; 
 	}

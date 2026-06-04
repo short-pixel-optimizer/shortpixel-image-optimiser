@@ -93,6 +93,11 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 	public function getRetina()
 	{
 		if ($this->is_virtual()) {
+			// This function needs an hard check on file exists, which might not be wanted. 
+			// Moved - Why invoke the translate, if it's going to be false anyhow?
+			if (false === \wpSPIO()->env()->useVirtualHeavyFunctions()) {
+				return false;
+			}
 			$fs = \wpSPIO()->filesystem();
 			$filepath = apply_filters('shortpixel/file/virtual/translate', $this->getFullPath(), $this);
 			$virtualFile = $fs->getFile($filepath);
@@ -101,10 +106,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 			$filepath = (string) $virtualFile->getFileDir();
 			$extension = $virtualFile->getExtension();
 
-			// This function needs an hard check on file exists, which might not be wanted.
-			if (false === \wpSPIO()->env()->useVirtualHeavyFunctions()) {
-				return false;
-			}
+
 		} else {
 			$filebase = $this->getFileBase();
 			$filepath = (string) $this->getFileDir();

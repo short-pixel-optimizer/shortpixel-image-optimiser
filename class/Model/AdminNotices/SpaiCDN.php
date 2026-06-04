@@ -5,12 +5,27 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
+/**
+ * Admin notice warning that ShortPixel Adaptive Images and CDN delivery
+ * should not be active at the same time.
+ *
+ * @package ShortPixel\Model\AdminNotices
+ */
 class SpaiCDN extends \ShortPixel\Model\AdminNoticeModel
 {
 
+	/** @var string Unique notice key. */
 	protected $key = 'MSG_SPAICDN';
+
+	/** @var string Severity level for this notice. */
   protected $errorLevel = 'error';
 
+	/**
+	 * Checks whether the notice should be triggered.
+	 * Returns true when both the SPAI plugin is active and CDN delivery is enabled.
+	 *
+	 * @return bool True to show the notice, false to suppress it.
+	 */
 	protected function checkTrigger()
 	{
 		  if (\wpSPIO()->env()->plugin_active('spai') && \wpSPIO()->settings()->useCDN == true)
@@ -20,6 +35,12 @@ class SpaiCDN extends \ShortPixel\Model\AdminNoticeModel
       return false;
 	}
 
+	/**
+	 * Checks whether the notice should be reset.
+	 * Returns true once either SPAI is deactivated or CDN delivery is disabled.
+	 *
+	 * @return bool True to reset the notice, false to keep it.
+	 */
   protected function checkReset()
   {
     if (\wpSPIO()->env()->plugin_active('spai') && \wpSPIO()->settings()->useCDN == true)
@@ -31,6 +52,12 @@ class SpaiCDN extends \ShortPixel\Model\AdminNoticeModel
   }
 
 // @todo This message is not properly stringF'ed.
+	/**
+	 * Builds the HTML message explaining the SPAI/CDN conflict and providing
+	 * a one-click button to deactivate ShortPixel Adaptive Images.
+	 *
+	 * @return string HTML message string.
+	 */
 	protected function getMessage()
 	{
 		$settings = \wpSPIO()->settings();

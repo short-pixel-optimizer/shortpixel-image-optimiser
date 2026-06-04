@@ -17,10 +17,28 @@ use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 use ShortPixel\Notices\NoticeController as Notices;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
 
-
+/**
+ * Handles plugin lifecycle operations: activation, deactivation, uninstallation,
+ * and database schema management.
+ *
+ * All methods are static and are typically invoked from WordPress register_activation_hook(),
+ * register_deactivation_hook(), and similar lifecycle callbacks.
+ *
+ * @package ShortPixel\Helper
+ */
 class InstallHelper
 {
 
+	/**
+	 * Runs all setup steps needed when the plugin is activated.
+	 *
+	 * Calls deactivatePlugin() first to ensure a clean state, then conditionally
+	 * writes WebP/AVIF rewrite rules to .htaccess, creates or updates database tables,
+	 * resets stale admin notices, fires the settings onActivate hook, installs the
+	 * media queue table, and flushes the object cache.
+	 *
+	 * @return void
+	 */
 	public static function activatePlugin()
 	{
 		self::deactivatePlugin();
@@ -47,6 +65,15 @@ class InstallHelper
 		wp_cache_flush();
 	}
 
+	/**
+	 * Cleans up runtime state when the plugin is deactivated.
+	 *
+	 * Fires the settings onDeactivate hook, removes .htaccess rewrite rules on
+	 * Apache servers, deletes the plugin log file, removes all ShortPixel transients
+	 * from the database, resets statistics, and stops scheduled cron events.
+	 *
+	 * @return void
+	 */
 	public static function deactivatePlugin()
 	{
 
@@ -89,6 +116,14 @@ class InstallHelper
 		CronController::getInstance()->onDeactivate();
 	}
 
+	/**
+	 * Removes persistent plugin data during an uninstall.
+	 *
+	 * Delegates queue and API key removal to their respective controllers, then
+	 * deletes known transients stored by the plugin.
+	 *
+	 * @return void
+	 */
 	public static function uninstallPlugin()
 	{
 		QueueController::uninstallPlugin();
@@ -100,6 +135,16 @@ class InstallHelper
 		delete_transient('quotaData');
 	}
 
+	/**
+	 * Performs a complete removal of all plugin data (hard uninstall).
+	 *
+	 * Verifies the 'remove-all' nonce, then runs deactivatePlugin(),
+	 * uninstallPlugin(), BulkController cleanup, option deletion, .htaccess
+	 * cleanup, custom database table drops, backup folder deletion, and finally
+	 * deactivates the plugin itself. Not recommended for normal use.
+	 *
+	 * @return void
+	 */
 	// Removes everything  of SPIO 5.x .  Not recommended.
 	public static function hardUninstall()
 	{
@@ -135,6 +180,14 @@ class InstallHelper
 	}
 
 
+	/**
+	 * Deactivates a conflicting third-party plugin via a nonce-verified GET request.
+	 *
+	 * Reads the target plugin slug from $_GET['plugin'], calls deactivate_plugins(),
+	 * then redirects back to the referring page.
+	 *
+	 * @return void Terminates execution via wp_safe_redirect() and die().
+	 */
 	public static function deactivateConflictingPlugin()
 	{
 		if (! isset($_GET['_wpnonce']) || ! wp_verify_nonce(sanitize_key($_GET['_wpnonce']), 'sp_deactivate_plugin_nonce')) {
@@ -154,7 +207,9 @@ class InstallHelper
 
 	/**
 	 * Check if TableName exists
-	 * @param $tableName The Name of the Table without Prefix.
+	 *
+	 * @param string $tableName The Name of the Table without Prefix.
+	 * @return bool True if the table exists, false otherwise.
 	 */
 	public static function checkTableExists($tableName)
 	{
@@ -174,6 +229,13 @@ class InstallHelper
 	}
 
 
+	/**
+	 * Creates or upgrades all custom database tables used by the plugin.
+	 *
+	 * Runs dbDelta() for each table definition and then ensures required indexes exist.
+	 *
+	 * @return void
+	 */
 	public static function checkTables()
 	{
 		global $wpdb;
@@ -187,6 +249,14 @@ class InstallHelper
 		self::checkIndexes();
 	}
 
+	/**
+	 * Verifies that all required database indexes exist and creates any that are missing.
+	 *
+	 * Iterates over a predefined map of table names and their expected indexes,
+	 * issuing CREATE INDEX statements for any that are absent.
+	 *
+	 * @return void
+	 */
 	private static function checkIndexes()
 	{
 		global $wpdb;
@@ -228,6 +298,14 @@ class InstallHelper
 		}
 	}
 
+	/**
+	 * Drops all custom plugin database tables if they exist.
+	 *
+	 * Removes shortpixel_folders, shortpixel_meta, shortpixel_postmeta, and
+	 * shortpixel_aipostmeta tables. Used during hard uninstall.
+	 *
+	 * @return void
+	 */
 	private static function removeTables()
 	{
 		global $wpdb;
@@ -249,6 +327,13 @@ class InstallHelper
 		}
 	}
 
+	/**
+	 * Returns the CREATE TABLE SQL for the shortpixel_folders table.
+	 *
+	 * Stores custom folder entries that the plugin monitors for optimizable images.
+	 *
+	 * @return string SQL statement string suitable for dbDelta().
+	 */
 	private static function getFolderTableSQL()
 	{
 		global $wpdb;
@@ -270,6 +355,13 @@ class InstallHelper
         ) $charsetCollate;";
 	}
 
+	/**
+	 * Returns the CREATE TABLE SQL for the shortpixel_meta table.
+	 *
+	 * Stores optimization metadata for custom media (non-Media Library) images.
+	 *
+	 * @return string SQL statement string suitable for dbDelta().
+	 */
 	private static function getMetaTableSQL()
 	{
 		global $wpdb;
@@ -296,11 +388,18 @@ class InstallHelper
           message varchar(255),
           ts_added timestamp,
           ts_optimized timestamp,
-					extra_info LONGTEXT,
+				extra_info LONGTEXT,
           PRIMARY KEY sp_id (id)
         ) $charsetCollate;";
 	}
 
+	/**
+	 * Returns the CREATE TABLE SQL for the shortpixel_postmeta table.
+	 *
+	 * Stores per-size optimization metadata for WordPress Media Library attachments.
+	 *
+	 * @return string SQL statement string suitable for dbDelta().
+	 */
 	private static function getPostMetaSQL()
 	{
 		global $wpdb;
@@ -326,22 +425,30 @@ class InstallHelper
 		return $sql;
 	}
 
+	/**
+	 * Returns the CREATE TABLE SQL for the shortpixel_aipostmeta table.
+	 *
+	 * Stores AI-generated SEO metadata (alt text, captions, descriptions, etc.)
+	 * associated with Media Library attachments.
+	 *
+	 * @return string SQL statement string suitable for dbDelta().
+	 */
 	private static function getAIPostSQL()
 	{
-		global $wpdb; 
+		global $wpdb;
 		$charsetCollate = $wpdb->get_charset_collate();
 		$prefix = $wpdb->prefix;
 
 		$sql = "CREATE TABLE {$prefix}shortpixel_aipostmeta (
-				id bigint unsigned not null AUTO_INCREMENT, 
+				id bigint unsigned not null AUTO_INCREMENT,
 				post_type tinyint default 1,
-				attach_id bigint unsigned NOT NULL,  
-				original_data text, 
-				generated_data text, 
-				old_filename varchar(300), 
+				attach_id bigint unsigned NOT NULL,
+				original_data text,
+				generated_data text,
+				old_filename varchar(300),
 				new_filename varchar(300),
-				status int, 
-				tsUpdated timestamp, 
+				status int,
+				tsUpdated timestamp,
 				PRIMARY KEY id (id)
 		) $charsetCollate";
 
