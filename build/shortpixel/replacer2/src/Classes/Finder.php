@@ -19,7 +19,7 @@ class Finder
 		{
 
 			$defaults = [
-				'callback' => array($this, 'doReplaceQuery'), // placeholder, should prolly communicate with replacer class 
+				'callback' => null, // placeholder, should prolly communicate with replacer class 
 				'base_url' => false, 
 				'return_data' => [], 
 				
@@ -39,20 +39,27 @@ class Finder
 
 			$defaults = [
 				'post_ids' => [], 
+				'post_status' => ['publish', 'future', 'draft', 'pending', 'private'],
 			]; 
 
+			$args = wp_parse_args($args, $defaults);
 
 			$base_url = $this->base_url;
 			$prepare = []; 
 			/* Search and replace in WP_POSTS */
 			// Removed $wpdb->remove_placeholder_escape from here, not compatible with WP 4.8
-	
+
+			$post_statuses = is_array($args['post_status']) ? $args['post_status'] : [$args['post_status']];
+			if (count($post_statuses) === 0) {
+				$post_statuses = $defaults['post_status'];
+			}
+
+			$status_placeholders = implode(', ', array_fill(0, count($post_statuses), '%s'));
 			$posts_sql = 
-				"SELECT ID as post_id, post_content as content FROM $wpdb->posts WHERE post_status in ('publish', 'future', 'draft', 'pending', 'private')
+				"SELECT ID as post_id, post_content as content FROM $wpdb->posts WHERE post_status IN ($status_placeholders)
 					AND post_content LIKE %s"; 
 				
-			//);
-			$prepare[]  = '%' . $base_url . '%'; 
+			$prepare = array_merge($post_statuses, ['%' . $base_url . '%']);
 
 			if (is_array($args['post_ids']) && count($args['post_ids']) > 0) {
 				$post_ids = $args['post_ids']; 
@@ -69,7 +76,10 @@ class Finder
 	
 
 			// @todo before this filter results?  pass results to some worker
-			call_user_func_array($this->callback, ['results' => $rs, 'args' => $this->return_data]);
+			if (false === is_null($this->callback) && true === is_callable($this->callback) )
+			{
+				call_user_func_array($this->callback, ['results' => $rs, 'args' => $this->return_data]);
+			}
 
 			return $rs;
 		}

@@ -319,24 +319,55 @@ class OptimizeAiController extends OptimizerBase
 
         $aiData['replace_filebase'] = $aiData['original_filebase'];
 
+        // Block this item to prevent a double process on this. 
+        $this->blockItem($qItem);
+
         $results = $this->replaceImageAttributes($qItem, $aiData); 
         $resultCount = count($results); 
+        $imageModel = $qItem->imageModel;
 
-       /* Feature off for now - This DOES NOT YET work  */;
         // If the file was just uploaded, assume it's not already widely linked and doesn't need replacing / symlinking 
         // ( Maybe just replacing? )
         // Generic number of strlen here. Disallow filename not to be very short, because because. 
         if (isset($aiData['filename']) && is_string($aiData['filename']) && strlen($aiData['filename']) > 5) // ?? 
         {
-            $args = [
-           //     'dry_run' => true,  // @todo TEST dry run - doesn't perform any operations.
-                'recent_upload' => $qItem->data()->recent_upload, 
-                'imagePostCount' => $resultCount, // Amount of records this image is used in.
-            ];
-            $this->replaceFiles($qItem, $aiData['filename'], $args);
+            // @todo This and the ReplaceAtttributes is similar code + Replacer2 doesn't reset at all due to getINstance implementation
+            $currentFileBase = ($imageModel->isScaled()) ? $imageModel->getOriginalFile()->getFileBase() : $imageModel->getFileBase();
+
+             $urls = $qItem->data()->urls; 
+             if (is_null($urls)) // can be empty on restore action 
+             {
+                 $url = $qItem->imageModel->getUrl(); 
+             }
+             else 
+             {
+                $url = $urls[0];
+             }
+
+             $replacer2 = \ShortPixel\Replacer\Replacer::getInstance(); 
+             $setup = $replacer2->Setup(); 
+             $setup->forSearch()->URL()->addData($url);
+             
+             $base_url = $setup->forSearch()->URL()->getBaseURL();
+             $post_ids = $this->getWpmlLanguagePostIds($qItem->item_id);
+     
+             $finder = $replacer2->Finder(['base_url' => $base_url]); 
+     
+            $results = $finder->posts(['post_ids' => $post_ids, 'post_status' => ['publish']]);
+
+
+            if ($currentFileBase !== $aiData['filename'])
+            {
+                $args = [
+               //     'dry_run' => true,  // @todo TEST dry run - doesn't perform any operations.
+                    'recent_upload' => $qItem->data()->recent_upload, 
+                    'imagePostCount' => count($results), // Amount of records this image is used in.
+                ];
+
+                $this->replaceFiles($qItem, $aiData['filename'], $args);
+            }
         }
 
-        $imageModel = $qItem->imageModel;
         $qItem->addResult(['improvements' => $imageModel->getImprovements()]); // Improvements for bulk UX. 
 
         $this->addPreview($qItem); // Preview ( image ) for bulk UX 
@@ -349,6 +380,8 @@ class OptimizeAiController extends OptimizerBase
 
         // For Bulk, add labels to display in the result set. Default is same as data, can be overridden . Used in Bulk JS
         $qItem->addResult(['aiDataLabels' => $this->getDataLabels()  ]);
+
+        $this->unBlockItem($qItem);
 
         $this->finishItemProcess($qItem);
         return;
@@ -676,7 +709,6 @@ class OptimizeAiController extends OptimizerBase
         
         
   }
-
 
   // @todo This might be returned in multiple formats / post data / postmeta data?  Public because of callback
   /** This is the callback for Finder results for replacing attributes on the Images  
