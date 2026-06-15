@@ -36,8 +36,7 @@ class AiController extends RequestManager
 
     public function __construct()
     {
-     //$this->main_url = 'https://capi-gpt.shortpixel.com/';
-     $this->main_url = 'https://devapigpt.shortpixel.com/';
+     $this->main_url = 'https://capi-gpt.shortpixel.com/';
     }
 
     /**
@@ -97,17 +96,16 @@ class AiController extends RequestManager
         $requestBody['id'] = $qItem->data()->remote_id;
       }
 
-
       $token = get_transient($this->auth_token);
-      // This still doesn't work / may 2026
-      /*if ($token !== false)
+
+    /*  if ($token !== false)
       {
-         $auth = $token;
+         $auth = 'Bearer ' . $token;
       }
       else
-      { */
+      {  */
         $auth = 'ApiKey ' . $keyControl->forceGetApiKey();
-      //}
+     // }
 
       // Should always check the results
       $requestParameters = [
@@ -137,7 +135,7 @@ class AiController extends RequestManager
     protected function handleResponse(QueueItem $qItem, $response)
     {
        $apiData = $this->parseResponse($response);//get the actual response from API, its an array
-       Log::addInfo('HAndle AI Response! ', $apiData);
+       Log::addInfo('HAndle AI Response! ', $response);
 
         // List all the random crap that might return.
         $id = isset($apiData['id']) ? intval($apiData['id']) : false;

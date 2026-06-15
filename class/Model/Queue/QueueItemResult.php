@@ -10,7 +10,8 @@ if (!defined('ABSPATH')) {
 use JsonSerializable;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
-class QueueItemResult implements JsonSerializable
+// class QueueItemResult implements JsonSerializable
+class QueueItemResult
 {
 
    protected $item_id; 
