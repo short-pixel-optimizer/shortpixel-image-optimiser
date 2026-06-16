@@ -160,7 +160,6 @@ class ActionController extends OptimizerBase
             $qStatus->numitems = 1; 
       }
 
-      Log::addTEmp('Returning actoin: ' . $action, $qStatus);
 
       return $qStatus;
   //  }
