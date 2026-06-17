@@ -261,19 +261,21 @@ class OptimizeAiController extends OptimizerBase
         'caption' => ['prefix' => 'ai_caption_prefix', 'postfix' => 'ai_caption_postfix'],
         'description' => ['prefix' => 'ai_description_prefix', 'postfix' => 'ai_description_postfix'],
         'post_title' => ['prefix' => 'ai_post_title_prefix', 'postfix' => 'ai_post_title_postfix'],
-        'filebase' => ['prefix' => 'ai_filename_prefix', 'postfix' => 'ai_filename_postfix'],
+        'filename' => ['prefix' => 'ai_filename_prefix', 'postfix' => 'ai_filename_postfix'],
     ];
 
     foreach ($prefixPostfixMap as $field => $affixes) {
         if (isset($aiData[$field]) && !empty($aiData[$field])) {
+
             $prefix = $settings->{$affixes['prefix']};
             $postfix = $settings->{$affixes['postfix']};
+            $spacer = ($field === 'filename') ? '' : ' ';
             
             if (!empty($prefix)) {
-                $aiData[$field] = $prefix . ' ' . $aiData[$field];
+                $aiData[$field] = $prefix . $spacer . $aiData[$field];
             }
             if (!empty($postfix)) {
-                $aiData[$field] = $aiData[$field] . ' ' . $postfix;
+                $aiData[$field] = $aiData[$field] . $spacer . $postfix;
             }
         }
     }
@@ -359,7 +361,7 @@ class OptimizeAiController extends OptimizerBase
             if ($currentFileBase !== $aiData['filename'])
             {
                 $args = [
-               //     'dry_run' => true,  // @todo TEST dry run - doesn't perform any operations.
+                    //'dry_run' => true,  // @todo TEST dry run - doesn't perform any operations.
                     'recent_upload' => $qItem->data()->recent_upload, 
                     'imagePostCount' => count($results), // Amount of records this image is used in.
                 ];
@@ -626,8 +628,8 @@ class OptimizeAiController extends OptimizerBase
       $replacer = new Replacer(); 
       $replacer->setSource($source_url);
       $replacer->setTarget($target_url); 
-      $replacer->setSourceMeta($searchArray); 
-      $replacer->setTargetMeta($replaceArray);
+      $replacer->addURLArray($searchArray, $replaceArray); 
+      
       
       if (false === $args['dry_run'])
       {

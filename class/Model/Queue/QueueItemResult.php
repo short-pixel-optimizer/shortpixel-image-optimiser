@@ -10,8 +10,8 @@ if (!defined('ABSPATH')) {
 use JsonSerializable;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
-// class QueueItemResult implements JsonSerializable
-class QueueItemResult
+// class QueueItemResult 
+class QueueItemResult implements JsonSerializable
 {
 
    protected $item_id; 
@@ -82,7 +82,7 @@ class QueueItemResult
          }
    }
 
-   public function jsonSerialize()
+   public function jsonSerialize() : object
    {
         return $this->forReturn();
    }

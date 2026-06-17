@@ -447,6 +447,7 @@ class QueueItem
 
       // Former securi function, add timestamp to all URLS, for cache busting.
       $urls = $this->timestampURLS(array_values($urls), $imageModel->get('id'));
+      // @todo This filter name should be changed to the new standard. 
       $this->data->urls = apply_filters('shortpixel_image_urls', $urls, $item_id);
 
       if (count($optimizeData['params']) > 0) {
