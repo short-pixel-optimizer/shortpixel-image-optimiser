@@ -570,7 +570,13 @@ class AiDataModel
         $attach_id = $this->attach_id;
         $current_alt = get_post_meta($attach_id, '_wp_attachment_image_alt', true);
         $post = get_post($attach_id);
-
+        
+        $filename = get_attached_file($attach_id);
+        if (false !== $filename)
+        {
+            $filename = basename($filename);
+        }
+        
         $current_description = $post->post_content;
         $current_caption = $post->post_excerpt;
         $current_post_title = $post->post_title;
@@ -586,6 +592,7 @@ class AiDataModel
         $this->current['description'] = $current_description;
         $this->current['caption'] = $current_caption;
         $this->current['post_title'] = $current_post_title;
+        $this->current['filename'] = $filename;
 
         $this->current_is_set = true;
 

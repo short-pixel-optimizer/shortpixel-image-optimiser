@@ -265,7 +265,7 @@ class OptimizeAiController extends OptimizerBase
     ];
 
     foreach ($prefixPostfixMap as $field => $affixes) {
-        if (isset($aiData[$field]) && !empty($aiData[$field])) {
+        if (isset($aiData[$field]) && !empty($aiData[$field]) && $aiData[$field] !== -3) {
 
             $prefix = $settings->{$affixes['prefix']};
             $postfix = $settings->{$affixes['postfix']};
@@ -339,7 +339,15 @@ class OptimizeAiController extends OptimizerBase
              $urls = $qItem->data()->urls; 
              if (is_null($urls)) // can be empty on restore action 
              {
-                 $url = $qItem->imageModel->getUrl(); 
+                $imageModel = $qItem->imageModel;
+                if (true === $imageModel->isScaled())
+                {
+                     $url = $imageModel->getOriginalFile()->getURL();
+                }
+                else
+                {
+                    $url = $qItem->imageModel->getUrl(); 
+                }
              }
              else 
              {
@@ -357,7 +365,8 @@ class OptimizeAiController extends OptimizerBase
      
             $results = $finder->posts(['post_ids' => $post_ids, 'post_status' => ['publish']]);
 
-
+            // @todo Probably this check needs to go way up before the whole query on Posts for the URL
+            // @todo2 - Finder queryies both post_id and content and should probably only query one of them.
             if ($currentFileBase !== $aiData['filename'])
             {
                 $args = [
@@ -440,7 +449,15 @@ class OptimizeAiController extends OptimizerBase
              $urls = $qItem->data()->urls; 
              if (is_null($urls)) // can be empty on restore action 
              {
-                 $url = $qItem->imageModel->getUrl(); 
+                $imageModel = $qItem->imageModel;
+                if (true === $imageModel->isScaled())
+                {
+                     $url = $imageModel->getOriginalFile()->getURL();
+                }
+                else
+                {
+                    $url = $qItem->imageModel->getUrl(); 
+                }
              }
              else 
              {

@@ -444,26 +444,24 @@ if (! defined('ABSPATH')) {
       <div class='current result_info'>
         <h3><?php _e('Current SEO Data', 'shortpixel-image-optimiser'); ?></h3>
         <ul>
-      <!--    <li <label><?php _e('Image filemame', 'shortpixel-image-optimiser'); ?>:</label> <span class='filename'></span>
-          </li> -->
+          
           <li><label><?php _e('Image ALT tag', 'shortpixel-image-optimiser'); ?>:</label> <span class='alt'></span></li>
           <li><label><?php _e('Image caption', 'shortpixel-image-optimiser'); ?>:</label> <span class='caption'></span></li>
-          <li><label><?php _e('Image description', 'shortpixel-image-optimiser'); ?>:</label> <span class='description'></span>
-          <li><label><?php _e('Image Title', 'shortpixel-image-optimiser'); ?>:</label> <span class='post_title'></span>
-
-          </li>
+          <li><label><?php _e('Image description', 'shortpixel-image-optimiser'); ?>:</label> <span class='description'></span></li>
+          <li><label><?php _e('Image Title', 'shortpixel-image-optimiser'); ?>:</label> <span class='post_title'></span></li>
+          <li><label><?php _e('Image filename', 'shortpixel-image-optimiser'); ?>:</label> <span class='filename'></span></li>
         </ul>
       </div>
       <div class='icon'><i class='shortpixel-icon chevron rotate_right'></i>&nbsp;</div>
       <div class='result result_info'>
         <h3><?php _e('Generated AI Image SEO data', 'shortpixel-image-optimiser'); ?></h3>
         <ul>
-<!--          <li><label><?php _e('Image filemame', 'shortpixel-image-optimiser'); ?>:</label> <span class='filename'></span>
-          </li> -->
+         
           <li><label><?php _e('Image ALT tag', 'shortpixel-image-optimiser'); ?>:</label> <span class='alt'></span></li>
           <li><label><?php _e('Image caption', 'shortpixel-image-optimiser'); ?>:</label> <span class='caption'></span></li>
-          <li><label><?php _e('Image description', 'shortpixel-image-optimiser'); ?>:</label> <span class='description'></span>
-          <li><label><?php _e('Image Title', 'shortpixel-image-optimiser'); ?>:</label> <span class='post_title'></span>
+          <li><label><?php _e('Image description', 'shortpixel-image-optimiser'); ?>:</label> <span class='description'></span></li>
+          <li><label><?php _e('Image Title', 'shortpixel-image-optimiser'); ?>:</label> <span class='post_title'></span></li>
+          <li><label><?php _e('Image filename', 'shortpixel-image-optimiser'); ?>:</label> <span class='filename'></span></li>
         </ul>
       </div>
 
