@@ -38,6 +38,8 @@ class Finder
 			global $wpdb;
 
 			$defaults = [
+				'post_fields' => ['ID', 'post_content'], 
+				'post_results' => ['post_id', 'content'], 
 				'post_ids' => [], 
 				'post_status' => ['publish', 'future', 'draft', 'pending', 'private'],
 			]; 
@@ -54,9 +56,20 @@ class Finder
 				$post_statuses = $defaults['post_status'];
 			}
 
+			$select = ''; 
+			foreach($args['post_fields'] as $index => $field)
+			{
+				$select .=  $field . ' '; 
+				if (isset($args['post_results'][$index]))
+				{
+					$select .= ' as ' . $args['post_results'][$index]; 
+				}
+				
+			}
+
 			$status_placeholders = implode(', ', array_fill(0, count($post_statuses), '%s'));
 			$posts_sql = 
-				"SELECT ID as post_id, post_content as content FROM $wpdb->posts WHERE post_status IN ($status_placeholders)
+				"SELECT " . $select . "  FROM $wpdb->posts WHERE post_status IN ($status_placeholders)
 					AND post_content LIKE %s"; 
 				
 			$prepare = array_merge($post_statuses, ['%' . $base_url . '%']);
