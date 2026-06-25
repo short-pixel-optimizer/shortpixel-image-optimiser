@@ -764,6 +764,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 					}
 					else {
 						$originalSize = $this->getFileSize();
+            Log::addTemp('OriginalSize : ' . $originalSize);
 					}
 
           $stati = [ApiController::STATUS_UNCHANGED, ApiController::STATUS_OPTIMIZED_BIGGER, ApiController::STATUS_NOT_COMPATIBLE];
@@ -771,6 +772,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
           {
             $copyok = true;
             $optimizedSize = $this->getFileSize();
+            
             $tempFile = null;
           }
           else
@@ -1029,6 +1031,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 					$this->width = null;
 					$this->height = null;
 					$this->mime = null;
+          $this->filesize = null;
 				}
 
         // Reset statii

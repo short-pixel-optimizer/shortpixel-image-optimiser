@@ -37,7 +37,6 @@ class wpOffload
 	private static $offloadPrevented = array();
 
 	private static $instance; 
-	private $pid; 
 
 	// if might have to do these checks many times for each thumbnails, keep it fastish.
 	//protected $retrievedCache = array();
@@ -45,7 +44,6 @@ class wpOffload
 	public function __construct($as3cf)
 	{
 		// This must be called before WordPress' init.
-		$this->pid = getmypid();
 		$this->init($as3cf);
 	}
 

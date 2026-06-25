@@ -81,7 +81,7 @@ class QueueItemResult implements JsonSerializable
          }
    }
 
-   public function jsonSerialize(): mixed
+   public function jsonSerialize() : object
    {
         return $this->forReturn();
    }
