@@ -363,7 +363,7 @@ class OptimizeAiController extends OptimizerBase
      
              $finder = $replacer2->Finder(['base_url' => $base_url]); 
      
-            $results = $finder->posts(['post_ids' => $post_ids, 'post_status' => ['publish']]);
+            $results = $finder->posts(['post_status' => ['publish'], 'post_fields' => ['ID']]);
 
             // @todo Probably this check needs to go way up before the whole query on Posts for the URL
             // @todo2 - Finder queryies both post_id and content and should probably only query one of them.
@@ -696,10 +696,21 @@ class OptimizeAiController extends OptimizerBase
              }
              else
             {
-                 update_attached_file($item_id, $metadata['file']);
+                 
             }
             
         }
+
+        if (true === $dry_run)
+        {
+            Log::addInfo('Dry Run - would update attached file with ' . $new_file);
+        }
+        else
+        {
+            update_attached_file($item_id, $new_file);
+        }
+
+
 
         if (isset($metadata['original_image']) && strpos($metadata['original_image'], $old_file) !== false)
         {

@@ -107,7 +107,7 @@ class ShortPixelPlugin {
 			// @todo This should not be done here.
 			$settings     = $this->settings();
 			$stats        = $settings->currentStats;
-			$totalCredits = isset( $stats['APICallsQuotaNumeric'] ) ? $stats['APICallsQuotaNumeric'] + $stats['APICallsQuotaOneTimeNumeric'] : 0;
+			$totalCredits = isset( $stats['APICallsQuota'] ) ? $stats['APICallsQuota'] + $stats['APICallsQuotaOneTime'] : 0;
 			$keyControl = ApiKeyController::getInstance();
 
 

@@ -57,14 +57,19 @@ class Finder
 			}
 
 			$select = ''; 
+			$i = 0; 
 			foreach($args['post_fields'] as $index => $field)
 			{
+				if ($i > 0)
+				{
+					$select .= ','; 
+				}
 				$select .=  $field . ' '; 
 				if (isset($args['post_results'][$index]))
 				{
 					$select .= ' as ' . $args['post_results'][$index]; 
 				}
-				
+				$i++; 
 			}
 
 			$status_placeholders = implode(', ', array_fill(0, count($post_statuses), '%s'));

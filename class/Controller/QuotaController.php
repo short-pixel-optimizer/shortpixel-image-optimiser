@@ -35,9 +35,9 @@ class QuotaController
       $settings = \wpSPIO()->settings();
 
       if ($settings->quotaExceeded)
-			{
+	  {
         return false;
-			}
+	  }
       return true;
 
     }
@@ -46,7 +46,7 @@ class QuotaController
      * Retrieves QuotaData object from cache or from remote source
      * @return array The quotadata array (remote format)
      */
-    protected function getQuotaData()
+    private function getQuotaData()
     {
         if (! is_null($this->quotaData))
           return $this->quotaData;
@@ -57,7 +57,7 @@ class QuotaController
         if (! $cacheData->exists() )
         {
             $quotaData = $this->getRemoteQuota();
-            if (false === $this->hasQuota())
+            if (false === $this->hasQuota() || false === $quotaData['GetSuccess'])
 							$timeout = MINUTE_IN_SECONDS;
 						else {
 							$timeout = HOUR_IN_SECONDS;
@@ -82,6 +82,13 @@ class QuotaController
           $quotaData = $this->getQuotaData();
           $DateNow = time();
 
+          // Provision since we slashes fields and removed numeric, prevent version with old quotaData from crashing.
+          if (isset($quotaData['APICallsQuota']) && false === is_numeric($quotaData['APICallsQuota']))
+          {
+              $this->forceCheckRemoteQuota();
+              $quotData = $this->getQuotaData(); 
+          }
+
           // This check to prevent IIS issue on 32Bit PHP to have complaints (?) .  //https://support.shortpixel.com/conversation/240212
           $DateSubscription = (isset($quotaData['APILastRenewalDate']) && $quotaData['APILastRenewalDate'] != 0 ) ? 
                           strtotime($quotaData['APILastRenewalDate']) : false; 
@@ -89,18 +96,25 @@ class QuotaController
 
           $quota = (object) [
               'unlimited' => isset($quotaData['Unlimited']) ? $quotaData['Unlimited'] : false,
+              'AIUnlimited' => isset($quotaData['AIUnlimited']) ? $quotaData['AIUnlimited'] : false, 
               'monthly' => (object) [
-                'text' =>  sprintf(__('%s/month', 'shortpixel-image-optimiser'), $quotaData['APICallsQuota']),
-                'total' =>  $quotaData['APICallsQuotaNumeric'],
-                'consumed' => $quotaData['APICallsMadeNumeric'],
-                'remaining' => max($quotaData['APICallsQuotaNumeric'] - $quotaData['APICallsMadeNumeric'], 0),
+                'text' =>  sprintf(__('%s/month', 'shortpixel-image-optimiser'), number_format($quotaData['APICallsQuota']) . __(' credits','shortpixel-image-optimiser') ),
+                'total' =>  $quotaData['APICallsQuota'],
+                'consumed' => $quotaData['APICallsMade'],
+                'remaining' => max($quotaData['APICallsQuota'] - $quotaData['APICallsMade'], 0),
                 'renew' => $DaysToReset,
               ],
               'onetime' => (object) [
-                'text' => $quotaData['APICallsQuotaOneTime'],
-                'total' => $quotaData['APICallsQuotaOneTimeNumeric'],
-                'consumed' => $quotaData['APICallsMadeOneTimeNumeric'],
-                'remaining' => $quotaData['APICallsQuotaOneTimeNumeric'] - $quotaData['APICallsMadeOneTimeNumeric'],
+                'text' => number_format($quotaData['APICallsQuotaOneTime']) . __(' credits','shortpixel-image-optimiser'),
+                'total' => $quotaData['APICallsQuotaOneTime'],
+                'consumed' => $quotaData['APICallsMadeOneTime'],
+                'remaining' => $quotaData['APICallsQuotaOneTime'] - $quotaData['APICallsMadeOneTime'],
+              ],
+              'ai' => (object) [
+                 'text' => number_format($quotaData['CaptionsCallsQuota']) . __(' credits','shortpixel-image-optimiser') , 
+                 'total' => $quotaData['CaptionsCallsQuota'], 
+                 'consumed' => $quotaData['CaptionsCallsMade'], 
+                 'remaining' => $quotaData['CaptionsCallsRemaining'], 
               ],
           ];
 
@@ -187,13 +201,24 @@ class QuotaController
      */
     private function getRemoteQuota($apiKey = false, $validate = false)
     {
-        if (! $apiKey && ! $validate) // validation is done by apikeymodel, might result in a loop.
+        if (false === $apiKey && false === $validate) // validation is done by apikeymodel, might result in a loop.
         {
           $keyControl = ApiKeyController::getInstance();
           $apiKey = $keyControl->forceGetApiKey();
         }
 
         $settings = \wpSPIO()->settings();
+
+        $numericResults = [
+              'APICallsMade', 
+              'APICallsQuota', 
+              'APICallsMadeOnTime', 
+              'APICallsQuotaOneTime', 
+              'APICallsMadeOneTime', 
+              'CaptionsCallsMade', 
+              'CaptionsCallsQuota', 
+              'CaptionsCallsRemaining'
+        ]; 
 
           if($settings->httpProto != 'https' && $settings->httpProto != 'http') {
               $settings->httpProto = 'https';
@@ -207,7 +232,7 @@ class QuotaController
           );
           $argsStr = "?key=".$apiKey;
 
-					$serverAgent = isset($_SERVER['HTTP_USER_AGENT']) ? urlencode(sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT']))) : '';
+		  $serverAgent = isset($_SERVER['HTTP_USER_AGENT']) ? urlencode(sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT']))) : '';
           $args['body']['useragent'] = "Agent" . $serverAgent;
           $argsStr .= "&useragent=Agent".$args['body']['useragent'];
 
@@ -220,11 +245,9 @@ class QuotaController
 
               $args['body']['DomainCheck'] = get_site_url();
               $args['body']['Info'] = get_bloginfo('version') . '|' . phpversion();
-              $args['body']['ImagesCount'] = $imageCount; //$imageCount['mainFiles'];
-              $args['body']['ThumbsCount'] = $thumbsCount; // $imageCount['totalFiles'] - $imageCount['mainFiles'];
+              $args['body']['ImagesCount'] = $imageCount; 
+              $args['body']['ThumbsCount'] = $thumbsCount; 
               $argsStr .= "&DomainCheck={$args['body']['DomainCheck']}&Info={$args['body']['Info']}&ImagesCount=$imageCount&ThumbsCount=$thumbsCount";
-
-
           }
 
           $args['body']['host'] = parse_url(get_site_url(),PHP_URL_HOST);
@@ -241,14 +264,9 @@ class QuotaController
               $args['body']['pass'] = stripslashes($settings->siteAuthPass);
               $argsStr .= '&user=' . urlencode($args['body']['user']) . '&pass=' . urlencode($args['body']['pass']);
           }
-          /* TF?
-          if($settings !== false) {
 
-              $args['body']['Settings'] = $settings;
-          } */
-
-          $time = microtime(true);
-          $comm = array();
+//          $time = microtime(true);
+//          $comm = array();
 
           //Try first HTTPS post. add the sslverify = false if https
           if($settings->httpProto === 'https') {
@@ -257,7 +275,7 @@ class QuotaController
 
           $response = wp_remote_post($requestURL, $args);
 
-          $comm['A: ' . (number_format(microtime(true) - $time, 2))] = array("sent" => "POST: " . $requestURL, "args" => $args, "received" => $response);
+        //  $comm['A: ' . (number_format(microtime(true) - $time, 2))] = array("sent" => "POST: " . $requestURL, "args" => $args, "received" => $response);
 
           //some hosting providers won't allow https:// POST connections so we try http:// as well
           if(is_wp_error( $response )) {
@@ -272,7 +290,7 @@ class QuotaController
                   unset($args['sslverify']);
               }
               $response = wp_remote_post($requestURL, $args);
-              $comm['B: ' . (number_format(microtime(true) - $time, 2))] = array("sent" => "POST: " . $requestURL, "args" => $args, "received" => $response);
+            //  $comm['B: ' . (number_format(microtime(true) - $time, 2))] = array("sent" => "POST: " . $requestURL, "args" => $args, "received" => $response);
 
               if(!is_wp_error( $response )){
                   $settings->httpProto = ($settings->httpProto == 'https' ? 'http' : 'https');
@@ -284,24 +302,22 @@ class QuotaController
               $args['body'] = null;
               $requestURL .= $argsStr;
               $response = wp_remote_get($requestURL, $args);
-              $comm['C: ' . (number_format(microtime(true) - $time, 2))] = array("sent" => "POST: " . $requestURL, "args" => $args, "received" => $response);
+          //    $comm['C: ' . (number_format(microtime(true) - $time, 2))] = array("sent" => "POST: " . $requestURL, "args" => $args, "received" => $response);
           }
 
-          $defaultData = array(
+          $defaultData = [
               "APIKeyValid" => false,
               "Message" => __('API Key could not be validated due to a connectivity error.<BR>Your firewall may be blocking us. Please contact your hosting provider and ask them to allow connections from your site to api.shortpixel.com (IP 176.9.21.94).<BR> If you still cannot validate your API Key after this, please <a href="https://shortpixel.com/contact" target="_blank">contact us</a> and we will try to help. ','shortpixel-image-optimiser'),
-              "APICallsMade" => __('Information unavailable. Please check your API key.','shortpixel-image-optimiser'),
-              "APICallsQuota" => __('Information unavailable. Please check your API key.','shortpixel-image-optimiser'),
-              "APICallsMadeOneTime" => 0,
-              "APICallsQuotaOneTime" => 0,
-              "APICallsMadeNumeric" => 0,
-              "APICallsQuotaNumeric" => 0,
-              "APICallsMadeOneTimeNumeric" => 0,
-              "APICallsQuotaOneTimeNumeric" => 0,
-              "APICallsRemaining" => 0,
-              "APILastRenewalDate" => 0,
-              "DomainCheck" => 'NOT Accessible');
+              "DomainCheck" => 'NOT Accessible',
+              "GetSuccess" => false, 
+            ];
+
           $defaultData = is_array($settings->currentStats) ? array_merge( $settings->currentStats, $defaultData) : $defaultData;
+
+          foreach($numericResults as $numField)
+          {
+             $defaultData[$numField] = 0;
+          }
 
           if(is_object($response) && get_class($response) == 'WP_Error') {
 
@@ -327,26 +343,28 @@ class QuotaController
               return $defaultData;
           }
 
-          $dataArray = array(
+          $dataArray = [
               "APIKeyValid" => true,
-              "APICallsMade" => number_format($data->APICallsMade) . __(' credits','shortpixel-image-optimiser'),
-              "APICallsQuota" => number_format($data->APICallsQuota) . __(' credits','shortpixel-image-optimiser'),
-              "APICallsMadeOneTime" => number_format($data->APICallsMadeOneTime) . __(' credits','shortpixel-image-optimiser'),
-              "APICallsQuotaOneTime" => number_format($data->APICallsQuotaOneTime) . __(' credits','shortpixel-image-optimiser'),
-              "APICallsMadeNumeric" => (int) max($data->APICallsMade, 0),
-              "APICallsQuotaNumeric" => (int) max($data->APICallsQuota, 0),
-              "APICallsMadeOneTimeNumeric" =>  (int) max($data->APICallsMadeOneTime, 0),
-              "APICallsQuotaOneTimeNumeric" => (int) max($data->APICallsQuotaOneTime, 0),
-
               "Unlimited" => (property_exists($data, 'Unlimited') && $data->Unlimited == 'true') ? true : false,
-
+              'AIUnlimited' => (property_exists($data, 'PlanType') && $data->PlanType == 'Unlimited AI') ? true : false, 
               "APILastRenewalDate" => $data->DateSubscription,
-              "DomainCheck" => (isset($data->DomainCheck) ? $data->DomainCheck : null)
-          );
-					 // My Eyes!  Basically :  ApiCalls - ApiCalls used, both for monthly and onetime. Max of each is 0.  Negative quota seems possible, but should not be substracted from one or the other.
-					 $dataArray["APICallsRemaining"] = max($dataArray['APICallsQuotaNumeric'] - $dataArray['APICallsMadeNumeric'], 0) + max($dataArray['APICallsQuotaOneTimeNumeric'] - $dataArray['APICallsMadeOneTimeNumeric'],0);
+              "DomainCheck" => (isset($data->DomainCheck) ? $data->DomainCheck : null), 
+              "GetSuccess" => true, 
+          ];
 
-					//reset quota exceeded flag -> user is allowed to process more images.
+          foreach($numericResults as $resultName)
+          {
+              if (property_exists($data, $resultName))
+              {
+                  $dataArray[$resultName] = (int) max($data->$resultName, 0); 
+              }
+              else
+              {
+                 $dataArray[$resultName] = 0;
+              }
+          }
+
+		 $dataArray["APICallsRemaining"] = max($dataArray['APICallsQuota'] - $dataArray['APICallsMade'], 0) + max($dataArray['APICallsQuotaOneTime'] - $dataArray['APICallsMadeOneTime'],0);
 
           if ( $dataArray['APICallsRemaining'] > 0 || $dataArray['Unlimited'])
 					{
@@ -358,7 +376,6 @@ class QuotaController
               $this->setQuotaExceeded();
 					}
 
-        //  Log::addDebug('GetQuotaInformation Result ', $dataArray);
           return $dataArray;
     }
 

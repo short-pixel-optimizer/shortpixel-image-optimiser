@@ -83,7 +83,8 @@
       height: 26px;
       margin-right: 8px;
       margin-top: -5px;
-      color: $color-darkest;
+     // color: $color-darkest;
+      line-height: 1.2;
     }
     .icon 
     {
@@ -928,7 +929,6 @@
       //margin: 35px 60px;
 
       &.ai {
-        max-width: 33%;
         float: left;
       }
       >p {

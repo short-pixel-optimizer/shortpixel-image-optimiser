@@ -512,7 +512,7 @@
   height: 26px;
   margin-right: 8px;
   margin-top: -5px;
-  color: #0f6a7d;
+  line-height: 1.2;
 }
 .wrap.is-shortpixel-bulk-page .button .icon {
   margin-right: 4px;
@@ -1162,7 +1162,6 @@
   padding-top: 20px;
 }
 .wrap.is-shortpixel-bulk-page section.panel.summary .credits.ai {
-  max-width: 33%;
   float: left;
 }
 .wrap.is-shortpixel-bulk-page section.panel.summary .credits > p {

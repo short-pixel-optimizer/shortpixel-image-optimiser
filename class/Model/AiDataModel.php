@@ -722,7 +722,7 @@ class AiDataModel
                 $message = __('Image Exif settings restrict AI usage', 'shortpixel-image-optimiser');
             break;
             case self::P_EXTENSION:
-                 $message = __('File Extension not supported', 'shortpixel-image-optimiser');
+                 $message = __('Shortpixel AI - File Extension not supported', 'shortpixel-image-optimiser');
             break;
             case self::P_NOJOB:
                 $message = __('No fields to generate', 'shortpixel-image-optimiser');
@@ -748,7 +748,7 @@ class AiDataModel
         $imageModel = $fs->getMediaImage($this->attach_id);
 
         // Gif removed here, since we (temporarily don't support it)
-        $extensions = ['png', 'jpeg', 'webp', 'jpg'];
+        $extensions = ['png', 'jpeg', 'webp', 'jpg', 'heic', 'svg', 'bmp', 'tiff', 'tif'];
 
         if (in_array($imageModel->getExtension(), $extensions))
         {
