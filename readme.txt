@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 4.8.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 6.5.2
+Stable tag: 6.5.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -453,6 +453,24 @@ Disable the feedback survey when the plugin is deactivated:
 
 == Changelog ==
 
+= 6.5.3 =
+
+🔧 The Reliability & Compatibility Update
+
+Release Date: June 25, 2026
+
+🛠️ Fixes
+
+* Restore Metadata Fix: Restoring an image now correctly restores the original file size in the metadata instead of keeping the optimized size.
+* Improved Host Compatibility: Removed the dependency on PHP's getmypid() function, improving compatibility with hosting environments where it's disabled.
+* JSON Serialization Fix: Resolved a rare issue where JSON serialization could fail in specific edge cases.
+
+🤝 Compatibility Updates
+
+* Breakdance & Oxygen Ready: Added compatibility with upcoming versions of the Breakdance and Oxygen builders to ensure a smooth experience as these platforms evolve.
+
+Update now for improved reliability, broader compatibility, and an even smoother optimization experience!
+
 = 6.5.2 =
 
 ☁️ The Offload & Backup Reliability Update
@@ -461,15 +479,15 @@ Release Date: June 4, 2026
 
 ⚡ Performance Improvements
 
-Offload Media + AWS S3: Improved performance by reducing useless remote operations for websites using Offload Media with Amazon S3, resulting in a smoother and more efficient optimization workflow.
+* Offload Media + AWS S3: Improved performance by reducing useless remote operations for websites using Offload Media with Amazon S3, resulting in a smoother and more efficient optimization workflow.
 
 🛠️ Fixes & Improvements
 
-Optimization Data Migration: Fixed an error that could occur when migrating legacy image optimization data to the new format.
-Custom Media Search Stability: Resolved an issue caused by unusual search requests on Custom Media pages.
-Smart Backups Filename Conflict: Fixed a rare edge case where multiple files requiring conversion, uploaded with the exact same filename during the same month, could cause issues when Smart Backups were enabled.
-Backup System Enhancements: Various reliability improvements and small fixes across the backup system.
-Code documentation: Improved the overall code documentation of the plugin.
+* Optimization Data Migration: Fixed an error that could occur when migrating legacy image optimization data to the new format.
+* Custom Media Search Stability: Resolved an issue caused by unusual search requests on Custom Media pages.
+* Smart Backups Filename Conflict: Fixed a rare edge case where multiple files requiring conversion, uploaded with the exact same filename during the same month, could cause issues when Smart Backups were enabled.
+* Backup System Enhancements: Various reliability improvements and small fixes across the backup system.
+* Code documentation: Improved the overall code documentation of the plugin.
 
 Update now for a faster, more reliable experience, especially if you’re using AWS S3 and Smart Backups! 🚀☁️
 
