@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 <div class="wrap shortpixel-other-media">
     <h2>
-        <?php esc_html_e($view->title);?>
+        <?php esc_html($view->title);?>
     </h2>
 
     <div class='toolbar'>

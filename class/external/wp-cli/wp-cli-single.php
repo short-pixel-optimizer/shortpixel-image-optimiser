@@ -51,7 +51,7 @@ class SpioSingle extends SpioCommandBase
 
       if (! isset($args[0]))
       {
-        \WP_CLI::Error(__('Specify an (Media Library) Item ID', 'shortpixel_image_optimiser'));
+        \WP_CLI::Error(__('Specify an (Media Library) Item ID', 'shortpixel-image-optimiser'));
         return;
       }
 			if (! is_numeric($args[0]))
@@ -84,7 +84,7 @@ class SpioSingle extends SpioCommandBase
 				 $message = $result->message;
 			elseif (property_exists($result, 'result') )
       {
-        \WP_CLI::Error(sprintf(__("Result result exists, should not be", 'shortpixel_image_optimiser'), $result) );
+        \WP_CLI::Error(sprintf(__("Result result exists, should not be", 'shortpixel-image-optimiser'), $result) );
       }
       else {
          $message = __('Operation didn\'t yield any messages');
@@ -97,7 +97,7 @@ class SpioSingle extends SpioCommandBase
 			}
       elseif (true === $result->is_error)
 			{
-        \WP_CLI::Error(sprintf(__("Restoring Item: %s", 'shortpixel_image_optimiser'), $message) );
+        \WP_CLI::Error(sprintf(__("Restoring Item: %s", 'shortpixel-image-optimiser'), $message) );
 			}
       else {
         \WP_CLI::Error('Undetermined' . $message);

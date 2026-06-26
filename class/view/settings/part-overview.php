@@ -100,7 +100,7 @@ $bulkblock = $dashboard->bulkblock;
      <div class='panel first-panel dashboard-optimize'>
 
         <i class='shortpixel-icon box-archive'></i>
-        <h4><?php _e('Optimize new Images', 'shortpixel-image-optimizer'); ?></h4>
+        <h4><?php _e('Optimize new Images', 'shortpixel-image-optimiser'); ?></h4>
 
         <span class='status-wrapper'><i class='shortpixel-icon status-icon ok'></i><span class='status-line'></span></span>
 
@@ -117,7 +117,7 @@ $bulkblock = $dashboard->bulkblock;
 
      <div class='panel second-panel dashboard-bulk'>
        <i class='shortpixel-icon bulk'></i>
-       <h4><?php _e('Bulk Actions', 'shortpixel-image-optimizer'); ?></h4>
+       <h4><?php _e('Bulk Actions', 'shortpixel-image-optimiser'); ?></h4>
 
 
         <span class='status-wrapper'>
@@ -140,7 +140,7 @@ $bulkblock = $dashboard->bulkblock;
      <div class='panel third-panel dashboard-webp'>
 
        <i class='shortpixel-icon photo'></i>
-       <h4><?php _e('WebP/AVIF', 'shortpixel-image-optimizer'); ?></h4>
+       <h4><?php _e('WebP/AVIF', 'shortpixel-image-optimiser'); ?></h4>
 
         <span class='status-wrapper'><i class='shortpixel-icon status-icon ok'></i><span class='status-line'></span></span>
 

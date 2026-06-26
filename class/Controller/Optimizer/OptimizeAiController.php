@@ -240,7 +240,7 @@ class OptimizeAiController extends OptimizerBase
     $settings = \wpSPIO()->settings();
 
     // removed  'post_title' here because in image title doens't look good. 
-    $textItems = ['alt', 'caption', 'description'];
+    $textItems = ['alt', 'caption', 'description', 'filename'];
     foreach($textItems as $textItem)
     {
       
@@ -303,7 +303,7 @@ class OptimizeAiController extends OptimizerBase
   {
         $aiData = $qItem->result()->aiData;  
         $aiData = apply_filters('shortpixel/ai/success', $aiData, $qItem); 
-
+Log::addTemp('Ai Handle S6 - AiData', $aiData); 
         $aiData = $this->formatResultData($aiData, $qItem);
 
         // Description : From POST CONTENT 
@@ -325,7 +325,6 @@ class OptimizeAiController extends OptimizerBase
         $this->blockItem($qItem);
 
         $results = $this->replaceImageAttributes($qItem, $aiData); 
-        $resultCount = count($results); 
         $imageModel = $qItem->imageModel;
 
         // If the file was just uploaded, assume it's not already widely linked and doesn't need replacing / symlinking 
@@ -370,17 +369,24 @@ class OptimizeAiController extends OptimizerBase
             if ($currentFileBase !== $aiData['filename'])
             {
                 $args = [
-                    //'dry_run' => true,  // @todo TEST dry run - doesn't perform any operations.
+                    'dry_run' => true,  // @todo TEST dry run - doesn't perform any operations.
                     'recent_upload' => $qItem->data()->recent_upload, 
                     'imagePostCount' => count($results), // Amount of records this image is used in.
                 ];
 
                 $this->replaceFiles($qItem, $aiData['filename'], $args);
             }
+
+          // Reset when files change.
+           $fs = \wpSPIO()->filesystem();
+           $qItem->setModel($fs->getMediaImage($item_id, false));
+           // Reflect new filename here. 
+           $qItem->addResult(['filename' => $qItem->imageModel->getFileName()]); 
         }
 
         $qItem->addResult(['improvements' => $imageModel->getImprovements()]); // Improvements for bulk UX. 
 
+        // This will add URL (optimized) to result
         $this->addPreview($qItem); // Preview ( image ) for bulk UX 
 
         AiDataModel::flushModelCache($item_id);
@@ -492,7 +498,7 @@ class OptimizeAiController extends OptimizerBase
   {
       $defaults = [
          'recent_upload' => false, 
-         'dry_run' => false, // @todo Need to dry-run this more, because it seems the newFileName bugs somehow
+         'dry_run' => false,
          'imagePostCount' => 0, 
          'imageThreshold' => 1, // How much references before not replacing this image.
       ];
@@ -707,10 +713,15 @@ class OptimizeAiController extends OptimizerBase
         }
         else
         {
-            update_attached_file($item_id, $new_file);
+            $attached_file = get_attached_file($item_id);
+            if (false === $attached_file && isset($metadata['file']))
+            {
+                $attached_file = $metadata['file'];
+            }
+
+            $new_attached_file = str_replace($old_file, $new_file, $attached_file); 
+            update_attached_file($item_id, $new_attached_file);
         }
-
-
 
         if (isset($metadata['original_image']) && strpos($metadata['original_image'], $old_file) !== false)
         {
@@ -976,16 +987,6 @@ public function getAltData(QueueItem $qItem)
 
 
     // *****!!! Temporary don't pass these back since we don't support it yet ** // 
-
-    if (isset($generated['filebase']))
-    {
-       unset($generated['filebase']); 
-    }
-    if (isset($generated['filename']))
-    {
-       unset($generated['filename']);
-    }
-
     $metadata['snippet'] = $view->returnView('snippets/part-aitext');
 
     $metadata['generated'] = $generated; 
@@ -1010,7 +1011,7 @@ public function getAltData(QueueItem $qItem)
 public function formatGenerated($generated, $current, $original, $isPreview = false)
 {
     
-  $fields = ['alt', 'caption', 'description', 'post_title'];
+  $fields = ['alt', 'caption', 'description', 'post_title', 'filebase'];
   $dataItems = []; 
 
   $labels = $this->getDataLabels();

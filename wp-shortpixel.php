@@ -52,12 +52,12 @@ if(!defined('SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION')) { //can be defined in wp-co
 
 define('SHORTPIXEL_API', 'api.shortpixel.com');
 
-$max_exec = intval(ini_get('max_execution_time'));
-if ($max_exec === 0) // max execution time of zero means infinite. Quantify.
-  $max_exec = 60;
-elseif($max_exec < 0) // some hosts like to set negative figures on this. Ignore that.
-  $max_exec = 30;
-define('SHORTPIXEL_MAX_EXECUTION_TIME', $max_exec);
+$spio_max_exec = intval(ini_get('max_execution_time'));
+if ($spio_max_exec === 0) // max execution time of zero means infinite. Quantify.
+  $spio_max_exec = 60;
+elseif($spio_max_exec < 0) // some hosts like to set negative figures on this. Ignore that.
+  $spio_max_exec = 30;
+define('SHORTPIXEL_MAX_EXECUTION_TIME', $spio_max_exec);
 
 // ** Load the modules */
 require_once(SHORTPIXEL_PLUGIN_DIR . '/build/shortpixel/autoload.php');
@@ -106,7 +106,7 @@ if (! function_exists("wpSPIO"))	{
 require_once(SHORTPIXEL_PLUGIN_DIR . '/shortpixel-plugin.php'); // loads runtime and needed classes.
 
 // PSR-4 package loader.
-$loader = new ShortPixel\Build\PackageLoader();
+$loader = new \ShortPixel\Build\PackageLoader();
 $loader->setComposerFile(SHORTPIXEL_PLUGIN_DIR . '/class/plugin.json');
 $loader->load(SHORTPIXEL_PLUGIN_DIR);
 

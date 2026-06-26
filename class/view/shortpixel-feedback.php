@@ -70,15 +70,15 @@ class ShortPixelFeedback {
       //  $form['body'] = 'bs';
 
         // Build the HTML to go in the form
-        $html = '<div class="shortpixel-deactivate-form-head"><strong>' . esc_html__( $form['heading'] ) . '</strong></div>';
+        $html = '<div class="shortpixel-deactivate-form-head"><strong>' . esc_html( $form['heading'] ) . '</strong></div>';
         $html .= '<div class="shortpixel-deactivate-form-body">';
         if( is_array( $form['options'] ) ) {
             $html .= '<div class="shortpixel-deactivate-options">';
-            $html .= '<p><strong>' . esc_html__( $form['body'] ) . '</strong></p><p>';
+            $html .= '<p><strong>' . esc_html( $form['body'] ) . '</strong></p><p>';
             foreach( $form['options'] as $key => $option ) {
                 $html .= '<input type="radio" name="shortpixel-deactivate-reason" id="' . esc_attr( $key ) . '" value="' . esc_attr( $key ) . '"> <label for="' . esc_attr( $key ) . '">' . esc_attr( $option ) . '</label><br>';
             }
-            $html .= '</p><label id="shortpixel-deactivate-details-label" for="shortpixel-deactivate-reasons"><strong>' . esc_html__( $form['details'] ) .'</strong></label><textarea name="shortpixel-deactivate-details" id="shortpixel-deactivate-details" rows="2" style="width:100%"></textarea>';
+            $html .= '</p><label id="shortpixel-deactivate-details-label" for="shortpixel-deactivate-reasons"><strong>' . esc_html( $form['details'] ) .'</strong></label><textarea name="shortpixel-deactivate-details" id="shortpixel-deactivate-details" rows="2" style="width:100%"></textarea>';
             $html .= '</div><!-- .shortpixel-deactivate-options -->';
         }
         $html .= '<hr/>';

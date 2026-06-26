@@ -136,7 +136,7 @@ $settings = \wpSPIO()->settings();
         <span><?php esc_html_e('Processed','shortpixel-image-optimiser'); ?>: <i data-stats-custom="done">-</i></span>
 
         <span><?php esc_html_e('Waiting','shortpixel-image-optimiser'); ?>: <i data-stats-custom="in_queue">-</i></span>
-        <span><?php esc_html_e('Errors') ?>: <i data-check-custom-fatalerrors  data-stats-custom="fatal_errors" class='error'>-</i>
+        <span><?php esc_html_e('Errors', 'shortpixel-image-optimiser') ?>: <i data-check-custom-fatalerrors  data-stats-custom="fatal_errors" class='error'>-</i>
 
 					<span class="display-error-box" data-check-visibility data-control="data-check-custom-fatalerrors" ><label title="<?php esc_html_e('Show Errors', 'shortpixel-image-optimiser'); ?>">
 						<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='custom' data-event='change'><?php esc_html_e('Show Errors','shortpixel-image-optimiser'); ?>

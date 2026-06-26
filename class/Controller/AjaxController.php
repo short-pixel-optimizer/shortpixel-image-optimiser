@@ -356,7 +356,7 @@ class AjaxController
 				$this->getEditorPreview($data);
 			break;
 			default:
-				$json->$type->message = __('Ajaxrequest - no action found', 'shorpixel-image-optimiser');
+				$json->$type->message = __('Ajaxrequest - no action found', 'shortpixel-image-optimiser');
 				$json->error = self::NO_ACTION;
 			break;
 		}
@@ -1333,7 +1333,7 @@ class AjaxController
 		   $json = [
 				'preview_image' => '', 
 				'item_id' => -1, 
-				'generated' => ['alt' => __('Select an image for example', 'shortpixel-image-optimser')], 
+				'generated' => ['alt' => __('Select an image for example', 'shortpixel-image-optimiser')], 
 				'original'	=> [], 
 		   ]; 
 		   $this->send((object) $json);
@@ -1608,7 +1608,7 @@ class AjaxController
 		if ($result === false) {
 			$json->folder->is_done = true;
 			$json->folder->result = new \stdClass;
-			$json->folder->result->message = __('All Folders have been scanned!', 'shortpixel_image_optimiser');
+			$json->folder->result->message = __('All Folders have been scanned!', 'shortpixel-image-optimiser');
 		} else {
 
 			$json->folder->result = $result;

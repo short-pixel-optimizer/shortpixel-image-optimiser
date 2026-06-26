@@ -159,7 +159,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 
           if (count($removed) > 0)
           {
-            Notices::addWarning(sprintf(__('Some images were missing. They have been removed from the Custom Media overview : %s %s'),
+            Notices::addWarning(sprintf(__('Some images were missing. They have been removed from the Custom Media overview : %s %s', 'shortpixel-image-optimiser'),
                 '<BR>', implode('<BR>', $removed)));
           }
 
@@ -417,7 +417,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
                     $page_links[] = sprintf(
                         "<a class='first-page button' href='%s'><span class='screen-reader-text'>%s</span><span aria-hidden='true'>%s</span></a>",
                         esc_url( $current_url ),
-                        esc_html__( 'First page' ),
+                        esc_html__( 'First page', 'shortpixel-image-optimiser' ),
                         '&laquo;'
                     );
                 }
@@ -428,14 +428,14 @@ class OtherMediaViewController extends \ShortPixel\ViewController
                 $page_links[] = sprintf(
                     "<a class='prev-page button' href='%s'><span class='screen-reader-text'>%s</span><span aria-hidden='true'>%s</span></a>",
                     esc_url( add_query_arg( 'paged', max( 1, $current - 1 ), $current_url ) ),
-                    esc_html__( 'Previous page' ),
+                    esc_html__( 'Previous page', 'shortpixel-image-optimiser' ),
                     '&lsaquo;'
                 );
             }
 
             $html_current_page = sprintf(
                 "%s<input class='current-page' id='current-page-selector' type='text' name='paged' value='%s' size='%d' aria-describedby='table-paging' /><span class='tablenav-paging-text'>",
-                '<label for="current-page-selector" class="screen-reader-text">' . esc_html__( 'Current Page' ) . '</label>',
+                '<label for="current-page-selector" class="screen-reader-text">' . esc_html__( 'Current Page', 'shortpixel-image-optimiser' ) . '</label>',
                 $current,
                 strlen( $pages )
             );
@@ -443,7 +443,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
             $html_total_pages = sprintf( "<span class='total-pages'>%s</span>", number_format_i18n( $pages ) );
             $page_links[]     = $total_pages_before . sprintf(
                 /* translators: 1: Current page, 2: Total pages. */
-                _x( '%1$s of %2$s', 'paging' ),
+                _x( '%1$s of %2$s', 'paging', 'shortpixel-image-optimiser' ),
                 $html_current_page,
                 $html_total_pages
             ) . $total_pages_after;
@@ -454,7 +454,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
                 $page_links[] = sprintf(
                     "<a class='next-page button' href='%s'><span class='screen-reader-text'>%s</span><span aria-hidden='true'>%s</span></a>",
                     esc_url( add_query_arg( 'paged', min( $pages, $current + 1 ), $current_url ) ),
-                    __( 'Next page' ),
+                    __( 'Next page', 'shortpixel-image-optimiser'),
                     '&rsaquo;'
                 );
             }
@@ -465,7 +465,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
                 $page_links[] = sprintf(
                     "<a class='last-page button' href='%s'><span class='screen-reader-text'>%s</span><span aria-hidden='true'>%s</span></a>",
                     esc_url( add_query_arg( 'paged', $pages, $current_url ) ),
-                    __( 'Last page' ),
+                    __( 'Last page', 'shortpixel-image-optimiser' ),
                     '&raquo;'
                 );
             }

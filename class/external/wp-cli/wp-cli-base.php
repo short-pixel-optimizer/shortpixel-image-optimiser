@@ -125,7 +125,7 @@ class SpioCommandBase
 			$message = $result->message;
 		}
 		if ($result->is_error) {
-			\WP_CLI::Error(sprintf(__("while adding item: %s", 'shortpixel_image_optimiser'), $message));
+			\WP_CLI::Error(sprintf(__("while adding item: %s", 'shortpixel-image-optimiser'), $message));
 		} else {
 			\WP_CLI::Success($message);
 

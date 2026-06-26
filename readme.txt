@@ -1,7 +1,7 @@
 === ShortPixel Image Optimizer - Optimize Images, Convert WebP & AVIF ===
 Contributors: ShortPixel
 Tags: convert webp, optimize images, image optimization, resize, compress images
-Requires at least: 4.8.0
+Requires at least: 5.9.0
 Tested up to: 7.0
 Requires PHP: 7.4
 Stable tag: 6.5.2

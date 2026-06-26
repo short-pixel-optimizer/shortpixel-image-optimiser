@@ -18,7 +18,7 @@ if (! $view->key->is_verifiedkey && $view->key->hide_api_key && ! $view->key->is
 elseif ($view->key->is_constant_key && ! $view->key->is_verifiedkey)
 {
   $dkey = ($view->key->hide_api_key) ? '' : '(' . SHORTPIXEL_API_KEY.  ')';
-	$error_message = sprintf(__('Constant API Key is not verified. Please check if this is a valid API key %s'),$dkey);
+	$error_message = sprintf(__('Constant API Key is not verified. Please check if this is a valid API key %s', 'shortpixel-image-optimiser'),$dkey);
   Notice::addError($error_message);
 }
 

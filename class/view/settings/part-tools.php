@@ -194,7 +194,7 @@ $queueRunning = $bulk->isAnyBulkRunning();
             &nbsp;
         </name> -->
         <content>
-						<a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'removeLegacy', 'noheader' => true), $url)); ?>" class="button danger"><?php esc_html_e('Remove Legacy Data'); ?></a>
+						<a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'removeLegacy', 'noheader' => true), $url)); ?>" class="button danger"><?php esc_html_e('Remove Legacy Data', 'shortpixel-image-optimser'); ?></a>
 
           <info>
             <?php printf(esc_html__('%sRemoves Legacy Data%s (the old format for storing image optimization information in the database, which was used before version 5). This may result in data loss. It is not recommended to do this manually.', 'shortpixel-image-optimiser'), '<b>','</b>'); ?>

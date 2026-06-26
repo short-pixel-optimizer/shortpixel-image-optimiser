@@ -1,4 +1,10 @@
 <?php
+namespace ShortPixel;
+
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 foreach($this->view->actions as $actionName => $action):
 
   $layout = isset($action['layout']) ? $action['layout'] : false;
@@ -35,8 +41,5 @@ foreach($this->view->actions as $actionName => $action):
     {
        echo "</P>";
     }
-  ?>
 
-
-  <?php
 endforeach;

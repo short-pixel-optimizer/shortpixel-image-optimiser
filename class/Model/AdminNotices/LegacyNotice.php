@@ -38,7 +38,7 @@ class LegacyNotice extends \ShortPixel\Model\AdminNoticeModel
 
 		$message .= '<p>' . __('Prior to version 5.0, a different format was used to store ShortPixel optimization information. ShortPixel automatically migrates the media library items to the new format when they are opened. %s Please check if your images contain the optimization information after migration. %s Read more %s', 'shortpixel-image-optimiser') . '</p>';
 
-		$message .=  '<p>' . __('It is recommended to migrate all items to the modern format by clicking the button below.', 'shortpixel-image-optimser') . '</p>';
+		$message .=  '<p>' . __('It is recommended to migrate all items to the modern format by clicking the button below.', 'shortpixel-image-optimiser') . '</p>';
 		$message .= '<p><a href="%s" class="button button-primary">%s</a></p>';
 
 		$read_link = esc_url('https://shortpixel.com/knowledge-base/article/spio-5-tells-me-to-convert-legacy-data-what-is-this/');

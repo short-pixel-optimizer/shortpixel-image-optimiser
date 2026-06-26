@@ -108,7 +108,7 @@ if ( ! defined( 'ABSPATH' ) ) {
       </p>
 
       <p>
-          <span><?php esc_html_e('Your one-time credits') ?></span>
+          <span><?php esc_html_e('Your one-time credits', 'shortpixel-image-optimiser') ?></span>
           <span><b><?php echo esc_html($quotaData->onetime->text) ?></b> |
              <?php esc_html_e('Used:', 'shortpixel-image-optimiser'); ?> <b><?php echo esc_html($this->formatNumber($quotaData->onetime->consumed, 0)); ?></b> |
              <?php esc_html_e('; Remaining:', 'shortpixel-image-optimiser'); ?> <b><?php echo esc_html($this->formatNumber($quotaData->onetime->remaining, 0)) ?></b>
@@ -184,7 +184,7 @@ if ( ! defined( 'ABSPATH' ) ) {
       <span><img src="<?php echo esc_url(wpSPIO()->plugin_url('res/img/bulk/over-quota.svg')) ?>" /></span>
             <p><?php printf(esc_html('In your ShortPixel account you %shave only %s credits available %s, but you have chosen %s  images to be optimized in this bulk process. You can either go back and select less images, or you can upgrade to a higher plan or buy one-time credits.','shortpixel-image-optimiser'), '<span class="red">', esc_html($this->formatNumber($quotaData->total->remaining, 0)), '</span>', '<b data-stats-total="images-images">0</b>'); ?>
 
-       <button type="button" class="button" onClick="ShortPixel.proposeUpgrade();"><?php esc_html_e('Show me the best options') ?></button>
+       <button type="button" class="button" onClick="ShortPixel.proposeUpgrade();"><?php esc_html_e('Show me the best options', 'shortpixel-image-optimiser') ?></button>
      </p>
 
        <span class='hidden' data-quota-remaining><?php

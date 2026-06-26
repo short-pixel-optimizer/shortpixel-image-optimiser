@@ -24,7 +24,7 @@ if (! defined('ABSPATH')) {
           ?></p>
       <?php if (true === \ShortPixel\Pantheon::IsActive()) {
         echo '<p>';
-        _e('(You are on Pantheon. This setting was automatically activated)');
+        _e('(You are on Pantheon. This setting was automatically activated)', 'shortpixel-image-optimser');
         echo '</p>';
       }
       ?>

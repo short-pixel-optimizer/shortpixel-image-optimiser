@@ -252,7 +252,7 @@ else:
                   <li>
                       <input type="radio" name="deliverWebpAlteringType" id="deliverWebpAlteredWP" <?php checked(($view->data->deliverWebp == 2), true);?> value="deliverWebpAlteredWP">
                       <label for="deliverWebpAlteredWP" >
-                          <?php esc_html_e('Only via Wordpress hooks (like the_content, the_excerpt, etc)');?>
+                          <?php esc_html_e('Only via Wordpress hooks (like the_content, the_excerpt, etc)', 'shortpixel-image-optimser');?>
                       </label>
                   </li>
                   <li>

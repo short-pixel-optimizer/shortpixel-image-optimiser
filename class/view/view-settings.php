@@ -162,7 +162,7 @@ if ( ! defined( 'ABSPATH' ) ) {
               <div class='banner-upgrade-button'>
                   <button type="button" class="button button-primary" id="upgrade" onclick="window.open('https://shortpixel.com/ms/af/KZYK08Q28044', '_blank');">
                       <i class="shortpixel-icon cart"></i>
-                      <?php _e('Upgrade Now', 'shortpixel-image-optimizer'); ?>
+                      <?php _e('Upgrade Now', 'shortpixel-image-optimiser'); ?>
                   </button>
               </div>
           </div>

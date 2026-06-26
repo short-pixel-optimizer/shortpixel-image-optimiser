@@ -10,15 +10,15 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		'attachment_alt',  //edit-media 
 		'attachment-details-alt-text', // media library upload screen / image select
 		'attachment-details-two-column-alt-text',
-	
-	 ];
-	 ai_enabled = true; 
-	 gutenCheck = []; 
+
+	];
+	ai_enabled = true;
+	gutenCheck = [];
 
 
 	Init() {
 		super.Init();
-		
+
 		let settings = spio_mediascreen_settings;
 		this.settings = settings;
 
@@ -26,105 +26,93 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		this.ListenGutenberg();
 
 
-		if (typeof settings.hide_ai !== 'undefined')
-		{
-			this.ai_enabled = ! settings.hide_ai;
+		if (typeof settings.hide_ai !== 'undefined') {
+			this.ai_enabled = !settings.hide_ai;
 		}
-		
+
 		// bind DoAction, for bulk actions in Media Libbrary to event
 		var actionEl = document.getElementById('doaction');
 		if (actionEl !== null)
 			actionEl.addEventListener('click', this.BulkActionEvent.bind(this));
-	   
+
 		// This init only in edit-media and pass the ID for safety. 
-		if (document.getElementById('attachment_alt') !== null)
-		{
+		if (document.getElementById('attachment_alt') !== null) {
 			var postInput = document.getElementById('post_ID');
-			let item_id = postInput.value; 
+			let item_id = postInput.value;
 			this.FetchAltView(undefined, item_id);
-			let imageDataEl = document.getElementById('shortpixel-data-' + item_id); 
-			let editorArgs = {}; 
-			if (null !== imageDataEl && imageDataEl.dataset.imagewidth)
-			{
-				 editorArgs.image_width= imageDataEl.dataset.imagewidth;
+			let imageDataEl = document.getElementById('shortpixel-data-' + item_id);
+			let editorArgs = {};
+			if (null !== imageDataEl && imageDataEl.dataset.imagewidth) {
+				editorArgs.image_width = imageDataEl.dataset.imagewidth;
 			}
-			if (null !== imageDataEl && imageDataEl.dataset.extension)
-			{
-				 editorArgs.image_ext = imageDataEl.dataset.extension;
+			if (null !== imageDataEl && imageDataEl.dataset.extension) {
+				editorArgs.image_ext = imageDataEl.dataset.extension;
 			}
-			this.InitEditorActions(postInput.value, 'edit', editorArgs); 
+			this.InitEditorActions(postInput.value, 'edit', editorArgs);
 		}
 	}
 
-	InitEditorActions(item_id, uiType, args)
-	{
+	InitEditorActions(item_id, uiType, args) {
 		let id = 'shortpixel_removebackground_button';
-		var button = document.createElement('button'); 
+		var button = document.createElement('button');
 
-		button.name = 'removeBackground'; 
-		button.innerHTML = this.settings.remove_background_title; 
-		button.type =  'button'; 
+		button.name = 'removeBackground';
+		button.innerHTML = this.settings.remove_background_title;
+		button.type = 'button';
 		button.classList.add('button', 'button-secondary');
-		button.id = id; 
-		button.dataset.item_id = item_id; 
+		button.id = id;
+		button.dataset.item_id = item_id;
 
-		button.addEventListener('click', (event) => { this.OpenEditorEvent(event, 'remove') }); 
-		button.dataset.opener = uiType; 
-		
-		var scaleButton = document.createElement('button'); 
-		scaleButton.name = 'scaleBackground'; 
-		scaleButton.innerHTML = this.settings.scale_title; 
-		scaleButton.type = 'button'; 
-		scaleButton.classList.add('button', 'button-secondary'); 
-		scaleButton.id = 'shortpixel_scale_button'; 
-		scaleButton.dataset.item_id = item_id; 
+		button.addEventListener('click', (event) => { this.OpenEditorEvent(event, 'remove') });
+		button.dataset.opener = uiType;
+
+		var scaleButton = document.createElement('button');
+		scaleButton.name = 'scaleBackground';
+		scaleButton.innerHTML = this.settings.scale_title;
+		scaleButton.type = 'button';
+		scaleButton.classList.add('button', 'button-secondary');
+		scaleButton.id = 'shortpixel_scale_button';
+		scaleButton.dataset.item_id = item_id;
 		scaleButton.style.marginLeft = '6px'
-		
-		scaleButton.addEventListener('click', (event) => { this.OpenEditorEvent(event, 'scale') }); 
-		scaleButton.dataset.opener = uiType; 
 
-		if (args.image_ext && false == (args.image_ext == 'jpg' || args.image_ext == 'png' || args.image_ext == 'jpeg'))
-		{
-			return; 
+		scaleButton.addEventListener('click', (event) => { this.OpenEditorEvent(event, 'scale') });
+		scaleButton.dataset.opener = uiType;
+
+		if (args.image_ext && false == (args.image_ext == 'jpg' || args.image_ext == 'png' || args.image_ext == 'jpeg')) {
+			return;
 		}
-		else if (args.image_width && parseInt(args.image_width) > parseInt(this.settings.upscale_max_width))
-		{
+		else if (args.image_width && parseInt(args.image_width) > parseInt(this.settings.upscale_max_width)) {
 			scaleButton.disabled = true;
-			scaleButton.title = this.settings.too_big_for_scale_title; 
+			scaleButton.title = this.settings.too_big_for_scale_title;
 		}
 
-			// @todo Probably all should pass uiType. 
-		if (typeof uiType === 'undefined' || uiType === 'edit')
-		{
-			var parent = document.querySelector('[id^=media-head]'); 
+		// @todo Probably all should pass uiType. 
+		if (typeof uiType === 'undefined' || uiType === 'edit') {
+			var parent = document.querySelector('[id^=media-head]');
 			let par = document.createElement('p');
 			let par2 = document.createElement('p');
 			par.append(button);
-			par2.append(scaleButton); 
+			par2.append(scaleButton);
 			parent.append(par, par2);
 		}
-		else if('gallery' === uiType)
-		{
+		else if ('gallery' === uiType) {
 			var parent = document.querySelector('.media-modal .attachment-actions')
 			parent.append(button, scaleButton);
 		}
-		else if ('gutenberg' == uiType)
-		{
+		else if ('gutenberg' == uiType) {
 			var parent = document.querySelector('.attachment-info  ');
-			if (null !== parent)
-			{
+			if (null !== parent) {
 				button.classList.add('button-link');
 				button.style.display = 'inline';
 				button.style.fontSize = '12px'; // hacking in to match Gburg. 
-				button.style.textDecoration = 'none'; 
-				
-				scaleButton.classList.add('button-link'); 
+				button.style.textDecoration = 'none';
+
+				scaleButton.classList.add('button-link');
 				scaleButton.style.display = 'inline';
 				scaleButton.style.fontSize = '12px'; // hacking in to match Gburg. 
-				scaleButton.style.textDecoration = 'none'; 
+				scaleButton.style.textDecoration = 'none';
 
-				if (false == scaleButton.disabled)
-				{
+				if (false == scaleButton.disabled) {
 					button.style.marginLeft = '4px';
 					parent.append(scaleButton);
 				}
@@ -134,99 +122,91 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		}
 	}
 
-	OpenEditorEvent(event, action_name)
-	{
-		let item_id = event.target.dataset.item_id; 
-		var opener = event.target.dataset.opener; 
+	OpenEditorEvent(event, action_name) {
+		let item_id = event.target.dataset.item_id;
+		var opener = event.target.dataset.opener;
 
-		event.preventDefault(); 
-		
+		event.preventDefault();
+
 		let backgroundShade = document.createElement('div');
 		backgroundShade.id = 'shortpixel-media-modal-shade';
 		backgroundShade.classList.add('shortpixel-media-modal-shade');
-		
-		let modal = document.createElement('div'); 
-		modal.id = 'shortpixel-media-modal'; 
-		modal.classList.add('shortpixel-media-modal', 'modal');
-		modal.dataset.opener = opener; 
-		modal.dataset.action_name = action_name; 
-		modal.dataset.item_id = item_id; 
 
-		if (null === document.getElementById('shortpixel-media-modal-css'))
-		{
-			var head  = document.getElementsByTagName('head')[0];
-			var link  = document.createElement('link');
-			link.id   = 'shortpixel-media-modal-css';
-			link.rel  = 'stylesheet';
+		let modal = document.createElement('div');
+		modal.id = 'shortpixel-media-modal';
+		modal.classList.add('shortpixel-media-modal', 'modal');
+		modal.dataset.opener = opener;
+		modal.dataset.action_name = action_name;
+		modal.dataset.item_id = item_id;
+
+		if (null === document.getElementById('shortpixel-media-modal-css')) {
+			var head = document.getElementsByTagName('head')[0];
+			var link = document.createElement('link');
+			link.id = 'shortpixel-media-modal-css';
+			link.rel = 'stylesheet';
 			link.type = 'text/css';
 			link.href = this.settings.modalcss;
 			link.media = 'all';
-			head.appendChild(link);	
+			head.appendChild(link);
 		}
 
 		// CloseEvent to close the modal + background
-		var closeEvent = new CustomEvent('shortpixel-media-modal-close', { detail : 
-			 {
-				 modal: modal,
-				 shade: backgroundShade,
-				 opener: opener, 
-			 }
-		} ); 
+		var closeEvent = new CustomEvent('shortpixel-media-modal-close', {
+			detail:
+			{
+				modal: modal,
+				shade: backgroundShade,
+				opener: opener,
+			}
+		});
 
-		var buttonEventUnblock = new CustomEvent('shortpixel-media-modal-buttons-unblock', { detail: {toggle : 'on'}});
-		var buttonEventBlock = new CustomEvent('shortpixel-media-modal-buttons-block', { detail: {toggle : 'off'}});
-		
+		var buttonEventUnblock = new CustomEvent('shortpixel-media-modal-buttons-unblock', { detail: { toggle: 'on' } });
+		var buttonEventBlock = new CustomEvent('shortpixel-media-modal-buttons-block', { detail: { toggle: 'off' } });
+
 
 		modal.closeEvent = closeEvent;  // if works, quite dirty.
-		modal.toggleButtonBlock = buttonEventBlock; 
-		modal.toggleButtonUnblock = buttonEventUnblock; 
+		modal.toggleButtonBlock = buttonEventBlock;
+		modal.toggleButtonUnblock = buttonEventUnblock;
 
 		//modal.addEventListener('shortpixel-media-modal-buttons-unblock, shortpixel-media-modal-buttons-block',
 		var buttonEvent = (event) => {
-			var toggle = event.detail.toggle; 
+			var toggle = event.detail.toggle;
 			console.log('toggle buttons');
 			var buttons = modal.querySelectorAll('button[type="button"]');
 
-			for (var i = 0; i < buttons.length; i++)
-			{
-				if ('on' == toggle)
-				{
-					buttons[i].disabled = false; 
+			for (var i = 0; i < buttons.length; i++) {
+				if ('on' == toggle) {
+					buttons[i].disabled = false;
 				}
-				else
-				{
-					buttons[i].disabled = true; 
+				else {
+					buttons[i].disabled = true;
 				}
 			}
-		}; 
+		};
 		modal.addEventListener('shortpixel-media-modal-buttons-unblock', buttonEvent);
 		modal.addEventListener('shortpixel-media-modal-buttons-block', buttonEvent);
 
 		document.addEventListener('shortpixel-media-modal-close', (event) => {
-				let detail = event.detail; 
-				detail.modal.remove();
-				detail.shade.remove(); 
+			let detail = event.detail;
+			detail.modal.remove();
+			detail.shade.remove();
 
-				if ('gallery' == event.detail.opener || 'gutenberg' == event.detail.opener)
-				{
-						var WPmodals = document.querySelectorAll('#wp-media-modal, .media-modal-backdrop'); 
-						for (let i =0; i < WPmodals.length; i++)
-						{
-							WPmodals[i].style.display = 'unset'; 
-						}
-		
+			if ('gallery' == event.detail.opener || 'gutenberg' == event.detail.opener) {
+				var WPmodals = document.querySelectorAll('#wp-media-modal, .media-modal-backdrop');
+				for (let i = 0; i < WPmodals.length; i++) {
+					WPmodals[i].style.display = 'unset';
 				}
+
+			}
 		}, { once: true });
 
-		backgroundShade.addEventListener('click', () => { document.dispatchEvent(closeEvent)});
+		backgroundShade.addEventListener('click', () => { document.dispatchEvent(closeEvent) });
 
 		// hide underlaying popups for now. 
-		if ('gallery' == opener || 'gutenberg' == opener)
-		{
-			var WPmodals = document.querySelectorAll('#wp-media-modal, .media-modal-backdrop'); 
-			for (let i =0; i < WPmodals.length; i++)
-			{
-			 	WPmodals[i].style.display = 'none'; 
+		if ('gallery' == opener || 'gutenberg' == opener) {
+			var WPmodals = document.querySelectorAll('#wp-media-modal, .media-modal-backdrop');
+			for (let i = 0; i < WPmodals.length; i++) {
+				WPmodals[i].style.display = 'none';
 			}
 		}
 
@@ -234,71 +214,63 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		document.body.append(modal);
 
 		window.addEventListener('shortpixel.openEditorPopup', function (event) {
-			let previewData = event.detail; 
+			let previewData = event.detail;
 
-			let actionName = event.detail.action_name; 
+			let actionName = event.detail.action_name;
 
-			modal.innerHTML = previewData.popup; 
+			modal.innerHTML = previewData.popup;
 			modal.querySelector('[data-action="close"]').addEventListener('click', () => {
 				document.dispatchEvent(closeEvent);
 			}, { once: true });
 
-			if (true == this.settings.popup_load_preview)
-			{
-				this.MediaEditorDoAction({ preview: true, 'item_id': item_id, 'modal': modal});
+			if (true == this.settings.popup_load_preview) {
+				this.MediaEditorDoAction({ preview: true, 'item_id': item_id, 'modal': modal });
 			}
 
-			let previewButton = modal.querySelector('[data-action="media-get-preview"]'); 
+			let previewButton = modal.querySelector('[data-action="media-get-preview"]');
 			previewButton.addEventListener('click', () => {
-				 	this.MediaEditorDoAction({ preview: true, 'item_id': item_id, 'modal' : modal, 'refresh' : true});
+				this.MediaEditorDoAction({ preview: true, 'item_id': item_id, 'modal': modal, 'refresh': true });
 			});
 
-			let saveButton = modal.querySelector('[data-action="media-save-button"]'); 
-			saveButton.addEventListener('click', () =>  { 
-				 this.MediaEditorDoAction({ preview: false, 'item_id': item_id, 'modal' : modal, 'refresh' : true});
+			let saveButton = modal.querySelector('[data-action="media-save-button"]');
+			saveButton.addEventListener('click', () => {
+				this.MediaEditorDoAction({ preview: false, 'item_id': item_id, 'modal': modal, 'refresh': true });
 			});
 
 			let actionWrapper = modal.querySelector('.' + actionName + '.action_wrapper');
-			if (null !== actionWrapper)
-			{
-				 actionWrapper.classList.add('active');
+			if (null !== actionWrapper) {
+				actionWrapper.classList.add('active');
 			}
 
 			// Interface elements for remove backgrounnd
-			let solidInput = modal.querySelectorAll('input[name="background_type"]'); 
-			if (solidInput.length > 0)
-			{
-				let solidSelector = modal.querySelector('#solid_selector'); 
-				for (let i = 0; i < solidInput.length; i++)	
-				{
+			let solidInput = modal.querySelectorAll('input[name="background_type"]');
+			if (solidInput.length > 0) {
+				let solidSelector = modal.querySelector('#solid_selector');
+				for (let i = 0; i < solidInput.length; i++) {
 					solidInput[i].addEventListener('change', (event) => {
-						 if (event.target.value == 'solid')
-						 {
-							 solidSelector.style.display = 'block'; 
-							 solidSelector.style.opacity = 1; 
-						 }
-						 else
-						 {
-							solidSelector.style.display = 'none'; 
-							solidSelector.style.opacity = 0; 
-						 }
-					}); 
+						if (event.target.value == 'solid') {
+							solidSelector.style.display = 'block';
+							solidSelector.style.opacity = 1;
+						}
+						else {
+							solidSelector.style.display = 'none';
+							solidSelector.style.opacity = 0;
+						}
+					});
 				}
 			}
 			let bgTransInput = modal.querySelector('#bg_transparency');
-			if (null !== bgTransInput)
-			{
+			if (null !== bgTransInput) {
 				bgTransInput.addEventListener('change', (event) => {
-					let value = event.target.value; 
-					let tr = modal.querySelector('#transparency_range'); 
-					if (null !== tr)
-					{ 
+					let value = event.target.value;
+					let tr = modal.querySelector('#transparency_range');
+					if (null !== tr) {
 						tr.innerText = value;
 					}
 				});
 			}
 
-			
+
 
 
 		}.bind(this), { once: true });
@@ -308,7 +280,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			id: item_id,
 			type: 'media',
 			screen_action: 'media/getEditorPopup',
-			action_name : action_name, 
+			action_name: action_name,
 		}
 		data.callback = 'shortpixel.openEditorPopup';
 		this.processor.AjaxRequest(data);
@@ -316,42 +288,37 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 	}
 
-	MediaEditorDoAction(data)
-	{
+	MediaEditorDoAction(data) {
 		let modal = data.modal;
-		let backgroundType = modal.querySelector('input[name="background_type"]:checked').value; 
-		let backgroundColor = modal.querySelector('#bg_display_picker').value; 
-		let backgroundTransparency = modal.querySelector('#bg_transparency').value; 
-		let newFileName = modal.querySelector('input[name="new_filename"]').value; 
-		let newPostTitle= modal.querySelector('input[name="new_posttitle"]').value;
-		let spinner = document.querySelector('.load-preview-spinner'); 
-		let scaleOption = document.querySelector('input[name="scale"]:checked').value; 
+		let backgroundType = modal.querySelector('input[name="background_type"]:checked').value;
+		let backgroundColor = modal.querySelector('#bg_display_picker').value;
+		let backgroundTransparency = modal.querySelector('#bg_transparency').value;
+		let newFileName = modal.querySelector('input[name="new_filename"]').value;
+		let newPostTitle = modal.querySelector('input[name="new_posttitle"]').value;
+		let spinner = document.querySelector('.load-preview-spinner');
+		let scaleOption = document.querySelector('input[name="scale"]:checked').value;
 
-		let action = modal.dataset.action_name; 
-		let opener = modal.dataset.opener; 
+		let action = modal.dataset.action_name;
+		let opener = modal.dataset.opener;
 
 
-		let previewImage = document.querySelector('.modal-wrapper .image-preview i'); 
+		let previewImage = document.querySelector('.modal-wrapper .image-preview i');
 		previewImage.style.backgroundImage = 'url(' + previewImage.dataset.placeholder + ')';
 
 		modal.dispatchEvent(modal.toggleButtonBlock);
 
-		if ('gutenberg' == opener)
-		{
+		if ('gutenberg' == opener) {
 			let searchParams = new URLSearchParams(window.location.search);
-			if (searchParams.has('post'))
-				{
-					 data.attached_post_id = searchParams.get('post'); 
-				}			 
+			if (searchParams.has('post')) {
+				data.attached_post_id = searchParams.get('post');
+			}
 		}
 
-		if (typeof data.refresh !== 'undefined')
-		{
-			 var refresh = data.refresh;
+		if (typeof data.refresh !== 'undefined') {
+			var refresh = data.refresh;
 		}
-		else
-		{
-			 var refresh = false; 
+		else {
+			var refresh = false;
 		}
 
 		spinner.classList.remove('shortpixel-hide');
@@ -360,210 +327,204 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			id: data.item_id,
 			type: 'media',
 			screen_action: 'media/getEditorPreview',
-			newFileName: newFileName, 
-			newPostTitle: newPostTitle, 
+			newFileName: newFileName,
+			newPostTitle: newPostTitle,
 			is_preview: data.preview,
-			refresh: refresh, 
+			refresh: refresh,
 			opener: opener,
 			action_name: action,
 		};
 
-		if ('remove' == action)
-		{
-			request.background_type =  backgroundType; 
-			request.background_color = backgroundColor; 
-			request.background_transparency = backgroundTransparency;   
+		if ('remove' == action) {
+			request.background_type = backgroundType;
+			request.background_color = backgroundColor;
+			request.background_transparency = backgroundTransparency;
 		}
 
-		if ('scale' == action)
-		{
+		if ('scale' == action) {
 			request.scale = scaleOption;
 		}
 
-		if (data.attached_post_id)
-		{
+		if (data.attached_post_id) {
 			request.attached_post_id = data.attached_post_id;
 		}
 
 		request.callback = 'shortpixel.mediaEditorPreviewLoaded';
 		this.processor.AjaxRequest(request);
 
-		window.addEventListener('shortpixel.mediaEditorPreviewLoaded',  function (event) {
-				this.MediaEditorPreviewEvent(event, modal);
-		}.bind(this), {once:true});
+		window.addEventListener('shortpixel.mediaEditorPreviewLoaded', function (event) {
+			this.MediaEditorPreviewEvent(event, modal);
+		}.bind(this), { once: true });
 	}
 
-	MediaEditorPreviewEvent(event, modal)
-	{
-		let data = event.detail; 
+	MediaEditorPreviewEvent(event, modal) {
+		let data = event.detail;
 
-		let errorElement = modal.querySelector('.error-message'); 
-		let spinner = modal.querySelector('.load-preview-spinner'); 
+		let errorElement = modal.querySelector('.error-message');
+		let spinner = modal.querySelector('.load-preview-spinner');
 
-		 if (true === data.is_error)
-		 {
-			 errorElement.innerText = data.message; 
-			 errorElement.classList.remove('shortpixel-hide');
-		 }
-		 if (true === data.is_done)
-		 {
-			if (spinner)
-			{
-				 spinner.classList.add('shortpixel-hide');
+		if (true === data.is_error) {
+			errorElement.innerText = data.message;
+			errorElement.classList.remove('shortpixel-hide');
+		}
+		if (true === data.is_done) {
+			if (spinner) {
+				spinner.classList.add('shortpixel-hide');
 			}
-		 }
-
-		 if (data.optimized)
-		 {	
-			 errorElement.classList.add('shortpixel-hide');
-			 let previewImage = document.querySelector('.modal-wrapper .image-preview i'); 
-			 previewImage.style.backgroundImage = 'url("' + data.optimized + '?ts=' + Date.now() + '")'; 
 		}
 
-		 if (typeof data.redirect !== 'undefined' && 'gutenberg' == data.redirect && data.new_attach_id)
-		 {
+		if (data.optimized) {
+			errorElement.classList.add('shortpixel-hide');
+			let previewImage = document.querySelector('.modal-wrapper .image-preview i');
+			previewImage.style.backgroundImage = 'url("' + data.optimized + '?ts=' + Date.now() + '")';
+		}
+
+		if (typeof data.redirect !== 'undefined' && 'gutenberg' == data.redirect && data.new_attach_id) {
 
 			// Documentation is media-template.php and media-attachment.js 
 			var lib = wp.media.frame.state().get('library');
 			var file = data.file;
-			lib.add(file);	
+			lib.add(file);
 			document.dispatchEvent(modal.closeEvent);
 
-		 }
-		 else if (typeof data.redirect !== 'undefined')
-		 {
+		}
+		else if (typeof data.redirect !== 'undefined') {
 			window.location.href = data.redirect;
-		 }
-		 modal.dispatchEvent(modal.toggleButtonUnblock);
+		}
+		modal.dispatchEvent(modal.toggleButtonUnblock);
 	}
 
-	FetchAltView(aiData, item_id)
-	{
-		if (false == this.ai_enabled)
-		{
-			 return;
+	FetchAltView(aiData, item_id) {
+		if (false == this.ai_enabled) {
+			return;
 		}
 		var attachmentAlt = this.GetPageAttachmentAlt();
 
 		if (null === attachmentAlt) // No attach alt around
 		{
-			return; 
+			return;
 		}
-		if (typeof item_id === 'undefined')
-		{
+		if (typeof item_id === 'undefined') {
 			console.error('Item_id not passed');
-			return; 
+			return;
+		}
+
+		// If we pass AiData for interface make sure it's the correct item_id
+		if (aiData && (!attachmentAlt.dataset.shortpixelAlt || attachmentAlt.dataset.shortpixelAlt != item_id)) {
+			console.log('This screen, not our screen', attachmentAlt.dataset.shortpixelAlt, item_id);
+			return;
 		}
 
 		var wp_screen_id = this.settings.wp_screen_id;
 
 
-		if (typeof aiData !== 'undefined')
-		{
-			var newAltText = aiData.alt; 
+		if (typeof aiData !== 'undefined') {
+			var newAltText = aiData.alt;
 			var newCaption = aiData.caption;
 			var newDescription = aiData.description;
 			var newTitle = aiData.post_title;
+			var newFileBase = aiData.filebase; 
 		}
-		
+
 		console.log(aiData);
 
-		if (typeof newAltText !== 'undefined')
-		{
+		if (typeof newAltText !== 'undefined') {
 			var inputs = this.altInputNames;
 
-			if (typeof newAltText == 'number')
-			{
-				newAltText = ''; 
+			if (typeof newAltText == 'number') {
+				newAltText = '';
 			}
-	
-			for (var i = 0; i < inputs.length; i++)
-			{
-				   var altInput = document.getElementById(inputs[i]); 
-				   if (altInput !== null)
-				   {
-					   if (altInput.dataset.shortpixelAlt != item_id)
-					   {
-						 console.log('Returned alt, but not ours.', item_id, altInput);
-						 continue; 
-					   }
-					   if (typeof altInput.value !== 'undefined')
-					   {
-						   altInput.value = newAltText; 	
-					   }
-					   else
-					   {
-						   altInput.innerText = newAltText; 	
-					   }
-				   }
+
+			for (var i = 0; i < inputs.length; i++) {
+				var altInput = document.getElementById(inputs[i]);
+				if (altInput !== null) {
+					if (altInput.dataset.shortpixelAlt != item_id) {
+						console.log('Returned alt, but not ours.', item_id, altInput);
+						continue;
+					}
+					if (typeof altInput.value !== 'undefined') {
+						altInput.value = newAltText;
+					}
+					else {
+						altInput.innerText = newAltText;
+					}
+				}
 			}
 		}
 		// edit media screen
-		 let captionFields = ['attachment_caption', 'attachment-details-caption', 'attachment-details-two-column-caption']; 
-		 let descriptionFields = ['attachment_content', 'attachment-details-description', 'attachment-details-two-column-description']; 
+		let captionFields = ['attachment_caption', 'attachment-details-caption', 'attachment-details-two-column-caption'];
+		let descriptionFields = ['attachment_content', 'attachment-details-description', 'attachment-details-two-column-description'];
+
+		let postTitleFields = ['attachment-details-title', 'attachment-details-two-column-title'];
+		let fileNameFields = ['attachment_url', '.misc-pub-filename strong', '.misc-pub-original-image strong']; 
 		
-		 let postTitleFields = ['attachment-details-title', 'attachment-details-two-column-title'];
-		 // This check: the edit-post screen also has a name title field, but this is for the post, not attachment. only replace in attachment screen
-		 if ('attachment' == wp_screen_id)
-	 	 {	
+		// This check: the edit-post screen also has a name title field, but this is for the post, not attachment. only replace in attachment screen
+		if ('attachment' == wp_screen_id) {
 			postTitleFields.push('title');
-		 }
-		 
-		 if (typeof newCaption !== 'undefined')
-		 {
-			if (typeof newCaption === 'number')
-			{
-				newCaption = ''; 
+		}
+
+		if (typeof newCaption !== 'undefined') {
+			if (typeof newCaption === 'number') {
+				newCaption = '';
 			}
 
-			for (var i = 0; i < captionFields.length; i++)
-			{
-				let captionField = document.getElementById(captionFields[i]); 
-				if (null !== captionField)
-				{
-					captionField.value = newCaption; 
-				}				 
-			}
-		 }
-
-		 if (typeof newDescription !== 'undefined')
-		 {
-			if (typeof(newDescription) === 'number')
-			{
-				newDescription = ''; 
-			}
-			for (var i = 0; i < descriptionFields.length; i++)
-			{
-				let descriptionField = document.getElementById(descriptionFields[i]);
-				if (null !== descriptionField)
-				{
-					 descriptionField.value = newDescription; 
+			for (var i = 0; i < captionFields.length; i++) {
+				let captionField = document.getElementById(captionFields[i]);
+				if (null !== captionField) {
+					captionField.value = newCaption;
 				}
 			}
-		 }
+		}
 
-		 if (typeof newTitle !== 'undefined' && typeof newTitle !== 'number')
-		 {
-
-
-			for (var i = 0; i < postTitleFields.length; i++)
-			{
-				 let titleField = document.getElementById(postTitleFields[i]); 
-				 if (null !== titleField)
-				 {
-					 titleField.value = newTitle;
-				 }
+		if (typeof newDescription !== 'undefined') {
+			if (typeof (newDescription) === 'number') {
+				newDescription = '';
 			}
-		 }
+			for (var i = 0; i < descriptionFields.length; i++) {
+				let descriptionField = document.getElementById(descriptionFields[i]);
+				if (null !== descriptionField) {
+					descriptionField.value = newDescription;
+				}
+			}
+		}
 
-		if (null !== attachmentAlt)
+		if (typeof newTitle !== 'undefined' && typeof newTitle !== 'number') {
+
+
+			for (var i = 0; i < postTitleFields.length; i++) {
+				let titleField = document.getElementById(postTitleFields[i]);
+				if (null !== titleField) {
+					titleField.value = newTitle;
+				}
+			}
+		}
+
+		if (typeof newFileBase !== 'undefined' && typeof newFileBase !== 'number')
 		{
-			if (attachmentAlt.dataset.shortpixelAlt && attachmentAlt.dataset.shortpixelAlt != item_id)
+			for (var i = 0; i < fileNameFields.length; i++)
 			{
-				console.log('AttachmentAlt not ' + item_id); 
+				let fileNameField = fileNameFields[i]; 
+				if (fileNameField.charAt(0) == '.')
+				{
+					fileNameField = document.querySelector(fileNameField); 
+					if (null !== fileNameField)
+					{
+						fileNameField.innerText = newFileBase; 
+					}
+					else
+					{
+						// @todo Need to find how to replace the URL here, or take URL from result.
+					}
+				}
+			}
+		}
+
+		if (null !== attachmentAlt) {
+			if (attachmentAlt.dataset.shortpixelAlt && attachmentAlt.dataset.shortpixelAlt != item_id) {
+				console.log('AttachmentAlt not ' + item_id);
 				return;
 			}
-			
+
 			var data = {
 				id: item_id,
 				type: 'media',
@@ -572,20 +533,17 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			data.callback = 'shortpixel.AttachAiInterface';
 			this.processor.AjaxRequest(data);
 
-			window.addEventListener('shortpixel.AttachAiInterface', this.AttachAiInterface.bind(this), {once: true});
+			window.addEventListener('shortpixel.AttachAiInterface', this.AttachAiInterface.bind(this), { once: true });
 		}
 	}
 
-	GetPageAttachmentAlt()
-	{
-		for (var i = 0; i < this.altInputNames.length; i++)
-			{
-				var attachmentAlt = document.getElementById(this.altInputNames[i]);
-				if (attachmentAlt !== null)
-				{
-					return attachmentAlt;
-				} 	
+	GetPageAttachmentAlt() {
+		for (var i = 0; i < this.altInputNames.length; i++) {
+			var attachmentAlt = document.getElementById(this.altInputNames[i]);
+			if (attachmentAlt !== null) {
+				return attachmentAlt;
 			}
+		}
 		return null;
 	}
 
@@ -621,9 +579,9 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			event.preventDefault();
 			var items = document.querySelectorAll('input[name="media[]"]:checked');
 
-			var bulkActions = []; 
-			var bulkItems = []; 
-			
+			var bulkActions = [];
+			var bulkItems = [];
+
 			for (var i = 0; i < items.length; i++) {
 
 				var media_id = items[i].value;
@@ -631,15 +589,15 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				var optimizable = column.classList.contains('is-optimizable');
 				var restorable = column.classList.contains('is-restorable');
 				var aiAction = column.classList.contains('ai-action');
-				
+
 				var compressionType = column.dataset.compression;
-				var actionPushed = false; 
-				
+				var actionPushed = false;
+
 				switch (actionValue) {
 					case 'shortpixel-optimize':
 						if (optimizable) {
-							bulkActions.push( this.AddDelayedAction('Optimize', media_id));
-							actionPushed = true; 
+							bulkActions.push(this.AddDelayedAction('Optimize', media_id));
+							actionPushed = true;
 							//this.Optimize(media_id);
 						}
 						break;
@@ -676,8 +634,8 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 						}
 
 						if (restorable) {
-							bulkActions.push( this.AddDelayedAction('ReOptimize', media_id, compressionType, action) );
-							actionPushed = true; 
+							bulkActions.push(this.AddDelayedAction('ReOptimize', media_id, compressionType, action));
+							actionPushed = true;
 
 							//this.ReOptimize(media_id, compressionType, action);
 						}
@@ -685,55 +643,50 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 						break;
 					case 'shortpixel-restore':
 						if (restorable) {
-							bulkActions.push( this.AddDelayedAction('RestoreItem', media_id) );
-							actionPushed = true; 
+							bulkActions.push(this.AddDelayedAction('RestoreItem', media_id));
+							actionPushed = true;
 							//this.RestoreItem(media_id);
 						}
 						break;
 					case 'shortpixel-mark-completed':
-							if (optimizable) {
-								bulkActions.push( this.AddDelayedAction('MarkCompleted', media_id) );
-								actionPushed = true; 
-								//this.MarkCompleted(media_id);
-							}
-					break; 
-					case 'shortpixel-generateai':
-						if (aiAction)
-						{
-							bulkActions.push( this.AddDelayedAction('RequestAlt', media_id) );
-							actionPushed = true; 
-							 //this.RequestAlt(media_id);
+						if (optimizable) {
+							bulkActions.push(this.AddDelayedAction('MarkCompleted', media_id));
+							actionPushed = true;
+							//this.MarkCompleted(media_id);
 						}
-					break; 
+						break;
+					case 'shortpixel-generateai':
+						if (aiAction) {
+							bulkActions.push(this.AddDelayedAction('RequestAlt', media_id));
+							actionPushed = true;
+							//this.RequestAlt(media_id);
+						}
+						break;
 				}
 
-				if (false === actionPushed)
-				{
+				if (false === actionPushed) {
 					items[i].checked = false;
 				}
-				else 
-				{
-					 bulkItems.push(items[i]);
+				else {
+					bulkItems.push(items[i]);
 				}
 			} // for Loop 
 
 
 			// Timeout: delay a little bit each item to prevent hammering server. 
-			var i = 0; 
-			if (bulkActions.length > 0)
-			{
+			var i = 0;
+			if (bulkActions.length > 0) {
 
 				var inv = setInterval(() => {
 
-							var item = bulkItems.shift(); 
-							item.checked = false; 
-							bulkActions[i]();
-							i++; 
-							if (i === bulkActions.length)
-							{
-								clearInterval(inv);
-							}
-						}, 1000 );
+					var item = bulkItems.shift();
+					item.checked = false;
+					bulkActions[i]();
+					i++;
+					if (i === bulkActions.length) {
+						clearInterval(inv);
+					}
+				}, 1000);
 			}
 
 
@@ -745,7 +698,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 	HandleImage(resultItem, type) {
 		var res = super.HandleImage(resultItem, type);
 		var fileStatus = this.processor.fStatus[resultItem.fileStatus];
-		var apiName = (typeof resultItem.apiName !== 'undefined') ? resultItem.apiName : 'optimize'; 
+		var apiName = (typeof resultItem.apiName !== 'undefined') ? resultItem.apiName : 'optimize';
 
 
 		// If image editor is active and file is being restored because of this reason ( or otherwise ), remove the warning if this one exists.
@@ -756,8 +709,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			}
 		}
 
-		if (fileStatus == 'FILE_DONE' && apiName == 'ai')
-		{
+		if (fileStatus == 'FILE_DONE' && apiName == 'ai') {
 			this.UpdateGutenBerg(resultItem);
 		}
 	}
@@ -785,10 +737,9 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 	// Check the Gallery popup on Media Library 
 	ListenGallery() {
 		var self = this;
-		var next_item_run_process = false; 
+		var next_item_run_process = false;
 
-		if (this.settings.hide_spio_in_popups)
-		{
+		if (this.settings.hide_spio_in_popups) {
 			return;
 		}
 
@@ -801,12 +752,12 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		if (typeof wp.media.view.Attachment.Details.TwoColumn !== 'undefined') {
 			var detailsColumn = wp.media.view.Attachment.Details.TwoColumn; // Media library grid.
 			var twoCol = true;
-			var opener = 'gallery'; 
+			var opener = 'gallery';
 		}
 		else {
 			var detailsColumn = wp.media.view.Attachment.Details; // Gutenberg
 			var twoCol = false;
-			var opener = 'gutenberg'; 
+			var opener = 'gutenberg';
 		}
 
 		var extended = detailsColumn.extend({
@@ -816,27 +767,22 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				if (typeof this.fetchSPIOData === 'function') {
 					let attach_id = this.model.get('id');
 
-					if (typeof attach_id !== 'undefined')
-					{
-						if (true === next_item_run_process )
-						{
+					if (typeof attach_id !== 'undefined') {
+						if (true === next_item_run_process) {
 							window.ShortPixelProcessor.SetInterval(-1);
 							window.ShortPixelProcessor.RunProcess();
-							next_item_run_process = false; 
+							next_item_run_process = false;
 						}
-						else
-						{
-						this.fetchSPIOData(attach_id);
-						this.spioBusy = true; // Note if this system turns out not to work, the perhaps render empties all if first was painted, second cancelled?
+						else {
+							this.fetchSPIOData(attach_id);
+							this.spioBusy = true; // Note if this system turns out not to work, the perhaps render empties all if first was painted, second cancelled?
 						}
 					}
-					else if (true == this.model.get('uploading'))
-					{
-						next_item_run_process = true; 
+					else if (true == this.model.get('uploading')) {
+						next_item_run_process = true;
 						console.log('Upload Start Detected');
 					}
-					else
-					{
+					else {
 						console.log('Id not found on render');
 					}
 				}
@@ -864,7 +810,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 					return;
 				}
 
-				var item_id = e.detail.media.id; 
+				var item_id = e.detail.media.id;
 
 				var $spSpace = this.$el.find('.attachment-info .details');
 				if ($spSpace.length === 0 && (typeof timed === 'undefined' || timed < 5)) {
@@ -878,21 +824,21 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 					setTimeout(function () { this.renderSPIOView(e, timed) }.bind(this), 1000);
 				}
 
-				let editorArgs = {}; 
+				let editorArgs = {};
 				if (e.detail.media.image && e.detail.media.image.width) // dottadot
 				{
-					editorArgs.image_width = e.detail.media.image.width; 
+					editorArgs.image_width = e.detail.media.image.width;
 				}
 				if (e.detail.media.image && e.detail.media.image.extension) // dottadot
 				{
-					editorArgs.image_ext = e.detail.media.image.extension; 
+					editorArgs.image_ext = e.detail.media.image.extension;
 				}
 
 				var html = this.doSPIORow(e.detail.media.itemView);
 				$spSpace.after(html);
 
 				self.InitEditorActions(item_id, opener, editorArgs);
-				self.FetchAltView(undefined, item_id); 
+				self.FetchAltView(undefined, item_id);
 
 			},
 			doSPIORow: function (dataHtml) {
@@ -903,7 +849,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				html += '</div>';
 				return html;
 			},
-			 
+
 			editAttachment: function (event) {
 				event.preventDefault();
 				self.AjaxOptimizeWarningFromUnderscore(this.model.get('id'));
@@ -920,22 +866,19 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 	}
 
 	// It's not possible via hooks / server-side, so attach the AI interface HTML to where it should be attached. 
-	AttachAiInterface(event)
-	{
-		
-		var data = event.detail.media; 	
-		var item_id = data.item_id; 
-		if (typeof data === 'undefined')
-		{
+	AttachAiInterface(event) {
+
+		var data = event.detail.media;
+		var item_id = data.item_id;
+		if (typeof data === 'undefined') {
 			console.log('Error on ai interface!', data);
 			return false;
 		}
 		var element = this.GetPageAttachmentAlt();
 
-		if (null == element)
-		{
-			console.warn('Could not attach ID interface here! '); 
-			return false; 
+		if (null == element) {
+			console.warn('Could not attach ID interface here! ');
+			return false;
 		}
 
 		var wrapper = document.getElementById('shortpixel-ai-wrapper-' + item_id);
@@ -948,14 +891,14 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		// This will not work because the wrapper doesn't exist and is recreated each time on fly. Need some place to store item_id on item load
 		var wrapper = document.createElement('div');
 		wrapper.id = 'shortpixel-ai-wrapper-' + item_id;
-		wrapper.classList.add('shortpixel-ai-interface',element.getAttribute('id'));
-		
-		wrapper.innerHTML = data.snippet;	
+		wrapper.classList.add('shortpixel-ai-interface', element.getAttribute('id'));
+
+		wrapper.innerHTML = data.snippet;
 
 
 		element.after(wrapper);
 
-		element.dataset.shortpixelAlt = data.item_id;		
+		element.dataset.shortpixelAlt = data.item_id;
 		if (data.result_alt && data.has_data)
 			element.value = data.result_alt;
 
@@ -1042,71 +985,63 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		});
 	}
 
-	ListenGutenberg()
-	{
+	ListenGutenberg() {
 
-		var self = this; 
+		var self = this;
 
-		if (typeof wp.data == 'undefined')
-		{
+		if (typeof wp.data == 'undefined') {
 			return;
 		}
 
 		wp.data.subscribe(() => {
 			if (wp.data.select('core')) {
 				const { getSelectedBlock } = wp.data.select('core/block-editor');
-		
+
 				const block = getSelectedBlock();
-			
+
 				if (block && block.name === 'core/image') {
 					const imageId = block.attributes.id; // Get the image ID
-		
+
 					if (imageId) {
-		
-						if (self.gutenCheck.indexOf(imageId) === -1)
-						{
-						
+
+						if (self.gutenCheck.indexOf(imageId) === -1) {
+
 							window.ShortPixelProcessor.SetInterval(-1);
 							window.ShortPixelProcessor.RunProcess();
-						
+
 							self.gutenCheck.push(imageId);
 						}
-						else
-						{
-						
+						else {
+
 						}
-		
+
 					}
 				}
 			}
 		});
 	}
 
-	UpdateGutenBerg(resultItem)
-	{
-		
-		var attach_id = resultItem.item_id; 
-		var aiData = resultItem.aiData; 
-		
-		if (! wp.data || ! wp.data.select('core'))
-		{
-			return false; 
+	UpdateGutenBerg(resultItem) {
+
+		var attach_id = resultItem.item_id;
+		var aiData = resultItem.aiData;
+
+		if (!wp.data || !wp.data.select('core')) {
+			return false;
 		}
 
-		let blocks = wp.data.select( 'core/block-editor' ).getBlocks();
-		for (let i = 0; i < blocks.length; i++)
-		{
+		let blocks = wp.data.select('core/block-editor').getBlocks();
+		for (let i = 0; i < blocks.length; i++) {
 			let block = blocks[i];
 
-			 if (block.attributes.id == attach_id)
-			 {
+			if (block.attributes.id == attach_id) {
 				let clientId = block.clientId;
 
-				console.log('DATA DISPATCH ', clientId, aiData);				
-				wp.data.dispatch( 'core/block-editor' ).updateBlockAttributes( clientId, 
-					aiData );
+				console.log('DATA DISPATCH ', clientId, aiData);
+				wp.data.dispatch('core/block-editor').updateBlockAttributes(clientId,
+					aiData);
 
-			 }
+			}
 		}
 	}
 

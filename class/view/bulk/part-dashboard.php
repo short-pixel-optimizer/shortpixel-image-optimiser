@@ -123,7 +123,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 				 	 <span class="svg-spinner"><?php $this->loadView('snippets/part-svgloader', false); ?></span>
 
            <span>
-           <h2><?php esc_html_e('Please wait, ShortPixel is loading'); ?></h2>
+           <h2><?php esc_html_e('Please wait, ShortPixel is loading', 'shortpixel-image-optimiser'); ?></h2>
 
          </span>
 

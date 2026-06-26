@@ -595,7 +595,7 @@ class UiHelper
 	{
 		 if ($mediaItem->isProcessable(true) === false)
 		 {
-			 $text = __('Not Processable: ','shortpixel_image_optimiser');
+			 $text = __('Not Processable: ','shortpixel-image-optimiser');
 			 $text  .= $mediaItem->getProcessableReason();
 		 }
 		 else {
@@ -614,7 +614,7 @@ class UiHelper
     }
     elseif (false === $mediaItem->isProcessable()  )
     {
-       $text = __('Not Processable: ','shortpixel_image_optimiser');
+       $text = __('Not Processable: ','shortpixel-image-optimiser');
        $text  .= $mediaItem->getProcessableReason();
     }
     elseif (! $mediaItem->exists())

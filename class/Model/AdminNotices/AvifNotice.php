@@ -90,7 +90,7 @@ class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 					 }
 					 elseif(is_null($contentType) || strpos($contentType, 'avif') === false)
 					 {
-						 $this->error_detail = sprintf(__('The required Content-type header for AVIF files was not found. Please check this with your hosting and/or CDN provider. For more details on how to fix this issue, %s see this article %s', 'shortpixel_image_optimiser'), '<a href="https://shortpixel.com/blog/avif-mime-type-delivery-apache-nginx/" target="_blank"> ', '</a>');
+						 $this->error_detail = sprintf(__('The required Content-type header for AVIF files was not found. Please check this with your hosting and/or CDN provider. For more details on how to fix this issue, %s see this article %s', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/avif-mime-type-delivery-apache-nginx/" target="_blank"> ', '</a>');
 					 }
 					 else
 					 {

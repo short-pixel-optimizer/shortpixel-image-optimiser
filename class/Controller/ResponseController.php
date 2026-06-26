@@ -191,14 +191,14 @@ class ResponseController
 			switch($item->fileStatus)
 			{
 				  case ImageModel::FILE_STATUS_ERROR:
-							$text .= sprintf(__('( %s %d ) ', 'shortpixel-image-optimizer'), (strtolower($item->item_type) == 'media') ?  __('Attachment ID ') : __('Custom # '), $item->item_id);
+							$text .= sprintf(__('( %s %d ) ', 'shortpixel-image-optimiser'), (strtolower($item->item_type) == 'media') ?  __('Attachment ID ') : __('Custom # '), $item->item_id);
 					break;
 			}
 
 			switch($item->apiStatus)
 			{
 				  case RequestManager::STATUS_FAIL:
-							$text .= sprintf(__('( %s %d ) ', 'shortpixel-image-optimizer'), (strtolower($item->item_type) == 'media') ?  __('Attachment ID ') : __('Custom # '), $item->item_id);
+							$text .= sprintf(__('( %s %d ) ', 'shortpixel-image-optimiser'), (strtolower($item->item_type) == 'media') ?  __('Attachment ID ') : __('Custom # '), $item->item_id);
 					break;
 			}
 
@@ -238,7 +238,7 @@ class ResponseController
            case RequestManager::STATUS_NOT_API:
               $action = (property_exists($item, 'action')) ? ucfirst($item->action) : __('Action', 'shortpixel-image-optimiser');
               $filename = (property_exists($item, 'fileName')) ? $item->fileName : '';
-              $text = sprintf(__('%s completed for %s'), $action, $item->fileName);
+              $text = sprintf(__('%s completed for %s', 'shortpixel-image-optimiser'), $action, $item->fileName);
            break;
 				}
 

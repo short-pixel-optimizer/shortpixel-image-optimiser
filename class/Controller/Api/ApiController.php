@@ -311,7 +311,7 @@ class ApiController extends RequestManager
 				}
 
 				// Bail out if action is not properly defined
-				return $this->returnFailure(self::STATUS_FAIL, __('ApiController was not provided with known action'));
+				return $this->returnFailure(self::STATUS_FAIL, __('ApiController was not provided with known action', 'shortpixel-image-optimiser'));
 
 
 		} // ApiResponse[0]
@@ -540,7 +540,7 @@ class ApiController extends RequestManager
 			Log::addError('Failure! HandleSuccess did not receive filename or imagename! ', $data);
 			Log::addError('Error Item:', $qItem);
 
-			return $this->returnFailure(self::STATUS_FAIL, __('Internal error, missing variables'));
+			return $this->returnFailure(self::STATUS_FAIL, __('Internal error, missing variables', 'shortpixel-image-optimiser'));
 		}
 
 		$originalFileSize = (false === $data['fileSize']) ? intval($fileData->OriginalSize) : $data['fileSize'];

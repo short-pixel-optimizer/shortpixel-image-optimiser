@@ -109,7 +109,7 @@ abstract class RequestManager
 
     $arguments = array(
         'method' => 'POST',
-        'timeout' => 15, // timeout in seconds
+        'timeout' => apply_filters('shortpixel/api/timeout/', 15), 
         'redirection' => 3, // amount of redirects allowed.
         'sslverify' => apply_filters('shortpixel/system/sslverify', true),
         'httpversion' => '1.0',
@@ -159,13 +159,13 @@ abstract class RequestManager
             }
             if (strpos($errorMessage, 'cURL error 60') !== false)
             {
-               $errorMessage = __('Server error, please contact support ( ' . $errorMessage. ')');
+               $errorMessage = sprintf(__('Server error, please contact support (%s)', 'shortpixel-image-optimiser'), $errorMessage);
                $is_fatal = true;
 
             }
             if (strpos($errorMessage, 'cURL error 6') !== false)
             {
-              $errorMessage = __('Host error, please check configuration or contact support ( ' . $errorMessage. ')');
+              $errorMessage = sprintf(__('Host error, please check configuration or contact support (%s)', 'shortpixel-image-optimiser'), $errorMessage);
               $is_fatal = true;
             }
 
@@ -234,12 +234,6 @@ abstract class RequestManager
    */
   protected function returnFailure($status, $message)
   {
-  /*      $result = $this->getResultObject();
-        $result->apiStatus = $status;
-        $result->message = $message;
-        $result->is_error = true;
-        $result->is_done = true; */
-
         $result = [
             'apiStatus' => $status,
             'message' => $message,
@@ -261,12 +255,6 @@ abstract class RequestManager
    */
   protected function returnRetry($status, $message)
   {
-
-  /*  $result = $this->getResultObject();
-    $result->apiStatus = $status;
-    $result->message = $message; */
-
-  //  $result->is_error = true;
 
     $result = [
       'apiStatus' => $status,
@@ -290,11 +278,7 @@ abstract class RequestManager
    */
   protected function returnOK($status = self::STATUS_UNCHANGED, $message = false)
   {
-      /* $result = $this->getResultObject();
-      $result->apiStatus = $status;
-      $result->is_error = false;
-      $result->message = $message;
-      */
+
       $result = [
          'apiStatus' => $status,
          'message' => $message,
@@ -349,7 +333,7 @@ abstract class RequestManager
   protected function parseResponse($response)
   {
     $data = $response['body'];
-
+Log::addTemp('Raw Response', $response);
     $raw_data = $data;
 
     $data = json_decode($data);

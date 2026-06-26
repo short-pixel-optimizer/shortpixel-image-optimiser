@@ -47,7 +47,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             ['name' => 'doBackgroundProcess',
              'checked' => $view->data->doBackgroundProcess,
              'label' => esc_html__('Background mode','shortpixel-image-optimiser'),
-             'data' => ['data-toggle="background_warning"', 'data-dashboard="' . __('Background mode is recommended', 'shortpixel-image-optimser') . '"'],
+             'data' => ['data-toggle="background_warning"', 'data-dashboard="' . __('Background mode is recommended', 'shortpixel-image-optimiser') . '"'],
             ]);
       ?>
 

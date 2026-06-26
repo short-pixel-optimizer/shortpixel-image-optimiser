@@ -32,7 +32,7 @@ if (Log::isManualDebug())
   </h2>
 
   <div class='env'>
-    <h3><?php esc_html_e('Environment', 'shortpixel'); ?></h3>
+    <h3><?php esc_html_e('Environment', 'shortpixel-image-optimiser'); ?></h3>
     <div class='flex'>
       <span>NGINX</span><span><?php var_export($this->is_nginx); ?></span>
       <span>KeyVerified</span><span><?php var_export($view->key->is_verifiedkey); ?></span>
@@ -73,7 +73,7 @@ if (Log::isManualDebug())
   </div> <!-- /env -->
 
   <div class='fs'>
-    <h3><?php esc_html_e('FileSystem', 'shortpixel'); ?></h3>
+    <h3><?php esc_html_e('FileSystem', 'shortpixel-image-optimiser'); ?></h3>
     <div class='flex'>
        <span>WpFileBase</span><span><?php var_export($fs->getWPFileBase()); ?></span>
        <span>Upload Base</span><span><?php var_export($fs->getWPUploadBase()); ?></span>
@@ -84,7 +84,7 @@ if (Log::isManualDebug())
   </div>
 
   <div class='settings'>
-    <h3><?php esc_html_e('Settings', 'shortpixel'); ?></h3>
+    <h3><?php esc_html_e('Settings', 'shortpixel-image-optimiser'); ?></h3>
     <?php $local = $this->view->key;
 
       $local->apiKey = strlen($local->apiKey) . ' chars'; ?>
@@ -120,7 +120,7 @@ if (Log::isManualDebug())
 
 
   <div class='quotadata'>
-    <h3><?php esc_html_e('Quota Data', 'shortpixel'); ?></h3>
+    <h3><?php esc_html_e('Quota Data', 'shortpixel-image-optimiser'); ?></h3>
     <pre><?php var_export($this->quotaData); ?></pre>
   </div>
 

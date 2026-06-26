@@ -43,7 +43,7 @@ class BulkViewController extends \ShortPixel\ViewController
     $this->view->stats = $queueController->getStartupData();
     $this->view->approx = $this->getApproxData();
 
-    $this->view->logHeaders = array(__('Images', 'shortpixel_image_optimiser'), __('Errors', 'shortpixel_image_optimizer'), __('Date', 'shortpixel_image_optimizer'), '');
+    $this->view->logHeaders = array(__('Images', 'shortpixel-image-optimiser'), __('Errors', 'shortpixel_image_optimizer'), __('Date', 'shortpixel_image_optimizer'), '');
     $this->view->logs = $this->getLogs();
 
     $keyControl = ApiKeyController::getInstance();
@@ -53,7 +53,7 @@ class BulkViewController extends \ShortPixel\ViewController
     if ( ! $keyControl->keyIsVerified() )
     {
         $this->view->error = true;
-        $this->view->errorTitle = __('Missing API Key', 'shortpixel_image_optimiser');
+        $this->view->errorTitle = __('Missing API Key', 'shortpixel-image-optimiser');
         $this->view->errorContent = $this->getActivationNotice();
         $this->view->showError = 'key';
     }
