@@ -326,13 +326,11 @@ class OptimizeAiController extends OptimizerBase
                 $url = $urls[0];
             }
 
-            // @todo Probably this check needs to go way up before the whole query on Posts for the URL
-            // @todo2 - Finder queryies both post_id and content and should probably only query one of them.
             if ($currentFileBase !== $aiData['filename']) {
                 $args = [
-                    'dry_run' => true,  // @todo TEST dry run - doesn't perform any operations.
+                    'dry_run' => false,  
                     'recent_upload' => $qItem->data()->recent_upload,
-                    //   'imagePostCount' => count($results), // Amount of records this image is used in.
+                    'url' => $url, 
                 ];
 
                 $this->replaceFiles($qItem, $aiData['filename'], $args);
@@ -454,9 +452,12 @@ class OptimizeAiController extends OptimizerBase
         $defaults = [
             'dry_run' => false,
             'imageThreshold' => 1, // How much references before not replacing this image.
+            'url' => false, 
         ];
 
         $args = wp_parse_args($args, $defaults);
+
+        $url = $args['url'];       
 
         $replacer2 = \ShortPixel\Replacer\Replacer::getInstance();
         $setup = $replacer2->Setup();

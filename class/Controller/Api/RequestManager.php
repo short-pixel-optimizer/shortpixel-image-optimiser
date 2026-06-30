@@ -333,7 +333,6 @@ abstract class RequestManager
   protected function parseResponse($response)
   {
     $data = $response['body'];
-Log::addTemp('Raw Response', $response);
     $raw_data = $data;
 
     $data = json_decode($data);

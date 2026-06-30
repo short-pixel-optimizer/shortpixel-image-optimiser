@@ -426,8 +426,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			var newFileBase = aiData.filebase; 
 		}
 
-		console.log(aiData);
-
 		if (typeof newAltText !== 'undefined') {
 			var inputs = this.altInputNames;
 

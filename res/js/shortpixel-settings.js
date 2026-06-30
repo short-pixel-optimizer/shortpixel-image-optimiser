@@ -452,6 +452,9 @@ class ShortPixelSettings {
 					button: {
 						text: self.strings.ai_strings.selectimage, 
 					},
+					library: {
+						type: 'image'  // Show only images
+					},					
 					multiple: false // Set to true to allow multiple image selection
 				});
 		
