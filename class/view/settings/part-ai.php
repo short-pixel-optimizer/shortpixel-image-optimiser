@@ -449,7 +449,7 @@ if (! defined('ABSPATH')) {
           <li><label><?php _e('Image caption', 'shortpixel-image-optimiser'); ?>:</label> <span class='caption'></span></li>
           <li><label><?php _e('Image description', 'shortpixel-image-optimiser'); ?>:</label> <span class='description'></span></li>
           <li><label><?php _e('Image Title', 'shortpixel-image-optimiser'); ?>:</label> <span class='post_title'></span></li>
-          <li><label><?php _e('Image filename', 'shortpixel-image-optimiser'); ?>:</label> <span class='filename'></span></li>
+          <li><label><?php _e('Image filename', 'shortpixel-image-optimiser'); ?>:</label> <span class='filebase'></span></li>
         </ul>
       </div>
       <div class='icon'><i class='shortpixel-icon chevron rotate_right'></i>&nbsp;</div>
@@ -461,7 +461,7 @@ if (! defined('ABSPATH')) {
           <li><label><?php _e('Image caption', 'shortpixel-image-optimiser'); ?>:</label> <span class='caption'></span></li>
           <li><label><?php _e('Image description', 'shortpixel-image-optimiser'); ?>:</label> <span class='description'></span></li>
           <li><label><?php _e('Image Title', 'shortpixel-image-optimiser'); ?>:</label> <span class='post_title'></span></li>
-          <li><label><?php _e('Image filename', 'shortpixel-image-optimiser'); ?>:</label> <span class='filename'></span></li>
+          <li><label><?php _e('Image filename', 'shortpixel-image-optimiser'); ?>:</label> <span class='filebase'></span></li>
         </ul>
       </div>
 

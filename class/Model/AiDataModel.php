@@ -1,8 +1,9 @@
 <?php
+
 namespace ShortPixel\Model;
 
-if ( ! defined( 'ABSPATH' ) ) {
- exit; // Exit if accessed directly.
+if (! defined('ABSPATH')) {
+    exit; // Exit if accessed directly.
 }
 
 use ShortPixel\Helper\InstallHelper;
@@ -172,13 +173,13 @@ class AiDataModel
      */
     public function __construct($attach_id, $type = 'media')
     {
-          $this->attach_id = $attach_id;
-          if ('media' == $type) // only this supported for now
-          {
-             $this->type = self::TYPE_MEDIA;
-          }
+        $this->attach_id = $attach_id;
+        if ('media' == $type) // only this supported for now
+        {
+            $this->type = self::TYPE_MEDIA;
+        }
 
-          $this->fetchRecord($this->attach_id, $this->type);
+        $this->fetchRecord($this->attach_id, $this->type);
     }
 
     /**
@@ -194,21 +195,20 @@ class AiDataModel
      */
     protected function fetchRecord($attach_id, $type)
     {
-           global $wpdb;
-           $tableName = self::getTableName();
+        global $wpdb;
+        $tableName = self::getTableName();
 
-           $sql = ' SELECT * FROM ' . $tableName . ' where attach_id = %d and post_type = %d';
-           $sql = $wpdb->prepare($sql, $attach_id, $type);
+        $sql = ' SELECT * FROM ' . $tableName . ' where attach_id = %d and post_type = %d';
+        $sql = $wpdb->prepare($sql, $attach_id, $type);
 
-           $row = $wpdb->get_row($sql);
+        $row = $wpdb->get_row($sql);
 
         if (false === $row && strpos($wpdb->last_error, 'exist') !== false) {
-			InstallHelper::checkTables();
+            InstallHelper::checkTables();
             $this->has_record = false;
-			return false;
+            return false;
         }
-        if (false == $row)
-        {
+        if (false == $row) {
             $this->has_record = false;
             return;
         }
@@ -222,7 +222,6 @@ class AiDataModel
         $this->status = $row->status;
         $this->original = array_merge($this->original, $originalData);
         $this->generated = array_merge($this->generated, $generatedData);
-
     }
 
     /**
@@ -234,15 +233,13 @@ class AiDataModel
     private function checkRowData($json)
     {
         $bool = UtilHelper::ValidateJSON($json);
-        if (false === $bool)
-        {
-             return [];
+        if (false === $bool) {
+            return [];
         }
 
         $data = json_decode($json);
 
         return (array) $data;
-
     }
 
     /** Get all data needed to send API for generating AI texts, depending on settings. This includes all settings minus URL
@@ -251,44 +248,40 @@ class AiDataModel
      * @return array{paramlist: array<string, array{context: mixed, chars: mixed}>, returndatalist: array<string, array<string, int>>}
      *         'paramlist' contains the API request payload; 'returndatalist' contains per-field status codes.
      */
-    public function getOptimizeData($params = []) : array
+    public function getOptimizeData($params = []): array
     {
         $settings = (object) UtilHelper::getAiSettings($params);
 
-        $ignore_fields = []; 
-        $preview_only = isset($params['preview_only']) ? $params['preview_only'] : false; 
+        $ignore_fields = [];
+        $preview_only = isset($params['preview_only']) ? $params['preview_only'] : false;
 
         // Ignore this on preview only (settings), otherwise we might get empty preview, which is not the point.
-        if (true === $settings->aiPreserve && false === $preview_only)
-        {
-            $currentData = $this->getCurrentData(); 
-            $ignore_fields = array_diff(array_keys( array_filter($currentData) ), []);
+        if (true === $settings->aiPreserve && false === $preview_only) {
+            $currentData = $this->getCurrentData();
+            $ignore_fields = array_diff(array_keys(array_filter($currentData)), []);
 
-            $fs = \wpSPIO()->filesystem(); 
-            $mediaItem = $fs->getMediaImage($this->attach_id); 
+            $fs = \wpSPIO()->filesystem();
+            $mediaItem = $fs->getMediaImage($this->attach_id);
 
-            if (false !== $mediaItem && true === $mediaItem->hasOriginal())
-            {
-                $mediaItem = $mediaItem->getOriginalFile(); 
+            if (false !== $mediaItem && true === $mediaItem->hasOriginal()) {
+                $mediaItem = $mediaItem->getOriginalFile();
             }
 
-            $fileName = $mediaItem->getFileName(); 
-            $extension = $mediaItem->getExtension(); 
-            
+            $fileName = $mediaItem->getFileName();
+            $extension = $mediaItem->getExtension();
+
             $fileName = str_replace('.' . $extension, '', $fileName);
 
-            if ($currentData['post_title'] == $fileName)
-            {
-                if (in_array('post_title', $ignore_fields))
-                {
+            if ($currentData['post_title'] == $fileName) {
+                if (in_array('post_title', $ignore_fields)) {
                     $ignore_fields = array_diff($ignore_fields, ['post_title']);
                 }
             }
-            
+
             // Exception via array_diff :: post_title always overwrite because it is always filled
         }
 
-       // $fields = ['ai_gen_alt', 'ai_gen_caption', 'ai_gen_description', 'ai_gen_filename'];
+        // $fields = ['ai_gen_alt', 'ai_gen_caption', 'ai_gen_description', 'ai_gen_filename'];
         $fields = ['alt', 'caption', 'description', 'filename', 'post_title'];
 
         $paramlist = [
@@ -296,11 +289,9 @@ class AiDataModel
             'context' => $settings->ai_general_context,
         ];
 
-        if (true === $settings->ai_use_post)
-        {
+        if (true === $settings->ai_use_post) {
             $parent_title = $this->getConnectedPostTitle();
-            if (false !== $parent_title && false === is_null($parent_title))
-            {
+            if (false !== $parent_title && false === is_null($parent_title)) {
                 $paramlist['use_parent_post_title'] = true;
                 $paramlist['parent_post_title'] = $parent_title;
             }
@@ -309,55 +300,44 @@ class AiDataModel
         $returnDataList = [];
         $field_status = false; // check if there are any fields to process / not all excluded.
 
-        foreach($fields as $field_name)
-        {
+        foreach ($fields as $field_name) {
             $api_name = $field_name;
 
-            switch($api_name)
-            {
+            switch ($api_name) {
                 case 'description':
                     $api_name = 'image_description';
-                break;
+                    break;
                 case 'filename':
                     $api_name = 'file';
-                break;
+                    break;
                 case 'post_title':
                     $api_name = 'title';
-                break;
+                    break;
             }
 
 
-            if (false === $settings->{'ai_gen_' . $field_name})
-            {
+            if (false === $settings->{'ai_gen_' . $field_name}) {
                 $returnDataList[$field_name]['status'] = self::F_STATUS_EXCLUDESETTING;
                 continue;
-            }
-            elseif (true === in_array($field_name, $ignore_fields))
-            {
+            } elseif (true === in_array($field_name, $ignore_fields)) {
                 $returnDataList[$field_name]['status'] = self::F_STATUS_PREVENTOVERRIDE;
-            }
-            else
-            {
+            } else {
                 $paramlist[$api_name] = [
-                        'context' => $settings->{'ai_' . $field_name . '_context'},
-                        'chars' => $settings->{'ai_limit_' . $field_name . '_chars'},
+                    'context' => $settings->{'ai_' . $field_name . '_context'},
+                    'chars' => $settings->{'ai_limit_' . $field_name . '_chars'},
                 ];
                 $returnDataList[$field_name]['status']  = self::F_STATUS_OK;
                 $field_status = true;
             }
-
-
         }
 
-        if (false === $field_status)
-        {
+        if (false === $field_status) {
             $this->processable_status = self::P_NOJOB;
         }
 
         $paramlist = apply_filters('shortpixel/aidatamodel/paramlist', $paramlist, $this->attach_id);
 
         return ['paramlist' => $paramlist, 'returndatalist' => $returnDataList];
-
     }
 
     /**
@@ -373,31 +353,23 @@ class AiDataModel
     public function handleNewData($data)
     {
         // Save to Database
-        foreach($data as $name => $value)
-        {
-             if ('original_filebase' == $name)
-             {
-                 $this->current['filebase'] = $value;
-             }
-             else
-             {
+        foreach ($data as $name => $value) {
+            if ('original_filebase' == $name) {
+                $this->current['filebase'] = $value;
+            } else {
                 $this->generated[$name] = $value;
-             }
-
+            }
         }
 
         $this->setCurrentData();
 
         // New Data.
-        if (false === $this->has_record)
-        {
+        if (false === $this->has_record) {
             $this->original = $this->current;
 
             $this->status = self::AI_STATUS_GENERATED;
             $this->updateRecord();
-        }
-        else
-        {
+        } else {
             // Not sure if  just categorically deny this, or some smart updater ( with more risks )
             Log::addError('New AI Data already has an entry');
         }
@@ -405,7 +377,6 @@ class AiDataModel
         // Save to WordPress
         $this->updateWPPost($this->generated);
         $this->updateWpMeta($this->generated);
-
     }
 
     /**
@@ -422,26 +393,22 @@ class AiDataModel
         $post = get_post($this->attach_id);
         $post_updated = false;
 
-        if (isset($data['caption']) && false !== $data['caption'] && false === is_numeric($data['caption']))
-        {
+        if (isset($data['caption']) && false !== $data['caption'] && false === is_numeric($data['caption'])) {
             $post->post_excerpt = $data['caption'];
             $post_updated = true;
         }
 
-        if (isset($data['description']) && false !== $data['description'] && false === is_numeric($data['description']))
-        {
+        if (isset($data['description']) && false !== $data['description'] && false === is_numeric($data['description'])) {
             $post->post_content = $data['description'];
             $post_updated = true;
         }
 
-        if (isset($data['post_title']) && false !== $data['post_title'] && false === is_numeric($data['post_title']))
-        {
-             $post->post_title = $data['post_title'];
-             $post_updated = true;
+        if (isset($data['post_title']) && false !== $data['post_title'] && false === is_numeric($data['post_title'])) {
+            $post->post_title = $data['post_title'];
+            $post_updated = true;
         }
 
-        if (true === $post_updated)
-        {
+        if (true === $post_updated) {
             wp_update_post($post);
         }
     }
@@ -454,8 +421,7 @@ class AiDataModel
      */
     protected function updateWpMeta($data)
     {
-        if (isset($data['alt']) && false !== $data['alt'] && false === is_int($data['alt']))
-        {
+        if (isset($data['alt']) && false !== $data['alt'] && false === is_int($data['alt'])) {
             $bool = update_post_meta($this->attach_id, '_wp_attachment_image_alt', $data['alt']);
         }
     }
@@ -477,7 +443,7 @@ class AiDataModel
      */
     public function getStatus()
     {
-         return $this->status;
+        return $this->status;
     }
 
     /**
@@ -487,7 +453,7 @@ class AiDataModel
      */
     public function getAttachId()
     {
-         return $this->attach_id;
+        return $this->attach_id;
     }
 
 
@@ -500,18 +466,17 @@ class AiDataModel
      */
     public function currentIsDifferent()
     {
-         $this->setCurrentData();
+        $this->setCurrentData();
 
-         $generated = array_filter($this->generated, [$this, 'mapWPVars'], ARRAY_FILTER_USE_KEY);
-         $current = array_filter($this->current, [$this, 'mapWPVars'], ARRAY_FILTER_USE_KEY);
+        $generated = array_filter($this->generated, [$this, 'mapWPVars'], ARRAY_FILTER_USE_KEY);
+        $current = array_filter($this->current, [$this, 'mapWPVars'], ARRAY_FILTER_USE_KEY);
 
-         $diff = array_diff($generated, $current);
+        $diff = array_diff($generated, $current);
 
-         if (count($diff) > 0)
-         {
-             return true;
-         }
-         return false;
+        if (count($diff) > 0) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -524,14 +489,12 @@ class AiDataModel
      */
     private function mapWPVars($key)
     {
-         $fields = ['alt', 'caption', 'description'];
+        $fields = ['alt', 'caption', 'description'];
 
-         if (false === in_array($key, $fields))
-         {
+        if (false === in_array($key, $fields)) {
             return false;
-         }
-         return true;
-
+        }
+        return true;
     }
 
     /**
@@ -541,20 +504,17 @@ class AiDataModel
      */
     protected function getConnectedPostTitle()
     {
-         $attach_id = $this->attach_id;
-         $post_parent = get_post_parent($attach_id);
-         if (! is_null($post_parent))
-         {
+        $attach_id = $this->attach_id;
+        $post_parent = get_post_parent($attach_id);
+        if (! is_null($post_parent)) {
             $post = get_post($post_parent);
-            if (false === is_null($post))
-            {
+            if (false === is_null($post)) {
                 $post_title = $post->post_title;
                 return $post_title;
             }
-         }
+        }
 
-         return false;
-
+        return false;
     }
 
     /**
@@ -570,13 +530,12 @@ class AiDataModel
         $attach_id = $this->attach_id;
         $current_alt = get_post_meta($attach_id, '_wp_attachment_image_alt', true);
         $post = get_post($attach_id);
-        
+
         $filename = get_attached_file($attach_id);
-        if (false !== $filename)
-        {
-            $filename = basename($filename);
+        if (false !== $filename) {
+            $filebase = basename($filename);
         }
-        
+
         $current_description = $post->post_content;
         $current_caption = $post->post_excerpt;
         $current_post_title = $post->post_title;
@@ -592,10 +551,9 @@ class AiDataModel
         $this->current['description'] = $current_description;
         $this->current['caption'] = $current_caption;
         $this->current['post_title'] = $current_post_title;
-        $this->current['filename'] = $filename;
+        $this->current['filebase'] = $filebase;
 
         $this->current_is_set = true;
-
     }
 
     /**
@@ -605,12 +563,11 @@ class AiDataModel
      */
     public function getCurrentData()
     {
-          if (false === $this->current_is_set)
-          {
-             $this->setCurrentData();
-          }
+        if (false === $this->current_is_set) {
+            $this->setCurrentData();
+        }
 
-          return $this->current;
+        return $this->current;
     }
 
     /**
@@ -630,13 +587,11 @@ class AiDataModel
      */
     public function checkStoredData()
     {
-        if (false === $this->has_record)
-        {
+        if (false === $this->has_record) {
             return true;
         }
 
         $this->setCurrentData();
-
     }
 
     /** Function to check if on this item there is something to AI
@@ -645,14 +600,13 @@ class AiDataModel
      */
     public function isProcessable()
     {
-        if (true === $this->has_record)
-        {
-             $this->processable_status = SELF::P_ALREADYDONE;
-             return false;
+        if (true === $this->has_record) {
+            $this->processable_status = SELF::P_ALREADYDONE;
+            return false;
         }
 
         // Stash here other conditions on top with && to build a big processable function
-        $processable = ( $this->isExifProcesssable() && $this->isExtensionIncluded() && $this->hasSomethingGeneratable() ) ? true : false;
+        $processable = ($this->isExifProcesssable() && $this->isExtensionIncluded() && $this->hasSomethingGeneratable()) ? true : false;
         return $processable;
     }
 
@@ -669,7 +623,7 @@ class AiDataModel
     private function isExifProcesssable()
     {
         // Change: Exif processing changed on API, allowing this - https://app.asana.com/1/18694759100379/project/1200110778640816/task/1213564895578597 
-       return true; 
+        return true;
 
         /*$fs = \wpSPIO()->filesystem(); 
         $imageModel = $fs->getMediaImage($this->attach_id); 
@@ -692,7 +646,6 @@ class AiDataModel
 
         $this->processable_status = self::P_EXIFAI;
         return false;  */
-
     }
 
     /**
@@ -701,35 +654,33 @@ class AiDataModel
      * @param bool $returnStatus When true, returns the raw P_* integer constant instead of a string.
      * @return string|int Translated message string, or integer status code when $returnStatus is true.
      */
-    public function getProcessableReason($returnStatus = false )
+    public function getProcessableReason($returnStatus = false)
     {
         $message = false;
 
-        if (true === $returnStatus)
-        {
+        if (true === $returnStatus) {
             return $this->processable_status;
         }
 
-        switch($this->processable_status)
-        {
+        switch ($this->processable_status) {
             case self::P_PROCESSABLE:
                 $message = __('AI is processable', 'shortpixel-image-optimiser');
-            break;
+                break;
             case self::P_ALREADYDONE:
                 $message = __('This image already has generated data', 'shortpixel-image-optimiser');
-            break;
+                break;
             case self::P_EXIFAI:
                 $message = __('Image Exif settings restrict AI usage', 'shortpixel-image-optimiser');
-            break;
+                break;
             case self::P_EXTENSION:
-                 $message = __('Shortpixel AI - File Extension not supported', 'shortpixel-image-optimiser');
-            break;
+                $message = __('Shortpixel AI - File Extension not supported', 'shortpixel-image-optimiser');
+                break;
             case self::P_NOJOB:
                 $message = __('No fields to generate', 'shortpixel-image-optimiser');
-            break;
+                break;
             default:
-                 $message = sprintf(__('Status %s unknown', 'shortpixel-image-optimiser'), $this->processable_status);
-            break;
+                $message = sprintf(__('Status %s unknown', 'shortpixel-image-optimiser'), $this->processable_status);
+                break;
         }
 
         return $message;
@@ -750,8 +701,7 @@ class AiDataModel
         // Gif removed here, since we (temporarily don't support it)
         $extensions = ['png', 'jpeg', 'webp', 'jpg', 'heic', 'svg', 'bmp', 'tiff', 'tif'];
 
-        if (in_array($imageModel->getExtension(), $extensions))
-        {
+        if (in_array($imageModel->getExtension(), $extensions)) {
             return true;
         }
 
@@ -771,10 +721,8 @@ class AiDataModel
     {
         $optimizeData = $this->getOptimizeData();
 
-        if (self::P_NOJOB === $this->processable_status)
-        {
-             return false;
-
+        if (self::P_NOJOB === $this->processable_status) {
+            return false;
         }
         return true;
     }
@@ -786,14 +734,12 @@ class AiDataModel
      */
     public function isSomeThingGenerated()
     {
-        if (false === $this->has_record)
-        {
-             return false;
+        if (false === $this->has_record) {
+            return false;
         }
 
-        if (count(array_keys(array_filter($this->generated))) > 0)
-        {
-             return true;
+        if (count(array_keys(array_filter($this->generated))) > 0) {
+            return true;
         }
         return false;
     }
@@ -805,8 +751,8 @@ class AiDataModel
      */
     private static function getTableName()
     {
-         global $wpdb;
-         return $wpdb->prefix . 'shortpixel_aipostmeta';
+        global $wpdb;
+        return $wpdb->prefix . 'shortpixel_aipostmeta';
     }
 
     /**
@@ -833,16 +779,12 @@ class AiDataModel
 
         $format = ['%d', '%d', '%s', '%s', '%s'];
 
-        if (false === $this->has_record)
-        {
+        if (false === $this->has_record) {
             $this->id = $wpdb->insert(self::getTableName(), $fields, $format);
             $this->has_record = true;
+        } else {
+            $wpdb->update(self::getTableName(), $fields, ['id' => $this->id], $format);
         }
-        else
-        {
-            $wpdb->update(self::getTableName(),$fields, ['id' => $this->id],$format);
-        }
-
     }
 
     /**
@@ -857,27 +799,22 @@ class AiDataModel
     public function migrate($data)
     {
         $updated = false;
-        if (false === is_array($data))
-        {
+        if (false === is_array($data)) {
             return false;
         }
 
-        if (is_null($this->original['alt']))
-        {
+        if (is_null($this->original['alt'])) {
             $this->original['alt'] = $data['original_alt'];
             $updated = true;
         }
-        if (is_null($this->generated['alt']))
-        {
+        if (is_null($this->generated['alt'])) {
             $this->generated['alt'] = $data['result_alt'];
             $updated = true;
         }
 
-        if (true === $updated)
-        {
+        if (true === $updated) {
             $this->status = self::AI_STATUS_GENERATED;
             $this->updateRecord();
-
         }
 
         return true;
@@ -892,8 +829,8 @@ class AiDataModel
      * @return void
      */
     public function revert()
-    {   
-        $this->onDelete(); 
+    {
+        $this->onDelete();
 
         $this->updateWPPost($this->original);
         $this->updateWpMeta($this->original);
@@ -901,13 +838,12 @@ class AiDataModel
 
     public function onDelete()
     {
-        if (true === $this->has_record)
-        {
+        if (true === $this->has_record) {
             global $wpdb;
             $wpdb->delete(self::getTableName(), ['id' => $this->id], ['%s']);
         }
 
-        $this->has_record = false; 
+        $this->has_record = false;
         self::flushModelCache($this->id);
     }
 
@@ -919,12 +855,11 @@ class AiDataModel
     public static function getMostRecent()
     {
         global $wpdb;
-         $sql = 'SELECT attach_id FROM ' . self::getTableName() . ' order by tsUpdated desc limit 1';
-         $attach_id = $wpdb->get_var($sql);
+        $sql = 'SELECT attach_id FROM ' . self::getTableName() . ' order by tsUpdated desc limit 1';
+        $attach_id = $wpdb->get_var($sql);
 
-        if (false === $attach_id)
-        {
-             return false;
+        if (false === $attach_id) {
+            return false;
         }
 
         return new AiDataModel($attach_id);
@@ -939,13 +874,11 @@ class AiDataModel
      */
     public static function getModelByAttachment($attach_id, $type = 'media')
     {
-        if (false === isset(self::$models[$attach_id]))
-        {
-             self::$models[$attach_id]  = new AiDataModel($attach_id, $type);
+        if (false === isset(self::$models[$attach_id])) {
+            self::$models[$attach_id]  = new AiDataModel($attach_id, $type);
         }
 
         return self::$models[$attach_id];
-
     }
 
     /**
@@ -957,15 +890,9 @@ class AiDataModel
      */
     public static function flushModelCache($attach_id, $type = 'media')
     {
-        if (isset(self::$models[$attach_id]))
-        {
-             unset(self::$models[$attach_id]);
+        if (isset(self::$models[$attach_id])) {
+            unset(self::$models[$attach_id]);
+        } else {
         }
-        else
-        {
-        }
-
     }
-
-
 } // class

@@ -28,9 +28,6 @@ class Replacer
 	protected $source_metadata = [];
 	protected $target_metadata = [];
 
-	protected $urlSourceArray = []; 
-	protected $urlTargetArray = []; 
-
 	protected static $instance; 
 
 	private $default_replace_settings = array(
@@ -87,7 +84,6 @@ class Replacer
 		return $this->target_url;
 	}
 
-	/* @todo These functions should in time be replaced by the MetaData structure in place */
 	public function setSourceMeta($meta)
 	{
 		$this->source_metadata = $meta;
@@ -97,17 +93,6 @@ class Replacer
 	{
 		$this->target_metadata = $meta;
 	}
-
-	/* @todo This function as well */
-	public function addURLArray(array $source, array $target)
-	{
-		 $this->urlSourceArray = $source; 
-		 $this->urlTargetArray = $target;
-
-	}
-
-	
-
 
 	public function Setup()
 	{
@@ -218,7 +203,7 @@ class Replacer
 		// If the two sides are disbalanced, the str_replace part will cause everything that has an empty replace counterpart to replace it with empty. Unwanted.
 		if (count($search_urls) !== count($replace_urls)) {
 			Log::addError('Unbalanced Replace Arrays, aborting', array($search_urls, $replace_urls, count($search_urls), count($replace_urls)));
-			$errors[] = __('There was an issue with updating your image URLS: Search and replace have different amount of values. Aborting updating thumbnails', 'enable-media-replace');
+			$errors[] = __('There was an issue with updating your image URLS: Search and replace have different amount of values. Aborting updating thumbnails', 'shortpixel-image-optimiser');
 			return $errors;
 		}
 
@@ -523,16 +508,8 @@ class Replacer
 	private function getRelativeURLS()
 	{
 		$dataArray = array(
-			'source' => array(
-				'url' => $this->source_url, 
-				'metadata' => $this->getFilesFromMetadata($this->source_metadata), 
-				'fileArray' => $this->urlSourceArray, 
-			),
-			'target' => array(
-				'url' => $this->target_url, 
-				'metadata' => $this->getFilesFromMetadata($this->target_metadata),
-				'fileArray' => $this->urlTargetArray,
-			),
+			'source' => array('url' => $this->source_url, 'metadata' => $this->getFilesFromMetadata($this->source_metadata)),
+			'target' => array('url' => $this->target_url, 'metadata' => $this->getFilesFromMetadata($this->target_metadata)),
 		);
 
 		$result = array();
@@ -540,8 +517,6 @@ class Replacer
 		foreach ($dataArray as $index => $item) {
 			$result[$index] = array();
 			$metadata = $item['metadata'];
-			$filedata = $item['fileArray']; 
-
 
 			$baseurl = parse_url($item['url'], PHP_URL_PATH);
 			$result[$index]['base'] = $baseurl;  // this is the relpath of the mainfile.
@@ -550,11 +525,8 @@ class Replacer
 			foreach ($metadata as $name => $filename) {
 				$result[$index][$name] =  $baseurl . wp_basename($filename); // filename can have a path like 19/08 etc.
 			}
-
-			$result[$index] = array_merge($result[$index], $filedata);
-
 		}
-		    Log::addDebug('Relative URLS', $result);
+		//    Log::addDebug('Relative URLS', $result);
 		return $result;
 	}
 

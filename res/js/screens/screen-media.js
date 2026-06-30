@@ -511,9 +511,13 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 					{
 						fileNameField.innerText = newFileBase; 
 					}
-					else
+					else if ( aiData.url)
 					{
-						// @todo Need to find how to replace the URL here, or take URL from result.
+						 fileNameField = document.getElementById(fileNameField); 
+						 if (null !== fileNameField)
+						 {
+						 	fileNameField.value = aiData.url;
+						 }
 					}
 				}
 			}

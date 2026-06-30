@@ -517,7 +517,7 @@ class ShortPixelSettings {
 			// @todo This response detail needs generated / original, not just the results. 
 
 			var elements = ['generated', 'original'];
-			var fields = ['filename', 'alt', 'caption', 'description', 'post_title'];
+			var fields = ['filebase', 'alt', 'caption', 'description', 'post_title'];
 
 			var currentData = document.querySelector('.current.result_info');
 			var generatedData = document.querySelector('.result.result_info');
