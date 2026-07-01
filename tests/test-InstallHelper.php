@@ -42,6 +42,46 @@ class InstallHelperTest extends WP_UnitTestCase {
 		parent::tear_down();
 	}
 
+	/**
+	 * Runs InstallHelper::checkTables() and probes each per-table dbDelta call
+	 * afterwards so failure messages carry enough context to explain *why* a
+	 * table wasn't created (e.g. MySQL 8 rejecting the plugin's
+	 * `PRIMARY KEY name (col)` syntax) instead of a bare "false is not true".
+	 *
+	 * The real checkTables() call is preserved so checkIndexes() still runs.
+	 * The follow-up per-table probes are idempotent (dbDelta is safe to
+	 * re-invoke).
+	 */
+	private function runCheckTablesAndCaptureError(): string {
+		global $wpdb;
+		$prev_last_error       = $wpdb->last_error;
+		$wpdb->last_error      = '';
+
+		InstallHelper::checkTables();
+		$errorAfterCheckTables = $wpdb->last_error;
+
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+		$perTable = array();
+		$ref      = new ReflectionClass( InstallHelper::class );
+		foreach ( array( 'getFolderTableSQL', 'getMetaTableSQL', 'getPostMetaSQL', 'getAIPostSQL' ) as $methodName ) {
+			$method = $ref->getMethod( $methodName );
+			$method->setAccessible( true );
+			$sql = (string) $method->invoke( null );
+
+			$wpdb->last_error = '';
+			$out              = dbDelta( $sql );
+
+			$perTable[ $methodName ] = array(
+				'result' => empty( $out ) ? '(empty)' : implode( '; ', (array) $out ),
+				'error'  => '' === $wpdb->last_error ? '(none)' : $wpdb->last_error,
+			);
+		}
+
+		$diag             = 'checkTables_last_error=[' . $errorAfterCheckTables . '] per-table=' . wp_json_encode( $perTable );
+		$wpdb->last_error = $prev_last_error;
+		return $diag;
+	}
+
 	/*
 	 * checkTableExists
 	 */
@@ -51,11 +91,11 @@ class InstallHelperTest extends WP_UnitTestCase {
 	}
 
 	public function test_checkTableExists_returns_true_after_checkTables() {
-		InstallHelper::checkTables();
+		$diag = $this->runCheckTablesAndCaptureError();
 		foreach ( self::SPIO_TABLES as $table ) {
 			$this->assertTrue(
 				InstallHelper::checkTableExists( $table ),
-				"Table {$table} should exist after checkTables()."
+				"Table {$table} should exist after checkTables(). {$diag}"
 			);
 		}
 	}
@@ -71,29 +111,32 @@ class InstallHelperTest extends WP_UnitTestCase {
 	public function test_checkTables_creates_all_plugin_tables() {
 		global $wpdb;
 
-		InstallHelper::checkTables();
+		$diag = $this->runCheckTablesAndCaptureError();
 
 		foreach ( self::SPIO_TABLES as $table ) {
 			$full = $wpdb->prefix . $table;
 			$row  = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $full ) );
-			$this->assertSame( $full, $row, "Expected table {$full} to be created." );
+			$this->assertSame( $full, $row, "Expected table {$full} to be created. {$diag}" );
 		}
 	}
 
 	public function test_checkTables_is_idempotent() {
-		InstallHelper::checkTables();
+		$diag1 = $this->runCheckTablesAndCaptureError();
 		// Second call should not error nor destroy the tables.
-		InstallHelper::checkTables();
+		$diag2 = $this->runCheckTablesAndCaptureError();
 
 		foreach ( self::SPIO_TABLES as $table ) {
-			$this->assertTrue( InstallHelper::checkTableExists( $table ) );
+			$this->assertTrue(
+				InstallHelper::checkTableExists( $table ),
+				"Table {$table} missing after idempotent checkTables(). First run: {$diag1} | Second run: {$diag2}"
+			);
 		}
 	}
 
 	public function test_checkTables_creates_expected_indexes() {
 		global $wpdb;
 
-		InstallHelper::checkTables();
+		$diag = $this->runCheckTablesAndCaptureError();
 
 		$expected = array(
 			'shortpixel_meta'       => array( 'path' ),
@@ -106,7 +149,7 @@ class InstallHelperTest extends WP_UnitTestCase {
 			$full = $wpdb->prefix . $table;
 			foreach ( $indexes as $indexName ) {
 				$row = $wpdb->get_row( $wpdb->prepare( "SHOW INDEX FROM {$full} WHERE Key_name = %s", $indexName ) ); // phpcs:ignore WordPress.DB
-				$this->assertNotNull( $row, "Index {$indexName} should exist on {$full}." );
+				$this->assertNotNull( $row, "Index {$indexName} should exist on {$full}. {$diag}" );
 			}
 		}
 	}
@@ -116,10 +159,13 @@ class InstallHelperTest extends WP_UnitTestCase {
 	 */
 
 	public function test_removeTables_drops_all_plugin_tables_when_present() {
-		InstallHelper::checkTables();
+		$diag = $this->runCheckTablesAndCaptureError();
 		// Sanity check: tables must exist before we try to remove them.
 		foreach ( self::SPIO_TABLES as $table ) {
-			$this->assertTrue( InstallHelper::checkTableExists( $table ) );
+			$this->assertTrue(
+				InstallHelper::checkTableExists( $table ),
+				"Sanity check failed — {$table} was not created by checkTables(). {$diag}"
+			);
 		}
 
 		$ref    = new ReflectionClass( InstallHelper::class );
@@ -224,7 +270,7 @@ class InstallHelperTest extends WP_UnitTestCase {
 	public function test_created_tables_have_expected_columns() {
 		global $wpdb;
 
-		InstallHelper::checkTables();
+		$diag = $this->runCheckTablesAndCaptureError();
 
 		// Spot-check a distinctive column from each table so we know the correct
 		// CREATE TABLE ran (rather than some legacy schema left over from a
@@ -239,7 +285,7 @@ class InstallHelperTest extends WP_UnitTestCase {
 		foreach ( $columnChecks as $table => $column ) {
 			$full    = $wpdb->prefix . $table;
 			$columns = $wpdb->get_col( "SHOW COLUMNS FROM {$full}", 0 ); // phpcs:ignore WordPress.DB
-			$this->assertContains( $column, $columns, "Column {$column} missing from {$full}." );
+			$this->assertContains( $column, $columns, "Column {$column} missing from {$full}. {$diag}" );
 		}
 	}
 }
