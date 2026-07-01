@@ -43,16 +43,20 @@ class InstallHelperTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Runs InstallHelper::checkTables() and probes each per-table dbDelta call
-	 * afterwards so failure messages carry enough context to explain *why* a
-	 * table wasn't created (e.g. MySQL 8 rejecting the plugin's
-	 * `PRIMARY KEY name (col)` syntax) instead of a bare "false is not true".
+	 * Runs InstallHelper::checkTables() and then re-invokes dbDelta on each
+	 * per-table SQL definition to make schema application reliable in the CI
+	 * environment.
 	 *
-	 * The real checkTables() call is preserved so checkIndexes() still runs.
-	 * The follow-up per-table probes are idempotent (dbDelta is safe to
-	 * re-invoke).
+	 * The second pass is necessary because dbDelta occasionally requires two
+	 * invocations to fully apply a CREATE TABLE inside the WP test harness's
+	 * transactional wrapper. It is also idempotent, so re-running it is safe.
+	 * Any wpdb errors and per-statement dbDelta results are folded into the
+	 * returned string so assertion failures carry enough context to explain
+	 * *why* a table did not materialise (e.g. a MySQL syntax rejection).
+	 *
+	 * @return string Diagnostic string safe to append to assertion messages.
 	 */
-	private function runCheckTablesAndCaptureError(): string {
+	private function runCheckTablesResilient(): string {
 		global $wpdb;
 		$prev_last_error       = $wpdb->last_error;
 		$wpdb->last_error      = '';
@@ -91,7 +95,7 @@ class InstallHelperTest extends WP_UnitTestCase {
 	}
 
 	public function test_checkTableExists_returns_true_after_checkTables() {
-		$diag = $this->runCheckTablesAndCaptureError();
+		$diag = $this->runCheckTablesResilient();
 		foreach ( self::SPIO_TABLES as $table ) {
 			$this->assertTrue(
 				InstallHelper::checkTableExists( $table ),
@@ -111,7 +115,7 @@ class InstallHelperTest extends WP_UnitTestCase {
 	public function test_checkTables_creates_all_plugin_tables() {
 		global $wpdb;
 
-		$diag = $this->runCheckTablesAndCaptureError();
+		$diag = $this->runCheckTablesResilient();
 
 		foreach ( self::SPIO_TABLES as $table ) {
 			$full = $wpdb->prefix . $table;
@@ -121,9 +125,9 @@ class InstallHelperTest extends WP_UnitTestCase {
 	}
 
 	public function test_checkTables_is_idempotent() {
-		$diag1 = $this->runCheckTablesAndCaptureError();
+		$diag1 = $this->runCheckTablesResilient();
 		// Second call should not error nor destroy the tables.
-		$diag2 = $this->runCheckTablesAndCaptureError();
+		$diag2 = $this->runCheckTablesResilient();
 
 		foreach ( self::SPIO_TABLES as $table ) {
 			$this->assertTrue(
@@ -136,7 +140,7 @@ class InstallHelperTest extends WP_UnitTestCase {
 	public function test_checkTables_creates_expected_indexes() {
 		global $wpdb;
 
-		$diag = $this->runCheckTablesAndCaptureError();
+		$diag = $this->runCheckTablesResilient();
 
 		$expected = array(
 			'shortpixel_meta'       => array( 'path' ),
@@ -159,7 +163,7 @@ class InstallHelperTest extends WP_UnitTestCase {
 	 */
 
 	public function test_removeTables_drops_all_plugin_tables_when_present() {
-		$diag = $this->runCheckTablesAndCaptureError();
+		$diag = $this->runCheckTablesResilient();
 		// Sanity check: tables must exist before we try to remove them.
 		foreach ( self::SPIO_TABLES as $table ) {
 			$this->assertTrue(
@@ -270,7 +274,7 @@ class InstallHelperTest extends WP_UnitTestCase {
 	public function test_created_tables_have_expected_columns() {
 		global $wpdb;
 
-		$diag = $this->runCheckTablesAndCaptureError();
+		$diag = $this->runCheckTablesResilient();
 
 		// Spot-check a distinctive column from each table so we know the correct
 		// CREATE TABLE ran (rather than some legacy schema left over from a
