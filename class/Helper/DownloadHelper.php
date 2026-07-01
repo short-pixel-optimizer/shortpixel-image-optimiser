@@ -27,8 +27,21 @@ class DownloadHelper
 		 */
 		  private static $instance;
 
-      protected $last_download_error; 
+      /**
+       * Message from the most recent failed download attempt.
+       *
+       * Populated by downloadFile() and its underlying strategies whenever a
+       * download fails. Retrieved by callers via getLastError() so the reason
+       * can be surfaced in admin notices or error responses.
+       *
+       * @var string|null
+       */
+      protected $last_download_error;
 
+			/**
+			 * Bootstraps the helper by ensuring the WordPress download_url() function
+			 * is available.
+			 */
 			public function __construct()
 			{
 					$this->checkEnv();
@@ -160,6 +173,12 @@ class DownloadHelper
 					return $file;
 			}
 
+      /**
+       * Returns the error message from the most recent failed download attempt.
+       *
+       * @return string|null The last error message, or null if no failure has
+       *                     been recorded on this instance.
+       */
       public function getLastError()
       {
           return $this->last_download_error;

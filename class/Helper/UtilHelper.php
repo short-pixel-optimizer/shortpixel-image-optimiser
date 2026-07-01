@@ -9,10 +9,24 @@ if (! defined('ABSPATH')) {
   exit; // Exit if accessed directly.
 }
 
-// Our newest Tools class
+/**
+ * Static utility class for miscellaneous helpers used across the plugin.
+ *
+ * Bundles small, dependency-light helpers for database table naming, plugin
+ * activation checks, timestamp conversion, image-size discovery, path
+ * normalisation, JSON validation, exclusion-pattern handling, and .htaccess
+ * rule management for WebP/AVIF delivery.
+ *
+ * @package ShortPixel\Helper
+ */
 class UtilHelper
 {
 
+  /**
+   * Returns the fully-prefixed name of the plugin's postmeta table.
+   *
+   * @return string Table name including the WordPress table prefix.
+   */
   public static function getPostMetaTable()
   {
     global $wpdb;
@@ -20,6 +34,15 @@ class UtilHelper
     return $wpdb->prefix . 'shortpixel_postmeta';
   }
 
+  /**
+   * Checks whether a given plugin is currently active on this site.
+   *
+   * On multisite installs, network-active (sitewide) plugins are considered as
+   * well as the per-site active list.
+   *
+   * @param string $plugin Plugin file identifier, e.g. "folder/plugin.php".
+   * @return bool True if the plugin is active, false otherwise.
+   */
   public static function shortPixelIsPluginActive($plugin)
   {
     $activePlugins = apply_filters('active_plugins', get_option('active_plugins', array()));
@@ -29,16 +52,38 @@ class UtilHelper
     return in_array($plugin, $activePlugins);
   }
 
+  /**
+   * Formats a Unix timestamp into a MySQL DATETIME string ("Y-m-d H:i:s").
+   *
+   * @param int $timestamp Unix timestamp in seconds.
+   * @return string MySQL-compatible datetime string.
+   */
   public static function timestampToDB($timestamp)
   {
     return date("Y-m-d H:i:s", $timestamp);
   }
 
+  /**
+   * Parses a MySQL DATETIME string back into a Unix timestamp.
+   *
+   * @param string $date MySQL datetime string.
+   * @return int|false Unix timestamp on success, false on parse failure.
+   */
   public static function DBtoTimestamp($date)
   {
     return strtotime($date);
   }
 
+  /**
+   * Returns all registered WordPress image sizes with their dimensions.
+   *
+   * Merges the built-in intermediate sizes (thumbnail/medium/large etc.) with
+   * any sizes added via add_image_size(). The result is filterable through the
+   * "shortpixel/settings/image_sizes" filter so integrations can extend the list.
+   *
+   * @return array<string, array{width:int,height:int,crop:mixed,nice-name?:string}>
+   *         Associative array keyed by size name.
+   */
   public static function getWordPressImageSizes()
   {
     global $_wp_additional_image_sizes;
@@ -61,19 +106,51 @@ class UtilHelper
     return $sizes;
   }
 
-  // wp_normalize_path doesn't work for windows installs in some situations, so we can use it, but we still want some of the functions.
+
+
+  /**
+   * Collapses runs of forward slashes in a path to a single slash.
+   *
+   * Preserves a leading "//" (used by UNC-style network paths) by only matching
+   * duplicated slashes preceded by another character. Used as a lightweight
+   * alternative to wp_normalize_path(), which behaves inconsistently on some
+   * Windows installations.
+   *
+   * @param string $path Filesystem path to normalise.
+   * @return string Normalised path with collapsed internal slashes.
+   */
   public static function spNormalizePath($path)
   {
     $path = preg_replace('|(?<=.)/+|', '/', $path);
     return $path;
   }
 
+  /**
+   * Returns the combined EXIF setting value used by the optimisation API.
+   *
+   * Sums the "exif" (keep/remove) and "exif_ai" (AI allowed) setting flags into
+   * a single integer that encodes both behaviours.
+   *
+   * @return int Combined EXIF parameter value.
+   */
   public static function getExifParameter()
   {
     return (\wpSPIO()->settings()->exif + \wpSPIO()->settings()->exif_ai);
   }
 
-  // Copy of private https://developer.wordpress.org/reference/functions/_wp_relative_upload_path/
+  /**
+   * Converts an absolute path under the uploads directory into a path relative
+   * to that directory.
+   *
+   * Mirrors WordPress core's private _wp_relative_upload_path() so we can call
+   * it from any context. Paths that are not under wp_get_upload_dir()['basedir']
+   * are returned unchanged.
+   *
+   * @see https://developer.wordpress.org/reference/functions/_wp_relative_upload_path/
+   *
+   * @param string $path Absolute filesystem path.
+   * @return string Relative path if under the uploads dir, otherwise the input path.
+   */
   public static function getRelativeUploadPath($path)
   {
     $new_path = $path;
@@ -94,6 +171,17 @@ class UtilHelper
     return $val !== null;
   }
 
+  /**
+   * Checks whether a string contains syntactically valid JSON.
+   *
+   * Short-circuits to false for non-strings and for strings that contain
+   * neither "{" nor ":", so trivial inputs never hit the parser. Uses PHP 8.3's
+   * native json_validate() where available, otherwise falls back to a
+   * json_decode() + json_last_error() check.
+   *
+   * @param string $json Candidate JSON string.
+   * @return bool True if the input is a non-empty valid JSON string.
+   */
   public static function validateJSON($json)
   {
     if (!is_string($json)) {
@@ -114,6 +202,23 @@ class UtilHelper
     return json_last_error() === JSON_ERROR_NONE;
   }
 
+  /**
+   * Returns the configured exclusion patterns, optionally filtered by context.
+   *
+   * When $args['filter'] is true, only the patterns that apply to the given
+   * context (thumbnail vs. custom image, optional thumbnail name) are returned.
+   * Otherwise the full pattern list from settings is returned.
+   *
+   * @param array $args {
+   *     Optional filtering context.
+   *
+   *     @type bool        $filter       Whether to filter patterns by the other args. Default false.
+   *     @type string|null $thumbname    Thumbnail name to match against a pattern's thumblist. Default null.
+   *     @type bool        $is_thumbnail True when evaluating a thumbnail. Default false.
+   *     @type bool        $is_custom    True when evaluating a Custom Media image. Default false.
+   * }
+   * @return array<int, array> List of exclusion pattern definitions.
+   */
   public static function getExclusions($args = array())
   {
     $defaults = array(
@@ -150,6 +255,16 @@ class UtilHelper
       return $patterns;
   }
 
+  /**
+   * Evaluates whether a single exclusion pattern applies in the given context.
+   *
+   * Handles the four "apply" scopes ("all", "only-thumbs", "only-custom", and
+   * per-thumbnail via the pattern's thumblist).
+   *
+   * @param array $pattern Exclusion pattern definition (must include an 'apply' key).
+   * @param array $options Context flags: 'is_thumbnail', 'is_custom', 'thumbname'.
+   * @return bool True if the pattern matches the context.
+   */
   protected static function matchExclusion($pattern, $options)
   {
     $apply = $pattern['apply'];
@@ -220,9 +335,20 @@ class UtilHelper
      return $bool;
   }
 
+  /**
+   * Builds the AI-feature settings payload, merged with caller-provided overrides.
+   *
+   * Reads every AI-related field from the plugin settings (generation flags,
+   * per-field character limits, context strings, language, EXIF handling) and
+   * merges them with any keys supplied in $params so callers can override
+   * individual values without repeating the full list.
+   *
+   * @param array $params Optional overrides keyed by setting name.
+   * @return array Merged AI settings array.
+   */
   public static function getAiSettings($params = [])
   {
-    $settings = \wpSPIO()->settings(); 
+    $settings = \wpSPIO()->settings();
 
     $defaults = [
     'ai_general_context' => $settings->ai_general_context, 
@@ -253,8 +379,22 @@ class UtilHelper
     return $params; 
   }
 
+  /**
+   * Converts a human-readable file-size string (e.g. "5k", "2MB", "1g") into
+   * a plain byte count.
+   *
+   * Accepts optional whitespace, an optional decimal-less integer prefix, and
+   * an optional case-insensitive suffix (K, M, G, T, each optionally followed
+   * by "B"). The 1024-based multipliers cascade via fall-through, so "1t"
+   * becomes 1024^4 bytes. Input that does not match the pattern is returned
+   * unchanged.
+   *
+   * @param string $value Size string to parse.
+   * @return string Numeric string representing the size in bytes, or the
+   *                original input if the pattern did not match.
+   */
   public static function convertExclusionFileSizeToBytes($value)
-  { 
+  {
     return preg_replace_callback('/^\s*(\d+)\s*(?:([kmgt]?)b?)?\s*$/i', function ($m) {
       switch (strtolower($m[2])) {
         case 't': $m[1] *= 1024;
@@ -267,6 +407,25 @@ class UtilHelper
 
   }
 
+  /**
+   * Writes or removes the ShortPixelWebp rewrite rules in the site's .htaccess files.
+   *
+   * When both $webp and $avif are false the rules are cleared from the root,
+   * uploads, and wp-content .htaccess files. Otherwise the combined AVIF + WebP
+   * rewrite block is written to the root .htaccess, and (unless disabled via the
+   * "shortpixel/install/write_deep_htaccess" filter) also to the uploads and
+   * wp-content .htaccess files with an inherited-rules preamble. The rules
+   * serve pre-generated .avif or .webp files to browsers that advertise
+   * support, and set appropriate Vary and Cache-Control headers.
+   *
+   * Both flags are passed together (rather than one-at-a-time) because previous
+   * versions of the plugin may have generated files of either format, so both
+   * rule sets are always written when any next-gen delivery is enabled.
+   *
+   * @param bool $webp Whether WebP delivery is enabled. Default false.
+   * @param bool $avif Whether AVIF delivery is enabled. Default false.
+   * @return void
+   */
   public static function alterHtaccess($webp = false, $avif = false)
   {
     // [BS] Backward compat. 11/03/2019 - remove possible settings from root .htaccess
