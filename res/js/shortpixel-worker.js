@@ -85,7 +85,6 @@ var SpWorker = {
 					 		console.error('Worker.js reporting issue on catch', error);
 					 }
 					 else {
-						console.log('stopped but not complaining!', error);
             // This could be a network error ( or user moving away ). Still send response in case of temporary network issues.
             postMessage({'status' : false, message: error});
 

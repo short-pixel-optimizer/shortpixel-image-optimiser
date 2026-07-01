@@ -274,7 +274,6 @@ class ShortPixelOnboarding
           }
        }
        else {
-         console.log('no steps done', event.target, next_step_number, previous_step_number);
          return;
        }
 

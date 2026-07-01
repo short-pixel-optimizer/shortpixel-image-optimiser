@@ -171,7 +171,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		//modal.addEventListener('shortpixel-media-modal-buttons-unblock, shortpixel-media-modal-buttons-block',
 		var buttonEvent = (event) => {
 			var toggle = event.detail.toggle;
-			console.log('toggle buttons');
 			var buttons = modal.querySelectorAll('button[type="button"]');
 
 			for (var i = 0; i < buttons.length; i++) {
@@ -411,7 +410,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 		// If we pass AiData for interface make sure it's the correct item_id
 		if (aiData && (!attachmentAlt.dataset.shortpixelAlt || attachmentAlt.dataset.shortpixelAlt != item_id)) {
-			console.log('This screen, not our screen', attachmentAlt.dataset.shortpixelAlt, item_id);
 			return;
 		}
 
@@ -437,7 +435,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				var altInput = document.getElementById(inputs[i]);
 				if (altInput !== null) {
 					if (altInput.dataset.shortpixelAlt != item_id) {
-						console.log('Returned alt, but not ours.', item_id, altInput);
+						
 						continue;
 					}
 					if (typeof altInput.value !== 'undefined') {
@@ -523,7 +521,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 		if (null !== attachmentAlt) {
 			if (attachmentAlt.dataset.shortpixelAlt && attachmentAlt.dataset.shortpixelAlt != item_id) {
-				console.log('AttachmentAlt not ' + item_id);
 				return;
 			}
 
@@ -782,10 +779,10 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 					}
 					else if (true == this.model.get('uploading')) {
 						next_item_run_process = true;
-						console.log('Upload Start Detected');
+						if (window.ShortPixelProcessor && window.ShortPixelProcessor.ShouldLog()) console.log('Upload Start Detected');
 					}
 					else {
-						console.log('Id not found on render');
+						if (window.ShortPixelProcessor && window.ShortPixelProcessor.ShouldLog()) console.log('Id not found on render');
 					}
 				}
 
@@ -873,7 +870,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		var data = event.detail.media;
 		var item_id = data.item_id;
 		if (typeof data === 'undefined') {
-			console.log('Error on ai interface!', data);
+			if (window.ShortPixelProcessor && window.ShortPixelProcessor.ShouldLog()) console.log('Error on ai interface!', data);
 			return false;
 		}
 		var element = this.GetPageAttachmentAlt();
@@ -1039,7 +1036,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			if (block.attributes.id == attach_id) {
 				let clientId = block.clientId;
 
-				console.log('DATA DISPATCH ', clientId, aiData);
 				wp.data.dispatch('core/block-editor').updateBlockAttributes(clientId,
 					aiData);
 

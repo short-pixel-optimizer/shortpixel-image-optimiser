@@ -563,14 +563,13 @@ class WPQ implements Queue
   {
      $status = get_option($this->statusName);  // two different Q's can run simulanously.
 
-
 		 $currentStatus =  $this->currentStatus;
 		 if( $currentStatus === false && isset($status['queues'][$this->qName]) ) // Don't save status which has been removed.
 		 {
 			  unset($status['queues'][$this->qName]);
 		 }
 		 else {
-			 if (false === $status)
+			 if (false === $status || false === is_array($status))
 			 {
 				  $status = array();
 					$status['queues'] = array();

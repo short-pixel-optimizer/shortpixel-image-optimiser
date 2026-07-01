@@ -22,7 +22,6 @@ class Finder
 				'callback' => null, // placeholder, should prolly communicate with replacer class 
 				'base_url' => false, 
 				'return_data' => [], 
-				
 			];
 			
 			$args = wp_parse_args($args, $defaults); 
