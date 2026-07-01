@@ -10,7 +10,6 @@ var ShortPixelToolTip = function(reserved, processor)
         var paused =  localStorage.getItem('tooltipPause'); // string returns, not boolean
         if (paused == 'true')
         {
-          console.log('manual paused (tooltip)');
           processor.PauseProcess();
         }
         var control = document.querySelector('.ab-item .controls');

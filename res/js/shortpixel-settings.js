@@ -1002,7 +1002,7 @@ class ShortPixelSettings {
 		const url = ShortPixel.AJAX_URL;
 
 		if (typeof responseOkCallBack !== 'function') {
-			responseOkCallBack = (response) => { console.log(response); };
+			responseOkCallBack = (response) => {  };
 		}
 		if (typeof responseErrorCallback !== 'function') {
 			responseErrorCallback = (response) => { console.error(response) };
