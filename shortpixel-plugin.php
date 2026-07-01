@@ -448,7 +448,7 @@ class ShortPixelPlugin {
 				'disable_processor' => apply_filters('shortpixel/processorjs/disable', false),
 				// Whether to show console logging in frontend JS. Filter name: '/shortpixel/front/disablelog'
 				// NOTE: The filter should return a boolean: true => show logs, false => don't show logs.
-				'showConsoleLog'    => (bool) apply_filters('/shortpixel/front/showConsoleLog', $debug),
+				'showConsoleLog'    => (bool) apply_filters('shortpixel/front/showConsoleLog', $debug),
             )
         );
 
