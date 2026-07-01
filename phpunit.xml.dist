@@ -8,8 +8,16 @@
 	convertWarningsToExceptions="true"
 	>
 	<testsuites>
+		<testsuite name="Helper">
+			<directory prefix="test-" suffix=".php">./tests/Helper</directory>
+		</testsuite>
+		<testsuite name="model">
+			<directory prefix="test-" suffix=".php">./tests/Model</directory>
+		</testsuite>
 		<testsuite name="SPIO Main">
 			<directory prefix="test-" suffix=".php">./tests/</directory>
+			<exclude>./tests/Helper</exclude>
+			<exclude>./tests/Model</exclude>
 		</testsuite>
 	</testsuites>
 </phpunit>
