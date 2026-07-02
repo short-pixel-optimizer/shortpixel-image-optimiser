@@ -78,8 +78,14 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     }
 
 		/**
-		* @param int $folder_id;
-		*/
+     * Assign the custom-folder id this image belongs to.
+     *
+     * Used by the folder-scanning flow to associate a freshly-discovered
+     * stub with its owning folder before saveMeta() persists it.
+     *
+     * @param int $folder_id Custom folder ID from shortpixel_folders.
+     * @return void
+     */
     public function setFolderId($folder_id)
     {
         $this->folder_id = $folder_id;
@@ -240,7 +246,19 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
       return $count; // 0 or 1
     }
 
-    /* Check if an image in theory could be processed. Check only exclusions, don't check status etc */
+    /**
+     * Whether this custom image can be processed right now.
+     *
+     * Wraps parent::isProcessable() with two custom-image-specific rules:
+     *   - Date-exclusion rules apply to the ts_optimized / ts_added stored on
+     *     the record itself, not to a WP post_date (custom images have none).
+     *   - `$strict = true` or a size / path exclusion status short-circuits;
+     *     otherwise the "still need a WebP/AVIF variant even though the file
+     *     is already optimized" flow is checked, gated by directory writability.
+     *
+     * @param bool $strict When true, only the main image is considered — the WebP/AVIF fallback is skipped.
+     * @return bool
+     */
     public function isProcessable($strict = false)
     {
         $bool = parent::isProcessable();
