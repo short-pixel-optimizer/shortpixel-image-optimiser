@@ -315,6 +315,16 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         return $bool;
     }
 
+		/**
+     * Whether this image can be restored from a backup.
+     *
+     * Delegates to the parent check first. If that says no, a special-case
+     * kicks in: a FILE_STATUS_PREVENT image that still has a backup on disk
+     * *is* restorable — that state can happen when optimize was prevented
+     * after backup was already created.
+     *
+     * @return bool
+     */
 		public function isRestorable() : bool
 		{
 
@@ -339,19 +349,43 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 				}
 		}
 
+    /**
+     * Return the WebP companion as a single-element array (or empty when
+     * none exists) to keep parity with the media-library shape.
+     *
+     * @return \ShortPixel\Model\File\FileModel[]
+     */
     protected function getWebps()
     {
          $webp = array($this->getWebp());
          return array_filter($webp);
     }
 
+    /**
+     * Return the AVIF companion as a single-element array (or empty when
+     * none exists) to keep parity with the media-library shape.
+     *
+     * @return \ShortPixel\Model\File\FileModel[]
+     */
     protected function getAvifs()
     {
          $avif = array($this->getAvif());
          return array_filter($avif);
     }
 
-    /** Get FileTypes that might be optimized. Checking for setting should go via isProcessableFileType! */
+    /**
+     * Return URLs of WebP or AVIF companions that still need to be optimized.
+     *
+     * Returns the main image URL when a companion of the requested type
+     * does not yet exist and the image is either processable or already
+     * optimized. PDFs never have companions.
+     *
+     * Callers should still gate the result with isProcessableFileType() —
+     * this method reports discoverability, not settings enablement.
+     *
+     * @param string $type Either 'webp' or 'avif'.
+     * @return string[] Single-element URL list when a companion is still needed; empty otherwise.
+     */
     public function getOptimizeFileType($type = 'webp')
     {
         // Pdf files can't have special images.
@@ -378,6 +412,17 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
     }
 
+    /**
+     * Restore this custom image from its backup and reset optimization state.
+     *
+     * Fires the pre-restore actions, calls parent::restore() to move the
+     * backup back into place, then clears the compressed size / compression
+     * type meta, deletes every WebP/AVIF companion file, wipes the webp/avif
+     * meta pointers, and persists. Fires the post-restore action either way.
+     *
+     * @param array $args Reserved for subclass compatibility; currently unused.
+     * @return bool True on success, false when the parent restore failed.
+     */
     public function restore($args = array())
     {
        do_action('shortpixel_before_restore_image', $this->get('id'));
@@ -425,6 +470,19 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
        return $return;
     }
 
+    /**
+     * Apply an API optimization result to this custom image.
+     *
+     * Simpler than the media-library version because there are no
+     * thumbnails: the main file is the only member. Runs
+     * parent::handleOptimized() for the main file (unless already
+     * optimized), applies the WebP/AVIF companion result, then stores the
+     * improvement percentage on `customImprovement` and persists.
+     *
+     * @param array{files: array, data: array} $optimizeData Result payload; expects `files[0]` for the main file's image + webp + avif entries.
+     * @param array $args Optional flags forwarded to the parent handler.
+     * @return bool True on success, false when the main-file handler failed.
+     */
     public function handleOptimized($optimizeData, $args = array())
     {
 			 $bool = true;
@@ -458,6 +516,17 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
        return $bool;
     }
 
+    /**
+     * Hydrate this instance from its row in shortpixel_meta.
+     *
+     * Always assigns an ImageMeta object so the caller can rely on
+     * $image_meta being non-null even when no row is found. When the row
+     * exists, copies path / folder / md5 onto the model, maps every column
+     * into the appropriate meta field, and decodes any `extra_info` JSON
+     * for the webp/avif "bigger than source" status markers.
+     *
+     * @return false|void False when no row exists; otherwise void with side effects on $image_meta.
+     */
     public function loadMeta()
     {
 
@@ -536,16 +605,32 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         $this->image_meta = $metaObj;
     }
 
+		/**
+     * Custom images have no parent hierarchy; always returns false.
+     *
+     * Implemented for signature compatibility with MediaLibraryModel::getParent(),
+     * where a WPML duplicate can point at a parent attachment.
+     *
+     * @return false
+     */
 		public function getParent()
 		{
-			 return false; // no parents here
+			 return false;
 		}
 
-    /** Load a CustomImageModel as Stub ( to be added ) . Checks if the image is already added as well
-		 *
-		 * @param String $path
-		 * @param Boolean $load
-		*/
+    /**
+     * Populate this instance as a "stub" pointing at a path that may or may
+     * not already exist in shortpixel_meta.
+     *
+     * Used by the custom-folder scanner: for each file found on disk,
+     * setStub() decides whether the file is already tracked (loads it if
+     * `$load = true`) or fresh (seeds a blank ImageMeta ready for the
+     * first saveMeta() insert).
+     *
+     * @param string $path Absolute filesystem path of the discovered file.
+     * @param bool   $load When true and a matching row exists, immediately loadMeta() from it.
+     * @return void
+     */
     public function setStub($path, $load = true)
     {
        $this->fullpath = $path;
@@ -575,6 +660,18 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
     }
 
+    /**
+     * Mark this image as "do not auto-optimize" by writing the reason onto
+     * the errorMessage meta and setting the status code, then persisting.
+     *
+     * Unlike MediaLibraryModel — which stores the flag on post meta —
+     * custom images already have their own row, so the state can live
+     * directly on the record.
+     *
+     * @param string $reason Human-readable reason surfaced by isOptimizePrevented().
+     * @param int    $status FILE_STATUS_* code; defaults to FILE_STATUS_PREVENT.
+     * @return void
+     */
     protected function preventNextTry($reason = '', $status = self::FILE_STATUS_PREVENT)
     {
         $this->setMeta('errorMessage', $reason);
@@ -582,11 +679,29 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         $this->saveMeta();
     }
 
+    /**
+     * Semantic wrapper around preventNextTry() for cases where the image
+     * is being marked as intentionally completed (e.g. FILE_STATUS_MARKED_DONE)
+     * rather than blocked after a fatal error.
+     *
+     * @param string $reason Human-readable reason.
+     * @param int    $status FILE_STATUS_* code to persist.
+     * @return void
+     */
     public function markCompleted($reason, $status)
     {
        return $this->preventNextTry($reason, $status);
     }
 
+    /**
+     * Whether this image is flagged as "do not auto-optimize" and, if so,
+     * expose the reason via $optimizePreventedReason + $processable_status.
+     *
+     * Any FILE_STATUS_PREVENT or FILE_STATUS_MARKED_DONE status counts as
+     * prevented; the errorMessage meta is returned as the reason string.
+     *
+     * @return string|false Reason string when prevented, false otherwise.
+     */
     public function isOptimizePrevented()
     {
          $status = $this->getMeta('status');
@@ -603,9 +718,21 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
          return false;
     }
 
+    /**
+     * Whether the record's tsOptimized (or tsAdded when never optimized)
+     * falls on the wrong side of a configured date-exclusion rule.
+     *
+     * `when=before` excludes items whose reference timestamp is earlier
+     * than the rule date; `when=after` (the default) excludes ones later.
+     * An unparseable rule date logs a warning and returns false so nothing
+     * is silently skipped.
+     *
+     * Sets $processable_status to P_EXCLUDE_DATE on match.
+     *
+     * @return bool
+     */
     protected function isDateExcluded()
     {
-        // @todo Implement
         $options = $this->checkDateExcluded();
 
 
@@ -658,21 +785,46 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     }
   
 
-    // Only one item for now, so it's equal
+    /**
+     * Whether anything in this image is optimized.
+     *
+     * Custom images have no thumbnails or companions to consider — this
+     * is functionally equivalent to isOptimized(). Provided so callers can
+     * uniformly ask the family regardless of model type.
+     *
+     * @return bool
+     */
     public function isSomethingOptimized()
     {
        return $this->isOptimized();
     }
 
+    /**
+     * Return the optimized image if any exists, mirroring the
+     * MediaLibraryModel signature. For custom images, that's always $this
+     * when optimized.
+     *
+     * @return self|false
+     */
     public function getSomethingOptimized()
     {
       if ($this->isOptimized())
       {
-        return $this; 
-      } 
-      return false; 
+        return $this;
+      }
+      return false;
     }
 
+    /**
+     * Clear the "prevent auto-optimization" flag on this custom image.
+     *
+     * Status resets to FILE_STATUS_SUCCESS when a backup still exists on
+     * disk (which means the file *was* previously optimized), or to
+     * FILE_STATUS_UNPROCESSED when it doesn't. Either way clears the
+     * error message and persists.
+     *
+     * @return void
+     */
     public function resetPrevent()
     {
         $backupModel = $this->getBackupModel(); 
@@ -686,6 +838,25 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         $this->saveMeta();
     }
 
+    /**
+     * Persist the current state to shortpixel_meta as an INSERT or UPDATE.
+     *
+     * Uses the $in_db flag to decide between insert and update; on insert,
+     * captures the new row id back onto $this->id so subsequent saves go
+     * through the update branch.
+     *
+     * The `message` column is dual-purpose: on success it stores the
+     * improvement percentage (from customImprovement), on failure the
+     * errorMessage — kept together for legacy compatibility with the pre-
+     * modern-meta schema. Format arrays are keyed for readability but the
+     * key names aren't used by wpdb.
+     *
+     * FILETYPE_BIGGER markers for webp/avif are folded into a JSON blob on
+     * the `extra_info` column so a single writable payload can hold future
+     * per-companion state without schema changes.
+     *
+     * @return bool True when the row was written, false on DB error.
+     */
     public function saveMeta()
     {
         global $wpdb;
@@ -794,6 +965,14 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         return false;
     }
 
+    /**
+     * Remove this image's row from shortpixel_meta.
+     *
+     * Does not touch the file on disk — see onDelete() for the full-cleanup
+     * flow.
+     *
+     * @return int|false Number of rows deleted, or false on DB error.
+     */
     public function deleteMeta()
     {
       global $wpdb;
@@ -805,6 +984,15 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
       return $result;
     }
 
+    /**
+     * Handle deletion of this image.
+     *
+     * Delegates the on-disk cleanup (main file + WebP/AVIF companions +
+     * backup) to parent::onDelete(), removes the shortpixel_meta row, and
+     * drops the id from the queue so nothing tries to process a ghost.
+     *
+     * @return void
+     */
     public function onDelete()
     {
 				parent::onDelete();
@@ -812,6 +1000,12 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 				$this->dropfromQueue();
     }
 
+			/**
+     * Remove this image from both the regular custom queue and the bulk
+     * queue.
+     *
+     * @return void
+     */
 			public function dropFromQueue()
 			{
 				 $queueController = new QueueController();
@@ -826,11 +1020,30 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 				 $queue->dropItem($this->get('id'));
 			}
 
+    /**
+     * Return the optimization improvement recorded on this image.
+     *
+     * Custom images store the improvement as a single percentage on the
+     * `customImprovement` meta field; the byte-savings variant
+     * (`$int = true` on ImageModel) is not tracked here — the parameter
+     * is accepted for signature compatibility only.
+     *
+     * @param bool $int Accepted for compatibility with ImageModel::getImprovement(); ignored.
+     * @return float|null Percentage improvement, or null when never optimized.
+     */
     public function getImprovement($int = false)
     {
        return $this->getMeta('customImprovement');
     }
 
+    /**
+     * Return the improvement payload in the same shape as
+     * MediaLibraryModel::getImprovements(), so consumers can be model-
+     * agnostic. Custom images have no thumbnails, so the payload always
+     * has a single `main` entry plus `totalpercentage` equal to it.
+     *
+     * @return array{main: array{0: float|int, 1: int}, totalpercentage: int}
+     */
     public function getImprovements()
     {
       $improvements = array();
