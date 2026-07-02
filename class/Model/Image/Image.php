@@ -31,6 +31,12 @@ Class Image extends \ShortPixel\Model\File\FileModel
 
 
         /**
+         * Constructor.
+         *
+         * Records the replacement path and detects which image library
+         * (GD or Imagick) is available via checkLibrary(). The image itself
+         * is not read from disk until loadImageResource() is called.
+         *
          * @param string $path            Absolute path of the source image file to load.
          * @param string $replacementPath Absolute path of the output file that will be created.
          */
