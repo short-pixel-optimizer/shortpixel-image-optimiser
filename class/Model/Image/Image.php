@@ -51,7 +51,9 @@ Class Image extends \ShortPixel\Model\File\FileModel
         /**
          * Detect which image processing library is available and set $useLib accordingly.
          *
-         * Prefers Imagick over GD when both are installed.
+         * Prefers GD over Imagick when both are installed; falls back to
+         * Imagick when GD is unavailable. When neither is installed, $useLib
+         * stays unset and the conversion methods will bail out.
          *
          * @return void
          */
