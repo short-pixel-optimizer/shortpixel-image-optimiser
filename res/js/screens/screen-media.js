@@ -470,8 +470,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			var newTitle = aiData.post_title;
 		}
 		
-		console.log(aiData);
-
 		if (typeof newAltText !== 'undefined')
 		{
 			var inputs = this.altInputNames;
