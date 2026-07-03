@@ -16,27 +16,49 @@ use ShortPixel\Helper\UtilHelper as UtilHelper;
 use ShortPixel\Helper\InstallHelper as InstallHelper;
 
 
+/**
+ * Cached, chainable statistics model backing the admin-dashboard counters.
+ *
+ * Provides a fluent DSL for reading counts:
+ *   `$stats->getStat('media')->grab('items')` → number of optimized media items
+ *   `$stats->getStat('period')->grab('months')->grab(3)` → optimized in month N ago
+ *
+ * `getStat()` selects a top-level bucket and returns `$this`; `grab()` either
+ * descends further and returns `$this`, or hits a leaf and returns the value.
+ * Leaf reads default to `-1` on the in-memory copy; that sentinel triggers a
+ * lazy DB fetch through fetchStatData() and the result is cached back into
+ * the settings row `currentStats` (keyed by a `time` field). The cache is
+ * considered fresh for `WEEK_IN_SECONDS` by default; the interval is
+ * filterable via `shortpixel/statistics/refresh`.
+ *
+ * @package ShortPixel\Model
+ */
 class StatsModel
 {
 
-  // Below are counted and saved in settings
-  //protected $totalOptimized; // combined filesize of optimized images
-  //protected $totalOriginal;  // combined filesize of original images
-
-  // There are gotten via SQL and saved in stats
-  //protected $totalImages;
-  //protected $totalThumbnails
-
+  /** @var int|null Unix timestamp of the last time the cache was saved (from the `time` key on currentStats). */
   protected $lastUpdate;
+  /** @var string[] Current chain path (e.g. ['media', 'items']) built up by getStat() and grab(). */
   protected $path = array();
 
-  protected $currentStat;  // used for chaining it.
+  /** @var mixed The chain cursor — set by getStat() and mutated by each grab() step until a leaf is reached. */
+  protected $currentStat;
 
+  /** @var int Cache TTL in seconds (default WEEK_IN_SECONDS, filterable). */
   protected $refreshStatTime;
 
 
-  // Commented out stats were dropped.
-  // Note: the difference in items / images including thumbs and the counts don't . This is due to technical difference in acquiring the data.
+  /**
+   * Default bucket structure. Every leaf starts at -1 (sentinel: "not yet
+   * loaded"), so the first grab() through fetchStatData() computes and caches.
+   *
+   * The commented-out lossy/lossless/glossy breakdowns were dropped in a
+   * pre-5.0 cleanup. Media `thumbs` / `thumbsTotal` are marked imprecise
+   * because they come from a raw substring extraction of the WP metadata
+   * blob rather than a properly walked family.
+   *
+   * @var array<string, array<string, mixed>>
+   */
     protected $defaults = array(
       'media' => array('items' => -1, // total optimized media items found
                        'images' => -1, // total optimized images (+thumbs) found
@@ -78,14 +100,39 @@ class StatsModel
       ), */
   );
 
-  protected $stats;  // loaded as defaults, or from dbase.
+  /** @var array<string, array<string, mixed>>|null Live stats — either the persisted values (if fresh) or a copy of $defaults. */
+  protected $stats;
 
+  /**
+   * Constructor.
+   *
+   * Reads the filterable cache TTL from `shortpixel/statistics/refresh`
+   * (default: 1 week) and immediately loads the persisted stats.
+   */
   public function __construct()
   {
       $this->refreshStatTime = apply_filters('shortpixel/statistics/refresh', WEEK_IN_SECONDS);
       $this->load();
   }
 
+  /**
+   * Populate $stats from the `currentStats` setting, applying freshness
+   * and schema-repair rules.
+   *
+   * Flow:
+   *   - Non-array or missing → start from $defaults.
+   *   - Legacy pre-5.0 shape (detected via the `APIKeyValid` key) →
+   *     discarded, fall back to $defaults.
+   *   - array_filter drops falsy top-level buckets — protects against a
+   *     stored `[]` or `false` from wiping the schema.
+   *   - array_merge with $defaults guarantees every top-level bucket is
+   *     present (top-level shallow merge only — the leaves may still be
+   *     -1 from the merge and will get lazy-loaded on first grab).
+   *   - If the persisted `time` + refreshStatTime is still in the future,
+   *     accept the payload as fresh; otherwise start over from $defaults.
+   *
+   * @return void
+   */
   public function load()
   {
     $settings = \wpSPIO()->settings();
@@ -119,6 +166,15 @@ class StatsModel
 
   }
 
+  /**
+   * Persist the current $stats payload to the `currentStats` setting,
+   * stamping it with the current time for freshness checks.
+   *
+   * The write goes through SettingsModel so the shutdown handler batches
+   * it with any other setting changes.
+   *
+   * @return void
+   */
   public function save()
   {
      $settings = \wpSPIO()->settings();
@@ -127,6 +183,15 @@ class StatsModel
      $settings->currentStats = $stats;
   }
 
+  /**
+   * Reset the in-memory stats to defaults and delete the persisted row.
+   *
+   * The subsequent load() call would find the option missing and fall
+   * back to defaults, so the deletion is enough — no explicit save() is
+   * needed here.
+   *
+   * @return void
+   */
   public function reset()
   {
       $this->stats = $this->defaults;
@@ -135,7 +200,18 @@ class StatsModel
   //    $this->save();
   }
 
-  // @todo This is not functional
+  /**
+   * Merge counter deltas from a stat-shaped object into the current bucket.
+   *
+   * NOTE: not currently functional — the leaves start at -1 (sentinel)
+   * so `+=` produces incorrect running totals. Kept as scaffolding until
+   * the additive counter flow is redesigned.
+   *
+   * @param object $stat Expected to expose $type + $images / $items numeric fields.
+   * @return void
+   *
+   * @todo Fix the -1 sentinel interaction before wiring this back up.
+   */
   public function add($stat)
   {
      if (property_exists($stat, 'images'))
@@ -146,6 +222,13 @@ class StatsModel
 
   }
 
+  /**
+   * Property accessor — returns the value of a declared property, or null
+   * for unknown names.
+   *
+   * @param string $name Property name.
+   * @return mixed|null
+   */
   public function get($name)
   {
       if (property_exists($this, $name))
@@ -154,6 +237,16 @@ class StatsModel
         return null;
   }
 
+  /**
+   * Start a fluent chain by selecting a top-level bucket.
+   *
+   * Resets the chain state (currentStat + path) then loads the requested
+   * bucket if it exists. Always returns $this so callers can immediately
+   * chain into `->grab(...)`.
+   *
+   * @param string $type Top-level bucket name — 'media', 'custom', 'period', or 'total'.
+   * @return $this
+   */
   public function getStat($type)
   {
       $this->currentStat = null;
@@ -168,6 +261,19 @@ class StatsModel
       return $this;
   }
 
+  /**
+   * Descend one level into the chain, or return the leaf value.
+   *
+   * Returns null when getStat() was never called or the last step
+   * blew away the cursor. When the requested key exists on the current
+   * (array) cursor, appends it to $path and steps the cursor down. When
+   * the cursor is no longer an array (reached a leaf), inspects the
+   * value: if it is the -1 sentinel, delegates to fetchStatData() which
+   * computes + caches + saves. Otherwise returns the current value.
+   *
+   * @param int|string $data Key at the next level of the chain.
+   * @return $this|int|string|null
+   */
   public function grab($data)
   {
      if (is_null($this->currentStat))
@@ -196,6 +302,25 @@ class StatsModel
 			 }
   }
 
+  /**
+   * Lazy backend for grab() — resolves a chain path against the actual
+   * data sources, caches the result on $stats and saves.
+   *
+   * Routes by the leading path segment:
+   *   - `period.months.<N>` → countMonthlyOptimized(N)
+   *   - `media.items` / `media.itemsTotal` → countMediaItems() variants
+   *   - `media.thumbs` / `media.thumbsTotal` → countMediaThumbnails() variants
+   *   - `media.images` → composed: media.items + media.thumbs
+   *   - `media.isLimited` → the flag countMediaThumbnails() sets when it
+   *     hit its row-limit on the unoptimized branch
+   *   - `custom.items` / `custom.itemsTotal` → customItems() variants
+   *   - `total.*` → summed across media + custom (custom.items == custom.images)
+   *
+   * Every branch normalises negative results to 0 before storing so a
+   * stray DB error can't corrupt the visible counters.
+   *
+   * @return int|string The computed value (or -1 when the path was unrecognised).
+   */
   private function fetchStatData()
   {
       $path = $this->path;
@@ -308,6 +433,16 @@ class StatsModel
 
   }
 
+  /**
+   * Coerce a numeric string to int in place; passes non-numeric values
+   * through untouched.
+   *
+   * Used everywhere in the chain so DB counts (which come back as strings
+   * from wpdb) get normalised before being cached / compared.
+   *
+   * @param mixed $var Value to coerce.
+   * @return mixed
+   */
   private function checkInt($var)
   {
     if (is_numeric($var) && gettype($var) !== 'integer')
@@ -319,7 +454,30 @@ class StatsModel
   }
 
 
-  // suboptimal over full stats implementation, but faster.
+  /**
+   * Count media-library thumbnails, optionally scoped to optimized ones.
+   *
+   * Two very different queries under the hood:
+   *   - `optimizedOnly = true`: precise — counts shortpixel_postmeta rows
+   *     with FILE_STATUS_SUCCESS and image_type ∈ {THUMB, ORIGINAL}.
+   *   - `optimizedOnly = false`: imprecise — extracts a two-character
+   *     substring from each `_wp_attachment_metadata` blob at a fixed
+   *     offset past the "sizes" key, which works for 0–99 thumbnails and
+   *     tolerates the "original_image" marker as an extra +1. This is a
+   *     deliberate perf trade-off — parsing every serialised blob would
+   *     be too slow on large libraries.
+   *
+   * Both queries exclude attachments carrying the
+   * `_shortpixel_prevent_optimize` post meta ("crashed items") — but note
+   * the exclusion is only actually written for the imprecise branch;
+   * the optimizedOnly branch trusts the shortpixel_postmeta row.
+   *
+   * When the raw query hits the `limit` row cap, `stats.media.isLimited`
+   * is flipped so the UI can warn the number is a floor.
+   *
+   * @param array{optimizedOnly?: bool, limit?: int} $args Options.
+   * @return int Thumbnail count.
+   */
   private function countMediaThumbnails($args = array())
   {
      global $wpdb;
@@ -374,6 +532,22 @@ class StatsModel
      return intval($thumbCount);
   }
 
+  /**
+   * Count media-library attachments, optionally scoped to optimized ones.
+   *
+   * Two queries:
+   *   - `optimizedOnly = true`: counts shortpixel_postmeta rows with
+   *     FILE_STATUS_SUCCESS and image_type = IMAGE_TYPE_MAIN.
+   *   - `optimizedOnly = false`: counts `_wp_attached_file` rows,
+   *     excluding attachments flagged with `_shortpixel_prevent_optimize`.
+   *
+   * If the query fails because the shortpixel_postmeta table doesn't
+   * exist, InstallHelper::checkTables() is invoked to self-heal, an
+   * error is logged, and 0 is returned.
+   *
+   * @param array{optimizedOnly?: bool} $args Options.
+   * @return int Item count.
+   */
   private function countMediaItems($args = array())
   {
       global $wpdb;
@@ -412,6 +586,23 @@ class StatsModel
       return intval($count);
   }
 
+  /**
+   * Count optimizations completed during a given month bucket.
+   *
+   * Bucketing: `monthsAgo = 1` returns the count for the range
+   * [now - 1 month, now]; `monthsAgo = N` returns [now - N months,
+   * now - (N-1) months]. So `1`, `2`, `3`, `4` produce four
+   * consecutive-monthly buckets stacked backwards from the current day.
+   *
+   * Counts both media-library optimizations (shortpixel_postmeta with
+   * tsOptimized) and custom-image optimizations (shortpixel_meta with
+   * ts_optimized), summed across both tables. Non-numeric wpdb results
+   * are ignored so a table-missing error contributes 0 rather than
+   * poisoning the total.
+   *
+   * @param int $monthsAgo Which month bucket to compute (1 = most recent).
+   * @return int Total optimizations completed in that month.
+   */
   private function countMonthlyOptimized($monthsAgo = 1)
   {
      global $wpdb;
@@ -444,6 +635,19 @@ class StatsModel
      return $count;
   }
 
+  /**
+   * Count custom-folder items, optionally scoped to optimized ones.
+   *
+   * Short-circuits to 0 in two cases: when OtherMediaController reports
+   * no custom images are configured at all, or when no active folder ids
+   * exist. Otherwise counts `shortpixel_meta` rows whose folder_id is in
+   * the active set; when `optimizedOnly = true`, additionally filters by
+   * status = FILE_STATUS_SUCCESS.
+   *
+   * @param array{optimizedOnly?: bool} $args Options.
+   * @return int|string|null Item count from wpdb (raw scalar; caller is
+   *                         expected to coerce via checkInt()).
+   */
   private function customItems($args = array())
   {
        global $wpdb;
