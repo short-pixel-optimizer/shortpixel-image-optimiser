@@ -998,11 +998,11 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page section#tab-debug .flex {
   display: flex;
 }
-.wrap.is-shortpixel-settings-page section#tab-debug .env .flex, .wrap.is-shortpixel-settings-page section#tab-debug .fs .flex {
+.wrap.is-shortpixel-settings-page section#tab-debug .env .flex, .wrap.is-shortpixel-settings-page section#tab-debug .fs .flex, .wrap.is-shortpixel-settings-page section#tab-debug .functions .flex {
   flex-wrap: wrap;
   max-width: 450px;
 }
-.wrap.is-shortpixel-settings-page section#tab-debug .env .flex span, .wrap.is-shortpixel-settings-page section#tab-debug .fs .flex span {
+.wrap.is-shortpixel-settings-page section#tab-debug .env .flex span, .wrap.is-shortpixel-settings-page section#tab-debug .fs .flex span, .wrap.is-shortpixel-settings-page section#tab-debug .functions .flex span {
   width: 45%;
   padding: 4px;
 }

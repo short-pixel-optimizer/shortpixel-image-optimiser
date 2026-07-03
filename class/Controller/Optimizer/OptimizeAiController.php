@@ -179,6 +179,7 @@ class OptimizeAiController extends OptimizerBase
                 Log::addDebug('Item failed, has error on done ', $qItem->result());
                 $queue->itemFailed($qItem, true);
                 $this->HandleItemError($qItem);
+                $this->finishItemProcess($qItem);
             } else // Do nothing for now / retry (?)
             {
             }
@@ -204,7 +205,7 @@ class OptimizeAiController extends OptimizerBase
 
         // Result for retrieveAlt
         if (property_exists($qItem->result(), 'aiData') && false === is_null($qItem->result()->aiData)) {
-            return $this->HandleSuccess($qItem);
+             $this->HandleSuccess($qItem);
         }
     }
 
@@ -360,7 +361,7 @@ class OptimizeAiController extends OptimizerBase
         $this->unBlockItem($qItem);
 
         $this->finishItemProcess($qItem);
-        return;
+
     }
 
     /**

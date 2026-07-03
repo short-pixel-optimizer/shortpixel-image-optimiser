@@ -72,6 +72,16 @@ if (Log::isManualDebug())
 		</div>
   </div> <!-- /env -->
 
+  <div class='functions'>
+    <h3><?php esc_html_e('Functions Usuable', 'shortpixel-image-optimiser'); ?></h3>
+    <div class='flex'>
+      <span>Finfo open</span><span><?php var_export(\wpSPIO()->env()->is_function_usable('finfo_open')); ?></span>
+      <span>MimeContent Type</span><span><?php var_export(\wpSPIO()->env()->is_function_usable('mime_content_type')) ?></span>
+      <span>Curl Init</span><span><?php var_export(\wpSPIO()->env()->is_function_usable('curl_init')); ?></span>    
+    </div>
+
+  </div>
+
   <div class='fs'>
     <h3><?php esc_html_e('FileSystem', 'shortpixel-image-optimiser'); ?></h3>
     <div class='flex'>

@@ -287,6 +287,7 @@ class QueueController
           
           if (is_object($queueItem))
           {
+            // @todo There is a problem here, when queueItem return is not an object, only boolean is return, but we want an integer for check in AddItemToQeueu
               $queueItem->setModel($mediaItem); 
               // @todo If item can be appended, probably add function in queueItem to add next_action and update to database (this q )?
               if (false === is_null($action) && false === $queueItem->data()->hasAction($action))
@@ -309,7 +310,6 @@ class QueueController
       }
       
       // Preventing double queries here
-
       return $bool;
   }
 

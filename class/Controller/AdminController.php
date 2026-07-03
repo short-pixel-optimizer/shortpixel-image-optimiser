@@ -191,7 +191,7 @@ class AdminController extends \ShortPixel\Controller
 
          $queueController = new QueueController();
         
-        $args = ['action' => 'requestAlt', 'recent_upload' => true];
+        $args = ['action' => 'requestAlt'];
         $result = $queueController->addItemToQueue($mediaItem, $args); 
          
         return $meta;

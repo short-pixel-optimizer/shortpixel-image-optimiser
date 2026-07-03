@@ -193,7 +193,7 @@ class AiController extends RequestManager
             }
             elseif(self::AI_STATUS_OVERQUOTA === $status)
             {
-               return $this->returnFailure(RequestManager::STATUS_ERROR, sprintf(esc_html__('Your AI quota for this month has been exceeded. We would love to hear your feedback — please share it with us %shere%s.', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/contact" target="_blank">', '</a>'));
+               return $this->returnFailure(RequestManager::STATUS_QUOTA_EXCEEDED, sprintf(esc_html__('Your AI quota for this month has been exceeded. We would love to hear your feedback — please share it with us %shere%s.', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/contact" target="_blank">', '</a>'));
             }
             elseif(self::AI_STATUS_INVALID_URL === $status)
             {
