@@ -286,8 +286,14 @@ class FileModel extends \ShortPixel\Model
             {
             finfo_close($fileinfo);
             }
+            // For AVIF on lower PHP version this check might fail because lacking AVIF integration in PHP . Let's declare a workable file good enough.            
+            if ($this->mime === 'application/octet-stream' && is_readable($this->getFullPath()) )
+            {
+                return true; 
+            }
             //FILEINFO_MIME_TYPE
         }
+        
         elseif(is_null($this->mime) && \wpSPIO()->env()->is_function_usable('mime_content_type')) {
           $this->mime = mime_content_type($this->getFullPath());
         }
