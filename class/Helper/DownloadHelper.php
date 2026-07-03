@@ -116,17 +116,8 @@ class DownloadHelper
 					{
 						Log::addError('Failed to download File', $result);
             $this->last_download_error = $tempFile->get_error_message();
-						//ResponseController::addData('is_error', true);
-						//Responsecontroller::addData('message', $tempFile->get_error_message());
 						return false;
 					}
-
-        /*
-        Log::addError('Nulling tempfile to zero for testing!');
-        $file = fopen($tempFile, 'r+');
-        ftruncate($file,0);
-        fclose($file);
-        */
 
 					$fs = \wpSPIO()->filesystem();
 					$file = $fs->getFile($tempFile);

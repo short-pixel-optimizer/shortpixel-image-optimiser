@@ -145,7 +145,7 @@ class AdminController extends \ShortPixel\Controller
 							$mediaItem = $fs->getImage($id, 'media', false);
 
 							$meta = $converter->getUpdatedMeta();
-           }
+          }
 
          $queueController = new QueueController();
                 
