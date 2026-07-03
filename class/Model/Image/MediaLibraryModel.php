@@ -1960,6 +1960,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	 * conversion (PNG→JPG, BMP→JPG, HEIC→JPG, etc.) reversible, and record
 	 * the attempt on convertMeta so a failure doesn't retry forever.
 	 *
+	 * Always runs (regardless of the backup setting): loads this attachment
+	 * into the BackupModel via `loadMediaItem($this)` so the backup layer
+	 * knows about any pending replacementImageBase before it's asked to
+	 * copy files.
+	 *
 	 * When backups are enabled:
 	 *   - the main file (or the unscaled original if scaled) is backed up first;
 	 *     on failure, records the error on convertMeta, saves, and bails.

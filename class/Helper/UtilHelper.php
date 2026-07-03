@@ -286,9 +286,23 @@ class UtilHelper
     return $bool;
   }
 
-  public static function testSymlink() : bool 
+  /**
+   * Probe whether the current filesystem supports working symlinks.
+   *
+   * Writes a test file to the WordPress upload base, creates a symlink
+   * pointing at it, and verifies that (a) the symlink is visible on disk
+   * and (b) content written through the symlink is readable back from the
+   * target file. Both files are unlinked before returning.
+   *
+   * Used to decide whether SPIO can rely on symlinks (e.g. for de-duplicating
+   * backups or unlisted-thumbnail flows) on the host WordPress install.
+   *
+   * @return bool True when the symlink test round-tripped successfully; false when
+   *              the symlink was not created or its contents diverged from the target.
+   */
+  public static function testSymlink() : bool
   {
-     $fs = \wpSPIO()->filesystem(); 
+     $fs = \wpSPIO()->filesystem();
 
      $base = $fs->getWPUploadBase();
 
