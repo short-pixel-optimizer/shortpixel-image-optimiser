@@ -191,6 +191,7 @@ class OptimizeAiController extends OptimizerBase
             Log::addDebug('Item failed, has error on done ', $qItem->result());
             $queue->itemFailed($qItem, true);
             $this->HandleItemError($qItem);
+            $this->finishItemProcess($qItem);
         }
         else // Do nothing for now / retry (?)
         {
