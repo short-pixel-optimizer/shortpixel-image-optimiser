@@ -159,7 +159,7 @@ if (! defined('ABSPATH')) {
 
         <content class='toggleTarget ai_gen_alt is-advanced'>
           <i class='documentation right dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe#4-toc-title"></i>
-          <name> <?php _e('Always add adter ALT tag:', 'shortpixel-image-optimiser'); ?></name>
+          <name> <?php _e('Always add after ALT tag:', 'shortpixel-image-optimiser'); ?></name>
           <input type="text" name="ai_alt_postfix" maxlength="50" value="<?php echo esc_attr($view->data->ai_alt_postfix); ?>" />
         </content>
 

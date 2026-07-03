@@ -74,7 +74,7 @@ window.ShortPixelProcessor =
 
     ShouldLog: function()
     {
-        return Boolean(typeof ShortPixelProcessorData !== 'undefined' && ShortPixelProcessorData.showConsoleLog);
+        return this.showConsoleLog;
     },
 
     Load: function(hasQuota)
@@ -86,8 +86,8 @@ window.ShortPixelProcessor =
         this.localSecret = localStorage.getItem('bulkSecret');
 
         this.remoteSecret = ShortPixelProcessorData.bulkSecret;
-          this.debugIsActive = Boolean(ShortPixelProcessorData.debugIsActive);
-        this.showConsoleLog = Boolean(ShortPixelProcessorData.showConsoleLog);
+          this.debugIsActive = (ShortPixelProcessorData.debugIsActive == 'true') ? true : false;
+        this.showConsoleLog = (ShortPixelProcessorData.showConsoleLog == 'true') ? true : false; 
         this.is_disabled = Boolean(ShortPixelProcessorData.disable_processor); 
 
         this.nonce['process'] = ShortPixelProcessorData.nonce_process;

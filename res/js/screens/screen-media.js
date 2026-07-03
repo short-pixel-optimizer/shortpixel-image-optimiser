@@ -413,6 +413,11 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			return;
 		}
 
+		// If we pass AiData for interface make sure it's the correct item_id
+		if (aiData && (!attachmentAlt.dataset.shortpixelAlt || attachmentAlt.dataset.shortpixelAlt != item_id)) {
+			return;
+		}
+
 		var wp_screen_id = this.settings.wp_screen_id;
 
 
@@ -423,8 +428,9 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			var newTitle = aiData.post_title;
 			var newFileBase = aiData.filebase; 
 		}
-
-		if (typeof newAltText !== 'undefined') {
+		
+		if (typeof newAltText !== 'undefined')
+		{
 			var inputs = this.altInputNames;
 
 			if (typeof newAltText == 'number') {
@@ -480,17 +486,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				let descriptionField = document.getElementById(descriptionFields[i]);
 				if (null !== descriptionField) {
 					descriptionField.value = newDescription;
-				}
-			}
-		}
-
-		if (typeof newTitle !== 'undefined' && typeof newTitle !== 'number') {
-
-
-			for (var i = 0; i < postTitleFields.length; i++) {
-				let titleField = document.getElementById(postTitleFields[i]);
-				if (null !== titleField) {
-					titleField.value = newTitle;
 				}
 			}
 		}
