@@ -405,6 +405,8 @@ class ShortPixelPlugin {
 		// If the queue is empty how often to check if something new appeared from somewhere. Excluding the manual items added by current processor user.
 		$deferInterval = apply_filters( 'shortpixel/process/deferInterval', 60000 );
 
+		$debug = (\wpSPIO()->env()->is_debug) ? 'true' : 'false';
+
 		wp_localize_script(
             'shortpixel-processor',
             'ShortPixelProcessorData',
@@ -419,9 +421,12 @@ class ShortPixelPlugin {
 				'startData'         => ( \wpSPIO()->env()->is_screen_to_use ) ? $queueController->getStartupData() : false,
 				'interval'          => $interval,
 				'deferInterval'     => $deferInterval,
-				'debugIsActive' 		=> (\wpSPIO()->env()->is_debug) ? 'true' : 'false',
+				'debugIsActive' 	=> $debug,
 				'autoMediaLibrary'  => ($settings->autoMediaLibrary) ? 'true' : 'false',
 				'disable_processor' => apply_filters('shortpixel/processorjs/disable', false),
+				// Whether to show console logging in frontend JS. Filter name: '/shortpixel/front/disablelog'
+				// NOTE: The filter should return a boolean: true => show logs, false => don't show logs.
+				'showConsoleLog'    => apply_filters('/shortpixel/front/showConsoleLog', $debug),
             )
         );
 

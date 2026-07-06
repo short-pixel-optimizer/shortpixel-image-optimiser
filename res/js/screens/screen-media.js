@@ -183,8 +183,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 		//modal.addEventListener('shortpixel-media-modal-buttons-unblock, shortpixel-media-modal-buttons-block',
 		var buttonEvent = (event) => {
-			var toggle = event.detail.toggle; 
-			console.log('toggle buttons');
+			var toggle = event.detail.toggle;
 			var buttons = modal.querySelectorAll('button[type="button"]');
 
 			for (var i = 0; i < buttons.length; i++)
@@ -455,6 +454,11 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			return; 
 		}
 
+		// If we pass AiData for interface make sure it's the correct item_id
+		if (aiData && (!attachmentAlt.dataset.shortpixelAlt || attachmentAlt.dataset.shortpixelAlt != item_id)) {
+			return;
+		}
+
 		var wp_screen_id = this.settings.wp_screen_id;
 
 
@@ -466,8 +470,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			var newTitle = aiData.post_title;
 		}
 		
-		console.log(aiData);
-
 		if (typeof newAltText !== 'undefined')
 		{
 			var inputs = this.altInputNames;
@@ -476,26 +478,21 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			{
 				newAltText = ''; 
 			}
-	
-			for (var i = 0; i < inputs.length; i++)
-			{
-				   var altInput = document.getElementById(inputs[i]); 
-				   if (altInput !== null)
-				   {
-					   if (altInput.dataset.shortpixelAlt != item_id)
-					   {
-						 console.log('Returned alt, but not ours.', item_id, altInput);
-						 continue; 
-					   }
-					   if (typeof altInput.value !== 'undefined')
-					   {
-						   altInput.value = newAltText; 	
-					   }
-					   else
-					   {
-						   altInput.innerText = newAltText; 	
-					   }
-				   }
+
+			for (var i = 0; i < inputs.length; i++) {
+				var altInput = document.getElementById(inputs[i]);
+				if (altInput !== null) {
+					if (altInput.dataset.shortpixelAlt != item_id) {
+						
+						continue;
+					}
+					if (typeof altInput.value !== 'undefined') {
+						altInput.value = newAltText;
+					}
+					else {
+						altInput.innerText = newAltText;
+					}
+				}
 			}
 		}
 		// edit media screen
@@ -556,11 +553,32 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			}
 		 }
 
-		if (null !== attachmentAlt)
+		if (typeof newFileBase !== 'undefined' && typeof newFileBase !== 'number')
 		{
-			if (attachmentAlt.dataset.shortpixelAlt && attachmentAlt.dataset.shortpixelAlt != item_id)
+			for (var i = 0; i < fileNameFields.length; i++)
 			{
-				console.log('AttachmentAlt not ' + item_id); 
+				let fileNameField = fileNameFields[i]; 
+				if (fileNameField.charAt(0) == '.')
+				{
+					fileNameField = document.querySelector(fileNameField); 
+					if (null !== fileNameField)
+					{
+						fileNameField.innerText = newFileBase; 
+					}
+					else if ( aiData.url)
+					{
+						 fileNameField = document.getElementById(fileNameField); 
+						 if (null !== fileNameField)
+						 {
+						 	fileNameField.value = aiData.url;
+						 }
+					}
+				}
+			}
+		}
+
+		if (null !== attachmentAlt) {
+			if (attachmentAlt.dataset.shortpixelAlt && attachmentAlt.dataset.shortpixelAlt != item_id) {
 				return;
 			}
 			
@@ -830,14 +848,12 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 						this.spioBusy = true; // Note if this system turns out not to work, the perhaps render empties all if first was painted, second cancelled?
 						}
 					}
-					else if (true == this.model.get('uploading'))
-					{
-						next_item_run_process = true; 
-						console.log('Upload Start Detected');
+					else if (true == this.model.get('uploading')) {
+						next_item_run_process = true;
+						if (window.ShortPixelProcessor && window.ShortPixelProcessor.ShouldLog()) console.log('Upload Start Detected');
 					}
-					else
-					{
-						console.log('Id not found on render');
+					else {
+						if (window.ShortPixelProcessor && window.ShortPixelProcessor.ShouldLog()) console.log('Id not found on render');
 					}
 				}
 
@@ -920,14 +936,12 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 	}
 
 	// It's not possible via hooks / server-side, so attach the AI interface HTML to where it should be attached. 
-	AttachAiInterface(event)
-	{
-		
-		var data = event.detail.media; 	
-		var item_id = data.item_id; 
-		if (typeof data === 'undefined')
-		{
-			console.log('Error on ai interface!', data);
+	AttachAiInterface(event) {
+
+		var data = event.detail.media;
+		var item_id = data.item_id;
+		if (typeof data === 'undefined') {
+			if (window.ShortPixelProcessor && window.ShortPixelProcessor.ShouldLog()) console.log('Error on ai interface!', data);
 			return false;
 		}
 		var element = this.GetPageAttachmentAlt();
@@ -1102,9 +1116,8 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			 {
 				let clientId = block.clientId;
 
-				console.log('DATA DISPATCH ', clientId, aiData);				
-				wp.data.dispatch( 'core/block-editor' ).updateBlockAttributes( clientId, 
-					aiData );
+				wp.data.dispatch('core/block-editor').updateBlockAttributes(clientId,
+					aiData);
 
 			 }
 		}

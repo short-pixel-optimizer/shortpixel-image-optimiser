@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 4.8.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 6.5.3
+Stable tag: 6.5.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -452,6 +452,23 @@ Disable the feedback survey when the plugin is deactivated:
 14. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 6.5.4 =
+
+⚡ The Optimization Flow Update
+
+Release Date: July 6, 2026
+
+🛠️ Fixes & Improvements
+
+* Smarter Credit Handling: Automatic image optimization will now continue even if AI credits are exhausted, as long as image optimization credits are still available.
+* AVIF Loop Prevention: Fixed a rare case where PHP limitations could not identify the MIME type correctly and could cause an infinite optimization loop for some AVIF files received from the optimization API.
+* Cleaner Browser Console: Removed optimization-related console logs from production. They are now only shown when plugin debug mode is enabled, with an additional filter available to disable them completely if needed.
+* Queue Stability: Fixed a rare error that could occur under specific conditions within the optimization queue.
+* Better Bulk Error Help: Bulk processing errors now link directly to the ShortPixel Knowledge Base search, making it easier to find the most relevant solution.
+* WordPress 7.0 UI Tweaks: Updated the Bulk Processing interface to better match the layout and styling changes introduced in WordPress 7.0.
+
+Update now for a smoother optimization workflow, improved reliability, and a more polished experience! 🚀
 
 = 6.5.3 =
 
