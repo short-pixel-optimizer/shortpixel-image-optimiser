@@ -38,7 +38,7 @@ class UiHelper
 	 *
 	 * @var string
 	 */
-	private static $knowledge_url = 'https://shortpixel.com/knowledge-base/article/common-shortpixel-bulk-processing-errors/'; // the URL of all knowledge.
+	private static $knowledge_url = 'https://shortpixel.com/knowledge-base/?s='; // the search URL of all knowledge.
 
 	/**
 	 * Sets the active output handler/mode name.
@@ -934,12 +934,14 @@ class UiHelper
 	/**
 	 * Returns an escaped URL linking to the ShortPixel knowledge-base search.
 	 *
-	 * @param string $subject Search subject (currently unused; KB search is disabled).
+	 * @param string $subject Search subject
 	 * @return string Escaped URL string.
 	 */
 	public static function getKBSearchLink($subject)
 	{
-			return esc_url(self::$knowledge_url); // . sanitize_text_field($subject)); //the KB search doesn't work anymore
+		$subject = sanitize_text_field($subject);   // collapse whitespace, strip tags
+		$subject = str_replace(' ', '-', $subject); // spaces -> dashes
+		return esc_url(self::$knowledge_url . $subject);
 	}
 
 	/**
