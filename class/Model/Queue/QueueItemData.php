@@ -225,11 +225,7 @@ class QueueItemData
         /**
          * Whether the item has any queued follow-up actions.
          *
-         * NOTE: Falls off the end (implicit null) instead of returning false
-         * when nothing is queued. Both values are falsy so callers using
-         * `if ($item->data->hasNextAction())` still work as expected.
-         *
-         * @return bool|null True when at least one next action is queued.
+         * @return bool True when at least one next action is queued.
          */
         public function hasNextAction()
         {
@@ -238,6 +234,7 @@ class QueueItemData
                  return true;
              }
 
+             return false;
         }
 
         /**

@@ -57,6 +57,8 @@ class ApiConverter extends MediaLibraryConverter
 		if (true === $this->imageModel->getMeta()->convertMeta()->isConverted()) {
 			return false;
 		}
+
+		return false;
 	}
 
 	/**

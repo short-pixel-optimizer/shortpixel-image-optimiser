@@ -1718,8 +1718,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
               }
            }
         }
-        // Convert fileSize to bytes. 
-        
+        // Convert fileSize to bytes.
+
+        return $bool;
     }
 
     /**

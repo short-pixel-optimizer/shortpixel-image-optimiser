@@ -175,7 +175,7 @@ class PNGConverter extends MediaLibraryConverter
 		 */
 		public function convert($args = array())
 		{
-			 if (! $this->isConvertable($this->imageModel))
+			 if (! $this->isConvertable())
 			 {
 				 return false;
 			 }
@@ -194,7 +194,7 @@ class PNGConverter extends MediaLibraryConverter
 			 $replacementPath = $this->getReplacementPath();
 			 if (false === $replacementPath)
 			 {
-				 Log::addWarn('ApiConverter replacement path failed');
+				 Log::addWarn('PNGConverter replacement path failed');
 				 $this->imageModel->getMeta()->convertMeta()->setError(self::ERROR_PATHFAIL);
 
 				 return false; // @todo Add ResponseController something here.

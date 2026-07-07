@@ -2285,8 +2285,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					}
 				}
 			}
-		}  // polylang
-		if ($env->plugin_active('polylang')) // polylang
+		}
+		// polylang
+		if ($env->plugin_active('polylang'))
 		{
 			// unholy sql where guid is duplicated.
 			$sql = 'SELECT id FROM ' . $wpdb->prefix . 'posts WHERE guid in (select guid from ' . $wpdb->prefix . 'posts where id = %d ) and post_type = %s and id <> %d';

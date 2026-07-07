@@ -191,7 +191,8 @@ class AiDataModel
      *
      * @param int $attach_id WordPress attachment post ID.
      * @param int $type      TYPE_MEDIA or TYPE_CUSTOM constant.
-     * @return void
+     * @return false|void Returns false when the table is missing; otherwise
+     *                    populates the instance and returns nothing.
      */
     protected function fetchRecord($attach_id, $type)
     {
@@ -437,7 +438,7 @@ class AiDataModel
     }
 
     /**
-     * Get the current AI status.
+     * Get the stored AI status for this record.
      *
      * @return int The AI status constant.
      */
@@ -689,7 +690,8 @@ class AiDataModel
     /**
      * Check whether the attachment's file extension is supported by the AI feature.
      *
-     * Supported extensions: png, jpeg, webp, jpg.  Sets P_EXTENSION on failure.
+     * Supported extensions: png, jpeg, webp, jpg, heic, svg, bmp, tiff, tif.
+     * Sets P_EXTENSION on failure.
      *
      * @return bool True if the extension is in the supported list, false otherwise.
      */
