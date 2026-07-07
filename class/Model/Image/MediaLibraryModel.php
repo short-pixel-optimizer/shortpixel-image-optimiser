@@ -2577,7 +2577,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	 *      then propagate the entire result to every WPML duplicate.
 	 *
 	 * @param array $args Reserved for subclass compatibility; currently unused.
-	 * @return bool Result of the last-restored member. See @todo in source about the edge case where this reports failure even when everything else succeeded.
+	 * @return bool True when every member (main, thumbnails, retinas, scaled original) restored successfully; false if any restore failed.
 	 */
 	public function restore($args = [])
 	{
@@ -2590,7 +2590,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$wpmeta = wp_get_attachment_metadata($this->get('id'));
 		$restored = [];
 
-		
+
 		// Get them early in case the filename changes ( ie png to jpg ) because it will stop getting it.
 		$WPMLduplicates = $this->getWPMLDuplicates();
 
@@ -2600,6 +2600,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		// ** Warning - This will also reset metadata ****
 		$bool = $is_main_restore_ok =  parent::restore();
+		$all_restored_ok = $bool;
 
 		// @todo The restoreConversion here - which does call for the replacer is probably the reason only the main file is replaced back
 		// Should probably be after the needsgenerate call has finished? 
@@ -2666,6 +2667,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				$thumbObj->image_meta = new ImageThumbnailMeta();
 			} elseif ($thumbObj->isRestorable()) {
 				$bool = $thumbObj->restore(); // resets metadata
+				$all_restored_ok = $all_restored_ok && $bool;
 				if (! $bool) {
 					$cleanRestore = false;
 				} else {
@@ -2702,6 +2704,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					$retinaObj->image_meta = new ImageThumbnailMeta();
 				} elseif ($retinaObj->isRestorable()) {
 					$bool = $retinaObj->restore();
+					$all_restored_ok = $all_restored_ok && $bool;
 
 					if (! $bool) {
 						$cleanRestore = false;
@@ -2716,6 +2719,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			$originalFile = $this->getOriginalFile();
 			if ($originalFile->isRestorable() && false === isset($restored[$originalFile->getFileBase()]) ) {
 				$bool = $originalFile->restore();
+				$all_restored_ok = $all_restored_ok && $bool;
 			}
 		}
 
@@ -2785,8 +2789,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			$this->id = $current_id;
 		}
 
-		// @todo Restore can be false if last item failed, which doesn't sound right.
-		return $bool;
+		return $all_restored_ok;
 	}
 
 	/**
@@ -3392,12 +3395,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 				$originalFile->image_meta->webp = $this->checkLegacyFileTypeFileName($originalFile, 'webp');
 				$originalFile->image_meta->avif = $this->checkLegacyFileTypeFileName($originalFile, 'avif');
-
-
-				if (strpos($thumbname, 'sp-found') !== false) // File is 'unlisted', also save file information.
-				{
-					$originalFile->image_meta->file = $originalFile->getFileName();
-				}
 
 				$originalFile->recordChanged(true);
 				$this->original_file = $originalFile;

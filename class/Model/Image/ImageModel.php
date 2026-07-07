@@ -1088,7 +1088,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                 $tempFile = $fs->getFile($results['image']['file']);
             }
 						
-            if ($this->is_virtual())
+            if ($this->is_virtual() && isset($tempFile))
             {
                 $filepath = apply_filters('shortpixel/file/virtual/translate', $this->getFullPath(), $this);
                 $virtualFile = $fs->getFile($filepath);

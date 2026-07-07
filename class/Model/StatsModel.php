@@ -279,8 +279,12 @@ class StatsModel
      if (is_null($this->currentStat))
           return null;
 
-       if (is_array($this->currentStat) && array_key_exists($data, $this->currentStat))
+       if (is_array($this->currentStat))
        {
+          if (! array_key_exists($data, $this->currentStat))
+          {
+             return null;
+          }
           $this->currentStat = $this->checkInt($this->currentStat[$data]);
           $this->path[] = $data;
        }
