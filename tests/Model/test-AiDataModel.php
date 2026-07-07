@@ -299,12 +299,12 @@ class AiDataModelTest extends WP_UnitTestCase {
 	}
 
 	/*
-	 * isExifProcesssable (private) — currently always true (dead-code branch)
+	 * isExifProcessable (private) — currently always true (dead-code branch)
 	 */
 
-	public function test_isExifProcesssable_currently_returns_true_unconditionally() {
+	public function test_isExifProcessable_currently_returns_true_unconditionally() {
 		$this->assertTrue(
-			$this->invokePrivate( $this->freshModel(), 'isExifProcesssable' )
+			$this->invokePrivate( $this->freshModel(), 'isExifProcessable' )
 		);
 	}
 

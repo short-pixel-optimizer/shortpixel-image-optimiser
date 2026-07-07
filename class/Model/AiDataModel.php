@@ -259,7 +259,7 @@ class AiDataModel
         // Ignore this on preview only (settings), otherwise we might get empty preview, which is not the point.
         if (true === $settings->aiPreserve && false === $preview_only) {
             $currentData = $this->getCurrentData();
-            $ignore_fields = array_diff(array_keys(array_filter($currentData)), []);
+            $ignore_fields = array_keys(array_filter($currentData));
 
             $fs = \wpSPIO()->filesystem();
             $mediaItem = $fs->getMediaImage($this->attach_id);
@@ -355,11 +355,12 @@ class AiDataModel
     {
         // Save to Database
         foreach ($data as $name => $value) {
+            // 'original_filebase' is skipped: setCurrentData() below refreshes
+            // $this->current['filebase'] from the attachment path directly.
             if ('original_filebase' == $name) {
-                $this->current['filebase'] = $value;
-            } else {
-                $this->generated[$name] = $value;
+                continue;
             }
+            $this->generated[$name] = $value;
         }
 
         $this->setCurrentData();
@@ -582,9 +583,15 @@ class AiDataModel
     }
 
     /**
-     * Verify that any stored AI data still matches the live WordPress values.
+     * Refresh the live-WordPress cache ($this->current) when a record exists.
      *
-     * @return bool True if no record exists (nothing to validate), void otherwise.
+     * The name implies a comparison against stored data but no comparison
+     * is actually performed — the method only calls setCurrentData() and
+     * returns nothing on that path. When there is no record it short-
+     * circuits with true so callers can treat "no record" as "nothing to
+     * validate".
+     *
+     * @return bool|void True when no record exists; no return value otherwise.
      */
     public function checkStoredData()
     {
@@ -607,7 +614,7 @@ class AiDataModel
         }
 
         // Stash here other conditions on top with && to build a big processable function
-        $processable = ($this->isExifProcesssable() && $this->isExtensionIncluded() && $this->hasSomethingGeneratable()) ? true : false;
+        $processable = ($this->isExifProcessable() && $this->isExtensionIncluded() && $this->hasSomethingGeneratable()) ? true : false;
         return $processable;
     }
 
@@ -621,32 +628,10 @@ class AiDataModel
      *
      * @return bool True if EXIF settings do not block AI, false otherwise.
      */
-    private function isExifProcesssable()
+    private function isExifProcessable()
     {
-        // Change: Exif processing changed on API, allowing this - https://app.asana.com/1/18694759100379/project/1200110778640816/task/1213564895578597 
+        // Change: Exif processing changed on API, allowing this - https://app.asana.com/1/18694759100379/project/1200110778640816/task/1213564895578597
         return true;
-
-        /*$fs = \wpSPIO()->filesystem(); 
-        $imageModel = $fs->getMediaImage($this->attach_id); 
-
-        if (false === $imageModel->isSomethingOptimized())
-        {
-            return true;
-        }
-
-        $imageObj = $imageModel->getSomethingOptimized();
-
-
-        $keepExif = $imageObj->getMeta('did_keepExif');
-
-        // 2-3 are exif_ai combined settings with keep-exif. 0-1 are when default settings are used and unset / unused
-        if (in_array($keepExif, [0,1,2,3]))
-        {
-            return true;
-        }
-
-        $this->processable_status = self::P_EXIFAI;
-        return false;  */
     }
 
     /**
@@ -714,19 +699,16 @@ class AiDataModel
     /**
      * Determine whether there is at least one AI field enabled for generation.
      *
-     * Calls getOptimizeData() as a side-effect; if that sets P_NOJOB the method
-     * returns false.
+     * getOptimizeData() is invoked for its side-effect: it sets
+     * processable_status to P_NOJOB when nothing is configured.
      *
      * @return bool True when at least one field can be generated, false otherwise.
      */
     protected function hasSomethingGeneratable()
     {
-        $optimizeData = $this->getOptimizeData();
+        $this->getOptimizeData();
 
-        if (self::P_NOJOB === $this->processable_status) {
-            return false;
-        }
-        return true;
+        return self::P_NOJOB !== $this->processable_status;
     }
 
     /**
@@ -805,11 +787,11 @@ class AiDataModel
             return false;
         }
 
-        if (is_null($this->original['alt'])) {
+        if (is_null($this->original['alt']) && isset($data['original_alt'])) {
             $this->original['alt'] = $data['original_alt'];
             $updated = true;
         }
-        if (is_null($this->generated['alt'])) {
+        if (is_null($this->generated['alt']) && isset($data['result_alt'])) {
             $this->generated['alt'] = $data['result_alt'];
             $updated = true;
         }
@@ -851,7 +833,7 @@ class AiDataModel
     {
         if (true === $this->has_record) {
             global $wpdb;
-            $wpdb->delete(self::getTableName(), ['id' => $this->id], ['%s']);
+            $wpdb->delete(self::getTableName(), ['id' => $this->id], ['%d']);
         }
 
         $this->has_record = false;
@@ -903,7 +885,6 @@ class AiDataModel
     {
         if (isset(self::$models[$attach_id])) {
             unset(self::$models[$attach_id]);
-        } else {
         }
     }
 } // class
