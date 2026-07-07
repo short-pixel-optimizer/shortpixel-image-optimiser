@@ -14,38 +14,99 @@ use \ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Controller\QueueController as QueueController;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 
-// extends DirectoryModel. Handles ShortPixel_meta database table
-// Replacing main parts of shortpixel-folder
+/**
+ * A directory registered in the SPIO custom-folders subsystem
+ * (`shortpixel_folders` table).
+ *
+ * Extends the plain-directory {@see DirectoryModel} with the database
+ * layer used by the "Other Media" pipeline: refresh / re-scan, per-folder
+ * statistics, activation state, and the guard rails that keep the media
+ * library, backup folder, and out-of-root paths from being registered.
+ *
+ * Populated either directly from a `shortpixel_folders` row (fast path,
+ * used by list-loaders that already ran the query) or by-path from the
+ * constructor.
+ *
+ * @package ShortPixel\Model\File
+ */
 class DirectoryOtherMediaModel extends DirectoryModel
 {
 
-  protected $id = -1; // if -1, this might not exist yet in Dbase. Null is not used, because that messes with isset
+  /**
+   * Row id in `shortpixel_folders`. Defaults to `-1` (not `null`) so
+   * `isset($this->id)` reliably returns true — the constructor's
+   * loadFolder / loadFolderByPath overwrites this on a successful lookup.
+   *
+   * @var int
+   */
+  protected $id = -1;
 
+  /** @var string|null Display name (falls back to `basename($path)` when not stored on the row). */
   protected $name;
+
+  /** @var int Folder-status code — one of the DIRECTORY_STATUS_* constants. */
   protected $status = 0;
-  protected $fileCount = 0; // inherent onreliable statistic in dbase. When insert / batch insert the folder count could not be updated, only on refreshFolder which is a relative heavy function to use on every file upload. Totals are better gotten from a stat-query, on request.
+
+  /**
+   * File count cached on the DB row.
+   *
+   * @var int
+   * @deprecated The DB column is only updated by refreshFolder() (a
+   *             relatively heavy call) — insert/batch flows leave it
+   *             stale. Prefer `getStats()['total']` for a live count.
+   */
+  protected $fileCount = 0;
+
+  /** @var int Unix timestamp — when the folder was last refreshed (files added, subfolders walked). */
   protected $updated = 0;
+
+  /** @var int Unix timestamp — when the folder was first inserted into `shortpixel_folders`. */
   protected $created = 0;
+
+  /** @var int Unix timestamp — when the folder's mtime tree was last checked for changes. */
   protected $checked = 0;
+
+  /** @var string|null MD5 hash of the folder path (legacy field). */
   protected $path_md5;
 
+  /** @var bool True when the folder came from the NextGen Gallery integration. */
   protected $is_nextgen = false;
+
+  /** @var bool True once the folder has been resolved against `shortpixel_folders`. */
   protected $in_db = false;
+
+  /** @var bool True when status = DIRECTORY_STATUS_REMOVED (soft-deleted). */
   protected $is_removed = false;
 
+  /** @var string|null Last diagnostic message set by checkDirectory / refreshFolder. */
   protected $last_message;
 
-  //protected $stats;
-
+  /**
+   * Per-request stats cache keyed by folder id. Populated on first call
+   * to getAllStats() from a single grouped SQL query so per-folder
+   * lookups don't each round-trip the DB.
+   *
+   * @var array<int, array{optimized: int, waiting: int, total: int}>|null
+   */
 	protected static $stats;
 
+  /** Folder is soft-deleted (kept as a row so historical optimizations can still be looked up). */
   const DIRECTORY_STATUS_REMOVED = -1;
+  /** Folder is a regular custom-folder registered by the user. */
   const DIRECTORY_STATUS_NORMAL = 0;
+  /** Folder is a NextGen Gallery folder, discovered via the NextGen integration. */
   const DIRECTORY_STATUS_NEXTGEN = 1;
 
-  /** Path or Folder Object, from SpMetaDao
-  *
-  */
+  /**
+   * Constructor.
+   *
+   * Accepts either a path string (the model self-loads via
+   * loadFolderByPath) or a raw DB-row-shaped object (typically supplied
+   * by SpMetaDao when it has already run the query for a list of
+   * folders — saves a per-instance round-trip).
+   *
+   * @param string|object $path Filesystem path OR a `shortpixel_folders` row object.
+   */
   public function __construct($path)
   {
 
@@ -65,6 +126,13 @@ class DirectoryOtherMediaModel extends DirectoryModel
   }
 
 
+  /**
+   * Read-only accessor for declared properties (avoids exposing them
+   * publicly). Returns null for unknown names.
+   *
+   * @param string $name Property name.
+   * @return mixed|null
+   */
   public function get($name)
   {
      if (property_exists($this, $name))
@@ -73,6 +141,17 @@ class DirectoryOtherMediaModel extends DirectoryModel
      return null;
   }
 
+  /**
+   * Setter for declared properties.
+   *
+   * NOTE: returns `true` on success but `null` on unknown-property
+   * failure — inconsistent with the boolean shape callers might expect.
+   * A false failure return would be more predictable.
+   *
+   * @param string $name  Property name.
+   * @param mixed  $value Value to assign.
+   * @return true|null
+   */
   public function set($name, $value)
   {
      if (property_exists($this, $name))
@@ -84,6 +163,16 @@ class DirectoryOtherMediaModel extends DirectoryModel
      return null;
   }
 
+  /**
+   * Return per-folder statistics for every folder in one grouped query,
+   * memoised on the static `$stats` cache for the rest of the request.
+   *
+   * The status codes summed here:
+   *   - `2` (FILE_STATUS_SUCCESS) and `-11` (FILE_STATUS_MARKED_DONE) → optimized
+   *   - `0` (FILE_STATUS_UNPROCESSED) → waiting
+   *
+   * @return array<int, array{optimized: int, waiting: int, total: int}> Stats keyed by `folder_id`.
+   */
 	public static function getAllStats()
 	{
 			if (is_null(self::$stats))
@@ -112,6 +201,18 @@ class DirectoryOtherMediaModel extends DirectoryModel
 		 return self::$stats;
 	}
 
+  /**
+   * Return the stats bucket for THIS folder.
+   *
+   * Fast path: consults `getAllStats()`'s bulk cache. When the folder
+   * isn't present in the bulk result (typically because it was just
+   * inserted or is not part of the last grouping), falls back to a
+   * per-folder SQL query.
+   *
+   * @return array{optimized: int, waiting: int, total: int}|false Stats
+   *         bucket, or false when no rows exist and the per-folder query
+   *         returned nothing.
+   */
   public function getStats()
   {
 			$stats = self::getAllStats();  // Querying all stats is more efficient than one-by-one
@@ -147,6 +248,19 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
   }
 
+  /**
+   * Persist this folder's state to `shortpixel_folders`, inserting a new
+   * row when `in_db` is false or updating the existing one otherwise.
+   *
+   * Race protection: even on the "new" branch, one more `loadFolderByPath`
+   * probe runs first so that if a parallel process (e.g. NextGen's own
+   * folder discovery) already inserted the row, we UPDATE instead of
+   * INSERTing a duplicate. On successful insert, a follow-up
+   * `loadFolderByPath` refreshes `$this->id` from the newly-created row.
+   *
+   * @return int|false Number of rows affected on UPDATE, insert-id on
+   *                   INSERT, or false when the wpdb call failed.
+   */
   public function save()
   {
     // Simple Update
@@ -198,6 +312,22 @@ class DirectoryOtherMediaModel extends DirectoryModel
 				return $result;
   }
 
+  /**
+   * Remove this folder from the SPIO custom-folders subsystem.
+   *
+   * Two-phase behaviour so historical optimizations aren't lost:
+   *   1. Delete every `shortpixel_meta` row for this folder whose status
+   *      is NOT `FILE_STATUS_SUCCESS` (2). Optimized images are kept so
+   *      the user can still restore them from backup after "deleting"
+   *      the folder.
+   *   2. If any rows remain (i.e. optimizations were preserved), the
+   *      folder row is soft-deleted by setting `status = -1`
+   *      (DIRECTORY_STATUS_REMOVED). Otherwise, the folder row is
+   *      hard-deleted.
+   *
+   * @return int|false Rows affected on the final update/delete, or
+   *                   false on wpdb error.
+   */
   public function delete()
   {
       $id = $this->id;
@@ -235,6 +365,11 @@ class DirectoryOtherMediaModel extends DirectoryModel
 			return $result;
   }
 
+  /**
+   * Whether this folder has been soft-deleted (status = DIRECTORY_STATUS_REMOVED).
+   *
+   * @return bool
+   */
   public function isRemoved()
   {
       if ($this->is_removed)
@@ -243,9 +378,18 @@ class DirectoryOtherMediaModel extends DirectoryModel
         return false;
   }
 
-  /** Updates the updated variable on folder to indicating when the last file change was made
-  * @return boolean  True if file were changed since last update, false if not
-  */
+  /**
+   * Walk the folder tree with `recurseLastChangeFile()`, update
+   * `$this->updated` with the newest mtime found, and persist.
+   *
+   * NOTE: `recurseLastChangeFile()` only inspects directory mtimes (not
+   * individual file mtimes) — this is normally sufficient because most
+   * filesystems bump the containing directory's mtime when a file
+   * changes, but exotic mounts (some SSHFS / network volumes) may not.
+   *
+   * @return bool True when a change was detected since the last update
+   *              (i.e. mtime moved forward), false otherwise.
+   */
   public function updateFileContentChange()
   {
       if (! $this->exists() )
@@ -265,9 +409,32 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
 
 
-  /** Crawls the folder and check for files that are newer than param time, or folder updated
-  * Note - last update timestamp is not updated here, needs to be done separately.
-  */
+  /**
+   * Re-scan the folder, register any new / changed files with the queue,
+   * and update the folder's row.
+   *
+   * Flow:
+   *   1. `checkDirectory(true)` (silent) rejects folders that shouldn't
+   *      be here (media library, backup dir, outside root, unwritable).
+   *   2. Skip when we have no DB row yet (`id <= 0`) — the caller
+   *      should have persisted the folder first.
+   *   3. Filter to files newer than `$this->updated` unless `$force=true`.
+   *   4. Only include files whose extensions are in
+   *      `ImageModel::PROCESSABLE_EXTENSIONS`; explicitly exclude `.avif`.
+   *   5. Hand off to `addImages()` which stages the discovered files
+   *      into the queue.
+   *   6. Reset the static stats cache for this folder and reload
+   *      `fileCount` from a fresh grouped query.
+   *   7. Stamp `$this->checked = time()` and save.
+   *
+   * @param bool $force When true, ignore `$this->updated` and re-scan
+   *                    every file. Used by the user-triggered "refresh"
+   *                    action in the admin UI.
+   * @return array{optimized: int, waiting: int, total: int, new: int}|false
+   *                   Post-refresh stats bucket with an added `new` key
+   *                   (difference against the pre-refresh total), or
+   *                   false when any of the guard checks failed.
+   */
   public function refreshFolder($force = false)
   {
       if ($force === false)
@@ -335,10 +502,27 @@ class DirectoryOtherMediaModel extends DirectoryModel
   }
 
 
-	/**  Check if a directory is allowed. Directory can't be media library, outside of root, or already existing in the database
-	* @param $silent If not allowed, don't generate notices.
-	*
-	*/
+	/**
+	 * Whether this directory is eligible to be registered as a custom
+	 * folder.
+	 *
+	 * Rejection reasons, in order:
+	 *   - Directory does not exist on disk.
+	 *   - Directory is outside the WordPress root path.
+	 *   - Directory is (or is inside) the ShortPixel backup folder.
+	 *   - Directory contains Media Library images (delegated to
+	 *     `OtherMediaController::checkIfMediaLibrary`).
+	 *   - Directory is not writable.
+	 *   - Directory is a subfolder of an already-registered custom folder.
+	 *
+	 * On rejection, a diagnostic message is stored on `$last_message` and
+	 * (unless `$silent`) a `Notice::addError` is raised for the admin UI.
+	 *
+	 * @param bool $silent When true, skip the notice emission — used by
+	 *                     `refreshFolder()` where the caller handles UI
+	 *                     messages itself.
+	 * @return bool True when eligible.
+	 */
 	public function checkDirectory($silent = false)
 	{
 			$fs = \wpSPIO()->filesystem();
@@ -456,6 +640,21 @@ class DirectoryOtherMediaModel extends DirectoryModel
 */
 
 
+    /**
+     * Walk the directory tree recursively and return the newest mtime
+     * seen across every directory (including this one).
+     *
+     * NOTE: only inspects DIRECTORY mtimes — individual regular files
+     * are not stat'd. This is a deliberate perf trade-off: on most
+     * filesystems a file change bumps the containing directory's mtime
+     * anyway.
+     *
+     * Unreadable directories short-circuit to the passed-in mtime,
+     * making the method safe against permission errors mid-walk.
+     *
+     * @param int $mtime Highest mtime seen so far (initial call: 0).
+     * @return int Highest directory mtime discovered.
+     */
     private function recurseLastChangeFile($mtime = 0)
     {
       $ignore = array('.','..');
@@ -494,6 +693,17 @@ class DirectoryOtherMediaModel extends DirectoryModel
       return $mtime;
     }
 
+    /**
+     * Convert a Unix timestamp to the `Y-m-d H:i:s` string shape the
+     * `shortpixel_folders` datetime columns expect.
+     *
+     * NOTE: uses loose `==` — a null-coerced-to-0 timestamp silently
+     * falls back to `time()`. Callers that intend to store a literal
+     * "epoch" timestamp will get "now" instead.
+     *
+     * @param int $timestamp Unix timestamp; 0 substitutes `time()`.
+     * @return string MySQL-shaped datetime.
+     */
     private function timestampToDB($timestamp)
     {
         if ($timestamp == 0) // when adding / or empty.
@@ -501,6 +711,13 @@ class DirectoryOtherMediaModel extends DirectoryModel
         return date("Y-m-d H:i:s", $timestamp);
     }
 
+    /**
+     * Convert a `Y-m-d H:i:s` datetime string from the DB back to a
+     * Unix timestamp. Null input falls back to `time()`.
+     *
+     * @param string|null $date Datetime string, or null.
+     * @return int Unix timestamp.
+     */
     private function DBtoTimestamp($date)
     {
         if (is_null($date))
@@ -513,10 +730,28 @@ class DirectoryOtherMediaModel extends DirectoryModel
         return $timestamp;
     }
 
-  /** This function is called by OtherMediaController / RefreshFolders. Other scripts should not call it
-  * @public
-  * @param Array CustomMediaImageModel stubs array.
-  */
+  /**
+   * Stage a batch of discovered file objects into the queue.
+   *
+   * For each file:
+   *   - If the file already has a `shortpixel_meta` row and its
+   *     recorded `folder_id` points at a folder that is no longer
+   *     active (removed / inactive), reassign it to this folder.
+   *   - If the file is new and passes `isProcessable()`, insert the
+   *     stub with this folder's id and (when `is_autoprocess` is on)
+   *     add it to the queue.
+   *
+   * Also fires the `shortpixel/othermedia/addfiles` filter so
+   * integrations can short-circuit the whole batch by returning false.
+   *
+   * @param array $files Array of FileModel-shaped objects (typically
+   *                     the output of `Filesystem::getFilesRecursive`).
+   * @return false|void False when the pre-filter vetoes the batch;
+   *                    otherwise void with side effects on the queue.
+   *
+   * @internal Called by OtherMediaController / refreshFolder — other
+   *           scripts should not call this directly.
+   */
   public function addImages($files) {
 
 			if ( apply_filters('shortpixel/othermedia/addfiles', true, $files, $this) === false)
@@ -585,6 +820,14 @@ class DirectoryOtherMediaModel extends DirectoryModel
   }
 
 
+    /**
+     * Look up a folder in `shortpixel_folders` by its path column and
+     * hydrate this instance from the resulting row (via `loadFolder()`)
+     * if one is found.
+     *
+     * @param string $path Filesystem path.
+     * @return bool True when a matching row was found and loaded.
+     */
     private function loadFolderByPath($path)
     {
         //$folders = self::getFolders(array('path' => $path));
@@ -604,7 +847,23 @@ class DirectoryOtherMediaModel extends DirectoryModel
         }
     }
 
-    /** Loads from database into model, the extra data of this model. */
+    /**
+     * Hydrate this instance from a `shortpixel_folders` row object.
+     *
+     * Behaviour worth noting:
+     *   - `in_db` is set to true only when `$folder->id > 0` — a stub
+     *     row with id = 0 stays "not in DB" from the model's perspective.
+     *   - Timestamp columns are optional on the input object; missing
+     *     ones fall back to `time()` via `DBtoTimestamp(null)`.
+     *   - `name` falls back to `basename($folder->path)` when the stored
+     *     name is empty.
+     *   - Fires the `shortpixel/othermedia/folder/load` action so
+     *     integrations can enrich the model before status-derived flags
+     *     (`is_removed`, `is_nextgen`) are computed.
+     *
+     * @param object $folder A `shortpixel_folders`-shaped row.
+     * @return void
+     */
     private function loadFolder($folder)
     {
       //  $class = get_class($folder);
