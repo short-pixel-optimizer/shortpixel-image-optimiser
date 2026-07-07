@@ -219,7 +219,18 @@ class ApiConverter extends MediaLibraryConverter
 		return;
 	}
 
-	// Restore from original file. Search and replace everything else to death.
+	/**
+	 * Roll back an API-based conversion.
+	 *
+	 * Currently a NO-OP — the entire body is commented out. The intent was
+	 * to swap the extension back, register the target with the replacer,
+	 * update WordPress metadata, and re-run the URL replacer, but that flow
+	 * appears to be handled elsewhere in the API path (likely via
+	 * MediaLibraryModel::restoreConversion). Kept as a placeholder to
+	 * satisfy the abstract contract.
+	 *
+	 * @return void
+	 */
 	public function restore()
 	{
 		/*$params = array('restore' => true);

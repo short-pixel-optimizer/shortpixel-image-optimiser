@@ -113,6 +113,11 @@ class DirectoryModel extends \ShortPixel\Model
 
   }
 
+  /**
+   * Returns the directory's path (with trailing slash) as a string.
+   *
+   * @return string
+   */
   public function __toString()
   {
     return (string) $this->path;
@@ -127,6 +132,12 @@ class DirectoryModel extends \ShortPixel\Model
     return $this->path;
   }
 
+  /**
+   * Returns the directory's last-modification time as a Unix timestamp.
+   *
+   * @return int|false filemtime() result — false when the directory cannot
+   *                   be stat'd.
+   */
   public function getModified()
   {
     return filemtime($this->path ?? '');
@@ -140,6 +151,14 @@ class DirectoryModel extends \ShortPixel\Model
     return $this->name;
   }
 
+  /**
+   * Reports whether the directory exists on disk.
+   *
+   * Lazily caches the result — subsequent calls skip the filesystem hit
+   * until a state-changing operation clears the cache.
+   *
+   * @return bool
+   */
   public function exists()
   {
 		if (is_null($this->exists))
@@ -149,6 +168,11 @@ class DirectoryModel extends \ShortPixel\Model
     return $this->exists;
   }
 
+  /**
+   * Reports whether the directory is currently writable.
+   *
+   * @return bool
+   */
   public function is_writable()
   {
 		if (is_null($this->is_writable))
@@ -159,6 +183,11 @@ class DirectoryModel extends \ShortPixel\Model
   }
 
 
+  /**
+   * Reports whether the directory is currently readable.
+   *
+   * @return bool
+   */
   public function is_readable()
   {
 		if (is_null($this->is_readable))
@@ -169,6 +198,12 @@ class DirectoryModel extends \ShortPixel\Model
     return $this->is_readable;
   }
 
+  /**
+   * Reports whether the directory is virtual — i.e. constructed from a URL
+   * rather than an existing local path. Set by the constructor.
+   *
+   * @return bool|null
+   */
   public function is_virtual()
   {
       return $this->is_virtual;
@@ -222,6 +257,17 @@ class DirectoryModel extends \ShortPixel\Model
   }
 
 
+  /**
+   * Walks $path from the innermost segment outward, looking for the deepest
+   * suffix that resolves as a real directory under $install_path.
+   *
+   * Used as a fallback strategy by getRelativePath() when direct string
+   * subtraction of the install path leaves an unresolvable result.
+   *
+   * @param string $path         Absolute path to reduce.
+   * @param string $install_path Absolute WordPress install root.
+   * @return string|false Deepest matching suffix, or false when no suffix resolves.
+   */
   private function reverseConstructPath($path, $install_path)
   {
     // Array value to reset index
@@ -331,6 +377,16 @@ class DirectoryModel extends \ShortPixel\Model
     return true;
   }
 
+	/**
+	 * Walks up the directory tree until it finds an existing ancestor and
+	 * returns that ancestor's permission bits.
+	 *
+	 * Used when check() needs a permission value for mkdir() but the target
+	 * directory does not yet exist (so its own fileperms() call would fail).
+	 *
+	 * @return int|false Permission bits from the closest existing ancestor,
+	 *                   or false when no ancestor could be read.
+	 */
 	public function getPermissionRecursive()
 	{
 		 $parent = $this->getParent();
@@ -398,7 +454,19 @@ class DirectoryModel extends \ShortPixel\Model
     return $fileArray;
   }
 
-  // @return boolean true if it should be kept in array, false if not.
+  /**
+   * Decides whether a file should be included in the result of getFiles()
+   * given the supplied filter arguments.
+   *
+   * Supports include/exclude substring matches on the raw path, mtime-based
+   * "newer than" / "older than" gates, a ctime-based older gate, and a
+   * dedicated dedup step for .webp/.avif files (they are dropped when a
+   * companion processable extension of the same basename exists).
+   *
+   * @param FileModel $file The candidate file.
+   * @param array     $args Filter args (see getFiles() defaults).
+   * @return bool True to keep the file in the result set, false to drop it.
+   */
   private function fileFilter(FileModel $file, $args)
   {
      $filter = true;
@@ -521,7 +589,15 @@ class DirectoryModel extends \ShortPixel\Model
     return false;
   }
 
-  //** Note, use sparingly, recursive function
+  /**
+   * Returns the recursive size of the directory in bytes.
+   *
+   * Walks every file in this directory and each subdirectory via
+   * getSubDirectories(). Slow on large trees — the "use sparingly" note is
+   * intentional.
+   *
+   * @return int Total size in bytes.
+   */
   public function getFolderSize()
   {
       //  \wpSPIO()->filesystem()->getFilesRecursive($this)
@@ -561,6 +637,15 @@ class DirectoryModel extends \ShortPixel\Model
       return $parentDir;
   }
 
+	/**
+	 * Returns the directory's raw permission bits from fileperms().
+	 *
+	 * Unlike FileModel::getPermissions() this does not mask with 0777 —
+	 * callers that want just the mode bits should mask themselves.
+	 *
+	 * @return int|false Raw fileperms() value, or false when the directory
+	 *                   does not exist or cannot be read.
+	 */
 	public function getPermissions()
 	{
 			if (! $this->exists())
@@ -579,6 +664,14 @@ class DirectoryModel extends \ShortPixel\Model
 
 	}
 
+  /**
+   * Removes the (empty) directory via PHP's rmdir().
+   *
+   * Non-empty directories will fail — use recursiveDelete() when the
+   * contents also need to be removed.
+   *
+   * @return bool
+   */
   public function delete()
   {
      return rmdir($this->getPath());

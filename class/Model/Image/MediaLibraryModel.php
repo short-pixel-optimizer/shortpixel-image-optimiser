@@ -19,59 +19,98 @@ use ShortPixel\Helper\UtilHelper as UtilHelper;
 use ShortPixel\Model\AiDataModel;
 use ShortPixel\Model\Converter\Converter as Converter;
 
+/**
+ * Represents a full WordPress Media Library attachment (the main file plus
+ * all its thumbnails, retinas, WebP / AVIF companions, and — where present —
+ * the WP 5.3+ unscaled original).
+ *
+ * Extends MediaLibraryThumbnailModel because the main file uses the same
+ * per-file logic as a thumbnail; the extra responsibility on this class is
+ * to own the *family* of variants, orchestrate the API request / result
+ * pipeline for all of them at once, and persist the aggregate state to the
+ * shortpixel_postmeta table.
+ *
+ * Also handles legacy metadata migration (from the pre-shortpixel_postmeta
+ * schema), WPML duplicate propagation, and detection of "unlisted" extra
+ * files that WordPress does not know about but that SPIO should still track.
+ *
+ * @package ShortPixel\Model\Image
+ */
 class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailModel
 {
 
-	/** @var array */
-	protected $thumbnails = []; // thumbnails of this // MediaLibraryThumbnailModel .
+	/** @var MediaLibraryThumbnailModel[] Registered thumbnails of this attachment, keyed by WP size name. */
+	protected $thumbnails = [];
 
-	/** @var array */
-	protected $retinas; // retina files - MediaLibraryThumbnailModel (or retina / webp and move to thumbnail? )
-	//protected $webps = array(); // webp files -
+	/** @var MediaLibraryThumbnailModel[]|null Retina (@2x) companions, keyed by size name; null until getRetinas() runs. */
+	protected $retinas;
 
-	/** @var boolean|Object */
-	protected $original_file = false; // the original instead of the possibly _scaled one created by WP 5.3
+	/** @var MediaLibraryThumbnailModel|false Unscaled original (WP 5.3+) when the main file is a `-scaled` copy, false otherwise. */
+	protected $original_file = false;
 
-	/** @var boolean */
-	protected $is_scaled = false; // if this is WP 5.3 scaled
-	//protected $do_png2jpg = false; // option to flag this one should be checked / converted to jpg.
+	/** @var bool True when this attachment carries a WP 5.3+ `-scaled` main file. */
+	protected $is_scaled = false;
 
+	/** @var array|null Cached wp_get_attachment_metadata() payload. */
 	protected $wp_metadata;
-	private $parent; // In case of WPML Duplicates
 
-	/** @var string **/
+	/** @var int|null Parent attachment ID when this instance is a WPML duplicate. */
+	private $parent;
+
+	/** @var string Model type marker used by BackupController / QueueController routing. */
 	protected $type = 'media';
 
-	/** @var boolean */
-	protected $is_main_file = true; // for checking
+	/** @var bool Always true on this class — marks the instance as the main attachment file. */
+	protected $is_main_file = true;
 
-	/** @var array */
-	private static $unlistedChecked = array(); // limit checking unlisted.
+	/** @var array<int, bool> Per-request cache of attachment IDs whose unlisted check has already run. */
+	private static $unlistedChecked = array();
 
-	/** @var boolean */
-	private static $unlistedNoticeChecked = false; // check for notice only one item per run. This is a performance killer otherwise.
+	/** @var bool Per-request flag: the "unlisted files found" notice check runs at most once per request. */
+	private static $unlistedNoticeChecked = false;
 
-	/** @var boolean */
-	protected $optimizePrevented; // cache if there is any reason to prevent optimizing
+	/** @var bool|null Cached result of isOptimizePrevented() for the current request. */
+	protected $optimizePrevented;
 
 
-	/** @var boolean */
-	private $justConverted = false; // check if legacy conversion happened on same run, to prevent double runs.
+	/** @var bool True after a legacy-format conversion ran this request, to prevent a second attempt. */
+	private $justConverted = false;
 
-	/** @var array */
-	private $optimizeData; // cache to prevent running this more than once per run.
+	/** @var array|null Per-request cache of getOptimizeData(); cleared by flushOptimizeData(). */
+	private $optimizeData;
 
-	/** @var string */
+	/** @var string Reserved size name used to route the main file through the same size-keyed data structures as the thumbnails. */
 	protected $mainImageKey = 'shortpixel_main_donotuse';
 
-	/** @var string */
+	/** @var string Reserved size name used for the WP 5.3+ unscaled original companion. */
 	protected $originalImageKey = 'shortpixel_original_donotuse';
 
-	/** @var array */
-	protected $forceSettings = array();  // option derives from setting or otherwise, request to be forced upon via UI to use specific value.
+	/** @var array<string, mixed> Per-request setting overrides pushed from the UI (e.g. "force lossy for this optimization"). */
+	protected $forceSettings = array();
 
+	/**
+	 * File extensions the Media Library pipeline will accept.
+	 *
+	 * Wider than the base ImageModel::PROCESSABLE_EXTENSIONS list because
+	 * Media Library uploads legitimately include BMP / TIFF that can be
+	 * routed through the Converter before hitting the API.
+	 */
 	const PROCESSABLE_EXTENSIONS = array('jpg', 'jpeg', 'gif', 'png', 'pdf', 'bmp', 'tiff', 'tif', 'webp');
 
+	/**
+	 * Constructor.
+	 *
+	 * Sets the attachment id, delegates to the thumbnail-model parent (which
+	 * seeds path + image_meta), then upgrades the instance to the main-file
+	 * flavour: swaps in an ImageMeta, marks the imageType as IMAGE_TYPE_MAIN
+	 * and assigns the reserved main-image key for the size-keyed data
+	 * structures. If WP 5.3+ is present, checks for an unscaled original.
+	 * Meta is loaded eagerly when $post_id > 0, and unlisted-file detection
+	 * runs unless the extension is excluded.
+	 *
+	 * @param int    $post_id WordPress attachment ID.
+	 * @param string $path    Absolute filesystem path to the main file.
+	 */
 	public function __construct($post_id, $path)
 	{
 		$this->id = $post_id;
@@ -98,13 +137,31 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 	}
 
+	/**
+	 * Return just the flat URL list for the ShortPixel API request.
+	 *
+	 * Thin wrapper around getOptimizeData() that drops the size keys so the
+	 * queue can hand a plain positional array to the API client.
+	 *
+	 * @return string[]
+	 */
 	public function getOptimizeUrls()
 	{
 		$data = $this->getOptimizeData();
 		return array_values($data['urls']);
 	}
 
-	// Cancel any exclusions set by user. This is meant to be able to manually optimize an image that has been excluded otherwise. Just to keep things simple. Run this before getting any URLs or OptimizeData.
+	/**
+	 * Clear the "excluded by user setting" status on this image and every
+	 * thumbnail, then flush the optimize-data cache so the next call
+	 * recomputes URLs against the relaxed state.
+	 *
+	 * Used by the "process anyway" flow — call this *before* getOptimizeUrls
+	 * / getOptimizeData when a user is manually optimizing an item that would
+	 * otherwise be filtered out.
+	 *
+	 * @return void
+	 */
 	public function cancelUserExclusions()
 	{
 		parent::cancelUserExclusions();
@@ -118,7 +175,29 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$this->optimizeData = null;
 	}
 
-	// Path will only return the filepath.  For reasons, see getOptimizeFileType
+	/**
+	 * Build the full API-request payload for this attachment family in one pass.
+	 *
+	 * Walks the main file plus every thumbnail (including the WP 5.3+
+	 * unscaled original when present) and produces:
+	 *   - `urls`   → per-size public URL to send to the API
+	 *   - `paths`  → per-size filesystem path (destination for the response)
+	 *   - `params` → per-size parameter list from createParamList()
+	 *   - `returnParams.sizes`      → per-size filename (for the response mapping)
+	 *   - `returnParams.doubles`    → sizes that share a paramList + URL hash with another size but map to a *different* file
+	 *   - `returnParams.duplicates` → sizes that map to the *same* file as another size (only the meta gets updated on completion)
+	 *   - `returnParams.fileSizes`  → per-size filesize, populated when createParamList selected the main URL instead of the size URL
+	 *
+	 * Thumbnails are skipped when the main extension isn't in
+	 * ImageModel::PROCESSABLE_EXTENSIONS (converter-only formats: bmp, tiff)
+	 * because those don't come with WP thumbnails yet — and in that case the
+	 * result is *not* cached because the next call may see a converted main.
+	 *
+	 * Unprocessable thumbnails still get a second pass at the end so they can
+	 * be tagged as duplicates of a size that *is* being processed.
+	 *
+	 * @return array{urls: array<string,string>, paths?: array<string,string>, params?: array<string,array>, returnParams: array{sizes: array<string,string>, doubles: array<string,string>, duplicates: array<string,string>, fileSizes?: array<string,int>}}
+	 */
 	public function getOptimizeData()
 	{
 		// The thumbnails included in the parent ImageModels are the ones that are not converted and thus also optimize all thumbnails.  Prevent adding thumbnails in the optimizeData if not so.
@@ -262,20 +341,44 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return $parameters;
 	}
 
+	/**
+	 * Clear the cached optimize-data payload so the next call recomputes.
+	 *
+	 * @return void
+	 */
 	public function flushOptimizeData()
 	{
 		$this->optimizeData = null;
 	}
 
-	// Overwrite a setting for optimization
+	/**
+	 * Push a per-request setting override (used by UI actions that want to
+	 * force a specific policy — e.g. "smartcrop for this run only"). Flushes
+	 * the optimize-data cache so the override is picked up.
+	 *
+	 * @param string $setting Setting key expected by createParamList (e.g. 'smartcrop').
+	 * @param mixed  $value   Override value.
+	 * @return void
+	 */
 	public function doSetting($setting, $value)
 	{
 		$this->forceSettings[$setting] = $value;
 		$this->flushOptimizeData();
 	}
 
-	// Try to get the URL via WordPress
-	// This is now officially a heavy function.  Take times, other plugins (like s3) might really delay it
+	/**
+	 * Resolve the public URL of the main attachment file.
+	 *
+	 * NOTE: This is a genuinely heavy call. Third-party plugins (S3
+	 * offloaders, CDN rewriters) can add significant latency to
+	 * wp_get_attachment_url(); avoid calling repeatedly.
+	 *
+	 * When a legacy-format conversion left a placeholder on disk, the
+	 * extension of the returned URL is rewritten back to the original format
+	 * so the API sees the file it expects.
+	 *
+	 * @return string Public URL of the main file.
+	 */
 	public function getURL()
 	{
 		$url = $this->fs()->checkURL(wp_get_attachment_url($this->id));
@@ -287,6 +390,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return $url;
 	}
 
+	/**
+	 * Return one of the reserved size-name keys used to identify the main
+	 * file / unscaled original in size-keyed data structures.
+	 *
+	 * @param string $key Either 'main' or 'original'.
+	 * @return string|null Reserved key, or null when $key is unknown.
+	 */
 	public function getImageKey($key = 'main')
 	{
 		 if ('main' == $key)
@@ -298,7 +408,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			 return $this->originalImageKey;
 		 }
 	}
-	/** Return all urls of item.  This should -not- be used for optimization. Use getOptimizeUrls(). In use for cache
+
+	/**
+	 * Return every URL owned by this attachment (main + original + all
+	 * thumbnails + all WebP + all AVIF companions).
+	 *
+	 * Intended for cache-warmup / cache-invalidation flows. Do *not* use
+	 * this for the optimizer — call getOptimizeUrls() instead.
+	 *
+	 * @return array{urls: array<string,string>, avif: array<string,string>, webp: array<string,string>}
 	 */
 	public function getAllUrls()
 	{
@@ -341,8 +459,14 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return $results;
 	}
 
-	/** Get all files contained within this object. 
-	 * @return Array 
+	/**
+	 * Return every FileModel owned by this attachment — the object counterpart
+	 * of getAllUrls().
+	 *
+	 * Used by backup / restore / cleanup flows that need to walk the family
+	 * as objects rather than URLs.
+	 *
+	 * @return array{files: array<string, \ShortPixel\Model\File\FileModel>, avif: array<string, \ShortPixel\Model\File\FileModel>, webp: array<string, \ShortPixel\Model\File\FileModel>}
 	 */
 	public function getAllFiles()
 	{
@@ -382,6 +506,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return $results;	 
 	}
 
+	/**
+	 * Return the WordPress attachment metadata array, populating the
+	 * per-instance cache on first call.
+	 *
+	 * @return array<string, mixed>|false Result of wp_get_attachment_metadata(), or false when unavailable.
+	 */
 	public function getWPMetaData()
 	{
 		if (is_null($this->wp_metadata))
@@ -390,9 +520,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return $this->wp_metadata;
 	}
 
-	/** Check if image is scaled by WordPress
+	/**
+	 * Whether the main file is a WordPress 5.3+ `-scaled` variant with an
+	 * unscaled original companion.
 	 *
-	 *	@return boolean
+	 * @return bool
 	 */
 	public function isScaled()
 	{
@@ -400,9 +532,27 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	}
 
 
-	/** Loads an array of Thumbnailmodels based on sizes available in WordPress metadata
-	 **  @return Array consisting ofMediaLibraryThumbnailModel
-	 **/
+	/**
+	 * Build a MediaLibraryThumbnailModel for every size declared in the WP
+	 * attachment metadata.
+	 *
+	 * Along the way:
+	 *   - populates $this->width / $this->height (falling back to on-disk
+	 *     measurement, or PDF's `full` size when the top-level values are
+	 *     missing);
+	 *   - copies the stored filesize onto the main file when available;
+	 *   - assigns each thumbnail its WordPress size definition (width /
+	 *     height / crop) from UtilHelper::getWordPressImageSizes(), with a
+	 *     duplicate-dimensions fallback for sizes not present in the current
+	 *     registration (e.g. sizes removed from the theme but still stored
+	 *     on old attachments).
+	 *
+	 * Attachments with no `sizes` array, no width, and an excluded extension
+	 * return an empty array — the attachment is treated as non-processable
+	 * without touching the disk.
+	 *
+	 * @return MediaLibraryThumbnailModel[] Thumbnail models keyed by WP size name.
+	 */
 	protected function loadThumbnailsFromWP()
 	{
 		$wpmeta = $this->getWPMetaData();
@@ -500,6 +650,19 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	}
 
 
+	/**
+	 * Return the retina (@2x) companions for every part of the family
+	 * — main file, unscaled original (when scaled), and each thumbnail.
+	 *
+	 * No-op when the `optimizeRetina` setting is off. The result is memoised
+	 * on $this->retinas and reused by getWebps() / getAvifs() /
+	 * getOptimizeData().
+	 *
+	 * The main-file / original-file entries use the reserved size names so
+	 * they don't collide with custom-size thumbnails.
+	 *
+	 * @return MediaLibraryThumbnailModel[] Retinas keyed by size name; empty array when the setting is off or none exist.
+	 */
 	protected function getRetinas() : array
 	{
 		// Don't load retina's if option is off.
@@ -543,6 +706,14 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return $this->retinas;
 	}
 
+	/**
+	 * Return every WebP companion belonging to this attachment: main file,
+	 * each thumbnail, each retina (prefixed with `retina-` so it doesn't
+	 * shadow a same-named thumbnail entry), and the unscaled original when
+	 * scaled.
+	 *
+	 * @return \ShortPixel\Model\File\FileModel[] Keyed by size name (or `retina-` + size name).
+	 */
 	protected function getWebps() : array
 	{
 		$webps = [];
@@ -573,6 +744,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return $webps;
 	}
 
+	/**
+	 * AVIF equivalent of getWebps() — walks the same family and returns the
+	 * AVIF companion files.
+	 *
+	 * @return \ShortPixel\Model\File\FileModel[] Keyed by size name (or `retina-` + size name).
+	 */
 	protected function getAvifs() : array
 	{
 		$avifs = [];
@@ -604,7 +781,22 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return $avifs;
 	}
 
-	// @todo Needs unit test.
+	/**
+	 * Count members of the attachment family by category.
+	 *
+	 * Supported $type values:
+	 *   - `thumbnails`   — number of registered thumbnails
+	 *   - `webps` / `avifs` / `retinas` — number of *unique* companion files
+	 *   - `optimized`    — main + thumbnails with FILE_STATUS_SUCCESS
+	 *   - `user_excluded`— main + thumbnails currently excluded by a user
+	 *                     setting (path / size / filesize rule)
+	 *
+	 * @param string                        $type Category to count.
+	 * @param array{thumbs_only?: bool} $args When `thumbs_only=true`, the main file is skipped for `optimized` / `user_excluded`.
+	 * @return int
+	 *
+	 * @todo Needs unit test.
+	 */
 	public function count($type, $args = [])
 	{
 		$defaults = array(
@@ -659,6 +851,34 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return $count;
 	}
 
+	/**
+	 * Apply an API optimization result across the entire attachment family
+	 * and persist the resulting state.
+	 *
+	 * Pipeline:
+	 *   1. Runs the main file through parent::handleOptimized() (unless
+	 *      already optimized) and folds resize/filesize changes into the
+	 *      pending _wp_attachment_metadata payload.
+	 *   2. Applies the WebP / AVIF companion result for the main file.
+	 *   3. Expands `doubles` into concrete per-size result entries so their
+	 *      files get copied + backed up (they share a result payload with a
+	 *      "leader" size but land in different files).
+	 *   4. Walks every size in `data.sizes`, runs its handleOptimizedFileType
+	 *      + handleOptimized, and folds resize/filesize changes for standard
+	 *      thumbnails (unlisted `file` thumbnails don't touch wp meta).
+	 *      Fatal-status thumbnails propagate up through preventNextTry().
+	 *   5. `duplicates` (same file, same result) get their meta cloned from
+	 *      the leader while preserving their own `databaseID` so the record
+	 *      is updated in place rather than deleted.
+	 *   6. Flushes the optimize-data cache, persists SPIO meta via saveMeta(),
+	 *      and writes the updated `_wp_attachment_metadata`.
+	 *   7. Propagates the same wp meta (and creates a duplicate row if
+	 *      missing) for every WPML duplicate attachment.
+	 *
+	 * @param array{files: array<string, array>, data: array{sizes: array<string,string>, doubles?: array<string,string>, duplicates?: array<string,string>}} $optimizeData Result payload returned by the API layer.
+	 * @param array{isConverted?: bool} $args Post-processing hints; `isConverted` is auto-derived from the convertMeta state.
+	 * @return bool True on success, false when the main file failed or any thumbnail flagged preventNextTry().
+	 */
 	public function handleOptimized($optimizeData, $args = array())
 	{
 		$return = true;
@@ -843,6 +1063,17 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return $return;
 	}
 
+	/**
+	 * Aggregate the per-file improvement figures across the whole family.
+	 *
+	 * For the main file and every optimized thumbnail, collects the
+	 * percentage + byte savings via ImageModel::getImprovement(). Returns
+	 * the per-item breakdown plus the average percentage and total byte
+	 * savings.
+	 *
+	 * @return array{main?: array{0: int|float|null, 1: int|null}, thumbnails?: array<string, array{0: int|float|null, 1: int|null}>, totalpercentage: int, totalsize: int}|false
+	 *   Improvements payload, or false when nothing is optimized.
+	 */
 	public function getImprovements()
 	{
 		$improvements = array();
@@ -891,16 +1122,47 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	}
 
 
-	/** Function to go from path -> thumbnail mode.  This should be used for unlisted etc, but nothing that already is loaded in thumbnails.
-	 *  @param String Full Path to the Thumbnail File
-	 *   @return Object ThumbnailModel
-	 * */
+	/**
+	 * Build a MediaLibraryThumbnailModel from a raw filesystem path.
+	 *
+	 * Intended for creating thumbnail objects that don't come from the
+	 * standard WP-metadata walk — chiefly unlisted files discovered on disk.
+	 * Do not use this for sizes already registered on $thumbnails; call
+	 * loadThumbnailsFromWP() instead.
+	 *
+	 * @param string $path Absolute path to the thumbnail file.
+	 * @param string $size Size name to assign.
+	 * @return MediaLibraryThumbnailModel
+	 */
 	private function getThumbnailModel($path, $size)
 	{
 		$thumbObj = new MediaLibraryThumbnailModel($path, $this->id, $size);
 		return $thumbObj;
 	}
 
+	/**
+	 * Hydrate this instance from the shortpixel_postmeta rows for the
+	 * attachment (plus any late-discovered files on disk).
+	 *
+	 * Flow:
+	 *   - No DB rows: build the family from WordPress metadata via
+	 *     loadThumbnailsFromWP(), then run checkLegacy() to migrate any
+	 *     pre-shortpixel_postmeta data found on the attachment. If migration
+	 *     produced something, saveMeta() persists it.
+	 *   - DB rows present: hydrate image_meta, then for each WP-declared
+	 *     thumbnail merge in the stored meta (removing it from the DB
+	 *     payload as it's consumed). Any leftover DB thumbnails with a
+	 *     `file` property are unlisted thumbnails — rebuild them from disk.
+	 *     Retinas and the unscaled original are loaded the same way.
+	 *   - If any object mutated its meta during load (verifyImage repairs,
+	 *     etc.), save the changes back to persist the fix — but only when
+	 *     this is a real attachment record (not a IMAGE_TYPE_DUPLICATE).
+	 *
+	 * Finally calls loadLooseItems() to catch anything that isn't tracked by
+	 * either WP or SPIO metadata yet.
+	 *
+	 * @return void
+	 */
 	protected function loadMeta()
 	{
 		$metadata = $this->getDBMeta();
@@ -1011,6 +1273,29 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$this->loadLooseItems();
 	}
 
+	/**
+	 * Load and reshape the shortpixel_postmeta rows for this attachment into
+	 * the legacy metadata-object shape that loadMeta() expects.
+	 *
+	 * Handles the tricky routing cases:
+	 *   - **Missing table**: when the query returns nothing *and* wpdb's last
+	 *     error mentions "exist", calls InstallHelper::checkTables() to fix
+	 *     the schema and bails out cleanly.
+	 *   - **IMAGE_TYPE_DUPLICATE row**: this attachment is a WPML duplicate
+	 *     pointing at a parent; re-queries against the parent id and stores
+	 *     the parent id on $this->parent. A duplicate-of-duplicate is
+	 *     treated as a bug and the stray record is deleted.
+	 *   - **No rows at all**: probes getWPMLDuplicates() for a sibling that
+	 *     *does* have a SPIO record; if found, self-heals by inserting a
+	 *     duplicate row and returning the parent's meta. Otherwise returns
+	 *     false so loadMeta() takes the "no meta yet" path.
+	 *
+	 * The row-to-object mapping decodes each row's `extra_info` JSON blob,
+	 * then routes it to `image_meta`, `retinas`, `original_file`, or
+	 * `thumbnails[$size]` depending on `image_type` + `parent`.
+	 *
+	 * @return \stdClass|false Attachment-shaped meta object, or false when no rows exist and no self-heal was possible.
+	 */
 	protected function getDBMeta()
 	{
 		global $wpdb;
@@ -1120,11 +1405,22 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return $metadata;
 	}
 
-	/*
-	*
-	*/
-	// @todo Test with retinas, they probably won't work because named after thumbname or 0
-
+	/**
+	 * Persist the entire attachment family to shortpixel_postmeta.
+	 *
+	 * Emits one createRecord() call per member (main file + every thumbnail
+	 * from getThumbObjects(), which spans thumbnails, retinas and the
+	 * original), then hands the surviving database IDs to cleanupDatabase()
+	 * so any rows we no longer track get pruned.
+	 *
+	 * IMAGE_TYPE_ORIGINAL rows are written with `size = null` — they own the
+	 * "original" slot rather than a WP size slug.
+	 *
+	 * @return void
+	 *
+	 * @todo Test with retinas — they may not persist correctly because they
+	 *       are keyed after their thumb name (or 0), not a distinct slug.
+	 */
 	protected function saveDBMeta()
 	{
 		$records = array();
@@ -1147,6 +1443,28 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	}
 
 
+	/**
+	 * Insert or update a single shortpixel_postmeta row from a serialised
+	 * meta object.
+	 *
+	 * The core columns (status, compression_type, sizes, timestamps) are
+	 * pulled off `$data` into the fixed schema; everything else is JSON-
+	 * encoded into the `extra_info` column. Null-valued fields are stripped
+	 * from `extra_info` to keep the payload compact.
+	 *
+	 * IMAGE_TYPE_DUPLICATE rows carry an `attach_id` + `parent` payload
+	 * inside `$data` so a duplicate can be created without the caller having
+	 * to know about the wiring.
+	 *
+	 * When inserting, the resulting database ID is written back onto the
+	 * appropriate in-memory object (main / thumbnail / retina / original) so
+	 * subsequent saves update in place instead of re-inserting.
+	 *
+	 * @param \stdClass   $data      Serialised meta payload (see ImageMeta::toClass()).
+	 * @param int         $imageType One of the ImageModel::IMAGE_TYPE_* constants.
+	 * @param string|null $sizeName  WP size name for thumbnails / retinas; null for main and original.
+	 * @return int Database ID of the inserted or updated row.
+	 */
 	private function createRecord($data, $imageType, $sizeName = null)
 	{
 		global $wpdb;
@@ -1250,6 +1568,18 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return $database_id;
 	}
 
+	/**
+	 * Insert a stub IMAGE_TYPE_DUPLICATE record linking a WPML duplicate
+	 * attachment to this one (its "leader").
+	 *
+	 * The stub has no size/compression/timestamp payload — all the real
+	 * optimization data continues to live on the parent's rows; this record
+	 * only exists so getDBMeta() can route the duplicate id to the parent.
+	 *
+	 * @param int      $duplicate_id ID of the duplicate attachment.
+	 * @param int|null $parent       Parent attachment id; defaults to $this->id.
+	 * @return void
+	 */
 	private function createDuplicateRecord($duplicate_id, $parent = null)
 	{
 		$data = new \StdClass;
@@ -1271,6 +1601,18 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$this->createRecord($data, $imageType);
 	}
 
+	/**
+	 * Delete any shortpixel_postmeta rows for this attachment that weren't
+	 * touched by the current saveDBMeta() pass.
+	 *
+	 * The `array_filter(..., 'intval')` guard exists as a safety belt:
+	 * an empty or zeroed `$records` list would produce a DELETE with no `id`
+	 * exclusions and wipe out every row for this attachment, so we bail out
+	 * instead.
+	 *
+	 * @param int[] $records Surviving database IDs from the current save pass.
+	 * @return void
+	 */
 	private function cleanupDatabase($records)
 	{
 		global $wpdb;
@@ -1294,13 +1636,29 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 
 
+	/**
+	 * Public entry point for persisting this attachment's SPIO meta.
+	 *
+	 * Currently a thin wrapper around saveDBMeta(); the extra indirection
+	 * lets subclasses (or the abstract contract on ImageModel) hook in
+	 * additional persistence without touching the DB code.
+	 *
+	 * @return void
+	 */
 	public function saveMeta()
 	{
-		//  global $wpdb;
 		$this->saveDBMeta();
 	}
 
-	/** Delete the ShortPixel Meta. */
+	/**
+	 * Delete every shortpixel_postmeta row belonging to this attachment and
+	 * clear any lingering "prevent optimization" flag.
+	 *
+	 * Does not touch WordPress metadata or files on disk — see onDelete()
+	 * for the full-cleanup flow.
+	 *
+	 * @return int|false Number of rows deleted, or false on DB error.
+	 */
 	public function deleteMeta()
 	{
 		global $wpdb;
@@ -1316,8 +1674,22 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return $bool;
 	}
 
-	/** Ondelete is trigger by WordPress deleting an image. SPIO should delete it's data, and backups */
-	// FileDelete param for subclass compat.
+	/**
+	 * Handle a WordPress attachment being deleted.
+	 *
+	 * When there are WPML duplicates the physical files are shared, so
+	 * `$fileDelete` is forced to false and only meta is cleaned. Otherwise
+	 * every member of the family is deleted:
+	 *   - the pre-conversion placeholder file (if a legacy conversion left one),
+	 *   - main file + every thumbnail + the unscaled original + every retina (via parent::onDelete),
+	 *   - the AI-data record for the attachment,
+	 *   - any legacy SPIO postmeta keys,
+	 *   - the shortpixel_postmeta rows,
+	 *   - and the queue entry so nothing tries to process it after deletion.
+	 *
+	 * @param bool $fileDelete Parameter kept for subclass signature compatibility; the effective value is derived from the WPML-duplicates check.
+	 * @return void
+	 */
 	public function onDelete($fileDelete = false)
 	{
 		$WPMLduplicates = $this->getWPMLDuplicates();
@@ -1372,7 +1744,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 	}
 
-	/* Check if the metadata of this image has changed or not since load. */
+	/**
+	 * Whether any member of the family (main file or any thumbnail) has an
+	 * unpersisted meta change since load.
+	 *
+	 * Used by loadMeta() to decide whether an on-load repair should be
+	 * flushed back to the database.
+	 *
+	 * @return bool
+	 */
 	protected function didAnyRecordChange()
 	{
 		if (true === $this->didRecordChange()) {
@@ -1390,6 +1770,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return false;
 	}
 
+	/**
+	 * Clear the "changed since load" flag on the main file and every
+	 * thumbnail, typically called right after a successful saveMeta().
+	 *
+	 * @return void
+	 */
 	protected function resetRecordChanges()
 	{
 		$this->recordChanged(false);
@@ -1400,6 +1786,14 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		}
 	}
 
+	/**
+	 * Remove this attachment from both the regular queue and the bulk queue.
+	 *
+	 * Called from onDelete() so a deletion doesn't leave a ghost queue entry
+	 * that will fail on next drain.
+	 *
+	 * @return void
+	 */
 	public function dropFromQueue()
 	{
 		$queueController = new QueueController();
@@ -1414,6 +1808,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$q->dropItem($this->get('id'));
 	}
 
+	/**
+	 * Return the MediaLibraryThumbnailModel for a WP size name, or false when
+	 * no thumbnail with that name exists.
+	 *
+	 * @param string $name WP size name (e.g. 'thumbnail', 'medium').
+	 * @return MediaLibraryThumbnailModel|false
+	 */
 	public function getThumbNail($name)
 	{
 		if (isset($this->thumbnails[$name]))
@@ -1422,8 +1823,29 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return false;
 	}
 
-	/* Check if an image in theory could be processed. Check exclusions, thumbnails etc. */
-	/* @param Strict Boolean Check only the main image, don't check thumbnails */
+	/**
+	 * Whether *anything* in this attachment family could still be processed.
+	 *
+	 * The check runs top-down:
+	 *   1. parent::isProcessable() for the main file — fast, and short-circuits when true.
+	 *   2. Date-exclusion rule — a matching rule returns false regardless.
+	 *   3. `$strict = true` stops here (main file only, thumbnails ignored).
+	 *   4. optimizePrevented → always false.
+	 *   5. Main file not processable → walk the thumbnails. Any processable
+	 *      thumbnail, or any optimized thumbnail that still has a missing
+	 *      WebP/AVIF variant, wins. Non-image main extensions (e.g. `webp`
+	 *      main + `jpg` thumbs) still return false because getOptimizeData
+	 *      would produce an empty URL list.
+	 *      Fatal thumbnail states (missing file, unwritable directory) are
+	 *      surfaced on `$this->processable_status` so the UI reports them
+	 *      instead of the misleading "image already optimized".
+	 *   6. Otherwise, if the main image is optimized but a WebP/AVIF variant
+	 *      is still needed, the family is processable — unless the directory
+	 *      is not writable.
+	 *
+	 * @param bool $strict When true, ignore thumbnails and only report on the main file.
+	 * @return bool
+	 */
 	public function isProcessable($strict = false)
 	{
 		$main_bool = $bool = parent::isProcessable();
@@ -1496,6 +1918,17 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return $bool;
 	}
 
+	/**
+	 * Whether *anything* in this attachment family can still be restored
+	 * from backup.
+	 *
+	 * Defers to parent::isRestorable() first (which handles the main file
+	 * itself). If the main file isn't restorable, walks each optimized
+	 * thumbnail and finally the unscaled original — one restorable member
+	 * is enough for the family to be considered restorable.
+	 *
+	 * @return bool
+	 */
 	public function isRestorable() : bool
 	{
 		$bool = true;
@@ -1522,6 +1955,28 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return $bool;
 	}
 
+	/**
+	 * Pre-conversion hook: create the backup(s) needed to make a format
+	 * conversion (PNG→JPG, BMP→JPG, HEIC→JPG, etc.) reversible, and record
+	 * the attempt on convertMeta so a failure doesn't retry forever.
+	 *
+	 * Always runs (regardless of the backup setting): loads this attachment
+	 * into the BackupModel via `loadMediaItem($this)` so the backup layer
+	 * knows about any pending replacementImageBase before it's asked to
+	 * copy files.
+	 *
+	 * When backups are enabled:
+	 *   - the main file (or the unscaled original if scaled) is backed up first;
+	 *     on failure, records the error on convertMeta, saves, and bails.
+	 *   - every thumbnail is backed up too, unless `backup_thumbnails=false`
+	 *     (e.g. BMP conversion where the thumbnails are BMPs of no interest).
+	 *
+	 * Either way saveMeta() runs at the end so filesizes are stored on the
+	 * meta even if the physical files are subsequently offloaded and deleted.
+	 *
+	 * @param array{checksum?: int|string, replacementPath?: string|null, backup_thumbnails?: bool} $args Converter-specific hints. `checksum` is recorded on convertMeta so the same file isn't re-tried.
+	 * @return bool True when preparation succeeded (or backups aren't required), false when a backup failed.
+	 */
 	public function conversionPrepare($args = [])
 	{
 		$settings = \wpSPIO()->settings();
@@ -1580,6 +2035,18 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return true;
 	}
 
+	/**
+	 * Post-conversion hook for a failed conversion.
+	 *
+	 * Cleans up the backups that conversionPrepare() created (since the
+	 * usual restore-flow won't fire — the image was never optimized), then
+	 * records the attempt on convertMeta so the next queue pass doesn't
+	 * try again, clears the replacementImageBase and flushes the optimize
+	 * cache before persisting.
+	 *
+	 * @param array{checksum?: int|string} $args Converter-specific hints. `checksum` is stored on convertMeta as the "already tried" marker.
+	 * @return void
+	 */
 	public function conversionFailed($args = array())
 	{
 		$settings = \wpSPIO()->settings();
@@ -1607,6 +2074,28 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$this->saveMeta();
 	}
 
+	/**
+	 * Post-conversion hook for a successful conversion.
+	 *
+	 * Flow:
+	 *   1. Marks convertMeta as done (with the `omit_backup` policy for the
+	 *      converted file — see ImageConvertMeta::setConversionDone).
+	 *   2. Swaps the main file over to the new `.jpg` path, deletes the old
+	 *      source, and resets the file info so subsequent size / mime reads
+	 *      reflect the JPEG.
+	 *   3. Rebuilds the thumbnail collection from wp metadata (converters
+	 *      typically regenerate thumbnails through WP core, so the size
+	 *      registration may have changed).
+	 *   4. Unless `skip_thumbnails=true`, walks the new thumbnails and does
+	 *      the same swap for each: point at the new `.jpg` file, delete the
+	 *      old-extension companion, refresh file info.
+	 *   5. Invalidates every cache that could still hold the old extension
+	 *      (wp_metadata, filesystem image cache, optimize-data) and records
+	 *      the checksum on convertMeta so a re-queue doesn't re-attempt.
+	 *
+	 * @param array{checksum?: int|string, omit_backup?: bool, skip_thumbnails?: bool} $args Converter hints. Defaults: `omit_backup=true`, `skip_thumbnails=false`.
+	 * @return void
+	 */
 	public function conversionSuccess($args = array())
 	{
 		$fs = \wpSPIO()->filesystem();
@@ -1664,6 +2153,21 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$this->saveMeta();
 	}
 
+	/**
+	 * Detect and record the WP 5.3+ unscaled original file, when present.
+	 *
+	 * The original is rejected in two cases:
+	 *   - the extension differs *and* is in the "difficult" set (BMP / TIFF)
+	 *     where WordPress converts the main file to JPEG at upload but leaves
+	 *     an original in a format we can't reliably back up alongside it;
+	 *   - the resolved original path equals the current main path (WP didn't
+	 *     actually create a `-scaled` variant, so there's no separate original).
+	 *
+	 * On success, sets $original_file + $is_scaled and tags the original with
+	 * the reserved size name so it appears in size-keyed payloads.
+	 *
+	 * @return false|void False when there is no attachment id yet; otherwise void.
+	 */
 	protected function setOriginalFile()
 	{
 		$fs = \wpSPIO()->filesystem();
@@ -1693,6 +2197,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		}
 	}
 
+	/**
+	 * Whether this attachment has a WP 5.3+ unscaled original companion.
+	 *
+	 * @return bool
+	 */
 	public function hasOriginal() : bool
 	{
 		if ($this->original_file)
@@ -1702,9 +2211,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	}
 
 	/**
-	 * getOriginalFile
+	 * Return the unscaled original companion, or false when none exists.
 	 *
-	 * @return Object|Boolean
+	 * @return MediaLibraryThumbnailModel|false
 	 */
 	public function getOriginalFile()
 	{
@@ -1716,10 +2225,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 
 	/**
-	 * Check if this Image has a Parent indicating it's a WPML Duplicate. 
+	 * Return the parent attachment ID when this instance is a WPML
+	 * duplicate, or false otherwise.
 	 *
-	 * @return boolean
-	 */ 
+	 * @return int|false
+	 */
 	public function getParent()
 	{
 		if (is_null($this->parent)) {
@@ -1734,10 +2244,18 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	}
 
 
-	/**  Try to find language duplicates in WPML and add the same status to it.
-	 ** @integration WPML
+	/**
+	 * Return the IDs of language-duplicate attachments for this one.
 	 *
-	 * Old _icl_lang_duplicate_of method have been removed, seems legacy.
+	 * Supports both WPML (via icl_translations trid siblings) and Polylang
+	 * (via matching guid + attachment post type). Duplicates that resolve
+	 * to a different physical file are filtered out — WPML translations
+	 * can legitimately point at unrelated images and we only want the ones
+	 * that share the same file on disk so their meta stays in sync.
+	 *
+	 * The legacy `_icl_lang_duplicate_of` fallback has been removed.
+	 *
+	 * @return int[] Deduplicated list of duplicate attachment IDs (never contains $this->id).
 	 */
 	public function getWPMLDuplicates()
 	{
@@ -1784,7 +2302,17 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return array_unique($duplicates);
 	}
 
-	/* Protect this image from being optimized. This flag should be unset by UX / Retry button on front */
+	/**
+	 * Persistently mark this attachment as "do not auto-optimize", surfacing
+	 * a reason string on `_shortpixel_prevent_optimize` post meta.
+	 *
+	 * The flag survives across requests — clear it via resetPrevent() from
+	 * the "Retry" button on the admin UI.
+	 *
+	 * @param string|int $reason Human-readable reason (or truthy sentinel).
+	 * @param int        $status FILE_STATUS_* code stored on image_meta->status; defaults to FILE_STATUS_PREVENT.
+	 * @return void
+	 */
 	protected function preventNextTry($reason = 1, $status = self::FILE_STATUS_PREVENT)
 	{
 		Log::addWarn($this->get('id') . ' preventing next try: ' . $reason);
@@ -1794,11 +2322,31 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$this->saveMeta();
 	}
 
+	/**
+	 * Semantic wrapper around preventNextTry() used when an image is being
+	 * marked as intentionally completed (e.g. FILE_STATUS_MARKED_DONE) rather
+	 * than blocked after a fatal error.
+	 *
+	 * @param string|int $reason Human-readable reason.
+	 * @param int        $status FILE_STATUS_* code to persist.
+	 * @return void
+	 */
 	public function markCompleted($reason, $status)
 	{
 		return $this->preventNextTry($reason, $status);
 	}
 
+	/**
+	 * Whether the `_shortpixel_prevent_optimize` flag is set on this
+	 * attachment.
+	 *
+	 * On a positive hit, side-effects: sets $processable_status to
+	 * P_OPTIMIZE_PREVENTED, stores the reason on $optimizePreventedReason so
+	 * getProcessableReason() can surface it, and caches the answer on
+	 * $optimizePrevented so repeat calls avoid the post-meta read.
+	 *
+	 * @return bool
+	 */
 	public function isOptimizePrevented()
 	{
 		if (! is_null($this->optimizePrevented)) {
@@ -1818,6 +2366,20 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		}
 	}
 
+	/**
+	 * Whether this attachment's post_date falls on the wrong side of a
+	 * configured date-exclusion rule.
+	 *
+	 * The rule payload comes from checkDateExcluded() (a `date` + `when`
+	 * pair). `when=before` excludes attachments whose post_date is earlier
+	 * than the rule date; `when=after` (the default) excludes ones later
+	 * than it. An unparseable rule date logs an error and returns false so
+	 * the image doesn't get silently skipped.
+	 *
+	 * Sets $processable_status to P_EXCLUDE_DATE on match.
+	 *
+	 * @return bool
+	 */
 	protected function isDateExcluded()
 	{
 		 $options = $this->checkDateExcluded();
@@ -1866,34 +2428,58 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 	}
 
-	/* @deprecated 
-	*  This compat function is only for RTA old version. Remove in due time. DO NOT USE!
-	*/ 
+	/**
+	 * Backwards-compat shim for the old Regenerate Thumbnails Advanced integration.
+	 *
+	 * Modern code should call `$this->getBackupModel()->hasBackup($this)`
+	 * directly. This wrapper logs a warning on every call so lingering usage
+	 * can be tracked down.
+	 *
+	 * @deprecated Retained only for old RTA. DO NOT USE in new code.
+	 * @return bool|\ShortPixel\Model\File\FileModel
+	 */
 	public function hasBackup()
 	{
 		Log::addWarn('Has Backup called on MediaLibraryModel - This should not happen');
-		 $backupModel = $this->getBackupModel();		 
-		 return $backupModel->hasBackup($this); 
+		 $backupModel = $this->getBackupModel();
+		 return $backupModel->hasBackup($this);
 	}
 
+	/**
+	 * Backwards-compat shim to fetch the main file's backup as a FileModel.
+	 *
+	 * Modern code should call the BackupController directly.
+	 *
+	 * @deprecated See hasBackup(). Logs a warning on every call.
+	 * @return \ShortPixel\Model\File\FileModel|false
+	 */
 	public function getBackupFile()
 	{
 		Log::addWarn('GetBackupFile called on MediaLibraryModel - This should not happen');
 		 $backupModel = $this->getBackupModel();
-		 $file = $backupModel->hasBackup($this); 
+		 $file = $backupModel->hasBackup($this);
 
 		 if (false === is_object($file))
 		 {
-			 return false;	 
+			 return false;
 		 }
 
 		 return $file;
-		 
+
 	}
 
 
 
-	// Check if anything is optimized. Main image can't be relied upon as in the past since it can be excluded, so anything optimized is the check to show the optimized options like restore.
+	/**
+	 * Whether any member of the family (main file or any thumbnail) is
+	 * currently optimized.
+	 *
+	 * The main file alone can no longer be relied on, because the user can
+	 * exclude it while thumbnails were previously optimized — so restore /
+	 * re-optimize UI options need to be shown based on the whole family.
+	 *
+	 * @return bool
+	 */
 	public function isSomethingOptimized()
 	{
 		if ($this->isOptimized())
@@ -1908,6 +2494,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return false;
 	}
 
+	/**
+	 * Return the first optimized member of the family — the main file when
+	 * possible, or the earliest optimized thumbnail otherwise.
+	 *
+	 * Used by UI flows that need "the file behind the optimization badge"
+	 * without caring which specific size it came from.
+	 *
+	 * @return self|MediaLibraryThumbnailModel|false
+	 */
 	public function getSomethingOptimized()
 	{
 		if ($this->isOptimized())
@@ -1924,6 +2519,16 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return false;
 	}
 
+	/**
+	 * Clear the "prevent auto-optimization" flag on this attachment.
+	 *
+	 * Removes the `_shortpixel_prevent_optimize` post meta, resets the
+	 * cached `optimizePrevented` flag, and re-sets a negative status back to
+	 * FILE_STATUS_UNPROCESSED so the queue will pick the item up again.
+	 * Typically wired to the "Retry" button in the admin UI.
+	 *
+	 * @return void
+	 */
 	public function resetPrevent()
 	{
 		delete_post_meta($this->id, '_shortpixel_prevent_optimize');
@@ -1936,7 +2541,42 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$this->optimizePrevented = null;
 	}
 
-	/** Removed the current attachment, with hopefully removing everything we set.
+	/**
+	 * Restore every optimized file in this attachment family from its backup,
+	 * roll back any format conversion, delete generated WebP/AVIF companions,
+	 * and re-sync the resulting state to WordPress + WPML duplicates.
+	 *
+	 * Pipeline:
+	 *   1. Fire the pre-restore actions (`shortpixel_before_restore_image`
+	 *      and `shortpixel/image/before_restore`) so integrations can react
+	 *      before the file changes.
+	 *   2. Snapshot state that will be wiped by parent::restore() —
+	 *      WPML duplicates, resize flag, and the convertMeta object.
+	 *   3. Run parent::restore() to restore the main file. If it was
+	 *      converted (and the converted format wasn't kept), restore the
+	 *      unscaled original first (needed by the Replacer), then call
+	 *      restoreConversion() to swap extensions and update WP attachment
+	 *      metadata.
+	 *   4. If convertMeta.isConverted && !omitBackup (i.e. we're keeping
+	 *      the converted file), mark the restore as "not clean" so
+	 *      convertMeta stays on the meta after the DB wipe check below.
+	 *   5. Walk thumbnails, restoring each; when several thumbnails share a
+	 *      filebase (duplicate sizes), only the first restore actually
+	 *      writes the file. Update wp meta size/filesize for standard
+	 *      thumbnails only.
+	 *   6. Do the same walk for retinas and the unscaled original.
+	 *   7. Delete non-source WebP / AVIF companions (except when the main
+	 *      file's own extension IS webp/avif — deleting it would be wrong).
+	 *   8. Remove legacy meta keys, then either deleteMeta() (clean restore
+	 *      — nothing left to track) or saveMeta() (partial restore).
+	 *   9. If the backup model requires it, regenerate thumbnails via
+	 *      generateThumbnails() and refresh wp meta accordingly.
+	 *  10. Update `_wp_attachment_metadata`, flush the postmeta cache
+	 *      (offload plugins re-cache on read), fire post-restore actions,
+	 *      then propagate the entire result to every WPML duplicate.
+	 *
+	 * @param array $args Reserved for subclass compatibility; currently unused.
+	 * @return bool Result of the last-restored member. See @todo in source about the edge case where this reports failure even when everything else succeeded.
 	 */
 	public function restore($args = [])
 	{
@@ -2148,7 +2788,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return $bool;
 	}
 
-	// This is check for the mainFile.
+	/**
+	 * Whether a shortpixel_postmeta row exists for the main file specifically.
+	 *
+	 * Overrides the thumbnail-model version because the main file is
+	 * distinguished by `size IS NULL` + `image_type = IMAGE_TYPE_MAIN`,
+	 * not by a size slug.
+	 *
+	 * @return bool
+	 */
 	public function hasDBRecord()
 	{
 
@@ -2167,9 +2815,31 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	}
 
 
-	/** New Setup of RestorePNG2JPG. Runs after copying backupfile back to uploads.
-	 * Important: The metadata will be CLEARED already
-	 * In time this should probably be moved to the backupModel logic, but it complicated not due to thumbsObj loop. 
+	/**
+	 * Roll back a legacy PNG→JPG (or similar) conversion after the backup
+	 * has already been copied back to uploads.
+	 *
+	 * The parent restore has already put a `.jpg` file at the source's
+	 * position and cleared the meta, so this method:
+	 *   - Resolves the "true" destination file (with the pre-conversion
+	 *     extension) via the ImageConvertMeta payload.
+	 *   - Queues the converted-format main file + every thumbnail for
+	 *     deletion — but defers the deletes until the end because some
+	 *     plugins (e.g. Polylang) block deletion of files still attached to
+	 *     an attachment.
+	 *   - Runs the actual deletes with a dedup guard so shared filebases
+	 *     (duplicate sizes) don't trigger a second failing unlink().
+	 *   - Delegates the extension-swap + attachment update to the
+	 *     Converter's own restore() method.
+	 *   - Invalidates wp_metadata and reloads the thumbnail collection so
+	 *     the next access sees the restored-format family.
+	 *
+	 * @param ImageConvertMeta $convertMeta Snapshot of the conversion state taken before parent::restore() wiped the meta.
+	 * @param \ShortPixel\Model\Converter\Converter $converter Converter matching the recorded format.
+	 * @return bool True; the current implementation has no failure return.
+	 *
+	 * @todo Move this logic to the BackupModel; the thumbObj loop is the
+	 *       reason it hasn't happened yet.
 	 */
 	protected function restoreConversion($convertMeta, $converter)
 	{
@@ -2266,7 +2936,23 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return true;
 	}
 
-	/** This function will recreate thumbnails. This is -only- needed for very special cases, i.e. offload */
+	/**
+	 * Ask WordPress to re-run thumbnail subsize generation for this
+	 * attachment.
+	 *
+	 * Wrapped in the `as3cf_wait_for_generate_attachment_metadata` filter
+	 * (via `returnTrue`) so the WP Offload Media integration doesn't
+	 * offload the freshly regenerated files before we're done.
+	 *
+	 * When the attachment is scaled, subsize generation runs against the
+	 * unscaled original so the resulting thumbnails are cut from the full
+	 * resolution, not the WP-scaled copy.
+	 *
+	 * Only used for special cases such as recovering from an offload
+	 * mishap; the regular restore/convert flows use generateThumbnails().
+	 *
+	 * @return void
+	 */
 	public function wpCreateImageSizes()
 	{
 		add_filter('as3cf_wait_for_generate_attachment_metadata', array($this, 'returnTrue'));
@@ -2282,13 +2968,28 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		remove_filter('as3cf_wait_for_generate_attachment_metadata', array($this, 'returnTrue'));
 	}
 
+	/**
+	 * Trivial filter callback returning true. Used to force
+	 * `as3cf_wait_for_generate_attachment_metadata` on for the duration of
+	 * wpCreateImageSizes().
+	 *
+	 * @return true
+	 */
 	public function returnTrue()
 	{
 		return true;
 	}
 
-	// Function to remove all shortpixel related data
-	// It's separated from the private function.
+	/**
+	 * Public entry point that removes every SPIO-related legacy trace from
+	 * an attachment: WP-metadata legacy keys (via removeLegacy()) and the
+	 * `_shortpixel_was_converted` / `_shortpixel_status` post-meta flags.
+	 *
+	 * Kept separate from the private removeLegacy() so callers that only
+	 * want to clear WP-metadata leftovers don't have to touch post meta.
+	 *
+	 * @return void
+	 */
 	public function removeLegacyShortPixel()
 	{
 		$bool = $this->removeLegacy();
@@ -2298,8 +2999,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		}
 	}
 
-	/** Utility function to create a loopable object of thumbnails, retinas and scaled (if so) and other object with thumbnailModel . Goal is to prevent several functions having to do the same operation on array with different names ( optimized, getOptimizeUrl, etc )
-	 * @return Array
+	/**
+	 * Return one unified array of thumbnail-model objects across every
+	 * companion — thumbnails, retinas (prefixed `retina_` so they can't
+	 * shadow a same-named size), and the unscaled original when scaled.
+	 *
+	 * Used everywhere the family needs a single loop rather than three
+	 * (isProcessable, saveDBMeta, isSomethingOptimized, etc.).
+	 *
+	 * @return MediaLibraryThumbnailModel[] Keyed by size name.
 	 */
 	private function getThumbObjects()
 	{
@@ -2317,8 +3025,17 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return $objects;
 	}
 
-	// Load items that might be processable but not in WP metadata or other meta's .
-	// used for IsProcessable ( check if we have something ) and handleOptimized ( to check against the optimized stuff )
+	/**
+	 * Populate the family with members that WP metadata and SPIO postmeta
+	 * don't know about.
+	 *
+	 * Runs after loadMeta() so that unlisted thumbnails on disk (from
+	 * SHORTPIXEL_CUSTOM_THUMB_SUFFIXES / _INFIXES or the "optimize unlisted"
+	 * setting) and retina companions are available to isProcessable() and
+	 * handleOptimized() without an extra full walk each time.
+	 *
+	 * @return void
+	 */
 	private function loadLooseItems()
 	{
 		// Load items that might be not recorded when loading.
@@ -2326,9 +3043,24 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$this->getRetinas();
 	}
 
+	/**
+	 * Regenerate the WordPress thumbnails for this attachment via
+	 * wp_generate_attachment_metadata().
+	 *
+	 * When the attachment is scaled, the unscaled original is used as the
+	 * source so the resulting thumbnails are cut from the full resolution
+	 * rather than the WP-scaled copy.
+	 *
+	 * Wraps the generation in the
+	 * `shortpixel/converter/prevent-offload` / `-off` action pair so the
+	 * offload integration doesn't ship the freshly regenerated files off
+	 * before the restore/convert flow is done with them.
+	 *
+	 * @return array<string, mixed>|\WP_Error Result of wp_generate_attachment_metadata().
+	 */
 	private function generateThumbnails()
 	{
-		// Generate not of the -scaled item, then it creates wrong thumbnails. 
+		// Generate not of the -scaled item, then it creates wrong thumbnails.
 		if (true === $this->hasOriginal())
 		{
 			 $originalFile = $this->getOriginalFile();
@@ -2353,9 +3085,16 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 	}
 
-	// Check and remove legacy data.
-	// If metadata is removed in a restore process, the legacy data will be reimported, which should not happen.
-	/* @return bool If legacy data was found and removed or not */
+	/**
+	 * Strip the legacy SPIO keys (`ShortPixel`, `ShortPixelImprovement`,
+	 * `ShortPixelPng2Jpg`) from `_wp_attachment_metadata`.
+	 *
+	 * Called during restore/onDelete so that after the SPIO postmeta rows
+	 * are cleared the next loadMeta() call doesn't re-import the same
+	 * legacy data via checkLegacy() and undo the operation.
+	 *
+	 * @return bool True when at least one legacy key was removed.
+	 */
 	private function removeLegacy()
 	{
 		$metadata = $this->getWPMetaData();
@@ -2378,7 +3117,21 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return $updated;
 	}
 
-	// Function to be called only by migrate all bulk and certain debug cases.
+	/**
+	 * Force-migrate a single attachment from the legacy schema to the
+	 * shortpixel_postmeta model.
+	 *
+	 * Runs checkLegacy() and additionally "self-heals" any family member
+	 * that has a backup on disk but no FILE_STATUS_SUCCESS status — marking
+	 * it optimized so restore / re-optimize actions work.
+	 *
+	 * Only intended for the "Migrate all" bulk action and a few debug
+	 * paths; the regular loadMeta() already runs checkLegacy() when needed.
+	 * The $justConverted guard prevents a double-migration in the same
+	 * request.
+	 *
+	 * @return void
+	 */
 	public function migrate()
 	{
 		// Don't double.
@@ -2425,7 +3178,38 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		}
 	}
 
-	// Convert from old metadata if needed.
+	/**
+	 * Migrate a pre-shortpixel_postmeta attachment into the modern schema.
+	 *
+	 * Reads the legacy `ShortPixel` block from `_wp_attachment_metadata` and
+	 * rehydrates image_meta + every family member. Highlights of the flow:
+	 *
+	 *   - No `ShortPixel` block, empty block, or "waiting-only" block →
+	 *     nothing to migrate; return false.
+	 *   - `_shortpixel_was_converted` before the July 2022 pre-bug cutoff +
+	 *     an existing backup → treated as a corrupted state, wipes the
+	 *     SPIO meta so migration can run cleanly again.
+	 *   - Legacy status / compression type / improvement / error message
+	 *     are mapped into the modern ImageMeta shape via legacyConvertType()
+	 *     and legacyConvertStatus(). Missing dates fall back to the post's
+	 *     own publish date.
+	 *   - Original file size comes from the backup when available;
+	 *     otherwise it's inferred from the improvement percentage.
+	 *   - WebP / AVIF companions are located via checkLegacyFileTypeFileName()
+	 *     (which can probe S3-offloaded virtual files).
+	 *   - PNG→JPG conversion is reconstructed on convertMeta when
+	 *     `ShortPixelPng2Jpg` is present.
+	 *   - Thumbnails present in `thumbsOptList` (or with a backup on disk)
+	 *     get their status / sizes / timestamps recreated. `sp-found-`
+	 *     prefixed sizes are tagged as unlisted by setting `meta.file`.
+	 *   - The unscaled original and every retina get the same treatment
+	 *     when the row is not already present in the DB.
+	 *   - Finally stamps `_shortpixel_was_converted = time()` (guard so
+	 *     restore doesn't re-migrate), clears `_shortpixel_status`, and
+	 *     sets `$justConverted` to block a second migration this request.
+	 *
+	 * @return bool True when legacy data was migrated, false when there was nothing to do.
+	 */
 	private function checkLegacy()
 	{
 		$metadata = $this->getWPMetaData();
@@ -2680,6 +3464,21 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return true;
 	}
 
+	/**
+	 * Resolve the filename of a WebP or AVIF companion for a family member
+	 * during legacy migration, including for S3-offloaded files.
+	 *
+	 * Local files are handled by getImageType() as normal. For virtual files
+	 * on the S3 Offload integration, the method probes both the
+	 * single-extension (`foo.webp`) and double-extension (`foo.jpg.webp`)
+	 * conventions via HTTP `url_exists` checks and returns whichever
+	 * actually resolves — falling back to the alternative convention if
+	 * the environment-preferred one is missing.
+	 *
+	 * @param MediaLibraryThumbnailModel|self $fileObj Family member to check.
+	 * @param string                          $type    'webp' or 'avif'.
+	 * @return string|null Filename of the companion, or null when none is found.
+	 */
 	private function checkLegacyFileTypeFileName($fileObj, $type)
 	{
 		$fileType = $fileObj->getImageType($type);
@@ -2732,6 +3531,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return null;
 	}
 
+	/**
+	 * Map the legacy string compression type onto the modern integer constant.
+	 *
+	 * @param string $string_type Legacy label ('lossy' / 'lossless' / 'glossy').
+	 * @return int One of the COMPRESSION_* constants, or -1 for unknown.
+	 */
 	private function legacyConvertType($string_type)
 	{
 		switch ($string_type) {
@@ -2751,7 +3556,20 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return $type;
 	}
 
-	/** Old Status can be anything*/
+	/**
+	 * Map a legacy ShortPixel data + metadata pair into a modern
+	 * FILE_STATUS_* code.
+	 *
+	 * Priority order:
+	 *   - `ShortPixelImprovement` numeric > 0 → FILE_STATUS_SUCCESS.
+	 *   - `WaitingProcessing` set → FILE_STATUS_PENDING.
+	 *   - Known error codes (`backup-fail`, `write-fail`) → FILE_STATUS_ERROR.
+	 *   - Any other negative `ErrCode` → passed through as the status.
+	 *
+	 * @param array $data     Legacy `ShortPixel` block from wp attachment metadata.
+	 * @param array $metadata Full wp attachment metadata (for the sibling `ShortPixelImprovement` key).
+	 * @return int FILE_STATUS_* code, or an ErrCode value when the legacy record was in an error state.
+	 */
 	private function legacyConvertStatus($data, $metadata)
 	{
 
@@ -2776,6 +3594,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return $status;
 	}
 
+	/**
+	 * Provide a compact representation for var_dump()/debug output that
+	 * exposes the family structure without dumping the entire FileModel
+	 * plumbing.
+	 *
+	 * @return array<string, mixed>
+	 */
 	public function __debugInfo()
 	{
 
@@ -2795,7 +3620,20 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		);
 	}
 
-	// Check for UnlistedNotice.  Check if in this image has unlisted without adding them
+	/**
+	 * Check whether unlisted files exist for this attachment and, if so,
+	 * raise the "MSG_UNLISTED_FOUND" admin notice — without actually
+	 * registering the unlisted files.
+	 *
+	 * Cheap paths short-circuit early: only runs once per request (via the
+	 * $unlistedNoticeChecked static), skips silent mode, skips when the
+	 * "optimize unlisted" setting is already on, and skips when the notice
+	 * is already active. Even the first attachments only bump a counter
+	 * on the settings model; the actual disk scan runs from attachment 100
+	 * onward, so early attachments in a request don't pay for the scan.
+	 *
+	 * @return void
+	 */
 	private function checkUnlistedForNotice()
 	{
 		// Prevent running this more than once per run.
@@ -2850,8 +3688,31 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$settings->unlistedCounter = 0;
 	}
 
-	/** Adds Unlisted Image to the Media Library Item
-	 * This function is called in IsProcessable
+	/**
+	 * Discover unlisted thumbnail files on disk and either register them
+	 * on the attachment or just return them for the notice flow.
+	 *
+	 * Scans the attachment's directory for files matching:
+	 *   - `<basename>-<W>x<H>.<ext>` (standard WP-style names) — only when
+	 *     the `optimizeUnlisted` setting is on or `$check_only=true`;
+	 *   - `<basename>-<W>x<H><suffix>.<ext>` for every SHORTPIXEL_CUSTOM_THUMB_SUFFIXES entry;
+	 *   - `<basename><infix>-<W>x<H>.<ext>` for every SHORTPIXEL_CUSTOM_THUMB_INFIXES entry.
+	 * The suffix/infix lists are also filterable via
+	 * `shortpixel/image/unlisted_suffixes` and `_infixes`.
+	 *
+	 * Per-request state:
+	 *   - $unlistedChecked memoises attachment IDs so a full request only
+	 *     scans each attachment once.
+	 *   - Virtual attachments skip the scan unless heavy virtual functions
+	 *     are enabled — scandir() on an offloaded directory is expensive.
+	 *
+	 * The matched files are filtered against $currentFiles (main + all
+	 * thumbnails + retinas + original) so nothing already tracked is
+	 * added, and against WebP/AVIF extensions so companions aren't
+	 * accidentally treated as thumbnails.
+	 *
+	 * @param bool $check_only When true, don't mutate $thumbnails; return the discovered filenames instead. Used by checkUnlistedForNotice().
+	 * @return string[]|void List of found filenames when $check_only=true; otherwise void with side-effects on $thumbnails.
 	 */
 	protected function addUnlisted($check_only = false)
 	{
@@ -3000,7 +3861,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		self::$unlistedChecked[] = $this->get('id');
 	}
 
-	// If image is flushed and then reloaded, the unlisted items might go omit, if these are not loaded again.
+	/**
+	 * Cache-flush hook: reset the "already checked for unlisted" list so
+	 * that when the filesystem controller flushes and images are reloaded,
+	 * unlisted files get rediscovered instead of silently disappearing.
+	 *
+	 * Wired via the filesystem cache-flush action.
+	 *
+	 * @return void
+	 */
 	public static function onFlushImageCache()
 	{
 		self::$unlistedChecked = array();

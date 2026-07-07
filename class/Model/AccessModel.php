@@ -41,6 +41,13 @@ class AccessModel
 	private $current_user_id;
 
 
+	/**
+	 * Constructor.
+	 *
+	 * Seeds the capability map via setDefaultPermissions(). The map is
+	 * immediately filterable via `shortpixel/init/permissions` so third
+	 * parties can override slugs before any permission check runs.
+	 */
 	public function __construct()
 	{
 		 $this->setDefaultPermissions();

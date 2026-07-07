@@ -8,22 +8,16 @@
 	convertWarningsToExceptions="true"
 	>
 	<testsuites>
-		<testsuite name="fileSystem">
-			<directory prefix="test-" suffix=".php">./tests/filesystem</directory>
-		</testsuite>
-		<testsuite name="imageModel">
-			<directory prefix="test-" suffix=".php">./tests/Model/image</directory>
-		</testsuite>
-		<testsuite name="Controllers">
-			<directory prefix="test-" suffix=".php">./tests/Controller</directory>
-		</testsuite>
-		<testsuite name="queue">
-			<directory prefix="test-" suffix=".php">./tests/queue</directory>
+		<testsuite name="Helper">
+			<directory prefix="test-" suffix=".php">./tests/Helper</directory>
 		</testsuite>
 		<testsuite name="model">
 			<directory prefix="test-" suffix=".php">./tests/Model</directory>
 		</testsuite>
-
-
+		<testsuite name="SPIO Main">
+			<directory prefix="test-" suffix=".php">./tests/</directory>
+			<exclude>./tests/Helper</exclude>
+			<exclude>./tests/Model</exclude>
+		</testsuite>
 	</testsuites>
 </phpunit>

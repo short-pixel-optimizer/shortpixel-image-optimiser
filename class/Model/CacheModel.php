@@ -72,21 +72,46 @@ class CacheModel
     $this->expires = $time;
   }
 
+  /**
+   * Assign a new in-memory value. Not persisted until save() is called.
+   *
+   * @param mixed $value Value to cache; can be any transient-serialisable type.
+   * @return void
+   */
   public function setValue($value)
   {
     $this->value = $value;
   }
 
+  /**
+   * Whether load() found a non-expired transient (or a subsequent save()
+   * successfully wrote one).
+   *
+   * @return bool
+   */
   public function exists()
   {
     return $this->exists;
   }
 
+  /**
+   * Return the current in-memory value.
+   *
+   * Returns whatever the transient held on load() when nothing has been
+   * assigned since, or the value passed to setValue() otherwise.
+   *
+   * @return mixed
+   */
   public function getValue()
   {
       return $this->value;
   }
 
+  /**
+   * Return the transient key this cache item is bound to.
+   *
+   * @return string
+   */
   public function getName()
   {
       return $this->name;

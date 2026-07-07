@@ -39,7 +39,7 @@ class EnvironmentModel extends \ShortPixel\Model
     public $is_screen_to_use = false; // where shortpixel optimizer loads
     public $is_our_screen = false; // where shortpixel hooks in more complicated functions.
 		public $is_gutenberg_editor = false;
-    public $is_classic_editor = false; 
+    public $is_classic_editor = false;
     public $is_bulk_page = false; // ShortPixel bulk screen.
     public $screen_id = false;
 
@@ -55,6 +55,11 @@ class EnvironmentModel extends \ShortPixel\Model
     public $memoryLimit;
 
 
+  /**
+   * Populates the environment fields immediately and defers a couple of
+   * checks that aren't available at construct time (plugin integrations and
+   * the current admin screen) to their respective WordPress hooks.
+   */
   public function __construct()
   {
      $this->setServer();
@@ -63,6 +68,11 @@ class EnvironmentModel extends \ShortPixel\Model
      add_action('current_screen', array($this, 'setScreen') );  // Not set on construct
   }
 
+  /**
+   * Returns the singleton instance, creating it on first access.
+   *
+   * @return EnvironmentModel
+   */
   public static function getInstance()
   {
     if (is_null(self::$instance))
@@ -95,6 +105,12 @@ class EnvironmentModel extends \ShortPixel\Model
     return false;
   }
 
+	/**
+	 * Checks whether the running PHP version is at least the supplied version.
+	 *
+	 * @param string $needed Minimum required PHP version, e.g. "7.4".
+	 * @return bool True if PHP_VERSION >= $needed.
+	 */
 	public function checkPHPVersion($needed)
 	{
 		 if (version_compare(PHP_VERSION, $needed) >= 0 )
@@ -162,14 +178,33 @@ class EnvironmentModel extends \ShortPixel\Model
      return false;
 	}
 
-  //https://www.php.net/manual/en/function.sys-getloadavg.php
+  /**
+   * Reads the 1/5/15-minute system load averages from PHP's sys_getloadavg().
+   *
+   * Note: the method currently discards the return value — it exists as an
+   * environment probe placeholder and returns null.
+   *
+   * @see https://www.php.net/manual/en/function.sys-getloadavg.php
+   *
+   * @return void
+   */
   public function getSystemLoad()
   {
       $load = sys_getloadavg();
 
   }
 
-  /* https://github.com/WordPress/WordPress/blob/master/wp-includes/class-wp-image-editor-imagick.php */
+  /**
+   * Determines whether WordPress's active image editor is Imagick.
+   *
+   * Uses wp_get_image_editor() with a bundled test image so the check reflects
+   * WP's own decision (which considers extension availability, MIME support,
+   * and any filter overrides) rather than a bare extension_loaded('imagick').
+   *
+   * @see https://github.com/WordPress/WordPress/blob/master/wp-includes/class-wp-image-editor-imagick.php
+   *
+   * @return bool True if the active editor class is WP_Image_Editor_Imagick.
+   */
   public function hasImagick()
   {
     $editor = wp_get_image_editor(\wpSPIO()->plugin_path('res/img/test.jpg'));
@@ -181,6 +216,11 @@ class EnvironmentModel extends \ShortPixel\Model
       return false;
   }
 
+	/**
+	 * Reports whether an offload integration (e.g. WP Offload Media) is active.
+	 *
+	 * @return bool True when the Offloader has resolved to a known offload name.
+	 */
 	public function hasOffload()
 	{
 			$off = \ShortPixel\External\Offload\Offloader::getInstance();
@@ -191,6 +231,11 @@ class EnvironmentModel extends \ShortPixel\Model
 				return true;
 	}
 
+  /**
+   * Returns the identifier of the active offload plugin, if any.
+   *
+   * @return string|null Offload plugin name, or null when no offload is active.
+   */
   public function getOffloadName()
   {
     $off = \ShortPixel\External\Offload\Offloader::getInstance();
@@ -198,6 +243,16 @@ class EnvironmentModel extends \ShortPixel\Model
     return $name;
   }
 
+  /**
+   * Decides whether the plugin should use its "virtual/heavy" filesystem
+   * features (which download remote files locally for CPU-intensive operations).
+   *
+   * Defaults to false when an offload plugin is active (to avoid ping-ponging
+   * files back and forth) and true otherwise. Filterable through the
+   * "shortpixel/file/virtual/heavy_features" filter.
+   *
+   * @return bool
+   */
   public function useVirtualHeavyFunctions()
   {
       $bool = ($this->hasOffload()) ? false : true; // If has WP Offload, by default don't use.
@@ -206,12 +261,20 @@ class EnvironmentModel extends \ShortPixel\Model
       return $bool;
   }
 
+  /**
+   * Populates all server-level environment fields: web-server type (nginx/apache),
+   * GD / Imagick / cURL availability, and the server's memory and execution
+   * time limits (converted from PHP shorthand strings into integer
+   * bytes/seconds).
+   *
+   * @return void
+   */
   private function setServer()
   {
     $this->is_nginx = ! empty($_SERVER["SERVER_SOFTWARE"]) && strpos(strtolower(wp_unslash($_SERVER["SERVER_SOFTWARE"])), 'nginx') !== false ? true : false;
     $this->is_apache = ! empty($_SERVER["SERVER_SOFTWARE"]) && strpos(strtolower(wp_unslash($_SERVER["SERVER_SOFTWARE"])), 'apache') !== false ? true : false;
     $this->is_gd_installed = function_exists('imagecreatefrompng') && function_exists('imagejpeg');
-    $this->is_imagick_installed = (extension_loaded('imagick')) ? true : false; 
+    $this->is_imagick_installed = (extension_loaded('imagick')) ? true : false;
 
     $this->is_curl_installed = function_exists('curl_init');
 
@@ -223,6 +286,13 @@ class EnvironmentModel extends \ShortPixel\Model
   }
 
 
+  /**
+   * Populates WordPress-related environment fields: multisite / main-site
+   * state, front vs. back context, AJAX / JSON / cron request flags, the
+   * debug toggle, and the auto-optimize-on-upload setting.
+   *
+   * @return void
+   */
   private function setWordPress()
   {
     $this->is_multisite = (function_exists("is_multisite") && is_multisite()) ? true : false;
@@ -239,11 +309,16 @@ class EnvironmentModel extends \ShortPixel\Model
     if (\wpSPIO()->settings()->autoMediaLibrary == 1)
       $this->is_autoprocess = true;
 
-    
+
 
   }
 
-  // check if this request is front or back.
+  /**
+   * Classifies the current request as either admin/AJAX or front-end and
+   * sets $this->is_admin / $this->is_front accordingly.
+   *
+   * @return void
+   */
   protected function determineFrontBack()
   {
     if ( is_admin() || wp_doing_ajax() )
@@ -253,6 +328,21 @@ class EnvironmentModel extends \ShortPixel\Model
 
   }
 
+  /**
+   * Records which admin screen the current request is on and decides whether
+   * the plugin should hook its UI into that screen.
+   *
+   * The "use screens" list is a merge of WordPress core screens (upload,
+   * attachment, post/page editors) with the plugin's own admin pages
+   * (settings, bulk), extended via the "shortpixel/init/optimize_on_screens"
+   * filter. Also detects Gutenberg, the classic editor and the bulk screen so
+   * downstream code can branch on them.
+   *
+   * @param \WP_Screen $screen The current screen object supplied by the
+   *                           current_screen action.
+   * @return void|false Returns false if the plugin's admin pages have not
+   *                    yet been registered (e.g. during activation).
+   */
   public function setScreen($screen)
   {
     // WordPress pages where we'll be active on.
@@ -306,25 +396,39 @@ class EnvironmentModel extends \ShortPixel\Model
 			  $this->is_screen_to_use = true;
 				$this->is_gutenberg_editor = true;
 	  }
-    // If settings / classic editor is by default, this get is not included, so test-override for now to always load on post, see if other page editor have issues with this. 
-    // If no issues, at some point this statements should be done uh better. 
+    // If settings / classic editor is by default, this get is not included, so test-override for now to always load on post, see if other page editor have issues with this.
+    // If no issues, at some point this statements should be done uh better.
     elseif (isset($_GET['classic-editor']) || 'post' === $screen->id)
     {
       $this->is_screen_to_use = true;
       $this->is_classic_editor = true;
-      
+
     }
-    
+
     $this->screen_is_set = true;
   }
 
+  /**
+   * Late-binds third-party integration detection (currently NextGen Gallery)
+   * that is not available at construct time.
+   *
+   * Fired on the plugins_loaded action.
+   *
+   * @return void
+   */
   public function setIntegrations()
   {
     $ng = \ShortPixel\NextGenController::getInstance();
     $this->has_nextgen = $ng->has_nextgen();
   }
 
-  //set default move as "list". only set once, it won't try to set the default mode again.
+  /**
+   * Switches the current user's Media Library view mode to "list" the first
+   * time this runs for that user, then persists the preference so subsequent
+   * invocations are a no-op.
+   *
+   * @return void
+   */
   public function setDefaultViewModeList()
   {
       $settings = \wpSPIO()->settings();
@@ -341,6 +445,13 @@ class EnvironmentModel extends \ShortPixel\Model
 
   }
 
+  /**
+   * Returns the plugin's slug relative to the WordPress plugins directory —
+   * i.e. the "folder/file.php" value expected by is_plugin_active() and
+   * similar WordPress APIs.
+   *
+   * @return string Plugin slug, e.g. "shortpixel-image-optimiser/wp-shortpixel.php".
+   */
   public function getRelativePluginSlug()
   {
       $dir = SHORTPIXEL_PLUGIN_DIR;
@@ -355,6 +466,15 @@ class EnvironmentModel extends \ShortPixel\Model
       return $slug;
   }
 
+  /**
+   * Returns whether generated WebP files should use the double-extension form
+   * ("image.jpg.webp") rather than replacing the extension ("image.webp").
+   *
+   * Controlled by the SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION constant, defined
+   * in wp-config.php or wp-shortpixel.php.
+   *
+   * @return bool
+   */
   public function useDoubleWebpExtension()
   {
       if (defined('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION') && SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION)
@@ -363,6 +483,14 @@ class EnvironmentModel extends \ShortPixel\Model
       return false;
   }
 
+  /**
+   * Returns whether generated AVIF files should use the double-extension form
+   * ("image.jpg.avif") rather than replacing the extension ("image.avif").
+   *
+   * Controlled by the SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION constant.
+   *
+   * @return bool
+   */
 	public function useDoubleAvifExtension()
   {
       if (defined('SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION') && SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION)
@@ -371,6 +499,13 @@ class EnvironmentModel extends \ShortPixel\Model
       return false;
   }
 
+	/**
+	 * Returns whether "trusted" mode is enabled via the SHORTPIXEL_TRUSTED_MODE
+	 * constant. When enabled, certain safety checks and confirmation prompts
+	 * are skipped, intended for developer or CLI workflows.
+	 *
+	 * @return bool
+	 */
 	public function useTrustedMode()
 	{
 		 if (defined('SHORTPIXEL_TRUSTED_MODE') && true === SHORTPIXEL_TRUSTED_MODE)
@@ -381,7 +516,22 @@ class EnvironmentModel extends \ShortPixel\Model
 	}
 
 
-   // function to limit runtimes in seconds..
+   /**
+    * Reports whether the current process has crossed its execution-time
+    * budget so the queue processor knows it should stop and reschedule.
+    *
+    * The threshold is a percentage of max_execution_time (default 90 %,
+    * filterable through "spio/process/max_execution"). A non-positive limit
+    * means "no limit" and always returns false.
+    *
+    * @param array $args {
+    *     Optional overrides.
+    *
+    *     @type int $limit Total time budget in seconds. Defaults to the
+    *                      environment's captured executionLimit.
+    * }
+    * @return bool True when elapsed time is over the threshold.
+    */
    public function IsOverTimeLimit($args = array())
       {
           $defaults = array(
@@ -415,6 +565,17 @@ class EnvironmentModel extends \ShortPixel\Model
           return false;
       }
 
+      /**
+       * Reports whether the current process is over its memory budget.
+       *
+       * Compares memory_get_usage() against a percentage of PHP's memory_limit
+       * (default 90 %, filterable through "spio/process/max_memory"). A -1
+       * memory limit (unlimited) always returns false.
+       *
+       * @param int $runCount Iteration counter, used only for diagnostic
+       *                      logging when the threshold is crossed.
+       * @return bool True when memory usage is over the threshold.
+       */
       public function IsOverMemoryLimit($runCount)
       {
           $memory_limit = $this->memoryLimit;
@@ -440,6 +601,16 @@ class EnvironmentModel extends \ShortPixel\Model
 
       }
 
+      /**
+       * Converts a PHP shorthand size string (e.g. "128M", "1G") into an
+       * integer number of bytes.
+       *
+       * Returns -1 when the input represents "unlimited" (a negative value,
+       * as used by PHP's memory_limit ini directive to disable the cap).
+       *
+       * @param string $s Shorthand size string.
+       * @return int Size in bytes, or -1 for unlimited.
+       */
       private function unitToInt($s)
       {
         if ((int) $s < 0)
