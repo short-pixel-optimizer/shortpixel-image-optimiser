@@ -204,16 +204,16 @@ abstract class Converter
 			return false;
 		}
 
-		$extension = $imageModel->getExtension();
-
-		$converter = false;
-		$converter = self::getConverterByExt($extension, $imageModel);
-
 		// No Support (yet)
 		if ($imageModel->get('type') == 'custom') {
 			//	Log::addInfo('Converter fail - no support for custom types');
 			return false;
 		}
+
+		$extension = $imageModel->getExtension();
+
+		$converter = false;
+		$converter = self::getConverterByExt($extension, $imageModel);
 
 		// Second option for conversion is image who have been placeholdered.
 		if (true === $imageModel->getMeta()->convertMeta()->hasPlaceHolder() && false === $imageModel->getMeta()->convertMeta()->isConverted() && ! is_null($imageModel->getMeta()->convertMeta()->getFileFormat())) {

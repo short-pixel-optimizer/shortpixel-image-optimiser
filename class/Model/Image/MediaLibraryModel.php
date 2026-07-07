@@ -2854,54 +2854,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		$destination = $fs->getFile($this->getFileDir() . $this->getFileBase() . '.' . $ext);
 
-		// If scaled in the name, revert to originalFile.
-		/*if ($this->isScaled()) {
-			$originalFile = $this->getOriginalFile();
-			$destination = $fs->getFile($this->getFileDir() . $originalFile->getFileBase() . '.' . $ext);
-		} */
-
 		// We can't remove files until the end of process because some plugins will block it.
 		$toRemove = array();
 		$toRemove[] = $this;
-		// Destination is image.png, the original.
-		/*if (false === $destination->exists()) { */
-			// This is a PNG content file, that has been restored as a .jpg file which is now main.
-		/*	$copyok = $this->copy($destination);
-			if (false === $copyok) {
-				Log::addError('Copy to destination failed!');
-				ResponseController::addData('message', __('Restore PNG2JPG : Copying PNG to destination failed', 'shortpixel-image-optimiser'));
-				ResponseController::addData('is_error', true);
-			} */
-
-			
-		/*} elseif (true === $destination->exists() && $destination->getExtension() == $ext) {
-			Log::addInfo('Destination exists, but is of correct extension, so fine?'); */
-		/* } else { 
-			Log::addError('Restoring Converted image not possible, target already exists');
-			ResponseController::addData('message', __('Restore PNG2JPG : Restoring to target that already exists', 'shortpixel-image-optimiser'));
-			ResponseController::addData('is_error', true);
-			return false;
-		}  */
 
 		$thumbObjs = $this->getThumbObjects();
 		$backupModel = $this->getBackupModel();
 
 		// @todo MOve this logic to BackuModel. Also remove the backup_files entry when deleting files keeping consistency
 		foreach ($thumbObjs as $thumbObj) {
-			/*if ($backupModel->hasBackup($thumbObj)) {
-				$backupFile = $backupModel->getBackupFile($thumbObj);
-
-				if (is_object($backupFile)) {
-					// This should delete in restore function.
-					$backupFile->delete();
-
-					$backupFileJPG = $fs->getFile($backupFile->getFileDir() . $backupFile->getFileBase() . '.jpg');
-					if (is_object($backupFileJPG) && $backupFileJPG->exists()) {
-						$backupFileJPG->delete();
-					}
-				}
-			} */
-
 			$toRemove[] = $thumbObj;
 		}
 

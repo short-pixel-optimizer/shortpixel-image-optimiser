@@ -35,7 +35,7 @@ class BMPConverter extends MediaLibraryConverter
     $extension = $this->imageModel->getExtension();
 
     // If extension is in list of allowed Api Converts.
-    if (in_array($extension, static::CONVERTABLE_EXTENSIONS) && $extension !== 'png')
+    if (in_array($extension, static::CONVERTABLE_EXTENSIONS))
     {
        return true;
     }
@@ -161,7 +161,7 @@ class BMPConverter extends MediaLibraryConverter
 	 * Restores the image to its original BMP format by updating WordPress metadata
 	 * to point back to the .bmp file and running the URL replacer.
 	 *
-	 * @return void
+	 * @return bool Result of the URL-replacer run.
 	 */
   public function restore()
   {
@@ -191,6 +191,6 @@ class BMPConverter extends MediaLibraryConverter
 
     $fs->flushImageCache();
 
-
+    return $result;
   }
 }

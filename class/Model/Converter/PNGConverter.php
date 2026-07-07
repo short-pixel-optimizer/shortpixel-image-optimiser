@@ -426,7 +426,7 @@ class PNGConverter extends MediaLibraryConverter
 		 * replacer to rewrite references from the intermediate `.jpg` back
 		 * to the restored `.png`.
 		 *
-		 * @return void
+		 * @return bool Result of the URL-replacer run.
 		 */
 		public function restore()
 		{
@@ -449,13 +449,14 @@ class PNGConverter extends MediaLibraryConverter
 			$fsNewFile = $fs->getFile($this->imageModel->getFileDir() . $newFileName);
 
 			$this->newFile = $fsNewFile;
-			$this->setTarget($fsNewFile); // Sets the target base file 
+			$this->setTarget($fsNewFile); // Sets the target base file
 
-			$this->updateMetaData($params); // Triggers update of new Metadata - Sets the targets 
+			$this->updateMetaData($params); // Triggers update of new Metadata - Sets the targets
 			$result = $this->replacer->replace();
 
 			$fs->flushImageCache();
 
+			return $result;
 		}
     /** Checks if imageModel is transparent. Returns boolean.  --Note-- this is a  heavy function that might load the entire image multiple times and cause memory issues!
     *

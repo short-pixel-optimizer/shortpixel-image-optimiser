@@ -606,38 +606,6 @@ class DirectoryOtherMediaModel extends DirectoryModel
 			 return true;
 	}
 
-/*
-  public function getFiles($args = array())
-	{
-			// Check if this directory if not forbidden.
-			if (! $this->checkDirectory(true))
-			{
-				return array();
-			}
-
-			return parent::getFiles($args);
-	}
-*/
-/*  public function getSubDirectories()
-	  {
-				$dirs = parent::getSubDirectories();
-				$checked = array();
-				foreach($dirs as $dir)
-				{
-					 if ($dir->checkDirectory(false))
-					 {
-					 	$checked[] = $dir;
-					 }
-					 else
-					 {
-					 	Log::addDebug('Illegal directory' . $dir->getPath());
-					 }
-				}
-
-				return $checked;
-		}
-*/
-
 
     /**
      * Walk the directory tree recursively and return the newest mtime
@@ -807,8 +775,6 @@ class DirectoryOtherMediaModel extends DirectoryModel
              {
                 $queueControl->addItemToQueue($imageObj);
              }
-          }
-          else {
           }
 
       }
