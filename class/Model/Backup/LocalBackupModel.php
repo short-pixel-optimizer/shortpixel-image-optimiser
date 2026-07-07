@@ -244,14 +244,14 @@ class LocalBackupModel extends BackupModel
      * Whether backups are stored as a single main-file entry that covers
      * thumbnails.
      *
-     * NOTE: currently a no-op — the empty body returns null implicitly.
-     * See the deferred-bugs memo.
+     * LocalBackupModel writes one backup file per source file (main and
+     * every thumbnail get their own), so this is always false.
      *
-     * @return void
+     * @return bool
      */
     public function backupIsMain()
     {
-
+        return false;
     }
 
      /**
@@ -273,9 +273,7 @@ class LocalBackupModel extends BackupModel
       */
      public function hasBackup(ImageModel $sourceFile, $strict = false) : bool
      {
-      $is_main_file = $sourceFile->get('is_main_file');
       $imageName = $this->getBackupName($sourceFile->get('name'), $sourceFile);
-      $imageType = $sourceFile->get('imageType');
 
       if (isset($this->backup_files[$imageName]))
       {
@@ -335,12 +333,12 @@ class LocalBackupModel extends BackupModel
      /**
       * Delete the backup file (if any) belonging to $sourceFile.
       *
-      * Silently no-ops when nothing was stored — the return value is
-      * always true, so callers should not use it to detect "nothing to
-      * delete" vs. "delete succeeded".
+      * Returns true when there was nothing to delete or when the delete
+      * succeeded. Returns false only when a delete was attempted and
+      * the underlying filesystem call reported failure.
       *
       * @param ImageModel $sourceFile Image whose backup should be removed.
-      * @return true
+      * @return bool
       */
      public function onDelete(ImageModel $sourceFile) : bool
      {
@@ -349,7 +347,7 @@ class LocalBackupModel extends BackupModel
           $backupFile = $this->getBackupFile($sourceFile);
           if (is_object($backupFile))
           {
-             $backupFile->delete();
+             return $backupFile->delete();
           }
        }
        return true;
@@ -507,15 +505,16 @@ class LocalBackupModel extends BackupModel
      */
     public function getBackupFile(ImageModel $sourceFile)
     {
+      $fs = \wpSPIO()->filesystem();
       $imageName = $this->getBackupName($sourceFile->get('name'), $sourceFile);
-      
+
       if (true === $this->hasBackup($sourceFile, true))
        {
           if (true === $this->backup_files[$imageName]['has_own_file']) // only if own file is set, otherwise file is empty, refering to directory.
           {
-            $file = $this->backup_files[$imageName]['file']; 
-            $fileObj = new FileModel($file); 
-            return $fileObj; 
+            $file = $this->backup_files[$imageName]['file'];
+            $fileObj = $fs->getFile($file);
+            return $fileObj;
           }
           else
           {
