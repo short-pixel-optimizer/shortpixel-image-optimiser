@@ -1,7 +1,8 @@
 <?php
+declare(strict_types=1);
 namespace ShortPixel\Controller;
 
-use LiteSpeed\Object_Cache;
+
 use ShortPixel\Controller\Api\RequestManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -124,7 +125,6 @@ class QueueController
       $in_queue = $this->isItemInQueue($imageModel, $args['action']);
       if (is_numeric($in_queue) && $in_queue !== false)
       {
-
         if (self::IN_QUEUE_ACTION_ADDED == $in_queue)
         {
           $qItem->addResult([
@@ -147,6 +147,9 @@ class QueueController
 
         return $qItem->result();
       }
+
+
+      unset($in_queue);
 
       $optimizer = $qItem->getApiController($args['action']);
 
@@ -273,12 +276,14 @@ class QueueController
    * @param ImageModel $mediaItem 
    * @return mixed 
    */
-  public function isItemInQueue(ImageModel $mediaItem, $action = null) : bool
+  public function isItemInQueue(ImageModel $mediaItem, $action = null)
   {
       $type = $mediaItem->get('type');
 
       $q = $this->getQueue($type);
       $bool = $q->isItemInQueue($mediaItem->get('id'));
+
+      $status = 0; 
 
       if (true === $bool)
       { 
@@ -287,7 +292,7 @@ class QueueController
           
           if (is_object($queueItem))
           {
-            // @todo There is a problem here, when queueItem return is not an object, only boolean is return, but we want an integer for check in AddItemToQeueu
+            // @todo There is a problem here, when queueItem return is not an object, only boolean is returned, but we want an integer for check in AddItemToQeueu
               $queueItem->setModel($mediaItem); 
               // @todo If item can be appended, probably add function in queueItem to add next_action and update to database (this q )?
               if (false === is_null($action) && false === $queueItem->data()->hasAction($action))
@@ -304,10 +309,9 @@ class QueueController
                   $bool = self::IN_QUEUE_SKIPPED; 
 
               }
-          }
-
-          
+          }          
       }
+
       
       // Preventing double queries here
       return $bool;

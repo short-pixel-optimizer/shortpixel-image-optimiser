@@ -481,7 +481,6 @@ class OptimizeAiController extends OptimizerBase
             return false;
         }
 
-        Log::addTemp('Replace File with Args', $args);
 
         $imageModel = $qItem->imageModel;
         $item_id = $qItem->item_id;
@@ -548,7 +547,6 @@ class OptimizeAiController extends OptimizerBase
             }
         }
 
-        Log::addTemp('TargetFilePahts', $targetFiles);
         $targetFileObjs = []; // if we have to check them all anyhow, store it for moving / deleting. 
         foreach ($targetFiles as $key => $target_path) {
             $targetFileObj = $fs->getFile($target_path);
@@ -582,8 +580,6 @@ class OptimizeAiController extends OptimizerBase
             }
         }
 
-        Log::addTemp('Moving Files Done');
-
         // @Todo  Here probably we should check the backup and move that as well.
         $backupController = BackupController::getBackupController();
         $backupModel = $backupController->getModel($imageModel);
@@ -606,11 +602,8 @@ class OptimizeAiController extends OptimizerBase
             Log::addInfo('ReplaceArray ', $replaceArray);
         }
 
-        Log::addTemp('Moving Backups Done');
-
         $this->replaceMetaData($item_id, $base_filename, $newFileName, $args['dry_run']);
 
-        Log::addTemp('Metadata replace done');
         return false;
     }
 

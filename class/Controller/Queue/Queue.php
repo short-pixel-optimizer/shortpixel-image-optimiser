@@ -951,7 +951,7 @@ abstract class Queue
 	 * @param int $item_id The item ID to check.
 	 * @return bool True when the item is waiting or in-process, false otherwise.
 	 */
-	public function isItemInQueue($item_id)
+	public function isItemInQueue($item_id) : bool
 	{
         if (isset(self::$isInQueue[$item_id]))
         {

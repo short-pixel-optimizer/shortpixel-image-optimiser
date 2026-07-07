@@ -529,7 +529,7 @@ class QueueItem
    {
       $this->newAction();
 
-      $remote_id = $args['remote_id'];
+      $remote_id = isset($args['remote_id']) ? $args['remote_id'] : null;
       
       if (isset($args['returndatalist']))
       {

@@ -2343,7 +2343,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		// Prevent Offload here, otherwise it won't offload anymore when all is done or restored.
 		do_action('shortpixel/converter/prevent-offload', $item_id);
 
-		Log::addTemp('Generate Thumbs -- ' . $item_id);
 		do_action('shortpixel-thumbnails-before-regenerate', $item_id);
 		$metadata = wp_generate_attachment_metadata($item_id, $fullPath);
 

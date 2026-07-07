@@ -764,7 +764,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 					}
 					else {
 						$originalSize = $this->getFileSize();
-            Log::addTemp('OriginalSize : ' . $originalSize);
 					}
 
           $stati = [ApiController::STATUS_UNCHANGED, ApiController::STATUS_OPTIMIZED_BIGGER, ApiController::STATUS_NOT_COMPATIBLE];

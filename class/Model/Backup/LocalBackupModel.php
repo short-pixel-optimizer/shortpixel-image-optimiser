@@ -39,7 +39,6 @@ class LocalBackupModel extends BackupModel
         {
           $result = true;
           $this->statusCode = self::STATUS_BACKUP_OK;
-          Log::addTemp('BackupFile Already Exists and is same size');
         }
         elseif(true === $singleBackup && $mainFile->getFullPath() !== $sourceFile->getFullPath() )
         {
@@ -343,9 +342,7 @@ class LocalBackupModel extends BackupModel
                          $success = false;
                          continue;
                     }
-                    
-                    Log::addTemp('Renamed backup file: ' . $oldFileName . ' to ' . $newFileName);
-                    
+                                        
                     // Update the cache with the new backup file path
                     $newImageName = str_replace($oldBaseFileName, $newBaseFileName, $imageName);
                     $newBackupFiles[$newImageName] = [
