@@ -299,10 +299,11 @@ class AiDataModelTest extends WP_UnitTestCase {
 	}
 
 	/*
-	 * isExifProcessable (private) — currently always true (dead-code branch)
+	 * isExifProcessable (private) — always true; API-side change made this
+	 * method unconditionally permissive (see the Asana link in the source).
 	 */
 
-	public function test_isExifProcessable_currently_returns_true_unconditionally() {
+	public function test_isExifProcessable_returns_true_unconditionally() {
 		$this->assertTrue(
 			$this->invokePrivate( $this->freshModel(), 'isExifProcessable' )
 		);
@@ -593,7 +594,7 @@ class AiDataModelTest extends WP_UnitTestCase {
 	}
 
 	/*
-	 * checkStoredData — early-return contract (dead scaffold otherwise)
+	 * checkStoredData — no-record short-circuit contract
 	 */
 
 	public function test_checkStoredData_returns_true_when_no_record_exists() {
@@ -601,5 +602,42 @@ class AiDataModelTest extends WP_UnitTestCase {
 		$this->setPrivate( $m, 'has_record', false );
 
 		$this->assertTrue( $m->checkStoredData() );
+	}
+
+	/*
+	 * migrate — isset guards on legacy data keys. Under phpunit's
+	 * convertNoticesToExceptions=true, an unguarded array read on a
+	 * missing key would throw — these tests would have failed before
+	 * the 2026-07-08 medium-priority sweep added the isset() guards.
+	 */
+
+	public function test_migrate_does_not_fatal_when_original_alt_is_missing() {
+		$m = $this->freshModel();
+
+		$result = $m->migrate( array( 'result_alt' => 'ai-only' ) );
+
+		$this->assertTrue( $result );
+		$this->assertNull( $this->getPrivate( $m, 'original' )['alt'] );
+		$this->assertSame( 'ai-only', $this->getPrivate( $m, 'generated' )['alt'] );
+	}
+
+	public function test_migrate_does_not_fatal_when_result_alt_is_missing() {
+		$m = $this->freshModel();
+
+		$result = $m->migrate( array( 'original_alt' => 'orig-only' ) );
+
+		$this->assertTrue( $result );
+		$this->assertSame( 'orig-only', $this->getPrivate( $m, 'original' )['alt'] );
+		$this->assertNull( $this->getPrivate( $m, 'generated' )['alt'] );
+	}
+
+	public function test_migrate_does_not_fatal_when_both_alt_keys_are_missing() {
+		$m = $this->freshModel();
+
+		$result = $m->migrate( array() );
+
+		$this->assertTrue( $result );
+		$this->assertNull( $this->getPrivate( $m, 'original' )['alt'] );
+		$this->assertNull( $this->getPrivate( $m, 'generated' )['alt'] );
 	}
 }
