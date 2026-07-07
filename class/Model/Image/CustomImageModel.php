@@ -997,7 +997,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     {
 				parent::onDelete();
         $this->deleteMeta();
-				$this->dropfromQueue();
+				$this->dropFromQueue();
     }
 
 			/**

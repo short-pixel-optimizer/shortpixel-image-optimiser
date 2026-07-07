@@ -121,7 +121,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
     else
     {
       parent::__construct($path);
-      $this->loadFolderbyPath($path);
+      $this->loadFolderByPath($path);
     }
   }
 

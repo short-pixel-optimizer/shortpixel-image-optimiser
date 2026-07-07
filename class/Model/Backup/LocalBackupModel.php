@@ -274,7 +274,7 @@ class LocalBackupModel extends BackupModel
      public function hasBackup(ImageModel $sourceFile, $strict = false) : bool
      {
       $is_main_file = $sourceFile->get('is_main_file');
-      $imageName = $this->getBackupname($sourceFile->get('name'), $sourceFile);
+      $imageName = $this->getBackupName($sourceFile->get('name'), $sourceFile);
       $imageType = $sourceFile->get('imageType');
 
       if (isset($this->backup_files[$imageName]))
