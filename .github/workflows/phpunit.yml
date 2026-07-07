@@ -2,9 +2,9 @@ name: SPIO PHPUnit Tests
 
 on:
   push:
-    branches: [ unit-tests ]
+    branches: [ unit-tests, updates ]
   pull_request:
-    branches: [ unit-tests ]
+    branches: [ unit-tests, updates ]
 
 jobs:
   build:
