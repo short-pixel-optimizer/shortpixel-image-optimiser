@@ -562,7 +562,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$height = null;
 
 		if (! isset($wpmeta['width'])) {
-			if ($this->getExtension == 'pdf') {
+			if ('pdf' === $this->getExtension()) {
 				$width = $wpmeta['full']['width'];
 			}
 		} else
@@ -570,7 +570,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 
 		if (! isset($wpmeta['height'])) {
-			if ($this->getExtension == 'pdf') {
+			if ('pdf' === $this->getExtension() ) {
 				$height = $wpmeta['full']['height'];
 			}
 		} else
@@ -1383,7 +1383,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				if ($record->parent == 0 && $record->image_type == self::IMAGE_TYPE_MAIN) {
 					// Database ID should probably also be stored for the thumbnails, so updating / insert into the database will be easier. We have a free primary key, so why not use it?
 					$metadata->image_meta  = $data;
-				} elseif ($record->parent == 0 && $record->image_type = self::IMAGE_TYPE_RETINA) {
+				} elseif ($record->parent == 0 && $record->image_type == self::IMAGE_TYPE_RETINA) {
 					$metadata->retinas[$this->mainImageKey] = $data;
 				} elseif ($record->parent > 0)  // Thumbnails
 				{
@@ -3420,7 +3420,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					// Check if thumbnail ('parent') is Optimized, if so, then retina probably should be optimized as well.
 					if ((isset($this->thumbnails[$index]) &&
 						is_object($this->thumbnails[$index]) &&
-						$this->thumbnails[$index]->isOptimized) || $backupModel->hasBackup($retinaObj)) {
+						$this->thumbnails[$index]->isOptimized() ) || $backupModel->hasBackup($retinaObj)) {
 						$retinaObj->image_meta->status = $status;
 						$retinaObj->image_meta->compressionType = $type;
 						if ($status == self::FILE_STATUS_SUCCESS)
