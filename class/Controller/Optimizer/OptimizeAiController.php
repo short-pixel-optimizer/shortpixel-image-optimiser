@@ -445,7 +445,6 @@ class OptimizeAiController extends OptimizerBase
   *  - Move the files
   *  - Update Metadata
   *  - Move Backups 
-  *  - Create Symlinks 
   ( This might warrant a class of it's own due to complexity, or hooking into converter Models )
   */
     protected function replaceFiles($qItem, $newFileName, $args = [])
@@ -573,13 +572,13 @@ class OptimizeAiController extends OptimizerBase
                 Log::addInfo('[Dry-run] Would have moved file : ' . $sourceFile->getFullPath() . ' to ' . $targetFileObj->getFullPath());
             }
 
-            if (false === $args['recent_upload']) {
+        /*    if (false === $args['recent_upload']) {
                 if (false === $args['dry_run']) {
                     $this->createSymlink($sourceFile, $targetFileObj);
                 } else {
                     Log::addInfo('[Dry-run] Would have symlinked ' . $sourceFile->getFullPath()  . ' to ' . $targetFileObj->getFullpath());
                 }
-            }
+            } */
         }
 
         Log::addTemp('Moving Files Done');
@@ -614,6 +613,7 @@ class OptimizeAiController extends OptimizerBase
         return false;
     }
 
+    /*
     private function createSymlink($sourceObj, $targetObj): bool
     {
         $settings = \wpSPIO()->settings();
@@ -628,6 +628,7 @@ class OptimizeAiController extends OptimizerBase
 
         return false;
     }
+        */
 
     protected function replaceMetaData($item_id, $old_file, $new_file, $dry_run = false)
     {
