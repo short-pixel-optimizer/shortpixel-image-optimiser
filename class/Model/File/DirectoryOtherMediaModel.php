@@ -110,7 +110,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
   public function __construct($path)
   {
 
-    if (is_object($path) && isset($path->path)) // Load directly via Database object, this saves a query.
+    if (is_object($path) && property_exists($path, 'path')) // Load directly via Database object, this saves a query.
     {
        $folder = $path;
        $path = $folder->path;

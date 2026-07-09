@@ -355,12 +355,11 @@ class AiDataModel
     {
         // Save to Database
         foreach ($data as $name => $value) {
-            // 'original_filebase' is skipped: setCurrentData() below refreshes
-            // $this->current['filebase'] from the attachment path directly.
             if ('original_filebase' == $name) {
-                continue;
+                $this->current['filebase'] = $value;
+            } else {
+                $this->generated[$name] = $value;
             }
-            $this->generated[$name] = $value;
         }
 
         $this->setCurrentData();
@@ -699,16 +698,19 @@ class AiDataModel
     /**
      * Determine whether there is at least one AI field enabled for generation.
      *
-     * getOptimizeData() is invoked for its side-effect: it sets
-     * processable_status to P_NOJOB when nothing is configured.
+     * Calls getOptimizeData() as a side-effect; if that sets P_NOJOB the method
+     * returns false.
      *
      * @return bool True when at least one field can be generated, false otherwise.
      */
     protected function hasSomethingGeneratable()
     {
-        $this->getOptimizeData();
+        $optimizeData = $this->getOptimizeData();
 
-        return self::P_NOJOB !== $this->processable_status;
+        if (self::P_NOJOB === $this->processable_status) {
+            return false;
+        }
+        return true;
     }
 
     /**

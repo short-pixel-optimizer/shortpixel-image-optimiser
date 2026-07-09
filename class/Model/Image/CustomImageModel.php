@@ -1027,19 +1027,15 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
      * Return the optimization improvement recorded on this image.
      *
      * Custom images store the improvement as a single percentage on the
-     * `customImprovement` meta field; the byte-savings variant is not
-     * tracked here, so `$int = true` returns 0 to honour the parent
-     * contract without inventing a value.
+     * `customImprovement` meta field; the byte-savings variant
+     * (`$int = true` on ImageModel) is not tracked here — the parameter
+     * is accepted for signature compatibility only.
      *
-     * @param bool $int When true return 0 (byte savings not tracked); otherwise return the percentage.
-     * @return int|float|null 0 when $int is true, the percentage improvement, or null when never optimized.
+     * @param bool $int Accepted for compatibility with ImageModel::getImprovement(); ignored.
+     * @return float|null Percentage improvement, or null when never optimized.
      */
     public function getImprovement($int = false)
     {
-       if ($int)
-       {
-           return 0;
-       }
        return $this->getMeta('customImprovement');
     }
 
