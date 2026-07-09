@@ -732,7 +732,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 				if (! isset($optimizeData['params']) || ! isset($optimizeData['urls']))
 				{
-					array([], 0);
+					return array([], 0);
 				}
 
 				$count = 0;
