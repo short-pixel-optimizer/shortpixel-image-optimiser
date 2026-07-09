@@ -267,17 +267,24 @@ class AiDataModel
                 $mediaItem = $mediaItem->getOriginalFile();
             }
 
-            $fileName = $mediaItem->getFileName();
-            $extension = $mediaItem->getExtension();
+            // If this function doesn't produce a workable MediaItem, play safe and don't un-ignore the post_title replacement
+            if (false === is_object($mediaItem))
+            {
+            
+            }
+            else
+            {
+                $fileName = $mediaItem->getFileName();
+                $extension = $mediaItem->getExtension();
 
-            $fileName = str_replace('.' . $extension, '', $fileName);
+                $fileName = str_replace('.' . $extension, '', $fileName);
 
-            if ($currentData['post_title'] == $fileName) {
-                if (in_array('post_title', $ignore_fields)) {
-                    $ignore_fields = array_diff($ignore_fields, ['post_title']);
+                if ($currentData['post_title'] == $fileName) {
+                    if (in_array('post_title', $ignore_fields)) {
+                        $ignore_fields = array_diff($ignore_fields, ['post_title']);
+                    }
                 }
             }
-
             // Exception via array_diff :: post_title always overwrite because it is always filled
         }
 
@@ -371,7 +378,7 @@ class AiDataModel
             $this->updateRecord();
         } else {
             // Not sure if  just categorically deny this, or some smart updater ( with more risks )
-            Log::addError('New AI Data already has an entry');
+            Log::addError('New AI Data already has an entry', $data);
         }
 
         // Save to WordPress
@@ -780,7 +787,8 @@ class AiDataModel
         $format = ['%d', '%d', '%s', '%s', '%s'];
 
         if (false === $this->has_record) {
-            $this->id = $wpdb->insert(self::getTableName(), $fields, $format);
+            $wpdb->insert(self::getTableName(), $fields, $format);
+            $this->id = $wpdb->insert_id;
             $this->has_record = true;
         } else {
             $wpdb->update(self::getTableName(), $fields, ['id' => $this->id], $format);
@@ -853,7 +861,7 @@ class AiDataModel
         }
 
         $this->has_record = false;
-        self::flushModelCache($this->id);
+        self::flushModelCache($this->attach_id);
     }
 
     /**
@@ -867,7 +875,7 @@ class AiDataModel
         $sql = 'SELECT attach_id FROM ' . self::getTableName() . ' order by tsUpdated desc limit 1';
         $attach_id = $wpdb->get_var($sql);
 
-        if (false === $attach_id) {
+        if (is_null($attach_id)) {
             return false;
         }
 

@@ -297,9 +297,9 @@ class StatsModel
         return $this->currentStat;
        }
        else
-			 {
+		{
         return $this;
-			 }
+		}
   }
 
   /**
