@@ -18,133 +18,256 @@ use ShortPixel\Helper\UtilHelper as UtilHelper;
 use ShortPixel\Model\Backup\BackupModel;
 use ShortPixel\Model\Converter\Converter as Converter;
 
-/* ImageModel class.
-*
-*
-* - Represents a -single- image entity *not file*.
-* - Can be either MediaLibrary, or Custom .
-* - Not a replacement of Meta, but might be.
-* - Goal: Structural ONE method calls of image related information, and combining information. Same task is now done on many places.
-* -- ShortPixel Class should be able to blindly call model for information, correct metadata and such.
-*/
-
+/**
+ * Abstract base model for a single image entity handled by ShortPixel.
+ *
+ * Represents an image *entity* (not just a file) — a Media Library attachment,
+ * a Custom image, a thumbnail, a retina or an original file. Subclasses provide
+ * the storage / loading of the associated metadata; this class owns the shared
+ * business logic: processability checks, exclusion rules, backup / restore,
+ * WebP + AVIF handling, and the post-optimization state transitions.
+ *
+ * The properties on this class (width, height, mime, error_message, etc.) are
+ * derived at runtime; all persistent state lives on the image_meta object.
+ *
+ * @package ShortPixel\Model\Image
+ */
 abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 {
-    // File Status Constants
+    // File Status Constants — persisted on image_meta->status.
+    /** Image was seen but processing failed. */
     const FILE_STATUS_ERROR = -1;
+    /** Image has never been processed. */
     const FILE_STATUS_UNPROCESSED = 0;
+    /** Image is queued but not yet optimized. */
     const FILE_STATUS_PENDING = 1;
+    /** Image has been successfully optimized. */
     const FILE_STATUS_SUCCESS = 2;
+    /** Image has been restored from backup. */
     const FILE_STATUS_RESTORED = 3;
-    const FILE_STATUS_TORESTORE = 4; // Used for Bulk Restore
+    /** Marker used during bulk restore to indicate the image is queued for restore. */
+    const FILE_STATUS_TORESTORE = 4;
 
+    /** Image is prevented from being auto-processed (usually after a fatal error). */
     const FILE_STATUS_PREVENT = -10;
+    /** Image was manually marked as done and should be skipped. */
     const FILE_STATUS_MARKED_DONE = -11;
+    /** Image metadata is invalid / unreadable. */
     const FILE_STATUS_BAD_METADATA = -12;
 
-    // Compression Option Consts - must be replicated in screen-base.js
+    // Compression Option Constants — must be replicated in screen-base.js.
+    /** Lossless compression. */
     const COMPRESSION_LOSSLESS = 0;
+    /** Lossy compression. */
     const COMPRESSION_LOSSY = 1;
+    /** Glossy compression (lossy tuned to preserve visual quality). */
     const COMPRESSION_GLOSSY = 2;
 
+    /** Marker used in the resize action for smart-crop enabled resizing. */
 		const ACTION_SMARTCROP = 100;
+    /** Marker used in the resize action for smart-crop disabled resizing. */
 		const ACTION_SMARTCROPLESS = 101;
 
-    // Extension that we process . Minus the one that one MediaLibraryModel should handle, so it doesn't touch the thumbns.
+    /**
+     * File extensions ShortPixel will process. Excludes anything the
+     * MediaLibraryModel should route separately (i.e. avoiding thumbnail
+     * touching).
+     */
     const PROCESSABLE_EXTENSIONS = array('jpg', 'jpeg', 'gif', 'png', 'pdf', 'webp');
 
-    //
+    // Processable-status codes — cached in $processable_status.
+    /** Image is eligible for processing. */
     const P_PROCESSABLE = 0;
+    /** Underlying file is missing. */
     const P_FILE_NOT_EXIST  = 1;
+    /** File extension is not in PROCESSABLE_EXTENSIONS. */
     const P_EXCLUDE_EXTENSION = 2;
+    /** Image dimensions match a size-exclusion rule. */
     const P_EXCLUDE_SIZE  = 3;
+    /** Image path / name matches a path-exclusion rule. */
     const P_EXCLUDE_PATH  = 4;
+    /** Image is already optimized. */
     const P_IS_OPTIMIZED = 5;
+    /** File is not writable. */
     const P_FILE_NOTWRITABLE = 6;
+    /** Backup directory is not writable. */
 		const P_BACKUPDIR_NOTWRITABLE = 7;
+    /** A backup already exists (blocking new backup). */
 		const P_BACKUP_EXISTS = 8;
+    /** preventNextTry() previously flagged this image; auto-processing is blocked. */
 		const P_OPTIMIZE_PREVENTED = 9;
+    /** Containing directory is not writable. */
 		const P_DIRECTORY_NOTWRITABLE = 10;
+    /** PDF processing is disabled in settings. */
     const P_EXCLUDE_EXTENSION_PDF = 11;
+    /** File on disk is zero-size or unreadable. */
     const P_IMAGE_ZERO_SIZE = 12;
-    const P_EXCLUDE_DATE = 13; 
+    /** Image date matches a date-exclusion rule. */
+    const P_EXCLUDE_DATE = 13;
+    /** Image filesize matches a filesize-exclusion rule. */
     const P_EXCLUDE_FILESIZE = 14;
 
-		// For restorable status
+    // Restorable-status codes — cached in $restorable_status.
+    /** Image can be restored from backup. */
 		const P_RESTORABLE = 109;
+    /** No backup file exists for this image. */
 		const P_BACKUP_NOT_EXISTS = 110;
+    /** Image was never optimized, nothing to restore. */
 		const P_NOT_OPTIMIZED = 111;
 
+    /** The primary attachment file. */
 		const IMAGE_TYPE_MAIN = 0;
+    /** A generated thumbnail size. */
 		const IMAGE_TYPE_THUMB = 1;
+    /** The unscaled original (WordPress `-scaled` companion). */
 		const IMAGE_TYPE_ORIGINAL = 2;
+    /** A retina variant (e.g. @2x). */
 		const IMAGE_TYPE_RETINA = 3;
+    /** A duplicate image already handled elsewhere. */
 		const IMAGE_TYPE_DUPLICATE = 4;
 
+    /** Sentinel stored on the webp/avif meta field when the optimized variant
+     *  would be larger than the source and was therefore not written. */
 		const FILETYPE_BIGGER = -10;
 
-    protected $image_meta; // metadata Object of the image.
+    /**
+     * The metadata object for this image (subclass-specific ImageMeta variant).
+     * @var \ShortPixel\Model\Image\ImageMeta|object
+     */
+    protected $image_meta;
+
+    /**
+     * Marker set when a meta field changed this request, so subclasses can
+     * decide whether to persist.
+     * @var bool
+     */
 		protected $recordChanged = false;
 
-    // ImageModel properties are not stored but is generated data.  Only storage should happen to the values in Meta.
-		/** @var string */
+    // NOTE: The properties below are runtime-derived. Persistent state lives on $image_meta.
+    /** @var string|int|null Image width in pixels; lazily populated by setImageSize(). */
     protected $width;
 
-		/** @var string */
+    /** @var string|int|null Image height in pixels; lazily populated by setImageSize(). */
     protected $height;
 
-		/** @var string */
+    /** @var string|null MIME type string of the underlying file. */
     protected $mime;
-   // protected $url; // possibly not in use.
 
-	  /** @var string */
+    /** @var string|null Last error message set for this image (surfaced through the response controller). */
     protected $error_message;
 
-		/** @var int */
-    protected $id; // ID of the load image, unique only combined with type. 
+    /** @var int|null Image identifier; unique only when combined with $imageType. */
+    protected $id;
 
-		/** @var string */
+    /** @var string|int|null One of the IMAGE_TYPE_* constants. */
 		protected $imageType;
 
-		/** @var int */
+    /** @var int|null Cached processable-status code — one of the P_* constants. */
     protected $processable_status = null;
 
-		/** @var int */
+    /** @var int|null Cached restorable-status code — one of the P_* constants. */
 		protected $restorable_status = null;
 
-    /** @var string */
+    /** @var string|null Human-readable reason returned by getProcessableReason() when auto-processing is prevented. */
   	protected $optimizePreventedReason;
 
-		// Public var that can be set by QueueController to prevent double queries.
-		/** @var boolean */
+    /**
+     * Externally set by QueueController to short-circuit repeated queue lookups.
+     * @var bool|null
+     */
 		public $is_in_queue;
 
-    
-    protected $backupModel; 
+    /**
+     * Cached backup model for this image, populated on first getBackupModel() call.
+     * @var \ShortPixel\Model\Backup\BackupModel|false|null
+     */
+    protected $backupModel;
 
 
+    /**
+     * Return the URLs (and companion data) that should be sent to the ShortPixel API
+     * for optimization.
+     *
+     * @return array Optimize-data array keyed by size / variant.
+     */
     abstract public function getOptimizeUrls();
+
+    /**
+     * Persist the current image_meta object back to storage (attachment meta,
+     * custom table, etc.).
+     *
+     * @return void
+     */
     abstract protected function saveMeta();
+
+    /**
+     * Load the image_meta object from storage into this instance.
+     *
+     * @return void
+     */
     abstract protected function loadMeta();
 
+    /**
+     * Return the per-thumbnail / per-variant optimization improvements the
+     * ShortPixel API reported for this image.
+     *
+     * @return array<string, mixed>|false
+     */
     abstract protected function getImprovements();
-    abstract protected function getExcludePatterns(); // get the Exclude Pattern(s) for -this- image to compare.
 
-   // abstract protected function getOptimizeFileType();
+    /**
+     * Return the exclude patterns (path, name, size, date, filesize) that
+     * apply to *this* image, ready to be evaluated by the isPathExcluded /
+     * isSizeExcluded / isFileSizeExcluded / checkDateExcluded helpers.
+     *
+     * @return array<int, array<string, mixed>>|false
+     */
+    abstract protected function getExcludePatterns();
 
-    // Function to prevent image from doing anything automatically - after fatal error.
+    /**
+     * Mark this image so that it will not be auto-processed again until
+     * resetPrevent() is called. Used to break auto-retry loops after fatal
+     * errors.
+     *
+     * @param string $reason Human-readable reason surfaced through getProcessableReason().
+     * @return void
+     */
     abstract protected function preventNextTry($reason = '');
-    abstract public function isOptimizePrevented();
-    abstract public function resetPrevent(); // to get going.
-    //abstract public function getParent(); // needed for top-class only.
 
-    // Construct
+    /**
+     * Whether preventNextTry() has flagged this image and it should be
+     * skipped by the automated pipeline.
+     *
+     * @return bool|string False when not prevented, otherwise the reason string.
+     */
+    abstract public function isOptimizePrevented();
+
+    /**
+     * Clear the "prevented" flag so this image can be processed again.
+     *
+     * @return void
+     */
+    abstract public function resetPrevent();
+
+    /**
+     * Constructor.
+     *
+     * @param string $path Absolute path to the image file backing this model.
+     */
     public function __construct($path)
     {
       parent::__construct($path);
     }
 
-    /* Function to run on load-time ( loadMeta ) to check certain values and make sure all data is loaded properly and in case of missing data, to supplant that */
+    /**
+     * Fill in derived meta values (originalWidth, originalHeight, tsAdded)
+     * and refresh WebP/AVIF companion metadata after loadMeta().
+     *
+     * Called by subclasses at the end of loadMeta() so the image_meta object
+     * always has a complete baseline.
+     *
+     * @return void
+     */
     protected function verifyImage()
     {
 
@@ -163,6 +286,15 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     }
 
+    /**
+     * Lazily populate $width and $height from the file on disk.
+     *
+     * Assigns `false` to the fields when the file is skippable (excluded
+     * extension, non-image, unreadable, or virtual) so subsequent calls do
+     * not re-run the check.
+     *
+     * @return void
+     */
     protected function setImageSize()
     {
       // to prevent is_null check on get to loop if something is off.
@@ -190,7 +322,17 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 
     }
-    /* Check if an image in theory could be processed. Check only exclusions, don't check status etc */
+    /**
+     * Whether this image is currently eligible for processing.
+     *
+     * Considers the exclusion rules (extension / size / filesize / path),
+     * filesystem readiness (exists / writable / directory writable), the
+     * optimize-prevented flag and the already-optimized status. The first
+     * result is cached in $processable_status; subsequent calls short-circuit
+     * off that cache.
+     *
+     * @return bool True if the image can be processed right now.
+     */
     public function isProcessable()
     {
         // isprocessable runs zillion times, so take the edge off a little.
@@ -234,6 +376,16 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     }
 
+    /**
+     * Whether a WebP or AVIF variant can still be generated for this image.
+     *
+     * Considers the feature-access gate, the "create WebP" / "create AVIF"
+     * settings, PDF exclusion, self-conversion (webp of a webp), and whether
+     * a variant already exists or was previously marked as FILETYPE_BIGGER.
+     *
+     * @param string $type Either 'webp' or 'avif'.
+     * @return bool True if a variant of $type is still processable.
+     */
     public function isProcessableFileType($type = 'webp')
     {
         $settings = \WPSPIO()->settings();
@@ -273,6 +425,11 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
           return false;
     }
 
+    /**
+     * Whether either a WebP or AVIF variant can still be generated.
+     *
+     * @return bool True if at least one of WebP / AVIF is still processable.
+     */
 		public function isProcessableAnyFileType()
 		{
 			  $webp = $this->isProcessableFileType('webp');
@@ -285,7 +442,15 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 				}
 		}
 
-    // Function to check if the reason it won't process is because user did some setting
+    /**
+     * Whether the image is excluded because of a user-configured setting
+     * (path, size, or filesize exclusion) rather than a system condition
+     * (missing file, not writable, etc.).
+     *
+     * Runs isProcessable() first so $processable_status is populated.
+     *
+     * @return bool True when the current $processable_status reflects a user exclusion.
+     */
     public function isUserExcluded()
     {
       if (is_null($this->processable_status))
@@ -306,6 +471,14 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         return false;
     }
 
+    /**
+     * Reset the processable-status cache when the current status is a
+     * user-configured exclusion, so the next isProcessable() call re-runs.
+     *
+     * Used by the "process anyway" flow.
+     *
+     * @return void
+     */
     public function cancelUserExclusions()
     {
        if ($this->isUserExcluded())
@@ -314,6 +487,13 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
        }
     }
 
+    /**
+     * Check whether the underlying file still exists, updating the
+     * processable-status cache with P_FILE_NOT_EXIST when it does not.
+     *
+     * @param bool $forceCheck Bypass any parent-level caching of the existence check.
+     * @return bool True when the file exists.
+     */
     public function exists($forceCheck = false)
     {
        $result = parent::exists($forceCheck);
@@ -324,7 +504,15 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
        return $result;
     }
 
-		/** In time this should replace the other. This one added for semantic reasons. */
+		/**
+     * Return the human-readable reason for the requested status cache.
+     *
+     * Newer semantic wrapper around getProcessableReason() that also handles
+     * the restorable-status cache.
+     *
+     * @param string $name Either 'processable' or 'restorable'.
+     * @return string|false Translated reason string, or false when unknown.
+     */
 		public function getReason($name = 'processable')
 		{
 				$status = null;
@@ -337,9 +525,11 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 			 return $this->getProcessableReason($status);
 		}
     
-    /** Find the backupmodel that combines with this file
-     * 
-     * @return object|boolean  The backup model or false  
+    /**
+     * Return the BackupModel associated with this image, using a per-instance
+     * cache to avoid repeated controller lookups.
+     *
+     * @return \ShortPixel\Model\Backup\BackupModel|false Backup model, or false when unavailable.
      */
     public function getBackupModel()
     {
@@ -360,6 +550,14 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
       return $backupModel;
     }
 
+    /**
+     * Translate a P_* status code into a human-readable, i18n'd reason string.
+     *
+     * When $status is null the current $processable_status is used.
+     *
+     * @param int|null $status One of the P_* constants; defaults to the cached processable_status.
+     * @return string Translated reason string (may contain HTML for links).
+     */
     public function getProcessableReason($status = null)
     {
       $message = false;
@@ -434,6 +632,15 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 
 
+    /**
+     * Whether the underlying file is an image.
+     *
+     * Virtual files are treated as images when the extension is not excluded,
+     * because their content cannot be inspected locally. Non-virtual files
+     * fall through to the parent FileModel check.
+     *
+     * @return bool
+     */
     public function isImage()
     {
         if (! $this->exists())
@@ -448,9 +655,15 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
               return false;
         }
 
-        return parent::isImage();  
+        return parent::isImage();
     }
 
+    /**
+     * Explicit property getter with lazy initialisation for width/height.
+     *
+     * @param string $name Property name.
+     * @return mixed|null The property value, or null when the property is unknown.
+     */
     public function get($name)
     {
        if (property_exists($this, $name))
@@ -467,11 +680,26 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     }
 
 
+    /**
+     * Magic accessor that delegates to get() so `$image->width` works the
+     * same as `$image->get('width')`.
+     *
+     * @param string $name Property name.
+     * @return mixed|null
+     */
     public function __get($name)
     {
         return $this->get($name);
     }
 
+    /**
+     * Read a value from image_meta, or the whole meta object.
+     *
+     * Unknown property names log a warning and return null.
+     *
+     * @param string|false $name Meta field name, or false to return the whole meta object.
+     * @return mixed|null Meta value, the full meta object when $name === false, or null when the field is unknown.
+     */
     public function getMeta($name = false)
     {
       if ($name === false)
@@ -488,9 +716,16 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
       return $this->image_meta->$name;
     }
 
-		/* Get counts of what needs to be optimized still
-		* @param String What to count: thumbnails, webp, avif.
-		*/
+		/**
+     * Count how many URLs of a given variant still need to be optimized.
+     *
+     * Reads the optimize-data array produced by getOptimizeData(), filters it
+     * by the requested variant and returns both the matching URL list and its
+     * count.
+     *
+     * @param string $param Variant to count: 'thumbnails' (alias for 'image'), 'webp' or 'avif'.
+     * @return array{0: array<int, string>, 1: int} Tuple of URL list and count.
+     */
 		public function getCountOptimizeData($param = 'thumbnails')
 		{
 				$optimizeData = $this->getOptimizeData();
@@ -520,6 +755,18 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 		}
 
+	  /**
+     * Resolve the FileModel for the WebP or AVIF companion of this image.
+     *
+     * Prefers the filename stored on image_meta, then falls back to the
+     * conventional single-extension (`foo.webp`) or double-extension
+     * (`foo.jpg.webp`) layout depending on environment settings. When the
+     * `shortpixel/image/filecheck` filter is enabled, the filesystem is
+     * re-checked and stale meta entries are cleared.
+     *
+     * @param string $type Either 'webp' or 'avif'.
+     * @return \ShortPixel\Model\File\FileModel|false File model for the variant, or false when none exists.
+     */
 	  protected function getImageType($type = 'webp')
 	  {
 	    $fs = \wpSPIO()->filesystem();
@@ -576,18 +823,33 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 	    return false;
 	  }
 
-    // @todo Deprecate this in favor of getImageType
+    /**
+     * Convenience wrapper for the WebP companion FileModel.
+     *
+     * @todo Deprecate this in favor of getImageType('webp').
+     * @return \ShortPixel\Model\File\FileModel|false
+     */
 		public function getWebp()
 		{
 				return $this->getImageType('webp');
 		}
 
-    // @todo Deprecate this in favor of getImageType
+    /**
+     * Convenience wrapper for the AVIF companion FileModel.
+     *
+     * @todo Deprecate this in favor of getImageType('avif').
+     * @return \ShortPixel\Model\File\FileModel|false
+     */
 	  public function getAvif()
 	  {
 	    	return $this->getImageType('avif');
 	  }
 
+    /**
+     * Persist the WebP companion filename onto image_meta when one exists on disk.
+     *
+     * @return void
+     */
 	  protected function setWebp()
 	  {
 	      $webp = $this->getImageType('webp');
@@ -597,6 +859,11 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         }
 	  }
 
+    /**
+     * Persist the AVIF companion filename onto image_meta when one exists on disk.
+     *
+     * @return void
+     */
 	  protected function setAvif()
 	  {
 	      $avif = $this->getImageType('avif');
@@ -606,6 +873,16 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         }
 	  }
 
+    /**
+     * Write a value to a known image_meta field, flagging the change so
+     * recordChanged() can persist later.
+     *
+     * Unknown field names are logged and ignored.
+     *
+     * @param string $name  Meta field name.
+     * @param mixed  $value New value.
+     * @return false|void False when the field is unknown; otherwise void.
+     */
     public function setMeta($name, $value)
     {
       if (! $this->hasMeta($name))
@@ -624,22 +901,50 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 			}
     }
 
-		// Indicates this image has changed data.  Parameters optional for future use.
+		/**
+     * Mark this image as having a modified meta value this request.
+     *
+     * $old_value / $new_value are accepted for future auditing but currently
+     * unused.
+     *
+     * @param bool  $bool      True to flag as changed, false to clear.
+     * @param mixed $old_value Previous value (currently unused).
+     * @param mixed $new_value New value (currently unused).
+     * @return void
+     */
 		protected function recordChanged($bool = true, $old_value = null, $new_value = null)
 		{
-			 $this->recordChanged = $bool; // Updated record for this image.
+			 $this->recordChanged = $bool;
 		}
 
+    /**
+     * Whether any meta value on this image has changed this request.
+     *
+     * @return bool
+     */
     protected function didRecordChange()
     {
        return $this->recordChanged;
     }
 
+    /**
+     * Whether the image_meta object exposes a given field.
+     *
+     * @param string $name Meta field name.
+     * @return bool
+     */
     public function hasMeta($name)
     {
         return (property_exists($this->image_meta, $name));
     }
 
+    /**
+     * Whether this image has been optimized (meta status == FILE_STATUS_SUCCESS).
+     *
+     * Also seeds the processable-status cache with P_IS_OPTIMIZED as a side effect.
+     *
+     * @return bool
+     */
     public function isOptimized()
     {
       if ($this->getMeta('status') == self::FILE_STATUS_SUCCESS)
@@ -651,9 +956,17 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
       return false;
     }
 
-    /* Returns the improvement of Image by optimizing
-    * @param boolean $int When true, returns only integer, otherwise a formatted number for display
-    */
+    /**
+     * Return the optimization improvement for this image.
+     *
+     * With $int=false returns the percentage improvement (2 decimals).
+     * With $int=true returns the absolute byte savings.
+     * Negative results (image ended up larger, possible with smartcrop) are
+     * clamped to 0.
+     *
+     * @param bool $int When true return raw byte savings; otherwise return the percentage improvement.
+     * @return int|float|false|null Improvement value, false when not optimized, null when sizes are unusable.
+     */
     public function getImprovement($int = false)
     {
         if ($this->isOptimized())
@@ -685,37 +998,25 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     }
 
 
-    /** Handles an Optimized Image in a general way
-    *
-    * - This function doesn't handle any specifics like custom / thumbnails or anything else, just for a general image
-    * - This function doesn't save metadata, that's job of subclass
-    *
-    * @param Array Result Array. One image result array. ie.
-		*
-    */
-		/*
-						[image] => Array
-                (
-                    [url] =>
-                    [originalSize] => 46188
-                    [optimizedSize] => 21200
-                    [status] => 2
-                )
-
-            [webp] => Array
-                (
-                    [url] =>
-                    [size] => 14280
-                    [status] => 2
-                )
-
-            [avif] => Array
-                (
-                    [url] =>
-                    [size] => 14094
-                    [status] => 2
-                )
-		*/
+    /**
+     * Post-optimization handler for the main image.
+     *
+     * Does the generic work: create the backup (unless a converter already
+     * did), move the temp file into place (with virtual-file support), update
+     * the size / timestamp / compression meta fields, and record resize info.
+     * Subclasses are responsible for persisting the meta afterwards.
+     *
+     * Example `$results` shape returned by the API:
+     * ```
+     * [image] => [ url, originalSize, optimizedSize, status ]
+     * [webp]  => [ url, size, status ]
+     * [avif]  => [ url, size, status ]
+     * ```
+     *
+     * @param array $results One image result array from the API.
+     * @param array $args    Options; supports 'isConverted' (bool) to skip the backup step when a converter already produced one.
+     * @return bool True on success, false on backup / copy failure.
+     */
     public function handleOptimized($results, $args = [])
     {
         $settings = \wpSPIO()->settings();
@@ -877,6 +1178,16 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     }
 
+    /**
+     * Post-optimization handler for the WebP + AVIF companions of this image.
+     *
+     * For each variant present in the API result:
+     *   - if the API returned a file, move it into place through handleWebp / handleAvif and record its filename on meta;
+     *   - if the API returned STATUS_OPTIMIZED_BIGGER / STATUS_NOT_COMPATIBLE, record FILETYPE_BIGGER so the variant isn't re-attempted.
+     *
+     * @param array $downloadResult API download result array with optional 'webp' / 'avif' sub-arrays.
+     * @return void
+     */
     public function handleOptimizedFileType($downloadResult)
     {
 				 $fs = \wpSPIO()->filesystem();
@@ -934,6 +1245,14 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 					}
     }
 
+    /**
+     * Whether this image can be restored from a backup right now.
+     *
+     * Populates $restorable_status with a P_* code describing the outcome
+     * and, on failure branches, records a response through ResponseController.
+     *
+     * @return bool True when a backup exists and the target is writable / virtual.
+     */
     public function isRestorable() : bool
     {
         $backupModel = $this->getBackupModel(); 
@@ -996,10 +1315,16 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         }
     }
 
-    /** Restores a backup to original file *
-    *
-    * **NOTE** This function only moves the file but doesn't save the meta, which should reflect the changes!
-    */
+    /**
+     * Restore this image from its backup file.
+     *
+     * NOTE: this only moves the file — the caller is responsible for saving
+     * the meta afterwards to reflect the restored state.
+     * Clears the width / height / mime / filesize caches on success so the
+     * next access re-reads them from the restored file.
+     *
+     * @return bool True on successful restore, false when not restorable or the move failed.
+     */
     public function restore()
     {
         if (! $this->isRestorable())
@@ -1039,10 +1364,14 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         return $bool;
     }
 
-    /** When an image is deleted
-    *
-    *  Handle an image delete i.e. by WordPress or elsehow.
-    */
+    /**
+     * Handle an image being deleted (by WordPress or otherwise).
+     *
+     * Cleans up the associated backup and any WebP / AVIF companion files
+     * that aren't the primary file itself.
+     *
+     * @return void
+     */
     public function onDelete()
     {
         // @todo This delete should go to backupModel, probably on main item.
@@ -1063,6 +1392,16 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         }
     }
 
+    /**
+     * Move an API-produced temporary WebP file into the final location.
+     *
+     * Handles virtual sources (translating the virtual path back to a real
+     * one) and the double-extension convention when enabled. If the target
+     * already exists it is considered a success without overwriting.
+     *
+     * @param FileModel $tempFile Temporary WebP file returned by the API.
+     * @return FileModel|false FileModel of the final destination, or false when the move failed.
+     */
     protected function handleWebp(FileModel $tempFile)
     {
          $fs = \wpSPIO()->filesystem();
@@ -1104,6 +1443,15 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
          return false;
     }
 
+    /**
+     * Move an API-produced temporary AVIF file into the final location.
+     *
+     * Handles virtual sources and the double-extension convention when
+     * enabled.
+     *
+     * @param FileModel $tempFile Temporary AVIF file returned by the API.
+     * @return FileModel|false FileModel of the final destination, or false when the move failed.
+     */
     protected function handleAvif(FileModel $tempFile)
     {
          $fs = \wpSPIO()->filesystem();
@@ -1136,6 +1484,13 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 
 
+    /**
+     * Evaluate the "name", "path", "regex-name" and "regex-path" exclusion
+     * rules against this image. Updates $processable_status to P_EXCLUDE_PATH
+     * on a match.
+     *
+     * @return bool True when at least one rule matches.
+     */
     protected function isPathExcluded()
     {
        $excludePatterns = $this->getExcludePatterns();
@@ -1165,7 +1520,19 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         return false;
     }
 
-		// Checks Processable extensions. The other way of approval is having the file be convertable.
+    /**
+     * Check whether the file's extension is excluded from processing.
+     *
+     * The extension must be in PROCESSABLE_EXTENSIONS; PDFs additionally
+     * require the optimizePdfs setting. As a final fallback, a main-file
+     * image with a non-listed extension is *not* excluded when a Converter
+     * would accept it.
+     *
+     * Updates $processable_status to P_EXCLUDE_EXTENSION or
+     * P_EXCLUDE_EXTENSION_PDF when the exclusion applies.
+     *
+     * @return bool True when the extension is excluded.
+     */
     protected function isExtensionExcluded()
     {
 
@@ -1206,6 +1573,14 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         return true;
     }
 
+    /**
+     * Substring exclusion match. Empty patterns never match (guards against
+     * faulty settings input).
+     *
+     * @param string $target  Filename or path being tested.
+     * @param string $pattern Pattern (plain substring).
+     * @return bool True when $pattern is found inside $target.
+     */
     protected function matchExcludePattern($target, $pattern) {
         if(strlen($pattern) == 0)  // can happen on faulty input in settings.
           return false;
@@ -1218,6 +1593,13 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         return false;
     }
 
+    /**
+     * Regex exclusion match. Empty patterns never match.
+     *
+     * @param string $target  Filename or path being tested.
+     * @param string $pattern PCRE-compatible regex including delimiters.
+     * @return bool True on a successful, non-empty match.
+     */
     protected function matchExludeRegexPattern($target, $pattern)
     {
       if(strlen($pattern) == 0)  // can happen on faulty input in settings.
@@ -1234,6 +1616,12 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
       return false;
     }
 
+		/**
+     * Evaluate "size" exclusion rules against this image's width / height.
+     * Updates $processable_status to P_EXCLUDE_SIZE on match.
+     *
+     * @return bool True when a size rule matched.
+     */
 		protected function isSizeExcluded()
 		{
 			$excludePatterns = $this->getExcludePatterns();
@@ -1262,6 +1650,15 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 			 return $bool;
 		}
 
+    /**
+     * Evaluate "filesize" exclusion rules against the file's byte size.
+     *
+     * Rule format is `"<operator> <value> <unit>"` (e.g. `"> 500 KB"`).
+     * Supported operators: `>` and `<`. Virtual / zero-byte files skip the
+     * check. Updates $processable_status to P_EXCLUDE_FILESIZE on match.
+     *
+     * @return bool|null True when a rule matched, false otherwise. Implicit null on malformed rule.
+     */
     private function isFileSizeExcluded()
     {
         $excludePatterns = $this->getExcludePatterns();
@@ -1324,6 +1721,15 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         
     }
 
+    /**
+     * Return the first "date" exclusion rule that applies to this image, or
+     * false when no date rule is configured.
+     *
+     * The caller is expected to compare the returned `date` / `when` pair
+     * against the image's own date.
+     *
+     * @return array{date: string, when: string}|false Rule payload, or false when no match.
+     */
     protected function checkDateExcluded()
 		{
 			$excludePatterns = $this->getExcludePatterns();
@@ -1344,6 +1750,13 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 			 return $bool;
 		}
 
+    /**
+     * Whether the file on disk has a usable size (or is virtual, which we
+     * can't measure locally). Zero-byte files set $processable_status to
+     * P_IMAGE_ZERO_SIZE.
+     *
+     * @return bool
+     */
     protected function isFileSizeOK()
     {
         if ($this->is_virtual() || $this->getFileSize() > 0 )
@@ -1356,6 +1769,16 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         }
     }
 
+    /**
+     * Transition a virtual file into a real one by pointing the model at a
+     * local path and refreshing the derived file info.
+     *
+     * Used after downloading a stateless (e.g. S3-offloaded) image back to
+     * the local filesystem for further processing.
+     *
+     * @param string $fullpath Absolute path the file now lives at.
+     * @return void
+     */
     protected function setVirtualToReal($fullpath)
     {
       $this->resetStatus();
@@ -1365,6 +1788,17 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
       $this->setFileInfo();
     }
 
+		/**
+     * Whether a given width/height pair should be *excluded* by a size rule.
+     *
+     * Rule format is `"minW-maxW × minH-maxH"` (× / x / X accepted). Bounds
+     * may be single values (min=max). Height range is optional.
+     *
+     * @param int    $width          Image width.
+     * @param int    $height         Image height.
+     * @param string $excludePattern Rule value from the settings.
+     * @return bool True when the dimensions fall *outside* the excluded range (i.e. still processable).
+     */
 		private function isProcessableSize($width, $height, $excludePattern)
 		{
 
@@ -1391,12 +1825,27 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		}
 
 
-    /** Convert Image Meta to A Class */
+    /**
+     * Delegate to the image_meta object's toClass() so callers can serialise
+     * meta without knowing which meta variant is in use.
+     *
+     * @return object
+     */
     protected function toClass()
     {
         return $this->image_meta->toClass();
     }
 
+    /**
+     * Create a backup of the current file through the BackupModel.
+     *
+     * On failure inspects the backup model's status code, sets
+     * preventNextTry() to break the retry loop and populates $error_message
+     * for the UI. The `shortpixel/image/skip_backup` filter can short-circuit
+     * this method (returning true without creating a backup).
+     *
+     * @return bool True on success (or when the filter opted out); false on failure.
+     */
     protected function createBackup()
     {
         $backupModel = $this->getBackupModel();
@@ -1440,11 +1889,31 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         return $bool;
     }
 
+    /**
+     * Convenience accessor for the ShortPixel filesystem controller.
+     *
+     * @return \ShortPixel\Controller\FileSystemController
+     */
     protected function fs()
     {
        return \wpSPIO()->filesystem();
     }
 
+		/**
+     * Assemble the per-URL parameter list sent to the ShortPixel API.
+     *
+     * Resolves the resize / smartcrop policy (they're mutually exclusive at
+     * the API level and interact with the size definition of a thumbnail),
+     * clamps the target dimensions against the configured resize sizes
+     * (doubled for retinas), and marks which variants (image / webp / avif)
+     * still need processing.
+     *
+     * The result is passed through the `shortpixel/image/imageparamlist`
+     * filter before being returned.
+     *
+     * @param array $args Per-URL context; expects at least 'url', 'main_url', 'main_width', 'main_height', and optionally 'smartcrop'.
+     * @return array{resize?: int, resize_width?: int, resize_height?: int, url: string, image: bool, webp: bool, avif: bool}
+     */
 		protected function createParamList($args = array())
 		{
 			$settings = \wpSPIO()->settings();

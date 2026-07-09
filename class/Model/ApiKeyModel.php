@@ -121,7 +121,13 @@ class ApiKeyModel extends \ShortPixel\Model
    */
 	private $option_name =  'spio_key';
 
-  /** Constructor. Check for constants, load the key */
+  /**
+   * Constructor.
+   *
+   * Detects the SHORTPIXEL_API_KEY and SHORTPIXEL_HIDE_API_KEY constants and
+   * caches the results in $key_is_constant / $key_is_hidden. The key itself is
+   * loaded lazily by loadKey().
+   */
   public function __construct()
   {
     $this->key_is_constant = (defined("SHORTPIXEL_API_KEY")) ? true : false;
@@ -286,21 +292,49 @@ class ApiKeyModel extends \ShortPixel\Model
   }
 
 
+  /**
+   * Whether the current API key has been verified during this request.
+   *
+   * Reflects the runtime $key_is_verified flag set by checkKey(); this is not
+   * necessarily the same as the persisted $verifiedKey value.
+   *
+   * @return bool True if checkKey() has confirmed the key this request.
+   */
   public function is_verified()
   {
       return $this->key_is_verified;
   }
 
+  /**
+   * Whether the API key is provided via the SHORTPIXEL_API_KEY constant.
+   *
+   * @return bool True if the constant is defined.
+   */
   public function is_constant()
   {
       return $this->key_is_constant;
   }
 
+  /**
+   * Whether the API key should be hidden from the settings UI.
+   *
+   * Controlled by the SHORTPIXEL_HIDE_API_KEY constant.
+   *
+   * @return bool True if the key is hidden.
+   */
   public function is_hidden()
   {
       return $this->key_is_hidden;
   }
 
+  /**
+   * Get the current API key.
+   *
+   * Returns the constant value when SHORTPIXEL_API_KEY is defined, otherwise
+   * the value loaded from the database. May be an empty string if no key is set.
+   *
+   * @return string The API key, or empty string when unset.
+   */
   public function getKey()
   {
       return $this->apiKey;

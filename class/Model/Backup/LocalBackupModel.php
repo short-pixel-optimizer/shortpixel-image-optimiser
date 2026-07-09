@@ -10,10 +10,44 @@ use ShortPixel\Model\File\FileModel;
 use ShortPixel\Model\Image\ImageModel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
+/**
+ * Local-disk implementation of {@see BackupModel}.
+ *
+ * Stores each media item's backup family under the plugin's configured
+ * backup directory (typically `uploads/ShortpixelBackups/…` mirroring the
+ * source year/month path). Each thumbnail can either have its own backup
+ * file or be covered by the main file's backup (see the `has_own_file`
+ * flag on the `backup_files` cache).
+ *
+ * Supports the "single file backup" setting where thumbnails are not
+ * backed up separately — createBackupFile() detects the thumbnail case
+ * and defers to a main-file backup instead.
+ *
+ * @package ShortPixel\Model\Backup
+ */
 class LocalBackupModel extends BackupModel
 {
 
-    // This must be able to create backup for images one-by-one. 
+    /**
+     * Copy $sourceFile into the backup directory, or verify an existing
+     * backup is usable.
+     *
+     * Decision tree:
+     *   1. Backup directory doesn't exist / can't be created → false.
+     *   2. Backup already exists with the same filesize → STATUS_BACKUP_OK, return true.
+     *   3. `singleFileBackup` is on AND this is a thumbnail (not the main
+     *      file) → recursively back up the main file instead, mark
+     *      STATUS_IGNORED.
+     *   4. Otherwise, if the source is a virtual (remote / stateless)
+     *      file, first materialise it locally via checkVirtualForBackup();
+     *      then copy the source to the backup path.
+     *
+     * On any failure the STATUS_ERR_COPY_FAILED code is stored on
+     * `statusCode` and false is returned.
+     *
+     * @param ImageModel $sourceFile Image to back up.
+     * @return bool
+     */
      public function createBackupFile(ImageModel $sourceFile) : bool
      {
 
@@ -93,9 +127,27 @@ class LocalBackupModel extends BackupModel
 
      }
 
-     // This one should probably do the whole procedure. 
-     // Problem - how to find all the file items here. 
-     public function restore(ImageModel $sourceFile) : bool 
+     /**
+      * Move the backup file for $sourceFile back to its live location.
+      *
+      * Special case for converted attachments (`isConverted && needsRegenerate`):
+      * when a non-main-file thumbnail is being restored and thumbnails will
+      * be regenerated after the main-file restore anyway, this method just
+      * deletes the thumbnail via onDelete() instead of trying to restore
+      * a non-existent per-thumbnail backup.
+      *
+      * On missing/unwritable backup or target, records a ResponseController
+      * error and returns false. Otherwise moves the backup file to the
+      * source's directory, using the *backup file's own name* — this is
+      * how the extension swap during a converted-restore works (e.g. the
+      * live file is `.jpg`, the backup is `.png`, restore places `.png`
+      * next to the `.jpg`; the caller is responsible for the extension
+      * housekeeping).
+      *
+      * @param ImageModel $sourceFile Image to restore.
+      * @return bool
+      */
+     public function restore(ImageModel $sourceFile) : bool
      {
          $fs = \wpSPIO()->filesystem();
          $backupFile = $this->getBackupFile($sourceFile); 
@@ -171,26 +223,52 @@ class LocalBackupModel extends BackupModel
         return $bool;
     }
 
+    /**
+     * Return the fully-loaded `$backup_files` map, running `loadAll()` on
+     * first access so every image in the family has been probed.
+     *
+     * @return array<string, array{has_backup: bool, file: string|false, has_own_file: bool}>
+     */
     public function getBackupData()
     {
       if (false === $this->full_backup_loaded)
       {
-         $this->loadAll(); 
+         $this->loadAll();
       }
 
       return $this->backup_files;
     }
 
+    /**
+     * Whether backups are stored as a single main-file entry that covers
+     * thumbnails.
+     *
+     * NOTE: currently a no-op — the empty body returns null implicitly.
+     * See the deferred-bugs memo.
+     *
+     * @return void
+     */
     public function backupIsMain()
     {
 
     }
 
-     /** Checks if there is a backup . This is simplest / less intensive check, should be used for overviews etc
-      * 
-      * @param ImageModel $sourceFile 
-      * @param bool $strict .  Don't look for mainFile. Check used for determine file / prevent loops. 
-      * @return bool 
+     /**
+      * Whether a backup exists for the given image.
+      *
+      * Cheap first path: an already-populated cache entry short-circuits
+      * to its stored `has_backup` value. Otherwise consults the filesystem
+      * and, when no dedicated backup is found for a non-strict-mode
+      * thumbnail lookup, falls back to checking whether the main file
+      * has one that covers it (populating `has_own_file = false` on the
+      * cache entry so `needsRegenerate()` knows to trigger a regen after
+      * restore).
+      *
+      * @param ImageModel $sourceFile Image to look up.
+      * @param bool       $strict     When true, skip the main-file fallback.
+      *                               Used to prevent recursion when the
+      *                               caller already knows about the main file.
+      * @return bool
       */
      public function hasBackup(ImageModel $sourceFile, $strict = false) : bool
      {
@@ -253,18 +331,25 @@ class LocalBackupModel extends BackupModel
         return $bool;
      }
 
+     /**
+      * Delete the backup file (if any) belonging to $sourceFile.
+      *
+      * Silently no-ops when nothing was stored — the return value is
+      * always true, so callers should not use it to detect "nothing to
+      * delete" vs. "delete succeeded".
+      *
+      * @param ImageModel $sourceFile Image whose backup should be removed.
+      * @return true
+      */
      public function onDelete(ImageModel $sourceFile) : bool
      {
-       //$isConverted = $this->isConverted; 
-       //$name = $sourceFile->get('name');
-       
        if (true === $this->hasBackup($sourceFile))
        {
           $backupFile = $this->getBackupFile($sourceFile);
           if (is_object($backupFile))
           {
              $backupFile->delete();
-          }   
+          }
        }
        return true;
      }
@@ -403,10 +488,19 @@ class LocalBackupModel extends BackupModel
         return $this->backupDirectory;
     }
 
-    /** Get the backup file
-     * 
-     * @param ImageModel $sourceFile 
-     * @return FileModel|false 
+    /**
+     * Return a FileModel pointing at the backup file for $sourceFile.
+     *
+     * Runs hasBackup() in strict mode first, so the main-file fallback
+     * from hasBackup() does not paper over "this thumbnail has no
+     * dedicated backup" — callers that want the covering main-file
+     * backup should explicitly call getMainBackupFile().
+     *
+     * When a dedicated backup exists but `has_own_file` is false (the
+     * thumbnail is covered by the main file), returns false.
+     *
+     * @param ImageModel $sourceFile Image to look up.
+     * @return FileModel|false
      */
     public function getBackupFile(ImageModel $sourceFile)
     {
@@ -431,52 +525,89 @@ class LocalBackupModel extends BackupModel
        }
     }
 
+    /**
+     * Return the backup file that represents the "main" backup for this
+     * media item — the unscaled original when scaled, otherwise the
+     * live main file.
+     *
+     * @return FileModel|false
+     */
     public function getMainBackupFile()
     {
-        $mainFile = $this->getMainFile(); 
-        $backupFile = $this->getBackupFile($mainFile); 
+        $mainFile = $this->getMainFile();
+        $backupFile = $this->getBackupFile($mainFile);
 
-        return $backupFile; 
+        return $backupFile;
     }
 
-  
+
+      /**
+       * Walk every file that belongs to the media item (main + thumbnails
+       * + retinas + original) and call hasBackup() on each to fully
+       * populate the `$backup_files` cache. Sets the `$full_backup_loaded`
+       * guard so subsequent getBackupData() / renameBackup() calls skip
+       * this work.
+       *
+       * @return void
+       */
       protected function loadAll()
       {
         $filesArray = $this->mediaItem->getAllFiles();
         $files = $filesArray['files'];
-      
+
         foreach ($files as $obj)
         {
-           $this->hasBackup($obj); 
+           $this->hasBackup($obj);
         }
 
-        $this->full_backup_loaded = true; 
+        $this->full_backup_loaded = true;
       }
 
 
+      /**
+       * Return the ImageModel that owns the "canonical" main backup for
+       * this media item.
+       *
+       * For Media Library items that have a WP 5.3+ unscaled original,
+       * that original is the main backup (thumbnails were cut from it);
+       * for everything else (custom images, non-scaled media items), the
+       * media item itself is used.
+       *
+       * @return ImageModel
+       */
       private function getMainFile()
       {
           if ('media' === $this->mediaItem->get('type') && $this->mediaItem->hasOriginal())
           {
-             return $this->mediaItem->getOriginalFile(); 
+             return $this->mediaItem->getOriginalFile();
           }
           else
           {
-             return $this->mediaItem; 
+             return $this->mediaItem;
           }
       }
 
+      /**
+       * Compute the key used in the `$backup_files` cache.
+       *
+       * Retina variants are prefixed with `retina_` so they don't collide
+       * with the same-named non-retina thumbnail entry.
+       *
+       * @param string     $imageName  Base image name (typically the WP size name).
+       * @param ImageModel $sourceFile Image, used to inspect the imageType constant.
+       * @return string
+       */
       private function getBackupName($imageName, $sourceFile) : string
       {
-         $imageType = $sourceFile->get('imageType'); 
-         
+         $imageType = $sourceFile->get('imageType');
+
 
         if (ImageModel::IMAGE_TYPE_RETINA === $imageType)
         {
-            $imageName = 'retina_' . $imageName; 
+            $imageName = 'retina_' . $imageName;
         }
 
-        return $imageName; 
+        return $imageName;
       }
 
 }

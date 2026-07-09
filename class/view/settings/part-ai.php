@@ -295,7 +295,6 @@ if (! defined('ABSPATH')) {
 
       <!-- ## Filename -->
       <setting class="ai_filename_setting">
-          <input type="hidden" name="ai_symlink_checked" value="<?php echo esc_attr($view->data->ai_symlink_checked); ?>">
         <content>
 
           <?php $this->printSwitchButton(
@@ -345,17 +344,6 @@ if (! defined('ABSPATH')) {
           );
           ?>
         </content>
-        <content class='nextline ai_gen_filename is-advanced'>
-          <?php $this->printSwitchButton(
-            [
-              'name' => 'ai_filename_addsymlink',
-              'checked' => $view->data->ai_filename_addsymlink,
-              'label' => esc_html__('When renaming the file, add a symlink from the old file to the new (SEO)', 'shortpixel-image-optimiser'),
-            ]
-          );
-          ?>
-        </content>
-
         <content class='nextline'>
             <name><?php printf(esc_html__('This is a feature we are currently evaluating. If you would like to see it implemented in a future version of our plugin, please %svote for it here%s.','shortpixel-image-optimiser'), '<a target="_blank" href="https://ideas.shortpixel.com/update-image-filename-with-an-seo-friendly-one~4cMEvKmvFbosoYTI9T4UgK?from=board">', '</a>' ); ?></name>
         </content>

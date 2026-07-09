@@ -4,8 +4,6 @@ namespace ShortPixel\Model\Queue;
 if (!defined('ABSPATH')) {
    exit; // Exit if accessed directly.
 }
-// Attempt to standardize what goes around in the queue and keep some overview.
-
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 
@@ -18,21 +16,56 @@ use ShortPixel\Helper\UiHelper;
 use ShortPixel\Model\AiDataModel;
 use stdClass;
 
+/**
+ * One slot in the ShortPixel queue — binds an image (ImageModel) to a pending
+ * action, the input data used to process it (QueueItemData), and the result
+ * produced by that processing (QueueItemResult).
+ *
+ * Only the `data` object is persistent: `toObject()` on it is what
+ * returnEnqueue() serialises to the underlying shortq storage. The image
+ * model and result are rehydrated / rebuilt on each pull from the queue.
+ *
+ * The `new*Action()` methods are the entry points for scheduling work — each
+ * one calls `newAction()` first to wipe the current result and reset the
+ * data object (while carefully preserving any queued next-actions plus
+ * fields listed on next_keepdata), then populates the fields that action
+ * specifically needs. `getAPIController()` routes on the current action to
+ * pick the right Optimizer/Ai/Action controller when a worker pulls the item.
+ *
+ * @package ShortPixel\Model\Queue
+ */
 class QueueItem
 {
 
-   protected $imageModel; // ImageModel 
-   protected $item_id; // Item Id 
-   protected $queueItem; // Object coming from WPQ
+   /** @var ImageModel|null The image this queue slot is optimizing / acting on. */
+   protected $imageModel;
+   /** @var int|null Attachment or custom-image ID; also the queue slot's identity. */
+   protected $item_id;
+   /** @var object|null Raw envelope object handed back from the underlying shortq layer. */
+   protected $queueItem;
 
-   protected $result; // Result object stores a viable customer response.
+   /** @var QueueItemResult|null Result payload for the current action; created lazily by result(). */
+   protected $result;
 
-   protected $data; // something savable to dbase, for now object. This is the only thing persistent!
+   /** @var QueueItemData The persistent per-item data (URLs, params, action, counters). This is the ONLY field written back to the queue. */
+   protected $data;
 
-   protected $item_count; // counted images for the table.
+   /** @var int|null "Credit" count for the item — used by the bulk table to show progress. */
+   protected $item_count;
 
-   protected $debug_active = false; // prevent operations when it's debug view in edit media
+   /** @var bool True when the item was constructed from the edit-media debug view so mutating side-effects are suppressed. */
+   protected $debug_active = false;
 
+   /**
+    * Constructor.
+    *
+    * Accepts either a bound ImageModel or a bare item_id — the two shapes
+    * are used interchangeably at different points in the pipeline. Also
+    * unconditionally seeds `$data` with an empty QueueItemData so callers
+    * can always do `$item->data()->foo = 'bar'` without a null check.
+    *
+    * @param array{imageModel?: ImageModel, item_id?: int} $args Initialisation payload.
+    */
    public function __construct($args = [])
    {
 
@@ -213,53 +246,97 @@ class QueueItem
       $this->item_count = 1;
    }
 
+   /**
+    * Schedule this slot to restore its image from backup.
+    *
+    * item_count is 1 — restore always operates on the whole family in one
+    * shot, regardless of thumbnail count.
+    *
+    * @return void
+    */
    public function newRestoreAction()
    {
-      $this->newAction(); 
+      $this->newAction();
 
       $this->data->action = 'restore';
       $this->item_count = 1;
    }
 
+   /**
+    * Schedule this slot to fetch AI-generated alt data for the image.
+    *
+    * item_count is 0 because this operation is metadata-only — it does not
+    * consume optimization credits.
+    *
+    * @return void
+    */
    public function getAltDataAction()
    {
-       $this->newAction(); 
-       $this->data->action = 'getAltData'; 
-       
-       $this->item_count = 0; 
+       $this->newAction();
+       $this->data->action = 'getAltData';
+
+       $this->item_count = 0;
    }
 
+   /**
+    * Schedule this slot for re-optimization with (optionally) a new
+    * compression type and/or smartcrop policy.
+    *
+    * The action is a two-step: `reoptimize` first (which typically restores
+    * the image so the fresh optimization has a clean source), followed by
+    * `optimize` — chained via next_actions. Both `compressionType` and
+    * `smartcrop` are added to keep_data so they survive newAction() when
+    * the `optimize` step runs.
+    *
+    * @param array{compressionType?: int, smartcrop?: bool} $args Overrides for the re-optimization.
+    * @return void
+    */
    public function newReOptimizeAction($args = [])
    {
-      $this->newAction(); 
+      $this->newAction();
 
-       $this->data->action = 'reoptimize'; 
+       $this->data->action = 'reoptimize';
        $this->data->next_actions = ['optimize'];
        $this->data->addKeepDataArgs(['compressionType', 'smartcrop']); // Each action it's own set of keep data.
        $this->item_count = 1;
 
-       // Smartcrop setting (?) 
+       // Smartcrop setting (?)
        if (isset($args['smartcrop']))
        {
-          $this->data()->smartcrop = $args['smartcrop']; 
+          $this->data()->smartcrop = $args['smartcrop'];
        }
 
-       // Then new compresion type to optimize to. 
-       if (isset($args['compressionType'])) 
+       // Then new compresion type to optimize to.
+       if (isset($args['compressionType']))
        {
           $this->data()->compressionType = $args['compressionType'];
-       }       
+       }
    }
 
+   /**
+    * Schedule this slot to strip legacy (pre-shortpixel_postmeta) SPIO
+    * metadata from the attachment.
+    *
+    * @return void
+    */
    public function newRemoveLegacyAction()
    {
-      $this->newAction(); 
+      $this->newAction();
 
       $this->data->action = 'removeLegacy';
       $this->item_count = 1;
    }
 
-   // @todo This should be moved to QueueItemResult as some point with validation
+   /**
+    * Merge an associative array of result fields onto the current result
+    * object, passing each through QueueItemResult's magic mutator so
+    * unknown keys are logged and dropped.
+    *
+    * @param array<string, mixed> $data Result-shape entries keyed by field name.
+    * @return void
+    *
+    * @todo Move this to QueueItemResult with proper per-field validation.
+    */
    public function addResult($data = [])
    {
       // Should list every possible item, arrayfilter out.
@@ -469,9 +546,25 @@ class QueueItem
 
    }
 
+   /**
+    * Schedule this slot to submit an AI alt-text request to the ShortPixel
+    * AI backend.
+    *
+    * Reads its payload from AiDataModel::getOptimizeData($args) and stores
+    * both the `paramlist` (arguments for the API call) and the
+    * `returndatalist` (data echoed back verbatim). Chains a `retrieveAlt`
+    * next-action so a subsequent worker pass can fetch the result — unless
+    * `preview_only=true`, in which case no chained retrieval is scheduled.
+    *
+    * If `recent_upload=true` is passed, that flag is added to keep_data so
+    * it propagates onto the chained retrieveAlt action.
+    *
+    * @param array{preview_only?: bool, recent_upload?: bool} $args Options; forwarded verbatim to AiDataModel::getOptimizeData().
+    * @return void
+    */
    public function requestAltAction($args = [])
-   {   
-      $this->newAction(); 
+   {
+      $this->newAction();
       $this->data->urls = [$this->imageModel->getUrl()];
       $this->data->tries = 0;
       $this->item_count = 1;
@@ -525,6 +618,15 @@ class QueueItem
       }
    }
 
+   /**
+    * Schedule this slot to retrieve a previously-submitted AI alt-text
+    * result using the remote reference id captured during requestAltAction().
+    *
+    * Resets `tries` to 0 so the retry counter for this stage starts fresh.
+    *
+    * @param array{remote_id: string|int, returndatalist?: array} $args Must include the `remote_id` returned by the request stage.
+    * @return void
+    */
    public function retrieveAltAction($args)
    {
       $this->newAction();
@@ -543,6 +645,25 @@ class QueueItem
 
    }
 
+   /**
+    * Schedule this slot for a background-removal (or background-replacement)
+    * operation via the ShortPixel API.
+    *
+    * Picks the source image intelligently: previews route through
+    * UiHelper::findBestPreview() with a 600px target for speed; real runs
+    * use the unscaled original when the attachment is `-scaled`.
+    *
+    * Payload details:
+    *   - `bg_remove=1` when `do_transparent=true`.
+    *   - Otherwise `bg_remove=<hex-color>+<hex-alpha>` where alpha is
+    *     zero-padded (00 through FF; 100 maps to FF).
+    *   - `newFileName` defaults to `<base>_nobg<ext>` when not specified.
+    *   - Compression is forced to LOSSLESS because the payload includes
+    *     alpha data that must not be re-quantised.
+    *
+    * @param array{do_transparent?: bool, replace_color?: string|null, replace_transparency?: string|int, url?: string|null, is_preview?: bool, newFileName?: string|null, newPostTitle?: string, refresh?: bool, attached_post_id?: int|null} $args See defaults inside the method.
+    * @return void
+    */
    public function newRemoveBackgroundAction($args)
    {
        $this->newAction(); 
@@ -631,9 +752,20 @@ class QueueItem
 
    }
 
+   /**
+    * Schedule this slot for an image-upscale operation via the ShortPixel
+    * API.
+    *
+    * Sources the unscaled original when the attachment is `-scaled`,
+    * mirroring newRemoveBackgroundAction's choice. Compression is forced to
+    * LOSSLESS. Defaults `newFileName` to `<base>_noscale<ext>`.
+    *
+    * @param array{url?: string|null, is_preview?: bool, newFileName?: string|null, newPostTitle?: string, refresh?: bool, attached_post_id?: int|null, scale?: int|string|null} $args See defaults inside the method.
+    * @return void
+    */
    public function newScaleImageAction($args = [])
    {
-      $this->newAction(); 
+      $this->newAction();
 
       $defaults = [
            'url' => null, 
@@ -751,7 +883,16 @@ class QueueItem
       return $urls;
    }
 
-   
+
+   /**
+    * Whether this slot has an ImageModel bound to it.
+    *
+    * Queue slots can be constructed with just an item_id (see the
+    * constructor), so callers that need to act on the image itself must
+    * check this first.
+    *
+    * @return bool
+    */
    public function checkImageModelExists()
    {
       if (is_null($this->imageModel) || false === is_object($this->imageModel)) {

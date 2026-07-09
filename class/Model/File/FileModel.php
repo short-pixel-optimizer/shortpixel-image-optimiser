@@ -94,6 +94,17 @@ class FileModel extends \ShortPixel\Model
     return (string) $this->fullpath;
   }
 
+  /**
+   * Populates $filename, $filebase and $extension from $this->fullpath.
+   *
+   * Runs processPath() first to normalise the path (URL→local, relative→
+   * absolute, open_basedir handling), then splits the result via
+   * mb_pathinfo() so multibyte filenames are handled correctly. The fileinfo
+   * fields are only populated when the target is actually a file —
+   * directories and empty paths leave them untouched.
+   *
+   * @return void
+   */
   protected function setFileInfo()
   {
       $processed_path = $this->processPath($this->fullpath);
@@ -148,6 +159,16 @@ class FileModel extends \ShortPixel\Model
     return $this->exists;
   }
 
+  /**
+   * Reports whether the file can currently be written to.
+   *
+   * Virtual (remote) files always return false. For local files, uses PHP's
+   * is_writable() when the file exists, or performs a create-then-delete
+   * probe when it does not — the only reliable "would this be writable"
+   * check for a non-existent target.
+   *
+   * @return bool
+   */
   public function is_writable()
   {
 		// Return when already asked / Stateless might set this
@@ -177,6 +198,15 @@ class FileModel extends \ShortPixel\Model
     return $this->is_writable;
   }
 
+	/**
+	 * Reports whether the directory holding this file can be written to.
+	 *
+	 * Virtual files always return false. Used by callers that want to write
+	 * a sibling of this file (e.g. a .webp variant) without first having to
+	 * instantiate the containing DirectoryModel themselves.
+	 *
+	 * @return bool
+	 */
 	public function is_directory_writable()
 	{
 		// Return when already asked / Stateless might set this
@@ -204,6 +234,14 @@ class FileModel extends \ShortPixel\Model
 		return $this->is_directory_writable;
 	}
 
+  /**
+   * Reports whether the file can currently be read.
+   *
+   * Wraps PHP's is_readable() with lazy caching so repeated calls do not
+   * re-hit the filesystem.
+   *
+   * @return bool
+   */
   public function is_readable()
   {
     if (is_null($this->is_readable))
@@ -212,7 +250,16 @@ class FileModel extends \ShortPixel\Model
     return $this->is_readable;
   }
 
-  // A file is virtual when the file is remote  with URL and no local alternative is present.
+  /**
+   * Reports whether this file is virtual — a remote URL with no resolvable
+   * local counterpart.
+   *
+   * Virtual files cannot be written and their filesize is unknown. The flag
+   * is set by UrlToPath() during construction when the URL does not resolve
+   * to something under ABSPATH.
+   *
+   * @return bool
+   */
   public function is_virtual()
   {
      if ( is_null($this->is_virtual))
@@ -260,16 +307,38 @@ class FileModel extends \ShortPixel\Model
     return $this->is_file;
   }
 
+  /**
+   * Returns the file's last-modification time as a Unix timestamp.
+   *
+   * @return int|false filemtime() result — false when the file cannot be stat'd.
+   */
   public function getModified()
   {
     return filemtime($this->fullpath);
   }
 
+  /**
+   * Returns the file's inode change time as a Unix timestamp.
+   *
+   * On most filesystems this doubles as the creation time. Thin wrapper
+   * around PHP's filectime().
+   *
+   * @return int|false filectime() result — false when the file cannot be stat'd.
+   */
   public function getCreated()
   {
     return filectime($this->fullpath);
   }
 
+  /**
+   * Determines whether the file is a bitmap image based on its MIME type.
+   *
+   * Prefers finfo_open() for the MIME probe, falls back to
+   * mime_content_type(), and as a last resort trusts the file extension when
+   * neither helper is available. Returns false for non-existent files.
+   *
+   * @return bool
+   */
   public function isImage()
   {
         if (! $this->exists())
@@ -330,6 +399,14 @@ class FileModel extends \ShortPixel\Model
       return $this->directory;
   }
 
+  /**
+   * Returns the file's size in bytes.
+   *
+   * Special-cases virtual files (returns -1, meaning "unknown") and
+   * non-existent files (returns 0). Lazily caches the result across calls.
+   *
+   * @return int Size in bytes, 0 for missing files, -1 for virtual files.
+   */
   public function getFileSize()
   {
 		if (false === is_null($this->filesize))
@@ -349,7 +426,15 @@ class FileModel extends \ShortPixel\Model
       return 0;
   }
 
-  // Creates an empty file
+  /**
+   * Creates an empty file at $this->fullpath.
+   *
+   * No-op if the file already exists or if its containing directory does
+   * not. Used by is_writable() as a "would writing succeed?" probe when the
+   * target does not yet exist.
+   *
+   * @return bool True on successful create, false otherwise.
+   */
   public function create()
   {
      if (! $this->exists() )
@@ -369,6 +454,15 @@ class FileModel extends \ShortPixel\Model
     return false;
   }
 
+  /**
+   * Appends a string to the file, creating it first if necessary.
+   *
+   * Used by the plugin's log helpers. Returns false and logs a warning when
+   * the file cannot be opened for writing.
+   *
+   * @param string $message Content to append.
+   * @return bool True on success, false when the file is not writable.
+   */
   public function append($message)
   {
        if (! $this->exists() )
@@ -480,11 +574,29 @@ class FileModel extends \ShortPixel\Model
 
   }
 
+	/**
+	 * Reads the file's entire contents into a string.
+	 *
+	 * Thin wrapper around file_get_contents() — no existence check, no size
+	 * limit. Callers should test exists() first for anything user-facing.
+	 *
+	 * @return string|false File contents, or false on read error.
+	 */
 	public function getContents()
 	{
 			return file_get_contents($this->getFullPath());
 	}
 
+  /**
+   * Returns the file's fully-resolved absolute path.
+   *
+   * On first call this triggers setFileInfo(), which normalises the path
+   * (URL→local, relative→absolute, open_basedir handling) and populates the
+   * filename / basename / extension fields. Subsequent calls are cached.
+   *
+   * @return string Absolute path, or an empty string when a null path was
+   *                supplied to the constructor.
+   */
   public function getFullPath()
   {
 		// filename here since fullpath is set unchecked in constructor, but might be a different take
@@ -496,14 +608,28 @@ class FileModel extends \ShortPixel\Model
     return $this->fullpath;
   }
 
-	// Testing this. Principle is that when the plugin is absolutely sure this is a file, not something remote, not something non-existing, get the fullpath without any check.
-	// This function should *only* be used when processing mega amounts of files while not doing optimization or any processing.
-	// So far, testing use for file Filter */
+	/**
+	 * Returns the path exactly as supplied to the constructor, with no
+	 * normalisation or filesystem lookups.
+	 *
+	 * Intended only for high-volume enumeration paths (e.g. filesystem-wide
+	 * scans in filters) where the caller is certain the path is already a
+	 * local file and does not want to pay for processPath() on each entry.
+	 *
+	 * @return string|null The raw constructor input.
+	 */
 	public function getRawFullPath()
 	{
 			return $this->rawfullpath;
 	}
 
+  /**
+   * Returns the filename with its extension (e.g. "photo.jpg").
+   *
+   * Triggers setFileInfo() lazily on first call.
+   *
+   * @return string|null
+   */
   public function getFileName()
   {
     if (is_null($this->filename))
@@ -512,6 +638,13 @@ class FileModel extends \ShortPixel\Model
     return $this->filename;
   }
 
+  /**
+   * Returns the filename without its extension (e.g. "photo" for "photo.jpg").
+   *
+   * Triggers setFileInfo() lazily on first call.
+   *
+   * @return string|null
+   */
   public function getFileBase()
   {
     if (is_null($this->filebase))
@@ -521,6 +654,14 @@ class FileModel extends \ShortPixel\Model
   }
 
 
+  /**
+   * Returns the file's lowercased extension (e.g. "jpg", "png"), or null if
+   * the filename does not have one.
+   *
+   * Triggers setFileInfo() lazily on first call.
+   *
+   * @return string|null
+   */
   public function getExtension()
   {
     if (is_null($this->extension))
@@ -529,6 +670,15 @@ class FileModel extends \ShortPixel\Model
     return $this->extension;
   }
 
+  /**
+   * Returns the file's MIME type as reported by WordPress core.
+   *
+   * Uses wp_get_image_mime() first (fast and reliable for image files) and
+   * falls back to wp_check_filetype_and_ext() for non-image or ambiguous
+   * files. Returns false for virtual and missing files.
+   *
+   * @return string|false MIME type on success, false when unavailable.
+   */
   public function getMime()
   {
     if (is_null($this->mime))
@@ -658,6 +808,18 @@ class FileModel extends \ShortPixel\Model
     return $path;
   }
 
+	/**
+	 * Short-circuits filesystem probes when the plugin is running in "trusted"
+	 * mode.
+	 *
+	 * When trusted mode is enabled via the SHORTPIXEL_TRUSTED_MODE constant,
+	 * the plugin assumes every path passed to the FileModel is a valid,
+	 * writable local file. This method sets the cached existence /
+	 * readability / writability flags accordingly so the potentially
+	 * expensive real filesystem calls are never triggered.
+	 *
+	 * @return void
+	 */
 	protected function checkTrustedMode()
 	{
 		// When in trusted mode prevent filesystem checks as much as possible.
@@ -919,6 +1081,14 @@ class FileModel extends \ShortPixel\Model
 
 
 
+	/**
+	 * Returns the file's Unix permission bits (masked with 0777).
+	 *
+	 * Lazily populates the cached value on first call. Callers can compare
+	 * against octal literals such as 0644 or 0755.
+	 *
+	 * @return int Permission bits.
+	 */
 	public function getPermissions()
   {
 		if (is_null($this->permissions))
@@ -927,6 +1097,16 @@ class FileModel extends \ShortPixel\Model
     return $this->permissions;
   }
 
+	/**
+	 * Sets the file's Unix permissions via chmod().
+	 *
+	 * The cached permissions value on the model is not updated — call
+	 * resetStatus() (or getPermissions() after clearing the field) if the
+	 * value needs to be read back immediately after setting.
+	 *
+	 * @param int $permissions Permission bits (e.g. 0644).
+	 * @return void
+	 */
 	// @tozo Lazy IMplementation / copy, should be brought in line w/ other attributes.
   public function setPermissions($permissions)
   {
@@ -973,6 +1153,14 @@ class FileModel extends \ShortPixel\Model
         }
     }
 
+    /**
+     * Returns a compact array of the model's key state for var_dump() and
+     * Xdebug output. Only the interesting fields (path, filename basename,
+     * directory, existence flags, virtual state) are surfaced so debug
+     * output stays readable.
+     *
+     * @return array<string, mixed>
+     */
     public function __debuginfo()
     {
        return [

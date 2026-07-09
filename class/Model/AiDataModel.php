@@ -836,6 +836,15 @@ class AiDataModel
         $this->updateWpMeta($this->original);
     }
 
+    /**
+     * Delete the AI post-meta row (if any) and clear the in-memory cache.
+     *
+     * Called by revert() before restoring original WordPress values, and
+     * separately by attachment-delete hooks. After this runs, has_record
+     * is false so a subsequent updateRecord() will INSERT rather than UPDATE.
+     *
+     * @return void
+     */
     public function onDelete()
     {
         if (true === $this->has_record) {

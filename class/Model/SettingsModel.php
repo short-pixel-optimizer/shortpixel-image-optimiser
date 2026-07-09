@@ -7,6 +7,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
+/**
+ * Persisted plugin settings model.
+ *
+ * Every user-configurable field the plugin exposes is declared in the
+ * $model array (inherited from {@see \ShortPixel\Model}) with its
+ * sanitisation type, default value, optional max / maxlength constraints,
+ * and an "export" flag that controls import/export inclusion.
+ *
+ * Settings are lazy-loaded from a single options row ("spio_settings"),
+ * read via the magic __get accessor, mutated via __set (which sanitises
+ * the value and marks the model dirty), and persisted on request shutdown
+ * so many sets during a single request only cost one DB write.
+ *
+ * Access the singleton via wpSPIO()->settings().
+ *
+ * @package ShortPixel\Model
+ */
 class SettingsModel extends \ShortPixel\Model
 {
 		private static $instance;
@@ -113,6 +130,11 @@ class SettingsModel extends \ShortPixel\Model
 
 		private $settings;
 
+		/**
+		 * Wires late-bound defaults for AI settings (which depend on the
+		 * current site's URL, name and locale, so they can't be baked into the
+		 * model array declaration) and loads the persisted values.
+		 */
 		public function __construct()
 		{
        $this->model['ai_general_context']['default'] = array($this, 'generateContextDefault');
@@ -121,6 +143,11 @@ class SettingsModel extends \ShortPixel\Model
 			 $this->load();
 		}
 
+		/**
+		 * Returns the singleton instance, creating it on first access.
+		 *
+		 * @return static
+		 */
 		public static function getInstance()
 		{
 			 if (is_null(self::$instance))
@@ -130,6 +157,17 @@ class SettingsModel extends \ShortPixel\Model
 			 return self::$instance;
 		}
 
+		/**
+		 * Reads the persisted settings row into memory and registers the
+		 * shutdown hooks that persist any in-memory changes at request end.
+		 *
+		 * The save is deferred to shutdown so multiple sets during a single
+		 * request only cost one DB write. Both PHP's register_shutdown_function
+		 * and WordPress's "shutdown" action are used because the PHP-level
+		 * hook is occasionally observed not to fire.
+		 *
+		 * @return void
+		 */
 		protected function load()
 		{
        $this->settings = $this->check(get_option($this->option_name, []));
@@ -148,12 +186,31 @@ class SettingsModel extends \ShortPixel\Model
 			 
 		}
 
+		/**
+		 * Persists the current in-memory settings to the WordPress options
+		 * table and clears the dirty flag so a subsequent shutdown does not
+		 * double-save.
+		 *
+		 * @return void
+		 */
 		protected function save()
 		{
 				$res = update_option($this->option_name, $this->settings);
         $this->updated = false; // Prevent double saves with this.
 		}
 
+		/**
+		 * Magic getter — returns a setting value by name, sanitised on read.
+		 *
+		 * When the setting has not been explicitly stored, falls back to the
+		 * model's declared default. Callable defaults are invoked so
+		 * late-binding values (e.g. current locale) resolve at read time.
+		 * Emits a log warning for unknown setting names.
+		 *
+		 * @param string $name Setting name.
+		 * @return mixed|null Sanitised setting value, its default, or null when
+		 *                    the setting is not part of the model.
+		 */
 		public function __get($name)
 		{
 			 if (isset($this->settings[$name]))
@@ -185,21 +242,48 @@ class SettingsModel extends \ShortPixel\Model
 			 }
 		}
 
+    /**
+     * Late-bound default for the ai_general_context field.
+     *
+     * Builds a sensible starting-point prompt that includes the current
+     * site's URL and title so an operator has a reasonable initial value
+     * on a fresh install.
+     *
+     * @return string
+     */
     protected function generateContextDefault()
     {
-       $site_title = get_bloginfo('name'); 
+       $site_title = get_bloginfo('name');
        $wp_url = get_bloginfo('url');
 
        $string = sprintf('Act like an SEO expert and generate an SEO-friendly ALT tag, caption, and description for the images from %s, titled %s, focusing on keywords and relevance for optimal image SEO.', $wp_url, $site_title);
        return $string;
     }
 
+    /**
+     * Late-bound default for the ai_language field.
+     *
+     * Returns the site's current WordPress locale so AI-generated content
+     * defaults to the same language as the site.
+     *
+     * @return string Locale string, e.g. "en_US".
+     */
     protected function returnSiteLanguage()
     {
        return get_locale();
     }
 
-    // This function is meant for version checks ( settings removed / added ) and filter overrides for specific use-cases.
+    /**
+     * Applies version-migration and filter overrides to the persisted
+     * settings array on load.
+     *
+     * Currently handles the "keepExif" → "exif" rename (from the legacy
+     * setting name) and dispatches the "shortpixel/settings/check" filter
+     * so integrations can override values.
+     *
+     * @param array $settings Raw settings array as returned from get_option().
+     * @return array Possibly-adjusted settings array.
+     */
     protected function check($settings)
     {
         if (isset($settings['keepExif']))
@@ -213,11 +297,32 @@ class SettingsModel extends \ShortPixel\Model
         return $settings;
     }
 
+    /**
+     * Magic setter — stores a setting value by name.
+     *
+     * Delegates to the internal set() method so validation and the
+     * "updated" flag stay in one place.
+     *
+     * @param string $name  Setting name.
+     * @param mixed  $value New value (will be sanitised per model rules).
+     * @return void
+     */
     public function __set($name, $value)
     {
       $this->set($name, $value);
     }
 
+    /**
+     * Sanitises and stores a setting value, marking the model dirty so the
+     * shutdown hook will persist it.
+     *
+     * No-op with a logged warning when the setting name is not part of the
+     * model.
+     *
+     * @param string $name  Setting name.
+     * @param mixed  $value Raw value.
+     * @return void
+     */
     protected function set($name, $value)
     {
       if (isset($this->model[$name]))
@@ -230,6 +335,17 @@ class SettingsModel extends \ShortPixel\Model
       }
     }
 
+    /**
+     * Sets a setting only when it has not been explicitly stored yet.
+     *
+     * Useful during install/upgrade to establish a starting value without
+     * overwriting a user's existing choice.
+     *
+     * @param string $name  Setting name.
+     * @param mixed  $value Value to store when the setting is empty.
+     * @return bool True when the value was written, false when the setting
+     *              was already present or is not part of the model.
+     */
     public function setIfEmpty($name, $value)
     {
         if (true === $this->exists($name) && false === $this->isset($name))
@@ -241,12 +357,24 @@ class SettingsModel extends \ShortPixel\Model
 				return false;
     }
 
-		// Simple function which can be expanded.
+		/**
+		 * Reports whether a name is declared in the model.
+		 *
+		 * @param string $name Setting name.
+		 * @return bool
+		 */
 		public function exists($name)
 		{
 			  return (isset($this->model[$name])) ? true : false;
 		}
 
+		/**
+		 * Reports whether a setting has been explicitly stored (as opposed to
+		 * merely having a default).
+		 *
+		 * @param string $name Setting name.
+		 * @return bool
+		 */
 		public function isset($name)
 		{
 			return (isset($this->settings[$name])) ? true : false;
@@ -274,9 +402,19 @@ class SettingsModel extends \ShortPixel\Model
 
     }
 
+    /**
+     * Returns the subset of settings that are safe to export or import — i.e.
+     * settings whose model entry does not carry `'export' => false`.
+     *
+     * Site-specific runtime fields such as currentStats, quotaExceeded and
+     * activationDate are flagged as non-exportable so import files stay
+     * portable between sites.
+     *
+     * @return array<string, mixed>
+     */
     public function getExport()
     {
-        $data = $this->getData(); 
+        $data = $this->getData();
         $export = []; 
         foreach($data as $name => $value)
         {
@@ -291,6 +429,13 @@ class SettingsModel extends \ShortPixel\Model
     }
 
 
+		/**
+		 * Removes a single setting from the persisted options and writes the
+		 * change back to the DB immediately.
+		 *
+		 * @param string $name Setting name.
+		 * @return void
+		 */
 		public function deleteOption($name)
 		{
 				if ($this->exists($name) && $this->isset($name))
@@ -300,19 +445,45 @@ class SettingsModel extends \ShortPixel\Model
 				}
 		}
 
+    /**
+     * Removes the plugin's entire settings option row from the database and
+     * clears the dirty flag so no shutdown hook rewrites it.
+     *
+     * Used during the "hard uninstall" flow.
+     *
+     * @return void
+     */
     public function deleteAll()
     {
         delete_option($this->option_name);
-        $this->updated = false; // prevent any save request going here. 
+        $this->updated = false; // prevent any save request going here.
     }
 
+    /**
+     * Records legacy activation state for backward compatibility with older
+     * plugin versions.
+     *
+     * Called from InstallHelper::activatePlugin(). Stores the activation
+     * date under the old option name and clears an unused legacy counter.
+     *
+     * @return void
+     */
     public function onActivate()
     {
-      // Legacy 
+      // Legacy
       update_option( 'wp-short-pixel-activation-date', time(), 'no');
       delete_option( 'wp-short-pixel-current-total-files');
     }
 
+    /**
+     * Deletes the collection of legacy option rows that older plugin
+     * versions used to track bulk-processing, notices and stats state.
+     *
+     * Called from InstallHelper::deactivatePlugin() so the WP options table
+     * is kept clean when the plugin is disabled.
+     *
+     * @return void
+     */
     public function onDeactivate()
     {
         delete_option('wp-short-pixel-activation-notice');

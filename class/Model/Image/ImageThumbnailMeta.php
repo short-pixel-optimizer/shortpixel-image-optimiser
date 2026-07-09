@@ -65,6 +65,12 @@ class ImageThumbnailMeta
   public $customImprovement;
 
 
+  /**
+   * Constructor.
+   *
+   * Seeds tsAdded with the current Unix timestamp so records always have a
+   * non-null creation time even when subclasses forget to set it.
+   */
   public function __construct()
   {
      $this->tsAdded = time(); // default

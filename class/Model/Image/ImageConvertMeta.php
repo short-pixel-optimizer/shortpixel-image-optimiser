@@ -36,6 +36,11 @@ class ImageConvertMeta
 	 protected $omitBackup = true; // Don't backup the converted image (again), keeping only the original format. if not, make a backup of the converted file and treat that as the default backup/restore
 	 protected $numberBase = 0;
 
+	/**
+	 * Constructor.
+	 *
+	 * No-op — all defaults are set inline on the property declarations.
+	 */
 	 public function __construct()
 	 {
 
