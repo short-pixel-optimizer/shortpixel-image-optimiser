@@ -142,10 +142,8 @@ class DirectoryOtherMediaModelTest extends WP_UnitTestCase {
 		$this->assertSame( 7, $this->getPrivate( $m, 'status' ) );
 	}
 
-	public function test_set_returns_null_for_unknown_property_current_shape() {
-		// Documents the current (drifting) contract — see the deferred bugs
-		// memo for the intended `false` return shape.
-		$this->assertNull( $this->freshModel()->set( 'not_a_real_field', 'x' ) );
+	public function test_set_returns_false_for_unknown_property() {
+		$this->assertFalse( $this->freshModel()->set( 'not_a_real_field', 'x' ) );
 	}
 
 	/*

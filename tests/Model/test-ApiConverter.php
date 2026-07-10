@@ -6,18 +6,15 @@
  * case), getCheckSum (constant), filterQueue's queue-item mutation, and
  * restore's no-op contract.
  *
- * Two tests are pinned to the intended contract of methods that ship
- * with real bugs (see `project_deferred_image_folder_bugs.md`):
+ * One test is pinned to the intended contract of a method that ships
+ * with a real bug (see `project_deferred_image_folder_bugs.md`):
  *
- *   - `isConvertable` falls off the end returning null when neither the
- *     extension list nor the placeholder branch matches. Intended: return
- *     false.
  *   - `filterQueue` accesses `$args['debug_active']` without an isset
  *     guard, so calling it with no args raises an undefined-index notice
  *     → exception under phpunit's convertNoticesToExceptions=true.
  *     Intended: default `debug_active` to false via wp_parse_args.
  *
- * Both `*_pinned_for_deferred_fix` tests will FAIL until the fixes ship.
+ * The `*_pinned_for_deferred_fix` test will FAIL until the fix ships.
  *
  * Skipped at the unit level (integration territory):
  *   - prepareQueue → creates placeholder JPGs on disk + calls
@@ -120,14 +117,7 @@ class ApiConverterTest extends WP_UnitTestCase {
 		$this->assertFalse( $c->isConvertable() );
 	}
 
-	/**
-	 * PINNED for deferred fix — `isConvertable` currently falls off the end
-	 * returning null when the extension is not in the list AND there is no
-	 * placeholder AND `isConverted` is false. Intended: return false.
-	 *
-	 * This test will FAIL until a terminal `return false;` is added.
-	 */
-	public function test_isConvertable_returns_false_for_unknown_extension_without_placeholder_pinned_for_deferred_fix() {
+	public function test_isConvertable_returns_false_for_unknown_extension_without_placeholder() {
 		$c = new ApiConverter( $this->makeImageStub( array(
 			'extension'       => 'gif',
 			'has_placeholder' => false,

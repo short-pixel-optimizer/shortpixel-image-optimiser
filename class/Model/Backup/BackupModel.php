@@ -123,8 +123,7 @@ abstract class BackupModel
      * Indicate whether the backup strategy stores a single main-file backup
      * that covers thumbnails (as opposed to per-thumbnail backups).
      *
-     * NOTE: LocalBackupModel's override currently has an empty body — see
-     * the deferred-bugs memo.
+     * @return bool
      */
     abstract public function backupIsMain();
 
@@ -231,20 +230,10 @@ abstract class BackupModel
      * dedicated backup file of its own — a signal to the restore path
      * that thumbnails should be regenerated after the main-file restore.
      *
-     * NOTE: the `$isConverted` guard at the top of the method computes
-     * `$extension` and `$replaceBase` but never uses them — dead code.
-     *
      * @return bool
      */
     public function needsRegenerate() : bool
     {
-         if ($this->isConverted)
-         {
-            $mainFile = $this->mediaItem;
-            $extension = $mainFile->getMeta()->convertMeta()->getFileFormat();
-            $replaceBase = $mainFile->getMeta()->convertMeta()->getReplacementImageBase();
-         }
-
          foreach($this->backup_files as $name => $fileAr)
          {
               if (true === $fileAr['has_backup'] && false === $fileAr['has_own_file'] )

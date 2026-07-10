@@ -34,7 +34,9 @@ class UiHelper
 	private static $outputMode = 'admin';
 
 	/**
-	 * Base URL for the ShortPixel knowledge-base article on bulk-processing errors.
+	 * Base URL for the ShortPixel knowledge-base search endpoint. The
+	 * search subject (see getKBSearchLink) is appended as the `s` query
+	 * parameter value.
 	 *
 	 * @var string
 	 */

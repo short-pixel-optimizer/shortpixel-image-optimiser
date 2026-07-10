@@ -44,7 +44,7 @@ class ApiConverter extends MediaLibraryConverter
 		$extension = $this->imageModel->getExtension();
 
 		// If extension is in list of allowed Api Converts.
-		if (in_array($extension, static::CONVERTABLE_EXTENSIONS) && $extension !== 'png') {
+		if (in_array($extension, static::CONVERTABLE_EXTENSIONS)) {
 			return true;
 		}
 
@@ -57,6 +57,8 @@ class ApiConverter extends MediaLibraryConverter
 		if (true === $this->imageModel->getMeta()->convertMeta()->isConverted()) {
 			return false;
 		}
+
+		return false;
 	}
 
 	/**
@@ -220,42 +222,14 @@ class ApiConverter extends MediaLibraryConverter
 	/**
 	 * Roll back an API-based conversion.
 	 *
-	 * Currently a NO-OP — the entire body is commented out. The intent was
-	 * to swap the extension back, register the target with the replacer,
-	 * update WordPress metadata, and re-run the URL replacer, but that flow
-	 * appears to be handled elsewhere in the API path (likely via
-	 * MediaLibraryModel::restoreConversion). Kept as a placeholder to
-	 * satisfy the abstract contract.
+	 * Deliberate no-op — the API-side restore flow is handled elsewhere
+	 * (see MediaLibraryModel::restoreConversion). This override exists
+	 * only to satisfy the abstract contract.
 	 *
 	 * @return void
 	 */
 	public function restore()
 	{
-		/*$params = array('restore' => true);
-			$fs = \wpSPIO()->filesystem();
-
-			$this->setupReplacer();
-
-			$newExtension =  $this->imageModel->getMeta()->convertMeta()->getFileFormat();
-
-			$oldFileName = $this->imageModel->getFileName(); // Old File Name, Still .jpg
-			$newFileName =  $this->imageModel->getFileBase() . '.' . $newExtension;
-
-			if ($this->imageModel->isScaled())
-			{
-				 $oldFileName = $this->imageModel->getOriginalFile()->getFileName();
-				 $newFileName = $this->imageModel->getOriginalFile()->getFileBase() . '.' . $newExtension;
-			}
-
-			$fsNewFile = $fs->getFile($this->imageModel->getFileDir() . $newFileName);
-
-			$this->newFile = $fsNewFile;
-			$this->setTarget($fsNewFile);
-
-			$this->updateMetaData($params);
-	//		$result = $this->replacer->replace();
-
-			$fs->flushImageCache(); */
 	}
 
 	/**

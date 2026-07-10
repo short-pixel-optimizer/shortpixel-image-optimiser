@@ -291,7 +291,7 @@ class StatsModel
 
          if ($this->currentStat === -1)
          {
-            $this->currentStat = $this->checkInt($this->fetchStatdata());  // if -1 stat might not be loaded, load.
+            $this->currentStat = $this->checkInt($this->fetchStatData());  // if -1 stat might not be loaded, load.
          }
 
         return $this->currentStat;

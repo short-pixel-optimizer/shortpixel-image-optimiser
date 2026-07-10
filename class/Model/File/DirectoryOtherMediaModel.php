@@ -110,7 +110,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
   public function __construct($path)
   {
 
-    if (is_object($path)) // Load directly via Database object, this saves a query.
+    if (is_object($path) && property_exists($path, 'path')) // Load directly via Database object, this saves a query.
     {
        $folder = $path;
        $path = $folder->path;
@@ -121,7 +121,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
     else
     {
       parent::__construct($path);
-      $this->loadFolderbyPath($path);
+      $this->loadFolderByPath($path);
     }
   }
 
@@ -144,13 +144,9 @@ class DirectoryOtherMediaModel extends DirectoryModel
   /**
    * Setter for declared properties.
    *
-   * NOTE: returns `true` on success but `null` on unknown-property
-   * failure — inconsistent with the boolean shape callers might expect.
-   * A false failure return would be more predictable.
-   *
    * @param string $name  Property name.
    * @param mixed  $value Value to assign.
-   * @return true|null
+   * @return bool True when the property exists and was assigned, false otherwise.
    */
   public function set($name, $value)
   {
@@ -160,7 +156,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
         return true;
      }
 
-     return null;
+     return false;
   }
 
   /**
@@ -399,7 +395,10 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
       $time = $this->recurseLastChangeFile();
       $this->updated = $time;
-      $this->save();
+      if (! $this->save())
+      {
+          return false;
+      }
 
       if ($old_time !== $time)
         return true;
@@ -607,38 +606,6 @@ class DirectoryOtherMediaModel extends DirectoryModel
 			 return true;
 	}
 
-/*
-  public function getFiles($args = array())
-	{
-			// Check if this directory if not forbidden.
-			if (! $this->checkDirectory(true))
-			{
-				return array();
-			}
-
-			return parent::getFiles($args);
-	}
-*/
-/*  public function getSubDirectories()
-	  {
-				$dirs = parent::getSubDirectories();
-				$checked = array();
-				foreach($dirs as $dir)
-				{
-					 if ($dir->checkDirectory(false))
-					 {
-					 	$checked[] = $dir;
-					 }
-					 else
-					 {
-					 	Log::addDebug('Illegal directory' . $dir->getPath());
-					 }
-				}
-
-				return $checked;
-		}
-*/
-
 
     /**
      * Walk the directory tree recursively and return the newest mtime
@@ -697,16 +664,16 @@ class DirectoryOtherMediaModel extends DirectoryModel
      * Convert a Unix timestamp to the `Y-m-d H:i:s` string shape the
      * `shortpixel_folders` datetime columns expect.
      *
-     * NOTE: uses loose `==` — a null-coerced-to-0 timestamp silently
-     * falls back to `time()`. Callers that intend to store a literal
-     * "epoch" timestamp will get "now" instead.
+     * An empty timestamp (null / false / '' / 0) falls back to time() —
+     * the datetime columns are non-null, so "unset" callers still get a
+     * useful value. Literal epoch (0) is treated as "unset" too.
      *
-     * @param int $timestamp Unix timestamp; 0 substitutes `time()`.
+     * @param int|null $timestamp Unix timestamp; empty substitutes `time()`.
      * @return string MySQL-shaped datetime.
      */
     private function timestampToDB($timestamp)
     {
-        if ($timestamp == 0) // when adding / or empty.
+        if (empty($timestamp)) // when adding / or empty.
           $timestamp = time();
         return date("Y-m-d H:i:s", $timestamp);
     }
@@ -746,8 +713,9 @@ class DirectoryOtherMediaModel extends DirectoryModel
    *
    * @param array $files Array of FileModel-shaped objects (typically
    *                     the output of `Filesystem::getFilesRecursive`).
-   * @return false|void False when the pre-filter vetoes the batch;
-   *                    otherwise void with side effects on the queue.
+   * @return bool False when the pre-filter vetoes the batch; true after
+   *              the batch has been processed (even if no files were
+   *              actually queued — e.g. all were already in the DB).
    *
    * @internal Called by OtherMediaController / refreshFolder — other
    *           scripts should not call this directly.
@@ -808,8 +776,6 @@ class DirectoryOtherMediaModel extends DirectoryModel
                 $queueControl->addItemToQueue($imageObj);
              }
           }
-          else {
-          }
 
       }
 
@@ -817,6 +783,8 @@ class DirectoryOtherMediaModel extends DirectoryModel
 			{
 				$this->updated = time();
 			}
+
+			return true;
   }
 
 
