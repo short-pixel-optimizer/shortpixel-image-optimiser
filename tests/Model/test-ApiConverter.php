@@ -6,16 +6,6 @@
  * case), getCheckSum (constant), filterQueue's queue-item mutation, and
  * restore's no-op contract.
  *
- * One test is pinned to the intended contract of a method that ships
- * with a real bug (see `project_deferred_image_folder_bugs.md`):
- *
- *   - `filterQueue` accesses `$args['debug_active']` without an isset
- *     guard, so calling it with no args raises an undefined-index notice
- *     → exception under phpunit's convertNoticesToExceptions=true.
- *     Intended: default `debug_active` to false via wp_parse_args.
- *
- * The `*_pinned_for_deferred_fix` test will FAIL until the fix ships.
- *
  * Skipped at the unit level (integration territory):
  *   - prepareQueue → creates placeholder JPGs on disk + calls
  *     conversionPrepare (backup pipeline)
@@ -200,27 +190,35 @@ class ApiConverterTest extends WP_UnitTestCase {
 		$this->assertSame( 1, $counts->creditCount );
 	}
 
-	/**
-	 * PINNED for deferred fix — `filterQueue` accesses `$args['debug_active']`
-	 * without an isset guard. Callers that omit the key trigger an
-	 * undefined-index notice, which becomes an exception under phpunit's
-	 * `convertNoticesToExceptions=true`. Intended: default `debug_active`
-	 * via wp_parse_args at the top of the method.
-	 *
-	 * This test will FAIL until the guard is added.
-	 */
-	public function test_filterQueue_does_not_throw_when_args_omit_debug_active_pinned_for_deferred_fix() {
+	public function test_filterQueue_does_not_throw_when_args_omit_debug_active() {
 		$c = new ApiConverter( $this->makeImageStub() );
 
 		$item = new QueueItem();
 		$item->data()->paramlist = array();
 		$item->data()->action = 'optimize';
 
-		// Passing an empty args array reproduces the caller path that omits
-		// debug_active. This should not raise a notice/exception.
-		$c->filterQueue( $item, array() );
+		// Sentinel: catch E_NOTICE / E_WARNING at the test level so a
+		// silently-swallowed undefined-index (e.g. if the harness's
+		// convertNoticesToExceptions isn't in effect) still fails the
+		// test loudly. Handler returns true so PHP doesn't chain to the
+		// default handler and we keep control of the assertion.
+		$noticed = false;
+		$previous = set_error_handler( function ( $errno ) use ( &$noticed ) {
+			if ( $errno & ( E_NOTICE | E_WARNING | E_USER_NOTICE | E_USER_WARNING ) ) {
+				$noticed = true;
+			}
+			return true;
+		} );
 
-		// If we got here, the args guard is present.
+		try {
+			// Passing an empty args array reproduces the caller path that
+			// omits debug_active.
+			$c->filterQueue( $item, array() );
+		} finally {
+			set_error_handler( $previous );
+		}
+
+		$this->assertFalse( $noticed, 'filterQueue raised a notice/warning when debug_active was omitted' );
 		$this->assertSame( 'convert_api', $item->data()->action );
 	}
 
