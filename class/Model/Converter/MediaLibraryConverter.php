@@ -149,12 +149,12 @@ abstract class MediaLibraryConverter extends Converter
 		if (isset($params['success']) && true === $params['success']) {
 			$fromExt = $this->imageModel->getMeta()->convertMeta()->getFileFormat();
 			$toExt = 'jpg';
-			$newGuid = preg_replace('/\.' . preg_quote($fromExt, '/') . '$/i', '.' . $toExt, $guid);
+			$newGuid = str_replace($fromExt, $toExt, $guid); // This probable doesn't work bcause doesn't update Guid with this function.
 			$post_ar = array('ID' => $attach_id, 'post_mime_type' => 'image/jpeg', 'guid' => $newGuid);
 		} elseif (isset($params['restore']) && true === $params['restore']) {
 			$fromExt = 'jpg';
 			$toExt = $this->imageModel->getMeta()->convertMeta()->getFileFormat();
-			$newGuid = preg_replace('/\.' . preg_quote($fromExt, '/') . '$/i', '.' . $toExt, $guid);
+			$newGuid = str_replace($fromExt, $toExt, $guid);
 			$post_ar = array('ID' => $attach_id, 'post_mime_type' => 'image/' . $toExt, 'guid' => $newGuid);
 		}
 
