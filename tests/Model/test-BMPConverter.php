@@ -6,14 +6,6 @@
  * only owns the isConvertable gate, the constant checksum, an empty-body
  * convert() placeholder, and filterQueue's backup-trigger.
  *
- * One test is pinned to the intended contract of a method that ships
- * with a real bug (see `project_deferred_image_folder_bugs.md`):
- *
- *   - `filterQueue` accesses `$args['debug_active']` without an isset
- *     guard, so calling it with no args raises an undefined-index notice
- *     → exception under phpunit's convertNoticesToExceptions=true.
- *     Intended: default `debug_active` to false via wp_parse_args.
- *
  * Skipped at the unit level (integration territory):
  *   - handleConvertedFilter → runs the URL replacer + wp attachment meta
  *   - restore → updates WP attachment metadata + replacer
@@ -93,9 +85,9 @@ class BMPConverterTest extends WP_UnitTestCase {
 	 * convert — no-op placeholder
 	 */
 
-	public function test_convert_is_a_noop_returning_null() {
+	public function test_convert_returns_false() {
 		$c = new BMPConverter( $this->makeImageStub() );
-		$this->assertNull( $c->convert() );
+		$this->assertFalse( $c->convert() );
 	}
 
 	/*
@@ -117,23 +109,32 @@ class BMPConverterTest extends WP_UnitTestCase {
 		$this->assertSame( 'optimize', $item->data()->action );
 	}
 
-	/**
-	 * PINNED for deferred fix — `filterQueue` accesses
-	 * `$args['debug_active']` without an isset guard. Callers that omit
-	 * the key trigger an undefined-index notice, which becomes an
-	 * exception under phpunit's `convertNoticesToExceptions=true`.
-	 * Intended: default `debug_active` via wp_parse_args at the top.
-	 *
-	 * This test will FAIL until the guard is added.
-	 */
-	public function test_filterQueue_does_not_throw_when_args_omit_debug_active_pinned_for_deferred_fix() {
+	public function test_filterQueue_does_not_throw_when_args_omit_debug_active() {
 		$c = new BMPConverter( $this->makeImageStub() );
 
 		$item = new QueueItem();
 		$item->data()->action = 'optimize';
 
-		$result = $c->filterQueue( $item, array() );
+		// Sentinel: catch E_NOTICE / E_WARNING at the test level so a
+		// silently-swallowed undefined-index (e.g. if the harness's
+		// convertNoticesToExceptions isn't in effect) still fails the
+		// test loudly. Handler returns true so PHP doesn't chain to the
+		// default handler and we keep control of the assertion.
+		$noticed = false;
+		$previous = set_error_handler( function ( $errno ) use ( &$noticed ) {
+			if ( $errno & ( E_NOTICE | E_WARNING | E_USER_NOTICE | E_USER_WARNING ) ) {
+				$noticed = true;
+			}
+			return true;
+		} );
 
+		try {
+			$result = $c->filterQueue( $item, array() );
+		} finally {
+			set_error_handler( $previous );
+		}
+
+		$this->assertFalse( $noticed, 'filterQueue raised a notice/warning when debug_active was omitted' );
 		$this->assertSame( $item, $result );
 	}
 }

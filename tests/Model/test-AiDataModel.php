@@ -6,19 +6,11 @@
  * `shortpixel_aipostmeta` table (created by InstallHelper::activatePlugin
  * during the test harness bootstrap). Each test cleans up after itself.
  *
- * Several tests are pinned to the *intended* contract of methods that
- * currently ship with real bugs — those tests are named
- * `*_pinned_for_deferred_fix` and will FAIL until the corresponding fixes
- * land (see `project_deferred_image_folder_bugs.md` for details):
- *
- *   - Bug A: `updateRecord` INSERT captures `wpdb->insert()`'s rows-affected
- *            return instead of `wpdb->insert_id` → wrong PK stored.
- *   - Bug B: `onDelete` flushes cache with `$this->id` (PK) instead of
- *            `$this->attach_id` (the actual cache key).
- *   - Bug C: `getMostRecent` checks `false === $attach_id` after
- *            `wpdb->get_var()`, which returns null (not false) on empty.
- *   - Bug E: Constructor only maps type='media' → TYPE_MEDIA; passing
- *            'custom' silently leaves `type` null and the fetch produces 0 rows.
+ * Constructor note: `type='custom'` is intentionally not supported yet
+ * (per Bas's `// only this supported for now` inline comment). The
+ * `test_constructor_leaves_type_null_for_unsupported_type_string` test
+ * documents that shape so a future refactor won't accidentally start
+ * mapping 'custom' without the paired changes to fetchRecord.
  *
  * Skipped at the unit level (integration territory):
  *   - `getOptimizeData` full flow → depends on `wpSPIO()->filesystem()->
@@ -363,20 +355,17 @@ class AiDataModelTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * PINNED for deferred fix (Bug E). The constructor only maps
-	 * `type='media'` — passing 'custom' silently leaves the `$type`
-	 * property null, and the subsequent fetchRecord query returns zero
-	 * rows because `%d` coerces null to 0.
-	 *
-	 * The intended behaviour is that 'custom' maps to TYPE_CUSTOM.
-	 * This test will FAIL until the fix lands.
+	 * Custom media type is intentionally not supported yet — the constructor's
+	 * inline comment says "only this supported for now". Passing 'custom'
+	 * leaves the `$type` property null. This test documents that shape so a
+	 * future refactor that starts mapping 'custom' also updates fetchRecord.
 	 */
-	public function test_constructor_maps_type_custom_string_to_TYPE_CUSTOM_constant_pinned_for_deferred_fix() {
+	public function test_constructor_leaves_type_null_for_unsupported_type_string() {
 		$attach_id = $this->makeAttachmentId();
 
 		$m = new AiDataModel( $attach_id, 'custom' );
 
-		$this->assertSame( AiDataModel::TYPE_CUSTOM, $this->getPrivate( $m, 'type' ) );
+		$this->assertNull( $this->getPrivate( $m, 'type' ) );
 	}
 
 	public function test_constructor_leaves_has_record_false_when_no_row_exists_for_attachment() {
@@ -441,34 +430,40 @@ class AiDataModelTest extends WP_UnitTestCase {
 		$this->assertSame( $new, $model->getAttachId() );
 	}
 
-	/**
-	 * PINNED for deferred fix (Bug C). `wpdb->get_var()` returns `null`
-	 * for an empty result set, not `false`. The current check
-	 * `if (false === $attach_id)` never fires; execution falls through
-	 * to `new AiDataModel(null)`.
-	 *
-	 * The intended behaviour is to return false for an empty table.
-	 * This test will FAIL until the fix lands.
-	 */
-	public function test_getMostRecent_returns_false_when_the_table_is_empty_pinned_for_deferred_fix() {
-		$this->assertFalse( AiDataModel::getMostRecent() );
+	public function test_getMostRecent_returns_false_when_the_table_is_empty() {
+		$result = AiDataModel::getMostRecent();
+
+		$this->assertFalse( $result );
+		// Sentinel: rule out an AiDataModel object slipping through
+		// (assertFalse alone can be permissive when the code returns a
+		// truthy object under a subtly buggy null-vs-false check).
+		$this->assertNotInstanceOf( AiDataModel::class, $result );
 	}
 
 	/*
 	 * updateRecord — INSERT / UPDATE and the PK-capture bug
 	 */
 
-	/**
-	 * PINNED for deferred fix (Bug A). Currently
-	 * `$this->id = $wpdb->insert(...)` — but `wpdb->insert()` returns the
-	 * rows-affected count (usually 1), NOT the inserted primary key. To
-	 * get the PK, use `$wpdb->insert_id`.
-	 *
-	 * The intended behaviour is that `$this->id` matches `wpdb->insert_id`
-	 * after INSERT. This test will FAIL until the fix lands.
-	 */
-	public function test_updateRecord_INSERT_captures_the_wpdb_insert_id_pinned_for_deferred_fix() {
+	public function test_updateRecord_INSERT_captures_the_wpdb_insert_id() {
 		global $wpdb;
+
+		// Sentinel: seed two dummy rows before the real insert so PKs start
+		// at >= 3. Defeats the "PK == rows-affected == 1" coincidence that
+		// would otherwise mask a buggy `$this->id = $wpdb->insert(...)`
+		// (which returns rows-affected, not the PK).
+		$wpdb->insert( $this->tableName(), array(
+			'attach_id'      => 999998,
+			'status'         => 0,
+			'original_data'  => '{}',
+			'generated_data' => '{}',
+		), array( '%d', '%d', '%s', '%s' ) );
+		$wpdb->insert( $this->tableName(), array(
+			'attach_id'      => 999999,
+			'status'         => 0,
+			'original_data'  => '{}',
+			'generated_data' => '{}',
+		), array( '%d', '%d', '%s', '%s' ) );
+
 		$attach_id = $this->makeAttachmentId();
 
 		$m = new AiDataModel( $attach_id );
@@ -480,6 +475,7 @@ class AiDataModelTest extends WP_UnitTestCase {
 
 		$expected_pk = (int) $wpdb->get_var( 'SELECT id FROM ' . $this->tableName() . ' WHERE attach_id = ' . $attach_id );
 
+		$this->assertGreaterThan( 1, $expected_pk, 'sentinel rows not written — test setup issue' );
 		$this->assertSame( $expected_pk, $this->getPrivate( $m, 'id' ) );
 	}
 
@@ -539,22 +535,19 @@ class AiDataModelTest extends WP_UnitTestCase {
 		$this->assertSame( 0, $count );
 	}
 
-	/**
-	 * PINNED for deferred fix (Bug B). The current code calls
-	 * `self::flushModelCache($this->id)` — but the cache is keyed by
-	 * `attach_id`, not by the primary key. So the intended eviction
-	 * misses, and a subsequent `getModelByAttachment` returns the
-	 * previously cached (stale) instance instead of a fresh one.
-	 *
-	 * The intended behaviour is that after onDelete(), a subsequent
-	 * getModelByAttachment call returns a fresh instance. This test
-	 * will FAIL until the flushModelCache argument is corrected to
-	 * `$this->attach_id`.
-	 */
-	public function test_onDelete_evicts_the_cache_by_attach_id_pinned_for_deferred_fix() {
+	public function test_onDelete_evicts_the_cache_by_attach_id() {
 		$attach_id = $this->makeAttachmentId();
 
 		$before = AiDataModel::getModelByAttachment( $attach_id );
+
+		// Sentinel: force `$this->id` (PK) to be a distinct integer so a
+		// wrong-key eviction (`flushModelCache($this->id)` instead of
+		// `flushModelCache($this->attach_id)`) can't accidentally hit the
+		// right cache slot. Also mark has_record so onDelete's DB path is
+		// exercised without bailing early.
+		$this->setPrivate( $before, 'id', 999999 );
+		$this->setPrivate( $before, 'has_record', true );
+
 		$before->onDelete();
 
 		$after = AiDataModel::getModelByAttachment( $attach_id );

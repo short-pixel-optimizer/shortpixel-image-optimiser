@@ -624,7 +624,13 @@ class QueueItem
     *
     * Resets `tries` to 0 so the retry counter for this stage starts fresh.
     *
-    * @param array{remote_id: string|int, returndatalist?: array} $args Must include the `remote_id` returned by the request stage.
+    * `remote_id` is optional at the argument level (missing keys default to
+    * null instead of raising an undefined-index notice), but callers should
+    * pass the value returned by the request stage — a null remote_id is
+    * stored verbatim on `$this->data->remote_id`, and the API-side lookup
+    * will fail without it.
+    *
+    * @param array{remote_id?: string|int, returndatalist?: array} $args Options; `remote_id` should normally be the value returned by the request stage.
     * @return void
     */
    public function retrieveAltAction($args)
