@@ -113,13 +113,13 @@ class LocalBackupModelTest extends WP_UnitTestCase {
 	}
 
 	/*
-	 * backupIsMain — pins the current (empty-body) contract per the
-	 * deferred bugs memo. When the fix lands ("return bool"), this
-	 * assertion should be updated.
+	 * backupIsMain — LocalBackupModel writes one backup file per source
+	 * file (main + every thumbnail get their own), so this is always
+	 * false. The deferred-bug empty body has been fixed.
 	 */
 
-	public function test_backupIsMain_returns_null_pinned_for_deferred_fix() {
-		$this->assertNull( $this->freshModel()->backupIsMain() );
+	public function test_backupIsMain_returns_false() {
+		$this->assertFalse( $this->freshModel()->backupIsMain() );
 	}
 
 	/*

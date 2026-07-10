@@ -6,11 +6,6 @@
  * a "keep data" preserved-data map, and a lazy counters object. Every field
  * is protected, so state is inspected via reflection.
  *
- * The hasNextAction() null-return behaviour is pinned as-is per the deferred
- * bugs memo (project_deferred_image_folder_bugs). When the missing terminal
- * `return false;` is added, the corresponding test below will need to be
- * updated to assertFalse instead of assertNull.
- *
  * @package Shortpixel_Image_Optimiser
  */
 
@@ -185,15 +180,8 @@ class QueueItemDataTest extends WP_UnitTestCase {
 		$this->assertTrue( $d->hasNextAction() );
 	}
 
-	/**
-	 * NOTE: this pins the current (bug-shaped) return contract of
-	 * hasNextAction() — it falls off the end returning null instead of
-	 * false when the queue is empty. Documented in
-	 * project_deferred_image_folder_bugs. When the `return false;` fix
-	 * lands, this assertion should be flipped to assertFalse.
-	 */
-	public function test_hasNextAction_returns_null_when_queue_is_empty_pinned_for_deferred_fix() {
-		$this->assertNull( ( new QueueItemData() )->hasNextAction() );
+	public function test_hasNextAction_returns_false_when_queue_is_empty() {
+		$this->assertFalse( ( new QueueItemData() )->hasNextAction() );
 	}
 
 	public function test_popNextAction_returns_null_when_queue_is_empty() {

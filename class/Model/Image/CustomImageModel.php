@@ -240,6 +240,9 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
            $count = count($this->getRetinas());
          break;
          */
+         default:
+            $count = 0;
+         break;
       }
 
 
@@ -997,7 +1000,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     {
 				parent::onDelete();
         $this->deleteMeta();
-				$this->dropfromQueue();
+				$this->dropFromQueue();
     }
 
 			/**
