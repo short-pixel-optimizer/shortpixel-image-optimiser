@@ -7,7 +7,7 @@
  *   - setModel / setData / block / data() / result() / __get / set
  *   - getQueueItem / returnEnqueue payload shape
  *   - Simple new*Action methods (Restore, RemoveLegacy, Migrate, GetAltData,
- *     ReOptimize)
+ *     ReOptimize, retrieveAlt)
  *   - newAction() carry-forward of next_actions + keep_data
  *   - addResult forwarding
  *   - getAPIController action → controller routing
@@ -17,7 +17,7 @@
  * with real optimize URLs, AI backend, or filesystem):
  *   - newDumpAction               → calls $imageModel->getOptimizeUrls()
  *   - newOptimizeAction           → builds params from getOptimizeData(), invokes Converter::getConverter
- *   - requestAltAction / retrieveAltAction → hits AiDataModel + AI backend
+ *   - requestAltAction            → hits AiDataModel + AI backend
  *   - newRemoveBackgroundAction   → UiHelper::findBestPreview + hex-alpha wiring
  *   - newScaleImageAction         → getOriginalFile + getUrl
  *
@@ -319,6 +319,68 @@ class QueueItemTest extends WP_UnitTestCase {
 
 		$this->assertSame( 'getAltData', $q->data()->action );
 		$this->assertSame( 0, $this->getPrivate( $q, 'item_count' ) );
+	}
+
+	/*
+	 * retrieveAltAction — remote_id capture + defensive isset guard
+	 * (Bas's fix in b8d29c4: `$args['remote_id']` is now optional; missing
+	 * keys default to null instead of raising an undefined-index notice.)
+	 */
+
+	public function test_retrieveAltAction_captures_remote_id_when_provided() {
+		$q = new QueueItem( array( 'item_id' => 1 ) );
+
+		$q->retrieveAltAction( array( 'remote_id' => 'abc-123' ) );
+
+		$this->assertSame( 'abc-123', $q->data()->remote_id );
+		$this->assertSame( 'retrieveAlt', $q->data()->action );
+		$this->assertSame( 0, $q->data()->tries );
+		$this->assertSame( 1, $this->getPrivate( $q, 'item_count' ) );
+	}
+
+	public function test_retrieveAltAction_defaults_remote_id_to_null_when_args_omit_it() {
+		$q = new QueueItem( array( 'item_id' => 1 ) );
+
+		// Sentinel: catch E_NOTICE / E_WARNING at the test level so a
+		// silently-swallowed undefined-index (e.g. if the harness's
+		// convertNoticesToExceptions isn't in effect) still fails the
+		// test loudly. Handler returns true so PHP doesn't chain to the
+		// default handler and we keep control of the assertion.
+		$noticed = false;
+		$previous = set_error_handler( function ( $errno ) use ( &$noticed ) {
+			if ( $errno & ( E_NOTICE | E_WARNING | E_USER_NOTICE | E_USER_WARNING ) ) {
+				$noticed = true;
+			}
+			return true;
+		} );
+
+		try {
+			$q->retrieveAltAction( array() );
+		} finally {
+			set_error_handler( $previous );
+		}
+
+		$this->assertFalse( $noticed, 'retrieveAltAction raised a notice when remote_id was omitted' );
+		// Positive side-effect assertions — a "did not throw" check alone
+		// could pass on a partial execution path.
+		$this->assertNull( $q->data()->remote_id );
+		$this->assertSame( 'retrieveAlt', $q->data()->action );
+		$this->assertSame( 0, $q->data()->tries );
+		$this->assertSame( 1, $this->getPrivate( $q, 'item_count' ) );
+	}
+
+	public function test_retrieveAltAction_writes_returndatalist_when_provided() {
+		$q = new QueueItem( array( 'item_id' => 1 ) );
+
+		$q->retrieveAltAction( array(
+			'remote_id'      => 'abc-123',
+			'returndatalist' => array( 'alt' => array( 'status' => 1 ) ),
+		) );
+
+		$this->assertSame(
+			array( 'alt' => array( 'status' => 1 ) ),
+			$q->data()->returndatalist
+		);
 	}
 
 	/*
