@@ -136,6 +136,11 @@ class AdminController extends \ShortPixel\Controller
 				{
 					$converter = Converter::getConverter($mediaItem, true);
 
+          $is_converted = $this->checkDirectConversion($mediaItem); 
+          if ( true === $is_converted)
+          {
+             
+          }
           // Convert only done by PNG atm, the rest is done via ImageModelToQueue.
           if (is_object($converter) && $converter->isConvertable())
 					{
@@ -152,6 +157,8 @@ class AdminController extends \ShortPixel\Controller
           $args = [
             'recent_upload' => true, 
           ];
+
+          
           
         	$result = $queueController->addItemToQueue($mediaItem, $args);
 				}
@@ -159,6 +166,25 @@ class AdminController extends \ShortPixel\Controller
 					Log::addWarn('Passed mediaItem is not processable', $id);
 				}
         return $meta; // It's a filter, otherwise no thumbs
+    }
+
+    private function checkDirectConversion($mediaItem) : bool
+    {
+
+    			$converter = Converter::getConverter($mediaItem, true);
+          $isConverted = false; 
+
+          // Convert only done by PNG atm, the rest is done via ImageModelToQueue.
+          if (is_object($converter) && $converter->isConvertable())
+					{
+							$args = array('runReplacer' => false);
+
+						 	$isConverted = $converter->convert($args);
+							$mediaItem = $fs->getImage($id, 'media', false);
+							$meta = $converter->getUpdatedMeta();
+          }
+
+          return $isConverted;         
     }
 
     /**

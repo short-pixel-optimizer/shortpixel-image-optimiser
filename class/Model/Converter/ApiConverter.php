@@ -96,9 +96,7 @@ class ApiConverter extends MediaLibraryConverter
 
 		// Run converter to create backup and make placeholder to block similar heics from overwriting.
 		$converter_args = array('runReplacer' => false);
-		if (false === $args['debug_active']) {
-			$this->prepareQueue($converter_args);
-		}
+		$this->prepareQueue($converter_args);
 
 		//Lossless because thumbnails will otherwise be derived of compressed image, leaving to double compression.
 		if (property_exists($qItem->data(), 'compressionType')) {
@@ -216,7 +214,7 @@ class ApiConverter extends MediaLibraryConverter
 	/** Currently not in use */
 	public function convert($args = array())
 	{
-		return;
+		return false;
 	}
 
 	/**

@@ -51,7 +51,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
    * File count cached on the DB row.
    *
    * @var int
-   * @deprecated The DB column is only updated by refreshFolder() (a
+   *  The DB column is only updated by refreshFolder() (a
    *             relatively heavy call) — insert/batch flows leave it
    *             stale. Prefer `getStats()['total']` for a live count.
    */
@@ -447,7 +447,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
       }
 
       $stats = $this->getStats();
-      $total_before = $stats['total'];
+      $total_before = isset($stats['total']) ? $stats['total'] : 0;
 
 			if (false === $this->checkDirectory(true))
 			{
@@ -491,12 +491,12 @@ class DirectoryOtherMediaModel extends DirectoryModel
 			unset(self::$stats[$this->id]);
 
       $stats = $this->getStats();
-      $this->fileCount = $stats['total'];
+      $this->fileCount = isset($stats['total']) ? $stats['total'] : 0;
 
       $this->checked = time();
       $this->save();
 
-      $stats['new'] = $stats['total'] - $total_before;
+      $stats['new'] = $this->fileCount - $total_before;
 
       return $stats;
   }

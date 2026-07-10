@@ -56,10 +56,8 @@ class BMPConverter extends MediaLibraryConverter
         'backup_thumbnails' => false, // no need for this. either they should be optimized, or generated after the run
     );
 
-    if (false === $args['debug_active'])
-    {
         $this->imageModel->conversionPrepare($conversion_args);
-    }
+
     return $item;
   }
 
@@ -154,7 +152,7 @@ class BMPConverter extends MediaLibraryConverter
 	 */
   public function convert($args = [])
   {
-
+     return false; 
   }
 
 	/**

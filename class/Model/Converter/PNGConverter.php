@@ -502,7 +502,8 @@ class PNGConverter extends MediaLibraryConverter
 		 */
 		protected function getPNGImage()
 		{
-			if (is_object($this->current_image))
+			// False is fail-state. Don't repeat to repeat the fail.
+			if (is_object($this->current_image) || false === $this->current_image)
 			{
 				 return $this->current_image;
 			}
@@ -536,15 +537,12 @@ class PNGConverter extends MediaLibraryConverter
 
 			Log::addInfo("PNG Replacement Path: " . $replacementPath);
 
-
-
-			// @todo Add ResponseController support to here and getReplacementPath.
 			if (false === $replacementPath)
 			{
 				Log::addWarn('Png2Jpg replacement path failed');
 				$this->imageModel->getMeta()->convertMeta()->setError(self::ERROR_PATHFAIL);
 
-				return false; // @todo Add ResponseController something here.
+				return false; 
 			}
 
 			$image = new Image($imagePath, $replacementPath); 
@@ -552,7 +550,7 @@ class PNGConverter extends MediaLibraryConverter
 
 			$bool = $image->checkImageLoaded();
 
-		//	$image = @imagecreatefrompng($imagePath);
+
 			if (false === $bool)
 			{
 				$msg = __('Image source failed - Check if source image is PNG and library is working', 'shortpixel-image-optimiser');

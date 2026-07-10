@@ -254,11 +254,10 @@ abstract class Converter
 	 *
 	 * @param DirectoryModel $dir    Target directory to check for collisions.
 	 * @param FileModel      $file   Proposed file object.
-	 * @param int            $number Starting suffix number (unused; always starts from 0 internally).
 	 * @return FileModel             A FileModel whose path does not already exist on disk.
 	 */
 	/** Own function to get a unique filename since the WordPress wp_unique_filename seems to not function properly w/ thumbnails */
-	protected function unique_file(DirectoryModel $dir, FileModel $file, $number = 0) : FileModel
+	protected function unique_file(DirectoryModel $dir, FileModel $file) : FileModel
 	{
 		if (false === $file->exists())
 			return $file;

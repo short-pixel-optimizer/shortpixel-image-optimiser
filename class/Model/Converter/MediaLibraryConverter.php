@@ -109,8 +109,14 @@ abstract class MediaLibraryConverter extends Converter
 
 		$params = wp_parse_args($params, $defaults);
 
+		if (false === $params['restore'] && false === $params['success'])
+		{
+			 Log::addError('UpdateMetadata : neither success or restore set, no action available', $params);
+			 return false; 
+		}
+
 		$newFile = $this->newFile;
-		//		$fullPath = $newFile->getFullPath();
+		
 
 		if (! is_object($newFile)) {
 			Log::addError('Update metadata failed. NewFile not properly set', $newFile);
@@ -158,7 +164,12 @@ abstract class MediaLibraryConverter extends Converter
 			$post_ar = array('ID' => $attach_id, 'post_mime_type' => 'image/' . $toExt, 'guid' => $newGuid);
 		}
 
-		$result = wp_update_post($post_ar);
+		$result = 0; 
+		if (isset($post_ar))
+		{
+			$result = wp_update_post($post_ar);
+		}
+		
 
 		if ($result === 0 || is_wp_error($result)) {
 			Log::addError('Issue updating WP Post converter - ' . $attach_id);
