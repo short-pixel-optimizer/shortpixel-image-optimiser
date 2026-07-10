@@ -453,31 +453,34 @@ class OptimizeAiController extends OptimizerBase
             'dry_run' => false,
             'imageThreshold' => 1, // How much references before not replacing this image.
             'url' => false, 
+            'recent_upload' => false, 
         ];
 
         $args = wp_parse_args($args, $defaults);
 
-        $url = $args['url'];       
+        // If recent upload is true, bypass the check if the image is used. 
+        if (false === $args['recent_upload'])
+        {
+            $url = $args['url'];       
 
-        $replacer2 = \ShortPixel\Replacer\Replacer::getInstance();
-        $setup = $replacer2->Setup();
-        $setup->forSearch()->URL()->addData($url);
+            $replacer2 = \ShortPixel\Replacer\Replacer::getInstance();
+            $setup = $replacer2->Setup();
+            $setup->forSearch()->URL()->addData($url);
 
-        $base_url = $setup->forSearch()->URL()->getBaseURL();
-        //$post_ids = $this->getWpmlLanguagePostIds($qItem->item_id);
+            $base_url = $setup->forSearch()->URL()->getBaseURL();
 
-        $finder = $replacer2->Finder(['base_url' => $base_url]);
+            $finder = $replacer2->Finder(['base_url' => $base_url]);
 
-        $results = $finder->posts(['post_status' => ['publish'], 'post_fields' => ['ID']]);
-        // Check postmeta. This is broader than the attached_file and designed to find pagebuilders and the like.
-        $meta_results = $finder->postmeta(['post_status' => ['publish', 'inherit'], 'post_fields' => ['post_id']]);
+            $results = $finder->posts(['post_status' => ['publish'], 'post_fields' => ['ID']]);
+            // Check postmeta. This is broader than the attached_file and designed to find pagebuilders and the like.
+            $meta_results = $finder->postmeta(['post_status' => ['publish', 'inherit'], 'post_fields' => ['post_id']]);
 
+            $imagePostCount = count($results) + count($meta_results);
 
-        $imagePostCount = count($results) + count($meta_results);
-
-        if (intval($imagePostCount) >= $args['imageThreshold']) {
-            Log::addInfo('AI Replace File: Image is mentioned - ' . $qItem->item_id);
-            return false;
+            if (intval($imagePostCount) >= $args['imageThreshold']) {
+                Log::addInfo('AI Replace File: Image is mentioned - ' . $qItem->item_id);
+                return false;
+            }
         }
 
 

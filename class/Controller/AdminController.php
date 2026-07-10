@@ -36,6 +36,8 @@ class AdminController extends \ShortPixel\Controller
 
     /** @var int[] Post IDs for which the upload hook should be suppressed. */
 		private static $preventUploadHook = array();
+    private static $recentUploads = [];  // Monitor recent uploads
+
 
     public static function getInstance()
     {
@@ -65,6 +67,8 @@ class AdminController extends \ShortPixel\Controller
           {
              return;
           }
+
+          self::$recentUploads[] = $post_id; 
 
           $converter = Converter::getConverter($mediaItem, true);
 
@@ -206,9 +210,15 @@ class AdminController extends \ShortPixel\Controller
 
 
 
-         $queueController = new QueueController();
+        $queueController = new QueueController();
         
         $args = ['action' => 'requestAlt'];
+
+        if (in_array($id, self::$recentUploads))
+        {
+           $args['recent_upload'] = true; 
+        }
+
         $result = $queueController->addItemToQueue($mediaItem, $args); 
          
         return $meta;

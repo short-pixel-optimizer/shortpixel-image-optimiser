@@ -964,10 +964,7 @@ abstract class Queue
           {
             self::$isInQueue[$item_id] = $itemObj; // cache this, since interface requests this X amount of times.
           }
-          else
-          {
-            Log::addWarn('Is Item in Queue didnt provide object?', $itemObj);
-          }
+
         }
 
 			$notQ = array(ShortQ::QSTATUS_DONE, ShortQ::QSTATUS_FATAL);
