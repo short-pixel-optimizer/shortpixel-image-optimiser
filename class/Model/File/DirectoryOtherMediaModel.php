@@ -836,7 +836,10 @@ class DirectoryOtherMediaModel extends DirectoryModel
     {
       //  $class = get_class($folder);
 				// Setters before action
-        $this->id = $folder->id;
+        // $wpdb->get_row() returns every column as a string by default;
+        // cast to match the documented @var int on these properties so
+        // strict-equality checks (assertSame, `===`) behave as expected.
+        $this->id = (int) $folder->id;
 
         if ($this->id > 0)
          $this->in_db = true;
@@ -844,9 +847,9 @@ class DirectoryOtherMediaModel extends DirectoryModel
         $this->updated = property_exists($folder,'ts_updated') ? $this->DBtoTimestamp($folder->ts_updated) : time();
         $this->created = property_exists($folder,'ts_created') ? $this->DBtoTimestamp($folder->ts_created) : time();
         $this->checked = property_exists($folder,'ts_checked') ? $this->DBtoTimestamp($folder->ts_checked) : time();
-        $this->fileCount = property_exists($folder,'file_count') ? $folder->file_count : 0; // deprecated, do not rely on.
+        $this->fileCount = property_exists($folder,'file_count') ? (int) $folder->file_count : 0; // deprecated, do not rely on.
 
-        $this->status = $folder->status;
+        $this->status = (int) $folder->status;
 
         if (strlen($folder->name) == 0)
           $this->name = basename($folder->path);
