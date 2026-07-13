@@ -605,7 +605,12 @@ class AiDataModelTest extends WP_UnitTestCase {
 	 */
 
 	public function test_migrate_does_not_fatal_when_original_alt_is_missing() {
-		$m = $this->freshModel();
+		// Real attach_id so the resulting INSERT in updateRecord() succeeds —
+		// freshModel() leaves attach_id null, which fires a WP "Column
+		// 'attach_id' cannot be null" error into the test log even though
+		// the test still passes.
+		$attach_id = $this->makeAttachmentId();
+		$m         = new AiDataModel( $attach_id );
 
 		$result = $m->migrate( array( 'result_alt' => 'ai-only' ) );
 
@@ -615,7 +620,8 @@ class AiDataModelTest extends WP_UnitTestCase {
 	}
 
 	public function test_migrate_does_not_fatal_when_result_alt_is_missing() {
-		$m = $this->freshModel();
+		$attach_id = $this->makeAttachmentId();
+		$m         = new AiDataModel( $attach_id );
 
 		$result = $m->migrate( array( 'original_alt' => 'orig-only' ) );
 
