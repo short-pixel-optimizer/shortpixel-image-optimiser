@@ -62,11 +62,10 @@ class SpioSingle extends SpioCommandBase
    *   - Builds a `QueueItems::getImageItem($imageModel)` and calls
    *     `newRestoreAction()` on it before enqueuing so the queue
    *     controller knows this item is a restore, not an optimize.
-   *   - Result-shape handling below is defensive: property_exists
-   *     guards on `message` and `result`, then decides success /
-   *     error / undetermined by looking at `->success` / `->is_error`.
-   *     There's an inconsistency here (see the memo item on
-   *     `$result->is_error` access without a guard).
+   *   - Result-shape handling below is defensive: `property_exists`
+   *     guards on `message`, `result`, `success`, and `is_error`
+   *     before reading each field, then decides success / error /
+   *     undetermined based on which flags are set.
    *
    * @param array $args        Positional args from WP-CLI. Index 0: item id.
    * @param array $assoc_args  Long options from WP-CLI (type).
@@ -88,7 +87,7 @@ class SpioSingle extends SpioCommandBase
 			}
 
       $id = intval($args[0]);
-			$type = $assoc_args['type'];
+			$type = isset($assoc_args['type']) ? $assoc_args['type'] : 'media';
 
       $imageModel = $fs->getImage($id, $type);
 
@@ -122,7 +121,7 @@ class SpioSingle extends SpioCommandBase
 			{
         \WP_CLI::Success($message);
 			}
-      elseif (true === $result->is_error)
+      elseif (property_exists($result, 'is_error') && true === $result->is_error)
 			{
         \WP_CLI::Error(sprintf(__("Restoring Item: %s", 'shortpixel-image-optimiser'), $message) );
 			}

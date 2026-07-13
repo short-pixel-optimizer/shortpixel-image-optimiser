@@ -197,7 +197,7 @@ class SpioCommandBase
 		if (property_exists($result, 'message')) {
 			$message = $result->message;
 		}
-		if ($result->is_error) {
+		if (property_exists($result, 'is_error') && $result->is_error) {
 			\WP_CLI::Error(sprintf(__("while adding item: %s", 'shortpixel-image-optimiser'), $message));
 		} else {
 			\WP_CLI::Success($message);
@@ -416,7 +416,7 @@ class SpioCommandBase
 			}
 		}
 
-		// Combined Status. Implememented from shortpixel-processor.js
+		// Combined Status. Implemented from shortpixel-processor.js
 		$mediaStatus = $customStatus = 100;
 
 		if (property_exists($results, 'media') && property_exists($results->media, 'qstatus')) {
@@ -462,10 +462,6 @@ class SpioCommandBase
 	 *   3. **Anything else** — either `\WP_CLI::error()` (when
 	 *      `is_error` is true) or a plain `line` with the message.
 	 *
-	 * NOTE: line 368 has *"This job, %d filess were processed"* — the
-	 * "filess" is a typo (double `s`). Flagged in the deferred-root-bugs
-	 * memo but not fixed during the docblock pass.
-	 *
 	 * @param object      $result Result object from the queue tick. Expected: apiStatus, message, improvements, is_error.
 	 * @param string      $type   Queue type this result came from (`media` / `custom`) — used for context only.
 	 * @param object|null $counts Optional counts object (baseCount, webpCount, avifCount, creditCount).
@@ -504,7 +500,7 @@ class SpioCommandBase
 
 				if (! is_null($counts)) {
 					$baseMsg = sprintf(
-						' This job, %d filess were processed: %d images',
+						' This job, %d files were processed: %d images',
 						$counts->creditCount,
 						$counts->baseCount
 					);
@@ -526,7 +522,7 @@ class SpioCommandBase
 
 			\WP_CLI::line($message);
 		} else {
-			if ($result->is_error) {
+			if (property_exists($result, 'is_error') && $result->is_error) {
 				\WP_CLI::error($result->message, false);
 			} else {
 				\WP_CLI::line($result->message);
@@ -541,19 +537,13 @@ class SpioCommandBase
 	 * `status()` at the bottom of the queue table, and from
 	 * `SpioBulk::auto()` between phases.
 	 *
-	 * NOTE: the sprintf format string contains `%s\%s` (backslash-s)
-	 * which reads as *"literal backslash then `s`"* — probably intended
-	 * as `%s/%s` (done/total slash). Cosmetic; the line still prints
-	 * but with a stray backslash. Flagged in the deferred-root-bugs
-	 * memo.
-	 *
 	 * @param string $name  Human-readable queue label (e.g. "media", "Total").
 	 * @param object $stats Stats snapshot: done, fatal_errors, total, percentage_done, awaiting.
 	 * @return void
 	 */
 	protected function displayStatsLine($name, $stats)
 	{
-		$line = sprintf('Current Status for %s : (%s\%s) Done (%s%%), %s awaiting %s errors --', $name, ($stats->done + $stats->fatal_errors), $stats->total, $stats->percentage_done, ($stats->awaiting), $stats->fatal_errors);
+		$line = sprintf('Current Status for %s : (%s/%s) Done (%s%%), %s awaiting %s errors --', $name, ($stats->done + $stats->fatal_errors), $stats->total, $stats->percentage_done, ($stats->awaiting), $stats->fatal_errors);
 
 		\WP_CLI::line($line);
 	}
