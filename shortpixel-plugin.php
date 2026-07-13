@@ -28,31 +28,111 @@ use ShortPixel\Model\AccessModel as AccessModel;
 use ShortPixel\Model\EnvironmentModel;
 use ShortPixel\Model\SettingsModel as SettingsModel;
 
-/** Plugin class
- * This class is meant for: WP Hooks, init of runtime and Controller Routing.
+/**
+ * Singleton plugin bootstrapper — the one class that turns a fresh WordPress
+ * request into a running SPIO install.
+ *
+ * Responsibilities, in the order they fire:
+ *
+ *   1. `__construct()` — schedule `lowInit` at `plugins_loaded` priority 5
+ *      (as early as reasonable without racing WP core).
+ *   2. `lowInit()` — capture plugin paths, honour the `shortpixel/plugin/init`
+ *      opt-out filter, boot the Front + Admin + AdminNotices controllers,
+ *      wire the WP-CLI controller when applicable, register ajax hooks, and
+ *      schedule `init`, `initHooks`, `admin_init`.
+ *   3. `init()` — start the cron controller and (for admin users only) hook
+ *      the deactivate-conflict handler + the feedback popup.
+ *   4. `initHooks()` — the big hook-registration block: ~25 hooks that
+ *      route thumbnail regenerate signals, Media Library actions, EMR,
+ *      cron-based processing, autoprocess uploads, AI upload hooks,
+ *      restore/backup cleanup, image editor filters, and admin toolbar.
+ *   5. `admin_init()` — plugin-version check (triggers `activatePlugin`
+ *      when the stored version differs), notice controller hookup, quota
+ *      fetch.
+ *
+ * The class also owns:
+ *
+ *   - **Accessors** for the shared SettingsModel / EnvironmentModel /
+ *     FileSystemController singletons (`settings()`, `env()`, `fileSystem()`).
+ *   - **Admin menu registration** (`admin_pages`, `admin_network_pages`).
+ *   - **Asset registration + on-demand enqueue** (`admin_scripts`,
+ *     `admin_styles`, `load_script`, `load_style`, `load_admin_scripts`).
+ *   - **Page router** (`route`) — dispatches admin page loads to the
+ *     appropriate `Controller\View\*` class based on `$plugin_page` /
+ *     `$screen_id`.
+ *   - **Path helpers** (`plugin_url`, `plugin_path`) and the admin-page
+ *     hook list (`get_admin_pages`).
+ *
+ * The class is a singleton; call `getInstance()` from anywhere and use
+ * `wpSPIO()` (defined in `wp-shortpixel.php`) as the global shorthand.
+ * Never instantiate this directly.
+ *
+ * @package ShortPixel
  */
 class ShortPixelPlugin {
 
 
+	/** @var ShortPixelPlugin|null Singleton instance held by getInstance(). */
 	private static $instance;
+
+	/** @var array Legacy require-once guard for model files; currently unused (kept for BC). */
 	protected static $modelsLoaded = array(); // don't require twice, limit amount of require looksups..
 
+	/** @var bool True when the request carries the `noheader` query flag; suppresses on-demand style/script enqueue. */
 	protected $is_noheaders = false;
 
+	/** @var string Absolute filesystem path to the plugin directory (with trailing slash). Populated in lowInit(). */
 	protected $plugin_path;
+
+	/** @var string Public URL to the plugin directory (with trailing slash). Populated in lowInit(). */
 	protected $plugin_url;
 
+	/** @var mixed Reserved / unused — historical "shortpixel megaclass" slot; never assigned. */
 	protected $shortPixel; // shortpixel megaclass
 
+	/** @var array<int, string> WP admin-page hook suffixes returned by add_options_page / add_media_page. */
 	protected $admin_pages = array();  // admin page hooks.
 
+	/**
+	 * Register the `lowInit` bootstrap at `plugins_loaded` priority 5.
+	 *
+	 * Nothing else runs here — real init is deferred so third-party plugins
+	 * (and WP core) can finish loading before we start wiring hooks. Callers
+	 * that need to prevent SPIO from booting should hook
+	 * `shortpixel/plugin/init` at `plugins_loaded` priority < 5 and return
+	 * false; see `lowInit()`.
+	 */
 	public function __construct() {
 		// $this->initHooks();
 		add_action( 'plugins_loaded', [$this, 'lowInit'], 5 ); // early as possible init.
-		
+
 	}
 
-	/** LowInit after all Plugins are loaded. Core WP function can still be missing. This should mostly add hooks */
+	/**
+	 * Bootstrap the plugin at `plugins_loaded` priority 5.
+	 *
+	 * Runs before WP core is fully available (some functions may still be
+	 * missing) so this method is deliberately minimal — its job is to
+	 * capture paths, honour the opt-out filter, boot the always-on
+	 * controllers, and schedule the real init work for later hooks.
+	 *
+	 * Sequence:
+	 *
+	 *   1. Populate `$plugin_path` / `$plugin_url` from
+	 *      `SHORTPIXEL_PLUGIN_FILE`.
+	 *   2. Detect the `noheader` request flag (asset loaders bail when set).
+	 *   3. Apply `shortpixel/plugin/init` — third-parties returning false
+	 *      here short-circuit the whole plugin. Hook at priority < 5.
+	 *   4. Instantiate `FrontController` (front-end asset delivery hooks),
+	 *      `AdminController` (singleton — most admin behaviour lives here),
+	 *      and `AdminNoticesController` (admin_notices dispatcher).
+	 *   5. Wire ajax hooks now (they don't need `init`).
+	 *   6. Boot the WP-CLI controller when `WP_CLI` is defined.
+	 *   7. Schedule `init`, `initHooks`, `admin_init` for the WP action hooks
+	 *      of the same name.
+	 *
+	 * @return void
+	 */
 	public function lowInit() {
 
 		$this->plugin_path = plugin_dir_path( SHORTPIXEL_PLUGIN_FILE );
@@ -89,6 +169,22 @@ class ShortPixelPlugin {
 		add_action( 'admin_init', [ $this, 'admin_init' ] );
 	}
 
+	/**
+	 * WordPress `init` hook — start the cron controller and (for admin users
+	 * only) hook the deactivate-conflict handler + the plugin feedback popup.
+	 *
+	 * The cron controller MUST be booted here so its wp-cron schedules are
+	 * registered before WP fires `wp_loaded`. The admin-user block is a
+	 * capability gate: only users the `AccessModel` recognises as "admin"
+	 * see the conflict-deactivator link and the feedback prompt.
+	 *
+	 * NOTE: the feedback-popup gate (currently around line 210) is
+	 * `if ( true || … )` — the `true ||` short-circuits everything, so
+	 * the popup loads unconditionally for admin users regardless of
+	 * key/credit state. See the deferred-root-bugs memo for triage.
+	 *
+	 * @return void
+	 */
 	public function init() : void
 	{
 		Controller\CronController::getInstance();  // cron jobs - must be init to function!
@@ -96,7 +192,7 @@ class ShortPixelPlugin {
 		$access = AccessModel::getInstance();
 
 		$isAdminUser = $access->userIsAllowed('is_admin_user');
-	
+
 		if ( $isAdminUser ) {
 			// toolbar notifications
 
@@ -120,7 +216,21 @@ class ShortPixelPlugin {
 	}
 
 
-	/** Mainline Admin Init. Tasks that can be loaded later should go here */
+	/**
+	 * WordPress `admin_init` hook — version check, notice hookup, quota fetch.
+	 *
+	 * Order matters:
+	 *
+	 *   1. `check_plugin_version()` — compares the constant version against
+	 *      the settings-stored version; a mismatch triggers
+	 *      `InstallHelper::activatePlugin()` (table upgrades, option
+	 *      migrations, etc.). Runs first so the rest can trust the schema.
+	 *   2. `NoticeController::getInstance()` — attaches its ajax listener.
+	 *   3. `QuotaController::getInstance()->getQuota()` — refreshes cached
+	 *      quota data from the API when stale.
+	 *
+	 * @return void
+	 */
 	public function admin_init() {
 			// This runs activation thing. Should be -after- init
 			$this->check_plugin_version();
@@ -130,36 +240,54 @@ class ShortPixelPlugin {
 			$quotaController->getQuota();
 	}
 
-	/** Function to get plugin settings
-     *
-     * @return SettingsModel The settings model object.
-     */
+	/**
+	 * Return the SettingsModel singleton — plugin configuration + persisted state.
+	 *
+	 * @return SettingsModel The settings model object.
+	 */
 	public function settings() : SettingsModel
 	{
 			return SettingsModel::getInstance();
 	}
 
-	/** Function to get all enviromental variables
-     *
-     * @return EnvironmentModel
-     */
+	/**
+	 * Return the EnvironmentModel singleton — request-scoped environment
+	 * detection (current screen, is_bulk_page, is_autoprocess, editor flags,
+	 * PHP/WP capabilities, etc.).
+	 *
+	 * @return EnvironmentModel
+	 */
 	public function env() : EnvironmentModel
 	{
 		return Model\EnvironmentModel::getInstance();
 	}
 
-	/** Get the SPIO FileSystemController
-	 * 
-	 * @return FileSystemController  FileSystemController Object 
+	/**
+	 * Return a fresh FileSystemController instance — filesystem access
+	 * façade the rest of the codebase uses to build FileModel / DirectoryModel
+	 * objects and resolve virtual (remote) files.
+	 *
+	 * Unlike `settings()` and `env()`, this returns a new instance every call
+	 * — the controller itself is stateless and cheap to construct.
+	 *
+	 * @return FileSystemController
 	 */
 	public function fileSystem() : FileSystemController
 	{
 		return new Controller\FileSystemController();
 	}
 
-	/** Create instance. This should not be needed to call anywhere else than main plugin file
-     * This should not be called *after* plugins_loaded action
-     **/
+	/**
+	 * Return the singleton `ShortPixelPlugin` instance, constructing it on
+	 * first call.
+	 *
+	 * This is called once from the plugin bootstrap (`wp-shortpixel.php`)
+	 * to seed the singleton; everywhere else should use the `wpSPIO()`
+	 * shorthand. Do NOT call this after `plugins_loaded` has fired — the
+	 * lowInit sequence assumes the singleton was set up before the hook.
+	 *
+	 * @return ShortPixelPlugin
+	 */
 	public static function getInstance() {
 		if ( is_null( self::$instance ) ) {
 			self::$instance = new ShortPixelPlugin();
@@ -168,9 +296,30 @@ class ShortPixelPlugin {
 
 	}
 
-	/** Hooks for all WordPress related hooks
-     * For now hooks in the lowInit, asap.
-     */
+	/**
+	 * Register the bulk of SPIO's WordPress hooks — admin menus, assets,
+	 * thumbnail-regenerate signals, Media Library actions, cron entry
+	 * points, upload autoprocess, AI upload hooks, restore/backup cleanup,
+	 * image editor filters, and admin toolbar.
+	 *
+	 * Runs on the `init` hook (scheduled by `lowInit()`). Most hooks
+	 * register handlers on the shared `AdminController` singleton; a few
+	 * target the `ImageEditorController`, `AjaxController`, and the
+	 * `OtherMediaViewController` for screen-options.
+	 *
+	 * Notable gates inside this method:
+	 *
+	 *   - The autoprocess block (uploads-trigger-optimize) only runs when
+	 *     `env()->is_autoprocess` is true AND the `shortpixel/init/automedialibrary`
+	 *     filter returns true. External integrations (see `class/external/visualcomposer.php`)
+	 *     use this filter to short-circuit optimization for specific contexts.
+	 *   - The AI-auto block only fires when `OptimizeAiController::isAutoAiEnabled()`
+	 *     is true; it registers upload hooks at priority 4 so AI runs BEFORE
+	 *     the normal optimization at priority 5.
+	 *   - The `network_admin_menu` hook only registers on multisite installs.
+	 *
+	 * @return void
+	 */
 	public function initHooks() {
 
 		add_action( 'admin_menu', array( $this, 'admin_pages' ) );
@@ -275,6 +424,20 @@ class ShortPixelPlugin {
 
 	}
 
+	/**
+	 * Register the plugin's authenticated ajax endpoints (`wp_ajax_*` hooks).
+	 *
+	 * Called from `lowInit()` — ajax hooks don't need to wait for `init`.
+	 * All handlers live on the `AjaxController` singleton, are prefixed
+	 * `ajax_`, and MUST verify the request nonce inside the handler (the
+	 * nonces are minted in `admin_scripts()` and passed to the JS layer
+	 * via `wp_localize_script`).
+	 *
+	 * No `wp_ajax_nopriv_*` variants are registered — SPIO ajax is
+	 * admin-only. Anonymous requests get a 400 from WordPress by default.
+	 *
+	 * @return void
+	 */
 	protected function ajaxHooks() {
 
 		// Ajax hooks. Should always be prepended with ajax_ and *must* check on nonce in function
@@ -295,7 +458,25 @@ class ShortPixelPlugin {
 
 
 
-	/** Hook in our admin pages */
+	/**
+	 * Register SPIO's admin submenu pages under Settings and Media.
+	 *
+	 * Three pages, all routed through `route()` as their callback:
+	 *
+	 *   - **Settings > ShortPixel** — the main settings screen. Suppressed
+	 *     on multisite child sites when the network admin has ticked
+	 *     `disable_site_settings_page` in the `spio_wpmu` network option.
+	 *   - **Media > Custom Media** — the "Other Media" folder scanner.
+	 *     Only shown when `OtherMediaController::showMenuItem()` returns
+	 *     true (i.e. at least one custom folder is registered).
+	 *   - **Media > Bulk ShortPixel** — the bulk-optimize workflow.
+	 *     Always registered.
+	 *
+	 * The returned hook suffixes are collected in `$this->admin_pages` for
+	 * downstream use (asset-loading decisions live in `load_admin_scripts()`).
+	 *
+	 * @return void
+	 */
 	public function admin_pages() {
 		$admin_pages = array();
 
@@ -323,6 +504,16 @@ class ShortPixelPlugin {
 		$this->admin_pages = $admin_pages;
 	}
 
+	/**
+	 * Register the multisite network-settings submenu.
+	 *
+	 * Currently a **stub** — the method's very first statement is an
+	 * unconditional `return;` guarded by an `@todo`. When re-enabled, this
+	 * will add a `ShortPixel` entry under network Settings that routes to
+	 * `MultiSiteViewController` via `route()`.
+	 *
+	 * @return void
+	 */
 	public function admin_network_pages()
 	{
 		return; // @todo Need to check this work.
@@ -336,10 +527,50 @@ class ShortPixelPlugin {
 		);
 	}
 
-	/** All scripts should be registed, not enqueued here (unless global wp-admin is needed )
-     *
-     * Not all those registered must be enqueued however.
-     */
+	/**
+	 * Register every JavaScript file the plugin might need and attach their
+	 * localize-script payloads. Actual enqueue happens in
+	 * `load_admin_scripts()` on a screen-by-screen basis.
+	 *
+	 * The full script inventory covers three concerns:
+	 *
+	 *   1. **UI / helper scripts** — folderbrowser, tooltip, jquery.knob,
+	 *      debug, settings, onboarding, shiftselect, inline-help, chatbot.
+	 *   2. **Processor scripts** — `shortpixel-processor` (the queue-driving
+	 *      loop) plus the `shortpixel-screen-*` variants (base, item-base,
+	 *      media, custom, bulk, nolist) that own the per-screen UI wiring.
+	 *   3. **Legacy / shared scripts** — `shortpixel`, media, datepicker.
+	 *
+	 * Localize payloads set here:
+	 *
+	 *   - `spio_folderbrowser` — folder browser i18n + icons.
+	 *   - `spio_tooltipStrings` — processor tooltip labels.
+	 *   - `settings_strings` — settings screen i18n (via UiHelper).
+	 *   - `spio_media` — media grid editor state + AI toggles.
+	 *   - `ShortPixelProcessorData` — nonces, worker URL, timing filters
+	 *     (`shortpixel/processor/interval`, `shortpixel/process/deferInterval`),
+	 *     debug flag, autoprocess flag, kill-switch filter.
+	 *   - `spio_screenStrings` — shared screen error strings.
+	 *   - `spio_mediascreen_settings` — media screen AI / modal / preview.
+	 *   - `shortPixelScreen` — bulk-screen strings + panel deep-link.
+	 *   - `_spTr` + `ShortPixelConstants` — legacy globals for the
+	 *     `shortpixel.js` (jQuery/knob) codepath.
+	 *
+	 * Filterable knobs:
+	 *
+	 *   - `shortpixel/plugin/nohelp` — override the chatbot script URL.
+	 *   - `shortpixel/processor/interval` — poll interval in ms (default 3000).
+	 *   - `shortpixel/process/deferInterval` — idle poll interval (default 60000).
+	 *   - `shortpixel/processorjs/disable` — hard kill for the frontend processor.
+	 *   - `/shortpixel/front/showConsoleLog` — surface `console.log` output.
+	 *   - `shortpixel/js/media/hide_in_popups` — suppress SPIO UI in modal frames.
+	 *
+	 * @param string $hook_suffix WP admin hook suffix (currently unused; the
+	 *                            script selection happens later in
+	 *                            `load_admin_scripts()` based on
+	 *                            `$plugin_page` / `$screen_id`).
+	 * @return void
+	 */
 	public function admin_scripts( $hook_suffix ) {
 
 		$settings       = \wpSPIO()->settings();
@@ -565,6 +796,18 @@ class ShortPixelPlugin {
 
 	}
 
+	/**
+	 * Register every CSS stylesheet the plugin might need. Actual enqueue
+	 * happens in `load_admin_scripts()` and via `load_style()` for
+	 * on-demand cases.
+	 *
+	 * The inventory covers: folderbrowser, notices (SPIO + module),
+	 * othermedia screen, toolbar (loaded everywhere), general admin,
+	 * bulk, nextgen, settings, datepicker. Nothing is enqueued from
+	 * here — this method is a pure registration pass.
+	 *
+	 * @return void
+	 */
 	public function admin_styles() {
 
 		wp_register_style( 'shortpixel-folderbrowser', plugins_url( '/res/css/shortpixel-folderbrowser.css', SHORTPIXEL_PLUGIN_FILE ),[], SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
@@ -595,7 +838,17 @@ class ShortPixelPlugin {
 	}
 
 
-	/** Load Style via Route, on demand */
+	/**
+	 * On-demand style enqueue with registered-check.
+	 *
+	 * Silently bails on `noheader` requests (partials rendered without a
+	 * full admin shell). Logs a warning when a caller asks for a style
+	 * that wasn't registered — usually a typo or a missing `admin_styles`
+	 * entry.
+	 *
+	 * @param string $name Handle previously registered in `admin_styles()`.
+	 * @return void
+	 */
 	public function load_style( $name ) {
 		if ( $this->is_noheaders ) {  // fail silently, if this is a no-headers request.
 			return;
@@ -608,7 +861,16 @@ class ShortPixelPlugin {
 		}
 	}
 
-	/** Load Style via Route, on demand */
+	/**
+	 * On-demand script enqueue with registered-check. Accepts either a
+	 * single handle or an array of handles for batch enqueue.
+	 *
+	 * Silently bails on `noheader` requests and logs a warning for
+	 * unregistered handles — same shape as `load_style()`.
+	 *
+	 * @param string|string[] $script Handle (or list of handles) previously registered in `admin_scripts()`.
+	 * @return void
+	 */
 	public function load_script( $script ) {
 		if ( $this->is_noheaders ) {  // fail silently, if this is a no-headers request.
 			return;
@@ -627,7 +889,37 @@ class ShortPixelPlugin {
 		}
 	}
 
-	/** This is separated from route to load in head, preventing unstyled content all the time */
+	/**
+	 * Screen-specific asset dispatcher — decides which scripts/styles get
+	 * enqueued for the current admin page.
+	 *
+	 * Runs on `admin_enqueue_scripts` at priority 90 (registered by
+	 * `initHooks()`) and, separately, on `enqueue_block_assets` for the
+	 * block editor. Runs in `<head>` — deliberately separated from
+	 * `route()` so styles arrive before the page body renders (no
+	 * flash-of-unstyled-content).
+	 *
+	 * Decision tree (first match wins), where each branch enqueues the
+	 * baseline processor bundle + a screen-specific `shortpixel-screen-*`
+	 * bundle + the styles needed for that screen:
+	 *
+	 *   - Any "SPIO-relevant" screen → processor + toolbar + notices.
+	 *   - `wp-shortpixel-settings` / `shortpixel-network-settings` → nolist
+	 *     screen, settings, chatbot, onboarding.
+	 *   - `wp-short-pixel-bulk` → bulk screen, chatbot, datepicker.
+	 *   - `upload` / `attachment` screens → media screen + debug (when
+	 *     `env()->is_debug`).
+	 *   - `wp-short-pixel-custom` → folderbrowser + custom screen +
+	 *     othermedia styles + chatbot.
+	 *   - NextGen screen (delegated to `NextGenController::isNextGenScreen()`)
+	 *     → custom screen + nextgen style.
+	 *   - Gutenberg / classic editor → processor + media screen.
+	 *   - Any other SPIO-relevant screen → nolist screen fallback.
+	 *
+	 * @param string $hook_suffix WP admin hook suffix (unused; branching is
+	 *                            on `$plugin_page` / `env()->screen_id`).
+	 * @return void
+	 */
 	 public function load_admin_scripts( $hook_suffix ) {
 		global $plugin_page;
 		$screen_id = $this->env()->screen_id;
@@ -710,10 +1002,37 @@ class ShortPixelPlugin {
 
 	}
 
-	/** Route, based on the page slug
-     *
-     * Principially all page controller should be routed from here.
-     */
+	/**
+	 * Dispatch admin page loads to the appropriate `Controller\View\*` class.
+	 *
+	 * Registered as the callback for every SPIO admin page (in
+	 * `admin_pages()`) and for Media Library screen loads
+	 * (`load-upload.php`, `load-post.php`, wired in `initHooks()`).
+	 *
+	 * Two inputs pick the controller:
+	 *
+	 *   - `$plugin_page` — the SPIO admin submenu slug when the request
+	 *     targets one of our pages (`wp-shortpixel-settings`,
+	 *     `shortpixel-network-settings`, `wp-short-pixel-custom` +
+	 *     optional `?part=folders|scan`, `wp-short-pixel-bulk`).
+	 *   - `env()->screen_id` — when there's no `$plugin_page`, the
+	 *     Media Library / Edit Media screens fall through to
+	 *     `ListMediaViewController` / `EditMediaViewController`.
+	 *
+	 * Two inputs pick the action on the resolved controller:
+	 *
+	 *   - `$_REQUEST['sp-action']` — the method name to invoke; defaults
+	 *     to `load`.
+	 *   - `$_GET['part']` — used above only to pick the OtherMedia
+	 *     sub-controller (folders / scan / default).
+	 *
+	 * When the requested action doesn't exist on the resolved controller
+	 * we log a warning and fall back to `load`. When no controller
+	 * matches at all, `route()` no-ops silently — WP renders the empty
+	 * page.
+	 *
+	 * @return void
+	 */
 	public function route() {
 		global $plugin_page;
 
@@ -783,7 +1102,16 @@ class ShortPixelPlugin {
 	}
 
 
-	// Get the plugin URL, based on real URL.
+	/**
+	 * Return the plugin's public URL, optionally with a relative path
+	 * appended.
+	 *
+	 * The base URL was captured in `lowInit()` via `plugin_dir_url()` and
+	 * always includes a trailing slash after `trailingslashit`.
+	 *
+	 * @param string $urlpath Relative URL fragment appended to the base (empty by default).
+	 * @return string Absolute URL to the plugin directory (or an asset under it).
+	 */
 	public function plugin_url( $urlpath = '' ) {
 		$url = trailingslashit( $this->plugin_url );
 		if ( strlen( $urlpath ) > 0 ) {
@@ -792,7 +1120,16 @@ class ShortPixelPlugin {
 		return $url;
 	}
 
-	// Get the plugin path.
+	/**
+	 * Return the plugin's absolute filesystem path, optionally with a
+	 * relative path appended.
+	 *
+	 * The base path was captured in `lowInit()` via `plugin_dir_path()`
+	 * and always includes a trailing slash after `trailingslashit`.
+	 *
+	 * @param string $path Relative path fragment appended to the base (empty by default).
+	 * @return string Absolute filesystem path to the plugin directory (or a file under it).
+	 */
 	public function plugin_path( $path = '' ) {
 		$plugin_path = trailingslashit( $this->plugin_path );
 		if ( strlen( $path ) > 0 ) {
@@ -802,14 +1139,32 @@ class ShortPixelPlugin {
 		return $plugin_path;
 	}
 
-	/** Returns defined admin page hooks. Internal use - check states via environmentmodel
-     *
-     * @returns Array
-     */
+	/**
+	 * Return the WP admin-page hook suffixes captured during
+	 * `admin_pages()`.
+	 *
+	 * For internal use — prefer `EnvironmentModel` flags (`is_bulk_page`,
+	 * `is_screen_to_use`, etc.) when you just need to know "are we on an
+	 * SPIO screen".
+	 *
+	 * @return array<int, string> Hook suffixes returned by `add_options_page` / `add_media_page`.
+	 */
 	public function get_admin_pages() {
 		return $this->admin_pages;
 	}
 
+	/**
+	 * Detect plugin-version drift and re-run activation when necessary.
+	 *
+	 * Compares the `SHORTPIXEL_IMAGE_OPTIMISER_VERSION` constant against
+	 * the `currentVersion` value stored in settings. A mismatch triggers
+	 * `InstallHelper::activatePlugin()` (table upgrades, option
+	 * migrations, etc.) and then writes the new version back. Runs on
+	 * every `admin_init`, so an upgrade takes effect the first time an
+	 * admin visits the dashboard after the plugin files change.
+	 *
+	 * @return void
+	 */
 	protected function check_plugin_version() {
       $version     = SHORTPIXEL_IMAGE_OPTIMISER_VERSION;
 			$db_version = $this->settings()->currentVersion;
