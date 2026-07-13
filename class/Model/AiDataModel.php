@@ -292,10 +292,17 @@ class AiDataModel
         // $fields = ['ai_gen_alt', 'ai_gen_caption', 'ai_gen_description', 'ai_gen_filename'];
         $fields = ['alt', 'caption', 'description', 'filename', 'post_title'];
 
+        
         $paramlist = [
             'languages' => $settings->ai_language,
             'context' => $settings->ai_general_context,
+            
         ];
+
+        if (true === $settings->ai_gen_filename)
+        {
+            $paramlist['prefer_keep_filename_if_relevant'] = $settings->ai_filename_prefercurrent;
+        }
 
         if (true === $settings->ai_use_post) {
             $parent_title = $this->getConnectedPostTitle();
