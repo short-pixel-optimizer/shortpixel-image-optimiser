@@ -65,5 +65,20 @@ jobs:
           mkdir -p "${WP_TESTS_DIR}"
           bash bin/install-wp-tests.sh "$DB_NAME" "$DB_USER" "$DB_PASS" "$DB_HOST" "${WP_VERSION}"
 
+      - name: Show test file discovery
+        run: |
+          echo "=== Test files discovered ==="
+          find tests -type f -name 'test-*.php' | sort
+          echo ""
+          echo "=== Total: $(find tests -type f -name 'test-*.php' | wc -l) test files ==="
+
+      - name: Show PHPUnit test method discovery
+        run: |
+          echo "=== PHPUnit will run the following test methods ==="
+          vendor/bin/phpunit --list-tests
+          echo ""
+          echo "=== Test suites configured in phpunit.xml.dist ==="
+          vendor/bin/phpunit --list-suites
+
       - name: Run PHPUnit tests
-        run: vendor/bin/phpunit
+        run: vendor/bin/phpunit --testdox --colors=never

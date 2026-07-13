@@ -14,10 +14,14 @@
 		<testsuite name="model">
 			<directory prefix="test-" suffix=".php">./tests/Model</directory>
 		</testsuite>
+		<testsuite name="External">
+			<directory prefix="test-" suffix=".php">./tests/External</directory>
+		</testsuite>
 		<testsuite name="SPIO Main">
 			<directory prefix="test-" suffix=".php">./tests/</directory>
 			<exclude>./tests/Helper</exclude>
 			<exclude>./tests/Model</exclude>
+			<exclude>./tests/External</exclude>
 		</testsuite>
 	</testsuites>
 </phpunit>
