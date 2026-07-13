@@ -15,7 +15,23 @@ use ShortPixel\Controller\QueueController;
 use ShortPixel\Controller\ResponseController as ResponseController;
 
 /**
- * Actions for running bulk operations from WP-CLI
+ * WP-CLI command group `wp spio bulk ...` — bulk / queue-orchestration
+ * commands. Extends `SpioCommandBase` (in `wp-cli-base.php`), so every
+ * command defined on the base (add, run, status, settings, clear,
+ * removebackups) is also available here as `wp spio bulk <cmd>`.
+ *
+ * Bulk-specific commands added below:
+ *
+ *   - `start`   — signal bulk-processing to begin (moves preparing → running)
+ *   - `auto`    — the one-shot "do everything" driver (create → prepare → start → run → finish)
+ *   - `create`  — build the queue, optionally with date/migration filters
+ *   - `prepare` — drive the preparing phase until it reports done
+ *
+ * The `getQueueController()` override at the bottom forces
+ * `is_bulk = true` so every base-class command inherited here runs
+ * against the bulk-mode queue rather than the "single item" queue.
+ *
+ * @package ShortPixel
  */
 class SpioBulk extends SpioCommandBase
 {
@@ -40,6 +56,10 @@ class SpioBulk extends SpioCommandBase
 	 *
 	 *
 	 * @when after_wp_load
+	 *
+	 * @param array $args   Positional args (unused).
+	 * @param array $assoc  Long options (queue).
+	 * @return void
 	 */
 	public function start($args, $assoc)
 	{
@@ -79,6 +99,25 @@ class SpioBulk extends SpioCommandBase
 	 * wp spio bulk auto
 	 *
 	 *
+	 * Implementation flow (loops until `$running = false`):
+	 *
+	 *   1. Show current settings, sleep 2s so the operator can read them.
+	 *   2. Fetch startup data. Pick the "combined" stats — total when
+	 *      both queues are in play, or the specific queue's stats when
+	 *      `--queue=` scoped to one.
+	 *   3. Branch on the combined status:
+	 *      - `is_preparing`  → run `prepare` then `start`.
+	 *      - `is_running`    → run `run` (drives every remaining tick).
+	 *      - Nothing running but items exist → print status + `start`.
+	 *      - Otherwise (done or nothing to do):
+	 *        · If `done > 0` or a queue was already created this loop
+	 *          → finish + break.
+	 *        · Else if `!$created` → `create` (build a fresh queue).
+	 *        · Else → error "nothing to do" and break.
+	 *
+	 * @param array $args   Positional args (unused).
+	 * @param array $assoc  Long options (queue, limit, special=migrate).
+	 * @return void
 	 */
 	public function auto($args, $assoc)
 	{
@@ -179,6 +218,19 @@ class SpioBulk extends SpioCommandBase
 	 *
 	 *
 	 * @when after_wp_load
+	 *
+	 * Implementation notes:
+	 *   - `--special=migrate` forces `queues = ['media']` regardless
+	 *     of the `--queue=` arg (migration is media-only).
+	 *   - Date filters (`--start-date` / `--end-date`) get bundled
+	 *     into `$args['filters']` and passed to `BulkController::createNewBulk()`.
+	 *   - The media queue picks up an extra `doAi` flag from
+	 *     `settings->autoAIBulk` so the AI pass runs alongside
+	 *     optimization if the operator opted in.
+	 *
+	 * @param array $args   Positional args (unused; reassigned mid-method).
+	 * @param array $assoc  Long options (queue, special, start-date, end-date).
+	 * @return object|null Stats object from the last-created queue (return value not typically consumed).
 	 */
 	public function create($args, $assoc)
 	{
@@ -238,6 +290,15 @@ class SpioBulk extends SpioCommandBase
 	}
 
 	/**
+	 * Documented-but-commented-out `restore` command.
+	 *
+	 * The docblock above shows what the interface *would* be
+	 * (`wp spio bulk restore <start-id> <end-id> [--type=<type>]`)
+	 * but the method body is a stub. Kept commented rather than
+	 * deleted so re-implementation has the option surface handy.
+	 * Flagged in the deferred-root-bugs memo.
+	 */
+	/**
 	 * ## OPTIONS
 	 *
 	 * <start-id>
@@ -268,6 +329,18 @@ class SpioBulk extends SpioCommandBase
 		} */
 
 
+	/**
+	 * Signal each queue's `BulkController::finishBulk($queue_name)`
+	 * — the completion side of the bulk lifecycle.
+	 *
+	 * Called from `auto()` when the loop detects a "done" state.
+	 * Protected because it's not a CLI command in its own right —
+	 * only the auto driver invokes it.
+	 *
+	 * @param array $args   Positional args (unused).
+	 * @param array $assoc  Long options (queue).
+	 * @return void
+	 */
 	protected function finishBulk($args, $assoc)
 	{
 		$bulkControl = BulkController::getInstance();
@@ -299,6 +372,17 @@ class SpioBulk extends SpioCommandBase
 	 *
 	 *   wp spio bulk prepare
 	 *
+	 * Implementation notes:
+	 *   - Aborts with `\WP_CLI::Error` when no queue is in a
+	 *     preparing state — you can't prepare something that's
+	 *     already prepared or already running.
+	 *   - Sets `--wait=0.5` on the internal `run()` call so the
+	 *     preparing phase ticks fast (no API round-trip involved,
+	 *     just enqueue work).
+	 *
+	 * @param array $args   Positional args (unused).
+	 * @param array $assoc  Long options (queue, limit) — mutated to inject wait=0.5 before the internal run() call.
+	 * @return void
 	 */
 	public function prepare($args, $assoc)
 	{
@@ -315,6 +399,20 @@ class SpioBulk extends SpioCommandBase
 		}
 	}
 
+	/**
+	 * Override of `SpioCommandBase::getQueueController()` — this
+	 * command group ALWAYS runs against a bulk-mode queue, regardless
+	 * of what the caller passed for `$bulk`.
+	 *
+	 * The parent method takes a `$bulk` flag; the argument is retained
+	 * here for interface compatibility but ignored. Any base-class
+	 * command inherited into `SpioBulk` (e.g. `wp spio bulk clear`,
+	 * `wp spio bulk status`) picks this override up and gets the bulk
+	 * queue automatically.
+	 *
+	 * @param bool $bulk Ignored — always constructs with `is_bulk => true`.
+	 * @return QueueController
+	 */
 	// To ensure the bulk switch is ok. Overriding parameter in any case.
 	protected function getQueueController($bulk = false)
 	{

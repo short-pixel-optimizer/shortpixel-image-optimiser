@@ -16,8 +16,21 @@ use ShortPixel\Model\Queue\QueueItem as QueueItem;
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
 
 /**
-* Actions and operations for the ShortPixel Image Optimizer plugin
-*/
+ * WP-CLI command group `wp spio ...` — single-item commands. Extends
+ * `SpioCommandBase` (in `wp-cli-base.php`), so every base-class
+ * command (add, run, status, settings, clear, removebackups) is also
+ * available here as `wp spio <cmd>`.
+ *
+ * Single-item-specific commands added below:
+ *
+ *   - `restore`    — restore one optimized item from its backup
+ *   - `requestAlt` — kick off an AI alt-text request for one item
+ *
+ * Unlike `SpioBulk`, this group does NOT override
+ * `getQueueController()` — it uses the base's default (non-bulk mode).
+ *
+ * @package ShortPixel
+ */
 class SpioSingle extends SpioCommandBase
 {
 
@@ -44,6 +57,20 @@ class SpioSingle extends SpioCommandBase
    *   wp spio restore 21 --type=custom
    *
    * @when after_wp_load
+   *
+   * Implementation notes:
+   *   - Builds a `QueueItems::getImageItem($imageModel)` and calls
+   *     `newRestoreAction()` on it before enqueuing so the queue
+   *     controller knows this item is a restore, not an optimize.
+   *   - Result-shape handling below is defensive: property_exists
+   *     guards on `message` and `result`, then decides success /
+   *     error / undetermined by looking at `->success` / `->is_error`.
+   *     There's an inconsistency here (see the memo item on
+   *     `$result->is_error` access without a guard).
+   *
+   * @param array $args        Positional args from WP-CLI. Index 0: item id.
+   * @param array $assoc_args  Long options from WP-CLI (type).
+   * @return void
    */
   public function restore($args, $assoc_args)
   {
@@ -111,6 +138,18 @@ class SpioSingle extends SpioCommandBase
 	 *   : Media Library ID
 	 *
 	 *
+	 * Implementation notes:
+	 *   - Uses `getMediaImage()` (not `getImage()`) — AI features
+	 *     only make sense for media-library attachments, so custom
+	 *     media isn't a valid target here.
+	 *   - Two `@todo` comments in-line acknowledge the method is
+	 *     minimal — the real integration with the AI queue is still
+	 *     coming and the current implementation just adds to the
+	 *     queue with `action=requestAlt` and hopes for the best.
+	 *
+	 * @param array $args   Positional args from WP-CLI. Index 0: attachment id.
+	 * @param array $assoc  Long options (unused — no flags on this command).
+	 * @return void
 	 */
 	public function requestAlt($args, $assoc)
 	{

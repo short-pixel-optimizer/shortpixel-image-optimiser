@@ -23,13 +23,41 @@ use ShortPixel\Controller\Queue\QueueItems as QueueItems;
 
 
 
+/**
+ * WP-CLI bootstrap — registers the plugin's `spio` and `spio bulk`
+ * command groups with WP-CLI and routes debug logging to a dedicated
+ * CLI log file.
+ *
+ * Instantiated once from `shortpixel-plugin.php` inside the
+ * `lowInit()` sequence when `defined('WP_CLI') && \WP_CLI` — so this
+ * class only ever loads in a WP-CLI request.
+ *
+ * The heavy lifting (arg parsing, queue orchestration, output
+ * formatting) lives on `SpioCommandBase` below; this class just wires
+ * two subclasses of that base (`SpioSingle` for `wp spio`, `SpioBulk`
+ * for `wp spio bulk`) into WP-CLI's dispatcher.
+ *
+ * @package ShortPixel
+ */
 class WpCliController
 {
+	/** @var WpCliController|null Singleton instance held by getInstance(). */
 	public static $instance;
 
+	/** @var int Reserved / unused — declared but never assigned or read. */
 	protected static $ticks = 0;
+
+	/** @var int Reserved / unused — declared but never assigned or read. */
 	protected static $emptyq = 0;
 
+	/**
+	 * Configure the SPIO logger for CLI context and register the two
+	 * WP-CLI command groups.
+	 *
+	 * When SPIO debug mode is active, redirects the logger to a
+	 * dedicated file (`shortpixel_log_wpcli` in the backup folder) so
+	 * CLI-side traces don't intermix with web-request traces.
+	 */
 	public function __construct()
 	{
 		$log = \ShortPixel\ShortPixelLogger\ShortPixelLogger::getInstance();
@@ -39,6 +67,12 @@ class WpCliController
 		$this->initCommands();
 	}
 
+	/**
+	 * Return the singleton, constructing it (and registering the CLI
+	 * commands) on first call.
+	 *
+	 * @return WpCliController
+	 */
 	public static function getInstance()
 	{
 		if (is_null(self::$instance))
@@ -50,6 +84,14 @@ class WpCliController
 	}
 
 
+	/**
+	 * Register the two WP-CLI command groups:
+	 *
+	 *   - `wp spio ...`      → `SpioSingle`  (single-item commands: restore, requestAlt, plus everything inherited from `SpioCommandBase`)
+	 *   - `wp spio bulk ...` → `SpioBulk`    (bulk / queue commands: start, auto, create, prepare, plus base commands)
+	 *
+	 * @return void
+	 */
 	protected function initCommands()
 	{
 		\WP_CLI::add_command('spio', '\ShortPixel\SpioSingle');
@@ -58,14 +100,41 @@ class WpCliController
 } // class WpCliController
 
 /**
- * ShortPixel Image Optimizer
+ * Base class for both WP-CLI command groups (`SpioSingle` and
+ * `SpioBulk`). Owns the commands shared by both surfaces plus every
+ * helper the subclasses need for output formatting, queue arg
+ * parsing, and result rendering.
  *
+ * Commands defined here (available as both `wp spio <cmd>` and
+ * `wp spio bulk <cmd>`):
  *
+ *   - `add`          — add a single item to the queue then process
+ *   - `run`          — drive the queue with optional --ticks / --wait
+ *   - `status`       — dump current queue counts
+ *   - `settings`     — dump the operator-visible settings snapshot
+ *   - `clear`        — reset the queue(s)
+ *   - `removebackups`— walk the backup folder via BackupController
+ *
+ * IMPORTANT: every public method on this class (and the subclasses)
+ * uses **WP-CLI's own PHPDoc grammar** — the `## OPTIONS`,
+ * `[--flag=<value>]`, `default:` / `options:` blocks, and `## EXAMPLES`
+ * are parsed by WP-CLI at runtime to produce `wp help spio <cmd>`
+ * output. When editing these docblocks, preserve that grammar
+ * verbatim — the internal-purpose prose I've added around them is
+ * safe to change independently.
+ *
+ * All command methods take `($args, $assoc)` — WP-CLI passes
+ * positional args in `$args` and long-option args in `$assoc`.
+ *
+ * @package ShortPixel
  */
 class SpioCommandBase
 {
 
+	/** @var int Reserved / unused — declared but never assigned or read. */
 	protected static $runs = 0;
+
+	/** @var int|null Cached queue "combined status" (min of media/custom qstatus) written at the end of runClick() but never read anywhere. Dead assignment. */
 	protected $last_combinedStatus;
 
 	/**
@@ -96,6 +165,10 @@ class SpioCommandBase
 	 *   wp spio [bulk] add 21 --type=custom --halt
 	 *
 	 * @when after_wp_load
+	 *
+	 * @param array $args   Positional args from WP-CLI. Index 0: item id.
+	 * @param array $assoc  Long options from WP-CLI (type, halt).
+	 * @return void
 	 */
 	public function add($args, $assoc)
 	{
@@ -178,6 +251,19 @@ class SpioCommandBase
 	 *
 	 *
 	 * @when after_wp_load
+	 *
+	 * Implementation notes:
+	 *   - Delegates to `runClick()` per tick. A `false` return from
+	 *     runClick means all queues signalled done → break out of the
+	 *     loop.
+	 *   - `--limit` is applied *after* runClick — the loop keeps
+	 *     preparing until `total >= limit` AND `is_preparing`.
+	 *   - `sleep($wait)` gives the API breathing room between ticks;
+	 *     defaults to 3 seconds when --wait is omitted.
+	 *
+	 * @param array $args   Positional args (unused by run itself, passed through to status()).
+	 * @param array $assoc  Long options (ticks, wait, queue, limit).
+	 * @return void
 	 */
 	public function run($args, $assoc)
 	{
@@ -239,6 +325,34 @@ class SpioCommandBase
 		$this->showResponses();
 	}
 
+	/**
+	 * Single-tick worker for `run()` — drive the queue controller
+	 * one cycle, emit per-queue log lines for anything worth showing,
+	 * and return whether another tick is worth trying.
+	 *
+	 * Output filtering rules:
+	 *   - Queue-empty results are silently skipped (nothing to say to
+	 *     the user).
+	 *   - Single-response results (prepared, enqueued) print one
+	 *     `[queue] : message` line.
+	 *   - Result arrays are iterated and each entry rendered via
+	 *     `displayResult()` (plus a trailing `displayStatsLine('Total')`
+	 *     to give the user progress after each successful op).
+	 *   - A `result` (singular) property triggers a `deprecated single
+	 *     result` error — no queue type is supposed to hit this shape.
+	 *
+	 * Return value drives the outer loop:
+	 *   - `false` → all queues done or bulk-preparing complete;
+	 *     `run()` should break out.
+	 *   - `true`  → more work exists; another tick should run.
+	 *
+	 * The min-of-both `combinedStatus` reflects the JS processor's
+	 * behaviour (see comment in code) — the loop only halts when the
+	 * *slower* of the two queues is done.
+	 *
+	 * @param string[] $queueTypes Queue names to drive this tick (subset of `media` / `custom`).
+	 * @return bool `true` when another tick is worth running, `false` when queues report done.
+	 */
 	protected function runClick($queueTypes)
 	{
 		ResponseController::setOutput(ResponseController::OUTPUT_CLI);
@@ -332,6 +446,31 @@ class SpioCommandBase
 		return true;
 	}
 
+	/**
+	 * Render a single optimizer result to the CLI. Called per item
+	 * from `runClick()` (and directly from `SpioSingle::requestAlt` /
+	 * `restore`).
+	 *
+	 * Three output shapes, keyed off `$result->apiStatus`:
+	 *
+	 *   1. **STATUS_SUCCESS** — banner + message + a formatted
+	 *      improvements table (main + per-thumbnail % savings) + a
+	 *      one-liner summary of the credits used (`processed / images
+	 *      / webps / avifs`).
+	 *   2. **STATUS_NOT_API** — just print the message (no
+	 *      formatting, no banner).
+	 *   3. **Anything else** — either `\WP_CLI::error()` (when
+	 *      `is_error` is true) or a plain `line` with the message.
+	 *
+	 * NOTE: line 368 has *"This job, %d filess were processed"* — the
+	 * "filess" is a typo (double `s`). Flagged in the deferred-root-bugs
+	 * memo but not fixed during the docblock pass.
+	 *
+	 * @param object      $result Result object from the queue tick. Expected: apiStatus, message, improvements, is_error.
+	 * @param string      $type   Queue type this result came from (`media` / `custom`) — used for context only.
+	 * @param object|null $counts Optional counts object (baseCount, webpCount, avifCount, creditCount).
+	 * @return void
+	 */
 	// Function for Showing JSON output of Optimizer regarding the process.
 	protected function displayResult($result, $type, $counts = null)
 	{
@@ -395,6 +534,23 @@ class SpioCommandBase
 		}
 	}
 
+	/**
+	 * Render a one-line progress summary for a queue's stats bucket.
+	 *
+	 * Called from `runClick()` after each successful op, from
+	 * `status()` at the bottom of the queue table, and from
+	 * `SpioBulk::auto()` between phases.
+	 *
+	 * NOTE: the sprintf format string contains `%s\%s` (backslash-s)
+	 * which reads as *"literal backslash then `s`"* — probably intended
+	 * as `%s/%s` (done/total slash). Cosmetic; the line still prints
+	 * but with a stray backslash. Flagged in the deferred-root-bugs
+	 * memo.
+	 *
+	 * @param string $name  Human-readable queue label (e.g. "media", "Total").
+	 * @param object $stats Stats snapshot: done, fatal_errors, total, percentage_done, awaiting.
+	 * @return void
+	 */
 	protected function displayStatsLine($name, $stats)
 	{
 		$line = sprintf('Current Status for %s : (%s\%s) Done (%s%%), %s awaiting %s errors --', $name, ($stats->done + $stats->fatal_errors), $stats->total, $stats->percentage_done, ($stats->awaiting), $stats->fatal_errors);
@@ -413,6 +569,9 @@ class SpioCommandBase
 	 *
 	 *   wp spio [bulk] status [--show-debug]
 	 *
+	 * @param array $args   Positional args (unused).
+	 * @param array $assoc  Long options (queue, show-debug).
+	 * @return void
 	 */
 	public function status($args, $assoc)
 	{
@@ -459,6 +618,7 @@ class SpioCommandBase
 	 *
 	 *   wp spio [bulk] settings
 	 *
+	 * @return void
 	 */
 	public function settings()
 	{
@@ -487,12 +647,13 @@ class SpioCommandBase
 	 *
 	 *   wp spio removebackups
 	 *
+	 * @return void
 	 */
 	public function removebackups()
 	{
 		$backupController = BackupController::getBackupController();
 		$backupController->cliRemoveBackups();
-		
+
 	}
 
 	/**
@@ -510,6 +671,10 @@ class SpioCommandBase
 	 * ## EXAMPLES
 	 *
 	 *   wp spio [bulk] clear
+	 *
+	 * @param array $args   Positional args (unused).
+	 * @param array $assoc  Long options (queue).
+	 * @return void
 	 */
 	public function clear($args, $assoc)
 	{
@@ -525,6 +690,20 @@ class SpioCommandBase
 	}
 
 
+	/**
+	 * Render a truthy/falsy value as a localised "Yes" / "No" string
+	 * for the `settings()` table.
+	 *
+	 * The optional `$colored` flag would wrap the output in
+	 * `\WP_CLI::colorize()` codes (green Yes / red No), but that path
+	 * is disabled at the top of the method because of a known WP-CLI
+	 * php-cli-tools bug (linked in the inline comment). Left as
+	 * scaffolding for when the upstream bug ships a fix.
+	 *
+	 * @param mixed $bool    Value to interpret truthy/falsy.
+	 * @param bool  $colored Passed by callers hopefully; currently forced to false.
+	 * @return string Localised "Yes" or "No".
+	 */
 	//  Colored is buggy, so off for now -> https://github.com/wp-cli/php-cli-tools/issues/134
 	private function textBoolean($bool, $colored = false)
 	{
@@ -550,6 +729,12 @@ class SpioCommandBase
 		return $res;
 	}
 
+	/**
+	 * Fetch a fresh queue-startup snapshot — the same payload the
+	 * front-end processor JS gets, containing per-queue stats.
+	 *
+	 * @return object Startup data object with `->media` / `->custom` / `->total` sub-objects.
+	 */
 	protected function getStatus()
 	{
 		$optimizeController = $this->getQueueController();
@@ -557,6 +742,19 @@ class SpioCommandBase
 		return $startupData;
 	}
 
+	/**
+	 * Placeholder for streaming ResponseController buffered messages
+	 * to CLI output — **currently a no-op stub**.
+	 *
+	 * Called from three places (`run` at the end, `SpioBulk::create`
+	 * at the end, `SpioSingle::restore` mid-way). Every one of those
+	 * calls silently does nothing. The `@todo` in-line acknowledges
+	 * it's deferred. Flagged in the deferred-root-bugs memo — either
+	 * wire the ResponseController path (uncomment the body) or remove
+	 * the calls and this method together.
+	 *
+	 * @return false Always false.
+	 */
 	protected function showResponses()
 	{
 		return false; // @todo Pending responseControl, offf.
@@ -574,6 +772,20 @@ class SpioCommandBase
          } */
 	}
 
+	/**
+	 * Parse the `--queue` associative arg into a list of queue names.
+	 *
+	 * Accepted shapes:
+	 *   - `--queue=media`            → `['media']`
+	 *   - `--queue=media,custom`     → `['media', 'custom']`
+	 *   - flag omitted               → `['media', 'custom']` (both)
+	 *
+	 * Each entry is `sanitize_text_field`'d — WP-CLI callers can only
+	 * pass strings but the sanitisation is belt-and-braces.
+	 *
+	 * @param array $assoc Long-option arg map from WP-CLI.
+	 * @return string[] Queue names to operate on.
+	 */
 	protected function getQueueArgument($assoc)
 	{
 
@@ -589,6 +801,17 @@ class SpioCommandBase
 		return $queue;
 	}
 
+	/**
+	 * Factory for the QueueController used across the CLI commands.
+	 *
+	 * The `$bulk` flag controls whether the controller enters bulk
+	 * mode (larger batches, different queue semantics). `SpioBulk`
+	 * overrides this method to force `is_bulk => true` regardless of
+	 * the passed argument.
+	 *
+	 * @param bool $bulk Whether to construct in bulk mode.
+	 * @return QueueController
+	 */
 	// To ensure the bulk switch is ok.
 	protected function getQueueController($bulk = false)
 	{
@@ -604,6 +827,14 @@ class SpioCommandBase
 
     }
 */
+	/**
+	 * Strip thousands-separator commas and decimal points from a
+	 * number string so it can be compared as an integer (used by
+	 * `run()` when applying `--limit`).
+	 *
+	 * @param string $string Number string possibly containing `,` and `.` separators.
+	 * @return string Digits-only string.
+	 */
 	private function unFormatNumber($string)
 	{
 		$string = str_replace(',', '', $string);
