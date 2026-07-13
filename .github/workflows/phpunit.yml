@@ -65,20 +65,56 @@ jobs:
           mkdir -p "${WP_TESTS_DIR}"
           bash bin/install-wp-tests.sh "$DB_NAME" "$DB_USER" "$DB_PASS" "$DB_HOST" "${WP_VERSION}"
 
-      - name: Show test file discovery
+      - name: Show PHPUnit + config sanity check
         run: |
-          echo "=== Test files discovered ==="
+          echo "=== PHPUnit binary + version ==="
+          which vendor/bin/phpunit
+          vendor/bin/phpunit --version
+          echo ""
+          echo "=== Test files discovered on disk ==="
           find tests -type f -name 'test-*.php' | sort
           echo ""
           echo "=== Total: $(find tests -type f -name 'test-*.php' | wc -l) test files ==="
-
-      - name: Show PHPUnit test method discovery
-        run: |
-          echo "=== PHPUnit will run the following test methods ==="
-          vendor/bin/phpunit --list-tests
           echo ""
-          echo "=== Test suites configured in phpunit.xml.dist ==="
+          echo "=== Test suites PHPUnit will recognise ==="
           vendor/bin/phpunit --list-suites
+          echo ""
+          echo "=== Test methods PHPUnit will run (across all suites) ==="
+          vendor/bin/phpunit --list-tests | tee /tmp/phpunit-tests.txt
+          echo ""
+          echo "=== Test method count: $(grep -c ' - ' /tmp/phpunit-tests.txt || echo 0) ==="
 
-      - name: Run PHPUnit tests
-        run: vendor/bin/phpunit --testdox --colors=never
+      - name: Run each PHPUnit testsuite explicitly
+        run: |
+          # Run each testsuite in its own phpunit invocation so we get a
+          # per-suite exit code + summary. We deliberately DON'T `set -e`
+          # here — we want every suite to run even if an earlier one
+          # fails, so a single broken suite doesn't hide the state of
+          # the rest. Aggregated exit code is checked at the end.
+          FAILED=0
+          FAILED_SUITES=""
+
+          for SUITE in "Helper" "model" "External" "SPIO Main"; do
+            echo ""
+            echo "=============================================================="
+            echo "=== Running testsuite: $SUITE"
+            echo "=============================================================="
+            vendor/bin/phpunit --testsuite "$SUITE" --testdox --colors=never
+            RC=$?
+            echo ""
+            echo "=== Testsuite '$SUITE' exit code: $RC"
+            if [ $RC -ne 0 ]; then
+              FAILED=1
+              FAILED_SUITES="$FAILED_SUITES '$SUITE'"
+            fi
+          done
+
+          echo ""
+          echo "=============================================================="
+          if [ $FAILED -ne 0 ]; then
+            echo "!!! FAILED testsuites:$FAILED_SUITES"
+            echo "=============================================================="
+            exit 1
+          fi
+          echo "=== All testsuites passed"
+          echo "=============================================================="
