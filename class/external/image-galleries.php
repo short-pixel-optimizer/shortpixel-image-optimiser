@@ -27,13 +27,6 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
  *      with the six extra suffixes above. Only wired when Envira or
  *      Soliloquy is active (via `addConstants()` on `admin_init`).
  *
- * KNOWN BUG: the `plugin_active('soliquy')` check in `addConstants()`
- * (line ~30) has a typo — the real Soliloquy plugin slug is
- * `soliloquy` (or `soliloquy-lite`). Effect: on installs with only
- * Soliloquy (no Envira), the Envira-suffix filter never gets wired,
- * so `_c` / `_tl` / etc. thumbnails aren't recognised. Flagged in the
- * deferred-bugs memo.
- *
  * The commented-out `SHORTPIXEL_CUSTOM_THUMB_SUFFIXES` block in
  * `addConstants()` is legacy scaffolding from the pre-filter days
  * when suffixes were configured via a constant. Kept in place as a
@@ -60,9 +53,6 @@ class ImageGalleries
    * Wire `envira_suffixes` into `shortpixel/image/unlisted_suffixes`
    * when Envira OR Soliloquy is active.
    *
-   * Warning: contains the `plugin_active('soliquy')` typo — see class
-   * docblock.
-   *
    * @return void
    */
   // This adds constants for mentioned plugins checking for specific suffixes on addUnlistedImages.
@@ -73,7 +63,7 @@ class ImageGalleries
     //if( !defined('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES')) {
 
 
-    if (\wpSPIO()->env()->plugin_active('envira') || \wpSPIO()->env()->plugin_active('soliquy') )
+    if (\wpSPIO()->env()->plugin_active('envira') || \wpSPIO()->env()->plugin_active('soliloquy') )
 		{
 
 						add_filter('shortpixel/image/unlisted_suffixes', array($this, 'envira_suffixes'));
@@ -105,7 +95,7 @@ class ImageGalleries
      $screens[] = 'edit-envira';
      $screens[] = 'envira';
 
-     // Solo Cuy
+     // Soliloquy
      $screens[] = 'edit-soliloquy';
      $screens[] = 'soliloquy';
      return $screens;

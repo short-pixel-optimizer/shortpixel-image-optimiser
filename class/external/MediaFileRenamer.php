@@ -99,7 +99,7 @@ class MediaFileRenamer
 
     if (false === isset($thumbObj))
     {
-        Log::addWarn('Media File Renamer: requested thumbnail not foud! ', $oldpath);
+        Log::addWarn('Media File Renamer: requested thumbnail not found! ', $oldpath);
         return false; 
     }
 

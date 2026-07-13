@@ -19,7 +19,7 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
  *   1. `shortpixel/aidatamodel/paramlist` (via `checkParamList`) —
  *      inbound: inject the locale into the outgoing AI request params
  *      when WPML reports a locale for the attachment.
- *   2. `shortpixel/ai/succes` (via `successHandle`) — outbound: give
+ *   2. `shortpixel/ai/success` (via `successHandle`) — outbound: give
  *      site owners a filter (`shortpixel/wpml/airesult`) to mutate the
  *      AI response before SPIO stores it.
  *
@@ -27,11 +27,6 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
  * bails early with `return false;` (yes, a return value from a
  * constructor — harmless, PHP ignores it) if `plugin_active('wpml')`
  * is false, so on non-WPML installs the class is inert.
- *
- * Filter-name note: `checkParamlist` (lowercase L) is the filter name,
- * while the method is defined as `checkParamList` (uppercase L).
- * PHP method-name lookup is case-insensitive so this works, but the
- * casing inconsistency is worth being aware of if you're grepping.
  *
  * Self-boots at file-load time (no singleton wrapper).
  */
@@ -48,8 +43,8 @@ class WPML
         {
             return false;
         }
-        add_filter('shortpixel/aidatamodel/paramlist', [$this, 'checkParamlist'], 10, 2);
-        add_filter('shortpixel/ai/succes', [$this, 'successHandle'], 10, 2);
+        add_filter('shortpixel/aidatamodel/paramlist', [$this, 'checkParamList'], 10, 2);
+        add_filter('shortpixel/ai/success', [$this, 'successHandle'], 10, 2);
     }
 
 

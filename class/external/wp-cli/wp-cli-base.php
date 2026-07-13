@@ -747,7 +747,7 @@ class SpioCommandBase
 	 */
 	protected function showResponses()
 	{
-		return false; // @todo Pending responseControl, offf.
+		return false; // @todo Pending responseControl, off.
 
 		/*$responses = ResponseController::getAll();
 

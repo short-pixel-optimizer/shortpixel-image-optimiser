@@ -7,8 +7,10 @@
  *   - envira_suffixes merges the six extra suffix patterns
  *
  * Skipped: addConstants() (`plugin_active` check requires the real
- * plugin loaded; also contains the `'soliquy'` slug typo flagged in
- * the deferred-bugs memo).
+ * plugin loaded — but at least the slugs it checks against are now
+ * correctly spelled after the 2026-07-14 typo fix; the previous
+ * `'soliquy'` misspelling would have silently broken Soliloquy-only
+ * installs).
  *
  * @package Shortpixel_Image_Optimiser
  */

@@ -126,7 +126,7 @@ class UncodeController
 
       $fs = \wpSPIO()->filesystem();
       $mediaItem = $fs->getImage($media_id, 'media');
-      if ($mediaItem->isProcessable())
+      if (is_object($mediaItem) && $mediaItem->isProcessable())
       {
           $control = new \Shortpixel\Controller\QueueController();
           $control->addItemToQueue($mediaItem);
