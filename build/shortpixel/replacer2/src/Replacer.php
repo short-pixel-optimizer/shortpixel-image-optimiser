@@ -27,6 +27,8 @@ class Replacer
 	protected $target_url;
 	protected $source_metadata = [];
 	protected $target_metadata = [];
+	protected $search_urls = []; 
+	protected $replace_urls = []; 
 
 	protected static $instance; 
 
@@ -92,6 +94,18 @@ class Replacer
 	public function setTargetMeta($meta)
 	{
 		$this->target_metadata = $meta;
+	}
+
+	public function addURLArray($search_urls = [], $replace_urls = [])
+	{
+		if (true === is_array($search_urls))
+		{
+			$this->search_urls = array_merge($this->search_urls, $search_urls);
+		}
+		if (true === is_array($replace_urls))
+		{
+			$this->replace_urls = array_merge($this->replace_urls, $replace_urls);
+		}
 	}
 
 	public function Setup()
@@ -161,6 +175,10 @@ class Replacer
 		$search_urls = $urls['source'];
 		$replace_urls = $urls['target'];
 
+
+	 	$search_urls = array_merge($search_urls, $this->search_urls); 
+	 	$replace_urls = array_merge($replace_urls, $this->replace_urls); 
+
 		/* If the replacement is much larger than the source, there can be more thumbnails. This leads to disbalance in the search/replace arrays.
 	      Remove those from the equation. If the size doesn't exist in the source, it shouldn't be in use either */
 		foreach ($replace_urls as $size => $url) {
@@ -203,7 +221,7 @@ class Replacer
 		// If the two sides are disbalanced, the str_replace part will cause everything that has an empty replace counterpart to replace it with empty. Unwanted.
 		if (count($search_urls) !== count($replace_urls)) {
 			Log::addError('Unbalanced Replace Arrays, aborting', array($search_urls, $replace_urls, count($search_urls), count($replace_urls)));
-			$errors[] = __('There was an issue with updating your image URLS: Search and replace have different amount of values. Aborting updating thumbnails', 'shortpixel-image-optimiser');
+			$errors[] = __('There was an issue with updating your image URLS: Search and replace have different amount of values. Aborting updating thumbnails', 'enable-media-replace');
 			return $errors;
 		}
 
