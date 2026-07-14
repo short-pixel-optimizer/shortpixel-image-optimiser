@@ -1342,7 +1342,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
         if ($bool !== true)
         {
-					Log::addError('Moving backupFile failed -' . $this->getFullpath() );
+					Log::addError('Moving backupFile failed -' . $this->getFullPath() );
 					$response = array(
 							'is_error' => true,
 							'issue_type' => ResponseController::ISSUE_FILE_NOTWRITABLE,
@@ -1506,7 +1506,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
                 if ($type == 'regex-name' || $type == 'regex-path')
                 {
-                    $result = $this->matchExludeRegexPattern($target, $pattern);
+                    $result = $this->matchExcludeRegexPattern($target, $pattern);
                 }
                 else {
                     $result =  $this->matchExcludePattern($target, $pattern);
@@ -1600,7 +1600,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
      * @param string $pattern PCRE-compatible regex including delimiters.
      * @return bool True on a successful, non-empty match.
      */
-    protected function matchExludeRegexPattern($target, $pattern)
+    protected function matchExcludeRegexPattern($target, $pattern)
     {
       if(strlen($pattern) == 0)  // can happen on faulty input in settings.
         return false;
