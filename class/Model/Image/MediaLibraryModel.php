@@ -561,20 +561,26 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$width = null;
 		$height = null;
 
-		if (! isset($wpmeta['width'])) {
-			if ('pdf' === $this->getExtension()) {
-				$width = $wpmeta['full']['width'];
-			}
-		} else
+		$sizes = isset($wpmeta['sizes']) ? $wpmeta['sizes'] : null; 
+
+		if (true === isset($wpmeta['width'])) {
 			$width = $wpmeta['width'];
+		}
+		elseif ('pdf' === $this->getExtension() && $sizes !== null && isset($sizes['full']) && isset($sizes['full']['width']))
+		{
+			$width = $sizes['full']['width'];		
+		} 
+		
 
-
-		if (! isset($wpmeta['height'])) {
-			if ('pdf' === $this->getExtension() ) {
-				$height = $wpmeta['full']['height'];
-			}
-		} else
+		if (true === isset($wpmeta['height'])) {
 			$height = $wpmeta['height'];
+
+		} 
+		elseif ('pdf' === $this->getExtension() && $sizes !== null && isset($sizes['full']) && isset($sizes['full']['height']))
+		{
+			$height = $sizes['full']['height'];		
+		} 
+
 
 		if (isset($wpmeta['filesize']) && intval($wpmeta['filesize']) > 0) {
 			$this->filesize = $wpmeta['filesize'];

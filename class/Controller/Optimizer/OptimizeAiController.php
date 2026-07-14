@@ -309,7 +309,7 @@ class OptimizeAiController extends OptimizerBase
         // If the file was just uploaded, assume it's not already widely linked and doesn't need replacing / symlinking 
         // ( Maybe just replacing? )
         // Generic number of strlen here. Disallow filename not to be very short, because because. 
-        if (isset($aiData['filename']) && is_string($aiData['filename']) && strlen($aiData['filename']) > 5) // ?? 
+        if (isset($aiData['filebase']) && is_string($aiData['filebase']) && strlen($aiData['filebase']) > 5) // ?? 
         {
             // @todo This and the ReplaceAtttributes is similar code + Replacer2 doesn't reset at all due to getINstance implementation
             $currentFileBase = ($imageModel->isScaled()) ? $imageModel->getOriginalFile()->getFileBase() : $imageModel->getFileBase();
@@ -327,14 +327,14 @@ class OptimizeAiController extends OptimizerBase
                 $url = $urls[0];
             }
 
-            if ($currentFileBase !== $aiData['filename']) {
+            if ($currentFileBase !== $aiData['filebase']) {
                 $args = [
                     'dry_run' => false,  
                     'recent_upload' => $qItem->data()->recent_upload,
                     'url' => $url, 
                 ];
 
-                $this->replaceFiles($qItem, $aiData['filename'], $args);
+                $this->replaceFiles($qItem, $aiData['filebase'], $args);
             }
 
             // Reset when files change.
@@ -447,7 +447,7 @@ class OptimizeAiController extends OptimizerBase
   *  - Move Backups 
   ( This might warrant a class of it's own due to complexity, or hooking into converter Models )
   */
-    protected function replaceFiles($qItem, $newFileName, $args = [])
+    protected function replaceFiles($qItem, $newFileBase, $args = [])
     {
         $defaults = [
             'dry_run' => false,
@@ -510,8 +510,7 @@ class OptimizeAiController extends OptimizerBase
         $base_url = str_replace('.' . pathinfo($base_url, PATHINFO_EXTENSION), '', $base_url);
         $base_url = str_replace($base_filename, '', $base_url);
 
-        $target_url = str_replace($base_filename, $newFileName, $source_url);
-
+        $target_url = str_replace($base_filename, $newFileBase, $source_url);
 
         $searchArray = $replaceArray = $sourceFiles = $targetFiles = [];
 
@@ -521,7 +520,7 @@ class OptimizeAiController extends OptimizerBase
             $sourceFiles[$key] = $fileObj;
 
             // The Str replace leaves the extension intact here.
-            $filename = str_replace($base_filename, $newFileName, $fileObj->getFileName());
+            $filename = str_replace($base_filename, $newFileBase, $fileObj->getFileName());
             $replaceArray[$key] = $base_url . $filename;
             $targetFiles[$key] = $fileObj->getFileDir() . $filename;
         }
@@ -531,7 +530,7 @@ class OptimizeAiController extends OptimizerBase
                 $searchArray['webp_' . $key] = $base_url . $fileObj->getFileName();
                 $sourceFiles['webp_' . $key] = $fileObj;
 
-                $webp_filename = str_replace($base_filename, $newFileName, $fileObj->getFileName());
+                $webp_filename = str_replace($base_filename, $newFileBase, $fileObj->getFileName());
                 $replaceArray['webp_' . $key] = $base_url . $webp_filename;
 
                 $targetFiles['webp_' . $key] =  $fileObj->getFileDir() . $webp_filename;
@@ -543,7 +542,7 @@ class OptimizeAiController extends OptimizerBase
                 $searchArray['avif_' . $key] = $base_url . $fileObj->getFileName();
                 $sourceFiles['avif_' . $key] = $fileObj;
 
-                $avif_filename = str_replace($base_filename, $newFileName, $fileObj->getFileName());
+                $avif_filename = str_replace($base_filename, $newFileBase, $fileObj->getFileName());
                 $replaceArray['avif_' . $key] = $base_url . $avif_filename;
                 $targetFiles['avif_' . $key] =  $fileObj->getFileDir() . $avif_filename;
             }
@@ -586,9 +585,9 @@ class OptimizeAiController extends OptimizerBase
         $backupController = BackupController::getBackupController();
         $backupModel = $backupController->getModel($imageModel);
         if (false === $args['dry_run']) {
-            $backupModel->renameBackup($newFileName);
+            $backupModel->renameBackup($newFileBase);
         } else {
-            Log::addInfo('[Dry-run] Would have renamed backup files to: ' . $newFileName);
+            Log::addInfo('[Dry-run] Would have renamed backup files to: ' . $newFileBase);
         }
 
         $replacer = new Replacer();
@@ -604,7 +603,7 @@ class OptimizeAiController extends OptimizerBase
             Log::addInfo('ReplaceArray ', $replaceArray);
         }
 
-        $this->replaceMetaData($item_id, $base_filename, $newFileName, $args['dry_run']);
+        $this->replaceMetaData($item_id, $base_filename, $newFileBase, $args['dry_run']);
 
         return false;
     }
