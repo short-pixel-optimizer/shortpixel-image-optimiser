@@ -240,7 +240,7 @@ class OptimizeAiController extends OptimizerBase
             'caption' => ['prefix' => 'ai_caption_prefix', 'postfix' => 'ai_caption_postfix'],
             'description' => ['prefix' => 'ai_description_prefix', 'postfix' => 'ai_description_postfix'],
             'post_title' => ['prefix' => 'ai_post_title_prefix', 'postfix' => 'ai_post_title_postfix'],
-            'filename' => ['prefix' => 'ai_filename_prefix', 'postfix' => 'ai_filename_postfix'],
+            'filebase' => ['prefix' => 'ai_filename_prefix', 'postfix' => 'ai_filename_postfix'],
         ];
 
         foreach ($prefixPostfixMap as $field => $affixes) {
@@ -248,7 +248,7 @@ class OptimizeAiController extends OptimizerBase
 
                 $prefix = $settings->{$affixes['prefix']};
                 $postfix = $settings->{$affixes['postfix']};
-                $spacer = ($field === 'filename') ? '' : ' ';
+                $spacer = ($field === 'filebase') ? '' : ' ';
 
                 if (!empty($prefix)) {
                     $aiData[$field] = $prefix . $spacer . $aiData[$field];
