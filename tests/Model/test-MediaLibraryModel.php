@@ -396,10 +396,14 @@ class MediaLibraryModelTest extends WP_UnitTestCase {
 	 * the size doesn't exist.
 	 */
 
-	public function test_getThumbNail_returns_null_for_a_size_not_in_the_thumbnails_map() {
+	public function test_getThumbNail_returns_false_for_a_size_not_in_the_thumbnails_map() {
 		$model = $this->makeStubModel();
 
-		$this->assertNull( $model->getThumbNail( 'nonexistent-size' ) );
+		// Sentinel: strict `assertFalse` (not `assertNull`). The method
+		// returns `false` via the `return false;` fall-through at line
+		// 1829 — a regression that changed to null would still be
+		// falsy but wouldn't match downstream `=== false` callsites.
+		$this->assertFalse( $model->getThumbNail( 'nonexistent-size' ) );
 	}
 
 	public function test_getThumbNail_returns_the_registered_thumbnail_object_for_a_known_size() {
@@ -1195,10 +1199,14 @@ class MediaLibraryModelTest extends WP_UnitTestCase {
 	 * getOptimizeUrls — thin wrapper around getOptimizeData()['urls'].
 	 */
 
-	public function test_getOptimizeUrls_returns_empty_array_when_optimizeData_has_no_urls() {
+	public function test_getOptimizeUrls_returns_empty_array_when_no_processable_targets_exist() {
 		$model = $this->makeStubModel();
-		// stub post_id=0 → wp_get_attachment_url(0) → false → getOptimizeData
-		// early-returns the empty parameters shape.
+		// wp_get_attachment_url(0) returns the site URL (not false) in the
+		// WP test env, so the "empty URL" early exit at getOptimizeData:231
+		// doesn't trigger. Instead force the not-processable path via the
+		// isProcessable cache — then the main-URL-add branch at line 250
+		// skips and `urls` stays empty.
+		$this->setProtected( $model, 'processable_status', ImageModel::P_EXCLUDE_PATH );
 
 		$result = $model->getOptimizeUrls();
 
@@ -1207,17 +1215,20 @@ class MediaLibraryModelTest extends WP_UnitTestCase {
 	}
 
 	/*
-	 * getOptimizeData — empty-URL early return + cache behaviour.
+	 * getOptimizeData — empty-URL / not-processable path + cache behaviour.
 	 */
 
-	public function test_getOptimizeData_returns_empty_parameters_shape_when_url_cannot_be_found() {
+	public function test_getOptimizeData_returns_empty_parameters_shape_when_nothing_is_processable() {
 		$model = $this->makeStubModel();
+		// Same rationale as the getOptimizeUrls test above — force the
+		// not-processable branch so `urls` stays empty regardless of
+		// whether the site URL is reachable.
+		$this->setProtected( $model, 'processable_status', ImageModel::P_EXCLUDE_PATH );
 
 		$result = $model->getOptimizeData();
 
-		// Shape sentinel: the early-return at line 231 returns the
-		// pre-initialised parameters array with `urls`, `params`, and
-		// `returnParams` keys but no populated entries.
+		// Shape sentinel: the pre-initialised parameters array has
+		// `urls`, `params`, and `returnParams` keys but no populated entries.
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'urls', $result );
 		$this->assertArrayHasKey( 'params', $result );
@@ -1568,8 +1579,9 @@ class MediaLibraryModelTest extends WP_UnitTestCase {
 	 * PINNED for deferred fix — MediaLibraryModel::legacyConvertStatus
 	 * has a branch coverage gap: when none of the four `if`/`elseif`
 	 * conditions fire, `$status` is never assigned. The final
-	 * `return $status;` then reads an undefined variable, which fatals
-	 * under convertNoticesToExceptions=true.
+	 * `return $status;` reads an undefined variable, which returns null
+	 * (in most PHP configs) or throws under strict warning-to-exception
+	 * configurations.
 	 *
 	 * Trigger: legacy data with a non-numeric `ErrCode` string that
 	 * isn't 'backup-fail' or 'write-fail' — e.g. `'unknown-error'`.
@@ -1577,9 +1589,14 @@ class MediaLibraryModelTest extends WP_UnitTestCase {
 	 * false in PHP, so none of the branches fire.
 	 *
 	 * Intended behaviour: define a default $status (e.g. FILE_STATUS_UNPROCESSED
-	 * or FILE_STATUS_ERROR) so the return is safe.
+	 * or FILE_STATUS_ERROR) so the return is always a valid int
+	 * FILE_STATUS_* code.
+	 *
+	 * This test will FAIL until Bas adds a default $status assignment.
+	 * Current observed behaviour: returns null (env-dependent — may
+	 * throw under stricter configs).
 	 */
-	public function test_legacyConvertStatus_does_not_crash_when_no_branch_fires_pinned_for_deferred_fix() {
+	public function test_legacyConvertStatus_returns_int_status_code_for_unknown_ErrCode_string_pinned_for_deferred_fix() {
 		$model = $this->makeStubModel();
 
 		// Non-numeric ErrCode that isn't 'backup-fail' or 'write-fail'.
@@ -1589,14 +1606,15 @@ class MediaLibraryModelTest extends WP_UnitTestCase {
 
 		try {
 			$result = $this->invokeProtected( $model, 'legacyConvertStatus', array( $data, $metadata ) );
-			// Post-fix: assert something sane (probably FILE_STATUS_ERROR or UNPROCESSED).
 			$this->assertIsInt(
 				$result,
-				'legacyConvertStatus should return an int FILE_STATUS_* code for any input, not undefined.'
+				'legacyConvertStatus returned a non-int (probably null) for an unknown ErrCode — `$status` is never assigned when none of the branches fire. Bug at MediaLibraryModel.php:3537-3558. Fix: add a default $status assignment.'
 			);
 		} catch ( \Throwable $t ) {
+			// Some PHP configs promote the undefined-variable notice
+			// to an exception. Same bug, different symptom.
 			$this->fail(
-				'legacyConvertStatus threw on unknown ErrCode string — `$status` is never assigned when none of the branches fire, and `return $status;` fatals. Bug at MediaLibraryModel.php:3537-3558. Message: ' . $t->getMessage()
+				'legacyConvertStatus threw on unknown ErrCode string — same undefined-$status bug at MediaLibraryModel.php:3537-3558. Message: ' . $t->getMessage()
 			);
 		}
 	}
@@ -1669,21 +1687,30 @@ class MediaLibraryModelTest extends WP_UnitTestCase {
 	 */
 
 	public function test_removeLegacyShortPixel_deletes_the_two_legacy_post_meta_keys_when_removeLegacy_returns_true() {
-		$model = $this->makeModelWithId( self::TEST_ATTACH_ID );
+		// Need a real attachment id — wp_get_attachment_metadata (which
+		// removeLegacy reads) returns false for non-attachment post ids,
+		// which means removeLegacy() would return false and skip the
+		// post-meta cleanup at line 2967.
+		$attachId = $this->factory->post->create( array(
+			'post_type'      => 'attachment',
+			'post_mime_type' => 'image/png',
+		) );
 
 		// Seed both post-meta flags AND a legacy WP metadata key so
-		// removeLegacy() returns true (its return gates the post-meta
-		// deletion at line 2967).
-		update_post_meta( self::TEST_ATTACH_ID, '_shortpixel_was_converted', 1 );
-		update_post_meta( self::TEST_ATTACH_ID, '_shortpixel_status', 2 );
-		wp_update_attachment_metadata( self::TEST_ATTACH_ID, array( 'ShortPixel' => array( 'sentinel' => 'legacy' ) ) );
+		// removeLegacy() returns true and gates the post-meta deletion.
+		update_post_meta( $attachId, '_shortpixel_was_converted', 1 );
+		update_post_meta( $attachId, '_shortpixel_status', 2 );
+		wp_update_attachment_metadata( $attachId, array( 'ShortPixel' => array( 'sentinel' => 'legacy' ) ) );
 
+		$model = $this->makeModelWithId( $attachId );
 		$model->removeLegacyShortPixel();
 
 		// Sentinel-pair: BOTH post-meta keys must be deleted. A
 		// regression that only deleted one would fail on the other.
-		$this->assertSame( '', get_post_meta( self::TEST_ATTACH_ID, '_shortpixel_was_converted', true ) );
-		$this->assertSame( '', get_post_meta( self::TEST_ATTACH_ID, '_shortpixel_status', true ) );
+		$this->assertSame( '', get_post_meta( $attachId, '_shortpixel_was_converted', true ) );
+		$this->assertSame( '', get_post_meta( $attachId, '_shortpixel_status', true ) );
+
+		wp_delete_post( $attachId, true );
 	}
 
 	/*
@@ -1692,27 +1719,39 @@ class MediaLibraryModelTest extends WP_UnitTestCase {
 	 */
 
 	public function test_removeLegacy_returns_true_when_it_stripped_a_legacy_key() {
-		$model = $this->makeModelWithId( self::TEST_ATTACH_ID );
+		// Real attachment required — see removeLegacyShortPixel test above
+		// for the wp_get_attachment_metadata / attachment-id coupling.
+		$attachId = $this->factory->post->create( array(
+			'post_type'      => 'attachment',
+			'post_mime_type' => 'image/png',
+		) );
+		wp_update_attachment_metadata( $attachId, array( 'ShortPixel' => array( 'x' => 1 ) ) );
 
-		wp_update_attachment_metadata( self::TEST_ATTACH_ID, array( 'ShortPixel' => array( 'x' => 1 ) ) );
-
+		$model  = $this->makeModelWithId( $attachId );
 		$result = $this->invokeProtected( $model, 'removeLegacy' );
 
 		$this->assertTrue( $result );
 
 		// Sentinel: the legacy key must be gone from wp metadata.
-		$metadata = wp_get_attachment_metadata( self::TEST_ATTACH_ID );
+		$metadata = wp_get_attachment_metadata( $attachId );
 		$this->assertArrayNotHasKey( 'ShortPixel', is_array( $metadata ) ? $metadata : array() );
+
+		wp_delete_post( $attachId, true );
 	}
 
 	public function test_removeLegacy_returns_false_when_no_legacy_keys_are_present() {
-		$model = $this->makeModelWithId( self::TEST_ATTACH_ID );
+		// Real attachment with NO legacy metadata seeded.
+		$attachId = $this->factory->post->create( array(
+			'post_type'      => 'attachment',
+			'post_mime_type' => 'image/png',
+		) );
+		$model = $this->makeModelWithId( $attachId );
 
-		// wp_get_attachment_metadata returns false for a non-attachment post_id;
-		// the removeLegacy foreach then does nothing → returns false.
 		$result = $this->invokeProtected( $model, 'removeLegacy' );
 
 		$this->assertFalse( $result );
+
+		wp_delete_post( $attachId, true );
 	}
 
 	/*
