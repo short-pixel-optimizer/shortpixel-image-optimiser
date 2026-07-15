@@ -605,19 +605,24 @@ class CustomImageModelTest extends WP_UnitTestCase {
 		// Payload lacks 'files' → guard at line 493 fails → $files undefined.
 		$payload = array( 'data' => array( 'foo' => 'bar' ) );
 
-		try {
-			$result = @$model->handleOptimized( $payload );
-			// Post-fix: expected to return false (early exit).
-			$this->assertSame(
-				false,
-				$result,
-				'handleOptimized should return false when files key is missing, not proceed to dereference undefined $files.'
-			);
-		} catch ( \Throwable $t ) {
-			$this->fail(
-				'handleOptimized threw on missing files key — the guard at line 493 skips $files assignment but the code below still uses $files[0]. Bug at CustomImageModel.php:506,509. Message: ' . $t->getMessage()
-			);
+		// The buggy code path walks through createBackup → preventNextTry →
+		// saveMeta, which fires an INSERT on an unpopulated model row
+		// (folder_id NULL, empty path/name). Suppress wpdb's error dump so
+		// the console output stays readable — the test's assertion is what
+		// matters, not the noise.
+		[ $model, $result, $threw, $msg ] = $this->runWithSuppressedDbErrors( function () use ( $model, $payload ) {
+			return @$model->handleOptimized( $payload );
+		}, $model );
+
+		if ( $threw ) {
+			$this->fail( 'handleOptimized threw on missing files key — the guard at line 493 skips $files assignment but the code below still uses $files[0]. Bug at CustomImageModel.php:506,509. Message: ' . $msg );
 		}
+		// Post-fix: expected to return false (early exit).
+		$this->assertSame(
+			false,
+			$result,
+			'handleOptimized should return false when files key is missing, not proceed to dereference undefined $files.'
+		);
 	}
 
 	public function test_handleOptimized_does_not_crash_when_optimizeData_lacks_data_key_pinned_for_deferred_fix() {
@@ -626,14 +631,48 @@ class CustomImageModelTest extends WP_UnitTestCase {
 		// still undefined even though 'files' key is present.
 		$payload = array( 'files' => array( array( 'image' => array() ) ) );
 
-		try {
-			$result = @$model->handleOptimized( $payload );
-			$this->assertSame( false, $result );
-		} catch ( \Throwable $t ) {
-			$this->fail(
-				'handleOptimized threw on missing data key — the AND-guard at line 493 short-circuits and $files never gets assigned even though the caller passed files. Bug at CustomImageModel.php:506,509. Message: ' . $t->getMessage()
-			);
+		[ $model, $result, $threw, $msg ] = $this->runWithSuppressedDbErrors( function () use ( $model, $payload ) {
+			return @$model->handleOptimized( $payload );
+		}, $model );
+
+		if ( $threw ) {
+			$this->fail( 'handleOptimized threw on missing data key — the AND-guard at line 493 short-circuits and $files never gets assigned even though the caller passed files. Bug at CustomImageModel.php:506,509. Message: ' . $msg );
 		}
+		$this->assertSame( false, $result );
+	}
+
+	/**
+	 * Runs a closure with wpdb error output suppressed AND the resulting
+	 * echoed error HTML captured & discarded via output buffering.
+	 *
+	 * `$wpdb->hide_errors()` covers the plain-text branch of `print_error()`;
+	 * the HTML branch (`<div id="error">…</div>`) is still echoed directly.
+	 * Wrapping in ob_start()/ob_end_clean() drops that too.
+	 *
+	 * Returns [ $model, $result, $threw, $msg ] — $model is passed through
+	 * unchanged for convenience in destructuring the caller's fixture.
+	 */
+	private function runWithSuppressedDbErrors( callable $fn, $model ): array {
+		global $wpdb;
+		$prevSuppress = $wpdb->suppress_errors( true );
+		$prevShow     = $wpdb->hide_errors();
+		ob_start();
+		$threw  = false;
+		$msg    = '';
+		$result = null;
+		try {
+			$result = $fn();
+		} catch ( \Throwable $t ) {
+			$threw = true;
+			$msg   = $t->getMessage();
+		} finally {
+			ob_end_clean();
+			$wpdb->suppress_errors( $prevSuppress );
+			if ( $prevShow ) {
+				$wpdb->show_errors();
+			}
+		}
+		return array( $model, $result, $threw, $msg );
 	}
 
 	/*

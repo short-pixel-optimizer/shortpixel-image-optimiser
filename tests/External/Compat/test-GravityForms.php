@@ -17,6 +17,13 @@
 
 use ShortPixel\gravityForms;
 
+// gravityforms.php is intentionally NOT in class/plugin.json's autoload
+// files list — the whole class is dormant and only loaded on-demand.
+// Pull it in explicitly so the test can reach it. Also triggers the
+// file-tail `$g = new gravityForms();` line, which is why we
+// remove_all_filters() below to reset any bleed from that boot.
+require_once dirname( dirname( dirname( __DIR__ ) ) ) . '/class/external/gravityforms.php';
+
 class GravityFormsTest extends WP_UnitTestCase {
 
 	public function test_constructor_registers_no_hooks_pinned_for_dormant_class() {

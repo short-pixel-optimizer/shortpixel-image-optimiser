@@ -1,0 +1,66 @@
+# SPIO test runner — matches the PHP + extensions the GitHub Actions
+# workflow at .github/workflows/phpunit.yml installs via shivammathur/setup-php.
+#
+# PHP version is a build arg so the same Dockerfile builds an image for
+# each supported PHP version (7.4 / 8.3 / 8.5). The build arg is
+# parameterised from docker-compose.tests.yml via the PHP_VERSION env var.
+#
+# Multi-arch: works on both linux/amd64 and linux/arm64 (Apple Silicon)
+# because official php:*-cli images publish both architectures for all
+# currently-supported PHP versions.
+
+ARG PHP_VERSION=8.3
+FROM php:${PHP_VERSION}-cli
+
+# System dependencies:
+#   - subversion:            bin/install-wp-tests.sh does `svn checkout` of the
+#                            WordPress test framework.
+#   - default-mysql-client:  the install script uses `mysql -h ...` to create
+#                            the test database.
+#   - git + unzip:           composer prefers them for some source packages.
+#   - libzip-dev + libxml2-dev + libonig-dev:  headers for the PHP zip / xml /
+#                            mbstring extensions we install below.
+#   - curl / ca-certificates: WP-CLI download + HTTPS to the SVN endpoint.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        subversion \
+        default-mysql-client \
+        git \
+        unzip \
+        curl \
+        ca-certificates \
+        libzip-dev \
+        libxml2-dev \
+        libonig-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# PHP extensions the plugin + test harness need. `json` is bundled in PHP 8+
+# so it's not in the install list — the workflow's `extensions:` value is a
+# no-op for it too.
+RUN docker-php-ext-install \
+        mbstring \
+        mysqli \
+        xml \
+        zip
+
+# Composer — copied from the official Composer image to avoid a manual
+# curl-verify-checksum dance. Pin to Composer 2 (matches most CI defaults).
+COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+
+# WP-CLI phar + a small wrapper that always passes --allow-root, because
+# the test container runs as root and WP-CLI refuses to run as root
+# without that flag (bin/install-wp-tests.sh calls `wp core download`,
+# `wp config create`, `wp core install` and would otherwise fail).
+RUN curl -sSL https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
+        -o /usr/local/bin/wp.phar \
+    && chmod +x /usr/local/bin/wp.phar \
+    && printf '#!/bin/sh\nphp /usr/local/bin/wp.phar --allow-root "$@"\n' > /usr/local/bin/wp \
+    && chmod +x /usr/local/bin/wp
+
+# PHP tuning to match what shivammathur/setup-php uses in the CI:
+#   post_max_size=256M, memory_limit=512M
+RUN { \
+        echo 'post_max_size=256M'; \
+        echo 'memory_limit=512M'; \
+    } > /usr/local/etc/php/conf.d/spio-test-tuning.ini
+
+WORKDIR /app

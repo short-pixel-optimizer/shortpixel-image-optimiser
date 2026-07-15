@@ -16,14 +16,25 @@ use ShortPixel\Model\Image\ImageModel;
 
 class UiHelperTest extends WP_UnitTestCase {
 
+	/**
+	 * Saved value of \wpSPIO()->settings()->redirectedSettings, restored in tear_down.
+	 */
+	private $savedRedirectedSettings;
+
 	public function set_up() {
 		parent::set_up();
 		// UiHelper::getAction() calls ApiKeyController::getInstance() which
-		// triggers ApiKeyModel::loadKey() → wp_redirect() on first init. The
-		// WP test bootstrap has already produced output at that point, so
-		// header() throws "headers already sent". Short-circuiting the
-		// wp_redirect filter prevents the header() call entirely.
-		add_filter( 'wp_redirect', '__return_false' );
+		// triggers ApiKeyModel::loadKey() → checkRedirect() on first init.
+		// With no verified key, checkRedirect() calls wp_safe_redirect() +
+		// exit(), silently killing PHPUnit mid-run (exit(0), no summary).
+		// Setting redirectedSettings truthy short-circuits the guard.
+		$this->savedRedirectedSettings = \wpSPIO()->settings()->redirectedSettings;
+		\wpSPIO()->settings()->redirectedSettings = 1;
+	}
+
+	public function tear_down() {
+		\wpSPIO()->settings()->redirectedSettings = $this->savedRedirectedSettings;
+		parent::tear_down();
 	}
 
 	/*

@@ -226,8 +226,13 @@ class ViewControllerTest extends WP_UnitTestCase {
 		//
 		// Instead, pick a real template we know exists in class/view/.
 		// `snippets/part-svgloader` is minimal and safe to include.
+		// Wrap in output buffering so the template's echoed SVG doesn't
+		// pollute the phpunit console output — we only care about the
+		// dedup bookkeeping.
+		ob_start();
 		$c->loadView( 'snippets/part-svgloader', true );
 		$c->loadView( 'snippets/part-svgloader', true );
+		ob_end_clean();
 
 		$loaded = $vRef->getValue( null );
 		// Sentinel: viewsLoaded contains the template exactly ONCE

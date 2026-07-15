@@ -1,0 +1,219 @@
+# Running the ShortPixel Image Optimiser tests
+
+This document describes how to run the PHPUnit test suite locally and how it
+maps to the GitHub Actions CI. Nothing here is shipped to WordPress.org —
+this file lives in the repo for the dev team.
+
+## What's in the suite
+
+The suite lives under `tests/` and is split into four PHPUnit testsuites via
+`phpunit.xml.dist`:
+
+| Testsuite | Path | Covers |
+|---|---|---|
+| `Helper` | `tests/Helper/` | Utility classes under `class/Helper/` |
+| `model` | `tests/Model/` | Data models + business logic under `class/Model/` |
+| `External` | `tests/External/` | Third-party integrations under `class/external/` |
+| `SPIO Main` | `tests/` (excluding the three above) | Root plugin classes (bootstrap, `Controller`, `ViewController`, etc.) |
+
+The tests run against a real WordPress test-environment (using the
+`WP_UnitTestCase` base class), not `WP_Mock`, so they need a MySQL database
+and a checkout of the WordPress test framework — see the setup section below.
+
+Test files follow the convention `test-<ClassName>.php`. Bootstrap lives at
+`tests/bootstrap.php`.
+
+## Recommended: run locally via Docker (OS-agnostic)
+
+**Prerequisite:** Docker Desktop (macOS / Windows) OR Docker Engine + the
+`docker compose` plugin (Linux). Nothing else — no local PHP, MySQL,
+Composer, WP-CLI, or SVN required.
+
+### Quick start
+
+```bash
+# Default — every testsuite on PHP 8.3 (matches the CI baseline)
+bin/test.sh
+
+# Specific testsuite
+bin/test.sh --testsuite Model
+bin/test.sh --testsuite External
+
+# Specific test method
+bin/test.sh --filter test_isProcessable
+
+# Specific test file
+bin/test.sh tests/Model/test-ImageModel.php
+```
+
+### PHP version matrix
+
+The setup supports PHP 7.4 (legacy minimum), 8.3 (current mainstream), and
+8.5 (upcoming). Each version gets its own Docker image tag, so switching
+between versions is cache-warm after the first build per version.
+
+```bash
+# One specific PHP version
+bin/test.sh --php 7.4
+bin/test.sh --php 8.5 --testsuite Model
+
+# All three sequentially — same as CI's matrix strategy
+bin/test.sh --matrix
+
+# Combine matrix with a filter
+bin/test.sh --matrix --filter test_handleAvif
+```
+
+### Debug workflow
+
+```bash
+# Drop into an interactive bash shell inside the PHP container.
+# Handy for repeated iteration without booting a fresh container per run.
+bin/test.sh --shell
+
+# From inside the shell:
+vendor/bin/phpunit --testsuite Model
+vendor/bin/phpunit --filter test_foo tests/Model/test-Bar.php
+```
+
+### Cache / reset
+
+```bash
+# Nuke all containers, volumes, and per-version PHP images.
+# Next run rebuilds everything from scratch (~3-5 min for one version).
+bin/test.sh --clean
+```
+
+Caches persisted between runs:
+
+- **`vendor/`** — lives on the host via the bind mount, so `composer install` runs only when `vendor/autoload.php` is missing.
+- **`/tmp/wordpress-tests-lib`** and **`/tmp/wordpress`** — persist in the `wp-tests-cache` named Docker volume, so the ~3-minute WordPress test-framework SVN checkout only happens once (per `--clean` cycle).
+- **PHP images** — Docker layer cache. Each PHP version keeps its own image tag (`spio-tests:php74` / `spio-tests:php83` / `spio-tests:php85`); switching PHP versions doesn't invalidate the others.
+
+### Timing expectations
+
+| Operation | First run | Subsequent runs |
+|---|---|---|
+| Full suite on one PHP version | 3-5 min (image pull + WP-tests SVN checkout) | ~20-60 s |
+| Full matrix (all 3 PHP versions) | 10-15 min | ~1-3 min |
+| Single testsuite | (setup + ~10 s) | ~10 s |
+
+## Alternative: run locally without Docker
+
+If Docker isn't an option, you can install the dependencies directly on your
+host. This is the setup the GitHub Actions runner uses under the hood.
+
+### System requirements
+
+- PHP 8.3 (or one of 7.4 / 8.5 for cross-version testing) with the `mbstring`, `mysqli`, `xml`, and `zip` extensions.
+- Composer 2.
+- MySQL 8.0 (any 5.7+ works but 8.0 matches CI).
+- WP-CLI (the `wp-cli.phar` binary somewhere on `$PATH` as `wp`).
+- SVN (`subversion` package) — required by `bin/install-wp-tests.sh` to check out the WordPress test framework.
+- `mysql` client — required by the same script to create the test database.
+
+### macOS install (Homebrew)
+
+```bash
+brew install php@8.3 composer mysql svn wp-cli
+brew services start mysql
+```
+
+### Linux install (Debian / Ubuntu)
+
+```bash
+sudo apt-get install php8.3-cli php8.3-mbstring php8.3-mysql php8.3-xml \
+                     php8.3-zip composer mysql-server subversion
+# WP-CLI:
+curl -sSL https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o /usr/local/bin/wp
+chmod +x /usr/local/bin/wp
+sudo service mysql start
+```
+
+### Windows
+
+Native Windows install is discouraged because `bin/install-wp-tests.sh` is a
+Bash script and depends on GNU-style tools (`grep -oP`, `sed -i`, `svn`).
+Use **WSL2** with a Debian/Ubuntu instance and follow the Linux instructions
+above, OR use the Docker path.
+
+### One-time bootstrap
+
+```bash
+# Install PHP dependencies
+composer install
+
+# Install the WordPress test framework (~3 min — SVN checkout).
+# Adjust the DB creds to match your local MySQL setup.
+bin/install-wp-tests.sh wordpress_test root '' 127.0.0.1 latest
+```
+
+The install script:
+1. Downloads the latest WordPress into `/tmp/wordpress` via WP-CLI.
+2. Creates a `wordpress_test` MySQL database.
+3. Runs `wp core install` to seed WordPress.
+4. SVN-checks-out the WordPress unit-test framework into `/tmp/wordpress-tests-lib`.
+5. Copies + patches `wp-tests-config.php` with the DB credentials.
+
+### Running tests
+
+```bash
+# All testsuites
+vendor/bin/phpunit
+
+# Specific testsuite
+vendor/bin/phpunit --testsuite Model
+vendor/bin/phpunit --testsuite External
+
+# Specific test method
+vendor/bin/phpunit --filter test_isProcessable
+
+# Specific file
+vendor/bin/phpunit tests/Model/test-ImageModel.php
+```
+
+## Running against the CI reference
+
+The CI configuration lives at `.github/workflows/phpunit.yml`. It:
+
+- Runs on `ubuntu-latest` GitHub Actions runners.
+- Uses a matrix strategy across PHP 7.4 / 8.3 / 8.5 (three jobs per push).
+- Installs PHP via `shivammathur/setup-php@v2`.
+- Uses MySQL 8.0 as a service container on port 3306.
+- Runs each testsuite in its own `phpunit` invocation so per-suite exit codes
+  are visible even when an earlier suite fails.
+
+The Docker-based local setup (`.docker/Dockerfile.tests` +
+`docker-compose.tests.yml` + `bin/test.sh`) is designed to match this
+environment byte-for-byte — same PHP versions, same MySQL image, same
+`bin/install-wp-tests.sh` script. If a test passes locally via `bin/test.sh`,
+it should pass on CI.
+
+## Writing new tests
+
+- Test files: `tests/<Group>/test-<ClassName>.php`.
+- Extend `WP_UnitTestCase` (not raw `PHPUnit\Framework\TestCase`) — SPIO relies on real WordPress state (real `wpdb`, real filters, real cache).
+- Use the existing test-file headers as templates. Each declares a focus-areas section, a skipped-at-unit-level section (integration territory), and reflection helpers where private members need inspection.
+- For SPIO's own database tables (`shortpixel_meta`, `shortpixel_folders`, `shortpixel_postmeta`), call `InstallHelper::checkTables()` in `set_up()` — plugin activation hooks don't fire in the WP test harness. See `tests/Model/test-DirectoryOtherMediaModel.php` for the canonical pattern.
+- Settings mutation: snapshot in `set_up()`, restore in `tear_down()`. See `tests/Model/test-PNGConverter.php` for the pattern.
+- Pinned regression tests: suffix the method name with `_pinned_for_deferred_fix` and include a docblock referencing the bug's file:line so it's grep-able.
+
+## Troubleshooting
+
+**"Could not find bin/install-wp-tests.sh" or SVN errors on first run**
+The Docker approach installs SVN in the container. If running natively, install `subversion` (Homebrew / apt) and retry.
+
+**"Class 'WP_UnitTestCase' not found"**
+The WordPress test framework isn't installed. Run `bin/install-wp-tests.sh` (native) or `bin/test.sh` (Docker — installs automatically on first run).
+
+**Tests pass locally but fail on CI (or vice versa)**
+Run `bin/test.sh --matrix` locally to check across PHP versions. Most cross-env failures are PHP-version-specific deprecations (PHP 8.5 surfaces things 8.3 doesn't) or a stale test cache. Try `bin/test.sh --clean` and rerun.
+
+**Docker on macOS: "no matching manifest for linux/arm64"**
+All the images we use (`php:*-cli`, `mysql:8.0`, `composer:2`) publish arm64 tags natively. If you see this, Docker Desktop needs updating, or a specific PHP version tag doesn't ship arm64 yet — fall back to `--php 8.3` which definitely does.
+
+**Docker: "port 3306 already in use"**
+The MySQL service in `docker-compose.tests.yml` does NOT publish its port to the host, so this shouldn't happen. If it does, another Compose file in the repo is claiming that port — check your local overrides.
+
+**Some tests are labeled `pinned_for_deferred_fix` — should I care?**
+Those tests are supposed to fail. They pin real bugs that are being tracked for the maintainer to review. See the sidecar memo `project_deferred_root_bugs.md` (not in the repo — internal doc) for the full list. Don't "fix" a pinned test by changing its assertion; that defeats the sentinel.
