@@ -83,6 +83,7 @@
  */
 
 use ShortPixel\Model\Image\ImageModel;
+use ShortPixel\Model\Image\ImageMeta;
 
 class ImageModelTest extends WP_UnitTestCase {
 
@@ -277,27 +278,21 @@ class ImageModelTest extends WP_UnitTestCase {
 
 			public function __construct( $path ) {
 				parent::__construct( $path );
-				$this->image_meta          = new stdClass();
-				$this->image_meta->status  = 0; // FILE_STATUS_UNPROCESSED
-				$this->image_meta->originalWidth  = null;
-				$this->image_meta->originalHeight = null;
-				$this->image_meta->tsAdded        = null;
-				$this->image_meta->webp           = null;
-				$this->image_meta->avif           = null;
-				// Meta fields handleOptimized writes to.
-				$this->image_meta->tsOptimized       = null;
-				$this->image_meta->compressedSize    = null;
-				$this->image_meta->originalSize      = null;
-				$this->image_meta->compressionType   = null;
-				$this->image_meta->did_keepExif      = null;
-				$this->image_meta->did_cmyk2rgb      = null;
-				$this->image_meta->resize            = null;
-				$this->image_meta->resizeWidth       = null;
-				$this->image_meta->resizeHeight      = null;
-				$this->image_meta->resizeType        = null;
-				// A stand-in field so setMeta success can be observed without
-				// touching a meta field that other logic depends on.
-				$this->image_meta->configurable = null;
+				// Use an anonymous class extending ImageMeta so:
+				//   1. convertMeta() is available (the Converter path in
+				//      isExtensionExcluded → Converter::getConverter calls
+				//      $image->image_meta->convertMeta() — a plain stdClass
+				//      fatals).
+				//   2. All the ImageThumbnailMeta fields (status, tsAdded,
+				//      webp, avif, tsOptimized, compressedSize, etc.) are
+				//      declared with sensible defaults, so hasMeta returns
+				//      true and setMeta writes succeed.
+				//   3. The `$configurable` stand-in is added on the anonymous
+				//      class for setMeta side-effect assertions without
+				//      touching real load-bearing fields.
+				$this->image_meta = new class extends ImageMeta {
+					public $configurable = null;
+				};
 			}
 
 			// --- 8 abstract stubs (no-op returns). ---
@@ -595,10 +590,17 @@ class ImageModelTest extends WP_UnitTestCase {
 	 */
 
 	public function test_exists_sets_processable_status_to_P_FILE_NOT_EXIST_when_file_missing() {
-		$model = $this->makeModel();
-		@unlink( $model->getFullPath() );
+		// Construct with a path that NEVER existed (don't create the
+		// fixture file). FileModel caches exists() results on first
+		// call — an alternative construct-then-unlink pattern would
+		// leave the stale `true` cached from any pre-unlink existence
+		// check inside the FileModel constructor chain.
+		$path  = sys_get_temp_dir() . '/spio-imagemodel-never-exists-' . uniqid() . '.png';
+		$model = $this->makeModel( $path );
 
-		$result = $model->exists();
+		// Force fresh check — exists() has a $forceCheck arg that
+		// bypasses the FileModel-level cache.
+		$result = $model->exists( true );
 
 		$this->assertFalse( $result );
 		// Sentinel: the side-effect is what pins the status. A regression
@@ -1315,8 +1317,14 @@ class ImageModelTest extends WP_UnitTestCase {
 	 */
 
 	public function test_isProcessable_returns_false_and_caches_P_FILE_NOT_EXIST_when_file_is_missing() {
-		$model = $this->makeModel();
-		@unlink( $model->getFullPath() );
+		// Never-created path — same rationale as
+		// test_exists_sets_processable_status_to_P_FILE_NOT_EXIST_when_file_missing.
+		// The construct-then-unlink pattern leaves a stale exists=true cache
+		// on the FileModel base, which routes isProcessable through the
+		// is_writable branch (→ P_FILE_NOTWRITABLE) instead of the
+		// exists branch (→ P_FILE_NOT_EXIST).
+		$path  = sys_get_temp_dir() . '/spio-imagemodel-never-exists-' . uniqid() . '.png';
+		$model = $this->makeModel( $path );
 
 		$this->assertFalse( $model->isProcessable() );
 		$this->assertSame(
@@ -1841,6 +1849,12 @@ class ImageModelTest extends WP_UnitTestCase {
 		\wpSPIO()->settings()->backupImages = true;
 		add_filter( 'shortpixel/image/skip_backup', '__return_true' );
 		$model = $this->makeModel();
+		// createBackup calls getBackupModel() BEFORE the filter check,
+		// which routes through BackupController::getModelById() with
+		// $this->get('id') — null on the stub → TypeError. Seed a stub
+		// backupModel so getBackupModel returns it via the cache branch
+		// without hitting the controller.
+		$this->setProtected( $model, 'backupModel', new stdClass() );
 
 		$results = array(
 			'image' => array(
@@ -1942,6 +1956,12 @@ class ImageModelTest extends WP_UnitTestCase {
 	public function test_createBackup_returns_true_immediately_when_skip_backup_filter_returns_true() {
 		add_filter( 'shortpixel/image/skip_backup', '__return_true' );
 		$model = $this->makeModel();
+		// getBackupModel() fires at the top of createBackup — BEFORE the
+		// filter check — and routes through BackupController::getModelById()
+		// with a null id on the stub. Seed a stub backupModel so the
+		// cache branch of getBackupModel returns it without hitting the
+		// controller.
+		$this->setProtected( $model, 'backupModel', new stdClass() );
 
 		$result = $this->invokeProtected( $model, 'createBackup' );
 
@@ -1965,6 +1985,9 @@ class ImageModelTest extends WP_UnitTestCase {
 		);
 
 		$model = $this->makeModel();
+		// Same rationale as the sibling test — bypass the
+		// BackupController path by seeding a stub backupModel.
+		$this->setProtected( $model, 'backupModel', new stdClass() );
 		$this->invokeProtected( $model, 'createBackup' );
 
 		$this->assertCount( 1, $captured );
@@ -2474,9 +2497,16 @@ class ImageModelTest extends WP_UnitTestCase {
 
 		$result = $this->invokeProtected( $model, 'fs' );
 
-		// Sentinel: identity check against the singleton. A regression
-		// that constructed a fresh controller would return a different
-		// instance.
-		$this->assertSame( \wpSPIO()->filesystem(), $result );
+		// `\wpSPIO()->filesystem()` doesn't return a singleton on this
+		// codebase — repeated calls hand back fresh instances. So an
+		// identity check (`assertSame`) is too strict. Instead pin the
+		// class-name equivalence: fs() must return the same TYPE that
+		// `\wpSPIO()->filesystem()` returns. A regression that pointed
+		// fs() at a different controller class would fail here.
+		$this->assertIsObject( $result );
+		$this->assertSame(
+			get_class( \wpSPIO()->filesystem() ),
+			get_class( $result )
+		);
 	}
 }
