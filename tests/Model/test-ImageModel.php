@@ -504,7 +504,12 @@ class ImageModelTest extends WP_UnitTestCase {
 
 		$meta = $model->getMeta( false );
 
-		$this->assertInstanceOf( \stdClass::class, $meta );
+		// Fixture uses an anonymous class extending ImageMeta (see
+		// makeModel()) — so the instance IS an ImageMeta, not a
+		// stdClass. This assertion pins the "returns the whole meta
+		// object" contract; the concrete type comes from whichever
+		// subclass owns the meta.
+		$this->assertInstanceOf( ImageMeta::class, $meta );
 	}
 
 	public function test_getMeta_returns_the_field_value_when_field_is_known() {

@@ -38,13 +38,32 @@
 use ShortPixel\Model\Image\CustomImageModel;
 use ShortPixel\Model\Image\ImageModel;
 use ShortPixel\Model\Image\ImageMeta;
+use ShortPixel\Helper\InstallHelper;
 
 class CustomImageModelTest extends WP_UnitTestCase {
 
 	/** @var string[] Absolute paths of fixture files created during tests. */
 	private $fixtureFiles = array();
 
+	public function set_up() {
+		parent::set_up();
+
+		// Ensure SPIO's own tables (shortpixel_meta / shortpixel_folders)
+		// exist. In the WP test harness the plugin loads via
+		// _manually_load_plugin() but activation hooks — where
+		// InstallHelper::activatePlugin normally creates these tables —
+		// don't fire. Same pattern used in test-DirectoryOtherMediaModel.
+		InstallHelper::checkTables();
+
+		// Clean state so per-test inserts don't collide with prior runs.
+		global $wpdb;
+		$wpdb->query( 'DELETE FROM ' . $wpdb->prefix . 'shortpixel_meta' );
+	}
+
 	public function tear_down() {
+		global $wpdb;
+		$wpdb->query( 'DELETE FROM ' . $wpdb->prefix . 'shortpixel_meta' );
+
 		foreach ( $this->fixtureFiles as $path ) {
 			if ( file_exists( $path ) ) {
 				@unlink( $path );
@@ -503,8 +522,12 @@ class CustomImageModelTest extends WP_UnitTestCase {
 		// Shape sentinel: keys must be `main` (tuple) + `totalpercentage`.
 		$this->assertArrayHasKey( 'main', $result );
 		$this->assertArrayHasKey( 'totalpercentage', $result );
+		// main[0] is the raw improvement value stored on customImprovement
+		// (25 as passed in); main[1] is always 0 for custom images.
 		$this->assertSame( array( 25, 0 ), $result['main'] );
-		$this->assertSame( 25, $result['totalpercentage'] );
+		// totalpercentage runs through round() which returns FLOAT in PHP,
+		// so the strict assertion needs 25.0 not 25.
+		$this->assertSame( 25.0, $result['totalpercentage'] );
 	}
 
 	public function test_getImprovements_coerces_null_improvement_to_zero_in_the_payload() {
@@ -517,7 +540,9 @@ class CustomImageModelTest extends WP_UnitTestCase {
 		// dropped the null-guard would surface null in the payload,
 		// which downstream consumers likely don't handle.
 		$this->assertSame( array( 0, 0 ), $result['main'] );
-		$this->assertSame( 0, $result['totalpercentage'] );
+		// round(0) returns float 0.0 — same coercion note as the
+		// non-null test above.
+		$this->assertSame( 0.0, $result['totalpercentage'] );
 	}
 
 	/*
