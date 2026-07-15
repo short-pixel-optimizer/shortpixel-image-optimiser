@@ -97,10 +97,17 @@ jobs:
       - name: Run each PHPUnit testsuite explicitly
         run: |
           # Run each testsuite in its own phpunit invocation so we get a
-          # per-suite exit code + summary. We deliberately DON'T `set -e`
-          # here — we want every suite to run even if an earlier one
-          # fails, so a single broken suite doesn't hide the state of
-          # the rest. Aggregated exit code is checked at the end.
+          # per-suite exit code + summary. Every suite must run even if
+          # an earlier one fails, so a single broken suite doesn't hide
+          # the state of the rest. Aggregated exit code is checked at
+          # the end.
+          #
+          # GitHub Actions runs `bash --noprofile --norc -eo pipefail`
+          # by default, so `set -e` is active. A bare phpunit failure
+          # would abort the whole step before we could capture $? — the
+          # `if ! ... ; then` construct is the documented escape hatch
+          # (`set -e` explicitly does not fire on a command in a
+          # conditional test).
           FAILED=0
           FAILED_SUITES=""
 
@@ -109,13 +116,14 @@ jobs:
             echo "=============================================================="
             echo "=== Running testsuite: $SUITE"
             echo "=============================================================="
-            vendor/bin/phpunit --testsuite "$SUITE" --testdox --colors=never
-            RC=$?
-            echo ""
-            echo "=== Testsuite '$SUITE' exit code: $RC"
-            if [ $RC -ne 0 ]; then
+            if ! vendor/bin/phpunit --testsuite "$SUITE" --testdox --colors=never; then
               FAILED=1
               FAILED_SUITES="$FAILED_SUITES '$SUITE'"
+              echo ""
+              echo "=== Testsuite '$SUITE' FAILED"
+            else
+              echo ""
+              echo "=== Testsuite '$SUITE' passed"
             fi
           done
 
