@@ -56,6 +56,39 @@ RUN curl -sSL https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-c
     && printf '#!/bin/sh\nphp /usr/local/bin/wp.phar --allow-root "$@"\n' > /usr/local/bin/wp \
     && chmod +x /usr/local/bin/wp
 
+# MySQL 8 auto-generates a self-signed TLS cert at startup and offers TLS
+# on every incoming connection. The mysql client shipped by Debian's
+# `default-mysql-client` package is actually MariaDB 11.x's client
+# (mariadb-client-core), which tries to negotiate TLS and rejects the
+# self-signed cert with:
+#
+#     ERROR 2026 (HY000): TLS/SSL error: self-signed certificate in certificate chain
+#
+# This kills bin/install-wp-tests.sh at the "create test database" step.
+#
+# Fix: wrap /usr/bin/mysql with a shim at /usr/local/bin/mysql that
+# always injects --skip-ssl before the caller's arguments. Why a wrapper
+# and not a /root/.my.cnf override?
+#
+#   * my.cnf works, but MariaDB's client aborts with exit 7 the moment
+#     it sees an option name it doesn't recognise (e.g. `ssl-mode=`,
+#     which is a MySQL-8-client option). Adding both names for
+#     cross-compat is a trap.
+#   * The wrapper is explicit — `mysql` inside this container always
+#     connects without TLS, regardless of which package version is
+#     installed. Survives a swap to mysql-community-client too, because
+#     --skip-ssl is understood by both MariaDB's and MySQL's clients.
+#
+# The wrapper lives in /usr/local/bin (earlier in PATH than /usr/bin)
+# and calls /usr/bin/mysql by absolute path, so there's no shell-lookup
+# loop. Safe because the connection never leaves the Docker internal
+# network — no MITM risk.
+#
+# Not needed on the CI runner because shivammathur/setup-php installs a
+# mysql client that handles the TLS handshake with MySQL 8 gracefully.
+RUN printf '#!/bin/sh\nexec /usr/bin/mysql --skip-ssl "$@"\n' > /usr/local/bin/mysql \
+    && chmod +x /usr/local/bin/mysql
+
 # PHP tuning to match what shivammathur/setup-php uses in the CI:
 #   post_max_size=256M, memory_limit=512M
 RUN { \
@@ -63,4 +96,4 @@ RUN { \
         echo 'memory_limit=512M'; \
     } > /usr/local/etc/php/conf.d/spio-test-tuning.ini
 
-WORKDIR /app
+WORKDIR /opt/plugin

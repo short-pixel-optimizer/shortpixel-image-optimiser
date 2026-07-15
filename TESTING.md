@@ -215,5 +215,16 @@ All the images we use (`php:*-cli`, `mysql:8.0`, `composer:2`) publish arm64 tag
 **Docker: "port 3306 already in use"**
 The MySQL service in `docker-compose.tests.yml` does NOT publish its port to the host, so this shouldn't happen. If it does, another Compose file in the repo is claiming that port — check your local overrides.
 
+**Docker: `ERROR 2026 (HY000): TLS/SSL error: self-signed certificate in certificate chain`**
+MySQL 8 auto-generates a self-signed TLS cert at startup and the MariaDB client (installed via Debian's `default-mysql-client`) rejects it. The Dockerfile ships a `/usr/local/bin/mysql` wrapper that always passes `--skip-ssl` to the underlying binary, avoiding TLS negotiation entirely. Safe because the mysql traffic never leaves Docker's internal network. If you still see this error, your image is stale — `bin/test.sh --clean` now runs `docker compose build --no-cache` to guarantee a fresh rebuild:
+
+```bash
+bin/test.sh --clean
+bin/test.sh
+```
+
 **Some tests are labeled `pinned_for_deferred_fix` — should I care?**
 Those tests are supposed to fail. They pin real bugs that are being tracked for the maintainer to review. See the sidecar memo `project_deferred_root_bugs.md` (not in the repo — internal doc) for the full list. Don't "fix" a pinned test by changing its assertion; that defeats the sentinel.
+
+**PHPUnit prints a few dots + F then abruptly ends with no summary (exit code 0)**
+Something in the code-under-test called `exit()` mid-test, which kills PHPUnit before it can emit its summary. The tell: no `Tests: X, Assertions: Y` line, no `OK`/`FAILURES!` block. Common culprits inside SPIO: `ApiKeyModel::checkRedirect()` (`wp_safe_redirect() + exit()` when no verified key), `wp_die()` in AJAX paths, `wp_send_json*()`. The fix is per-test: seed whatever state short-circuits the exit — e.g. `\wpSPIO()->settings()->redirectedSettings = 1` for the redirect guard (pattern: `tests/Helper/test-UiHelper.php::set_up`). Running with `--debug` shows exactly which test the process died in.

@@ -41,13 +41,19 @@ services:
         # Set PHP_VERSION in the host env (or via bin/test.sh --php <v>)
         # to switch between 7.4 / 8.3 / 8.5. Defaults to 8.3 if unset.
         PHP_VERSION: ${PHP_VERSION:-8.3}
-    working_dir: /app
+    # Mount at a path with a non-root parent (parent = /opt) so
+    # SHORTPIXEL_PLUGIN_DIR mimics a real WP `wp-content/plugins/{slug}`
+    # layout. `EnvironmentModel::getRelativePluginSlug()` uses
+    # `str_replace($plugins_dir, '', $plugin_file)` — if we mounted at
+    # `/app` the plugins_dir would be `/` and str_replace would strip
+    # every slash from the file path, producing e.g. `appwp-shortpixel.php`.
+    working_dir: /opt/plugin
     volumes:
       # Live-mount the repo so edits on the host are immediately visible
       # inside the container. `vendor/` populated by composer install is
       # written back to the host too — that's intentional so the IDE has
       # autoload data.
-      - .:/app
+      - .:/opt/plugin
       # Persistent cache for /tmp so the WP-tests SVN checkout + wp core
       # download only pay their cost once. `bin/test.sh --clean` wipes this.
       - wp-tests-cache:/tmp
