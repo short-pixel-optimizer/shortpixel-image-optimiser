@@ -1827,10 +1827,11 @@ class AjaxController
 	protected function send($json)
 	{
 		// Cast before sending anything to a simple stdclass, to prevent issues with adding json and processorkey to output 
-		if (is_object($json) && false === $json instanceof \stdClass)
+		if ( (is_object($json) && false === $json instanceof \stdClass)  || is_array($json))
 		{
 			$json = (object) $json; 
 		}
+
 		$callback = isset($_POST['callback']) ? sanitize_text_field($_POST['callback']) : false;
 		if ($callback)
 			$json->callback = $callback; // which type of request we just fullfilled ( response processing )
