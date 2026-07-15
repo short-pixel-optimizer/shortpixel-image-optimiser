@@ -8,8 +8,18 @@ on:
 
 jobs:
   build:
-    name: Run Tests
+    name: Run Tests (PHP ${{ matrix.php-version }})
     runs-on: ubuntu-latest
+
+    strategy:
+      # Don't cancel other PHP versions when one fails — we want to see
+      # results across the whole matrix, not just the first failure.
+      fail-fast: false
+      matrix:
+        php-version:
+          - '7.4'   # legacy — minimum supported per plugin header
+          - '8.3'   # currently most common in production
+          - '8.5'   # upcoming — flag regressions before it ships
 
     services:
       mysql:
@@ -38,10 +48,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up PHP
+      - name: Set up PHP ${{ matrix.php-version }}
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'  # change this to the PHP version you need
+          php-version: ${{ matrix.php-version }}
           extensions: mbstring, mysqli, json, xml
           ini-values: post_max_size=256M, memory_limit=512M
           tools: composer
