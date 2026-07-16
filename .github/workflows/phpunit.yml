@@ -108,6 +108,13 @@ jobs:
           # `if ! ... ; then` construct is the documented escape hatch
           # (`set -e` explicitly does not fire on a command in a
           # conditional test).
+          #
+          # Per-suite output is tee-d to $LOGDIR so the end-of-run
+          # summary can extract failing test names + grand totals
+          # without re-invoking phpunit.
+          LOGDIR=$(mktemp -d)
+          trap "rm -rf $LOGDIR" EXIT
+
           FAILED=0
           FAILED_SUITES=""
 
@@ -116,16 +123,71 @@ jobs:
             echo "=============================================================="
             echo "=== Running testsuite: $SUITE"
             echo "=============================================================="
-            if ! vendor/bin/phpunit --testsuite "$SUITE" --testdox --colors=never; then
+            SAFE_NAME=$(echo "$SUITE" | tr " " "_")
+            LOG="$LOGDIR/$SAFE_NAME.log"
+            # Pipe through tee for capture. GitHub Actions logs aren't a
+            # TTY, so keep colours off — the captured log stays scannable.
+            if vendor/bin/phpunit --testsuite "$SUITE" --testdox --colors=never 2>&1 | tee "$LOG" && [ "${PIPESTATUS[0]}" -eq 0 ]; then
+              echo ""
+              echo "=== Testsuite '$SUITE' passed"
+            else
               FAILED=1
               FAILED_SUITES="$FAILED_SUITES '$SUITE'"
               echo ""
               echo "=== Testsuite '$SUITE' FAILED"
-            else
-              echo ""
-              echo "=== Testsuite '$SUITE' passed"
             fi
           done
+
+          echo ""
+          echo "=============================================================="
+          echo "=== Summary"
+          echo "=============================================================="
+
+          # Grand totals across all suites.
+          GRAND_TESTS=0
+          GRAND_ASSERTIONS=0
+          GRAND_FAILED=0
+
+          for SUITE in "Helper" "model" "External" "SPIO Main"; do
+            SAFE_NAME=$(echo "$SUITE" | tr " " "_")
+            LOG="$LOGDIR/$SAFE_NAME.log"
+            # `Tests: 42, Assertions: 99, Failures: 3, ...` — pick the last
+            # one in case a suite emits multiple summary lines.
+            TOTALS=$(grep -E "^(Tests: |OK \(|OK, but incomplete)" "$LOG" | tail -n 1 || true)
+            echo ""
+            echo "-- $SUITE --"
+            if [ -n "$TOTALS" ]; then
+              echo "   $TOTALS"
+              # Two shapes to parse:
+              #   `OK (N tests, M assertions)`               — all passed
+              #   `Tests: N, Assertions: M, [Errors: E,] [Failures: F,] …`
+              # Errors + Failures both count as "failed" for the summary.
+              if [[ "$TOTALS" =~ ^OK\ \(([0-9]+)\ tests,\ ([0-9]+)\ assertions\) ]]; then
+                GRAND_TESTS=$((GRAND_TESTS + ${BASH_REMATCH[1]}))
+                GRAND_ASSERTIONS=$((GRAND_ASSERTIONS + ${BASH_REMATCH[2]}))
+              elif [[ "$TOTALS" =~ Tests:\ ([0-9]+),\ Assertions:\ ([0-9]+) ]]; then
+                GRAND_TESTS=$((GRAND_TESTS + ${BASH_REMATCH[1]}))
+                GRAND_ASSERTIONS=$((GRAND_ASSERTIONS + ${BASH_REMATCH[2]}))
+                [[ "$TOTALS" =~ Errors:\ ([0-9]+) ]]   && GRAND_FAILED=$((GRAND_FAILED + ${BASH_REMATCH[1]}))
+                [[ "$TOTALS" =~ Failures:\ ([0-9]+) ]] && GRAND_FAILED=$((GRAND_FAILED + ${BASH_REMATCH[1]}))
+              fi
+            else
+              echo "   (no summary emitted — PHPUnit likely died mid-run)"
+            fi
+            FAILING=$(grep -E "^[0-9]+\) [A-Za-z_]+Test::test_" "$LOG" || true)
+            if [ -n "$FAILING" ]; then
+              echo "   Failing tests:"
+              echo "$FAILING" | sed "s/^/     /"
+            fi
+          done
+
+          GRAND_PASSED=$((GRAND_TESTS - GRAND_FAILED))
+          echo ""
+          echo "-- Grand total --"
+          echo "   Tests:      $GRAND_TESTS"
+          echo "   Assertions: $GRAND_ASSERTIONS"
+          echo "   Passed:     $GRAND_PASSED"
+          echo "   Failed:     $GRAND_FAILED"
 
           echo ""
           echo "=============================================================="
