@@ -1,5 +1,7 @@
 <?php
+declare(strict_types=1);
 namespace ShortPixel\Model\Image;
+
 
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
@@ -497,9 +499,8 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
  			}
  			else {
  				Log::addError('Something went wrong with handleOptimized', $optimizeData);
+        return false; 
  			}
-
-
 
 			 if (! $this->isOptimized() ) // main file might not be contained in results
 			 {
@@ -738,6 +739,11 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     {
         $options = $this->checkDateExcluded();
 
+        if (false === $options)
+        {
+          return false;
+        }
+
 
         if ($this->getMeta('tsOptimized') > 0)
           $timestamp = $this->getMeta('tsOptimized');
@@ -877,10 +883,11 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         $message = null;
 
       $optimized = new \DateTime();
-      $optimized->setTimestamp($metaObj->tsOptimized);
+
+      $optimized->setTimestamp($metaObj->tsOptimized ?? time());
 
       $added = new \DateTime();
-      $added->setTimeStamp($metaObj->tsAdded);
+      $added->setTimeStamp($metaObj->tsAdded ?? time());
 
 			$extra_info = array();
 			if ($this->getMeta('webp') === self::FILETYPE_BIGGER)

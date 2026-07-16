@@ -83,6 +83,11 @@ class EnvironmentModelTest extends WP_UnitTestCase {
 	 * unitToInt (private) — invoked via reflection
 	 */
 
+	/**
+	 * A unitless value (plain bytes — valid memory_limit ini syntax) used
+	 * to reach `strpos('BKMG', '')`, which warns "Empty needle" on
+	 * PHP 7.4. The empty unit is now short-circuited to exponent 0.
+	 */
 	public function test_unitToInt_parses_plain_bytes() {
 		$this->assertSame( 512, $this->invokePrivate( $this->freshEnv(), 'unitToInt', array( '512' ) ) );
 	}

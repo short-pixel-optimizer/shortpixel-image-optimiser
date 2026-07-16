@@ -8,14 +8,11 @@
  * (installed by InstallHelper::activatePlugin during the test harness
  * bootstrap; also insured via `InstallHelper::checkTables()` at set_up).
  *
- * One test is pinned to the intended contract of a method that ships
- * with a real bug (see `project_deferred_image_folder_bugs.md`):
- *
- *   - `save()` INSERT branch captures `$wpdb->insert()`'s rows-affected
- *     return instead of the actual PK via `$wpdb->insert_id`. The `id`
- *     ends up self-healed by the follow-up `loadFolderByPath()`, but the
- *     return value of `save()` is the rows-affected count (usually 1),
- *     not the inserted primary key.
+ * Note on `save()`'s return contract: per Bas's a7a0f8f9 docblock
+ * clarification, save() intentionally returns rows-affected (or false on
+ * DB error) — NOT the inserted PK. The instance's `$id` is refreshed to
+ * the actual PK by the follow-up `loadFolderByPath()`. The save() INSERT
+ * test below asserts that documented contract.
  *
  * Skipped at the unit level (integration territory):
  *   - refreshFolder → walks the filesystem + queue integration
@@ -498,24 +495,18 @@ class DirectoryOtherMediaModelTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * PINNED for deferred fix. `save()` INSERT branch does
-	 * `$this->id = $wpdb->insert(...)` — which returns rows-affected (1),
-	 * not the actual PK. The `$this->id` field is later self-healed by
-	 * the follow-up `loadFolderByPath()` call, but the value returned by
-	 * `save()` itself is the wrong rows-affected count.
-	 *
-	 * Intended behaviour: `save()` returns a value that matches the
-	 * inserted row's actual PK. This test seeds a dummy row first so
-	 * PKs are guaranteed to be > 1 — the rows-affected coincidence
-	 * (which would mask the bug for the first insert) is defeated.
-	 *
-	 * This test will FAIL until save() uses `$wpdb->insert_id`.
+	 * `save()`'s documented contract (per a7a0f8f9): the INSERT branch
+	 * returns rows-affected (1), NOT the inserted PK — and the instance's
+	 * `id` is self-healed to the actual PK by the follow-up
+	 * `loadFolderByPath()`. A sentinel row is seeded first so PKs are
+	 * guaranteed > 1, proving `id` holds the real PK rather than the
+	 * rows-affected count.
 	 */
-	public function test_save_INSERT_returns_the_actual_inserted_id_pinned_for_deferred_fix() {
+	public function test_save_INSERT_returns_rows_affected_and_self_heals_id_to_the_actual_pk() {
 		global $wpdb;
 
-		// Insert a dummy row first so subsequent PKs are > 1 (defeats the
-		// rows-affected coincidence when PK also happens to be 1).
+		// Sentinel row pushes subsequent PKs above 1, so the rows-affected
+		// value (1) and the real PK can't coincide.
 		$wpdb->insert( $this->foldersTable(), array(
 			'name'       => 'sentinel',
 			'status'     => 0,
@@ -532,12 +523,13 @@ class DirectoryOtherMediaModelTest extends WP_UnitTestCase {
 
 		$result = $m->save();
 
-		// The freshly-inserted row's actual PK — should be greater than 1
-		// because the sentinel row occupies PK 1.
-		$expected_pk = (int) $wpdb->get_var( 'SELECT id FROM ' . $this->foldersTable() . ' WHERE path = "' . esc_sql( $this->sandbox ) . '"' );
+		$actual_pk = (int) $wpdb->get_var( 'SELECT id FROM ' . $this->foldersTable() . ' WHERE path = "' . esc_sql( $this->sandbox ) . '"' );
 
-		$this->assertGreaterThan( 1, $expected_pk, 'test setup issue: sentinel row not written' );
-		$this->assertSame( $expected_pk, (int) $result );
+		$this->assertGreaterThan( 1, $actual_pk, 'test setup issue: sentinel row not written' );
+		// Documented contract: rows affected, not the PK.
+		$this->assertSame( 1, (int) $result );
+		// The instance id must be self-healed to the real PK.
+		$this->assertSame( $actual_pk, (int) $this->getPrivate( $m, 'id' ) );
 	}
 
 	/*

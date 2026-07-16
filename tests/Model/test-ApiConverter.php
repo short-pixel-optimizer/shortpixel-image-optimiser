@@ -62,6 +62,27 @@ class ApiConverterTest extends WP_UnitTestCase {
 		};
 	}
 
+	/**
+	 * Build an ApiConverter that overrides `prepareQueue()` to a no-op so
+	 * filterQueue's queue-item mutation can be exercised without dragging
+	 * in FileSystemController::pathToUrl (which type-hints a real
+	 * FileModel that our lightweight imageModel stub can't satisfy).
+	 *
+	 * Bas removed the `debug_active` gate around prepareQueue on
+	 * 2026-07-11 (see project_deferred_image_folder_bugs.md), so
+	 * filterQueue now always calls prepareQueue — the tests below use
+	 * this stub to isolate the mutation behaviour they actually care
+	 * about. prepareQueue's own coverage is integration territory and
+	 * lives outside this unit-test file.
+	 */
+	private function makeConverter( $imageStub ) {
+		return new class( $imageStub ) extends ApiConverter {
+			protected function prepareQueue( $args = array() ) {
+				return true;
+			}
+		};
+	}
+
 	/*
 	 * Constants
 	 */
@@ -131,7 +152,7 @@ class ApiConverterTest extends WP_UnitTestCase {
 	 */
 
 	public function test_filterQueue_strips_convertto_from_paramlist() {
-		$c = new ApiConverter( $this->makeImageStub() );
+		$c = $this->makeConverter( $this->makeImageStub() );
 
 		$item = new QueueItem();
 		$item->data()->paramlist = array(
@@ -148,7 +169,7 @@ class ApiConverterTest extends WP_UnitTestCase {
 	}
 
 	public function test_filterQueue_replaces_action_with_convert_api_and_schedules_the_original_as_next() {
-		$c = new ApiConverter( $this->makeImageStub() );
+		$c = $this->makeConverter( $this->makeImageStub() );
 
 		$item = new QueueItem();
 		$item->data()->paramlist = array();
@@ -161,7 +182,7 @@ class ApiConverterTest extends WP_UnitTestCase {
 	}
 
 	public function test_filterQueue_forces_compressionType_to_LOSSLESS() {
-		$c = new ApiConverter( $this->makeImageStub() );
+		$c = $this->makeConverter( $this->makeImageStub() );
 
 		$item = new QueueItem();
 		$item->data()->paramlist = array();
@@ -174,7 +195,7 @@ class ApiConverterTest extends WP_UnitTestCase {
 	}
 
 	public function test_filterQueue_resets_credit_counts_to_a_single_base_image() {
-		$c = new ApiConverter( $this->makeImageStub() );
+		$c = $this->makeConverter( $this->makeImageStub() );
 
 		$item = new QueueItem();
 		$item->data()->paramlist = array();
@@ -191,7 +212,7 @@ class ApiConverterTest extends WP_UnitTestCase {
 	}
 
 	public function test_filterQueue_does_not_throw_when_args_omit_debug_active() {
-		$c = new ApiConverter( $this->makeImageStub() );
+		$c = $this->makeConverter( $this->makeImageStub() );
 
 		$item = new QueueItem();
 		$item->data()->paramlist = array();

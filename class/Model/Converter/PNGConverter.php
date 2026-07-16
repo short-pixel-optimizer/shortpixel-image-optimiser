@@ -371,9 +371,9 @@ class PNGConverter extends MediaLibraryConverter
      * the original PNG.
      *
      * Rules, in order:
-     *   1. Result is smaller or equal → accept.
-     *   2. Original filesize is 0 (unknown / virtual file) → accept.
-     *   3. Result is 0 → reject (write issue).
+     *   1. Result is 0 → reject (write issue).
+     *   2. Result is smaller or equal → accept.
+     *   3. Original filesize is 0 (unknown / virtual file) → accept.
      *   4. Consult `shortpixel/pngconverter/filesizeMargin` filter. A
      *      negative value short-circuits every subsequent check and accepts.
      *      Otherwise, accept iff the percentage increase is within the
@@ -383,21 +383,26 @@ class PNGConverter extends MediaLibraryConverter
      * @param int $resultSize  Converted JPG filesize in bytes.
      * @return bool True when the JPG should replace the PNG.
      */
-    private function checkFileSizeMargin($fileSize, $resultSize)
+    private function checkFileSizeMargin(int $fileSize, int $resultSize)
     {
-        // If the original filesize is bigger, it means we made it smaller, rejoice and allow.
-        if ($fileSize >= $resultSize)
-          return true;
 
-        // Fine suppose, but crashes the increase
-        if ($fileSize == 0)
-          return true;
-
-        // Indicates write issues
+		// Indicates write issues. If result size is zero, should not accept result.
         if ($resultSize == 0)
         {
            return false;
         }
+
+
+		// If the original filesize is bigger, it means we made it smaller, rejoice and allow.
+        if ($fileSize >= $resultSize)
+          return true;
+
+
+        // Fine suppose, but crashes the increase . This could happen when filesize is not properly set in metadata or passed. 
+        if ($fileSize == 0)
+          return true;
+
+
 
         $percentage = apply_filters('shortpixel/pngconverter/filesizeMargin', 0);
 

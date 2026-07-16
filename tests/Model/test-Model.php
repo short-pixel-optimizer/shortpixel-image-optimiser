@@ -159,6 +159,26 @@ class ModelTest extends WP_UnitTestCase {
 		$this->assertSame( array(), $this->subject()->sanitizeArray( array() ) );
 	}
 
+	/**
+	 * Regression sentinel for a7a0f8f9 — the `is_numeric` branch used to
+	 * run before `is_float`, so real PHP floats were truncated through
+	 * intval() (1.5 → 1). The float check now runs first.
+	 */
+	public function test_sanitizeArray_preserves_float_values_without_truncation() {
+		$out = $this->subject()->sanitizeArray( array( 'ratio' => 1.5, 'neg' => -0.25 ) );
+		$this->assertSame( 1.5, $out['ratio'] );
+		$this->assertSame( -0.25, $out['neg'] );
+	}
+
+	public function test_sanitizeArray_casts_numeric_strings_and_ints_via_intval() {
+		// Numeric *strings* are not is_float(), so they still take the
+		// is_numeric branch — including float-shaped strings ('1.5' → 1).
+		$out = $this->subject()->sanitizeArray( array( 'int' => 42, 'intstr' => '7', 'floatstr' => '1.5' ) );
+		$this->assertSame( 42, $out['int'] );
+		$this->assertSame( 7, $out['intstr'] );
+		$this->assertSame( 1, $out['floatstr'] );
+	}
+
 	/*
 	 * sanitize (dispatcher) — invoked via public wrapper
 	 */
@@ -298,6 +318,30 @@ class ModelTest extends WP_UnitTestCase {
 		// tags is an array field — stripslashes must not be applied to it.
 		$subject->tags = array( "a\\'b" );
 		$this->assertSame( array( "a\\'b" ), $subject->getData()['tags'] );
+	}
+
+	/**
+	 * Regression sentinel for a7a0f8f9 — getData() used to read
+	 * `$this->model[$item]['s']` without an isset guard, emitting an
+	 * "Undefined array key 's'" warning for fields declared without a
+	 * type (like the `no_type` fixture field). The temporary error
+	 * handler turns any such warning back into a test failure.
+	 */
+	public function test_getData_emits_no_warning_for_fields_without_a_type_key() {
+		$caught = array();
+		set_error_handler( function ( $errno, $errstr ) use ( &$caught ) {
+			$caught[] = $errstr;
+			return true;
+		}, E_WARNING | E_NOTICE );
+
+		try {
+			$data = $this->subject()->getData();
+		} finally {
+			restore_error_handler();
+		}
+
+		$this->assertSame( 'default', $data['no_type'] );
+		$this->assertSame( array(), $caught, 'getData() raised warnings: ' . implode( ' | ', $caught ) );
 	}
 
 	/*

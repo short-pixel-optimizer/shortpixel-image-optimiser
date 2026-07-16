@@ -109,7 +109,7 @@ class QueueItemResultTest extends WP_UnitTestCase {
 
 		$obj = $r->forReturn();
 
-		$this->assertObjectHasAttribute( 'item_id', $obj );
+		$this->assertObjectHasProperty( 'item_id', $obj );
 		$this->assertSame( 42, $obj->item_id );
 		$this->assertSame( 'ok', $obj->message );
 		$this->assertSame( 2, $obj->apiStatus );
@@ -119,9 +119,9 @@ class QueueItemResultTest extends WP_UnitTestCase {
 		$this->assertFalse( $obj->is_error );
 
 		// Fields never assigned are stripped.
-		$this->assertObjectNotHasAttribute( 'files', $obj );
-		$this->assertObjectNotHasAttribute( 'improvements', $obj );
-		$this->assertObjectNotHasAttribute( 'aiData', $obj );
+		$this->assertObjectNotHasProperty( 'files', $obj );
+		$this->assertObjectNotHasProperty( 'improvements', $obj );
+		$this->assertObjectNotHasProperty( 'aiData', $obj );
 	}
 
 	public function test_forReturn_keeps_false_and_zero_and_empty_string() {
@@ -160,6 +160,6 @@ class QueueItemResultTest extends WP_UnitTestCase {
 
 		$this->assertSame( 7, $decoded->item_id );
 		$this->assertSame( 'msg', $decoded->message );
-		$this->assertObjectNotHasAttribute( 'files', $decoded );
+		$this->assertObjectNotHasProperty( 'files', $decoded );
 	}
 }
