@@ -93,12 +93,16 @@ abstract class RequestManager
   /**
    * Builds the wp_remote_post() argument array for a ShortPixel API request.
    *
-   * Merges the provided request body and parameter overrides with sensible
-   * defaults (timeout, SSL verify, JSON encoding, etc.). The SSL-verify argument
-   * is omitted entirely for plain HTTP to avoid unnecessary overhead.
+   * Applies the 'shortpixel/api/request' filter to $requestBody before encoding,
+   * then serialises the body as JSON with JSON_UNESCAPED_UNICODE. The default
+   * timeout of 15 seconds is overridable via the 'shortpixel/api/timeout/' filter.
+   * SSL verification defaults to true (filterable via 'shortpixel/system/sslverify')
+   * but the `sslverify` key is omitted entirely when the protocol is plain HTTP to
+   * avoid unnecessary overhead.
    *
-   * @param array $requestBody       Associative array of API payload fields (e.g. key, urllist).
-   * @param array $requestParameters Optional overrides: 'blocking' (bool) and 'headers' (array).
+   * @param array $requestBody       Associative array of API payload fields (e.g. key, urllist, lossy).
+   * @param array $requestParameters Optional overrides applied to the argument array:
+   *                                 'blocking' (bool, default true) and 'headers' (array, default []).
    * @return array Argument array ready to pass to wp_remote_post().
    */
   protected function getRequest($requestBody = [], $requestParameters = [])
@@ -131,12 +135,18 @@ abstract class RequestManager
   /**
    * Performs a wp_remote_post() to the configured API endpoint and stores the result on the queue item.
    *
-   * When the request is blocking, WP_Error objects and non-200 HTTP codes are mapped to
-   * failure/retry results; successful responses are passed to handleResponse(). Non-blocking
-   * (first-send) requests are immediately marked as enqueued without waiting for a response.
+   * The ShortPixel API always returns HTTP 200 with a JSON body; non-200 HTTP status
+   * codes at the transport layer (proxy errors, firewall blocks, etc.) are treated as
+   * terminal failures. When blocking:
+   *  - WP_Error objects are mapped to STATUS_CONNECTION_ERROR; cURL 28 (timeout) and
+   *    cURL 60 (SSL) / cURL 6 (host) errors produce specialised messages, with cURL 60
+   *    and cURL 6 treated as fatal (returnFailure) and others as retryable (returnRetry).
+   *  - Non-200 HTTP codes are mapped to a terminal returnFailure.
+   *  - HTTP 200 responses are passed to handleResponse() for JSON parsing and routing.
+   * Non-blocking (first-send, tries == 0) requests are immediately marked STATUS_ENQUEUED.
    *
    * @param QueueItem $qItem             The queue item that will receive the result via addResult().
-   * @param array     $requestParameters HTTP argument array produced by getRequest().
+   * @param array     $requestParameters Full wp_remote_post() argument array produced by getRequest().
    * @return void
    */
   protected function doRequest(QueueItem $qItem, $requestParameters )
@@ -291,13 +301,15 @@ abstract class RequestManager
   /**
    * Returns a success result array, optionally marking the item as done.
    *
-   * Merges the provided data array into the result. The is_done flag is only added
-   * when the status equals STATUS_SUCCESS. A false message is omitted from the result.
+   * Merges the provided data array into the result. The `is_done` key is only present
+   * in the result when $status equals STATUS_SUCCESS; for STATUS_PARTIAL_SUCCESS the
+   * key is absent entirely (not set to false). A false $message causes the 'message'
+   * key to be removed from the result before returning.
    *
-   * @param array      $data    Additional data to merge into the result (e.g. files, aiData).
-   * @param int        $status  Status code; defaults to STATUS_SUCCESS.
-   * @param string|false $message Optional human-readable success message.
-   * @return array The merged result array.
+   * @param array        $data    Additional data to merge into the result (e.g. 'files', 'aiData').
+   * @param int          $status  Status code; defaults to STATUS_SUCCESS.
+   * @param string|false $message Optional human-readable success message; false to omit.
+   * @return array The merged result array containing at least 'apiStatus', 'is_error', and $data fields.
    */
   protected function returnSuccess($data, $status = self::STATUS_SUCCESS, $message = false)
   {
@@ -323,12 +335,13 @@ abstract class RequestManager
   /**
    * Decodes the JSON body from a wp_remote_post() response.
    *
-   * Falls back to extracting the first valid JSON object from the raw body string
-   * when json_decode() returns null (e.g. when the response contains extra data
-   * outside the JSON structure).
+   * Falls back to extracting the first valid JSON object from the raw body string via
+   * getJsonStrings() when json_decode() returns null (e.g. when the response contains
+   * extra data outside the JSON envelope). If getJsonStrings() returns an empty array
+   * the subsequent `$data[0]` access will produce an undefined-offset notice.
    *
    * @param array $response Raw wp_remote_post() response array with a 'body' key.
-   * @return array Decoded response data as an associative array.
+   * @return array Decoded response data cast to an associative array.
    */
   protected function parseResponse($response)
   {

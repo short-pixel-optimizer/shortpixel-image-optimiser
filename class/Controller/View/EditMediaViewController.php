@@ -21,20 +21,45 @@ use ShortPixel\Model\File\DirectoryModel;
 use ShortPixel\Model\File\FileModel as FileModel;
 
 
-// Future contoller for the edit media metabox view.
+/**
+ * View controller for the ShortPixel meta box on the attachment edit screen.
+ *
+ * Adds a 'ShortPixel Info' meta box (side panel) to the WordPress attachment
+ * edit page via the `add_meta_boxes_attachment` hook. The meta box renders the
+ * `view-edit-media` template, which displays compression status, action buttons,
+ * image dimensions, conversion and resize statistics, and — when debug mode is
+ * active — a detailed diagnostic dump.
+ *
+ * Also provides addAIAlter() to inject an AI-data button into the attachment
+ * fields (hooked to `attachment_fields_to_edit`, currently commented out at
+ * the call site).
+ *
+ * @package ShortPixel\Controller\View
+ */
 class EditMediaViewController extends \ShortPixel\ViewController
 {
       protected $template = 'view-edit-media';
-  //    protected $model = 'image';
 
+      /** @var int|null WordPress post ID of the attachment being edited. */
       protected $post_id;
+      /** @var mixed|null Retained for backward compatibility; not used in the current render path. */
       protected $legacyViewObj;
 
+      /** @var \ShortPixel\Model\Image\MediaLibraryModel|false Image model for the current attachment, or false when not found. */
       protected $imageModel;
+      /** @var bool Whether loadHooks() has already been called to avoid double-registration. */
       protected $hooked;
 
 			protected static $instance;
 
+      /**
+       * Registers the add_meta_boxes_attachment action hook.
+       *
+       * Called once from load() via the $this->hooked guard. Sets $this->hooked
+       * to true so subsequent load() calls are no-ops.
+       *
+       * @return void
+       */
       protected function loadHooks()
       {
             add_action( 'add_meta_boxes_attachment', array( $this, 'addMetaBox') );
@@ -42,6 +67,15 @@ class EditMediaViewController extends \ShortPixel\ViewController
             $this->hooked = true;
       }
 
+      /**
+       * Default controller action: registers hooks and enables trusted filesystem mode.
+       *
+       * Calls loadHooks() if not yet done. Starts trusted mode so the filesystem
+       * helper can access attachment files without capability gating during the
+       * meta-box render.
+       *
+       * @return void
+       */
       public function load()
       {
         if (! $this->hooked)
@@ -52,6 +86,14 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
       }
 
+      /**
+       * Registers the 'ShortPixel Info' side meta box on the attachment edit screen.
+       *
+       * Callback for the `add_meta_boxes_attachment` action. The meta box calls
+       * doMetaBox() to render its content.
+       *
+       * @return void
+       */
       public function addMetaBox()
       {
           add_meta_box(
@@ -84,6 +126,21 @@ class EditMediaViewController extends \ShortPixel\ViewController
           return $fields;
       }
 
+      /**
+       * Renders the ShortPixel meta box content for an attachment.
+       *
+       * Loads the image model for $post->ID. When the model cannot be found (not an
+       * image or file missing), renders the template with an error status message.
+       * Otherwise populates $this->view with status text, action buttons, burger-menu
+       * list, image dimensions, per-image statistics, and (in debug mode) a full
+       * diagnostic dump, then includes the `view-edit-media` template.
+       *
+       * Action buttons are suppressed when the current user does not have the
+       * required ShortPixel capability ($this->userIsAllowed).
+       *
+       * @param \WP_Post $post The attachment post object.
+       * @return bool|void False when the image model cannot be loaded; void otherwise.
+       */
        public function dometaBox($post)
       {
           $this->post_id = $post->ID;
@@ -131,11 +188,29 @@ class EditMediaViewController extends \ShortPixel\ViewController
           $this->loadView();
       }
 
+      /**
+       * Returns a success/status text string for the current image model.
+       *
+       * Delegates to UIHelper::renderSuccessText(). Not currently called from the
+       * main render path (doMetaBox() uses UiHelper::getStatusText() instead).
+       *
+       * @return string HTML status string.
+       */
       protected function getStatusMessage()
       {
           return UIHelper::renderSuccessText($this->imageModel);
       }
 
+      /**
+       * Collects per-image optimization statistics for display in the meta box.
+       *
+       * Returns an empty array when the image has not been optimized. Otherwise
+       * returns an array of [label, value] pairs covering: EXIF retention,
+       * format conversion (or conversion failure reason), resize dimensions,
+       * optimization timestamp, and a link to the stats knowledge base article.
+       *
+       * @return array<int, array{0: string, 1: string}> Rows of [label, value] pairs.
+       */
       protected function getStatistics()
       {
         $stats = [];
@@ -190,6 +265,19 @@ class EditMediaViewController extends \ShortPixel\ViewController
         return $stats;
       }
 
+      /**
+       * Collects full diagnostic information for an attachment (debug mode only).
+       *
+       * Returns an empty array immediately when SPIO debug mode is off. Otherwise
+       * builds an array of [label, value] pairs covering: attachment URL and file
+       * path, virtual status, image dimensions and MIME type, ShortPixel status flags
+       * (processable, optimized, restorable, DB record), conversion metadata, WPML
+       * duplicates, queue enqueue data, AI processability (when AI is enabled),
+       * backup file locations for the main image and all thumbnails, and the raw
+       * WordPress attachment metadata array.
+       *
+       * @return array<int|string, array{0: string, 1: mixed}> Rows of [label, value] pairs.
+       */
       protected function getDebugInfo()
       {
           if(! \wpSPIO()->env()->is_debug )

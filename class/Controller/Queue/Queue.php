@@ -54,10 +54,39 @@ abstract class Queue
     const RESULT_UNKNOWN = -10;
 
 
+    /**
+     * Scan the source (media library / custom table) and enqueue the next batch of items.
+     *
+     * @return object Result object with items added and whether preparation is done.
+     */
     abstract protected function prepare();
+
+    /**
+     * Enqueue items for a bulk-restore run instead of a normal optimize run.
+     *
+     * @return object Result object with items added and whether preparation is done.
+     */
     abstract protected function prepareBulkRestore();
+
+    /**
+     * Enqueue items for a bulk undo-AI run.
+     *
+     * @return object Result object with items added and whether preparation is done.
+     */
     abstract protected function prepareUndoAI();
+
+    /**
+     * Return the queue type identifier ('media' or 'custom').
+     *
+     * @return string
+     */
     abstract public function getType();
+
+    /**
+     * Return the SQL fragments/values implementing the active bulk filters for this queue.
+     *
+     * @return array Query data used by prepare() to restrict the item selection.
+     */
     abstract protected function getFilterQueryData();
 
     /** @var string Human-readable queue name (e.g. 'Media', 'Custom'). */
@@ -121,7 +150,15 @@ abstract class Queue
 		$this->q->resetQueue();
 	}
 
-    // gateway to set custom options for queue.
+    /**
+     * Forwards the provided options array to the underlying ShortQ queue instance.
+     *
+     * Used by QueueController::getQueue() to reapply persisted options after
+     * construction (e.g. enqueue_limit, numitems, retry_limit).
+     *
+     * @param array $options Key-value pairs of ShortQ queue options.
+     * @return mixed Return value from the underlying ShortQ::setOptions() call.
+     */
     public function setOptions($options)
     {
         return $this->q->setOptions($options);
@@ -637,7 +674,14 @@ abstract class Queue
           return $return; // only return real amount.
     }
 
-    // Used by Optimizecontroller on handlesuccess.
+    /**
+     * Returns the internal queue name string (e.g. 'Media', 'mediaSingle', 'custom').
+     *
+     * Used by optimiser controllers to reference the queue by name when logging
+     * or updating status after a successful optimisation.
+     *
+     * @return string The queue name assigned at construction time.
+     */
     public function getQueueName()
     {
           return $this->queueName;

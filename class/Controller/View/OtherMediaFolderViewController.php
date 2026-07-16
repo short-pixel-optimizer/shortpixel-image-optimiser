@@ -10,6 +10,18 @@ use ShortPixel\Helper\InstallHelper as InstallHelper;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 
 
+/**
+ * View controller for the Custom Media Folders admin screen.
+ *
+ * Renders the paginated folder management list (upload.php?page=wp-short-pixel-custom&part=folders)
+ * using the `view-other-media-folder` template. Each row represents a monitored
+ * directory registered with OtherMediaController, and provides refresh, stop-monitoring,
+ * and show-files actions.
+ *
+ * Wired up by AdminController alongside OtherMediaViewController.
+ *
+ * @package ShortPixel\Controller\View
+ */
 class OtherMediaFolderViewController extends \ShortPixel\ViewController
 {
 
@@ -17,19 +29,32 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
 
   protected static $instance;
 
-  // Pagination .
+  /** @var int Number of folder rows to show per page. */
   protected $items_per_page = 20;
+  /** @var int Current page number (1-based), derived from $_GET['paged']. */
   protected $currentPage = 1;
+  /** @var int Total folder count matching the current filter, set by getItems(). */
   protected $total_items = 0;
+  /** @var string Sort direction ('asc' or 'desc'), derived from $_GET['order']. */
   protected $order;
+  /** @var string Column to sort by, validated against allowed headings, derived from $_GET['orderby']. */
   protected $orderby;
+  /** @var string|false Search string from $_GET['s'], or false when no search is active. */
   protected $search;
+  /** @var bool|string Whether to show hidden/inactive directories. */
   protected $show_hidden = false;
+  /** @var bool Whether any hidden directory IDs exist. */
   protected $has_hidden_items = false;
+  /** @var string Absolute path to the WordPress file-base used to relativise folder paths for display. */
   protected $customFolderBase;
 
+  /** @var \ShortPixel\Controller\OtherMediaController OtherMediaController singleton cached for use across methods. */
 	private $controller;
 
+  /**
+   * Reads pagination/ordering/search GET parameters, initialises OtherMediaController,
+   * resolves the WordPress file-base path, and loads display settings into the view.
+   */
   public function __construct()
   {
     parent::__construct();
@@ -66,6 +91,16 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
       $this->loadView();
   }
 
+  /**
+   * Renders a single folder row as an HTML string.
+   *
+   * Buffers the `custom/part-single-folder` template with $this->view->current_item
+   * set to $folderObj. Used by AJAX calls that need to refresh a single row
+   * without reloading the full page.
+   *
+   * @param \ShortPixel\Model\File\DirectoryOtherMediaModel $folderObj The folder model to render.
+   * @return string HTML string of the rendered folder row.
+   */
   public function singleItemView($folderObj)
   {
     ob_start();
@@ -78,6 +113,14 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
     return $result;
   }
 
+  /**
+   * Populates $this->view with static display settings for the folder list template.
+   *
+   * Sets view->settings (NextGen enabled flag), view->title, view->show_search,
+   * and view->has_filters.
+   *
+   * @return void
+   */
   protected function loadSettings()
   {
 
@@ -91,6 +134,17 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
 
   }
 
+  /**
+   * Returns the action descriptors for a single folder row.
+   *
+   * Includes: 'refresh' (JS call to RefreshFolder), 'remove' (JS call to
+   * StopMonitoringFolder), and 'showfiles' (link to the files tab filtered
+   * by this folder's ID). Actions that launch JS are typed 'js'; the show-files
+   * action is typed 'link'.
+   *
+   * @param \ShortPixel\Model\File\DirectoryOtherMediaModel $item The folder model.
+   * @return array<string, array<string, mixed>> Action descriptors keyed by action slug.
+   */
   protected function getRowActions($item)
   {
 
@@ -126,6 +180,17 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
      return $actions;
   }
 
+  /**
+   * Loads the current page of folder objects and updates $this->total_items.
+   *
+   * Calls queryItems() twice: once with the current page's limit/offset to get
+   * the display rows, and once with limit=-1 and only_count=true to get the
+   * total for pagination. Each raw DB row is resolved to a DirectoryOtherMediaModel
+   * via OtherMediaController::getFolderByID().
+   *
+   * @param array<string, mixed> $args Optional overrides merged into the query defaults.
+   * @return array<int, \ShortPixel\Model\File\DirectoryOtherMediaModel> Folder models keyed by folder DB id.
+   */
 	private function getItems($args = array())
 	{
 		  $results = $this->queryItems($args);
@@ -143,6 +208,22 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
 			return $items;
 	}
 
+  /**
+   * Executes a SELECT query against wp_shortpixel_folders with optional filtering.
+   *
+   * Supported $args:
+   *   id (int|false)         — filter by a specific folder ID.
+   *   remove_hidden (bool)   — exclude status=-1 rows (default true).
+   *   path (string|false)    — filter by exact path.
+   *   only_count (bool)      — return an int count instead of row objects.
+   *   limit (int)            — rows per page (-1 = no limit).
+   *   offset (int)           — row offset for pagination.
+   *
+   * Returns an empty array (or 0) when the shortpixel_folders table does not exist.
+   *
+   * @param array<string, mixed> $args Query options merged with defaults.
+   * @return array<int, object>|int DB row objects, or int count when only_count is true.
+   */
   private function queryItems($args = array())
   {
     global $wpdb;
@@ -218,6 +299,11 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
     return $results;
   }
 
+  /**
+   * Returns the column heading definitions for the folder list table.
+   *
+   * @return array<string, array<string, mixed>> Column heading definitions keyed by column slug.
+   */
   protected function getHeadings()
   {
      $headings = array(
@@ -255,6 +341,15 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
 		return $headings;
   }
 
+    /**
+     * Builds query-string arguments for folder-list pagination links.
+     *
+     * Always includes 'part' => 'folders' to keep navigation within the folder tab.
+     * Empty values are stripped via array_filter.
+     *
+     * @param array<string, mixed> $args Overrides for individual arguments.
+     * @return array<string, mixed> Filtered query argument map.
+     */
     private function getPageArgs($args = array())
     {
       $defaults = array(
@@ -271,7 +366,15 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
 
     }
 
-		// @todo duplicate of OtherMediaViewController which is not nice.
+    /**
+     * Renders a single column heading cell, optionally as a sortable link.
+     *
+     * Duplicates OtherMediaViewController::getDisplayHeading() — the two classes
+     * share no common parent that could host this method.
+     *
+     * @param array<string, mixed> $heading Heading definition from getHeadings().
+     * @return string HTML string for the heading cell content.
+     */
 		protected function getDisplayHeading($heading)
 		{
 				$output = '';
@@ -315,6 +418,14 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
 				return $output;
 		}
 
+    /**
+     * Validates an orderby column name against the allowed heading columns.
+     *
+     * Returns an empty string when the supplied value is not in the allowed set.
+     *
+     * @param string $orderby The raw orderby value from the request.
+     * @return string The validated orderby value, or '' if not allowed.
+     */
     protected function filterAllowedOrderBy($orderby)
     {
         $headings = $this->getHeadings() ;
@@ -333,6 +444,14 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
         return $orderby;
     }
 
+    /**
+     * Builds the HTML pagination control for the folder list table.
+     *
+     * Returns false when there is only one page. Otherwise generates first/prev/
+     * current/next/last navigation links inside a GET form.
+     *
+     * @return string|false Pagination HTML string, or false when pagination is unnecessary.
+     */
     protected function getPagination()
     {
         $current = $this->currentPage;
@@ -451,6 +570,14 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
         return $output;
     }
 
+    /**
+     * Builds the SQL filter array from active GET parameters.
+     *
+     * Currently supports only a path LIKE search from $_GET['s']. Returns an
+     * empty array when no search term is present.
+     *
+     * @return array<string, object> Filter objects keyed by column name.
+     */
     protected function getFilter() {
         $filter = array();
 
@@ -463,6 +590,11 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
         return $filter;
     }
 
+    /**
+     * Checks whether the shortpixel_folders table exists in the database.
+     *
+     * @return bool True when the table is present; false otherwise.
+     */
     private function hasFoldersTable()
     {
       return InstallHelper::checkTableExists('shortpixel_folders');

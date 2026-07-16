@@ -14,38 +14,68 @@ use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Controller\Api\ApiController as ApiController;
 use ShortPixel\Model\Queue\QueueItem;
 
+/**
+ * Centralised store and formatter for per-item optimization responses.
+ *
+ * All methods are static; the class acts as a request-scoped registry keyed by
+ * queue type and item ID. Callers populate ResponseModel objects through
+ * `addData()` / `formatQItem()` and retrieve human-readable text via
+ * `formatItem()`.
+ *
+ * Must be primed with `setQ()` before use so that the correct queue context
+ * (name, type, max tries) is known. Output verbosity is controlled by
+ * `setOutput()` and the OUTPUT_* constants.
+ *
+ * @package ShortPixel\Controller
+ */
 class ResponseController
 {
 
+    /** @var array<string, array<int, ResponseModel>> Registry of response items keyed by queue type then item ID. */
     protected static $items = array();
 
-		protected static $queueName; // the current queueName.
-		protected static $queueType;  // the currrent queueType.
+    /** @var string|null Name of the currently active queue (e.g. 'MediaLibrary'). */
+		protected static $queueName;
+
+    /** @var string|null Type identifier of the currently active queue (e.g. 'media'). */
+		protected static $queueType;
+
+    /** @var int|null Maximum number of retries configured for the current queue. */
 		protected static $queueMaxTries;
 
+    /** @var int Current output verbosity level; one of the OUTPUT_* constants. */
 		protected static $screenOutput  = 1; // see consts down
 
-		// Some form of issue keeping
-		const ISSUE_BACKUP_CREATE = 10; // Issues with backups in ImageModel
+		// Issue-type constants used on ResponseModel::$issue_type
+		const ISSUE_BACKUP_CREATE = 10;        // Issues with backups in ImageModel
 		const ISSUE_BACKUP_EXISTS = 11;
-		const ISSUE_OPTIMIZED_NOFILE = 12; // Issues with missing files
-		const ISSUE_QUEUE_FAILED = 13;  // Issues with enqueueing items ( Queue )
-		const ISSUE_FILE_NOTWRITABLE = 20; // Issues with file writing
+		const ISSUE_OPTIMIZED_NOFILE = 12;     // Issues with missing files
+		const ISSUE_QUEUE_FAILED = 13;         // Issues with enqueueing items (Queue)
+		const ISSUE_FILE_NOTWRITABLE = 20;     // Issues with file writing
 		const ISSUE_DIRECTORY_NOTWRITABLE = 30; // Issues with directory writing
+		const ISSUE_API = 50;                  // Issues with API — general
+		const ISSUE_QUOTA = 100;               // Issues with Quota
+
+		// Output verbosity levels
+		const OUTPUT_MEDIA = 1; // Has context of image; uses simple language
+		const OUTPUT_BULK  = 2;
+		const OUTPUT_CLI   = 3; // No visual context; includes filename and queue info
 
 
-		const ISSUE_API = 50; // Issues with API - general
-		const ISSUE_QUOTA = 100; // Issues with Quota.
-
-		const OUTPUT_MEDIA = 1; // Has context of image, needs simple language
-		const OUTPUT_BULK = 2;
-		const OUTPUT_CLI = 3;  // Has no context, needs more information
-
-
-		/** Correlates type of item with the queue being used.  Be aware that usage *outside* the queue system needs to manually set type
-		* @param Object QueueObject being used.
-		*
-		*/
+		/**
+		 * Prime the controller with the active queue's context.
+		 *
+		 * Must be called before any per-item methods. Sets the queue name, type,
+		 * and max-tries values used by subsequent formatting calls. Also ensures
+		 * the items registry has a bucket for the queue type.
+		 *
+		 * Be aware that usage outside the queue system needs to manually set the
+		 * type via `addData()` with an `item_type` key.
+		 *
+		 * @param object $q QueueObject being used (must implement getType(),
+		 *                  getQueueName(), and getShortQ()).
+		 * @return void
+		 */
 		public static function setQ($q)
 		{
 			 $queueType = $q->getType();
@@ -60,12 +90,27 @@ class ResponseController
 			 }
 		}
 
+		/**
+		 * Set the output verbosity level for message formatting.
+		 *
+		 * @param int $output One of the OUTPUT_* constants (OUTPUT_MEDIA, OUTPUT_BULK, OUTPUT_CLI).
+		 * @return void
+		 */
 		public static function setOutput($output)
 		{
 				self::$screenOutput = $output;
 		}
 
-
+		/**
+		 * Retrieve or create the ResponseModel for a given item ID.
+		 *
+		 * Uses the current queue type as the item type. Falls back to "Unknown"
+		 * when no queue context has been set. If an existing ResponseModel for
+		 * this item is already in the registry it is returned directly.
+		 *
+		 * @param int $item_id The queue item ID.
+		 * @return ResponseModel The response model for the item.
+		 */
 		public static function getResponseItem($item_id)
 		{
 				if (is_null(self::$queueType)) // fail-safe
@@ -87,14 +132,34 @@ class ResponseController
 				return $item;
 		}
 
+		/**
+		 * Write a ResponseModel back into the registry.
+		 *
+		 * @param ResponseModel $item The updated response model.
+		 * @return void
+		 */
 		protected static function updateResponseItem($item)
 		{
 				$itemType = $item->item_type;
 			  self::$items[$itemType][$item->item_id] = $item;
 		}
 
-		// ?
-		//
+		/**
+		 * Attach data to the ResponseModel for a given item.
+		 *
+		 * Accepts either a key/value pair or an associative array/object as
+		 * `$name`. Only properties that already exist on ResponseModel are set;
+		 * unknown keys are silently ignored. If an `item_type` key is present
+		 * and no queue context has been set yet, this method also seeds
+		 * `$queueType` so that subsequent calls work outside the queue system.
+		 *
+		 * Logs a warning when `$item_id` is not numeric.
+		 *
+		 * @param int          $item_id The queue item ID.
+		 * @param string|array $name    Property name, or associative array of property => value pairs.
+		 * @param mixed        $value   Value to set when $name is a string; ignored when $name is an array.
+		 * @return void
+		 */
 		public static function addData($item_id, $name, $value = null)
 		{
 			if (false === is_numeric($item_id))
@@ -133,8 +198,14 @@ class ResponseController
 		}
 
 
-		// This is Deprecated 
-		
+		/**
+		 * Return a formatted human-readable message for an item.
+		 *
+		 * @deprecated Use formatQItem() for queue-based items.
+		 *
+		 * @param int $item_id The queue item ID.
+		 * @return string Formatted message string.
+		 */
 		public static function formatItem($item_id)
 		{
 				 $item = self::getResponseItem($item_id); // ResponseMOdel
@@ -149,6 +220,16 @@ class ResponseController
 				 return $text;
 		}
 
+		/**
+		 * Merge a QueueItem's result into its ResponseModel and return a formatted message.
+		 *
+		 * Copies non-null result properties from the QueueItem onto the ResponseModel,
+		 * sets the item type from the attached ImageModel, persists via
+		 * `updateResponseItem()`, then delegates to `formatItem()` for the final string.
+		 *
+		 * @param QueueItem $queueItem The completed queue item.
+		 * @return string Formatted human-readable message.
+		 */
 		public static function formatQItem(QueueItem $queueItem)
 		{
 			$result = $queueItem->result();
@@ -178,6 +259,17 @@ class ResponseController
 
 		}
 
+		/**
+		 * Append error-specific context to a message string.
+		 *
+		 * Checks `$item->issue_type` and `$item->fileStatus`/`apiStatus` to
+		 * append file names and item IDs. In CLI output mode the queue name and
+		 * file name are prepended.
+		 *
+		 * @param ResponseModel $item The response model for the errored item.
+		 * @param string        $text The base message text to augment.
+		 * @return string The augmented message text.
+		 */
 		private static function formatErrorItem($item, $text)
 		{
 			switch($item->issue_type)
@@ -211,6 +303,18 @@ class ResponseController
 			return $text;
 		}
 
+		/**
+		 * Build a success/in-progress message string for a non-error item.
+		 *
+		 * Inspects `$item->apiStatus` to produce status-appropriate text:
+		 * waiting, enqueued, successfully optimized, timed out, or a generic
+		 * non-API action completion. In CLI output mode appends the queue name,
+		 * file name, and retry count.
+		 *
+		 * @param ResponseModel $item The response model for the item.
+		 * @param string        $text The base message text to augment.
+		 * @return string The formatted message text.
+		 */
 		private static function formatRegularItem($item, $text)
 		{
 

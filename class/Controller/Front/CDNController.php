@@ -14,18 +14,59 @@ use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Replacer\Replacer as Replacer;
 
 
+/**
+ * Front-end CDN URL rewriting controller.
+ *
+ * CDNController extends PageConverter to rewrite on-page image (and optionally
+ * JS/CSS) URLs so they are served through a ShortPixel CDN domain.  It runs as
+ * an output-buffer callback (processFront) that receives the fully-rendered HTML
+ * of each front-end page and returns it with qualifying URLs prefixed by the CDN
+ * domain and a comma-separated argument string (compression, WebP/AVIF format
+ * tokens, scheme hints, etc.).
+ *
+ * Lifecycle:
+ *  1. __construct() calls PageConverter::__construct(), listenFlush() (hooks
+ *     flushItem to image optimise/restore actions), and loadCDNDomain().
+ *  2. shouldConvert() (inherited) gates on environment context.
+ *  3. init() registers optional script_loader_src / style_loader_src hooks for
+ *     JS and CSS CDN delivery, then starts the output buffer with processFront
+ *     as the callback.
+ *
+ * HTML transform pipeline (processFront):
+ *  - Inline CSS backgrounds are extracted via fetchInlineBackground() and
+ *    rewritten by pregReplaceContent().
+ *  - <img> and <source srcset> blocks are extracted via fetchImageMatches() /
+ *    extractImageMatches() and rewritten by pregReplaceByString() after being
+ *    sorted and grouped by imageId.
+ *  - JSON responses (detected via checkContent/checkJson) receive additional
+ *    JSON-slash encoding so CDN URLs do not break serialised HTML payloads.
+ *
+ * CDN argument format: comma-separated tokens assembled by createArguments(),
+ * e.g. "ret_img,q_cdnize,to_webp,s_webp" prefixed to the host-stripped URL.
+ */
 class CDNController extends \ShortPixel\Controller\Front\PageConverter
 {
 
+	/** @var string Trailing-slash CDN domain with /spio/ path appended (e.g. https://cdn.example.com/spio/). */
 	protected $cdn_domain;
+
+	/** @var array Reserved for future CDN argument defaults; currently unused. */
 	protected $cdn_arguments = [];
 
+	/** @var array Reserved for future per-URL skip rules; currently unused. */
 	protected $skip_rules = [];
+
+	/** @var string Replacement strategy: 'preg' (default) or 'string' (via Replacer). */
 	protected $replace_method = 'preg';
 
+	/** @var bool True when the current response body is detected as JSON; triggers JSON-slash encoding of replaced URLs. */
 	private $content_is_json = false;
 
 
+	/**
+	 * Boots the CDN controller: loads the CDN domain, gates on shouldConvert(),
+	 * and delegates further setup to init().
+	 */
 	public function __construct()
 	{
 		parent::__construct();
@@ -41,11 +82,21 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 	}
 
+	/**
+	 * Registers WP hooks and starts the output buffer.
+	 *
+	 * Calls addWPHooks() to register optional JS/CSS hooks, then opens an output
+	 * buffer whose flush callback is processFront(). Also populates
+	 * $this->regex_exclusions via the 'shortpixel/front/cdn/regex_exclude' filter
+	 * and sets $this->replace_method via 'shortpixel/front/cdn/replace_method'.
+	 *
+	 * @return void
+	 */
 	protected function init()
 	{
 
 		// Add hooks for easier conversion / checking
-		
+
 		$this->addWPHooks();
 
 		// Starts buffer of whole page, with callback .
@@ -71,12 +122,28 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 	}
 
 
+	/**
+	 * Registers or deregisters the site domain with the ShortPixel CDN API.
+	 *
+	 * Builds a no-cdn.shortpixel.ai endpoint URL from the site's host and the
+	 * account API key, then issues a wp_remote_post() request. The 'action'
+	 * argument controls whether the path contains 'add-domain' (register) or
+	 * 'revoke-domain' (deregister).
+	 *
+	 * Returns false if the site URL cannot be parsed (no 'host' component).
+	 * On success the function returns no value (void); the API response is
+	 * currently not checked or returned.
+	 *
+	 * @param array $args {
+	 *     @type string $action 'register' (default) or 'deregister'.
+	 * }
+	 * @return false|void False when the site host cannot be determined, void otherwise.
+	 */
 	public function registerDomain($args = [])
 	{
 		$defaults = [
-			'action' => 'register', // or deregister 
-			
-		]; 
+			'action' => 'register', // or deregister
+		];
 		
 		$args = wp_parse_args($args, $defaults);
 
@@ -112,9 +179,28 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		
 	}
 
+	/**
+	 * Purges CDN cache for JS/CSS assets or the entire site.
+	 *
+	 * Two purge modes are supported via $args['purge']:
+	 *  - 'cssjs': Bumps the stored cdn_purge_version setting (a 4-digit Unix
+	 *    timestamp suffix) so asset URLs acquire a new cache-busting version
+	 *    query arg.  No remote call is made.
+	 *  - 'all': Issues a wp_remote_post() to the no-cdn.shortpixel.ai
+	 *    purge-cdn-cache-bulk endpoint.  Checks the JSON response for
+	 *    Status == 2 to confirm success.
+	 *
+	 * @param array $args {
+	 *     @type string $purge Purge mode: 'cssjs' or 'all'.
+	 * }
+	 * @return array {
+	 *     @type bool   $is_error True when the remote call failed.
+	 *     @type string $message  Human-readable result or error string.
+	 * }
+	 */
 	public function purgeCDN($args = [])
 	{
-		$purge = $args['purge']; 
+		$purge = $args['purge'];
 		$settings = \wpSPIO()->settings();
 	//	$purge_domain = 'https://no-cdn.shortpixel.ai/purge-cdn-cache-bulk'; 
 
@@ -157,9 +243,26 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		 
 	}
 
+	/**
+	 * Builds the no-cdn.shortpixel.ai endpoint URL for a given CDN action.
+	 *
+	 * The URL format varies by action:
+	 *  - 'purge-cdn-cache': <base>/<action>/<apikey>/  (no site/CDN host suffix;
+	 *    the caller appends the asset path).
+	 *  - Any other action (e.g. 'purge-cdn-cache-bulk'):
+	 *    <base>/<action>/<apikey>/<site-host>/<cdn-host>
+	 *
+	 * Falls back to 'spcdn.shortpixel.ai' when the CDNDomain setting cannot
+	 * be parsed to a host component.
+	 *
+	 * @param array $args {
+	 *     @type string $action API action path segment (e.g. 'purge-cdn-cache-bulk').
+	 * }
+	 * @return string Fully constructed endpoint URL (no trailing slash).
+	 */
 	private function getPurgeURL($args = [])
 	{
-		$action = isset($args['action']) ? $args['action'] : ''; 
+		$action = isset($args['action']) ? $args['action'] : '';
 		$purge_domain = 'https://no-cdn.shortpixel.ai'; 
 
 		$settings = \wpSPIO()->settings();
@@ -185,6 +288,21 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 	}
 
+	/**
+	 * Builds the CDN argument array for a URL replacement block.
+	 *
+	 * Assembles key=value tokens that are later joined with commas and inserted
+	 * between the CDN domain and the asset URL, e.g.
+	 * "https://cdn.example.com/spio/ret_img,q_cdnize,to_webp,s_webp/example.com/…".
+	 *
+	 * Compression is always 'q_cdnize'.  The 'return' key defaults to 'ret_img'
+	 * but callers may override it (e.g. 'ret_auto' for scripts).  WebP/AVIF
+	 * format and extension-doubling tokens are derived from plugin settings and
+	 * environment capability flags.
+	 *
+	 * @param array $args Initial argument overrides; supports 'return' and 'version'.
+	 * @return array Associative array of CDN argument tokens ready for implode(',').
+	 */
 	protected function createArguments($args = [])
 	{
 		$settings = \wpSPIO()->settings();
@@ -236,6 +354,16 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 	}
 
+	/**
+	 * Registers WordPress hooks for JS and CSS CDN delivery.
+	 *
+	 * When the cdn_js setting is enabled, hooks processScript() on
+	 * 'script_loader_src'.  When cdn_css is enabled, hooks processScript() on
+	 * 'style_loader_src'.  Both hooks run at priority 10 and receive the src
+	 * URL and handle as arguments.
+	 *
+	 * @return void
+	 */
 	protected function addWPHooks()
 	{
 		$settings = \wpSPIO()->settings();
@@ -251,6 +379,21 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 	}
 
+	/**
+	 * Rewrites a single script or style src URL to use the CDN domain.
+	 *
+	 * Hooked on 'script_loader_src' and 'style_loader_src'.  Bails early if
+	 * checkPreProcess() fails, $src is empty, the URL is excluded by regex
+	 * rules, belongs to another domain, or does not end with a recognised
+	 * extension (.js, .css, .ttf, .woff, .woff2, .otf depending on settings).
+	 *
+	 * Uses 'ret_auto' return mode and appends a cdn_purge_version token so that
+	 * cached JS/CSS assets can be invalidated.
+	 *
+	 * @param string $src    The script/style source URL.
+	 * @param string $handle The registered script/style handle (unused but required by WP filter signature).
+	 * @return string CDN-rewritten URL, or the original $src if the URL was excluded or conversion is disabled.
+	 */
 	public function processScript($src, $handle)
 	{
 		if (false === $this->checkPreProcess()) {
@@ -326,6 +469,27 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		return $src;
 	}
 
+	/**
+	 * Output-buffer callback: rewrites all qualifying image and background URLs in a full HTML page.
+	 *
+	 * Receives the raw buffered HTML and returns it with CDN URLs substituted.
+	 * Processing order:
+	 *  1. checkPreProcess() bail (e.g. 404 response).
+	 *  2. checkContent() to detect JSON payloads and set $content_is_json.
+	 *  3. Inline CSS url() backgrounds via fetchInlineBackground() →
+	 *     filterEmptyURLS → filterRegexExclusions → filterOtherDomains →
+	 *     filterFonts → createReplacements → pregReplaceContent.
+	 *  4. <img> / <source srcset> blocks via fetchImageMatches() →
+	 *     extractImageMatches() → filter chain → createReplacements →
+	 *     pregReplaceByString (per imageId group).
+	 *
+	 * When no replacements survive the filter chain for either pass, the method
+	 * returns the original (pre-checkContent) content to avoid spurious changes.
+	 * JSON payloads receive URL-encoded CDN URLs via encodeForJson().
+	 *
+	 * @param string $content Full HTML (or JSON) page content from the output buffer.
+	 * @return string Content with qualifying image/background URLs rewritten to CDN.
+	 */
 	protected function processFront($content)
 	{
 		if (false === $this->checkPreProcess()) {
@@ -415,14 +579,40 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		return $content;
 	}
 
+	/**
+	 * Encodes a URL for use inside a JSON string by applying JSON serialisation rules.
+	 *
+	 * Runs json_encode() on the URL to escape forward slashes and special
+	 * characters, then strips the surrounding double-quote delimiters that
+	 * json_encode() adds.  Used when $content_is_json is true so that CDN URLs
+	 * in JSON-embedded HTML are correctly slash-escaped.
+	 *
+	 * @param string $url URL to encode.
+	 * @return string JSON-safe URL without surrounding quotes.
+	 */
 	private function encodeForJSON($url)
 	{
 		 $url = json_encode($url);
-		 $url = str_replace('"', '', $url); 
+		 $url = str_replace('"', '', $url);
 		 return $url;
 	}
 
 
+	/**
+	 * Loads and normalises the CDN domain for URL rewriting.
+	 *
+	 * When called with $CDNDomain === false (default), reads CDNDomain from
+	 * plugin settings and stores the normalised result in $this->cdn_domain.
+	 * When called with an explicit domain string, normalises and returns the
+	 * result without updating the property (used by validateCDNDomain()).
+	 *
+	 * Normalisation: if the CDN URL has no path, or a bare '/' path, appends
+	 * '/spio/' so the CDN argument string can be inserted cleanly between the
+	 * domain and asset URL.
+	 *
+	 * @param string|false $CDNDomain CDN domain to normalise, or false to load from settings.
+	 * @return string|void Normalised CDN domain when $CDNDomain is provided; void when updating the property.
+	 */
 	protected function loadCDNDomain($CDNDomain = false)
 	{
 		if ($CDNDomain === false)
@@ -492,14 +682,25 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 	}
 
+	/**
+	 * Validates a CDN domain string by normalising it and comparing the result.
+	 *
+	 * Passes $CDNDomain through loadCDNDomain() (return-value mode).  If the
+	 * normalised result equals the input, the domain is already well-formed and
+	 * true is returned.  Otherwise the normalised (corrected) domain is returned
+	 * so the caller can show or store it.
+	 *
+	 * @param string $CDNDomain CDN domain string to validate.
+	 * @return true|string True when the domain is valid as-is; normalised domain string otherwise.
+	 */
 	public function validateCDNDomain($CDNDomain)
 	{
-		
+
 		$resultDomain = $this->loadCDNDomain($CDNDomain);
 
 		if ($resultDomain === $CDNDomain)
 		{
-			 return true; 
+			 return true;
 		}
 		else
 		{
@@ -508,9 +709,20 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 	}
 
+	/**
+	 * Extracts all <img> and <source srcset> tag strings from HTML content.
+	 *
+	 * Returns the outer HTML of each matched tag as a flat string array.  The
+	 * regex matches <img …> tags and <source> tags that contain a srcset
+	 * attribute (allowing arbitrary attributes between <source and srcset=).
+	 *
+	 * @param string $content HTML content to search.
+	 * @param array  $args    Reserved for future use; currently unused.
+	 * @return string[] Flat array of matched tag HTML strings.
+	 */
 	protected function fetchImageMatches($content, $args = [])
 	{
-		// Previous pattern 
+		// Previous pattern
 		//$number = preg_match_all('/<img[^>]*>|<source srcset="[^>]*">/i', $content, $matches);
 
 		// Updated pattern via - https://github.com/short-pixel-optimizer/shortpixel-image-optimiser/issues/159
@@ -524,10 +736,22 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		return $matches;
 	}
 
+	/**
+	 * Extracts CSS url() values from HTML content and builds replace blocks for each.
+	 *
+	 * Uses a recursive PCRE pattern to match balanced parentheses inside url(…),
+	 * capturing the inner content (group 2) which may contain quoted or unquoted
+	 * URLs.  For each match a replace block is created via getReplaceBlock() and
+	 * CDN arguments are attached via createArguments().
+	 *
+	 * @param string $content HTML content to search (may include inline <style> blocks or style= attributes).
+	 * @param array  $args    Reserved for future use; currently unused.
+	 * @return \stdClass[] Array of replace-block stdClass objects, one per url() match.
+	 */
 	protected function fetchInlineBackground($content, $args = [])
 	{
-		$number = preg_match_all('/url(\(((?:[^()]+|(?1))+)\))/m', $content, $matches); 
-		$matches = $matches[2]; 
+		$number = preg_match_all('/url(\(((?:[^()]+|(?1))+)\))/m', $content, $matches);
+		$matches = $matches[2];
 		
 		$replaceBlocks = []; 
 		foreach($matches as $url)
@@ -540,12 +764,35 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		return $replaceBlocks;
 	}
 
+	/**
+	 * Stub for future document-level URL extraction (e.g. <link>, <script src>).
+	 *
+	 * Not yet implemented.
+	 *
+	 * @param string $content HTML content.
+	 * @param array  $args    Reserved for future use.
+	 * @return void
+	 */
 	protected function fetchDocumentMatches($content, $args = [])
 	{
 		//		$number = preg_match_all('')
 	}
 
-	/** Extract matches from the document.  This are the source images and should not be altered, since the string replace would fail doing that */
+	/**
+	 * Converts raw <img>/<source> HTML strings into replace-block objects.
+	 *
+	 * For each tag string from fetchImageMatches(), parses it via FrontImage to
+	 * obtain the primary src URL and any additional srcset image data.  Creates
+	 * one replace block per distinct URL, assigning a shared imageId (e.g.
+	 * 'image0') so that processFront() can group all blocks from the same tag
+	 * and perform a single str_replace on the tag's outer HTML.
+	 *
+	 * When $content_is_json is true, the raw tag string is unslashed before
+	 * parsing so that JSON escape sequences do not confuse FrontImage.
+	 *
+	 * @param string[] $matches Flat array of raw <img>/<source> HTML strings.
+	 * @return \stdClass[] Array of replace-block objects with htmlMatch and imageId set.
+	 */
 	protected function extractImageMatches($matches)
 	{
 
@@ -589,8 +836,18 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 	}
 
 
-	/** @param $urls Array Source URLS
-	 * @return Array URLs - The string that the original values should be replaced with
+	/**
+	 * Populates replace_url on each block by prepending the CDN domain and argument string.
+	 *
+	 * For every block, strips the scheme from the URL (CDN expects a schemeless
+	 * path) and assembles: <cdn_domain><args,joined>/<scheme-stripped-url>.  Any
+	 * HTTP URLs add a 'p_h' scheme argument via checkScheme().  Blocks whose URL
+	 * has no host (relative) are made absolute via checkDomain(); those blocks
+	 * are moved to the end of the returned array so the shorter, absolute-URL
+	 * variants are replaced first.
+	 *
+	 * @param \stdClass[] $replaceBlocks Replace-block objects with url, parsed, and args set.
+	 * @return \stdClass[] Same blocks with replace_url populated; relative-URL blocks appended last.
 	 */
 	protected function createReplacements($replaceBlocks)
 	{
@@ -626,10 +883,18 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 	}
 
 
-	// Special checks / operations because the URL is replaced. Data check.
-
-	// @todo Transform these functions to 1 check each, so each combination can use it's own mix/match of checks / transforms ( image, css, javascript  ) . Possibly with URL as argument and parsed_url as non-optional second param.
-	// @return True of URL was changed, false if not.
+	/**
+	 * Resolves a relative or protocol-relative URL to an absolute URL using the site URL.
+	 *
+	 * When a replace block has no 'host' in its parsed URL (e.g. a srcset entry
+	 * like "/wp-content/uploads/foo.jpg"), the site URL is prepended.  If the
+	 * path does not begin with '/', a trailing slash is added to the site URL
+	 * before concatenation.  The block's url and parsed properties are updated
+	 * in place.
+	 *
+	 * @param \stdClass $replaceBlock Replace block to inspect and potentially update (mutated in place).
+	 * @return bool True when the URL was changed (was relative/protocol-relative), false otherwise.
+	 */
 	protected function checkDomain($replaceBlock) : bool
 	{
 		if (! isset($replaceBlock->parsed['host'])) {
@@ -650,6 +915,17 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		return false;
 	}
 
+	/**
+	 * Adds scheme-related CDN arguments and strips protocol-relative prefixes from the URL.
+	 *
+	 * If the URL's scheme is 'http', adds the 'p_h' arg so the CDN knows to
+	 * serve the asset over HTTP rather than HTTPS.  If the URL starts with '//',
+	 * strips those two characters so the CDN receives a bare host-prefixed path.
+	 * Mutates the replace block in place; returns no value.
+	 *
+	 * @param \stdClass $replaceBlock Replace block to inspect and potentially update (mutated in place).
+	 * @return void
+	 */
 	private function checkScheme($replaceBlock)
 	{
 		if (isset($replaceBlock->parsed['scheme']) && 'http' == $replaceBlock->parsed['scheme']) {
@@ -737,6 +1013,16 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 	}
 
+	/**
+	 * Inspects content to determine whether it is a JSON payload and sets $content_is_json.
+	 *
+	 * Passes content through checkJson().  When JSON is detected, sets the
+	 * $content_is_json flag so that processFront() applies JSON-slash encoding
+	 * to replaced URLs.  Returns the content unchanged.
+	 *
+	 * @param string $content Page content from the output buffer.
+	 * @return string Unmodified $content.
+	 */
 	protected function checkContent($content)
 	{
 		if (true === $this->checkJson($content)) {
@@ -751,6 +1037,17 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		return $content;
 	}
 
+	/**
+	 * Checks whether a string is valid JSON.
+	 *
+	 * Delegates to UtilHelper::validateJSON().  May be replaced by the native
+	 * json_validate() once PHP 8.3 is the minimum requirement.
+	 *
+	 * @param string $json  String to validate.
+	 * @param int    $depth Maximum nesting depth (reserved, passed to helper).
+	 * @param int    $flags JSON decode flags (reserved, passed to helper).
+	 * @return bool True when $json is valid JSON, false otherwise.
+	 */
 	//https://www.php.net/manual/en/function.json-validate.php ( comments )
 	// Could in time be replaced by json_validate proper. (PHP 8.3)
 	protected function checkJson($json, $depth = 512, $flags = 0)
@@ -760,6 +1057,16 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 	}
 
+	/**
+	 * Registers WordPress action hooks that trigger CDN cache invalidation.
+	 *
+	 * Hooks flushItem() on 'shortpixel/image/after_restore' and
+	 * 'shortpixel/image/optimised' (both priority 10, 2 args) so that the CDN
+	 * cache entry for an image is purged whenever the image is optimised or
+	 * restored to its original.
+	 *
+	 * @return void
+	 */
 	protected function listenFlush()
 	{
 		add_action('shortpixel/image/after_restore',  [$this, 'flushItem'], 10, 2); // hit this when restoring.

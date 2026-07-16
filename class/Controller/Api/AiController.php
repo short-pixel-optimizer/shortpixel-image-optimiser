@@ -34,19 +34,34 @@ class AiController extends RequestManager
     const AI_STATUS_OVERQUOTA = 3;
 
 
+    /**
+     * Initialises the AI API base URL.
+     *
+     * Sets $main_url to the ShortPixel AI API endpoint. The commented-out line
+     * shows the production URL (capi-gpt.shortpixel.com); the active value points
+     * to the dev endpoint (devapigpt.shortpixel.com). The concrete $apiEndPoint
+     * (inherited from RequestManager) is set per-request inside doRequest() based
+     * on whether the item already has a remote_id.
+     */
     public function __construct()
     {
      //$this->main_url = 'https://capi-gpt.shortpixel.com/';
-     $this->main_url = 'https://devapigpt.shortpixel.com/'; 
+     $this->main_url = 'https://devapigpt.shortpixel.com/';
 
     }
 
     /**
      * Builds and dispatches an AI API request for the given queue item.
      *
-     * Determines whether to send a new request ('requestAlt') or poll for results
-     * ('retrieveAlt') based on the item's action, assembles the request body, and
-     * calls the remote API endpoint.
+     * Determines the request shape from the item's action:
+     *  - 'requestAlt' : sends the image URL (urls[0]), any paramlist fields, plus
+     *    `retry = '1'` and `version = 'v_2'` to initiate a new AI analysis.
+     *  - 'retrieveAlt': sends `id = data()->remote_id` to poll for the result.
+     *
+     * Authentication uses a cached JWT Bearer token (stored in the 'spio_ai_jwt_token'
+     * transient) if available, falling back to `ApiKey <key>` on the Authorization header.
+     * All AI requests are blocking. Delegates endpoint selection and HTTP dispatch to
+     * doRequest(), which routes to 'add-url.php' or 'get-url.php' based on remote_id.
      *
      * @param QueueItem $qItem The queue item containing the image and action data.
      * @return void
@@ -126,13 +141,23 @@ class AiController extends RequestManager
     /**
      * Parses and processes the raw AI API response for a queue item.
      *
-     * Handles both 'requestAlt' and 'retrieveAlt' action flows, including JWT token
-     * caching, status-based branching (waiting, success, over-quota, invalid URL),
-     * and delegates final data handling to handleSuccess().
+     * Calls parseResponse() to decode the JSON body, then:
+     * 1. Caches a JWT token from the response into a one-hour transient if present.
+     * 2. For 'requestAlt': a numeric `id` in the response is stored as `remote_id` and
+     *    returns STATUS_SUCCESS. AI_STATUS_OVERQUOTA (3) or AI_STATUS_INVALID_URL (2)
+     *    in the `status` field return STATUS_QUOTA_EXCEEDED / STATUS_FAIL respectively;
+     *    any other non-id response is a STATUS_ERROR failure.
+     * 3. For 'retrieveAlt': switches on the numeric `status` field (cast to int, compared
+     *    via PHP loose-equality in a switch on string literals '-1'/'0'/'1'/'2'). Status
+     *    '-1' (error) returns STATUS_FAIL. Status '0' (queued) falls through to '1'
+     *    (processing) and returns STATUS_WAITING, unless $is_error is truthy for '0'.
+     *    Status '2' and the default branch delegate to handleSuccess(). The 'aiData' array
+     *    includes: filebase (generated_file_name), alt, caption, relevance,
+     *    description (image_description), and post_title (title).
      *
      * @param QueueItem $qItem    The queue item being processed.
-     * @param mixed     $response The raw HTTP response from the AI API.
-     * @return array Result array produced by one of the returnSuccess/returnFailure/returnRetry/returnOk methods.
+     * @param array     $response Raw wp_remote_post() response array (body not yet decoded).
+     * @return array Result array produced by one of the return* helper methods.
      */
     protected function handleResponse(QueueItem $qItem, $response)
     {
@@ -247,13 +272,19 @@ class AiController extends RequestManager
     /**
      * Merges AI-returned data with any pre-existing return data list and returns a success result.
      *
-     * For fields listed in the queue item's returndatalist that are absent from the
-     * API response, fills in their stored status values before wrapping everything
-     * in a success result array.
+     * When the queue item's `returndatalist` is not null, iterates over each named entry:
+     * if that name is absent from $aiData but the entry has a 'status' key, backfills
+     * $aiData[$name] with that stored status value. This preserves the status of fields
+     * that were not returned by the API (e.g. fields already processed in a previous run).
      *
-     * @param array     $aiData Fields and values received from the AI API (alt, caption, description, etc.).
+     * Note: the guard condition `false === is_null(...)` is a double negation that means
+     * "only proceed if returndatalist is not null".
+     *
+     * @param array     $aiData Fields and values received from the AI API (alt, caption,
+     *                          description, post_title, relevance, filebase, etc.).
      * @param QueueItem $qItem  The queue item holding the returndatalist configuration.
-     * @return array Result array via RequestManager returnSuccess.
+     * @return array Success result array via RequestManager::returnSuccess(), containing
+     *               an 'aiData' key with the merged fields.
      */
     protected function handleSuccess($aiData, QueueItem $qItem)
     {

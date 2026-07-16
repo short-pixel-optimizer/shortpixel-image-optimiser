@@ -11,23 +11,48 @@ use ShortPixel\Model\StatsModel as StatsModel;
 use ShortPixel\Controller\Queue\StatsQueue as StatsQueue;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 
-
+/**
+ * Provides a unified read interface for plugin statistics.
+ *
+ * Wraps StatsModel to expose counts of optimized images, thumbnails, and
+ * compression ratios. Also calculates derived metrics such as thumbnails
+ * still to optimize and average compression percentage (the latter is cached
+ * via CacheController to avoid repeated database queries).
+ *
+ * Follows the singleton pattern via `getInstance()`.
+ *
+ * @package ShortPixel\Controller
+ */
 class StatsController extends \ShortPixel\Controller
 {
 
+    /** @var StatsModel The underlying statistics model. */
     protected $model;
+
+    /** @var StatsQueue|null Reserved for future queue-based stat collection. */
     protected $queue;
+
+    /** @var StatsController|null Singleton instance. */
     protected static $instance;
 
+    /** @var array Placeholder for in-memory stat accumulation (currently unused). */
     protected $stats =  array(
         //  'processed'
     );
 
+    /**
+     * Instantiate the controller and its StatsModel.
+     */
     public function __construct()
     {
          $this->model = new StatsModel();
     }
 
+    /**
+     * Return the singleton instance, creating it on first call.
+     *
+     * @return StatsController
+     */
     public static function getInstance()
     {
          if (is_null(self::$instance))
@@ -36,6 +61,18 @@ class StatsController extends \ShortPixel\Controller
          return self::$instance;
     }
 
+    /**
+     * Retrieve a statistic by path using one or more keys.
+     *
+     * With a single argument, attempts a direct property lookup on the model
+     * first; if that returns null, falls back to `getStat()`. With multiple
+     * arguments the first is passed to `getStat()` and each subsequent key
+     * drills further via `grab()`. Returns 0 and logs a warning when the
+     * final resolved value is still an object (i.e. the path did not resolve).
+     *
+     * @param mixed ...$params One or more stat path segments.
+     * @return mixed The resolved statistic value, or 0 on failure.
+     */
     public function find(... $params)
     {
         if (count($params) == 1)
@@ -63,11 +100,25 @@ class StatsController extends \ShortPixel\Controller
           return $stat;
     }
 
+    /**
+     * Reset all statistics in the underlying model.
+     *
+     * @return void
+     */
     public function reset()
     {
        $this->model->reset();
     }
 
+    /**
+     * Return the average image compression percentage across the last 1000
+     * successfully optimized images.
+     *
+     * The result is cached for one hour via CacheController under the key
+     * `average_compression`. Returns 0 when no qualifying rows exist.
+     *
+     * @return int|float Average compression percentage (0–100), or 0 on failure.
+     */
     public function getAverageCompression()
     {
       $cacheControl = new CacheController();
@@ -97,7 +148,15 @@ class StatsController extends \ShortPixel\Controller
 
     }
 
-    // This is not functional @todo
+    /**
+     * Add image statistics to the model.
+     *
+     * @todo This method is not functional yet; the stat values are hardcoded
+     *       placeholders and $stats is mutated before being passed to the model.
+     *
+     * @param object $stats Stats object to populate and persist.
+     * @return void
+     */
     public function addImage($stats)
     {
        $stats->type = 'media';

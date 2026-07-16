@@ -12,19 +12,71 @@ use ShortPixel\Model\FrontImage as FrontImage;
 
 use ShortPixel\ShortPixelImgToPictureWebp as ShortPixelImgToPictureWebp;
 
-/** Handle everything that SP is doing front-wise */
+/**
+ * Front-end WebP/AVIF <picture>-tag injection controller.
+ *
+ * PictureController extends PageConverter to convert <img> tags and inline CSS
+ * url() backgrounds to use locally-hosted WebP and AVIF files.  It operates
+ * in one of two delivery modes controlled by the deliverWebp plugin setting:
+ *
+ *  - WEBP_GLOBAL (1): Opens an output buffer (via PageConverter::startOutputBuffer)
+ *    so that the entire rendered page passes through convertImgToPictureAddWebp()
+ *    before being sent to the browser.
+ *  - WEBP_WP (2): Hooks convertImgToPictureAddWebp() on a set of WordPress
+ *    content filters (the_content, the_excerpt, post_thumbnail_html,
+ *    wp_get_attachment_image) at high priority so only plugin-rendered HTML is
+ *    transformed.  The filter set is extensible via the
+ *    'shortpixel/front/picture_webp_filters' filter.
+ *
+ * HTML transform pipeline (convert()):
+ *  1. testPictures(): finds <img> tags already inside <picture> elements and
+ *     marks them with class="sp-no-webp" so they are skipped by convertImage().
+ *  2. preg_replace_callback on /<img …>/: calls convertImage() for each tag.
+ *  3. testInlineStyle(): finds CSS url() declarations and delegates to
+ *     convertInlineStyle() which replaces them with WebP equivalents.
+ *
+ * File resolution: for each image, the controller looks for a .webp file at
+ * the same path with either the base name (image.webp) or the full name
+ * (image.jpg.webp) and for .avif similarly.  The 'shortpixel/front/webp_notfound'
+ * filter allows third-party code to supply an alternative file location.
+ *
+ * AMP pages are excluded (returns early when amp_is_request() is true) because
+ * the <picture> element is not permitted by AMP.
+ */
 class PictureController extends \ShortPixel\Controller\Front\PageConverter
 {
-  // DeliverWebp option settings for front-end delivery of webp
+  /** @var int deliverWebp mode: output-buffer the full page. */
   const WEBP_GLOBAL = 1;
+
+  /** @var int deliverWebp mode: hook on standard WP content filters only. */
   const WEBP_WP = 2;
+
+  /** @var int deliverWebp mode: no front-end conversion (pass-through). */
   const WEBP_NOCHANGE = 3;
 
+  /**
+   * Registers the init hook that sets up WebP delivery based on plugin settings.
+   */
   public function __construct()
   {
 			add_action('init', [$this, 'initWebpHooks']);
   }
 
+	/**
+	 * Wires up WebP/AVIF delivery hooks based on the deliverWebp plugin setting.
+	 *
+	 * Called on the 'init' action.  Bails early via shouldConvert() for admin,
+	 * AJAX, cron, and page-builder contexts.  Warns (admin notice) if the
+	 * ShortPixel Adaptive Images plugin is active alongside this feature, since
+	 * the two conflict.
+	 *
+	 * For WEBP_GLOBAL: starts an output buffer whose callback is
+	 * convertImgToPictureAddWebp(), so the full rendered page is transformed.
+	 * For WEBP_WP: attaches convertImgToPictureAddWebp() to the filter list
+	 * defined by 'shortpixel/front/picture_webp_filters'.
+	 *
+	 * @return false|void False when shouldConvert() returns false; void otherwise.
+	 */
 	public function initWebpHooks()
   {
     $webp_option = \wpSPIO()->settings()->deliverWebp;
@@ -74,10 +126,18 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
   }
 
 
-  /* Picture generation, hooked on the_content filter
-  * @param $content String The content to check and convert
-  * @return String Converted content
-  */
+  /**
+   * Entry-point filter/buffer callback: converts <img> and CSS backgrounds in HTML to WebP/AVIF.
+   *
+   * Used as both the output-buffer callback (WEBP_GLOBAL mode) and as a
+   * WordPress content filter (WEBP_WP mode).  Bails early for 404 responses
+   * (checkPreProcess) and for AMP pages (amp_is_request()), where the <picture>
+   * element is not allowed.
+   *
+   * @param string $content HTML content to transform.
+   * @return string Transformed content with <img> tags wrapped in <picture> elements
+   *                and inline CSS url() values replaced with WebP equivalents.
+   */
   public function convertImgToPictureAddWebp($content) {
 
 			if (false === $this->checkPreProcess())
@@ -96,6 +156,22 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
 
 
 
+  /**
+   * Runs the full WebP/AVIF conversion pipeline on an HTML string.
+   *
+   * Skips RSS feeds and the admin context.  Calls testPictures() first to mark
+   * <img> tags already inside <picture> elements with sp-no-webp.  Then uses
+   * preg_replace_callback on /<img …>/ to call convertImage() for every <img>
+   * tag.  Finally calls testInlineStyle() to replace inline CSS url() values
+   * with WebP equivalents.
+   *
+   * Returns the original $content on any early bail; otherwise returns the
+   * transformed content (which may equal $content if no convertible images were
+   * found).
+   *
+   * @param string $content HTML content to transform.
+   * @return string Content with <img> tags and inline CSS backgrounds converted.
+   */
   protected function convert($content)
   {
       // Don't do anything with the RSS feed.
@@ -132,7 +208,20 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
   }
 
 
-  /* Find image tags within picture definitions and make sure they are converted only by block, */
+  /**
+   * Protects <img> tags already inside <picture> elements from double-conversion.
+   *
+   * Scans $content for <picture>…<img>…</picture> blocks using a dot-all regex.
+   * For each <img> found inside a <picture>, inserts class="sp-no-webp" (or
+   * prepends 'sp-no-webp ' to an existing class attribute) so that the
+   * preg_replace_callback in convert() skips them when convertImage() is called.
+   *
+   * Returns false only when preg_match_all yields a false $matches result
+   * (pattern error); otherwise always returns the (possibly unmodified) content.
+   *
+   * @param string $content HTML content to scan.
+   * @return string|false Content with sp-no-webp markers added, or false on regex failure.
+   */
   private function testPictures($content)
   {
     // [BS] Escape when DOM Module not installed
@@ -181,10 +270,24 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
     $imgs = $node->getElementsByTagName('img');
   } */
 
-  /** Callback function with received an <img> tag match
-  * @param $match Image declaration block
-  * @return String Replacement image declaration block
-  */
+  /**
+   * preg_replace_callback handler: converts a single <img> tag to a <picture> element.
+   *
+   * Receives the regex match array from the /<img …>/i pattern in convert().
+   * Parses the tag via FrontImage to obtain src and srcset definitions, then for
+   * each definition attempts to locate .webp (base-name and full-name variants)
+   * and .avif counterparts on the filesystem.  Falls back through the
+   * 'shortpixel/front/webp_notfound' filter for each missing file.
+   *
+   * If neither webpCount nor avifCount is non-zero after processing all
+   * definitions, the original <img> HTML is returned unchanged.  Otherwise
+   * calls FrontImage::parseReplacement() with arrays of WebP and/or AVIF
+   * srcset strings to produce a <picture> element with appropriate <source>
+   * elements.
+   *
+   * @param array $match preg_replace_callback match array; $match[0] is the full <img> tag HTML.
+   * @return string <picture>…</picture> HTML when WebP/AVIF variants exist, or the original <img> tag.
+   */
   protected function convertImage($match)
   {
       $fs = \wpSPIO()->filesystem();
@@ -312,6 +415,20 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
 
   }
 
+  /**
+   * Finds all CSS url() declarations in HTML content and delegates to convertInlineStyle().
+   *
+   * Uses the pattern '/(url\(.*?\))(.*?)(?:;|\"|\')/' (dot-all) to match url()
+   * values plus any trailing background shorthand properties up to a ; or
+   * quote delimiter.  Group 1 is the full url(…) token; group 2 is any trailing
+   * image-data (position, repeat, etc.).  Results are passed as a structured
+   * array to convertInlineStyle() for file-system resolution and replacement.
+   *
+   * Returns $content unchanged when no url() matches are found.
+   *
+   * @param string $content HTML content to scan.
+   * @return string Content with inline CSS url() backgrounds replaced by WebP equivalents.
+   */
   protected function testInlineStyle($content)
   {
     //preg_match_all('/background.*[^:](url\(.*\))[;]/isU', $content, $matches);
@@ -337,10 +454,27 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
   }
 
 
-  /** Function to convert inline CSS backgrounds to webp
-  * @param $match Regex match for inline style
-  * @return String Replaced (or not) content for webp.
-  */
+  /**
+   * Replaces inline CSS url() declarations with WebP equivalents where available.
+   *
+   * For each entry in $matches (with 'item' = the url(…) string and 'imagedata'
+   * = optional trailing shorthand), extracts the raw URL, resolves it to a
+   * filesystem path via the VFS, then looks for a .webp counterpart using both
+   * the base-name and full-name strategies.  Falls back through the
+   * 'shortpixel/front/webp_notfound' filter when neither file exists on disk.
+   *
+   * Only processes extensions in [jpg, jpeg, gif, png].  Skips external URLs
+   * (where getFileDir() returns false).  Each source url() token is replaced
+   * once in $content via str_replace(); the converted array guards against
+   * double-replacement when the same image appears on multiple elements.
+   *
+   * The replacement uses the base WebP name (no trailing image-data) as the
+   * inline value: url('<webp-url>').
+   *
+   * @param array  $matches Structured match array from testInlineStyle(); each entry has 'item' and 'imagedata'.
+   * @param string $content HTML content in which replacements are made.
+   * @return string Content with qualifying inline CSS backgrounds replaced.
+   */
   protected function convertInlineStyle($matches, $content)
   {
     $fs = \wpSPIO()->filesystem();
