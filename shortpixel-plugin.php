@@ -207,7 +207,7 @@ class ShortPixelPlugin {
 			$keyControl = ApiKeyController::getInstance();
 
 
-			if ( true || false === $keyControl->keyIsVerified() || $totalCredits < 4000 ) {
+			if (  false === $keyControl->keyIsVerified() || $totalCredits < 4000 ) {
 				require_once 'class/view/shortpixel-feedback.php';
 				new ShortPixelFeedback( SHORTPIXEL_PLUGIN_FILE, 'shortpixel-image-optimiser' );
 			}

@@ -389,15 +389,17 @@ class PNGConverter extends MediaLibraryConverter
         if ($fileSize >= $resultSize)
           return true;
 
-        // Fine suppose, but crashes the increase
-        if ($fileSize == 0)
-          return true;
-
-        // Indicates write issues
+		// Indicates write issues. If result size is zero, should not accept result.
         if ($resultSize == 0)
         {
            return false;
         }
+
+        // Fine suppose, but crashes the increase . This could happen when filesize is not properly set in metadata or passed. 
+        if ($fileSize == 0)
+          return true;
+
+
 
         $percentage = apply_filters('shortpixel/pngconverter/filesizeMargin', 0);
 

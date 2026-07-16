@@ -667,7 +667,7 @@ The screen IDS seem to be have changed, trying a more definitive solution
 				}
 			}
 			else {
-				$paths = array_merge($paths, $this->getImageAbspath($image, $size));
+				$paths[] = $this->getImageAbspath($image, $size);
 			}
 
 			foreach($paths as $path)
@@ -749,7 +749,8 @@ The screen IDS seem to be have changed, trying a more definitive solution
    * @param string $size  Size slug — defaults to `'full'`.
    * @return string Absolute filesystem path to the image at that size.
    */
-  protected function getImageAbspath($image, $size = 'full') {
+  protected function getImageAbspath($image, $size = 'full') : string
+  {
 
       if (true === $this->is_legacy)
       {

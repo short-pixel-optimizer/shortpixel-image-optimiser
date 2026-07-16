@@ -1,5 +1,7 @@
 <?php
+declare(strict_types=1);
 namespace ShortPixel\Model\Image;
+
 
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
@@ -497,9 +499,8 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
  			}
  			else {
  				Log::addError('Something went wrong with handleOptimized', $optimizeData);
+        return false; 
  			}
-
-
 
 			 if (! $this->isOptimized() ) // main file might not be contained in results
 			 {
@@ -737,6 +738,11 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     protected function isDateExcluded()
     {
         $options = $this->checkDateExcluded();
+
+        if (false === $options)
+        {
+          return false;
+        }
 
 
         if ($this->getMeta('tsOptimized') > 0)

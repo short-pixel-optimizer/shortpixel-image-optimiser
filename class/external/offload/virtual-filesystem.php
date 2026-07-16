@@ -75,7 +75,7 @@ class VirtualFileSystem
 		public function checkIfOffloaded($bool, $url, $rawpath)
 		{
 				// Slow as it is, check nothing.
-			 if ($this->offloadName = 's3-uploads-human')
+			 if ('s3-uploads-human' === $this->offloadName)
 			 {
 				 return FileModel::$VIRTUAL_STATELESS;
 			 }

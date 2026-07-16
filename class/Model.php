@@ -282,7 +282,7 @@ abstract class Model
       {
         return null;
       }
-      $new_array = array();
+      $new_array = [];
       foreach($array as $key => $value)
       {
 			$newkey = $this->sanitizeString($key);
@@ -291,6 +291,18 @@ abstract class Model
 			{
 				 $newval = $this->sanitizeArray($value);
 			}
+      elseif (is_numeric($value))
+      {
+           $newval = intval($value); 
+      }
+      elseif (is_float($value))
+      {
+         $newval = floatval($value);
+      }
+      elseif (is_bool($value) )
+      {
+         $newval = $value; 
+      }
 			else {
 				  $newval = $this->sanitizeString($value);
 			}

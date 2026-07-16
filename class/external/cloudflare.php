@@ -59,8 +59,7 @@ class CloudFlareAPI {
     private $setup_done = false;
     /** @var bool True when both zone_id and token are non-empty; every hook handler short-circuits if false. */
     private $config_ok = false;
-    /** @var bool True when authenticating via Bearer token (the only supported path today — see addAuth() for the dead legacy branch). */
-    private $use_token = false;
+
 
     /** @var bool Declared but never assigned or read — historical flag. Safe to remove. */
     private $cf_exists = true;
@@ -102,7 +101,6 @@ class CloudFlareAPI {
 
         if (! empty($this->token) && ! empty($this->zone_id))
         {
-          $this->use_token = true;
           $this->config_ok = true;
         }
 
@@ -179,15 +177,6 @@ class CloudFlareAPI {
             $purge_array  = array();
             $prepare_request_info = array();
 
-            // if full image size tag is missing, we need to add it
-            /* Seems unused? 
-
-            if ( ! in_array( 'full', $fetch_images_sizes ) ) {
-                $fetch_images_sizes[] = 'full';
-            }
-
-            */
-
 						$fs = \wpSPIO()->filesystem();
 
 						$image_paths[] = $imageItem->getURL();
@@ -227,17 +216,12 @@ class CloudFlareAPI {
 						}
 
             if ( ! empty( $image_paths ) ) {
-              //$prepare_request_info['files'] = $image_url_for_purge;
                 // Encode the data into JSON before send
                 $dispatch_purge_info = function_exists('wp_json_encode') ? wp_json_encode( $prepare_request_info ) : json_encode( $prepare_request_info );
-
 
                 $response = $this->delete_url_cache_request_action($image_paths);
 
                 // Start the process of cache purge
-            /*    $request_response = $this->delete_url_cache_request_action( "https://api.cloudflare.com/client/v4/zones/" . $cloudflare_zone_id . "/purge_cache", $dispatch_purge_info, $dispatch_header ); */
-
-
             } else {
                 // No use in running the process
             }
@@ -281,18 +265,8 @@ class CloudFlareAPI {
      */
     private function addAuth($headers)
     {
-        if ($this->use_token)
-        {
-          $headers['authorization'] = 'Authorization: Bearer ' . $this->token;
-        }
-        else
-        {
-          $headers['x-auth-email'] = 'X-Auth-Email: ' . $this->email;
-          $headers['x-auth-key'] = 'X-Auth-Key: ' . $this->authkey;
-        }
-
-        return $headers;
-
+       $headers['authorization'] = 'Authorization: Bearer ' . $this->token;
+       return $headers;
     }
 
 

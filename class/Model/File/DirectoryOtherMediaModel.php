@@ -290,11 +290,12 @@ class DirectoryOtherMediaModel extends DirectoryModel
 						else
 						{
               $data['ts_created'] = $this->timestampToDB(time());
-							$this->id = $wpdb->insert($table, $data);
+							$result = $wpdb->insert($table, $data);
+              $this->id = $wpdb->insert_id;
+
 							if ($this->id !== false)
 							{
 								$is_new = true;
-								$result = $this->id;
 							}
 						}
         }
