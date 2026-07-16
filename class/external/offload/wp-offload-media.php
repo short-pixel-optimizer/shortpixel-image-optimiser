@@ -881,21 +881,19 @@ class wpOffload
 	 * `wp_get_original_image_path()`, which then confuses SPIO's
 	 * downloader — it tries to copy the remote file to the scaled path
 	 * even when it needs the original. This filter forces the original
-	 * shape by removing any `-scaled` substring from the path.
+	 * shape by stripping a trailing `-scaled` suffix from the basename.
 	 *
-	 * @todo `strpos` matches `-scaled` anywhere in the path; a folder
-	 *       named `my-scaled-photos/` would be caught. The `@todo` in
-	 *       code suggests anchoring on `-scaled.<ext>` at the end
-	 *       instead. Not fixed during this doc pass.
+	 * The strip is anchored to `-scaled.<ext>` at the end of the path, so
+	 * folder names containing `-scaled` (e.g. `my-scaled-photos/`) are
+	 * left untouched.
 	 *
 	 * @param string $filepath Filepath from the upstream filter.
 	 * @param int    $id       WordPress attachment id (unused).
-	 * @return string Filepath with any `-scaled` substring removed.
+	 * @return string Filepath with a trailing `-scaled` suffix removed.
 	 */
 	public function checkScaledUrl($filepath, $id)
 	{
 		// Original filepath can never have a scaled in there.
-		// @todo This should probably check -scaled.<extension> as string end preventing issues.
 		if (strpos($filepath, '-scaled') !== false) {
 			$filepath = preg_replace('/-scaled(\.[a-z0-9]+)$/i', '$1', $filepath);
 			//$filepath = str_replace('-scaled', '', $filepath);

@@ -8,8 +8,8 @@
  *   - preventUpdateMetaData — in-list cancels, otherwise passes through
  *   - sourceCache (private) — three shapes (uncached read, write, cached read)
  *     plus scheme normalisation
- *   - checkScaledUrl — the `-scaled` stripper, plus a pinned sentinel
- *     for the `@todo` folder-name false-positive
+ *   - checkScaledUrl — the `-scaled` stripper, plus a regression
+ *     sentinel for the folder-name false-positive (fixed in a7a0f8f9)
  *
  * Skipped at the unit level (integration territory — need an as3cf
  * instance, WordPress attachments, or the SPIO filesystem):
@@ -26,17 +26,10 @@
  *   - fixWebpRemotePath                    → SPIO filesystem + as3cf
  *   - returnOriginalFile                   → get_attached_file with a real attachment
  *
- * One test is pinned to the intended contract of a method that ships
- * with a real bug (see project_deferred_root_bugs.md):
- *
- *   - `checkScaledUrl` uses `strpos($filepath, '-scaled')` + `str_replace`,
- *     which matches `-scaled` anywhere in the path — a folder named
- *     `my-scaled-folder` gets its `-scaled` stripped too. The `@todo`
- *     in the code acknowledges this and suggests anchoring on
- *     `-scaled.<ext>` at the end.
- *
- * The `*_pinned_for_deferred_fix` test will FAIL until the strip is
- * anchored to the basename+extension.
+ * Regression sentinel: `checkScaledUrl` used to strip `-scaled` from
+ * anywhere in the path (a folder named `my-scaled-folder` lost its
+ * segment). Fixed in a7a0f8f9 by anchoring the strip to `-scaled.<ext>`
+ * at the end of the path — the folder-name test below pins the fix.
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -229,7 +222,7 @@ class wpOffloadTest extends WP_UnitTestCase {
 	}
 
 	/*
-	 * checkScaledUrl — strip `-scaled` + pinned false-positive sentinel
+	 * checkScaledUrl — strip `-scaled` + folder-name regression sentinel
 	 */
 
 	public function test_checkScaledUrl_strips_scaled_before_extension_in_a_typical_path() {
@@ -242,19 +235,13 @@ class wpOffloadTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * PINNED for deferred fix — `checkScaledUrl` uses
-	 * `strpos($filepath, '-scaled')` + `str_replace('-scaled', ...)`,
-	 * which matches the substring **anywhere** in the path. A folder
-	 * named `my-scaled-folder` gets its `-scaled` segment stripped too,
-	 * even though the folder isn't a WordPress scaled-image intermediary.
-	 *
-	 * Intended behaviour (per the `@todo` in the code): only strip
-	 * `-scaled` when it sits immediately before the file extension in
-	 * the basename.
-	 *
-	 * This test will FAIL until the strip is anchored to the basename.
+	 * Regression sentinel for a7a0f8f9 — `checkScaledUrl` used to do a
+	 * blind `str_replace('-scaled', ...)` that matched the substring
+	 * **anywhere** in the path, so a folder named `my-scaled-folder`
+	 * lost its `-scaled` segment. The strip is now a `preg_replace`
+	 * anchored on `-scaled.<ext>` at the end of the path.
 	 */
-	public function test_checkScaledUrl_does_not_strip_scaled_from_folder_names_pinned_for_deferred_fix() {
+	public function test_checkScaledUrl_does_not_strip_scaled_from_folder_names() {
 		$o = $this->freshOffload();
 
 		$input = '/wp-content/uploads/2024/06/my-scaled-folder/photo.jpg';

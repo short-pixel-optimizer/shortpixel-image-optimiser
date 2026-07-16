@@ -619,7 +619,11 @@ class EnvironmentModel extends \ShortPixel\Model
         }
 
         return (int)preg_replace_callback('/(\-?\d+)(.?)/', function ($m) {
-            return $m[1] * pow(1024, strpos('BKMG', $m[2]));
+            // Empty unit (plain bytes) short-circuits: strpos() with an empty
+            // needle warns on PHP 7.4. A false result (unknown unit) coerces
+            // to 0 — same multiplier as bytes — matching previous behaviour.
+            $exponent = ('' === $m[2]) ? 0 : (int) strpos('BKMG', $m[2]);
+            return $m[1] * pow(1024, $exponent);
         }, strtoupper($s));
       }
 

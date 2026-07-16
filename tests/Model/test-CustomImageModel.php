@@ -134,13 +134,10 @@ class CustomImageModelTest extends WP_UnitTestCase {
 	 * ImageMeta). Optionally pre-set a real fullpath via reflection so
 	 * filesystem-dependent methods (getURL etc.) have coherent state.
 	 *
-	 * Seeds tsAdded/tsOptimized so `saveMeta()` doesn't fatal. Since
-	 * commit 399b29e2 the class declares `strict_types=1`, which turns
-	 * the previous `Deprecated: DateTime::setTimestamp() passing null`
-	 * warning into a hard TypeError inside `saveMeta()`. ImageThumbnailMeta's
-	 * constructor seeds tsAdded to `time()`, but tsOptimized stays null —
-	 * force both to a safe integer so any test-driven path through
-	 * saveMeta() survives.
+	 * Seeds tsAdded/tsOptimized to fixed integers. Production's saveMeta()
+	 * now null-coalesces both timestamps to `time()` (a7a0f8f9), so a null
+	 * no longer fatals under the class's `strict_types=1` — but seeding
+	 * keeps the stub deterministic instead of silently picking up "now".
 	 */
 	private function makeStubModel( ?string $path = null ): CustomImageModel {
 		$model = new CustomImageModel( 0 );
