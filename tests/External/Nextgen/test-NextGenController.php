@@ -10,8 +10,8 @@
  *   - add_screen_loads — precise match (`ngg` property) vs substring matches
  *     vs no-match, plus the sticky `$is_ngg_screen` flag side-effect
  *   - checkAddFiles — three-branch NextGen-folder + optimize-setting gate
- *   - PINNED — onDeleteImage's array_merge($paths, string) TypeError trap
- *     (see project_deferred_root_bugs.md)
+ *   - Regression sentinel — onDeleteImage's array_merge($paths, string)
+ *     TypeError trap (see project_deferred_root_bugs.md)
  *
  * Skipped at the unit level (integration territory — need real NextGen
  * classes, the shortpixel_folders DB table, or OtherMediaController state):
@@ -267,24 +267,34 @@ class NextGenControllerTest extends WP_UnitTestCase {
 	}
 
 	/*
-	 * onDeleteImage — pinned bug: array_merge($paths, string) TypeError
-	 * under PHP 8 when $size is not false.
+	 * onDeleteImage — regression sentinel guarding the PHP 8
+	 * array_merge($paths, string) TypeError fix.
 	 */
 
 	/**
-	 * PINNED for deferred fix — onDeleteImage's else-branch has
-	 * `array_merge($paths, $this->getImageAbspath($image, $size))`.
-	 * getImageAbspath returns a string; array_merge requires arrays.
-	 * Under PHP 8 (which the CI runs) this raises a TypeError the
-	 * moment $size is not false.
+	 * Regression sentinel: onDeleteImage must not raise a TypeError
+	 * when $size is a specific string (e.g. 'thumbnail').
 	 *
-	 * Intended behaviour: no TypeError. Fix is `$paths[] = ...`
-	 * (append instead of merge). See project_deferred_root_bugs.md.
-	 *
-	 * This test will FAIL until the one-character fix ships.
+	 * Before the fix, onDeleteImage's else-branch called
+	 * `array_merge($paths, $this->getImageAbspath($image, $size))` —
+	 * but getImageAbspath returns a string, and PHP 8's array_merge
+	 * requires arrays. Fix: `$paths[] = ...` (append instead of merge).
+	 * See project_deferred_root_bugs.md.
 	 */
-	public function test_onDeleteImage_does_not_fatal_when_size_is_a_specific_string_pinned_for_deferred_fix() {
+	public function test_onDeleteImage_does_not_fatal_when_size_is_a_specific_string() {
 		$c = $this->makeTestableController();
+
+		// Downstream: onDeleteImage → OtherMediaController->getCustomImageByPath
+		// → CustomImageModel->setStub, which SELECTs from `shortpixel_meta`.
+		// This test file doesn't seed that table (checkTables() in every set_up
+		// would slow the other 15 tests in this file that don't touch the DB),
+		// so wpdb emits "Table doesn't exist" errors as pure noise. Suppress
+		// them so the test output stays scannable — the assertion we care
+		// about is the TypeError guard below.
+		global $wpdb;
+		$prevSuppress = $wpdb->suppress_errors( true );
+		$prevShow     = $wpdb->hide_errors();
+		ob_start();
 
 		// Sentinel: only TypeError counts as failure. Downstream
 		// exceptions from OtherMediaController::getInstance()->
@@ -293,13 +303,20 @@ class NextGenControllerTest extends WP_UnitTestCase {
 		try {
 			$c->onDeleteImage( 1, 'thumbnail' );
 		} catch ( \TypeError $e ) {
+			ob_end_clean();
+			$wpdb->suppress_errors( $prevSuppress );
+			if ( $prevShow ) { $wpdb->show_errors(); }
 			$this->fail(
-				'onDeleteImage raised TypeError — the array_merge($paths, string) bug is still present. ' .
+				'onDeleteImage raised TypeError — regression of the array_merge($paths, string) bug. ' .
 				'Message: ' . $e->getMessage()
 			);
 		} catch ( \Throwable $t ) {
 			// Non-TypeError — probably from the OtherMediaController
 			// path further down. Not this test's concern.
+		} finally {
+			ob_end_clean();
+			$wpdb->suppress_errors( $prevSuppress );
+			if ( $prevShow ) { $wpdb->show_errors(); }
 		}
 
 		// Explicit assertion so PHPUnit doesn't mark the test risky.
@@ -320,7 +337,11 @@ class NextGenControllerTest extends WP_UnitTestCase {
 				return (object) array( 'id' => $nggId );
 			}
 
-			protected function getImageAbspath( $image, $size = 'full' ) {
+			// Bas added a `: string` return type to the parent method in 399b29e2
+			// (P1 fix for onDeleteImage array_merge TypeError). The override
+			// signature must stay compatible or PHP fatals with
+			// "Declaration ... must be compatible with ..." at load time.
+			protected function getImageAbspath( $image, $size = 'full' ): string {
 				return '/tmp/spio-test-nextgen-file.jpg';
 			}
 

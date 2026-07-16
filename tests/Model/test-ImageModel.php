@@ -18,8 +18,8 @@
  *   - getProcessableReason (P_* → i18n string translator)
  *
  * SESSION 4 (done) — pipelines:
- *   - handleWebp / handleAvif (temp-file → target move, with the
- *     `handleAvif` swallowed-failure bug pinned)
+ *   - handleWebp / handleAvif (temp-file → target move, with a
+ *     regression sentinel guarding the `handleAvif` swallowed-failure fix)
  *   - handleOptimizedFileType (dispatch to handleWebp/handleAvif +
  *     FILETYPE_BIGGER handling for OPTIMIZED_BIGGER / NOT_COMPATIBLE)
  *   - handleOptimized (backup skip paths, no-copy stati, missing-file
@@ -577,9 +577,14 @@ class ImageModelTest extends WP_UnitTestCase {
 	 */
 
 	public function test_isImage_returns_false_when_file_does_not_exist() {
-		$model = $this->makeModel();
-		// Delete the fixture so exists() returns false.
-		@unlink( $model->getFullPath() );
+		// Construct with a path that never existed. FileModel::exists()
+		// caches its result on first call — the earlier construct-then-
+		// unlink pattern let a cached `true` linger, and isImage() then
+		// proceeded to call finfo_file() on the missing path, emitting
+		// "Failed to open stream" on PHP 8.x. Same pattern the next test
+		// (test_exists_sets_processable_status_...) already uses.
+		$path  = sys_get_temp_dir() . '/spio-imagemodel-never-exists-' . uniqid() . '.png';
+		$model = $this->makeModel( $path );
 
 		$this->assertFalse( $model->isImage() );
 	}
@@ -1063,27 +1068,24 @@ class ImageModelTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * PINNED for deferred fix — the PDF-extension check at line 1539
-	 * uses `===` without lowercasing (`'pdf' === $this->getExtension()`).
-	 * A `.PDF` (uppercase) extension bypasses the optimizePdfs setting
-	 * check entirely and falls through to the strtolower'd in_array on
-	 * PROCESSABLE_EXTENSIONS below — which DOES match `pdf`, so the
-	 * file is reported processable regardless of the PDF-off setting.
+	 * Regression sentinel: `.PDF` (uppercase) must behave identically
+	 * to `.pdf` with respect to the optimizePdfs setting.
 	 *
-	 * Intended behaviour: `.PDF` should behave identically to `.pdf`
-	 * with respect to the optimizePdfs setting.
-	 *
-	 * This test will FAIL until line 1539 is changed to
+	 * Before the fix, the PDF-extension check at line 1539 was
+	 * `'pdf' === $this->getExtension()` (case-sensitive). An uppercase
+	 * `.PDF` bypassed the optimizePdfs gate and fell through to the
+	 * strtolower'd in_array on PROCESSABLE_EXTENSIONS below — reporting
+	 * the file as processable regardless of the PDF-off setting. Fix:
 	 * `strtolower($this->getExtension()) === 'pdf'`.
 	 */
-	public function test_isExtensionExcluded_treats_uppercase_PDF_the_same_as_lowercase_pinned_for_deferred_fix() {
+	public function test_isExtensionExcluded_treats_uppercase_PDF_the_same_as_lowercase() {
 		\wpSPIO()->settings()->optimizePdfs = false;
 		$path  = $this->makeSizedFile( 100, 'PDF' );
 		$model = $this->makeModel( $path );
 
 		$this->assertTrue(
 			$this->invokeProtected( $model, 'isExtensionExcluded' ),
-			'.PDF (uppercase) should be excluded when optimizePdfs is off — same as .pdf. The `===` check bypasses lowercasing.'
+			'.PDF (uppercase) should be excluded when optimizePdfs is off — same as .pdf. Regression of the case-sensitive `===` check at ImageModel.php:1539.'
 		);
 	}
 
@@ -1424,24 +1426,22 @@ class ImageModelTest extends WP_UnitTestCase {
 	}
 
 	/*
-	 * isProcessable pinned regression — cancelUserExclusions bug.
-	 *
-	 * PINNED for deferred fix — cancelUserExclusions() sets
-	 * `processable_status = 0` intending to force a fresh evaluation
-	 * on the next isProcessable() call. But P_PROCESSABLE === 0, so
-	 * the cache short-circuit at lines 339-348 sees `0 === P_PROCESSABLE`
-	 * and returns true immediately — WITHOUT re-running any of the
-	 * validity checks. If between cancelUserExclusions and the next
-	 * isProcessable call the file gets deleted / preventNextTry fires
-	 * / a new exclusion pattern is added, isProcessable will lie.
-	 *
-	 * Intended behaviour: cancelUserExclusions() should set
-	 * `$this->processable_status = null;` so the next isProcessable()
-	 * call bypasses the cache and re-evaluates. See ImageModel.php:486.
-	 *
-	 * This test will FAIL until the fix ships.
+	 * isProcessable regression sentinel — cancelUserExclusions cache reset.
 	 */
-	public function test_isProcessable_reevaluates_after_cancelUserExclusions_pinned_for_deferred_fix() {
+
+	/**
+	 * Regression sentinel: after cancelUserExclusions() the next
+	 * isProcessable() call must re-evaluate from scratch, not return
+	 * cached true.
+	 *
+	 * Before the fix, cancelUserExclusions() set `processable_status = 0`
+	 * intending to force a fresh evaluation — but P_PROCESSABLE === 0,
+	 * so the cache short-circuit at lines 339-348 read `0 === P_PROCESSABLE`
+	 * and returned true immediately, skipping every validity check. Fix:
+	 * cancelUserExclusions now sets `processable_status = null;` so the
+	 * cache miss triggers a full re-check.
+	 */
+	public function test_isProcessable_reevaluates_after_cancelUserExclusions() {
 		$model = $this->makeModel();
 		// Seed a user-excluded state by pattern.
 		$model->_testPatterns = array(
@@ -1461,7 +1461,7 @@ class ImageModelTest extends WP_UnitTestCase {
 
 		$this->assertFalse(
 			$result,
-			'isProcessable returned true for a deleted file after cancelUserExclusions — the status=0 seeded by cancelUserExclusions collided with P_PROCESSABLE (=0), bypassing all re-checks.'
+			'isProcessable returned true for a deleted file after cancelUserExclusions — regression of the status=0 vs P_PROCESSABLE (=0) collision that let the cache short-circuit skip all re-checks.'
 		);
 	}
 
@@ -1571,40 +1571,37 @@ class ImageModelTest extends WP_UnitTestCase {
 	}
 
 	/*
-	 * getProcessableReason pinned regression — default case reads the
-	 * wrong status field.
-	 *
-	 * PINNED for deferred fix — the default case at line 626 reads
-	 * `$this->processable_status` when it should read the `$status`
-	 * argument that was passed in (or resolved from). When getReason()
-	 * routes 'restorable' through here with an unknown restorable code,
-	 * the default message reports the processable_status instead of
-	 * the restorable_status — misleading debug info.
-	 *
-	 * Reproduce: seed processable_status = P_FILE_NOT_EXIST (=1),
-	 * seed restorable_status = 99999 (unknown), call
-	 * getReason('restorable'). The default message should mention
-	 * "99999" (the restorable code). Currently it mentions "1" (the
-	 * processable code) instead.
-	 *
-	 * This test will FAIL until line 626 uses $status instead of
-	 * $this->processable_status.
+	 * getProcessableReason regression sentinel — default case reads the
+	 * argument status, not the processable_status field.
 	 */
-	public function test_getProcessableReason_default_case_uses_the_argument_status_not_the_processable_field_pinned_for_deferred_fix() {
+
+	/**
+	 * Regression sentinel: getReason('restorable') must include the
+	 * restorable_status code in the default-case message — not the
+	 * unrelated processable_status.
+	 *
+	 * Before the fix, the default case at line 626 read
+	 * `$this->processable_status` instead of the `$status` argument
+	 * resolved from the caller. Routing 'restorable' through the
+	 * translator with an unknown restorable code would surface the
+	 * processable code in the debug message. Fix: the default case
+	 * now uses the resolved `$status` argument.
+	 */
+	public function test_getProcessableReason_default_case_uses_the_argument_status_not_the_processable_field() {
 		$model = $this->makeModel();
 		$this->setProtected( $model, 'processable_status', ImageModel::P_FILE_NOT_EXIST );
 		$this->setProtected( $model, 'restorable_status', 99999 );
 
 		$result = $model->getReason( 'restorable' );
 
-		// Sentinel: the message should mention the RESTORABLE code (99999),
-		// not the PROCESSABLE code (1 = P_FILE_NOT_EXIST). Currently
-		// includes "1" because the default case dereferences the wrong
-		// property.
+		// Sentinel: the message must mention the RESTORABLE code (99999),
+		// not the PROCESSABLE code (1 = P_FILE_NOT_EXIST). Regression of
+		// the default-case wrong-property dereference at ImageModel.php:626
+		// would surface "1" here instead.
 		$this->assertStringContainsString(
 			'99999',
 			$result,
-			'getReason(restorable) default message reports processable_status instead of the passed status — bug at ImageModel.php:626'
+			'getReason(restorable) default message reports processable_status instead of the passed status — regression of the fix at ImageModel.php:626'
 		);
 	}
 
@@ -1706,19 +1703,16 @@ class ImageModelTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * PINNED for deferred fix — handleAvif has NO `return false;`
-	 * inside its "move failed" branch. Compare against handleWebp
-	 * (lines 1436-1440) which correctly returns false. handleAvif
-	 * (lines 1475-1480) just logs a warning and returns $target,
-	 * causing handleOptimizedFileType to record `avif` meta for a
-	 * variant that doesn't exist on disk.
+	 * Regression sentinel: handleAvif must return false (not $target)
+	 * when the source move fails, matching handleWebp's contract.
 	 *
-	 * Intended behaviour: match handleWebp — `return false;` inside
-	 * the `if (! $result)` block.
-	 *
-	 * This test will FAIL until the fix ships.
+	 * Before the fix, handleAvif's "move failed" branch (lines 1475-1480)
+	 * only logged a warning and returned $target, causing
+	 * handleOptimizedFileType to record `avif` meta for a variant that
+	 * didn't exist on disk. Fix: `return false;` inside the
+	 * `if (! $result)` block, mirroring handleWebp (lines 1436-1440).
 	 */
-	public function test_handleAvif_returns_false_when_source_move_fails_pinned_for_deferred_fix() {
+	public function test_handleAvif_returns_false_when_source_move_fails() {
 		$model = $this->makeModel();
 		$fs    = \wpSPIO()->filesystem();
 
@@ -1730,7 +1724,7 @@ class ImageModelTest extends WP_UnitTestCase {
 		$this->assertSame(
 			false,
 			$result,
-			'handleAvif returned $target (truthy) on move failure — no `return false;` inside the `if (! $result)` block. Compare handleWebp:1436-1440.'
+			'handleAvif returned $target (truthy) on move failure — regression of the missing `return false;` inside the `if (! $result)` block. Compare handleWebp:1436-1440.'
 		);
 	}
 
@@ -2461,21 +2455,21 @@ class ImageModelTest extends WP_UnitTestCase {
 
 	/*
 	 * cancelUserExclusions — resets processable_status when it currently
-	 * holds a user-exclusion code. NOTE: the reset value is 0 which
-	 * collides with P_PROCESSABLE — pinned in session 3 as the
-	 * cancelUserExclusions bug (Finding A).
+	 * holds a user-exclusion code. Bas's fix in 399b29e2 changed the
+	 * reset value from `0` (which collided with P_PROCESSABLE) to `null`,
+	 * so `isProcessable()` re-runs its evaluation after the reset instead
+	 * of returning a stale "processable" verdict.
 	 */
 
-	public function test_cancelUserExclusions_resets_processable_status_to_zero_when_user_excluded() {
+	public function test_cancelUserExclusions_resets_processable_status_to_null_when_user_excluded() {
 		$model = $this->makeModel();
 		$this->setProtected( $model, 'processable_status', ImageModel::P_EXCLUDE_PATH );
 
 		$model->cancelUserExclusions();
 
-		// The current behaviour (reset to 0) is what session 3's pinned
-		// test flags as buggy. This test documents the CURRENT contract;
-		// the fix will need this test updated to `assertNull` instead.
-		$this->assertSame( 0, $this->getProtected( $model, 'processable_status' ) );
+		// Sentinel: null (not 0). A regression that reintroduced `= 0`
+		// would collide with P_PROCESSABLE and short-circuit isProcessable().
+		$this->assertNull( $this->getProtected( $model, 'processable_status' ) );
 	}
 
 	public function test_cancelUserExclusions_leaves_status_untouched_when_not_user_excluded() {

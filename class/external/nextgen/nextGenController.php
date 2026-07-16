@@ -639,12 +639,10 @@ The screen IDS seem to be have changed, trying a more definitive solution
    * queue each abspath for `onDelete()`; for a specific size we
    * process just that one path.
    *
-   * NOTE: the else-branch at ~line 350 does `array_merge($paths,
-   * $this->getImageAbspath(...))` — `getImageAbspath` returns a
-   * string, and `array_merge` requires arrays. Under PHP 8 this
-   * raises a TypeError; the code has been shipping this way because
-   * NextGen apparently always fires the hook with `$size === false`
-   * in practice. Flagged in the deferred-root-bugs memo.
+   * (Prior to 399b29e2 the else-branch used `array_merge($paths,
+   * $this->getImageAbspath(...))`, which raised a PHP 8 TypeError
+   * because `getImageAbspath` returns a string; the current
+   * `$paths[] = ...` append works uniformly.)
    *
    * @param int         $nggId NextGen image id.
    * @param string|false $size Size slug, or false for a whole-image delete.

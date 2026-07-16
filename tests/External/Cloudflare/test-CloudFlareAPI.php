@@ -6,10 +6,10 @@
  *
  * Focus areas:
  *   - Constructor registers BOTH hooks (optimised + before_restore)
- *   - Property defaults (setup_done, config_ok, use_token, api_url)
+ *   - Property defaults (setup_done, config_ok, api_url)
  *   - setup() config resolution:
- *      · Empty settings   → config_ok=false, use_token=false
- *      · Both credentials → config_ok=true, use_token=true, values cached
+ *      · Empty settings   → config_ok=false
+ *      · Both credentials → config_ok=true, values cached
  *      · Partial config   → config_ok=false (both credentials required)
  *   - check_cloudflare() runs setup() lazily on first hook fire
  *   - check_cloudflare() short-circuits when config_ok is false —
@@ -26,9 +26,6 @@
  *     intercept
  *   - Constant-driven setup (SHORTPIXEL_CFZONE / SHORTPIXEL_CFTOKEN)
  *     — defines can't be un-defined, would leak across the process
- *   - addAuth() legacy (`use_token=false`) branch — dead code that
- *     references undeclared `$this->email` / `$this->authkey`
- *     properties (flagged in the deferred-bugs memo)
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -124,7 +121,6 @@ class CloudFlareAPITest extends WP_UnitTestCase {
 		// break the "no settings read at file-load" contract.
 		$this->assertFalse( $this->getPrivate( $c, 'setup_done' ) );
 		$this->assertFalse( $this->getPrivate( $c, 'config_ok' ) );
-		$this->assertFalse( $this->getPrivate( $c, 'use_token' ) );
 	}
 
 	public function test_freshly_constructed_instance_has_the_v4_api_url_base() {
@@ -149,7 +145,6 @@ class CloudFlareAPITest extends WP_UnitTestCase {
 
 		$this->assertTrue( $this->getPrivate( $c, 'setup_done' ), 'setup_done should always flip' );
 		$this->assertFalse( $this->getPrivate( $c, 'config_ok' ) );
-		$this->assertFalse( $this->getPrivate( $c, 'use_token' ) );
 	}
 
 	public function test_setup_marks_config_ok_and_token_mode_when_both_credentials_are_present() {
@@ -161,7 +156,6 @@ class CloudFlareAPITest extends WP_UnitTestCase {
 
 		$this->assertTrue( $this->getPrivate( $c, 'setup_done' ) );
 		$this->assertTrue( $this->getPrivate( $c, 'config_ok' ) );
-		$this->assertTrue( $this->getPrivate( $c, 'use_token' ) );
 		// Sentinel: verify credentials are actually cached on the
 		// instance — a regression that flipped the flags without
 		// storing values would still pass the flag assertions but
@@ -231,9 +225,8 @@ class CloudFlareAPITest extends WP_UnitTestCase {
 	 * addAuth() — Bearer path only (legacy branch is dead code)
 	 */
 
-	public function test_addAuth_adds_bearer_authorization_header_when_use_token_is_true() {
+	public function test_addAuth_adds_bearer_authorization_header() {
 		$c = new CloudFlareAPI();
-		$this->setPrivate( $c, 'use_token', true );
 		$this->setPrivate( $c, 'token', 'super-secret-token' );
 
 		$result = $this->invokePrivate( $c, 'addAuth', array( array() ) );
@@ -248,7 +241,6 @@ class CloudFlareAPITest extends WP_UnitTestCase {
 
 	public function test_addAuth_preserves_caller_supplied_headers_when_adding_bearer_auth() {
 		$c = new CloudFlareAPI();
-		$this->setPrivate( $c, 'use_token', true );
 		$this->setPrivate( $c, 'token', 'super-secret-token' );
 
 		$existing = array(

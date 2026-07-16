@@ -5,24 +5,22 @@
  * Focus areas:
  *   - Passthrough / constant-return methods (getLocalPathByURL,
  *     extraFeatures, isActive)
- *   - Sentinel test pinning the intended (bug-free) contract of
- *     checkIfOffloaded — see the `_pinned_for_deferred_fix` note below
+ *   - Regression sentinels guarding the checkIfOffloaded `=` vs `==`
+ *     fix — see the per-test docblocks below
  *
  * Skipped at the unit level (integration territory):
  *   - __construct → calls listen() which registers three add_filter hooks
  *   - listen     → pure hook registration; asserting hooks were added
  *                  would duplicate WordPress's own registry
  *
- * One test is pinned to the intended contract of a method that ships
- * with a real bug (see project_deferred_root_bugs.md):
+ * Two tests guard against regression of a fixed bug (see
+ * project_deferred_root_bugs.md):
  *
- *   - `checkIfOffloaded` uses `=` (assignment) instead of `==` in the
- *     first branch: `if ($this->offloadName = 's3-uploads-human')`.
- *     The assignment silently rewrites `$this->offloadName` on every
- *     call. Intended: leave the property alone.
- *
- * The `*_pinned_for_deferred_fix` test will FAIL until the `=` is
- * changed to `==` (or `===`).
+ *   - `checkIfOffloaded` previously used `=` (assignment) instead of
+ *     `==` in the first branch:
+ *     `if ($this->offloadName = 's3-uploads-human')`. The assignment
+ *     silently rewrote `$this->offloadName` on every call. The fix
+ *     restores the comparison so the property is left alone.
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -97,28 +95,27 @@ class VirtualFileSystemTest extends WP_UnitTestCase {
 	}
 
 	/*
-	 * checkIfOffloaded — pinned sentinel for the `=` vs `==` bug
+	 * checkIfOffloaded — regression sentinels for the `=` vs `==` fix
 	 */
 
 	/**
-	 * PINNED for deferred fix — `checkIfOffloaded` at
-	 * virtual-filesystem.php uses `=` (assignment) instead of `==` in
-	 * `if ($this->offloadName = 's3-uploads-human')`. The assignment
-	 * silently rewrites `$this->offloadName` on every call regardless of
-	 * the offloader's actual identity.
+	 * Regression sentinel: checkIfOffloaded must treat
+	 * `$this->offloadName` as read-only inside its comparison — the
+	 * property must not be mutated by a lookup call.
 	 *
-	 * Intended behaviour: `$this->offloadName` should be treated as
-	 * read-only inside a comparison — the property must not be mutated
-	 * by a lookup call.
-	 *
-	 * This test will FAIL until the `=` is changed to `==` (or `===`).
+	 * Before the fix, checkIfOffloaded at virtual-filesystem.php used
+	 * `=` (assignment) instead of `==` in
+	 * `if ($this->offloadName = 's3-uploads-human')`. Every call
+	 * silently rewrote `$this->offloadName` regardless of the offloader's
+	 * actual identity, routing all detection down the s3-uploads-human
+	 * branch. Fix: `==` (or `===`).
 	 *
 	 * Sentinel principle #4 from feedback_pinned_test_sentinels.md:
 	 * make ID-like fields distinct so the wrong branch has a visible
 	 * consequence. Here we seed `stack` (any non-target value) and check
 	 * it's unchanged after the call.
 	 */
-	public function test_checkIfOffloaded_does_not_mutate_offloadName_pinned_for_deferred_fix() {
+	public function test_checkIfOffloaded_does_not_mutate_offloadName() {
 		$v = $this->freshVirtualFileSystem();
 		$this->setPrivate( $v, 'offloadName', 'stack' );
 
@@ -127,17 +124,17 @@ class VirtualFileSystemTest extends WP_UnitTestCase {
 		$this->assertSame(
 			'stack',
 			$this->getPrivate( $v, 'offloadName' ),
-			'checkIfOffloaded silently rewrote offloadName — the `=` in the first branch is an assignment, not a comparison'
+			'checkIfOffloaded silently rewrote offloadName — regression of the `=` (assignment) vs `==` (comparison) bug in the first branch'
 		);
 	}
 
 	/**
-	 * Companion happy-path assertion: when offloadName IS
-	 * `s3-uploads-human`, checkIfOffloaded should still identify the file
-	 * as stateless. Pinned alongside the mutation sentinel above so the
-	 * fix ("change `=` to `==`") can be verified end-to-end.
+	 * Companion happy-path regression sentinel: when offloadName IS
+	 * `s3-uploads-human`, checkIfOffloaded must still identify the file
+	 * as stateless. Guarded alongside the mutation sentinel above so
+	 * both halves of the `=` → `==` fix stay verified end-to-end.
 	 */
-	public function test_checkIfOffloaded_returns_VIRTUAL_STATELESS_for_s3_uploads_human_pinned_for_deferred_fix() {
+	public function test_checkIfOffloaded_returns_VIRTUAL_STATELESS_for_s3_uploads_human() {
 		$v = $this->freshVirtualFileSystem();
 		$this->setPrivate( $v, 'offloadName', 's3-uploads-human' );
 

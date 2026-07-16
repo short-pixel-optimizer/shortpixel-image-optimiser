@@ -19,9 +19,9 @@
  *   - isOptimizePrevented (post-meta read + cache + side-effects)
  *   - preventNextTry, markCompleted, resetPrevent (post-meta write + status
  *     transitions + saveMeta trigger)
- *   - isDateExcluded — 2 pinned regressions (same $options-unguarded bug
- *     as CustomImageModel::isDateExcluded, plus a MediaLib-specific
- *     get_post()-returns-null bug)
+ *   - isDateExcluded — 2 regression sentinels (same $options-unguarded
+ *     fix as CustomImageModel::isDateExcluded, plus a MediaLib-specific
+ *     get_post()-returns-null guard)
  *   - isProcessable + isRestorable overrides (delegation to parent when
  *     parent already returns true — the deep branches need real WP
  *     attachments and are deferred to session 5)
@@ -38,7 +38,7 @@
  * WP metadata cleanup + 2 pinned regressions on legacyConvertStatus:
  *   - hasOriginal / getOriginalFile / getParent / returnTrue
  *   - legacyConvertType (all 4 mapping branches)
- *   - legacyConvertStatus (4 status branches + 2 PINNED bugs)
+ *   - legacyConvertStatus (4 status branches + 2 regression sentinels)
  *   - getThumbnailModel / getThumbObjects (walker over thumbs + retinas +
  *     scaled original)
  *   - removeLegacyShortPixel / removeLegacy (post-meta + WP metadata cleanup)
@@ -1093,29 +1093,25 @@ class MediaLibraryModelTest extends WP_UnitTestCase {
 	}
 
 	/*
-	 * isDateExcluded — two pinned regressions.
+	 * isDateExcluded — two regression sentinels.
 	 *
-	 * Both are the same shape as the CustomImageModel::isDateExcluded
-	 * pinned bug — dereferencing return values without checking their
-	 * type first.
+	 * Both guard the same fix shape as CustomImageModel::isDateExcluded —
+	 * dereferencing return values only after checking their type.
 	 */
 
 	/**
-	 * PINNED for deferred fix — MediaLibraryModel::isDateExcluded at line
-	 * 2392 calls `checkDateExcluded()` and then dereferences
-	 * `$options['date']` at line 2400 without checking that
-	 * checkDateExcluded() returned an array (it returns false when no
-	 * date rule matches).
+	 * Regression sentinel: MediaLibraryModel::isDateExcluded must return
+	 * false safely when no date rule is configured, even when called
+	 * directly (bypassing isProcessable's outer
+	 * `false !== checkDateExcluded()` guard).
 	 *
-	 * Same bug as CustomImageModel::isDateExcluded pinned in session 2
-	 * of CustomImageModel tests. When called via isProcessable the outer
-	 * `false !== checkDateExcluded()` guard protects — but direct calls
-	 * (from subclasses / integration) fatal.
-	 *
-	 * Intended behaviour: return false safely when checkDateExcluded()
-	 * returns false.
+	 * Before the fix, isDateExcluded (around line 2392) dereferenced
+	 * `$options['date']` at line 2400 without verifying that
+	 * checkDateExcluded() had returned an array — it returns false when
+	 * no date rule matches. Same shape as the CustomImageModel::isDateExcluded
+	 * fix; guarded by an early `false === $options` short-circuit.
 	 */
-	public function test_isDateExcluded_does_not_crash_when_no_date_rule_configured_pinned_for_deferred_fix() {
+	public function test_isDateExcluded_does_not_crash_when_no_date_rule_configured() {
 		// Create a real post so get_post() returns a real object — we
 		// want to isolate the checkDateExcluded=false branch.
 		$postId = $this->factory->post->create();
@@ -1130,7 +1126,7 @@ class MediaLibraryModelTest extends WP_UnitTestCase {
 			);
 		} catch ( \Throwable $t ) {
 			$this->fail(
-				'isDateExcluded threw on no-date-rule state — checkDateExcluded() returned false but the method tried $options["date"] anyway. Bug at MediaLibraryModel.php:2400. Message: ' . $t->getMessage()
+				'isDateExcluded threw on no-date-rule state — regression of the unguarded $options["date"] dereference at MediaLibraryModel.php:2400. Message: ' . $t->getMessage()
 			);
 		} finally {
 			wp_delete_post( $postId, true );
@@ -1138,19 +1134,19 @@ class MediaLibraryModelTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * PINNED for deferred fix — MediaLibraryModel::isDateExcluded at line
-	 * 2394-2395 calls `get_post($this->id)` and then reads
-	 * `$post->post_date` without checking that `$post` is an object.
-	 * When `$this->id` doesn't resolve to an existing post (deleted
-	 * attachment, race, stub with id=0), `get_post` returns null and the
-	 * property read fatals under strict handling.
+	 * Regression sentinel: MediaLibraryModel::isDateExcluded must return
+	 * false safely when `$this->id` doesn't resolve to an existing post
+	 * (deleted attachment, race, stub with id=0).
 	 *
-	 * Intended behaviour: return false safely when the post doesn't exist.
-	 *
-	 * This is a MediaLibrary-specific bug — CustomImageModel doesn't have
-	 * this shape because it reads timestamps from image_meta directly.
+	 * Before the fix, isDateExcluded (lines 2394-2395) called
+	 * `get_post($this->id)` and then read `$post->post_date` without
+	 * checking that `$post` was an object — `get_post` returns null when
+	 * the id doesn't resolve, so the property read fataled under strict
+	 * handling. This is a MediaLibrary-specific fix; CustomImageModel
+	 * doesn't have this shape because it reads timestamps from image_meta
+	 * directly.
 	 */
-	public function test_isDateExcluded_does_not_crash_when_post_does_not_exist_pinned_for_deferred_fix() {
+	public function test_isDateExcluded_does_not_crash_when_post_does_not_exist() {
 		// Use a post_id that definitely doesn't resolve to any real post.
 		$model = $this->makeModelWithId( 999999999 );
 
@@ -1163,7 +1159,7 @@ class MediaLibraryModelTest extends WP_UnitTestCase {
 			);
 		} catch ( \Throwable $t ) {
 			$this->fail(
-				'isDateExcluded threw when the post does not exist — get_post() returned null but the method tried $post->post_date anyway. Bug at MediaLibraryModel.php:2394-2395. Message: ' . $t->getMessage()
+				'isDateExcluded threw when the post does not exist — regression of the unguarded $post->post_date read at MediaLibraryModel.php:2394-2395. Message: ' . $t->getMessage()
 			);
 		}
 	}
@@ -1543,22 +1539,19 @@ class MediaLibraryModelTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * PINNED for deferred fix — MediaLibraryModel::legacyConvertStatus
-	 * at line 3546 has `is_numeric($metadata["ShortPixelImprovement"]) > 0`.
-	 * That parses as `(is_numeric(...) === true) > 0`, i.e. `true > 0`,
-	 * which is always true. The intended check was against the VALUE
-	 * being > 0 — `$metadata["ShortPixelImprovement"] > 0`. So ANY numeric
-	 * ShortPixelImprovement (including 0 or a negative like -1) gets
-	 * mapped to FILE_STATUS_SUCCESS.
+	 * Regression sentinel: legacyConvertStatus must NOT map a zero
+	 * ShortPixelImprovement to FILE_STATUS_SUCCESS — it should fall to
+	 * the negative-ErrCode branch and return the raw error code.
 	 *
-	 * Intended behaviour: only positive improvement values should route
-	 * to SUCCESS. Zero improvement means the API accepted but didn't
-	 * reduce the file — should NOT be flagged as an optimization success.
-	 *
-	 * This test will FAIL (returns SUCCESS instead of the negative ErrCode
-	 * fallback) until Bas fixes line 3546.
+	 * Before the fix, line 3546 read
+	 * `is_numeric($metadata["ShortPixelImprovement"]) > 0`, which parses
+	 * as `(is_numeric(...) === true) > 0` → `true > 0` → always true.
+	 * ANY numeric improvement (including 0 or negative) got mapped to
+	 * SUCCESS. Fix: compare the VALUE
+	 * (`$metadata["ShortPixelImprovement"] > 0`) so only positive
+	 * improvements route to SUCCESS.
 	 */
-	public function test_legacyConvertStatus_does_not_map_zero_improvement_to_SUCCESS_pinned_for_deferred_fix() {
+	public function test_legacyConvertStatus_does_not_map_zero_improvement_to_SUCCESS() {
 		$model = $this->makeStubModel();
 
 		// Zero improvement + a negative ErrCode fallback. The correct
@@ -1571,32 +1564,24 @@ class MediaLibraryModelTest extends WP_UnitTestCase {
 		$this->assertSame(
 			-100,
 			$this->invokeProtected( $model, 'legacyConvertStatus', array( $data, $metadata ) ),
-			'legacyConvertStatus mapped 0 improvement to SUCCESS — bug at line 3546: `is_numeric(...) > 0` always evaluates to `true > 0` which is true. Should be `$metadata["ShortPixelImprovement"] > 0`.'
+			'legacyConvertStatus mapped 0 improvement to SUCCESS — regression of the `is_numeric(...) > 0` (always-true) comparison at line 3546. The fixed form is `$metadata["ShortPixelImprovement"] > 0`.'
 		);
 	}
 
 	/**
-	 * PINNED for deferred fix — MediaLibraryModel::legacyConvertStatus
-	 * has a branch coverage gap: when none of the four `if`/`elseif`
-	 * conditions fire, `$status` is never assigned. The final
-	 * `return $status;` reads an undefined variable, which returns null
-	 * (in most PHP configs) or throws under strict warning-to-exception
-	 * configurations.
+	 * Regression sentinel: legacyConvertStatus must always return an int
+	 * FILE_STATUS_* code — even for an unrecognised non-numeric ErrCode
+	 * string (e.g. 'unrecognised-error-string').
 	 *
-	 * Trigger: legacy data with a non-numeric `ErrCode` string that
-	 * isn't 'backup-fail' or 'write-fail' — e.g. `'unknown-error'`.
-	 * The `$error < 0` comparison against a non-numeric string is
-	 * false in PHP, so none of the branches fire.
-	 *
-	 * Intended behaviour: define a default $status (e.g. FILE_STATUS_UNPROCESSED
-	 * or FILE_STATUS_ERROR) so the return is always a valid int
-	 * FILE_STATUS_* code.
-	 *
-	 * This test will FAIL until Bas adds a default $status assignment.
-	 * Current observed behaviour: returns null (env-dependent — may
-	 * throw under stricter configs).
+	 * Before the fix, the method had a branch coverage gap: when none of
+	 * the four `if`/`elseif` conditions fired (non-numeric ErrCode that
+	 * isn't 'backup-fail' / 'write-fail'; no WaitingProcessing; no
+	 * ShortPixelImprovement), `$status` was never assigned. The final
+	 * `return $status;` read an undefined variable — returned null in
+	 * most configs or threw under strict warning-to-exception setups.
+	 * Fix: a default $status assignment guarantees an int return.
 	 */
-	public function test_legacyConvertStatus_returns_int_status_code_for_unknown_ErrCode_string_pinned_for_deferred_fix() {
+	public function test_legacyConvertStatus_returns_int_status_code_for_unknown_ErrCode_string() {
 		$model = $this->makeStubModel();
 
 		// Non-numeric ErrCode that isn't 'backup-fail' or 'write-fail'.
@@ -1608,13 +1593,13 @@ class MediaLibraryModelTest extends WP_UnitTestCase {
 			$result = $this->invokeProtected( $model, 'legacyConvertStatus', array( $data, $metadata ) );
 			$this->assertIsInt(
 				$result,
-				'legacyConvertStatus returned a non-int (probably null) for an unknown ErrCode — `$status` is never assigned when none of the branches fire. Bug at MediaLibraryModel.php:3537-3558. Fix: add a default $status assignment.'
+				'legacyConvertStatus returned a non-int (probably null) for an unknown ErrCode — regression of the undefined-$status bug at MediaLibraryModel.php:3537-3558.'
 			);
 		} catch ( \Throwable $t ) {
 			// Some PHP configs promote the undefined-variable notice
-			// to an exception. Same bug, different symptom.
+			// to an exception. Same regression, different symptom.
 			$this->fail(
-				'legacyConvertStatus threw on unknown ErrCode string — same undefined-$status bug at MediaLibraryModel.php:3537-3558. Message: ' . $t->getMessage()
+				'legacyConvertStatus threw on unknown ErrCode string — regression of the undefined-$status bug at MediaLibraryModel.php:3537-3558. Message: ' . $t->getMessage()
 			);
 		}
 	}
