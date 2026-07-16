@@ -344,9 +344,6 @@ if (! defined('ABSPATH')) {
           );
           ?>
         </content>
-        <content class='nextline'>
-            <name><?php printf(esc_html__('This is a feature we are currently evaluating. If you would like to see it implemented in a future version of our plugin, please %svote for it here%s.','shortpixel-image-optimiser'), '<a target="_blank" href="https://ideas.shortpixel.com/update-image-filename-with-an-seo-friendly-one~4cMEvKmvFbosoYTI9T4UgK?from=board">', '</a>' ); ?></name>
-        </content>
       </setting>
 
 
