@@ -1,0 +1,99 @@
+# SPIO test runner — matches the PHP + extensions the GitHub Actions
+# workflow at .github/workflows/phpunit.yml installs via shivammathur/setup-php.
+#
+# PHP version is a build arg so the same Dockerfile builds an image for
+# each supported PHP version (7.4 / 8.3 / 8.5). The build arg is
+# parameterised from docker-compose.tests.yml via the PHP_VERSION env var.
+#
+# Multi-arch: works on both linux/amd64 and linux/arm64 (Apple Silicon)
+# because official php:*-cli images publish both architectures for all
+# currently-supported PHP versions.
+
+ARG PHP_VERSION=8.3
+FROM php:${PHP_VERSION}-cli
+
+# System dependencies:
+#   - subversion:            bin/install-wp-tests.sh does `svn checkout` of the
+#                            WordPress test framework.
+#   - default-mysql-client:  the install script uses `mysql -h ...` to create
+#                            the test database.
+#   - git + unzip:           composer prefers them for some source packages.
+#   - libzip-dev + libxml2-dev + libonig-dev:  headers for the PHP zip / xml /
+#                            mbstring extensions we install below.
+#   - curl / ca-certificates: WP-CLI download + HTTPS to the SVN endpoint.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        subversion \
+        default-mysql-client \
+        git \
+        unzip \
+        curl \
+        ca-certificates \
+        libzip-dev \
+        libxml2-dev \
+        libonig-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# PHP extensions the plugin + test harness need. `json` is bundled in PHP 8+
+# so it's not in the install list — the workflow's `extensions:` value is a
+# no-op for it too.
+RUN docker-php-ext-install \
+        mbstring \
+        mysqli \
+        xml \
+        zip
+
+# Composer — copied from the official Composer image to avoid a manual
+# curl-verify-checksum dance. Pin to Composer 2 (matches most CI defaults).
+COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+
+# WP-CLI phar + a small wrapper that always passes --allow-root, because
+# the test container runs as root and WP-CLI refuses to run as root
+# without that flag (bin/install-wp-tests.sh calls `wp core download`,
+# `wp config create`, `wp core install` and would otherwise fail).
+RUN curl -sSL https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
+        -o /usr/local/bin/wp.phar \
+    && chmod +x /usr/local/bin/wp.phar \
+    && printf '#!/bin/sh\nphp /usr/local/bin/wp.phar --allow-root "$@"\n' > /usr/local/bin/wp \
+    && chmod +x /usr/local/bin/wp
+
+# MySQL 8 auto-generates a self-signed TLS cert at startup and offers TLS
+# on every incoming connection. The mysql client shipped by Debian's
+# `default-mysql-client` package is actually MariaDB 11.x's client
+# (mariadb-client-core), which tries to negotiate TLS and rejects the
+# self-signed cert with:
+#
+#     ERROR 2026 (HY000): TLS/SSL error: self-signed certificate in certificate chain
+#
+# This kills bin/install-wp-tests.sh at the "create test database" step.
+#
+# Fix: wrap /usr/bin/mysql with a shim at /usr/local/bin/mysql that
+# always injects --skip-ssl before the caller's arguments. Why a wrapper
+# and not a /root/.my.cnf override?
+#
+#   * my.cnf works, but MariaDB's client aborts with exit 7 the moment
+#     it sees an option name it doesn't recognise (e.g. `ssl-mode=`,
+#     which is a MySQL-8-client option). Adding both names for
+#     cross-compat is a trap.
+#   * The wrapper is explicit — `mysql` inside this container always
+#     connects without TLS, regardless of which package version is
+#     installed. Survives a swap to mysql-community-client too, because
+#     --skip-ssl is understood by both MariaDB's and MySQL's clients.
+#
+# The wrapper lives in /usr/local/bin (earlier in PATH than /usr/bin)
+# and calls /usr/bin/mysql by absolute path, so there's no shell-lookup
+# loop. Safe because the connection never leaves the Docker internal
+# network — no MITM risk.
+#
+# Not needed on the CI runner because shivammathur/setup-php installs a
+# mysql client that handles the TLS handshake with MySQL 8 gracefully.
+RUN printf '#!/bin/sh\nexec /usr/bin/mysql --skip-ssl "$@"\n' > /usr/local/bin/mysql \
+    && chmod +x /usr/local/bin/mysql
+
+# PHP tuning to match what shivammathur/setup-php uses in the CI:
+#   post_max_size=256M, memory_limit=512M
+RUN { \
+        echo 'post_max_size=256M'; \
+        echo 'memory_limit=512M'; \
+    } > /usr/local/etc/php/conf.d/spio-test-tuning.ini
+
+WORKDIR /opt/plugin

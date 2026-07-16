@@ -34,56 +34,33 @@ class InstallHelperTest extends WP_UnitTestCase {
 
 	public function set_up() {
 		parent::set_up();
+
+		// WP_UnitTestCase's parent::set_up() wires two `query` filters —
+		// `_create_temporary_tables` and `_drop_temporary_tables` — that
+		// rewrite every `CREATE TABLE` / `DROP TABLE` into the TEMPORARY
+		// variant so per-test DDL doesn't leak. TEMPORARY tables are
+		// invisible to `SHOW TABLES LIKE` (and to `information_schema.tables`),
+		// so `InstallHelper::checkTableExists()` — the very method under
+		// test — cannot see them.
+		//
+		// Since this test class specifically exercises the SHOW-TABLES-based
+		// existence probe + the DROP-TABLE path, we detach both filters so
+		// CREATE / DROP execute as real DDL. tear_down() drops the real
+		// tables so no state leaks into other test classes.
+		remove_filter( 'query', array( $this, '_create_temporary_tables' ) );
+		remove_filter( 'query', array( $this, '_drop_temporary_tables' ) );
+
+		// Now safe to issue a real DROP — cleans up any leftover from a
+		// prior test that crashed before its tear_down ran.
 		$this->drop_spio_tables();
 	}
 
 	public function tear_down() {
+		// Filters were removed in set_up(); DROP TABLE runs as real DDL,
+		// so the tables created during the test are removed here rather
+		// than leaking into the shared MySQL schema.
 		$this->drop_spio_tables();
 		parent::tear_down();
-	}
-
-	/**
-	 * Runs InstallHelper::checkTables() and then re-invokes dbDelta on each
-	 * per-table SQL definition to make schema application reliable in the CI
-	 * environment.
-	 *
-	 * The second pass is necessary because dbDelta occasionally requires two
-	 * invocations to fully apply a CREATE TABLE inside the WP test harness's
-	 * transactional wrapper. It is also idempotent, so re-running it is safe.
-	 * Any wpdb errors and per-statement dbDelta results are folded into the
-	 * returned string so assertion failures carry enough context to explain
-	 * *why* a table did not materialise (e.g. a MySQL syntax rejection).
-	 *
-	 * @return string Diagnostic string safe to append to assertion messages.
-	 */
-	private function runCheckTablesResilient(): string {
-		global $wpdb;
-		$prev_last_error       = $wpdb->last_error;
-		$wpdb->last_error      = '';
-
-		InstallHelper::checkTables();
-		$errorAfterCheckTables = $wpdb->last_error;
-
-		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-		$perTable = array();
-		$ref      = new ReflectionClass( InstallHelper::class );
-		foreach ( array( 'getFolderTableSQL', 'getMetaTableSQL', 'getPostMetaSQL', 'getAIPostSQL' ) as $methodName ) {
-			$method = $ref->getMethod( $methodName );
-			$method->setAccessible( true );
-			$sql = (string) $method->invoke( null );
-
-			$wpdb->last_error = '';
-			$out              = dbDelta( $sql );
-
-			$perTable[ $methodName ] = array(
-				'result' => empty( $out ) ? '(empty)' : implode( '; ', (array) $out ),
-				'error'  => '' === $wpdb->last_error ? '(none)' : $wpdb->last_error,
-			);
-		}
-
-		$diag             = 'checkTables_last_error=[' . $errorAfterCheckTables . '] per-table=' . wp_json_encode( $perTable );
-		$wpdb->last_error = $prev_last_error;
-		return $diag;
 	}
 
 	/*
@@ -95,11 +72,11 @@ class InstallHelperTest extends WP_UnitTestCase {
 	}
 
 	public function test_checkTableExists_returns_true_after_checkTables() {
-		$diag = $this->runCheckTablesResilient();
+		InstallHelper::checkTables();
 		foreach ( self::SPIO_TABLES as $table ) {
 			$this->assertTrue(
 				InstallHelper::checkTableExists( $table ),
-				"Table {$table} should exist after checkTables(). {$diag}"
+				"Table {$table} should exist after checkTables()."
 			);
 		}
 	}
@@ -115,24 +92,24 @@ class InstallHelperTest extends WP_UnitTestCase {
 	public function test_checkTables_creates_all_plugin_tables() {
 		global $wpdb;
 
-		$diag = $this->runCheckTablesResilient();
+		InstallHelper::checkTables();
 
 		foreach ( self::SPIO_TABLES as $table ) {
 			$full = $wpdb->prefix . $table;
 			$row  = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $full ) );
-			$this->assertSame( $full, $row, "Expected table {$full} to be created. {$diag}" );
+			$this->assertSame( $full, $row, "Expected table {$full} to be created." );
 		}
 	}
 
 	public function test_checkTables_is_idempotent() {
-		$diag1 = $this->runCheckTablesResilient();
-		// Second call should not error nor destroy the tables.
-		$diag2 = $this->runCheckTablesResilient();
+		InstallHelper::checkTables();
+		// Second call must not error nor destroy the tables.
+		InstallHelper::checkTables();
 
 		foreach ( self::SPIO_TABLES as $table ) {
 			$this->assertTrue(
 				InstallHelper::checkTableExists( $table ),
-				"Table {$table} missing after idempotent checkTables(). First run: {$diag1} | Second run: {$diag2}"
+				"Table {$table} missing after idempotent checkTables()."
 			);
 		}
 	}
@@ -140,7 +117,7 @@ class InstallHelperTest extends WP_UnitTestCase {
 	public function test_checkTables_creates_expected_indexes() {
 		global $wpdb;
 
-		$diag = $this->runCheckTablesResilient();
+		InstallHelper::checkTables();
 
 		$expected = array(
 			'shortpixel_meta'       => array( 'path' ),
@@ -153,7 +130,7 @@ class InstallHelperTest extends WP_UnitTestCase {
 			$full = $wpdb->prefix . $table;
 			foreach ( $indexes as $indexName ) {
 				$row = $wpdb->get_row( $wpdb->prepare( "SHOW INDEX FROM {$full} WHERE Key_name = %s", $indexName ) ); // phpcs:ignore WordPress.DB
-				$this->assertNotNull( $row, "Index {$indexName} should exist on {$full}. {$diag}" );
+				$this->assertNotNull( $row, "Index {$indexName} should exist on {$full}." );
 			}
 		}
 	}
@@ -163,12 +140,12 @@ class InstallHelperTest extends WP_UnitTestCase {
 	 */
 
 	public function test_removeTables_drops_all_plugin_tables_when_present() {
-		$diag = $this->runCheckTablesResilient();
+		InstallHelper::checkTables();
 		// Sanity check: tables must exist before we try to remove them.
 		foreach ( self::SPIO_TABLES as $table ) {
 			$this->assertTrue(
 				InstallHelper::checkTableExists( $table ),
-				"Sanity check failed — {$table} was not created by checkTables(). {$diag}"
+				"Sanity check failed — {$table} was not created by checkTables()."
 			);
 		}
 
@@ -274,7 +251,7 @@ class InstallHelperTest extends WP_UnitTestCase {
 	public function test_created_tables_have_expected_columns() {
 		global $wpdb;
 
-		$diag = $this->runCheckTablesResilient();
+		InstallHelper::checkTables();
 
 		// Spot-check a distinctive column from each table so we know the correct
 		// CREATE TABLE ran (rather than some legacy schema left over from a
@@ -289,7 +266,7 @@ class InstallHelperTest extends WP_UnitTestCase {
 		foreach ( $columnChecks as $table => $column ) {
 			$full    = $wpdb->prefix . $table;
 			$columns = $wpdb->get_col( "SHOW COLUMNS FROM {$full}", 0 ); // phpcs:ignore WordPress.DB
-			$this->assertContains( $column, $columns, "Column {$column} missing from {$full}. {$diag}" );
+			$this->assertContains( $column, $columns, "Column {$column} missing from {$full}." );
 		}
 	}
 }
