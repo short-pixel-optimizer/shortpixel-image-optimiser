@@ -254,8 +254,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
    * INSERTing a duplicate. On successful insert, a follow-up
    * `loadFolderByPath` refreshes `$this->id` from the newly-created row.
    *
-   * @return int|false Number of rows affected on UPDATE, insert-id on
-   *                   INSERT, or false when the wpdb call failed.
+   * @return int|false Number of rows affected  or false when the wpdb call failed.
    */
   public function save()
   {

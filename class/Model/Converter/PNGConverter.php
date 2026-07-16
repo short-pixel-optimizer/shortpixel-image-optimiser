@@ -383,17 +383,20 @@ class PNGConverter extends MediaLibraryConverter
      * @param int $resultSize  Converted JPG filesize in bytes.
      * @return bool True when the JPG should replace the PNG.
      */
-    private function checkFileSizeMargin($fileSize, $resultSize)
+    private function checkFileSizeMargin(int $fileSize, int $resultSize)
     {
-        // If the original filesize is bigger, it means we made it smaller, rejoice and allow.
-        if ($fileSize >= $resultSize)
-          return true;
 
 		// Indicates write issues. If result size is zero, should not accept result.
         if ($resultSize == 0)
         {
            return false;
         }
+
+
+		// If the original filesize is bigger, it means we made it smaller, rejoice and allow.
+        if ($fileSize >= $resultSize)
+          return true;
+
 
         // Fine suppose, but crashes the increase . This could happen when filesize is not properly set in metadata or passed. 
         if ($fileSize == 0)

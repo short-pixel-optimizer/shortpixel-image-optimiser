@@ -46,7 +46,9 @@ abstract class Model
 
         $value = $this->{$item};
 
-        if (isset($this->model[$item]) && $this->model[$item]['s'] == 'string')
+        if (isset($this->model[$item]) &&
+            isset($this->model[$item]['s']) && 
+            $this->model[$item]['s'] == 'string')
         {
           if (false === is_null($value))
           {
@@ -291,13 +293,13 @@ abstract class Model
 			{
 				 $newval = $this->sanitizeArray($value);
 			}
-      elseif (is_numeric($value))
-      {
-           $newval = intval($value); 
-      }
       elseif (is_float($value))
       {
          $newval = floatval($value);
+      }
+      elseif (is_numeric($value))
+      {
+           $newval = intval($value); 
       }
       elseif (is_bool($value) )
       {

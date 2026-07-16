@@ -897,7 +897,8 @@ class wpOffload
 		// Original filepath can never have a scaled in there.
 		// @todo This should probably check -scaled.<extension> as string end preventing issues.
 		if (strpos($filepath, '-scaled') !== false) {
-			$filepath = str_replace('-scaled', '', $filepath);
+			$filepath = preg_replace('/-scaled(\.[a-z0-9]+)$/i', '$1', $filepath);
+			//$filepath = str_replace('-scaled', '', $filepath);
 		}
 		return $filepath;
 	}

@@ -883,10 +883,11 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         $message = null;
 
       $optimized = new \DateTime();
-      $optimized->setTimestamp($metaObj->tsOptimized);
+
+      $optimized->setTimestamp($metaObj->tsOptimized ?? time());
 
       $added = new \DateTime();
-      $added->setTimeStamp($metaObj->tsAdded);
+      $added->setTimeStamp($metaObj->tsAdded ?? time());
 
 			$extra_info = array();
 			if ($this->getMeta('webp') === self::FILETYPE_BIGGER)
