@@ -59,13 +59,11 @@ class VirtualFileSystem
 		 * `shortpixel/image/urltopath` filter — declare whether the URL
 		 * is a virtual (stateless remote) file.
 		 *
-		 * BUG (line 32): the first `if` uses `=` (assignment) instead of
-		 * `==` (comparison) — `$this->offloadName = 's3-uploads-human'`
-		 * always assigns and then evaluates truthy, so this branch fires
-		 * for **every** offloader, not just `s3-uploads-human`. Effective
-		 * current behaviour: every call returns `VIRTUAL_STATELESS`
-		 * regardless of URL or offloader identity. Flagged in the
-		 * deferred-root-bugs memo; leave untouched during doc pass.
+		 * Only fires the VIRTUAL_STATELESS return for the `s3-uploads-human`
+		 * offloader. Any other offloader falls through to the file_exists
+		 * probe below. (Prior to 399b29e2 the first `if` used `=` instead
+		 * of `===`, silently rewriting `$this->offloadName` on every call
+		 * and returning VIRTUAL_STATELESS unconditionally.)
 		 *
 		 * @param bool   $bool    Existing filter value from prior handlers.
 		 * @param string $url     URL being checked.

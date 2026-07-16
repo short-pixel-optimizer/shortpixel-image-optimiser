@@ -32,23 +32,21 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
  *     `cloudflareZoneID` setting.
  *   - API token: `SHORTPIXEL_CFTOKEN` constant wins, otherwise the
  *     `cloudflareToken` setting.
- *   - When both are non-empty, `use_token = true` and `config_ok =
- *     true`; the class is ready to purge. Missing either → the hook
- *     handler no-ops (nothing purged, no error logged).
+ *   - When both are non-empty, `config_ok = true` and the class is
+ *     ready to purge. Missing either → the hook handler no-ops
+ *     (nothing purged, no error logged).
  *
  * Runtime dependency: PHP cURL. When `curl_init` isn't available the
  * handler logs a warning and skips the purge — the rest of the plugin
  * continues normally.
  *
- * NOTE: the class-level `@todo` (below) acknowledges leftover
- * scaffolding in `start_cloudflare_cache_purge_process` — see the
- * per-method docblocks and the deferred-bugs memo for the specifics
- * (unused `$prepare_request_info` / `$dispatch_purge_info` and the
- * dead legacy-auth branch in `addAuth`).
+ * NOTE: leftover scaffolding remains in `start_cloudflare_cache_purge_process`
+ * (unused `$prepare_request_info` / `$dispatch_purge_info` — flagged in
+ * the deferred-bugs memo). The dead legacy `use_token = false` /
+ * email+authkey branch in `addAuth()` was removed in 399b29e2.
  *
  * @package ShortPixel
  */
-// @todo Clean up unused lines in this file. (cloudflare)
 class CloudFlareAPI {
     /** @var string|null Cloudflare Zone ID resolved from constant or settings during setup(). */
     private $zone_id; // $_cloudflareZoneID
@@ -244,24 +242,15 @@ class CloudFlareAPI {
     }
 
     /**
-     * Attach Cloudflare auth headers to an outgoing request.
+     * Attach Cloudflare Bearer auth header to an outgoing request.
      *
-     * Bearer-token path (`use_token === true`): adds
-     * `Authorization: Bearer <token>` — the only active path today.
-     *
-     * WARNING: the `else` branch references `$this->email` and
-     * `$this->authkey`, which are NOT declared as properties on this
-     * class. If `use_token` ever ends up false (currently unreachable
-     * because `setup()` only flips `use_token` when both credentials
-     * are present, and no other path exists), this branch would
-     * trigger an undefined-property notice on PHP 8+ and produce
-     * `X-Auth-Email: ` / `X-Auth-Key: ` headers with empty values.
-     * This is legacy Cloudflare v1 auth scaffolding — either wire the
-     * email/authkey config through `setup()` or delete the branch.
-     * Flagged in the deferred-bugs memo.
+     * Adds `Authorization: Bearer <token>` — the only supported auth
+     * mode. The legacy v1 email + auth-key branch was removed in
+     * 399b29e2 (it referenced undeclared `$this->email` / `$this->authkey`
+     * properties and was structurally unreachable anyway).
      *
      * @param array $headers Existing header map (`slug => "Header: value"` shape).
-     * @return array Header map with auth entries added.
+     * @return array Header map with the auth entry added.
      */
     private function addAuth($headers)
     {

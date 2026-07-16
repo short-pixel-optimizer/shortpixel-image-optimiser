@@ -7,9 +7,10 @@
  *
  * SESSION 2 (done) — state-machine overrides + pipeline entry points
  * + specifics:
- *   - handleOptimized (2 pinned regressions for the $files-undefined bug)
- *   - isDateExcluded (1 pinned regression for the $options-not-array bug,
- *     plus before/after rule branches via subclass override)
+ *   - handleOptimized (2 regression sentinels guarding the $files-undefined
+ *     early-exit fix)
+ *   - isDateExcluded (1 regression sentinel guarding the $options-not-array
+ *     guard, plus before/after rule branches via subclass override)
  *   - setStub (existing DB row vs no matching row)
  *   - getWebps / getAvifs (empty and companion-exists shapes)
  *   - getOptimizeFileType (pdf branch, no companion, has companion)
@@ -132,9 +133,19 @@ class CustomImageModelTest extends WP_UnitTestCase {
 	 * Build a stub CustomImageModel (id=0 → skips DB load, creates empty
 	 * ImageMeta). Optionally pre-set a real fullpath via reflection so
 	 * filesystem-dependent methods (getURL etc.) have coherent state.
+	 *
+	 * Seeds tsAdded/tsOptimized so `saveMeta()` doesn't fatal. Since
+	 * commit 399b29e2 the class declares `strict_types=1`, which turns
+	 * the previous `Deprecated: DateTime::setTimestamp() passing null`
+	 * warning into a hard TypeError inside `saveMeta()`. ImageThumbnailMeta's
+	 * constructor seeds tsAdded to `time()`, but tsOptimized stays null —
+	 * force both to a safe integer so any test-driven path through
+	 * saveMeta() survives.
 	 */
 	private function makeStubModel( ?string $path = null ): CustomImageModel {
 		$model = new CustomImageModel( 0 );
+		$model->setMeta( 'tsAdded', time() );
+		$model->setMeta( 'tsOptimized', 0 );
 		if ( $path !== null ) {
 			$this->setProtected( $model, 'fullpath', $path );
 		}
@@ -585,22 +596,27 @@ class CustomImageModelTest extends WP_UnitTestCase {
 	}
 
 	/*
-	 * handleOptimized — pinned regressions for the $files-undefined bug
-	 * at line 506 / 509.
+	 * handleOptimized — regression sentinels for the $files-undefined
+	 * early-exit at line 506 / 509.
 	 *
 	 * When `$optimizeData` is missing the `files` OR `data` key, the
-	 * `if (isset(...) && isset(...))` branch skips assignment to $files
-	 * — but the code below UNCONDITIONALLY dereferences $files[0] on
-	 * two lines. Under convertNoticesToExceptions=true (PHPUnit config)
-	 * this throws "Undefined variable $files".
+	 * `if (isset(...) && isset(...))` guard used to skip assignment to
+	 * $files — while the code below UNCONDITIONALLY dereferenced
+	 * $files[0] on two lines, throwing "Undefined variable $files"
+	 * under convertNoticesToExceptions=true. The fix adds an early
+	 * `return false;` inside the else branch so callers get a clean
+	 * false back instead of a fatal.
 	 *
-	 * Intended behaviour: log the error and return false early.
-	 *
-	 * These tests will FAIL (throw) until Bas adds a `return false;`
-	 * inside the else branch at line 499.
+	 * These tests guard against re-introduction of the crash.
 	 */
 
-	public function test_handleOptimized_does_not_crash_when_optimizeData_lacks_files_key_pinned_for_deferred_fix() {
+	/**
+	 * Regression sentinel: handleOptimized must return false (not fatal)
+	 * when the payload lacks the `files` key. Before the fix, the guarded
+	 * $files assignment was skipped but the code below still dereferenced
+	 * $files[0], throwing "Undefined variable $files".
+	 */
+	public function test_handleOptimized_does_not_crash_when_optimizeData_lacks_files_key() {
 		$model = $this->makeStubModel();
 		// Payload lacks 'files' → guard at line 493 fails → $files undefined.
 		$payload = array( 'data' => array( 'foo' => 'bar' ) );
@@ -615,9 +631,9 @@ class CustomImageModelTest extends WP_UnitTestCase {
 		}, $model );
 
 		if ( $threw ) {
-			$this->fail( 'handleOptimized threw on missing files key — the guard at line 493 skips $files assignment but the code below still uses $files[0]. Bug at CustomImageModel.php:506,509. Message: ' . $msg );
+			$this->fail( 'handleOptimized threw on missing files key — regression of the $files-undefined bug at CustomImageModel.php:506,509. The guard should short-circuit with `return false;` before dereferencing $files. Message: ' . $msg );
 		}
-		// Post-fix: expected to return false (early exit).
+		// Sentinel: expected to return false (early exit).
 		$this->assertSame(
 			false,
 			$result,
@@ -625,7 +641,14 @@ class CustomImageModelTest extends WP_UnitTestCase {
 		);
 	}
 
-	public function test_handleOptimized_does_not_crash_when_optimizeData_lacks_data_key_pinned_for_deferred_fix() {
+	/**
+	 * Regression sentinel: handleOptimized must return false (not fatal)
+	 * when the payload has `files` but lacks `data`. The AND-guard around
+	 * the $files assignment short-circuits on the missing `data` key, so
+	 * without the early-return fix the code below still tried to
+	 * dereference undefined $files.
+	 */
+	public function test_handleOptimized_does_not_crash_when_optimizeData_lacks_data_key() {
 		$model = $this->makeStubModel();
 		// Payload lacks 'data' → same guard fails (AND, not OR) → $files
 		// still undefined even though 'files' key is present.
@@ -636,7 +659,7 @@ class CustomImageModelTest extends WP_UnitTestCase {
 		}, $model );
 
 		if ( $threw ) {
-			$this->fail( 'handleOptimized threw on missing data key — the AND-guard at line 493 short-circuits and $files never gets assigned even though the caller passed files. Bug at CustomImageModel.php:506,509. Message: ' . $msg );
+			$this->fail( 'handleOptimized threw on missing data key — regression of the AND-guard short-circuit bug at CustomImageModel.php:506,509. Message: ' . $msg );
 		}
 		$this->assertSame( false, $result );
 	}
@@ -680,23 +703,18 @@ class CustomImageModelTest extends WP_UnitTestCase {
 	 */
 
 	/**
-	 * PINNED for deferred fix — isDateExcluded at line 752 accesses
-	 * `$options['date']` without checking that checkDateExcluded()
-	 * returned an array (it returns false when no date rule matches).
+	 * Regression sentinel: isDateExcluded must return false safely when
+	 * no date rule is configured, even when called directly (bypassing
+	 * isProcessable's outer `false !== checkDateExcluded()` guard).
 	 *
-	 * When callers go through isProcessable, the outer
-	 * `false !== $this->checkDateExcluded()` guard at line 270 protects
-	 * against this — but calling isDateExcluded() directly (e.g. from
-	 * a subclass or a targeted test) hits the unguarded dereference.
-	 *
-	 * Intended behaviour: return false safely when no date rule is
-	 * configured, mirroring the pattern the parent's checkDateExcluded
-	 * already establishes.
-	 *
-	 * This test will FAIL until Bas adds a `false === $options` guard
-	 * at the top of isDateExcluded.
+	 * Before the fix, the method dereferenced `$options['date']` without
+	 * checking that checkDateExcluded() had returned an array — it
+	 * returns false when no date rule matches, so direct callers hit an
+	 * unguarded dereference. The fix adds a `false === $options` guard
+	 * at the top of isDateExcluded, mirroring the pattern the parent's
+	 * checkDateExcluded already establishes.
 	 */
-	public function test_isDateExcluded_does_not_crash_when_no_date_rule_configured_pinned_for_deferred_fix() {
+	public function test_isDateExcluded_does_not_crash_when_no_date_rule_configured() {
 		$model = $this->makeStubModel();
 		// Seed tsAdded so DateTime setTimestamp() doesn't complain about null.
 		$model->setMeta( 'tsAdded', time() );
@@ -711,7 +729,7 @@ class CustomImageModelTest extends WP_UnitTestCase {
 			);
 		} catch ( \Throwable $t ) {
 			$this->fail(
-				'isDateExcluded threw on no-date-rule state — checkDateExcluded() returned false but the method tried $options["date"] anyway. Bug at CustomImageModel.php:752. Message: ' . $t->getMessage()
+				'isDateExcluded threw on no-date-rule state — regression of the unguarded $options["date"] dereference at CustomImageModel.php:752. Message: ' . $t->getMessage()
 			);
 		}
 	}

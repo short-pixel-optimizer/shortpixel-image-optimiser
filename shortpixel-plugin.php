@@ -178,10 +178,10 @@ class ShortPixelPlugin {
 	 * capability gate: only users the `AccessModel` recognises as "admin"
 	 * see the conflict-deactivator link and the feedback prompt.
 	 *
-	 * NOTE: the feedback-popup gate (currently around line 210) is
-	 * `if ( true || … )` — the `true ||` short-circuits everything, so
-	 * the popup loads unconditionally for admin users regardless of
-	 * key/credit state. See the deferred-root-bugs memo for triage.
+	 * The feedback-popup gate loads only for admin users whose key is
+	 * unverified OR who have fewer than 4000 credits — the "true ||"
+	 * debug shortcut that was making it load unconditionally was
+	 * removed in 399b29e2.
 	 *
 	 * @return void
 	 */
