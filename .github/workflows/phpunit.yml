@@ -2,7 +2,7 @@ name: SPIO PHPUnit Tests
 
 on:
   push:
-    branches: [ unit-tests ]
+    branches: [ unit-tests, integration-tests ]
   pull_request:
     branches: [ updates ]
 
@@ -52,7 +52,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-version }}
-          extensions: mbstring, mysqli, json, xml
+          extensions: gd, mbstring, mysqli, json, xml
           ini-values: post_max_size=256M, memory_limit=512M
           tools: composer
 
@@ -198,3 +198,74 @@ jobs:
           fi
           echo "=== All testsuites passed"
           echo "=============================================================="
+
+  integration:
+    name: Run Integration Tests (PHP ${{ matrix.php-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # Budget decision: PRs run PHP 8.3 only (the common production
+        # version); pushes to the integration-tests branch run the full
+        # 7.4/8.3/8.5 matrix.
+        php-version: ${{ github.event_name == 'pull_request' && fromJSON('["8.3"]') || fromJSON('["7.4", "8.3", "8.5"]') }}
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: wordpress_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping --silent"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 3
+
+    env:
+      WP_CORE_DIR: /tmp/wordpress
+      WP_TESTS_DIR: /tmp/wordpress-tests-lib
+      WP_VERSION: latest
+      DB_NAME: wordpress_test
+      DB_USER: root
+      DB_PASS: password
+      DB_HOST: 127.0.0.1
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up PHP ${{ matrix.php-version }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          # gd is required: the integration suite creates real attachments
+          # and wp_generate_attachment_metadata() needs a WP image editor.
+          extensions: gd, mbstring, mysqli, json, xml
+          ini-values: post_max_size=256M, memory_limit=512M
+          tools: composer
+
+      - name: Install SVN
+        run: sudo apt-get update && sudo apt-get install -y subversion
+
+      - name: Install WP-CLI
+        run: |
+          curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+          chmod +x wp-cli.phar
+          sudo mv wp-cli.phar /usr/local/bin/wp
+
+      - name: Install Composer dependencies
+        run: |
+          composer clear-cache
+          composer update --no-interaction --prefer-dist
+
+      - name: Install WordPress Unit Test Suite
+        run: |
+          mkdir -p "${WP_TESTS_DIR}"
+          bash bin/install-wp-tests.sh "$DB_NAME" "$DB_USER" "$DB_PASS" "$DB_HOST" "${WP_VERSION}"
+
+      - name: Run integration testsuite
+        run: vendor/bin/phpunit -c phpunit-integration.xml --testdox --colors=never
