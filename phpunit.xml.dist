@@ -26,6 +26,9 @@
 			<exclude>./tests/Model</exclude>
 			<exclude>./tests/External</exclude>
 			<exclude>./tests/Controller</exclude>
+			<!-- Integration tests need a real WP install + their own bootstrap
+			     (phpunit-integration.xml); the unit bootstrap can't load them. -->
+			<exclude>./tests/Integration</exclude>
 		</testsuite>
 	</testsuites>
 </phpunit>
