@@ -599,7 +599,7 @@ class AdminNoticesController extends \ShortPixel\Controller
         if (\wpSPIO()->env()->is_debug)
             $transient_duration = 180;
 
-        $keyControl = new apiKeyController();
+        $keyControl = new ApiKeyController();
         //$keyControl->loadKey();
 
         $notices = get_transient($transient_name);
