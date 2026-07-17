@@ -12,10 +12,11 @@
  *   - checkRemoveBackups() gating logic: all four setting combinations.
  *   - cronRemoveBackups() and cliRemoveBackups() return false when preconditions
  *     are not met; dispatch to autoRemoveBackups() when they are.
- *   - getModel() / getModelById() per-image cache (two-level keyed array).
  *   - withItem() placeholder — public API but intentionally empty.
  *
- * Out of scope (integration territory):
+ * Out of scope (integration territory — see integration-test punch list):
+ *   - getModelById() cache population (calls wpSPIO()->filesystem()->getImage(),
+ *     which requires a real WP attachment post).
  *   - autoRemoveBackups() filesystem walk (requires real backup tree on disk
  *     with year/month subdirectories and live filesystem controller calls).
  *   - getBackupModel() / getModelById() full round-trips that hit the DB or
@@ -439,21 +440,6 @@ class BackupControllerTest extends WP_UnitTestCase {
 		// Must not throw; return value is void (null).
 		$result = $ctrl->withItem( $bareItem );
 		$this->assertNull( $result );
-	}
-
-	// -----------------------------------------------------------------------
-	// Static model cache ($models) — via getModelById reflection
-	// -----------------------------------------------------------------------
-
-	/*
-	 * getModelById — seeds and returns the $models cache
-	 */
-
-	public function test_getModelById_populates_models_cache_on_first_call() {
-		$this->markTestSkipped(
-			'getModelById() calls wpSPIO()->filesystem()->getImage(), which ' .
-			'requires a real WP attachment post. Covered by integration tests.'
-		);
 	}
 
 	// -----------------------------------------------------------------------

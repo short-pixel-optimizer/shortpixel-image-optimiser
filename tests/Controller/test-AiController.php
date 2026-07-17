@@ -132,23 +132,12 @@ class AiControllerTest extends WP_UnitTestCase {
 	// -----------------------------------------------------------------------
 
 	/**
-	 * PINNED — production bug in AiController::handleResponse() (class/Controller/Api/AiController.php ~206).
-	 *
-	 * INTENDED: A response carrying status=AI_STATUS_OVERQUOTA (3) with no `id`
-	 *   and no `error` key should reach the elseif(AI_STATUS_OVERQUOTA) branch and
-	 *   return STATUS_QUOTA_EXCEEDED.
-	 *
-	 * ACTUAL: The early-return guard at line 206 — `if (false === $id && false === $is_error)` —
-	 *   fires first because the API response includes neither an `id` nor an `error` key.
-	 *   `$is_error` is derived solely from the presence of an `error` key, not from `$status`.
-	 *   The method therefore returns STATUS_WAITING instead of STATUS_QUOTA_EXCEEDED.
-	 *
-	 * FIX: Move the AI_STATUS_OVERQUOTA / AI_STATUS_INVALID_URL checks before the early-return
-	 *   guard, or expand the guard to also pass when `$status` is a known error code.
-	 *
-	 * This test MUST FAIL until the fix lands.
+	 * A status-only response (no `id`, no `error` key) carrying
+	 * AI_STATUS_OVERQUOTA must return STATUS_QUOTA_EXCEEDED, not a
+	 * STATUS_WAITING retry — the status checks run before the
+	 * "response without result object" guard.
 	 */
-	public function test_handleResponse_requestAlt_overquota_returns_quota_exceeded_pinned_for_deferred_fix() {
+	public function test_handleResponse_requestAlt_overquota_returns_quota_exceeded() {
 		$qItem    = $this->makeAiQueueItem( 'requestAlt' );
 		$response = $this->makeRawResponse( [ 'status' => AiController::AI_STATUS_OVERQUOTA ] );
 
@@ -164,20 +153,12 @@ class AiControllerTest extends WP_UnitTestCase {
 	// -----------------------------------------------------------------------
 
 	/**
-	 * PINNED — production bug in AiController::handleResponse() (class/Controller/Api/AiController.php ~206).
-	 *
-	 * INTENDED: A response carrying status=AI_STATUS_INVALID_URL (2) with no `id`
-	 *   and no `error` key should reach the elseif(AI_STATUS_INVALID_URL) branch and
-	 *   return STATUS_FAIL.
-	 *
-	 * ACTUAL: Same early-return guard as the overquota case — `$is_error` is false
-	 *   when no `error` key is present, so the guard fires and returns STATUS_WAITING.
-	 *
-	 * FIX: same as the overquota pinned test above.
-	 *
-	 * This test MUST FAIL until the fix lands.
+	 * A status-only response (no `id`, no `error` key) carrying
+	 * AI_STATUS_INVALID_URL must return STATUS_FAIL, not a STATUS_WAITING
+	 * retry — the status checks run before the "response without result
+	 * object" guard.
 	 */
-	public function test_handleResponse_requestAlt_invalid_url_returns_status_fail_pinned_for_deferred_fix() {
+	public function test_handleResponse_requestAlt_invalid_url_returns_status_fail() {
 		$qItem    = $this->makeAiQueueItem( 'requestAlt' );
 		$response = $this->makeRawResponse( [ 'status' => AiController::AI_STATUS_INVALID_URL ] );
 

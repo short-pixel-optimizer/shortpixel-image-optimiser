@@ -401,24 +401,14 @@ class BulkControllerTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Pinned regression test for BulkController.php:354–364.
+	 * With 10 existing entries, addLog() rotates: the oldest metadata entry
+	 * is shifted off and the new entry appended, keeping the stored option
+	 * at exactly 10 entries.
 	 *
-	 * BUG: The rotation block at line 354 calls array_shift($logs) but the
-	 * condition for removing the oldest log's physical file (line 357) checks
-	 * isset($data['logfile']) — where $data is the NEW entry being built, not
-	 * the shifted-out old entry. $data['logfile'] is only assigned at line 373,
-	 * after the rotation block closes. As a secondary effect the array_shift
-	 * removes the entry from the local $logs copy but getLogs() may return the
-	 * cached $this->logs which is not updated, causing saveLogs() to persist
-	 * the unmodified 10-entry array.
-	 *
-	 * Expected (after fix): after addLog() with 10 existing entries the stored
-	 * option contains exactly 10 entries and the oldest (processed=1) is gone.
-	 * Actual (current): the oldest entry is NOT removed — this test fails until fixed.
-	 *
-	 * @see BulkController::addLog() line 354–373
+	 * The queue stub uses done=99 so the new entry's 'processed' value cannot
+	 * collide with the seeded values 1–10.
 	 */
-	public function test_addLog_trims_oldest_metadata_entry_when_limit_is_ten_pinned_for_deferred_fix() {
+	public function test_addLog_trims_oldest_metadata_entry_when_limit_is_ten() {
 		// Seed 10 existing entries so the 11th call triggers rotation.
 		$existing = array();
 		for ( $i = 1; $i <= 10; $i++ ) {
@@ -434,7 +424,7 @@ class BulkControllerTest extends WP_UnitTestCase {
 		}
 		update_option( 'shortpixel-bulk-logs', $existing, false );
 
-		$stub = $this->makeQueueStub( array( 'done' => 1 ), 'media' );
+		$stub = $this->makeQueueStub( array( 'done' => 99 ), 'media' );
 
 		$ctrl = $this->freshController();
 		// Pre-populate the in-memory cache so getLogs() doesn't re-read the option.
@@ -451,26 +441,15 @@ class BulkControllerTest extends WP_UnitTestCase {
 	}
 
 	// -------------------------------------------------------------------------
-	// addLog — PINNED BUG: orphaned log file on rotation (line 357)
+	// addLog — rotation deletes the oldest physical log file
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Pinned regression test for BulkController.php:357.
-	 *
-	 * BUG: Inside the `count($logs) == 10` rotation block, the code checks
-	 *   `isset($data['logfile'])` (line 357) — but `$data['logfile']` is only
-	 *   set later at line 373.  The intended check is `isset($log['logfile'])`
-	 *   where `$log` is the shifted (oldest) entry returned by array_shift().
-	 *   Result: the physical log file for the oldest entry is NEVER deleted;
-	 *   orphaned bulk_*.log files accumulate in the backup folder.
-	 *
-	 * Expected (after fix):  oldest log file should be DELETED during rotation.
-	 * Actual (current):      oldest log file SURVIVES — this test asserts the
-	 *                         buggy behaviour so it fails when Bas fixes it.
-	 *
-	 * @see BulkController::addLog() line 354–365
+	 * During rotation, the physical log file belonging to the shifted-out
+	 * (oldest) entry is deleted from the backup folder, so bulk_*.log files
+	 * do not accumulate.
 	 */
-	public function test_addLog_rotation_orphaned_log_file_survives_pinned_for_deferred_fix() {
+	public function test_addLog_rotation_deletes_oldest_log_file() {
 		$oldTimestamp = 1700000001;
 		$oldLogName   = 'bulk_media_' . $oldTimestamp . '.log';
 		$oldLogPath   = $this->backupPath . $oldLogName;
@@ -510,14 +489,9 @@ class BulkControllerTest extends WP_UnitTestCase {
 
 		$this->invokeProtected( $ctrl, 'addLog', array( $stub ) );
 
-		// BUGGY BEHAVIOUR: the file for the oldest log entry still exists because
-		// `isset($data['logfile'])` is always false at the point it is evaluated
-		// (line 357 checks $data, not $log).
-		// When the bug is fixed this assertion will FAIL — which is the intent.
-		$this->assertFileExists(
+		$this->assertFileDoesNotExist(
 			$oldLogPath,
-			'BUG (line 357): $data["logfile"] is checked instead of $log["logfile"], so the oldest ' .
-			'physical log file is never deleted during rotation. Expected: file deleted. Actual: file survives.'
+			'The oldest physical log file must be deleted during rotation.'
 		);
 	}
 

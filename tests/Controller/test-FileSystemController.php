@@ -329,20 +329,10 @@ class FileSystemControllerTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Pinned regression test for FileSystemController.php:522.
-	 *
-	 * BUG: sortFiles() compares get_class($array[0]) against the string
-	 * 'ShortPixel\FileModel', but the actual FQCN registered by the autoloader
-	 * is 'ShortPixel\Model\File\FileModel'. The equality check therefore always
-	 * evaluates to false, so FileModel arrays always fall into the directory
-	 * branch and fatal on getName() (which FileModel does not implement).
-	 *
-	 * Expected (after fix): FileModel arrays are sorted alphabetically by
-	 * getFileName(). Actual (current): fatal error — getName() is undefined.
-	 *
-	 * @see FileSystemController::sortFiles() line 522
+	 * sortFiles() detects FileModel arrays via the full FQCN and sorts
+	 * them alphabetically by getFileName().
 	 */
-	public function test_sortFiles_sorts_FileModel_objects_alphabetically_by_filename_pinned_for_deferred_fix() {
+	public function test_sortFiles_sorts_FileModel_objects_alphabetically_by_filename() {
 		// Create real files so FileModel can determine their names.
 		$pathZ = $this->sandbox . 'zebra.jpg';
 		$pathA = $this->sandbox . 'apple.jpg';

@@ -118,25 +118,11 @@ class ApiKeyControllerTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * PINNED — production bug in ApiKeyModel::loadKey() (class/Model/ApiKeyModel.php ~152).
-	 *
-	 * INTENDED: forceGetApiKey() is documented `@return string` and should return ''
-	 *   when no key is stored.
-	 *
-	 * ACTUAL: When the consolidated option ('wp-short-pixel-apiKey-options') does not
-	 *   exist, loadKey() takes the legacy migration branch (line ~150). It reads the
-	 *   legacy 'wp-short-pixel-apiKey' option with a default of `false`. The resulting
-	 *   `$apikeySettings` array is then ['apiKey' => false, ...]. At line ~168,
-	 *   `isset($apikeySettings['apiKey'])` is true (the key exists, value is false),
-	 *   so `$this->apiKey` is set to `false`. getKey() / forceGetApiKey() then returns
-	 *   `false` instead of the documented `''`.
-	 *
-	 * FIX: Change the legacy-migration default from `false` to `''`, or add a
-	 *   `?? ''` / `?: ''` cast on line ~168.
-	 *
-	 * This test MUST FAIL until the fix lands.
+	 * forceGetApiKey() honours its `@return string` contract: with no key
+	 * stored (including the legacy-migration path, whose get_option default
+	 * is ''), it returns '' — never false.
 	 */
-	public function test_forceGetApiKey_returns_empty_string_when_no_key_pinned_for_deferred_fix() {
+	public function test_forceGetApiKey_returns_empty_string_when_no_key() {
 		$ctrl = ApiKeyController::getInstance();
 		$this->assertIsString( $ctrl->forceGetApiKey() );
 		$this->assertSame( '', $ctrl->forceGetApiKey() );

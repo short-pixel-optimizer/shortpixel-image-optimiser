@@ -220,7 +220,8 @@ class MediaLibraryQueueTest extends WP_UnitTestCase {
 	// -------------------------------------------------------------------------
 
 	/*
-	 * createNewBulk — returns merged options and strips 'filters'
+	 * createNewBulk — returns merged options; caller-supplied raw 'filters'
+	 * are consumed by addFilters() and never override the processed ones.
 	 */
 
 	public function test_createNewBulk_returns_an_array() {
@@ -231,22 +232,21 @@ class MediaLibraryQueueTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * PINNED — production bug.
-	 *
-	 * Bug: class/Controller/Queue/MediaLibraryQueue.php::createNewBulk() (line ~119).
-	 * The method calls unset($args['filters']) on the caller's $args before merging,
-	 * but then merges with $this->options which always contains 'filters' => [] as a
-	 * default (declared at line ~39).  The array_merge therefore always re-introduces
-	 * 'filters' into the returned array — the unset has no visible effect on the result.
-	 * Fix: also unset 'filters' from $options after the array_merge, before returning.
+	 * By design (confirmed by Bas, 2026-07-17): the caller's raw 'filters'
+	 * value is consumed by addFilters() — which resolves date strings into
+	 * bounding item IDs stored in $this->options['filters'] — and is unset
+	 * from $args so the raw input can never override the processed values
+	 * in the array_merge. The returned options therefore carry the queue's
+	 * own (processed) filters, not the caller's raw array.
 	 */
-	public function test_createNewBulk_strips_filters_key_from_returned_options_pinned_for_deferred_fix() {
+	public function test_createNewBulk_raw_filters_do_not_override_processed_options() {
 		$q      = $this->freshQueue( 'testBulkFilters' . uniqid() );
 		$q->resetQueue();
-		// Provide a 'filters' key; it should be consumed by addFilters() and absent in result.
-		// We pass an empty filters array so addFilters() is a no-op (no dates to resolve).
-		$result = $q->createNewBulk( array( 'filters' => array() ) );
-		$this->assertArrayNotHasKey( 'filters', $result );
+		// A raw sentinel value that addFilters() ignores (no start_date/end_date):
+		// it must NOT survive into the returned options.
+		$result = $q->createNewBulk( array( 'filters' => array( 'raw_marker' => 'must-not-leak' ) ) );
+		$this->assertArrayHasKey( 'filters', $result );
+		$this->assertArrayNotHasKey( 'raw_marker', $result['filters'] );
 	}
 
 	public function test_createNewBulk_merges_caller_args_into_returned_options() {

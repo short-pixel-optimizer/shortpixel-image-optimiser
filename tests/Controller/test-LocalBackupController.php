@@ -12,12 +12,12 @@
  *     real filesystem controller.
  *   - getPeriodAr() (private) — date arithmetic produces correct structure
  *     for every supported period token; unknown token returns null.
- *   - autoRemoveBackups() filesystem walk and checkRemoveMonth() /
- *     checkFilesinDirectory() helpers — skipped (require real backup tree).
  *
- * Out of scope (integration territory):
+ * Out of scope (integration territory — see integration-test punch list):
  *   - autoRemoveBackups() full walk (calls filesystem controller, DirectoryModel
  *     traversal, real file/directory deletion).
+ *   - checkFilesinDirectory() (DirectoryModel::getFiles() + FileModel::delete()
+ *     on a real backup tree).
  *   - getBackupBaseDirectory() (depends on wpSPIO()->filesystem()->getWPUploadBase()).
  *   - createBackupFile / restore / hasBackup / renameBackup (LocalBackupModel).
  *
@@ -364,28 +364,4 @@ class LocalBackupControllerTest extends WP_UnitTestCase {
 		} );
 	}
 
-	// -----------------------------------------------------------------------
-	// autoRemoveBackups() — filesystem walk — skipped
-	// -----------------------------------------------------------------------
-
-	public function test_autoRemoveBackups_skipped_requires_real_filesystem() {
-		$this->markTestSkipped(
-			'autoRemoveBackups() calls wpSPIO()->filesystem() directory traversal ' .
-			'and performs real file/directory deletion. Covered by integration tests.'
-		);
-	}
-
-	public function test_checkFilesinDirectory_skipped_requires_real_directory() {
-		$this->markTestSkipped(
-			'checkFilesinDirectory() calls DirectoryModel::getFiles() and FileModel::delete(). ' .
-			'Covered by integration tests.'
-		);
-	}
-
-	public function test_getBackupBaseDirectory_skipped_requires_filesystem_controller() {
-		$this->markTestSkipped(
-			'getBackupBaseDirectory() calls wpSPIO()->filesystem()->getWPUploadBase(). ' .
-			'Covered by integration tests.'
-		);
-	}
 }

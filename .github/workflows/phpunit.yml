@@ -118,7 +118,7 @@ jobs:
           FAILED=0
           FAILED_SUITES=""
 
-          for SUITE in "Helper" "model" "External" "SPIO Main"; do
+          for SUITE in "Helper" "model" "External" "Controllers" "SPIO Main"; do
             echo ""
             echo "=============================================================="
             echo "=== Running testsuite: $SUITE"
@@ -148,7 +148,7 @@ jobs:
           GRAND_ASSERTIONS=0
           GRAND_FAILED=0
 
-          for SUITE in "Helper" "model" "External" "SPIO Main"; do
+          for SUITE in "Helper" "model" "External" "Controllers" "SPIO Main"; do
             SAFE_NAME=$(echo "$SUITE" | tr " " "_")
             LOG="$LOGDIR/$SAFE_NAME.log"
             # `Tests: 42, Assertions: 99, Failures: 3, ...` — pick the last

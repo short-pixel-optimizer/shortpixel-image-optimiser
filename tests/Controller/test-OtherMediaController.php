@@ -5,9 +5,10 @@
  * Focus areas (pure data helpers that do not require directory scans):
  *   - getInstance() — singleton contract and reset.
  *   - getFolderTable() / getMetaTable() — return correctly prefixed table names.
- *   - hasCustomImages() — static-cache behaviour; returns false when table absent
- *     or count is 0; returns true when count > 0 (verified with seeded DB rows
- *     only when the shortpixel_meta table exists in the test install).
+ *   - hasCustomImages() — static-cache behaviour; returns false when count is 0;
+ *     returns true when count > 0 (verified with seeded DB rows). The table-absent
+ *     branch is untestable here: tests/bootstrap.php always creates the custom
+ *     tables via InstallHelper::checkTables().
  *   - getActiveDirectoryIDS() — in-memory caching; returns empty array when
  *     table absent.
  *   - showMenuItem() — reads the showCustomMedia setting.
@@ -167,19 +168,8 @@ class OtherMediaControllerTest extends WP_UnitTestCase {
 	}
 
 	// -------------------------------------------------------------------------
-	// hasCustomImages — caching and table-absent path
+	// hasCustomImages — caching
 	// -------------------------------------------------------------------------
-
-	public function test_hasCustomImages_returns_false_when_meta_table_absent() {
-		if ( InstallHelper::checkTableExists( 'shortpixel_meta' ) ) {
-			$this->markTestSkipped( 'shortpixel_meta table exists in this install — table-absent path untestable.' );
-		}
-
-		$ctrl   = OtherMediaController::getInstance();
-		$result = $ctrl->hasCustomImages();
-
-		$this->assertFalse( $result );
-	}
 
 	public function test_hasCustomImages_caches_result_on_repeated_calls() {
 		// Seed the static cache directly to verify that the second call reads

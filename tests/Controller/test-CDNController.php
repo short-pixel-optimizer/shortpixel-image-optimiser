@@ -515,20 +515,10 @@ class CDNControllerTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Pinned regression test for UtilHelper.php:192.
-	 *
-	 * BUG: validateJSON() (called by checkJson) contains an early bail-out at
-	 * line 192 that returns false when the input contains neither '{' nor ':'.
-	 * A valid JSON array like '[1,2,3]' has neither character, so the function
-	 * incorrectly returns false for any JSON array that lacks those bytes.
-	 *
-	 * Expected (after fix): checkJson('[1,2,3]') returns true.
-	 * Actual (current):     checkJson('[1,2,3]') returns false — this test fails
-	 *                        until the early-bail condition is corrected.
-	 *
-	 * @see UtilHelper::validateJSON() line 192
+	 * checkJson accepts a top-level JSON array — validateJSON()'s fast
+	 * bail-out recognises '[' alongside '{' and ':'.
 	 */
-	public function test_checkJson_returns_true_for_valid_json_array_pinned_for_deferred_fix() {
+	public function test_checkJson_returns_true_for_valid_json_array() {
 		$ctrl   = $this->freshController();
 		$result = $this->invokePrivate( $ctrl, 'checkJson', array( '[1,2,3]' ) );
 		$this->assertTrue( $result );

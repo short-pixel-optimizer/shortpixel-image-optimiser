@@ -268,7 +268,7 @@ abstract class BackupController
      * Verify that the auto-remove preconditions are satisfied.
      *
      * Returns true only when both `autoRemoveBackups` is strictly true AND
-     * `autoRemoveBackupsPeriod` is a non-null string. The double-condition
+     * `autoRemoveBackupsPeriod` is a non-empty string. The double-condition
      * guard (false === $bool || $bool !== true) in the callers is
      * intentional: this method deliberately errs on the side of caution —
      * see the inline comment "better fail than fault".
@@ -294,7 +294,7 @@ abstract class BackupController
         }
 
         // After many double checks, -better fail than fault- perhaps return true.
-        if (is_string($removePeriod) && false === empty($removeperiod) && true === $removeBackups)
+        if (is_string($removePeriod) && false === empty($removePeriod) && true === $removeBackups)
         {
            return true;
         }
