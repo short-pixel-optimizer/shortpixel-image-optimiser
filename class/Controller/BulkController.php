@@ -354,9 +354,9 @@ class BulkController
         if (count($logs) == 10) // remove logs if more than 10.
         {
           $log = array_shift($logs);
-					if (isset($data['logfile']))
+					if (isset($log['logfile']))
 					{
-						$logfile = $data['logfile'];
+						$logfile = $log['logfile'];
 
 	          $fileLog = $fs->getFile($backupDir->getPath() . $logfile);
 	          if ($fileLog->exists())

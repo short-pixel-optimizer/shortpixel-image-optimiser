@@ -327,7 +327,7 @@ class OtherMediaController extends \ShortPixel\Controller
 				 $subDirs = $directory->getSubDirectories();
 				 foreach($subDirs as $subDir)
 				 {
-					  if ($subDir->checkDirectory(true) === false)
+					  if ($subDir->check(true) === false)
 						{
 							 return false;
 						}
