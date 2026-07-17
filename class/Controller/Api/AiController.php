@@ -145,8 +145,9 @@ class AiController extends RequestManager
      * 1. Caches a JWT token from the response into a one-hour transient if present.
      * 2. For 'requestAlt': a numeric `id` in the response is stored as `remote_id` and
      *    returns STATUS_SUCCESS. AI_STATUS_OVERQUOTA (3) or AI_STATUS_INVALID_URL (2)
-     *    in the `status` field return STATUS_QUOTA_EXCEEDED / STATUS_FAIL respectively;
-     *    any other non-id response is a STATUS_ERROR failure.
+     *    in the `status` field return STATUS_QUOTA_EXCEEDED / STATUS_FAIL respectively.
+     *    A response with no id, no error key, and no known status returns a
+     *    STATUS_WAITING retry; anything else is a STATUS_ERROR failure.
      * 3. For 'retrieveAlt': switches on the numeric `status` field (cast to int, compared
      *    via PHP loose-equality in a switch on string literals '-1'/'0'/'1'/'2'). Status
      *    '-1' (error) returns STATUS_FAIL. Status '0' (queued) falls through to '1'
