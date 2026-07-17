@@ -82,3 +82,39 @@ $_spio_previous_error_handler = set_error_handler(
 		return false; // fall through to PHP's default handler.
 	}
 );
+
+/**
+ * The test install has an empty, unverified API key. Any code path that
+ * constructs ApiKeyController — directly or indirectly (QuotaController,
+ * AdminNoticesController::get_remote_notices(), RequestManager subclasses) —
+ * runs ApiKeyModel::checkKey('') → checkRedirect(), which fires
+ * wp_safe_redirect() + exit() on the first non-AJAX request and kills the
+ * PHPUnit process mid-suite.
+ *
+ * Marking the one-time settings redirect as already performed (the normal
+ * post-first-activation state) makes controller construction safe everywhere.
+ *
+ * Both layers are needed:
+ *  - the in-memory singleton value covers code that reads the already-built
+ *    SettingsModel instance;
+ *  - the direct option write covers tests that reset SettingsModel::$instance
+ *    (to force a fresh DB read) — a rebuilt instance must find the flag in the
+ *    'spio_settings' option or the redirect fires mid-suite. This write runs
+ *    before the first test's transaction starts, so it is never rolled back.
+ */
+\wpSPIO()->settings()->redirectedSettings = 1;
+
+$_spio_settings_option                       = get_option( 'spio_settings', array() );
+$_spio_settings_option['redirectedSettings'] = 1;
+update_option( 'spio_settings', $_spio_settings_option );
+
+/**
+ * Create the plugin's custom tables (shortpixel_folders / _meta / _postmeta /
+ * _aipostmeta). The WP test install never runs the plugin's activation hook,
+ * so without this any code path that queries these tables (e.g.
+ * StatsModel::countMediaItems() via BulkViewController::getApproxData())
+ * emits a "table doesn't exist" WordPress database error mid-suite.
+ * DDL auto-commits in MySQL, so this runs once here, before the first test
+ * transaction, and survives every per-test rollback.
+ */
+\ShortPixel\Helper\InstallHelper::checkTables();
