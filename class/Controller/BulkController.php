@@ -10,7 +10,14 @@ use ShortPixel\Controller\Queue\CustomQueue as CustomQueue;
 use ShortPixel\Controller\Queue\Queue as Queue;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
-// Class for controlling bulk and reporting.
+/**
+ * Manages bulk optimisation runs and bulk operation log persistence.
+ *
+ * Responsible for creating, starting, and finishing bulk queues, and for
+ * maintaining the rotating list of bulk-run log files stored in the backup folder.
+ *
+ * @package ShortPixel\Controller
+ */
 class BulkController
 {
    protected static $instance;
@@ -18,11 +25,17 @@ class BulkController
 
    protected $logs;
 
+   /** Intentionally empty; use {@see getInstance()} to obtain the singleton. */
    public function __construct()
    {
 
    }
 
+   /**
+    * Return the singleton instance, creating it on first call.
+    *
+    * @return BulkController The singleton instance.
+    */
    public static function getInstance()
    {
       if ( is_null(self::$instance))
@@ -87,6 +100,12 @@ class BulkController
       return $Q->getStats();
    }
 
+	 /**
+	  * Check whether a bulk run is currently in progress for a given queue.
+	  *
+	  * @param string $type Queue name: 'media' or 'custom'. Default 'media'.
+	  * @return bool True if the queue has unfinished items, false otherwise.
+	  */
 	 public function isBulkRunning($type = 'media')
 	 {
        $queueControl = new QueueController(['is_bulk' => true]);
@@ -104,6 +123,11 @@ class BulkController
 			}
 	 }
 
+	 /**
+	  * Return true if a bulk run is active on either the media or custom queue.
+	  *
+	  * @return bool True when at least one queue has an active bulk run.
+	  */
 	 public function isAnyBulkRunning()
 	 {
 		   $bool = $this->isBulkRunning('media');
@@ -115,7 +139,15 @@ class BulkController
 			 return $bool;
 	 }
 
-   // Check if any bulk queue is on custom operation ( they always run in tandem, so no matter )
+   /**
+    * Return the current custom operation name for any running queue, or false.
+    *
+    * Checks the media queue first, then the custom queue.  Both queues always run
+    * in tandem so the first non-false result is authoritative.
+    *
+    * @return string|false The custom operation name (e.g. 'bulk-restore', 'migrate'),
+    *                      or false when no custom operation is active.
+    */
    public function getAnyCustomOperation()
    {
 
@@ -137,6 +169,12 @@ class BulkController
 
    }
 
+   /**
+    * Return the custom-operation name stored in a specific queue's custom data.
+    *
+    * @param string $qname Queue name: 'media' or 'custom'.
+    * @return string|false The operation name, or false when none is set.
+    */
    public function getCustomOperation($qname)
    {
      $queueControl = new QueueController(['is_bulk' => true]);
@@ -163,6 +201,15 @@ class BulkController
        return  $q->getStats(); 
    }
 
+   /**
+    * Finalise a bulk run for the given queue type.
+    *
+    * Writes a log entry for the completed run, resets the `migrate` legacy notice
+    * if the run was a migration, then resets the queue via `Queue::resetQueue()`.
+    *
+    * @param string $type Queue name: 'media' or 'custom'. Default 'media'.
+    * @return void
+    */
    public function finishBulk($type = 'media')
    {
      $queueControl = new QueueController(['is_bulk' => true]);
@@ -184,6 +231,15 @@ class BulkController
 
 
 
+   /**
+    * Return the list of stored bulk-run log metadata from the database.
+    *
+    * Results are cached in memory after the first call.  Each entry is an associative
+    * array with keys: processed, not_processed, errors, fatal_errors, type, date,
+    * logfile, and optionally operation and total_images.
+    *
+    * @return array Array of log metadata entries (up to 10).
+    */
    public function getLogs()
    {
         if (is_null($this->logs))
@@ -194,6 +250,15 @@ class BulkController
         return $this->logs;
    }
 
+	 /**
+	  * Return a FileModel for a specific bulk log file, or false if it does not exist.
+	  *
+	  * Validates that the resolved path is within the backup directory to prevent
+	  * path-traversal attacks before returning the file object.
+	  *
+	  * @param string $logName Filename including extension (e.g. 'bulk_media_1234567890.log').
+	  * @return \ShortPixel\Model\File\FileModel|false The log file model, or false on failure.
+	  */
 	 public function getLog($logName)
 	 {
   		 $fs = \wpSPIO()->filesystem();
@@ -221,6 +286,12 @@ class BulkController
 
 
 
+	 /**
+	  * Return the metadata entry for a specific log file by filename.
+	  *
+	  * @param string $fileName The log filename to look up (as stored in the log metadata).
+	  * @return array|false The log metadata array, or false when not found.
+	  */
 	 public function getLogData($fileName)
 	 {
 		 		$logs = $this->getLogs();
@@ -236,6 +307,17 @@ class BulkController
 				return false;
 	 }
 
+   /**
+    * Persist a log entry for a completed bulk run and rotate old log files.
+    *
+    * Skips writing when nothing was processed and no fatal errors occurred.  Keeps a
+    * maximum of 10 log entries, removing the oldest file and metadata entry when the
+    * limit is reached.  Renames the current log file (`current_bulk_$type.log`) to a
+    * timestamped name before saving the metadata.
+    *
+    * @param \ShortPixel\Controller\Queue\Queue $q The queue object from which stats are read.
+    * @return void
+    */
    protected function addLog($q)
    {
 				$stats = $q->getStats(); // for the log
@@ -272,9 +354,9 @@ class BulkController
         if (count($logs) == 10) // remove logs if more than 10.
         {
           $log = array_shift($logs);
-					if (isset($data['logfile']))
+					if (isset($log['logfile']))
 					{
-						$logfile = $data['logfile'];
+						$logfile = $log['logfile'];
 
 	          $fileLog = $fs->getFile($backupDir->getPath() . $logfile);
 	          if ($fileLog->exists())
@@ -294,6 +376,12 @@ class BulkController
         $this->saveLogs($logs);
    }
 
+   /**
+    * Persist the bulk-run log array to the database, or delete the option when empty.
+    *
+    * @param array $logs Array of log metadata entries to save.
+    * @return void
+    */
    protected function saveLogs($logs)
    {
         if (is_array($logs) && count($logs) > 0)
@@ -302,7 +390,11 @@ class BulkController
           delete_option(self::$logName);
    }
 
-	 // Removes Bulk Log .
+   /**
+    * Remove the bulk-log option from the database during plugin uninstall.
+    *
+    * @return void
+    */
    public static function uninstallPlugin()
    {
       delete_option(self::$logName);

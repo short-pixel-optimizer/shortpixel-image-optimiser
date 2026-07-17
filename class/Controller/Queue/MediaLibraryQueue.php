@@ -108,6 +108,12 @@ class MediaLibraryQueue extends Queue
    /**
     * Initialises a new bulk run, applying any provided filters before delegating to the parent.
     *
+    * A raw 'filters' value in $args is consumed by addFilters() — which resolves
+    * date strings into bounding item IDs stored in $this->options['filters'] —
+    * and is then unset so the raw input cannot override the processed values
+    * during the merge. The returned options therefore always carry the queue's
+    * own (processed) filters.
+    *
     * @param array $args Optional arguments including a 'filters' key for date/ID range filters.
     * @return array The merged options passed to the parent bulk initialisation.
     */

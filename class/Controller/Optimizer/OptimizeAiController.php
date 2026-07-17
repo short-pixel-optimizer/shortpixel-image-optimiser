@@ -20,10 +20,27 @@ use ShortPixel\Model\Queue\QueueItemResult;
 use ShortPixel\Replacer\Replacer;
 use ShortPixel\ViewController as ViewController;
 
+/**
+ * Manages AI feature processing: alt-text generation, image upscaling, and background removal.
+ *
+ * Uses AiController (not ApiController) as its API backend. The two-phase flow is:
+ *   1. enqueueItem() with action='requestAlt' submits the image; AiController returns a
+ *      remote_id and the item is re-queued with action='retrieveAlt' via next_action.
+ *   2. On the retrieve pass handleAPIResult() receives aiData and calls HandleSuccess(),
+ *      which applies the 'shortpixel/ai/success' filter, formats the data, saves it to
+ *      AiDataModel, replaces in-post image attributes via Replacer2, and optionally
+ *      renames physical files when the AI generates a new filename.
+ *
+ * Direct (preview_only) calls skip the queue and run sendToProcessing() + handleAPIResult()
+ * synchronously within enqueueItem().
+ *
+ * @package ShortPixel\Controller\Optimizer
+ */
 // Class for AI Operations.  In time split off OptimizeController / Optimize actions to a main queue runner seperately.
 class OptimizeAiController extends OptimizerBase
 {
 
+    /** Binds the AI API controller and sets the API name for queue result handling. */
     public function __construct()
     {
         parent::__construct();
@@ -50,6 +67,15 @@ class OptimizeAiController extends OptimizerBase
     }
 
 
+    /**
+     * Dispatches the queue item to the correct AI handler based on its action.
+     *
+     * 'undoAI' is handled locally via undoAltData(). All other actions (requestAlt,
+     * retrieveAlt) are delegated to AiController::processMediaItem().
+     *
+     * @param QueueItem $qItem The item to process.
+     * @return mixed Return value of undoAltData() for the undoAI action; void otherwise.
+     */
     public function sendToProcessing(QueueItem $qItem)
     {
 
@@ -82,6 +108,16 @@ class OptimizeAiController extends OptimizerBase
 
     }
 
+    /**
+     * Checks whether the AI data model for this attachment is in a processable state.
+     *
+     * Loads the AiDataModel for the attachment and queries its isProcessable() status.
+     * On failure, adds an error result to the queue item with FILE_STATUS_ERROR and the
+     * human-readable reason from the model.
+     *
+     * @param QueueItem $qItem The queue item to validate.
+     * @return bool True if the AI model is processable; false otherwise.
+     */
     public function checkItem(QueueItem $qItem)
     {
 
@@ -101,6 +137,19 @@ class OptimizeAiController extends OptimizerBase
         return $is_processable;
     }
 
+    /**
+     * Enqueues an AI action item, either synchronously (preview_only) or via the async queue.
+     *
+     * 'requestAlt' and 'retrieveAlt' are the supported actions. When preview_only is true
+     * the item is processed inline: sendToProcessing() and handleAPIResult() are called
+     * immediately and the result is returned directly. Otherwise the item is added to the
+     * async queue. An optional 'queue_list_order' argument is persisted on the item data
+     * and propagated through subsequent actions.
+     *
+     * @param QueueItem $qItem The item to enqueue.
+     * @param array     $args  Must include 'action'; optionally 'preview_only' and 'queue_list_order'.
+     * @return \stdClass|QueueItemResult Queue status object, or the direct result on preview_only.
+     */
     public function enqueueItem(QueueItem $qItem, $args = [])
     {
 
@@ -166,6 +215,22 @@ class OptimizeAiController extends OptimizerBase
     }
 
 
+    /**
+     * Processes the AI API result stored on the queue item after sendToProcessing().
+     *
+     * Error path: if is_done, marks the item failed, calls HandleItemError(), and finishes
+     * the process. Non-done errors are currently silently retried.
+     *
+     * requestAlt path: STATUS_WAITING means the request was accepted and the item should
+     * wait for the next poll; a numeric remote_id triggers finishItemProcess() which chains
+     * the retrieveAlt next_action.
+     *
+     * retrieveAlt path: when aiData is present on the result, delegates to HandleSuccess()
+     * which applies the 'shortpixel/ai/success' filter and persists the data.
+     *
+     * @param QueueItem $qItem The queue item whose result should be evaluated.
+     * @return void
+     */
     public function handleAPIResult(QueueItem $qItem)
     {
         $queue = $this->currentQueue;
@@ -209,6 +274,19 @@ class OptimizeAiController extends OptimizerBase
         }
     }
 
+    /**
+     * Formats raw AI result data before it is persisted to the database.
+     *
+     * Applies processTextResult() (capitalisation, period) to text fields (alt, caption,
+     * description, filename). Any field that comes back as numeric 1 from the API is
+     * treated as "not generated" and replaced with an empty string. Applies configured
+     * prefix/postfix settings for each field. Always stores the original file base in
+     * 'original_filebase' for later use in replaceFiles().
+     *
+     * @param array     $aiData Associative array of AI-generated field values.
+     * @param QueueItem $qItem  The queue item providing the image model and data context.
+     * @return array Formatted copy of $aiData.
+     */
     public function formatResultData($aiData, $qItem)
     {
         // Always save the original filename
@@ -266,6 +344,11 @@ class OptimizeAiController extends OptimizerBase
         return $aiData;
     }
 
+    /**
+     * Returns a translated label map for the AI data fields used in bulk and settings UIs.
+     *
+     * @return string[] Associative array of field name → translated display label.
+     */
     private function getDataLabels()
     {
         $labels = [
@@ -279,6 +362,22 @@ class OptimizeAiController extends OptimizerBase
         return $labels;
     }
 
+    /**
+     * Persists AI-generated data and performs all post-processing on a successful retrieve result.
+     *
+     * Applies the 'shortpixel/ai/success' filter to the raw aiData, formats it via
+     * formatResultData(), and saves it through AiDataModel::handleNewData(). Then:
+     *   - Replaces in-post image attributes (alt, caption) via replaceImageAttributes().
+     *   - Renames physical files and updates WordPress metadata via replaceFiles() when
+     *     the AI returned a new filebase that differs from the current one, and only when
+     *     the image is not already widely linked in published content.
+     *   - Appends improvements, preview URLs, and the final aiData/aiDataLabels to the
+     *     queue item result for bulk UI consumption.
+     * The item is blocked during processing and unblocked before finishItemProcess() is called.
+     *
+     * @param QueueItem $qItem The queue item with aiData on its result object.
+     * @return void
+     */
     protected function HandleSuccess(QueueItem $qItem)
     {
         $aiData = $qItem->result()->aiData;
@@ -447,6 +546,25 @@ class OptimizeAiController extends OptimizerBase
   *  - Move Backups 
   ( This might warrant a class of it's own due to complexity, or hooking into converter Models )
   */
+    /**
+     * Renames all physical files for an attachment to use a new AI-generated filename base.
+     *
+     * When recent_upload is false, first checks how many published posts reference this image;
+     * if the count meets or exceeds imageThreshold (default 1) the rename is skipped. Otherwise:
+     *   1. Collects all image file objects (main, thumbnails, WebP, AVIF) from the image model.
+     *   2. Checks that no target filename already exists (conflict guard).
+     *   3. Moves each source file to its new name.
+     *   4. Renames backup files via BackupController.
+     *   5. Replaces source/target URL pairs in post content via Replacer2.
+     *   6. Updates WordPress attachment metadata and the attached-file postmeta.
+     * Supports a dry_run mode that logs all planned operations without making any changes.
+     * Always returns false (the return value is currently unused by callers).
+     *
+     * @param QueueItem $qItem       The queue item providing the image model.
+     * @param string    $newFileBase New filename base (without extension) from the AI.
+     * @param array     $args        Optional: dry_run (bool), imageThreshold (int), url (string), recent_upload (bool).
+     * @return bool Always returns false.
+     */
     protected function replaceFiles($qItem, $newFileBase, $args = [])
     {
         $defaults = [
@@ -625,6 +743,24 @@ class OptimizeAiController extends OptimizerBase
     }
         */
 
+    /**
+     * Updates WordPress attachment metadata and the attached-file postmeta to reflect a renamed file.
+     *
+     * Replaces occurrences of $old_file with $new_file in the 'file', 'original_image', and
+     * per-size 'file' entries of the attachment metadata array, then calls
+     * wp_update_attachment_metadata(). Also updates the _wp_attached_file postmeta via
+     * update_attached_file(). In dry_run mode all changes are logged but not persisted.
+     *
+     * Note: when is_dry_run is true the metadata 'file' string replacement is computed but
+     * wp_update_attachment_metadata() is not called; the replaced $metadata variable is
+     * only logged and then silently discarded.
+     *
+     * @param int    $item_id  WordPress attachment post ID.
+     * @param string $old_file Original filename base to replace.
+     * @param string $new_file New filename base to substitute.
+     * @param bool   $dry_run  When true, log changes without writing to the database.
+     * @return void
+     */
     protected function replaceMetaData($item_id, $old_file, $new_file, $dry_run = false)
     {
         $metadata = wp_get_attachment_metadata($item_id);
@@ -739,6 +875,13 @@ class OptimizeAiController extends OptimizerBase
 
 
     // @todo Direct copy from CDNController. In future might be merged somewhere. 
+    /**
+     * Extracts all img and source srcset tags from an HTML content string.
+     *
+     * @param string $content HTML content to search.
+     * @param array  $args    Reserved for future use; currently unused.
+     * @return string[] Array of matched HTML tag strings.
+     */
     protected function fetchImageMatches($content, $args = [])
     {
         $number = preg_match_all('/<img[^>]*>|<source srcset="[^>]*">/i', $content, $matches);
@@ -772,6 +915,13 @@ class OptimizeAiController extends OptimizerBase
         return $bool;
     }
 
+    /**
+     * Returns whether AI processing should run automatically on newly uploaded images.
+     *
+     * Requires both isAiEnabled() and the autoAI setting to be truthy.
+     *
+     * @return bool True when auto AI is enabled; false otherwise.
+     */
     public function isAutoAiEnabled()
     {
         $bool = $this->isAiEnabled();
@@ -804,6 +954,20 @@ class OptimizeAiController extends OptimizerBase
         return $text;
     }
 
+    /**
+     * Reverts AI-generated data for an attachment back to its original values.
+     *
+     * Reads the original (pre-AI) alt, caption, description, and post_title from the
+     * AiDataModel, calls AiDataModel::revert() to clear the generated data, then calls
+     * replaceImageAttributes() to write the original values back into post content.
+     * Marks the queue item done with STATUS_NOT_API. Returns the result of getAltData()
+     * for display in the media modal.
+     *
+     * Note: file renaming that may have occurred during HandleSuccess() is not reversed here.
+     *
+     * @param QueueItem $qItem The queue item for the attachment to revert.
+     * @return array Return value of getAltData() containing snippet, generated, original, and current data.
+     */
     // @todo Should be moved to protected / called via sendToProcessing in future ( now also called via ajaxControl )
     public function undoAltData(QueueItem $qItem)
     {
@@ -843,6 +1007,19 @@ class OptimizeAiController extends OptimizerBase
         return $this->getAltData($qItem);
     }
 
+    /**
+     * Returns a structured data payload describing the current AI state for an attachment.
+     *
+     * Loads the AiDataModel and migrates legacy shortpixel_alt_requests postmeta when the
+     * status is AI_STATUS_NOTHING and old data is found. Builds generated, original, and
+     * current data arrays via formatGenerated(), renders the media-modal snippet via
+     * ViewController, and returns a metadata array containing: snippet, generated, original,
+     * current, action, item_id, and labels. Used both as the return value of undoAltData()
+     * and as the final result payload added to the queue item in HandleSuccess().
+     *
+     * @param QueueItem $qItem The queue item for the target attachment.
+     * @return array Associative array with keys: snippet, generated, original, current, action, item_id, labels.
+     */
     public function getAltData(QueueItem $qItem)
     {
         $item_id = $qItem->item_id;

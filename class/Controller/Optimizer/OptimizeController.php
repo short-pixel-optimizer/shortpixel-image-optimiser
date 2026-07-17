@@ -28,9 +28,26 @@ use ShortPixel\Controller\Queue\QueueItems;
 use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Controller\StatsController as StatsController;
 
+/**
+ * Handles the standard image optimization pipeline: API submission, result processing,
+ * file download, and image model updates.
+ *
+ * This is the primary optimizer subclass. QueueController calls sendToProcessing() which
+ * delegates to ApiController::processMediaItem() or processActionItem() depending on the
+ * action. After the API responds, handleAPIResult() is called: it branches on action type
+ * (optimize/convert_api → handleOptimizeAction(); remove_background/scale_image →
+ * handleAction()) and on result status (success, error, partial-success, quota exceeded,
+ * timeout). Optimized files are downloaded to temp paths in handleOptimizedItem() and
+ * then applied to the image model. On full success the 'shortpixel/image/optimised' hook
+ * is fired. Items still having processable URLs after one round-trip are re-enqueued
+ * automatically for further processing.
+ *
+ * @package ShortPixel\Controller\Optimizer
+ */
 class OptimizeController extends OptimizerBase
 {
 
+  /** Binds the optimize API controller and sets the API name for queue result handling. */
   public function __construct()
   {
     parent::__construct();
@@ -38,6 +55,13 @@ class OptimizeController extends OptimizerBase
     $this->apiName = 'optimize';
   }
 
+  /**
+   * Prepares the queue item for optimization and adds it to the async queue.
+   *
+   * @param QueueItem $qItem The item to enqueue.
+   * @param array     $args  Optimization arguments (e.g. compressionType, smartcrop).
+   * @return \stdClass Queue status object from the queue layer.
+   */
   public function enQueueItem(QueueItem $qItem, $args = []) : \stdClass
   {
     $queue = $this->getCurrentQueue($qItem);
@@ -99,6 +123,16 @@ class OptimizeController extends OptimizerBase
     return false;
   }
 
+  /**
+   * Dispatches the queue item to the ApiController for optimization or to a direct action handler.
+   *
+   * Routes 'optimize' and 'convert_api' actions through ApiController::processMediaItem(), and
+   * 'remove_background'/'scale_image' through ApiController::processActionItem(). Applies
+   * forceExclusion user-exclusion override before sending if required.
+   *
+   * @param QueueItem $qItem The item to send for processing.
+   * @return void
+   */
   public function sendToProcessing(QueueItem $qItem)
   {
     $action = $qItem->data()->action;
@@ -121,6 +155,17 @@ class OptimizeController extends OptimizerBase
     }
   }
 
+  /**
+   * Processes the API result stored on the queue item after sendToProcessing().
+   *
+   * Branches first on error/success, then on action type. For errors, maps API status
+   * codes to AjaxController error constants and records them on the ResponseController.
+   * For successes, delegates to handleOptimizeAction() or handleAction(). Always appends
+   * a KB search link to error results and a formatted response message to all results.
+   *
+   * @param QueueItem $qItem The queue item whose result should be evaluated.
+   * @return bool|void Returns false if the image model is invalid; void otherwise.
+   */
   public function handleAPIResult(QueueItem $qItem)
   {
     $imageModel = $qItem->imageModel;
@@ -237,6 +282,20 @@ class OptimizeController extends OptimizerBase
     }
   }
 
+  /**
+   * Handles a completed optimize or convert_api result for a queue item.
+   *
+   * When is_done and STATUS_SUCCESS: downloads temp files via handleOptimizedItem(), updates
+   * the image model, fires 'shortpixel_image_optimised' (deprecated) and
+   * 'shortpixel/image/optimised' hooks on success. When is_done but is_error: fails the queue
+   * item. When is_done and still processable (more thumbnails/formats remain): re-enqueues
+   * the item automatically for another round-trip. When not is_done (STATUS_UNCHANGED or
+   * STATUS_PARTIAL_SUCCESS): processes any partial files and waits; fails with a timeout
+   * message once the queue retry_limit is reached.
+   *
+   * @param QueueItem $qItem The queue item to handle.
+   * @return void
+   */
   protected function handleOptimizeAction($qItem)
   {
     $imageModel = $qItem->imageModel;
@@ -378,6 +437,17 @@ class OptimizeController extends OptimizerBase
     }
   }
 
+  /**
+   * Handles a completed remove_background or scale_image API result.
+   *
+   * On STATUS_SUCCESS and when not a preview-only request: downloads the resulting file
+   * from the API URL, side-loads it into WordPress via media_handle_sideload(), and stores
+   * the new attachment ID in the queue item result. Preview-only requests skip the download
+   * and sideload steps. Returns false if the download fails.
+   *
+   * @param QueueItem $qItem The queue item holding the action result.
+   * @return bool|void False on download failure; void otherwise.
+   */
   protected function handleAction($qItem) {
 
     $item_id = $qItem->item_id; 
@@ -433,18 +503,29 @@ class OptimizeController extends OptimizerBase
 
   }
 
+  /**
+   * No-op error handler; error state is already recorded on the queue item result.
+   *
+   * @param QueueItem $qItem The failed queue item.
+   * @return void
+   */
   protected function HandleItemError(QueueItem $qItem)
   {
     return;
   }
 
   /**
-   * [Handles one optimized image and extra filetypes]
-   * @param  [object] $q                         [queue object]
-   * @param  [object] $item                      [item QueueItem object. The data item]
-   * @param  [object] $mediaObj                  [imageModel of the optimized collection]
-   * @param  [array] $successData               [all successdata received so far]
-   * @return int           status integer, one of apicontroller status constants
+   * Downloads optimized image, WebP, and AVIF files from the API and applies them to the image model.
+   *
+   * Iterates the files array from the queue item result. For each entry it downloads the main
+   * image (if STATUS_SUCCESS or STATUS_OPTIMIZED_BIGGER when a converter is active), the WebP
+   * variant, and the AVIF variant. Download paths are stored on the queue item data so they
+   * survive a partial retry. The item is blocked during the download phase. After downloading,
+   * control passes to the converter (if applicable) or directly to ImageModel::handleOptimized().
+   *
+   * @param QueueItem  $qItem      The queue item being processed.
+   * @param ImageModel $imageModel The image model to apply the optimized files to.
+   * @return int One of ApiController::STATUS_SUCCESS, STATUS_CONVERTED, or STATUS_FAIL.
    */
   protected function handleOptimizedItem(QueueItem $qItem, $imageModel)
   {
@@ -558,6 +639,18 @@ class OptimizeController extends OptimizerBase
     return $status;
   }
 
+  /**
+   * Deletes temporary downloaded files after the image model has processed them.
+   *
+   * Returns false early (skips deletion) when data()->files is NOT null, which is the
+   * condition used to indicate a multi-round partial download is still in progress.
+   * Otherwise iterates $qItem->files (a public property, not data()->files) and deletes
+   * each path from disk, skipping entries that are numeric status codes (e.g.
+   * STATUS_OPTIMIZED_BIGGER) rather than real file paths.
+   *
+   * @param QueueItem $qItem The queue item whose temp files should be cleaned up.
+   * @return bool|void Returns false early when persistent files are still in use; void otherwise.
+   */
   protected function deleteTempFiles(QueueItem $qItem)
   {
     if (! is_null($qItem->data()->files)) {

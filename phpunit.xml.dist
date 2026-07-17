@@ -17,11 +17,15 @@
 		<testsuite name="External">
 			<directory prefix="test-" suffix=".php">./tests/External</directory>
 		</testsuite>
+		<testsuite name="Controllers">
+			<directory prefix="test-" suffix=".php">./tests/Controller</directory>
+		</testsuite>
 		<testsuite name="SPIO Main">
 			<directory prefix="test-" suffix=".php">./tests/</directory>
 			<exclude>./tests/Helper</exclude>
 			<exclude>./tests/Model</exclude>
 			<exclude>./tests/External</exclude>
+			<exclude>./tests/Controller</exclude>
 		</testsuite>
 	</testsuites>
 </phpunit>

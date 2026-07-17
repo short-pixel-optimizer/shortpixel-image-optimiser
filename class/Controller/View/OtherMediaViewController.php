@@ -19,27 +19,53 @@ use ShortPixel\Controller\Queue\CustomQueue as CustomQueue;
 use ShortPixel\Helper\UiHelper as UiHelper;
 use ShortPixel\Model\Image\CustomImageModel;
 
-// Future contoller for the edit media metabox view.
+/**
+ * View controller for the Custom Media (Other Media) list screen.
+ *
+ * Renders the paginated, sortable, and filterable image list on the Custom
+ * Media admin page (upload.php?page=wp-short-pixel-custom) using the
+ * `view-other-media` template.
+ *
+ * Wired up by AdminController. Pagination state, ordering, and search terms
+ * are read from GET parameters in the constructor and applied in queryItems().
+ * Images found to be missing on disk are removed automatically during getItems().
+ *
+ * @package ShortPixel\Controller\View
+ */
 class OtherMediaViewController extends \ShortPixel\ViewController
 {
-      //$this->model = new
       protected $template = 'view-other-media';
 
 			protected static $instance;
 
+    	/** @var string WordPress user option key for storing the per-page preference. */
     	const OTHER_MEDIA_PER_PAGE_OPTION = 'shortpixel_custom_media_per_page';
 
-      // Pagination .
+      /** @var int Number of items to show per page (loaded from the user screen option). */
       protected $items_per_page = 20;
+      /** @var int Current page number (1-based), derived from $_GET['paged']. */
       protected $currentPage = 1;
+      /** @var int Total number of items matching the current filter, set by queryItems(). */
       protected $total_items = 0;
+      /** @var string Sort direction ('asc' or 'desc'), derived from $_GET['order']. */
       protected $order;
+      /** @var string Column to sort by, validated against allowed headings, derived from $_GET['orderby']. */
       protected $orderby;
+      /** @var string|false Search string from $_GET['s'], or false when no search is active. */
       protected $search;
 
+      /** @var bool|string Whether to show hidden (inactive) directories instead of active ones. */
 			protected $show_hidden = false;
+      /** @var bool Whether any hidden directory IDs exist, used to conditionally show the "show hidden" toggle. */
 			protected $has_hidden_items = false;
 
+      /**
+       * Reads pagination, ordering, search, and per-page preferences from GET parameters.
+       *
+       * No nonce is required for these read-only URL parameters (PHPCS suppression
+       * comments are present in-code). The per-page value is loaded from the user's
+       * stored screen option via loadScreenPerPageOption().
+       */
       public function __construct()
       {
         parent::__construct();
@@ -80,6 +106,15 @@ class OtherMediaViewController extends \ShortPixel\ViewController
       }
 
 
+      /**
+       * Returns the column heading definitions for the custom-media list table.
+       *
+       * Each entry is an associative array with 'title', 'sortable', and optionally
+       * 'orderby'. The 'actions' heading is conditionally removed when no API key
+       * is verified.
+       *
+       * @return array<string, array<string, mixed>> Column heading definitions keyed by column slug.
+       */
       protected function getHeadings()
       {
          $headings = array(
@@ -119,7 +154,15 @@ class OtherMediaViewController extends \ShortPixel\ViewController
         return $headings;
       }
 
-        	public function addOtherMediaScreenOptions() {
+      /**
+       * Registers the "Items per page" screen option for the custom-media list screen.
+       *
+       * Hooked to the `load-{page_hook}` action by AdminController so the option
+       * appears in the Screen Options panel.
+       *
+       * @return void
+       */
+      public function addOtherMediaScreenOptions() {
       add_screen_option( 'per_page', array(
         'label'   => __( 'Items per page', 'shortpixel-image-optimiser' ),
         'default' => 20,
@@ -127,6 +170,18 @@ class OtherMediaViewController extends \ShortPixel\ViewController
       ) );
   	}
 
+    /**
+     * Filters the saved value for the custom-media per-page screen option.
+     *
+     * Hooked to `set-screen-option` (pre-WP 5.4) or `set_screen_option_{option}`
+     * (WP 5.4+). Returns the int value when the option matches; otherwise passes
+     * $status through unchanged.
+     *
+     * @param bool|int $status  The current status (passed from WordPress).
+     * @param string   $option  The option name being saved.
+     * @param int      $value   The value the user selected.
+     * @return bool|int The integer value when our option matches; $status otherwise.
+     */
     public function setScreenOption( $status, $option, $value ) {
       if ( self::OTHER_MEDIA_PER_PAGE_OPTION === $option ) {
         return intval( $value );
@@ -135,6 +190,16 @@ class OtherMediaViewController extends \ShortPixel\ViewController
       return $status;
     }
 
+      /**
+       * Loads the current page of custom-media items, removing any that no longer exist on disk.
+       *
+       * Calls queryItems() to get raw DB rows, then resolves each to a
+       * CustomImageModel via the filesystem helper. Models whose file is missing
+       * are deleted via onDelete() and a warning notice is added listing the
+       * removed paths.
+       *
+       * @return array<int, \ShortPixel\Model\Image\CustomImageModel> Loaded, existing image models.
+       */
       protected function getItems() : array
       {
           $fs = \wpSPIO()->filesystem();
@@ -166,6 +231,16 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           return $items;
       }
 
+     /**
+      * Reads the user's stored screen-option value for items per page.
+      *
+      * Returns $default when get_user_option() is unavailable or when the
+      * stored value is zero or negative.
+      *
+      * @param string $option_name WordPress user option key.
+      * @param int    $default     Fallback items-per-page value. Default 20.
+      * @return int Number of items per page.
+      */
      protected function loadScreenPerPageOption( $option_name, $default = 20 )
     {
       if ( ! function_exists( 'get_user_option' ) ) {
@@ -182,6 +257,14 @@ class OtherMediaViewController extends \ShortPixel\ViewController
       return $default;
     }
 
+      /**
+       * Returns a map of folder_id to DirectoryOtherMediaModel for all items in the current page.
+       *
+       * Deduplicates folder lookups: each unique folder_id is fetched only once.
+       *
+       * @param array<int, \ShortPixel\Model\Image\CustomImageModel> $items Loaded image models.
+       * @return array<int, \ShortPixel\Model\File\DirectoryOtherMediaModel> Folder models keyed by folder_id.
+       */
       protected function getItemFolders($items)
       {
          $folderArray = array();
@@ -199,7 +282,15 @@ class OtherMediaViewController extends \ShortPixel\ViewController
          return $folderArray;
       }
 
-      /* Check which folders are in result, and load them. */
+      /**
+       * Alias of getItemFolders() — returns a folder-id-to-model map for a set of items.
+       *
+       * This method duplicates getItemFolders() and is not currently called from
+       * the main load() path; getItemFolders() is preferred.
+       *
+       * @param array<int, \ShortPixel\Model\Image\CustomImageModel> $items Loaded image models.
+       * @return array<int, \ShortPixel\Model\File\DirectoryOtherMediaModel> Folder models keyed by folder_id.
+       */
       protected function loadFolders($items)
       {
          $folderArray = array();
@@ -218,6 +309,20 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 
       }
 
+      /**
+       * Builds the SQL filter array from active GET parameters.
+       *
+       * Reads $_GET['s'] (path LIKE search), $_GET['folder_id'] (exact folder match),
+       * and $_GET['custom-status'] (optimized / unoptimized / prevented). Also sets
+       * $this->view->hasFilter and $this->view->hasSearch flags for the template.
+       *
+       * Filter values are constructed as stdClass objects with 'operator' and 'value'
+       * properties and consumed directly by queryItems(). Note that SQL values are
+       * assembled via string concatenation with esc_sql(); no wpdb::prepare() is used
+       * here (see Suspected bugs in report).
+       *
+       * @return array<string, object> Filter objects keyed by (pseudo-)column name.
+       */
       protected function getFilter() {
           $filter = array();
 
@@ -277,6 +382,17 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           return $filter;
       }
 
+      /**
+       * Executes the paginated SQL query for custom-media items and sets $this->total_items.
+       *
+       * Runs two queries against wp_shortpixel_meta: a COUNT query to determine the
+       * total for pagination, and a SELECT query to fetch the current page's rows.
+       * Filters from getFilter() are applied to both queries. Ordering is applied via
+       * sanitize_sql_orderby(). Returns an empty array when no active (or hidden) folder
+       * directories are found.
+       *
+       * @return array<int, object> Raw DB row objects (not yet resolved to image models).
+       */
       public function queryItems() {
           $filters = $this->getFilter();
           global $wpdb;
@@ -325,6 +441,16 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           return $results;
       }
 
+      /**
+       * Builds the query-string arguments array for pagination links.
+       *
+       * Merges current state (orderby, order, search, page) with any overrides
+       * supplied in $args. Empty values are removed via array_filter so they do
+       * not pollute pagination URLs.
+       *
+       * @param array<string, mixed> $args Overrides for individual arguments.
+       * @return array<string, mixed> Filtered query argument map.
+       */
       private function getPageArgs($args = array())
       {
         $defaults = array(
@@ -340,6 +466,16 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 
       }
 
+      /**
+       * Validates an orderby column name against the allowed heading columns.
+       *
+       * Collects all 'orderby' values from getHeadings() and returns an empty
+       * string when the supplied value is not in the allowed set, preventing
+       * SQL injection via the ORDER BY clause.
+       *
+       * @param string $orderby The raw orderby value from the request.
+       * @return string The validated orderby value, or '' if not allowed.
+       */
       protected function filterAllowedOrderBy($orderby)
       {
           $headings = $this->getHeadings() ;
@@ -358,6 +494,15 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           return $orderby;
       }
 
+      /**
+       * Builds the HTML pagination control for the custom-media list table.
+       *
+       * Returns false when the total number of pages is one or fewer (no pagination
+       * needed). Otherwise generates first/prev/current/next/last navigation links
+       * wrapped in a GET form so non-JS browsers can submit the page number.
+       *
+       * @return string|false Pagination HTML string, or false when pagination is unnecessary.
+       */
       protected function getPagination()
       {
           $parray = array();
@@ -477,10 +622,16 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           return $output;
       }
 
-      /** Actions to list under the Image row
-      * @param $item CustomImageModel
-      */
-
+      /**
+       * Returns the action list for a single custom-media item row.
+       *
+       * Always includes a 'view' link. Optimize/restore/re-optimize actions are
+       * added from UiHelper::getActions() only when the API key is verified and
+       * quota has not been exceeded.
+       *
+       * @param \ShortPixel\Model\Image\CustomImageModel $item The image model for this row.
+       * @return array<string, array<string, mixed>> Action descriptors keyed by action slug.
+       */
       protected function getRowActions($item)
       {
 
@@ -507,7 +658,16 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 					return $rowActions;
       }
 
-			// Function to sync output exactly with Media Library functions for consistency
+      /**
+       * Renders the ShortPixel action column cell for a single custom-media row.
+       *
+       * Outputs a wrapping div with the item's ID as the element ID, then calls
+       * printItemActions() and UiHelper::getStatusText() to populate the cell.
+       * Mirrors the structure of the Media Library column for visual consistency.
+       *
+       * @param \ShortPixel\Model\Image\CustomImageModel $item The image model for this row.
+       * @return void
+       */
 			public function doActionColumn($item)
 			{
           ?>
@@ -520,7 +680,16 @@ class OtherMediaViewController extends \ShortPixel\ViewController
         <?php
 			}
 
-      // Use for view, also for renderItemView
+      /**
+       * Outputs the inline action buttons and burger-menu list for a custom-media row.
+       *
+       * Loads the `snippets/part-single-actions` template for button-style actions
+       * (when any are present) and echoes the burger-menu HTML for list-style actions.
+       * Used both by doActionColumn() (list table) and by individual item AJAX renders.
+       *
+       * @param \ShortPixel\Model\Image\CustomImageModel $item The image model for this row.
+       * @return void
+       */
 			public function printItemActions($item)
       {
 
@@ -542,6 +711,15 @@ class OtherMediaViewController extends \ShortPixel\ViewController
         echo $list_actions;
       }
 
+      /**
+       * Outputs the status filter <select> element for the custom-media list table.
+       *
+       * Options: 'all', 'optimized', 'unoptimized', 'prevented'. Reads the current
+       * selection from the INPUT_GET 'custom-status' parameter (FILTER_UNSAFE_RAW
+       * is used; the value is output through esc_attr/esc_html).
+       *
+       * @return void
+       */
       public function printFilter()
       {
             $status   = filter_input(INPUT_GET, 'custom-status', FILTER_UNSAFE_RAW );
@@ -564,6 +742,14 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 
       }
 
+      /**
+       * Outputs <option> elements for the bulk-action <select> on the custom-media page.
+       *
+       * Covers: optimize, restore, re-optimize (lossy/glossy/lossless), and
+       * mark-completed. Called directly from the view template inside a <select> element.
+       *
+       * @return void
+       */
       public function printBulkActions()
       {
           $bulkActions =  ['shortpixel-optimize' => __('Optimize','shortpixel-image-optimiser'),
@@ -580,6 +766,16 @@ class OtherMediaViewController extends \ShortPixel\ViewController
       }
 
 
+      /**
+       * Renders a single column heading cell, optionally as a sortable link.
+       *
+       * When $heading['sortable'] is true, wraps the title in an anchor that
+       * toggles sort direction on repeated clicks and adds a 'sorted asc/desc'
+       * indicator class. Non-sortable headings are returned as plain text.
+       *
+       * @param array<string, mixed> $heading Heading definition from getHeadings().
+       * @return string HTML string for the heading cell content.
+       */
       protected function getDisplayHeading($heading)
       {
           $output = '';
@@ -623,6 +819,15 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           return $output;
       }
 
+      /**
+       * Returns a formatted date string for a custom-media item's most relevant timestamp.
+       *
+       * Prefers the tsOptimized timestamp when non-zero; falls back to tsAdded.
+       * Uses UiHelper::formatDate() to produce a human-readable string.
+       *
+       * @param \ShortPixel\Model\Image\CustomImageModel $item The image model.
+       * @return string Formatted date string.
+       */
       protected function getDisplayDate($item)
       {
         if ($item->getMeta('tsOptimized') > 0)

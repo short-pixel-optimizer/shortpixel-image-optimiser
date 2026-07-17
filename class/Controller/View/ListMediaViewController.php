@@ -20,15 +20,38 @@ use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Model\Image\MediaLibraryModel as MediaLibraryModel;
 
 
-// Controller for the MediaLibraryView
+/**
+ * View controller for the WordPress Media Library list view.
+ *
+ * Injects a 'ShortPixel Compression' column into the Media Library table
+ * (upload.php list mode) by hooking into `manage_media_columns` and
+ * `manage_media_custom_column`. Each cell is rendered using the `view-list-media`
+ * template, which shows compression status, action buttons, AI data indicators,
+ * and a burger-menu of secondary actions.
+ *
+ * Also adds a filter dropdown for filtering by ShortPixel compression state
+ * (`restrict_manage_posts`) and appends the before/after image comparer widget
+ * to the page via `loop_end`.
+ *
+ * Wired up by AdminController.
+ *
+ * @package ShortPixel\Controller\View
+ */
 class ListMediaViewController extends \ShortPixel\ViewController
 {
 
 	protected static $instance;
 
   protected $template = 'view-list-media';
-//  protected $model = 'image';
 
+  /**
+   * Default controller action: enables trusted filesystem mode and registers Media Library hooks.
+   *
+   * Starts trusted mode so attachment files can be accessed during column rendering,
+   * then calls loadHooks() to attach all filter and action callbacks.
+   *
+   * @return void
+   */
   public function load()
   {
 			$fs = \wpSPIO()->filesystem();
@@ -38,7 +61,17 @@ class ListMediaViewController extends \ShortPixel\ViewController
   }
 
 	
-  /** Hooks for the MediaLibrary View */
+  /**
+   * Registers all WordPress hooks for the Media Library column integration.
+   *
+   * Hooks registered:
+   *   - `manage_media_columns`       → headerColumns() (adds column header).
+   *   - `manage_media_custom_column` → doColumn() (renders each cell).
+   *   - `restrict_manage_posts`      → mediaAddFilterDropdown() (adds filter dropdown).
+   *   - `loop_end`                   → loadComparer() (appends comparer widget).
+   *
+   * @return void
+   */
   protected function loadHooks()
   {
     add_filter( 'manage_media_columns', array( $this, 'headerColumns' ) );//add media library column header
@@ -52,6 +85,15 @@ class ListMediaViewController extends \ShortPixel\ViewController
 
   }
 
+  /**
+   * Adds the 'ShortPixel Compression' column to the Media Library list table.
+   *
+   * Filter callback for `manage_media_columns`. Appends the column to the $defaults
+   * array provided by WordPress and returns the modified array.
+   *
+   * @param array<string, string> $defaults Existing column definitions.
+   * @return array<string, string> Modified column definitions with the ShortPixel column added.
+   */
   public function headerColumns($defaults)
   {
     $defaults['wp-shortPixel'] = __('ShortPixel Compression', 'shortpixel-image-optimiser');
@@ -60,6 +102,18 @@ class ListMediaViewController extends \ShortPixel\ViewController
     return $defaults;
   }
 
+  /**
+   * Renders the ShortPixel column cell for a single media library row.
+   *
+   * Action callback for `manage_media_custom_column`. Resets $this->view to a
+   * fresh stdClass for each row (preventing carry-over between rows), then calls
+   * loadItem() to populate view data before including the template (unique=false
+   * so the template is re-included for every row).
+   *
+   * @param string $column_name The name of the current column being rendered.
+   * @param int    $id          The attachment post ID.
+   * @return void
+   */
   public function doColumn($column_name, $id)
   {
      if($column_name == 'wp-shortPixel')
@@ -75,6 +129,19 @@ class ListMediaViewController extends \ShortPixel\ViewController
 
   }
 
+  /**
+   * Populates $this->view with data for a single media library attachment.
+   *
+   * Loads the MediaLibraryModel for $id. When not found (not an image or file
+   * missing), sets view->text to an error string and returns. Otherwise loads AI
+   * data if AI is enabled, sets view->text (status text), view->list_actions
+   * (burger-menu HTML), view->actions, view->infoClass (space-separated capability
+   * flags for JS), and view->infoData (compression type). Actions and burger-menu
+   * are suppressed when the current user does not have the ShortPixel capability.
+   *
+   * @param int $id WordPress attachment post ID.
+   * @return void
+   */
   protected function loadItem($id)
   {
      $fs = \wpSPIO()->filesystem();
@@ -167,6 +234,16 @@ class ListMediaViewController extends \ShortPixel\ViewController
 
   }
 
+  /**
+   * Loads AI data for an attachment and populates AI-related view properties.
+   *
+   * Sets view->item_id, view->ai_icon ('ai' or 'no-ai'), and view->ai_title
+   * describing which AI-generated fields are present. Returns the AiDataModel
+   * for further use by the template or loadItem().
+   *
+   * @param int $item_id WordPress attachment post ID.
+   * @return \ShortPixel\Model\AiDataModel The loaded AI data model.
+   */
   protected function loadAiItem($item_id)
   {
      $AiDataModel = AiDataModel::getModelByAttachment($item_id); 
@@ -196,14 +273,28 @@ class ListMediaViewController extends \ShortPixel\ViewController
 
   }
 
+  /**
+   * Appends the before/after image comparer widget to the Media Library page.
+   *
+   * Callback for the `loop_end` action. Includes the `snippets/part-comparer`
+   * template once (unique dedup is the default).
+   *
+   * @return void
+   */
   public function loadComparer()
   {
     $this->loadView('snippets/part-comparer');
   }
 
-  /*
-  * @hook restrict_manage_posts
-  */
+  /**
+   * Outputs the ShortPixel status filter <select> element in the Media Library toolbar.
+   *
+   * Callback for the `restrict_manage_posts` action. Returns immediately when
+   * not on the upload screen. Options: 'all', 'optimized', 'unoptimized', 'prevented'.
+   * The current selection is read from INPUT_GET 'shortpixel_status'.
+   *
+   * @return void
+   */
   public function mediaAddFilterDropdown() {
       $scr = get_current_screen();
       if ( $scr->base !== 'upload' ) return;

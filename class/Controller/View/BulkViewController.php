@@ -19,19 +19,46 @@ use ShortPixel\Helper\UiHelper as UiHelper;
 use ShortPixel\Model\AccessModel as AccessModel;
 
 
+/**
+ * View controller for the Bulk Optimization admin screen.
+ *
+ * Renders the bulk processing page (upload.php?page=wp-short-pixel-bulk) using
+ * the `view-bulk` template. Prepares quota status, approximate unoptimized image
+ * counts, past bulk-run logs, custom bulk operation labels, and dashboard offer
+ * banners for the template.
+ *
+ * Wired up by AdminController on the `admin_menu` hook.
+ *
+ * @package ShortPixel\Controller\View
+ */
 class BulkViewController extends \ShortPixel\ViewController
 {
 
+  /** @var string Nonce action name for the bulk form. */
   protected $form_action = 'sp-bulk';
+  /** @var string Template file name (without .php) for the bulk page. */
   protected $template = 'view-bulk';
 
+  /** @var object|null Quota data object from QuotaController. */
   protected $quotaData;
+  /** @var mixed|null Reserved for future use. */
   protected $pendingMeta;
+  /** @var array<int, mixed> Reserved for future folder selection support. */
   protected $selected_folders = array();
 
 	protected static $instance;
 
 
+  /**
+   * Default action: populates view data and renders the bulk processing page.
+   *
+   * Loads quota status, queue startup data, approximate unoptimized image counts,
+   * past bulk-run logs, error/quota notices, buy-more link, custom operation labels
+   * (from the panel GET arg or an active bulk operation), a remote offer banner,
+   * and the dashboard promo block. Renders the `view-bulk` template.
+   *
+   * @return void
+   */
   public function load()
   {
     $quota = QuotaController::getInstance();
@@ -96,6 +123,15 @@ class BulkViewController extends \ShortPixel\ViewController
 
   }
 
+  /**
+   * Populates $this->view with dashboard icon, link, title, and message.
+   *
+   * Defaults to the ShortPixel plugin icon with no link or title. When a remote
+   * promotional offer is available from AdminNoticesController, overrides all four
+   * fields with offer data.
+   *
+   * @return void
+   */
   private function loadDashboard()
   {
       $noticesController = AdminNoticesController::getInstance();
@@ -115,6 +151,16 @@ class BulkViewController extends \ShortPixel\ViewController
       } 
   }
 
+  /**
+   * Returns a human-readable label for a custom bulk operation identifier.
+   *
+   * Recognised identifiers: 'bulk-restore', 'migrate', 'removeLegacy', 'bulk-undoAI'.
+   * Note: no default case is defined — an unrecognised identifier will return an
+   * uninitialised $label variable (see Suspected bugs in report).
+   *
+   * @param string $operation Internal bulk operation identifier.
+   * @return string Translated label for the operation.
+   */
   private function getCustomLabel($operation)
   {
       switch($operation)
@@ -171,7 +217,14 @@ class BulkViewController extends \ShortPixel\ViewController
 
   }
 
-	// Double with ApiNotice . @todo Fix.
+  /**
+   * Returns the HTML message shown when no API key is set on the bulk page.
+   *
+   * Directs the user to the settings page to validate their key or sign up.
+   * Duplicates similar logic in the ApiNotice admin notice class.
+   *
+   * @return string HTML message string (not escaped — contains intentional anchor tags).
+   */
 	protected function getActivationNotice()
 	{
 		$message = "<p>" . __('In order to start the optimization process, you need to validate your API Key in the '
@@ -181,6 +234,18 @@ class BulkViewController extends \ShortPixel\ViewController
 		return $message;
 	}
 
+  /**
+   * Calculates approximate counts of unoptimized media and custom images.
+   *
+   * Uses StatsController to compute total-minus-optimized deltas for media items,
+   * thumbnails, and custom images. Thumbnail counts are further reduced by the
+   * number of excluded sizes. All returned counts are clamped to zero to prevent
+   * negative display values. Also reports whether the media query result is limited
+   * (isLimited flag from StatsController).
+   *
+   * @return object stdClass with media, custom, and total sub-objects containing
+   *                unoptimized image count estimates.
+   */
   protected function getApproxData()
   {
 		$otherMediaController = OtherMediaController::getInstance();
@@ -233,10 +298,18 @@ class BulkViewController extends \ShortPixel\ViewController
 
   }
 
-	/* Function to check for and load the current Log.  This can be present on load time when the bulk page is refreshed during operations.
-	*  Reload the past error and display them in the error box.
-	* @param String $type  media or custom
-	*/
+  /**
+   * Loads and formats the current in-progress bulk log file for display.
+   *
+   * Reads the active log file (current_bulk_{type}.log) from the backup directory
+   * via BulkController::getLog(). Returns false when no log file exists. When
+   * present, parses semicolon-delimited entries with pipe-separated fields
+   * (date|filename|item_id|message) and renders each as a styled 'fatal' div.
+   * Single-cell entries (empty lines) are skipped.
+   *
+   * @param string $type 'media' or 'custom'. Default 'media'.
+   * @return string|false Formatted HTML log output, or false when no log is present.
+   */
 	protected function loadCurrentLog($type = 'media')
 	{
 		$bulkController = BulkController::getInstance();
@@ -282,6 +355,17 @@ class BulkViewController extends \ShortPixel\ViewController
 		 return $output;
 	}
 
+  /**
+   * Returns formatted log data for all past bulk runs.
+   *
+   * Retrieves raw log entries from BulkController::getLogs() and enriches each
+   * with a human-readable bulkName (combining queue type and operation), a
+   * formatted date, and — when the matching log file exists — a linked error count
+   * anchor. Results are reverse-sorted by index (most recent first).
+   *
+   * @return array<int, array<string, mixed>> Enriched log entry arrays with keys:
+   *   type, images, errors, date, operation, bulkName.
+   */
   public function getLogs()
   {
       $bulkController = BulkController::getInstance();

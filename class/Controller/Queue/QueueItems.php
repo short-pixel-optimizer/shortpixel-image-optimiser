@@ -28,12 +28,14 @@ class QueueItems
     ];
 
     /**
-     * GetImageItem
+     * Creates a new QueueItem wrapping the supplied ImageModel.
      *
-     * @param ImageModel $imageModel
-     * @return QueueItem QueueItem
+     * A fresh QueueItem is returned on every call; items are not cached (the
+     * caching code in the method body is intentionally commented out).
+     *
+     * @param ImageModel $imageModel The image model to wrap.
+     * @return QueueItem A new QueueItem with the imageModel attached.
      */
-
     public static function getImageItem(ImageModel $imageModel)
     {
         $type = $imageModel->get('type');
