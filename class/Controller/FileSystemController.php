@@ -516,7 +516,7 @@ class FileSystemController extends \ShortPixel\Controller
 
     // what are we sorting.
     $class = get_class($array[0]);
-    $is_files = ($class == 'ShortPixel\FileModel') ? true : false; // if not files, then dirs.
+    $is_files = ($class == \ShortPixel\Model\File\FileModel::class) ? true : false; // if not files, then dirs.
 
     usort(
       $array,

@@ -102,11 +102,16 @@ class UtilHelper
       return false;
     }
 
-    // Try to simpler bail out without checking for the decode.
-		if (strpos($json, '{' ) === false && strpos($json, ':') === false)
-		{
-			return false; 
-		}
+    $json = trim($json);
+
+    // Allow top-level arrays as valid JSON while still rejecting plain text.
+    if ('' === $json) {
+      return false;
+    }
+
+    if (false === strpos($json, '{') && false === strpos($json, '[') && false === strpos($json, ':')) {
+      return false;
+    }
 
     if (function_exists('json_validate')) {
       return \json_validate($json);

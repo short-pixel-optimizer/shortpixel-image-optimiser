@@ -589,7 +589,7 @@ class AjaxController
 					'message' => __('Limit of attempts exceeded. Possible connection issue. Try again later. ', 'shortpixel-image-optimiser'),
 				]; 
 				
-				$this->send($result->forReturn());
+				$this->send($result);
 				exit('Timeout');
 				break; 
 			}
