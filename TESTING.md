@@ -73,6 +73,11 @@ only the outbound ShortPixel API mocked at the HTTP layer. It runs in its
 own phpunit invocation so the fast unit signal and the slow integration
 signal stay separated.
 
+One special case: the Cloudflare purge tests (`test-CloudflarePurge.php`)
+boot a local `php -S` capture server on port 8437 inside the container,
+because the purge uses raw cURL that the WP HTTP mock can't intercept.
+No real Cloudflare traffic is ever sent.
+
 ```bash
 # Integration suite only
 bin/test.sh --integration
@@ -100,6 +105,39 @@ test install, the suite remaps the request URL list to the committed
 fixtures' public `raw.githubusercontent.com` URLs (same bytes) and
 disables thumbnail processing — only main files have public counterparts.
 
+### Cross-plugin compatibility tests
+
+The compat suite (`tests/Compat/`) runs the SPIO integrations against the
+REAL partner plugins — WooCommerce, NextGen Gallery, and WP Offload Media
+Lite — downloaded from wordpress.org (latest stable, zips cached in the
+`wp-tests-cache` volume) and activated natively in the test install.
+WPML has no public download and is currently not covered.
+
+```bash
+bin/test.sh --compat
+bin/test.sh --compat --filter CompatWooCommerce
+```
+
+How it works:
+
+- `--compat` downloads + extracts the partner plugins into the test
+  install's `wp-content/plugins/`, then runs phpunit with
+  `SPIO_PARTNER_PLUGINS=1` and the `Compat` testsuite.
+- `tests/bootstrap.php` activates the partners via a
+  `pre_option_active_plugins` filter (real WP core plugin loading);
+  `tests/Integration/bootstrap.php` fires their activation hooks once so
+  their installers create the tables they need (DDL auto-commits, so the
+  tables survive per-test rollbacks).
+- Plain `--integration` / `--all` runs never load the partner plugins —
+  the env variable gates everything — so the standard suites are
+  unaffected.
+- The suite runs on PHP 8.3 or 8.5 with WP latest. PHP 7.4 and pinned
+  WP versions exit early with a skip note — partner plugin floors (WP
+  Offload Media Lite needs PHP 8.1+, current partner releases require
+  modern WP), not ours.
+- Each test also self-skips when its partner plugin isn't loaded, so an
+  accidental plain-phpunit run of the suite is harmless.
+
 ### WordPress version
 
 Tests run against the latest WordPress by default. `--wp <version>` pins a
@@ -115,23 +153,27 @@ bin/test.sh --wp 5.9 --php 7.4 --integration  # old WP + old PHP combo
 CI mirrors this: pushes run the integration suite on WP latest across
 PHP 7.4/8.3/8.5, plus WP 5.9 (the oldest version that runs on this
 test setup) on PHP 7.4 and 8.3. Pull requests run PHP 8.3 / WP latest,
-plus the same WP 5.9 combos.
+plus the same WP 5.9 combos. Every run also includes the `compat` job
+(PHP 8.3 and 8.5, WP latest) that downloads the partner plugins and
+runs the Compat testsuite — same steps as `bin/test.sh --compat`.
 
 ### Everything in one go
 
 ```bash
-# Unit suites + integration suite, one command (PHP 8.3 / WP latest)
+# Unit + integration + compat suites, one command (PHP 8.3 / WP latest)
 bin/test.sh --all
 
-# The full local sweep: unit + integration on PHP 7.4, 8.3 AND 8.5
+# The full local sweep: all three passes on PHP 7.4, 8.3 AND 8.5
+# (the compat pass self-skips on 7.4 — partner plugin floors)
 bin/test.sh --matrix --all
 
-# Unit + integration on a pinned combo
+# Unit + integration on a pinned combo (compat pass skips off-latest)
 bin/test.sh --all --wp 5.9 --php 7.4
 ```
 
-Both passes always run — a unit failure doesn't hide the integration
-result (or vice versa); failures are aggregated in the final verdict.
+All passes always run — a unit failure doesn't hide the integration or
+compat result (or vice versa); failures are aggregated in the final
+verdict.
 
 ### Debug workflow
 

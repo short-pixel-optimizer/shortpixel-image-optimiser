@@ -19,5 +19,14 @@
 		<testsuite name="Smoke">
 			<directory prefix="test-" suffix=".php">./tests/Smoke</directory>
 		</testsuite>
+		<!-- Cross-plugin compatibility tests: need the partner plugins
+		     (WooCommerce, NextGen Gallery, WP Offload Media Lite)
+		     extracted + activated in the test install. Excluded from
+		     plain runs by defaultTestSuite above; opt in via the compat
+		     flag of bin/test.sh, which prepares the plugins and sets
+		     SPIO_PARTNER_PLUGINS=1. -->
+		<testsuite name="Compat">
+			<directory prefix="test-" suffix=".php">./tests/Compat</directory>
+		</testsuite>
 	</testsuites>
 </phpunit>

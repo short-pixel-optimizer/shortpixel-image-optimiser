@@ -274,3 +274,89 @@ jobs:
 
       - name: Run integration testsuite
         run: vendor/bin/phpunit -c phpunit-integration.xml --testdox --colors=never
+
+  compat:
+    # Cross-plugin compatibility suite: runs SPIO against the REAL
+    # WooCommerce, NextGen Gallery and WP Offload Media Lite plugins
+    # (latest stable from wordpress.org). PHP 8.3 + 8.5 on WP latest —
+    # PHP 7.4 is ruled out by the partner plugins' own requirement
+    # floors (WP Offload Media Lite needs PHP 8.1+); mirrors
+    # bin/test.sh --compat.
+    name: Run Compat Tests (PHP ${{ matrix.php }}, WP latest)
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.3', '8.5']
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: wordpress_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping --silent"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 3
+
+    env:
+      WP_CORE_DIR: /tmp/wordpress
+      WP_TESTS_DIR: /tmp/wordpress-tests-lib
+      WP_VERSION: latest
+      DB_NAME: wordpress_test
+      DB_USER: root
+      DB_PASS: password
+      DB_HOST: 127.0.0.1
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: gd, mbstring, mysqli, json, xml
+          ini-values: post_max_size=256M, memory_limit=512M
+          tools: composer
+
+      - name: Install SVN
+        run: sudo apt-get update && sudo apt-get install -y subversion
+
+      - name: Install WP-CLI
+        run: |
+          curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+          chmod +x wp-cli.phar
+          sudo mv wp-cli.phar /usr/local/bin/wp
+
+      - name: Install Composer dependencies
+        run: |
+          composer clear-cache
+          composer update --no-interaction --prefer-dist
+
+      - name: Install WordPress Unit Test Suite
+        run: |
+          mkdir -p "${WP_TESTS_DIR}"
+          bash bin/install-wp-tests.sh "$DB_NAME" "$DB_USER" "$DB_PASS" "$DB_HOST" "${WP_VERSION}"
+
+      - name: Install partner plugins
+        run: |
+          # Same slugs + source as bin/test.sh --compat. latest-stable
+          # keeps the suite honest against what users actually install.
+          PLUGIN_DIR="$WP_CORE_DIR/wp-content/plugins"
+          mkdir -p "$PLUGIN_DIR"
+          for SLUG in woocommerce nextgen-gallery amazon-s3-and-cloudfront; do
+            echo "=== Downloading $SLUG (latest stable)"
+            curl -sSL "https://downloads.wordpress.org/plugin/$SLUG.latest-stable.zip" -o "/tmp/$SLUG.zip"
+            unzip -qo "/tmp/$SLUG.zip" -d "$PLUGIN_DIR"
+          done
+
+      - name: Run compat testsuite
+        env:
+          SPIO_PARTNER_PLUGINS: '1'
+        run: vendor/bin/phpunit -c phpunit-integration.xml --testsuite Compat --testdox --colors=never

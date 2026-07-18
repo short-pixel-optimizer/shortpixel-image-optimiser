@@ -16,5 +16,19 @@
 
 require dirname( __DIR__ ) . '/bootstrap.php';
 
+/**
+ * Compat runs: fire each partner plugin's activation hook once so their
+ * installers create the tables they need (NextGen's ngg_gallery,
+ * WooCommerce's wc_* tables). The WP test install never goes through a
+ * real activation, and DDL auto-commits in MySQL, so this runs here —
+ * before the first test transaction — and survives per-test rollbacks.
+ */
+if ( '1' === getenv( 'SPIO_PARTNER_PLUGINS' ) ) {
+	foreach ( wp_get_active_and_valid_plugins() as $_spio_partner_file ) {
+		do_action( 'activate_' . plugin_basename( $_spio_partner_file ) );
+	}
+	unset( $_spio_partner_file );
+}
+
 require_once __DIR__ . '/Helpers/MockShortPixelApi.php';
 require_once __DIR__ . '/Helpers/SPIO_IntegrationTestCase.php';

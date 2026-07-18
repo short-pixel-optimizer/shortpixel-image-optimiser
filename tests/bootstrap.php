@@ -34,6 +34,38 @@ function _manually_load_plugin() {
 
 tests_add_filter( 'muplugins_loaded', '_manually_load_plugin' );
 
+/**
+ * Cross-plugin compatibility runs (bin/test.sh --compat) set
+ * SPIO_PARTNER_PLUGINS=1 after extracting the partner plugins into the
+ * test install's plugin dir. Activating them via the active_plugins
+ * option lets WP core load them exactly like a production install —
+ * paths, constants (NGG_PLUGIN), and lifecycle hooks (as3cf_init) all
+ * behave normally, and SPIO's is_plugin_active()-based detection works.
+ *
+ * The callback runs when WP core reads the option (WP_PLUGIN_DIR is
+ * defined by then); plugins missing from disk are silently skipped so
+ * a partial download never fatals the whole suite.
+ */
+if ( '1' === getenv( 'SPIO_PARTNER_PLUGINS' ) ) {
+	tests_add_filter(
+		'pre_option_active_plugins',
+		function () {
+			$partners = array(
+				'woocommerce/woocommerce.php',
+				'nextgen-gallery/nggallery.php',
+				'amazon-s3-and-cloudfront/wordpress-s3.php',
+			);
+			$active = array();
+			foreach ( $partners as $partner ) {
+				if ( file_exists( WP_PLUGIN_DIR . '/' . $partner ) ) {
+					$active[] = $partner;
+				}
+			}
+			return $active;
+		}
+	);
+}
+
 // Start up the WP testing environment.
 require "{$_tests_dir}/includes/bootstrap.php";
 
