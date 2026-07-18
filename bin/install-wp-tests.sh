@@ -27,19 +27,18 @@ WP_TESTS_DIR="${WP_TESTS_DIR:-/tmp/wordpress-tests-lib}"
 rm -rf "$WP_CORE_DIR" "$WP_TESTS_DIR"
 mkdir -p "$WP_CORE_DIR"
 
-# Download WordPress
+# Download WordPress. For "latest" the actual version number is extracted
+# from the download output because the SVN test-framework checkout below
+# needs an explicit tag. For a pinned version the requested version IS the
+# tag (WordPress tags X.0 releases as "X.0", so pass "6.0", not "6.0.0").
 if [ "$WP_VERSION" == "latest" ]; then
-  wp core download --version=latest --path="$WP_CORE_DIR" --force
+  output=$(wp core download --version=latest --path="$WP_CORE_DIR" --force)
+  TESTS_WP_VERSION=$(echo "$output" | grep -oP 'Downloading WordPress \K[0-9]+\.[0-9]+(\.[0-9]+)?')
 else
   wp core download --version="$WP_VERSION" --path="$WP_CORE_DIR" --force
+  TESTS_WP_VERSION="$WP_VERSION"
 fi
-
-# Extract the WP version to use it for SVN
-output=$(wp core download --version=latest --path="$WP_CORE_DIR" --force)
-
-# Use grep to extract the version number
-LATEST_WP=$(echo "$output" | grep -oP 'Downloading WordPress \K[0-9]+\.[0-9]+(\.[0-9]+)?')
-echo "Latest WP version to use: $LATEST_WP"
+echo "WP version to use for the test framework: $TESTS_WP_VERSION"
 
 # Create a wp-config file for the test environment
 cd "$WP_CORE_DIR"
@@ -55,8 +54,8 @@ wp core install --url=example.dev --title="Test Site" --admin_user=admin --admin
 
 # Download the testing framework
 mkdir -p "$WP_TESTS_DIR"
-svn checkout https://develop.svn.wordpress.org/tags/$LATEST_WP/tests/phpunit/includes/ "$WP_TESTS_DIR/includes"
-svn export https://develop.svn.wordpress.org/tags/$LATEST_WP/wp-tests-config-sample.php "$WP_TESTS_DIR/includes/wp-tests-config-sample.php"
+svn checkout https://develop.svn.wordpress.org/tags/$TESTS_WP_VERSION/tests/phpunit/includes/ "$WP_TESTS_DIR/includes"
+svn export https://develop.svn.wordpress.org/tags/$TESTS_WP_VERSION/wp-tests-config-sample.php "$WP_TESTS_DIR/includes/wp-tests-config-sample.php"
 
 # Copy the wp-tests-config.php file template from the downloaded includes
 cp "$WP_TESTS_DIR/includes/wp-tests-config-sample.php" "$WP_TESTS_DIR/wp-tests-config.php"

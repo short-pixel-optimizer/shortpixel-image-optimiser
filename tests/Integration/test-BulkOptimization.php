@@ -6,10 +6,10 @@
  * phase scans the media library in batches), startBulk(), then loop-driven
  * processQueue() ticks on the bulk queues until the run reports finished.
  *
- * Scope: natively processable raster formats (jpg / png / gif / webp).
- * heic / tiff / bmp go through ApiConverter — a separate API conversion
- * endpoint the HTTP mock does not support yet (Wave 2, with the
- * converter-endpoint mock).
+ * Scope: natively processable raster formats (jpg / png / gif / webp)
+ * plus the ApiConverter formats (heic / tiff / bmp) — those ride the same
+ * reducer endpoint as a forced-lossless 'convert_api' round-trip, which
+ * the mock supports since Wave 2 (real lossless bytes when lossy=0).
  *
  * pdf is EXCLUDED from the happy-path tests and covered by a pinned test
  * instead: DownloadHelper rejects any download that is not an image unless
@@ -32,6 +32,9 @@ class BulkOptimizationTest extends SPIO_IntegrationTestCase {
 		'fixture-small.png',
 		'fixture-large.gif',
 		'fixture-large.webp',
+		'fixture-large.heic',
+		'fixture-medium.tiff',
+		'fixture-medium.bmp',
 	);
 
 	/**

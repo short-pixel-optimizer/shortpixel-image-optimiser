@@ -9,12 +9,13 @@ this file lives in the repo for the dev team.
 The suite lives under `tests/` and is split into four PHPUnit testsuites via
 `phpunit.xml.dist`:
 
-| Testsuite | Path | Covers |
-|---|---|---|
-| `Helper` | `tests/Helper/` | Utility classes under `class/Helper/` |
-| `model` | `tests/Model/` | Data models + business logic under `class/Model/` |
-| `External` | `tests/External/` | Third-party integrations under `class/external/` |
-| `SPIO Main` | `tests/` (excluding the three above) | Root plugin classes (bootstrap, `Controller`, `ViewController`, etc.) |
+| Testsuite     | Path                                | Covers                                                  |
+|---------------|-------------------------------------|---------------------------------------------------------|
+| `Helper`      | `tests/Helper/`                     | Utility classes under `class/Helper/`                   |
+| `model`       | `tests/Model/`                      | Data models + business logic under `class/Model/`       |
+| `External`    | `tests/External/`                   | Third-party integrations under `class/external/`        |
+| `Controllers` | `tests/Controller/`                 | Request handlers under `class/Controller/`              |
+| `SPIO Main`   | `tests/` (excluding the four above) | Root plugin classes (bootstrap, `ViewController`, etc.) |
 
 The tests run against a real WordPress test-environment (using the
 `WP_UnitTestCase` base class), not `WP_Mock`, so they need a MySQL database
@@ -64,6 +65,57 @@ bin/test.sh --matrix
 bin/test.sh --matrix --filter test_handleAvif
 ```
 
+### Integration suite
+
+The integration suite (`tests/Integration/`, `phpunit-integration.xml`) runs
+the real optimize/restore pipeline against a WordPress test install, with
+only the outbound ShortPixel API mocked at the HTTP layer. It runs in its
+own phpunit invocation so the fast unit signal and the slow integration
+signal stay separated.
+
+```bash
+# Integration suite only
+bin/test.sh --integration
+bin/test.sh --integration --php 7.4
+bin/test.sh --integration --filter test_optimize
+
+# Integration suite on all three PHP versions
+bin/test.sh --matrix --integration
+```
+
+### WordPress version
+
+Tests run against the latest WordPress by default. `--wp <version>` pins a
+specific version (pass the tag WordPress publishes — `5.9`, not `5.9.0`).
+Each WP version keeps its own cache dirs inside the `wp-tests-cache`
+volume, so switching versions is cache-warm after the first install.
+
+```bash
+bin/test.sh --wp 5.9                          # unit suites on WP 5.9
+bin/test.sh --wp 5.9 --php 7.4 --integration  # old WP + old PHP combo
+```
+
+CI mirrors this: pushes run the integration suite on WP latest across
+PHP 7.4/8.3/8.5, plus WP 5.9 (the oldest version that runs on this
+test setup) on PHP 7.4 and 8.3. Pull requests run PHP 8.3 / WP latest,
+plus the same WP 5.9 combos.
+
+### Everything in one go
+
+```bash
+# Unit suites + integration suite, one command (PHP 8.3 / WP latest)
+bin/test.sh --all
+
+# The full local sweep: unit + integration on PHP 7.4, 8.3 AND 8.5
+bin/test.sh --matrix --all
+
+# Unit + integration on a pinned combo
+bin/test.sh --all --wp 5.9 --php 7.4
+```
+
+Both passes always run — a unit failure doesn't hide the integration
+result (or vice versa); failures are aggregated in the final verdict.
+
 ### Debug workflow
 
 ```bash
@@ -92,11 +144,13 @@ Caches persisted between runs:
 
 ### Timing expectations
 
-| Operation | First run | Subsequent runs |
-|---|---|---|
-| Full suite on one PHP version | 3-5 min (image pull + WP-tests SVN checkout) | ~20-60 s |
-| Full matrix (all 3 PHP versions) | 10-15 min | ~1-3 min |
-| Single testsuite | (setup + ~10 s) | ~10 s |
+| Operation                                              | First run                                    | Subsequent runs |
+|--------------------------------------------------------|----------------------------------------------|-----------------|
+| Full suite on one PHP version                          | 3-5 min (image pull + WP-tests SVN checkout) | ~20-60 s        |
+| Full matrix (all 3 PHP versions)                       | 10-15 min                                    | ~1-3 min        |
+| Single testsuite                                       | (setup + ~10 s)                              | ~10 s           |
+| Integration suite on one PHP version                   | (setup + ~1 min)                             | ~1 min          |
+| `--matrix --all` (unit + integration × 3 PHP versions) | 15-20 min                                    | ~6-8 min        |
 
 ## Alternative: run locally without Docker
 

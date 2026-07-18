@@ -65,6 +65,7 @@ abstract class SPIO_IntegrationTestCase extends WP_UnitTestCase {
 		$this->resetPluginSingletons();
 
 		$this->purgeQueueTable();
+		$this->purgeMetaTable();
 	}
 
 	public function tear_down() {
@@ -104,7 +105,11 @@ abstract class SPIO_IntegrationTestCase extends WP_UnitTestCase {
 	 * @return int Attachment id.
 	 */
 	protected function uploadFixture( string $fixture ): int {
-		$source  = $this->fixturePath( $fixture );
+		return $this->uploadFile( $this->fixturePath( $fixture ) );
+	}
+
+	/** Upload an arbitrary file on disk as a real Media Library attachment. */
+	protected function uploadFile( string $source ): int {
 		$uploads = wp_upload_dir();
 
 		$target = trailingslashit( $uploads['path'] ) . wp_unique_filename( $uploads['path'], basename( $source ) );
@@ -122,7 +127,7 @@ abstract class SPIO_IntegrationTestCase extends WP_UnitTestCase {
 			$target
 		);
 		$this->assertIsInt( $attachment_id );
-		$this->assertGreaterThan( 0, $attachment_id, 'wp_insert_attachment must succeed for ' . $fixture );
+		$this->assertGreaterThan( 0, $attachment_id, 'wp_insert_attachment must succeed for ' . basename( $source ) );
 
 		require_once ABSPATH . 'wp-admin/includes/image.php';
 		$metadata = wp_generate_attachment_metadata( $attachment_id, $target );
@@ -225,6 +230,18 @@ abstract class SPIO_IntegrationTestCase extends WP_UnitTestCase {
 			}
 		}
 
+		// OtherMediaController caches the folders-table existence and custom-
+		// image counts in statics; stale values hide folders/images created
+		// or purged by other tests.
+		$ref = new ReflectionClass( \ShortPixel\Controller\OtherMediaController::class );
+		foreach ( array( 'instance', 'hasFoldersTable', 'hasCustomImages' ) as $name ) {
+			if ( $ref->hasProperty( $name ) ) {
+				$prop = $ref->getProperty( $name );
+				$prop->setAccessible( true );
+				$prop->setValue( null, null );
+			}
+		}
+
 		// BackupController picks No/Local backup based on settings at first
 		// call and caches BackupModels per attachment id — WP test rollbacks
 		// reuse attachment ids, so a stale cache would poison later tests.
@@ -250,6 +267,23 @@ abstract class SPIO_IntegrationTestCase extends WP_UnitTestCase {
 		global $wpdb;
 		$table = $wpdb->prefix . 'shortpixel_queue';
 		$wpdb->query( "UPDATE `$table` SET updated = '2000-01-01 00:00:00'" );
+	}
+
+	/**
+	 * Empty the shortpixel_postmeta table (per-test, from set_up only).
+	 *
+	 * Like the queue table it is created mid-test via DDL (implicit commit),
+	 * so its rows survive the WP test-transaction rollback while attachment
+	 * ids get reused — leftover rows would make a FRESH upload look
+	 * already-converted/optimized. Never call this mid-test: it would wipe
+	 * the optimization meta of the attachments under test.
+	 */
+	protected function purgeMetaTable(): void {
+		global $wpdb;
+		$table = $wpdb->prefix . 'shortpixel_postmeta';
+		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) === $table ) {
+			$wpdb->query( "DELETE FROM `$table`" );
+		}
 	}
 
 	protected function purgeQueueTable(): void {

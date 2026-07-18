@@ -46,6 +46,12 @@ class MockShortPixelApi {
 	/** @var int|null When set, the next reducer call returns this Status->Code for every URL instead of success. */
 	public $forceStatusCode = null;
 
+	/** @var string|null When set, reducer calls return this RAW body verbatim (malformed-response testing). */
+	public $malformedBody = null;
+
+	/** @var string|null When set, reducer calls return a WP_Error('http_request_failed', <this message>) — transport-level failure. */
+	public $wpErrorMessage = null;
+
 	/** @var int Number of times a URL should answer CODE_WAITING before turning CODE_SUCCESS (simulates queued processing). */
 	public $waitingRounds = 0;
 
@@ -111,6 +117,12 @@ class MockShortPixelApi {
 		);
 
 		if ( false !== strpos( $path, 'reducer' ) ) {
+			if ( null !== $this->wpErrorMessage ) {
+				return new WP_Error( 'http_request_failed', $this->wpErrorMessage );
+			}
+			if ( null !== $this->malformedBody ) {
+				return $this->httpResponse( $this->malformedBody, $args );
+			}
 			return $this->handleReducer( $args );
 		}
 
@@ -206,21 +218,46 @@ class MockShortPixelApi {
 
 		$originalSize = (int) filesize( $localPath );
 
-		$lossy    = $this->variantBytes( $localPath, 'lossy' );
+		// Resize parameters (resize-on-upload): the real API scales images
+		// exceeding the target box. resize = 1 (outer/contain) | 3 (inner/cover).
+		$resize = null;
+		if ( ! empty( $request['resize'] ) ) {
+			$resize = array(
+				'mode' => (int) $request['resize'],
+				'w'    => (int) $request['resize_width'],
+				'h'    => (int) $request['resize_height'],
+			);
+		}
+
+		$lossy    = $this->variantBytes( $localPath, 'lossy', $resize );
 		$lossyUrl = $this->stashFile( $key . '-lossy', $lossy, $localPath );
+
+		// Lossless jobs (request lossy=0 — e.g. ApiConverter forces lossless
+		// for heic/tiff/bmp conversion) read LosslessURL/LosslessSize; keeping
+		// LosslessURL = OriginalURL there makes the plugin mark the item
+		// UNCHANGED. Serve real bytes + size for those. Lossy jobs keep the
+		// captured real-API shape (LosslessURL echoes OriginalURL).
+		$isLossless = isset( $request['lossy'] ) && 0 === (int) $request['lossy'];
+		if ( $isLossless ) {
+			$losslessUrl  = $this->stashFile( $key . '-lossless', $lossy, $localPath );
+			$losslessSize = strlen( $lossy );
+		} else {
+			$losslessUrl  = $sourceUrl;
+			$losslessSize = $originalSize;
+		}
 
 		$entry = array(
 			'Status'             => array( 'Code' => self::CODE_SUCCESS, 'Message' => 'Success' ),
 			'OriginalURL'        => $sourceUrl,
-			'LosslessURL'        => $sourceUrl, // = OriginalURL when no lossless pass ran (matches capture)
+			'LosslessURL'        => $losslessUrl,
 			'LossyURL'           => $lossyUrl,
 			'WebPLosslessURL'    => 'NA',
 			'WebPLossyURL'       => 'NA',
 			'AVIFLosslessURL'    => 'NA',
 			'AVIFLossyURL'       => 'NA',
 			'OriginalSize'       => $originalSize,
-			'LosslessSize'       => $originalSize,
-			'LoselessSize'       => $originalSize, // real API sends BOTH spellings
+			'LosslessSize'       => $losslessSize,
+			'LoselessSize'       => $losslessSize, // real API sends BOTH spellings
 			'LossySize'          => strlen( $lossy ),
 			'WebPLosslessSize'   => 'NA',
 			'WebPLoselessSize'   => 'NA',
@@ -232,14 +269,14 @@ class MockShortPixelApi {
 		);
 
 		if ( $wantWebp ) {
-			$webp = $this->variantBytes( $localPath, 'webp' );
+			$webp = $this->variantBytes( $localPath, 'webp', $resize );
 			if ( null !== $webp ) {
 				$entry['WebPLossyURL']  = $this->stashFile( $key . '-lossy-webp', $webp, $localPath, 'webp' );
 				$entry['WebPLossySize'] = strlen( $webp );
 			}
 		}
 		if ( $wantAvif ) {
-			$avif = $this->variantBytes( $localPath, 'avif' );
+			$avif = $this->variantBytes( $localPath, 'avif', $resize );
 			if ( null !== $avif ) {
 				$entry['AVIFLossyURL']  = $this->stashFile( $key . '-lossy-avif', $avif, $localPath, 'avif' );
 				$entry['AVIFLossySize'] = strlen( $avif );
@@ -291,12 +328,27 @@ class MockShortPixelApi {
 	 *      bytes — the plugin writes whatever it downloads, it does not
 	 *      re-validate the container format.
 	 *
-	 * @param string $localPath Source file on disk.
-	 * @param string $variant   'lossy' | 'webp' | 'avif'.
+	 * When $resize is set and the source exceeds the target box, the bytes
+	 * are GD-scaled (skipping the pre-optimized fixture, which has the
+	 * original dimensions) — mirrors the API's server-side resize.
+	 *
+	 * @param string     $localPath Source file on disk.
+	 * @param string     $variant   'lossy' | 'webp' | 'avif'.
+	 * @param array|null $resize    { mode: 1(outer/contain)|3(inner/cover), w, h } or null.
 	 * @return string|null Bytes, or null when no variant could be produced.
 	 */
-	private function variantBytes( $localPath, $variant ) {
-		$basename  = basename( $localPath );
+	private function variantBytes( $localPath, $variant, $resize = null ) {
+		if ( null !== $resize ) {
+			$resized = $this->resizedVariantBytes( $localPath, $variant, $resize );
+			if ( null !== $resized ) {
+				return $resized;
+			}
+		}
+
+		// Leftover files from earlier runs/tests make wp_unique_filename
+		// append -2, -3… to uploads; strip that suffix so the optimized-
+		// fixture lookup still matches (fixture-large-2.heic → fixture-large.heic).
+		$basename  = preg_replace( '/-\d+(\.[a-z0-9]+)$/i', '$1', basename( $localPath ) );
 		$fixtures  = dirname( __DIR__, 2 ) . '/fixtures/optimized/';
 		$candidate = ( 'lossy' === $variant ) ? $fixtures . $basename : $fixtures . $basename . '.' . $variant;
 
@@ -335,6 +387,43 @@ class MockShortPixelApi {
 			// No-op from 8.0 and deprecated in 8.5; still frees memory on 7.4.
 			imagedestroy( $img );
 		}
+
+		return ( '' === $bytes ) ? null : $bytes;
+	}
+
+	/**
+	 * GD-scaled variant bytes for a source exceeding the resize box.
+	 *
+	 * @return string|null Bytes, or null when the source fits the box already
+	 *                     (caller falls back to the normal variant path).
+	 */
+	private function resizedVariantBytes( $localPath, $variant, array $resize ) {
+		$img = $this->gdLoad( $localPath );
+		if ( false === $img ) {
+			return null;
+		}
+
+		$width  = imagesx( $img );
+		$height = imagesy( $img );
+		$ratios = array( $resize['w'] / $width, $resize['h'] / $height );
+		// outer (1) = contain: both sides fit the box; inner (3) = cover.
+		$scale = ( 3 === $resize['mode'] ) ? max( $ratios ) : min( $ratios );
+
+		if ( $scale >= 1 ) {
+			return null;
+		}
+
+		$img = imagescale( $img, (int) round( $width * $scale ), (int) round( $height * $scale ) );
+
+		ob_start();
+		if ( 'webp' === $variant && function_exists( 'imagewebp' ) ) {
+			imagewebp( $img, null, 40 );
+		} elseif ( 'avif' === $variant && function_exists( 'imageavif' ) ) {
+			imageavif( $img, null, 40 );
+		} else {
+			imagejpeg( $img, null, 40 );
+		}
+		$bytes = ob_get_clean();
 
 		return ( '' === $bytes ) ? null : $bytes;
 	}
@@ -379,14 +468,22 @@ class MockShortPixelApi {
 	// Utilities
 	// -------------------------------------------------------------------
 
-	/** Map an uploads URL (possibly carrying ?ver=) to a local file path. */
+	/** Map an uploads or wp-content URL (possibly carrying ?ver=) to a local file path. */
 	private function urlToPath( $url ) {
+		$url = strtok( $url, '?' );
+
 		$uploads = wp_get_upload_dir();
-		$url     = strtok( $url, '?' );
-		if ( 0 !== strpos( $url, $uploads['baseurl'] ) ) {
-			return null;
+		if ( 0 === strpos( $url, $uploads['baseurl'] ) ) {
+			return $uploads['basedir'] . substr( $url, strlen( $uploads['baseurl'] ) );
 		}
-		return $uploads['basedir'] . substr( $url, strlen( $uploads['baseurl'] ) );
+
+		// Custom media ("Other Media") files live outside uploads.
+		$contentUrl = content_url();
+		if ( 0 === strpos( $url, $contentUrl ) ) {
+			return WP_CONTENT_DIR . substr( $url, strlen( $contentUrl ) );
+		}
+
+		return null;
 	}
 
 	/**
@@ -427,6 +524,8 @@ class MockShortPixelApi {
 		$this->files           = array();
 		$this->rounds          = array();
 		$this->forceStatusCode = null;
+		$this->malformedBody   = null;
+		$this->wpErrorMessage  = null;
 		$this->waitingRounds   = 0;
 	}
 }

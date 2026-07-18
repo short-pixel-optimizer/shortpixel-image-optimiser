@@ -200,16 +200,21 @@ jobs:
           echo "=============================================================="
 
   integration:
-    name: Run Integration Tests (PHP ${{ matrix.php-version }})
+    name: Run Integration Tests (PHP ${{ matrix.php-version }}, WP ${{ matrix.wp-version }})
     runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
-      matrix:
-        # Budget decision: PRs run PHP 8.3 only (the common production
-        # version); pushes to the integration-tests branch run the full
-        # 7.4/8.3/8.5 matrix.
-        php-version: ${{ github.event_name == 'pull_request' && fromJSON('["8.3"]') || fromJSON('["7.4", "8.3", "8.5"]') }}
+      # Budget decision: PRs run PHP 8.3 / WP latest (the common production
+      # combo) plus WP 5.9 — the oldest version that runs on this test
+      # setup — on PHP 7.4 and 8.3. Pushes to the integration-tests branch
+      # run the full PHP 7.4/8.3/8.5 matrix on WP latest, plus WP 5.9 on
+      # PHP 7.4 and 8.3. Old WP + PHP 8.5 is skipped: a WP core that
+      # predates PHP 8.x-era fixes only produces deprecation noise there,
+      # not signal.
+      matrix: ${{ github.event_name == 'pull_request'
+        && fromJSON('{"include":[{"php-version":"8.3","wp-version":"latest"},{"php-version":"7.4","wp-version":"5.9"},{"php-version":"8.3","wp-version":"5.9"}]}')
+        || fromJSON('{"include":[{"php-version":"7.4","wp-version":"latest"},{"php-version":"8.3","wp-version":"latest"},{"php-version":"8.5","wp-version":"latest"},{"php-version":"7.4","wp-version":"5.9"},{"php-version":"8.3","wp-version":"5.9"}]}') }}
 
     services:
       mysql:
@@ -228,7 +233,7 @@ jobs:
     env:
       WP_CORE_DIR: /tmp/wordpress
       WP_TESTS_DIR: /tmp/wordpress-tests-lib
-      WP_VERSION: latest
+      WP_VERSION: ${{ matrix.wp-version }}
       DB_NAME: wordpress_test
       DB_USER: root
       DB_PASS: password
