@@ -28,5 +28,13 @@
 		<testsuite name="Compat">
 			<directory prefix="test-" suffix=".php">./tests/Compat</directory>
 		</testsuite>
+		<!-- Multisite tests: need a multisite WP test install, which the
+		     WP test bootstrap only builds when WP_MULTISITE=1 is in the
+		     environment. Excluded from plain runs by defaultTestSuite
+		     above; opt in via the ms flag of bin/test.sh, which sets the
+		     env var. Tests self-skip on a single-site install. -->
+		<testsuite name="Multisite">
+			<directory prefix="test-" suffix=".php">./tests/Multisite</directory>
+		</testsuite>
 	</testsuites>
 </phpunit>

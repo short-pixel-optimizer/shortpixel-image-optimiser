@@ -31,6 +31,7 @@
 			<exclude>./tests/Integration</exclude>
 			<exclude>./tests/Smoke</exclude>
 			<exclude>./tests/Compat</exclude>
+			<exclude>./tests/Multisite</exclude>
 		</testsuite>
 	</testsuites>
 </phpunit>

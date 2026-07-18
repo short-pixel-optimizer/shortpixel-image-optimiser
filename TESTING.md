@@ -147,6 +147,37 @@ How it works:
 - Each test also self-skips when its partner plugin isn't loaded, so an
   accidental plain-phpunit run of the suite is harmless.
 
+### Multisite tests
+
+The multisite suite (`tests/Multisite/`) runs against a NETWORK WordPress
+test install and covers the plugin's multisite-specific surface: per-site
+custom tables (`wp_N_shortpixel_*`), per-site `spio_settings` isolation vs
+the network-wide `spio_wpmu` option, and the full optimization pipeline on
+a subsite (whose uploads live in `uploads/sites/N/`).
+
+```bash
+bin/test.sh --ms
+bin/test.sh --ms --filter test_optimization_pipeline_runs_on_a_subsite
+```
+
+How it works:
+
+- `--ms` sets `WP_MULTISITE=1`, which makes the WP test-lib bootstrap
+  (re)install the test database as a multisite network — no separate
+  config file or cache dir needed, since the install is rebuilt on every
+  run anyway.
+- The suite uses the integration config/bootstrap (mock API + the
+  `SPIO_IntegrationTestCase` base class) with the `Multisite` testsuite.
+- Every test self-skips on a single-site install, so selecting the suite
+  without the env flag yields skips, not failures.
+
+The admin-ajax dispatch tests (`tests/Integration/test-AjaxEndpoint.php`)
+are related coverage from the same WP test framework family: they use
+`WP_Ajax_UnitTestCase` to exercise the REAL `wp_ajax_*` path — hook
+wiring, nonce gate, capability gate, JSON termination — instead of
+calling `AjaxController` methods directly. They run as part of the
+normal Integration suite; no flags needed.
+
 ### WordPress version
 
 Tests run against the latest WordPress by default. `--wp <version>` pins a
@@ -164,15 +195,18 @@ PHP 7.4/8.3/8.5, plus WP 5.9 (the oldest version that runs on this
 test setup) on PHP 7.4 and 8.3. Pull requests run PHP 8.3 / WP latest,
 plus the same WP 5.9 combos. Every run also includes the `compat` job
 (PHP 8.3 and 8.5, WP latest) that downloads the partner plugins and
-runs the Compat testsuite — same steps as `bin/test.sh --compat`.
+runs the Compat testsuite — same steps as `bin/test.sh --compat` — and
+the `multisite` job (PHP 8.3, WP latest), which mirrors
+`bin/test.sh --ms`.
 
 ### Everything in one go
 
 ```bash
-# Unit + integration + compat suites, one command (PHP 8.3 / WP latest)
+# Unit + integration + multisite + compat suites, one command
+# (PHP 8.3 / WP latest)
 bin/test.sh --all
 
-# The full local sweep: all three passes on PHP 7.4, 8.3 AND 8.5
+# The full local sweep: all four passes on PHP 7.4, 8.3 AND 8.5
 # (the compat pass self-skips on 7.4 — partner plugin floors)
 bin/test.sh --matrix --all
 
