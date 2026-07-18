@@ -83,6 +83,23 @@ bin/test.sh --integration --filter test_optimize
 bin/test.sh --matrix --integration
 ```
 
+### Real-API smoke tests
+
+The smoke suite (`tests/Smoke/`) removes the HTTP mock and runs the
+pipeline against the **live** ShortPixel API — catching contract drift a
+mock can't see. It needs a valid API key and consumes real quota credits
+(about one per test), so it is never part of `--integration`, `--all`,
+or CI; without the key every test skips.
+
+```bash
+SHORTPIXEL_SMOKE_KEY=<your 20-char key> bin/test.sh --smoke
+```
+
+Because the live API fetches images by URL and can't reach the local
+test install, the suite remaps the request URL list to the committed
+fixtures' public `raw.githubusercontent.com` URLs (same bytes) and
+disables thumbnail processing — only main files have public counterparts.
+
 ### WordPress version
 
 Tests run against the latest WordPress by default. `--wp <version>` pins a

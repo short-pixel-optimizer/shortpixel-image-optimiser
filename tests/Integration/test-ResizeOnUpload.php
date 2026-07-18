@@ -3,7 +3,8 @@
  * Integration tests: resize-on-upload (Wave 2).
  *
  * With resizeImages enabled, the reducer request carries resize
- * (1 = outer/contain, 3 = inner/cover) + resize_width/resize_height, and the
+ * (1 = outer/cover, 3 = inner/contain — verified against the real API in
+ * the smoke suite) + resize_width/resize_height, and the
  * API returns the main image scaled down server-side. Client-side,
  * ImageModel::handleOptimized() compares the downloaded dimensions against
  * originalWidth/originalHeight meta, records resize/resizeWidth/resizeHeight
@@ -68,15 +69,15 @@ class ResizeOnUploadTest extends SPIO_IntegrationTestCase {
 		$image = $this->freshImageModel( $id );
 		$this->assertTrue( $image->isOptimized() );
 
-		// 1200x900 contained in 800x800 => 800x600.
+		// 1200x900 covering 800x800 => 1067x800 (shortest side fills the box).
 		clearstatcache();
 		$size = getimagesize( get_attached_file( $id ) );
-		$this->assertSame( 800, $size[0], 'The main file on disk must be scaled to the resize box width.' );
-		$this->assertSame( 600, $size[1], 'The main file height must keep the aspect ratio (contain).' );
+		$this->assertSame( 1067, $size[0], 'The main file on disk must be scaled so the shortest side fills the box (cover).' );
+		$this->assertSame( 800, $size[1], 'The main file height must equal the box height (cover, landscape source).' );
 
 		$this->assertTrue( (bool) $image->getMeta( 'resize' ), 'The resize flag must be recorded in SPIO meta.' );
-		$this->assertSame( 800, (int) $image->getMeta( 'resizeWidth' ) );
-		$this->assertSame( 600, (int) $image->getMeta( 'resizeHeight' ) );
+		$this->assertSame( 1067, (int) $image->getMeta( 'resizeWidth' ) );
+		$this->assertSame( 800, (int) $image->getMeta( 'resizeHeight' ) );
 
 		// PINNED BUG: on a FIRST-time optimize no SPIO meta record exists yet,
 		// and MediaLibraryModel::loadMeta() only calls verifyImage() (which
@@ -86,8 +87,8 @@ class ResizeOnUploadTest extends SPIO_IntegrationTestCase {
 		// the already-resized file. Correct values would be 1200/900.
 		// When these assertions fail with 1200/900 the bug was fixed —
 		// flip the expectations and drop this comment.
-		$this->assertSame( 800, (int) $image->getMeta( 'originalWidth' ), 'PINNED: originalWidth is backfilled from the resized file, losing the true original (should be 1200).' );
-		$this->assertSame( 600, (int) $image->getMeta( 'originalHeight' ), 'PINNED: originalHeight is backfilled from the resized file (should be 900).' );
+		$this->assertSame( 1067, (int) $image->getMeta( 'originalWidth' ), 'PINNED: originalWidth is backfilled from the resized file, losing the true original (should be 1200).' );
+		$this->assertSame( 800, (int) $image->getMeta( 'originalHeight' ), 'PINNED: originalHeight is backfilled from the resized file (should be 900).' );
 	}
 
 	public function test_wp_attachment_metadata_reflects_new_dimensions() {
@@ -97,8 +98,8 @@ class ResizeOnUploadTest extends SPIO_IntegrationTestCase {
 		$this->optimizeAttachment( $id );
 
 		$metadata = wp_get_attachment_metadata( $id );
-		$this->assertSame( 800, (int) $metadata['width'], '_wp_attachment_metadata width must be updated after resize.' );
-		$this->assertSame( 600, (int) $metadata['height'] );
+		$this->assertSame( 1067, (int) $metadata['width'], '_wp_attachment_metadata width must be updated after resize.' );
+		$this->assertSame( 800, (int) $metadata['height'] );
 	}
 
 	public function test_image_within_bounds_is_not_resized() {

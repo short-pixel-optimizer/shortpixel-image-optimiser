@@ -406,8 +406,10 @@ class MockShortPixelApi {
 		$width  = imagesx( $img );
 		$height = imagesy( $img );
 		$ratios = array( $resize['w'] / $width, $resize['h'] / $height );
-		// outer (1) = contain: both sides fit the box; inner (3) = cover.
-		$scale = ( 3 === $resize['mode'] ) ? max( $ratios ) : min( $ratios );
+		// Verified against the real API (smoke run 2026-07-18):
+		// outer (1) = COVER: result >= box on both sides;
+		// inner (3) = CONTAIN: result fits inside the box.
+		$scale = ( 1 === $resize['mode'] ) ? max( $ratios ) : min( $ratios );
 
 		if ( $scale >= 1 ) {
 			return null;
