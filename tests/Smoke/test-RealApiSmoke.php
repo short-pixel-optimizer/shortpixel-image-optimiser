@@ -18,7 +18,8 @@
  *     Thumbnail processing is disabled — only the main file has a public
  *     counterpart.
  *
- * Run: bin/test.sh --smoke   (never part of --integration/--all or CI)
+ * Run: bin/test.sh --smoke   (never part of --integration/--all or the
+ * push/PR CI runs; a dedicated monthly workflow — smoke.yml — covers CI)
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -327,6 +328,76 @@ class RealApiSmokeTest extends SPIO_IntegrationTestCase {
 		clearstatcache();
 		$this->assertSame( $originalSize, filesize( $path ), 'Restore must bring back the original file bytes.' );
 		$this->assertFalse( $this->freshImageModel( $id )->isOptimized(), 'Image must no longer be marked optimized after restore.' );
+	}
+
+	/**
+	 * fixture-exif.jpg carries real EXIF (camera make/model, artist, GPS,
+	 * exposure data — written with exiftool). With the `exif` setting ON
+	 * (keep_exif=1 on the wire) the optimized download must still contain
+	 * the EXIF payload. Costs 1 credit.
+	 *
+	 * The marker is checked byte-level (strpos on the file contents) so the
+	 * test does not depend on PHP's exif extension being loaded.
+	 */
+	public function test_real_api_keeps_exif_when_setting_on() {
+		\wpSPIO()->settings()->exif = 1;
+
+		$id = $this->uploadFixture( 'fixture-exif.jpg' );
+
+		$imageModel      = \wpSPIO()->filesystem()->getImage( $id, 'media' );
+		$queueController = new QueueController();
+		$queueController->addItemToQueue( $imageModel );
+
+		$this->runQueueAgainstRealApi();
+
+		$image = $this->freshImageModel( $id );
+		$this->assertTrue(
+			$image->isOptimized(),
+			'EXIF fixture must be optimized by the real API.' . $this->explainPipelineState( $id )
+		);
+
+		$this->assertStringContainsString(
+			'ShortPixel Test Camera',
+			(string) file_get_contents( get_attached_file( $id ) ),
+			'With exif=1 the optimized file must retain the EXIF camera make.' . $this->explainPipelineState( $id )
+		);
+	}
+
+	/**
+	 * Inverse of the above: with the `exif` setting OFF (keep_exif=0) the
+	 * real API must strip the EXIF payload from the optimized download.
+	 * Costs 1 credit.
+	 */
+	public function test_real_api_strips_exif_when_setting_off() {
+		\wpSPIO()->settings()->exif = 0;
+
+		$id = $this->uploadFixture( 'fixture-exif.jpg' );
+
+		// Sanity: the uploaded original must carry the marker, or the
+		// stripped assertion below would pass vacuously.
+		$this->assertStringContainsString(
+			'ShortPixel Test Camera',
+			(string) file_get_contents( get_attached_file( $id ) ),
+			'Fixture sanity: fixture-exif.jpg must contain EXIF before optimization.'
+		);
+
+		$imageModel      = \wpSPIO()->filesystem()->getImage( $id, 'media' );
+		$queueController = new QueueController();
+		$queueController->addItemToQueue( $imageModel );
+
+		$this->runQueueAgainstRealApi();
+
+		$image = $this->freshImageModel( $id );
+		$this->assertTrue(
+			$image->isOptimized(),
+			'EXIF fixture must be optimized by the real API.' . $this->explainPipelineState( $id )
+		);
+
+		$this->assertStringNotContainsString(
+			'ShortPixel Test Camera',
+			(string) file_get_contents( get_attached_file( $id ) ),
+			'With exif=0 the optimized file must have its EXIF stripped.' . $this->explainPipelineState( $id )
+		);
 	}
 
 	/**

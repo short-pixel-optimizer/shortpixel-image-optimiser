@@ -54,6 +54,9 @@ if ( '1' === getenv( 'SPIO_PARTNER_PLUGINS' ) ) {
 				'woocommerce/woocommerce.php',
 				'nextgen-gallery/nggallery.php',
 				'amazon-s3-and-cloudfront/wordpress-s3.php',
+				// Commercial — extracted from tests/partner-plugins/ when
+				// present; silently skipped (like the rest) when not.
+				'sitepress-multilingual-cms/sitepress.php',
 			);
 			$active = array();
 			foreach ( $partners as $partner ) {

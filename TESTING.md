@@ -94,7 +94,10 @@ The smoke suite (`tests/Smoke/`) removes the HTTP mock and runs the
 pipeline against the **live** ShortPixel API — catching contract drift a
 mock can't see. It needs a valid API key and consumes real quota credits
 (about one per test), so it is never part of `--integration`, `--all`,
-or CI; without the key every test skips.
+or the push/PR CI runs; without the key every test skips. A dedicated
+CI workflow (`.github/workflows/smoke.yml`) runs the suite once a month
+(plus manual dispatch) using the `SHORTPIXEL_SMOKE_KEY` repository
+secret.
 
 ```bash
 SHORTPIXEL_SMOKE_KEY=<your 20-char key> bin/test.sh --smoke
@@ -111,7 +114,13 @@ The compat suite (`tests/Compat/`) runs the SPIO integrations against the
 REAL partner plugins — WooCommerce, NextGen Gallery, and WP Offload Media
 Lite — downloaded from wordpress.org (latest stable, zips cached in the
 `wp-tests-cache` volume) and activated natively in the test install.
-WPML has no public download and is currently not covered.
+
+WPML is commercial (no public download): drop its zip into
+`tests/partner-plugins/` (gitignored) and `--compat` extracts and
+activates it too. To update WPML, replace the zip — the harness
+re-extracts whenever the zip is newer than the extracted copy. Without
+the zip, the WPML tests self-skip. CI does not run the WPML tests (the
+zip can't live in the public repo).
 
 ```bash
 bin/test.sh --compat
