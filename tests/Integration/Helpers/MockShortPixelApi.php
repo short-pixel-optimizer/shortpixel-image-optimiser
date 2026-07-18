@@ -55,6 +55,21 @@ class MockShortPixelApi {
 	/** @var int Number of times a URL should answer CODE_WAITING before turning CODE_SUCCESS (simulates queued processing). */
 	public $waitingRounds = 0;
 
+	/** @var int|null When set, add-url.php answers { status: <this> } instead of an id (3 = AI over-quota, 2 = invalid URL). */
+	public $aiAddStatus = null;
+
+	/** @var int Number of { status: 1 } (processing) rounds get-url.php answers before delivering the result. */
+	public $aiWaitingRounds = 0;
+
+	/** @var array Field overrides for the get-url.php success payload (generated_file_name, alt, caption, image_description, title, relevance). */
+	public $aiFields = array();
+
+	/** @var int Auto-increment for AI remote ids. */
+	private $aiNextId = 5000;
+
+	/** @var array<int,int> Per-remote-id count of get-url polls answered. */
+	private $aiRounds = array();
+
 	/** @var array<string,int> Per-URL count of reducer rounds already answered. */
 	private $rounds = array();
 
@@ -130,9 +145,51 @@ class MockShortPixelApi {
 			return $this->handleDownload( $path, $args );
 		}
 
+		if ( false !== strpos( $path, 'add-url.php' ) ) {
+			return $this->handleAiAdd( $args );
+		}
+		if ( false !== strpos( $path, 'get-url.php' ) ) {
+			return $this->handleAiGet( $args );
+		}
+
+		if ( false !== strpos( $path, 'api-status.php' ) ) {
+			return $this->handleApiStatus( $args );
+		}
+
 		// Anything else on *.shortpixel.com (notices endpoint, heartbeat,
 		// settings validate…): benign empty-JSON 200 so callers fail soft.
+		// NB: QuotaController::getRemoteQuota() must NOT land here — its
+		// `empty(json_decode('{}'))` guard passes stdClass through and the
+		// unguarded $data->Status->Code read then sprays notices into ajax
+		// output (seen on the WP 5.9 run, 2026-07-19).
 		return $this->httpResponse( '{}', $args );
+	}
+
+	/**
+	 * Answer an api-status.php quota/key-validation call
+	 * (QuotaController::getRemoteQuota) as a healthy paying account with
+	 * both optimization and AI (Captions) credits available.
+	 */
+	private function handleApiStatus( array $args ) {
+		$body = array(
+			'Status'                 => array(
+				'Code'    => 2,
+				'Message' => 'Success',
+			),
+			'Unlimited'              => 'false',
+			'PlanType'               => 'Monthly',
+			'DateSubscription'       => gmdate( 'Y-m-d', time() - 5 * DAY_IN_SECONDS ),
+			'DomainCheck'            => 'Accessible',
+			'APICallsMade'           => 100,
+			'APICallsQuota'          => 10000,
+			'APICallsMadeOneTime'    => 0,
+			'APICallsQuotaOneTime'   => 0,
+			'CaptionsCallsMade'      => 5,
+			'CaptionsCallsQuota'     => 1000,
+			'CaptionsCallsRemaining' => 995,
+		);
+
+		return $this->httpResponse( wp_json_encode( $body ), $args );
 	}
 
 	// -------------------------------------------------------------------
@@ -284,6 +341,66 @@ class MockShortPixelApi {
 		}
 
 		return $entry;
+	}
+
+	// -------------------------------------------------------------------
+	// AI endpoints (add-url.php / get-url.php — capi-gpt AI API)
+	// -------------------------------------------------------------------
+
+	/**
+	 * Answer an add-url.php (requestAlt) call.
+	 *
+	 * Success shape matches AiController::handleResponse(): an `id` (the
+	 * remote job reference) plus a `jwt` that the controller caches in the
+	 * spio_ai_jwt_token transient. With $aiAddStatus set, a bare
+	 * { status: N } error object is returned instead (3 = AI over-quota,
+	 * 2 = invalid URL).
+	 */
+	private function handleAiAdd( array $args ) {
+		if ( null !== $this->aiAddStatus ) {
+			return $this->httpResponse(
+				wp_json_encode( array( 'status' => $this->aiAddStatus, 'error' => 'Forced AI status by test' ) ),
+				$args
+			);
+		}
+
+		$id = $this->aiNextId++;
+		return $this->httpResponse(
+			wp_json_encode( array( 'id' => $id, 'jwt' => 'mock-ai-jwt-token' ) ),
+			$args
+		);
+	}
+
+	/**
+	 * Answer a get-url.php (retrieveAlt) poll.
+	 *
+	 * Status field per AiController: 1 = still processing (STATUS_WAITING),
+	 * 2 = done. The success payload field names are the API's, not SPIO's:
+	 * image_description → description, title → post_title,
+	 * generated_file_name → filebase (omitted by default so the file-rename
+	 * path stays out of scope unless a test opts in via $aiFields).
+	 */
+	private function handleAiGet( array $args ) {
+		$request = $this->decodeParams( $args );
+		$id      = isset( $request['id'] ) ? (int) $request['id'] : 0;
+
+		$this->aiRounds[ $id ] = isset( $this->aiRounds[ $id ] ) ? $this->aiRounds[ $id ] + 1 : 1;
+		if ( $this->aiRounds[ $id ] <= $this->aiWaitingRounds ) {
+			return $this->httpResponse( wp_json_encode( array( 'status' => 1 ) ), $args );
+		}
+
+		$fields = array_merge(
+			array(
+				'alt'               => 'a mock ai alt text',
+				'caption'           => 'a mock ai caption',
+				'image_description' => 'a mock ai description',
+				'title'             => 'a mock ai title',
+				'relevance'         => '9',
+			),
+			$this->aiFields
+		);
+
+		return $this->httpResponse( wp_json_encode( array_merge( array( 'status' => 2 ), $fields ) ), $args );
 	}
 
 	// -------------------------------------------------------------------
@@ -529,5 +646,9 @@ class MockShortPixelApi {
 		$this->malformedBody   = null;
 		$this->wpErrorMessage  = null;
 		$this->waitingRounds   = 0;
+		$this->aiAddStatus     = null;
+		$this->aiWaitingRounds = 0;
+		$this->aiFields        = array();
+		$this->aiRounds        = array();
 	}
 }

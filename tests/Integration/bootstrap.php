@@ -31,4 +31,6 @@ if ( '1' === getenv( 'SPIO_PARTNER_PLUGINS' ) ) {
 }
 
 require_once __DIR__ . '/Helpers/MockShortPixelApi.php';
+require_once __DIR__ . '/Helpers/SPIO_IntegrationHelpers.php';
 require_once __DIR__ . '/Helpers/SPIO_IntegrationTestCase.php';
+require_once __DIR__ . '/Helpers/SPIO_AjaxTestCase.php';
