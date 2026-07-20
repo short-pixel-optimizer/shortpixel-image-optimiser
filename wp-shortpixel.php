@@ -8,7 +8,6 @@
  * Author URI: https://shortpixel.com
  * GitHub Plugin URI: https://github.com/short-pixel-optimizer/shortpixel-image-optimiser
  * Text Domain: shortpixel-image-optimiser
- * Domain Path: /lang
  */
 
 use ShortPixel\ShortPixelPlugin;

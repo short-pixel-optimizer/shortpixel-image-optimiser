@@ -55,7 +55,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  <setting class='exclude-patterns-setting'>
      <name>
        <?php esc_html_e('Exclude patterns','shortpixel-image-optimiser');?>
-       <label><input type='checkbox' class='shortpixel-hide' data-toggle='exclude-settings-expanded'> >> <?php		printf(esc_html__('See examples', 'shortpixel-image-optimiser')); ?></label>
+       <label>
+        <input type='checkbox' class='shortpixel-hide' data-toggle='exclude-settings-expanded'> >> <?php 
+       printf(esc_html__('See examples', 'shortpixel-image-optimiser')); ?>
+       </label>
 
      </name>
      <info>
