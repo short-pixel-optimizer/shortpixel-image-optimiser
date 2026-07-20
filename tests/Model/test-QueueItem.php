@@ -241,7 +241,7 @@ class QueueItemTest extends WP_UnitTestCase {
 		$out = $q->getQueueItem();
 
 		$this->assertSame( 42, $out->id );
-		$this->assertObjectHasAttribute( 'value', $out );
+		$this->assertObjectHasProperty( 'value', $out );
 		$this->assertSame( 'optimize', $out->value->action );
 	}
 

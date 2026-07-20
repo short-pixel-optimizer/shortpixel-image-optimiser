@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace ShortPixel\Model\Image;
 
 
@@ -483,7 +484,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     {
        if ($this->isUserExcluded())
        {
-          $this->processable_status = 0;
+          $this->processable_status = null;
        }
     }
 
@@ -623,7 +624,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
              $message = __('Date is excluded', 'shortpixel-image-optimiser');
           break; 
          default:
-            $message = __(sprintf('Unknown Issue, Code %s',  $this->processable_status), 'shortpixel-image-optimiser');
+            $message = __(sprintf('Unknown Issue, Code %s',  $status), 'shortpixel-image-optimiser');
          break;
       }
 
@@ -1342,7 +1343,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
         if ($bool !== true)
         {
-					Log::addError('Moving backupFile failed -' . $this->getFullpath() );
+					Log::addError('Moving backupFile failed -' . $this->getFullPath() );
 					$response = array(
 							'is_error' => true,
 							'issue_type' => ResponseController::ISSUE_FILE_NOTWRITABLE,
@@ -1473,9 +1474,10 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
             }
 
             $result = $tempFile->move($target);
-            if (! $result)
+            if (false === $result)
             {
               Log::addWarn('Could not copy Avif to destination ' . $target->getFullPath() );
+              return false; 
             }
             return $target;
 
@@ -1506,7 +1508,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
                 if ($type == 'regex-name' || $type == 'regex-path')
                 {
-                    $result = $this->matchExludeRegexPattern($target, $pattern);
+                    $result = $this->matchExcludeRegexPattern($target, $pattern);
                 }
                 else {
                     $result =  $this->matchExcludePattern($target, $pattern);
@@ -1542,12 +1544,11 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
          if (! $settings->optimizePdfs )
          {
            $this->processable_status = self::P_EXCLUDE_EXTENSION_PDF;
-
             return true;
          }
        }
 
-        if (! is_null($this->getExtension()) && in_array( strtolower($this->getExtension()) , self::PROCESSABLE_EXTENSIONS))
+        if (! is_null($this->getExtension()) && in_array( $this->getExtension() , self::PROCESSABLE_EXTENSIONS))
         {
             return false;
         }
@@ -1600,7 +1601,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
      * @param string $pattern PCRE-compatible regex including delimiters.
      * @return bool True on a successful, non-empty match.
      */
-    protected function matchExludeRegexPattern($target, $pattern)
+    protected function matchExcludeRegexPattern($target, $pattern)
     {
       if(strlen($pattern) == 0)  // can happen on faulty input in settings.
         return false;

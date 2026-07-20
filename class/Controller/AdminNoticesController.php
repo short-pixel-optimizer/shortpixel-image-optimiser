@@ -49,6 +49,16 @@ class AdminNoticesController extends \ShortPixel\Controller
 
     private $silent_mode = false;
 
+    /**
+	 * Register admin-notice display hooks and initialise notice model instances.
+	 *
+	 * Attaches `displayNotices()` to both `admin_notices` (priority 50) and
+	 * `admin_footer`, and registers the plugin-update-message hook.
+	 *
+	 * When `SHORTPIXEL_SILENT_MODE` is true, returns early after setting the silent-mode
+	 * flag without loading any notice models.  Otherwise registers `check_admin_notices`
+	 * at priority 5 on `admin_notices` and calls `initNotices()`.
+	 */
     public function __construct()
     {
         add_action('admin_notices', array($this, 'displayNotices'), 50); // notices occured before page load
@@ -67,6 +77,11 @@ class AdminNoticesController extends \ShortPixel\Controller
 				$this->initNotices();
     }
 
+    /**
+     * Return the singleton instance, creating it on first call.
+     *
+     * @return static The singleton AdminNoticesController instance.
+     */
     public static function getInstance()
     {
         if (is_null(self::$instance))
@@ -75,12 +90,24 @@ class AdminNoticesController extends \ShortPixel\Controller
         return self::$instance;
     }
 
+    /**
+     * Remove all persistent plugin notices from the notice store.
+     *
+     * @return void
+     */
     public static function resetAllNotices()
     {
         Notices::resetNotices();
     }
 
-		// Notices no longer in use.
+		/**
+		 * Remove notices that were used in older plugin versions but are no longer relevant.
+		 *
+		 * Cleans up `MSG_FEATURE_SMARTCROP`, `MSG_FEATURE_HEIC`, and `MSG_AVIF_ERROR`
+		 * so stale notices do not linger after an upgrade.
+		 *
+		 * @return void
+		 */
 		public static function resetOldNotices()
 		{
 			Notices::removeNoticeByID('MSG_FEATURE_SMARTCROP');
@@ -97,6 +124,13 @@ class AdminNoticesController extends \ShortPixel\Controller
         Notices::removeNoticeByID('MSG_COMPAT');
     }
 
+    /**
+     * Remove all API-key-related notices from the notice store.
+     *
+     * Clears `MSG_NO_APIKEY`, `MSG_NO_APIKEY_REPEAT`, and `MSG_NO_APIKEY_REPEAT_LONG`.
+     *
+     * @return void
+     */
     public static function resetAPINotices()
     {
         Notices::removeNoticeByID('MSG_NO_APIKEY');
@@ -104,6 +138,13 @@ class AdminNoticesController extends \ShortPixel\Controller
         Notices::removeNoticeByID('MSG_NO_APIKEY_REPEAT_LONG');
     }
 
+    /**
+     * Remove all quota-exceeded notices from the notice store.
+     *
+     * Clears `MSG_UPGRADE_MONTH`, `MSG_UPGRADE_BULK`, and `MSG_QUOTA_REACHED`.
+     *
+     * @return void
+     */
     public static function resetQuotaNotices()
     {
         Notices::removeNoticeByID('MSG_UPGRADE_MONTH');
@@ -111,21 +152,58 @@ class AdminNoticesController extends \ShortPixel\Controller
         Notices::removeNoticeByID('MSG_QUOTA_REACHED');
     }
 
+    /**
+     * Remove third-party integration notices from the notice store.
+     *
+     * Clears `MSG_INTEGRATION_NGGALLERY`.
+     *
+     * @return void
+     */
     public static function resetIntegrationNotices()
     {
         Notices::removeNoticeByID('MSG_INTEGRATION_NGGALLERY');
     }
 
+    /**
+     * Remove the legacy-conversion notice from the notice store.
+     *
+     * Clears `MSG_CONVERT_LEGACY`.
+     *
+     * @return void
+     */
     public static function resetLegacyNotice()
     {
         Notices::removeNoticeByID('MSG_CONVERT_LEGACY');
     }
 
+    /**
+     * Return whether the controller is operating in silent mode.
+     *
+     * In silent mode (`SHORTPIXEL_SILENT_MODE === true`), persistent notices are
+     * suppressed; only the transient display hook remains active.
+     *
+     * @return bool True when silent mode is active.
+     */
     public function isSilentMode()
     {
        return $this->silent_mode;
     }
 
+    /**
+     * Output all queued notices that are appropriate for the current admin screen.
+     *
+     * Hooked to `admin_notices` (priority 50) and `admin_footer`.  On non-ShortPixel
+     * screens only the dashboard is allowed through (where plugin notices may appear).
+     *
+     * Loads the shortpixel-notices and notices-module stylesheets on the dashboard.
+     * For each displayable notice, checks screen scope and the current user's
+     * `noticeIsAllowed()` capability before outputting HTML.  Also enqueues the knob
+     * and shortpixel scripts for quota-exceeded notices.
+     *
+     * Calls `NoticeController::update()` after rendering to dismiss one-shot notices.
+     *
+     * @return void
+     */
     public function displayNotices()
     {
         if (! \wpSPIO()->env()->is_screen_to_use)
@@ -189,7 +267,15 @@ class AdminNoticesController extends \ShortPixel\Controller
         $noticeControl->update(); // puts views, and updates
     }
 
-    /* General function to check on Hook for admin notices if there is something to show globally */
+    /**
+     * Hook callback that loads and evaluates notice models on admin page load.
+     *
+     * Runs at priority 5 on `admin_notices`, before `displayNotices()`.  Skips
+     * non-ShortPixel screens (with a dashboard exception) and delegates to
+     * `loadNotices()` to run each notice model and fetch remote notices.
+     *
+     * @return void
+     */
     public function check_admin_notices()
     {
         if (! \wpSPIO()->env()->is_screen_to_use)
@@ -201,6 +287,15 @@ class AdminNoticesController extends \ShortPixel\Controller
        $this->loadNotices();
     }
 
+    /**
+     * Instantiate each notice model and register notice icons.
+     *
+     * Creates one instance of each class listed in `$definedNotices` and indexes
+     * them by their notice key.  Also calls `NoticeController::loadIcons()` with the
+     * plugin's custom robo-images.
+     *
+     * @return void
+     */
     protected function initNotices()
     {
         foreach($this->definedNotices as $className)
@@ -222,6 +317,14 @@ class AdminNoticesController extends \ShortPixel\Controller
 
     }
 
+		/**
+		 * Evaluate all registered notice models and process remote notices.
+		 *
+		 * Calls `load()` on each notice model so it can decide whether to queue
+		 * itself, then delegates to `doRemoteNotices()`.
+		 *
+		 * @return void
+		 */
 		protected function loadNotices()
 		{
 			 foreach($this->adminNotices as $key => $class)
@@ -233,6 +336,12 @@ class AdminNoticesController extends \ShortPixel\Controller
 
 		}
 
+    /**
+     * Return a specific notice model by its notice key.
+     *
+     * @param string $key The notice key (e.g. 'MSG_QUOTA_REACHED').
+     * @return \ShortPixel\Model\AdminNotices\AbstractNotice|false The notice model, or false if not found.
+     */
     public function getNoticeByKey($key)
     {
         if (isset($this->adminNotices[$key]))
@@ -244,13 +353,26 @@ class AdminNoticesController extends \ShortPixel\Controller
         }
     }
 
+    /**
+     * Return all registered notice model instances indexed by key.
+     *
+     * @return array<string, \ShortPixel\Model\AdminNotices\AbstractNotice> Map of key → notice model.
+     */
     public function getAllNotices()
     {
         return $this->adminNotices;
     }
 
 
-    // Called by MediaLibraryModel
+    /**
+     * Queue the legacy-conversion notice if it has not been dismissed.
+     *
+     * Called by `MediaLibraryModel` when it detects legacy metadata format.
+     * Adds the notice via `addManual()` only when the notice model exists and has not
+     * already been dismissed by the user.
+     *
+     * @return void
+     */
     public function invokeLegacyNotice()
     {
         $noticeModel = $this->getNoticeByKey('MSG_CONVERT_LEGACY');
@@ -261,8 +383,13 @@ class AdminNoticesController extends \ShortPixel\Controller
     }
 
     /**
-     * 
-     * @var ShortPixel\Controller\functon
+     * Return the first active 'offer' type from the remote notices feed, or false.
+     *
+     * Fetches remote notices (cached via transient) and returns the first entry whose
+     * `type` is 'offer' and whose `suppressedafter` date (if set) has not yet passed.
+     * Returns false when no notices are available or no active offer is found.
+     *
+     * @return array|false Offer data array (keys lower-cased) or false when none found.
      */
     public function getRemoteOffer()
     {
@@ -299,6 +426,16 @@ class AdminNoticesController extends \ShortPixel\Controller
        return false;
     }
 
+    /**
+     * Fetch remote notices and queue any new ones as persistent admin notices.
+     *
+     * Skips execution on non-ShortPixel admin screens.  Iterates over the remote
+     * notices feed (type 'offer' entries are skipped here — handled by `getRemoteOffer()`).
+     * For entries not yet stored, creates a persistent notice via `Notices::addWarning()`,
+     * `addError()`, or `addNormal()` (default) with a one-month TTL.
+     *
+     * @return void
+     */
     protected function doRemoteNotices()
     {
          // Don't load on ajax, or other complicated things
@@ -378,11 +515,27 @@ class AdminNoticesController extends \ShortPixel\Controller
         }
     }
 
+    /**
+     * Render the upgrade-options popup view inline (not an AJAX handler).
+     *
+     * Loads the `snippets/part-upgrade-options` view template directly.
+     *
+     * @return void
+     */
     public function proposeUpgradePopup() {
         $view = new ViewController();
         $view->loadView('snippets/part-upgrade-options');
     }
 
+    /**
+     * AJAX endpoint: fetch the personalised upgrade proposal fragment from shortpixel.com.
+     *
+     * Posts the plugin version, API key, monthly usage stats (m1-m4), remaining files
+     * count and WebP/AVIF flags to `https://shortpixel.com/propose-upgrade-frag`,
+     * then echoes the returned HTML fragment and dies.
+     *
+     * @return void Never returns; ends the request with die().
+     */
     public function proposeUpgradeRemote()
     {
         //$stats = $this->countAllIfNeeded($this->_settings->currentStats, 300);
@@ -428,6 +581,16 @@ class AdminNoticesController extends \ShortPixel\Controller
 
     }
 
+    /**
+     * Fetch the remote notices feed from the ShortPixel API (cached for one day).
+     *
+     * Builds the request URL from the API endpoint, current API key, plugin version,
+     * and target identifier.  Uses a WordPress transient for caching; in debug mode
+     * the TTL is reduced to 180 seconds.  Stores `false` on HTTP error so repeated
+     * failures do not hammer the API.
+     *
+     * @return array|false Array of notice objects from the API, or false on failure / empty response.
+     */
     private function get_remote_notices()
     {
         $transient_name = 'shortpixel_remote_notice';
@@ -436,7 +599,7 @@ class AdminNoticesController extends \ShortPixel\Controller
         if (\wpSPIO()->env()->is_debug)
             $transient_duration = 180;
 
-        $keyControl = new apiKeyController();
+        $keyControl = new ApiKeyController();
         //$keyControl->loadKey();
 
         $notices = get_transient($transient_name);
@@ -471,6 +634,17 @@ class AdminNoticesController extends \ShortPixel\Controller
         return $notices;
     }
 
+    /**
+     * Display a contextual upgrade notice below the plugin's update entry in the plugins list.
+     *
+     * Hooked to `in_plugin_update_message-{plugin}` (priority 50).  Fetches the
+     * update notice text from the plugin's readme.txt and renders it inside an inline
+     * WP notice `<div>` when non-empty.
+     *
+     * @param array    $data     Plugin data array provided by WordPress.
+     * @param object   $response WordPress update response object; `$response->new_version` is used.
+     * @return void
+     */
     public function pluginUpdateMessage($data, $response)
     {
         //    $message = $this->getPluginUpdateMessage($plugin['new_version']);

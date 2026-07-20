@@ -112,7 +112,7 @@ class ImageThumbnailMetaTest extends WP_UnitTestCase {
 		$m->fromClass( $source );
 
 		$this->assertSame( 2, $m->status );
-		$this->assertObjectNotHasAttribute( 'unknown_key', $m );
+		$this->assertObjectNotHasProperty( 'unknown_key', $m );
 	}
 
 	/*
@@ -131,7 +131,7 @@ class ImageThumbnailMetaTest extends WP_UnitTestCase {
 		$this->assertSame( 3, $out->status );
 		$this->assertSame( 999, $out->compressedSize );
 		$this->assertSame( 'foo.webp', $out->webp );
-		$this->assertObjectNotHasAttribute( 'customImprovement', $out );
+		$this->assertObjectNotHasProperty( 'customImprovement', $out );
 	}
 
 	public function test_toClass_exports_customImprovement_would_have_been_present_but_is_intentionally_skipped() {
@@ -140,7 +140,7 @@ class ImageThumbnailMetaTest extends WP_UnitTestCase {
 
 		$out = $m->toClass();
 
-		$this->assertObjectNotHasAttribute( 'customImprovement', $out );
+		$this->assertObjectNotHasProperty( 'customImprovement', $out );
 	}
 
 	/*

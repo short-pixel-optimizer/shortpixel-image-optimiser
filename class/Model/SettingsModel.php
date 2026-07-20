@@ -30,7 +30,7 @@ class SettingsModel extends \ShortPixel\Model
 
 		private $option_name = 'spio_settings';
 
-		private $updated = false;
+		protected $updated = false;
 
 		protected $model = array(
 //        'apiKey' => array('s' => 'string'), // string
@@ -229,10 +229,7 @@ class SettingsModel extends \ShortPixel\Model
                     return call_user_func($default);
                   }
               }
-              else
-              {
-                return $default; 
-              }
+              return $default; 
 
           }
 

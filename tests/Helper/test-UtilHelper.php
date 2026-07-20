@@ -76,6 +76,10 @@ class UtilHelperTest extends WP_UnitTestCase {
 		$this->assertTrue( UtilHelper::validateJSON( '{"a":1,"b":"two"}' ) );
 	}
 
+	public function test_validateJSON_accepts_valid_array() {
+		$this->assertTrue( UtilHelper::validateJSON( '[1,2,3]' ) );
+	}
+
 	public function test_validateJSON_rejects_non_string_input() {
 		$this->assertFalse( UtilHelper::validateJSON( array( 'a' => 1 ) ) );
 		$this->assertFalse( UtilHelper::validateJSON( 42 ) );

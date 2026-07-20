@@ -49,6 +49,13 @@ class ApiController extends RequestManager
 	/** @var array Temporary directories created during a request, keyed by identifier. */
 	protected static $temporaryDirs = array();
 
+	/**
+	 * Initialises the API endpoint URLs from the plugin settings.
+	 *
+	 * Sets $apiEndPoint (inherited from RequestManager) to the reducer endpoint
+	 * (https://api.shortpixel.com/v2/reducer.php) and $apiDumpEndPoint to the
+	 * cleanup endpoint, both using the configured HTTP protocol (http or https).
+	 */
 	public function __construct()
 	{
 		$settings = \wpSPIO()->settings();
@@ -60,9 +67,14 @@ class ApiController extends RequestManager
 	 * Builds and sends an image-optimisation request to the ShortPixel API.
 	 *
 	 * Validates the image model and URL list on the queue item, assembles the full
-	 * request body (compression, resize, format-conversion flags, etc.), and calls
-	 * doRequest(). On a terminal error the item is immediately dumped from the
-	 * remote cache.
+	 * request body (compression type, resize, CMYK conversion, EXIF, format-conversion
+	 * flags, plugin version, API key, item ID, and optional `paramlist`/`returndatalist`
+	 * fields), and calls doRequest(). The first send is non-blocking (tries == 0);
+	 * subsequent retries are blocking. On a terminal error the item is immediately
+	 * dumped from the remote cache via dumpMediaItem().
+	 *
+	 * Note: when the image model fails the processable check the method adds a failure
+	 * result but does NOT return early — execution continues to the URL check below.
 	 *
 	 * @param QueueItem $qItem Queue item containing the image model, URLs, and optimisation settings.
 	 * @return void
@@ -224,13 +236,24 @@ class ApiController extends RequestManager
 	/**
 	 * Dispatches the parsed API response to the appropriate handler based on the queue item's action.
 	 *
-	 * Inspects the Status object returned by the API and maps known error codes to
-	 * internal result states (quota exceeded, invalid key, maintenance, etc.). When
-	 * the response contains image data it delegates to handleOptimizeResponse() or
-	 * handleActionResponse() according to the action type.
+	 * Calls parseResponse() to JSON-decode the response body, then inspects the top-level
+	 * Status object. The ShortPixel API always returns HTTP 200; error conditions are
+	 * signalled via Status.Code values in the JSON body. Known codes handled here:
+	 *
+	 *  - -102/-105/-106/-108/-111/-113/-201/-202/-203/-207 : permanent file/URL errors → STATUS_ERROR (no retry)
+	 *  - -301/-403 : quota exceeded → STATUS_QUOTA_EXCEEDED (retry after quota refill)
+	 *  - -302 : file no longer available remotely → STATUS_FAIL
+	 *  - -306 : mixed-domain URLs in one request → STATUS_FAIL
+	 *  - -401/-402 : invalid/wrong API key → STATUS_NO_KEY
+	 *  - -404 : remote optimisation queue full → STATUS_QUEUE_FULL (retry)
+	 *  - -500 : API maintenance → STATUS_MAINTENANCE (retry)
+	 *
+	 * When the response contains image data (array with index 0), delegates to
+	 * handleOptimizeResponse() for 'optimize'/'convert_api' actions, or
+	 * handleActionResponse() for 'remove_background'/'scale_image' actions.
 	 *
 	 * @param QueueItem $qItem    The queue item being processed.
-	 * @param mixed     $response The raw HTTP response array from wp_remote_post().
+	 * @param array     $response Raw wp_remote_post() response array (body not yet decoded).
 	 * @return array Result array from one of the return* helper methods.
 	 */
 	protected function handleResponse(QueueItem $qItem, $response)
@@ -343,10 +366,18 @@ class ApiController extends RequestManager
 	/**
 	 * Processes an API response containing optimised image data for a standard optimise action.
 	 *
-	 * Iterates over each returned image object, checks its status (waiting, success, etc.),
-	 * dispatches successful items to handleNewSuccess(), and assembles a combined result
-	 * reflecting the number of ready, waiting, and total images. Returns a partial-success
-	 * result when only a subset of images have finished.
+	 * Extracts the `returndatalist` envelope (containing `sizes`, `fileSizes`, `doubles`,
+	 * and `duplicates` sub-keys) from the response array before iterating over per-image
+	 * objects. For each image object, inspects Status.Code:
+	 *  - STATUS_UNCHANGED / STATUS_WAITING : increments the waiting counter; marks partial success.
+	 *  - STATUS_SUCCESS                    : delegates to handleNewSuccess() for per-format
+	 *                                        result assembly (image, WebP, AVIF), where the
+	 *                                        per-format URL fields use 'NC' (not compressible)
+	 *                                        and 'NA' (not available / stop polling) sentinels.
+	 *
+	 * Returns STATUS_SUCCESS when all images are done, STATUS_PARTIAL_SUCCESS when some
+	 * are still waiting, or STATUS_UNCHANGED when all images are still pending. Fails with
+	 * STATUS_FAIL if `returndatalist.sizes` is absent.
 	 *
 	 * @param QueueItem $qItem    The queue item being processed.
 	 * @param array     $response The decoded API response array (indexed by image).
@@ -481,13 +512,17 @@ class ApiController extends RequestManager
 	/**
 	 * Processes an API response for a single-file action (background removal, upscale, etc.).
 	 *
-	 * Checks the status code of the first returned image object and returns an
-	 * "unchanged/waiting" result when the server has not finished, or a success result
-	 * containing the optimised and original image URLs when complete.
+	 * Inspects the Status.Code of $response[0]. Returns STATUS_UNCHANGED when the code is
+	 * STATUS_UNCHANGED or STATUS_WAITING. On STATUS_SUCCESS, returns a success result with
+	 * 'optimized' set to LosslessURL and 'original' set to OriginalURL from the response
+	 * object — LosslessURL is used unconditionally regardless of compression type.
+	 *
+	 * If the status code matches neither waiting nor success the method falls through
+	 * without an explicit return (implicit null), which the caller does not handle.
 	 *
 	 * @param QueueItem $qItem    The queue item being processed.
-	 * @param array     $response The decoded API response array.
-	 * @return array|void Result array, or void when the status is not handled.
+	 * @param array     $response The decoded API response array; $response[0] is the image object.
+	 * @return array|null Result array, or null when the status code is unrecognised.
 	 */
 	protected function handleActionResponse(QueueItem $qItem, $response)
 	{
@@ -511,16 +546,26 @@ class ApiController extends RequestManager
 	}
 
 	/**
-	 * When API signals it's done optimizing an image.
+	 * Builds the per-image result structure when the API signals a completed optimisation.
 	 *
-	 * Builds the per-image result structure (main image, WebP, AVIF) from the API
-	 * response object, applies the file-size margin check, and returns an array
-	 * describing download URLs, sizes, and statuses for each format variant.
+	 * Reads URL and size fields from the API response object. For lossy compression the
+	 * relevant fields are `LossyURL` / `LossySize`; for lossless they are `LosslessURL` /
+	 * `LosslessSize`. WebP and AVIF variants use the same naming prefixed with `WebP` or
+	 * `AVIF` (e.g. `WebPLosslessURL`). Two per-format string sentinels are handled:
+	 *  - 'NC' (Not Compressible) : sets STATUS_NOT_COMPATIBLE for that format.
+	 *  - 'NA' (Not Available)    : the URL field is absent or skipped; status stays STATUS_SKIP.
 	 *
-	 * @param QueueItem $qItem    Queue item object with all settings.
-	 * @param object    $fileData API response object for a single image with URL and size properties.
-	 * @param array     $data     Contextual data: fileName, imageName, and optionally fileSize and resize.
-	 * @return array Array with processed image data (image, webp, avif sub-arrays with url, size, status).
+	 * Applies checkFileSizeMargin() against the original file size; if the optimised result
+	 * is larger than the allowed margin the status is set to STATUS_OPTIMIZED_BIGGER. The
+	 * smartcrop `resize == 4` path bypasses that margin check.
+	 *
+	 * @param QueueItem $qItem    Queue item object carrying compression type and settings.
+	 * @param object    $fileData API response object for a single image (OriginalSize, OriginalURL,
+	 *                            LossyURL, LossySize, LosslessURL, LosslessSize, WebP*, AVIF*, etc.).
+	 * @param array     $data     Contextual data: 'fileName', 'imageName', optionally 'fileSize'
+	 *                            (overrides OriginalSize) and 'resize' (int, 4 = smartcrop).
+	 * @return array Associative array with 'image', 'webp', and 'avif' sub-arrays, each containing
+	 *               'url', 'size'/'optimizedSize', 'originalSize' (image only), and 'status'.
 	 */
 	protected function handleNewSuccess(QueueItem $qItem, $fileData, $data)
 	{
@@ -637,13 +682,17 @@ class ApiController extends RequestManager
 	/**
 	 * Checks whether the optimised file size is within an acceptable margin of the original.
 	 *
-	 * Returns true when the result is smaller than or equal to the original, when the
-	 * original size is zero, when the configured margin percentage is negative (disabled),
-	 * when the size increase is within the allowed percentage, or when smartcrop with
-	 * "ignore sizes" is active. Returns false when the optimised result is bigger by
-	 * more than the allowed margin.
+	 * Returns true when:
+	 *  - $resultSize <= $fileSize (already smaller or equal),
+	 *  - $fileSize == 0 (no baseline to compare against),
+	 *  - the 'shortpixel/api/filesizeMargin' filter returns a negative value (check disabled),
+	 *  - the percentage increase is within the margin (default 5 % via that filter), or
+	 *  - both settings->useSmartcrop and settings->smartCropIgnoreSizes are true.
 	 *
-	 * @param int $fileSize   Original file size in bytes.
+	 * Returns false when the optimised result is larger than the original by more than
+	 * the allowed margin percentage.
+	 *
+	 * @param int $fileSize   Original file size in bytes (used as the baseline).
 	 * @param int $resultSize Optimised file size in bytes.
 	 * @return bool True if the result is acceptable; false if the result is too large.
 	 */

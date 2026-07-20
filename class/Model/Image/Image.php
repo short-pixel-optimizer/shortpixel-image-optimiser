@@ -1,4 +1,5 @@
 <?php
+
 namespace ShortPixel\Model\Image;
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
@@ -295,7 +296,7 @@ Class Image extends \ShortPixel\Model\File\FileModel
             }
 
             imagefill($bg, 0, 0, imagecolorallocate($bg, 255, 255, 255));
-		imagealphablending($bg, 1);
+		imagealphablending($bg, true);
 		imagecopy($bg, $this->image, 0, 0, 0, 0, $width, $height);
 
             $bool = imagejpeg($bg, $this->replacementPath, 90);

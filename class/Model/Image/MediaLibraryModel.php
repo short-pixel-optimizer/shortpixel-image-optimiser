@@ -2391,10 +2391,20 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	{
 		 $options = $this->checkDateExcluded();
 
+		 if (false === $options)
+		{
+			return false; 
+		}
+
 		 $post = get_post($this->id); 
+
+		 if (false === is_object($post))
+		 {
+		 	 return false; 
+		 }
 		 $date = $post->post_date; 
 
-		$postDate = new \DateTime($date);
+		 $postDate = new \DateTime($date);
 
 		 try{
 			$date = new \DateTime($options['date']); 
@@ -3543,7 +3553,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		if (
 			isset($metadata['ShortPixelImprovement']) &&
 			is_numeric($metadata["ShortPixelImprovement"]) &&
-			is_numeric($metadata["ShortPixelImprovement"]) > 0
+			$metadata["ShortPixelImprovement"] > 0
 		) {
 			$status = self::FILE_STATUS_SUCCESS;
 		} elseif ($waiting) {
@@ -3552,6 +3562,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			$status = self::FILE_STATUS_ERROR;
 		} elseif ($error < 0) {
 			$status = $error;
+		}
+		else  // Else because we must, if nothing else. 
+		{
+			$status = self::FILE_STATUS_ERROR;
 		}
 
 

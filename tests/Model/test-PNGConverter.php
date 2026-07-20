@@ -303,6 +303,12 @@ class PNGConverterTest extends WP_UnitTestCase {
 		$this->assertTrue( $this->invokePrivate( $c, 'checkFileSizeMargin', array( 0, 1000 ) ) );
 	}
 
+	/**
+	 * Regression sentinel for a7a0f8f9 — the `$fileSize >= $resultSize`
+	 * accept-check used to run BEFORE the resultSize==0 reject-check, so
+	 * (1000, 0) wrongly returned true and a zero-byte JPG (write failure)
+	 * would have replaced the PNG. The zero-result check now runs first.
+	 */
 	public function test_checkFileSizeMargin_false_when_result_size_is_zero_indicating_write_failure() {
 		$c = new PNGConverter( $this->makeImageStub() );
 		$this->assertFalse( $this->invokePrivate( $c, 'checkFileSizeMargin', array( 1000, 0 ) ) );

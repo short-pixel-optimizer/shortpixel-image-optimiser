@@ -288,10 +288,18 @@ class MediaLibraryThumbnailModelTest extends WP_UnitTestCase {
 		$this->setPrivate( $m, 'is_main_file', true );
 		$this->setPrivate( $m, 'imageType', ImageModel::IMAGE_TYPE_MAIN );
 
+		// Pre-seed processable_status to a value distinct from P_EXCLUDE_SIZE.
+		// isThumbnailProcessable's if-branch (the one we're testing) always
+		// overwrites this field with P_EXCLUDE_SIZE when it fires — so if we
+		// end up != P_EXCLUDE_SIZE, the branch was correctly skipped.
+		// Also short-circuits the parent::isProcessable() cache check at
+		// ImageModel.php:339 so the else-branch cascade (integration
+		// territory — needs FS + image_meta) doesn't crash on a fresh
+		// object built via newInstanceWithoutConstructor().
+		$this->setPrivate( $m, 'processable_status', ImageModel::P_PROCESSABLE );
+
 		// With is_main_file=true, the excludeThumbnails guard is skipped so
-		// the "excluded" branch does not fire — the processable_status stays
-		// at its uncached default. (The parent::isProcessable call that
-		// follows is integration territory and is not asserted on here.)
+		// the "excluded" branch does not fire.
 		$this->invokePrivate( $m, 'isThumbnailProcessable' );
 
 		$this->assertNotSame( ImageModel::P_EXCLUDE_SIZE, $this->getPrivate( $m, 'processable_status' ) );
@@ -303,6 +311,9 @@ class MediaLibraryThumbnailModelTest extends WP_UnitTestCase {
 		$m = $this->freshModel();
 		$this->setPrivate( $m, 'is_main_file', false );
 		$this->setPrivate( $m, 'imageType', ImageModel::IMAGE_TYPE_ORIGINAL );
+
+		// See the sibling test above for why this pre-seed is here.
+		$this->setPrivate( $m, 'processable_status', ImageModel::P_PROCESSABLE );
 
 		$this->invokePrivate( $m, 'isThumbnailProcessable' );
 

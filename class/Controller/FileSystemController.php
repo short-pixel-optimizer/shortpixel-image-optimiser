@@ -36,6 +36,7 @@ class FileSystemController extends \ShortPixel\Controller
   /** @var array Static cache of loaded CustomImageModel objects, keyed by ID */
   static $customItems = array();
 
+  /** Captures the EnvironmentModel for path/URL resolution helpers. */
   public function __construct()
   {
     $this->env = wpSPIO()->env();
@@ -346,10 +347,15 @@ class FileSystemController extends \ShortPixel\Controller
   }
 
 
-  /** Used in ApiKeyModel for installation testing 
-   * 
-   * @param mixed $folder 
-   * @return bool 
+  /**
+   * Ensure the backup folder exists and is writable, creating it if necessary.
+   *
+   * Used by `ApiKeyModel` during installation self-tests to verify the filesystem
+   * is set up correctly.  Calls `DirectoryModel::check(true)` which creates the
+   * full directory tree when it is missing.
+   *
+   * @param string $folder Absolute path to the backup folder. Default SHORTPIXEL_BACKUP_FOLDER.
+   * @return bool True if the directory exists and is usable, false otherwise.
    */
   public function checkBackUpFolder($folder = SHORTPIXEL_BACKUP_FOLDER)
   {
@@ -513,7 +519,7 @@ class FileSystemController extends \ShortPixel\Controller
 
     // what are we sorting.
     $class = get_class($array[0]);
-    $is_files = ($class == 'ShortPixel\FileModel') ? true : false; // if not files, then dirs.
+    $is_files = ($class == \ShortPixel\Model\File\FileModel::class) ? true : false; // if not files, then dirs.
 
     usort(
       $array,

@@ -218,9 +218,12 @@ class AiDataModel
         $generatedData = $this->checkRowData($row->generated_data);
 
 
-        $this->id = $row->id;
+        // $wpdb->get_row() returns every column as a string by default;
+        // cast to match the documented @var int on these properties so
+        // strict-equality checks (assertSame, `===`) behave as expected.
+        $this->id = (int) $row->id;
         $this->has_record = true;
-        $this->status = $row->status;
+        $this->status = (int) $row->status;
         $this->original = array_merge($this->original, $originalData);
         $this->generated = array_merge($this->generated, $generatedData);
     }
@@ -872,7 +875,9 @@ class AiDataModel
             return false;
         }
 
-        return new AiDataModel($attach_id);
+        // $wpdb->get_var() returns strings; cast so the constructed model's
+        // attach_id matches its documented @var int.
+        return new AiDataModel((int) $attach_id);
     }
 
     /**

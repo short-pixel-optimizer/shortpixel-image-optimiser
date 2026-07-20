@@ -118,7 +118,10 @@ class FileModel extends \ShortPixel\Model
       {
         $this->filename = isset($info['basename']) ? $info['basename'] : null; // filename + extension
         $this->filebase = isset($info['filename']) ? $info['filename'] : null; // only filename
-        $this->extension = isset($info['extension']) ? strtolower($info['extension']) : null; // only (last) extension
+        // mb_pathinfo() pre-initialises 'extension' to '' so isset() is
+        // always true — also check for the empty-string default so
+        // extensionless files return null (matches the @return contract).
+        $this->extension = (isset($info['extension']) && '' !== $info['extension']) ? strtolower($info['extension']) : null; // only (last) extension
       }
 
   }

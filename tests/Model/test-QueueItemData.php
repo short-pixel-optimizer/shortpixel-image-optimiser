@@ -125,8 +125,8 @@ class QueueItemDataTest extends WP_UnitTestCase {
 
 		$this->assertSame( 'optimize', $obj->action );
 		$this->assertSame( 2, $obj->tries );
-		$this->assertObjectNotHasAttribute( 'urls', $obj );
-		$this->assertObjectNotHasAttribute( 'files', $obj );
+		$this->assertObjectNotHasProperty( 'urls', $obj );
+		$this->assertObjectNotHasProperty( 'files', $obj );
 	}
 
 	/*

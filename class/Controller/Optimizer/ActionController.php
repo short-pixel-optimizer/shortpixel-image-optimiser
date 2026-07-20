@@ -28,6 +28,7 @@ use ShortPixel\Model\Converter\Converter as Converter;
 class ActionController extends OptimizerBase
 {
 
+   /** Sets the API name for queue result handling; actions run without a remote API. */
    public function __construct()
    {
       parent::__construct();
@@ -79,7 +80,13 @@ class ActionController extends OptimizerBase
       return $check;
   }
 
-  // @todo See if we need this, more for Apier things
+  /**
+   * No-op error handler; action items report failures via their result object.
+   *
+   * @todo See if we need this, more for Apier things
+   * @param QueueItem $qItem The queue item that raised an error.
+   * @return void
+   */
   protected function HandleItemError(QueueItem $qItem)
   {
     return;

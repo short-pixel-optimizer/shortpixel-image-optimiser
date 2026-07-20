@@ -34,7 +34,8 @@ abstract class Model
   /**
    * Collects all field values defined in the model and returns them as an associative array.
    *
-   * String values have slashes stripped before being returned.
+   * Fields typed 's' => 'string' have slashes stripped before being
+   * returned; fields without an 's' key are returned as-is.
    *
    * @return array<string, mixed> Associative array of field name => current value.
    */
@@ -46,7 +47,9 @@ abstract class Model
 
         $value = $this->{$item};
 
-        if (isset($this->model[$item]) && $this->model[$item]['s'] == 'string')
+        if (isset($this->model[$item]) &&
+            isset($this->model[$item]['s']) && 
+            $this->model[$item]['s'] == 'string')
         {
           if (false === is_null($value))
           {
@@ -269,7 +272,12 @@ abstract class Model
   }
 
   /**
-   * Recursively sanitizes an array, applying sanitizeString() to all keys and leaf values.
+   * Recursively sanitizes an array. Keys are passed through sanitizeString();
+   * leaf values are cast by type: nested arrays recurse, floats keep their
+   * precision via floatval(), other numerics (ints and numeric strings) go
+   * through intval(), booleans pass through, everything else is
+   * sanitizeString()'d. Note the float check runs before the numeric check —
+   * is_numeric() also matches floats, which would truncate them.
    *
    * Returns null if the input is not an array.
    *
@@ -282,7 +290,7 @@ abstract class Model
       {
         return null;
       }
-      $new_array = array();
+      $new_array = [];
       foreach($array as $key => $value)
       {
 			$newkey = $this->sanitizeString($key);
@@ -291,6 +299,18 @@ abstract class Model
 			{
 				 $newval = $this->sanitizeArray($value);
 			}
+      elseif (is_float($value))
+      {
+         $newval = floatval($value);
+      }
+      elseif (is_numeric($value))
+      {
+           $newval = intval($value); 
+      }
+      elseif (is_bool($value) )
+      {
+         $newval = $value; 
+      }
 			else {
 				  $newval = $this->sanitizeString($value);
 			}

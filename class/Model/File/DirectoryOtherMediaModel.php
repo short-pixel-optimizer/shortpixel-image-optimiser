@@ -254,8 +254,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
    * INSERTing a duplicate. On successful insert, a follow-up
    * `loadFolderByPath` refreshes `$this->id` from the newly-created row.
    *
-   * @return int|false Number of rows affected on UPDATE, insert-id on
-   *                   INSERT, or false when the wpdb call failed.
+   * @return int|false Number of rows affected  or false when the wpdb call failed.
    */
   public function save()
   {
@@ -290,11 +289,12 @@ class DirectoryOtherMediaModel extends DirectoryModel
 						else
 						{
               $data['ts_created'] = $this->timestampToDB(time());
-							$this->id = $wpdb->insert($table, $data);
+							$result = $wpdb->insert($table, $data);
+              $this->id = $wpdb->insert_id;
+
 							if ($this->id !== false)
 							{
 								$is_new = true;
-								$result = $this->id;
 							}
 						}
         }
@@ -836,7 +836,10 @@ class DirectoryOtherMediaModel extends DirectoryModel
     {
       //  $class = get_class($folder);
 				// Setters before action
-        $this->id = $folder->id;
+        // $wpdb->get_row() returns every column as a string by default;
+        // cast to match the documented @var int on these properties so
+        // strict-equality checks (assertSame, `===`) behave as expected.
+        $this->id = (int) $folder->id;
 
         if ($this->id > 0)
          $this->in_db = true;
@@ -844,9 +847,9 @@ class DirectoryOtherMediaModel extends DirectoryModel
         $this->updated = property_exists($folder,'ts_updated') ? $this->DBtoTimestamp($folder->ts_updated) : time();
         $this->created = property_exists($folder,'ts_created') ? $this->DBtoTimestamp($folder->ts_created) : time();
         $this->checked = property_exists($folder,'ts_checked') ? $this->DBtoTimestamp($folder->ts_checked) : time();
-        $this->fileCount = property_exists($folder,'file_count') ? $folder->file_count : 0; // deprecated, do not rely on.
+        $this->fileCount = property_exists($folder,'file_count') ? (int) $folder->file_count : 0; // deprecated, do not rely on.
 
-        $this->status = $folder->status;
+        $this->status = (int) $folder->status;
 
         if (strlen($folder->name) == 0)
           $this->name = basename($folder->path);
