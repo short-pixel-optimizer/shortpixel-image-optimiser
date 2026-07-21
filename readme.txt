@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 4.8.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 6.5.4
+Stable tag: 6.5.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -452,6 +452,20 @@ Disable the feedback survey when the plugin is deactivated:
 14. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 6.5.5 =
+
+🛡️ The Stability Update
+
+Release Date: July 21, 2026
+
+🛠️ Fixes
+
+* Download Error Handling: Fixed a fatal error that could occur when ShortPixel was unable to download an optimized file from the API, with clearer error messages now shown instead. Thanks to Tremi Dkhar for the contribution!
+* Queue Robustness: Fixed a PHP warning that could occur when processing queue items without a remote ID.
+* AJAX Response Fix: Fixed a possible issue when sending array-based responses during optimization processing.
+
+Update now for a more stable and reliable optimization experience! 🚀
 
 = 6.5.4 =
 
