@@ -284,14 +284,36 @@ class DownloadHelper
        */
       private function remoteGetMethod($url)
       {
-            //get_temp_dir
+            $downloadTimeout = $this->getMaxDownloadTime();
+            $extension = pathinfo($url, PATHINFO_EXTENSION);
+            $suffix = '';
+
+            if ('' !== $extension)
+            {
+                $suffix = '.' . $extension;
+            }
+
             $tmpfname = tempnam(get_temp_dir(), 'spiotmp');
 
-            $downloadTimeout = $this->getMaxDownloadTime();
+            if (false === $tmpfname)
+            {
+                Log::addError('Failed to create temp file for remote download', $url);
+                return false;
+            }
+
+            // Rename the temp name to to original extension on the end to preserve PDF file checks
+            $tmpFilePath = $tmpfname . $suffix;
+
+            if (false === @rename($tmpfname, $tmpFilePath))
+            {
+                @unlink($tmpfname);
+                Log::addError('Failed to rename temp file for remote download', $url);
+                return false;
+            }
 
             $args_for_get = array(
               'stream' => true,
-              'filename' => $tmpfname,
+              'filename' => $tmpFilePath,
               'timeout' => $downloadTimeout,
             );
 
