@@ -177,12 +177,6 @@ class AiController extends RequestManager
 
         if ($qItem->data()->action == 'requestAlt')
         {
-            if (false === $id && false === $is_error)
-            {
-               return $this->returnRetry(RequestManager::STATUS_WAITING, __('Response without result object', 'shortpixel-image-optimiser'));
-            }
-
-
             if (false !== $id)
             {
               $remote_id = intval($id);
@@ -197,6 +191,10 @@ class AiController extends RequestManager
             elseif(self::AI_STATUS_INVALID_URL === $status)
             {
                 return $this->returnFailure(RequestManager::STATUS_FAIL, __('No URL or Invalid URL', 'shortpixel-image-optimiser'));
+            }
+            elseif (false === $id && false === $is_error)
+            {
+               return $this->returnRetry(RequestManager::STATUS_WAITING, __('Response without result object', 'shortpixel-image-optimiser'));
             }
             else
             {
