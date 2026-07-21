@@ -100,6 +100,9 @@ class DownloadHelper
 
 				$args = wp_parse_args($args, $defaults);
         $success = false;
+        $result = false;
+        $tempFile = null;
+        $this->last_download_error = null;
 
 				Log::addDebug('Downloading file :' . $url, $args);
 
@@ -128,7 +131,17 @@ class DownloadHelper
 					if (false === $success)
 					{
 						Log::addError('Failed to download File', $result);
-            $this->last_download_error = $tempFile->get_error_message();
+
+            if (is_wp_error($result))
+            {
+                $this->last_download_error = $result->get_error_message();
+            }
+            elseif (empty($this->last_download_error))
+            {
+                $this->last_download_error = __('File download failed.', 'shortpixel-image-optimiser');
+            }
+						//ResponseController::addData('is_error', true);
+						//Responsecontroller::addData('message', $tempFile->get_error_message());
 						return false;
 					}
 
