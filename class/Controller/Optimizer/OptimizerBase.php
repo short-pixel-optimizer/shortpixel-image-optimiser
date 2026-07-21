@@ -224,7 +224,7 @@ abstract class OptimizerBase
      *
      * @return void
      */
-    protected function checkBlockedItems()
+    public function checkBlockedItems()
     {
         if (is_null(self::$blockedItems) || count(self::$blockedItems) == 0)
         {
