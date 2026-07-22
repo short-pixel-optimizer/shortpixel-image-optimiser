@@ -108,16 +108,79 @@ class AbilitiesController
 	/**
 	 * Return the ability definitions to register, keyed by ability name.
 	 *
-	 * Each entry is the args array passed to `wp_register_ability()`.
-	 * Read-only abilities (get-stats, get-quota, get-settings, ...) and
-	 * action abilities (optimize-media, restore-media, ...) are added
-	 * here in later phases
+	 * Each entry is the args array passed to `wp_register_ability()`
 	 *
 	 * @return array<string, array>
 	 */
 	protected function getAbilities()
 	{
+		$meta = $this->getDefaultMeta();
+
 		$abilities = [];
+
+		// --- Read-only abilities for now (to see if i'm on right path adn i'll introduce actions abilities later if i see everyting looks good)---
+
+		$abilities['shortpixel/get-stats'] = [
+			'title'               => __( 'Get Optimization Stats', 'shortpixel-image-optimiser' ),
+			'description'         => __( 'Returns image optimization statistics: totals, compression averages, and images remaining to optimize', 'shortpixel-image-optimiser' ),
+			'category'            => self::ABILITY_CATEGORY,
+			'execute_callback'    => [ GetStatsAbility::class, 'execute' ],
+			'permission_callback' => [ $this, 'userCanOptimize' ],
+			'args'                => [],
+			'meta'                => $meta,
+		];
+
+		$abilities['shortpixel/get-quota'] = [
+			'title'               => __( 'Get Account Quota', 'shortpixel-image-optimiser' ),
+			'description'         => __( 'Returns ShortPixel account quota: monthly credits, one-time credits, AI credits, and whether quota is exceeded', 'shortpixel-image-optimiser' ),
+			'category'            => self::ABILITY_CATEGORY,
+			'execute_callback'    => [ GetQuotaAbility::class, 'execute' ],
+			'permission_callback' => [ $this, 'userCanOptimize' ],
+			'args'                => [],
+			'meta'                => $meta,
+		];
+
+		$abilities['shortpixel/get-settings'] = [
+			'title'               => __( 'Get Plugin Settings', 'shortpixel-image-optimiser' ),
+			'description'         => __( 'Returns the current ShortPixel plugin settings (whitelisted subset, API key is never exposed)', 'shortpixel-image-optimiser' ),
+			'category'            => self::ABILITY_CATEGORY,
+			'execute_callback'    => [ GetSettingsAbility::class, 'execute' ],
+			'permission_callback' => [ $this, 'userCanManage' ],
+			'args'                => [],
+			'meta'                => $meta,
+		];
+
+		$abilities['shortpixel/get-media-status'] = [
+			'title'               => __( 'Get Image Optimization Status', 'shortpixel-image-optimiser' ),
+			'description'         => __( 'Returns the optimization status of a single image by ID: compression ratio, bytes saved, backup state', 'shortpixel-image-optimiser' ),
+			'category'            => self::ABILITY_CATEGORY,
+			'execute_callback'    => [ GetMediaStatusAbility::class, 'execute' ],
+			'permission_callback' => [ $this, 'userCanOptimize' ],
+			'args'                => [
+				'id' => [
+					'type'        => 'integer',
+					'description' => __( 'The attachment ID (media library) or custom media ID', 'shortpixel-image-optimiser' ),
+					'required'    => true,
+				],
+				'type' => [
+					'type'        => 'string',
+					'description' => __( 'Image type: "media" for Media Library or "custom" for Custom Media', 'shortpixel-image-optimiser' ),
+					'default'     => 'media',
+					'enum'        => [ 'media', 'custom' ],
+				],
+			],
+			'meta' => $meta,
+		];
+
+		$abilities['shortpixel/get-queue-status'] = [
+			'title'               => __( 'Get Queue Status', 'shortpixel-image-optimiser' ),
+			'description'         => __( 'Returns the current state of the optimization queues: items in queue, in process, done, and whether each queue is running', 'shortpixel-image-optimiser' ),
+			'category'            => self::ABILITY_CATEGORY,
+			'execute_callback'    => [ GetQueueStatusAbility::class, 'execute' ],
+			'permission_callback' => [ $this, 'userCanOptimize' ],
+			'args'                => [],
+			'meta'                => $meta,
+		];
 
 		return $abilities;
 	}
