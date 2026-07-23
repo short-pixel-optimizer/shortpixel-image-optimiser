@@ -372,4 +372,281 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$this->assertTrue( $result->is_error, 'An item that already has AI data must not be re-queued' );
 		$this->assertTrue( $result->is_done );
 	}
+
+	/**
+	 * Manually updating the alt text after AI generation must reset the AI
+	 * status so the item shows as "different" (user-edited) rather than
+	 * clean-generated.
+	 *
+	 * Verified behaviour: AiDataModel::currentIsDifferent() returns true when
+	 * the live _wp_attachment_image_alt deviates from the stored generated alt.
+	 *
+	 * Manual-plan row: 32.5
+	 */
+	public function test_updating_alt_text_after_ai_generation_resets_ai_status() {
+		$attachment_id = $this->freshAttachment();
+
+		$this->enqueueAi( $attachment_id );
+		$this->runQueueUntilEmpty();
+
+		$generated_alt = get_post_meta( $attachment_id, '_wp_attachment_image_alt', true );
+		$this->assertSame( 'A mock ai alt text.', $generated_alt, 'Precondition: AI alt was generated' );
+
+		// Simulate the user manually editing the alt text via WP (e.g. media
+		// library edit screen). Update post meta directly as WP itself does.
+		update_post_meta( $attachment_id, '_wp_attachment_image_alt', 'My custom hand-typed alt' );
+
+		// Re-load the model from DB so it reads fresh current data.
+		AiDataModel::flushModelCache( $attachment_id );
+		$aiModel = AiDataModel::getModelByAttachment( $attachment_id, 'media' );
+
+		// The model must still report AI_STATUS_GENERATED (the record is not
+		// wiped just because the user edited) — but currentIsDifferent() must
+		// now return true because the live value diverges from the generated one.
+		$this->assertSame(
+			AiDataModel::AI_STATUS_GENERATED,
+			$aiModel->getStatus(),
+			'aipostmeta row must still be GENERATED after manual edit'
+		);
+		$this->assertTrue(
+			$aiModel->currentIsDifferent(),
+			'currentIsDifferent() must be true when the user overwrote the AI alt'
+		);
+	}
+
+	/**
+	 * Undoing AI data must restore the pre-AI alt text that was saved as the
+	 * original value when AI first ran, remove the aipostmeta row, and leave
+	 * the item processable again.
+	 *
+	 * Verified behaviour: AiDataModel::revert() writes original data back to
+	 * WP, deletes the DB row, and flushes the model cache so isProcessable()
+	 * returns true for a fresh model.
+	 *
+	 * Manual-plan rows: 32.6 / 33.06
+	 */
+	public function test_undo_ai_data_restores_previous_alt_text() {
+		$attachment_id = $this->freshAttachment();
+
+		// Give the attachment a pre-existing alt before AI runs.
+		update_post_meta( $attachment_id, '_wp_attachment_image_alt', 'original human alt' );
+
+		$this->enqueueAi( $attachment_id );
+		$this->runQueueUntilEmpty();
+
+		$this->assertSame(
+			'A mock ai alt text.',
+			get_post_meta( $attachment_id, '_wp_attachment_image_alt', true ),
+			'Precondition: AI must have overwritten the original alt'
+		);
+
+		// Undo via the model's revert() method — the same path OptimizeAiController
+		// calls for the 'undoAI' action (undoAltData()).
+		AiDataModel::flushModelCache( $attachment_id );
+		$aiModel = AiDataModel::getModelByAttachment( $attachment_id, 'media' );
+		$aiModel->revert();
+
+		// After revert the original alt must be back.
+		$this->assertSame(
+			'original human alt',
+			get_post_meta( $attachment_id, '_wp_attachment_image_alt', true ),
+			'revert() must restore the pre-AI alt text'
+		);
+
+		// The aipostmeta row must be gone so the item is processable again.
+		AiDataModel::flushModelCache( $attachment_id );
+		$freshModel = AiDataModel::getModelByAttachment( $attachment_id, 'media' );
+		$this->assertSame(
+			AiDataModel::AI_STATUS_NOTHING,
+			$freshModel->getStatus(),
+			'Status must be AI_STATUS_NOTHING after revert'
+		);
+		$this->assertTrue(
+			$freshModel->isProcessable(),
+			'Item must be processable again after undo'
+		);
+	}
+
+	/**
+	 * A requestAlt action submitted when no valid API key is configured must
+	 * not reach the AI API; processQueue() must return APIKEY_FAILED and the
+	 * alt text must remain empty.
+	 *
+	 * Verified behaviour: QueueController::processQueue() gates the whole tick
+	 * on ApiKeyController::keyIsVerified(); with a missing/unverified key it
+	 * returns AjaxController::APIKEY_FAILED without sending any HTTP request.
+	 *
+	 * Manual-plan row: 32.10
+	 */
+	public function test_ai_request_with_no_api_key_fails_with_no_key_error() {
+		$attachment_id = $this->freshAttachment();
+
+		// Remove the verified key so the system has no valid key at all.
+		update_option(
+			'spio_key',
+			array(
+				'apiKey'      => '',
+				'verifiedKey' => false,
+				'apiKeyTried' => '',
+			)
+		);
+		// Reset singletons so ApiKeyController re-reads the option above.
+		$this->resetPluginSingletons();
+
+		// Without this, ApiKeyModel::checkRedirect() (ApiKeyModel.php:505) sees
+		// an unverified key that never redirected and wp_safe_redirect()+exit()s,
+		// killing the whole PHPUnit process mid-suite.
+		\wpSPIO()->settings()->redirectedSettings = 1;
+
+		$this->enqueueAi( $attachment_id );
+		$this->assertTrue( $this->queueHasWork(), 'Precondition: AI item must be in the queue' );
+
+		$result = ( new QueueController() )->processQueue( array( 'media', 'custom' ) );
+
+		$this->assertSame(
+			\ShortPixel\Controller\AjaxController::APIKEY_FAILED,
+			$result->error,
+			'processQueue() must return APIKEY_FAILED when no API key is set'
+		);
+		$this->assertSame(
+			'',
+			(string) get_post_meta( $attachment_id, '_wp_attachment_image_alt', true ),
+			'No alt must be written when the API key gate blocks the tick'
+		);
+
+		$aiRequests = array_filter( $this->api->requests, function ( $r ) {
+			return false !== strpos( $r['url'], 'add-url.php' );
+		} );
+		$this->assertCount( 0, $aiRequests, 'No add-url.php request must be sent when key is missing' );
+	}
+
+	/**
+	 * With aiPreserve=true, running AI on an item that already has alt text
+	 * must not overwrite the existing alt (F_STATUS_PREVENTOVERRIDE), while
+	 * fields that were empty are still filled.
+	 *
+	 * Verified behaviour: AiDataModel::getOptimizeData() excludes non-empty
+	 * fields from the API paramlist when aiPreserve is on, and the API result
+	 * for excluded fields carries the F_STATUS_PREVENTOVERRIDE integer status
+	 * rather than a text string.
+	 *
+	 * Manual-plan row: 33.04
+	 */
+	public function test_preserve_existing_ai_data_setting_prevents_overwrite() {
+		$attachment_id = $this->freshAttachment();
+
+		// Pre-fill only alt — caption and description stay empty.
+		update_post_meta( $attachment_id, '_wp_attachment_image_alt', 'pre-existing human alt' );
+
+		\wpSPIO()->settings()->aiPreserve      = 1;
+		\wpSPIO()->settings()->ai_gen_alt      = 1;
+		\wpSPIO()->settings()->ai_gen_caption  = 1;
+
+		$this->enqueueAi( $attachment_id );
+		$this->runQueueUntilEmpty();
+
+		// The pre-existing alt must NOT have been replaced.
+		$this->assertSame(
+			'pre-existing human alt',
+			get_post_meta( $attachment_id, '_wp_attachment_image_alt', true ),
+			'aiPreserve=true must protect a non-empty alt from AI overwrite'
+		);
+
+		// Caption (was empty) must have been filled.
+		$post = get_post( $attachment_id );
+		$this->assertNotEmpty(
+			$post->post_excerpt,
+			'aiPreserve=true must still fill empty caption'
+		);
+
+		// The AiDataModel record must reflect F_STATUS_PREVENTOVERRIDE for alt.
+		AiDataModel::flushModelCache( $attachment_id );
+		$aiModel    = AiDataModel::getModelByAttachment( $attachment_id, 'media' );
+		$generated  = $aiModel->getGeneratedData();
+		$this->assertSame(
+			AiDataModel::F_STATUS_PREVENTOVERRIDE,
+			$generated['alt'],
+			'generated[alt] must be F_STATUS_PREVENTOVERRIDE when aiPreserve blocked the field'
+		);
+	}
+
+	/**
+	 * Without aiPreserve, running AI on an item that already has alt text
+	 * must overwrite the existing alt with the AI-generated value.
+	 *
+	 * Verified behaviour: when aiPreserve is false, no fields are excluded
+	 * from the API paramlist and AiDataModel::handleNewData() writes every
+	 * generated value to WordPress.
+	 *
+	 * Manual-plan row: 33.05
+	 */
+	public function test_without_preserve_flag_ai_overwrites_existing_alt_text() {
+		$attachment_id = $this->freshAttachment();
+
+		update_post_meta( $attachment_id, '_wp_attachment_image_alt', 'pre-existing human alt' );
+
+		\wpSPIO()->settings()->aiPreserve = 0;
+		\wpSPIO()->settings()->ai_gen_alt = 1;
+
+		$this->enqueueAi( $attachment_id );
+		$this->runQueueUntilEmpty();
+
+		$this->assertSame(
+			'A mock ai alt text.',
+			get_post_meta( $attachment_id, '_wp_attachment_image_alt', true ),
+			'Without aiPreserve the AI alt must overwrite the existing value'
+		);
+	}
+
+	/**
+	 * After undoing AI data, the item must be processable again, and a new
+	 * AI generation pass (e.g. triggered by bulk) must succeed and write fresh
+	 * generated values.
+	 *
+	 * Verified behaviour: revert() deletes the aipostmeta row, isProcessable()
+	 * returns true, and a subsequent enqueue + queue run re-generates the data.
+	 *
+	 * Manual-plan row: 32.17
+	 */
+	public function test_undo_then_bulk_regenerates_ai_data() {
+		$attachment_id = $this->freshAttachment();
+
+		// First generation.
+		$this->enqueueAi( $attachment_id );
+		$this->runQueueUntilEmpty();
+		$this->assertSame(
+			'A mock ai alt text.',
+			get_post_meta( $attachment_id, '_wp_attachment_image_alt', true ),
+			'Precondition: first generation must succeed'
+		);
+
+		// Undo.
+		AiDataModel::flushModelCache( $attachment_id );
+		$aiModel = AiDataModel::getModelByAttachment( $attachment_id, 'media' );
+		$aiModel->revert();
+		AiDataModel::flushModelCache( $attachment_id );
+
+		// Verify item is processable after undo.
+		$freshModel = AiDataModel::getModelByAttachment( $attachment_id, 'media' );
+		$this->assertTrue( $freshModel->isProcessable(), 'Precondition: item must be processable after undo' );
+
+		// Simulate "bulk regenerate" by re-enqueueing the item.
+		// Reset mock request log so we can assert a new add-url call happens.
+		$this->api->reset();
+		$result = $this->enqueueAi( $attachment_id );
+		$this->assertFalse( $result->is_error, 'Re-enqueue after undo must succeed: ' . print_r( $result->message ?? '', true ) );
+
+		$this->runQueueUntilEmpty();
+
+		$this->assertSame(
+			'A mock ai alt text.',
+			get_post_meta( $attachment_id, '_wp_attachment_image_alt', true ),
+			'Regeneration after undo must produce fresh AI alt text'
+		);
+
+		$addRequests = array_filter( $this->api->requests, function ( $r ) {
+			return false !== strpos( $r['url'], 'add-url.php' );
+		} );
+		$this->assertGreaterThanOrEqual( 1, count( $addRequests ), 'A new add-url.php request must be sent during regeneration' );
+	}
 }

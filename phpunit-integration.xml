@@ -11,6 +11,16 @@
 	<testsuites>
 		<testsuite name="Integration">
 			<directory prefix="test-" suffix=".php">./tests/Integration</directory>
+			<!-- Excluded: define()s SPIO constants that would poison every
+			     test running after it in the same process. Runs as the
+			     IntegrationIsolated suite (second phpunit invocation made
+			     by the integration mode of bin/test.sh). -->
+			<exclude>./tests/Integration/test-ConstantsAndFilters.php</exclude>
+		</testsuite>
+		<!-- Constant-defining tests: must run in their own PHP process
+		     (see the exclude above). -->
+		<testsuite name="IntegrationIsolated">
+			<file>./tests/Integration/test-ConstantsAndFilters.php</file>
 		</testsuite>
 		<!-- Live-API smoke tests: cost real quota credits and need
 		     SHORTPIXEL_SMOKE_KEY. Excluded from plain runs by

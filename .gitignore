@@ -21,3 +21,5 @@ bin/
 # Commercial partner-plugin zips for bin/test.sh --compat (WPML etc.) —
 # never commit these; drop the zip in and the harness picks it up.
 /tests/partner-plugins/
+# Manual tests, not needed in the repo
+/tests/manual/

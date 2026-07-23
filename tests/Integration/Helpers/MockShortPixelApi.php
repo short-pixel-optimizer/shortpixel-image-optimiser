@@ -49,7 +49,7 @@ class MockShortPixelApi {
 	/** @var string|null When set, reducer calls return this RAW body verbatim (malformed-response testing). */
 	public $malformedBody = null;
 
-	/** @var string|null When set, reducer calls return a WP_Error('http_request_failed', <this message>) — transport-level failure. */
+	/** @var string|null When set, reducer and api-status.php calls return a WP_Error('http_request_failed', <this message>) — transport-level failure. */
 	public $wpErrorMessage = null;
 
 	/** @var int Number of times a URL should answer CODE_WAITING before turning CODE_SUCCESS (simulates queued processing). */
@@ -69,6 +69,9 @@ class MockShortPixelApi {
 
 	/** @var array<int,int> Per-remote-id count of get-url polls answered. */
 	private $aiRounds = array();
+
+	/** @var array<int,string[]> Per-remote-id API field names requested in the add-url paramlist (alt, caption, image_description, title, file). */
+	private $aiRequestedFields = array();
 
 	/** @var array<string,int> Per-URL count of reducer rounds already answered. */
 	private $rounds = array();
@@ -153,6 +156,9 @@ class MockShortPixelApi {
 		}
 
 		if ( false !== strpos( $path, 'api-status.php' ) ) {
+			if ( null !== $this->wpErrorMessage ) {
+				return new WP_Error( 'http_request_failed', $this->wpErrorMessage );
+			}
 			return $this->handleApiStatus( $args );
 		}
 
@@ -270,8 +276,11 @@ class MockShortPixelApi {
 				$convertto = (string) $param['convertto'];
 			}
 		}
-		$wantWebp = false !== strpos( $convertto, '+webp' );
-		$wantAvif = false !== strpos( $convertto, '+avif' );
+		// '+webp' = webp in addition to base optimization; bare 'webp' =
+		// companion-only conversion for an already-optimized image
+		// (QueueItem::newOptimizeData drops the '+' when image=false).
+		$wantWebp = false !== strpos( $convertto, 'webp' );
+		$wantAvif = false !== strpos( $convertto, 'avif' );
 
 		$originalSize = (int) filesize( $localPath );
 
@@ -355,6 +364,12 @@ class MockShortPixelApi {
 	 * spio_ai_jwt_token transient. With $aiAddStatus set, a bare
 	 * { status: N } error object is returned instead (3 = AI over-quota,
 	 * 2 = invalid URL).
+	 *
+	 * Remembers which field jobs the paramlist requested (flattened into the
+	 * body by AiController::prepareRequest) so get-url.php can — like the
+	 * real API — answer with ONLY those fields. Fields excluded client-side
+	 * (aiPreserve / disabled setting) are then backfilled with their status
+	 * ints by AiController::handleSuccess() from the item's returndatalist.
 	 */
 	private function handleAiAdd( array $args ) {
 		if ( null !== $this->aiAddStatus ) {
@@ -365,6 +380,14 @@ class MockShortPixelApi {
 		}
 
 		$id = $this->aiNextId++;
+
+		$request = $this->decodeParams( $args );
+		if ( is_array( $request ) ) {
+			$this->aiRequestedFields[ $id ] = array_values( array_intersect(
+				array( 'alt', 'caption', 'image_description', 'title', 'file' ),
+				array_keys( $request )
+			) );
+		}
 		return $this->httpResponse(
 			wp_json_encode( array( 'id' => $id, 'jwt' => 'mock-ai-jwt-token' ) ),
 			$args
@@ -389,16 +412,19 @@ class MockShortPixelApi {
 			return $this->httpResponse( wp_json_encode( array( 'status' => 1 ) ), $args );
 		}
 
-		$fields = array_merge(
-			array(
-				'alt'               => 'a mock ai alt text',
-				'caption'           => 'a mock ai caption',
-				'image_description' => 'a mock ai description',
-				'title'             => 'a mock ai title',
-				'relevance'         => '9',
-			),
-			$this->aiFields
+		$defaults = array(
+			'alt'               => 'a mock ai alt text',
+			'caption'           => 'a mock ai caption',
+			'image_description' => 'a mock ai description',
+			'title'             => 'a mock ai title',
 		);
+		// Real-API fidelity: only fields the add-url paramlist asked for come
+		// back; the rest must stay absent so AiController::handleSuccess()
+		// backfills their returndatalist status ints (e.g. PREVENTOVERRIDE).
+		if ( isset( $this->aiRequestedFields[ $id ] ) ) {
+			$defaults = array_intersect_key( $defaults, array_flip( $this->aiRequestedFields[ $id ] ) );
+		}
+		$fields = array_merge( $defaults, array( 'relevance' => '9' ), $this->aiFields );
 
 		return $this->httpResponse( wp_json_encode( array_merge( array( 'status' => 2 ), $fields ) ), $args );
 	}
@@ -650,5 +676,6 @@ class MockShortPixelApi {
 		$this->aiWaitingRounds = 0;
 		$this->aiFields        = array();
 		$this->aiRounds        = array();
+		$this->aiRequestedFields = array();
 	}
 }
