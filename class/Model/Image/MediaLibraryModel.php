@@ -598,7 +598,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		$this->width = $width;
 		$this->height = $height;
-
+		
 		$thumbnails = [];
 
 		if (isset($wpmeta['sizes'])) {
@@ -1177,29 +1177,35 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$this->image_meta = new ImageMeta();
 		$fs = \wpSPIO()->fileSystem();
 
-		if (! $metadata) {
+		if (false === $metadata) {
 			// Thumbnails is a an array of ThumbnailModels
-			$this->thumbnails = $this->loadThumbnailsFromWP();
+		//	$this->thumbnails = $this->loadThumbnailsFromWP();
 			$result = $this->checkLegacy();
 			if ($result) {
 				$this->saveMeta();
 			}
-		} elseif (is_object($metadata)) {
-			$this->image_meta->fromClass($metadata->image_meta);
+			$metadata = new \stdClass;
+		}
+		//} elseif (is_object($metadata)) {
+
+			if (property_exists($metadata, 'image_meta'))
+			{
+				$this->image_meta->fromClass($metadata->image_meta);
+			}
 
 			// Loads thumbnails from the WordPress installation to ensure fresh list, discover later added, etc.
 			$thumbnails = $this->loadThumbnailsFromWP();
 
 			foreach ($thumbnails as $name => $thumbObj) {
-				if (isset($metadata->thumbnails[$name])) // Check WP thumbs against our metadata.
+			
+				$thumbMeta = new ImageThumbnailMeta();
+				if (property_exists($metadata, 'thumbnails') && isset($metadata->thumbnails[$name])) // Check WP thumbs against our metadata.
 				{
-					$thumbMeta = new ImageThumbnailMeta();
 					$thumbMeta->fromClass($metadata->thumbnails[$name]); // Load Thumbnail data from our saved Meta in model
-
-					$thumbnails[$name]->setMetaObj($thumbMeta);
-					$thumbnails[$name]->verifyImage();
 					unset($metadata->thumbnails[$name]);
 				}
+					$thumbnails[$name]->setMetaObj($thumbMeta);
+					$thumbnails[$name]->verifyImage();
 			}
 
 			// Load Unlisted Thumbnails.
@@ -1266,15 +1272,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			// New! @todo Move check functions to this, to check upon load and not randomly around
 			$this->verifyImage();
 
-
-
 			// If anything changed during load, and this is stored ( ie optimized ) images, update changes.
 			if (true === $this->didAnyRecordChange() && ! is_null($this->getMeta('databaseID')) && $this->imageType !== self::IMAGE_TYPE_DUPLICATE) {
 
 				$this->saveMeta();
 				$this->resetRecordChanges();
 			}
-		} // Elseif metadata object.
+		//} // Elseif metadata object.
 
 		$this->loadLooseItems();
 	}
