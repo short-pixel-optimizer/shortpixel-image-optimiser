@@ -182,6 +182,98 @@ class AbilitiesController
 			'meta'                => $meta,
 		];
 
+		// ---  Action abilities ---
+
+		$abilities['shortpixel/optimize-media'] = [
+			'title'               => __( 'Optimize Image', 'shortpixel-image-optimiser' ),
+			'description'         => __( 'Enqueues an image for optimization and processes the queue within a time budget. Optimization is asynchronous: if the job does not finish in one call, use run-queue to continue. Consumes ShortPixel credits', 'shortpixel-image-optimiser' ),
+			'category'            => self::ABILITY_CATEGORY,
+			'execute_callback'    => [ OptimizeMediaAbility::class, 'execute' ],
+			'permission_callback' => [ $this, 'userCanOptimize' ],
+			'args'                => [
+				'id' => [
+					'type'        => 'integer',
+					'description' => __( 'The attachment ID (media library) or custom media ID', 'shortpixel-image-optimiser' ),
+					'required'    => true,
+				],
+				'type' => [
+					'type'        => 'string',
+					'description' => __( 'Image type: "media" for Media Library or "custom" for Custom Media', 'shortpixel-image-optimiser' ),
+					'default'     => 'media',
+					'enum'        => [ 'media', 'custom' ],
+				],
+				'compression' => [
+					'type'        => 'string',
+					'description' => __( 'Compression level. Omit to use the plugin setting', 'shortpixel-image-optimiser' ),
+					'enum'        => [ 'lossy', 'glossy', 'lossless' ],
+				],
+				'smartcrop' => [
+					'type'        => 'boolean',
+					'description' => __( 'Force smart cropping on or off for this job. Omit to use the plugin setting', 'shortpixel-image-optimiser' ),
+				],
+				'process' => [
+					'type'        => 'boolean',
+					'description' => __( 'Process the queue immediately after enqueueing (default true). Set false to only enqueue', 'shortpixel-image-optimiser' ),
+					'default'     => true,
+				],
+			],
+			'meta' => $meta,
+		];
+
+		$abilities['shortpixel/run-queue'] = [
+			'title'               => __( 'Run Optimization Queue', 'shortpixel-image-optimiser' ),
+			'description'         => __( 'Advances the optimization queues by running processing ticks within a time budget. Call repeatedly until the queues report empty. Returns the queue status after the run', 'shortpixel-image-optimiser' ),
+			'category'            => self::ABILITY_CATEGORY,
+			'execute_callback'    => [ RunQueueAbility::class, 'execute' ],
+			'permission_callback' => [ $this, 'userCanOptimize' ],
+			'args'                => [
+				'ticks' => [
+					'type'        => 'integer',
+					'description' => __( 'Maximum number of processing ticks to run (default 10, max 20)', 'shortpixel-image-optimiser' ),
+					'default'     => 10,
+				],
+			],
+			'meta' => $meta,
+		];
+
+		$abilities['shortpixel/restore-media'] = [
+			'title'               => __( 'Restore Image from Backup', 'shortpixel-image-optimiser' ),
+			'description'         => __( 'Restores an optimized image to its original state from the ShortPixel backup. Does not consume credits. Fails when no backup exists', 'shortpixel-image-optimiser' ),
+			'category'            => self::ABILITY_CATEGORY,
+			'execute_callback'    => [ RestoreMediaAbility::class, 'execute' ],
+			'permission_callback' => [ $this, 'userCanOptimize' ],
+			'args'                => [
+				'id' => [
+					'type'        => 'integer',
+					'description' => __( 'The attachment ID (media library) or custom media ID', 'shortpixel-image-optimiser' ),
+					'required'    => true,
+				],
+				'type' => [
+					'type'        => 'string',
+					'description' => __( 'Image type: "media" for Media Library or "custom" for Custom Media', 'shortpixel-image-optimiser' ),
+					'default'     => 'media',
+					'enum'        => [ 'media', 'custom' ],
+				],
+			],
+			'meta' => $meta,
+		];
+
+		$abilities['shortpixel/update-settings'] = [
+			'title'               => __( 'Update Plugin Settings', 'shortpixel-image-optimiser' ),
+			'description'         => __( 'Updates ShortPixel settings from a strict whitelist with validation. Sensitive fields (API key, credentials, CDN domain) can never be written. Returns updated and skipped keys', 'shortpixel-image-optimiser' ),
+			'category'            => self::ABILITY_CATEGORY,
+			'execute_callback'    => [ UpdateSettingsAbility::class, 'execute' ],
+			'permission_callback' => [ $this, 'userCanManage' ],
+			'args'                => [
+				'settings' => [
+					'type'        => 'object',
+					'description' => __( 'Object with setting keys to update. Allowed: compressionType (lossy/glossy/lossless), processThumbnails, backupImages, useSmartcrop, createWebp, createAvif, optimizePdfs, optimizeRetina, optimizeUnlisted, CMYKtoRGBconversion, autoMediaLibrary, useCDN, resizeImages, resizeWidth, resizeHeight, resizeType (outer/inner), png2jpg (0-2), exif (0-1), enable_ai, autoAI, ai_gen_alt, ai_gen_caption, ai_gen_description', 'shortpixel-image-optimiser' ),
+					'required'    => true,
+				],
+			],
+			'meta' => $meta,
+		];
+
 		return $abilities;
 	}
 
