@@ -79,16 +79,11 @@ class ResizeOnUploadTest extends SPIO_IntegrationTestCase {
 		$this->assertSame( 1067, (int) $image->getMeta( 'resizeWidth' ) );
 		$this->assertSame( 800, (int) $image->getMeta( 'resizeHeight' ) );
 
-		// PINNED BUG: on a FIRST-time optimize no SPIO meta record exists yet,
-		// and MediaLibraryModel::loadMeta() only calls verifyImage() (which
-		// backfills originalWidth/originalHeight) in its metadata-exists
-		// branch. So the resize comparison in ImageModel::handleOptimized()
-		// runs against NULL originals, and the next load backfills them from
-		// the already-resized file. Correct values would be 1200/900.
-		// When these assertions fail with 1200/900 the bug was fixed —
-		// flip the expectations and drop this comment.
-		$this->assertSame( 1067, (int) $image->getMeta( 'originalWidth' ), 'PINNED: originalWidth is backfilled from the resized file, losing the true original (should be 1200).' );
-		$this->assertSame( 800, (int) $image->getMeta( 'originalHeight' ), 'PINNED: originalHeight is backfilled from the resized file (should be 900).' );
+		// Since 3a2a299d (bug #5 fix) loadMeta() runs verifyImage() on the
+		// fresh-image branch too, so the true pre-resize dimensions are
+		// recorded before the API result is applied.
+		$this->assertSame( 1200, (int) $image->getMeta( 'originalWidth' ), 'originalWidth must record the true pre-resize width.' );
+		$this->assertSame( 900, (int) $image->getMeta( 'originalHeight' ), 'originalHeight must record the true pre-resize height.' );
 	}
 
 	public function test_wp_attachment_metadata_reflects_new_dimensions() {
@@ -116,14 +111,9 @@ class ResizeOnUploadTest extends SPIO_IntegrationTestCase {
 		$this->assertSame( 1200, $size[0], 'An image already within the resize box must keep its dimensions.' );
 		$this->assertSame( 900, $size[1] );
 
-		// PINNED BUG (same root cause as the originalWidth pin above): with
-		// originalWidth/Height NULL on a first-time optimize, the
-		// "$width != $originalWidth" check in ImageModel::handleOptimized()
-		// is true even though the API did not resize anything, so the image
-		// is falsely flagged as resized (with resizeWidth = its own width).
-		// When these fail (resize false / resizeWidth empty) the bug was
-		// fixed — flip to assertFalse( resize ) and drop this comment.
-		$this->assertTrue( (bool) $image->getMeta( 'resize' ), 'PINNED: resize flag is falsely set for an unresized first-time optimize (should be false).' );
-		$this->assertSame( 1200, (int) $image->getMeta( 'resizeWidth' ), 'PINNED: resizeWidth records the unchanged width (should be unset).' );
+		// Since 3a2a299d (bug #5 fix) the originals are known on a first-time
+		// optimize, so an unresized image is no longer falsely flagged.
+		$this->assertFalse( (bool) $image->getMeta( 'resize' ), 'The resize flag must stay false for an unresized first-time optimize.' );
+		$this->assertEmpty( $image->getMeta( 'resizeWidth' ), 'resizeWidth must stay unset when the API did not resize.' );
 	}
 }

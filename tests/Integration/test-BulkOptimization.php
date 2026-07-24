@@ -17,7 +17,10 @@
  * always end in `.tmp` (wp_tempnam), so the whitelist never matches and
  * PDF optimization always fails at the download step. Broken since
  * 9cd33e9c (2026-04-01); the attempted fix 5c63ce9e checks the wrong
- * extension. Real production bug — reported to Bas.
+ * extension. Reported to Bas (bug #1); the fix attempt c66431c7 renames
+ * the temp file in remoteGetMethod() only — but that is the LAST fallback,
+ * and the primary downloadURLMethod() (WP download_url, `.tmp` suffix)
+ * succeeds first, so the whitelist still never matches. Still broken.
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -167,6 +170,11 @@ class BulkOptimizationTest extends SPIO_IntegrationTestCase {
 	 * is rejected ("seems not an image"). The API round-trip itself
 	 * succeeds — the mock serves smaller PDF bytes — so before 9cd33e9c
 	 * (2026-04-01) this optimized fine.
+	 *
+	 * Fix attempt c66431c7 (IT #1) does NOT resolve this: it adds the
+	 * extension-preserving rename to remoteGetMethod(), but that is the
+	 * last entry in the download-method fallback chain; downloadURLMethod()
+	 * (WP download_url) succeeds first and still yields a `.tmp` file.
 	 */
 	public function test_bulk_pdf_currently_fails_at_download_step_pinned() {
 		$id = $this->uploadFixture( 'fixture-large.pdf' );
@@ -464,7 +472,16 @@ class BulkOptimizationTest extends SPIO_IntegrationTestCase {
 
 	/**
 	 * When a registered thumbnail file is missing from disk, the bulk run must
-	 * skip the missing thumbnail but still optimize the files it can reach.
+	 * still optimize the files it can reach (the main file), while the item
+	 * itself ends as a fatal error in the queue: the pipeline re-sends the
+	 * item for the unreachable thumbnail and gives up after retries, so the
+	 * ShortQ "done" counter is never incremented for it.
+	 *
+	 * NOTE: an earlier version asserted $stats->done > 0, which only passed in
+	 * full-suite runs because ShortQ status counters live in the shortqwp_SPIO
+	 * option and leak between tests (purgeQueueTable() only clears the table).
+	 * In isolation done is honestly 0. Verified identical on pre-fix 63a6fcfc,
+	 * so this is long-standing behavior, not a side-effect of Bas's IT#5 fix.
 	 *
 	 * Manual plan 4.14.
 	 */
@@ -496,9 +513,17 @@ class BulkOptimizationTest extends SPIO_IntegrationTestCase {
 			'Main file must still be optimized even when a thumbnail is missing.'
 		);
 
-		// The run must not have zero processed items; the missing thumb is skipped
-		// but the queue does complete.
-		$this->assertGreaterThan( 0, (int) $stats->done, 'At least the main file must be counted as done.' );
+		// The queue must complete; the item with the missing thumbnail is
+		// recorded as a fatal error after retries (see docblock).
+		$this->assertTrue(
+			(bool) $stats->is_finished,
+			'The bulk queue must reach the finished state despite the missing thumbnail.'
+		);
+		$this->assertGreaterThan(
+			0,
+			(int) $stats->fatal_errors,
+			'The item with the missing thumbnail must be recorded as a fatal error.'
+		);
 
 		$bulk->finishBulk( 'media' );
 	}

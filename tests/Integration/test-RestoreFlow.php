@@ -647,9 +647,10 @@ class RestoreFlowTest extends SPIO_IntegrationTestCase {
 				'A backup must exist for the _c companion after optimization (rows 19.3/20.3).'
 			);
 
-			// Capture the backup-file path now — after restore the file is gone
-			// and hasBackup() / getBackupFile() caches stale state; assert on the
-			// raw filesystem path instead (established pattern in this suite).
+			// Capture the backup-file path now — asserting on the raw filesystem
+			// path after restore is the established pattern in this suite.
+			// (LocalBackupModel's $backup_files cache is reset on restore/delete
+			// since 1ee7e37e — bug #4 fix — but path assertions stay robust.)
 			$cBackupFileObj = $backup->getBackupFile( $cThumb );
 			$this->assertNotFalse(
 				$cBackupFileObj,
@@ -799,25 +800,21 @@ class RestoreFlowTest extends SPIO_IntegrationTestCase {
 		$recentFile = $currentDir . '/recent.jpg';
 		copy( $this->fixturePath( 'fixture-small.jpg' ), $recentFile );
 
-		// PHP warns on the failed rmdir (see pinned assertion below); don't
-		// let the WP test framework convert that warning into a failure.
-		@$controller->cronRemoveBackups();
+		$controller->cronRemoveBackups();
 
 		clearstatcache();
 		$this->assertDirectoryDoesNotExist( $emptyYearDir, 'Empty year directories before the cutoff are removed.' );
 		$this->assertFileExists( $recentFile, 'Backups from the current month must survive the prune.' );
 
-		// PINNED BUG (sentinel): autoRemoveBackups() deletes old year dirs
-		// with DirectoryModel::delete() — a plain, non-recursive rmdir() —
-		// which fails on any populated year directory. Old backups are
-		// therefore never actually removed on real installs. When this is
-		// fixed (recursiveDelete or equivalent), this assertion will fail:
-		// flip it to assertDirectoryDoesNotExist and drop the pin.
-		$this->assertFileExists(
+		// Since 89050ab8 (bug #2 fix) old year dirs are removed with
+		// recursiveDelete(), so populated pre-cutoff trees go away entirely.
+		$this->assertFileDoesNotExist(
 			$ancientFile,
-			'Pinned current behavior: populated pre-cutoff year dirs survive because rmdir() is non-recursive. If this fails, the bug was fixed — update the test.'
+			'Populated pre-cutoff year dirs must be pruned recursively.'
 		);
-
-		unlink( $ancientFile );
+		$this->assertDirectoryDoesNotExist(
+			dirname( $ancientFile, 2 ),
+			'The pre-cutoff year directory itself must be gone after the prune.'
+		);
 	}
 }
