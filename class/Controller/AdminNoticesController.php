@@ -241,7 +241,7 @@ class AdminNoticesController extends \ShortPixel\Controller
                         continue;
                     }
                     // Bit hacky; limit global messages to our screens. Next step here @todo would be to include a remotenotice flag in the noticemodel
-                    elseif (strpos($notice->getID(), 'Global') !== false && false === $is_our_screen)
+                    elseif (is_string($notice->getID()) && strpos($notice->getID(), 'Global') !== false && false === $is_our_screen)
                     {
                         continue; 
                     }
