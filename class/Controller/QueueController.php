@@ -227,7 +227,8 @@ class QueueController
               //$json->status = 0;
             }
   
-            if (! property_exists($qItem->result(), 'message') || false === is_null($qItem->result->message) && strlen($qItem->result->message) <= 0)
+            $result = $qItem->result(); 
+            if (! property_exists($result, 'message') || false === is_null($result->message) || strlen($result->message) <= 0)
             {
               $qItem->addResult([
                 'message' => $message,
