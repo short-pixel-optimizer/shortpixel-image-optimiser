@@ -287,6 +287,7 @@ class SettingsModel extends \ShortPixel\Model
         {
           //Notices::addNormal('Dont forget about keepexif');
            $this->set('exif',$settings['keepExif'] );
+           $settings['exif'] = $settings['keepExif'];
            unset($settings['keepExif']);
         }
 
