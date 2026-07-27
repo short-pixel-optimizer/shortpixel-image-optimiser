@@ -479,7 +479,7 @@ class SpioCommandBase
 			\WP_CLI::line(' ');
 			\WP_CLI::line(' ' . $result->message); // testing
 
-			if (property_exists($result, 'improvements')) {
+			if (false === empty($result->improvements) ) {
 				$outputTable = array();
 				$improvements = $result->improvements;
 
