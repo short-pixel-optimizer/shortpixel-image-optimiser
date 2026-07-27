@@ -3276,7 +3276,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 			$this->image_meta->wasConverted = true;
 			$this->image_meta->status = $status;
-			$this->image_meta->improvement = $improvement;
+//			$this->image_meta->improvement = $improvement;
 			$this->image_meta->compressionType = $type;
 			$this->image_meta->compressedSize = $this->getFileSize();
 			$this->image_meta->tsAdded = $tsAdded;
@@ -3288,11 +3288,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				$backup = $backupModel->getBackupFile($this);
 				if (is_object($backup))
 					$this->image_meta->originalSize = $backup->getFileSize();
-			} elseif (isset($metadata['ShortPixelImprovement'])) {
+			} elseif (is_numeric($improvement) && $improvement > 0) {
 				// If the improvement is set, calculate back originalsize.
-				$imp = intval($metadata['ShortPixelImprovement']); // try to make int. Legacy can contain errors / message / crap here.
-				if ($imp > 0)
-					$this->image_meta->originalSize = ($this->getFileSize() / (100 - $imp)) * 100;
+				$this->image_meta->originalSize = ($this->getFileSize() / (100 - $improvement)) * 100;
 			}
 
 			$this->image_meta->webp = $this->checkLegacyFileTypeFileName($this, 'webp');
@@ -3323,12 +3321,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				$thumbnailObj->image_meta->compressionType = $type;
 				$thumbnailObj->image_meta->compressedSize = $thumbnailObj->getFileSize();
 
-				$thumbnailObj->has_backup = false;
+//				$thumbnailObj->has_backup = false;
 				if ($backupModel->hasBackup($thumbnailObj)) {
 					$backup = $backupModel->getBackupFile($thumbnailObj);
 					if (is_object($backup)) {
 						$thumbnailObj->image_meta->originalSize = $backup->getFileSize();
-						$thumbnailObj->has_backup = true;
+//						$thumbnailObj->has_backup = true;
 					}
 				}
 
@@ -3358,13 +3356,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				$originalFile->image_meta->compressionType = $type;
 				$originalFile->image_meta->compressedSize = $originalFile->getFileSize();
 
-	 			 $originalFile->has_backup = false;
+//	 			 $originalFile->has_backup = false;
 
 				if ($backupModel->hasBackup($originalFile)) {
 					$backup = $backupModel->getBackupFile($originalFile);
 					if (is_object($backup)) {
 						$originalFile->image_meta->originalSize = $backup->getFileSize();
-						$originalFile->has_backup = true;
+//						$originalFile->has_backup = true;
 					}
 				}
 
@@ -3412,7 +3410,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						}
 
 						if ($backupModel->hasBackup($retinaObj)) {
-							$retinaObj->has_backup = true;
+					//		$retinaObj->has_backup = true;
 							if ($status == self::FILE_STATUS_SUCCESS)
 							{	
 								$backupFile = $backupModel->getBackupFile($retinaObj);
