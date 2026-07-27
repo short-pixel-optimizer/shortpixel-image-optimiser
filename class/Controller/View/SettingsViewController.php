@@ -1316,18 +1316,18 @@ class SettingsViewController extends \ShortPixel\ViewController
               $type = isset($post['deliverWebpType']) ? $post['deliverWebpType'] : '';
               $altering = isset($post['deliverWebpAlteringType']) ? $post['deliverWebpAlteringType'] : '';
 
-              if ($type == 'deliverWebpAltered')
+              if ('deliverWebpAltered' == $type )
               {
-                  if ($altering == 'deliverWebpAlteredWP')
+                  if ('deliverWebpAlteredWP' == $altering)
                   {
                       $deliverwebp = 2;
                   }
-                  elseif($altering = 'deliverWebpAlteredGlobal')
+                  elseif('deliverWebpAlteredGlobal' == $altering )
                   {
                       $deliverwebp = 1;
                   }
               }
-              elseif ($type == 'deliverWebpUnaltered') {
+              elseif ('deliverWebpUnaltered' == $type) {
                 $deliverwebp = 3;
               }
             }
