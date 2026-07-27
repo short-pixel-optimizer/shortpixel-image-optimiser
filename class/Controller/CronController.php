@@ -212,6 +212,7 @@ class CronController
       $this->bulkRemoveAll();
       $this->custom_scheduler(true);
       $this->removeLegacyCron();
+      $this->tools_scheduler(true);
   }
 
   /**
