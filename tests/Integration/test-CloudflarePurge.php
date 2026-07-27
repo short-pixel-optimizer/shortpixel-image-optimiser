@@ -21,6 +21,7 @@
  */
 
 use ShortPixel\CloudFlareAPI;
+use ShortPixel\Controller\OtherMediaController;
 use ShortPixel\Controller\QueueController;
 
 class CloudflarePurgeTest extends SPIO_IntegrationTestCase {
@@ -212,5 +213,169 @@ PHP;
 
 		$this->assertTrue( \wpSPIO()->filesystem()->getImage( $id, 'media', false )->isOptimized() );
 		$this->assertSame( array(), $this->capturedRequests(), 'Without zone/token configuration no purge request may be sent.' );
+	}
+
+	// -------------------------------------------------------------------
+	// Custom media helpers (shared between 15.2a and 15.2b)
+	// -------------------------------------------------------------------
+
+	/**
+	 * Create a temp folder with a single image registered in the custom-media
+	 * pipeline, return (customDir, customId).
+	 *
+	 * @return array{string, int}  [absolute folder path with trailing slash, shortpixel_meta id]
+	 */
+	private function addCustomMediaImage(): array {
+		global $wpdb;
+		// Purge stale shortpixel_folders / shortpixel_meta rows so the folder
+		// and image are the only ones present (mirrors CustomMediaFoldersTest).
+		foreach ( array( 'shortpixel_folders', 'shortpixel_meta' ) as $name ) {
+			$table = $wpdb->prefix . $name;
+			if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) === $table ) {
+				$wpdb->query( "DELETE FROM `$table`" );
+			}
+		}
+
+		$customDir = trailingslashit( WP_CONTENT_DIR ) . 'spio-cf-custom-' . wp_generate_password( 8, false ) . '/';
+		mkdir( $customDir, 0777, true );
+		$imagePath = $customDir . 'cf-custom.jpg';
+		copy( $this->fixturePath( 'fixture-small.jpg' ), $imagePath );
+
+		$otherMedia = \ShortPixel\Controller\OtherMediaController::getInstance();
+		$folder     = $otherMedia->addDirectory( $customDir );
+		$this->assertNotFalse( $folder, 'Custom folder registration must succeed.' );
+
+		// Scan finds one image; resolve its shortpixel_meta id.
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT id FROM {$wpdb->prefix}shortpixel_meta WHERE folder_id = %d",
+				(int) $folder->get( 'id' )
+			)
+		);
+		$this->assertCount( 1, $rows, 'Exactly one image must be found in the custom folder.' );
+
+		return array( $customDir, (int) $rows[0]->id );
+	}
+
+	/** Remove the custom-media folder created by addCustomMediaImage(). */
+	private function removeCustomMediaDir( string $dir ): void {
+		foreach ( glob( $dir . '*' ) ?: array() as $file ) {
+			@unlink( $file );
+		}
+		@rmdir( $dir );
+	}
+
+	// -------------------------------------------------------------------
+	// 15.2a — custom-media optimize fires Cloudflare purge
+	// -------------------------------------------------------------------
+
+	/**
+	 * Optimizing a Custom Media image must fire a Cloudflare cache-purge
+	 * request containing that image's URL — exactly the same
+	 * shortpixel/image/optimised hook that Media Library items use.
+	 *
+	 * The CloudFlareAPI constructor wires check_cloudflare() onto the hook;
+	 * reflection then injects the capture-server credentials into that
+	 * instance so the purge hits the local server rather than the real
+	 * api.cloudflare.com.  The plugin's own (unconfigured) instance stays
+	 * a no-op throughout.
+	 *
+	 * Manual plan row 15.2a.
+	 *
+	 * @return void
+	 */
+	public function test_custom_media_optimize_purges_cloudflare_cache() {
+		// configuredPurger() calls new CloudFlareAPI() which registers
+		// check_cloudflare on shortpixel/image/optimised via the constructor,
+		// then injects the capture-server credentials via reflection.
+		$this->configuredPurger();
+
+		list( $customDir, $customId ) = $this->addCustomMediaImage();
+
+		try {
+			$customImage     = \wpSPIO()->filesystem()->getImage( $customId, 'custom', false );
+			$queueController = new QueueController();
+			$queueController->addItemToQueue( $customImage );
+			$this->runQueueUntilEmpty();
+
+			$customImage = \wpSPIO()->filesystem()->getImage( $customId, 'custom', false );
+			$this->assertTrue( $customImage->isOptimized(), 'Custom image must be optimized before checking the purge.' );
+
+			$requests = $this->capturedRequests();
+			$this->assertNotEmpty( $requests, 'Optimizing a custom-media image must fire a Cloudflare purge request.' );
+
+			$this->assertSame(
+				'/zones/' . self::ZONE . '/purge_cache',
+				$requests[0]['uri'],
+				'Purge must target the configured Cloudflare zone.'
+			);
+			$this->assertSame( 'Bearer ' . self::TOKEN, $requests[0]['auth'], 'Purge must carry the Bearer token.' );
+
+			// The purge files list must include the URL of the custom image.
+			$files     = $this->purgedFiles( $requests[0] );
+			$customUrl = $customImage->getURL();
+			$this->assertContains(
+				$customUrl,
+				$files,
+				'Cloudflare purge files list must include the custom-media image URL.'
+			);
+		} finally {
+			$this->removeCustomMediaDir( $customDir );
+		}
+	}
+
+	// -------------------------------------------------------------------
+	// 15.2b — custom-media restore fires Cloudflare purge
+	// -------------------------------------------------------------------
+
+	/**
+	 * Restoring a Custom Media image must fire a Cloudflare cache-purge
+	 * request via the shortpixel/image/before_restore hook before the
+	 * file reverts — the same hook fired for Media Library restores.
+	 *
+	 * Manual plan row 15.2b.
+	 *
+	 * @return void
+	 */
+	public function test_custom_media_restore_purges_cloudflare_cache() {
+		$this->configuredPurger();
+
+		list( $customDir, $customId ) = $this->addCustomMediaImage();
+
+		try {
+			$customImage     = \wpSPIO()->filesystem()->getImage( $customId, 'custom', false );
+			$queueController = new QueueController();
+			$queueController->addItemToQueue( $customImage );
+			$this->runQueueUntilEmpty();
+
+			$customImage = \wpSPIO()->filesystem()->getImage( $customId, 'custom', false );
+			$this->assertTrue( $customImage->isOptimized(), 'Custom image must be optimized before restore test.' );
+
+			// Clear the log so we only see the restore-triggered purge.
+			@unlink( self::$captureDir . '/requests.log' );
+
+			// Restore — same ShortQ-gotcha workaround as the ML restore test.
+			$this->purgeQueueTable();
+			$queueController = new QueueController();
+			$queueController->addItemToQueue(
+				\wpSPIO()->filesystem()->getImage( $customId, 'custom', false ),
+				array( 'action' => 'restore' )
+			);
+			$this->runQueueUntilEmpty();
+
+			$requests = $this->capturedRequests();
+			$this->assertNotEmpty( $requests, 'Restoring a custom-media image must fire a Cloudflare purge request (before_restore hook).' );
+
+			$this->assertSame(
+				'/zones/' . self::ZONE . '/purge_cache',
+				$requests[0]['uri'],
+				'Restore purge must target the configured Cloudflare zone.'
+			);
+
+			$files = $this->purgedFiles( $requests[0] );
+			$this->assertNotEmpty( $files, 'Restore purge files list must not be empty.' );
+		} finally {
+			$this->removeCustomMediaDir( $customDir );
+		}
 	}
 }

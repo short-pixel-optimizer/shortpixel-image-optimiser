@@ -379,4 +379,245 @@ class AjaxHandlersTest extends SPIO_AjaxTestCase {
 		$this->assertStringContainsString( 'removed', $response->settings->results );
 		$this->assertFalse( is_dir( SHORTPIXEL_BACKUP_FOLDER ), 'The backup folder must be gone' );
 	}
+
+	// -------------------------------------------------------------------
+	// Plan 2.16 / 2.43 — non-image attachment optimize returns not-optimizable message
+	// -------------------------------------------------------------------
+
+	/**
+	 * Uploading a non-image file (PDF) creates an attachment that SPIO cannot
+	 * optimize.  Calling optimizeItem on such an attachment must not crash — it
+	 * must return a response (is_optimizable = false) or a NO_ACCESS error
+	 * (if the image model fails to load), not a PHP fatal.
+	 *
+	 * Plan rows: 2.16 / 2.43 — non-image attachment optimize returns not-optimizable.
+	 *
+	 * NOTE: The PDF fixture produces a valid attachment but wp_generate_attachment_metadata()
+	 * does not create image sizes for it, so MediaLibraryModel::isProcessable() returns
+	 * false — the queue result will reflect that the item is not optimizable.
+	 *
+	 * @see class/Controller/AjaxController.php optimizeItem()
+	 * @see class/Model/Image/MediaLibraryModel.php isProcessable()
+	 */
+	public function test_non_image_attachment_optimize_returns_not_optimizable_message() {
+		$this->_setRole( 'administrator' );
+
+		// PDFs ARE optimizable when the optimizePdfs setting is on (the
+		// baseline default) — switch it off so the PDF models a genuinely
+		// non-optimizable attachment.
+		\wpSPIO()->settings()->optimizePdfs = 0;
+
+		// Upload a PDF — with optimizePdfs off it cannot be compressed by SPIO.
+		$attachment_id = $this->uploadFixture( 'fixture-large.pdf' );
+		$this->purgeQueueTable();
+
+		$response = $this->doScreenAction(
+			'optimizeItem',
+			array(
+				'id'   => $attachment_id,
+				'type' => 'media',
+			)
+		);
+
+		// The handler must return JSON (not crash).
+		$this->assertIsObject( $response, 'optimizeItem must return JSON for a non-image attachment; raw: ' . $this->lastRawResponse() );
+
+		// Either the pipeline set is_optimizable = false, or access was denied.
+		$is_optimizable   = $response->media->is_optimizable ?? null;
+		$error            = $response->error ?? null;
+		$queue_item_count = (int) ( $response->media->results[0]->in_queue ?? 0 );
+
+		if ( null !== $is_optimizable ) {
+			$this->assertFalse(
+				(bool) $is_optimizable,
+				'A PDF attachment must not be reported as optimizable'
+			);
+		} elseif ( null !== $error ) {
+			// NO_ACCESS is also acceptable — no queue item was added.
+			$this->assertSame( AjaxController::NO_ACCESS, $error );
+		}
+
+		// In no case may the PDF have been enqueued for optimization.
+		$this->assertFalse(
+			$this->queueHasWork(),
+			'A non-image attachment must never be enqueued for optimization'
+		);
+	}
+
+	// -------------------------------------------------------------------
+	// Plan 2.20 / 2.47 — restore on non-image attachment degrades gracefully
+	// -------------------------------------------------------------------
+
+	/**
+	 * Calling restoreItem on a non-image attachment (PDF) must not crash.
+	 * Since PDF attachments are never optimized there is nothing to restore;
+	 * the handler should return a JSON response (possibly NO_ACCESS or
+	 * a queue result with no work done) without a fatal error.
+	 *
+	 * Plan rows: 2.20 / 2.47 — restore on non-image attachment degrades gracefully.
+	 *
+	 * @see class/Controller/AjaxController.php restoreItem()
+	 */
+	public function test_restore_on_non_image_attachment_degrades_gracefully() {
+		$this->_setRole( 'administrator' );
+
+		$attachment_id = $this->uploadFixture( 'fixture-large.pdf' );
+		$this->purgeQueueTable();
+
+		$response = $this->doScreenAction(
+			'restoreItem',
+			array(
+				'id'   => $attachment_id,
+				'type' => 'media',
+			)
+		);
+
+		// Must return JSON without crashing.
+		$this->assertIsObject( $response, 'restoreItem must return JSON for a non-image attachment; raw: ' . $this->lastRawResponse() );
+
+		// Acceptable outcomes: status=true (no-op restore enqueued and completed)
+		// or error=NO_ACCESS (model failed to load / is not accessible).
+		$status = $response->status ?? null;
+		$error  = $response->error ?? null;
+
+		$this->assertTrue(
+			null !== $status || null !== $error,
+			'restoreItem must set either status or error in the response'
+		);
+
+		// The restore queue tick must not have triggered any reducer API call on a PDF.
+		if ( $this->queueHasWork() ) {
+			$this->runQueueUntilEmpty();
+		}
+
+		$api_reducer_calls = array_filter( $this->api->requests, function ( $req ) {
+			return false !== strpos( $req['url'], 'reducer' );
+		} );
+		$this->assertEmpty(
+			$api_reducer_calls,
+			'Restoring a non-image attachment must not hit the reducer API'
+		);
+	}
+
+	// -------------------------------------------------------------------
+	// Plan 2.15.1 — bulk glossy reoptimize covers mixed optimized and unoptimized
+	// -------------------------------------------------------------------
+
+	/**
+	 * reOptimizeItem with compressionType=1 (glossy) must re-send both already-
+	 * optimized and previously-unoptimized images through the pipeline.  After
+	 * both finish the queue must be empty and both items must be marked optimized.
+	 *
+	 * Plan row: 2.15.1 — bulk glossy reoptimize over mixed optimized/unoptimized.
+	 *
+	 * @see class/Controller/AjaxController.php reOptimizeItem()
+	 */
+	public function test_bulk_glossy_reoptimize_covers_mixed_optimized_and_unoptimized_images() {
+		$this->_setRole( 'administrator' );
+
+		// Upload two images: optimize only the first.
+		$id_optimized   = $this->uploadFixture( 'fixture-small.jpg' );
+		$id_unoptimized = $this->uploadFixture( 'fixture-small.png' );
+		$this->purgeQueueTable();
+
+		$this->optimizeAttachment( $id_optimized );
+		$this->purgeQueueTable();
+
+		$this->assertTrue( $this->freshImageModel( $id_optimized )->isOptimized(), 'Precondition: first image optimized' );
+		$this->assertFalse( $this->freshImageModel( $id_unoptimized )->isOptimized(), 'Precondition: second image not optimized' );
+
+		$requests_before = count( $this->api->requests );
+
+		// Re-optimize the first (already optimized) at glossy.
+		$response1 = $this->doScreenAction(
+			'reOptimizeItem',
+			array(
+				'id'              => $id_optimized,
+				'type'            => 'media',
+				'compressionType' => 1,
+			)
+		);
+		$this->assertIsObject( $response1 );
+		$this->assertTrue( $response1->status );
+
+		// Optimize the second (never-optimized) at glossy.
+		$response2 = $this->doScreenAction(
+			'optimizeItem',
+			array(
+				'id'              => $id_unoptimized,
+				'type'            => 'media',
+				'compressionType' => 1,
+			)
+		);
+		$this->assertIsObject( $response2 );
+
+		$this->runQueueUntilEmpty();
+
+		$this->assertTrue(
+			$this->freshImageModel( $id_optimized )->isOptimized(),
+			'Previously-optimized image must still be optimized after glossy reoptimize'
+		);
+		$this->assertTrue(
+			$this->freshImageModel( $id_unoptimized )->isOptimized(),
+			'Previously-unoptimized image must be optimized by glossy reoptimize'
+		);
+		$this->assertGreaterThan(
+			$requests_before,
+			count( $this->api->requests ),
+			'Both images must have been sent through the API'
+		);
+	}
+
+	// -------------------------------------------------------------------
+	// Plan 10.1.2 — editor can reprocess any image
+	// -------------------------------------------------------------------
+
+	/**
+	 * An editor (edit_others_posts) passes the outer is_author gate AND the
+	 * per-image imageIsEditable() check for attachments they did not personally
+	 * upload (because is_editor maps to edit_others_posts, which grants access
+	 * to all posts).  reOptimizeItem must therefore succeed for an editor acting
+	 * on any attachment.
+	 *
+	 * Plan row: 10.1.2 — editor can reprocess any image.
+	 *
+	 * @see class/Model/AccessModel.php imageIsEditable()
+	 * @see class/Controller/AjaxController.php reOptimizeItem()
+	 */
+	public function test_editor_can_reprocess_any_image() {
+		// Upload as administrator.
+		$this->_setRole( 'administrator' );
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+		$this->optimizeAttachment( $attachment_id );
+		$this->purgeQueueTable();
+		$this->assertTrue( $this->freshImageModel( $attachment_id )->isOptimized(), 'Precondition: image optimized' );
+
+		// Switch to editor — different user, different owner.
+		$editor_id = $this->factory()->user->create( array( 'role' => 'editor' ) );
+		wp_set_current_user( $editor_id );
+
+		$response = $this->doScreenAction(
+			'reOptimizeItem',
+			array(
+				'id'              => $attachment_id,
+				'type'            => 'media',
+				'compressionType' => 1,
+			)
+		);
+
+		$this->assertIsObject( $response, 'reOptimizeItem must return JSON for an editor; raw: ' . $this->lastRawResponse() );
+		$this->assertFalse(
+			isset( $response->error ) && $response->error === AjaxController::NO_ACCESS,
+			'An editor must not be blocked from reprocessing any image'
+		);
+		$this->assertTrue( $response->status, 'reOptimizeItem must succeed for an editor' );
+		$this->assertTrue( $this->queueHasWork(), 'reOptimizeItem must enqueue the item for the editor' );
+
+		$this->runQueueUntilEmpty();
+		$this->assertTrue(
+			$this->freshImageModel( $attachment_id )->isOptimized(),
+			'Image must be optimized again after editor reprocess'
+		);
+	}
 }

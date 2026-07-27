@@ -373,6 +373,89 @@ class WpCliTest extends SPIO_IntegrationTestCase {
 		}
 	}
 
+	/**
+	 * Restore a custom-media image via `wp spio restore ID --type=custom`.
+	 * The command resolves the image via filesystem()->getImage($id, 'custom'),
+	 * runs the restore action synchronously through the queue, and reports success.
+	 * Manual plan row 11.2.5 (custom-type variant).
+	 */
+	public function test_restore_via_cli_with_type_custom() {
+		\wpSPIO()->settings()->backupImages = 1;
+
+		// --- Set up a custom folder and register one image. ---
+		global $wpdb;
+		foreach ( array( 'shortpixel_folders', 'shortpixel_meta' ) as $tbl ) {
+			$t = $wpdb->prefix . $tbl;
+			if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $t ) ) === $t ) {
+				$wpdb->query( "DELETE FROM `$t`" );
+			}
+		}
+
+		$customDir = trailingslashit( WP_CONTENT_DIR ) . 'spio-cli-restore-' . wp_generate_password( 8, false ) . '/';
+		mkdir( $customDir );
+		$src = $this->fixturePath( 'fixture-small.jpg' );
+		copy( $src, $customDir . 'cli-restore.jpg' );
+
+		try {
+			$folder = \ShortPixel\Controller\OtherMediaController::getInstance()->addDirectory( $customDir );
+			$this->assertNotFalse( $folder, 'Custom folder must register successfully.' );
+
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT id FROM {$wpdb->prefix}shortpixel_meta WHERE folder_id = %d",
+					(int) $folder->get( 'id' )
+				)
+			);
+			$this->assertNotEmpty( $rows, 'Image must be scanned into shortpixel_meta.' );
+			$customId = (int) $rows[0]->id;
+
+			// Optimize the image through the standard queue pipeline.
+			$image = \wpSPIO()->filesystem()->getImage( $customId, 'custom' );
+			( new \ShortPixel\Controller\QueueController() )->addItemToQueue( $image );
+			$this->runQueueUntilEmpty();
+			$this->purgeQueueTable();
+
+			$optimized = \wpSPIO()->filesystem()->getImage( $customId, 'custom', false );
+			$this->assertTrue( $optimized->isOptimized(), 'Precondition: custom image must be optimized before CLI restore.' );
+
+			// --- Invoke the CLI restore with --type=custom. ---
+			WP_CLI::reset();
+
+			$cli = new SpioSingle();
+			$cli->restore( array( $customId ), array( 'type' => 'custom' ) );
+
+			$successes = WP_CLI::messagesOfType( 'success' );
+			$this->assertNotEmpty(
+				$successes,
+				"wp spio restore $customId --type=custom must report success.\n" . WP_CLI::allText()
+			);
+			$this->assertStringContainsString(
+				'Item restored',
+				$successes[0],
+				"The success message must contain 'Item restored' (row 11.2.5).\n" . WP_CLI::allText()
+			);
+
+			// The image must now be back to unoptimized state.
+			$restored = \wpSPIO()->filesystem()->getImage( $customId, 'custom', false );
+			$this->assertFalse(
+				$restored->isOptimized(),
+				'Custom image must be marked as unoptimized after CLI restore with --type=custom (row 11.2.5).'
+			);
+
+			// The disk file must be back to the original byte size.
+			clearstatcache();
+			$originalSize = filesize( $src );
+			$this->assertSame(
+				$originalSize,
+				filesize( $customDir . 'cli-restore.jpg' ),
+				'The restored custom file on disk must match the original fixture byte size (row 11.2.5).'
+			);
+		} finally {
+			@unlink( $customDir . 'cli-restore.jpg' );
+			@rmdir( $customDir );
+		}
+	}
+
 	// -------------------------------------------------------------------
 	// bulk lifecycle
 	// -------------------------------------------------------------------

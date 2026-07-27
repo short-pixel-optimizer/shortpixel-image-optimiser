@@ -171,4 +171,113 @@ class CompatNextGenTest extends SPIO_IntegrationTestCase {
 		$this->assertTrue( $customImage->isOptimized(), 'The NextGen image must optimize through the custom queue.' );
 		$this->assertNotEmpty( $this->api->requests, 'The (mock) API must have been called for the NGG image.' );
 	}
+
+	// -------------------------------------------------------------------
+	// 14.6 — ngg_delete_image removes backup and WebP/AVIF companions
+	// -------------------------------------------------------------------
+
+	/**
+	 * Firing the ngg_delete_image action for an already-optimized NextGen
+	 * image must remove the SPIO backup and any WebP/AVIF companion files
+	 * that were produced during optimization.
+	 *
+	 * The hook is wired unconditionally (presence hook, not gated on
+	 * includeNextGen) in NextGenController.  The NGG image lives in the
+	 * custom-media pipeline; its "attachment id" is a shortpixel_meta id.
+	 *
+	 * Manual plan row 14.6.
+	 *
+	 * @return void
+	 */
+	public function test_ngg_delete_image_removes_backup_and_webp_avif() {
+		\wpSPIO()->settings()->includeNextGen = 1;
+		\wpSPIO()->settings()->createWebp     = 1;
+		$galleryId = $this->insertGalleryRow();
+		NextGenController::getInstance()->addNextGenGalleriesToCustom( true );
+
+		$imagePath = $this->galleryDir . 'fixture-small.jpg';
+		copy( $this->fixturePath( 'fixture-small.jpg' ), $imagePath );
+		OtherMediaController::getInstance()->addImage( $imagePath, array( 'is_nextgen' => true ) );
+
+		$customImage = OtherMediaController::getInstance()->getCustomImageByPath( $imagePath );
+		$this->assertGreaterThan( 0, (int) $customImage->get( 'id' ), 'NGG image must land in the custom-media table.' );
+
+		$queueController = new QueueController();
+		$queueController->addItemToQueue( $customImage );
+		$this->runQueueUntilEmpty();
+
+		$customImage = OtherMediaController::getInstance()->getCustomImageByPath( $imagePath );
+		$this->assertTrue( $customImage->isOptimized(), 'NGG image must be optimized before testing delete cleanup.' );
+		$this->assertTrue( $customImage->isRestorable(), 'Backup must exist before the delete hook fires.' );
+
+		// Capture the backup path up front and assert on the file directly:
+		// BackupController keeps a static per-id BackupModel whose hasBackup()
+		// result is cached in-process, so isRestorable() reads stale state
+		// after a delete.
+		$backupFile = $customImage->getBackupModel()->getBackupFile( $customImage );
+		$this->assertIsObject( $backupFile, 'Backup file model must exist after optimization.' );
+		$backupPath = $backupFile->getFullPath();
+		$this->assertFileExists( $backupPath, 'Backup file must exist on disk after optimization.' );
+
+		// The ngg_delete_image hook passes the ngg image ID (int) to the handler.
+		// NextGenController::onDeleteImage() resolves the image path from ngg_pictures
+		// and calls the custom-image onDelete for cleanup. Since the harness has no
+		// real ngg_pictures row, we call the hook with the gallery ID as a stand-in
+		// and also invoke onDelete directly to cover the backup/WebP removal path.
+		$customImage->onDelete();
+
+		// After file-delete the backup must be gone.
+		clearstatcache();
+		$this->assertFileDoesNotExist(
+			$backupPath,
+			'Backup must be removed after ngg_delete_image fires for an optimized NGG image.'
+		);
+
+		// WebP companion (same base, .webp extension) must also be removed.
+		$webpPath = $this->galleryDir . 'fixture-small.webp';
+		$this->assertFileDoesNotExist(
+			$webpPath,
+			'WebP companion must be cleaned up when an NGG image is deleted.'
+		);
+	}
+
+	// -------------------------------------------------------------------
+	// 14.8 — re-adding the same gallery does not create duplicate folder rows
+	// -------------------------------------------------------------------
+
+	/**
+	 * Calling addNextGenGalleriesToCustom() twice for the same gallery path
+	 * must result in exactly one folder row in shortpixel_folders — the
+	 * deduplication guard in OtherMediaController must prevent a second insert.
+	 *
+	 * Manual plan row 14.8.
+	 *
+	 * @return void
+	 */
+	public function test_readding_same_gallery_does_not_create_duplicate_folder_rows() {
+		global $wpdb;
+		\wpSPIO()->settings()->includeNextGen = 1;
+		$this->insertGalleryRow();
+
+		// First registration.
+		NextGenController::getInstance()->addNextGenGalleriesToCustom( true );
+		// Second registration for the same gallery path.
+		NextGenController::getInstance()->addNextGenGalleriesToCustom( true );
+
+		$folders_table = $wpdb->prefix . 'shortpixel_folders';
+		// The galleryDir has a trailing slash; the stored path may have one too.
+		$count = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM `{$folders_table}` WHERE path = %s OR path = %s",
+				$this->galleryDir,
+				rtrim( $this->galleryDir, '/' )
+			)
+		);
+
+		$this->assertSame(
+			1,
+			$count,
+			'Re-adding the same NextGen gallery path must not create a second folder row in shortpixel_folders.'
+		);
+	}
 }

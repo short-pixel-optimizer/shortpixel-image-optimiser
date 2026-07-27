@@ -78,6 +78,20 @@ boot a local `php -S` capture server on port 8437 inside the container,
 because the purge uses raw cURL that the WP HTTP mock can't intercept.
 No real Cloudflare traffic is ever sent.
 
+A second special case: `test-ConstantsAndFilters.php` `define()`s SPIO
+behavior constants (wp-config style), which would poison every test that
+runs after it in the same PHP process. It is excluded from the main
+`Integration` suite and runs as the separate `IntegrationIsolated`
+testsuite — `bin/test.sh --integration` makes both phpunit invocations
+automatically.
+
+The suite also contains hook-level partner-integration tests that do NOT
+need the partner plugin installed — they fire the partner's public hooks
+directly and assert on SPIO's reaction: `test-EMRIntegration.php`
+(Enable Media Replace), `test-RTAIntegration.php` (Regenerate Thumbnails
+Advanced), `test-MediaPress.php`, and `test-PhotoEngine.php` (WP/LR Sync).
+These run as part of the plain `--integration` pass.
+
 ```bash
 # Integration suite only
 bin/test.sh --integration
@@ -121,6 +135,12 @@ activates it too. To update WPML, replace the zip — the harness
 re-extracts whenever the zip is newer than the extracted copy. Without
 the zip, the WPML tests self-skip. CI does not run the WPML tests (the
 zip can't live in the public repo).
+
+Polylang is covered hook/data-level (`test-CompatPolylang.php`): the
+suite fakes Polylang's presence via the `pre_option_active_plugins`
+filter and reproduces its shared-guid media translations directly in the
+DB, so no Polylang zip or code is needed — the guid-duplicate detection
+in `MediaLibraryModel::getWPMLDuplicates()` is exercised for real.
 
 ```bash
 bin/test.sh --compat

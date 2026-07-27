@@ -242,4 +242,77 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 		$this->uploadedAttachments = array();
 		$this->leaveSubsite();
 	}
+
+	// -------------------------------------------------------------------
+	// Plan 1.13 — per-subsite API key is isolated from main site
+	// -------------------------------------------------------------------
+
+	/**
+	 * Each subsite must store its own spio_key option independently.
+	 * Writing a different key on the subsite must not alter the main site's key,
+	 * and reading the main site's key on the subsite must not be visible.
+	 *
+	 * Plan row: 1.13 — per-subsite API key is isolated from main site.
+	 *
+	 * NOTE: The multisite harness note applies — SettingsModel defers save to
+	 * shutdown; call onShutdown() to force the write before switching blogs.
+	 * Delete subsite attachments BEFORE restore_current_blog (leaveSubsite()).
+	 *
+	 * @see class/Model/ApiKeyModel.php — option_name = 'spio_key' (per-site in multisite)
+	 */
+	public function test_subsite_api_key_is_isolated_from_main_site() {
+		// Confirm main-site baseline: 20 a's from spioSetUpBaseline().
+		$main_key = get_option( 'spio_key' );
+		$this->assertSame(
+			str_repeat( 'a', 20 ),
+			$main_key['apiKey'],
+			'Precondition: main site has the baseline API key'
+		);
+
+		// Create a subsite and give it its own different key.
+		$blog_id     = $this->createAndEnterSubsite();
+		$subsite_key = str_repeat( 'z', 20 );
+
+		update_option( 'spio_key', array(
+			'apiKey'      => $subsite_key,
+			'verifiedKey' => true,
+			'apiKeyTried' => '',
+		) );
+
+		// Force settings save (SettingsModel defers to shutdown hook).
+		$settings = \wpSPIO()->settings();
+		$settings->onShutdown();
+
+		// Read back the subsite key while still on the subsite.
+		$stored_on_subsite = get_option( 'spio_key' );
+		$this->assertSame(
+			$subsite_key,
+			$stored_on_subsite['apiKey'],
+			'Subsite spio_key must store the key written on the subsite'
+		);
+
+		// Delete any attachments before switching back (multisite harness requirement).
+		foreach ( $this->uploadedAttachments as $id ) {
+			wp_delete_attachment( $id, true );
+		}
+		$this->uploadedAttachments = array();
+
+		// Switch back to main site.
+		$this->leaveSubsite();
+
+		// Main site must still have its original key.
+		$main_key_after = get_option( 'spio_key' );
+		$this->assertSame(
+			str_repeat( 'a', 20 ),
+			$main_key_after['apiKey'],
+			'Main site spio_key must not be affected by a key written on the subsite'
+		);
+
+		// The subsite key must not be visible on the main site option.
+		$this->assertNotSame(
+			$subsite_key,
+			$main_key_after['apiKey'],
+			'Subsite key must be isolated and not bleed into the main site spio_key option'
+		);
+	}
 }

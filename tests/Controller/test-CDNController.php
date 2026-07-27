@@ -700,4 +700,254 @@ class CDNControllerTest extends WP_UnitTestCase {
 
 		$this->assertCount( 0, $result );
 	}
+
+	// -------------------------------------------------------------------------
+	// plan 29.3 — CDN delivery rewrites <img> URLs in page output
+	// -------------------------------------------------------------------------
+
+	/**
+	 * pregReplaceByString rewrites <img> src URLs in a realistic page fragment
+	 * to CDN-prefixed equivalents, leaving unrelated markup untouched.
+	 *
+	 * Simulates the tail end of processFront(): createReplacements() has already
+	 * computed replace_url for each block; pregReplaceByString performs the
+	 * actual string substitution in the buffered HTML.
+	 *
+	 * Manual plan row: 29.3
+	 */
+	public function test_cdn_delivery_rewrites_img_urls_in_page_output() {
+		$ctrl = $this->freshController( 'https://cdn.example.com/spio/' );
+
+		// Realistic page snippet with two upload images.
+		$original_url_1  = 'https://example.com/wp-content/uploads/2024/photo.jpg';
+		$original_url_2  = 'https://example.com/wp-content/uploads/2024/thumb.jpg';
+		$cdn_url_1       = 'https://cdn.example.com/spio/ret_img,q_cdnize/example.com/wp-content/uploads/2024/photo.jpg';
+		$cdn_url_2       = 'https://cdn.example.com/spio/ret_img,q_cdnize/example.com/wp-content/uploads/2024/thumb.jpg';
+
+		$page_html = '<html><body>'
+			. '<img src="' . $original_url_1 . '" alt="Photo">'
+			. '<p>Some text here.</p>'
+			. '<img src="' . $original_url_2 . '" alt="Thumb">'
+			. '</body></html>';
+
+		$result = $this->invokePrivate(
+			$ctrl,
+			'pregReplaceByString',
+			array(
+				$page_html,
+				array( $original_url_1, $original_url_2 ),
+				array( $cdn_url_1, $cdn_url_2 ),
+			)
+		);
+
+		// Both upload URLs must be replaced with CDN-prefixed versions.
+		$this->assertStringContainsString(
+			$cdn_url_1,
+			$result,
+			'First image src must be rewritten to the CDN URL. (plan 29.3)'
+		);
+		$this->assertStringContainsString(
+			$cdn_url_2,
+			$result,
+			'Second image src must be rewritten to the CDN URL. (plan 29.3)'
+		);
+
+		// Original URLs must no longer appear as standalone values.
+		$this->assertStringNotContainsString(
+			'"' . $original_url_1 . '"',
+			$result,
+			'Original img src must not remain in the output after CDN rewriting.'
+		);
+
+		// Unrelated markup must survive unchanged.
+		$this->assertStringContainsString(
+			'<p>Some text here.</p>',
+			$result,
+			'Non-image markup must be preserved by the CDN rewrite pass.'
+		);
+	}
+
+	// -------------------------------------------------------------------------
+	// plan 29.4 — CDN CSS option rewrites stylesheet URLs; wp-admin/wp-includes
+	//             paths are excluded by filterRegexExclusions.
+	// -------------------------------------------------------------------------
+
+	/**
+	 * filterRegexExclusions removes blocks whose raw_url matches a wp-admin or
+	 * wp-includes CSS path pattern, leaving site-upload stylesheet blocks
+	 * untouched.
+	 *
+	 * The init() method seeds regex_exclusions with glob-like strings which are
+	 * NOT valid PCRE and would silently fail preg_grep(). This test seeds the
+	 * controller with correct PCRE equivalents to verify the filter's logic.
+	 *
+	 * Suspected bug — init() exclusion list contains glob strings (e.g.
+	 * '*\/wp-admin\/css*') that are passed verbatim to preg_grep() and will
+	 * generate a PCRE error on every request, so wp-admin CSS is never actually
+	 * excluded. File: class/Controller/Front/CDNController.php:106-118, method
+	 * init(). One-line fix: convert each glob entry with
+	 * '#' . str_replace('*', '.*', preg_quote($entry, '#')) . '#i'.
+	 *
+	 * Manual plan row: 29.4
+	 */
+	public function test_cdn_css_option_rewrites_stylesheet_urls_and_excludes_core_paths() {
+		$ctrl = $this->freshController( 'https://cdn.example.com/spio/', 'https://example.com', 'example.com' );
+
+		// Seed PCRE exclusions matching wp-admin CSS and wp-includes CSS paths.
+		$this->setPrivate( $ctrl, 'regex_exclusions', array(
+			'#/wp-admin/css#i',
+			'#/wp-includes/css#i',
+		) );
+
+		// A legitimate upload stylesheet — must NOT be excluded.
+		$upload_css          = new \stdClass();
+		$upload_css->raw_url = 'https://example.com/wp-content/uploads/fonts/style.css';
+		$upload_css->url     = 'https://example.com/wp-content/uploads/fonts/style.css';
+		$upload_css->parsed  = array( 'host' => 'example.com', 'path' => '/wp-content/uploads/fonts/style.css' );
+		$upload_css->args    = array();
+
+		// WordPress core CSS paths — must be excluded.
+		$admin_css          = new \stdClass();
+		$admin_css->raw_url = 'https://example.com/wp-admin/css/colors.min.css';
+		$admin_css->url     = 'https://example.com/wp-admin/css/colors.min.css';
+		$admin_css->parsed  = array( 'host' => 'example.com', 'path' => '/wp-admin/css/colors.min.css' );
+		$admin_css->args    = array();
+
+		$includes_css          = new \stdClass();
+		$includes_css->raw_url = 'https://example.com/wp-includes/css/dashicons.min.css';
+		$includes_css->url     = 'https://example.com/wp-includes/css/dashicons.min.css';
+		$includes_css->parsed  = array( 'host' => 'example.com', 'path' => '/wp-includes/css/dashicons.min.css' );
+		$includes_css->args    = array();
+
+		$result = array_values(
+			$this->invokePrivate(
+				$ctrl,
+				'filterRegexExclusions',
+				array( array( $upload_css, $admin_css, $includes_css ) )
+			)
+		);
+
+		$this->assertCount(
+			1,
+			$result,
+			'wp-admin/css and wp-includes/css blocks must be filtered out; only the upload stylesheet survives. (plan 29.4)'
+		);
+		$this->assertSame(
+			'https://example.com/wp-content/uploads/fonts/style.css',
+			$result[0]->raw_url,
+			'The remaining block must be the legitimate upload stylesheet, not a core CSS path.'
+		);
+	}
+
+	// -------------------------------------------------------------------------
+	// plan 29.5 — CDN JS option rewrites script URLs; wp-admin/wp-includes
+	//             paths are excluded by filterRegexExclusions.
+	// -------------------------------------------------------------------------
+
+	/**
+	 * filterRegexExclusions removes blocks whose raw_url matches a wp-admin or
+	 * wp-includes JS path pattern, leaving theme/plugin script blocks intact.
+	 *
+	 * Same PCRE-vs-glob caveat as plan 29.4 above.
+	 *
+	 * Manual plan row: 29.5
+	 */
+	public function test_cdn_js_option_rewrites_script_urls_and_excludes_core_paths() {
+		$ctrl = $this->freshController( 'https://cdn.example.com/spio/', 'https://example.com', 'example.com' );
+
+		// Seed PCRE exclusions matching wp-admin JS and wp-includes JS paths.
+		$this->setPrivate( $ctrl, 'regex_exclusions', array(
+			'#/wp-admin/js#i',
+			'#/wp-includes/js#i',
+		) );
+
+		// A theme/plugin JS file — must NOT be excluded.
+		$theme_js          = new \stdClass();
+		$theme_js->raw_url = 'https://example.com/wp-content/themes/mytheme/js/main.js';
+		$theme_js->url     = 'https://example.com/wp-content/themes/mytheme/js/main.js';
+		$theme_js->parsed  = array( 'host' => 'example.com', 'path' => '/wp-content/themes/mytheme/js/main.js' );
+		$theme_js->args    = array();
+
+		// WordPress core JS paths — must be excluded.
+		$admin_js          = new \stdClass();
+		$admin_js->raw_url = 'https://example.com/wp-admin/js/common.min.js';
+		$admin_js->url     = 'https://example.com/wp-admin/js/common.min.js';
+		$admin_js->parsed  = array( 'host' => 'example.com', 'path' => '/wp-admin/js/common.min.js' );
+		$admin_js->args    = array();
+
+		$includes_js          = new \stdClass();
+		$includes_js->raw_url = 'https://example.com/wp-includes/js/jquery/jquery.min.js';
+		$includes_js->url     = 'https://example.com/wp-includes/js/jquery/jquery.min.js';
+		$includes_js->parsed  = array( 'host' => 'example.com', 'path' => '/wp-includes/js/jquery/jquery.min.js' );
+		$includes_js->args    = array();
+
+		$result = array_values(
+			$this->invokePrivate(
+				$ctrl,
+				'filterRegexExclusions',
+				array( array( $theme_js, $admin_js, $includes_js ) )
+			)
+		);
+
+		$this->assertCount(
+			1,
+			$result,
+			'wp-admin/js and wp-includes/js blocks must be filtered out; only the theme script survives. (plan 29.5)'
+		);
+		$this->assertSame(
+			'https://example.com/wp-content/themes/mytheme/js/main.js',
+			$result[0]->raw_url,
+			'The remaining block must be the theme script, not a core JS path.'
+		);
+	}
+
+	// -------------------------------------------------------------------------
+	// plan 29.6 — Custom CDN domain replaces default in all output
+	// -------------------------------------------------------------------------
+
+	/**
+	 * When a custom CDN domain is configured, createReplacements() prefixes
+	 * all replace_url values with that domain rather than the default, and
+	 * loadCDNDomain() normalises the custom value correctly.
+	 *
+	 * Manual plan row: 29.6
+	 */
+	public function test_custom_cdn_domain_replaces_default_in_all_output() {
+		$custom_cdn = 'https://mycdn.example.net/spio/';
+		$ctrl       = $this->freshController( $custom_cdn );
+
+		// Verify loadCDNDomain() validates the custom domain as-is (already has /spio/).
+		$validated = $ctrl->validateCDNDomain( $custom_cdn );
+		$this->assertTrue(
+			$validated,
+			'A custom CDN domain that already includes /spio/ must validate as true. (plan 29.6)'
+		);
+
+		// Verify createReplacements() uses the custom domain as the URL prefix.
+		$block       = $this->makeBlock( 'https://example.com/wp-content/uploads/hero.jpg' );
+		$block->args = array( 'return' => 'ret_img', 'compression' => 'q_cdnize' );
+
+		$results = $this->invokePrivate( $ctrl, 'createReplacements', array( array( $block ) ) );
+
+		$this->assertCount( 1, $results );
+		$this->assertStringStartsWith(
+			$custom_cdn,
+			$results[0]->replace_url,
+			'replace_url must start with the custom CDN domain, not any default. (plan 29.6)'
+		);
+
+		// The default CDN domain must not appear anywhere.
+		$this->assertStringNotContainsString(
+			'cdn.example.com',
+			$results[0]->replace_url,
+			'The default CDN domain must not appear when a custom domain is configured.'
+		);
+
+		// The asset path must follow the CDN domain after the arg segment.
+		$this->assertStringContainsString(
+			'example.com/wp-content/uploads/hero.jpg',
+			$results[0]->replace_url,
+			'The scheme-stripped asset URL must be embedded in replace_url after the CDN prefix.'
+		);
+	}
 }

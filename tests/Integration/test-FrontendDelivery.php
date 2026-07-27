@@ -223,4 +223,87 @@ class FrontendDeliveryTest extends SPIO_IntegrationTestCase {
 		$hook = array( $controller, 'convertImgToPictureAddWebp' );
 		$this->assertFalse( has_filter( 'the_content', $hook ), 'deliverWebp=0 must not hook content filters' );
 	}
+
+	/**
+	 * When a srcset img has a WebP companion for every size but an AVIF
+	 * companion exists only for some sizes, the picture tag must still emit a
+	 * WebP <source> element in addition to the partial AVIF <source>.
+	 *
+	 * Scenario (plan rows 25.3 / 25.7):
+	 *  - Two srcset entries pointing at the same upload URL (mimics a real
+	 *    srcset such as "image-300x200.jpg 300w, image-large.jpg 1024w").
+	 *  - A WebP companion exists for the main (large) URL but NOT for the
+	 *    thumbnail-sized entry (simulated here by using two distinct upload
+	 *    attachments, one with WebP, one without, and building the srcset from
+	 *    their URLs).
+	 *  - An AVIF companion exists for only ONE of the two srcset entries.
+	 *
+	 * Verified behaviour (PictureController::convertImage()):
+	 *  - $avifCount > 0 because at least one AVIF was found → the AVIF
+	 *    <source> block IS emitted with the AVIF URL for the size that has it.
+	 *  - The missing-AVIF entry falls back to the WebP URL (the $lastwebp
+	 *    path at PictureController.php lines 390-392) in the AVIF srcset.
+	 *  - $webpCount > 0 → the WebP <source> block is also emitted.
+	 *  - The resulting <picture> offers both a WebP source and an AVIF source.
+	 *
+	 * Manual-plan rows: 25.3 / 25.7
+	 */
+	public function test_missing_large_avif_falls_back_to_webp_source_in_picture_tag() {
+		// Two attachments: the first will have both WebP and AVIF companions;
+		// the second will have only WebP (no AVIF) — simulates a srcset where
+		// the large size has AVIF but a thumbnail/secondary size does not.
+		$attach_with_avif = $this->uploadFixture( 'fixture-small.jpg' );
+		$attach_webp_only = $this->uploadFixture( 'fixture-small.jpg' );
+
+		// Create WebP companions for both.
+		$this->makeCompanion( $attach_with_avif, 'webp' );
+		$this->makeCompanion( $attach_webp_only, 'webp' );
+
+		// Create an AVIF companion only for the first attachment.
+		$this->makeCompanion( $attach_with_avif, 'avif' );
+		// Intentionally NO AVIF companion for $attach_webp_only.
+
+		$url_avif = wp_get_attachment_url( $attach_with_avif );
+		$url_webp = wp_get_attachment_url( $attach_webp_only );
+
+		// Build an img with a srcset that references both URLs.
+		$html = '<img src="' . $url_avif . '" srcset="' . $url_avif . ' 1024w, ' . $url_webp . ' 300w">';
+
+		$output = $this->convertHtml( $html );
+
+		// The picture tag must be present.
+		$this->assertStringContainsString( '<picture>', $output, 'Output must be wrapped in a <picture> element' );
+
+		// A WebP source must be present (webpCount >= 1).
+		$this->assertStringContainsString(
+			'type="image/webp"',
+			$output,
+			'A WebP <source> must be emitted when at least one srcset entry has a WebP companion'
+		);
+		$this->assertStringContainsString( '.webp', $output, 'WebP companion URL must appear in the output' );
+
+		// An AVIF source must also be present (avifCount >= 1 from the first entry).
+		$this->assertStringContainsString(
+			'type="image/avif"',
+			$output,
+			'An AVIF <source> must be emitted when at least one srcset entry has an AVIF companion'
+		);
+		$this->assertStringContainsString( '.avif', $output, 'AVIF companion URL must appear in the output' );
+
+		// The AVIF srcset for the second entry (no AVIF on disk) must fall
+		// back to the WebP companion URL, not the raw JPEG — verify a .webp
+		// URL appears inside the avif-typed source block.
+		// We do this by checking the AVIF source line contains a .webp reference
+		// (the fallback path in PictureController lines 390-392).
+		preg_match( '/<source[^>]+type="image\/avif"[^>]*>/i', $output, $avif_source_matches );
+		$this->assertNotEmpty( $avif_source_matches, 'There must be an image/avif <source> element in the output' );
+		$this->assertStringContainsString(
+			'.webp',
+			$avif_source_matches[0],
+			'The AVIF <source> srcset must fall back to the WebP URL for sizes without an AVIF companion'
+		);
+
+		// The original img must still appear as the fallback.
+		$this->assertStringContainsString( $url_avif, $output, 'The original img src must survive as the <img> fallback' );
+	}
 }
