@@ -213,8 +213,6 @@ class AdminController extends \ShortPixel\Controller
 							$meta = $converter->getUpdatedMeta();
         }
 
-
-
         $queueController = new QueueController();
         
         $args = ['action' => 'requestAlt'];
