@@ -28,7 +28,7 @@ class SettingsModel extends \ShortPixel\Model
 {
 		private static $instance;
 
-		private $option_name = 'spio_settings';
+		protected $option_name = 'spio_settings';
 
 		protected $updated = false;
 
@@ -128,7 +128,7 @@ class SettingsModel extends \ShortPixel\Model
   //  const ALLOW_AI = 2;
   //  const DENY_AI = 2;
 
-		private $settings;
+		protected $settings;
 
 		/**
 		 * Wires late-bound defaults for AI settings (which depend on the
