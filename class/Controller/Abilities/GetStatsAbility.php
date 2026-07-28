@@ -23,8 +23,10 @@ class GetStatsAbility
 	 * @param array $args Input arguments (none required for this ability)
 	 * @return array Stats data
 	 */
-	public static function execute( $args )
+	public static function execute( $args = null )
 	{
+		$args = is_array( $args ) ? $args : [];
+
 		$statsController = StatsController::getInstance();
 
 		$mediaItems          = $statsController->find( 'media', 'items' );

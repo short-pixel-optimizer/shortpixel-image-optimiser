@@ -25,8 +25,10 @@ class UpdateSettingsAbility
 	 * @param array $args Input: settings (object with whitelisted keys)
 	 * @return array Updated keys, skipped keys with reasons
 	 */
-	public static function execute( $args )
+	public static function execute( $args = null )
 	{
+		$args = is_array( $args ) ? $args : [];
+
 		$input = isset( $args['settings'] ) ? $args['settings'] : null;
 
 		if ( is_object( $input ) ) {

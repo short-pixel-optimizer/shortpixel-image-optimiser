@@ -62,8 +62,10 @@ class GetSettingsAbility
 	 * @param array $args Input arguments (none required for this ability)
 	 * @return array Settings data
 	 */
-	public static function execute( $args )
+	public static function execute( $args = null )
 	{
+		$args = is_array( $args ) ? $args : [];
+
 		$settings = \wpSPIO()->settings();
 		$keyController = ApiKeyController::getInstance();
 

@@ -31,8 +31,10 @@ class OptimizeMediaAbility
 	 *                    process (bool, default true)
 	 * @return array Result data or error
 	 */
-	public static function execute( $args )
+	public static function execute( $args = null )
 	{
+		$args = is_array( $args ) ? $args : [];
+
 		$id   = isset( $args['id'] ) ? (int) $args['id'] : 0;
 		$type = isset( $args['type'] ) ? $args['type'] : 'media';
 

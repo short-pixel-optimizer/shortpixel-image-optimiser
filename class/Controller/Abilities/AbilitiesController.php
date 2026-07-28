@@ -16,13 +16,13 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
  * controllers (QuotaController, StatsController, QueueController, etc).
  *
  * Behaviour on WP < 6.9 (or without the Abilities API feature plugin):
- * the `abilities_api_*` hooks never fire, so this whole controller is a
+ * the `wp_abilities_api_*` hooks never fire, so this whole controller is a
  * silent no-op. The `function_exists` guards inside the callbacks are a
  * second line of defense only.
  *
  * Registration flow:
- *   1. `abilities_api_categories_init` → registers the `shortpixel` category
- *   2. `abilities_api_init` → registers every ability from getAbilities()
+ *   1. `wp_abilities_api_categories_init` → registers the `shortpixel` category
+ *   2. `wp_abilities_api_init` → registers every ability from getAbilities()
  *
  * Third-parties can prevent registration entirely by returning false on
  * the `shortpixel/abilities/init` filter.
@@ -56,13 +56,13 @@ class AbilitiesController
 	 */
 	public function __construct()
 	{
-		add_action( 'abilities_api_categories_init', [ $this, 'registerCategories' ] );
-		add_action( 'abilities_api_init', [ $this, 'registerAbilities' ] );
+		add_action( 'wp_abilities_api_categories_init', [ $this, 'registerCategories' ] );
+		add_action( 'wp_abilities_api_init', [ $this, 'registerAbilities' ] );
 	}
 
 	/**
 	 * Register the shared ability category for all SPIO abilities.
-	 * Runs on `abilities_api_categories_init`
+	 * Runs on `wp_abilities_api_categories_init`
 	 *
 	 * @return void
 	 */
@@ -73,12 +73,13 @@ class AbilitiesController
 		}
 
 		\wp_register_ability_category( self::ABILITY_CATEGORY, [
-			'label' => __( 'ShortPixel Image Optimizer', 'shortpixel-image-optimiser' ),
+			'label'       => __( 'ShortPixel Image Optimizer', 'shortpixel-image-optimiser' ),
+			'description' => __( 'Abilities for ShortPixel image optimization, quota, settings, and queue control', 'shortpixel-image-optimiser' ),
 		] );
 	}
 
 	/**
-	 * Register all SPIO abilities. Runs on `abilities_api_init`.
+	 * Register all SPIO abilities. Runs on `wp_abilities_api_init`.
 	 *
 	 * Can be short-circuited by third parties via the
 	 * `shortpixel/abilities/init` filter (return false to disable)
@@ -99,7 +100,7 @@ class AbilitiesController
 		foreach ( $this->getAbilities() as $name => $args ) {
 			$result = \wp_register_ability( $name, $args );
 
-			if ( false === $result ) {
+			if ( null === $result ) {
 				Log::addWarn( 'Ability registration failed: ' . $name );
 			}
 		}
@@ -121,155 +122,166 @@ class AbilitiesController
 		// --- Read-only abilities for now (to see if i'm on right path adn i'll introduce actions abilities later if i see everyting looks good)---
 
 		$abilities['shortpixel/get-stats'] = [
-			'title'               => __( 'Get Optimization Stats', 'shortpixel-image-optimiser' ),
+			'label'               => __( 'Get Optimization Stats', 'shortpixel-image-optimiser' ),
 			'description'         => __( 'Returns image optimization statistics: totals, compression averages, and images remaining to optimize', 'shortpixel-image-optimiser' ),
 			'category'            => self::ABILITY_CATEGORY,
 			'execute_callback'    => [ GetStatsAbility::class, 'execute' ],
 			'permission_callback' => [ $this, 'userCanOptimize' ],
-			'args'                => [],
 			'meta'                => $meta,
 		];
 
 		$abilities['shortpixel/get-quota'] = [
-			'title'               => __( 'Get Account Quota', 'shortpixel-image-optimiser' ),
+			'label'               => __( 'Get Account Quota', 'shortpixel-image-optimiser' ),
 			'description'         => __( 'Returns ShortPixel account quota: monthly credits, one-time credits, AI credits, and whether quota is exceeded', 'shortpixel-image-optimiser' ),
 			'category'            => self::ABILITY_CATEGORY,
 			'execute_callback'    => [ GetQuotaAbility::class, 'execute' ],
 			'permission_callback' => [ $this, 'userCanOptimize' ],
-			'args'                => [],
 			'meta'                => $meta,
 		];
 
 		$abilities['shortpixel/get-settings'] = [
-			'title'               => __( 'Get Plugin Settings', 'shortpixel-image-optimiser' ),
+			'label'               => __( 'Get Plugin Settings', 'shortpixel-image-optimiser' ),
 			'description'         => __( 'Returns the current ShortPixel plugin settings (whitelisted subset, API key is never exposed)', 'shortpixel-image-optimiser' ),
 			'category'            => self::ABILITY_CATEGORY,
 			'execute_callback'    => [ GetSettingsAbility::class, 'execute' ],
 			'permission_callback' => [ $this, 'userCanManage' ],
-			'args'                => [],
 			'meta'                => $meta,
 		];
 
 		$abilities['shortpixel/get-media-status'] = [
-			'title'               => __( 'Get Image Optimization Status', 'shortpixel-image-optimiser' ),
+			'label'               => __( 'Get Image Optimization Status', 'shortpixel-image-optimiser' ),
 			'description'         => __( 'Returns the optimization status of a single image by ID: compression ratio, bytes saved, backup state', 'shortpixel-image-optimiser' ),
 			'category'            => self::ABILITY_CATEGORY,
 			'execute_callback'    => [ GetMediaStatusAbility::class, 'execute' ],
 			'permission_callback' => [ $this, 'userCanOptimize' ],
-			'args'                => [
-				'id' => [
-					'type'        => 'integer',
-					'description' => __( 'The attachment ID (media library) or custom media ID', 'shortpixel-image-optimiser' ),
-					'required'    => true,
+			'input_schema'        => [
+				'type'       => 'object',
+				'properties' => [
+					'id' => [
+						'type'        => 'integer',
+						'description' => 'The attachment ID (media library) or custom media ID',
+					],
+					'type' => [
+						'type'        => 'string',
+						'description' => 'Image type: media or custom',
+						'default'     => 'media',
+						'enum'        => [ 'media', 'custom' ],
+					],
 				],
-				'type' => [
-					'type'        => 'string',
-					'description' => __( 'Image type: "media" for Media Library or "custom" for Custom Media', 'shortpixel-image-optimiser' ),
-					'default'     => 'media',
-					'enum'        => [ 'media', 'custom' ],
-				],
+				'required' => [ 'id' ],
 			],
 			'meta' => $meta,
 		];
 
 		$abilities['shortpixel/get-queue-status'] = [
-			'title'               => __( 'Get Queue Status', 'shortpixel-image-optimiser' ),
+			'label'               => __( 'Get Queue Status', 'shortpixel-image-optimiser' ),
 			'description'         => __( 'Returns the current state of the optimization queues: items in queue, in process, done, and whether each queue is running', 'shortpixel-image-optimiser' ),
 			'category'            => self::ABILITY_CATEGORY,
 			'execute_callback'    => [ GetQueueStatusAbility::class, 'execute' ],
 			'permission_callback' => [ $this, 'userCanOptimize' ],
-			'args'                => [],
 			'meta'                => $meta,
 		];
 
-		// ---  Action abilities ---
+		// --- Action abilities ---
 
 		$abilities['shortpixel/optimize-media'] = [
-			'title'               => __( 'Optimize Image', 'shortpixel-image-optimiser' ),
+			'label'               => __( 'Optimize Image', 'shortpixel-image-optimiser' ),
 			'description'         => __( 'Enqueues an image for optimization and processes the queue within a time budget. Optimization is asynchronous: if the job does not finish in one call, use run-queue to continue. Consumes ShortPixel credits', 'shortpixel-image-optimiser' ),
 			'category'            => self::ABILITY_CATEGORY,
 			'execute_callback'    => [ OptimizeMediaAbility::class, 'execute' ],
 			'permission_callback' => [ $this, 'userCanOptimize' ],
-			'args'                => [
-				'id' => [
-					'type'        => 'integer',
-					'description' => __( 'The attachment ID (media library) or custom media ID', 'shortpixel-image-optimiser' ),
-					'required'    => true,
+			'input_schema'        => [
+				'type'       => 'object',
+				'properties' => [
+					'id' => [
+						'type'        => 'integer',
+						'description' => 'The attachment ID (media library) or custom media ID',
+					],
+					'type' => [
+						'type'        => 'string',
+						'description' => 'Image type: media or custom',
+						'default'     => 'media',
+						'enum'        => [ 'media', 'custom' ],
+					],
+					'compression' => [
+						'type'        => 'string',
+						'description' => 'Compression level. Omit to use the plugin setting',
+						'enum'        => [ 'lossy', 'glossy', 'lossless' ],
+					],
+					'smartcrop' => [
+						'type'        => 'boolean',
+						'description' => 'Force smart cropping on or off. Omit to use the plugin setting',
+					],
+					'process' => [
+						'type'        => 'boolean',
+						'description' => 'Process the queue immediately after enqueueing. Set false to only enqueue',
+						'default'     => true,
+					],
 				],
-				'type' => [
-					'type'        => 'string',
-					'description' => __( 'Image type: "media" for Media Library or "custom" for Custom Media', 'shortpixel-image-optimiser' ),
-					'default'     => 'media',
-					'enum'        => [ 'media', 'custom' ],
-				],
-				'compression' => [
-					'type'        => 'string',
-					'description' => __( 'Compression level. Omit to use the plugin setting', 'shortpixel-image-optimiser' ),
-					'enum'        => [ 'lossy', 'glossy', 'lossless' ],
-				],
-				'smartcrop' => [
-					'type'        => 'boolean',
-					'description' => __( 'Force smart cropping on or off for this job. Omit to use the plugin setting', 'shortpixel-image-optimiser' ),
-				],
-				'process' => [
-					'type'        => 'boolean',
-					'description' => __( 'Process the queue immediately after enqueueing (default true). Set false to only enqueue', 'shortpixel-image-optimiser' ),
-					'default'     => true,
-				],
+				'required' => [ 'id' ],
 			],
 			'meta' => $meta,
 		];
 
 		$abilities['shortpixel/run-queue'] = [
-			'title'               => __( 'Run Optimization Queue', 'shortpixel-image-optimiser' ),
+			'label'               => __( 'Run Optimization Queue', 'shortpixel-image-optimiser' ),
 			'description'         => __( 'Advances the optimization queues by running processing ticks within a time budget. Call repeatedly until the queues report empty. Returns the queue status after the run', 'shortpixel-image-optimiser' ),
 			'category'            => self::ABILITY_CATEGORY,
 			'execute_callback'    => [ RunQueueAbility::class, 'execute' ],
 			'permission_callback' => [ $this, 'userCanOptimize' ],
-			'args'                => [
-				'ticks' => [
-					'type'        => 'integer',
-					'description' => __( 'Maximum number of processing ticks to run (default 10, max 20)', 'shortpixel-image-optimiser' ),
-					'default'     => 10,
+			'input_schema'        => [
+				'type'       => 'object',
+				'properties' => [
+					'ticks' => [
+						'type'        => 'integer',
+						'description' => 'Maximum number of processing ticks to run (max 20)',
+						'default'     => 10,
+					],
 				],
 			],
 			'meta' => $meta,
 		];
 
 		$abilities['shortpixel/restore-media'] = [
-			'title'               => __( 'Restore Image from Backup', 'shortpixel-image-optimiser' ),
+			'label'               => __( 'Restore Image from Backup', 'shortpixel-image-optimiser' ),
 			'description'         => __( 'Restores an optimized image to its original state from the ShortPixel backup. Does not consume credits. Fails when no backup exists', 'shortpixel-image-optimiser' ),
 			'category'            => self::ABILITY_CATEGORY,
 			'execute_callback'    => [ RestoreMediaAbility::class, 'execute' ],
 			'permission_callback' => [ $this, 'userCanOptimize' ],
-			'args'                => [
-				'id' => [
-					'type'        => 'integer',
-					'description' => __( 'The attachment ID (media library) or custom media ID', 'shortpixel-image-optimiser' ),
-					'required'    => true,
+			'input_schema'        => [
+				'type'       => 'object',
+				'properties' => [
+					'id' => [
+						'type'        => 'integer',
+						'description' => 'The attachment ID (media library) or custom media ID',
+					],
+					'type' => [
+						'type'        => 'string',
+						'description' => 'Image type: media or custom',
+						'default'     => 'media',
+						'enum'        => [ 'media', 'custom' ],
+					],
 				],
-				'type' => [
-					'type'        => 'string',
-					'description' => __( 'Image type: "media" for Media Library or "custom" for Custom Media', 'shortpixel-image-optimiser' ),
-					'default'     => 'media',
-					'enum'        => [ 'media', 'custom' ],
-				],
+				'required' => [ 'id' ],
 			],
 			'meta' => $meta,
 		];
 
 		$abilities['shortpixel/update-settings'] = [
-			'title'               => __( 'Update Plugin Settings', 'shortpixel-image-optimiser' ),
+			'label'               => __( 'Update Plugin Settings', 'shortpixel-image-optimiser' ),
 			'description'         => __( 'Updates ShortPixel settings from a strict whitelist with validation. Sensitive fields (API key, credentials, CDN domain) can never be written. Returns updated and skipped keys', 'shortpixel-image-optimiser' ),
 			'category'            => self::ABILITY_CATEGORY,
 			'execute_callback'    => [ UpdateSettingsAbility::class, 'execute' ],
 			'permission_callback' => [ $this, 'userCanManage' ],
-			'args'                => [
-				'settings' => [
-					'type'        => 'object',
-					'description' => __( 'Object with setting keys to update. Allowed: compressionType (lossy/glossy/lossless), processThumbnails, backupImages, useSmartcrop, createWebp, createAvif, optimizePdfs, optimizeRetina, optimizeUnlisted, CMYKtoRGBconversion, autoMediaLibrary, useCDN, resizeImages, resizeWidth, resizeHeight, resizeType (outer/inner), png2jpg (0-2), exif (0-1), enable_ai, autoAI, ai_gen_alt, ai_gen_caption, ai_gen_description', 'shortpixel-image-optimiser' ),
-					'required'    => true,
+			'input_schema'        => [
+				'type'       => 'object',
+				'properties' => [
+					'settings' => [
+						'type'        => 'object',
+						'description' => 'Object with setting keys to update. Allowed: compressionType (lossy/glossy/lossless), processThumbnails, backupImages, useSmartcrop, createWebp, createAvif, optimizePdfs, optimizeRetina, optimizeUnlisted, CMYKtoRGBconversion, autoMediaLibrary, useCDN, resizeImages, resizeWidth, resizeHeight, resizeType (outer/inner), png2jpg (0-2), exif (0-1), enable_ai, autoAI, ai_gen_alt, ai_gen_caption, ai_gen_description',
+					],
 				],
+				'required' => [ 'settings' ],
 			],
 			'meta' => $meta,
 		];

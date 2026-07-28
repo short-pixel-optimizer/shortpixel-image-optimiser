@@ -24,8 +24,10 @@ class GetQuotaAbility
 	 * @param array $args Input arguments (none required for this ability)
 	 * @return array Quota data
 	 */
-	public static function execute( $args )
+	public static function execute( $args = null )
 	{
+		$args = is_array( $args ) ? $args : [];
+
 		$quotaController = QuotaController::getInstance();
 		$quota = $quotaController->getQuota();
 

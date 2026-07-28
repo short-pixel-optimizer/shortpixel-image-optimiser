@@ -24,8 +24,10 @@ class RunQueueAbility
 	 * @param array $args Input: ticks (int, default 10, max 20)
 	 * @return array Run summary + queue status after the run
 	 */
-	public static function execute( $args )
+	public static function execute( $args = null )
 	{
+		$args = is_array( $args ) ? $args : [];
+
 		$keyController = ApiKeyController::getInstance();
 		if ( false === $keyController->keyIsVerified() ) {
 			return [ 'error' => true, 'message' => 'The ShortPixel API key is not verified. Configure it in Settings > ShortPixel' ];

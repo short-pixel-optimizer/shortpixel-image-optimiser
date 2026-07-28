@@ -23,8 +23,10 @@ class GetMediaStatusAbility
 	 * @param array $args Input arguments: id (int, required), type (string, default 'media')
 	 * @return array Image status data or error
 	 */
-	public static function execute( $args )
+	public static function execute( $args = null )
 	{
+		$args = is_array( $args ) ? $args : [];
+
 		$id   = isset( $args['id'] ) ? (int) $args['id'] : 0;
 		$type = isset( $args['type'] ) ? $args['type'] : 'media';
 

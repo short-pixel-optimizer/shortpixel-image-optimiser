@@ -24,8 +24,10 @@ class GetQueueStatusAbility
 	 * @param array $args Input arguments (none required for this ability)
 	 * @return array Queue status data
 	 */
-	public static function execute( $args )
+	public static function execute( $args = null )
 	{
+		$args = is_array( $args ) ? $args : [];
+
 		$queueController = new QueueController();
 		$startupData     = $queueController->getStartupData();
 
