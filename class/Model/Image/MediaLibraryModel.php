@@ -1183,8 +1183,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			$result = $this->checkLegacy();
 			if ($result) {
 				$this->saveMeta();
+				$metadata = $this->getDBMeta();
 			}
-			$metadata = new \stdClass;
+			else 
+			{
+				$metadata = new \stdClass;
+			}
 		}
 		//} elseif (is_object($metadata)) {
 

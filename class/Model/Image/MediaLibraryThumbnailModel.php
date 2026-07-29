@@ -354,27 +354,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 		return parent::getImprovements();
 	}
 
-	/*
-	public function getBackupFileName()
-	{
-		$mainFile = ($this->is_main_file) ? $this : $this->getMainFile();
-		if (false == $mainFile) {
-			return parent::getBackupFileName();
-		}
-
-		if ($mainFile->getMeta()->convertMeta()->getReplacementImageBase() !== false) {
-			if ($this->is_main_file)
-				return $mainFile->getMeta()->convertMeta()->getReplacementImageBase() . '.' . $this->getExtension();
-			else {
-				//					 $fileBaseNoSize =
-				$name = str_replace($mainFile->getFileBase(), $mainFile->getMeta()->convertMeta()->getReplacementImageBase(), $this->getFileName());
-
-				return $name;
-			}
-		}
-
-		return parent::getBackupFileName();
-	} */
 
 
 	/**
