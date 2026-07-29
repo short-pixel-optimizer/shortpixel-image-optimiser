@@ -355,8 +355,13 @@ abstract class RequestManager
          'status' => self::STATUS_ERROR,
          'error' => json_last_error_msg(),
        ]; */
+  
+      $data = $this->getJsonStrings($raw_data);
+      
+      if (! isset($data[0])) {
+        return array('status' => self::STATUS_ERROR, 'error' => json_last_error_msg());
+      }
 
-       $data = $this->getJsonStrings($raw_data);
        $data = isset($data[0]) ? (array) json_decode($data[0]) : [];
        return $data;
     }

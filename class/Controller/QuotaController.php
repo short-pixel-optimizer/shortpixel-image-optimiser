@@ -35,9 +35,9 @@ class QuotaController
       $settings = \wpSPIO()->settings();
 
       if ($settings->quotaExceeded)
-	  {
+	    {
         return false;
-	  }
+	    }
       return true;
 
     }
