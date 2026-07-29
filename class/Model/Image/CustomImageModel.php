@@ -1041,9 +1041,14 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
      * @param bool $int Accepted for compatibility with ImageModel::getImprovement(); ignored.
      * @return float|null Percentage improvement, or null when never optimized.
      */
-    public function getImprovement($int = false)
+    public function getImprovement($int = false) : int
     {
-       return $this->getMeta('customImprovement');
+       $improvement = $this->getMeta('customImprovement');
+       if (is_numeric($improvement))
+       {
+          return intval($improvement); 
+       }
+       return 0; // Aways return an int
     }
 
     /**
@@ -1068,10 +1073,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
          $count++;
       } */
 			$improvement = $this->getImprovement();
-			if (is_null($improvement)) // getImprovement can return null.
-			{
-				$improvement = 0;
-			}
+
       $improvements['main'] = array($improvement, 0);
 			$improvements['totalpercentage'] = round($improvement); // the same.
 
