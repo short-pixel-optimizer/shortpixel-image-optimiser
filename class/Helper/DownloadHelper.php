@@ -269,6 +269,25 @@ class DownloadHelper
            return false;
         }
 
+
+        $extension = pathinfo($url, PATHINFO_EXTENSION);
+        $suffix = '';
+
+        if ('' !== $extension)
+        {
+            $suffix = '.' . $extension;
+        }
+
+        $tmpFilePath = $tempFile . $suffix;
+
+        // Rename to keep extension for checks
+        if (false === @rename($tempFile, $tmpFilePath))
+        {
+            @unlink($tempFile);
+            Log::addError('Failed to rename temp file for remote download', $url);
+            return false;
+        }
+
         return $tempFile;
       }
 
