@@ -551,9 +551,11 @@ class AjaxController
 				$this->settingsFormSubmit($action);
 				break;
 			default:
-
 				Log::addError('Issue with settingsRequest, not valid action');
-				exit('0');
+				$json = new \stdClass;
+				$json->result = false;
+				$json->message = __('Settings requests with invalid action', 'shortpixel-image-optimiser');
+				$this->send($json);
 				break;
 		}
 	}
