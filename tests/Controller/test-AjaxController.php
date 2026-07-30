@@ -244,8 +244,13 @@ class AjaxControllerTest extends WP_UnitTestCase {
 	/**
 	 * Pins the set of recognised actions that settingsRequest() delegates to
 	 * settingsFormSubmit(). If someone renames or removes a case label, the
-	 * production form submit silently becomes a no-op logged with addError and
-	 * exit('0') — this test must catch that regression.
+	 * production form submit silently becomes a no-op logged with addError — this
+	 * test must catch that regression.
+	 *
+	 * Bug #24 FIXED (ff5641a7): the default branch no longer calls exit('0'). It
+	 * now builds a $json response object (result=false, message='Settings requests
+	 * with invalid action') and calls $this->send($json). The source text assertion
+	 * below also pins the new error text so a rollback would be caught.
 	 *
 	 * We verify the contract by reading the source and asserting the expected
 	 * strings appear. A full end-to-end call is blocked by checkNonce().
@@ -280,6 +285,20 @@ class AjaxControllerTest extends WP_UnitTestCase {
 				"Expected case $case is missing from settingsRequest() dispatch"
 			);
 		}
+
+		// Bug #24 FIXED (ff5641a7): default branch must NOT contain bare exit('0').
+		// Instead it sends a structured JSON error. Pin both the absence of the old
+		// bare exit and the presence of the new error message text.
+		$this->assertStringNotContainsString(
+			"exit('0')",
+			$src,
+			"settingsRequest() default branch must not use bare exit('0') — Bug #24 fixed (ff5641a7)"
+		);
+		$this->assertStringContainsString(
+			'Settings requests with invalid action',
+			$src,
+			"settingsRequest() default branch must send the new structured error message — Bug #24 (ff5641a7)"
+		);
 	}
 
 	// -----------------------------------------------------------------

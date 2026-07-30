@@ -21,14 +21,11 @@
  *      returned ID sets to the known seed groups.
  *
  * Key findings:
- *   - PRODUCTION BUG (AdminController.php ~624): The 'prevented' branch of
- *     filter_add_where() uses `$where = $wpdb->prepare(...)` (assignment, not
- *     `$where .=`), so it REPLACES the existing WHERE clause — discarding WP's
- *     standard attachment conditions (post_status='inherit', post_type='attachment').
- *     As a result the query may return non-attachment posts or miss status filters.
- *     This is pinned in test_prevented_filter_returns_prevented_attachments() below
- *     with an explanatory assertion message. Flip the pinned assertion when fixed.
- *   - The 'optimized' and 'unoptimized' filter branches correctly use `$where .=`
+ *   - Bug #26 FIXED (ea3cd51a): the 'prevented' branch of filter_add_where()
+ *     now APPENDS with `$where .=` (it used to assign, replacing WP's standard
+ *     attachment conditions). test_prevented_filter_returns_prevented_attachments()
+ *     asserts a strict result set since the fix.
+ *   - The 'optimized' and 'unoptimized' filter branches also use `$where .=`
  *     (appending) and work as expected.
  *   - An attachment that is optimized AND has _shortpixel_prevent_optimize set
  *     still appears under the 'optimized' filter (status=SUCCESS in shortpixel_postmeta
@@ -322,48 +319,27 @@ class MediaLibraryFilterTest extends SPIO_IntegrationTestCase {
 	 * 'prevented' filter must return only attachments that have the
 	 * _shortpixel_prevent_optimize post-meta key set.
 	 *
-	 * PINNED CURRENT BEHAVIOUR: filter_add_where()'s 'prevented' branch assigns
-	 * `$where = $wpdb->prepare(...)` instead of `$where .=`, which REPLACES WP's
-	 * standard WHERE clause rather than appending to it. The immediate consequence
-	 * is that the generated SQL omits conditions like `post_status = 'inherit'` and
-	 * the type/status guards added by earlier filters. In the test environment this
-	 * means the query may return IDs that do not belong to the test-seeded set, or
-	 * may over-match. The assertion below validates the EXPECTED sub-set (prevented
-	 * IDs returned) as long as the query still surfaces them, but does not assert
-	 * strict equality because the discarded WHERE clause means additional,
-	 * unrelated posts might sneak in.
-	 *
-	 * Production bug: class/Controller/AdminController.php ~line 624.
-	 * Flip to a strict assertSame() once the `$where .=` fix is applied.
+	 * Bug #26 FIXED (ea3cd51a): filter_add_where()'s 'prevented' branch now
+	 * APPENDS (`$where .=`) instead of assigning, so WP's standard attachment
+	 * conditions (post_status='inherit', post_type='attachment') are kept and
+	 * the result set is exactly the prevented attachments — strict set
+	 * comparison, flipped from the pinned subset assertions.
 	 *
 	 * Manual plan 2.22.
 	 */
 	public function test_prevented_filter_returns_prevented_attachments() {
 		$returned = $this->queryWithFilter( 'prevented' );
 
-		// PINNED: the prevented IDs must appear in the result set (the sub-select
-		// for meta_key still works; the replacement of $where causes broader
-		// correctness issues but the prevent meta condition itself is valid).
-		foreach ( $this->preventedIds as $id ) {
-			$this->assertContains(
-				$id,
-				$returned,
-				// PINNED: the 'prevented' branch of filter_add_where() uses $where = instead of $where .=
-				// (AdminController.php ~624), replacing the WP WHERE clause. This still surfaces the
-				// prevented IDs, but the query may also return non-attachment / non-inherit posts.
-				// Flip to a strict set comparison when the $where .= fix is applied. Plan 2.22.
-				"'prevented' filter must include prevented attachment $id (pinned: where-replacement bug in AdminController.php ~624 is present). Plan 2.22."
-			);
-		}
+		$expected = array_merge( $this->preventedIds, array( $this->optimizedThenPreventedId ) );
+		sort( $expected );
+		$returned = array_map( 'intval', $returned );
+		sort( $returned );
 
-		// An optimized attachment without the prevent meta must NOT appear.
-		foreach ( $this->optimizedIds as $id ) {
-			$this->assertNotContains(
-				$id,
-				$returned,
-				"'prevented' filter must NOT include a cleanly optimized attachment $id. Plan 2.22."
-			);
-		}
+		$this->assertSame(
+			$expected,
+			$returned,
+			"Since ea3cd51a (bug #26 fix) the 'prevented' filter must return exactly the attachments carrying _shortpixel_prevent_optimize. Plan 2.22."
+		);
 	}
 
 	// -------------------------------------------------------------------
@@ -400,11 +376,6 @@ class MediaLibraryFilterTest extends SPIO_IntegrationTestCase {
 	 * attachment has status = FILE_STATUS_SUCCESS (2) in the shortpixel_postmeta
 	 * table (main file row), so it is NOT excluded by that clause and should appear.
 	 *
-	 * PINNED CURRENT BEHAVIOUR: the $where-replacement bug in the 'prevented' branch
-	 * (AdminController.php ~624) still surfaces this ID because the meta sub-select
-	 * itself is correct. The surrounding behaviour (possible extra matches) is already
-	 * documented in test_prevented_filter_returns_prevented_attachments().
-	 *
 	 * Manual plan 2.22.1.
 	 */
 	public function test_optimized_then_prevented_appears_under_prevented_filter() {
@@ -412,10 +383,7 @@ class MediaLibraryFilterTest extends SPIO_IntegrationTestCase {
 
 		$this->assertContains(
 			$this->optimizedThenPreventedId,
-			$returned,
-			// PINNED: $where-replacement bug in 'prevented' branch (AdminController.php ~624) documented above.
-			// The meta sub-select correctly picks up the optimized-then-prevented ID.
-			// Flip to a stricter assertion when the bug is fixed. Plan 2.22.1.
+			array_map( 'intval', $returned ),
 			'An optimized-then-prevented attachment must appear under the "prevented" filter (it has the prevent meta key). Plan 2.22.1.'
 		);
 	}

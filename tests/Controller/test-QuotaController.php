@@ -16,6 +16,8 @@
  * Out of scope (and why):
  *   - getRemoteQuota() — makes live wp_remote_post / wp_remote_get calls to
  *     api.shortpixel.com; skipped to avoid network I/O in unit tests.
+ *     Bug #17 FIXED (1facd056): guard is now `! is_object($data) || ! property_exists($data,'Status') || empty($data)`
+ *     so a body of '{}' (empty object) or non-object JSON no longer reaches $data->Status->Code.
  *   - remoteValidateKey() — also makes live remote calls; skipped.
  *   - setQuotaExceeded() / resetQuotaExceeded() — call AdminNoticesController
  *     which requires full admin-notices infrastructure; skipped.

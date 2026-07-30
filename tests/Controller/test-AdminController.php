@@ -456,6 +456,10 @@ class AdminControllerTest extends WP_UnitTestCase {
 
 	/**
 	 * 'prevented' filter: WHERE clause references _shortpixel_prevent_optimize meta key.
+	 *
+	 * Bug #26 FIXED (ea3cd51a): the 'prevented' branch now uses `$where .=` instead of
+	 * `$where =`, so the original WHERE fragment is preserved and only the new sub-select
+	 * is appended.  Previously the original $where was silently discarded.
 	 */
 	public function test_filter_add_where_prevented_references_prevent_meta_key() {
 		$ctrl = AdminController::getInstance();
@@ -467,6 +471,8 @@ class AdminControllerTest extends WP_UnitTestCase {
 		$result = $ctrl->filter_add_where( $base, new \WP_Query() );
 
 		$this->assertStringContainsString( '_shortpixel_prevent_optimize', $result );
+		// Bug #26 FIXED (ea3cd51a): base must be preserved (append, not replace).
+		$this->assertStringStartsWith( $base, $result );
 
 		unset( $_REQUEST['filter_action'], $_REQUEST['shortpixel_status'] );
 	}

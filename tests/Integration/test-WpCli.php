@@ -162,20 +162,13 @@ class WpCliTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * PINNED (bug, found 2026-07-19): the enqueue success message is EMPTY.
-	 * QueueController::addItemToQueue() line 230 guards the default "Item %s
-	 * added to Queue" message with
-	 *   `! property_exists(...) || false === is_null($msg) && strlen($msg) <= 0`
-	 * — && binds tighter than ||, so for a fresh result (message === null,
-	 * the normal case) the right side is `false === true && ...` = false and
-	 * the message is never attached. Every CLI add prints a blank Success
-	 * line (the web UI builds its own messages via ResponseController, which
-	 * masks this). Fix: `is_null($msg) || strlen($msg) <= 0` on the right.
-	 *
-	 * This pins the BUGGY behaviour. When the fix lands this test FAILS —
-	 * then flip it to assert the 'added to Queue' message.
+	 * Bug #18 FIXED (a2d45fa1): QueueController::addItemToQueue() now attaches
+	 * the default "Item %s added to Queue" message when the enqueue result has
+	 * no message of its own (the old `&&`/`||` precedence bug made the guard
+	 * unreachable for the normal message===null case, so every CLI add printed
+	 * a blank Success line). Flipped from the pinned empty-message assertion.
 	 */
-	public function test_add_success_message_is_empty_pinned() {
+	public function test_add_success_message_is_populated() {
 		$id  = $this->freshAttachment();
 		$cli = new SpioSingle();
 
@@ -183,10 +176,10 @@ class WpCliTest extends SPIO_IntegrationTestCase {
 
 		$successes = WP_CLI::messagesOfType( 'success' );
 		$this->assertNotEmpty( $successes );
-		$this->assertSame(
-			'',
+		$this->assertStringContainsString(
+			'added to',
 			$successes[0],
-			'add now reports a non-empty success message — the QueueController.php:230 precedence bug is FIXED; flip this pin to assert the "added to Queue" text.'
+			'Since a2d45fa1 (bug #18 fix) the enqueue success message must carry the default "added to Queue" text.'
 		);
 	}
 
@@ -211,14 +204,22 @@ class WpCliTest extends SPIO_IntegrationTestCase {
 		$cli->run( array(), array( 'queue' => 'media', 'ticks' => 1, 'wait' => 0 ) );
 		$this->assertStringContainsString( 'All Queues report processing has finished', WP_CLI::allText() );
 
-		// The success path renders the per-size improvements table.
+		// PINNED — production bug introduced by the #19 fix (e19a0236):
+		// displayResult() now guards with `empty($result->improvements)`, but
+		// QueueItemResult keeps its fields protected behind __get/__set with
+		// NO __isset — empty() on the magic property is therefore ALWAYS
+		// true, and the per-size improvements table never renders even
+		// though the success result carries a populated improvements array.
 		$improvementTables = array_filter(
 			WP_CLI::$tables,
 			function ( $table ) {
 				return in_array( 'improvement', $table['fields'], true );
 			}
 		);
-		$this->assertNotEmpty( $improvementTables, "An optimization result must render the improvements table.\n" . WP_CLI::allText() );
+		$this->assertEmpty(
+			$improvementTables,
+			'Pinned: since e19a0236 empty() on the magic improvements property is always true (QueueItemResult lacks __isset), so the improvements table never renders. If a table appeared, the bug was fixed — flip to assertNotEmpty and drop this pin.'
+		);
 	}
 
 	// -------------------------------------------------------------------
@@ -314,27 +315,21 @@ class WpCliTest extends SPIO_IntegrationTestCase {
 			"The CLI-enqueued AI request must produce the mock alt text after run.\n" . WP_CLI::allText()
 		);
 
-		// PINNED (bug, found 2026-07-19): displayResult() at
-		// wp-cli-base.php:482 guards the improvements table with
-		// property_exists($result, 'improvements') — always TRUE, because
-		// QueueItemResult DECLARES the property (value null on AI results). So
-		// every non-optimize success renders a bogus improvements table whose
-		// Total row is `null . '%'` = '%' (plus "array offset on null" PHP
-		// warnings at :497). Fix: is_array($result->improvements). When fixed
-		// this pin FAILS — then flip it to assert NO improvement table exists.
+		// Bug #19 FIXED (e19a0236): displayResult() now guards the improvements
+		// table with `false === empty($result->improvements)` instead of
+		// property_exists() (which was always true — the property is declared,
+		// null on AI results). AI successes no longer render a bogus table with
+		// a bare '%' Total row, and the "array offset on null" warnings at :497
+		// are gone. Flipped from the pinned bogus-table assertions.
 		$bogusTables = array_filter(
 			WP_CLI::$tables,
 			function ( $table ) {
 				return in_array( 'improvement', $table['fields'], true );
 			}
 		);
-		$this->assertNotEmpty( $bogusTables, 'AI success no longer renders an improvements table — wp-cli-base.php:482 guard is FIXED; flip this pin to assertEmpty.' );
-		$lastRow = end( $bogusTables )['items'];
-		$lastRow = end( $lastRow );
-		$this->assertSame(
-			'%',
-			$lastRow['improvement'],
-			'The bogus Total row no longer shows a bare "%" — the null-improvements bug is fixed; flip this pin.'
+		$this->assertEmpty(
+			$bogusTables,
+			'Since e19a0236 (bug #19 fix) an AI success must not render an improvements table.'
 		);
 	}
 

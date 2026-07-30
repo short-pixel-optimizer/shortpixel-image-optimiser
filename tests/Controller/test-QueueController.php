@@ -20,8 +20,18 @@
  *   - processQueue(): skipped — requires a verified API key + quota; integration territory.
  *   - runTick(): skipped — depends on a live dequeue cycle; integration territory.
  *   - resetQueues(): skipped — alters shared DB state across all four queue names.
- *   - Line ~230 note: `$qItem->result->message` access is NOT pinned as a bug; see
- *     task description for confirmation.
+ *
+ * Bug #18 fix attempt (a2d45fa1): addItemToQueue() now DOES populate a default
+ *   message (the original bug — success messages never set — is gone; the
+ *   integration pin was flipped). BUT the new condition is itself flawed:
+ *   `! property_exists($result, 'message') || false === is_null($result->message) || strlen($result->message) <= 0`
+ *   Term 2 (`false === is_null(...)`) is TRUE for every NON-null message, so any
+ *   pre-existing custom message is OVERWRITTEN by the generic
+ *   "Item %s added to Queue" default. The null case only passes via term 3's
+ *   strlen(null) (deprecated on PHP 8.1+). Correct form would be
+ *   `... || is_null($result->message) || strlen((string) $result->message) <= 0`.
+ *   Reported as a NEW bug in the fix wave; behaviour is exercised at the
+ *   integration level (test-WpCli.php success-message test).
  *
  * @package Shortpixel_Image_Optimiser
  */

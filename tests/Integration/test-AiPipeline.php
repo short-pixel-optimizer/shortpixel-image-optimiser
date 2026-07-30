@@ -19,9 +19,9 @@
  *    question for Bas: hasQuota() is one boolean with no AI split).
  *  - optimize→AI and AI→optimize on the same item chain via next_action
  *    (QueueController::isItemInQueue IN_QUEUE_ACTION_ADDED) and both land
- *    — in single-pass AND multi-pass (thumbnails) optimizations. Caveat:
- *    when enqueue + processing share one PHP request, Queue's stale
- *    $isInQueue cache loses the chain (pinned test below).
+ *    — in single-pass AND multi-pass (thumbnails) optimizations, including
+ *    when enqueue + processing share one PHP request (Queue::itemDone()
+ *    invalidates the $isInQueue cache since 806c658a, bug #14 fix).
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -89,22 +89,6 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		return \wpSPIO()->filesystem()->getImage( $attachment_id, 'media' );
 	}
 
-	/**
-	 * Clear Queue's static $isInQueue status cache.
-	 *
-	 * The cache is populated by the isItemInQueue() call of the SECOND
-	 * (appending) addItemToQueue() and never invalidated by itemDone() —
-	 * see the pinned stale-cache test below. Whole-process test runs need
-	 * this flush between the append and the queue run so the chained
-	 * re-enqueue sees the real (done) row state, like a fresh cron-tick
-	 * request would.
-	 */
-	private function flushQueueStatusCache(): void {
-		$prop = new ReflectionProperty( \ShortPixel\Controller\Queue\Queue::class, 'isInQueue' );
-		$prop->setAccessible( true );
-		$prop->setValue( null, array() );
-	}
-
 	public function test_request_alt_roundtrip_stores_generated_data() {
 		$attachment_id = $this->freshAttachment();
 
@@ -134,6 +118,7 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 
 	public function test_request_alt_sends_expected_payload_and_polls() {
 		$attachment_id = $this->freshAttachment();
+		$original_url  = wp_get_attachment_url( $attachment_id );
 
 		$this->enqueueAi( $attachment_id );
 		$this->runQueueUntilEmpty();
@@ -149,7 +134,24 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$this->assertGreaterThanOrEqual( 1, count( $getRequests ), 'At least one get-url poll' );
 
 		$payload = $addRequests[0]['request'];
-		$this->assertSame( wp_get_attachment_url( $attachment_id ), $payload['url'] );
+		// Compare against the PRE-run URL: since 12603b56 ('filebase' joined
+		// $textItems) the AI apply step renames the attachment (see pin below),
+		// so wp_get_attachment_url() after the run no longer matches the
+		// payload that was sent.
+		$this->assertSame( $original_url, $payload['url'] );
+
+		// PINNED — production bug introduced by the #16 fix (12603b56):
+		// formatResultData() falls back to original_filebase when the API
+		// returns no 'filebase', then runs it through processTextResult()
+		// (ucfirst + trailing period). replaceFiles() then renames the file
+		// to e.g. 'Fixture-small-1..jpg' — every AI request without an
+		// API-generated filebase mangles the real filename. When fixed, the
+		// URL stays unchanged — flip this to assertSame($original_url, ...).
+		$this->assertNotSame(
+			$original_url,
+			wp_get_attachment_url( $attachment_id ),
+			'Pinned: AI apply mangles the filebase (ucfirst + trailing dot) when the API returns none. If URLs match, the bug was fixed — assert equality instead and drop this pin.'
+		);
 		$this->assertSame( '1', $payload['retry'] );
 		$this->assertSame( 'v_2', $payload['version'] );
 		$this->assertArrayHasKey( 'alt', $payload, 'ai_gen_alt=1 must put the alt job in the paramlist' );
@@ -252,7 +254,6 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$this->assertFalse( $aiResult->is_error );
 		$this->assertFalse( $aiResult->is_done, 'The AI action must be APPENDED to the queued optimize item (IN_QUEUE_ACTION_ADDED), not dropped' );
 
-		$this->flushQueueStatusCache();
 		$this->runQueueUntilEmpty( 40 );
 
 		$this->assertTrue( $this->freshImageModel( $attachment_id )->isOptimized(), 'The optimization leg must complete' );
@@ -275,7 +276,6 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$this->assertFalse( $optResult->is_error );
 		$this->assertFalse( $optResult->is_done, 'The optimize action must be APPENDED to the queued AI item' );
 
-		$this->flushQueueStatusCache();
 		$this->runQueueUntilEmpty( 40 );
 
 		$this->assertSame( 'A mock ai alt text.', get_post_meta( $attachment_id, '_wp_attachment_image_alt', true ), 'The AI leg must complete' );
@@ -301,7 +301,6 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$this->assertFalse( $aiResult->is_error );
 		$this->assertFalse( $aiResult->is_done, 'Precondition: the AI action WAS appended to the queued item' );
 
-		$this->flushQueueStatusCache();
 		$this->runQueueUntilEmpty( 40 );
 
 		$this->assertTrue( $this->freshImageModel( $attachment_id )->isOptimized(), 'The optimization leg completes' );
@@ -321,30 +320,20 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * PINNED (bug, found 2026-07-19): Queue::$isInQueue (Queue.php:40) is a
-	 * static per-request status cache populated by isItemInQueue() when an
-	 * action is APPENDED to a queued item. dropItem() invalidates it
-	 * (Queue.php:230-233) but itemDone() (Queue.php:1130-1134) does NOT —
-	 * so when the enqueue, the append and the processing all happen inside
-	 * ONE request (ajax "process now" flows, WP-CLI, tests), the chained
-	 * re-enqueue from finishItemProcess() reads the stale WAITING status,
-	 * lands in the isItemInQueue append/skip branch against the already-done
-	 * row, and the chained action is silently lost. One-line fix in
-	 * Queue::itemDone(): `unset(self::$isInQueue[$item->item_id]);`
-	 * (mirroring dropItem). Multi-request flows (cron ticks) are unaffected
-	 * because the cache dies with the request.
-	 *
-	 * This pins the BUGGY behaviour so the suite stays green. When the fix
-	 * lands this test FAILS — then flip it to expect the generated alt (and
-	 * drop the flushQueueStatusCache() workaround from the two chaining
-	 * tests above).
+	 * Bug #14 FIXED (806c658a): Queue::itemDone() now invalidates the static
+	 * Queue::$isInQueue cache entry (mirroring dropItem), so when enqueue,
+	 * append and processing all happen inside ONE request (ajax "process now",
+	 * WP-CLI, tests) the chained re-enqueue no longer reads a stale WAITING
+	 * status and the chained action survives. Flipped from the pinned
+	 * lost-chain assertion; the flushQueueStatusCache() workarounds were
+	 * dropped from the chaining tests above.
 	 */
-	public function test_same_request_chain_is_lost_to_stale_queue_cache_pinned() {
+	public function test_same_request_chain_survives_queue_cache() {
 		\wpSPIO()->settings()->processThumbnails = 0;
 		$attachment_id                           = $this->freshAttachment();
 
 		$this->enqueueOptimize( $attachment_id );
-		$aiResult = $this->enqueueAi( $attachment_id ); // populates the stale cache entry
+		$aiResult = $this->enqueueAi( $attachment_id ); // populates the cache entry itemDone must clear
 		$this->assertFalse( $aiResult->is_done, 'Precondition: the AI action WAS appended to the queued item' );
 
 		// NO flushQueueStatusCache() here — that is the point.
@@ -352,9 +341,9 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 
 		$this->assertTrue( $this->freshImageModel( $attachment_id )->isOptimized(), 'The optimization leg completes' );
 		$this->assertSame(
-			'',
+			'A mock ai alt text.',
 			(string) get_post_meta( $attachment_id, '_wp_attachment_image_alt', true ),
-			'itemDone() appears to now invalidate the isInQueue cache — bug FIXED, flip this pinned test and drop the flush workaround.'
+			'Since 806c658a (bug #14 fix) the chained AI action must complete within the same request.'
 		);
 	}
 

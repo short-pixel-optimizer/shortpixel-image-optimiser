@@ -26,12 +26,10 @@
  *   - loadQuotaData() / loadAPiKeyData() / loadDashBoardInfo() — require live
  *     QuotaController / ApiKeyController with a real or stub API key.
  *
- * PINNED BUG:
+ * BUG FIXED (b8d8f38d):
  *   processWebP() line ~1325: `elseif ($altering = 'deliverWebpAlteredGlobal')`
- *   uses ASSIGNMENT `=` instead of comparison `==`. The condition is always
- *   truthy when reached, so $deliverwebp is ALWAYS set to 1 (global) even when
- *   the user selected the WP picture-tag mode (which should give 2).
- *   Pinned as test_processWebP_wp_picture_tag_gives_2_pinned_for_deferred_fix.
+ *   ASSIGNMENT bug replaced with Yoda comparison `'deliverWebpAlteredGlobal' == $altering`.
+ *   Unknown altering types now leave $deliverwebp = 0. Test updated accordingly.
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -350,39 +348,23 @@ class SettingsViewControllerTest extends WP_UnitTestCase {
 		$this->assertSame( 3, $result['deliverWebp'] );
 	}
 
-	public function test_processWebP_wp_picture_tag_gives_2_pinned_for_deferred_fix() {
+	public function test_processWebP_unknown_altering_type_gives_0() {
 		/**
-		 * PINNED BUG: SettingsViewController.php line ~1325.
+		 * Bug #12 FIXED (b8d8f38d): the elseif assignment bug
+		 *   `elseif ($altering = 'deliverWebpAlteredGlobal')`
+		 * has been replaced with a Yoda comparison
+		 *   `elseif ('deliverWebpAlteredGlobal' == $altering)`.
 		 *
-		 * Code reads:
-		 *   if ($altering == 'deliverWebpAlteredWP')    → $deliverwebp = 2;
-		 *   elseif ($altering = 'deliverWebpAlteredGlobal') → $deliverwebp = 1;
-		 *                        ^--- ASSIGNMENT, not comparison!
-		 *
-		 * When the user selects the WP picture-tag option ('deliverWebpAlteredWP'
-		 * correctly matches the first branch → $deliverwebp = 2), but when the user
-		 * selects the Global htaccess option ('deliverWebpAlteredGlobal' is compared
-		 * via ==), the elseif is NEVER reached with WP-mode because the first
-		 * branch already returned 2. However, for any OTHER altering value (or an
-		 * empty/missing one), the elseif evaluates the ASSIGNMENT `=` which is always
-		 * truthy, overwriting $altering and setting $deliverwebp = 1 erroneously.
-		 *
-		 * Observable wrong behaviour: when deliverWebpAlteringType is an empty string
-		 * (i.e. neither WP-mode nor global was specified), deliverWebp should be 0,
-		 * but because of the assignment the elseif always fires and produces 1.
-		 *
-		 * Expected (correct) output: 0 (disabled — no valid sub-type selected).
-		 * Actual (buggy) output:     1 (global htaccess, incorrect).
-		 *
-		 * This test currently asserts the ACTUAL (wrong) output so it passes on the
-		 * buggy code. When `=` is corrected to `==`, deliverWebp will be 0 and this
-		 * test must be updated (or deleted) at that time.
+		 * Previously, an empty (or unknown) altering type caused the assignment to
+		 * evaluate as truthy, always setting $deliverwebp = 1 (global htaccess).
+		 * After the fix, an empty altering type correctly leaves $deliverwebp = 0
+		 * (no valid sub-type selected).
 		 */
 		$c = $this->freshController();
 		$this->setProtected( $c, 'is_nginx', true );
 
 		// deliverWebpType is 'deliverWebpAltered' but altering type is empty —
-		// no valid sub-type is active, so the expected correct result is 0.
+		// no valid sub-type is active, so the correct result is 0.
 		$post = array(
 			'deliverWebp'             => '1',
 			'createWebp'              => '1',
@@ -392,11 +374,9 @@ class SettingsViewControllerTest extends WP_UnitTestCase {
 
 		$result = $this->invokeProtected( $c, 'processWebP', array( $post ) );
 
-		// BUG: because `= 'deliverWebpAlteredGlobal'` is always truthy, the result
-		// is 1 instead of the correct 0.
-		// When the bug is fixed this assertion must change to assertSame( 0, ... ).
-		$this->assertSame( 1, $result['deliverWebp'],
-			'PINNED BUG: elseif assignment makes deliverWebp=1 instead of 0 when no sub-type is selected'
+		// Bug #12 FIXED (b8d8f38d): now correctly 0 when no sub-type is selected.
+		$this->assertSame( 0, $result['deliverWebp'],
+			'With an empty altering type, deliverWebp must be 0 (no valid sub-type)'
 		);
 	}
 

@@ -14,11 +14,17 @@
  *     into shortpixel_postmeta rows when an image without a DB record is
  *     loaded. Triggered automatically from loadMeta()'s no-metadata branch.
  *
- * KNOWN REGRESSION (pinned in the first optimization-data test): since the
- * bug #5 fix (3a2a299d) loadMeta() falls through after checkLegacy() and
- * overwrites the migrated thumbnail meta with empty ImageThumbnailMeta
- * objects, so thumbnail postmeta rows end up status 0 instead of SUCCESS.
- * Reported to Bas; flip the pin when fixed.
+ * Bug #27 HALF-FIXED (c0bc8c17): loadMeta() now reloads the freshly saved DB
+ * meta after a successful checkLegacy() instead of falling through with an
+ * empty stdClass, so the MAIN image's migrated status survives. RESIDUAL
+ * (pinned): checkLegacy()'s thumbnail loop iterates $this->thumbnails, which
+ * is still empty at that point in loadMeta(), so thumbsOptList is never
+ * migrated — thumbnail rows end up status 0. Bug #8 FIXED (867b3573):
+ * check() now also writes the renamed exif value back into the returned
+ * settings array, so a migrated keepExif choice persists. Note: since the
+ * bug #9 fix (9b18a8e8) checkLegacy() no longer writes the undeclared
+ * 'improvement' meta — improvement is computed from originalSize via
+ * getImprovement().
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -69,19 +75,18 @@ class LegacyMigrationTest extends SPIO_IntegrationTestCase {
 		$this->resetPluginSingletons();
 		$settings = \wpSPIO()->settings();
 
-		// PINNED BUG: SettingsModel::check() calls set('exif', …), which
-		// writes into $this->settings — but load() then overwrites
-		// $this->settings with check()'s RETURN value, which only had
-		// keepExif unset. The renamed value is lost, so a user's
-		// keepExif=0 choice silently falls back to the default exif=1.
-		$this->assertSame( 1, (int) $settings->exif, 'PINNED: the migrated keepExif=0 value is dropped and the default wins (should be 0).' );
+		// Bug #8 FIXED (867b3573): check() now writes the renamed value into
+		// the returned settings array too (`$settings['exif'] = $settings['keepExif']`),
+		// so load() no longer discards the migration — keepExif=0 carries over.
+		$this->assertSame( 0, (int) $settings->exif, 'Since 867b3573 (bug #8 fix) the migrated keepExif=0 value must survive as exif=0.' );
 
-		// The removal half of the rename does work: after the shutdown
-		// save, the legacy key is gone from the persisted row.
+		// After the shutdown save the legacy key is gone and the renamed
+		// value is persisted.
 		$settings->onShutdown();
 		$saved = get_option( 'spio_settings' );
 		$this->assertArrayNotHasKey( 'keepExif', $saved, 'The legacy keepExif key must be removed from the persisted settings.' );
-		$this->assertArrayNotHasKey( 'exif', $saved, 'PINNED: the renamed exif value never reaches the persisted settings (should be present with value 0).' );
+		$this->assertArrayHasKey( 'exif', $saved, 'The renamed exif value must reach the persisted settings.' );
+		$this->assertSame( 0, (int) $saved['exif'], 'The persisted exif value must keep the migrated keepExif=0 choice.' );
 	}
 
 	// -------------------------------------------------------------------
@@ -139,7 +144,10 @@ class LegacyMigrationTest extends SPIO_IntegrationTestCase {
 
 		$this->assertTrue( $image->isOptimized(), 'A legacy-optimized attachment must load as optimized after migration.' );
 		$this->assertSame( ImageModel::COMPRESSION_LOSSY, (int) $image->getMeta( 'compressionType' ), "Legacy type 'lossy' must map to COMPRESSION_LOSSY." );
-		$this->assertSame( 25, (int) $image->getMeta( 'improvement' ), 'The legacy improvement percentage must carry over.' );
+		// Since 9b18a8e8 (bug #9 fix) checkLegacy() no longer writes the
+		// undeclared 'improvement' meta; the percentage is computed from the
+		// back-calculated originalSize instead.
+		$this->assertEqualsWithDelta( 25.0, (float) $image->getImprovement(), 0.5, 'The legacy improvement percentage must be derivable via getImprovement().' );
 		$this->assertTrue( (bool) $image->getMeta( 'wasConverted' ), 'The migrated record must be flagged wasConverted.' );
 
 		// No backup exists, so originalSize is back-calculated from the improvement.
@@ -160,27 +168,27 @@ class LegacyMigrationTest extends SPIO_IntegrationTestCase {
 		$statuses = $this->postmetaStatuses( $id );
 		$this->assertGreaterThanOrEqual( 2, count( $statuses ), 'Migration must write rows for the main image and its thumbnails.' );
 
-		// PINNED REGRESSION (side-effect of the bug #5 fix, 3a2a299d): after
-		// checkLegacy() migrates + saveMeta()s, loadMeta() now falls through
-		// into the common load path with an EMPTY $metadata stdClass, so every
-		// thumbnail gets a fresh empty ImageThumbnailMeta (MediaLibraryModel.php
-		// ~1199-1208) — wiping the just-migrated thumbnail statuses — and the
-		// didAnyRecordChange() save persists the wiped rows (status 0 in DB).
-		// Before 3a2a299d every family member ended in SUCCESS state.
-		// When this pin FAILS the regression was fixed: restore the strict
-		// all-SUCCESS loop over $statuses and drop this block.
-		$successCount = count(
-			array_filter(
-				$statuses,
-				function ( $status ) {
-					return ImageModel::FILE_STATUS_SUCCESS === $status;
-				}
-			)
+		// Bug #27 HALF-FIXED (c0bc8c17): loadMeta() now reloads the saved DB
+		// meta after a successful checkLegacy(), so the MAIN image keeps its
+		// migrated SUCCESS status (fixed part, asserted above via isOptimized).
+		//
+		// PINNED — residual production bug: the thumbnail loop in checkLegacy()
+		// (MediaLibraryModel.php:3317 `foreach ($this->thumbnails ...)`) runs
+		// while $this->thumbnails is still the empty default — loadMeta() only
+		// populates thumbnails AFTER the checkLegacy() call — so thumbsOptList
+		// is never migrated. The thumbnail rows are then written by the
+		// post-load save with fresh empty meta: status 0, no compression data.
+		// When Bas fixes this, every status below becomes SUCCESS — flip then.
+		$success = array_filter(
+			$statuses,
+			function ( $s ) {
+				return ImageModel::FILE_STATUS_SUCCESS === $s;
+			}
 		);
-		$this->assertLessThan(
-			count( $statuses ),
-			$successCount,
-			'Pinned current behavior: migrated thumbnail rows lose their SUCCESS status (loadMeta fall-through wipes thumb meta after checkLegacy). If this fails, the regression was fixed — assert all rows SUCCESS instead.'
+		$this->assertCount(
+			1,
+			$success,
+			'Pinned residual of bug #27: only the MAIN row keeps SUCCESS; thumbnail rows are written with status 0 because checkLegacy() iterates an empty $this->thumbnails. If more rows are SUCCESS, the residual was fixed — assert all-SUCCESS instead and drop this pin.'
 		);
 
 		// The re-migration guard must be stamped.
