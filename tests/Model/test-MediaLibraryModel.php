@@ -54,6 +54,13 @@
  *   - loadThumbnailsFromWP / addUnlisted / loadLooseItems (WP attachment fixture)
  *   - conversionPrepare / Failed / Success (need BackupModel)
  *   - migrate / checkLegacy / checkLegacyFileTypeFileName (massive; migration flow)
+ *     Bug #9 FIXED (9b18a8e8): checkLegacy() no longer writes dynamic props
+ *     image_meta->improvement or ->has_backup; originalSize back-calc now uses
+ *     the local $improvement variable (is_numeric && > 0) instead of re-reading
+ *     $metadata['ShortPixelImprovement'].
+ *   - loadMeta (after checkLegacy()) Bug #27 FIXED (c0bc8c17): now calls
+ *     $this->getDBMeta() instead of returning an empty stdClass after a
+ *     successful checkLegacy() migration.
  *   - wpCreateImageSizes / generateThumbnails (WP thumbnail regen wiring)
  *
  * SESSION 3 (deferred) — State machine (isProcessable/isRestorable/

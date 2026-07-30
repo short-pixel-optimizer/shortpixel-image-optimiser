@@ -204,17 +204,13 @@ class SettingsAjaxSaveTest extends SPIO_AjaxTestCase {
 	}
 
 	/**
-	 * PINNED (bug, found 2026-07-18): processWebP() line ~1325 uses
-	 * ASSIGNMENT in `elseif($altering = 'deliverWebpAlteredGlobal')` instead
-	 * of comparison. The branch is therefore always truthy, so ANY altering
-	 * value other than 'deliverWebpAlteredWP' — including garbage or a
-	 * missing field — silently enables mode 1 (global .htaccess rewrite)
-	 * where 0 (disabled) is the only defensible result. One-char fix: `==`.
-	 *
-	 * This pins the BUGGY behaviour so the suite stays green. When the fix
-	 * lands this test FAILS — then flip the expectation to 0.
+	 * Bug #12 FIXED (b8d8f38d): processWebP() now COMPARES
+	 * (`'deliverWebpAlteredGlobal' == $altering`, Yoda style) instead of
+	 * assigning, so an unknown altering type no longer silently enables
+	 * mode 1 (global .htaccess rewrite) — delivery stays disabled (0).
+	 * Flipped from the pinned always-truthy-branch assertion.
 	 */
-	public function test_deliverwebp_unknown_altering_type_enables_global_pinned() {
+	public function test_deliverwebp_unknown_altering_type_stays_disabled() {
 		$this->_setRole( 'administrator' );
 
 		$this->doSettingsSave(
@@ -228,9 +224,9 @@ class SettingsAjaxSaveTest extends SPIO_AjaxTestCase {
 		);
 
 		$this->assertEquals(
-			1,
+			0,
 			\wpSPIO()->settings()->deliverWebp,
-			'processWebP() assignment-instead-of-comparison appears FIXED — flip this pinned test to expect 0.'
+			'Since b8d8f38d (bug #12 fix) an unknown altering type must leave WebP delivery disabled.'
 		);
 	}
 

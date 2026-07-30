@@ -22,8 +22,11 @@
  *     these side effects; controlled via reflection instead.
  *   - bulkScheduleEvent / bulkCheckEvent — delegate to getQueueData() which
  *     creates a live QueueController; out of scope for unit tests.
- *   - checkNewJobs / onDeactivate — thin orchestrators of the above; also
- *     out of scope.
+ *   - checkNewJobs — thin orchestrator; out of scope.
+ *   - onDeactivate — Bug #13 FIXED (b25fe1c7): now calls tools_scheduler(true)
+ *     so spio-remove-backups IS cleared on plugin deactivation.  The underlying
+ *     tools_scheduler() is unit-tested above; onDeactivate itself orchestrates
+ *     multiple schedulers and is covered by integration tests.
  *
  * @package Shortpixel_Image_Optimiser
  */

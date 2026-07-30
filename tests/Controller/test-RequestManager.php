@@ -4,8 +4,9 @@
  *
  * Scope: status constants, returnFailure / returnRetry / returnOK / returnSuccess
  * result-array shapes, parseResponse() with valid JSON, parseResponse() with
- * JSON embedded in surrounding noise (getJsonStrings() path), and a pinned
- * regression for the undefined-offset warning when the body contains no JSON.
+ * JSON embedded in surrounding noise (getJsonStrings() path), and a regression
+ * test that the undefined-offset warning no longer fires when the body has no JSON
+ * (Bug #7 FIXED a81b64d0 + 4b3b4d9f).
  *
  * Out of scope / why:
  * - doRequest(): calls wp_remote_post() and therefore hits the network; excluded
@@ -253,28 +254,23 @@ class RequestManagerTest extends WP_UnitTestCase {
 	// -----------------------------------------------------------------------
 
 	/**
-	 * Pinned regression: RequestManager.php ~line 359.
+	 * Bug FIXED (a81b64d0 + 4b3b4d9f): parseResponse() now guards against
+	 * getJsonStrings() returning an empty array.  When no JSON object is found in
+	 * the body, $data[0] is no longer accessed; instead the method returns an
+	 * explicit error array: ['status' => STATUS_ERROR, 'error' => json_last_error_msg()].
 	 *
-	 * EXPECTED (after fix): parseResponse() returns a safe empty array or a
-	 * sentinel error when the body contains no JSON.
-	 *
-	 * ACTUAL (current): getJsonStrings() returns [] and $data[0] triggers an
-	 * "Undefined offset: 0" notice (PHP 7), or a PHP 8 warning. The result is
-	 * effectively (array) json_decode(null) === [].
-	 *
-	 * This test MUST FAIL once a proper guard is added.
+	 * The old "Undefined offset: 0" notice no longer fires, and the return value
+	 * is now the sentinel error array rather than an empty array.
 	 */
-	public function test_parseResponse_plain_html_body_triggers_undefined_offset_notice_pinned_for_deferred_fix() {
+	public function test_parseResponse_plain_html_body_returns_error_sentinel_array() {
 		$html     = '<html><body><h1>502 Bad Gateway</h1></body></html>';
 		$response = [ 'body' => $html ];
 
 		$warningFired = false;
 		$previous     = set_error_handler( function ( $errno ) use ( &$warningFired ) {
-			// E_NOTICE (8) on PHP 7, E_WARNING (2) on PHP 8.
 			if ( in_array( $errno, [ E_NOTICE, E_WARNING ], true ) ) {
 				$warningFired = true;
 			}
-			// Do NOT call the previous handler — swallow so the test keeps running.
 			return true;
 		} );
 
@@ -282,8 +278,12 @@ class RequestManagerTest extends WP_UnitTestCase {
 
 		restore_error_handler();
 
-		// Current (buggy) behaviour: a PHP notice/warning fires and result is [].
-		$this->assertTrue( $warningFired, 'Expected an undefined-offset notice/warning, but none was raised.' );
-		$this->assertSame( [], $result, 'Expected empty array as the result when body is non-JSON HTML.' );
+		// Bug #7 FIXED (a81b64d0 + 4b3b4d9f): no offset notice/warning is raised.
+		$this->assertFalse( $warningFired, 'No undefined-offset notice/warning should be raised after the fix.' );
+		// The fixed code returns a status=STATUS_ERROR sentinel.
+		$this->assertIsArray( $result );
+		$this->assertArrayHasKey( 'status', $result );
+		$this->assertSame( RequestManager::STATUS_ERROR, $result['status'] );
+		$this->assertArrayHasKey( 'error', $result );
 	}
 }

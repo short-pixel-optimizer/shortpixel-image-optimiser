@@ -150,17 +150,12 @@ class CronSchedulingTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * PINNED (bug, found 2026-07-19): onDeactivate() calls bulkRemoveAll() +
-	 * custom_scheduler(true) + removeLegacyCron() but never
-	 * tools_scheduler(true) — so the daily 'spio-remove-backups' event
-	 * SURVIVES plugin deactivation and keeps firing (into a missing action
-	 * once the plugin files are gone). One-line fix in onDeactivate():
-	 * `$this->tools_scheduler(true);`.
-	 *
-	 * This pins the BUGGY behaviour so the suite stays green. When the fix
-	 * lands this test FAILS — then flip the expectation to assertFalse.
+	 * Bug #13 FIXED (b25fe1c7): onDeactivate() now also calls
+	 * tools_scheduler(true), so the daily 'spio-remove-backups' event is
+	 * cleared on plugin deactivation instead of surviving and firing into a
+	 * missing action. Flipped from the pinned survives-deactivation assertion.
 	 */
-	public function test_deactivation_leaves_remove_backups_cron_pinned() {
+	public function test_deactivation_clears_remove_backups_cron() {
 		\wpSPIO()->settings()->autoRemoveBackups = 1;
 
 		$controller = new CronController();
@@ -168,9 +163,9 @@ class CronSchedulingTest extends SPIO_IntegrationTestCase {
 
 		$controller->onDeactivate();
 
-		$this->assertNotFalse(
+		$this->assertFalse(
 			wp_next_scheduled( 'spio-remove-backups' ),
-			'onDeactivate() appears to now clear spio-remove-backups — bug FIXED, flip this pinned test to assertFalse.'
+			'Since b25fe1c7 (bug #13 fix) deactivation must clear the spio-remove-backups cron.'
 		);
 	}
 }

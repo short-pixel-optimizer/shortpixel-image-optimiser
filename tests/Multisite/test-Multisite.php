@@ -144,7 +144,7 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 
 	public function test_network_settings_are_shared_across_sites() {
 		// Written the way admin_pages() reads it: the raw network option.
-		// (Writing through MultiSettingsModel is pinned as broken below.)
+		// (Writing through MultiSettingsModel is covered below.)
 		update_site_option( 'spio_wpmu', array( 'disable_site_settings_page' => true ) );
 
 		$this->createAndEnterSubsite();
@@ -159,22 +159,13 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * PINNED (bug, reported 2026-07-18): MultiSettingsModel redeclares
-	 * $settings and $option_name as PRIVATE, shadowing SettingsModel's
-	 * equally-private properties. The parent's magic __set() writes to the
-	 * PARENT's slot, while the child's overridden save() persists the
-	 * never-modified CHILD slot — so nothing set through the model ever
-	 * reaches the spio_wpmu network option (and __get() likewise reads the
-	 * empty parent slot, i.e. defaults, not stored values). The whole
-	 * network-settings screen pipeline (MultiSiteViewController →
-	 * processSave()/getData()) is a silent no-op; currently masked in
-	 * production because admin_network_pages() is stubbed out.
-	 *
-	 * This pins the BUGGY behaviour so the suite stays green. When the fix
-	 * lands (e.g. make both properties protected), this test FAILS — then
-	 * flip it to assert the value IS persisted.
+	 * Bug #11 FIXED (4a6edf6e): SettingsModel's $settings/$option_name are
+	 * now protected and MultiSettingsModel no longer redeclares them, so the
+	 * private-property shadowing is gone — values set through the model reach
+	 * the spio_wpmu network option. Flipped from the pinned write-is-lost
+	 * assertion.
 	 */
-	public function test_multisettings_model_write_is_lost_pinned() {
+	public function test_multisettings_model_write_persists() {
 		delete_site_option( 'spio_wpmu' );
 		// Precondition sentinel: no stored network settings.
 		$this->assertSame( array(), get_site_option( 'spio_wpmu', array() ) );
@@ -185,11 +176,12 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 
 		$stored = get_site_option( 'spio_wpmu', array() );
 		$this->assertIsArray( $stored );
-		$this->assertArrayNotHasKey(
+		$this->assertArrayHasKey(
 			'disable_site_settings_page',
 			$stored,
-			'MultiSettingsModel property shadowing appears FIXED — flip this pinned test to assert persistence.'
+			'Since 4a6edf6e (bug #11 fix) a value set through MultiSettingsModel must persist to spio_wpmu.'
 		);
+		$this->assertTrue( (bool) $stored['disable_site_settings_page'] );
 	}
 
 	public function test_subsite_upload_paths_and_urls_use_sites_subdirectory() {

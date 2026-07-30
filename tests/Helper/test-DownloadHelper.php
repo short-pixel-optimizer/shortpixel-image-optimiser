@@ -9,6 +9,14 @@
  * setPreferredProtocol) requires HTTP mocking and a real filesystem target and
  * is better covered by integration tests.
  *
+ * SUSPICIOUS BUG NOTE — downloadURLMethod() (033998ae):
+ *   The commit renames $tempFile to $tmpFilePath (appending the URL extension) then
+ *   reaches `return $tempFile;` — the OLD, now-nonexistent path. The renamed file
+ *   exists at $tmpFilePath but the caller receives $tempFile which no longer exists on
+ *   disk. This appears to be an oversight in the fix. Not corrected here because:
+ *   (a) production code is read-only for this task, and (b) the fix to the return
+ *   value should be confirmed with Bas before any test is written against the new path.
+ *
  * @package Shortpixel_Image_Optimiser
  */
 

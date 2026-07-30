@@ -291,8 +291,13 @@ class SettingsModelTest extends WP_UnitTestCase {
 
 		// The legacy key is removed from the returned settings array…
 		$this->assertArrayNotHasKey( 'keepExif', $out );
-		// …and the value is transposed onto the exif setting.
+		// …and the value is transposed onto the exif setting via $this->set().
 		$this->assertSame( 1, $s->exif );
+		// Bug #8 FIXED (867b3573): the migrated value is also present in the
+		// RETURNED array (previously only $this->set() was called but $settings['exif']
+		// was never written, so the caller's copy did not carry the new key).
+		$this->assertArrayHasKey( 'exif', $out );
+		$this->assertSame( 1, $out['exif'] );
 	}
 
 	public function test_check_dispatches_the_settings_check_filter() {

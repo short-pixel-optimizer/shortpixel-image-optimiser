@@ -490,30 +490,38 @@ class CustomImageModelTest extends WP_UnitTestCase {
 	 * The $int arg is documented as ignored (compat shim).
 	 */
 
-	public function test_getImprovement_returns_customImprovement_meta_value() {
+	public function test_getImprovement_returns_int_for_numeric_customImprovement_meta_value() {
 		$model = $this->makeStubModel();
-		$model->setMeta( 'customImprovement', 42.5 );
+		$model->setMeta( 'customImprovement', 42 );
 
-		$this->assertSame( 42.5, $model->getImprovement() );
+		// Since 06fa42f7 (int-return fix): getImprovement() now has return type :int and
+		// applies intval() when the meta is numeric. A float like 42.5 is truncated
+		// to 42; use an integer value in the fixture to avoid ambiguity.
+		$this->assertIsInt( $model->getImprovement() );
+		$this->assertSame( 42, $model->getImprovement() );
 	}
 
 	public function test_getImprovement_ignores_int_argument_as_documented_compat_shim() {
 		$model = $this->makeStubModel();
-		$model->setMeta( 'customImprovement', 42.5 );
+		$model->setMeta( 'customImprovement', 30 );
 
 		// Sentinel: the docblock explicitly says $int is accepted for
 		// signature compatibility but ignored. A regression that started
 		// honoring $int (e.g. by returning byte savings) would return
-		// something other than 42.5 here.
-		$this->assertSame( 42.5, $model->getImprovement( true ) );
-		$this->assertSame( 42.5, $model->getImprovement( false ) );
+		// something other than 30 here.
+		// Since 06fa42f7 (int-return fix): return type is now int.
+		$this->assertSame( 30, $model->getImprovement( true ) );
+		$this->assertSame( 30, $model->getImprovement( false ) );
 	}
 
-	public function test_getImprovement_returns_null_when_customImprovement_meta_is_unset() {
+	public function test_getImprovement_returns_zero_when_customImprovement_meta_is_unset() {
 		$model = $this->makeStubModel();
 		// customImprovement is null on a fresh ImageMeta.
 
-		$this->assertNull( $model->getImprovement() );
+		// Since 06fa42f7 (int-return fix): getImprovement() now returns 0 (int) instead of
+		// null when customImprovement is not numeric.  The old assertNull assertion
+		// pinned the broken behaviour where null was returned and callers had to guard.
+		$this->assertSame( 0, $model->getImprovement() );
 	}
 
 	/*
@@ -530,26 +538,25 @@ class CustomImageModelTest extends WP_UnitTestCase {
 		// Shape sentinel: keys must be `main` (tuple) + `totalpercentage`.
 		$this->assertArrayHasKey( 'main', $result );
 		$this->assertArrayHasKey( 'totalpercentage', $result );
-		// main[0] is the raw improvement value stored on customImprovement
-		// (25 as passed in); main[1] is always 0 for custom images.
+		// main[0] is the improvement value via getImprovement() — Since 06fa42f7 (int-return fix):
+		// now typed :int and intval(25)=25; main[1] is always 0 for custom images.
 		$this->assertSame( array( 25, 0 ), $result['main'] );
 		// totalpercentage runs through round() which returns FLOAT in PHP,
 		// so the strict assertion needs 25.0 not 25.
 		$this->assertSame( 25.0, $result['totalpercentage'] );
 	}
 
-	public function test_getImprovements_coerces_null_improvement_to_zero_in_the_payload() {
+	public function test_getImprovements_returns_zero_in_payload_when_customImprovement_is_unset() {
 		$model = $this->makeStubModel();
 		// customImprovement is null on a fresh ImageMeta.
 
 		$result = $model->getImprovements();
 
-		// Sentinel: null → 0 fallback at line 1066. A regression that
-		// dropped the null-guard would surface null in the payload,
-		// which downstream consumers likely don't handle.
+		// Since 06fa42f7 (int-return fix): getImprovement() now returns 0 (int) directly
+		// when customImprovement is not numeric, so the old null-guard in getImprovements()
+		// was removed. The payload still correctly contains 0 in both cases.
 		$this->assertSame( array( 0, 0 ), $result['main'] );
-		// round(0) returns float 0.0 — same coercion note as the
-		// non-null test above.
+		// round(0) returns float 0.0.
 		$this->assertSame( 0.0, $result['totalpercentage'] );
 	}
 
