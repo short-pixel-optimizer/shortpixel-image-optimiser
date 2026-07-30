@@ -300,7 +300,7 @@ class OptimizeAiController extends OptimizerBase
         $settings = \wpSPIO()->settings();
 
         // removed  'post_title' here because in image title doens't look good. 
-        $textItems = ['alt', 'caption', 'description', 'filebase'];
+        $textItems = ['alt', 'caption', 'description'];
         foreach ($textItems as $textItem) {
 
             if (isset($aiData[$textItem]) && false !== $aiData[$textItem] && false === is_numeric($aiData[$textItem])) {

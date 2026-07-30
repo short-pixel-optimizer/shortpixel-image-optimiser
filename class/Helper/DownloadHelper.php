@@ -269,7 +269,6 @@ class DownloadHelper
            return false;
         }
 
-
         $extension = pathinfo($url, PATHINFO_EXTENSION);
         $suffix = '';
 
@@ -288,7 +287,7 @@ class DownloadHelper
             return false;
         }
 
-        return $tempFile;
+        return $tmpFilePath;
       }
 
       /**

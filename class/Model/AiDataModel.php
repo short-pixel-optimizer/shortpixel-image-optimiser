@@ -411,17 +411,17 @@ class AiDataModel
         $post = get_post($this->attach_id);
         $post_updated = false;
 
-        if (isset($data['caption']) && false !== $data['caption'] && false === is_numeric($data['caption'])) {
+        if (isset($data['caption']) && false !== $data['caption'] && false === is_numeric($data['caption']) && strlen($data['caption']) >= 0) {
             $post->post_excerpt = $data['caption'];
             $post_updated = true;
         }
 
-        if (isset($data['description']) && false !== $data['description'] && false === is_numeric($data['description'])) {
+        if (isset($data['description']) && false !== $data['description'] && false === is_numeric($data['description']) && strlen($data['description']) >= 0) {
             $post->post_content = $data['description'];
             $post_updated = true;
         }
 
-        if (isset($data['post_title']) && false !== $data['post_title'] && false === is_numeric($data['post_title'])) {
+        if (isset($data['post_title']) && false !== $data['post_title'] && false === is_numeric($data['post_title']) && strlen($data['post_title']) >= 0) {
             $post->post_title = $data['post_title'];
             $post_updated = true;
         }

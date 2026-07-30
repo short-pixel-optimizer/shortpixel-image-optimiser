@@ -3314,6 +3314,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			$this->getMeta()->convertMeta()->setConversionDone();
 		}
 
+		// Could not be set. Load thumbnails from WP when emtpy. 
+		if (0 === count($this->thumbnails))
+		{
+			$this->thumbnails = $this->loadThumbnailsFromWP();
+		}
+
+
 		foreach ($this->thumbnails as $thumbname => $thumbnailObj) // ThumbnailModel
 		{
 			if ($thumbnailObj->hasDBRecord() === true) {

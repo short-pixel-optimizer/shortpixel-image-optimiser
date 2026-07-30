@@ -1,1 +1,1 @@
-{"name":"ShortPixel\/shortpixelmodules","description":"ShortPixel submodules","type":"function","autoload":{"psr-4":{"ShortPixel\\ShortQ":"shortq\/src","ShortPixel\\Notices":"notices\/src","ShortPixel\\ShortPixelLogger":"log\/src","ShortPixel\\Replacer":"replacer\/src"}}}
+{"name":"ShortPixel\/shortpixelmodules","description":"ShortPixel submodules","type":"function","autoload":{"psr-4":{"ShortPixel\\ShortQ":"shortq\/src","ShortPixel\\Replacer":"replacer2\/src","ShortPixel\\Notices":"notices\/src","ShortPixel\\ShortPixelLogger":"log\/src"}}}

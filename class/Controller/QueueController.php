@@ -228,7 +228,7 @@ class QueueController
             }
   
             $result = $qItem->result(); 
-            if (! property_exists($result, 'message') || false === is_null($result->message) || strlen($result->message) <= 0)
+            if (! property_exists($result, 'message') || is_null($result->message) || strlen( (string) $result->message) <= 0)
             {
               $qItem->addResult([
                 'message' => $message,
