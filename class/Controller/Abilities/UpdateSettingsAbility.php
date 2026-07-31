@@ -116,9 +116,13 @@ class UpdateSettingsAbility
 			'exif'                => [ 'type' => 'integer', 'min' => 0, 'max' => 1 ],
 			'enable_ai'           => [ 'type' => 'boolean' ],
 			'autoAI'              => [ 'type' => 'boolean' ],
+			'autoAIBulk'          => [ 'type' => 'boolean' ],
+			'aiPreserve'          => [ 'type' => 'boolean' ],
 			'ai_gen_alt'          => [ 'type' => 'boolean' ],
 			'ai_gen_caption'      => [ 'type' => 'boolean' ],
 			'ai_gen_description'  => [ 'type' => 'boolean' ],
+			'ai_gen_post_title'   => [ 'type' => 'boolean' ],
+			'ai_gen_filename'     => [ 'type' => 'boolean' ],
 		];
 	}
 
