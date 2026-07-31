@@ -49,9 +49,11 @@ class GetSettingsAbility
 		'enable_ai',
 		'autoAI',
 		'autoAIBulk',
+		'aiPreserve',
 		'ai_gen_alt',
 		'ai_gen_caption',
 		'ai_gen_description',
+		'ai_gen_post_title',
 		'ai_gen_filename',
 		'ai_language',
 	];

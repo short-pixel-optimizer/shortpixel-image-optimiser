@@ -179,6 +179,16 @@ class AbilitiesController
 			'category'            => self::ABILITY_CATEGORY,
 			'execute_callback'    => [ GetQueueStatusAbility::class, 'execute' ],
 			'permission_callback' => [ $this, 'userCanOptimize' ],
+			'input_schema'        => [
+				'type'       => 'object',
+				'properties' => [
+					'bulk' => [
+						'type'        => 'boolean',
+						'description' => 'When true, report the bulk queues instead of the single-item queues',
+						'default'     => false,
+					],
+				],
+			],
 			'meta'                => $meta,
 		];
 
@@ -225,7 +235,7 @@ class AbilitiesController
 
 		$abilities['shortpixel/run-queue'] = [
 			'label'               => __( 'Run Optimization Queue', 'shortpixel-image-optimiser' ),
-			'description'         => __( 'Advances the optimization queues by running processing ticks within a time budget. Call repeatedly until the queues report empty. Returns the queue status after the run', 'shortpixel-image-optimiser' ),
+			'description'         => __( 'Advances the optimization queues by running processing ticks within a time budget. Call repeatedly until the queues report empty. Pass bulk=true when continuing a bulk restore (auto-detected when a bulk is already running). Returns the queue status after the run', 'shortpixel-image-optimiser' ),
 			'category'            => self::ABILITY_CATEGORY,
 			'execute_callback'    => [ RunQueueAbility::class, 'execute' ],
 			'permission_callback' => [ $this, 'userCanOptimize' ],
@@ -236,6 +246,10 @@ class AbilitiesController
 						'type'        => 'integer',
 						'description' => 'Maximum number of processing ticks to run (max 20)',
 						'default'     => 10,
+					],
+					'bulk' => [
+						'type'        => 'boolean',
+						'description' => 'Drive the bulk queues instead of the single-item queues. When omitted, auto-detects an active bulk or custom operation',
 					],
 				],
 			],
@@ -267,6 +281,213 @@ class AbilitiesController
 			'meta' => $meta,
 		];
 
+		$abilities['shortpixel/bulk-restore'] = [
+			'label'               => __( 'Bulk Restore Images', 'shortpixel-image-optimiser' ),
+			'description'         => __( 'Starts a bulk restore of all optimized images from backup (de-optimize). Destructive and non-reversible. Requires confirm=true. Does not consume credits. Asynchronous: call run-queue until the queues report empty', 'shortpixel-image-optimiser' ),
+			'category'            => self::ABILITY_CATEGORY,
+			'execute_callback'    => [ BulkRestoreAbility::class, 'execute' ],
+			'permission_callback' => [ $this, 'userCanOptimize' ],
+			'input_schema'        => [
+				'type'       => 'object',
+				'properties' => [
+					'confirm' => [
+						'type'        => 'boolean',
+						'description' => 'Must be true to acknowledge that bulk restore is destructive and non-reversible',
+					],
+					'queues' => [
+						'type'        => 'array',
+						'description' => 'Which queues to restore. Defaults to both media and custom',
+						'items'       => [
+							'type' => 'string',
+							'enum' => [ 'media', 'custom' ],
+						],
+						'default'     => [ 'media', 'custom' ],
+					],
+					'process' => [
+						'type'        => 'boolean',
+						'description' => 'Advance prepare/process within this request. Set false to only create the bulk',
+						'default'     => true,
+					],
+				],
+				'required' => [ 'confirm' ],
+			],
+			'meta' => $meta,
+		];
+
+		$abilities['shortpixel/bulk-optimize'] = [
+			'label'               => __( 'Bulk Optimize Images', 'shortpixel-image-optimiser' ),
+			'description'         => __( 'Starts a bulk optimization of all unoptimized images. Requires confirm=true. Consumes ShortPixel credits. Asynchronous: call run-queue until the queues report empty. Statistics cache is reset when the bulk finishes', 'shortpixel-image-optimiser' ),
+			'category'            => self::ABILITY_CATEGORY,
+			'execute_callback'    => [ BulkOptimizeAbility::class, 'execute' ],
+			'permission_callback' => [ $this, 'userCanOptimize' ],
+			'input_schema'        => [
+				'type'       => 'object',
+				'properties' => [
+					'confirm' => [
+						'type'        => 'boolean',
+						'description' => 'Must be true to acknowledge that bulk optimize consumes ShortPixel credits',
+					],
+					'queues' => [
+						'type'        => 'array',
+						'description' => 'Which queues to optimize. Defaults to both media and custom',
+						'items'       => [
+							'type' => 'string',
+							'enum' => [ 'media', 'custom' ],
+						],
+						'default'     => [ 'media', 'custom' ],
+					],
+					'do_ai' => [
+						'type'        => 'boolean',
+						'description' => 'Run AI generation during bulk. Omit to use the autoAIBulk plugin setting',
+					],
+					'process' => [
+						'type'        => 'boolean',
+						'description' => 'Advance prepare/process within this request. Set false to only create the bulk',
+						'default'     => true,
+					],
+				],
+				'required' => [ 'confirm' ],
+			],
+			'meta' => $meta,
+		];
+
+		// --- AI Image SEO abilities (Media Library only) ---
+
+		$abilities['shortpixel/get-ai-seo-status'] = [
+			'label'               => __( 'Get AI Image SEO Status', 'shortpixel-image-optimiser' ),
+			'description'         => __( 'Returns AI Image SEO status for a Media Library attachment: generation state, processability, and original/generated/current values for alt, caption, description, title and filename. Custom Media is not supported', 'shortpixel-image-optimiser' ),
+			'category'            => self::ABILITY_CATEGORY,
+			'execute_callback'    => [ GetAiSeoStatusAbility::class, 'execute' ],
+			'permission_callback' => [ $this, 'userCanOptimize' ],
+			'input_schema'        => [
+				'type'       => 'object',
+				'properties' => [
+					'id' => [
+						'type'        => 'integer',
+						'description' => 'The Media Library attachment ID',
+					],
+				],
+				'required' => [ 'id' ],
+			],
+			'meta' => $meta,
+		];
+
+		$abilities['shortpixel/generate-ai-seo'] = [
+			'label'               => __( 'Generate AI Image SEO', 'shortpixel-image-optimiser' ),
+			'description'         => __( 'Enqueues AI SEO generation (alt, caption, description, title, optional filename) for a Media Library image and processes the queue within a time budget. Asynchronous: if incomplete, call run-queue. Consumes AI credits. Custom Media is not supported', 'shortpixel-image-optimiser' ),
+			'category'            => self::ABILITY_CATEGORY,
+			'execute_callback'    => [ GenerateAiSeoAbility::class, 'execute' ],
+			'permission_callback' => [ $this, 'userCanOptimize' ],
+			'input_schema'        => [
+				'type'       => 'object',
+				'properties' => [
+					'id' => [
+						'type'        => 'integer',
+						'description' => 'The Media Library attachment ID',
+					],
+					'process' => [
+						'type'        => 'boolean',
+						'description' => 'Process the queue immediately after enqueueing. Set false to only enqueue',
+						'default'     => true,
+					],
+					'preview_only' => [
+						'type'        => 'boolean',
+						'description' => 'Generate a preview without persisting results to the attachment',
+						'default'     => false,
+					],
+					'gen_alt' => [
+						'type'        => 'boolean',
+						'description' => 'Override: generate ALT text. Omit to use the plugin setting',
+					],
+					'gen_caption' => [
+						'type'        => 'boolean',
+						'description' => 'Override: generate caption. Omit to use the plugin setting',
+					],
+					'gen_description' => [
+						'type'        => 'boolean',
+						'description' => 'Override: generate description. Omit to use the plugin setting',
+					],
+					'gen_post_title' => [
+						'type'        => 'boolean',
+						'description' => 'Override: generate image title. Omit to use the plugin setting',
+					],
+					'gen_filename' => [
+						'type'        => 'boolean',
+						'description' => 'Override: rename filename via AI. Omit to use the plugin setting',
+					],
+				],
+				'required' => [ 'id' ],
+			],
+			'meta' => $meta,
+		];
+
+		$abilities['shortpixel/undo-ai-seo'] = [
+			'label'               => __( 'Undo AI Image SEO', 'shortpixel-image-optimiser' ),
+			'description'         => __( 'Reverts AI-generated SEO metadata (alt, caption, description, title) to the pre-generation values. Does not consume credits. Filename renames are not reversed. Custom Media is not supported', 'shortpixel-image-optimiser' ),
+			'category'            => self::ABILITY_CATEGORY,
+			'execute_callback'    => [ UndoAiSeoAbility::class, 'execute' ],
+			'permission_callback' => [ $this, 'userCanOptimize' ],
+			'input_schema'        => [
+				'type'       => 'object',
+				'properties' => [
+					'id' => [
+						'type'        => 'integer',
+						'description' => 'The Media Library attachment ID',
+					],
+				],
+				'required' => [ 'id' ],
+			],
+			'meta' => $meta,
+		];
+
+		$abilities['shortpixel/bulk-generate-ai-seo'] = [
+			'label'               => __( 'Bulk Generate AI Image SEO', 'shortpixel-image-optimiser' ),
+			'description'         => __( 'Starts a media-only bulk that generates AI SEO for processable attachments (AI only, no image optimize). Requires confirm=true. Consumes AI credits. Asynchronous: call run-queue with bulk=true until queues empty', 'shortpixel-image-optimiser' ),
+			'category'            => self::ABILITY_CATEGORY,
+			'execute_callback'    => [ BulkGenerateAiSeoAbility::class, 'execute' ],
+			'permission_callback' => [ $this, 'userCanOptimize' ],
+			'input_schema'        => [
+				'type'       => 'object',
+				'properties' => [
+					'confirm' => [
+						'type'        => 'boolean',
+						'description' => 'Must be true to acknowledge that bulk AI SEO generation consumes AI credits',
+					],
+					'process' => [
+						'type'        => 'boolean',
+						'description' => 'Advance prepare/process within this request. Set false to only create the bulk',
+						'default'     => true,
+					],
+				],
+				'required' => [ 'confirm' ],
+			],
+			'meta' => $meta,
+		];
+
+		$abilities['shortpixel/bulk-undo-ai-seo'] = [
+			'label'               => __( 'Bulk Undo AI Image SEO', 'shortpixel-image-optimiser' ),
+			'description'         => __( 'Starts a media-only bulk that reverts AI SEO metadata for all attachments with generated data. Requires confirm=true. Does not consume credits. Filename renames are not reversed. Asynchronous: call run-queue with bulk=true until queues empty', 'shortpixel-image-optimiser' ),
+			'category'            => self::ABILITY_CATEGORY,
+			'execute_callback'    => [ BulkUndoAiSeoAbility::class, 'execute' ],
+			'permission_callback' => [ $this, 'userCanOptimize' ],
+			'input_schema'        => [
+				'type'       => 'object',
+				'properties' => [
+					'confirm' => [
+						'type'        => 'boolean',
+						'description' => 'Must be true to acknowledge that bulk undo reverts AI SEO site-wide',
+					],
+					'process' => [
+						'type'        => 'boolean',
+						'description' => 'Advance prepare/process within this request. Set false to only create the bulk',
+						'default'     => true,
+					],
+				],
+				'required' => [ 'confirm' ],
+			],
+			'meta' => $meta,
+		];
+
 		$abilities['shortpixel/update-settings'] = [
 			'label'               => __( 'Update Plugin Settings', 'shortpixel-image-optimiser' ),
 			'description'         => __( 'Updates ShortPixel settings from a strict whitelist with validation. Sensitive fields (API key, credentials, CDN domain) can never be written. Returns updated and skipped keys', 'shortpixel-image-optimiser' ),
@@ -278,7 +499,7 @@ class AbilitiesController
 				'properties' => [
 					'settings' => [
 						'type'        => 'object',
-						'description' => 'Object with setting keys to update. Allowed: compressionType (lossy/glossy/lossless), processThumbnails, backupImages, useSmartcrop, createWebp, createAvif, optimizePdfs, optimizeRetina, optimizeUnlisted, CMYKtoRGBconversion, autoMediaLibrary, useCDN, resizeImages, resizeWidth, resizeHeight, resizeType (outer/inner), png2jpg (0-2), exif (0-1), enable_ai, autoAI, ai_gen_alt, ai_gen_caption, ai_gen_description',
+						'description' => 'Object with setting keys to update. Allowed: compressionType (lossy/glossy/lossless), processThumbnails, backupImages, useSmartcrop, createWebp, createAvif, optimizePdfs, optimizeRetina, optimizeUnlisted, CMYKtoRGBconversion, autoMediaLibrary, useCDN, resizeImages, resizeWidth, resizeHeight, resizeType (outer/inner), png2jpg (0-2), exif (0-1), enable_ai, autoAI, autoAIBulk, aiPreserve, ai_gen_alt, ai_gen_caption, ai_gen_description, ai_gen_post_title, ai_gen_filename',
 					],
 				],
 				'required' => [ 'settings' ],

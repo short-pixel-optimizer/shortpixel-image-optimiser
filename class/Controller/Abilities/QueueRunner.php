@@ -5,8 +5,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
+use ShortPixel\Controller\BulkController;
 use ShortPixel\Controller\QueueController;
 use ShortPixel\Controller\Queue\Queue;
+use ShortPixel\Controller\StatsController;
 
 /**
  * Shared queue-driving helper for action abilities.
@@ -20,6 +22,10 @@ use ShortPixel\Controller\Queue\Queue;
  * the queue as far as the time budget allows and reports progress; callers
  * (AI agents) are expected to call shortpixel/run-queue again when items
  * remain
+ *
+ * When `$isBulk` is true, ticks run against the bulk queues. Bulk mode also
+ * auto-calls BulkController::startBulk() when preparation finishes, because
+ * bulk queues do not start processing automatically
  *
  * @package ShortPixel\Controller\Abilities
  */
@@ -38,22 +44,28 @@ class QueueRunner
 	 * Run processing ticks until the queues are empty, an error occurs,
 	 * or the tick/time budget runs out
 	 *
-	 * @param int $maxTicks Maximum number of ticks to run (capped at MAX_TICKS)
-	 * @param int $timeBudget Maximum seconds to spend (capped by MAX_TIME_BUDGET and PHP max_execution_time)
-	 * @return array Summary: ticks_run, stopped_reason, is_error, last_message
+	 * @param int  $maxTicks   Maximum number of ticks to run (capped at MAX_TICKS)
+	 * @param int  $timeBudget Maximum seconds to spend (capped by MAX_TIME_BUDGET and PHP max_execution_time)
+	 * @param bool $isBulk     When true, drive the bulk queues and auto-start after prepare
+	 * @return array Summary: ticks_run, stopped_reason, is_error, last_message, is_bulk, stats_reset
 	 */
-	public static function run( $maxTicks = 10, $timeBudget = 20 )
+	public static function run( $maxTicks = 10, $timeBudget = 20, $isBulk = false )
 	{
 		$maxTicks   = min( max( 1, (int) $maxTicks ), self::MAX_TICKS );
 		$timeBudget = self::clampTimeBudget( $timeBudget );
+		$isBulk     = (bool) $isBulk;
 
-		$queueController = new QueueController();
+		// REST/MCP (and cron) do not load wp-admin; converters need these helpers
+		self::ensureAdminIncludes();
+
+		$queueController = new QueueController( [ 'is_bulk' => $isBulk ] );
 
 		$startTime     = time();
 		$ticksRun      = 0;
 		$stoppedReason = 'tick_limit_reached';
 		$isError       = false;
 		$lastMessage   = '';
+		$statsReset    = false;
 
 		while ( $ticksRun < $maxTicks ) {
 
@@ -78,10 +90,23 @@ class QueueRunner
 
 			if ( Queue::RESULT_QUEUE_EMPTY === $combinedStatus ) {
 				$stoppedReason = 'queues_empty';
+				if ( true === $isBulk ) {
+					$statsReset = self::finalizeBulkRun();
+					if ( true === $statsReset ) {
+						$lastMessage = 'Bulk finished; statistics cache reset';
+					}
+				}
 				break;
 			}
 
+			// Bulk queues stay idle after prepare until startBulk is called
 			if ( Queue::RESULT_PREPARING_DONE === $combinedStatus ) {
+				if ( true === $isBulk ) {
+					BulkController::getInstance()->startBulk( [ 'media', 'custom' ] );
+					$lastMessage = 'Bulk preparation done, processing started';
+					continue;
+				}
+
 				$stoppedReason = 'preparing_done';
 				break;
 			}
@@ -97,7 +122,29 @@ class QueueRunner
 			'stopped_reason' => $stoppedReason,
 			'is_error'       => $isError,
 			'last_message'   => $lastMessage,
+			'is_bulk'        => $isBulk,
+			'stats_reset'    => $statsReset,
 		];
+	}
+
+	/**
+	 * Finish bulk queues and invalidate cached dashboard stats
+	 *
+	 * Always resets StatsController after a completed bulk so the
+	 * WEEK_IN_SECONDS currentStats cache does not show stale counts
+	 *
+	 * @return bool True when statistics cache was reset
+	 */
+	private static function finalizeBulkRun()
+	{
+		$bulkControl = BulkController::getInstance();
+
+		$bulkControl->finishBulk( 'media' );
+		$bulkControl->finishBulk( 'custom' );
+
+		StatsController::getInstance()->reset();
+
+		return true;
 	}
 
 	/**
@@ -138,5 +185,23 @@ class QueueRunner
 		}
 
 		return $budget;
+	}
+
+	/**
+	 * Load wp-admin helpers missing outside the admin bootstrap (REST, MCP, cron)
+	 *
+	 * Same pattern as AdminController::loadCronCompat()
+	 *
+	 * @return void
+	 */
+	private static function ensureAdminIncludes()
+	{
+		if ( false === function_exists( 'download_url' ) ) {
+			include_once ABSPATH . 'wp-admin/includes/admin.php';
+		}
+
+		if ( false === function_exists( 'wp_generate_attachment_metadata' ) ) {
+			include_once ABSPATH . 'wp-admin/includes/image.php';
+		}
 	}
 }

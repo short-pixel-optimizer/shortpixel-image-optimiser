@@ -21,18 +21,21 @@ class GetQueueStatusAbility
 	/**
 	 * Execute the ability callback
 	 *
-	 * @param array $args Input arguments (none required for this ability)
+	 * @param array $args Input: bulk (bool) — when true, report the bulk queues
 	 * @return array Queue status data
 	 */
 	public static function execute( $args = null )
 	{
 		$args = is_array( $args ) ? $args : [];
 
-		$queueController = new QueueController();
+		$isBulk = ! empty( $args['bulk'] );
+
+		$queueController = new QueueController( [ 'is_bulk' => $isBulk ] );
 		$startupData     = $queueController->getStartupData();
 
 		$result = [
-			'queues' => [],
+			'is_bulk' => $isBulk,
+			'queues'  => [],
 		];
 
 		foreach ( [ 'media', 'custom' ] as $queueName ) {
