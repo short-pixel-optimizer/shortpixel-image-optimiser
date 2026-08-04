@@ -378,7 +378,7 @@ class WPQ implements Queue
 
      if (false !== $item)
      {
-        self::$itemCache[$item->$item_id]  = $item; 
+        self::$itemCache[$item_id]  = $item; 
      }
      
      return $item;

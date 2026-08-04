@@ -27,6 +27,8 @@ class Replacer
 	protected $target_url;
 	protected $source_metadata = [];
 	protected $target_metadata = [];
+	protected $search_urls = []; 
+	protected $replace_urls = []; 
 
 	protected static $instance; 
 
@@ -92,6 +94,18 @@ class Replacer
 	public function setTargetMeta($meta)
 	{
 		$this->target_metadata = $meta;
+	}
+
+	public function addURLArray($search_urls = [], $replace_urls = [])
+	{
+		if (true === is_array($search_urls))
+		{
+			$this->search_urls = array_merge($this->search_urls, $search_urls);
+		}
+		if (true === is_array($replace_urls))
+		{
+			$this->replace_urls = array_merge($this->replace_urls, $replace_urls);
+		}
 	}
 
 	public function Setup()
@@ -161,6 +175,10 @@ class Replacer
 		$search_urls = $urls['source'];
 		$replace_urls = $urls['target'];
 
+
+	 	$search_urls = array_merge($search_urls, $this->search_urls); 
+	 	$replace_urls = array_merge($replace_urls, $this->replace_urls); 
+
 		/* If the replacement is much larger than the source, there can be more thumbnails. This leads to disbalance in the search/replace arrays.
 	      Remove those from the equation. If the size doesn't exist in the source, it shouldn't be in use either */
 		foreach ($replace_urls as $size => $url) {
@@ -203,7 +221,7 @@ class Replacer
 		// If the two sides are disbalanced, the str_replace part will cause everything that has an empty replace counterpart to replace it with empty. Unwanted.
 		if (count($search_urls) !== count($replace_urls)) {
 			Log::addError('Unbalanced Replace Arrays, aborting', array($search_urls, $replace_urls, count($search_urls), count($replace_urls)));
-			$errors[] = __('There was an issue with updating your image URLS: Search and replace have different amount of values. Aborting updating thumbnails', 'enable-media-replace');
+			$errors[] = __('There was an issue with updating your image URLS: Search and replace have different amount of values. Aborting updating thumbnails', 'shortpixel-image-optimiser');
 			return $errors;
 		}
 
@@ -350,7 +368,7 @@ class Replacer
 					if (null === $content) {
 						Log::addDebug('Content returned null, aborting this record, meta_id : ' . $id_field);
 					} else {
-						$content = $this->replaceContent($content, $search_urls, $replace_urls);
+						$content = $this->replaceContent($content, $search_urls, $replace_urls, false, false);
 
 						// Content as how it's going to dbase.
 						$content = apply_filters('shortpixel/replacer/save_meta_value', $content, $row, $component);
@@ -382,7 +400,7 @@ class Replacer
 	 * @param $in_deep Boolean.  This is use to prevent serialization of sublevels. Only pass back serialized from top.
 	 * @param $strict_check Boolean . If true, remove all classes from serialization check and fail. This should be done on post_content, not on metadata.
 	 */
-	public function replaceContent($content, $search, $replace, $in_deep = false, $strict_check = false)
+	public function replaceContent($content, $search, $replace, $in_deep = false, $strict_check = true)
 	{
 
 		// Since ReplaceContent can now be called directly, this might not be set, set defaults if so
@@ -422,11 +440,11 @@ class Replacer
 		} elseif (is_array($content)) // array metadata and such.
 		{
 			foreach ($content as $index => $value) {
-				$content[$index] = $this->replaceContent($value, $search, $replace, true); //str_replace($value, $search, $replace);
+				$content[$index] = $this->replaceContent($value, $search, $replace, true, $strict_check); //str_replace($value, $search, $replace);
 				if (is_string($index)) // If the key is the URL (sigh)
 				{
 
-					$index_replaced = $this->replaceContent($index, $search, $replace, true);
+					$index_replaced = $this->replaceContent($index, $search, $replace, true, $strict_check);
 					if ($index_replaced !== $index)
 						$content = $this->change_key($content, array($index => $index_replaced));
 				}
@@ -443,7 +461,7 @@ class Replacer
 				}
 			}
 			foreach ($content as $key => $value) {
-				$content->{$key} = $this->replaceContent($value, $search, $replace, true);
+				$content->{$key} = $this->replaceContent($value, $search, $replace, true, $strict_check);
 			}
 		}
 
@@ -526,6 +544,7 @@ class Replacer
 				$result[$index][$name] =  $baseurl . wp_basename($filename); // filename can have a path like 19/08 etc.
 			}
 		}
+		//    Log::addDebug('Relative URLS', $result);
 		return $result;
 	}
 
