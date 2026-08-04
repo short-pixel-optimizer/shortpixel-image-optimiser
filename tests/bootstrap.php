@@ -73,6 +73,35 @@ if ( '1' === getenv( 'SPIO_PARTNER_PLUGINS' ) ) {
 require "{$_tests_dir}/includes/bootstrap.php";
 
 /**
+ * WP 5.9 test-isolation guard: neutralize spurious dbDelta ALTERs.
+ *
+ * ShortQ re-runs its table install (WPQ::createQueue -> install(true) ->
+ * dbDelta) whenever its shortqwp_* status option is missing — which is
+ * every test, because per-test rollbacks remove the option. On WP <= 6.0
+ * dbDelta mis-compares column types against MySQL 8 DESCRIBE output
+ * (display widths/case, e.g. `int(11)` vs `int`) and emits a
+ * `CHANGE COLUMN` ALTER for every column, every time. ALTER TABLE
+ * implicitly COMMITs the wrapping test transaction, so everything seeded
+ * up to that point leaks into later tests in the class (seen as
+ * MediaLibraryFilterTest failing on WP 5.9 with prevented attachments
+ * from earlier tests).
+ *
+ * The tables are created with the current schema during the install
+ * phase, so these ALTERs are pure churn — rewrite them to a harmless
+ * non-committing statement. WP >= 6.1 dbDelta detects no diff and never
+ * emits them, making this filter a no-op there.
+ */
+add_filter(
+	'query',
+	function ( $query ) {
+		if ( preg_match( '/^\s*ALTER TABLE\s+`?\w*shortpixel_\w+`?\s+CHANGE COLUMN\s/i', $query ) ) {
+			return 'DO 0';
+		}
+		return $query;
+	}
+);
+
+/**
  * Silence ONLY PHP 8.5 deprecations that cannot be fixed while retaining
  * PHP 7.4 back-compat (per the plugin header). Everything else — real
  * warnings, deprecations tied to production bugs, test-fixture races —

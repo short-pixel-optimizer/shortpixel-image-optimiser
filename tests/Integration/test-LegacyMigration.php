@@ -14,12 +14,11 @@
  *     into shortpixel_postmeta rows when an image without a DB record is
  *     loaded. Triggered automatically from loadMeta()'s no-metadata branch.
  *
- * Bug #27 HALF-FIXED (c0bc8c17): loadMeta() now reloads the freshly saved DB
- * meta after a successful checkLegacy() instead of falling through with an
- * empty stdClass, so the MAIN image's migrated status survives. RESIDUAL
- * (pinned): checkLegacy()'s thumbnail loop iterates $this->thumbnails, which
- * is still empty at that point in loadMeta(), so thumbsOptList is never
- * migrated — thumbnail rows end up status 0. Bug #8 FIXED (867b3573):
+ * Bug #27 FULLY FIXED (c0bc8c17 + af5794d8): loadMeta() reloads the freshly
+ * saved DB meta after a successful checkLegacy() (main-row half, c0bc8c17),
+ * and checkLegacy() now populates $this->thumbnails via loadThumbnailsFromWP()
+ * when the property is still empty (af5794d8), so thumbsOptList migrates too —
+ * every thumbnail row gets its SUCCESS status. Bug #8 FIXED (867b3573):
  * check() now also writes the renamed exif value back into the returned
  * settings array, so a migrated keepExif choice persists. Note: since the
  * bug #9 fix (9b18a8e8) checkLegacy() no longer writes the undeclared
@@ -168,28 +167,17 @@ class LegacyMigrationTest extends SPIO_IntegrationTestCase {
 		$statuses = $this->postmetaStatuses( $id );
 		$this->assertGreaterThanOrEqual( 2, count( $statuses ), 'Migration must write rows for the main image and its thumbnails.' );
 
-		// Bug #27 HALF-FIXED (c0bc8c17): loadMeta() now reloads the saved DB
-		// meta after a successful checkLegacy(), so the MAIN image keeps its
-		// migrated SUCCESS status (fixed part, asserted above via isOptimized).
-		//
-		// PINNED — residual production bug: the thumbnail loop in checkLegacy()
-		// (MediaLibraryModel.php:3317 `foreach ($this->thumbnails ...)`) runs
-		// while $this->thumbnails is still the empty default — loadMeta() only
-		// populates thumbnails AFTER the checkLegacy() call — so thumbsOptList
-		// is never migrated. The thumbnail rows are then written by the
-		// post-load save with fresh empty meta: status 0, no compression data.
-		// When Bas fixes this, every status below becomes SUCCESS — flip then.
-		$success = array_filter(
-			$statuses,
-			function ( $s ) {
-				return ImageModel::FILE_STATUS_SUCCESS === $s;
-			}
-		);
-		$this->assertCount(
-			1,
-			$success,
-			'Pinned residual of bug #27: only the MAIN row keeps SUCCESS; thumbnail rows are written with status 0 because checkLegacy() iterates an empty $this->thumbnails. If more rows are SUCCESS, the residual was fixed — assert all-SUCCESS instead and drop this pin.'
-		);
+		// Bug #27 FULLY FIXED (c0bc8c17 + af5794d8): the main row keeps its
+		// migrated SUCCESS status AND checkLegacy() now loads the thumbnails
+		// from WP before its thumbnail loop, so every thumbsOptList entry
+		// migrates with SUCCESS too.
+		foreach ( $statuses as $status ) {
+			$this->assertSame(
+				ImageModel::FILE_STATUS_SUCCESS,
+				$status,
+				'Since af5794d8 (bug #27 full fix) every migrated row — main AND thumbnails — must carry FILE_STATUS_SUCCESS.'
+			);
+		}
 
 		// The re-migration guard must be stamped.
 		$this->assertIsNumeric( get_post_meta( $id, '_shortpixel_was_converted', true ), 'Migration must stamp the _shortpixel_was_converted guard.' );

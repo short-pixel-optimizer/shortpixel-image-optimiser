@@ -204,21 +204,19 @@ class WpCliTest extends SPIO_IntegrationTestCase {
 		$cli->run( array(), array( 'queue' => 'media', 'ticks' => 1, 'wait' => 0 ) );
 		$this->assertStringContainsString( 'All Queues report processing has finished', WP_CLI::allText() );
 
-		// PINNED — production bug introduced by the #19 fix (e19a0236):
-		// displayResult() now guards with `empty($result->improvements)`, but
-		// QueueItemResult keeps its fields protected behind __get/__set with
-		// NO __isset — empty() on the magic property is therefore ALWAYS
-		// true, and the per-size improvements table never renders even
-		// though the success result carries a populated improvements array.
+		// Bug #32 FIXED (af5794d8): displayResult() fetches the magic property
+		// into a local var before empty() — QueueItemResult has __get/__set
+		// but no __isset, so empty() directly on $result->improvements was
+		// always true. The per-size improvements table renders again.
 		$improvementTables = array_filter(
 			WP_CLI::$tables,
 			function ( $table ) {
 				return in_array( 'improvement', $table['fields'], true );
 			}
 		);
-		$this->assertEmpty(
+		$this->assertNotEmpty(
 			$improvementTables,
-			'Pinned: since e19a0236 empty() on the magic improvements property is always true (QueueItemResult lacks __isset), so the improvements table never renders. If a table appeared, the bug was fixed — flip to assertNotEmpty and drop this pin.'
+			'Since af5794d8 (bug #32 fix) a successful optimization must render the per-size improvements table.'
 		);
 	}
 

@@ -15,9 +15,11 @@
  *   - fetchImageMatches(): regex against crafted HTML strings.
  *   - formatGenerated(): label collection, -3 substitution for status codes.
  *   - formatResultData(): prefix/postfix application, numeric-1 → empty-string
- *     replacement, original_filebase preservation. NOTE: $textItems changed from
- *     ['alt','caption','description','filename'] to ['alt','caption','description','filebase']
- *     in Bug #16 FIXED (12603b56) — 'filename' is no longer formatted, 'filebase' is.
+ *     replacement, original_filebase preservation. NOTE: $textItems is
+ *     ['alt','caption','description'] since Bug #31 FIXED (af5794d8) — 'filebase'
+ *     was removed so file base names are never sentence-formatted (12603b56 had
+ *     added it, mangling the original_filebase fallback with ucfirst + period).
+ *     Prefix/postfix for filebase still applies via the ai_filename_* settings.
  *   - replaceFiles() — PINNED BUG: always returns false on both success and
  *     conflict paths (see test_replaceFiles_returns_false_on_success_and_conflict_pinned_for_deferred_fix).
  *   - sendToProcessing() dispatch: 'undoAI' is routed locally; other actions
@@ -420,9 +422,10 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 	/*
 	 * formatResultData — numeric-1 → empty string, prefix/postfix, original_filebase
 	 *
-	 * Bug #16 FIXED (12603b56): $textItems changed from ['alt','caption','description','filename']
-	 * to ['alt','caption','description','filebase']. The key 'filename' is no longer text-formatted;
-	 * 'filebase' is now the text item for the file base name. Fixtures updated accordingly.
+	 * Bug #31 FIXED (af5794d8): 'filebase' was removed from $textItems (12603b56
+	 * had put it there, replacing the dead 'filename' key from bug #16, but that
+	 * sentence-formatted real file names). $textItems is ['alt','caption','description'];
+	 * filebase keeps its prefix/postfix handling via the ai_filename_* settings.
 	 */
 
 	public function test_formatResultData_stores_original_filebase_from_image_model() {
@@ -436,7 +439,6 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 		$settings->ai_alt_prefix  = '';
 		$settings->ai_alt_postfix = '';
 
-		// Bug #16 FIXED (12603b56): 'filebase' replaces 'filename' in $textItems.
 		$aiData = [ 'alt' => 'A nice dog.', 'caption' => '', 'description' => '', 'filebase' => '' ];
 		$result = $ctrl->formatResultData( $aiData, $qItem );
 
@@ -459,7 +461,6 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 		$settings->ai_alt_postfix = '';
 
 		// Numeric 1 in alt simulates "API didn't generate a value for this field".
-		// Bug #16 FIXED (12603b56): use 'filebase' not 'filename' in fixture.
 		$aiData = [ 'alt' => 1, 'caption' => '', 'description' => '', 'filebase' => '' ];
 		$result = $ctrl->formatResultData( $aiData, $qItem );
 
@@ -480,9 +481,8 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 		$settings->ai_alt_prefix     = 'MyPrefix';
 		$settings->ai_alt_postfix    = '';
 
-		// Clear all other prefix/postfix settings to avoid noise.
-		// Bug #16 FIXED (12603b56): 'filebase' replaces 'filename' in $textItems;
-		// the settings keys for filebase prefix/postfix remain 'ai_filename_prefix'/'ai_filename_postfix'.
+		// Clear all other prefix/postfix settings to avoid noise. The settings
+		// keys for filebase prefix/postfix are 'ai_filename_prefix'/'ai_filename_postfix'.
 		foreach ( [ 'ai_caption_prefix', 'ai_caption_postfix', 'ai_description_prefix', 'ai_description_postfix',
 					'ai_post_title_prefix', 'ai_post_title_postfix', 'ai_filename_prefix', 'ai_filename_postfix' ] as $key ) {
 			$settings->$key = '';
@@ -508,8 +508,7 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 		$settings->ai_alt_prefix     = '';
 		$settings->ai_alt_postfix    = 'MyPostfix';
 
-		// Bug #16 FIXED (12603b56): 'filebase' replaces 'filename' in $textItems;
-		// settings keys for filebase prefix/postfix remain 'ai_filename_prefix'/'ai_filename_postfix'.
+		// Settings keys for filebase prefix/postfix are 'ai_filename_prefix'/'ai_filename_postfix'.
 		foreach ( [ 'ai_caption_prefix', 'ai_caption_postfix', 'ai_description_prefix', 'ai_description_postfix',
 					'ai_post_title_prefix', 'ai_post_title_postfix', 'ai_filename_prefix', 'ai_filename_postfix' ] as $key ) {
 			$settings->$key = '';
@@ -532,26 +531,20 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 		$settings                    = \wpSPIO()->settings();
 		$settings->ai_alt_prefix     = '';
 		$settings->ai_alt_postfix    = '';
-		// Bug #16 FIXED (12603b56): 'filebase' is the $textItems key but settings remain 'ai_filename_*'.
 		$settings->ai_filename_prefix  = '';
 		$settings->ai_filename_postfix = '';
 
 		// No 'filebase' key in input → should default to original_filebase.
-		// Bug #16 FIXED (12603b56): aiData must not contain 'filebase' to test the fallback path.
 		$aiData = [ 'alt' => '', 'caption' => '', 'description' => '' ];
 		$result = $ctrl->formatResultData( $aiData, $qItem );
 
-		// PINNED — production bug introduced by the #16 fix (12603b56):
-		// 'filebase' now sits in $textItems, so the original_filebase
-		// FALLBACK is run through processTextResult() (ucfirst + trailing
-		// period) and 'original-base' comes out as 'Original-base.' —
-		// downstream replaceFiles() then renames real files to mangled
-		// names like 'Fixture-small..jpg'. When fixed, flip this back to
-		// assertSame('original-base', $result['filebase']).
+		// Bug #31 FIXED (af5794d8): 'filebase' is no longer in $textItems, so
+		// the original_filebase fallback passes through untouched — no more
+		// ucfirst + trailing period mangling ('Original-base.').
 		$this->assertSame(
-			'Original-base.',
+			'original-base',
 			$result['filebase'],
-			'Pinned: since 12603b56 the filebase fallback is sentence-formatted (ucfirst + trailing dot). If this fails with the raw value preserved, the bug was fixed — assert original-base and drop this pin.'
+			'Since af5794d8 (bug #31 fix) the original_filebase fallback must be preserved verbatim.'
 		);
 	}
 

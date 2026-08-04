@@ -11,19 +11,13 @@
  * reducer endpoint as a forced-lossless 'convert_api' round-trip, which
  * the mock supports since Wave 2 (real lossless bytes when lossy=0).
  *
- * pdf is EXCLUDED from the happy-path tests and covered by a pinned test
- * instead: DownloadHelper rejects any download that is not an image unless
- * its extension is whitelisted ('pdf'), but download_url() temp files
- * always end in `.tmp` (wp_tempnam), so the whitelist never matches and
- * PDF optimization always fails at the download step. Broken since
- * 9cd33e9c (2026-04-01); the attempted fix 5c63ce9e checks the wrong
- * extension. Reported to Bas (bug #1); fix attempt c66431c7 renamed the
- * temp file in remoteGetMethod() only (the LAST fallback, never reached).
- * Fix attempt 033998ae moves the rename into downloadURLMethod() — but it
- * then `return $tempFile;`, the OLD pre-rename path that no longer exists
- * on disk, so download() sees a zero-byte/absent file. If anything this
- * now breaks ALL downloads via the primary method, not just PDFs. Still
- * broken; pinned below.
+ * pdf rides the happy path since bugs #1/#29 were FIXED (af5794d8):
+ * downloadURLMethod() renames the wp_tempnam() `.tmp` file to carry the
+ * URL extension and now returns the RENAMED path ($tmpFilePath), so the
+ * DownloadHelper 'pdf' extension whitelist matches and the download is
+ * accepted. (History: broken since 9cd33e9c; fix attempts 5c63ce9e,
+ * c66431c7 and 033998ae each missed — the last returned the stale
+ * pre-rename path, breaking ALL extension-bearing downloads.)
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -41,6 +35,7 @@ class BulkOptimizationTest extends SPIO_IntegrationTestCase {
 		'fixture-large.heic',
 		'fixture-medium.tiff',
 		'fixture-medium.bmp',
+		'fixture-large.pdf',
 	);
 
 	/**
@@ -158,63 +153,6 @@ class BulkOptimizationTest extends SPIO_IntegrationTestCase {
 				"The bulk run must have sent $mainFile to the reducer."
 			);
 		}
-
-		$bulk->finishBulk( 'media' );
-	}
-
-	/**
-	 * PINNED — production bug, reported to Bas.
-	 *
-	 * PDF optimization fails at the download step: DownloadHelper
-	 * (class/Helper/DownloadHelper.php:147-156) whitelists the 'pdf'
-	 * extension, but download_url() stores the body in a wp_tempnam()
-	 * file that ALWAYS ends in `.tmp`, so the whitelist never matches;
-	 * finfo then reports application/pdf (not image/*) and the download
-	 * is rejected ("seems not an image"). The API round-trip itself
-	 * succeeds — the mock serves smaller PDF bytes — so before 9cd33e9c
-	 * (2026-04-01) this optimized fine.
-	 *
-	 * Fix attempt c66431c7 (IT #1) did NOT resolve this: it added the
-	 * extension-preserving rename to remoteGetMethod() only — the last
-	 * entry in the fallback chain, never reached. Fix attempt 033998ae
-	 * moves the rename into downloadURLMethod() (lines 273-291) but then
-	 * `return $tempFile;` — the OLD pre-rename path, which no longer
-	 * exists. The caller's exist()/filesize() checks fail, so the PDF
-	 * download still dies (and the same broken return now sits on the
-	 * primary path for every format).
-	 */
-	public function test_bulk_pdf_currently_fails_at_download_step_pinned() {
-		$id = $this->uploadFixture( 'fixture-large.pdf' );
-		$this->purgeQueueTable();
-
-		$bulk = BulkController::getInstance();
-		$bulk->createNewBulk( 'media', array( 'doMedia' => true, 'doAi' => false ) );
-		$this->runBulkPreparation();
-		$bulk->startBulk( 'media' );
-
-		$stats = $this->runBulkUntilFinished();
-
-		// Sentinel: the pipeline DID reach the download phase — the mock
-		// served the optimized PDF bytes — so the failure is download
-		// rejection, not an earlier bail-out.
-		$downloadCalls = array_filter(
-			$this->api->requests,
-			function ( $req ) {
-				return false !== strpos( $req['url'], '/f/' );
-			}
-		);
-		$this->assertNotEmpty( $downloadCalls, 'The optimized PDF must have been requested for download.' );
-
-		$image = \wpSPIO()->filesystem()->getImage( $id, 'media', false );
-		$this->assertFalse(
-			$image->isOptimized(),
-			'Pinned current behavior: PDF is never optimized because DownloadHelper rejects the .tmp download. If this fails, the bug was fixed — move pdf back into FIXTURES and drop this test.'
-		);
-		$this->assertSame(
-			1,
-			(int) $stats->fatal_errors,
-			'Pinned current behavior: the PDF item ends as a fatal queue error. If this fails, the bug was fixed — move pdf back into FIXTURES and drop this test.'
-		);
 
 		$bulk->finishBulk( 'media' );
 	}

@@ -134,23 +134,16 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$this->assertGreaterThanOrEqual( 1, count( $getRequests ), 'At least one get-url poll' );
 
 		$payload = $addRequests[0]['request'];
-		// Compare against the PRE-run URL: since 12603b56 ('filebase' joined
-		// $textItems) the AI apply step renames the attachment (see pin below),
-		// so wp_get_attachment_url() after the run no longer matches the
-		// payload that was sent.
 		$this->assertSame( $original_url, $payload['url'] );
 
-		// PINNED — production bug introduced by the #16 fix (12603b56):
-		// formatResultData() falls back to original_filebase when the API
-		// returns no 'filebase', then runs it through processTextResult()
-		// (ucfirst + trailing period). replaceFiles() then renames the file
-		// to e.g. 'Fixture-small-1..jpg' — every AI request without an
-		// API-generated filebase mangles the real filename. When fixed, the
-		// URL stays unchanged — flip this to assertSame($original_url, ...).
-		$this->assertNotSame(
+		// Bug #31 FIXED (af5794d8): 'filebase' was removed from $textItems in
+		// formatResultData(), so the original_filebase fallback is no longer
+		// sentence-formatted (ucfirst + trailing dot) and replaceFiles() no
+		// longer renames the real file when the API returns no filebase.
+		$this->assertSame(
 			$original_url,
 			wp_get_attachment_url( $attachment_id ),
-			'Pinned: AI apply mangles the filebase (ucfirst + trailing dot) when the API returns none. If URLs match, the bug was fixed — assert equality instead and drop this pin.'
+			'Since af5794d8 (bug #31 fix) an AI run without an API-generated filebase must leave the attachment URL untouched.'
 		);
 		$this->assertSame( '1', $payload['retry'] );
 		$this->assertSame( 'v_2', $payload['version'] );

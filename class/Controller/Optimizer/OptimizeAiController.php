@@ -278,7 +278,7 @@ class OptimizeAiController extends OptimizerBase
      * Formats raw AI result data before it is persisted to the database.
      *
      * Applies processTextResult() (capitalisation, period) to text fields (alt, caption,
-     * description, filename). Any field that comes back as numeric 1 from the API is
+     * description — never filebase). Any field that comes back as numeric 1 from the API is
      * treated as "not generated" and replaced with an empty string. Applies configured
      * prefix/postfix settings for each field. Always stores the original file base in
      * 'original_filebase' for later use in replaceFiles().
