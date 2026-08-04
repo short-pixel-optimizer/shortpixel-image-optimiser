@@ -64,7 +64,7 @@ jobs:
       - name: Install Composer dependencies
         run: |
           composer clear-cache
-          composer update --no-interaction --prefer-dist
+          COMPOSER=composer.tests.json composer install --no-interaction --prefer-dist
 
       - name: Install WordPress Unit Test Suite
         run: |
@@ -78,4 +78,4 @@ jobs:
           if [ -z "$SHORTPIXEL_SMOKE_KEY" ]; then
             echo "::warning::SHORTPIXEL_SMOKE_KEY secret is not set — all smoke tests will self-skip."
           fi
-          vendor/bin/phpunit -c phpunit-integration.xml --testsuite Smoke --testdox --colors=never
+          vendor-tests/bin/phpunit -c phpunit-integration.xml --testsuite Smoke --testdox --colors=never

@@ -246,8 +246,8 @@ verdict.
 bin/test.sh --shell
 
 # From inside the shell:
-vendor/bin/phpunit --testsuite Model
-vendor/bin/phpunit --filter test_foo tests/Model/test-Bar.php
+vendor-tests/bin/phpunit --testsuite Model
+vendor-tests/bin/phpunit --filter test_foo tests/Model/test-Bar.php
 ```
 
 ### Cache / reset
@@ -260,7 +260,7 @@ bin/test.sh --clean
 
 Caches persisted between runs:
 
-- **`vendor/`** — lives on the host via the bind mount, so `composer install` runs only when `vendor/autoload.php` is missing.
+- **`vendor-tests/`** — lives on the host via the bind mount, so the test-deps install (`COMPOSER=composer.tests.json composer install`) runs only when `vendor-tests/autoload.php` is missing.
 - **`/tmp/wordpress-tests-lib`** and **`/tmp/wordpress`** — persist in the `wp-tests-cache` named Docker volume, so the ~3-minute WordPress test-framework SVN checkout only happens once (per `--clean` cycle).
 - **PHP images** — Docker layer cache. Each PHP version keeps its own image tag (`spio-tests:php74` / `spio-tests:php83` / `spio-tests:php85`); switching PHP versions doesn't invalidate the others.
 
@@ -316,8 +316,11 @@ above, OR use the Docker path.
 ### One-time bootstrap
 
 ```bash
-# Install PHP dependencies
-composer install
+# Install the test dependencies (PHPUnit + polyfills). Test deps live in
+# composer.tests.json / composer.tests.lock and install into vendor-tests/ —
+# the main composer.json is the plugin/module BUILD tool and is not needed
+# for running tests.
+COMPOSER=composer.tests.json composer install
 
 # Install the WordPress test framework (~3 min — SVN checkout).
 # Adjust the DB creds to match your local MySQL setup.
@@ -335,17 +338,17 @@ The install script:
 
 ```bash
 # All testsuites
-vendor/bin/phpunit
+vendor-tests/bin/phpunit
 
 # Specific testsuite
-vendor/bin/phpunit --testsuite Model
-vendor/bin/phpunit --testsuite External
+vendor-tests/bin/phpunit --testsuite Model
+vendor-tests/bin/phpunit --testsuite External
 
 # Specific test method
-vendor/bin/phpunit --filter test_isProcessable
+vendor-tests/bin/phpunit --filter test_isProcessable
 
 # Specific file
-vendor/bin/phpunit tests/Model/test-ImageModel.php
+vendor-tests/bin/phpunit tests/Model/test-ImageModel.php
 ```
 
 ## Running against the CI reference

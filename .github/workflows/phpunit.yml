@@ -68,7 +68,7 @@ jobs:
       - name: Install Composer dependencies
         run: |
           composer clear-cache
-          composer update --no-interaction --prefer-dist
+          COMPOSER=composer.tests.json composer install --no-interaction --prefer-dist
 
       - name: Install WordPress Unit Test Suite
         run: |
@@ -78,8 +78,8 @@ jobs:
       - name: Show PHPUnit + config sanity check
         run: |
           echo "=== PHPUnit binary + version ==="
-          which vendor/bin/phpunit
-          vendor/bin/phpunit --version
+          which vendor-tests/bin/phpunit
+          vendor-tests/bin/phpunit --version
           echo ""
           echo "=== Test files discovered on disk ==="
           find tests -type f -name 'test-*.php' | sort
@@ -87,10 +87,10 @@ jobs:
           echo "=== Total: $(find tests -type f -name 'test-*.php' | wc -l) test files ==="
           echo ""
           echo "=== Test suites PHPUnit will recognise ==="
-          vendor/bin/phpunit --list-suites
+          vendor-tests/bin/phpunit --list-suites
           echo ""
           echo "=== Test methods PHPUnit will run (across all suites) ==="
-          vendor/bin/phpunit --list-tests | tee /tmp/phpunit-tests.txt
+          vendor-tests/bin/phpunit --list-tests | tee /tmp/phpunit-tests.txt
           echo ""
           echo "=== Test method count: $(grep -c ' - ' /tmp/phpunit-tests.txt || echo 0) ==="
 
@@ -127,7 +127,7 @@ jobs:
             LOG="$LOGDIR/$SAFE_NAME.log"
             # Pipe through tee for capture. GitHub Actions logs aren't a
             # TTY, so keep colours off — the captured log stays scannable.
-            if vendor/bin/phpunit --testsuite "$SUITE" --testdox --colors=never 2>&1 | tee "$LOG" && [ "${PIPESTATUS[0]}" -eq 0 ]; then
+            if vendor-tests/bin/phpunit --testsuite "$SUITE" --testdox --colors=never 2>&1 | tee "$LOG" && [ "${PIPESTATUS[0]}" -eq 0 ]; then
               echo ""
               echo "=== Testsuite '$SUITE' passed"
             else
@@ -265,7 +265,7 @@ jobs:
       - name: Install Composer dependencies
         run: |
           composer clear-cache
-          composer update --no-interaction --prefer-dist
+          COMPOSER=composer.tests.json composer install --no-interaction --prefer-dist
 
       - name: Install WordPress Unit Test Suite
         run: |
@@ -273,7 +273,7 @@ jobs:
           bash bin/install-wp-tests.sh "$DB_NAME" "$DB_USER" "$DB_PASS" "$DB_HOST" "${WP_VERSION}"
 
       - name: Run integration testsuite
-        run: vendor/bin/phpunit -c phpunit-integration.xml --testdox --colors=never
+        run: vendor-tests/bin/phpunit -c phpunit-integration.xml --testdox --colors=never
 
   multisite:
     # Multisite suite: the WP test framework installs the test database
@@ -332,7 +332,7 @@ jobs:
       - name: Install Composer dependencies
         run: |
           composer clear-cache
-          composer update --no-interaction --prefer-dist
+          COMPOSER=composer.tests.json composer install --no-interaction --prefer-dist
 
       - name: Install WordPress Unit Test Suite
         run: |
@@ -342,7 +342,7 @@ jobs:
       - name: Run multisite testsuite
         env:
           WP_MULTISITE: '1'
-        run: vendor/bin/phpunit -c phpunit-integration.xml --testsuite Multisite --testdox --colors=never
+        run: vendor-tests/bin/phpunit -c phpunit-integration.xml --testsuite Multisite --testdox --colors=never
 
   compat:
     # Cross-plugin compatibility suite: runs SPIO against the REAL
@@ -406,7 +406,7 @@ jobs:
       - name: Install Composer dependencies
         run: |
           composer clear-cache
-          composer update --no-interaction --prefer-dist
+          COMPOSER=composer.tests.json composer install --no-interaction --prefer-dist
 
       - name: Install WordPress Unit Test Suite
         run: |
@@ -428,4 +428,4 @@ jobs:
       - name: Run compat testsuite
         env:
           SPIO_PARTNER_PLUGINS: '1'
-        run: vendor/bin/phpunit -c phpunit-integration.xml --testsuite Compat --testdox --colors=never
+        run: vendor-tests/bin/phpunit -c phpunit-integration.xml --testsuite Compat --testdox --colors=never

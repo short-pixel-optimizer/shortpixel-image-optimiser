@@ -6,7 +6,7 @@
 #
 #     docker compose -f docker-compose.tests.yml up -d mysql
 #     docker compose -f docker-compose.tests.yml run --rm php \
-#         bash -c 'composer install && bin/install-wp-tests.sh wordpress_test root password mysql latest && vendor/bin/phpunit'
+#         bash -c 'COMPOSER=composer.tests.json composer install && bin/install-wp-tests.sh wordpress_test root password mysql latest && vendor-tests/bin/phpunit'
 #     docker compose -f docker-compose.tests.yml down
 #
 # The `wp-tests-cache` named volume persists /tmp/wordpress-tests-lib and
@@ -50,9 +50,9 @@ services:
     working_dir: /opt/plugin
     volumes:
       # Live-mount the repo so edits on the host are immediately visible
-      # inside the container. `vendor/` populated by composer install is
-      # written back to the host too — that's intentional so the IDE has
-      # autoload data.
+      # inside the container. `vendor-tests/` populated by the test-deps
+      # composer install (COMPOSER=composer.tests.json) is written back to
+      # the host too — that's intentional so the IDE has autoload data.
       - .:/opt/plugin
       # Persistent cache for /tmp so the WP-tests SVN checkout + wp core
       # download only pay their cost once. `bin/test.sh --clean` wipes this.

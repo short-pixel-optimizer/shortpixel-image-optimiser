@@ -1,4 +1,6 @@
 vendor
+# Test-only dependencies (composer.tests.json) — composer.tests.lock IS tracked.
+vendor-tests
 composer.lock
 .DS_Store
 .env.testing
