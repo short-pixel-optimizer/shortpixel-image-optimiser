@@ -128,7 +128,10 @@ class SettingsModel extends \ShortPixel\Model
   //  const ALLOW_AI = 2;
   //  const DENY_AI = 2;
 
-		private $settings;
+		protected $settings;
+
+		/** @var \ShortPixel\Model\MultiSettingsModel|null Cached network settings model when multisite overrides are enabled. */
+		protected $networkSettingsModel = null;
 
 		/**
 		 * Wires late-bound defaults for AI settings (which depend on the
@@ -213,6 +216,15 @@ class SettingsModel extends \ShortPixel\Model
 		 */
 		public function __get($name)
 		{
+			 if ($this->isNetworkOverrideEnabled())
+			 {
+				 $network_value = $this->getNetworkSettingValue($name);
+				 if (null !== $network_value)
+				 {
+					 return $network_value;
+				 }
+			 }
+
 			 if (isset($this->settings[$name]))
 			 {
 				  return $this->sanitize($name, $this->settings[$name]);
@@ -374,8 +386,78 @@ class SettingsModel extends \ShortPixel\Model
 		 */
 		public function isset($name)
 		{
+			if ($this->isNetworkOverrideEnabled())
+			{
+				$network_value = $this->getNetworkSettingValue($name);
+				if (null !== $network_value)
+				{
+					return true;
+				}
+			}
+
 			return (isset($this->settings[$name])) ? true : false;
 
+		}
+
+		/**
+		 * Returns the network settings model when multisite overrides are active.
+		 *
+		 * @return \ShortPixel\Model\MultiSettingsModel|null
+		 */
+		protected function getNetworkSettingsModel()
+		{
+			if (is_null($this->networkSettingsModel) && function_exists('is_multisite') && is_multisite())
+			{
+				if (class_exists('\ShortPixel\Model\MultiSettingsModel'))
+				{
+					$this->networkSettingsModel = \ShortPixel\Model\MultiSettingsModel::getInstance();
+				}
+			}
+
+			return $this->networkSettingsModel;
+		}
+
+		/**
+		 * Returns a network-scope setting value when network override mode is enabled.
+		 *
+		 * @param string $name Setting name.
+		 * @return mixed|null
+		 */
+		protected function getNetworkSettingValue($name)
+		{
+			$network_model = $this->getNetworkSettingsModel();
+			if (! is_object($network_model) || ! method_exists($network_model, 'exists'))
+			{
+				return null;
+			}
+
+			if ($network_model->exists($name))
+			{
+				return $network_model->{$name};
+			}
+
+			return null;
+		}
+
+		/**
+		 * Reports whether network-wide settings should override the per-site values.
+		 *
+		 * @return bool
+		 */
+		public function isNetworkOverrideEnabled()
+		{
+			$network_model = $this->getNetworkSettingsModel();
+			if (! is_object($network_model) || ! method_exists($network_model, 'exists'))
+			{
+				return false;
+			}
+
+			if (! $network_model->exists('network_settings_override_enabled'))
+			{
+				return false;
+			}
+
+			return (bool) $network_model->network_settings_override_enabled;
 		}
 
     /** Check if this entry in settings should be in import / export function . Some are internal / site only .

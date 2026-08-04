@@ -149,6 +149,8 @@ class SettingsViewController extends \ShortPixel\ViewController
         }
 
         $this->load_settings();
+        $this->loadView('view-settings');
+
       }
 
       /**
@@ -713,6 +715,7 @@ class SettingsViewController extends \ShortPixel\ViewController
       public function load_settings()
       {
          $this->view->data = (Object) $this->model->getData();
+         $this->view->network_override_enabled = (bool) $this->model->isNetworkOverrideEnabled();
 
 				 $this->loadAPiKeyData();
          $this->loadDashBoardInfo();
@@ -761,10 +764,10 @@ class SettingsViewController extends \ShortPixel\ViewController
          //$this->view->latest_ai = $this->getLatestAIExamples();
 				 $this->view->is_unlimited= (!is_null($this->quotaData) && $this->quotaData->unlimited) ? true : false;
 
-         $settings = \wpSPIO()->settings();
-
 				 if ($this->view->data->createAvif == 1)
+         {
            $this->avifServerCheck();
+         }
 
          // Set viewMode
 				 if (false === $this->view->key->is_verifiedkey)
@@ -787,7 +790,6 @@ class SettingsViewController extends \ShortPixel\ViewController
 
 				 $this->view_mode = $view_mode;
 
-				 $this->loadView('view-settings');
       }
 
 

@@ -76,13 +76,16 @@ class ShortPixelSettings {
 
 		// ApiKeyField toggle
 		var keyField = this.root.querySelector('.apifield i.eye');
-		keyField.addEventListener('click', self.ToggleApiFieldEvent.bind(self));
-
-			var compressionRadios = this.root.querySelectorAll('.shortpixel-compression-options input[type="radio"]');
-			for (var i = 0; i < compressionRadios.length; i++)
-			{
-				 compressionRadios[i].addEventListener('change', this.CompressionTypeChangeEvent.bind(this));
-			}
+		if (keyField !== null)
+		{
+			keyField.addEventListener('click', self.ToggleApiFieldEvent.bind(self));
+		}
+		
+		var compressionRadios = this.root.querySelectorAll('.shortpixel-compression-options input[type="radio"]');
+		for (var i = 0; i < compressionRadios.length; i++)
+		{
+			 compressionRadios[i].addEventListener('change', this.CompressionTypeChangeEvent.bind(this));
+		}
 	}
 
 	InitAjaxForm() {
@@ -322,11 +325,13 @@ class ShortPixelSettings {
 
 	InitModeSwitcher() {
 		var switcher = document.getElementById('viewmode-toggles');
-		var checkbox = switcher.querySelector('input[type="checkbox"]');
-
+		
 		if (null == switcher) {
 			return;
 		}
+
+		var checkbox = switcher.querySelector('input[type="checkbox"]');
+
 		if (this.root.classList.contains('advanced') || checkbox.checked) {
 			checkbox.checked = true;
 			this.current_mode = 'advanced';
@@ -1111,7 +1116,13 @@ class ShortPixelSettings {
 
 	DashBoardWarningEvent(warning, matches) {
 
-		var dashBox = warning[0];
+		var dashBox = (warning.length > 0) ? warning[0] : null;
+
+		if (null === dashBox)
+		{
+			console.warn('Dashbox not set?', matches);
+			return; 
+		}
 		var status = (true === matches.allMatches) ? 'alert' : (true === matches.someMatch) ? 'warning' : 'ok';
 
 		let panelName;

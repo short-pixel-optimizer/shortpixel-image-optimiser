@@ -115,6 +115,15 @@ class MultiSettingsModelTest extends WP_UnitTestCase {
 		$this->assertFalse( $model['disable_site_settings_page']['default'] );
 	}
 
+	public function test_constructor_adds_network_override_toggle_to_model_schema() {
+		$m     = MultiSettingsModel::getInstance();
+		$model = $this->getPrivate( $m, 'model' );
+
+		$this->assertArrayHasKey( 'network_settings_override_enabled', $model );
+		$this->assertSame( 'boolean', $model['network_settings_override_enabled']['s'] );
+		$this->assertFalse( $model['network_settings_override_enabled']['default'] );
+	}
+
 	public function test_constructor_preserves_inherited_parent_model_fields() {
 		$m     = MultiSettingsModel::getInstance();
 		$model = $this->getPrivate( $m, 'model' );

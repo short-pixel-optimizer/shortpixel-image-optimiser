@@ -9,6 +9,7 @@ if (! defined('ABSPATH')) {
 ?>
 <section id="tab-ai" class="<?php echo ($this->display_part == 'ai') ? 'active setting-tab' : 'setting-tab'; ?>" data-part="ai">
 
+  <fieldset <?php disabled($view->network_override_enabled, true); ?>>
   <settinglist>
 
     <h2><?php esc_html_e('AI Image SEO & Accessibility', 'shortpixel-image-optimiser'); ?></h2>
@@ -455,6 +456,9 @@ if (! defined('ABSPATH')) {
   </settingslist>
 
 
-  <?php $this->loadView('settings/part-savebuttons', false); ?>
+  <?php if (! isset($view->render_tab_save_buttons) || true === (bool) $view->render_tab_save_buttons) : ?>
+    <?php $this->loadView('settings/part-savebuttons', false); ?>
+  <?php endif; ?>
 
+  </fieldset>
 </section>

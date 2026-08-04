@@ -483,7 +483,9 @@ class ShortPixelPlugin {
 		$show_site_settings = true;
 		if ($this->env()->is_multisite && ! is_network_admin()) {
 			$network_settings = get_site_option('spio_wpmu', array());
-			if ( isset($network_settings['disable_site_settings_page']) && $network_settings['disable_site_settings_page'] ) {
+			$disable_site_settings = isset($network_settings['disable_site_settings_page']) && $network_settings['disable_site_settings_page'];
+			$network_override_enabled = isset($network_settings['network_settings_override_enabled']) && $network_settings['network_settings_override_enabled'];
+			if ($disable_site_settings || $network_override_enabled) {
 				$show_site_settings = false;
 			}
 		}
@@ -516,7 +518,6 @@ class ShortPixelPlugin {
 	 */
 	public function admin_network_pages()
 	{
-		return; // @todo Need to check this work.
 		add_submenu_page(
 			'settings.php',
 			__( 'ShortPixel Network Settings', 'shortpixel-image-optimiser' ),

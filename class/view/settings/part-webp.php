@@ -43,6 +43,7 @@ if( $this->is_nginx ){
 
 <section id="tab-webp" class="<?php echo ($this->display_part == 'webp') ? 'active setting-tab' :'setting-tab'; ?>" data-part="webp" >
 
+<fieldset <?php disabled($view->network_override_enabled, true); ?>>
 <settinglist>
 
   <h2><?php esc_html_e('Deliver Next Generation Images & CDN','shortpixel-image-optimiser');?></h2>
@@ -308,5 +309,7 @@ else:
 
 </settinglist>
 
-  <?php $this->loadView('settings/part-savebuttons', false); ?>
+  <?php if (! isset($view->render_tab_save_buttons) || true === (bool) $view->render_tab_save_buttons) : ?>
+    <?php $this->loadView('settings/part-savebuttons', false); ?>
+  <?php endif; ?>
 </section>
