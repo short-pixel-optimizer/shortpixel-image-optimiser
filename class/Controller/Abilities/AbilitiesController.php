@@ -107,13 +107,40 @@ class AbilitiesController
 	}
 
 	/**
+	 * Whether the WordPress Abilities API is available on this site
+	 *
+	 * @return bool
+	 */
+	public function isApiAvailable()
+	{
+		return function_exists( 'wp_register_ability' );
+	}
+
+	/**
+	 * Whether a named ability is currently registered with the Abilities API
+	 *
+	 * @param string $name Ability name (e.g. shortpixel/get-stats)
+	 * @return bool
+	 */
+	public function isAbilityRegistered( $name )
+	{
+		if ( ! function_exists( 'wp_get_ability' ) ) {
+			return false;
+		}
+
+		$ability = \wp_get_ability( $name );
+		return null !== $ability;
+	}
+
+	/**
 	 * Return the ability definitions to register, keyed by ability name.
 	 *
-	 * Each entry is the args array passed to `wp_register_ability()`
+	 * Each entry is the args array passed to `wp_register_ability()`.
+	 * Public so the debug settings page can list the catalog
 	 *
 	 * @return array<string, array>
 	 */
-	protected function getAbilities()
+	public function getAbilities()
 	{
 		$meta = $this->getDefaultMeta();
 

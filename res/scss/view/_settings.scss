@@ -324,6 +324,17 @@
            text-align: center;
         }
      }
+     .table.mcp-abilities-list {
+        margin-top: 12px;
+        max-width: 960px;
+        > div > span:nth-child(1) { min-width: 220px; }
+        > div > span:nth-child(3),
+        > div > span:nth-child(4),
+        > div > span:nth-child(5) {
+           text-align: center;
+           padding: 0 8px;
+        }
+     }
   }
 
   section.banner
