@@ -13,7 +13,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 <section id="tab-processing" class="<?php echo ($this->display_part == 'processing') ? 'active setting-tab' :'setting-tab'; ?>" data-part="processing" >
 
-<fieldset <?php disabled($view->network_override_enabled, true); ?>>
 <settinglist>
 
   <h2><?php esc_html_e('Processing','shortpixel-image-optimiser');?></h2>
@@ -186,9 +185,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 </settinglist>
 
-<?php if (! isset($view->render_tab_save_buttons) || true === (bool) $view->render_tab_save_buttons) : ?>
   <?php $this->loadView('settings/part-savebuttons', false); ?>
-<?php endif; ?>
 
-</fieldset>
 </section>

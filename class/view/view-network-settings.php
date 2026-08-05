@@ -73,6 +73,10 @@ if ( ! defined( 'ABSPATH' ) ) {
         <?php $this->loadView('settings/part-processing'); ?>
         <?php $this->loadView('settings/part-webp'); ?>
         <?php $this->loadView('settings/part-ai'); ?>
+        <?php $this->loadView('settings/part-integrations'); ?>
+        <?php $this->loadView('settings/part-exclusions'); ?>
+        <?php $this->loadView('settings/part-help'); ?>
+
       </form>
     </section>
   </article>

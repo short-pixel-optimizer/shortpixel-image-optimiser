@@ -13,7 +13,6 @@ if (! defined('ABSPATH')) {
 ?>
 
 <section id="tab-optimisation" class="<?php echo ($this->display_part == 'optimisation') ? 'active setting-tab' : 'setting-tab'; ?>" data-part="optimisation">
-  <fieldset <?php disabled($view->network_override_enabled, true); ?>>
 
   <?php
 
@@ -475,7 +474,6 @@ if (! defined('ABSPATH')) {
 
 
   </settinglist>
-
 
 
   <?php $this->loadView('settings/part-savebuttons', false); ?>

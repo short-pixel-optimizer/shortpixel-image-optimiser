@@ -29,17 +29,13 @@ if ( ! defined( 'ABSPATH' ) ) {
           <i class='shortpixel-icon user'></i><name><?php _e('ShortPixel Account','shortpixel-image-optimiser'); ?></name>
       </a>
     <?php } ?>
-    <!--<button><i class='shortpixel-icon notifications'></i><?php _e('Notifications','shortpixel-image-optimiser'); ?></button>-->
   </div>
 </header>
-
-
-<?php //$this->loadView('settings/part-header'); ?>
 
   <input type='checkbox' name='heavy_features' value='1' <?php echo ($this->disable_heavy_features) ? 'checked' : '' ?> class='shortpixel-hide' />
 
 <article class='shortpixel-settings'>
-  <?php if ($this->view->data->redirectedSettings < 3 && $view->key->is_verifiedkey)
+  <?php if ($this->view->data->redirectedSettings < 3 && $view->key->is_verifiedkey && false === $this->is_network_page)
   {
     $this->loadView('settings/part-quicktour');
   }
@@ -52,6 +48,15 @@ if ( ! defined( 'ABSPATH' ) ) {
     <input type='checkbox'></label>
   <menu>
 			<ul>
+        <?php if (true === $this->is_network_page): ?>
+        <li>
+          <?php echo $this->settingLink([
+            'part' => 'network',
+            'title' => __('Network Control', 'shortpixel-image-optimiser'),
+            'icon' => 'shortpixel-icon dashboard',
+          ]); ?>
+        </li>
+        <?php endif; ?> 
 				<li>
           <?php echo $this->settingLink([
               'part' => 'overview',
@@ -177,6 +182,12 @@ if ( ! defined( 'ABSPATH' ) ) {
         <input type='hidden' name='display_part' value="<?php echo esc_attr($this->display_part) ?>" />
         <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
 
+          <?php if (true === $this->is_network_page)
+          {
+             $this->loadView('settings/part-network-override'); 
+          }
+          ?>
+
           <?php $this->loadView('settings/part-overview'); ?>
           <?php $this->loadView('settings/part-optimisation'); ?>
           <?php $this->loadView('settings/part-processing'); ?>
@@ -222,17 +233,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	        <input type='hidden' name='display_part' value="<?php echo esc_attr($this->display_part) ?>" />
 	        <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
 
-        <?php
-        if (! $this->view->cloudflare_constant) // @todo
-        {
-
-        }
-
-
-        ?>
 			</form>
 
-			</div> <!-- wrappur -->
+			</div> <!-- wrapper -->
       <?php
     endif;
     ?>

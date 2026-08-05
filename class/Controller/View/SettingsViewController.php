@@ -96,6 +96,9 @@ class SettingsViewController extends \ShortPixel\ViewController
      /** @var array<int, mixed> Notices generated during the current request, reported back in AJAX responses. */
 		 protected $notices_added = [];
 
+     // Is this the setting area for WPMU? 
+     protected $is_network_page = false; 
+
      /**
       * Accumulates field correction records to be sent back to the JS form.
       * Each entry is an associative array with keys: field, old_value, new_value,
@@ -712,7 +715,7 @@ class SettingsViewController extends \ShortPixel\ViewController
        *
        * @return void
        */
-      public function load_settings()
+      protected function load_settings()
       {
          $this->view->data = (Object) $this->model->getData();
          $this->view->network_override_enabled = (bool) $this->model->isNetworkOverrideEnabled();
@@ -756,7 +759,7 @@ class SettingsViewController extends \ShortPixel\ViewController
          if (true === $bool )
             $this->view->hide_banner = true; 
 
-         if ( defined('SHORTPIXEL_NO_BANNER') && SHORTPIXEL_NO_BANNER == true)
+         if ( defined('SHORTPIXEL_NO_BANNER') && \SHORTPIXEL_NO_BANNER == true)
          {
            $this->view->hide_banner = true; 
          }

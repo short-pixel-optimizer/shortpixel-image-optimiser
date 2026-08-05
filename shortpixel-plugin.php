@@ -91,7 +91,7 @@ class ShortPixelPlugin {
 	protected $shortPixel; // shortpixel megaclass
 
 	/** @var array<int, string> WP admin-page hook suffixes returned by add_options_page / add_media_page. */
-	protected $admin_pages = array();  // admin page hooks.
+	protected $admin_pages = [];  // admin page hooks.
 
 	/**
 	 * Register the `lowInit` bootstrap at `plugins_loaded` priority 5.
@@ -503,7 +503,7 @@ class ShortPixelPlugin {
 		/*translators: title and menu name for the Bulk Processing page*/
 		$admin_pages[] = add_media_page( __( 'ShortPixel Bulk Process', 'shortpixel-image-optimiser' ), __( 'Bulk ShortPixel', 'shortpixel-image-optimiser' ), 'edit_others_posts', 'wp-short-pixel-bulk', array( $this, 'route' ) );
 
-		$this->admin_pages = $admin_pages;
+		$this->admin_pages = array_merge($this->admin_pages, $admin_pages);
 	}
 
 	/**
@@ -518,7 +518,7 @@ class ShortPixelPlugin {
 	 */
 	public function admin_network_pages()
 	{
-		add_submenu_page(
+		$page = add_submenu_page(
 			'settings.php',
 			__( 'ShortPixel Network Settings', 'shortpixel-image-optimiser' ),
 			__( 'ShortPixel', 'shortpixel-image-optimiser' ),
@@ -526,6 +526,12 @@ class ShortPixelPlugin {
 			'shortpixel-network-settings',
 			[ $this, 'route' ]
 		);
+
+		if ($page !== false)
+		{
+			// WPMU adds the -network prefix to screen_id;
+			$this->admin_pages[] = $page . '-network'; 
+		}
 	}
 
 	/**

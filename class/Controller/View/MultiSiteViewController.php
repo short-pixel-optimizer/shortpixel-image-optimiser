@@ -29,11 +29,13 @@ class MultiSiteViewController extends SettingsViewController
 {
 
       /** @var string Template for the network settings page. */
-      protected $template = 'view-network-settings';
+      protected $template = 'view-settings';
       /** @var string Nonce action name for the network settings form. */
       protected $form_action = 'save-multi-settings';
       /** @var string[] Valid tab identifiers accepted by the network settings page. */
       protected $all_display_parts = array('network', 'optimisation', 'processing', 'webp', 'ai');
+
+      protected $is_network_page = true; 
 
       /**
        * Instantiates the MultiSettingsModel and chains to the parent constructor.
@@ -47,7 +49,6 @@ class MultiSiteViewController extends SettingsViewController
          parent::__construct();
          $this->model = new MultiSettingsModel();
          $this->view->network_settings_enabled = false;
-         $this->view->network_override_enabled = false;
       }
 
       /**
@@ -70,6 +71,8 @@ class MultiSiteViewController extends SettingsViewController
 
           $this->load_network_settings();
       }
+
+      
 
       /**
        * Reads the environment details and uses the network settings tabs by default.
@@ -120,7 +123,6 @@ class MultiSiteViewController extends SettingsViewController
           $noticeController->update();
 
           $this->view->network_settings_enabled = (bool) $this->model->network_settings_override_enabled;
-          $this->view->network_override_enabled = false;
 
           $url = network_admin_url('settings.php?page=shortpixel-network-settings&part=' . rawurlencode($this->display_part));
           $redirect = 'self';
@@ -181,7 +183,7 @@ class MultiSiteViewController extends SettingsViewController
       {
           $this->view->data = (object) $this->model->getData();
           $this->view->network_settings_enabled = (bool) $this->model->network_settings_override_enabled;
-          $this->view->network_override_enabled = false;
+         
           $this->view->key = (object) [
               'is_verifiedkey' => true,
               'is_constant_key' => false,
@@ -193,6 +195,16 @@ class MultiSiteViewController extends SettingsViewController
           $this->loadDashBoardInfo();
           $this->load_settings();
           $this->loadView();
+      }
+
+      protected function load_settings()
+      {
+          parent::load_settings(); 
+
+          if ('page-quick-tour' === $this->view_mode)
+          {
+             $this->view_mode = get_user_option('shortpixel-settings-mode');
+          }
       }
 
       /**
