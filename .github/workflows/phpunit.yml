@@ -4,7 +4,7 @@ on:
   push:
     branches: [ unit-tests, integration-tests ]
   pull_request:
-    branches: [ updates ]
+    branches: [ updates, master ]
 
 jobs:
   build:
