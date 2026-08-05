@@ -1942,18 +1942,25 @@ class AjaxController
 	{
 		$id = get_transient('spio_settings_ai_example_id');
 
+		$attach_id = null; 
 		if (false === $id || ! is_numeric($id))
 		{
 			$item = AiDataModel::getMostRecent();
-			$attach_id = $item->getAttachId(); 
+			if (is_object($item))
+			{
+				$attach_id = $item->getAttachId(); 
+			}
 		}
 		else
 		{
 			$item = AiDataModel::getModelByAttachment($id);
 			$attach_id = $id; 
 		}
-		
+
+
 		$imageModel = \wpSPIO()->fileSystem()->getMediaImage($attach_id);
+
+
 
         if (is_null($attach_id) || false === $imageModel)
         {
