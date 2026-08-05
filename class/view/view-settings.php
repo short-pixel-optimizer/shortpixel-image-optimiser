@@ -177,9 +177,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 		</menu>
 		<section class="wrapper">
-      <form name='wp_shortpixel_options' action='<?php echo esc_url(add_query_arg('noheader', 'true')) ?>'  method='post' id='wp_shortpixel_options'>
-
+      <form name='wp_shortpixel_options' action='<?php echo esc_url(add_query_arg('noheader', 'true'), $this->url) ?>'  method='post' id='wp_shortpixel_options'>
         <input type='hidden' name='display_part' value="<?php echo esc_attr($this->display_part) ?>" />
+        <input type="hidden" name="form_action" value="<?php echo esc_attr($this->form_action); ?>" />
+
         <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
 
           <?php if (true === $this->is_network_page)
@@ -220,26 +221,5 @@ if ( ! defined( 'ABSPATH' ) ) {
         </div>
     </section>
 
-<article id="shortpixel-settings-tabs" class="sp-tabs">
-    <?php if (! $view->key->is_verifiedkey)
-    {
-    } ?>
-
-  <?php
-    if ($view->key->is_verifiedkey):
-      ?>
-      <div class='section-wrapper'>
-				<form name='wp_shortpixel_options' action='<?php echo esc_url(add_query_arg('noheader', 'true')) ?>'  method='post' id='wp_shortpixel_options'>
-	        <input type='hidden' name='display_part' value="<?php echo esc_attr($this->display_part) ?>" />
-	        <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
-
-			</form>
-
-			</div> <!-- wrapper -->
-      <?php
-    endif;
-    ?>
-
-</article>
 <?php $this->loadView('settings/part-wso'); ?>
 <?php $this->loadView('snippets/part-inline-modal'); ?>

@@ -982,8 +982,10 @@ class ShortPixelSettings {
 			saveButtons.classList.add('saving');
 		}
 
-		formData.append('screen_action', 'form_submit');
+		let form_action = formData.get('form_action');
+		formData.append('screen_action', form_action);
 		formData.append('form-nonce', formData.get('nonce'));
+
 
 		// Special Actions
 		let formaction_parsed = URL.parse(form.action);
