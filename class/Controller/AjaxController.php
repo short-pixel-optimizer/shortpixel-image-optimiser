@@ -1957,10 +1957,7 @@ class AjaxController
 			$attach_id = $id; 
 		}
 
-
 		$imageModel = \wpSPIO()->fileSystem()->getMediaImage($attach_id);
-
-
 
         if (is_null($attach_id) || false === $imageModel)
         {

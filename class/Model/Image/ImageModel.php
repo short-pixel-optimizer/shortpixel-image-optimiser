@@ -310,12 +310,18 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
       if (! $this->isExtensionExcluded() && $this->isImage() && $this->is_readable() && ! $this->is_virtual() )
       {
-         list($width, $height) = @getimagesize($this->getFullPath());
-         if ($width)
+         $info = @getimagesize($this->getFullPath());
+         if (is_array($info))
+         {
+            list($width, $height) = $info; 
+
+         }
+  
+         if (isset($width))
          {
           $this->width = $width;
          }
-         if ($height)
+         if (isset($height))
          {
           $this->height = $height;
          }
