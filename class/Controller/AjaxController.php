@@ -551,9 +551,11 @@ class AjaxController
 				$this->settingsFormSubmit($action);
 				break;
 			default:
-
 				Log::addError('Issue with settingsRequest, not valid action');
-				exit('0');
+				$json = new \stdClass;
+				$json->result = false;
+				$json->message = __('Settings requests with invalid action', 'shortpixel-image-optimiser');
+				$this->send($json);
 				break;
 		}
 	}
@@ -1940,17 +1942,21 @@ class AjaxController
 	{
 		$id = get_transient('spio_settings_ai_example_id');
 
+		$attach_id = null; 
 		if (false === $id || ! is_numeric($id))
 		{
 			$item = AiDataModel::getMostRecent();
-			$attach_id = $item->getAttachId(); 
+			if (is_object($item))
+			{
+				$attach_id = $item->getAttachId(); 
+			}
 		}
 		else
 		{
 			$item = AiDataModel::getModelByAttachment($id);
 			$attach_id = $id; 
 		}
-		
+
 		$imageModel = \wpSPIO()->fileSystem()->getMediaImage($attach_id);
 
         if (is_null($attach_id) || false === $imageModel)

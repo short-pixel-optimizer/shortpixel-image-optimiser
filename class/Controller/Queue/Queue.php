@@ -532,7 +532,7 @@ abstract class Queue
 
                   if (true === $optimizeAiController->isAiEnabled() &&
                   true === $settings->autoAIBulk &&
-                  true === $queueOptions['doAi'])
+                  true === ($queueOptions['doAi'] ?? false) )
                   {
                     $aiDataModel = AiDataModel::getModelByAttachment($mediaItem->get('id'));
                     $enqueueAi = $aiDataModel->isProcessable();
@@ -1131,6 +1131,13 @@ abstract class Queue
     {
       $qItem = $this->mediaItemToQueue($item); // convert again
       $this->q->itemDone($qItem);
+
+      // Remove from cache
+      $item_id = $item->item_id;
+      if (isset(self::$isInQueue[$item_id])) 
+      {
+          unset(self::$isInQueue[$item_id]);
+      }
     }
 
     /**

@@ -9,12 +9,13 @@ this file lives in the repo for the dev team.
 The suite lives under `tests/` and is split into four PHPUnit testsuites via
 `phpunit.xml.dist`:
 
-| Testsuite | Path | Covers |
-|---|---|---|
-| `Helper` | `tests/Helper/` | Utility classes under `class/Helper/` |
-| `model` | `tests/Model/` | Data models + business logic under `class/Model/` |
-| `External` | `tests/External/` | Third-party integrations under `class/external/` |
-| `SPIO Main` | `tests/` (excluding the three above) | Root plugin classes (bootstrap, `Controller`, `ViewController`, etc.) |
+| Testsuite     | Path                                | Covers                                                  |
+|---------------|-------------------------------------|---------------------------------------------------------|
+| `Helper`      | `tests/Helper/`                     | Utility classes under `class/Helper/`                   |
+| `model`       | `tests/Model/`                      | Data models + business logic under `class/Model/`       |
+| `External`    | `tests/External/`                   | Third-party integrations under `class/external/`        |
+| `Controllers` | `tests/Controller/`                 | Request handlers under `class/Controller/`              |
+| `SPIO Main`   | `tests/` (excluding the four above) | Root plugin classes (bootstrap, `ViewController`, etc.) |
 
 The tests run against a real WordPress test-environment (using the
 `WP_UnitTestCase` base class), not `WP_Mock`, so they need a MySQL database
@@ -64,6 +65,179 @@ bin/test.sh --matrix
 bin/test.sh --matrix --filter test_handleAvif
 ```
 
+### Integration suite
+
+The integration suite (`tests/Integration/`, `phpunit-integration.xml`) runs
+the real optimize/restore pipeline against a WordPress test install, with
+only the outbound ShortPixel API mocked at the HTTP layer. It runs in its
+own phpunit invocation so the fast unit signal and the slow integration
+signal stay separated.
+
+One special case: the Cloudflare purge tests (`test-CloudflarePurge.php`)
+boot a local `php -S` capture server on port 8437 inside the container,
+because the purge uses raw cURL that the WP HTTP mock can't intercept.
+No real Cloudflare traffic is ever sent.
+
+A second special case: `test-ConstantsAndFilters.php` `define()`s SPIO
+behavior constants (wp-config style), which would poison every test that
+runs after it in the same PHP process. It is excluded from the main
+`Integration` suite and runs as the separate `IntegrationIsolated`
+testsuite — `bin/test.sh --integration` makes both phpunit invocations
+automatically.
+
+The suite also contains hook-level partner-integration tests that do NOT
+need the partner plugin installed — they fire the partner's public hooks
+directly and assert on SPIO's reaction: `test-EMRIntegration.php`
+(Enable Media Replace), `test-RTAIntegration.php` (Regenerate Thumbnails
+Advanced), `test-MediaPress.php`, and `test-PhotoEngine.php` (WP/LR Sync).
+These run as part of the plain `--integration` pass.
+
+```bash
+# Integration suite only
+bin/test.sh --integration
+bin/test.sh --integration --php 7.4
+bin/test.sh --integration --filter test_optimize
+
+# Integration suite on all three PHP versions
+bin/test.sh --matrix --integration
+```
+
+### Real-API smoke tests
+
+The smoke suite (`tests/Smoke/`) removes the HTTP mock and runs the
+pipeline against the **live** ShortPixel API — catching contract drift a
+mock can't see. It needs a valid API key and consumes real quota credits
+(about one per test), so it is never part of `--integration`, `--all`,
+or the push/PR CI runs; without the key every test skips. A dedicated
+CI workflow (`.github/workflows/smoke.yml`) runs the suite once a month
+(plus manual dispatch) using the `SHORTPIXEL_SMOKE_KEY` repository
+secret.
+
+```bash
+SHORTPIXEL_SMOKE_KEY=<your 20-char key> bin/test.sh --smoke
+```
+
+Because the live API fetches images by URL and can't reach the local
+test install, the suite remaps the request URL list to the committed
+fixtures' public `raw.githubusercontent.com` URLs (same bytes) and
+disables thumbnail processing — only main files have public counterparts.
+
+### Cross-plugin compatibility tests
+
+The compat suite (`tests/Compat/`) runs the SPIO integrations against the
+REAL partner plugins — WooCommerce, NextGen Gallery, and WP Offload Media
+Lite — downloaded from wordpress.org (latest stable, zips cached in the
+`wp-tests-cache` volume) and activated natively in the test install.
+
+WPML is commercial (no public download): drop its zip into
+`tests/partner-plugins/` (gitignored) and `--compat` extracts and
+activates it too. To update WPML, replace the zip — the harness
+re-extracts whenever the zip is newer than the extracted copy. Without
+the zip, the WPML tests self-skip. CI does not run the WPML tests (the
+zip can't live in the public repo).
+
+Polylang is covered hook/data-level (`test-CompatPolylang.php`): the
+suite fakes Polylang's presence via the `pre_option_active_plugins`
+filter and reproduces its shared-guid media translations directly in the
+DB, so no Polylang zip or code is needed — the guid-duplicate detection
+in `MediaLibraryModel::getWPMLDuplicates()` is exercised for real.
+
+```bash
+bin/test.sh --compat
+bin/test.sh --compat --filter CompatWooCommerce
+```
+
+How it works:
+
+- `--compat` downloads + extracts the partner plugins into the test
+  install's `wp-content/plugins/`, then runs phpunit with
+  `SPIO_PARTNER_PLUGINS=1` and the `Compat` testsuite.
+- `tests/bootstrap.php` activates the partners via a
+  `pre_option_active_plugins` filter (real WP core plugin loading);
+  `tests/Integration/bootstrap.php` fires their activation hooks once so
+  their installers create the tables they need (DDL auto-commits, so the
+  tables survive per-test rollbacks).
+- Plain `--integration` / `--all` runs never load the partner plugins —
+  the env variable gates everything — so the standard suites are
+  unaffected.
+- The suite runs on PHP 8.3 or 8.5 with WP latest. PHP 7.4 and pinned
+  WP versions exit early with a skip note — partner plugin floors (WP
+  Offload Media Lite needs PHP 8.1+, current partner releases require
+  modern WP), not ours.
+- Each test also self-skips when its partner plugin isn't loaded, so an
+  accidental plain-phpunit run of the suite is harmless.
+
+### Multisite tests
+
+The multisite suite (`tests/Multisite/`) runs against a NETWORK WordPress
+test install and covers the plugin's multisite-specific surface: per-site
+custom tables (`wp_N_shortpixel_*`), per-site `spio_settings` isolation vs
+the network-wide `spio_wpmu` option, and the full optimization pipeline on
+a subsite (whose uploads live in `uploads/sites/N/`).
+
+```bash
+bin/test.sh --ms
+bin/test.sh --ms --filter test_optimization_pipeline_runs_on_a_subsite
+```
+
+How it works:
+
+- `--ms` sets `WP_MULTISITE=1`, which makes the WP test-lib bootstrap
+  (re)install the test database as a multisite network — no separate
+  config file or cache dir needed, since the install is rebuilt on every
+  run anyway.
+- The suite uses the integration config/bootstrap (mock API + the
+  `SPIO_IntegrationTestCase` base class) with the `Multisite` testsuite.
+- Every test self-skips on a single-site install, so selecting the suite
+  without the env flag yields skips, not failures.
+
+The admin-ajax dispatch tests (`tests/Integration/test-AjaxEndpoint.php`)
+are related coverage from the same WP test framework family: they use
+`WP_Ajax_UnitTestCase` to exercise the REAL `wp_ajax_*` path — hook
+wiring, nonce gate, capability gate, JSON termination — instead of
+calling `AjaxController` methods directly. They run as part of the
+normal Integration suite; no flags needed.
+
+### WordPress version
+
+Tests run against the latest WordPress by default. `--wp <version>` pins a
+specific version (pass the tag WordPress publishes — `5.9`, not `5.9.0`).
+Each WP version keeps its own cache dirs inside the `wp-tests-cache`
+volume, so switching versions is cache-warm after the first install.
+
+```bash
+bin/test.sh --wp 5.9                          # unit suites on WP 5.9
+bin/test.sh --wp 5.9 --php 7.4 --integration  # old WP + old PHP combo
+```
+
+CI mirrors this: pushes run the integration suite on WP latest across
+PHP 7.4/8.3/8.5, plus WP 5.9 (the oldest version that runs on this
+test setup) on PHP 7.4 and 8.3. Pull requests run PHP 8.3 / WP latest,
+plus the same WP 5.9 combos. Every run also includes the `compat` job
+(PHP 8.3 and 8.5, WP latest) that downloads the partner plugins and
+runs the Compat testsuite — same steps as `bin/test.sh --compat` — and
+the `multisite` job (PHP 8.3, WP latest), which mirrors
+`bin/test.sh --ms`.
+
+### Everything in one go
+
+```bash
+# Unit + integration + multisite + compat suites, one command
+# (PHP 8.3 / WP latest)
+bin/test.sh --all
+
+# The full local sweep: all four passes on PHP 7.4, 8.3 AND 8.5
+# (the compat pass self-skips on 7.4 — partner plugin floors)
+bin/test.sh --matrix --all
+
+# Unit + integration on a pinned combo (compat pass skips off-latest)
+bin/test.sh --all --wp 5.9 --php 7.4
+```
+
+All passes always run — a unit failure doesn't hide the integration or
+compat result (or vice versa); failures are aggregated in the final
+verdict.
+
 ### Debug workflow
 
 ```bash
@@ -72,8 +246,8 @@ bin/test.sh --matrix --filter test_handleAvif
 bin/test.sh --shell
 
 # From inside the shell:
-vendor/bin/phpunit --testsuite Model
-vendor/bin/phpunit --filter test_foo tests/Model/test-Bar.php
+vendor-tests/bin/phpunit --testsuite Model
+vendor-tests/bin/phpunit --filter test_foo tests/Model/test-Bar.php
 ```
 
 ### Cache / reset
@@ -86,17 +260,19 @@ bin/test.sh --clean
 
 Caches persisted between runs:
 
-- **`vendor/`** — lives on the host via the bind mount, so `composer install` runs only when `vendor/autoload.php` is missing.
+- **`vendor-tests/`** — lives on the host via the bind mount, so the test-deps install (`COMPOSER=composer.tests.json composer install`) runs only when `vendor-tests/autoload.php` is missing.
 - **`/tmp/wordpress-tests-lib`** and **`/tmp/wordpress`** — persist in the `wp-tests-cache` named Docker volume, so the ~3-minute WordPress test-framework SVN checkout only happens once (per `--clean` cycle).
 - **PHP images** — Docker layer cache. Each PHP version keeps its own image tag (`spio-tests:php74` / `spio-tests:php83` / `spio-tests:php85`); switching PHP versions doesn't invalidate the others.
 
 ### Timing expectations
 
-| Operation | First run | Subsequent runs |
-|---|---|---|
-| Full suite on one PHP version | 3-5 min (image pull + WP-tests SVN checkout) | ~20-60 s |
-| Full matrix (all 3 PHP versions) | 10-15 min | ~1-3 min |
-| Single testsuite | (setup + ~10 s) | ~10 s |
+| Operation                                              | First run                                    | Subsequent runs |
+|--------------------------------------------------------|----------------------------------------------|-----------------|
+| Full suite on one PHP version                          | 3-5 min (image pull + WP-tests SVN checkout) | ~20-60 s        |
+| Full matrix (all 3 PHP versions)                       | 10-15 min                                    | ~1-3 min        |
+| Single testsuite                                       | (setup + ~10 s)                              | ~10 s           |
+| Integration suite on one PHP version                   | (setup + ~1 min)                             | ~1 min          |
+| `--matrix --all` (unit + integration × 3 PHP versions) | 15-20 min                                    | ~6-8 min        |
 
 ## Alternative: run locally without Docker
 
@@ -140,8 +316,11 @@ above, OR use the Docker path.
 ### One-time bootstrap
 
 ```bash
-# Install PHP dependencies
-composer install
+# Install the test dependencies (PHPUnit + polyfills). Test deps live in
+# composer.tests.json / composer.tests.lock and install into vendor-tests/ —
+# the main composer.json is the plugin/module BUILD tool and is not needed
+# for running tests.
+COMPOSER=composer.tests.json composer install
 
 # Install the WordPress test framework (~3 min — SVN checkout).
 # Adjust the DB creds to match your local MySQL setup.
@@ -159,17 +338,17 @@ The install script:
 
 ```bash
 # All testsuites
-vendor/bin/phpunit
+vendor-tests/bin/phpunit
 
 # Specific testsuite
-vendor/bin/phpunit --testsuite Model
-vendor/bin/phpunit --testsuite External
+vendor-tests/bin/phpunit --testsuite Model
+vendor-tests/bin/phpunit --testsuite External
 
 # Specific test method
-vendor/bin/phpunit --filter test_isProcessable
+vendor-tests/bin/phpunit --filter test_isProcessable
 
 # Specific file
-vendor/bin/phpunit tests/Model/test-ImageModel.php
+vendor-tests/bin/phpunit tests/Model/test-ImageModel.php
 ```
 
 ## Running against the CI reference

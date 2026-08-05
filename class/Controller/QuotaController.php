@@ -35,9 +35,9 @@ class QuotaController
       $settings = \wpSPIO()->settings();
 
       if ($settings->quotaExceeded)
-	  {
+	    {
         return false;
-	  }
+	    }
       return true;
 
     }
@@ -336,7 +336,7 @@ class QuotaController
           $data = $response['body'];
           $data = json_decode($data);
 
-          if(empty($data)) { return $defaultData; }
+          if(! is_object($data) || ! property_exists($data,'Status') || empty($data)) { return $defaultData; }
 
           if($data->Status->Code != 2) {
               $defaultData['Message'] = $data->Status->Message;

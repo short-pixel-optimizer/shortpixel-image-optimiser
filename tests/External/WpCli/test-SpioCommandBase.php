@@ -15,6 +15,11 @@
  *     wire directly into \WP_CLI::Error / Success / line / log, plus the
  *     queue controller's real DB path. Better as integration tests.
  *   - displayResult / displayStatsLine — both stream to \WP_CLI::line.
+ *     Bug #19 FIXED (e19a0236) + Bug #32 FIXED (af5794d8): displayResult()
+ *     guards improvements with an empty() check on a LOCAL copy of the magic
+ *     property (QueueItemResult has __get/__set but no __isset, so empty()
+ *     directly on $result->improvements was always true and the table never
+ *     rendered). Empty/null improvements skip the table; populated ones render it.
  *
  * @package Shortpixel_Image_Optimiser
  */

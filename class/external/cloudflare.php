@@ -315,7 +315,8 @@ class CloudFlareAPI {
 
       $request_response = curl_exec( $curl_connection );
       $result           = json_decode( $request_response, true );
-      curl_close( $curl_connection );
+
+      unset($curl_connection);
 
       if ( ! is_array( $result ) ) {
           Log::addWarn( 'ShortPixel - CloudFlare: The CloudFlare API is not responding correctly', $result);

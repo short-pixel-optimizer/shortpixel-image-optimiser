@@ -1,4 +1,6 @@
 vendor
+# Test-only dependencies (composer.tests.json) — composer.tests.lock IS tracked.
+vendor-tests
 composer.lock
 .DS_Store
 .env.testing
@@ -18,3 +20,8 @@ bin/
 .env.local
 /wordpress/
 /travis_output/
+# Commercial partner-plugin zips for bin/test.sh --compat (WPML etc.) —
+# never commit these; drop the zip in and the harness picks it up.
+/tests/partner-plugins/
+# Manual tests, not needed in the repo
+/tests/manual/

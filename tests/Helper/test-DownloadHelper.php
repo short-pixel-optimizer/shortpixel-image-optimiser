@@ -9,6 +9,11 @@
  * setPreferredProtocol) requires HTTP mocking and a real filesystem target and
  * is better covered by integration tests.
  *
+ * Bug #29 FIXED (af5794d8): downloadURLMethod() renames $tempFile to
+ *   $tmpFilePath (appending the URL extension) and now returns the RENAMED
+ *   path — 033998ae had returned the stale pre-rename $tempFile, breaking
+ *   every download made through the primary download_url() method.
+ *
  * @package Shortpixel_Image_Optimiser
  */
 

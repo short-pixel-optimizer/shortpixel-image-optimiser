@@ -31,10 +31,8 @@ class MultiSettingsModel extends \ShortPixel\Model\SettingsModel
   private static $instance;
 
   /** @var string WordPress network-option name used for persistence. */
-  private $option_name = 'spio_wpmu';
+  protected $option_name = 'spio_wpmu';
 
-  /** @var array<string, mixed>|null In-memory settings values loaded from the network option. */
-  private $settings;
 
   /**
    * Constructor.

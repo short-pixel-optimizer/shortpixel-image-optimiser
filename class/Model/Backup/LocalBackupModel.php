@@ -220,6 +220,7 @@ class LocalBackupModel extends BackupModel
          // Attempt for easy support of different file-extensions / conversions, move backupfile back based on it's own file
 				$bool = $backupFile->move($targetFile);
 
+        $this->backup_files = []; // Reset the cache 
         return $bool;
     }
 
@@ -349,6 +350,7 @@ class LocalBackupModel extends BackupModel
              return $backupFile->delete();
           }
        }
+       $this->backup_files = []; // Remove the cache
        return true;
      }
 

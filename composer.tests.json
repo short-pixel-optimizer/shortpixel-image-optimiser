@@ -1,0 +1,14 @@
+{
+    "name": "short-pixel-optimizer/spio-tests",
+    "description": "Test-only dependencies for the SPIO PHPUnit suites. Kept separate from composer.json, which is the plugin/module build tool. Install with: COMPOSER=composer.tests.json composer install (writes composer.tests.lock, installs into vendor-tests/). bin/test.sh and the CI workflows do this automatically.",
+    "require-dev": {
+        "phpunit/phpunit": "^9.6",
+        "yoast/phpunit-polyfills": "^1.1 || ^2.0"
+    },
+    "config": {
+        "vendor-dir": "vendor-tests",
+        "platform": {
+            "php": "7.4.33"
+        }
+    }
+}

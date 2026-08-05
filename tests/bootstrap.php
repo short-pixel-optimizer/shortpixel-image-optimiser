@@ -34,8 +34,72 @@ function _manually_load_plugin() {
 
 tests_add_filter( 'muplugins_loaded', '_manually_load_plugin' );
 
+/**
+ * Cross-plugin compatibility runs (bin/test.sh --compat) set
+ * SPIO_PARTNER_PLUGINS=1 after extracting the partner plugins into the
+ * test install's plugin dir. Activating them via the active_plugins
+ * option lets WP core load them exactly like a production install —
+ * paths, constants (NGG_PLUGIN), and lifecycle hooks (as3cf_init) all
+ * behave normally, and SPIO's is_plugin_active()-based detection works.
+ *
+ * The callback runs when WP core reads the option (WP_PLUGIN_DIR is
+ * defined by then); plugins missing from disk are silently skipped so
+ * a partial download never fatals the whole suite.
+ */
+if ( '1' === getenv( 'SPIO_PARTNER_PLUGINS' ) ) {
+	tests_add_filter(
+		'pre_option_active_plugins',
+		function () {
+			$partners = array(
+				'woocommerce/woocommerce.php',
+				'nextgen-gallery/nggallery.php',
+				'amazon-s3-and-cloudfront/wordpress-s3.php',
+				// Commercial — extracted from tests/partner-plugins/ when
+				// present; silently skipped (like the rest) when not.
+				'sitepress-multilingual-cms/sitepress.php',
+			);
+			$active = array();
+			foreach ( $partners as $partner ) {
+				if ( file_exists( WP_PLUGIN_DIR . '/' . $partner ) ) {
+					$active[] = $partner;
+				}
+			}
+			return $active;
+		}
+	);
+}
+
 // Start up the WP testing environment.
 require "{$_tests_dir}/includes/bootstrap.php";
+
+/**
+ * WP 5.9 test-isolation guard: neutralize spurious dbDelta ALTERs.
+ *
+ * ShortQ re-runs its table install (WPQ::createQueue -> install(true) ->
+ * dbDelta) whenever its shortqwp_* status option is missing — which is
+ * every test, because per-test rollbacks remove the option. On WP <= 6.0
+ * dbDelta mis-compares column types against MySQL 8 DESCRIBE output
+ * (display widths/case, e.g. `int(11)` vs `int`) and emits a
+ * `CHANGE COLUMN` ALTER for every column, every time. ALTER TABLE
+ * implicitly COMMITs the wrapping test transaction, so everything seeded
+ * up to that point leaks into later tests in the class (seen as
+ * MediaLibraryFilterTest failing on WP 5.9 with prevented attachments
+ * from earlier tests).
+ *
+ * The tables are created with the current schema during the install
+ * phase, so these ALTERs are pure churn — rewrite them to a harmless
+ * non-committing statement. WP >= 6.1 dbDelta detects no diff and never
+ * emits them, making this filter a no-op there.
+ */
+add_filter(
+	'query',
+	function ( $query ) {
+		if ( preg_match( '/^\s*ALTER TABLE\s+`?\w*shortpixel_\w+`?\s+CHANGE COLUMN\s/i', $query ) ) {
+			return 'DO 0';
+		}
+		return $query;
+	}
+);
 
 /**
  * Silence ONLY PHP 8.5 deprecations that cannot be fixed while retaining

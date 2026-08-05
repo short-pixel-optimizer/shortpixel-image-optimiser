@@ -213,8 +213,6 @@ class AdminController extends \ShortPixel\Controller
 							$meta = $converter->getUpdatedMeta();
         }
 
-
-
         $queueController = new QueueController();
         
         $args = ['action' => 'requestAlt'];
@@ -621,7 +619,7 @@ class AdminController extends \ShortPixel\Controller
 
                 $sql .= sprintf(' AND %s.ID not in ( SELECT attach_id FROM %s WHERE parent = 0 and status = %s)', $wpdb->posts, $tableName, ImageModel::FILE_STATUS_MARKED_DONE);
 
-                $where = $wpdb->prepare($sql, '_shortpixel_prevent_optimize');
+                $where .= $wpdb->prepare($sql, '_shortpixel_prevent_optimize');
             break;
         }
 

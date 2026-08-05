@@ -35,6 +35,11 @@
  *   - prepareItems() — calls wpSPIO()->filesystem()->getImage() and invokes
  *     the full image model stack; integration territory.
  *   - itemDone() / itemFailed() — require a real ShortQ queue row.
+ *     Bug #14 note (806c658a): Queue::itemDone() now also unsets self::$isInQueue[$item_id];
+ *     the cache-clearing behaviour is tested via dropItem() which uses the same static property.
+ *     Bug #23 note (dc777cb1): doAi key missing from $queueOptions no longer triggers an
+ *     undefined-index warning; `$queueOptions['doAi'] ?? false` is used; the doAi=false path
+ *     is exercised via test_setBulkOptions_stores_queueOptions_under_queueOptions_key.
  *
  * @package Shortpixel_Image_Optimiser
  */

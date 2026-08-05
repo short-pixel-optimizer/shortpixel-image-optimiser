@@ -25,30 +25,31 @@ The `build/shortpixel/` directory contains bundled dependencies (notices, log, s
 
 ## Testing
 
-PHPUnit with WP_Mock (no live WordPress required for unit tests):
+Test dependencies (PHPUnit + Yoast polyfills) are kept SEPARATE from the main
+composer.json (which is the plugin/module build tool). They live in
+`composer.tests.json` / `composer.tests.lock` and install into `vendor-tests/`:
 
 ```bash
-# Run all tests
-vendor/bin/phpunit
-
-# Run a specific test suite
-vendor/bin/phpunit --testsuite fileSystem
-vendor/bin/phpunit --testsuite imageModel
-vendor/bin/phpunit --testsuite Controllers
-vendor/bin/phpunit --testsuite queue
-vendor/bin/phpunit --testsuite model
-
-# Run a single test file
-vendor/bin/phpunit tests/Model/image/test-ImageModel.php
+COMPOSER=composer.tests.json composer install
 ```
 
-Test bootstrap: `tests/bootstrap.php`. Test files follow the naming convention `test-*.php`.
+All suites run against a real WordPress test install inside Docker via
+`bin/test.sh` (see TESTING.md for the full reference):
 
-For integration/acceptance tests (requires a running WordPress instance):
 ```bash
-./test.sh
-./test.sh -t <suite_name>
+bin/test.sh                        # all unit suites (PHP 8.3, matches CI)
+bin/test.sh --testsuite Controllers
+bin/test.sh --integration          # integration suite (phpunit-integration.xml)
+bin/test.sh --ms                   # multisite suite
+bin/test.sh --compat               # cross-plugin compatibility suite
+bin/test.sh --all                  # unit + integration + compat
+bin/test.sh --php 8.5 --integration
+bin/test.sh tests/Model/test-ImageModel.php
 ```
+
+Unit bootstrap: `tests/bootstrap.php`; integration bootstrap:
+`tests/Integration/bootstrap.php`. Test files follow the naming convention
+`test-*.php`.
 
 ## Linting
 

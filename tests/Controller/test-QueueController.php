@@ -20,8 +20,15 @@
  *   - processQueue(): skipped — requires a verified API key + quota; integration territory.
  *   - runTick(): skipped — depends on a live dequeue cycle; integration territory.
  *   - resetQueues(): skipped — alters shared DB state across all four queue names.
- *   - Line ~230 note: `$qItem->result->message` access is NOT pinned as a bug; see
- *     task description for confirmation.
+ *
+ * Bug #18 FIXED (a2d45fa1) + Bug #28 FIXED (af5794d8): addItemToQueue()
+ *   populates the default "Item %s added to Queue" message only when the result
+ *   has no message of its own. The a2d45fa1 condition was flawed (its
+ *   `false === is_null(...)` term overwrote every custom message and its bare
+ *   strlen(null) threw a TypeError under strict_types); af5794d8 corrected it to
+ *   `! property_exists(...) || is_null($result->message) || strlen((string) $result->message) <= 0`.
+ *   Behaviour is exercised at the integration level (test-WpCli.php
+ *   success-message test).
  *
  * @package Shortpixel_Image_Optimiser
  */

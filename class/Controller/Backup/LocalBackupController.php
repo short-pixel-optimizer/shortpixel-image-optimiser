@@ -91,7 +91,7 @@ class LocalBackupController extends BackupController
             if (strlen($dirName) === 4 && $dirName < $period['year'])
             {
                 Log::addInfo('Automatic Backup Removal, removing dir: ', $dir->getPath());
-                $dir->delete();
+                $dir->recursiveDelete();
             }
             elseif(strlen($dirName) === 4 && $period['year'] === $dirName)
             {

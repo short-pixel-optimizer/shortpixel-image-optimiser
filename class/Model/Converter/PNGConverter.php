@@ -363,7 +363,7 @@ class PNGConverter extends MediaLibraryConverter
 
 			$fs->flushImage($this->imageModel);
 
-			return true;
+			return $bool;
 		}
 
     /**

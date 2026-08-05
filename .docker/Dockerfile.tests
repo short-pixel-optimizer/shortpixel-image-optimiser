@@ -20,6 +20,10 @@ FROM php:${PHP_VERSION}-cli
 #   - git + unzip:           composer prefers them for some source packages.
 #   - libzip-dev + libxml2-dev + libonig-dev:  headers for the PHP zip / xml /
 #                            mbstring extensions we install below.
+#   - libjpeg/libpng/libwebp/libfreetype dev headers: for the GD extension —
+#                            the integration suite generates real thumbnails
+#                            via wp_generate_attachment_metadata(), which
+#                            needs a WP image editor (GD).
 #   - curl / ca-certificates: WP-CLI download + HTTPS to the SVN endpoint.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         subversion \
@@ -31,12 +35,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libzip-dev \
         libxml2-dev \
         libonig-dev \
+        libjpeg-dev \
+        libpng-dev \
+        libwebp-dev \
+        libfreetype6-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # PHP extensions the plugin + test harness need. `json` is bundled in PHP 8+
 # so it's not in the install list — the workflow's `extensions:` value is a
 # no-op for it too.
-RUN docker-php-ext-install \
+#
+# GD configure syntax differs between PHP 7.4 (--with-jpeg etc. on
+# docker-php-ext-configure) and needs jpeg+webp+freetype enabled explicitly.
+RUN docker-php-ext-configure gd --with-jpeg --with-webp --with-freetype \
+    && docker-php-ext-install \
+        gd \
         mbstring \
         mysqli \
         xml \

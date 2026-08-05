@@ -598,7 +598,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		$this->width = $width;
 		$this->height = $height;
-
+		
 		$thumbnails = [];
 
 		if (isset($wpmeta['sizes'])) {
@@ -1177,29 +1177,39 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$this->image_meta = new ImageMeta();
 		$fs = \wpSPIO()->fileSystem();
 
-		if (! $metadata) {
+		if (false === $metadata) {
 			// Thumbnails is a an array of ThumbnailModels
-			$this->thumbnails = $this->loadThumbnailsFromWP();
+		//	$this->thumbnails = $this->loadThumbnailsFromWP();
 			$result = $this->checkLegacy();
 			if ($result) {
 				$this->saveMeta();
+				$metadata = $this->getDBMeta();
 			}
-		} elseif (is_object($metadata)) {
-			$this->image_meta->fromClass($metadata->image_meta);
+			else 
+			{
+				$metadata = new \stdClass;
+			}
+		}
+		//} elseif (is_object($metadata)) {
+
+			if (property_exists($metadata, 'image_meta'))
+			{
+				$this->image_meta->fromClass($metadata->image_meta);
+			}
 
 			// Loads thumbnails from the WordPress installation to ensure fresh list, discover later added, etc.
 			$thumbnails = $this->loadThumbnailsFromWP();
 
 			foreach ($thumbnails as $name => $thumbObj) {
-				if (isset($metadata->thumbnails[$name])) // Check WP thumbs against our metadata.
+			
+				$thumbMeta = new ImageThumbnailMeta();
+				if (property_exists($metadata, 'thumbnails') && isset($metadata->thumbnails[$name])) // Check WP thumbs against our metadata.
 				{
-					$thumbMeta = new ImageThumbnailMeta();
 					$thumbMeta->fromClass($metadata->thumbnails[$name]); // Load Thumbnail data from our saved Meta in model
-
-					$thumbnails[$name]->setMetaObj($thumbMeta);
-					$thumbnails[$name]->verifyImage();
 					unset($metadata->thumbnails[$name]);
 				}
+					$thumbnails[$name]->setMetaObj($thumbMeta);
+					$thumbnails[$name]->verifyImage();
 			}
 
 			// Load Unlisted Thumbnails.
@@ -1266,15 +1276,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			// New! @todo Move check functions to this, to check upon load and not randomly around
 			$this->verifyImage();
 
-
-
 			// If anything changed during load, and this is stored ( ie optimized ) images, update changes.
 			if (true === $this->didAnyRecordChange() && ! is_null($this->getMeta('databaseID')) && $this->imageType !== self::IMAGE_TYPE_DUPLICATE) {
 
 				$this->saveMeta();
 				$this->resetRecordChanges();
 			}
-		} // Elseif metadata object.
+		//} // Elseif metadata object.
 
 		$this->loadLooseItems();
 	}
@@ -3272,7 +3280,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 			$this->image_meta->wasConverted = true;
 			$this->image_meta->status = $status;
-			$this->image_meta->improvement = $improvement;
+//			$this->image_meta->improvement = $improvement;
 			$this->image_meta->compressionType = $type;
 			$this->image_meta->compressedSize = $this->getFileSize();
 			$this->image_meta->tsAdded = $tsAdded;
@@ -3284,11 +3292,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				$backup = $backupModel->getBackupFile($this);
 				if (is_object($backup))
 					$this->image_meta->originalSize = $backup->getFileSize();
-			} elseif (isset($metadata['ShortPixelImprovement'])) {
+			} elseif (is_numeric($improvement) && $improvement > 0) {
 				// If the improvement is set, calculate back originalsize.
-				$imp = intval($metadata['ShortPixelImprovement']); // try to make int. Legacy can contain errors / message / crap here.
-				if ($imp > 0)
-					$this->image_meta->originalSize = ($this->getFileSize() / (100 - $imp)) * 100;
+				$this->image_meta->originalSize = ($this->getFileSize() / (100 - $improvement)) * 100;
 			}
 
 			$this->image_meta->webp = $this->checkLegacyFileTypeFileName($this, 'webp');
@@ -3308,6 +3314,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			$this->getMeta()->convertMeta()->setConversionDone();
 		}
 
+		// Could not be set. Load thumbnails from WP when emtpy. 
+		if (0 === count($this->thumbnails))
+		{
+			$this->thumbnails = $this->loadThumbnailsFromWP();
+		}
+
+
 		foreach ($this->thumbnails as $thumbname => $thumbnailObj) // ThumbnailModel
 		{
 			if ($thumbnailObj->hasDBRecord() === true) {
@@ -3319,12 +3332,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				$thumbnailObj->image_meta->compressionType = $type;
 				$thumbnailObj->image_meta->compressedSize = $thumbnailObj->getFileSize();
 
-				$thumbnailObj->has_backup = false;
+//				$thumbnailObj->has_backup = false;
 				if ($backupModel->hasBackup($thumbnailObj)) {
 					$backup = $backupModel->getBackupFile($thumbnailObj);
 					if (is_object($backup)) {
 						$thumbnailObj->image_meta->originalSize = $backup->getFileSize();
-						$thumbnailObj->has_backup = true;
+//						$thumbnailObj->has_backup = true;
 					}
 				}
 
@@ -3354,13 +3367,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				$originalFile->image_meta->compressionType = $type;
 				$originalFile->image_meta->compressedSize = $originalFile->getFileSize();
 
-	 			 $originalFile->has_backup = false;
+//	 			 $originalFile->has_backup = false;
 
 				if ($backupModel->hasBackup($originalFile)) {
 					$backup = $backupModel->getBackupFile($originalFile);
 					if (is_object($backup)) {
 						$originalFile->image_meta->originalSize = $backup->getFileSize();
-						$originalFile->has_backup = true;
+//						$originalFile->has_backup = true;
 					}
 				}
 
@@ -3408,7 +3421,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						}
 
 						if ($backupModel->hasBackup($retinaObj)) {
-							$retinaObj->has_backup = true;
+					//		$retinaObj->has_backup = true;
 							if ($status == self::FILE_STATUS_SUCCESS)
 							{	
 								$backupFile = $backupModel->getBackupFile($retinaObj);

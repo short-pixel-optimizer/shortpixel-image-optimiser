@@ -15,7 +15,11 @@
  *   - fetchImageMatches(): regex against crafted HTML strings.
  *   - formatGenerated(): label collection, -3 substitution for status codes.
  *   - formatResultData(): prefix/postfix application, numeric-1 → empty-string
- *     replacement, original_filebase preservation.
+ *     replacement, original_filebase preservation. NOTE: $textItems is
+ *     ['alt','caption','description'] since Bug #31 FIXED (af5794d8) — 'filebase'
+ *     was removed so file base names are never sentence-formatted (12603b56 had
+ *     added it, mangling the original_filebase fallback with ucfirst + period).
+ *     Prefix/postfix for filebase still applies via the ai_filename_* settings.
  *   - replaceFiles() — PINNED BUG: always returns false on both success and
  *     conflict paths (see test_replaceFiles_returns_false_on_success_and_conflict_pinned_for_deferred_fix).
  *   - sendToProcessing() dispatch: 'undoAI' is routed locally; other actions
@@ -417,6 +421,11 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 
 	/*
 	 * formatResultData — numeric-1 → empty string, prefix/postfix, original_filebase
+	 *
+	 * Bug #31 FIXED (af5794d8): 'filebase' was removed from $textItems (12603b56
+	 * had put it there, replacing the dead 'filename' key from bug #16, but that
+	 * sentence-formatted real file names). $textItems is ['alt','caption','description'];
+	 * filebase keeps its prefix/postfix handling via the ai_filename_* settings.
 	 */
 
 	public function test_formatResultData_stores_original_filebase_from_image_model() {
@@ -430,7 +439,7 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 		$settings->ai_alt_prefix  = '';
 		$settings->ai_alt_postfix = '';
 
-		$aiData = [ 'alt' => 'A nice dog.', 'caption' => '', 'description' => '', 'filename' => '' ];
+		$aiData = [ 'alt' => 'A nice dog.', 'caption' => '', 'description' => '', 'filebase' => '' ];
 		$result = $ctrl->formatResultData( $aiData, $qItem );
 
 		$this->assertArrayHasKey( 'original_filebase', $result );
@@ -452,7 +461,7 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 		$settings->ai_alt_postfix = '';
 
 		// Numeric 1 in alt simulates "API didn't generate a value for this field".
-		$aiData = [ 'alt' => 1, 'caption' => '', 'description' => '', 'filename' => '' ];
+		$aiData = [ 'alt' => 1, 'caption' => '', 'description' => '', 'filebase' => '' ];
 		$result = $ctrl->formatResultData( $aiData, $qItem );
 
 		$this->assertSame( '', $result['alt'] );
@@ -472,13 +481,14 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 		$settings->ai_alt_prefix     = 'MyPrefix';
 		$settings->ai_alt_postfix    = '';
 
-		// Clear all other prefix/postfix settings to avoid noise.
+		// Clear all other prefix/postfix settings to avoid noise. The settings
+		// keys for filebase prefix/postfix are 'ai_filename_prefix'/'ai_filename_postfix'.
 		foreach ( [ 'ai_caption_prefix', 'ai_caption_postfix', 'ai_description_prefix', 'ai_description_postfix',
 					'ai_post_title_prefix', 'ai_post_title_postfix', 'ai_filename_prefix', 'ai_filename_postfix' ] as $key ) {
 			$settings->$key = '';
 		}
 
-		$aiData = [ 'alt' => 'A dog.', 'caption' => '', 'description' => '', 'filename' => '' ];
+		$aiData = [ 'alt' => 'A dog.', 'caption' => '', 'description' => '', 'filebase' => '' ];
 		$result = $ctrl->formatResultData( $aiData, $qItem );
 
 		$this->assertStringStartsWith( 'MyPrefix ', $result['alt'] );
@@ -498,12 +508,13 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 		$settings->ai_alt_prefix     = '';
 		$settings->ai_alt_postfix    = 'MyPostfix';
 
+		// Settings keys for filebase prefix/postfix are 'ai_filename_prefix'/'ai_filename_postfix'.
 		foreach ( [ 'ai_caption_prefix', 'ai_caption_postfix', 'ai_description_prefix', 'ai_description_postfix',
 					'ai_post_title_prefix', 'ai_post_title_postfix', 'ai_filename_prefix', 'ai_filename_postfix' ] as $key ) {
 			$settings->$key = '';
 		}
 
-		$aiData = [ 'alt' => 'A cat.', 'caption' => '', 'description' => '', 'filename' => '' ];
+		$aiData = [ 'alt' => 'A cat.', 'caption' => '', 'description' => '', 'filebase' => '' ];
 		$result = $ctrl->formatResultData( $aiData, $qItem );
 
 		$this->assertStringEndsWith( ' MyPostfix', $result['alt'] );
@@ -524,10 +535,17 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 		$settings->ai_filename_postfix = '';
 
 		// No 'filebase' key in input → should default to original_filebase.
-		$aiData = [ 'alt' => '', 'caption' => '', 'description' => '', 'filename' => '' ];
+		$aiData = [ 'alt' => '', 'caption' => '', 'description' => '' ];
 		$result = $ctrl->formatResultData( $aiData, $qItem );
 
-		$this->assertSame( 'original-base', $result['filebase'] );
+		// Bug #31 FIXED (af5794d8): 'filebase' is no longer in $textItems, so
+		// the original_filebase fallback passes through untouched — no more
+		// ucfirst + trailing period mangling ('Original-base.').
+		$this->assertSame(
+			'original-base',
+			$result['filebase'],
+			'Since af5794d8 (bug #31 fix) the original_filebase fallback must be preserved verbatim.'
+		);
 	}
 
 	/*
