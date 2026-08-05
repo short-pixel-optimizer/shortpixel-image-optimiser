@@ -581,7 +581,7 @@ class FileSystemController extends \ShortPixel\Controller
     curl_setopt($ch, CURLOPT_NOBODY, true);
     curl_exec($ch);
     $responseCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
+    unset($ch); 
 
     if ($responseCode == 200) {
       return true;
