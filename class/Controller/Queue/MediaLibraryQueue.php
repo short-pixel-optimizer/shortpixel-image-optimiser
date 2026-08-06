@@ -59,7 +59,7 @@ class MediaLibraryQueue extends Queue
 
      $this->options = apply_filters('shortpixel/medialibraryqueue/options', $options);
 
-     $this->q->setOptions($options);
+     $this->q->setOptions($this->options);
    }
 
    /**
