@@ -305,7 +305,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
 						if (restorable) {
 							bulkActions.push( this.AddDelayedAction('ReOptimize',item_id, compressionType, action));
 							actionPushed = true; 
-							//this.ReOptimize(media_id, compressionType, action);
 						}
 
 
@@ -314,14 +313,12 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
 						if (restorable) {
 							bulkActions.push( this.AddDelayedAction('RestoreItem', item_id) );
 							actionPushed = true; 
-							//this.RestoreItem(media_id);
 						}
 						break;
 					case 'shortpixel-mark-completed':
 							if (optimizable) {
 								bulkActions.push( this.AddDelayedAction('MarkCompleted', item_id) );
 								actionPushed = true; 
-								//this.MarkCompleted(media_id);
 							}
 					break; 
       }
@@ -360,7 +357,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
     OpenFolderModal()
     {
       var shade  = document.querySelector(".sp-folder-picker-shade");
-    //  this.FadeIn(shade, 500);
       this.Show(shade);
 
       var picker = document.querySelector(".shortpixel-modal.modal-folder-picker");
@@ -403,7 +399,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
       var shade  = document.querySelector(".sp-folder-picker-shade");
       this.Hide(shade);
 
-      // @todo FadeOut function here
       var picker = document.querySelector('.shortpixel-modal.modal-folder-picker');
       this.Hide(picker);
 
@@ -425,7 +420,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
       data.screen_action = 'addCustomFolder';
       data.callback = 'shortpixel.folder.AddNewDirectory';
 
-      // @todo this message logic should prob. become part of the folder selector js proper.
       var messageEl = document.querySelector('.modal-folder-picker .folder-message');
       if (null !== messageEl)
       {
@@ -437,13 +431,12 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
 
       }
 
-
       window.addEventListener('shortpixel.folder.AddNewDirectory', this.UpdateFolderViewEvent.bind(this), {'once':true});
-
       this.processor.AjaxRequest(data);
 
-
     }
+
+
 
     UpdateFolderViewEvent(event)
     {

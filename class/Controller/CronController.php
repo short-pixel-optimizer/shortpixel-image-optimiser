@@ -238,7 +238,6 @@ class CronController
               $this->bulkScheduleEvent($type, $options, $args);
             }
             else  {
-              // check if still items, or how do we do this (@todo)
               $this->bulkCheckEvent($type, $options, $args);
             }
          }
@@ -421,7 +420,6 @@ class CronController
    * returns its startup data object (containing `total->stats->awaiting` and
    * `total->stats->is_running`).
    *
-   * @todo Could be transferred to QueueController::getStartUpData directly.
    *
    * @param string $queue_type Queue type key ('bulk' or 'single').
    * @return object Queue startup data object.

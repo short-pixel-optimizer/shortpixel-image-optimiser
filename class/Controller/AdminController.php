@@ -106,7 +106,6 @@ class AdminController extends \ShortPixel\Controller
 					 return $meta;
 				}
 
-        // todo add check here for mediaitem
 			  $fs = \wpSPIO()->filesystem();
 				$fs->flushImageCache(); // it's possible file just changed by external plugin.
         $mediaItem = $fs->getImage($id, 'media');

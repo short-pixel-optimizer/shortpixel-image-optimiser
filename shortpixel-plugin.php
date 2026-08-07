@@ -825,7 +825,6 @@ class ShortPixelPlugin {
 		// load everywhere, because we are inconsistent.
 		wp_register_style( 'shortpixel-toolbar', plugins_url( '/res/css/shortpixel-toolbar.css', SHORTPIXEL_PLUGIN_FILE ), array( 'dashicons' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
 
-		// @todo Might need to be removed later on
 		wp_register_style( 'shortpixel-admin', plugins_url( '/res/css/shortpixel-admin.css', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
 
 		wp_register_style( 'shortpixel-bulk', plugins_url( '/res/css/shortpixel-bulk.css', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );

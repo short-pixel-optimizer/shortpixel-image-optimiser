@@ -86,7 +86,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			scaleButton.title = this.settings.too_big_for_scale_title;
 		}
 
-		// @todo Probably all should pass uiType. 
 		if (typeof uiType === 'undefined' || uiType === 'edit') {
 			var parent = document.querySelector('[id^=media-head]');
 			let par = document.createElement('p');
@@ -100,7 +99,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			parent.append(button, scaleButton);
 		}
 		else if ('gutenberg' == uiType) {
-			var parent = document.querySelector('.attachment-info  ');
+			var parent = document.querySelector('.attachment-info');
 			if (null !== parent) {
 				button.classList.add('button-link');
 				button.style.display = 'inline';
