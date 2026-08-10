@@ -379,9 +379,9 @@ class DownloadHelper
 
 		      if($settings->downloadProto == '' || $reset) {
 		          //make a test to see if the http is working
-		          $testURL = 'http://' . SHORTPIXEL_API . '/img/connection-test-image.png';
+		          $testURL = 'https://' . SHORTPIXEL_API . '/img/connection-test-image.png';
 		          $result = download_url($testURL, 10);
-		          $settings->downloadProto = is_wp_error( $result ) ? 'https' : 'http';
+		          $settings->downloadProto = is_wp_error( $result ) ? 'http' : 'https';
 
               // remove test.
               if (false === is_wp_error($result))
