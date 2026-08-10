@@ -1517,6 +1517,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		unset($data->tsAdded);
 		unset($data->tsOptimized);
 
+		$data->lastSave = date('Y-m-d H:i:s', time()); 
+
 		if (property_exists($data, 'databaseID') && intval($data->databaseID) > 0) {
 			$databaseID = $data->databaseID;
 			$insert = false;

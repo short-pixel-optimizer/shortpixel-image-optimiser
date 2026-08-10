@@ -1009,7 +1009,6 @@ class UiHelper
    */
   public static function formatTS($ts)
   {
-      //$format = get_option('date_format') .' @ ' . date_i18n(get_option('time_format');
 		if (function_exists('wp_date'))
 		{
       	$date = wp_date(get_option('date_format'), $ts);

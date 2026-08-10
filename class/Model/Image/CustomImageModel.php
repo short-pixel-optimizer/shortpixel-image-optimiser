@@ -899,13 +899,9 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 				 $extra_info['avifStatus']  = self::FILETYPE_BIGGER;
 			}
 
-			if (count($extra_info) > 0)
-			{
-				 $extra_info = json_encode($extra_info);
-			}
-			else {
-				 $extra_info = null;
-			}
+      $extra_info['lastSave'] = date('Y-m-d H:i:s', time());
+
+      $extra_info = json_encode($extra_info);
 
       $backupModel = $this->getBackupModel();
 
