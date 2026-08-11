@@ -318,4 +318,20 @@ class OptimizerBaseTest extends WP_UnitTestCase {
 		$stub->publicCheckBlockedItems();
 		$this->assertTrue( true );
 	}
+
+	/**
+	 * Regression for bug #3 (fixed in e034b877): checkBlockedItems() is
+	 * registered as a shutdown handler (register_shutdown_function in the
+	 * OptimizerBase constructor), and PHP's shutdown dispatcher can only
+	 * call PUBLIC methods. When the method was protected, every fatal
+	 * mid-optimization left its item blocked forever, with only a silent
+	 * "Unable to call ..." warning at shutdown.
+	 */
+	public function test_checkBlockedItems_is_public_for_shutdown_dispatch() {
+		$m = new ReflectionMethod( OptimizerBase::class, 'checkBlockedItems' );
+		$this->assertTrue(
+			$m->isPublic(),
+			'checkBlockedItems() must stay public: it runs via register_shutdown_function, which cannot invoke protected methods (bug #3, e034b877).'
+		);
+	}
 }

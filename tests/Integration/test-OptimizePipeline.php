@@ -687,4 +687,42 @@ class OptimizePipelineTest extends SPIO_IntegrationTestCase {
 			'Image must still be optimized after re-optimizing without SmartCrop (plan 24.8). Pinned: smartcrop meta clearance not verified — field not located.'
 		);
 	}
+
+	// -------------------------------------------------------------------
+	// Meta persistence: lastSave timestamp (aecd4279)
+	// -------------------------------------------------------------------
+
+	/**
+	 * Since aecd4279, MediaLibraryModel::createRecord() stamps every saved
+	 * shortpixel_postmeta row with a 'lastSave' datetime inside the
+	 * extra_info JSON (for debugging / support). Optimizing an attachment
+	 * must leave a parseable, recent lastSave on the main-file row.
+	 */
+	public function test_optimize_writes_lastsave_timestamp_in_extra_info() {
+		global $wpdb;
+
+		$before = time();
+		$id     = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->optimizeAttachment( $id );
+
+		$extra_info = $wpdb->get_var( $wpdb->prepare(
+			"SELECT extra_info FROM {$wpdb->prefix}shortpixel_postmeta WHERE attach_id = %d AND parent = 0",
+			$id
+		) );
+		$this->assertNotEmpty( $extra_info, 'The main-file shortpixel_postmeta row must carry extra_info JSON.' );
+
+		$decoded = json_decode( $extra_info, true );
+		$this->assertIsArray( $decoded, 'extra_info must be valid JSON.' );
+		$this->assertArrayHasKey( 'lastSave', $decoded, 'extra_info must contain the lastSave timestamp (aecd4279).' );
+
+		$this->assertMatchesRegularExpression(
+			'/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/',
+			$decoded['lastSave'],
+			'lastSave must be a Y-m-d H:i:s datetime string.'
+		);
+
+		$saved = strtotime( $decoded['lastSave'] );
+		$this->assertGreaterThanOrEqual( $before - 1, $saved, 'lastSave must not predate the optimization run.' );
+		$this->assertLessThanOrEqual( time() + 1, $saved, 'lastSave must not lie in the future.' );
+	}
 }

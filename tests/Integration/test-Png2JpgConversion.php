@@ -166,4 +166,54 @@ class Png2JpgConversionTest extends SPIO_IntegrationTestCase {
 		$image = $this->freshImageModel( $id );
 		$this->assertTrue( $image->isOptimized() );
 	}
+
+	/**
+	 * Regression for bug #6 (fixed in 1dbdf638): PNGConverter::convertFile()
+	 * hardcoded `return true` even when Image::convertPNG() (the actual
+	 * GD/Imagick conversion) returned false — a silent false-success that
+	 * left updateMetaData() bailing later with "NewFile not properly set".
+	 *
+	 * The failing-library branch cannot be provoked through a real upload
+	 * (GD is present in the test container and PNG fixtures convert fine),
+	 * so the loaded-image object is replaced via the converter's own
+	 * $current_image cache slot with a stub whose convertPNG() fails —
+	 * exercising the exact `$bool = $image->convertPNG()` path.
+	 *
+	 * Sentinel: with the bug present convertFile() returns true and the
+	 * assertFalse fails.
+	 */
+	public function test_convertfile_returns_false_when_library_conversion_fails() {
+		\wpSPIO()->settings()->png2jpg = 0; // keep the upload hook from converting
+
+		$id    = $this->uploadFixture( 'fixture-small.png' );
+		$image = $this->freshImageModel( $id );
+
+		$converter = new \ShortPixel\Model\Converter\PNGConverter( $image );
+
+		// A "loaded" image whose conversion fails.
+		$stub = new class() {
+			public function getWidth() {
+				return 100;
+			}
+			public function getHeight() {
+				return 100;
+			}
+			public function convertPNG() {
+				return false;
+			}
+		};
+
+		// getPNGImage() returns $current_image when it is already an object.
+		$prop = new ReflectionProperty( \ShortPixel\Model\Converter\PNGConverter::class, 'current_image' );
+		$prop->setAccessible( true );
+		$prop->setValue( $converter, $stub );
+
+		$m = new ReflectionMethod( \ShortPixel\Model\Converter\PNGConverter::class, 'convertFile' );
+		$m->setAccessible( true );
+
+		$this->assertFalse(
+			$m->invoke( $converter ),
+			'convertFile() must return false when convertPNG() fails (bug #6: hardcoded `return true`, fixed 1dbdf638).'
+		);
+	}
 }
