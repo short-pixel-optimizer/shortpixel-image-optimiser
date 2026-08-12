@@ -490,8 +490,6 @@ class ShortPixelPlugin {
 			}
 		}
 
-		$show_site_settings = true;
-
 		// settings page
 		if ( $show_site_settings ) {
 			$admin_pages[] = add_options_page( __( 'ShortPixel Settings', 'shortpixel-image-optimiser' ), 'ShortPixel', 'manage_options', 'wp-shortpixel-settings', array( $this, 'route' ) );

@@ -156,20 +156,6 @@ class SettingsViewController extends \ShortPixel\ViewController
 
       }
 
-      /**
-       * Stub entry point for AJAX form saves.
-       *
-       * Loads environment state so the controller is ready for downstream
-       * callers. The actual save logic is triggered via checkPost() / processSave()
-       * in the AJAX handler after indicateAjaxSave() has been called.
-       *
-       * @return void
-       */
-			public function saveForm()
-			{
-				 $this->loadEnv();
-
-			}
 
       /**
        * Marks this request as an AJAX save, suppressing the normal page redirect.
@@ -885,14 +871,11 @@ class SettingsViewController extends \ShortPixel\ViewController
 				 $keyController = ApiKeyController::getInstance();
 
 				 $keyObj = new \stdClass;
-//				 $this->view->key = new \stdClass;
-				 // $this->keyModel->loadKey();
 
 				 $keyObj->is_verifiedkey = $this->keyModel->is_verified();
 				 $keyObj->is_constant_key = $this->keyModel->is_constant();
 				 $keyObj->hide_api_key = $this->keyModel->is_hidden();
 				 $keyObj->apiKey = $keyController->getKeyForDisplay();
-        // $keyObj->redirectedSettings =
 
 				 $showApiKey = false;
 
