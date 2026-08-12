@@ -39,6 +39,7 @@ if (Log::isManualDebug())
       <span>HtAccess writable</span><span><?php var_export($this->is_htaccess_writable); ?></span>
       <span>Multisite</span><span><?php var_export($this->is_multisite); ?></span>
       <span>Main site</span><span><?php var_export($this->is_mainsite); ?></span>
+      <span>Network Admin</span><span><?php var_export($this->is_network_admin); ?></span>
       <span>Constant key</span><span><?php var_export($view->key->is_constant_key); ?></span>
       <span>Hide Key</span><span><?php var_export($view->key->hide_api_key); ?></span>
       <span>Has Nextgen</span><span><?php var_export($this->has_nextgen); ?></span>

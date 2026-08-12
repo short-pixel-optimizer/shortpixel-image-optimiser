@@ -91,7 +91,7 @@ class ShortPixelPlugin {
 	protected $shortPixel; // shortpixel megaclass
 
 	/** @var array<int, string> WP admin-page hook suffixes returned by add_options_page / add_media_page. */
-	protected $admin_pages = array();  // admin page hooks.
+	protected $admin_pages = [];  // admin page hooks.
 
 	/**
 	 * Register the `lowInit` bootstrap at `plugins_loaded` priority 5.
@@ -483,7 +483,9 @@ class ShortPixelPlugin {
 		$show_site_settings = true;
 		if ($this->env()->is_multisite && ! is_network_admin()) {
 			$network_settings = get_site_option('spio_wpmu', array());
-			if ( isset($network_settings['disable_site_settings_page']) && $network_settings['disable_site_settings_page'] ) {
+			$disable_site_settings = isset($network_settings['disable_site_settings_page']) && $network_settings['disable_site_settings_page'];
+			$network_override_enabled = isset($network_settings['network_settings_override_enabled']) && $network_settings['network_settings_override_enabled'];
+			if ($disable_site_settings || $network_override_enabled) {
 				$show_site_settings = false;
 			}
 		}
@@ -501,7 +503,7 @@ class ShortPixelPlugin {
 		/*translators: title and menu name for the Bulk Processing page*/
 		$admin_pages[] = add_media_page( __( 'ShortPixel Bulk Process', 'shortpixel-image-optimiser' ), __( 'Bulk ShortPixel', 'shortpixel-image-optimiser' ), 'edit_others_posts', 'wp-short-pixel-bulk', array( $this, 'route' ) );
 
-		$this->admin_pages = $admin_pages;
+		$this->admin_pages = array_merge($this->admin_pages, $admin_pages);
 	}
 
 	/**
@@ -516,8 +518,7 @@ class ShortPixelPlugin {
 	 */
 	public function admin_network_pages()
 	{
-		return; // @todo Need to check this work.
-		add_submenu_page(
+		$page = add_submenu_page(
 			'settings.php',
 			__( 'ShortPixel Network Settings', 'shortpixel-image-optimiser' ),
 			__( 'ShortPixel', 'shortpixel-image-optimiser' ),
@@ -525,6 +526,12 @@ class ShortPixelPlugin {
 			'shortpixel-network-settings',
 			[ $this, 'route' ]
 		);
+
+		if ($page !== false)
+		{
+			// WPMU adds the -network prefix to screen_id;
+			$this->admin_pages[] = $page . '-network'; 
+		}
 	}
 
 	/**
@@ -635,7 +642,7 @@ class ShortPixelPlugin {
 
 		wp_register_script('shortpixel-inline-help', plugins_url('res/js/shortpixel-inline-help.js',  SHORTPIXEL_PLUGIN_FILE), [], SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 		wp_register_script('shortpixel-chatbot', 
-			apply_filters('shortpixel/plugin/nohelp', 'https://spcdn.shortpixel.ai/assets/js/ext/ai-chat-agent.js'), [], SHORTPIXEL_IMAGE_OPTIMISER_VERSION, $args_footer_async);
+		apply_filters('shortpixel/plugin/nohelp', 'https://spcdn.shortpixel.ai/assets/js/ext/ai-chat-agent.js'), [], SHORTPIXEL_IMAGE_OPTIMISER_VERSION, $args_footer_async);
 
 		// This filter is from ListMediaViewController for the media library grid display, executive script in shortpixel-media.js.
 

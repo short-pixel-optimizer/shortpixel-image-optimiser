@@ -76,13 +76,16 @@ class ShortPixelSettings {
 
 		// ApiKeyField toggle
 		var keyField = this.root.querySelector('.apifield i.eye');
-		keyField.addEventListener('click', self.ToggleApiFieldEvent.bind(self));
-
-			var compressionRadios = this.root.querySelectorAll('.shortpixel-compression-options input[type="radio"]');
-			for (var i = 0; i < compressionRadios.length; i++)
-			{
-				 compressionRadios[i].addEventListener('change', this.CompressionTypeChangeEvent.bind(this));
-			}
+		if (keyField !== null)
+		{
+			keyField.addEventListener('click', self.ToggleApiFieldEvent.bind(self));
+		}
+		
+		var compressionRadios = this.root.querySelectorAll('.shortpixel-compression-options input[type="radio"]');
+		for (var i = 0; i < compressionRadios.length; i++)
+		{
+			 compressionRadios[i].addEventListener('change', this.CompressionTypeChangeEvent.bind(this));
+		}
 	}
 
 	InitAjaxForm() {
@@ -322,11 +325,13 @@ class ShortPixelSettings {
 
 	InitModeSwitcher() {
 		var switcher = document.getElementById('viewmode-toggles');
-		var checkbox = switcher.querySelector('input[type="checkbox"]');
-
+		
 		if (null == switcher) {
 			return;
 		}
+
+		var checkbox = switcher.querySelector('input[type="checkbox"]');
+
 		if (this.root.classList.contains('advanced') || checkbox.checked) {
 			checkbox.checked = true;
 			this.current_mode = 'advanced';
@@ -977,8 +982,10 @@ class ShortPixelSettings {
 			saveButtons.classList.add('saving');
 		}
 
-		formData.append('screen_action', 'form_submit');
+		let form_action = formData.get('form_action');
+		formData.append('screen_action', form_action);
 		formData.append('form-nonce', formData.get('nonce'));
+
 
 		// Special Actions
 		let formaction_parsed = URL.parse(form.action);
@@ -1111,7 +1118,13 @@ class ShortPixelSettings {
 
 	DashBoardWarningEvent(warning, matches) {
 
-		var dashBox = warning[0];
+		var dashBox = (warning.length > 0) ? warning[0] : null;
+
+		if (null === dashBox)
+		{
+			console.warn('Dashbox not set?', matches);
+			return; 
+		}
 		var status = (true === matches.allMatches) ? 'alert' : (true === matches.someMatch) ? 'warning' : 'ok';
 
 		let panelName;
@@ -1347,14 +1360,24 @@ class ShortPixelSettings {
 	}
 
 	ReceiveModal(elem) {
-		if (typeof elem.detail.settings.results !== 'undefined') {
+		if (typeof (elem.detail.settings) !== 'undefined' && typeof elem.detail.settings.results !== 'undefined') {
 			var modal = document.getElementById('spioSettingsModal');
 			var body = modal.querySelector('.spio-modal-body');
 
 			body.innerHTML = elem.detail.settings.results;
 		}
+		else if (typeof elem.detail.message !== 'undefined')
+		{
+			var modal = document.getElementById('spioSettingsModal');
+			var body = modal.querySelector('.spio-modal-body');
 
-		if (typeof elem.detail.settings.redirect !== 'undefined') {
+			let textNode = document.createElement('p');
+			textNode.innerText = elem.detail.message; 
+			body.append(textNode);
+
+		}
+
+		if (typeof (elem.detail.settings) !== 'undefined' && typeof elem.detail.settings.redirect !== 'undefined') {
 			window.location.href = elem.detail.settings.redirect;
 		}
 

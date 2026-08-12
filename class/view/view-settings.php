@@ -29,17 +29,13 @@ if ( ! defined( 'ABSPATH' ) ) {
           <i class='shortpixel-icon user'></i><name><?php _e('ShortPixel Account','shortpixel-image-optimiser'); ?></name>
       </a>
     <?php } ?>
-    <!--<button><i class='shortpixel-icon notifications'></i><?php _e('Notifications','shortpixel-image-optimiser'); ?></button>-->
   </div>
 </header>
-
-
-<?php //$this->loadView('settings/part-header'); ?>
 
   <input type='checkbox' name='heavy_features' value='1' <?php echo ($this->disable_heavy_features) ? 'checked' : '' ?> class='shortpixel-hide' />
 
 <article class='shortpixel-settings'>
-  <?php if ($this->view->data->redirectedSettings < 3 && $view->key->is_verifiedkey)
+  <?php if ($this->view->data->redirectedSettings < 3 && $view->key->is_verifiedkey && false === $this->is_network_page)
   {
     $this->loadView('settings/part-quicktour');
   }
@@ -52,6 +48,15 @@ if ( ! defined( 'ABSPATH' ) ) {
     <input type='checkbox'></label>
   <menu>
 			<ul>
+        <?php if (true === $this->is_network_page): ?>
+        <li>
+          <?php echo $this->settingLink([
+            'part' => 'network',
+            'title' => __('Network Control', 'shortpixel-image-optimiser'),
+            'icon' => 'shortpixel-icon dashboard',
+          ]); ?>
+        </li>
+        <?php endif; ?> 
 				<li>
           <?php echo $this->settingLink([
               'part' => 'overview',
@@ -172,10 +177,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 		</menu>
 		<section class="wrapper">
-      <form name='wp_shortpixel_options' action='<?php echo esc_url(add_query_arg('noheader', 'true')) ?>'  method='post' id='wp_shortpixel_options'>
-
+      <form name='wp_shortpixel_options' action='<?php echo esc_url(add_query_arg('noheader', 'true'), $this->url) ?>'  method='post' id='wp_shortpixel_options'>
         <input type='hidden' name='display_part' value="<?php echo esc_attr($this->display_part) ?>" />
+        <input type="hidden" name="form_action" value="<?php echo esc_attr($this->form_action); ?>" />
+
         <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
+
+          <?php if (true === $this->is_network_page)
+          {
+             $this->loadView('settings/part-network-override'); 
+          }
+          ?>
 
           <?php $this->loadView('settings/part-overview'); ?>
           <?php $this->loadView('settings/part-optimisation'); ?>
@@ -209,34 +221,5 @@ if ( ! defined( 'ABSPATH' ) ) {
         </div>
     </section>
 
-<article id="shortpixel-settings-tabs" class="sp-tabs">
-    <?php if (! $view->key->is_verifiedkey)
-    {
-    } ?>
-
-  <?php
-    if ($view->key->is_verifiedkey):
-      ?>
-      <div class='section-wrapper'>
-				<form name='wp_shortpixel_options' action='<?php echo esc_url(add_query_arg('noheader', 'true')) ?>'  method='post' id='wp_shortpixel_options'>
-	        <input type='hidden' name='display_part' value="<?php echo esc_attr($this->display_part) ?>" />
-	        <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
-
-        <?php
-        if (! $this->view->cloudflare_constant) // @todo
-        {
-
-        }
-
-
-        ?>
-			</form>
-
-			</div> <!-- wrappur -->
-      <?php
-    endif;
-    ?>
-
-</article>
 <?php $this->loadView('settings/part-wso'); ?>
 <?php $this->loadView('snippets/part-inline-modal'); ?>

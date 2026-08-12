@@ -24,6 +24,7 @@ use ShortPixel\Model\AccessModel as AccessModel;
 
 use ShortPixel\Controller\View\SettingsViewController as SettingsViewController;
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
+use ShortPixel\Controller\View\MultiSiteViewController;
 use ShortPixel\Model\AiDataModel;
 use ShortPixel\Model\Queue\QueueItem;
 use ShortPixel\ViewController;
@@ -535,7 +536,8 @@ class AjaxController
 		$this->checkActionAccess($action, 'is_admin_user');
 
 		switch ($action) {
-			case 'form_submit':
+			case 'save-settings': // usual settings 
+			case 'save-multi-settings': // multisite settings
 			case 'action_addkey':
 			case 'action_debug_redirectBulk':
 			case 'action_debug_removePrevented':
@@ -550,6 +552,7 @@ class AjaxController
 			case 'action_end_quick_tour':
 				$this->settingsFormSubmit($action);
 				break;
+			break;
 			default:
 				Log::addError('Issue with settingsRequest, not valid action');
 				$json = new \stdClass;
@@ -572,7 +575,16 @@ class AjaxController
 	 */
 	protected function settingsFormSubmit($action)
 	{
-		$viewController =  new SettingsViewController();
+		if ('save-multi-settings' === $action)
+		{
+			$viewController =  new MultiSiteViewController();
+		}
+		else 
+		{
+			$viewController =  new SettingsViewController();
+		}
+		
+
 		$viewController->indicateAjaxSave(); // set ajax save method
 
 		$url = isset($_POST['request_url']) ? sanitize_text_field($_POST['request_url']) : null;
@@ -2607,6 +2619,18 @@ class AjaxController
 		$accessModel = AccessModel::getInstance();
 
 		$bool = $accessModel->userIsAllowed($access);
+
+		$multisite_restricted = ['toolsRemoveAll', 'toolsRemoveBackup']; 
+		$env = \wpSPIO()->env(); 
+
+		// Restrict site-wide actions to the network admin.
+		if (in_array($action, $multisite_restricted) && $env->is_multisite)
+		{
+			if (false === $env->is_network_admin)
+			{
+				 $bool = false; 
+			}
+		}
 
 		if ($bool === false) {
 			$json = new \stdClass;

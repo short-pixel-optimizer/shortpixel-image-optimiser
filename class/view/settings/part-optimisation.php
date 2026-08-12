@@ -476,7 +476,6 @@ if (! defined('ABSPATH')) {
   </settinglist>
 
 
-
   <?php $this->loadView('settings/part-savebuttons', false); ?>
 
 </section>

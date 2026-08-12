@@ -77,7 +77,6 @@ class AccessModel
 			);
 
 		 $spioCaps = apply_filters('shortpixel/init/permissions', $spioCaps);
-		 // $this->cap_actions = bla.
 		 $this->caps = $spioCaps;
 
 	}

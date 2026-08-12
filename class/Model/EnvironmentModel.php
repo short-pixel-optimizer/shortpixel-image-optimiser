@@ -24,6 +24,7 @@ class EnvironmentModel extends \ShortPixel\Model
     // MultiSite
     public $is_multisite;
     public $is_mainsite;
+    public $is_network_admin;
 
     // Integrations
     public $has_nextgen;
@@ -297,6 +298,7 @@ class EnvironmentModel extends \ShortPixel\Model
   {
     $this->is_multisite = (function_exists("is_multisite") && is_multisite()) ? true : false;
     $this->is_mainsite = (function_exists('is_main_site') && true === is_main_site()) ? true : false;
+    $this->is_network_admin = (function_exists('is_network_admin') && true === is_network_admin()) ? true : false; 
 
     $this->determineFrontBack();
 
@@ -379,17 +381,19 @@ class EnvironmentModel extends \ShortPixel\Model
     {
         return false;
     }
+    $screen_id = $screen->id; //(property_exists($screen, 'in_admin') && 'network' === $screen->in_admin) ? str_replace('-network', '',$screen->id) : $screen->id;
 
 
-    if ( in_array($screen->id, $pages))
+
+    if ( in_array($screen_id, $pages))
     {
        $this->is_screen_to_use = true;
-       if (in_array($screen->id, $admin_pages))
+       if (in_array($screen_id, $admin_pages))
        {
        $this->is_our_screen = true;
        }
 			 // Strpos instead of full screen id, because the first page (media_page) is not reliable and can change.
-       if ( strpos($screen->id, 'wp-short-pixel-bulk') !== false)
+       if ( strpos($screen_id, 'wp-short-pixel-bulk') !== false)
         $this->is_bulk_page = true;
     }
 		elseif (is_object($screen) && method_exists( $screen, 'is_block_editor' ) && $screen->is_block_editor() ) {
@@ -398,7 +402,7 @@ class EnvironmentModel extends \ShortPixel\Model
 	  }
     // If settings / classic editor is by default, this get is not included, so test-override for now to always load on post, see if other page editor have issues with this.
     // If no issues, at some point this statements should be done uh better.
-    elseif (isset($_GET['classic-editor']) || 'post' === $screen->id)
+    elseif (isset($_GET['classic-editor']) || 'post' === $screen_id)
     {
       $this->is_screen_to_use = true;
       $this->is_classic_editor = true;
