@@ -59,6 +59,7 @@ class SettingsViewController extends \ShortPixel\ViewController
      protected $is_multisite;
      /** @var bool Whether the current site is the primary (main) site of the network. */
      protected $is_mainsite;
+     protected $is_network_admin;
      /** @var bool Whether the NextGen Gallery plugin is active. */
      protected $has_nextgen;
      /** @var bool Whether a form save should redirect to the bulk page instead of reloading settings. */
@@ -948,6 +949,7 @@ class SettingsViewController extends \ShortPixel\ViewController
           $this->is_multisite = $env->is_multisite;
           $this->is_mainsite = $env->is_mainsite;
           $this->has_nextgen = $env->has_nextgen;
+          $this->is_network_admin = $env->is_network_admin;
 
           $this->disable_heavy_features = (false === \wpSPIO()->env()->useVirtualHeavyFunctions()) ? true : false;
 

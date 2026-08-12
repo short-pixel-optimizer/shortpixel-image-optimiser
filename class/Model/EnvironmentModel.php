@@ -24,6 +24,7 @@ class EnvironmentModel extends \ShortPixel\Model
     // MultiSite
     public $is_multisite;
     public $is_mainsite;
+    public $is_network_admin;
 
     // Integrations
     public $has_nextgen;
@@ -297,6 +298,7 @@ class EnvironmentModel extends \ShortPixel\Model
   {
     $this->is_multisite = (function_exists("is_multisite") && is_multisite()) ? true : false;
     $this->is_mainsite = (function_exists('is_main_site') && true === is_main_site()) ? true : false;
+    $this->is_network_admin = (function_exists('is_network_admin') && true === is_network_admin()) ? true : false; 
 
     $this->determineFrontBack();
 

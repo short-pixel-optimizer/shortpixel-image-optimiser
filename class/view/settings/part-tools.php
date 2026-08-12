@@ -202,6 +202,7 @@ $queueRunning = $bulk->isAnyBulkRunning();
         </content>
      </setting>
 
+     <?php if (false === $this->is_multisite || (true === $this->is_multisite && true === $this->is_network_admin)): ?>
      <!-- Remove All Data -->
      <setting>
        <!-- <name>
@@ -232,7 +233,6 @@ $queueRunning = $bulk->isAnyBulkRunning();
          </div> <!-- modal -->
        </content>
     </setting>
-
 
     <!-- Remove Backups -->
     <setting>
@@ -268,6 +268,8 @@ $queueRunning = $bulk->isAnyBulkRunning();
            <!-- backup modal -->
       </content>
    </setting>
+
+    <?php endif; ?> 
 
       </settinglist>
 

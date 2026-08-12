@@ -2613,6 +2613,18 @@ class AjaxController
 
 		$bool = $accessModel->userIsAllowed($access);
 
+		$multisite_restricted = ['toolsRemoveAll', 'toolsRemoveBackup']; 
+		$env = \wpSPIO()->env(); 
+
+		// Restrict site-wide actions to the network admin.
+		if (in_array($action, $multisite_restricted) && $env->is_multisite)
+		{
+			if (false === $env->is_network_admin)
+			{
+				 $bool = false; 
+			}
+		}
+
 		if ($bool === false) {
 			$json = new \stdClass;
 			$json->message = __('This user is not allowed to perform this action', 'shortpixel-image-optimiser');

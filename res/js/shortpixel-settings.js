@@ -1360,14 +1360,24 @@ class ShortPixelSettings {
 	}
 
 	ReceiveModal(elem) {
-		if (typeof elem.detail.settings.results !== 'undefined') {
+		if (typeof (elem.detail.settings) !== 'undefined' && typeof elem.detail.settings.results !== 'undefined') {
 			var modal = document.getElementById('spioSettingsModal');
 			var body = modal.querySelector('.spio-modal-body');
 
 			body.innerHTML = elem.detail.settings.results;
 		}
+		else if (typeof elem.detail.message !== 'undefined')
+		{
+			var modal = document.getElementById('spioSettingsModal');
+			var body = modal.querySelector('.spio-modal-body');
 
-		if (typeof elem.detail.settings.redirect !== 'undefined') {
+			let textNode = document.createElement('p');
+			textNode.innerText = elem.detail.message; 
+			body.append(textNode);
+
+		}
+
+		if (typeof (elem.detail.settings) !== 'undefined' && typeof elem.detail.settings.redirect !== 'undefined') {
 			window.location.href = elem.detail.settings.redirect;
 		}
 
