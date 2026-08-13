@@ -302,11 +302,6 @@ class AiDataModel
             
         ];
 
-        if (true === $settings->ai_gen_filename)
-        {
-            $paramlist['prefer_keep_filename_if_relevant'] = $settings->ai_filename_prefercurrent;
-        }
-
         if (true === $settings->ai_use_post) {
             $parent_title = $this->getConnectedPostTitle();
             if (false !== $parent_title && false === is_null($parent_title)) {
@@ -344,6 +339,10 @@ class AiDataModel
                     'context' => $settings->{'ai_' . $field_name . '_context'},
                     'chars' => $settings->{'ai_limit_' . $field_name . '_chars'},
                 ];
+                // API expects this flag inside file, not at payload root :)
+                if ('file' === $api_name) {
+                    $paramlist[$api_name]['prefer_keep_filename_if_relevant'] = (bool) $settings->ai_filename_prefercurrent;
+                }
                 $returnDataList[$field_name]['status']  = self::F_STATUS_OK;
                 $field_status = true;
             }
