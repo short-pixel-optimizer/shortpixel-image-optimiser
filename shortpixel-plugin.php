@@ -465,7 +465,8 @@ class ShortPixelPlugin {
 	 *
 	 *   - **Settings > ShortPixel** — the main settings screen. Suppressed
 	 *     on multisite child sites when the network admin has ticked
-	 *     `disable_site_settings_page` in the `spio_wpmu` network option.
+	 *     `disable_site_settings_page` or `network_settings_override_enabled`
+	 *     in the `spio_wpmu` network option.
 	 *   - **Media > Custom Media** — the "Other Media" folder scanner.
 	 *     Only shown when `OtherMediaController::showMenuItem()` returns
 	 *     true (i.e. at least one custom folder is registered).
@@ -509,10 +510,10 @@ class ShortPixelPlugin {
 	/**
 	 * Register the multisite network-settings submenu.
 	 *
-	 * Currently a **stub** — the method's very first statement is an
-	 * unconditional `return;` guarded by an `@todo`. When re-enabled, this
-	 * will add a `ShortPixel` entry under network Settings that routes to
-	 * `MultiSiteViewController` via `route()`.
+	 * Adds a `ShortPixel` entry under network Settings (capability
+	 * `manage_network_options`) that routes to `MultiSiteViewController` via
+	 * `route()`, and records the page hook (with the `-network` suffix WPMU
+	 * appends to screen ids) in $admin_pages so assets load on that screen.
 	 *
 	 * @return void
 	 */

@@ -24,6 +24,7 @@ class EnvironmentModel extends \ShortPixel\Model
     // MultiSite
     public $is_multisite;
     public $is_mainsite;
+    /** @var bool True when the request runs in the network admin area (false during AJAX requests). */
     public $is_network_admin;
 
     // Integrations

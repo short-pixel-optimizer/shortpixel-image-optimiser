@@ -59,6 +59,7 @@ class SettingsViewController extends \ShortPixel\ViewController
      protected $is_multisite;
      /** @var bool Whether the current site is the primary (main) site of the network. */
      protected $is_mainsite;
+     /** @var bool Whether the current request runs in the network admin area. */
      protected $is_network_admin;
      /** @var bool Whether the NextGen Gallery plugin is active. */
      protected $has_nextgen;
@@ -97,8 +98,8 @@ class SettingsViewController extends \ShortPixel\ViewController
      /** @var array<int, mixed> Notices generated during the current request, reported back in AJAX responses. */
 		 protected $notices_added = [];
 
-     // Is this the setting area for WPMU? 
-     protected $is_network_page = false; 
+     /** @var bool Whether this controller renders the WPMU network settings page (see MultiSiteViewController). */
+     protected $is_network_page = false;
 
      /**
       * Accumulates field correction records to be sent back to the JS form.

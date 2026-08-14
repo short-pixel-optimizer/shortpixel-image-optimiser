@@ -521,7 +521,8 @@ class AjaxController
 	 *
 	 * Verifies the nonce (`settings_request`) and requires `is_admin_user` capability.
 	 * Recognised `$_POST['screen_action']` values are routed to `settingsFormSubmit()`:
-	 * `form_submit`, `action_addkey`, `action_debug_*`, `action_request_new_key`,
+	 * `save-settings` (site settings form), `save-multi-settings` (network settings
+	 * form), `action_addkey`, `action_debug_*`, `action_request_new_key`,
 	 * `action_end_quick_tour`.  Any other value logs an error and exits with '0'.
 	 *
 	 * @return void
@@ -564,13 +565,15 @@ class AjaxController
 	}
 
 	/**
-	 * Delegate a settings form action to SettingsViewController.
+	 * Delegate a settings form action to the settings view controller.
 	 *
-	 * Instantiates `SettingsViewController`, marks it as processing an AJAX save, sets
-	 * the redirect URL from `$_POST['request_url']`, and calls the action method on the
-	 * view controller if it exists, otherwise falls back to `load()`.  Exits afterwards.
+	 * Instantiates `MultiSiteViewController` for `save-multi-settings` (network
+	 * settings form) or `SettingsViewController` otherwise, marks it as processing
+	 * an AJAX save, sets the redirect URL from `$_POST['request_url']`, and calls
+	 * the action method on the view controller if it exists, otherwise falls back
+	 * to `load()`.  Exits afterwards.
 	 *
-	 * @param string $action The action method name to invoke on SettingsViewController.
+	 * @param string $action The action method name to invoke on the view controller.
 	 * @return void  Always exits.
 	 */
 	protected function settingsFormSubmit($action)
@@ -2612,8 +2615,10 @@ class AjaxController
 	 * Verify that the current user has the required capability for an action.
 	 *
 	 * Delegates to `AccessModel::userIsAllowed()` with the provided `$access` level
-	 * (e.g. 'is_author', 'is_editor', 'is_admin_user').  On failure, sends a JSON
-	 * error with `error = NO_ACCESS` and exits.
+	 * (e.g. 'is_author', 'is_editor', 'is_admin_user').  On multisite, the site-wide
+	 * tool actions `toolsRemoveAll` / `toolsRemoveBackup` are additionally denied
+	 * unless the request runs in the network admin. On failure, sends a JSON error
+	 * with `error = NO_ACCESS` and exits.
 	 *
 	 * @param string $action The action name (used only for the error message).
 	 * @param string $access The capability level string as understood by AccessModel.

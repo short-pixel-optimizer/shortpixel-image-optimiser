@@ -16,9 +16,10 @@ use ShortPixel\Notices\NoticeController as Notice;
 /**
  * View controller for the WordPress Multisite network settings screen.
  *
- * Extends SettingsViewController to reuse the settings-save pipeline, but
- * renders the `view-network-settings` template instead and binds to the
- * MultiSettingsModel (network-wide settings stored in the network options table).
+ * Extends SettingsViewController to reuse the settings-save pipeline and the
+ * regular `view-settings` template (rendered with $is_network_page = true, which
+ * adds the Network Control tab), but binds to the MultiSettingsModel
+ * (network-wide settings stored in the network options table).
  *
  * Wired up by AdminController on the `network_admin_menu` hook when the site
  * is part of a multisite network.
@@ -35,7 +36,8 @@ class MultiSiteViewController extends SettingsViewController
       /** @var string[] Valid tab identifiers accepted by the network settings page. */
       protected $all_display_parts = array('network', 'optimisation', 'processing', 'webp', 'ai');
 
-      protected $is_network_page = true; 
+      /** @var bool Marks this controller as the WPMU network settings page for shared templates. */
+      protected $is_network_page = true;
 
       /**
        * Instantiates the MultiSettingsModel and chains to the parent constructor.
@@ -173,9 +175,10 @@ class MultiSiteViewController extends SettingsViewController
       /**
        * Populates $this->view with network settings data and renders the template.
        *
-       * Sets view->data from MultiSettingsModel::getData(), loads API key display
-       * properties, and loads the dashboard summary, then includes the
-       * `view-network-settings` template via loadView().
+       * Sets view->data from MultiSettingsModel::getData(), stubs the API key
+       * display properties (the network page does not manage keys), loads the
+       * dashboard summary and the shared settings view data, then renders the
+       * `view-settings` template via loadView().
        *
        * @return void
        */
@@ -197,9 +200,15 @@ class MultiSiteViewController extends SettingsViewController
           $this->loadView();
       }
 
+      /**
+       * Loads the shared settings view data, but never enters quick-tour mode
+       * (the tour is a per-site onboarding flow, not a network one).
+       *
+       * @return void
+       */
       protected function load_settings()
       {
-          parent::load_settings(); 
+          parent::load_settings();
 
           if ('page-quick-tour' === $this->view_mode)
           {

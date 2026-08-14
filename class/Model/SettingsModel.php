@@ -205,10 +205,13 @@ class SettingsModel extends \ShortPixel\Model
 		/**
 		 * Magic getter — returns a setting value by name, sanitised on read.
 		 *
-		 * When the setting has not been explicitly stored, falls back to the
-		 * model's declared default. Callable defaults are invoked so
-		 * late-binding values (e.g. current locale) resolve at read time.
-		 * Emits a log warning for unknown setting names.
+		 * When multisite network overrides are enabled (see
+		 * isNetworkOverrideEnabled()), a network-provided value takes precedence
+		 * over the per-site stored value. Otherwise, when the setting has not
+		 * been explicitly stored, falls back to the model's declared default.
+		 * Callable defaults are invoked so late-binding values (e.g. current
+		 * locale) resolve at read time. Emits a log warning for unknown setting
+		 * names.
 		 *
 		 * @param string $name Setting name.
 		 * @return mixed|null Sanitised setting value, its default, or null when
@@ -380,7 +383,8 @@ class SettingsModel extends \ShortPixel\Model
 
 		/**
 		 * Reports whether a setting has been explicitly stored (as opposed to
-		 * merely having a default).
+		 * merely having a default). Also true when an enabled multisite network
+		 * override provides a value for the setting.
 		 *
 		 * @param string $name Setting name.
 		 * @return bool

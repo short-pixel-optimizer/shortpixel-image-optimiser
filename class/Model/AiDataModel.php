@@ -247,6 +247,9 @@ class AiDataModel
 
     /** Get all data needed to send API for generating AI texts, depending on settings. This includes all settings minus URL
      *
+     * When filename generation is enabled, the `prefer_keep_filename_if_relevant`
+     * flag is sent inside the `file` field object (not at the payload root).
+     *
      * @param array $params Optional override parameters for AI settings.
      * @return array{paramlist: array<string, array{context: mixed, chars: mixed}>, returndatalist: array<string, array<string, int>>}
      *         'paramlist' contains the API request payload; 'returndatalist' contains per-field status codes.
