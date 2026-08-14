@@ -62,7 +62,7 @@ class QueueItemData
         protected $block;
         /** @var \stdClass|null Ad-hoc counters used by the UI (built up via addCount()). */
         protected $counts;
-        /** @var int|null Optional queue-position hint so re-queued items don't sink to the bottom. */
+        /** @var int|null Optional queue-position hint so re-queued items doesn't sink to the bottom. */
         protected $queue_list_order;
         /** @var bool|null True when the item was added by the upload hook, so recent-upload heuristics can apply. */
         protected $recent_upload;
@@ -281,7 +281,7 @@ class QueueItemData
              }
              else
              {
-                $this->next_keepdata = array_merge($this->next_keepdata, $args);
+                $this->next_keepdata = array_unique(array_merge($this->next_keepdata, $args));
              }
 
         }

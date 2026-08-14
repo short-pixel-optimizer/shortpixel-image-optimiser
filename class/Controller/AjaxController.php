@@ -1886,6 +1886,7 @@ class AjaxController
 					
 					$result = $optimizer->enqueueItem($qItem, ['preview_only' => true, 'action' => 'retrieveAlt', 'remote_id' => $remote_id]); 
 					$state = 'retrieveAlt';
+					$result->is_done = false; 
 					
 				}
 				elseif ('retrieveAlt' === $state)
@@ -1908,6 +1909,10 @@ class AjaxController
 						 $is_done = true; 
 						 break;  // safe guards.
 
+					}
+					else
+					{
+						Log::addTemp('AiData not set in Ajax');
 					}
 					
 					if ($result->is_done)

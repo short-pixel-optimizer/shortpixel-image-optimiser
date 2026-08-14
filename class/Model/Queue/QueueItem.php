@@ -578,6 +578,7 @@ class QueueItem
       {
          $paramlist['preview_only'] = true;
          $preview_only = true; 
+         $this->data()->addKeepDataArgs('preview_only');
       } 
 
       $aiDataModel = AiDataModel::getModelByAttachment($item_id, $this->imageModel->get('type'));
@@ -591,12 +592,17 @@ class QueueItem
       if (isset($data['returndatalist']))
       {
          $this->data()->returndatalist = $data['returndatalist'];
-         $this->data()->addKeepDataArgs('returndatalist');
+         $this->data()->addKeepDataArgs(['returndatalist']);
       }
 
       if (isset($args['recent_upload']) && true === $args['recent_upload'])
       {
          $this->data()->addKeepDataArgs(['recent_upload']);
+      }
+
+      if (isset($data['paramlist']['languages']))
+      {
+          $this->data()->addKeepDataArgs('languages');
       }
 
       $this->data->addCount(['aiCount' => 1]); // @todo Check if this is really a one credito operation.

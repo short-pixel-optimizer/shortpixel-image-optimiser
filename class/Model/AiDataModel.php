@@ -164,7 +164,6 @@ class AiDataModel
     /** @var int Field already has content and aiPreserve prevents overwriting. */
     const F_STATUS_PREVENTOVERRIDE = -4;
 
-
     /**
      * Load or initialise the AI data record for a given attachment.
      *
