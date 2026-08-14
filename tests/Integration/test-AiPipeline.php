@@ -158,6 +158,42 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$this->assertSame( 'mock-ai-jwt-token', get_transient( 'spio_ai_jwt_token' ) );
 	}
 
+	/**
+	 * Regression for 2e3b43c0: `prefer_keep_filename_if_relevant` must be sent
+	 * INSIDE the `file` object of the AI payload — the API expects it there.
+	 * Before the fix it sat at the payload root (and only when ai_gen_filename
+	 * was on, where the API ignored it).
+	 */
+	public function test_filename_preference_flag_is_sent_inside_the_file_object() {
+		$settings                             = \wpSPIO()->settings();
+		$settings->ai_gen_filename            = 1;
+		$settings->ai_filename_prefercurrent  = 1;
+
+		$attachment_id = $this->freshAttachment();
+
+		$this->enqueueAi( $attachment_id );
+		$this->runQueueUntilEmpty();
+
+		$addRequests = array_values( array_filter( $this->api->requests, function ( $r ) {
+			return false !== strpos( $r['url'], 'add-url.php' );
+		} ) );
+		$this->assertNotEmpty( $addRequests, 'The AI job must reach add-url.php' );
+
+		$payload = $addRequests[0]['request'];
+		$this->assertArrayHasKey( 'file', $payload, 'ai_gen_filename=1 must put the filename job in the paramlist' );
+		$this->assertArrayHasKey(
+			'prefer_keep_filename_if_relevant',
+			(array) $payload['file'],
+			'The flag must live inside the file object (2e3b43c0), where the API reads it.'
+		);
+		$this->assertTrue( (bool) ( (array) $payload['file'] )['prefer_keep_filename_if_relevant'] );
+		$this->assertArrayNotHasKey(
+			'prefer_keep_filename_if_relevant',
+			$payload,
+			'The flag must no longer appear at the payload root.'
+		);
+	}
+
 	public function test_processing_status_is_polled_until_ready() {
 		$attachment_id = $this->freshAttachment();
 

@@ -36,10 +36,11 @@ class SettingsAjaxSaveTest extends SPIO_AjaxTestCase {
 	 * not auto-populate from $_POST like PHP itself would.
 	 *
 	 * @param array  $fields        Form fields to submit.
-	 * @param string $screen_action The screen_action to route. Default form_submit.
+	 * @param string $screen_action The screen_action to route. Default 'save-settings'
+	 *                              (renamed from 'form_submit' in the multisite branch).
 	 * @return object|null Decoded JSON response.
 	 */
-	private function doSettingsSave( array $fields, string $screen_action = 'form_submit' ): ?object {
+	private function doSettingsSave( array $fields, string $screen_action = 'save-settings' ): ?object {
 		$_POST = array_merge(
 			array(
 				'nonce'         => wp_create_nonce( 'settings_request' ),
@@ -58,7 +59,7 @@ class SettingsAjaxSaveTest extends SPIO_AjaxTestCase {
 		$this->_setRole( 'administrator' );
 
 		$_POST['nonce']         = 'not-a-valid-nonce';
-		$_POST['screen_action'] = 'form_submit';
+		$_POST['screen_action'] = 'save-settings';
 
 		$response = $this->doAjax( 'shortpixel_settingsRequest' );
 

@@ -12,7 +12,10 @@
  *   - per-site 'spio_settings' isolation vs the network-wide 'spio_wpmu'
  *     option (MultiSettingsModel);
  *   - the full optimization pipeline on a subsite, whose uploads live in
- *     uploads/sites/N/ — the path/URL shape most likely to regress.
+ *     uploads/sites/N/ — the path/URL shape most likely to regress;
+ *   - the network settings feature (merged in 9eed2de9): the un-stubbed
+ *     network admin menu entry, the network_settings_override_enabled read
+ *     path on the per-site SettingsModel, and two pinned bugs (#36, #37).
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -233,6 +236,198 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 		wp_delete_attachment( $attachment_id, true );
 		$this->uploadedAttachments = array();
 		$this->leaveSubsite();
+	}
+
+	// -------------------------------------------------------------------
+	// Network settings feature (merged 9eed2de9)
+	// -------------------------------------------------------------------
+
+	/**
+	 * The network admin menu entry was un-stubbed in the multisite branch:
+	 * admin_network_pages() used to bail out with an unconditional `return;`
+	 * (@todo). It must now register the ShortPixel submenu under network
+	 * Settings and record the page hook (with WPMU's `-network` screen-id
+	 * suffix) in $admin_pages so assets load on that screen.
+	 */
+	public function test_admin_network_pages_registers_network_settings_submenu() {
+		global $submenu;
+
+		require_once ABSPATH . 'wp-admin/includes/plugin.php';
+
+		$admin_id = self::factory()->user->create( array( 'role' => 'administrator' ) );
+		grant_super_admin( $admin_id );
+		wp_set_current_user( $admin_id );
+
+		\wpSPIO()->admin_network_pages();
+
+		$slugs = array();
+		foreach ( (array) ( $submenu['settings.php'] ?? array() ) as $item ) {
+			$slugs[] = $item[2];
+		}
+		$this->assertContains(
+			'shortpixel-network-settings',
+			$slugs,
+			'admin_network_pages() must register the network settings submenu (was a return; stub before the multisite branch).'
+		);
+
+		$ref = new ReflectionProperty( \ShortPixel\ShortPixelPlugin::class, 'admin_pages' );
+		$ref->setAccessible( true );
+		$admin_pages = $ref->getValue( \wpSPIO() );
+
+		// The hook prefix differs between a real admin load ('settings_page_')
+		// and the test context ('admin_page_', core menus not registered), so
+		// match on the stable slug + '-network' tail only.
+		$this->assertNotEmpty(
+			preg_grep( '/shortpixel-network-settings-network$/', $admin_pages ),
+			'The page hook must be recorded with the -network suffix WPMU appends to screen ids.'
+		);
+	}
+
+	/**
+	 * network_settings_override_enabled: when the network stores a value for
+	 * a setting, the per-site SettingsModel must return the network value
+	 * instead of the site's own stored value.
+	 */
+	public function test_network_override_makes_site_settings_read_network_value() {
+		// Site explicitly stores the opposite value.
+		$settings             = \wpSPIO()->settings();
+		$settings->createWebp = false;
+		$settings->onShutdown();
+
+		update_site_option(
+			'spio_wpmu',
+			array(
+				'network_settings_override_enabled' => true,
+				'createWebp'                        => true,
+			)
+		);
+		$this->resetPluginSingletons();
+
+		$this->assertTrue( \wpSPIO()->settings()->isNetworkOverrideEnabled() );
+		$this->assertTrue(
+			(bool) \wpSPIO()->settings()->createWebp,
+			'With the override enabled, a network-stored value must win over the site-stored value.'
+		);
+	}
+
+	/** With the toggle off, network-stored values must NOT leak into sites. */
+	public function test_network_values_do_not_apply_when_override_is_disabled() {
+		$settings             = \wpSPIO()->settings();
+		$settings->createWebp = false;
+		$settings->onShutdown();
+
+		update_site_option(
+			'spio_wpmu',
+			array(
+				'network_settings_override_enabled' => false,
+				'createWebp'                        => true,
+			)
+		);
+		$this->resetPluginSingletons();
+
+		$this->assertFalse( \wpSPIO()->settings()->isNetworkOverrideEnabled() );
+		$this->assertFalse(
+			(bool) \wpSPIO()->settings()->createWebp,
+			'With the override disabled, the site-stored value must be used.'
+		);
+	}
+
+	/**
+	 * PINNED bug #36: SettingsModel::getNetworkSettingValue() gates on
+	 * $network_model->exists($name) — which checks the MODEL SCHEMA, not the
+	 * stored network values (MultiSettingsModel::isset() exists for that but
+	 * is unused). Since every regular setting is in the schema, and
+	 * MultiSettingsModel::__get() falls back to model DEFAULTS for unstored
+	 * names, enabling the override masks EVERY site-stored setting with the
+	 * default — even when the network admin never configured that setting.
+	 *
+	 * Here: the site stores compressionType=2, the network stores ONLY the
+	 * toggle, yet the site reads the default (1) instead of its own 2.
+	 *
+	 * FLIP when fixed (exists() → stored-value check): the assertion below
+	 * fails with compressionType=2 — then assert 2 (site fallback) instead.
+	 */
+	public function test_pin36_override_masks_site_values_with_network_defaults() {
+		$settings                  = \wpSPIO()->settings();
+		$settings->compressionType = 2;
+		$settings->onShutdown();
+
+		update_site_option( 'spio_wpmu', array( 'network_settings_override_enabled' => true ) );
+		$this->resetPluginSingletons();
+
+		$this->assertEquals(
+			1,
+			\wpSPIO()->settings()->compressionType,
+			'PINNED bug #36 — network override returns the model default (1) instead of falling back to the site-stored value (2). When getNetworkSettingValue() checks stored network values instead of the model schema, flip this to assert 2.'
+		);
+	}
+
+	/**
+	 * PINNED bug #37: checkActionAccess() denies `toolsRemoveAll` /
+	 * `toolsRemoveBackup` on multisite whenever $env->is_network_admin is
+	 * false — but these actions arrive via admin-ajax.php, where WordPress's
+	 * is_network_admin() is ALWAYS false (no current_screen, WP_NETWORK_ADMIN
+	 * undefined). So on multisite even a super admin clicking the buttons on
+	 * the network settings screen is denied: the gate should use a capability
+	 * check (e.g. is_super_admin() / manage_network), not the request context.
+	 *
+	 * This test reproduces the AJAX reality: super admin, no network screen.
+	 *
+	 * FLIP when fixed: checkActionAccess() will return true for the super
+	 * admin and no WPDieException is thrown — then assert the allowed path.
+	 */
+	public function test_pin37_super_admin_is_denied_sitewide_tools_in_ajax_context() {
+		$admin_id = self::factory()->user->create( array( 'role' => 'administrator' ) );
+		grant_super_admin( $admin_id );
+		wp_set_current_user( $admin_id );
+
+		// admin-ajax.php reality: no admin screen object is set.
+		unset( $GLOBALS['current_screen'] );
+		$this->assertFalse( is_network_admin(), 'Precondition: AJAX requests never run as network admin.' );
+		$this->assertTrue( \wpSPIO()->env()->is_multisite );
+
+		// The capability itself allows the user — the denial below comes
+		// exclusively from the is_network_admin gate.
+		$this->assertTrue(
+			\ShortPixel\Model\AccessModel::getInstance()->userIsAllowed( 'is_admin_user' ),
+			'Precondition: the super admin passes the capability check.'
+		);
+
+		$controller = \ShortPixel\Controller\AjaxController::getInstance();
+		$method     = new ReflectionMethod( \ShortPixel\Controller\AjaxController::class, 'checkActionAccess' );
+		$method->setAccessible( true );
+
+		// wp_send_json() terminates with an uncatchable plain `die` outside an
+		// ajax context, and even the default AJAX wp_die handler plain-dies.
+		// Force the ajax path AND swap in a throwing die-handler so the JSON
+		// termination becomes a catchable exception (hooks are restored by the
+		// WP test framework after every test).
+		add_filter( 'wp_doing_ajax', '__return_true' );
+		add_filter(
+			'wp_die_ajax_handler',
+			function () {
+				return function ( $message ) {
+					throw new WPDieException( is_scalar( $message ) ? (string) $message : 'wp_die' );
+				};
+			}
+		);
+
+		$denied = false;
+		ob_start();
+		try {
+			$method->invoke( $controller, 'toolsRemoveAll', 'is_admin_user' );
+		} catch ( WPDieException $e ) {
+			$denied = true;
+		}
+		$output = ob_get_clean();
+
+		$this->assertTrue(
+			$denied,
+			'PINNED bug #37 — a super admin is denied toolsRemoveAll because is_network_admin() is false during AJAX. When the gate switches to a capability check, flip this test to assert the action is allowed.'
+		);
+
+		$json = json_decode( $output );
+		$this->assertSame( \ShortPixel\Controller\AjaxController::NO_ACCESS, $json->error );
 	}
 
 	// -------------------------------------------------------------------
