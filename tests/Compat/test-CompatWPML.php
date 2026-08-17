@@ -13,6 +13,9 @@
  *     filters are only wired when plugin_active('wpml') is true, and
  *     checkParamList() injects the attachment's WPML locale into the
  *     outgoing AI request params.
+ *   - OptimizeAiController::WPMLCheckReplace() (f232c607) — the replace-time
+ *     language guard for AI text replacement, incl. pinned bug #40 (compares
+ *     the non-existent 'code' key instead of 'language_code').
  *   - MediaLibraryModel::getWPMLDuplicates() — translation duplicates
  *     found via the real icl_translations table (same-trid siblings),
  *     restricted to attachments sharing the same physical file; on
@@ -163,6 +166,88 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 
 		$params = apply_filters( 'shortpixel/aidatamodel/paramlist', array(), $id );
 		$this->assertArrayNotHasKey( 'languages', $params, 'No locale means no languages param.' );
+	}
+
+	// -------------------------------------------------------------------
+	// AI replace-time language guard (WPMLCheckReplace, f232c607)
+	// -------------------------------------------------------------------
+
+	/** Reflection access to the protected OptimizeAiController::WPMLCheckReplace(). */
+	private function invokeWpmlCheckReplace( int $post_id, int $queue_item_id ): bool {
+		$controller = \ShortPixel\Controller\Optimizer\OptimizeAiController::getInstance();
+		$method     = new ReflectionMethod( \ShortPixel\Controller\Optimizer\OptimizeAiController::class, 'WPMLCheckReplace' );
+		$method->setAccessible( true );
+		return $method->invoke( $controller, $post_id, $queue_item_id );
+	}
+
+	/**
+	 * When WPML cannot resolve a language for either side, the guard must
+	 * refuse the replacement (fail closed). This path correctly reads the
+	 * `language_code` key, so it behaves the same before and after bug #40.
+	 */
+	public function test_wpml_replace_guard_fails_closed_without_language_details() {
+		remove_all_filters( 'wpml_post_language_details' );
+		add_filter( 'wpml_post_language_details', '__return_null' );
+
+		$this->assertFalse(
+			$this->invokeWpmlCheckReplace( 12345, 67890 ),
+			'With no WPML language details available, the replace guard must refuse the replacement.'
+		);
+	}
+
+	/**
+	 * PINNED bug #40: WPMLCheckReplace() validates the WPML lookup via the
+	 * `language_code` key (correct — that is what `wpml_post_language_details`
+	 * returns), but then COMPARES `$language['code']` vs
+	 * `$language_queue['code']` — a key WPML never provides. Both sides are
+	 * undefined, so the mismatch branch can never trigger: pages in a
+	 * DIFFERENT language are still replaced, defeating the whole guard (and
+	 * emitting two "Undefined array key" warnings per checked post on PHP 8).
+	 *
+	 * The pin accepts either manifestation of the bug — the undefined-key
+	 * warning (converted to an exception by phpunit-integration.xml) or a
+	 * `true` return for clearly different languages.
+	 *
+	 * FLIP when fixed (`code` → `language_code`): the call below returns
+	 * false with no warning — then simply assertFalse the invocation.
+	 */
+	public function test_pin40_wpml_replace_guard_does_not_block_other_languages() {
+		$post_id  = 12345;
+		$queue_id = 67890;
+
+		remove_all_filters( 'wpml_post_language_details' );
+		add_filter(
+			'wpml_post_language_details',
+			function ( $details, $id ) use ( $post_id ) {
+				// Realistic WPML payload: language_code + locale, no 'code' key.
+				return ( $id === $post_id )
+					? array( 'language_code' => 'de', 'locale' => 'de_DE' )
+					: array( 'language_code' => 'en', 'locale' => 'en_US' );
+			},
+			10,
+			2
+		);
+
+		$warning = null;
+		$allowed = null;
+		try {
+			$allowed = $this->invokeWpmlCheckReplace( $post_id, $queue_id );
+		} catch ( \Throwable $e ) {
+			$warning = $e;
+		}
+
+		if ( null !== $warning ) {
+			$this->assertStringContainsString(
+				'code',
+				$warning->getMessage(),
+				'PINNED bug #40 — the guard reads the non-existent \'code\' key. When fixed, no warning is raised: flip this test to assertFalse the invocation.'
+			);
+		} else {
+			$this->assertTrue(
+				$allowed,
+				'PINNED bug #40 — comparing the undefined \'code\' keys makes different-language pages pass the guard. When fixed (language_code), flip this to assertFalse.'
+			);
+		}
 	}
 
 	// -------------------------------------------------------------------

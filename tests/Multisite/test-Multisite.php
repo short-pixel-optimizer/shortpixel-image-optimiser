@@ -15,7 +15,10 @@
  *     uploads/sites/N/ — the path/URL shape most likely to regress;
  *   - the network settings feature (merged in 9eed2de9): the un-stubbed
  *     network admin menu entry, the network_settings_override_enabled read
- *     path on the per-site SettingsModel, and two pinned bugs (#36, #37).
+ *     path on the per-site SettingsModel (network defaults win by design —
+ *     ex-#36, closed as intended), the fixed #37 super-admin AJAX access
+ *     (4acf1395), and pinned bug #39 (is_super_admin missing from the
+ *     AccessModel caps map).
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -333,21 +336,19 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * PINNED bug #36: SettingsModel::getNetworkSettingValue() gates on
-	 * $network_model->exists($name) — which checks the MODEL SCHEMA, not the
-	 * stored network values (MultiSettingsModel::isset() exists for that but
-	 * is unused). Since every regular setting is in the schema, and
-	 * MultiSettingsModel::__get() falls back to model DEFAULTS for unstored
-	 * names, enabling the override masks EVERY site-stored setting with the
-	 * default — even when the network admin never configured that setting.
+	 * INTENDED behavior (was reported as bug #36, closed as by-design 2026-08-17):
+	 * with the network override enabled, the network level is authoritative for
+	 * ALL settings — getNetworkSettingValue() gates on the model SCHEMA, so
+	 * settings the network admin never configured resolve to the network model
+	 * DEFAULT rather than falling back to the site-stored value.
 	 *
 	 * Here: the site stores compressionType=2, the network stores ONLY the
-	 * toggle, yet the site reads the default (1) instead of its own 2.
+	 * toggle, and the site reads the network default (1) — by design.
 	 *
-	 * FLIP when fixed (exists() → stored-value check): the assertion below
-	 * fails with compressionType=2 — then assert 2 (site fallback) instead.
+	 * A future option may let users choose which settings stay site-level;
+	 * revisit this test when that lands.
 	 */
-	public function test_pin36_override_masks_site_values_with_network_defaults() {
+	public function test_override_applies_network_defaults_even_for_unstored_settings() {
 		$settings                  = \wpSPIO()->settings();
 		$settings->compressionType = 2;
 		$settings->onShutdown();
@@ -358,25 +359,19 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 		$this->assertEquals(
 			1,
 			\wpSPIO()->settings()->compressionType,
-			'PINNED bug #36 — network override returns the model default (1) instead of falling back to the site-stored value (2). When getNetworkSettingValue() checks stored network values instead of the model schema, flip this to assert 2.'
+			'With the override enabled the network level is authoritative: unstored settings resolve to the network default (1), not the site-stored value (2). Intended behavior (ex-#36, closed by design).'
 		);
 	}
 
 	/**
-	 * PINNED bug #37: checkActionAccess() denies `toolsRemoveAll` /
-	 * `toolsRemoveBackup` on multisite whenever $env->is_network_admin is
-	 * false — but these actions arrive via admin-ajax.php, where WordPress's
-	 * is_network_admin() is ALWAYS false (no current_screen, WP_NETWORK_ADMIN
-	 * undefined). So on multisite even a super admin clicking the buttons on
-	 * the network settings screen is denied: the gate should use a capability
-	 * check (e.g. is_super_admin() / manage_network), not the request context.
-	 *
-	 * This test reproduces the AJAX reality: super admin, no network screen.
-	 *
-	 * FLIP when fixed: checkActionAccess() will return true for the super
-	 * admin and no WPDieException is thrown — then assert the allowed path.
+	 * Bug #37 FIXED (4acf1395): the is_network_admin request-context gate was
+	 * removed from checkActionAccess(); `toolsRemoveAll` / `toolsRemoveBackup`
+	 * now pass the 'is_super_admin' access level to AccessModel instead. Since
+	 * is_network_admin() is always false during admin-ajax.php, the old gate
+	 * denied even super admins — this regression test reproduces the AJAX
+	 * reality (super admin, no network screen) and asserts access is granted.
 	 */
-	public function test_pin37_super_admin_is_denied_sitewide_tools_in_ajax_context() {
+	public function test_super_admin_is_allowed_sitewide_tools_in_ajax_context() {
 		$admin_id = self::factory()->user->create( array( 'role' => 'administrator' ) );
 		grant_super_admin( $admin_id );
 		wp_set_current_user( $admin_id );
@@ -386,22 +381,63 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 		$this->assertFalse( is_network_admin(), 'Precondition: AJAX requests never run as network admin.' );
 		$this->assertTrue( \wpSPIO()->env()->is_multisite );
 
-		// The capability itself allows the user — the denial below comes
-		// exclusively from the is_network_admin gate.
-		$this->assertTrue(
-			\ShortPixel\Model\AccessModel::getInstance()->userIsAllowed( 'is_admin_user' ),
-			'Precondition: the super admin passes the capability check.'
-		);
+		list( $allowed, $output ) = $this->invokeCheckActionAccess( 'toolsRemoveAll', 'is_super_admin' );
 
+		$this->assertTrue(
+			$allowed,
+			'Bug #37 fixed (4acf1395) — a super admin must be allowed to run toolsRemoveAll from the AJAX context. A denial here means the is_network_admin request-context gate (or similar) is back.'
+		);
+		$this->assertSame( '', $output, 'No JSON error must be emitted on the allowed path.' );
+	}
+
+	/**
+	 * PINNED bug #39: the 'is_super_admin' access level used by the #37 fix
+	 * (4acf1395) is NOT defined in AccessModel::setDefaultPermissions(), so
+	 * getCap() falls back to the default 'manage_options' — a capability every
+	 * regular site administrator holds on multisite. The intended restriction
+	 * ("super admins only" per the commit message) therefore does not restrict
+	 * anything: a plain subsite admin can still run the site-wide destructive
+	 * tools (Remove All Data / Remove Backups).
+	 *
+	 * FLIP when fixed (caps map entry or real is_super_admin() check): the
+	 * invocation below will be denied — then assert $allowed is false and the
+	 * JSON error is NO_ACCESS.
+	 */
+	public function test_pin39_regular_site_admin_can_still_run_sitewide_tools() {
+		$admin_id = self::factory()->user->create( array( 'role' => 'administrator' ) );
+		wp_set_current_user( $admin_id );
+
+		$this->assertFalse( is_super_admin( $admin_id ), 'Precondition: a plain administrator, not a super admin.' );
+		unset( $GLOBALS['current_screen'] );
+		$this->assertTrue( \wpSPIO()->env()->is_multisite );
+
+		list( $allowed, $output ) = $this->invokeCheckActionAccess( 'toolsRemoveAll', 'is_super_admin' );
+
+		$this->assertTrue(
+			$allowed,
+			"PINNED bug #39 — 'is_super_admin' is missing from the AccessModel caps map, so it falls back to 'manage_options' and a regular site admin passes. When the check truly restricts to super admins, flip this to assert denial."
+		);
+	}
+
+	/**
+	 * Invoke AjaxController::checkActionAccess() so that a denial is
+	 * observable instead of fatal.
+	 *
+	 * wp_send_json() terminates with an uncatchable plain `die` outside an
+	 * ajax context, and even the default AJAX wp_die handler plain-dies.
+	 * Force the ajax path AND swap in a throwing die-handler so the JSON
+	 * termination becomes a catchable exception (hooks are restored by the
+	 * WP test framework after every test).
+	 *
+	 * @param string $action The ajax action name to check.
+	 * @param string $access The AccessModel access level string.
+	 * @return array{0: bool, 1: string} [allowed, captured JSON output].
+	 */
+	private function invokeCheckActionAccess( $action, $access ) {
 		$controller = \ShortPixel\Controller\AjaxController::getInstance();
 		$method     = new ReflectionMethod( \ShortPixel\Controller\AjaxController::class, 'checkActionAccess' );
 		$method->setAccessible( true );
 
-		// wp_send_json() terminates with an uncatchable plain `die` outside an
-		// ajax context, and even the default AJAX wp_die handler plain-dies.
-		// Force the ajax path AND swap in a throwing die-handler so the JSON
-		// termination becomes a catchable exception (hooks are restored by the
-		// WP test framework after every test).
 		add_filter( 'wp_doing_ajax', '__return_true' );
 		add_filter(
 			'wp_die_ajax_handler',
@@ -412,22 +448,16 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 			}
 		);
 
-		$denied = false;
+		$allowed = false;
 		ob_start();
 		try {
-			$method->invoke( $controller, 'toolsRemoveAll', 'is_admin_user' );
+			$allowed = (bool) $method->invoke( $controller, $action, $access );
 		} catch ( WPDieException $e ) {
-			$denied = true;
+			$allowed = false;
 		}
 		$output = ob_get_clean();
 
-		$this->assertTrue(
-			$denied,
-			'PINNED bug #37 — a super admin is denied toolsRemoveAll because is_network_admin() is false during AJAX. When the gate switches to a capability check, flip this test to assert the action is allowed.'
-		);
-
-		$json = json_decode( $output );
-		$this->assertSame( \ShortPixel\Controller\AjaxController::NO_ACCESS, $json->error );
+		return array( $allowed, $output );
 	}
 
 	// -------------------------------------------------------------------

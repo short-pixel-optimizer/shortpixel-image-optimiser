@@ -35,7 +35,8 @@
  *     loaded; also calls AiDataModel::getModelByAttachment() which reads from DB.
  *   - undoAltData(): calls AiDataModel + replaceImageAttributes() — integration.
  *   - replaceImageAttributes() / replaceMetaData(): touch Replacer2 + WP metadata — integration.
- *   - getWpmlLanguagePostIds(): requires WPML active and a populated translations table.
+ *   - WPMLCheckReplace() (replaced getWpmlLanguagePostIds in f232c607): requires
+ *     WPML active — covered in tests/Compat/test-CompatWPML.php.
  *
  * @package Shortpixel_Image_Optimiser
  */
