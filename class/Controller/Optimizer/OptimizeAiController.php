@@ -502,6 +502,7 @@ class OptimizeAiController extends OptimizerBase
     protected function WPMLCheckReplace($post_id, $queue_item_id) : bool 
     {
         if (!\wpSPIO()->env()->plugin_active('wpml')) {
+            Log::addTemp('WPML not active');
             return true;
         }
 
@@ -518,6 +519,7 @@ class OptimizeAiController extends OptimizerBase
              return false; 
         } 
 
+        Log::addTemp("WPML Approved $post_id - $queue_item_id ");
         return true; 
     }
 

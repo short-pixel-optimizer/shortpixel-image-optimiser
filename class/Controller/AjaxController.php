@@ -444,11 +444,11 @@ class AjaxController
 				$json = $this->startRemoveLegacy($json, $data);
 				break;
 			case "toolsRemoveAll":
-				$this->checkActionAccess($action, 'is_admin_user');
+				$this->checkActionAccess($action, 'is_super_admin');
 				$json = $this->removeAllData($json, $data);
 				break;
 			case "toolsRemoveBackup":
-				$this->checkActionAccess($action, 'is_admin_user');
+				$this->checkActionAccess($action, 'is_super_admin');
 				$json = $this->removeBackup($json, $data);
 				break;
 			case "loadLogFile":
@@ -2629,18 +2629,6 @@ class AjaxController
 		$accessModel = AccessModel::getInstance();
 
 		$bool = $accessModel->userIsAllowed($access);
-
-		$multisite_restricted = ['toolsRemoveAll', 'toolsRemoveBackup']; 
-		$env = \wpSPIO()->env(); 
-
-		// Restrict site-wide actions to the network admin.
-		if (in_array($action, $multisite_restricted) && $env->is_multisite)
-		{
-			if (false === $env->is_network_admin)
-			{
-				 $bool = false; 
-			}
-		}
 
 		if ($bool === false) {
 			$json = new \stdClass;
