@@ -532,4 +532,276 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 			'Subsite key must be isolated and not bleed into the main site spio_key option'
 		);
 	}
+
+	// -------------------------------------------------------------------
+	// Network settings save pipeline (MultiSiteViewController::processSave)
+	// -------------------------------------------------------------------
+
+	/**
+	 * Run MultiSiteViewController::processSave() against a crafted $_POST and
+	 * return the decoded handleAjaxSave() JSON response.
+	 *
+	 * processSave() terminates through wp_send_json(); the ajax filters below
+	 * turn that plain die into a catchable WPDieException (see
+	 * invokeCheckActionAccess for the rationale). Persistence to spio_wpmu is
+	 * deferred to a PHP shutdown handler in production, so the model flush is
+	 * triggered here explicitly on the controller's own model instance.
+	 *
+	 * @param array $postFields Form fields as posted by the network settings form.
+	 * @return object|null Decoded JSON response of handleAjaxSave().
+	 */
+	private function runNetworkProcessSave( array $postFields ) {
+		$_POST = $postFields;
+
+		$controller = new \ShortPixel\Controller\View\MultiSiteViewController();
+
+		add_filter( 'wp_doing_ajax', '__return_true' );
+		add_filter(
+			'wp_die_ajax_handler',
+			function () {
+				return function ( $message ) {
+					throw new WPDieException( is_scalar( $message ) ? (string) $message : 'wp_die' );
+				};
+			}
+		);
+
+		$method = new ReflectionMethod( \ShortPixel\Controller\View\MultiSiteViewController::class, 'processSave' );
+		$method->setAccessible( true );
+
+		$ob_level = ob_get_level();
+		ob_start();
+		try {
+			$method->invoke( $controller );
+		} catch ( WPDieException $e ) {
+			unset( $e );
+		}
+		// The save flow (ErrorController fatal capture) can open an extra
+		// buffer that the wp_die exception skips closing — unwind to ours,
+		// keeping the innermost captured output (the JSON).
+		$output = '';
+		while ( ob_get_level() > $ob_level ) {
+			$output = ob_get_clean() . $output;
+		}
+		$_POST = array();
+
+		// Flush the controller's own MultiSettingsModel instance the way the
+		// registered PHP shutdown handler would at real request end.
+		$ref  = new ReflectionObject( $controller );
+		$prop = $ref->getProperty( 'model' );
+		$prop->setAccessible( true );
+		$prop->getValue( $controller )->onShutdown();
+
+		return json_decode( (string) $output );
+	}
+
+	/**
+	 * The full network save leg: posted fields must be sanitized, applied to
+	 * the MultiSettingsModel and persisted into the spio_wpmu network option.
+	 */
+	public function test_network_save_persists_posted_settings_to_spio_wpmu() {
+		$response = $this->runNetworkProcessSave(
+			array(
+				'network_settings_override_enabled' => 'on',
+				'createWebp'                        => 'on',
+				'compressionType'                   => '2',
+			)
+		);
+
+		$this->assertIsObject( $response, 'processSave must terminate through wp_send_json with a JSON body.' );
+		$this->assertTrue( $response->result, 'The ajax save response must report success.' );
+
+		$stored = get_site_option( 'spio_wpmu' );
+		$this->assertIsArray( $stored, 'The network save must write the spio_wpmu network option.' );
+		$this->assertTrue( (bool) $stored['network_settings_override_enabled'], 'The posted override toggle must persist.' );
+		$this->assertTrue( (bool) $stored['createWebp'], 'A posted boolean must persist as true.' );
+		$this->assertEquals( 2, $stored['compressionType'], 'A posted scalar must persist sanitized.' );
+	}
+
+	/**
+	 * Unchecked checkboxes are absent from the POST body; processSave() must
+	 * collapse every stored-but-unposted boolean to false (the same behavior
+	 * the site-level save has — and the class of bug behind earlier settings
+	 * regressions).
+	 */
+	public function test_network_save_collapses_unposted_booleans_to_false() {
+		update_site_option(
+			'spio_wpmu',
+			array(
+				'network_settings_override_enabled' => true,
+				'createWebp'                        => true,
+			)
+		);
+
+		$response = $this->runNetworkProcessSave(
+			array(
+				// createWebp deliberately NOT posted — an unchecked checkbox.
+				'network_settings_override_enabled' => 'on',
+				'compressionType'                   => '1',
+			)
+		);
+
+		$this->assertIsObject( $response );
+		$this->assertTrue( $response->result );
+
+		$stored = get_site_option( 'spio_wpmu' );
+		$this->assertFalse( (bool) $stored['createWebp'], 'A stored boolean missing from the POST must collapse to false.' );
+		$this->assertTrue( (bool) $stored['network_settings_override_enabled'], 'The posted toggle must stay enabled.' );
+	}
+
+	// -------------------------------------------------------------------
+	// Site settings menu gating (ShortPixelPlugin::admin_pages)
+	// -------------------------------------------------------------------
+
+	/**
+	 * Register the admin pages as a site admin and report whether the
+	 * per-site ShortPixel settings submenu was added.
+	 */
+	private function siteSettingsMenuRegistered(): bool {
+		$admin_id = self::factory()->user->create( array( 'role' => 'administrator' ) );
+		wp_set_current_user( $admin_id );
+		require_once ABSPATH . 'wp-admin/includes/plugin.php';
+
+		// Isolate from menu state leaked by other tests in this process.
+		$GLOBALS['submenu'] = array();
+
+		\wpSPIO()->admin_pages();
+
+		$entries = isset( $GLOBALS['submenu']['options-general.php'] ) ? $GLOBALS['submenu']['options-general.php'] : array();
+		foreach ( $entries as $entry ) {
+			if ( isset( $entry[2] ) && 'wp-shortpixel-settings' === $entry[2] ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * With network_settings_override_enabled OR disable_site_settings_page
+	 * set at network level, admin_pages() must not register the per-site
+	 * settings page for subsite admins.
+	 */
+	public function test_site_settings_menu_is_suppressed_by_network_gating() {
+		update_site_option( 'spio_wpmu', array( 'network_settings_override_enabled' => true ) );
+		$this->assertFalse( $this->siteSettingsMenuRegistered(), 'The override toggle must hide the site settings menu.' );
+
+		update_site_option( 'spio_wpmu', array( 'disable_site_settings_page' => true ) );
+		$this->assertFalse( $this->siteSettingsMenuRegistered(), 'disable_site_settings_page must hide the site settings menu.' );
+	}
+
+	/** Without any network gating, the site settings menu must register normally. */
+	public function test_site_settings_menu_registers_without_network_gating() {
+		update_site_option( 'spio_wpmu', array() );
+		$this->assertTrue( $this->siteSettingsMenuRegistered(), 'With no network gating the site settings menu must be present.' );
+	}
+
+	// -------------------------------------------------------------------
+	// Override scope + isolation
+	// -------------------------------------------------------------------
+
+	/**
+	 * The network override is stored network-wide, so it must win over the
+	 * locally stored value on ANY subsite — not just the main site (which the
+	 * earlier override tests cover).
+	 */
+	public function test_network_override_applies_on_subsite() {
+		update_site_option(
+			'spio_wpmu',
+			array(
+				'network_settings_override_enabled' => true,
+				'createWebp'                        => true,
+			)
+		);
+
+		$this->createAndEnterSubsite();
+
+		$settings             = \wpSPIO()->settings();
+		$settings->createWebp = false; // site-stored value on the subsite
+		$settings->onShutdown();
+		$this->resetPluginSingletons();
+
+		$this->assertTrue( \wpSPIO()->settings()->isNetworkOverrideEnabled(), 'The network toggle must be visible from the subsite.' );
+		$this->assertTrue(
+			(bool) \wpSPIO()->settings()->createWebp,
+			'The network-stored value must win over the subsite-stored value.'
+		);
+
+		$this->leaveSubsite();
+	}
+
+	/**
+	 * The API key lives in the per-site spio_key option (ApiKeyModel), outside
+	 * the SettingsModel schema — the network override must never mask it.
+	 * Pinning this explicitly so a refactor that routes the key through the
+	 * settings override path gets caught.
+	 */
+	public function test_api_key_is_not_masked_by_network_override() {
+		update_site_option(
+			'spio_wpmu',
+			array(
+				'network_settings_override_enabled' => true,
+				'apiKey'                            => str_repeat( 'x', 20 ), // must never be consulted
+			)
+		);
+		$this->resetPluginSingletons();
+
+		$keyControl = \ShortPixel\Controller\ApiKeyController::getInstance();
+		$this->assertSame(
+			str_repeat( 'a', 20 ),
+			$keyControl->getKeyModel()->getKey(),
+			'The API key comes from the per-site spio_key option and must not be masked by the network override.'
+		);
+		$this->assertTrue( $keyControl->keyIsVerified(), 'The site key must stay verified with the override enabled.' );
+	}
+
+	// -------------------------------------------------------------------
+	// Network settings page rendering (#38 regression surface)
+	// -------------------------------------------------------------------
+
+	/**
+	 * Render the network settings page and assert the Network Control tab is
+	 * functional: the override toggle input exists (part-network-override.php
+	 * present — the file whose absence was bug #38) and the form posts the
+	 * 'save-multi-settings' screen action.
+	 */
+	public function test_network_settings_page_renders_override_toggle_and_form_action() {
+		$admin_id = self::factory()->user->create( array( 'role' => 'administrator' ) );
+		grant_super_admin( $admin_id );
+		wp_set_current_user( $admin_id );
+
+		$_POST = array();
+
+		$controller = new \ShortPixel\Controller\View\MultiSiteViewController();
+		ob_start();
+		$controller->load();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString( 'id="tab-network"', $html, 'The Network Control tab must render (bug #38 fixed — part-network-override.php present).' );
+		$this->assertStringContainsString( 'name="network_settings_override_enabled"', $html, 'The override toggle input must be present.' );
+		$this->assertStringContainsString( 'value="save-multi-settings"', $html, 'The form_action field must post the network save action.' );
+	}
+
+	// -------------------------------------------------------------------
+	// Network value sanitization on the site read path
+	// -------------------------------------------------------------------
+
+	/**
+	 * Values stored dirty at network level (bad type, markup) must come out
+	 * sanitized when a site reads them through the override path
+	 * (SettingsModel::__get → MultiSettingsModel::__get → sanitize()).
+	 */
+	public function test_dirty_network_values_are_sanitized_on_site_read() {
+		update_site_option(
+			'spio_wpmu',
+			array(
+				'network_settings_override_enabled' => true,
+				'compressionType'                   => '2<script>alert(1)</script>',
+				'createWebp'                        => 'yes',
+			)
+		);
+		$this->resetPluginSingletons();
+
+		$settings = \wpSPIO()->settings();
+		$this->assertSame( 2, $settings->compressionType, 'A dirty int must be cast clean by the sanitizer on the override read path.' );
+		$this->assertTrue( (bool) $settings->createWebp, 'A truthy string must sanitize to a boolean true.' );
+	}
 }
