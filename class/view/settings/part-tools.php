@@ -115,13 +115,6 @@ $queueRunning = $bulk->isAnyBulkRunning();
       
     </settinglist>
 
-        <setting>
-
-            <content>
-              <a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'migrate', 'noheader' => true), $url)); ?>" class="button">
-                  <?php esc_html_e('Search and Migrate All', 'shortpixel-image-optimiser'); ?>
-              </a>
-
     <h3><?php _e('Settings Import / Export', 'shortpixel-image-optimiser'); ?></h3>
     <settinglist class='setting-importexport'>
       <setting>
@@ -247,8 +240,6 @@ $queueRunning = $bulk->isAnyBulkRunning();
         <info>
             <?php esc_html_e('When backups are enabled, original images are stored in a backup folder. If you remove the backup folder, you will not be able to restore or reoptimize the images. We strongly recommend that you keep a copy of the backup folder (/wp-content/uploads/ShortpixelBackups/) somewhere safe.','shortpixel-image-optimiser');?>
         </info>
-              <?php wp_nonce_field('empty-backup', 'tools-nonce'); ?>
-
               <div class='remove-backup modalTarget' id="ToolsRemoveBackup">
 
                 <input type="hidden" name="screen_action" value="toolsRemoveBackup" />

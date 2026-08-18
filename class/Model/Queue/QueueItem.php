@@ -557,7 +557,9 @@ class QueueItem
     * `preview_only=true`, in which case no chained retrieval is scheduled.
     *
     * If `recent_upload=true` is passed, that flag is added to keep_data so
-    * it propagates onto the chained retrieveAlt action.
+    * it propagates onto the chained retrieveAlt action. The same applies to
+    * `preview_only` and — when present in the payload — the `languages`
+    * paramlist entry.
     *
     * @param array{preview_only?: bool, recent_upload?: bool} $args Options; forwarded verbatim to AiDataModel::getOptimizeData().
     * @return void

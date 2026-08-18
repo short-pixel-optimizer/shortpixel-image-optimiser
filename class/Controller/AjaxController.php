@@ -2664,10 +2664,9 @@ class AjaxController
 	 * Verify that the current user has the required capability for an action.
 	 *
 	 * Delegates to `AccessModel::userIsAllowed()` with the provided `$access` level
-	 * (e.g. 'is_author', 'is_editor', 'is_admin_user').  On multisite, the site-wide
-	 * tool actions `toolsRemoveAll` / `toolsRemoveBackup` are additionally denied
-	 * unless the request runs in the network admin. On failure, sends a JSON error
-	 * with `error = NO_ACCESS` and exits.
+	 * (e.g. 'is_author', 'is_editor', 'is_admin_user', 'is_super_admin' — the latter
+	 * used by the site-wide tools `toolsRemoveAll` / `toolsRemoveBackup`). On failure,
+	 * sends a JSON error with `error = NO_ACCESS` and exits.
 	 *
 	 * @param string $action The action name (used only for the error message).
 	 * @param string $access The capability level string as understood by AccessModel.

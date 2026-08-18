@@ -465,6 +465,9 @@ class OptimizeAiController extends OptimizerBase
     /**
      * Get post IDs for the same WPML language as the given attachment.
      *
+     * Disabled — replaced by the per-result WPMLCheckReplace() guard below,
+     * which filters at replace time instead of pre-filtering the finder query.
+     *
      * @param int $item_id
      * @return int[]
      */
@@ -493,13 +496,18 @@ class OptimizeAiController extends OptimizerBase
     } */
 
     /**
-     * Undocumented function
+     * Decide whether an AI text replacement may run on a given post (WPML guard).
      *
-     * @param [int] $post_id - The post_id of the page / post 
-     * @param [int] $queue_item_id - The ID of the queue item image
-     * @return boolean
+     * When WPML is active, both the target post and the queue item (attachment)
+     * are resolved through the `wpml_post_language_details` filter; replacement
+     * is only allowed when both languages are known and identical, so pages in
+     * other languages are left untouched. Without WPML the check always passes.
+     *
+     * @param int $post_id       The post_id of the page / post to replace in.
+     * @param int $queue_item_id The attachment ID of the queue item image.
+     * @return bool True when replacing on this post is allowed.
      */
-    protected function WPMLCheckReplace($post_id, $queue_item_id) : bool 
+    protected function WPMLCheckReplace($post_id, $queue_item_id) : bool
     {
         if (!\wpSPIO()->env()->plugin_active('wpml')) {
             Log::addTemp('WPML not active');
@@ -852,13 +860,14 @@ class OptimizeAiController extends OptimizerBase
     }
 
     // @todo This might be returned in multiple formats / post data / postmeta data?  Public because of callback
-    /** This is the callback for Finder results for replacing attributes on the Images  
-     * 
-     * This function also saves the results!
-     * 
-     * @param mixed $results 
-     * @param mixed $args 
-     * @return void 
+    /** This is the callback for Finder results for replacing attributes on the Images
+     *
+     * This function also saves the results! Each result is first passed through
+     * WPMLCheckReplace(), so posts in a different WPML language are skipped.
+     *
+     * @param mixed $results
+     * @param mixed $args
+     * @return void
      */
     public function handleReplace($results, $args)
     {
