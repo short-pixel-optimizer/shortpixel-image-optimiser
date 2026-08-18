@@ -506,6 +506,9 @@ class AjaxController
 			case 'media/getEditorPreview': 
 				$this->getEditorPreview($data);
 			break;
+			case 'media/replaceFileName': 
+				$this->replaceFileName($data);
+			break; 
 			default:
 				$json->$type->message = __('Ajaxrequest - no action found', 'shortpixel-image-optimiser');
 				$json->error = self::NO_ACTION;
@@ -1306,6 +1309,52 @@ class AjaxController
 		$json->status = true;
 
 		return $json;
+	}
+
+	protected function replaceFileName($data)
+	{
+		$id = $data['id'];
+		$type = $data['type'];	
+
+		$newFileName = isset($_POST['newFileName']) ? sanitize_file_name($_POST['newFileName']) : false; 
+
+		if (false === $newFileName)
+		{
+		
+			$result_json = [
+			'error' => __('Something went wrong', 'shortpixel-image-optimiser'), 
+			'is_error' => true, 
+			];
+
+		 	$result_json['message'] = __('This image could not be loaded', 'shortpixel-image-optimiser'); 
+		 	$this->send((object) $result_json);
+		}
+
+
+		$imageModel = $this->getMediaItem($id, $type);
+		$this->checkImageAccess($imageModel);
+		
+
+		$queueItem = new QueueItem(['imageModel' => $imageModel]);
+
+		$apiController =  $queueItem->getApiController('requestAlt');
+
+		$result = $apiController->ajax_replaceFile($queueItem, $newFileName);
+
+		// Todo Send this QueueItem to the replaceFiles method. 
+		$result_json = [
+			'is_done' => true, 
+			'message' => (true === $result) ? __('Files were replaced', 'shortpixel-image-optimiser') : __('Files were not replaced', 'shortpixel-image-optimiser'),
+
+		];
+
+		if (false === $result)
+		{
+			 $result_json['is_error'] = true; 
+		}
+
+		$this->send((object) $result_json);
+
 	}
 
 	/**

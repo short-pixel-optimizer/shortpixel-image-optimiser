@@ -592,9 +592,9 @@ class OptimizeAiController extends OptimizerBase
      * @param QueueItem $qItem       The queue item providing the image model.
      * @param string    $newFileBase New filename base (without extension) from the AI.
      * @param array     $args        Optional: dry_run (bool), imageThreshold (int), url (string), recent_upload (bool).
-     * @return bool Always returns false.
+     * @return bool .True if it made it to end of replace functions.
      */
-    protected function replaceFiles($qItem, $newFileBase, $args = [])
+    protected function replaceFiles($qItem, $newFileBase, $args = []) : bool
     {
         $defaults = [
             'dry_run' => false,
@@ -630,7 +630,6 @@ class OptimizeAiController extends OptimizerBase
             }
         }
 
-
         $imageModel = $qItem->imageModel;
         $item_id = $qItem->item_id;
 
@@ -640,7 +639,6 @@ class OptimizeAiController extends OptimizerBase
         $files['files'] = array_unique($files['files']);
         $files['webp'] = array_unique($files['webp']);
         $files['avif'] = array_unique($files['avif']);
-
 
         $fs = \wpSPIO()->filesystem();
 
@@ -752,7 +750,28 @@ class OptimizeAiController extends OptimizerBase
 
         $this->replaceMetaData($item_id, $base_filename, $newFileBase, $args['dry_run']);
 
-        return false;
+        return true;
+    }
+
+    public function ajax_replaceFile($qItem, $newFileName)
+    {
+         $imageModel = $qItem->imageModel;
+         if (true === $imageModel->isScaled()) {
+                $url = $imageModel->getOriginalFile()->getURL();
+         } else {
+                $url = $qItem->imageModel->getUrl();
+        }
+
+         $baseReplace = pathinfo(basename($newFileName), PATHINFO_FILENAME); 
+
+         $args = [
+            'url' => $url, 
+            'recent_upload' => true,
+         ];
+
+         $result = $this->replaceFiles($qItem, $baseReplace, $args);
+
+         return $result;
     }
 
     /*
@@ -1058,6 +1077,7 @@ class OptimizeAiController extends OptimizerBase
     public function getAltData(QueueItem $qItem)
     {
         $item_id = $qItem->item_id;
+        $imageModel = $qItem->imageModel;
 
         $aiModel = AiDataModel::getModelByAttachment($item_id, 'media');
 
@@ -1103,6 +1123,7 @@ class OptimizeAiController extends OptimizerBase
             //      'isSupported' => $this->isSupported($qItem),
             'dataItems' => $dataItems,  // This seems not used(?)
             'isDifferent' =>  $aiModel->currentIsDifferent(),
+            'filename' => $imageModel->getFileName(), 
         ]);
 
 
