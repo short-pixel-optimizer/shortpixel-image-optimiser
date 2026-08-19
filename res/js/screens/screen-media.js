@@ -924,8 +924,9 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 								this.SetMessageProcessing(id);
 								this.processor.AjaxRequest(data);
 
-								window.addEventListener('ShortPixelMedia.reloadWindow', () => 
+								window.addEventListener('ShortPixelMedia.reloadWindow', (data) => 
 								{
+									
 									window.location.reload(); 
 								}, { 'once' : true });
 

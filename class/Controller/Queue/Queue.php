@@ -1081,10 +1081,11 @@ abstract class Queue
 	 * @param array      $queue     Current in-memory batch of enqueue arrays (each has an 'id' key).
 	 * @return bool True when a duplicate is already queued and the item should be skipped.
 	 */
-	public function isDuplicateActive($mediaItem, $queue = array() )
+	public function isDuplicateActive($mediaItem, $queue = array())
 	{
 		if ($mediaItem->get('type') === 'custom')
 			return false;
+
 
 		$WPMLduplicates = $mediaItem->getWPMLDuplicates();
 		$qitems = array();
@@ -1095,6 +1096,7 @@ abstract class Queue
 				  $qitems[] = $qitem['id'];
 			 }
 		}
+
 
 		if (is_array($WPMLduplicates) && count($WPMLduplicates) > 0)
 		{

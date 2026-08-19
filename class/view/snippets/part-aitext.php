@@ -94,6 +94,10 @@ elseif (false === $has_data):
 
 <div class="shortpixel-ai-replace-file hidden">
 	<?php _e('File Name :', 'shortpixel-image-optimiser'); ?>
-	<input type="text" name="filename_replace" value="<?php echo esc_attr($filename); ?>">
+	<input type="text" name="filename_replace" value="<?php echo esc_attr($filename); ?>" 
+	title="<?php _e('Warning - If this image is already indexed by search engines, please note that no automatic redirects are being added!', 'shortpixel-image-optimiser'); ?>">
+	
+	<span class="copy-to-clipboard-container">
 	<button type="button" class='button button-secondary' name="filename_replace_submit" value="1"><?php _e('Change Filename') ?></button>
+	</span>
 </div>
