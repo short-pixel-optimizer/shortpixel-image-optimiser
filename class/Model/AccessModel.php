@@ -71,13 +71,13 @@ class AccessModel
 					'image_user' => 'edit_post',
 					'custom_all' => 'edit_others_posts',
 					'is_admin_user' => 'manage_options',
+					'is_super_admin' => 'manage_network',  // User for Multisite 
 					'is_editor' => 'edit_others_posts',  // used in AjaxController
 					'is_author' => 'edit_posts', // used in AjaxController
 					'actions' => array(),
 			);
 
 		 $spioCaps = apply_filters('shortpixel/init/permissions', $spioCaps);
-		 // $this->cap_actions = bla.
 		 $this->caps = $spioCaps;
 
 	}

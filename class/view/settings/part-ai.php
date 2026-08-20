@@ -454,7 +454,6 @@ if (! defined('ABSPATH')) {
 
   </settingslist>
 
-
-  <?php $this->loadView('settings/part-savebuttons', false); ?>
+    <?php $this->loadView('settings/part-savebuttons', false); ?>
 
 </section>

@@ -888,12 +888,53 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 		wrapper.innerHTML = data.snippet;
 
-
 		element.after(wrapper);
 
 		element.dataset.shortpixelAlt = data.item_id;
 		if (data.result_alt && data.has_data)
+		{
 			element.value = data.result_alt;
+		}
+
+		let replaceFileIF = wrapper.querySelector('.shortpixel-ai-replace-file'); 
+		if (null !== replaceFileIF)
+		{
+			let pubFileName = document.querySelector('#submitdiv .misc-pub-filename'); 
+			if (null !== pubFileName && pubFileName.classList.contains('shortpixel-replace-if') === false)
+			{	
+				pubFileName.innerHTML = replaceFileIF.innerHTML; 
+				pubFileName.classList.add('shortpixel-replace-if'); 
+
+				let button = pubFileName.querySelector('button'); 
+				if (null !== button)
+				{
+					 button.addEventListener('click', () => {
+
+							var newFileNameField = document.querySelector('.shortpixel-replace-if input[name="filename_replace"]'); 
+							if (null !== newFileNameField)
+							{
+								var newFileName = newFileNameField.value;
+								var data = {
+									id: item_id,
+									type: this.type,
+									newFileName: newFileName, 
+									screen_action: 'media/replaceFileName',
+									callback: 'ShortPixelMedia.reloadWindow',
+								}	
+								this.SetMessageProcessing(id);
+								this.processor.AjaxRequest(data);
+
+								window.addEventListener('ShortPixelMedia.reloadWindow', (data) => 
+								{
+									
+									window.location.reload(); 
+								}, { 'once' : true });
+
+							}
+					 });
+				}
+			}
+		}
 
 	}
 

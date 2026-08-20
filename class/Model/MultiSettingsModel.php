@@ -33,6 +33,21 @@ class MultiSettingsModel extends \ShortPixel\Model\SettingsModel
   /** @var string WordPress network-option name used for persistence. */
   protected $option_name = 'spio_wpmu';
 
+  /**
+   * Read a stored network value without falling back to the site settings model.
+   *
+   * @param string $name Setting name.
+   * @return mixed|null
+   */
+  protected function getStoredValue($name)
+  {
+      if (is_array($this->settings) && array_key_exists($name, $this->settings))
+      {
+          return $this->settings[$name];
+      }
+
+      return null;
+  }
 
   /**
    * Constructor.
@@ -46,6 +61,7 @@ class MultiSettingsModel extends \ShortPixel\Model\SettingsModel
       // Ensure the parent model fields are available and add network-only options.
       $this->model = array_merge($this->model, [
           'disable_site_settings_page' => ['s' => 'boolean', 'default' => false],
+          'network_settings_override_enabled' => ['s' => 'boolean', 'default' => false],
       ]);
 
       parent::__construct();
@@ -100,6 +116,62 @@ class MultiSettingsModel extends \ShortPixel\Model\SettingsModel
   }
 
   /**
+   * Return a network-scoped setting value from the network option store.
+   *
+   * Unlike the site settings model, this instance should never fall back to
+   * the per-site settings store when reading its own values.
+   *
+   * @param string $name Setting name.
+   * @return mixed|null
+   */
+  public function __get($name)
+  {
+      $stored_value = $this->getStoredValue($name);
+      if (null !== $stored_value)
+      {
+          return $this->sanitize($name, $stored_value);
+      }
+
+      if (isset($this->model[$name]))
+      {
+          $default = $this->model[$name]['default'] ?? null;
+          if (is_array($default) && is_callable($default))
+          {
+              return call_user_func($default);
+          }
+
+          return $default;
+      }
+
+      return parent::__get($name);
+  }
+
+  /**
+   * Report whether a setting exists in the network-scoped settings storage.
+   *
+   * @param string $name Setting name.
+   * @return bool
+   */
+  public function isset($name)
+  {
+      return array_key_exists($name, (array) $this->settings);
+  }
+
+  /**
+   * Report whether network-wide settings should override the per-site values.
+   *
+   * This model itself always evaluates its own toggle, rather than consulting
+   * a different settings model instance.
+   *
+   * @return bool
+   */
+  public function isNetworkOverrideEnabled()
+  {
+      $value = $this->getStoredValue('network_settings_override_enabled');
+      return (bool) $value;
+  }
+
+  /**
    * Persist the in-memory settings to `spio_wpmu` via `update_site_option`
    * and clear the parent's `$updated` dirty flag so the shutdown handler
    * does not double-save.
@@ -108,7 +180,7 @@ class MultiSettingsModel extends \ShortPixel\Model\SettingsModel
    */
   protected function save()
   {
-       update_site_option($this->option_name, $this->settings);
+       $bool = update_site_option($this->option_name, $this->settings);
        $this->updated = false;
   }
 

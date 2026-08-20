@@ -79,7 +79,6 @@ class OptimizeAiController extends OptimizerBase
     public function sendToProcessing(QueueItem $qItem)
     {
 
-
         $action = $qItem->data()->action;
 
         switch ($action) {
@@ -466,10 +465,13 @@ class OptimizeAiController extends OptimizerBase
     /**
      * Get post IDs for the same WPML language as the given attachment.
      *
+     * Disabled — replaced by the per-result WPMLCheckReplace() guard below,
+     * which filters at replace time instead of pre-filtering the finder query.
+     *
      * @param int $item_id
      * @return int[]
      */
-    protected function getWpmlLanguagePostIds($item_id)
+    /* protected function getWpmlLanguagePostIds($item_id)
     {
         if (!\wpSPIO()->env()->plugin_active('wpml')) {
             return [];
@@ -491,6 +493,42 @@ class OptimizeAiController extends OptimizerBase
         );
 
         return array_map('intval', $post_ids);
+    } */
+
+    /**
+     * Decide whether an AI text replacement may run on a given post (WPML guard).
+     *
+     * When WPML is active, both the target post and the queue item (attachment)
+     * are resolved through the `wpml_post_language_details` filter; replacement
+     * is only allowed when both languages are known and identical, so pages in
+     * other languages are left untouched. Without WPML the check always passes.
+     *
+     * @param int $post_id       The post_id of the page / post to replace in.
+     * @param int $queue_item_id The attachment ID of the queue item image.
+     * @return bool True when replacing on this post is allowed.
+     */
+    protected function WPMLCheckReplace($post_id, $queue_item_id) : bool
+    {
+        if (!\wpSPIO()->env()->plugin_active('wpml')) {
+            Log::addTemp('WPML not active');
+            return true;
+        }
+
+        $language = apply_filters('wpml_post_language_details', null, $post_id);
+        $language_queue = apply_filters('wpml_post_language_details', null, $queue_item_id);
+
+        if ( (!is_array($language) || empty($language['language_code'])) || !is_array($language_queue) || empty($language_queue['language_code']) ) {
+            return false;
+        }
+
+        if ($language['code'] !== $language_queue['code'])
+        {
+            Log::addTemp('wrong language ( ' . $language['code'] . ' - '  . $language_queue['code'] . ' ) - not replacing this page ', $post_id); 
+             return false; 
+        } 
+
+        Log::addTemp("WPML Approved $post_id - $queue_item_id ");
+        return true; 
     }
 
 
@@ -528,14 +566,13 @@ class OptimizeAiController extends OptimizerBase
         $setup->forSearch()->URL()->addData($url);
 
         $base_url = $setup->forSearch()->URL()->getBaseURL();
-        $post_ids = $this->getWpmlLanguagePostIds($qItem->item_id);
 
         $finder = $replacer2->Finder(['base_url' => $base_url, 'callback' => [$this, 'handleReplace'], 'return_data' => [
             'aiData' => $aiData,
             'qItem' => $qItem,
         ]]);
 
-        $results = $finder->posts(['post_ids' => $post_ids]);
+        $results = $finder->posts();
         return $results;
     }
 
@@ -563,9 +600,9 @@ class OptimizeAiController extends OptimizerBase
      * @param QueueItem $qItem       The queue item providing the image model.
      * @param string    $newFileBase New filename base (without extension) from the AI.
      * @param array     $args        Optional: dry_run (bool), imageThreshold (int), url (string), recent_upload (bool).
-     * @return bool Always returns false.
+     * @return bool .True if it made it to end of replace functions.
      */
-    protected function replaceFiles($qItem, $newFileBase, $args = [])
+    protected function replaceFiles($qItem, $newFileBase, $args = []) : bool
     {
         $defaults = [
             'dry_run' => false,
@@ -601,7 +638,6 @@ class OptimizeAiController extends OptimizerBase
             }
         }
 
-
         $imageModel = $qItem->imageModel;
         $item_id = $qItem->item_id;
 
@@ -611,7 +647,6 @@ class OptimizeAiController extends OptimizerBase
         $files['files'] = array_unique($files['files']);
         $files['webp'] = array_unique($files['webp']);
         $files['avif'] = array_unique($files['avif']);
-
 
         $fs = \wpSPIO()->filesystem();
 
@@ -723,7 +758,28 @@ class OptimizeAiController extends OptimizerBase
 
         $this->replaceMetaData($item_id, $base_filename, $newFileBase, $args['dry_run']);
 
-        return false;
+        return true;
+    }
+
+    public function ajax_replaceFile($qItem, $newFileName)
+    {
+         $imageModel = $qItem->imageModel;
+         if (true === $imageModel->isScaled()) {
+                $url = $imageModel->getOriginalFile()->getURL();
+         } else {
+                $url = $qItem->imageModel->getUrl();
+        }
+
+         $baseReplace = pathinfo(basename($newFileName), PATHINFO_FILENAME); 
+
+         $args = [
+            'url' => $url, 
+            'recent_upload' => true,
+         ];
+
+         $result = $this->replaceFiles($qItem, $baseReplace, $args);
+
+         return $result;
     }
 
     /*
@@ -804,13 +860,14 @@ class OptimizeAiController extends OptimizerBase
     }
 
     // @todo This might be returned in multiple formats / post data / postmeta data?  Public because of callback
-    /** This is the callback for Finder results for replacing attributes on the Images  
-     * 
-     * This function also saves the results!
-     * 
-     * @param mixed $results 
-     * @param mixed $args 
-     * @return void 
+    /** This is the callback for Finder results for replacing attributes on the Images
+     *
+     * This function also saves the results! Each result is first passed through
+     * WPMLCheckReplace(), so posts in a different WPML language are skipped.
+     *
+     * @param mixed $results
+     * @param mixed $args
+     * @return void
      */
     public function handleReplace($results, $args)
     {
@@ -824,6 +881,12 @@ class OptimizeAiController extends OptimizerBase
         foreach ($results as $result) {
             $post_id = $result['post_id'];
             $content = $result['content'];
+
+            // Check if language is correct in case of WPML.  Don't replace different language pages. 
+            if (false === $this->WPMLCheckReplace($post_id, $qItem->item_id))
+            {
+                continue; 
+            }
 
             $matches = $this->fetchImageMatches($content);
             $sources = [];
@@ -1023,6 +1086,7 @@ class OptimizeAiController extends OptimizerBase
     public function getAltData(QueueItem $qItem)
     {
         $item_id = $qItem->item_id;
+        $imageModel = $qItem->imageModel;
 
         $aiModel = AiDataModel::getModelByAttachment($item_id, 'media');
 
@@ -1068,6 +1132,7 @@ class OptimizeAiController extends OptimizerBase
             //      'isSupported' => $this->isSupported($qItem),
             'dataItems' => $dataItems,  // This seems not used(?)
             'isDifferent' =>  $aiModel->currentIsDifferent(),
+            'filename' => $imageModel->getFileName(), 
         ]);
 
 

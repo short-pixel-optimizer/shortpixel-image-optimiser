@@ -130,6 +130,9 @@ class SettingsModel extends \ShortPixel\Model
 
 		protected $settings;
 
+		/** @var \ShortPixel\Model\MultiSettingsModel|null Cached network settings model when multisite overrides are enabled. */
+		protected $networkSettingsModel = null;
+
 		/**
 		 * Wires late-bound defaults for AI settings (which depend on the
 		 * current site's URL, name and locale, so they can't be baked into the
@@ -202,10 +205,13 @@ class SettingsModel extends \ShortPixel\Model
 		/**
 		 * Magic getter — returns a setting value by name, sanitised on read.
 		 *
-		 * When the setting has not been explicitly stored, falls back to the
-		 * model's declared default. Callable defaults are invoked so
-		 * late-binding values (e.g. current locale) resolve at read time.
-		 * Emits a log warning for unknown setting names.
+		 * When multisite network overrides are enabled (see
+		 * isNetworkOverrideEnabled()), a network-provided value takes precedence
+		 * over the per-site stored value. Otherwise, when the setting has not
+		 * been explicitly stored, falls back to the model's declared default.
+		 * Callable defaults are invoked so late-binding values (e.g. current
+		 * locale) resolve at read time. Emits a log warning for unknown setting
+		 * names.
 		 *
 		 * @param string $name Setting name.
 		 * @return mixed|null Sanitised setting value, its default, or null when
@@ -213,6 +219,15 @@ class SettingsModel extends \ShortPixel\Model
 		 */
 		public function __get($name)
 		{
+			 if ($this->isNetworkOverrideEnabled())
+			 {
+				 $network_value = $this->getNetworkSettingValue($name);
+				 if (null !== $network_value)
+				 {
+					 return $network_value;
+				 }
+			 }
+
 			 if (isset($this->settings[$name]))
 			 {
 				  return $this->sanitize($name, $this->settings[$name]);
@@ -368,15 +383,86 @@ class SettingsModel extends \ShortPixel\Model
 
 		/**
 		 * Reports whether a setting has been explicitly stored (as opposed to
-		 * merely having a default).
+		 * merely having a default). Also true when an enabled multisite network
+		 * override provides a value for the setting.
 		 *
 		 * @param string $name Setting name.
 		 * @return bool
 		 */
 		public function isset($name)
 		{
+			if ($this->isNetworkOverrideEnabled())
+			{
+				$network_value = $this->getNetworkSettingValue($name);
+				if (null !== $network_value)
+				{
+					return true;
+				}
+			}
+
 			return (isset($this->settings[$name])) ? true : false;
 
+		}
+
+		/**
+		 * Returns the network settings model when multisite overrides are active.
+		 *
+		 * @return \ShortPixel\Model\MultiSettingsModel|null
+		 */
+		protected function getNetworkSettingsModel()
+		{
+			if (is_null($this->networkSettingsModel) && function_exists('is_multisite') && is_multisite())
+			{
+				if (class_exists('\ShortPixel\Model\MultiSettingsModel'))
+				{
+					$this->networkSettingsModel = \ShortPixel\Model\MultiSettingsModel::getInstance();
+				}
+			}
+
+			return $this->networkSettingsModel;
+		}
+
+		/**
+		 * Returns a network-scope setting value when network override mode is enabled.
+		 *
+		 * @param string $name Setting name.
+		 * @return mixed|null
+		 */
+		protected function getNetworkSettingValue($name)
+		{
+			$network_model = $this->getNetworkSettingsModel();
+			if (! is_object($network_model) || ! method_exists($network_model, 'exists'))
+			{
+				return null;
+			}
+
+			if ($network_model->exists($name))
+			{
+				return $network_model->{$name};
+			}
+
+			return null;
+		}
+
+		/**
+		 * Reports whether network-wide settings should override the per-site values.
+		 *
+		 * @return bool
+		 */
+		public function isNetworkOverrideEnabled()
+		{
+			$network_model = $this->getNetworkSettingsModel();
+			if (! is_object($network_model) || ! method_exists($network_model, 'exists'))
+			{
+				return false;
+			}
+
+			if (! $network_model->exists('network_settings_override_enabled'))
+			{
+				return false;
+			}
+
+			return (bool) $network_model->network_settings_override_enabled;
 		}
 
     /** Check if this entry in settings should be in import / export function . Some are internal / site only .

@@ -260,8 +260,11 @@ class AjaxControllerTest extends WP_UnitTestCase {
 			dirname( __DIR__, 2 ) . '/class/Controller/AjaxController.php'
 		);
 
+		// 'form_submit' was renamed in the network-settings feature (9eed2de9):
+		// site saves now post 'save-settings', network saves 'save-multi-settings'.
 		$expected_cases = array(
-			"'form_submit'",
+			"'save-settings'",
+			"'save-multi-settings'",
 			"'action_addkey'",
 			"'action_debug_redirectBulk'",
 			"'action_debug_removePrevented'",

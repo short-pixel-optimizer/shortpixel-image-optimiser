@@ -59,6 +59,8 @@ class SettingsViewController extends \ShortPixel\ViewController
      protected $is_multisite;
      /** @var bool Whether the current site is the primary (main) site of the network. */
      protected $is_mainsite;
+     /** @var bool Whether the current request runs in the network admin area. */
+     protected $is_network_admin;
      /** @var bool Whether the NextGen Gallery plugin is active. */
      protected $has_nextgen;
      /** @var bool Whether a form save should redirect to the bulk page instead of reloading settings. */
@@ -95,6 +97,9 @@ class SettingsViewController extends \ShortPixel\ViewController
 		 protected $is_ajax_save = false;
      /** @var array<int, mixed> Notices generated during the current request, reported back in AJAX responses. */
 		 protected $notices_added = [];
+
+     /** @var bool Whether this controller renders the WPMU network settings page (see MultiSiteViewController). */
+     protected $is_network_page = false;
 
      /**
       * Accumulates field correction records to be sent back to the JS form.
@@ -149,22 +154,10 @@ class SettingsViewController extends \ShortPixel\ViewController
         }
 
         $this->load_settings();
+        $this->loadView('view-settings');
+
       }
 
-      /**
-       * Stub entry point for AJAX form saves.
-       *
-       * Loads environment state so the controller is ready for downstream
-       * callers. The actual save logic is triggered via checkPost() / processSave()
-       * in the AJAX handler after indicateAjaxSave() has been called.
-       *
-       * @return void
-       */
-			public function saveForm()
-			{
-				 $this->loadEnv();
-
-			}
 
       /**
        * Marks this request as an AJAX save, suppressing the normal page redirect.
@@ -710,9 +703,10 @@ class SettingsViewController extends \ShortPixel\ViewController
        *
        * @return void
        */
-      public function load_settings()
+      protected function load_settings()
       {
          $this->view->data = (Object) $this->model->getData();
+         $this->view->network_override_enabled = (bool) $this->model->isNetworkOverrideEnabled();
 
 				 $this->loadAPiKeyData();
          $this->loadDashBoardInfo();
@@ -753,7 +747,7 @@ class SettingsViewController extends \ShortPixel\ViewController
          if (true === $bool )
             $this->view->hide_banner = true; 
 
-         if ( defined('SHORTPIXEL_NO_BANNER') && SHORTPIXEL_NO_BANNER == true)
+         if ( defined('SHORTPIXEL_NO_BANNER') && \SHORTPIXEL_NO_BANNER == true)
          {
            $this->view->hide_banner = true; 
          }
@@ -761,10 +755,10 @@ class SettingsViewController extends \ShortPixel\ViewController
          //$this->view->latest_ai = $this->getLatestAIExamples();
 				 $this->view->is_unlimited= (!is_null($this->quotaData) && $this->quotaData->unlimited) ? true : false;
 
-         $settings = \wpSPIO()->settings();
-
 				 if ($this->view->data->createAvif == 1)
+         {
            $this->avifServerCheck();
+         }
 
          // Set viewMode
 				 if (false === $this->view->key->is_verifiedkey)
@@ -787,7 +781,6 @@ class SettingsViewController extends \ShortPixel\ViewController
 
 				 $this->view_mode = $view_mode;
 
-				 $this->loadView('view-settings');
       }
 
 
@@ -880,14 +873,11 @@ class SettingsViewController extends \ShortPixel\ViewController
 				 $keyController = ApiKeyController::getInstance();
 
 				 $keyObj = new \stdClass;
-//				 $this->view->key = new \stdClass;
-				 // $this->keyModel->loadKey();
 
 				 $keyObj->is_verifiedkey = $this->keyModel->is_verified();
 				 $keyObj->is_constant_key = $this->keyModel->is_constant();
 				 $keyObj->hide_api_key = $this->keyModel->is_hidden();
 				 $keyObj->apiKey = $keyController->getKeyForDisplay();
-        // $keyObj->redirectedSettings =
 
 				 $showApiKey = false;
 
@@ -960,6 +950,7 @@ class SettingsViewController extends \ShortPixel\ViewController
           $this->is_multisite = $env->is_multisite;
           $this->is_mainsite = $env->is_mainsite;
           $this->has_nextgen = $env->has_nextgen;
+          $this->is_network_admin = $env->is_network_admin;
 
           $this->disable_heavy_features = (false === \wpSPIO()->env()->useVirtualHeavyFunctions()) ? true : false;
 

@@ -24,6 +24,7 @@ use ShortPixel\Model\AccessModel as AccessModel;
 
 use ShortPixel\Controller\View\SettingsViewController as SettingsViewController;
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
+use ShortPixel\Controller\View\MultiSiteViewController;
 use ShortPixel\Model\AiDataModel;
 use ShortPixel\Model\Queue\QueueItem;
 use ShortPixel\ViewController;
@@ -443,11 +444,11 @@ class AjaxController
 				$json = $this->startRemoveLegacy($json, $data);
 				break;
 			case "toolsRemoveAll":
-				$this->checkActionAccess($action, 'is_admin_user');
+				$this->checkActionAccess($action, 'is_super_admin');
 				$json = $this->removeAllData($json, $data);
 				break;
 			case "toolsRemoveBackup":
-				$this->checkActionAccess($action, 'is_admin_user');
+				$this->checkActionAccess($action, 'is_super_admin');
 				$json = $this->removeBackup($json, $data);
 				break;
 			case "loadLogFile":
@@ -505,6 +506,9 @@ class AjaxController
 			case 'media/getEditorPreview': 
 				$this->getEditorPreview($data);
 			break;
+			case 'media/replaceFileName': 
+				$this->replaceFileName($data);
+			break; 
 			default:
 				$json->$type->message = __('Ajaxrequest - no action found', 'shortpixel-image-optimiser');
 				$json->error = self::NO_ACTION;
@@ -520,7 +524,8 @@ class AjaxController
 	 *
 	 * Verifies the nonce (`settings_request`) and requires `is_admin_user` capability.
 	 * Recognised `$_POST['screen_action']` values are routed to `settingsFormSubmit()`:
-	 * `form_submit`, `action_addkey`, `action_debug_*`, `action_request_new_key`,
+	 * `save-settings` (site settings form), `save-multi-settings` (network settings
+	 * form), `action_addkey`, `action_debug_*`, `action_request_new_key`,
 	 * `action_end_quick_tour`.  Any other value logs an error and exits with '0'.
 	 *
 	 * @return void
@@ -535,7 +540,8 @@ class AjaxController
 		$this->checkActionAccess($action, 'is_admin_user');
 
 		switch ($action) {
-			case 'form_submit':
+			case 'save-settings': // usual settings 
+			case 'save-multi-settings': // multisite settings
 			case 'action_addkey':
 			case 'action_debug_redirectBulk':
 			case 'action_debug_removePrevented':
@@ -550,6 +556,7 @@ class AjaxController
 			case 'action_end_quick_tour':
 				$this->settingsFormSubmit($action);
 				break;
+			break;
 			default:
 				Log::addError('Issue with settingsRequest, not valid action');
 				$json = new \stdClass;
@@ -561,18 +568,29 @@ class AjaxController
 	}
 
 	/**
-	 * Delegate a settings form action to SettingsViewController.
+	 * Delegate a settings form action to the settings view controller.
 	 *
-	 * Instantiates `SettingsViewController`, marks it as processing an AJAX save, sets
-	 * the redirect URL from `$_POST['request_url']`, and calls the action method on the
-	 * view controller if it exists, otherwise falls back to `load()`.  Exits afterwards.
+	 * Instantiates `MultiSiteViewController` for `save-multi-settings` (network
+	 * settings form) or `SettingsViewController` otherwise, marks it as processing
+	 * an AJAX save, sets the redirect URL from `$_POST['request_url']`, and calls
+	 * the action method on the view controller if it exists, otherwise falls back
+	 * to `load()`.  Exits afterwards.
 	 *
-	 * @param string $action The action method name to invoke on SettingsViewController.
+	 * @param string $action The action method name to invoke on the view controller.
 	 * @return void  Always exits.
 	 */
 	protected function settingsFormSubmit($action)
 	{
-		$viewController =  new SettingsViewController();
+		if ('save-multi-settings' === $action)
+		{
+			$viewController =  new MultiSiteViewController();
+		}
+		else 
+		{
+			$viewController =  new SettingsViewController();
+		}
+		
+
 		$viewController->indicateAjaxSave(); // set ajax save method
 
 		$url = isset($_POST['request_url']) ? sanitize_text_field($_POST['request_url']) : null;
@@ -1293,6 +1311,52 @@ class AjaxController
 		return $json;
 	}
 
+	protected function replaceFileName($data)
+	{
+		$id = $data['id'];
+		$type = $data['type'];	
+
+		$newFileName = isset($_POST['newFileName']) ? sanitize_file_name($_POST['newFileName']) : false; 
+
+		if (false === $newFileName)
+		{
+		
+			$result_json = [
+			'error' => __('Something went wrong', 'shortpixel-image-optimiser'), 
+			'is_error' => true, 
+			];
+
+		 	$result_json['message'] = __('This image could not be loaded', 'shortpixel-image-optimiser'); 
+		 	$this->send((object) $result_json);
+		}
+
+
+		$imageModel = $this->getMediaItem($id, $type);
+		$this->checkImageAccess($imageModel);
+		
+
+		$queueItem = new QueueItem(['imageModel' => $imageModel]);
+
+		$apiController =  $queueItem->getApiController('requestAlt');
+
+		$result = $apiController->ajax_replaceFile($queueItem, $newFileName);
+
+		// Todo Send this QueueItem to the replaceFiles method. 
+		$result_json = [
+			'is_done' => true, 
+			'message' => (true === $result) ? __('Files were replaced', 'shortpixel-image-optimiser') : __('Files were not replaced', 'shortpixel-image-optimiser'),
+
+		];
+
+		if (false === $result)
+		{
+			 $result_json['is_error'] = true; 
+		}
+
+		$this->send((object) $result_json);
+
+	}
+
 	/**
 	 * Request AI-generated alt text for an image.
 	 *
@@ -1874,6 +1938,7 @@ class AjaxController
 					
 					$result = $optimizer->enqueueItem($qItem, ['preview_only' => true, 'action' => 'retrieveAlt', 'remote_id' => $remote_id]); 
 					$state = 'retrieveAlt';
+					$result->is_done = false; 
 					
 				}
 				elseif ('retrieveAlt' === $state)
@@ -1896,6 +1961,10 @@ class AjaxController
 						 $is_done = true; 
 						 break;  // safe guards.
 
+					}
+					else
+					{
+						Log::addTemp('AiData not set in Ajax');
 					}
 					
 					if ($result->is_done)
@@ -2595,8 +2664,9 @@ class AjaxController
 	 * Verify that the current user has the required capability for an action.
 	 *
 	 * Delegates to `AccessModel::userIsAllowed()` with the provided `$access` level
-	 * (e.g. 'is_author', 'is_editor', 'is_admin_user').  On failure, sends a JSON
-	 * error with `error = NO_ACCESS` and exits.
+	 * (e.g. 'is_author', 'is_editor', 'is_admin_user', 'is_super_admin' — the latter
+	 * used by the site-wide tools `toolsRemoveAll` / `toolsRemoveBackup`). On failure,
+	 * sends a JSON error with `error = NO_ACCESS` and exits.
 	 *
 	 * @param string $action The action name (used only for the error message).
 	 * @param string $access The capability level string as understood by AccessModel.

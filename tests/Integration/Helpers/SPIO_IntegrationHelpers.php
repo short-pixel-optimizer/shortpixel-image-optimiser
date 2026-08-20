@@ -227,8 +227,9 @@ trait SPIO_IntegrationHelpers {
 
 		// Standalone singletons that cache settings-derived state at
 		// construction time (ApiKeyController loads + verifies the key,
-		// QuotaController caches quota) — must re-read per test.
-		foreach ( array( SettingsModel::class, ApiKeyController::class, QuotaController::class ) as $class ) {
+		// QuotaController caches quota, MultiSettingsModel caches the
+		// spio_wpmu network option) — must re-read per test.
+		foreach ( array( SettingsModel::class, \ShortPixel\Model\MultiSettingsModel::class, ApiKeyController::class, QuotaController::class ) as $class ) {
 			$ref = new ReflectionClass( $class );
 			if ( $ref->hasProperty( 'instance' ) ) {
 				$prop = $ref->getProperty( 'instance' );

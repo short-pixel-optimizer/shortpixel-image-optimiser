@@ -164,7 +164,6 @@ class AiDataModel
     /** @var int Field already has content and aiPreserve prevents overwriting. */
     const F_STATUS_PREVENTOVERRIDE = -4;
 
-
     /**
      * Load or initialise the AI data record for a given attachment.
      *
@@ -248,6 +247,9 @@ class AiDataModel
 
     /** Get all data needed to send API for generating AI texts, depending on settings. This includes all settings minus URL
      *
+     * When filename generation is enabled, the `prefer_keep_filename_if_relevant`
+     * flag is sent inside the `file` field object (not at the payload root).
+     *
      * @param array $params Optional override parameters for AI settings.
      * @return array{paramlist: array<string, array{context: mixed, chars: mixed}>, returndatalist: array<string, array<string, int>>}
      *         'paramlist' contains the API request payload; 'returndatalist' contains per-field status codes.
@@ -302,11 +304,6 @@ class AiDataModel
             
         ];
 
-        if (true === $settings->ai_gen_filename)
-        {
-            $paramlist['prefer_keep_filename_if_relevant'] = $settings->ai_filename_prefercurrent;
-        }
-
         if (true === $settings->ai_use_post) {
             $parent_title = $this->getConnectedPostTitle();
             if (false !== $parent_title && false === is_null($parent_title)) {
@@ -344,6 +341,10 @@ class AiDataModel
                     'context' => $settings->{'ai_' . $field_name . '_context'},
                     'chars' => $settings->{'ai_limit_' . $field_name . '_chars'},
                 ];
+                // API expects this flag inside file, not at payload root :)
+                if ('file' === $api_name) {
+                    $paramlist[$api_name]['prefer_keep_filename_if_relevant'] = (bool) $settings->ai_filename_prefercurrent;
+                }
                 $returnDataList[$field_name]['status']  = self::F_STATUS_OK;
                 $field_status = true;
             }

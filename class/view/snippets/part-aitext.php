@@ -21,6 +21,7 @@ $dataItems = implode(', ',$this->data['dataItems']);
 $is_processable = $this->data['is_processable']; 
 $processable_reason = $this->data['processable_reason'];
 $processable_status = $this->data['processable_status'];
+$filename = $this->data['filename'];
 
 $quotaControl = QuotaController::getInstance();
 $keyControl = ApiKeyController::getInstance();
@@ -57,7 +58,7 @@ elseif (false === $has_data):
 
 	<?php else: ?>
 
-        <a class='button button-secondary' title="Generate image SEO data with ShortPixel AI (Beta)" href="javascript:window.ShortPixelProcessor.screen.RequestAlt(<?php echo esc_attr($item_id); ?>)">
+        <a class='button button-secondary' title="Generate image SEO data with ShortPixel AI" href="javascript:window.ShortPixelProcessor.screen.RequestAlt(<?php echo esc_attr($item_id); ?>)">
 			<img class="shortpixel-ai-icon ai" src="<?php echo esc_url($ai_icon); ?>">	
 			<span><?php printf(__('AI Image SEO by ShortPixel %s', 'shortpixel-image-optimiser'), esc_html($dataItems)) ?></span>
 			<img class="shortpixel-ai-icon shortpixel" src="<?php echo esc_url($robo_icon); ?>">
@@ -89,3 +90,14 @@ elseif (false === $has_data):
 	} ?>
 
 <?php endif; ?>
+
+
+<div class="shortpixel-ai-replace-file hidden">
+	<?php _e('File Name :', 'shortpixel-image-optimiser'); ?>
+	<input type="text" name="filename_replace" value="<?php echo esc_attr($filename); ?>" 
+	title="<?php _e('Warning - If this image is already indexed by search engines, please note that no automatic redirects are being added!', 'shortpixel-image-optimiser'); ?>">
+	
+	<span class="copy-to-clipboard-container">
+	<button type="button" class='button button-secondary' name="filename_replace_submit" value="1"><?php _e('Change Filename') ?></button>
+	</span>
+</div>

@@ -139,8 +139,9 @@ class QueueController
           }
       }
 
+      // This should be @todo  be checked when doing AI actions!
       // These checks are across all actions.
-      if ($queue->isDuplicateActive($imageModel))
+      if ($args['action'] !== 'requestAlt' && true === $queue->isDuplicateActive($imageModel))
       {
         $qItem->addResult([
             'fileStatus' => ImageModel::FILE_STATUS_UNPROCESSED,

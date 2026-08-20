@@ -162,6 +162,39 @@ class RestoreFlowTest extends SPIO_IntegrationTestCase {
 		);
 	}
 
+	/**
+	 * Regression for bug #4 (fixed in 1ee7e37e): LocalBackupModel caches its
+	 * backup-directory listing in $backup_files, and BackupController hands
+	 * out ONE static BackupModel per attachment id. Before the fix, restore()
+	 * (and delete()) moved the backup file away WITHOUT resetting that cache,
+	 * so hasBackup() kept returning stale true for the rest of the request —
+	 * even through "fresh" image-model loads, because the static per-id
+	 * BackupModel survives them.
+	 *
+	 * Sentinel: hasBackup() is called BEFORE the restore to populate the
+	 * cache on the exact instance the restore pipeline reuses; with the bug
+	 * present the post-restore call returns true and the test fails.
+	 */
+	public function test_restore_invalidates_backup_cache_in_same_request() {
+		$id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->optimizeAttachment( $id );
+
+		$image  = $this->freshImageModel( $id );
+		$backup = BackupController::getBackupModel( $image );
+		$this->assertTrue(
+			$backup->hasBackup( $image ),
+			'Sanity: backup exists and the $backup_files cache is now populated.'
+		);
+
+		$this->restoreAttachment( $id );
+
+		clearstatcache();
+		$this->assertFalse(
+			$backup->hasBackup( $this->freshImageModel( $id ) ),
+			'hasBackup() on the same-request cached BackupModel must be false after restore (bug #4: stale $backup_files cache, fixed 1ee7e37e).'
+		);
+	}
+
 	public function test_restore_removes_webp_companions() {
 		\wpSPIO()->settings()->createWebp = 1;
 

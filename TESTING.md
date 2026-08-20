@@ -129,12 +129,20 @@ REAL partner plugins — WooCommerce, NextGen Gallery, and WP Offload Media
 Lite — downloaded from wordpress.org (latest stable, zips cached in the
 `wp-tests-cache` volume) and activated natively in the test install.
 
-WPML is commercial (no public download): drop its zip into
-`tests/partner-plugins/` (gitignored) and `--compat` extracts and
-activates it too. To update WPML, replace the zip — the harness
-re-extracts whenever the zip is newer than the extracted copy. Without
-the zip, the WPML tests self-skip. CI does not run the WPML tests (the
-zip can't live in the public repo).
+WPML and its Media Translation add-on are commercial (no public
+download): drop their zips into `tests/partner-plugins/` (gitignored)
+and `--compat` extracts and activates them too. To update one, replace
+its zip — the harness re-extracts whenever the zip is newer than the
+extracted copy. Without the zips, the WPML / Media Translation tests
+self-skip. CI does not run these tests (the zips can't live in the
+public repo).
+
+WPML Media Translation gets its own suite (`test-CompatWPMLMedia.php`):
+its end state — a translation attachment pointing at its OWN physical
+file — must be treated by SPIO as an independent image (no duplicate
+propagation, own API call, no AI fan-out, files untouched when the
+original is deleted), unlike the shared-file duplicates covered in
+`test-CompatWPML.php`.
 
 Polylang is covered hook/data-level (`test-CompatPolylang.php`): the
 suite fakes Polylang's presence via the `pre_option_active_plugins`

@@ -29,8 +29,11 @@ class ShortPixelOnboarding
          this.InitNewKeySwitch();
 
          var addButton = this.root.querySelector('button[name="add-key"]');
-         addButton.addEventListener('click', this.AddKeyEvent.bind(this));
-
+         if (null !== addButton)
+         {
+            addButton.addEventListener('click', this.AddKeyEvent.bind(this));
+         }
+         
          let inputs = ['pluginemail', 'new-key']; 
          for (let i = 0; i < inputs.length; i++)
          {

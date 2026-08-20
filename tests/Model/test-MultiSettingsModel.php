@@ -4,9 +4,13 @@
  *
  * Focuses on the divergence from the per-site SettingsModel:
  *   - the constructor's model-schema merge for `disable_site_settings_page`
+ *     and `network_settings_override_enabled`
  *   - the load() override reading from `get_site_option('spio_wpmu')`
  *   - the save() override writing back to the same key
  *   - a separate singleton pool from SettingsModel
+ *   - the network-scoped read path: __get (stored value or model default,
+ *     no per-site fallback), isset() (storage check, not schema check) and
+ *     isNetworkOverrideEnabled() reading the stored toggle
  *
  * The parent's SettingsModel behaviour (magic __get/__set, sanitisation,
  * shutdown persistence) is covered by test-SettingsModel and is not
@@ -115,6 +119,15 @@ class MultiSettingsModelTest extends WP_UnitTestCase {
 		$this->assertFalse( $model['disable_site_settings_page']['default'] );
 	}
 
+	public function test_constructor_adds_network_override_toggle_to_model_schema() {
+		$m     = MultiSettingsModel::getInstance();
+		$model = $this->getPrivate( $m, 'model' );
+
+		$this->assertArrayHasKey( 'network_settings_override_enabled', $model );
+		$this->assertSame( 'boolean', $model['network_settings_override_enabled']['s'] );
+		$this->assertFalse( $model['network_settings_override_enabled']['default'] );
+	}
+
 	public function test_constructor_preserves_inherited_parent_model_fields() {
 		$m     = MultiSettingsModel::getInstance();
 		$model = $this->getPrivate( $m, 'model' );
@@ -178,6 +191,57 @@ class MultiSettingsModelTest extends WP_UnitTestCase {
 		$this->invokePrivate( $m, 'save' );
 
 		$this->assertFalse( $this->getPrivate( $m, 'updated' ) );
+	}
+
+	/*
+	 * Network-scoped read path — __get / isset() / isNetworkOverrideEnabled()
+	 */
+
+	public function test_get_returns_stored_network_value_sanitized() {
+		update_site_option( self::OPTION_NAME, array( 'createWebp' => 1 ) );
+
+		$m = MultiSettingsModel::getInstance();
+
+		$this->assertTrue( $m->createWebp, 'Stored network value must be returned (sanitized to boolean).' );
+	}
+
+	public function test_get_returns_model_default_when_not_stored_at_network_level() {
+		$m = MultiSettingsModel::getInstance();
+
+		$this->assertFalse( $m->network_settings_override_enabled );
+		$this->assertFalse( $m->disable_site_settings_page );
+	}
+
+	public function test_isset_reports_storage_not_schema() {
+		update_site_option( self::OPTION_NAME, array( 'createWebp' => true ) );
+
+		$m = MultiSettingsModel::getInstance();
+
+		$this->assertTrue( $m->isset( 'createWebp' ), 'isset() must be true for a stored key.' );
+		$this->assertFalse(
+			$m->isset( 'compressionType' ),
+			'isset() must be false for a key that is only declared in the model schema but never stored.'
+		);
+	}
+
+	public function test_isNetworkOverrideEnabled_defaults_to_false() {
+		$m = MultiSettingsModel::getInstance();
+
+		$this->assertFalse( $m->isNetworkOverrideEnabled() );
+	}
+
+	public function test_isNetworkOverrideEnabled_reads_stored_toggle() {
+		update_site_option( self::OPTION_NAME, array( 'network_settings_override_enabled' => true ) );
+
+		$m = MultiSettingsModel::getInstance();
+
+		$this->assertTrue( $m->isNetworkOverrideEnabled() );
+	}
+
+	public function test_site_settingsmodel_network_override_is_disabled_on_single_site() {
+		// The unit suite runs single-site: the site model must never consult
+		// a network model there.
+		$this->assertFalse( SettingsModel::getInstance()->isNetworkOverrideEnabled() );
 	}
 
 	public function test_save_then_load_roundtrip_via_the_site_option() {

@@ -264,7 +264,8 @@ class QueueItemData
          * the field name, and the current value of that field will be
          * captured at getKeepDataArgs() time) or a name/value pair (string
          * key → the value is used verbatim). A non-array $args is wrapped
-         * so single-value calls are convenient.
+         * so single-value calls are convenient. Repeated registrations of the
+         * same entry are deduplicated (array_unique).
          *
          * @param mixed $args Preserved-data entries; see semantics above.
          * @return void
@@ -281,7 +282,7 @@ class QueueItemData
              }
              else
              {
-                $this->next_keepdata = array_merge($this->next_keepdata, $args);
+                $this->next_keepdata = array_unique(array_merge($this->next_keepdata, $args));
              }
 
         }

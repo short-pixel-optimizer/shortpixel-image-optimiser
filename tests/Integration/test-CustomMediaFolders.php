@@ -904,4 +904,51 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 		$this->assertNotFalse( $avifFile, 'An AVIF companion model must be returned after re-running with createAvif=1 (row 6.18).' );
 		$this->assertTrue( $avifFile->exists(), 'The AVIF companion file must exist on disk after the third pass (row 6.18).' );
 	}
+
+	// -------------------------------------------------------------------
+	// Meta persistence: lastSave timestamp (aecd4279)
+	// -------------------------------------------------------------------
+
+	/**
+	 * Since aecd4279, CustomImageModel::saveMeta() ALWAYS json_encodes
+	 * extra_info (previously null when empty) and stamps it with a
+	 * 'lastSave' datetime (for debugging / support). Optimizing a custom
+	 * image must leave a parseable, recent lastSave on its shortpixel_meta
+	 * row.
+	 */
+	public function test_optimize_writes_lastsave_timestamp_in_extra_info() {
+		global $wpdb;
+
+		$before = time();
+
+		$folder = $this->addCustomFolder();
+		$rows   = $this->customImageRows( (int) $folder->get( 'id' ) );
+		$id     = array_search( 'custom-photo.jpg', $rows, true );
+		$this->assertIsInt( $id );
+
+		( new QueueController() )->addItemToQueue( \wpSPIO()->filesystem()->getImage( $id, 'custom' ) );
+		$this->runQueueUntilEmpty();
+
+		$this->assertTrue( $this->freshCustomImage( $id )->isOptimized() );
+
+		$extra_info = $wpdb->get_var( $wpdb->prepare(
+			"SELECT extra_info FROM {$wpdb->prefix}shortpixel_meta WHERE id = %d",
+			$id
+		) );
+		$this->assertNotEmpty( $extra_info, 'extra_info must never be null after a save (aecd4279: always json_encoded).' );
+
+		$decoded = json_decode( $extra_info, true );
+		$this->assertIsArray( $decoded, 'extra_info must be valid JSON.' );
+		$this->assertArrayHasKey( 'lastSave', $decoded, 'extra_info must contain the lastSave timestamp (aecd4279).' );
+
+		$this->assertMatchesRegularExpression(
+			'/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/',
+			$decoded['lastSave'],
+			'lastSave must be a Y-m-d H:i:s datetime string.'
+		);
+
+		$saved = strtotime( $decoded['lastSave'] );
+		$this->assertGreaterThanOrEqual( $before - 1, $saved, 'lastSave must not predate the optimization run.' );
+		$this->assertLessThanOrEqual( time() + 1, $saved, 'lastSave must not lie in the future.' );
+	}
 }
