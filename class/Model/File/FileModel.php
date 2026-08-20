@@ -850,7 +850,11 @@ class FileModel extends \ShortPixel\Model
 				{
 					$this->filesize = 0;
 				}
+
+        return true; 
 		}
+
+    return false;
 
 	}
 

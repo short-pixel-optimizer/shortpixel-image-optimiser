@@ -780,6 +780,21 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 			if ($this->getMeta($type) === self::FILETYPE_BIGGER)
 				return false;
 
+      // If trustedMode is on, each path returns as exists by default, which makes the whole webp / avif check here useless. 
+      // Instead poor-mans approach would be to check the setting and if on, return ok. 
+      if (true === $this->checkTrustedMode())
+      {
+         $setname = ('webp' == $type) ? 'createWebp' : 'createAvif';  
+         if (true === \wpSPIO()->settings()->{$setname} )
+         {
+           return true; 
+         }
+         else 
+         {
+           return false; 
+         }
+      }
+
 	    if (! is_null($this->getMeta($type)))
 	    {
 				// Filter to disable assumption(s) on the file basis of imageType.  Active when something has manually been deleted.

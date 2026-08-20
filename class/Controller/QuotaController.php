@@ -220,7 +220,7 @@ class QuotaController
               'CaptionsCallsRemaining'
         ]; 
 
-          if($settings->httpProto != 'https' && $settings->httpProto != 'http') {
+          if($settings->httpProto !== 'https' && $settings->httpProto !== 'http') {
               $settings->httpProto = 'https';
           }
 

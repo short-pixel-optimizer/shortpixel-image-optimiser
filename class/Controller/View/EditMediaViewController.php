@@ -15,6 +15,7 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Helper\UiHelper as UiHelper;
 
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
+use ShortPixel\Helper\DownloadHelper;
 use ShortPixel\Model\AiDataModel;
 use ShortPixel\Model\Converter\Converter;
 use ShortPixel\Model\File\DirectoryModel;
