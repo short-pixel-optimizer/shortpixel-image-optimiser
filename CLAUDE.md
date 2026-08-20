@@ -44,7 +44,7 @@ bin/test.sh --ms                   # multisite suite
 bin/test.sh --compat               # cross-plugin compatibility suite
 bin/test.sh --all                  # unit + integration + compat
 bin/test.sh --php 8.5 --integration
-bin/test.sh tests/Model/test-ImageModel.php
+bin/test.sh --testsuite model --filter ImageModelTest   # single file: filter on CLASS name (file paths don't work — PHPUnit can't map test-Foo.php to FooTest)
 ```
 
 Unit bootstrap: `tests/bootstrap.php`; integration bootstrap:

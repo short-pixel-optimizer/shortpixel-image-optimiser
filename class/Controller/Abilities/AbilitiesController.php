@@ -146,7 +146,7 @@ class AbilitiesController
 
 		$abilities = [];
 
-		// --- Read-only abilities for now (to see if i'm on right path adn i'll introduce actions abilities later if i see everyting looks good)---
+		// --- Read-only abilities ---
 
 		$abilities['shortpixel/get-stats'] = [
 			'label'               => __( 'Get Optimization Stats', 'shortpixel-image-optimiser' ),
