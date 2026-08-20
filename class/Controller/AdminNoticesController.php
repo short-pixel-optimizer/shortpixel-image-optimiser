@@ -515,71 +515,6 @@ class AdminNoticesController extends \ShortPixel\Controller
         }
     }
 
-    /**
-     * Render the upgrade-options popup view inline (not an AJAX handler).
-     *
-     * Loads the `snippets/part-upgrade-options` view template directly.
-     *
-     * @return void
-     */
-    public function proposeUpgradePopup() {
-        $view = new ViewController();
-        $view->loadView('snippets/part-upgrade-options');
-    }
-
-    /**
-     * AJAX endpoint: fetch the personalised upgrade proposal fragment from shortpixel.com.
-     *
-     * Posts the plugin version, API key, monthly usage stats (m1-m4), remaining files
-     * count and WebP/AVIF flags to `https://shortpixel.com/propose-upgrade-frag`,
-     * then echoes the returned HTML fragment and dies.
-     *
-     * @return void Never returns; ends the request with die().
-     */
-    public function proposeUpgradeRemote()
-    {
-        //$stats = $this->countAllIfNeeded($this->_settings->currentStats, 300);
-        $statsController = StatsController::getInstance();
-        $apiKeyController = ApiKeyController::getInstance();
-        $settings = \wpSPIO()->settings();
-
-        $webpActive = ($settings->createWebp) ? true : false;
-        $avifActive =  ($settings->createAvif) ? true : false;
-
-        $args = array(
-            'method' => 'POST',
-            'timeout' => 10,
-            'redirection' => 5,
-            'httpversion' => '1.0',
-            'blocking' => true,
-            'headers' => array(),
-            'body' => array("params" => json_encode(array(
-                'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
-                'key' => $apiKeyController->forceGetApiKey(),
-                'm1' => $statsController->find('period', 'months', '1'),
-                'm2' => $statsController->find('period', 'months', '2'),
-                'm3' => $statsController->find('period', 'months', '3'),
-                'm4' => $statsController->find('period', 'months', '4'),
-                'filesTodo' => $statsController->totalImagesToOptimize(),
-                'estimated' => $settings->optimizeUnlisted || $settings->optimizeRetina ? 'true' : 'false',
-                'webp' => $webpActive,
-                'avif' => $avifActive,
-                /* */
-                'iconsUrl' => base64_encode(wpSPIO()->plugin_url('res/img'))
-            ))),
-            'cookies' => array()
-
-        );
-
-
-        $proposal = wp_remote_post("https://shortpixel.com/propose-upgrade-frag", $args);
-
-        if(is_wp_error( $proposal )) {
-            $proposal = array('body' => __('Error. Could not contact ShortPixel server for proposal', 'shortpixel-image-optimiser'));
-        }
-        die( $proposal['body'] );
-
-    }
 
     /**
      * Fetch the remote notices feed from the ShortPixel API (cached for one day).
@@ -750,35 +685,32 @@ class AdminNoticesController extends \ShortPixel\Controller
             if (! isset($matches[1]))
                 return ''; // no update texts.
 
-            $match = str_replace('\n', '', $matches[1]);
-            $lines = str_split(trim($match));
+            $match = $matches[1];
+            $versions = [];
+            $current_version = null;
+            $current_message = '';
 
-            $versions = array();
-            $inv = false;
-            foreach($lines as $char)
+            foreach (preg_split('/\R/', trim($match)) as $line)
             {
-                //if (count($versions) == 0)
-                if ($char == '=' && ! $inv) // = and not recording version, start one.
+                if (preg_match('/^\s*=\s*([^=\r\n]+?)\s*=\s*$/', $line, $version_match))
                 {
-                    $curver = '';
-                    $inv = true;
-                }
-                elseif ($char == ' ' && $inv) // don't record spaces in version
-                    continue;
-                elseif ($char == '=' && $inv) // end of version line
-                {  $versions[trim($curver)] = '';
-                    $inv = false;
-                }
-                elseif($inv) // record the version string
-                {
-                    $curver .= $char;
-                }
-                elseif(! $inv)  // record the message
-                {
-                    $versions[trim($curver)] .= $char;
-                }
+                    if ($current_version !== null)
+                    {
+                        $versions[$current_version] = trim($current_message);
+                    }
 
+                    $current_version = trim($version_match[1]);
+                    $current_message = '';
+                }
+                elseif ($current_version !== null)
+                {
+                    $current_message .= $line . "\n";
+                }
+            }
 
+            if ($current_version !== null)
+            {
+                $versions[$current_version] = trim($current_message);
             }
 
             foreach($versions as $version => $line)

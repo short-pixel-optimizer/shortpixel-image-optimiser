@@ -2460,27 +2460,6 @@ class AjaxController
 		exit();
 	}
 	*/
-	
-	/**
-	 * AJAX handler: trigger a remote quota-upgrade proposal popup.
-	 *
-	 * Action: `wp_ajax_shortpixel_propose_upgrade`.
-	 *
-	 * Verifies the nonce (`ajax_request`) and `is_editor` capability, then calls
-	 * `AdminNoticesController::proposeUpgradeRemote()` which fetches and outputs the
-	 * upgrade fragment from ShortPixel's servers.  Exits immediately after.
-	 *
-	 * @return void  Always exits.
-	 */
-	public function ajax_proposeQuotaUpgrade()
-	{
-		$this->checkNonce('ajax_request');
-		$this->checkActionAccess('propose_upgrade', 'is_editor');
-
-		$notices = AdminNoticesController::getInstance();
-		$notices->proposeUpgradeRemote();
-		exit();
-	}
 
 	/**
 	 * AJAX handler: force a remote quota refresh and report the current state.

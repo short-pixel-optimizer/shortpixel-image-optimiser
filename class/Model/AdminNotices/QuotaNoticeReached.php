@@ -32,12 +32,8 @@ class QuotaNoticeReached extends \ShortPixel\Model\AdminNoticeModel
 	 */
 	public function load()
 	{
-    // $this->callback = array(AdminNoticesController::getInstance(), 'proposeUpgradePopup');
      $bool = parent::load();
-     if (true === $bool && is_object($this->notice))
-     {
-        AdminNoticesController::getInstance()->proposeUpgradePopup();
-     }
+    
 	}
 
 	/**
@@ -120,15 +116,25 @@ class QuotaNoticeReached extends \ShortPixel\Model\AdminNoticeModel
 						$message .= sprintf(__('<strong> %s images and thumbnails</strong> have not been optimized by ShortPixel yet.','shortpixel-image-optimiser'), $totalImagesToOptimize  );
 				}
 
+			
+			$upgradeButton = sprintf('<a href="https://shortpixel.com/ms/af/KZYK08Q28044" target="_blank" class="button button-primary" style="margin-right:10px;" >
+							%s </a> ',
+				   __('Buy credits', 'shortpixel-image-optimiser'));
+
 			 $message .= sprintf('</p>
 					<div>
-						<button class="button button-primary" type="button" id="shortpixel-upgrade-advice" onclick="ShortPixel.proposeUpgrade()" style="margin-right:10px;"><strong>' .  __('Show me the best available options', 'shortpixel-image-optimiser') . '</strong></button>
-						<a class="button button-primary" href="%s"
-							 title="' . __('Go to My Account and choose a plan','shortpixel-image-optimiser') . '" target="_blank" style="margin-right:10px;">
-								<strong>' . __('Upgrade','shortpixel-image-optimiser') . '</strong>
-						</a>
-						<button type="button" name="checkQuota" class="button" onclick="ShortPixel.checkQuota()">'.  __('Confirm new credits','shortpixel-image-optimiser') . '</button>
-				</div>', $login_url);
+					%s
+					<a class="button button-primary" href="%s"
+					 title="%s" target="_blank" style="margin-right:10px;">
+					 <strong>%s</strong>
+					</a>	
+					<button type="button" name="checkQuota" class="button" onclick="ShortPixel.checkQuota()">%s</button>
+				</div>', $upgradeButton, 
+				esc_url($login_url),
+				__('Go to My Account and choose a plan','shortpixel-image-optimiser'),
+				__('Upgrade','shortpixel-image-optimiser'),
+				__('Confirm new credits','shortpixel-image-optimiser')
+				);
 
 			$message .= '</div>'; /// closing div
 			return $message;

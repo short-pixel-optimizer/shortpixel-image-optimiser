@@ -43,13 +43,6 @@ var ShortPixel = function() {
         // Extracting the protected Array from within the 0 element of the parent array
         ShortPixel.setOptions(ShortPixelConstants[0]);
 
-				/*if (jQuery('#shortpixel-form-request-key').length > 0)
-				{
-					  jQuery('#pluginemail').on('change, keyup', jQuery.proxy(this.updateSignupEmail, this));
-						jQuery('#request_key').on('mouseenter', jQuery.proxy(this.updateSignupEmail, this));
-						jQuery('#request_key').on('click', jQuery.proxy(this.newApiKey, this));
-				} */
-
         if (window.ShortPixelProcessor)
 				{
           window.ShortPixelProcessor.Load(ShortPixel['HAS_QUOTA']);
@@ -72,42 +65,6 @@ var ShortPixel = function() {
             ShortPixel[opt] = options[opt];
         }
     }
-
-    function updateSignupEmail() {
-
-				clearTimeout( ShortPixel.updateTimer );
-
-				ShortPixel.updateTimer = setTimeout( function() {
-
-        var email = jQuery('#pluginemail').val().trim();
-				var $submit = jQuery('#request_key');
-				var isValid = ShortPixel.isEmailValid(email)
-        if(isValid) {
-            jQuery('#request_key').removeClass('disabled');
-						$submit.removeClass('disabled');
-						$submit.removeAttr('disabled');
-        }
-				else
-				{
-						$submit.attr('disabled', true);
-					  $submit.addClass('disabled');
-				}
-        jQuery('#request_key').attr('href', jQuery('#request_key').attr('href').split('?')[0] + '?pluginemail=' + email);
-			}, 1000);
-    }
-
-    // Settings part-general
-    function validateKey(button){
-        jQuery('#valid').val('validate');
-
-        jQuery(button).parents('form').submit();
-    }
-
-    jQuery("#key").on('keypress', function(e) {
-        if(e.which == 13) {
-            jQuery('#valid').val('validate');
-        }
-    });
 
 
     // Settings part-general
@@ -189,23 +146,8 @@ var ShortPixel = function() {
 
     }
 
-    function checkThumbsUpdTotal(el) {
-        var total = jQuery("#" +(el.checked ? "total" : "main")+ "ToProcess").val();
-        jQuery("div.bulk-play span.total").text(total);
-        jQuery("#displayTotal").text(total);
-    }
-
     function initSettings() {
-      //  ShortPixel.adjustSettingsTabs();
         ShortPixel.setupGeneralTab(); // certain alerts.
-
-
-
-        jQuery("article.sp-tabs a.tab-link").on('click', function(e){
-            var theID = jQuery(e.target).data("id");
-            ShortPixel.switchSettingsTab( theID );
-        });
-
     }
 
    
@@ -234,101 +176,9 @@ var ShortPixel = function() {
                  return value + '%';
             }
         });
-    }
-
-  /*function browseContent(browseData) {
-        browseData.action = 'shortpixel_browse_content';
-
-        var browseResponse = "";
-        jQuery.ajax({
-            type: "POST",
-            url: ShortPixel.AJAX_URL,
-            data: browseData,
-            success: function(response) {
-                 browseResponse = response;
-            },
-            async: false
-        });
-        return browseResponse;
-    } */
-
-
-    function newApiKey(event) {
-				event.preventDefault();
-        ShortPixel.updateSignupEmail();
-
-        if(!jQuery("#tos").is( ":checked" )) {
-            event.preventDefault();
-            jQuery("#tos-robo").fadeIn(400,function(){jQuery("#tos-hand").fadeIn();});
-            jQuery("#tos").click(function(){
-                jQuery("#tos-robo").css("display", "none");
-                jQuery("#tos-hand").css("display", "none");
-            });
-            return;
-        }
-				if (jQuery('#request_key').is(':disabled'))
-				{
-					return false;
-				}
-        jQuery('#request_key').addClass('disabled');
-        jQuery('#pluginemail_spinner').addClass('is-active');
-
-				jQuery('#shortpixel-form-request-key').submit();
-
-    }
-
-    function proposeUpgrade() {
-        //first open the popup window with the spinner
-        jQuery("#shortPixelProposeUpgrade .sp-modal-body").addClass('sptw-modal-spinner');
-        jQuery("#shortPixelProposeUpgrade .sp-modal-body").html("");
-        jQuery("#shortPixelProposeUpgradeShade").css("display", "block");
-        jQuery("#shortPixelProposeUpgrade").removeClass('shortpixel-hide');
-        jQuery("#shortPixelProposeUpgradeShade").on('click', this.closeProposeUpgrade);
-        //get proposal from server
-        var browseData = { 'action': 'shortpixel_propose_upgrade', nonce: ShortPixelConstants[0].nonce_ajaxrequest};
-        jQuery.ajax({
-            type: "POST",
-            url: ShortPixel.AJAX_URL,
-            data: browseData,
-            success: function(response) {
-                jQuery("#shortPixelProposeUpgrade .sp-modal-body").removeClass('sptw-modal-spinner');
-                jQuery("#shortPixelProposeUpgrade .sp-modal-body").html(response);
-            },
-						complete: function(response, status)
-						{
-
-						}
-        });
-    }
-
-    function closeProposeUpgrade() {
-        jQuery("#shortPixelProposeUpgradeShade").css("display", "none");
-        jQuery("#shortPixelProposeUpgrade").addClass('shortpixel-hide');
-        if(ShortPixel.toRefresh) {
-            ShortPixel.checkQuota();
-        }
-    }
-
-    // used in bulk restore all interface
-    function checkRandomAnswer(e)
-    {
-        var value = jQuery(e.target).val();
-        var answer = jQuery('input[name="random_answer"]').val();
-        var target = jQuery('input[name="random_answer"]').data('target');
-
-        if (value == answer)
-        {
-          jQuery(target).removeClass('disabled').prop('disabled', false);
-          jQuery(target).removeAttr('aria-disabled');
-
-        }
-        else
-        {
-            jQuery(target).addClass('disabled').prop('disabled', true);
-        }
-
-    }
-
+    }    
+   
+   // In use: UIHELPER.php.  @todo remove . 
     function openImageMenu(e) {
             e.preventDefault();
             //install (lazily) a window click event to close the menus
@@ -345,6 +195,7 @@ var ShortPixel = function() {
             if(!shown) e.target.parentElement.classList.add("sp-show");
     }
 
+    // In Use - UIHelper.php 
 // @todo Comparer should probably move to screen-base js
     function loadComparer(id, type) {
         this.comparerData.origUrl = false;
@@ -445,50 +296,20 @@ var ShortPixel = function() {
 
     }
 
-    function convertPunycode(url) {
-        var parser = document.createElement('a');
-        parser.href = url;
-        if(url.indexOf(parser.protocol + '//' + parser.hostname) < 0) {
-            return parser.href;
-        }
-        return url.replace(parser.protocol + '//' + parser.hostname,  parser.protocol + '//' + parser.hostname.split('.').map(function(part) {return sp_punycode.toASCII(part)}).join('.'));
-    }
-
-
-
     return {
         init                : init,
         didInit             : false,
         setOptions          : setOptions,
-        //isEmailValid        : isEmailValid,
-        updateSignupEmail   : updateSignupEmail,
-        validateKey         : validateKey,
         enableResize        : enableResize,
         setupGeneralTab     : setupGeneralTab,
-  //      apiKeyChanged       : apiKeyChanged,
-        checkThumbsUpdTotal : checkThumbsUpdTotal,
         initSettings        : initSettings,
-      //  switchSettingsTab   : switchSettingsTab,
-      //  closeHelpPane       : closeHelpPane,
         checkQuota          : checkQuota,
         percentDial         : percentDial,
-      //  initFolderSelector  : initFolderSelector,
-    //    browseContent       : browseContent,
-        newApiKey           : newApiKey,
-        proposeUpgrade      : proposeUpgrade,
-        closeProposeUpgrade : closeProposeUpgrade,
-  //      includeUnlisted     : includeUnlisted,
-        checkRandomAnswer : checkRandomAnswer,
-      //  recheckQuota        : recheckQuota,
         openImageMenu       : openImageMenu,
         menuCloseEvent      : false,
         loadComparer        : loadComparer,
         displayComparerPopup: displayComparerPopup,
         closeComparerPopup  : closeComparerPopup,
-        convertPunycode     : convertPunycode,
-      //  checkExifWarning    : checkExifWarning,
-      //  checkBackUpWarning  : checkBackUpWarning,
-			//	checkSmartCropWarning: checkSmartCropWarning,
         comparerData        : {
             cssLoaded   : false,
             jsLoaded    : false,
