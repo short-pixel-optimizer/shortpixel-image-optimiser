@@ -221,7 +221,7 @@ class Replacer
 		// If the two sides are disbalanced, the str_replace part will cause everything that has an empty replace counterpart to replace it with empty. Unwanted.
 		if (count($search_urls) !== count($replace_urls)) {
 			Log::addError('Unbalanced Replace Arrays, aborting', array($search_urls, $replace_urls, count($search_urls), count($replace_urls)));
-			$errors[] = __('There was an issue with updating your image URLS: Search and replace have different amount of values. Aborting updating thumbnails', 'shortpixel-image-optimiser');
+			$errors[] = __('There was an issue with updating your image URLS: Search and replace have different amount of values. Aborting updating thumbnails', 'enable-media-replace');
 			return $errors;
 		}
 
@@ -411,6 +411,10 @@ class Replacer
 		if (true === is_serialized($content)) {
 			$serialized_content = $content; // use to return content back if incomplete classes are found, prevent destroying the original information
 
+			if (false === $strict_check) {
+				$strict_check = $this->containsMagicMethods($content);
+			}
+
 			if (true === $strict_check) {
 				$args = array('allowed_classes' => false);
 			} else {
@@ -459,6 +463,7 @@ class Replacer
 				} else { // else just return the content.
 					return $content;
 				}
+
 			}
 			foreach ($content as $key => $value) {
 				$content->{$key} = $this->replaceContent($value, $search, $replace, true);
@@ -480,6 +485,33 @@ class Replacer
 			$content = maybe_serialize($content);
 		}
 		return $content;
+	}
+
+	private function containsMagicMethods($serialized_content) : bool 
+	{
+		preg_match_all('/[OC]:\d+:"([^"]+)":/', $serialized_content, $matches);
+
+		$magic_methods = array(
+			'__construct', '__destruct', '__call', '__callStatic',
+			'__get', '__set', '__isset', '__unset', '__sleep',
+			'__wakeup', '__serialize', '__unserialize', '__set_state',
+			'__clone', '__debugInfo', '__toString', '__invoke'
+		);
+
+		foreach (array_unique($matches[1]) as $class_name) {
+			if (!class_exists($class_name, false)) {
+				continue;
+			}
+
+			$reflection = new \ReflectionClass($class_name);
+			foreach ($magic_methods as $method_name) {
+				if ($reflection->hasMethod($method_name)) {
+					return true;
+				}
+			}
+		}
+
+		return false;
 	}
 
 	/** Check if path is allowed within openbasedir restrictions. This is an attempt to limit notices in file funtions if so.  Most likely the path will be relative in that case.

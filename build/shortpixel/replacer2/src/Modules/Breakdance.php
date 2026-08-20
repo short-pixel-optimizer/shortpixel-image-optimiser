@@ -1,7 +1,5 @@
 <?php
 namespace ShortPixel\Replacer\Modules;
-
-use ReflectionMethod;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 
@@ -110,30 +108,12 @@ class Breakdance
 
       $global = \Breakdance\Data\get_global_option('global_settings_json_string');
 
-      $tree = json_encode($content, JSON_UNESCAPED_SLASHES);
+      $content = json_encode($content, JSON_UNESCAPED_SLASHES);
+      \Breakdance\Data\save_document($content, $global, null, $meta_row['post_id']);
 
-    
-     $paramCount = 4; // Default. 
-     try 
-     {
-       $method = new \ReflectionFunction('Breakdance\Data\save_document');
-       $paramCount = $method->getNumberOfParameters();
-     }
-     catch (\Exception $e)
-     {
-        Log::addError('Reflection check in breakdance failing', $e);
-     }
-
-     // Old vs New.  Tried via Ajax Method which seems more dynamic, put this path ends the PHP script via send_json. 
-     if (4 === $paramCount)
-     {
-          \Breakdance\Data\save_document($tree, $global, null, $meta_row['post_id']);
-     }
-     elseif (10 === $paramCount)
-     {
-          \Breakdance\Data\save_document($tree, false, false, false, false, false, false, false, false, $meta_row['post_id']);
-     }
-    
+      /*  return \Breakdance\Data\encode_before_writing_to_wp([
+          'tree_json_string' => $content,
+        ], true); */
 
        return $content;
     }
