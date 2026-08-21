@@ -432,7 +432,11 @@ class OptimizeAiController extends OptimizerBase
                     'url' => $url, 
                 ];
 
-                $this->replaceFiles($qItem, $aiData['filebase'], $args);
+                $files_replaced = $this->replaceFiles($qItem, $aiData['filebase'], $args);
+                if (true === $files_replaced)
+                {
+                     $qItem->addResult(['redirect' => 'reload']);
+                }
             }
 
             // Reset when files change.
@@ -779,7 +783,7 @@ class OptimizeAiController extends OptimizerBase
 
          $result = $this->replaceFiles($qItem, $baseReplace, $args);
 
-         return $result;
+         
     }
 
     /*
@@ -1132,7 +1136,7 @@ class OptimizeAiController extends OptimizerBase
             //      'isSupported' => $this->isSupported($qItem),
             'dataItems' => $dataItems,  // This seems not used(?)
             'isDifferent' =>  $aiModel->currentIsDifferent(),
-            'filename' => $imageModel->getFileName(), 
+            'filename' => ($imageModel->isScaled()) ? $imageModel->getOriginalFile()->getFileName() : $imageModel->getFileName(), 
         ]);
 
 

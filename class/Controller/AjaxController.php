@@ -1345,7 +1345,7 @@ class AjaxController
 		$result_json = [
 			'is_done' => true, 
 			'message' => (true === $result) ? __('Files were replaced', 'shortpixel-image-optimiser') : __('Files were not replaced', 'shortpixel-image-optimiser'),
-
+			'redirect' => 'reload', 
 		];
 
 		if (false === $result)
