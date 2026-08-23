@@ -771,8 +771,13 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
      * `shortpixel/image/filecheck` filter is enabled, the filesystem is
      * re-checked and stale meta entries are cleared.
      *
+     * In trusted mode file-existence checks always report true, so the
+     * variant is instead assumed to exist only when its generation setting
+     * (createWebp / createAvif) is enabled — in that case boolean true is
+     * returned rather than a FileModel.
+     *
      * @param string $type Either 'webp' or 'avif'.
-     * @return \ShortPixel\Model\File\FileModel|false File model for the variant, or false when none exists.
+     * @return \ShortPixel\Model\File\FileModel|bool File model for the variant, false when none exists, or true in trusted mode when the createWebp/createAvif setting says one should exist.
      */
 	  protected function getImageType($type = 'webp')
 	  {

@@ -821,7 +821,7 @@ class FileModel extends \ShortPixel\Model
 	 * readability / writability flags accordingly so the potentially
 	 * expensive real filesystem calls are never triggered.
 	 *
-	 * @return void
+	 * @return bool True when trusted mode is active (flags were set), false otherwise.
 	 */
 	protected function checkTrustedMode()
 	{
