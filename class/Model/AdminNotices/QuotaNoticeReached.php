@@ -85,7 +85,7 @@ class QuotaNoticeReached extends \ShortPixel\Model\AdminNoticeModel
 
 				$message .= '<div style="float:right;">
 						<div class="bulk-progress-indicator" style="height: 110px">
-								<div style="margin-bottom:5px">' . __('Average image<br>reduction until now:','shortpixel-image-optimiser') . '</div>
+								<div style="margin-top:5px">' . __('Average image<br>reduction until now:','shortpixel-image-optimiser') . '</div>
 								<div id="sp-avg-optimization"><input type="text" id="sp-avg-optimization-dial" value="' . round($averageCompression) . '" class="dial percentDial" data-dialsize="60"></div>
 								<script>
 										jQuery(function() {
@@ -132,7 +132,7 @@ class QuotaNoticeReached extends \ShortPixel\Model\AdminNoticeModel
 				</div>', $upgradeButton, 
 				esc_url($login_url),
 				__('Go to My Account and choose a plan','shortpixel-image-optimiser'),
-				__('Upgrade','shortpixel-image-optimiser'),
+				__('Upgrade to Unlimited','shortpixel-image-optimiser'),
 				__('Confirm new credits','shortpixel-image-optimiser')
 				);
 
