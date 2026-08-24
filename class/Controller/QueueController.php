@@ -82,7 +82,13 @@ class QueueController
   /**
    * Add a single item to the queue
    *
-   * @param ImageModel $imageModel 
+   * For requestAlt actions on WPML-duplicated attachments, each language
+   * variant is enqueued separately first (addWpmlAiItemsToQueue), and the
+   * duplicate-active check is skipped — every attachment record needs its
+   * own AI request, and the just-queued variants must not make the original
+   * count as an active duplicate (d55dbeca, fix for #42).
+   *
+   * @param ImageModel $imageModel
    * @param array $args
    * @return Object Result object
    */

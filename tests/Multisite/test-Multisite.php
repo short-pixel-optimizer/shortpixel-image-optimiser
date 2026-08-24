@@ -17,8 +17,8 @@
  *     network admin menu entry, the network_settings_override_enabled read
  *     path on the per-site SettingsModel (network defaults win by design —
  *     ex-#36, closed as intended), the fixed #37 super-admin AJAX access
- *     (4acf1395), and pinned bug #39 (is_super_admin missing from the
- *     AccessModel caps map).
+ *     (4acf1395), and the fixed #39 (is_super_admin now maps to
+ *     manage_network since 1fc98025 — regression-tested).
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -391,19 +391,19 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * PINNED bug #39: the 'is_super_admin' access level used by the #37 fix
-	 * (4acf1395) is NOT defined in AccessModel::setDefaultPermissions(), so
-	 * getCap() falls back to the default 'manage_options' — a capability every
-	 * regular site administrator holds on multisite. The intended restriction
-	 * ("super admins only" per the commit message) therefore does not restrict
-	 * anything: a plain subsite admin can still run the site-wide destructive
-	 * tools (Remove All Data / Remove Backups).
+	 * Regression for bug #39 (FIXED in 1fc98025): 'is_super_admin' used to be
+	 * missing from the AccessModel caps map, so getCap() fell back to
+	 * 'manage_options' and a plain subsite admin could run the site-wide
+	 * destructive tools (Remove All Data / Remove Backups). 1fc98025 mapped
+	 * 'is_super_admin' => 'manage_network', which only super admins hold on
+	 * multisite, so the invocation must now be denied.
 	 *
-	 * FLIP when fixed (caps map entry or real is_super_admin() check): the
-	 * invocation below will be denied — then assert $allowed is false and the
-	 * JSON error is NO_ACCESS.
+	 * Note: the same mapping introduced bug #44 on SINGLE-site installs
+	 * (administrators never hold manage_network there) — see
+	 * test_pin44_single_site_administrator_cannot_remove_backups in
+	 * tests/Integration/test-AjaxHandlers.php.
 	 */
-	public function test_pin39_regular_site_admin_can_still_run_sitewide_tools() {
+	public function test_regular_site_admin_is_denied_sitewide_tools() {
 		$admin_id = self::factory()->user->create( array( 'role' => 'administrator' ) );
 		wp_set_current_user( $admin_id );
 
@@ -413,9 +413,15 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 
 		list( $allowed, $output ) = $this->invokeCheckActionAccess( 'toolsRemoveAll', 'is_super_admin' );
 
-		$this->assertTrue(
+		$this->assertFalse(
 			$allowed,
-			"PINNED bug #39 — 'is_super_admin' is missing from the AccessModel caps map, so it falls back to 'manage_options' and a regular site admin passes. When the check truly restricts to super admins, flip this to assert denial."
+			'Regression #39: a regular subsite admin must be DENIED the site-wide destructive tools (is_super_admin => manage_network since 1fc98025).'
+		);
+		$json = json_decode( $output );
+		$this->assertSame(
+			\ShortPixel\Controller\AjaxController::NO_ACCESS,
+			isset( $json->error ) ? $json->error : null,
+			'The denial must be reported as a NO_ACCESS JSON error.'
 		);
 	}
 

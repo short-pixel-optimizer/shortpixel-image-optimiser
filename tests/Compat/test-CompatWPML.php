@@ -22,10 +22,10 @@
  *     restricted to attachments sharing the same physical file; on
  *     optimize, handleOptimized() propagates meta to every duplicate.
  *   - QueueController::addWpmlAiItemsToQueue() (f232c607) — the requestAlt
- *     per-language fan-out, incl. pinned bug #42 (the fan-out runs before
- *     the Queue::isDuplicateActive() check, so the ORIGINAL attachment is
- *     skipped as "duplicate active" and never gets its own alt text), and
- *     the isDuplicateActive() skip for same-file translations.
+ *     per-language fan-out, incl. the #42 regression (fixed in d55dbeca:
+ *     requestAlt is exempt from the duplicate-active check, so the ORIGINAL
+ *     attachment is queued alongside its fan-out variants), and the
+ *     isDuplicateActive() skip for same-file translations.
  *
  * Own-file translations (WPML Media Translation add-on) are covered in
  * test-CompatWPMLMedia.php.
@@ -485,18 +485,14 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 	 * language variants: each duplicate is a separate attachment record and
 	 * needs its own AI request (QueueController::addWpmlAiItemsToQueue).
 	 *
-	 * PINNED bug #42 (second half): the fan-out DOES queue the translation,
-	 * but the ORIGINAL attachment never gets queued. addItemToQueue() runs
-	 * addWpmlAiItemsToQueue() BEFORE the isDuplicateActive() check, so the
-	 * just-queued language variants make the original count as
-	 * "duplicate already active in queue" and it is skipped — its own alt
-	 * text is never generated.
-	 *
-	 * FLIP when fixed (e.g. run the duplicate fan-out after/around the
-	 * duplicate-active check, or exempt requestAlt): change the last
-	 * assertion to assertContains.
+	 * Regression test for bug #42 (FIXED in d55dbeca, flipped from pin42):
+	 * addItemToQueue() ran addWpmlAiItemsToQueue() before the
+	 * isDuplicateActive() check, so the just-queued language variants made
+	 * the original count as "duplicate already active in queue" and it was
+	 * skipped — its own alt text was never generated. The fix exempts
+	 * requestAlt actions from the duplicate-active check.
 	 */
-	public function test_pin42_requestalt_fanout_drops_the_original_attachment() {
+	public function test_requestalt_fanout_queues_translation_and_original() {
 		$id     = $this->uploadFixture( 'fixture-small.jpg' );
 		$dup_id = $this->createDuplicateAttachment( $id );
 
@@ -514,10 +510,10 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 
 		$queued = $this->queuedItemIds();
 		$this->assertContains( $dup_id, $queued, 'The WPML language variant must get its own requestAlt queue item.' );
-		$this->assertNotContains(
+		$this->assertContains(
 			$id,
 			$queued,
-			'PINNED bug #42 — the original is currently skipped as "duplicate active" right after its own fan-out. If it IS queued now, the bug is fixed: flip this to assertContains.'
+			'Regression #42: the original must be queued too — it used to be skipped as "duplicate active" right after its own fan-out.'
 		);
 	}
 

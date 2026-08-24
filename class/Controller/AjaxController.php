@@ -41,7 +41,6 @@ use ShortPixel\ViewController;
  * - `wp_ajax_shortpixel_ajax`            → ajaxRequest()
  * - `wp_ajax_shortpixel_settings`        → settingsRequest()
  * - `wp_ajax_shortpixel_checkquota`      → ajax_checkquota()
- * - `wp_ajax_shortpixel_propose_upgrade` → ajax_proposeQuotaUpgrade()
  *
  * ## Request routing
  *

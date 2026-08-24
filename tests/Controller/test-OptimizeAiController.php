@@ -20,8 +20,13 @@
  *     was removed so file base names are never sentence-formatted (12603b56 had
  *     added it, mangling the original_filebase fallback with ucfirst + period).
  *     Prefix/postfix for filebase still applies via the ai_filename_* settings.
- *   - replaceFiles() — PINNED BUG: always returns false on both success and
- *     conflict paths (see test_replaceFiles_returns_false_on_success_and_conflict_pinned_for_deferred_fix).
+ *   - replaceFiles() — returns false on conflict-abort; the old pinned bug
+ *     (success path also returned false) was FIXED in 1fc98025 (`return true`
+ *     at ~line 765). Conflict path covered in
+ *     test_replaceFiles_returns_false_on_conflict.
+ *   - ajax_replaceFile() — PINNED BUG #45 (c44f0369): the `return $result;`
+ *     was removed, so AjaxController::replaceFileName() always reports
+ *     "Files were not replaced" even on success (see test_pin45).
  *   - sendToProcessing() dispatch: 'undoAI' is routed locally; other actions
  *     reach api->processMediaItem() (routing verified via spy).
  *
@@ -565,25 +570,17 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 	}
 
 	/*
-	 * PINNED BUG: replaceFiles() always returns false — both on conflict-abort and on success.
+	 * replaceFiles() conflict-abort contract: returns false when the target
+	 * filename already exists on disk.
 	 *
-	 * Expected (correct) behaviour:
-	 *   - When a target filename conflict is detected (~line 674) the method should
-	 *     return false to signal the abort.
-	 *   - When all file moves and URL replacements complete successfully (~line 726)
-	 *     the method should return true to signal success.
-	 *
-	 * Actual behaviour:
-	 *   - BOTH branches return `false` unconditionally. The success path at the very
-	 *     end of the function (line 726) says `return false;` — a copy-paste of the
-	 *     conflict-abort guard.
-	 *   - The caller (HandleSuccess, ~line 436) ignores the return value entirely, so
-	 *     a conflict-abort is indistinguishable from a successful rename. This makes
-	 *     silent failures invisible to the user.
-	 *
-	 * This test pins the CURRENT (broken) behaviour. It will START FAILING once the
-	 * bug is fixed — at that point the success path should return true and the assertions
-	 * should be updated to reflect the corrected contract.
+	 * History: this used to pin a bug where the SUCCESS path also returned
+	 * false (copy-paste of the conflict guard). FIXED in 1fc98025 — the
+	 * success path now ends with `return true;` (~line 765) and HandleSuccess
+	 * (~line 435) consumes it for the reload redirect. The conflict path
+	 * correctly stayed false, so this test's assertions were already the
+	 * post-fix contract; only the docs changed. The success path still can't
+	 * be exercised in a clean unit test (see below) — it is covered
+	 * indirectly by the integration AI pipeline.
 	 *
 	 * How we construct the conflict fixture without touching production code:
 	 *   1. Build a QueueItem whose imageModel is mocked via an anonymous class that
@@ -598,18 +595,7 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 	 * Replacer2 to be fully set up. So we assert only the conflict-abort branch here,
 	 * and document that both branches return the same false for the same reason.
 	 */
-	public function test_replaceFiles_returns_false_on_success_and_conflict_pinned_for_deferred_fix() {
-		/*
-		 * Expected when fixed:
-		 *   conflict-abort path  → return false  (correct: abort on conflict)
-		 *   success path         → return true   (CURRENTLY returns false — BUG)
-		 *
-		 * This test asserts both currently return false, which will break once
-		 * the success path is corrected to return true.
-		 *
-		 * Bug location: OptimizeAiController::replaceFiles(), line ~726.
-		 */
-
+	public function test_replaceFiles_returns_false_on_conflict() {
 		$ctrl = new OptimizeAiController();
 
 		// Build the QueueItem with a minimal ImageModel that supplies getAllFiles().
@@ -709,16 +695,53 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 		@unlink( $src_path );
 		@unlink( $tgt_path );
 
-		/*
-		 * BOTH the conflict-abort and the success path currently return false.
-		 * When the bug is fixed:
-		 *   - conflict_result should remain false (correct abort signal).
-		 *   - A parallel test against the success path should assert true.
-		 * This test will start failing at that point — update accordingly.
-		 */
 		$this->assertFalse(
 			$conflict_result,
-			'replaceFiles() conflict-abort path returns false (as expected; pinned because success path also returns false — BUG).'
+			'replaceFiles() must return false when the target filename already exists (conflict abort).'
+		);
+	}
+
+	/*
+	 * PINNED BUG #45 (c44f0369 "Fixes - Reload when renaming"): the commit
+	 * removed `return $result;` from ajax_replaceFile(), so it always returns
+	 * null. Its only caller, AjaxController::replaceFileName() (~line 1342),
+	 * does `(true === $result)` on it → the user ALWAYS sees "Files were not
+	 * replaced", even when the rename succeeded (the page still reloads via
+	 * the new 'redirect' => 'reload', masking it somewhat).
+	 *
+	 * The replaceFiles() call chain is stubbed to return true, proving the
+	 * value is dropped by ajax_replaceFile itself.
+	 *
+	 * FLIP when fixed: assertTrue( $result ) once `return $result;` is back.
+	 */
+	public function test_pin45_ajax_replaceFile_drops_the_replaceFiles_result() {
+		$ctrl = new class() extends OptimizeAiController {
+			protected function replaceFiles( $qItem, $newFileBase, $args = [] ): bool {
+				return true; // simulate a fully successful replace
+			}
+		};
+
+		$model = new class() extends ImageModel {
+			public function __construct() {}
+			public function get( $name ) { return null; }
+			public function getOptimizeUrls() { return []; }
+			protected function saveMeta() {}
+			protected function loadMeta() {}
+			protected function getImprovements() { return false; }
+			protected function getExcludePatterns() { return []; }
+			protected function preventNextTry( $reason = '' ) {}
+			public function isOptimizePrevented() { return false; }
+			public function resetPrevent() {}
+			public function isScaled() { return false; }
+			public function getUrl() { return 'http://example.org/wp-content/uploads/spio-pin45.jpg'; }
+		};
+
+		$qItem  = new QueueItem( [ 'imageModel' => $model ] );
+		$result = $ctrl->ajax_replaceFile( $qItem, 'spio-pin45-new.jpg' );
+
+		$this->assertNull(
+			$result,
+			'PINNED BUG #45: ajax_replaceFile() drops the (true) result of replaceFiles(). When Bas restores `return $result;`, flip this to assertTrue.'
 		);
 	}
 }
