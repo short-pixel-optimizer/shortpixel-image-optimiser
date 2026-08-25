@@ -31,7 +31,7 @@ class GetQueueStatusAbility
 		$isBulk = ! empty( $args['bulk'] );
 
 		$queueController = new QueueController( [ 'is_bulk' => $isBulk ] );
-		$startupData     = $queueController->getStartupData();
+		$startupData     = $queueController->getStartupData( false );
 
 		$result = [
 			'is_bulk' => $isBulk,

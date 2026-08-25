@@ -440,10 +440,11 @@ class QueueController
    *
    * Used by the bulk UI on page load to render initial counters.
    *
+   * @param bool $formatNumbers Whether to apply locale-aware number formatting for display
    * @return object Stats object containing media, custom and total sub-objects,
-   *                each with a stats property as returned by Queue::getStats().
+   *                each with a stats property as returned by Queue::getStats()
    */
-  public function getStartupData() : object
+  public function getStartupData(bool $formatNumbers = true) : object
   {
       $mediaQ = $this->getQueue('media');
       $customQ = $this->getQueue('custom');
@@ -457,7 +458,10 @@ class QueueController
       $data->custom->stats = $customQ->getStats();
 
       $data->total = $this->calculateStatsTotals($data);
-      $data = $this->numberFormatStats($data);
+      if ($formatNumbers)
+      {
+        $data = $this->numberFormatStats($data);
+      }
       return $data;
   }
 
