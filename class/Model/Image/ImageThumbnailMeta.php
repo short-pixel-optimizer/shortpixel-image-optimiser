@@ -64,6 +64,7 @@ class ImageThumbnailMeta
   /** @var float|null Saved compression improvement percentage, used only by CustomImageModel. */
   public $customImprovement;
 
+  public $lastSave; 
 
   /**
    * Constructor.

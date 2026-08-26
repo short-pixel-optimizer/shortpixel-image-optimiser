@@ -193,7 +193,7 @@ class AiDataModel
      * @return false|void Returns false when the table is missing; otherwise
      *                    populates the instance and returns nothing.
      */
-    protected function fetchRecord($attach_id, $type)
+    protected function fetchRecord(int $attach_id, $type)
     {
         global $wpdb;
         $tableName = self::getTableName();
@@ -904,7 +904,7 @@ class AiDataModel
      * @param string $type      Media type (currently unused, reserved for future use).
      * @return void
      */
-    public static function flushModelCache($attach_id, $type = 'media')
+    public static function flushModelCache(int $attach_id, $type = 'media')
     {
         if (isset(self::$models[$attach_id])) {
             unset(self::$models[$attach_id]);

@@ -336,6 +336,12 @@ class EditMediaViewController extends \ShortPixel\ViewController
 					$debugInfo[] = array(__('Restorable'), $restorable);
 					$debugInfo[] = array(__('Record'), $hasrecord);
 
+          $lastSave = $imageObj->getMeta('lastSave'); 
+          if (null !== $lastSave)
+          {
+             $debugInfo[] = array(__('Last Saved', 'shortpixel-image-optimiser'), $lastSave);
+          }
+
 					if ($imageObj->getMeta()->convertMeta()->didTry())
 					{
 						 $debugInfo[] = array(__('Converted'), ($imageObj->getMeta()->convertMeta()->isConverted() ?'<span class="green">Yes</span>' : '<span class="red">No</span> '));
