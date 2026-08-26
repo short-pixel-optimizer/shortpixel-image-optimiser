@@ -463,6 +463,7 @@ abstract class Queue
 			$settings = \wpSPIO()->settings();
         $env = \wpSPIO()->env();
         $queueOptions = $this->getOptions();
+        $allowAiWithoutBulkSetting = true === ($queueOptions['allowAiWithoutBulkSetting'] ?? false);
 
           if (count($items) == 0)
           {
@@ -532,7 +533,7 @@ abstract class Queue
                   }
 
                   if (true === $optimizeAiController->isAiEnabled() &&
-                  true === $settings->autoAIBulk &&
+                  (true === $settings->autoAIBulk || true === $allowAiWithoutBulkSetting) &&
                   true === ($queueOptions['doAi'] ?? false) )
                   {
                     $aiDataModel = AiDataModel::getModelByAttachment($mediaItem->get('id'));

@@ -58,15 +58,14 @@ class BulkGenerateAiSeoAbility
 
 		QueueController::resetQueues();
 
-		// Queue prepare requires both queueOptions.doAi and settings.autoAIBulk
 		$settings = \wpSPIO()->settings();
 		$previousAutoAiBulk = (bool) $settings->autoAIBulk;
-		$settings->autoAIBulk = true;
 
 		$bulkControl = BulkController::getInstance();
 		$stats = $bulkControl->createNewBulk( 'media', [
-			'doMedia' => false,
-			'doAi'    => true,
+			'doMedia'                   => false,
+			'doAi'                      => true,
+			'allowAiWithoutBulkSetting' => true,
 		] );
 
 		$response = [
@@ -76,7 +75,7 @@ class BulkGenerateAiSeoAbility
 			'do_media'              => false,
 			'do_ai'                 => true,
 			'auto_ai_bulk_previous' => $previousAutoAiBulk,
-			'auto_ai_bulk_set'      => true,
+			'auto_ai_bulk_set'      => false,
 			'started'               => [
 				'media' => self::normalizeStats( $stats ),
 			],

@@ -67,15 +67,14 @@ class BulkOptimizeAbility
 			? (bool) $args['do_ai']
 			: (bool) \wpSPIO()->settings()->autoAIBulk;
 
-		// Queue prepare requires settings.autoAIBulk alongside queueOptions.doAi
-		if ( true === $doAi ) {
-			\wpSPIO()->settings()->autoAIBulk = true;
-		}
-
 		foreach ( $queues as $qname ) {
 			$bulkArgs = [];
 			if ( 'media' === $qname ) {
-				$bulkArgs = [ 'doMedia' => true, 'doAi' => $doAi ];
+				$bulkArgs = [
+					'doMedia'                   => true,
+					'doAi'                      => $doAi,
+					'allowAiWithoutBulkSetting' => $doAi,
+				];
 			}
 
 			$stats = $bulkControl->createNewBulk( $qname, $bulkArgs );
