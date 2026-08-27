@@ -450,6 +450,11 @@ abstract class Queue
      * Handles normal optimisation, bulk-restore, bulk-undoAI, migrate, and removeLegacy
      * operations. Breaks early if memory or time limits are reached.
      *
+     * AI items are added when AI is enabled, queueOptions['doAi'] is set, and
+     * either the autoAIBulk setting or the per-bulk
+     * queueOptions['allowAiWithoutBulkSetting'] override (used by the MCP bulk
+     * abilities so a one-shot call does not persist the setting) is active.
+     *
      * @param array $items Array of integer item IDs to process.
      * @return array Associative array with keys: items (int), images (int), results (int), overlimit (bool).
      */

@@ -7,15 +7,14 @@
  * image/DB state — against the REAL queue + optimizer pipeline and the
  * MockShortPixelApi HTTP interceptor.
  *
- * PINNED tests document bugs found on the mcp branch (Calin's list — these
- * assert today's BUGGY behaviour and FAIL when the bug is fixed, so the
- * assertion must then be flipped):
- *  - pin C1: get-queue-status casts locale-formatted stats to int —
- *    QueueController::getStartupData() runs numberFormatStats(), so any
- *    count >= 1000 becomes e.g. "1,201" and (int) truncates it to 1.
- *  - pin C2: bulk-generate-ai-seo permanently persists autoAIBulk=true as a
- *    side effect (records the previous value but never restores it).
- *    bulk-optimize with do_ai=true does the same.
+ * Bugs from the mcp branch (Calin's list) are now all FIXED and covered by
+ * regression tests here:
+ *  - #C1 (fixed in 2254cd59): get-queue-status used to (int)-cast the
+ *    locale-formatted stats from getStartupData(), truncating counts >= 1000
+ *    ("1,201" → 1); the ability now reads raw stats via getStartupData(false).
+ *  - #C2 (fixed in c412011d): bulk-generate-ai-seo (and bulk-optimize with
+ *    do_ai=true) used to permanently persist autoAIBulk=true; the AI pickup
+ *    is now scoped to the bulk via the allowAiWithoutBulkSetting queue option.
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -230,53 +229,35 @@ class AbilitiesIntegrationTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * PIN C1 (Calin #1 in the session report): queue counts >= 1000 collapse.
+	 * Regression for Calin bug #1 (FIXED in 2254cd59): getStartupData() used
+	 * to always pipe stats through numberFormatStats(), so an in_queue counter
+	 * of 1201 arrived at the ability as the STRING "1,201" and the (int) cast
+	 * truncated it to 1. GetQueueStatusAbility now calls
+	 * getStartupData(false) to read the raw integer stats (the bulk UI /
+	 * WP-CLI callers keep the formatting default).
 	 *
-	 * QueueController::getStartupData() pipes every stat through
-	 * numberFormatStats() → UiHelper::formatNumber() → number_format_i18n(),
-	 * so 1201 waiting items arrive at the ability as the STRING "1,201" —
-	 * and GetQueueStatusAbility's (int) cast truncates that to 1. An MCP
-	 * agent watching a big bulk would believe the queue is nearly empty.
-	 *
-	 * FLIP when fixed (read raw stats before formatting, or strip the
-	 * locale formatting before casting): in_queue must equal 1201.
+	 * Stats read the persisted ShortQ 'items' STATUS COUNTER, not a live
+	 * COUNT(*) on the queue table (the original pin seeded rows via direct
+	 * inserts, which never reach the counter), so the counter itself is set
+	 * to the >=1000 value that triggers the locale separator.
 	 */
-	public function test_pinC1_get_queue_status_truncates_formatted_counts_at_1000() {
-		global $wpdb;
-
+	public function test_get_queue_status_reports_raw_counts_above_1000() {
 		$attachment_id = $this->freshAttachment();
 		OptimizeMediaAbility::execute( array( 'id' => $attachment_id, 'process' => false ) );
 
-		$table    = $wpdb->prefix . 'shortpixel_queue';
-		$template = $wpdb->get_row( "SELECT queue_name, plugin_slug, status, value FROM {$table} LIMIT 1", ARRAY_A );
-		$this->assertNotEmpty( $template, 'The enqueued item must produce a queue row to clone' );
-
-		// Clone the real waiting row up to 1201 total items.
-		for ( $i = 0; $i < 1200; $i++ ) {
-			$wpdb->insert( $table, array(
-				'queue_name'  => $template['queue_name'],
-				'plugin_slug' => $template['plugin_slug'],
-				'status'      => $template['status'],
-				'value'       => $template['value'],
-				'item_id'     => 900000 + $i,
-				'item_count'  => 1,
-				'list_order'  => 100 + $i,
-				'created'     => current_time( 'mysql' ),
-				'updated'     => current_time( 'mysql' ),
-			) );
-		}
-
-		$raw_count = (int) $wpdb->get_var(
-			$wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE status = %d", (int) $template['status'] )
-		);
-		$this->assertSame( 1201, $raw_count, 'Seeding must yield 1201 waiting rows' );
+		// Bump the persisted counter to a value number_format_i18n() would
+		// render with a thousands separator.
+		$mediaQ = ( new \ShortPixel\Controller\QueueController() )->getQueue( 'media' );
+		$prop   = new ReflectionProperty( \ShortPixel\Controller\Queue\Queue::class, 'q' );
+		$prop->setAccessible( true );
+		$prop->getValue( $mediaQ )->setStatus( 'items', 1201, true );
 
 		$status = GetQueueStatusAbility::execute();
 
 		$this->assertSame(
-			1,
+			1201,
 			$status['queues']['media']['in_queue'],
-			'PIN C1: (int) on the locale-formatted "1,201" truncates to 1. When getStartupData stats are read raw (bug fixed), FLIP this to assertSame(1201, ...).'
+			'Regression #C1: get-queue-status must report the raw waiting count (getStartupData(false) since 2254cd59), not an (int)-truncated locale-formatted string.'
 		);
 	}
 
@@ -408,19 +389,20 @@ class AbilitiesIntegrationTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * PIN C2 (Calin #2 in the session report): bulk-generate-ai-seo flips
-	 * the autoAIBulk SETTING to true so Queue::prepare() picks up AI items,
-	 * and never restores it — SettingsModel persists on shutdown, so a
-	 * one-shot MCP call permanently changes site behaviour (every future
-	 * MANUAL bulk will silently generate AI SEO and consume AI credits).
-	 * The response's auto_ai_bulk_previous field suggests a restore was
-	 * intended. BulkOptimizeAbility with do_ai=true has the same issue.
+	 * Regression for Calin bug #2 (FIXED in c412011d): bulk-generate-ai-seo
+	 * used to flip the autoAIBulk SETTING to true (persisted on shutdown) so
+	 * Queue::prepare() would pick up AI items, and never restored it — a
+	 * one-shot MCP call permanently changed site behaviour. The fix scopes
+	 * the override to the bulk itself: the ability passes the
+	 * 'allowAiWithoutBulkSetting' queue option (persisted in the queue's
+	 * custom_data, so it survives cross-request prepare ticks) and
+	 * Queue::prepare() accepts it as an alternative to the setting.
 	 *
-	 * FLIP when fixed (setting restored after the bulk, or the prepare
-	 * filter scoped to the request): autoAIBulk must still be falsy here.
+	 * This is end-to-end on purpose: it proves the AI fan-out still WORKS
+	 * without the setting (alt text lands) while the setting stays untouched.
 	 */
-	public function test_pinC2_bulk_generate_ai_seo_permanently_persists_autoaibulk() {
-		$this->freshAttachment();
+	public function test_bulk_generate_ai_seo_works_without_touching_autoaibulk() {
+		$attachment_id = $this->freshAttachment();
 
 		$this->assertEmpty( \wpSPIO()->settings()->autoAIBulk, 'Baseline: autoAIBulk off' );
 
@@ -428,10 +410,20 @@ class AbilitiesIntegrationTest extends SPIO_IntegrationTestCase {
 
 		$this->assertFalse( $result['error'] );
 		$this->assertFalse( $result['auto_ai_bulk_previous'], 'The ability itself records that the setting was off before' );
+		$this->assertFalse( $result['auto_ai_bulk_set'], 'Since c412011d the ability must not set the autoAIBulk setting' );
 
-		$this->assertTrue(
-			(bool) \wpSPIO()->settings()->autoAIBulk,
-			'PIN C2: the one-shot ability call leaves autoAIBulk=true in SettingsModel (persisted on shutdown). When the setting is restored/scoped (bug fixed), FLIP this to assertEmpty.'
+		$run = $this->runQueueViaAbility( true );
+		$this->assertSame( 'queues_empty', $run['processing']['stopped_reason'], 'The AI bulk must run to completion: ' . print_r( $run, true ) );
+
+		$this->assertSame(
+			'A mock ai alt text.',
+			get_post_meta( $attachment_id, '_wp_attachment_image_alt', true ),
+			'Regression #C2: the AI fan-out must still fire via the allowAiWithoutBulkSetting queue option, without the global setting.'
+		);
+
+		$this->assertEmpty(
+			\wpSPIO()->settings()->autoAIBulk,
+			'Regression #C2: a one-shot bulk-generate-ai-seo call must leave the persisted autoAIBulk setting untouched (c412011d).'
 		);
 	}
 
