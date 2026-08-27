@@ -368,7 +368,7 @@ class Replacer
 					if (null === $content) {
 						Log::addDebug('Content returned null, aborting this record, meta_id : ' . $id_field);
 					} else {
-						$content = $this->replaceContent($content, $search_urls, $replace_urls);
+						$content = $this->replaceContent($content, $search_urls, $replace_urls, false, false);
 
 						// Content as how it's going to dbase.
 						$content = apply_filters('shortpixel/replacer/save_meta_value', $content, $row, $component);
@@ -400,7 +400,7 @@ class Replacer
 	 * @param $in_deep Boolean.  This is use to prevent serialization of sublevels. Only pass back serialized from top.
 	 * @param $strict_check Boolean . If true, remove all classes from serialization check and fail. This should be done on post_content, not on metadata.
 	 */
-	public function replaceContent($content, $search, $replace, $in_deep = false, $strict_check = false)
+	public function replaceContent($content, $search, $replace, $in_deep = false, $strict_check = true)
 	{
 
 		// Since ReplaceContent can now be called directly, this might not be set, set defaults if so
@@ -411,15 +411,11 @@ class Replacer
 		if (true === is_serialized($content)) {
 			$serialized_content = $content; // use to return content back if incomplete classes are found, prevent destroying the original information
 
-			if (false === $strict_check) {
-				$strict_check = $this->containsMagicMethods($content);
-			}
-
-			if (true === $strict_check) {
+			//if (true === $strict_check) {
 				$args = array('allowed_classes' => false);
-			} else {
-				$args = array('allowed_classes' => true);
-			}
+			//} else {
+			//	$args = array('allowed_classes' => true);
+			//}
 
 			$content = Unserialize::unserialize($content, $args);
 			// bail directly on incomplete classes. In < PHP 7.2 is_object is false on incomplete objects!
@@ -444,11 +440,11 @@ class Replacer
 		} elseif (is_array($content)) // array metadata and such.
 		{
 			foreach ($content as $index => $value) {
-				$content[$index] = $this->replaceContent($value, $search, $replace, true); //str_replace($value, $search, $replace);
+				$content[$index] = $this->replaceContent($value, $search, $replace, true, $strict_check); //str_replace($value, $search, $replace);
 				if (is_string($index)) // If the key is the URL (sigh)
 				{
 
-					$index_replaced = $this->replaceContent($index, $search, $replace, true);
+					$index_replaced = $this->replaceContent($index, $search, $replace, true, $strict_check);
 					if ($index_replaced !== $index)
 						$content = $this->change_key($content, array($index => $index_replaced));
 				}
@@ -463,10 +459,9 @@ class Replacer
 				} else { // else just return the content.
 					return $content;
 				}
-
 			}
 			foreach ($content as $key => $value) {
-				$content->{$key} = $this->replaceContent($value, $search, $replace, true);
+				$content->{$key} = $this->replaceContent($value, $search, $replace, true, $strict_check);
 			}
 		}
 
@@ -485,33 +480,6 @@ class Replacer
 			$content = maybe_serialize($content);
 		}
 		return $content;
-	}
-
-	private function containsMagicMethods($serialized_content) : bool 
-	{
-		preg_match_all('/[OC]:\d+:"([^"]+)":/', $serialized_content, $matches);
-
-		$magic_methods = array(
-			'__construct', '__destruct', '__call', '__callStatic',
-			'__get', '__set', '__isset', '__unset', '__sleep',
-			'__wakeup', '__serialize', '__unserialize', '__set_state',
-			'__clone', '__debugInfo', '__toString', '__invoke'
-		);
-
-		foreach (array_unique($matches[1]) as $class_name) {
-			if (!class_exists($class_name, false)) {
-				continue;
-			}
-
-			$reflection = new \ReflectionClass($class_name);
-			foreach ($magic_methods as $method_name) {
-				if ($reflection->hasMethod($method_name)) {
-					return true;
-				}
-			}
-		}
-
-		return false;
 	}
 
 	/** Check if path is allowed within openbasedir restrictions. This is an attempt to limit notices in file funtions if so.  Most likely the path will be relative in that case.

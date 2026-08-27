@@ -45,6 +45,7 @@ class WPML
         }
         add_filter('shortpixel/aidatamodel/paramlist', [$this, 'checkParamList'], 10, 2);
         add_filter('shortpixel/ai/success', [$this, 'successHandle'], 10, 2);
+        add_filter('shortpixel/image/file_filter_site_url',[$this, 'checkHomeURL']);
     }
 
 
@@ -96,6 +97,12 @@ class WPML
     {
         $data = apply_filters('shortpixel/wpml/airesult', $data, $qItem);
         return $data;
+    }
+
+    public function checkHomeURL($home_url)
+    {
+            $site_url = str_replace('http:', '', site_url('', 'http'));
+            return $site_url;
     }
 
 

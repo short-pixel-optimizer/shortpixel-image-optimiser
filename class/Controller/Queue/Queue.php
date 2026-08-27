@@ -185,7 +185,6 @@ abstract class Queue
 		 $result = new \stdClass;
 
        $this->q->addItems([$qItem->returnEnqueue()], false);
-       Log::addTemp('Temp Enqueue ', $qItem->returnEnqueue());
        $numitems = $this->q->withRemoveDuplicates()->enqueue(); // enqueue returns numitems
 
        $this->checkQueueCache($imageModel->get('id'));

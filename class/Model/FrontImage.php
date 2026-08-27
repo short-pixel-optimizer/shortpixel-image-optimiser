@@ -362,7 +362,6 @@ class FrontImage
 		$output .= $this->buildImage();
 
 		$output .= "</picture>";
-
 		return $output;
 	}
 

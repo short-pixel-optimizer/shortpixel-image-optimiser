@@ -326,7 +326,10 @@ class ShortPixelPlugin {
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_scripts' ) ); // admin scripts
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_styles' ) ); // admin styles
 		add_action( 'admin_enqueue_scripts', array( $this, 'load_admin_scripts' ), 90 ); // loader via route.
-		add_action( 'enqueue_block_assets', array($this, 'load_admin_scripts'), 90);
+
+		// This enqueue_block_assets turned off .  Because it doesn't call the admin_scripts / styles on the same hook it will misfire the loading. 
+		// Plus it seems that admin_enqueue_scripts also fires on the same page, so unneeded.  If need to re-activate, a way to load all admin scripts / styles is needed.
+		//add_action( 'enqueue_block_assets', array($this, 'load_admin_scripts'), 90);
 
 		// defer notices a little to allow other hooks ( notable adminnotices )
 
@@ -819,8 +822,6 @@ class ShortPixelPlugin {
 	public function admin_styles() {
 
 		wp_register_style( 'shortpixel-folderbrowser', plugins_url( '/res/css/shortpixel-folderbrowser.css', SHORTPIXEL_PLUGIN_FILE ),[], SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
-
-		//wp_register_style( 'shortpixel', plugins_url( '/res/css/short-pixel.css', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
 
 		// notices. additional styles for SPIO.
 		wp_register_style( 'shortpixel-notices', plugins_url( '/res/css/shortpixel-notices.css', SHORTPIXEL_PLUGIN_FILE ), array( 'shortpixel-admin' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );

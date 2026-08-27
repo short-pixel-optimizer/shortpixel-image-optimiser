@@ -1963,7 +1963,7 @@ class AjaxController
 					}
 					else
 					{
-						Log::addTemp('AiData not set in Ajax');
+						//Log::addTemp('AiData not set in Ajax');
 					}
 					
 					if ($result->is_done)
