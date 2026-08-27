@@ -524,9 +524,9 @@ class OptimizeAiController extends OptimizerBase
             return false;
         }
 
-        if ($language['code'] !== $language_queue['code'])
+        if ($language['language_code'] !== $language_queue['language_code'])
         {
-            Log::addTemp('wrong language ( ' . $language['code'] . ' - '  . $language_queue['code'] . ' ) - not replacing this page ', $post_id); 
+            Log::addTemp('wrong language ( ' . $language['language_code'] . ' - '  . $language_queue['language_code'] . ' ) - not replacing this page ', $post_id); 
              return false; 
         } 
 
@@ -785,6 +785,11 @@ class OptimizeAiController extends OptimizerBase
          
     }
 
+    public function ajax_replaceImageAttributes($qItem, $aiData)
+    {
+            return $this->replaceImageAttributes($qItem, $aiData);   
+    }
+
     /*
     private function createSymlink($sourceObj, $targetObj): bool
     {
@@ -908,6 +913,9 @@ class OptimizeAiController extends OptimizerBase
                     continue;
                 }
 
+
+               $aiPreserve = \wpSPIO()->settings()->aiPreserve; 
+
                 /*   if (strpos($src, $aiData['replace_filebase']) === false)
              {
                 continue; 
@@ -916,12 +924,20 @@ class OptimizeAiController extends OptimizerBase
                 $do_replace = false;
 
                 if (isset($aiData['alt']) && false === is_int($aiData['alt'])) {
-                    $frontImage->alt = $aiData['alt'];
-                    $do_replace = true;
+
+                    if (false === $aiPreserve || (is_null($frontImage->alt) || strlen(trim($frontImage->alt)) == 0) )
+                    {
+                        $frontImage->alt = $aiData['alt'];
+                        $do_replace = true;
+                    }
                 }
                 if (isset($aiData['caption']) && false === is_int($aiData['caption'])) {
-                    $frontImage->caption = $aiData['caption'];
-                    $do_replace = true;
+
+                    if (false === $aiPreserve || (is_null($frontImage->caption) || strlen(trim($frontImage->caption)) == 0) )
+                    {
+                        $frontImage->caption = $aiData['caption'];
+                        $do_replace = true;
+                    }
                 }
 
                 if (true === $do_replace) {

@@ -407,6 +407,9 @@ class AjaxController
 			case 'ai/undoAlt':
 				$json = $this->undoAltData($json, $data);			
 			break;
+			case 'ai/redoAiReplacement': 
+				$json = $this->redoAiReplacement($json, $data); 
+			break;
 			case 'unMarkCompleted':
 				$json = $this->unMarkCompleted($json, $data);
 				break;
@@ -1491,6 +1494,29 @@ class AjaxController
 		$json->$type = $altData;
 		$json->status = true;
 		
+		return $json;
+	}
+
+
+	protected function redoAiReplacement($json, $data)
+	{
+		$id = $data['id'];
+		$type = $data['type'];
+		
+		$imageModel = $this->getMediaItem($id, $type); 
+		$this->checkImageAccess($imageModel);
+	
+		$aiModel = AiDataModel::getModelByAttachment($id, 'media');
+		$aiData = $aiModel->getGeneratedData(); 
+
+		$queueItem = new QueueItem(['imageModel' => $imageModel]);
+		$queueItem->newRedoAiReplacementAction(); 
+
+		$api = $queueItem->getApiController('getAltData'); 
+
+		$api->ajax_replaceImageAttributes($queueItem, $aiData);
+
+		$json->status = true;	
 		return $json;
 	}
 

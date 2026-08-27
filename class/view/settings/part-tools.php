@@ -75,6 +75,19 @@ $queueRunning = $bulk->isAnyBulkRunning();
             </content>
         </setting>
 
+        <setting>
+        <!--    <name>
+              <?php esc_html_e('Reapply Generated AI DATA','shortpixel-image-optimiser'); ?>
+            </name> -->
+            <content>
+        				<a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'redoAiReplacement', 'part' => 'tools', 'noheader' => true), $url)); ?>" class="button"><?php esc_html_e('Redo Ai Replacement','shortpixel-image-optimiser'); ?></a>
+
+                <info>
+                  <?php printf(esc_html__('Will run through all content and see if any already generated Ai Data was missed with current settings and try to reapply','shortpixel-image-optimiser') , '<br>', '<b>','</b>'); ?>
+                </info>
+            </content>
+        </setting>
+
     </settinglist>
 
     <h3><?php _e('CDN Tools', 'shortpixel-image-optimiser'); ?></h3>

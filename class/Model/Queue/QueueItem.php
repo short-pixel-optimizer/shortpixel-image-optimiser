@@ -278,6 +278,14 @@ class QueueItem
        $this->item_count = 0;
    }
 
+   public function newRedoAiReplacementAction()
+   {
+      $this->newAction(); 
+      $this->data->action = 'redoAiReplacement'; 
+
+      $this->item_count = 0;
+   }
+
    /**
     * Schedule this slot for re-optimization with (optionally) a new
     * compression type and/or smartcrop policy.
@@ -293,7 +301,7 @@ class QueueItem
     */
    public function newReOptimizeAction($args = [])
    {
-      $this->newAction();
+       $this->newAction();
 
        $this->data->action = 'reoptimize';
        $this->data->next_actions = ['optimize'];
@@ -864,6 +872,7 @@ class QueueItem
          case 'getAltData': 
          case 'undoAI': 
          case 'redoAI': 
+         case 'redoAltReplacement': 
             $api = OptimizeAiController::getInstance();
             break;
          case 'restore':

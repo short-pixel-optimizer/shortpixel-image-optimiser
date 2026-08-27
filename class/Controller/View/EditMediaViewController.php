@@ -398,6 +398,8 @@ class EditMediaViewController extends \ShortPixel\ViewController
               $debugInfo[] = ['Ai -Generated ', $aiDataModel->getGeneratedData()];
             }
 
+            $debugInfo[] = ['', '<a href="javascript:window.ShortPixelProcessor.screen.RedoAiReplacement(' . $this->post_id . ');">Redo Ai Replacement</a>'];
+
           }
 
           $backupController = BackupController::getBackupController(); 
