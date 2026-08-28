@@ -549,7 +549,7 @@ class OptimizeAiController extends OptimizerBase
     protected function replaceImageAttributes(QueueItem $qItem, $aiData)
     {
         if (is_int($aiData['alt']) && is_int($aiData['caption'])) {
-            Log::addInfo('Alt/Caption returned integer/status, not replace');
+            Log::addInfo('Alt and Caption returned integer/status, not replacing : ' . $qItem->item_id );
             return;
         }
 
@@ -785,7 +785,7 @@ class OptimizeAiController extends OptimizerBase
 
          $result = $this->replaceFiles($qItem, $baseReplace, $args);
 
-         
+         return $result;
     }
 
     public function redoAIReplace($qItem)
