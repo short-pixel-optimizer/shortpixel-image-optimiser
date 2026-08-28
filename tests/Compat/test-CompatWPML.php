@@ -14,9 +14,10 @@
  *     checkParamList() injects the attachment's WPML locale into the
  *     outgoing AI request params.
  *   - OptimizeAiController::WPMLCheckReplace() (f232c607) — the replace-time
- *     language guard for AI text replacement, incl. pinned bug #40 (compares
- *     the non-existent 'code' key instead of 'language_code') at both the
- *     guard level and end-to-end through handleReplace().
+ *     language guard for AI text replacement, incl. the #40 regression
+ *     (fixed in af2414cc: compares 'language_code' instead of the
+ *     non-existent 'code' key) at both the guard level and end-to-end
+ *     through handleReplace().
  *   - MediaLibraryModel::getWPMLDuplicates() — translation duplicates
  *     found via the real icl_translations table (same-trid siblings),
  *     restricted to attachments sharing the same physical file; on
@@ -205,22 +206,15 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * PINNED bug #40: WPMLCheckReplace() validates the WPML lookup via the
-	 * `language_code` key (correct — that is what `wpml_post_language_details`
-	 * returns), but then COMPARES `$language['code']` vs
-	 * `$language_queue['code']` — a key WPML never provides. Both sides are
-	 * undefined, so the mismatch branch can never trigger: pages in a
-	 * DIFFERENT language are still replaced, defeating the whole guard (and
-	 * emitting two "Undefined array key" warnings per checked post on PHP 8).
-	 *
-	 * The pin accepts either manifestation of the bug — the undefined-key
-	 * warning (converted to an exception by phpunit-integration.xml) or a
-	 * `true` return for clearly different languages.
-	 *
-	 * FLIP when fixed (`code` → `language_code`): the call below returns
-	 * false with no warning — then simply assertFalse the invocation.
+	 * Regression test for bug #40 (FIXED in af2414cc, flipped from pin40):
+	 * WPMLCheckReplace() used to compare `$language['code']` vs
+	 * `$language_queue['code']` — a key WPML never provides — so both sides
+	 * were undefined and different-language pages were replaced anyway
+	 * (plus "Undefined array key" warnings on PHP 8). The fix compares the
+	 * real `language_code` keys: a post in a different language than the
+	 * queued item must now be refused, with no warning raised.
 	 */
-	public function test_pin40_wpml_replace_guard_does_not_block_other_languages() {
+	public function test_wpml_replace_guard_blocks_other_languages() {
 		$post_id  = 12345;
 		$queue_id = 67890;
 
@@ -237,26 +231,10 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 			2
 		);
 
-		$warning = null;
-		$allowed = null;
-		try {
-			$allowed = $this->invokeWpmlCheckReplace( $post_id, $queue_id );
-		} catch ( \Throwable $e ) {
-			$warning = $e;
-		}
-
-		if ( null !== $warning ) {
-			$this->assertStringContainsString(
-				'code',
-				$warning->getMessage(),
-				'PINNED bug #40 — the guard reads the non-existent \'code\' key. When fixed, no warning is raised: flip this test to assertFalse the invocation.'
-			);
-		} else {
-			$this->assertTrue(
-				$allowed,
-				'PINNED bug #40 — comparing the undefined \'code\' keys makes different-language pages pass the guard. When fixed (language_code), flip this to assertFalse.'
-			);
-		}
+		$this->assertFalse(
+			$this->invokeWpmlCheckReplace( $post_id, $queue_id ),
+			'Regression #40: a post in a different WPML language must be refused by the replace guard (the old code compared undefined \'code\' keys and let it through).'
+		);
 	}
 
 	// -------------------------------------------------------------------
@@ -550,25 +528,19 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// handleReplace end-to-end — pinned against bug #40
+	// handleReplace end-to-end — regression for bug #40
 	// -------------------------------------------------------------------
 
 	/**
-	 * PINNED bug #40, end-to-end leg: handleReplace() runs every result
-	 * through WPMLCheckReplace(), which compares the non-existent 'code'
-	 * key on both sides — so a post in a DIFFERENT language is replaced
-	 * anyway (undefined === undefined passes the guard).
-	 *
-	 * Depending on the error-handler configuration the bug manifests as an
-	 * "Undefined array key 'code'" warning/exception instead; the pin
-	 * accepts either manifestation (same pattern as the unit-level pin40).
-	 *
-	 * FLIP when fixed (`code` → `language_code`): the same-language post is
-	 * replaced, and the other-language post is NOT — change the second
-	 * content assertion to assertStringNotContainsString and drop the
-	 * warning branch.
+	 * Regression test for bug #40, end-to-end leg (FIXED in af2414cc,
+	 * flipped from pin40): handleReplace() runs every result through
+	 * WPMLCheckReplace(). The guard used to compare the non-existent
+	 * 'code' key on both sides, so posts in a DIFFERENT language were
+	 * replaced anyway. With the `language_code` comparison the
+	 * same-language post gets the AI alt while the other-language post is
+	 * left untouched.
 	 */
-	public function test_pin40_handlereplace_replaces_other_language_posts_end_to_end() {
+	public function test_handlereplace_skips_other_language_posts_end_to_end() {
 		$id         = $this->uploadFixture( 'fixture-small.jpg' );
 		$imageModel = $this->freshImageModel( $id );
 
@@ -599,21 +571,7 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 			'qItem'  => $qItem,
 		);
 
-		$warning = null;
-		try {
-			\ShortPixel\Controller\Optimizer\OptimizeAiController::getInstance()->handleReplace( $results, $args );
-		} catch ( \Throwable $e ) {
-			$warning = $e;
-		}
-
-		if ( null !== $warning ) {
-			$this->assertStringContainsString(
-				'code',
-				$warning->getMessage(),
-				'PINNED bug #40 — handleReplace hits the undefined \'code\' key in the guard. When fixed, no warning is raised: assert the replace outcomes instead.'
-			);
-			return;
-		}
+		\ShortPixel\Controller\Optimizer\OptimizeAiController::getInstance()->handleReplace( $results, $args );
 
 		// Replacer's Updater writes post_content via direct SQL — invalidate
 		// the WP post cache before re-reading.
@@ -625,10 +583,10 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 			get_post( $post_same )->post_content,
 			'The same-language post must receive the AI alt text.'
 		);
-		$this->assertStringContainsString(
+		$this->assertStringNotContainsString(
 			'AI pinned alt',
 			get_post( $post_other )->post_content,
-			'PINNED bug #40 — the different-language post is currently replaced too because the guard compares undefined keys. When fixed, flip to assertStringNotContainsString.'
+			'Regression #40: the different-language post must NOT be replaced (the old guard compared undefined \'code\' keys and replaced it anyway).'
 		);
 	}
 }
