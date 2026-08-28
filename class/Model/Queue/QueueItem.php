@@ -278,6 +278,16 @@ class QueueItem
        $this->item_count = 0;
    }
 
+   /**
+    * Schedule this slot to re-run the in-content AI text replacement from
+    * the STORED aipostmeta data (no new API request).
+    *
+    * Dispatched by getApiController('redoAiReplacement') to
+    * OptimizeAiController, whose sendToProcessing() routes the action to
+    * redoAIReplace(). item_count is 0 — no credits are consumed.
+    *
+    * @return void
+    */
    public function newRedoAiReplacementAction()
    {
       $this->newAction(); 
