@@ -156,13 +156,13 @@ $queueRunning = $bulk->isAnyBulkRunning();
 
 		<h4 class='warning'><?php esc_html_e('Warning', 'shortpixel-image-optimiser'); ?></h4>
 
-		<p><?php printf(esc_html__('-- DESC -- .', 'shortpixel-image-optimiser'), '<b>', '</b>', '<b>', '</b>'); ?></p>
+		<p><?php printf(esc_html__('ShortPixel will redo the AI Replacement according to current settings.  This means it search through all post content and try to replace image tags with AI-generated results if any are available. This is not reversible.', 'shortpixel-image-optimiser'), '<b>', '</b>', '<b>', '</b>'); ?></p>
 
 		<p class='warning optiongroup'><?php esc_html_e('It is strongly advised to create a full backup before starting this process.', 'shortpixel-image-optimiser'); ?></p>
 
 		<nav>
 			<button class="button" type="button" data-action="open-panel" data-panel="dashboard"><?php esc_html_e('Back', 'shortpixel-image-optimiser'); ?></button>
-			<button type="button" type="button" class="button disabled button-primary" disabled id='bulk-migrate-button' data-action="RedoAiReplacement"><?php esc_html_e('Bulk Redo AI Replacement ', 'shortpixel-image-optimiser') ?>
+			<button type="button" type="button" class="button button-primary" id='bulk-redoai-button' data-action="BulkRedoAiReplacement"><?php esc_html_e('Bulk Redo AI Replacement ', 'shortpixel-image-optimiser') ?>
 			</button>
 
 		</nav>

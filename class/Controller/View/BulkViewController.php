@@ -177,6 +177,9 @@ class BulkViewController extends \ShortPixel\ViewController
           case 'bulk-undoAI':
             $label = __('Bulk Remove AI Data', 'shortpixel-image-optimiser');           
           break; 
+          case 'redoAiReplacement': 
+            $label = __('Bulk Redo AI Replacement', 'shortpixel-image-optimiser');                     
+          break; 
       }
 
       return $label;
@@ -210,6 +213,9 @@ class BulkViewController extends \ShortPixel\ViewController
          break; 
          case 'bulk-removeLegacy': 
             $action = 'removeLegacy'; 
+         break; 
+         case 'bulk-redoAiReplacement':
+            $action = 'redoAiReplacement';
          break; 
       }
 

@@ -1123,7 +1123,6 @@ class ShortPixelScreen extends ShortPixelScreenBase
 		this.UpdatePanelStatus('loading', 'selection');
 		this.SwitchPanel('selection');
 
-  	//this.SwitchPanel('process');
     this.RemovePanelFromURL(shortPixelScreen.panel);
 
 
@@ -1132,6 +1131,23 @@ class ShortPixelScreen extends ShortPixelScreenBase
     window.addEventListener('shortpixel.bulk.onSwitchPanel', this.StartBulk.bind(this), {'once': true});
     this.processor.AjaxRequest(data);
   }
+
+  BulkRedoAiReplacement (event)
+  {
+    var data = {screen_action: 'startBulkRedoAiReplacement', callback: 'shortpixel.startBulkRedoAiReplacement'}; //
+		this.UpdatePanelStatus('loading', 'selection');
+		this.SwitchPanel('selection');
+
+    this.RemovePanelFromURL(shortPixelScreen.panel);
+
+
+    // Prepare should happen after selecting what the optimize.
+    window.addEventListener('shortpixel.startBulkRedoAiReplacement', this.PrepareBulk.bind(this), {'once': true} );
+    window.addEventListener('shortpixel.bulk.onSwitchPanel', this.StartBulk.bind(this), {'once': true});
+    this.processor.AjaxRequest(data);
+  }
+
+
 	BulkRemoveLegacy(event)
   {
 

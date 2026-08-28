@@ -441,6 +441,10 @@ class AjaxController
 				$this->checkActionAccess($action, 'is_admin_user');
 				$json = $this->startMigrateAll($json, $data);
 				break;
+			case 'startBulkRedoAiReplacement':
+				$this->checkActionAccess($action, 'is_admin_user');
+				$json = $this->startBulkRedoAiReplacement($json, $data);
+				break;			
 			case 'startRemoveLegacy':
 				$this->checkActionAccess($action, 'is_admin_user');
 				$json = $this->startRemoveLegacy($json, $data);
@@ -1505,16 +1509,14 @@ class AjaxController
 		
 		$imageModel = $this->getMediaItem($id, $type); 
 		$this->checkImageAccess($imageModel);
-	
-		$aiModel = AiDataModel::getModelByAttachment($id, 'media');
-		$aiData = $aiModel->getGeneratedData(); 
+	 
 
 		$queueItem = new QueueItem(['imageModel' => $imageModel]);
 		$queueItem->newRedoAiReplacementAction(); 
 
 		$api = $queueItem->getApiController('getAltData'); 
 
-		$api->ajax_replaceImageAttributes($queueItem, $aiData);
+		$api->redoAiReplacement($queueItem);
 
 		$json->status = true;	
 		return $json;
@@ -1795,6 +1797,17 @@ class AjaxController
 
 
 		$stats = $bulkControl->createNewBulk('media', ['customOp' => 'migrate']);
+		$json->media->stats = $stats;
+
+		return $json;
+	}
+
+	protected function startBulkRedoAiReplacement($json, $data)
+	{
+		$bulkControl = BulkController::getInstance();
+		QueueController::resetQueues(); // prevent any weirdness
+
+		$stats = $bulkControl->createNewBulk('media', ['customOp' => 'redoAiReplacement']);
 		$json->media->stats = $stats;
 
 		return $json;

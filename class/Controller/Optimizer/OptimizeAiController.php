@@ -85,6 +85,9 @@ class OptimizeAiController extends OptimizerBase
             case 'undoAI':
                 return $this->undoAltData($qItem);
                 break;
+            case 'redoAiReplacement':
+                $this->redoAiReplace($qItem);
+            break; 
             default:
                 $this->api->processMediaItem($qItem);
                 break;
@@ -785,9 +788,25 @@ class OptimizeAiController extends OptimizerBase
          
     }
 
-    public function ajax_replaceImageAttributes($qItem, $aiData)
+    public function redoAIReplace($qItem)
     {
-            return $this->replaceImageAttributes($qItem, $aiData);   
+        $imageModel = $qItem->imageModel;
+        $item_id = $imageModel->get('id');
+
+        $aiModel = AiDataModel::getModelByAttachment($item_id, 'media');
+		$aiData = $aiModel->getGeneratedData();
+
+        $this->replaceImageAttributes($qItem, $aiData);   
+    
+        $this->finishItemProcess($qItem);
+
+
+        $qItem->addResult([
+         'is_done' => true,
+         'is_error' => false,
+         'message' => __('Item checked ', 'shortpixel-image-optimiser'),
+         'apiStatus' => ApiController::STATUS_NOT_API,
+        ]);
     }
 
     /*
@@ -907,6 +926,10 @@ class OptimizeAiController extends OptimizerBase
                 $frontImage = new \ShortPixel\Model\FrontImage($match);
                 $src = $frontImage->src;
 
+                if (is_null($src))
+                {
+                     continue; 
+                }
                 // Only replace in post content the image we did
                 $pattern = '/' . preg_quote($image_filebase, '/') . '(-\d+x\d+\.|\.|-scaled\.)' . $imageModel->getExtension() . '/i';
                 if (preg_match($pattern, $src) !== 1) {

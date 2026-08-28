@@ -255,7 +255,7 @@ abstract class Queue
             {
               $prepared = $this->prepareBulkRestore();
             }
-            elseif (false !== $custom_operation && 'bulk-undoAI' === $custom_operation)
+            elseif (false !== $custom_operation && ('bulk-undoAI' === $custom_operation || 'redoAiReplacement' === $custom_operation))
             {
                $prepared = $this->prepareUndoAI();
             }
@@ -605,6 +605,12 @@ abstract class Queue
                          $qObject = new \stdClass;
                          $qObject->action = 'undoAI';
                          $queue[] = ['id' => $mediaItem->get('id'), 'value' => $qObject];
+                      }
+                      elseif('redoAiReplacement' === $operation)
+                      {
+                          $qItem = QueueItems::getImageItem($mediaItem);
+                          $qItem->newRedoAiReplacementAction();
+                          $queue[] = $qItem->returnEnqueue();
                       }
                    }
                    elseif(true === $enqueueAi)

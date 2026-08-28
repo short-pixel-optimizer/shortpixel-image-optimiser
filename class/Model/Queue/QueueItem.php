@@ -872,7 +872,7 @@ class QueueItem
          case 'getAltData': 
          case 'undoAI': 
          case 'redoAI': 
-         case 'redoAltReplacement': 
+         case 'redoAiReplacement': 
             $api = OptimizeAiController::getInstance();
             break;
          case 'restore':
