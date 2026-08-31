@@ -1064,6 +1064,25 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			return false;
 		}
 
+		// Fields disabled in settings, or skipped by 'preserve existing', come back as
+		// integer status codes instead of text. Only apply real core/image attributes
+		// holding a string: an integer caption makes the block's save() throw, after
+		// which Gutenberg serializes the image block as an empty void comment.
+		var attributes = {};
+
+		if (typeof aiData !== 'undefined') {
+			if (typeof aiData.alt === 'string') {
+				attributes.alt = aiData.alt;
+			}
+			if (typeof aiData.caption === 'string') {
+				attributes.caption = aiData.caption;
+			}
+		}
+
+		if (Object.keys(attributes).length === 0) {
+			return false;
+		}
+
 		let blocks = wp.data.select('core/block-editor').getBlocks();
 		for (let i = 0; i < blocks.length; i++) {
 			let block = blocks[i];
@@ -1072,7 +1091,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				let clientId = block.clientId;
 
 				wp.data.dispatch('core/block-editor').updateBlockAttributes(clientId,
-					aiData);
+					attributes);
 
 			}
 		}
