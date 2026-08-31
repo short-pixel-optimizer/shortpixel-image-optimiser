@@ -34,7 +34,7 @@ class MultiSiteViewController extends SettingsViewController
       /** @var string Nonce action name for the network settings form. */
       protected $form_action = 'save-multi-settings';
       /** @var string[] Valid tab identifiers accepted by the network settings page. */
-      protected $all_display_parts = array('network', 'optimisation', 'processing', 'webp', 'ai');
+     // protected $all_display_parts = array('network', 'optimisation', 'processing', 'webp', 'ai');
 
       /** @var bool Marks this controller as the WPMU network settings page for shared templates. */
       protected $is_network_page = true;
@@ -48,9 +48,13 @@ class MultiSiteViewController extends SettingsViewController
        */
       public function __construct()
       {
+        // Only add network to the all parts of settings 
+         $this->all_display_parts[] = 'network';   
+
          parent::__construct();
          $this->model = new MultiSettingsModel();
          $this->view->network_settings_enabled = false;
+         
       }
 
       /**
@@ -126,7 +130,8 @@ class MultiSiteViewController extends SettingsViewController
 
           $this->view->network_settings_enabled = (bool) $this->model->network_settings_override_enabled;
 
-          $url = network_admin_url('settings.php?page=shortpixel-network-settings&part=' . rawurlencode($this->display_part));
+          $url = network_admin_url('settings.php?page=shortpixel-
+          &part=' . rawurlencode($this->display_part));
           $redirect = 'self';
 
           $this->handleAjaxSave($redirect, $url);
@@ -248,4 +253,11 @@ class MultiSiteViewController extends SettingsViewController
           return sprintf('<a href="%s" class="%s" data-menu-link="%s" %s >%s</a>', $link, esc_attr($class), esc_attr($args['part']), $active, $title);
       }
 
-}
+      public function setControllerURL($url)
+      {
+          // Fix for missing /network/ in admin page URL's from route () in  SPIO main plugin file. 
+          $url = str_replace( '/wp-admin/', '/wp-admin/network/', $url );
+          $this->url = $url; 
+      }
+
+} // Class 

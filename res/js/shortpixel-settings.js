@@ -1005,6 +1005,11 @@ class ShortPixelSettings {
 
 		formData.append('request_url', window.location.toString());
 
+		if (document.querySelector('input[name="is_network_admin"]') !== null)
+		{
+				formData.append('is_network_admin', 'true');
+		}
+
 		if (false === formData.has('nonce')) {
 			formData.append('nonce', ShortPixelProcessorData.nonce_settingsrequest);
 		}

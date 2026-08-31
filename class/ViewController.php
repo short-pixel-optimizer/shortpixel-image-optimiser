@@ -126,6 +126,8 @@ class ViewController extends Controller
     }
     elseif (isset($_POST) && count($_POST) > 0)
     {
+      Log::addInfo('Check Post succeeds nonce check, action : ' . $this->form_action, array($_POST) );
+
       check_admin_referer( $this->form_action, 'sp-nonce' ); // extra check, when we are wrong here, it dies.
 
       $this->is_form_submit = true;

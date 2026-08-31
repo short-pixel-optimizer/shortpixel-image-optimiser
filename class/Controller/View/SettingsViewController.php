@@ -1430,7 +1430,6 @@ class SettingsViewController extends \ShortPixel\ViewController
 
         $url = null;
 
-
         if ($redirect == 'self'  || $redirect == 'reload')
         {
           if (true === $this->is_ajax_save)

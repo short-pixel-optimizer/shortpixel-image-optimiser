@@ -187,6 +187,9 @@ if ( ! defined( 'ABSPATH' ) ) {
           <?php if (true === $this->is_network_page)
           {
              $this->loadView('settings/part-network-override'); 
+             ?>
+             <input type="hidden" name="is_network_admin" value="1" /> 
+             <?php 
           }
           ?>
 

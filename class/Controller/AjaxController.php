@@ -587,7 +587,11 @@ class AjaxController
 	 */
 	protected function settingsFormSubmit($action)
 	{
-		if ('save-multi-settings' === $action)
+
+	
+		// This is submitted by a separate field to justify the correct nonce and load Multisite if it's there on other actions as well. Set via shortpixel-settings AjaxRequest
+		$is_network_admin = isset($_POST['is_network_admin']) ? true : false; 
+		if (true === $is_network_admin)
 		{
 			$viewController =  new MultiSiteViewController();
 		}
@@ -595,7 +599,6 @@ class AjaxController
 		{
 			$viewController =  new SettingsViewController();
 		}
-		
 
 		$viewController->indicateAjaxSave(); // set ajax save method
 
