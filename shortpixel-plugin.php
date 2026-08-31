@@ -189,6 +189,16 @@ class ShortPixelPlugin {
 	{
 		Controller\CronController::getInstance();  // cron jobs - must be init to function!
 
+		// New - init logger a bit later ( = safer ), nothing really lost here. 
+		if (false === defined( 'WP_CLI' ) || false === \WP_CLI)
+		{
+			$log = \ShortPixel\ShortPixelLogger\ShortPixelLogger::getInstance();
+			if (\ShortPixel\ShortPixelLogger\ShortPixelLogger::debugIsActive() )
+			{
+				$log->setLogPath(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
+			}
+		}
+
 		$access = AccessModel::getInstance();
 
 		$isAdminUser = $access->userIsAllowed('is_admin_user');
@@ -645,9 +655,11 @@ class ShortPixelPlugin {
 		wp_register_script('shortpixel-media', plugins_url('res/js/shortpixel-media.js',  SHORTPIXEL_PLUGIN_FILE), array('jquery'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
 		wp_register_script('shortpixel-inline-help', plugins_url('res/js/shortpixel-inline-help.js',  SHORTPIXEL_PLUGIN_FILE), [], SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
-		wp_register_script('shortpixel-chatbot', 
-		apply_filters('shortpixel/plugin/nohelp', 'https://spcdn.shortpixel.ai/assets/js/ext/ai-chat-agent.js'), [], SHORTPIXEL_IMAGE_OPTIMISER_VERSION, $args_footer_async);
-
+		
+		if (true === apply_filters('shortpixel/plugin/nohelp', true))
+		{
+			wp_register_script('shortpixel-chatbot', 'https://spcdn.shortpixel.ai/assets/js/ext/ai-chat-agent.js', [], SHORTPIXEL_IMAGE_OPTIMISER_VERSION, $args_footer_async);
+		}
 		// This filter is from ListMediaViewController for the media library grid display, executive script in shortpixel-media.js.
 
 		$filters = array('optimized' => array(

@@ -82,6 +82,7 @@ if (! defined('SHORTPIXEL_DEBUG'))
 }
 
 
+/*
 if (false === defined( 'WP_CLI' ) || false === WP_CLI)
 {
 	$log = \ShortPixel\ShortPixelLogger\ShortPixelLogger::getInstance();
@@ -89,7 +90,7 @@ if (false === defined( 'WP_CLI' ) || false === WP_CLI)
 	{
   	$log->setLogPath(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
 	}
-}
+} */
 
 /* Function to reach core function of ShortPixel
 * Use to get plugin url, plugin path, or certain core controllers
