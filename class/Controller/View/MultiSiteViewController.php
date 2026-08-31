@@ -18,11 +18,23 @@ use ShortPixel\Notices\NoticeController as Notice;
  *
  * Extends SettingsViewController to reuse the settings-save pipeline and the
  * regular `view-settings` template (rendered with $is_network_page = true, which
- * adds the Network Control tab), but binds to the MultiSettingsModel
- * (network-wide settings stored in the network options table).
+ * adds the Network Control tab AND a hidden `is_network_admin` input read by
+ * shortpixel-settings.js for the AJAX routing gate), but binds to the
+ * MultiSettingsModel (network-wide settings stored in the network options
+ * table).
  *
  * Wired up by AdminController on the `network_admin_menu` hook when the site
  * is part of a multisite network.
+ *
+ * TEMPLATE NOTE (e4d1d0a8, 2026-08-28): view-network-settings.php was removed
+ * and the shared view-settings.php is used instead — the network-specific
+ * bits (Network Control tab, hidden routing input) are conditional on
+ * $this->is_network_page = true.
+ *
+ * ROUTING NOTE: AjaxController::settingsFormSubmit() selects this controller
+ * when the client posts is_network_admin=true. See the bug #41 pins in
+ * tests/Multisite/test-MultisiteNetworkSave.php for the security limits of
+ * that mechanism.
  *
  * @package ShortPixel\Controller\View
  */
@@ -33,7 +45,15 @@ class MultiSiteViewController extends SettingsViewController
       protected $template = 'view-settings';
       /** @var string Nonce action name for the network settings form. */
       protected $form_action = 'save-multi-settings';
-      /** @var string[] Valid tab identifiers accepted by the network settings page. */
+      /*
+       * Since e4d1d0a8 (2026-08-28) $all_display_parts is INHERITED from
+       * SettingsViewController (overview/optimisation/exclusions/processing/
+       * webp/ai/integrations/debug/tools/help) and only the 'network' entry
+       * is appended in the constructor. The previous redeclaration lived
+       * here and only exposed a 5-entry list, which broke deep-linked tabs
+       * that the parent set knows about. Keeping the old array commented
+       * out as a reminder — remove after the release ships.
+       */
      // protected $all_display_parts = array('network', 'optimisation', 'processing', 'webp', 'ai');
 
       /** @var bool Marks this controller as the WPMU network settings page for shared templates. */
@@ -42,19 +62,23 @@ class MultiSiteViewController extends SettingsViewController
       /**
        * Instantiates the MultiSettingsModel and chains to the parent constructor.
        *
+       * Appends 'network' to the inherited $all_display_parts so the Network
+       * Control tab is a recognised deep-link target (see the class docblock
+       * for the inheritance-vs-redeclare rationale).
+       *
        * Overrides $this->model with a MultiSettingsModel instance so that the
        * inherited processSave() and load_settings() logic operates on network-wide
        * settings rather than per-site settings.
        */
       public function __construct()
       {
-        // Only add network to the all parts of settings 
-         $this->all_display_parts[] = 'network';   
+        // Only add network to the all parts of settings
+         $this->all_display_parts[] = 'network';
 
          parent::__construct();
          $this->model = new MultiSettingsModel();
          $this->view->network_settings_enabled = false;
-         
+
       }
 
       /**
@@ -130,8 +154,7 @@ class MultiSiteViewController extends SettingsViewController
 
           $this->view->network_settings_enabled = (bool) $this->model->network_settings_override_enabled;
 
-          $url = network_admin_url('settings.php?page=shortpixel-
-          &part=' . rawurlencode($this->display_part));
+          $url = network_admin_url('settings.php?page=shortpixel-network-settings&part=' . rawurlencode($this->display_part));
           $redirect = 'self';
 
           $this->handleAjaxSave($redirect, $url);
@@ -253,11 +276,27 @@ class MultiSiteViewController extends SettingsViewController
           return sprintf('<a href="%s" class="%s" data-menu-link="%s" %s >%s</a>', $link, esc_attr($class), esc_attr($args['part']), $active, $title);
       }
 
+      /**
+       * Sets the controller URL and rewrites plain admin URLs to network-admin URLs.
+       *
+       * Overrides the ViewController base implementation to inject `/network/`
+       * into `/wp-admin/` paths so that the AJAX save redirect targets the
+       * network settings screen (the route in shortpixel-plugin.php passes a
+       * plain admin URL because the same route serves both single-site and
+       * multisite dispatch).
+       *
+       * Called by AjaxController::settingsFormSubmit() with the client-posted
+       * `$_POST['request_url']` when this controller has been selected via the
+       * `is_network_admin` routing flag.
+       *
+       * @param string $url The URL captured from the request; typically an /wp-admin/ URL.
+       * @return void
+       */
       public function setControllerURL($url)
       {
-          // Fix for missing /network/ in admin page URL's from route () in  SPIO main plugin file. 
+          // Fix for missing /network/ in admin page URL's from route () in  SPIO main plugin file.
           $url = str_replace( '/wp-admin/', '/wp-admin/network/', $url );
-          $this->url = $url; 
+          $this->url = $url;
       }
 
-} // Class 
+} // Class

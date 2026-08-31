@@ -313,6 +313,16 @@ class BulkViewController extends \ShortPixel\ViewController
    * (date|filename|item_id|message) and renders each as a styled 'fatal' div.
    * Single-cell entries (empty lines) are skipped.
    *
+   * BUG #48 (open, pinned in tests/Controller/test-BulkViewController.php as
+   * test_pin48_loadCurrentLog_emits_unescaped_filename_and_message_pinned_for_deferred_fix):
+   * the $date, $filename, and $message cells below are concatenated straight
+   * into the returned HTML with no escaping. Commit 50719048 stripped
+   * esc_html from the caller-side echo in view/bulk/part-finished.php and
+   * part-process.php (so the kbinfo <span>/<a> renders as HTML), which turns
+   * the unescaped cells into stored XSS in wp-admin whenever an
+   * attacker-controlled filename lands in the log. Fix here: esc_html each
+   * cell at build time and leave the kbinfo markup raw.
+   *
    * @param string $type 'media' or 'custom'. Default 'media'.
    * @return string|false Formatted HTML log output, or false when no log is present.
    */

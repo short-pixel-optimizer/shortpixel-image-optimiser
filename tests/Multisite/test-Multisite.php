@@ -624,6 +624,65 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
+	 * Regression test for bug #47 (fixed 2026-08-31): during e4d1d0a8 the
+	 * self-redirect literal in MultiSiteViewController::processSave was broken
+	 * across two physical lines, truncating the page slug to 'shortpixel-' +
+	 * newline + indentation. The redirect URL must carry the full
+	 * 'shortpixel-network-settings' slug with no embedded whitespace.
+	 *
+	 * We can only observe the URL by intercepting handleAjaxSave() — the
+	 * production caller passes redirect='self' so the URL never lands in the
+	 * JSON body. A subclass captures both args and short-circuits the
+	 * response.
+	 */
+	public function test_process_save_builds_clean_network_redirect_url() {
+		delete_site_option( 'spio_wpmu' );
+
+		$capturing = new class extends \ShortPixel\Controller\View\MultiSiteViewController {
+			public $capturedUrl = null;
+			protected function handleAjaxSave( $redirect, $url = false ) {
+				$this->capturedUrl = $url;
+				throw new \WPDieException( 'captured' );
+			}
+		};
+
+		$_POST = array(
+			'network_settings_override_enabled' => 'on',
+			'compressionType'                   => '1',
+		);
+
+		$method = new ReflectionMethod( $capturing, 'processSave' );
+		$method->setAccessible( true );
+
+		$ob_level = ob_get_level();
+		ob_start();
+		try {
+			$method->invoke( $capturing );
+		} catch ( \WPDieException $e ) {
+			unset( $e );
+		}
+		while ( ob_get_level() > $ob_level ) {
+			ob_end_clean();
+		}
+		$_POST = array();
+
+		$this->assertNotNull(
+			$capturing->capturedUrl,
+			'processSave must have called handleAjaxSave with a URL.'
+		);
+
+		// The part value is 'overview' by default (base class) because
+		// processSave() doesn't seed display_part to 'network' on its own —
+		// this test guards the SLUG, so the part value is unconstrained.
+		$this->assertMatchesRegularExpression(
+			"/settings\\.php\\?page=shortpixel-network-settings(?:&|&amp;)part=\\w+\$/",
+			(string) $capturing->capturedUrl,
+			'Regression #47: the redirect must carry the full shortpixel-network-settings slug with no embedded whitespace. '
+			. 'Actual URL: ' . (string) $capturing->capturedUrl
+		);
+	}
+
+	/**
 	 * Unchecked checkboxes are absent from the POST body; processSave() must
 	 * collapse every stored-but-unposted boolean to false (the same behavior
 	 * the site-level save has — and the class of bug behind earlier settings

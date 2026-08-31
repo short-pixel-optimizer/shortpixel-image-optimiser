@@ -103,6 +103,13 @@ class ViewController extends Controller
    * and store the submitted fields. Returns false and terminates execution on a
    * hard nonce failure; returns true silently when no POST data is present.
    *
+   * PRIVACY NOTE (added e4d1d0a8): on success and on failure this method
+   * dumps the FULL $_POST array into the debug log via Log::addInfo. Settings
+   * form submissions include the API key input on the site settings screen,
+   * so the shortpixel debug log can end up containing that key value in
+   * cleartext. Fine for developer debugging; something to be aware of before
+   * shipping a debug log to an external channel.
+   *
    * @param bool $processPostData Whether to call processPostData() on valid submission. Default true.
    * @return bool True when no POST or POST is valid; false on nonce mismatch with ajaxSave present.
    */
@@ -126,6 +133,8 @@ class ViewController extends Controller
     }
     elseif (isset($_POST) && count($_POST) > 0)
     {
+      // See method docblock — the full $_POST array (including any API key
+      // field on the site settings form) reaches the debug log here.
       Log::addInfo('Check Post succeeds nonce check, action : ' . $this->form_action, array($_POST) );
 
       check_admin_referer( $this->form_action, 'sp-nonce' ); // extra check, when we are wrong here, it dies.
