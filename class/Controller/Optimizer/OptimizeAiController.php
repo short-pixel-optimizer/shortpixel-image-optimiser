@@ -412,7 +412,7 @@ class OptimizeAiController extends OptimizerBase
         // Generic number of strlen here. Disallow filename not to be very short, because because. 
         if (isset($aiData['filebase']) && is_string($aiData['filebase']) && strlen($aiData['filebase']) > 5) // ?? 
         {
-            // @todo This and the ReplaceAtttributes is similar code + Replacer2 doesn't reset at all due to getINstance implementation
+            // @todo This and the ReplaceAtttributes is similar code. (Replacer2's Setup::getInstance() returns a fresh instance per call since 97f2c1f4, so URL data no longer leaks between items.)
             $currentFileBase = ($imageModel->isScaled()) ? $imageModel->getOriginalFile()->getFileBase() : $imageModel->getFileBase();
 
             $urls = $qItem->data()->urls;
@@ -538,13 +538,20 @@ class OptimizeAiController extends OptimizerBase
     }
 
 
-    /** Replace Image Attributes ( others? ) on images via BaseURL 
-     * 
-     * The finder is passed a callback to which the results will be returned.  
-     * 
-     * @param QueueItem $qItem 
-     * @param mixed $new_text The new text 
-     * @return array 
+    /** Replace Image Attributes ( others? ) on images via BaseURL
+     *
+     * Resolves this item's (original-file) URL, feeds it to a FRESH
+     * replacer2 Setup (Setup::getInstance() is intentionally NOT a
+     * singleton since 97f2c1f4 — a shared instance accumulated URLs
+     * across items and getBaseURL() then searched with the first item's
+     * URL, leaving every later image's in-content alt untouched), and
+     * runs the Finder over post_content. Matching posts are passed to
+     * the handleReplace() callback, which does the actual attribute
+     * replacement and save.
+     *
+     * @param QueueItem $qItem
+     * @param array $aiData Generated AI data (alt / caption are strings, or int status codes when not generated).
+     * @return array|void Finder results; void when alt AND caption are int status codes.
      */
     protected function replaceImageAttributes(QueueItem $qItem, $aiData)
     {
@@ -788,6 +795,20 @@ class OptimizeAiController extends OptimizerBase
          return $result;
     }
 
+    /**
+     * Re-run the in-content attribute replacement from STORED AI data.
+     *
+     * Recovery path (Tools → "Redo Ai Replacement", 90d1a316) for items whose
+     * aipostmeta row is GENERATED but whose embedding posts missed the
+     * replacement (e.g. the pre-97f2c1f4 replacer2 Setup-singleton bug). No
+     * API request is made: the generated data is read from AiDataModel and
+     * pushed through replaceImageAttributes(). Queue dispatch reaches this
+     * via sendToProcessing()'s `$this->redoAiReplace()` call — PHP method
+     * names are case-insensitive, so that resolves here.
+     *
+     * @param QueueItem $qItem The redoAiReplacement queue item.
+     * @return void Marks the item done (STATUS_NOT_API) via addResult().
+     */
     public function redoAIReplace($qItem)
     {
         $imageModel = $qItem->imageModel;
@@ -891,9 +912,14 @@ class OptimizeAiController extends OptimizerBase
      *
      * This function also saves the results! Each result is first passed through
      * WPMLCheckReplace(), so posts in a different WPML language are skipped.
+     * Within each post only <img> tags whose src matches THIS item's file base
+     * (incl. -WxH thumbnail and -scaled variants) are touched. With the
+     * aiPreserve setting enabled, only EMPTY alt/caption attributes are
+     * filled; existing values are left alone. Int values in aiData (status
+     * codes) mean "no generated text" and never replace anything.
      *
-     * @param mixed $results
-     * @param mixed $args
+     * @param array $results Finder results: arrays with post_id + content.
+     * @param array $args    'aiData' (generated data) and 'qItem' (QueueItem).
      * @return void
      */
     public function handleReplace($results, $args)

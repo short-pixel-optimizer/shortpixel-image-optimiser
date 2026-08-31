@@ -24,9 +24,9 @@
  *     (success path also returned false) was FIXED in 1fc98025 (`return true`
  *     at ~line 765). Conflict path covered in
  *     test_replaceFiles_returns_false_on_conflict.
- *   - ajax_replaceFile() — PINNED BUG #45 (c44f0369): the `return $result;`
- *     was removed, so AjaxController::replaceFileName() always reports
- *     "Files were not replaced" even on success (see test_pin45).
+ *   - ajax_replaceFile() — bug #45 (c44f0369 dropped `return $result;`)
+ *     FIXED in 370fb5db; regression-tested in
+ *     test_ajax_replaceFile_returns_the_replaceFiles_result.
  *   - sendToProcessing() dispatch: 'undoAI' is routed locally; other actions
  *     reach api->processMediaItem() (routing verified via spy).
  *
@@ -702,19 +702,15 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 	}
 
 	/*
-	 * PINNED BUG #45 (c44f0369 "Fixes - Reload when renaming"): the commit
-	 * removed `return $result;` from ajax_replaceFile(), so it always returns
-	 * null. Its only caller, AjaxController::replaceFileName() (~line 1342),
-	 * does `(true === $result)` on it → the user ALWAYS sees "Files were not
-	 * replaced", even when the rename succeeded (the page still reloads via
-	 * the new 'redirect' => 'reload', masking it somewhat).
-	 *
-	 * The replaceFiles() call chain is stubbed to return true, proving the
-	 * value is dropped by ajax_replaceFile itself.
-	 *
-	 * FLIP when fixed: assertTrue( $result ) once `return $result;` is back.
+	 * Regression test for bug #45 (FIXED in 370fb5db, flipped from pin45):
+	 * c44f0369 "Fixes - Reload when renaming" had removed `return $result;`
+	 * from ajax_replaceFile(), so it always returned null and its caller,
+	 * AjaxController::replaceFileName(), showed "Files were not replaced"
+	 * even on success. The fix restored the return; this test stubs the
+	 * replaceFiles() chain to return true and asserts the value is passed
+	 * through by ajax_replaceFile.
 	 */
-	public function test_pin45_ajax_replaceFile_drops_the_replaceFiles_result() {
+	public function test_ajax_replaceFile_returns_the_replaceFiles_result() {
 		$ctrl = new class() extends OptimizeAiController {
 			protected function replaceFiles( $qItem, $newFileBase, $args = [] ): bool {
 				return true; // simulate a fully successful replace
@@ -739,9 +735,9 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 		$qItem  = new QueueItem( [ 'imageModel' => $model ] );
 		$result = $ctrl->ajax_replaceFile( $qItem, 'spio-pin45-new.jpg' );
 
-		$this->assertNull(
+		$this->assertTrue(
 			$result,
-			'PINNED BUG #45: ajax_replaceFile() drops the (true) result of replaceFiles(). When Bas restores `return $result;`, flip this to assertTrue.'
+			'Regression #45: ajax_replaceFile() must return the replaceFiles() result — it used to drop it (always null), making every rename report "Files were not replaced".'
 		);
 	}
 }

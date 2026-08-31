@@ -4,6 +4,7 @@ vendor-tests
 composer.lock
 .DS_Store
 .env.testing
+.phpunit.result.cache
 .idea/.gitignore
 .idea/misc.xml
 .idea/modules.xml
@@ -15,7 +16,6 @@ composer.lock
 /.idea/shortpixel-image-optimiser.iml
 /.idea/workspace.xml
 /.idea
-bin/
 /composer.phar
 .env.local
 /wordpress/

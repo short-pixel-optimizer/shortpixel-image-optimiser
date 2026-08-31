@@ -667,4 +667,140 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		} );
 		$this->assertGreaterThanOrEqual( 1, count( $addRequests ), 'A new add-url.php request must be sent during regeneration' );
 	}
+
+	/**
+	 * Regression test for the customer-reported bulk AI SEO bug (fixed in
+	 * 97f2c1f4): when SEVERAL images are AI-processed in the same PHP
+	 * request, every image's in-content <img alt> must be updated in the
+	 * post that embeds it — not just the first image's post.
+	 *
+	 * Root cause of the bug: replacer2's Setup::getInstance() was a
+	 * request-lifetime singleton whose Url data accumulated via addData(),
+	 * while Url::getBaseURL() always returned data[0]. Every AI item after
+	 * the first therefore searched post_content for the FIRST item's URL;
+	 * handleReplace()'s filename filter then silently discarded the found
+	 * posts, so images 2..n kept alt="" in content forever (the aipostmeta
+	 * row made isProcessable() false on re-runs). The fix makes
+	 * Setup::getInstance() return a FRESH instance per call, so each
+	 * replaceImageAttributes() run searches with its own image's base URL.
+	 *
+	 * FLIP-alert: if this fails with only the first post updated, the
+	 * Setup singleton (or equivalent shared Url state) has been
+	 * reintroduced in replacer2.
+	 */
+	public function test_bulk_ai_updates_in_content_alt_for_every_image_not_just_the_first() {
+		// Three attachments in one request — wp_unique_filename gives them
+		// distinct file bases (fixture-small, fixture-small-1, fixture-small-2).
+		$ids = array(
+			$this->uploadFixture( 'fixture-small.jpg' ),
+			$this->uploadFixture( 'fixture-small.jpg' ),
+			$this->uploadFixture( 'fixture-small.jpg' ),
+		);
+		$this->purgeQueueTable();
+
+		// Each image is embedded in its OWN post, with an empty alt.
+		$posts = array();
+		foreach ( $ids as $id ) {
+			$img_tag      = '<img src="' . esc_url( wp_get_attachment_url( $id ) ) . '" alt="" />';
+			$posts[ $id ] = self::factory()->post->create( array( 'post_content' => $img_tag ) );
+		}
+
+		foreach ( $ids as $id ) {
+			$result = $this->enqueueAi( $id );
+			$this->assertFalse( $result->is_error, 'AI enqueue must succeed for attachment ' . $id );
+		}
+
+		$this->runQueueUntilEmpty();
+
+		foreach ( $ids as $id ) {
+			$this->assertSame(
+				'A mock ai alt text.',
+				get_post_meta( $id, '_wp_attachment_image_alt', true ),
+				"Attachment $id must get its WP alt meta (sanity — this part worked even with the bug)"
+			);
+
+			// Replacer's Updater writes post_content via direct SQL.
+			clean_post_cache( $posts[ $id ] );
+			$content = get_post( $posts[ $id ] )->post_content;
+			$this->assertStringContainsString(
+				'alt="A mock ai alt text."',
+				$content,
+				"Post embedding attachment $id must have its in-content alt filled. If only the first post got it, the replacer2 Setup singleton bug is back."
+			);
+		}
+	}
+
+	/**
+	 * aiPreserve=true (af2414cc, default false): the in-content replacement
+	 * (handleReplace) must only FILL empty alt attributes and leave
+	 * human-written alts alone.
+	 */
+	public function test_aipreserve_only_fills_empty_in_content_alts() {
+		$id         = $this->freshAttachment();
+		$imageModel = $this->freshImageModel( $id );
+		$src        = esc_url( wp_get_attachment_url( $id ) );
+
+		// AFTER freshImageModel(): resetPluginSingletons() recreates the
+		// SettingsModel, which would discard an unsaved in-memory value.
+		\wpSPIO()->settings()->aiPreserve = 1;
+
+		$post_human = self::factory()->post->create( array( 'post_content' => '<img src="' . $src . '" alt="human written alt" />' ) );
+		$post_empty = self::factory()->post->create( array( 'post_content' => '<img src="' . $src . '" alt="" />' ) );
+
+		$qItem   = \ShortPixel\Controller\Queue\QueueItems::getImageItem( $imageModel );
+		$results = array(
+			array( 'post_id' => $post_human, 'content' => get_post( $post_human )->post_content ),
+			array( 'post_id' => $post_empty, 'content' => get_post( $post_empty )->post_content ),
+		);
+		$args    = array(
+			'aiData' => array( 'alt' => 'A mock ai alt text.', 'caption' => 0 ),
+			'qItem'  => $qItem,
+		);
+
+		\ShortPixel\Controller\Optimizer\OptimizeAiController::getInstance()->handleReplace( $results, $args );
+
+		// Replacer's Updater writes post_content via direct SQL.
+		clean_post_cache( $post_human );
+		clean_post_cache( $post_empty );
+
+		$this->assertStringContainsString(
+			'alt="human written alt"',
+			get_post( $post_human )->post_content,
+			'With aiPreserve on, an existing alt must NOT be overwritten.'
+		);
+		$this->assertStringContainsString(
+			'alt="A mock ai alt text."',
+			get_post( $post_empty )->post_content,
+			'With aiPreserve on, an empty alt must still be filled.'
+		);
+	}
+
+	/** Contrast case: with aiPreserve off (default) existing alts ARE overwritten. */
+	public function test_without_aipreserve_existing_in_content_alt_is_overwritten() {
+		$id         = $this->freshAttachment();
+		$imageModel = $this->freshImageModel( $id );
+		$src        = esc_url( wp_get_attachment_url( $id ) );
+
+		\wpSPIO()->settings()->aiPreserve = 0;
+
+		$post_human = self::factory()->post->create( array( 'post_content' => '<img src="' . $src . '" alt="human written alt" />' ) );
+
+		$qItem = \ShortPixel\Controller\Queue\QueueItems::getImageItem( $imageModel );
+		$args  = array(
+			'aiData' => array( 'alt' => 'A mock ai alt text.', 'caption' => 0 ),
+			'qItem'  => $qItem,
+		);
+
+		\ShortPixel\Controller\Optimizer\OptimizeAiController::getInstance()->handleReplace(
+			array( array( 'post_id' => $post_human, 'content' => get_post( $post_human )->post_content ) ),
+			$args
+		);
+
+		clean_post_cache( $post_human );
+		$this->assertStringContainsString(
+			'alt="A mock ai alt text."',
+			get_post( $post_human )->post_content,
+			'With aiPreserve off, the AI alt must replace the existing in-content alt.'
+		);
+	}
 }

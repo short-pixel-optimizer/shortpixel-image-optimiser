@@ -649,4 +649,92 @@ class AjaxHandlersTest extends SPIO_AjaxTestCase {
 			'Image must be optimized again after editor reprocess'
 		);
 	}
+
+	// -------------------------------------------------------------------
+	// ai/redoAiReplacement — regression for bug #46
+	// -------------------------------------------------------------------
+
+	/**
+	 * REGRESSION bug #46 (introduced in 90d1a316 "Bulk redo AI
+	 * replacement"): AjaxController::redoAiReplacement() used to call
+	 * `$api->redoAiReplacement($queueItem)` — an undefined method (the real
+	 * name is redoAIReplace(), "...Replace" not "...Replacement", so PHP's
+	 * method-name case-insensitivity could not save it) — making every
+	 * single-item `ai/redoAiReplacement` AJAX request fatal. Fixed by
+	 * renaming the call to redoAIReplace().
+	 *
+	 * End-to-end check of the recovery scenario: AI data is GENERATED but
+	 * the embedding post still has alt="" (the pre-97f2c1f4 replacer2
+	 * singleton stuck state). The single-item redo must not fatal, must
+	 * return status=true, and must re-apply the stored alt to the post
+	 * content synchronously — no new API calls, no queue round-trip.
+	 */
+	public function test_single_redo_ai_replacement_reapplies_in_content_alt() {
+		$this->_setRole( 'administrator' );
+
+		$settings                  = \wpSPIO()->settings();
+		$settings->enable_ai       = 1;
+		$settings->ai_gen_alt      = 1;
+		$settings->ai_gen_caption  = 1;
+		$settings->ai_gen_filename = 0;
+		$settings->aiPreserve      = false;
+
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$img_tag       = '<img src="' . esc_url( wp_get_attachment_url( $attachment_id ) ) . '" alt="" />';
+		$post_id       = self::factory()->post->create( array( 'post_content' => $img_tag ) );
+
+		global $wpdb;
+		$suppress = $wpdb->suppress_errors( true );
+		$wpdb->query( "DELETE FROM `{$wpdb->prefix}shortpixel_aipostmeta`" );
+		$wpdb->suppress_errors( $suppress );
+
+		$ref  = new ReflectionClass( \ShortPixel\Model\AiDataModel::class );
+		$prop = $ref->getProperty( 'models' );
+		$prop->setAccessible( true );
+		$prop->setValue( null, array() );
+
+		$this->purgeQueueTable();
+
+		// Generate the AI data through the queue + mock API.
+		$imageModel = \wpSPIO()->filesystem()->getImage( $attachment_id, 'media' );
+		( new QueueController() )->addItemToQueue( $imageModel, array( 'action' => 'requestAlt' ) );
+		$this->runQueueUntilEmpty();
+
+		clean_post_cache( $post_id );
+		$this->assertStringContainsString(
+			'A mock ai alt text.',
+			get_post( $post_id )->post_content,
+			'Precondition: the initial generation must fill the in-content alt.'
+		);
+
+		// Recreate the stuck state: aipostmeta GENERATED, in-content alt empty.
+		wp_update_post( array( 'ID' => $post_id, 'post_content' => $img_tag ) );
+		clean_post_cache( $post_id );
+		$this->assertStringNotContainsString( 'A mock ai alt text.', get_post( $post_id )->post_content );
+		$prop->setValue( null, array() );
+
+		$response = $this->doScreenAction(
+			'ai/redoAiReplacement',
+			array(
+				'id'   => $attachment_id,
+				'type' => 'media',
+			)
+		);
+
+		$this->assertIsObject(
+			$response,
+			'Regression #46: ai/redoAiReplacement must return JSON, not fatal; raw: ' . $this->lastRawResponse()
+		);
+		$this->assertTrue(
+			$response->status,
+			'Regression #46: the single-item redo handler must report success.'
+		);
+
+		clean_post_cache( $post_id );
+		$this->assertStringContainsString(
+			'alt="A mock ai alt text."',
+			get_post( $post_id )->post_content,
+			'Regression #46: the single-item redo must re-apply the stored AI alt to the embedding post content.'
+		);
+	}
 }

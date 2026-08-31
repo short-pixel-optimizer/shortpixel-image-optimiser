@@ -741,4 +741,78 @@ class BulkOptimizationTest extends SPIO_IntegrationTestCase {
 			'AI status must be AI_STATUS_NOTHING after undoAI reverts the record (plan 32.15).'
 		);
 	}
+
+	/**
+	 * The Tools-menu "Redo Ai Replacement" bulk (90d1a316, beta): a bulk with
+	 * customOp=redoAiReplacement must select every attachment with GENERATED
+	 * aipostmeta data (MediaLibraryQueue::queryAiItems), enqueue a
+	 * redoAiReplacement action per item, and re-run the in-content
+	 * replacement (OptimizeAiController::redoAIReplace →
+	 * replaceImageAttributes) from the STORED AI data — no new API calls.
+	 *
+	 * This is the recovery path for the customer-reported replacer2
+	 * singleton bug: images whose posts were skipped in an earlier bulk
+	 * (alt="" left in content, aipostmeta present so re-runs refuse them)
+	 * get their in-content alt filled by this bulk.
+	 */
+	public function test_bulk_redo_ai_replacement_reapplies_in_content_alt() {
+		$settings                  = \wpSPIO()->settings();
+		$settings->enable_ai       = 1;
+		$settings->ai_gen_alt      = 1;
+		$settings->ai_gen_caption  = 1;
+		$settings->ai_gen_filename = 0;
+		$settings->aiPreserve      = false;
+
+		$id       = $this->uploadFixture( 'fixture-small.jpg' );
+		$img_tag  = '<img src="' . esc_url( wp_get_attachment_url( $id ) ) . '" alt="" />';
+		$post_id  = self::factory()->post->create( array( 'post_content' => $img_tag ) );
+
+		global $wpdb;
+		$suppress = $wpdb->suppress_errors( true );
+		$wpdb->query( "DELETE FROM `{$wpdb->prefix}shortpixel_aipostmeta`" );
+		$wpdb->suppress_errors( $suppress );
+
+		$ref  = new ReflectionClass( \ShortPixel\Model\AiDataModel::class );
+		$prop = $ref->getProperty( 'models' );
+		$prop->setAccessible( true );
+		$prop->setValue( null, array() );
+
+		$this->purgeQueueTable();
+
+		// Generate the AI data (single-item request).
+		$imageModel = \wpSPIO()->filesystem()->getImage( $id, 'media' );
+		( new QueueController() )->addItemToQueue( $imageModel, array( 'action' => 'requestAlt' ) );
+		$this->runQueueUntilEmpty();
+
+		clean_post_cache( $post_id );
+		$this->assertStringContainsString(
+			'A mock ai alt text.',
+			get_post( $post_id )->post_content,
+			'Precondition: the initial generation must fill the in-content alt.'
+		);
+
+		// Simulate the stuck state customers hit with the replacer2 singleton
+		// bug: aipostmeta says GENERATED but the embedding post still has an
+		// empty alt (a plain re-run would refuse the item as already done).
+		wp_update_post( array( 'ID' => $post_id, 'post_content' => $img_tag ) );
+		clean_post_cache( $post_id );
+		$this->assertStringNotContainsString( 'A mock ai alt text.', get_post( $post_id )->post_content );
+
+		QueueController::resetQueues();
+		$prop->setValue( null, array() );
+
+		$bulk = BulkController::getInstance();
+		$bulk->createNewBulk( 'media', array( 'customOp' => 'redoAiReplacement' ) );
+		$this->runBulkPreparation();
+		$bulk->startBulk( 'media' );
+		$this->runBulkUntilFinished();
+		$bulk->finishBulk( 'media' );
+
+		clean_post_cache( $post_id );
+		$this->assertStringContainsString(
+			'alt="A mock ai alt text."',
+			get_post( $post_id )->post_content,
+			'The redoAiReplacement bulk must re-apply the stored AI alt to the embedding post content.'
+		);
+	}
 }

@@ -86,7 +86,8 @@ class QueueController
    * variant is enqueued separately first (addWpmlAiItemsToQueue), and the
    * duplicate-active check is skipped — every attachment record needs its
    * own AI request, and the just-queued variants must not make the original
-   * count as an active duplicate (d55dbeca, fix for #42).
+   * count as an active duplicate (d55dbeca, fix for #42; f08c31b2 widened
+   * the exemption to retrieveAlt so the poll step is not blocked either).
    *
    * @param ImageModel $imageModel
    * @param array $args

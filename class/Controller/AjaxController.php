@@ -1502,6 +1502,18 @@ class AjaxController
 	}
 
 
+	/**
+	 * Single-item "redo AI replacement" handler (screen_action
+	 * ai/redoAiReplacement).
+	 *
+	 * Builds a redoAiReplacement QueueItem for the media item and hands it
+	 * straight to OptimizeAiController::redoAIReplace(), which re-applies
+	 * the stored AI data without any API call.
+	 *
+	 * @param \stdClass $json JSON accumulator object.
+	 * @param array     $data Dispatch data: id + type of the media item.
+	 * @return \stdClass Updated JSON response object.
+	 */
 	protected function redoAiReplacement($json, $data)
 	{
 		$id = $data['id'];
@@ -1516,7 +1528,7 @@ class AjaxController
 
 		$api = $queueItem->getApiController('getAltData'); 
 
-		$api->redoAiReplacement($queueItem);
+		$api->redoAIReplace($queueItem);
 
 		$json->status = true;	
 		return $json;
@@ -1802,6 +1814,23 @@ class AjaxController
 		return $json;
 	}
 
+	/**
+	 * Set up the bulk "Redo Ai Replacement" operation for the media queue
+	 * (Tools menu, beta).
+	 *
+	 * Resets all queues, creates a new bulk for 'media' with
+	 * `customOp => 'redoAiReplacement'`. Preparation then selects every
+	 * attachment with a GENERATED aipostmeta row and enqueues a
+	 * redoAiReplacement action per item, which re-applies the stored AI
+	 * texts to the embedding post content (no API requests).
+	 *
+	 * Returns:
+	 * - `$json->media->stats` object  Updated media queue statistics.
+	 *
+	 * @param \stdClass $json JSON accumulator object.
+	 * @param array     $data Dispatch data array (unused).
+	 * @return \stdClass Updated JSON response object.
+	 */
 	protected function startBulkRedoAiReplacement($json, $data)
 	{
 		$bulkControl = BulkController::getInstance();
