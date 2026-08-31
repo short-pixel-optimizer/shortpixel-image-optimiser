@@ -545,6 +545,9 @@ class AjaxController
 
 		$this->checkActionAccess($action, 'is_admin_user');
 
+		$isM = \is_multisite(); 
+
+
 		switch ($action) {
 			case 'save-settings': // usual settings 
 			case 'save-multi-settings': // multisite settings

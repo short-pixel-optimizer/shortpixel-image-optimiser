@@ -105,7 +105,8 @@ $settings = \wpSPIO()->settings();
 		<div data-error-media="message" data-presentation="append" class='errorbox media'>
 				<?php if(property_exists($this->view, 'mediaErrorLog') && $this->view->mediaErrorLog !== false)
 				{
-				echo esc_html($this->view->mediaErrorLog);
+          // No esc_html here, because it's HTML! 
+				echo $this->view->mediaErrorLog;
         }
     ?>
     </div> 
@@ -155,7 +156,8 @@ $settings = \wpSPIO()->settings();
     <div data-error-custom="message" data-presentation="append" class='errorbox custom'>
 			<?php if(property_exists($this->view, 'customErrorLog') && $this->view->customErrorLog !== false)
 			{
-				echo esc_html($this->view->customErrorLog);
+        // No esc HTML here!
+				echo $this->view->customErrorLog;
       }
       ?>
     </div>
