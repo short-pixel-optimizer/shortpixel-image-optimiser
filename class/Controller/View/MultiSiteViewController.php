@@ -295,8 +295,10 @@ class MultiSiteViewController extends SettingsViewController
       public function setControllerURL($url)
       {
           // Fix for missing /network/ in admin page URL's from route () in  SPIO main plugin file.
+        if (false === strpos($url, '/wp-admin/network/')) {
           $url = str_replace( '/wp-admin/', '/wp-admin/network/', $url );
-          $this->url = $url;
+        }
+        $this->url = $url;
       }
 
 } // Class

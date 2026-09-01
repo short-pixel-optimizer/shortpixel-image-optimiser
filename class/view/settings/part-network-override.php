@@ -16,6 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
           'name' => 'network_settings_override_enabled',
           'checked' => (bool) $view->network_settings_enabled,
           'label' => esc_html__('Use network-wide settings for this site', 'shortpixel-image-optimiser'),
+          'data' => ['data-action="override_network_action"', 'setting-action="EnableNetworkOptionsEvent"'],
         ]); ?>
       </content>
       <info>

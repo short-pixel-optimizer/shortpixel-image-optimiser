@@ -49,7 +49,7 @@ if ( ! defined( 'ABSPATH' ) ) {
   <menu>
 			<ul>
         <?php if (true === $this->is_network_page): ?>
-        <li>
+        <li class='network'>
           <?php echo $this->settingLink([
             'part' => 'network',
             'title' => __('Network Control', 'shortpixel-image-optimiser'),

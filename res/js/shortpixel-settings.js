@@ -27,13 +27,14 @@ class ShortPixelSettings {
 		var self = this;
 		this.strings = settings_strings;
 
-		this.InitToggle(); // data- toggles 
+		this.InitToggle(); // data-toggles 
 		this.InitExclusions(); // Exclusions 
 		this.InitWarnings(); // Settings warnings 
 		this.InitMenu(); // The menu 
 		this.InitModeSwitcher(); // Simple / Advanced mode 
 		this.InitActionEvents(); // Action events.
 		this.InitAiEvents(); 
+		this.InitNetworkActions();
 
 		// Modals
 		var modals = this.root.querySelectorAll('[data-action="open-modal"]');
@@ -296,7 +297,6 @@ class ShortPixelSettings {
 	}
 
 	InitMenu() {
-		//var menu_elements = this.root.querySelectorAll('menu ul li a');
 		var menu_elements = this.root.querySelectorAll('[data-menu-link]');
 		this.menu_elements = menu_elements;
 
@@ -343,15 +343,66 @@ class ShortPixelSettings {
 		switcher.addEventListener('change', this.SwitchViewModeEvent.bind(this));
 	}
 
+	// For multisite settings only. 
+	InitNetworkActions()
+	{
+		if (document.querySelector('input[name="is_network_admin"]') === null)
+		{
+			return; 
+		}
+
+		let action = document.querySelector('[data-action="override_network_action"]');
+		if (null === action)
+		{
+			 return; 
+		}
+
+		this.EnableNetworkOptionsEvent(null);
+
+
+
+	}
+
+	EnableNetworkOptionsEvent(event)
+	{
+		let action = document.querySelector('[data-action="override_network_action"]');
+
+		let active = action.checked; 
+
+		let menuElements = document.querySelectorAll('menu li:not(.network)'); 
+		for (let i = 0; i < menuElements.length; i++)
+		{
+			if (active)
+			{
+				menuElements[i].classList.remove('hidden'); 
+			}
+			else
+			{
+				menuElements[i].classList.add('hidden'); 
+			}
+			 
+		}
+
+		var switcher = document.querySelector('.adv_switcher'); 
+		if (null !== switcher)
+		{
+			if (active)
+			{
+				switcher.classList.remove('hidden');
+			}
+			else 
+			{
+				switcher.classList.add('hidden');
+			}
+			 
+		}
+
+	}
+
 	InitActionEvents() {
 		var actions = document.querySelectorAll('[setting-action]');
 		for (var i = 0; i < actions.length; i++) {
 			var actionElement = actions[i];
-			/*if (false === actionElement.hasAttribute('data-function'))
-			{
-				console.warn('Action without function', actionElement); 
-				continue; 
-			} */
 
 			var method = actionElement.getAttribute('setting-action');
 			if ('undefined' === typeof this[method]) {
