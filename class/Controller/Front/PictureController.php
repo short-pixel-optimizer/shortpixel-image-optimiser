@@ -556,6 +556,12 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
             //            $new_urldef = "url('" . $checkedFile . "') $image_data ;";
             // Fix2 :: The image_data should not be matched anymore via main match, perhaps it works in all cases to leave it alone? 
             // Fix3 :: Removed the ' ' around the newdef image since this can cause issues if the main image is wrapped in the same. 
+            // Fix4 :: Recommended to str_replace the checkedFile URL for things that might break CSS. 
+            $checkedFile = str_replace(
+                array(' ', '(', ')', "'", '"'),
+                array('%20', '%28', '%29', '%27', '%22'),
+                $checkedFile
+            );            
             $new_urldef = "url(" . $checkedFile . ") ";
             $content = str_replace($target_urldef, $new_urldef, $content);
           }
