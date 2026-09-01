@@ -348,11 +348,11 @@ class BulkViewController extends \ShortPixel\ViewController
 				$kbinfo = '<span class="kbinfo"><a href="' . esc_url($kblink) . '" target="_blank" ><span class="dashicons dashicons-editor-help">&nbsp;</span></a></span>';
 
 				$output .= '<div class="fatal">';
-				$output .= $date . ': ';
+				$output .= esc_html($date) . ': ';
 				if ($message)
-					$output .= $message;
+					$output .= esc_html($message);
 				if ($filename)
-					$output .= ' ( '. __('in file ','shortpixel-image-optimiser') . ' ' . $filename . ' ) ' . $kbinfo;
+					$output .= ' ( '. __('in file ','shortpixel-image-optimiser') . ' ' . esc_html($filename) . ' ) ' . $kbinfo;
 
 				$output .= '</div>';
 		 }
