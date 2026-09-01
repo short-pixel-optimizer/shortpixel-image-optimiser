@@ -252,4 +252,108 @@ class BulkViewControllerTest extends WP_UnitTestCase {
 		// custom-media section. Missing it would always show or always hide the block.
 		$this->assertObjectHasProperty( 'has_custom', $result->custom );
 	}
+
+	// -----------------------------------------------------------------
+	// loadCurrentLog — bug #48 sentinel (unescaped error-log cells)
+	// -----------------------------------------------------------------
+
+	/**
+	 * BUG #48 (pinned_for_deferred_fix): commit 50719048 stripped esc_html
+	 * from the two error-log echoes in view/bulk/part-finished.php and
+	 * part-process.php (they render $this->view->mediaErrorLog /
+	 * customErrorLog raw so the intended kbinfo <span>/<a> markup renders).
+	 * The HTML those views print is built by BulkViewController::loadCurrentLog
+	 * (protected) — which concatenates the raw $date / $message / $filename
+	 * cells straight into the output around the kbinfo span, with NO escaping.
+	 *
+	 * The log file lives in SHORTPIXEL_BACKUP_FOLDER/current_bulk_media.log
+	 * and its rows are written from optimization-time context (filename comes
+	 * from the attachment). An attacker who can upload a media item — or any
+	 * flow that lets a user influence the stored filename — can therefore
+	 * plant HTML/JS that survives all the way to the admin bulk screen and
+	 * executes in the wp-admin origin: stored XSS.
+	 *
+	 * CORRECT FIX (for Bas, not this test):
+	 *   In loadCurrentLog, escape the cells at build time (esc_html on $date,
+	 *   $message, $filename) and keep the kbinfo <span>/<a> markup raw. That
+	 *   preserves the reason esc_html was removed from the views (kbinfo
+	 *   needs to render as HTML) while restoring output safety.
+	 *
+	 * FLIP INSTRUCTIONS: when the cells are escaped at build time, the raw
+	 * <script>… will NOT appear in the output — the assertion
+	 * assertStringContainsString('<script>alert(1)</script>', $output) will
+	 * fail. Flip to assertStringNotContainsString, drop the _pinned_ suffix,
+	 * and delete this block.
+	 */
+	public function test_pin48_loadCurrentLog_emits_unescaped_filename_and_message_pinned_for_deferred_fix() {
+		// Bulk log paths depend on the plugin's backup folder constant; the
+		// wp-shortpixel.php bootstrap defines it. Ensure the directory
+		// exists (fresh test installs may not have created it yet).
+		if ( ! defined( 'SHORTPIXEL_BACKUP_FOLDER' ) ) {
+			$this->markTestSkipped( 'SHORTPIXEL_BACKUP_FOLDER not defined — plugin bootstrap did not run.' );
+		}
+		$backup_dir = SHORTPIXEL_BACKUP_FOLDER;
+		if ( ! is_dir( $backup_dir ) ) {
+			if ( ! wp_mkdir_p( $backup_dir ) ) {
+				$this->markTestSkipped( 'Cannot create backup dir at ' . $backup_dir );
+			}
+		}
+
+		$log_path = rtrim( $backup_dir, '/\\' ) . '/current_bulk_media.log';
+
+		// Row format expected by loadCurrentLog(): date|filename|item_id|message
+		// separated by ';' between rows. Filename and message carry the XSS.
+		$xss_filename = '<script>alert(1)</script>.jpg';
+		$xss_message  = '<img src=x onerror=alert(2)>';
+		$row          = '2026-08-31 12:00:00|' . $xss_filename . '|42|' . $xss_message;
+
+		// Preserve any pre-existing log so we don't stomp on unrelated state.
+		$prior = file_exists( $log_path ) ? file_get_contents( $log_path ) : null;
+		file_put_contents( $log_path, $row . ';' );
+
+		try {
+			$c      = $this->freshController();
+			$output = $this->invokeProtected( $c, 'loadCurrentLog', array( 'media' ) );
+
+			// If getLog() couldn't resolve the file (backup path realpath
+			// mismatch on some hosts), the method returns false — that's a
+			// harness limitation, not a pass, so skip rather than false-pass.
+			if ( false === $output ) {
+				$this->markTestSkipped( 'BulkController::getLog() could not resolve ' . $log_path . ' — harness path limitation.' );
+			}
+
+			$this->assertIsString( $output );
+
+			// Sentinel: the crafted <script> tag survives unescaped in the
+			// output that goes to $this->view->mediaErrorLog and gets echoed
+			// raw by part-finished.php / part-process.php since 50719048.
+			$this->assertStringContainsString(
+				'<script>alert(1)</script>',
+				$output,
+				'BUG #48 pin: filename cell must survive UNESCAPED in loadCurrentLog output (which part-finished.php/part-process.php echo raw). If this fails, the cells were escaped at build time — flip to assertStringNotContainsString and drop the _pinned_for_deferred_fix suffix.'
+			);
+			$this->assertStringContainsString(
+				'<img src=x onerror=alert(2)>',
+				$output,
+				'BUG #48 pin: message cell must survive UNESCAPED. Same flip rules as above.'
+			);
+			// Second half of the sentinel: the surrounding kbinfo <a> markup
+			// (which is why esc_html was stripped) IS still present, so a
+			// half-fix that escapes cells but drops kbinfo entirely would be
+			// caught here rather than silently regressing the UI.
+			$this->assertStringContainsString(
+				'class="kbinfo"',
+				$output,
+				'BUG #48 pin: the kbinfo helper span must remain in the output — a fix that removes it entirely would over-correct.'
+			);
+		} finally {
+			// Restore prior content (or delete if none) so the test does not
+			// leak fixture state into other bulk-log tests.
+			if ( null === $prior ) {
+				@unlink( $log_path );
+			} else {
+				file_put_contents( $log_path, $prior );
+			}
+		}
+	}
 }

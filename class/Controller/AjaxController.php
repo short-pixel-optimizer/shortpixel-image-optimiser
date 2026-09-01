@@ -534,6 +534,14 @@ class AjaxController
 	 * form), `action_addkey`, `action_debug_*`, `action_request_new_key`,
 	 * `action_end_quick_tour`.  Any other value logs an error and exits with '0'.
 	 *
+	 * Since e4d1d0a8 the network-vs-site view controller is selected by
+	 * `$_POST['is_network_admin']` inside `settingsFormSubmit()`; the
+	 * `$screen_action` here is only the action-method name and the
+	 * `checkActionAccess` gate. The `$isM = is_multisite();` local below is
+	 * currently DEAD (never read); it was left in place by the routing rework
+	 * pending Bas's follow-up on bug #41 (per-branch multisite capability
+	 * gate).
+	 *
 	 * @return void
 	 */
 	public function settingsRequest()
@@ -545,7 +553,7 @@ class AjaxController
 
 		$this->checkActionAccess($action, 'is_admin_user');
 
-		$isM = \is_multisite(); 
+		$isM = \is_multisite();
 
 
 		switch ($action) {
@@ -579,11 +587,36 @@ class AjaxController
 	/**
 	 * Delegate a settings form action to the settings view controller.
 	 *
-	 * Instantiates `MultiSiteViewController` for `save-multi-settings` (network
-	 * settings form) or `SettingsViewController` otherwise, marks it as processing
-	 * an AJAX save, sets the redirect URL from `$_POST['request_url']`, and calls
-	 * the action method on the view controller if it exists, otherwise falls back
-	 * to `load()`.  Exits afterwards.
+	 * ROUTING (updated e4d1d0a8, 2026-08-28): the controller class is chosen
+	 * from the client-supplied `$_POST['is_network_admin']` flag rather than
+	 * from `$action`. The flag is set by shortpixel-settings.js when the
+	 * hidden `<input name="is_network_admin" value="1">` in view-settings.php
+	 * is present on the rendered form (i.e. the network settings screen).
+	 * When present -> `MultiSiteViewController`; when absent ->
+	 * `SettingsViewController`.
+	 *
+	 * SECURITY NOTE (bug #41, still open): the routing flag is CLIENT input
+	 * and is not corroborated server-side. Combined with the `is_admin_user`
+	 * (manage_options) gate in `settingsRequest()`, a subsite administrator
+	 * can select the MultiSiteViewController branch by posting the flag
+	 * themselves and write to the network-wide spio_wpmu option. See the
+	 * paired pinned tests in tests/Multisite/test-MultisiteNetworkSave.php
+	 * (test_pin41_regular_admin_can_save_network_settings_pinned_for_deferred_fix
+	 * and test_pin41_widened_vector_client_flag_alone_reaches_network_save_pinned_for_deferred_fix).
+	 *
+	 * The view controller is marked as processing an AJAX save, its redirect
+	 * URL is set from `$_POST['request_url']`, and the named `$action` method
+	 * is invoked if it exists on the controller — otherwise `load()` is
+	 * called. Exits afterwards via `wp_send_json()` inside the view
+	 * controller's save flow.
+	 *
+	 * DEBUG NOTE: the trailing `exit('ajaxcontroller - formsubmit')` at the
+	 * end of the method is a debug marker (should never be reached in
+	 * production because the save path always exits via wp_send_json). If a
+	 * request does fall through — e.g. an invalid `$action` on a controller
+	 * that also has no matching save side-effect — this raw exit dumps the
+	 * literal string into the ajax response body and would kill the PHPUnit
+	 * runner mid-suite (see 2026-08-31 ms false-green investigation).
 	 *
 	 * @param string $action The action method name to invoke on the view controller.
 	 * @return void  Always exits.
@@ -591,14 +624,14 @@ class AjaxController
 	protected function settingsFormSubmit($action)
 	{
 
-	
+
 		// This is submitted by a separate field to justify the correct nonce and load Multisite if it's there on other actions as well. Set via shortpixel-settings AjaxRequest
-		$is_network_admin = isset($_POST['is_network_admin']) ? true : false; 
+		$is_network_admin = isset($_POST['is_network_admin']) ? true : false;
 		if (true === $is_network_admin)
 		{
 			$viewController =  new MultiSiteViewController();
 		}
-		else 
+		else
 		{
 			$viewController =  new SettingsViewController();
 		}
