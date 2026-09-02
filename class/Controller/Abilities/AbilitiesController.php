@@ -313,7 +313,7 @@ class AbilitiesController
 			'description'         => __( 'Starts a bulk restore of all optimized images from backup (de-optimize). Destructive and non-reversible. Requires confirm=true. Does not consume credits. Asynchronous: call run-queue until the queues report empty', 'shortpixel-image-optimiser' ),
 			'category'            => self::ABILITY_CATEGORY,
 			'execute_callback'    => [ BulkRestoreAbility::class, 'execute' ],
-			'permission_callback' => [ $this, 'userCanOptimize' ],
+			'permission_callback' => [ $this, 'userCanManage' ],
 			'input_schema'        => [
 				'type'       => 'object',
 				'properties' => [
@@ -496,7 +496,7 @@ class AbilitiesController
 			'description'         => __( 'Starts a media-only bulk that reverts AI SEO metadata for all attachments with generated data. Requires confirm=true. Does not consume credits. Filename renames are not reversed. Asynchronous: call run-queue with bulk=true until queues empty', 'shortpixel-image-optimiser' ),
 			'category'            => self::ABILITY_CATEGORY,
 			'execute_callback'    => [ BulkUndoAiSeoAbility::class, 'execute' ],
-			'permission_callback' => [ $this, 'userCanOptimize' ],
+			'permission_callback' => [ $this, 'userCanManage' ],
 			'input_schema'        => [
 				'type'       => 'object',
 				'properties' => [
