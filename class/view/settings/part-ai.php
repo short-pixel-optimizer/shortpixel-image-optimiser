@@ -103,6 +103,18 @@ if (! defined('ABSPATH')) {
       </content>
     </setting>
 
+    <setting>
+      <content>
+        <name><?php esc_html_e('Image SEO in post content', 'shortpixel-image-optimiser'); ?></name>
+        <info><?php esc_html_e('Controls how generated AI data is written into post content. Default: fill only where alt is missing.', 'shortpixel-image-optimiser'); ?></info>
+        <select name="ai_content_replace">
+          <option value="none" <?php selected($view->data->ai_content_replace, 'none'); ?>><?php esc_html_e("Don't modify post content (Media-Library-only)", 'shortpixel-image-optimiser'); ?></option>
+          <option value="missing" <?php selected($view->data->ai_content_replace, 'missing'); ?>><?php esc_html_e('Fill only where alt is missing (safe default)', 'shortpixel-image-optimiser'); ?></option>
+          <option value="overwrite" <?php selected($view->data->ai_content_replace, 'overwrite'); ?>><?php esc_html_e('Overwrite existing alt/caption in posts', 'shortpixel-image-optimiser'); ?></option>
+        </select>
+      </content>
+    </setting>
+
 
     </gridbox>
 

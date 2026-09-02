@@ -555,6 +555,12 @@ class OptimizeAiController extends OptimizerBase
      */
     protected function replaceImageAttributes(QueueItem $qItem, $aiData)
     {
+        // New setting that allows skipping post-content modifications entirely.
+        $contentReplace = \wpSPIO()->settings()->ai_content_replace ?? 'missing';
+        if ($contentReplace === 'none') {
+            Log::addDebug('ai_content_replace=none: skipping replaceImageAttributes for ' . $qItem->item_id);
+            return;
+        }
         if (is_int($aiData['alt']) && is_int($aiData['caption'])) {
             Log::addInfo('Alt and Caption returned integer/status, not replacing : ' . $qItem->item_id );
             return;
@@ -957,13 +963,22 @@ class OptimizeAiController extends OptimizerBase
                      continue; 
                 }
                 // Only replace in post content the image we did
-                $pattern = '/' . preg_quote($image_filebase, '/') . '(-\d+x\d+\.|\.|-scaled\.)' . $imageModel->getExtension() . '/i';
-                if (preg_match($pattern, $src) !== 1) {
+                // Only match against the filename portion to avoid substring
+                // collisions (e.g. my-photo vs photo). Parse the URL path and
+                // compare the basename with an anchored regex that allows
+                // typical thumbnail suffixes.
+                $path = parse_url($src, PHP_URL_PATH);
+                $basename = basename($path);
+                $ext = preg_quote($imageModel->getExtension(), '/');
+                $pattern = '/^' . preg_quote($image_filebase, '/') . '(-\d+x\d+|-scaled)?\.' . $ext . '$/i';
+                if (preg_match($pattern, $basename) !== 1) {
                     continue;
                 }
 
 
                $aiPreserve = \wpSPIO()->settings()->aiPreserve; 
+               // Determine content-replacement mode: 'missing' or 'overwrite'.
+               $contentReplace = \wpSPIO()->settings()->ai_content_replace ?? 'missing';
 
                 /*   if (strpos($src, $aiData['replace_filebase']) === false)
              {
@@ -973,19 +988,26 @@ class OptimizeAiController extends OptimizerBase
                 $do_replace = false;
 
                 if (isset($aiData['alt']) && false === is_int($aiData['alt'])) {
-
-                    if (false === $aiPreserve || (is_null($frontImage->alt) || strlen(trim($frontImage->alt)) == 0) )
-                    {
+                    if ($contentReplace === 'overwrite') {
                         $frontImage->alt = $aiData['alt'];
                         $do_replace = true;
+                    } elseif ($contentReplace === 'missing') {
+                        if (false === $aiPreserve || (is_null($frontImage->alt) || strlen(trim($frontImage->alt)) == 0) ) {
+                            $frontImage->alt = $aiData['alt'];
+                            $do_replace = true;
+                        }
                     }
                 }
-                if (isset($aiData['caption']) && false === is_int($aiData['caption'])) {
-
-                    if (false === $aiPreserve || (is_null($frontImage->caption) || strlen(trim($frontImage->caption)) == 0) )
-                    {
+                // Only perform a caption-only replacement when we're also
+                // changing the tag in a way that will actually be written
+                // into the post (for now, only when alt is also replaced).
+                // This avoids triggering a full parse+rebuild that would
+                // alter unrelated attributes while leaving the caption
+                // silently un-written.
+                if ($do_replace && isset($aiData['caption']) && false === is_int($aiData['caption'])) {
+                    if (false === $aiPreserve || (is_null($frontImage->caption) || strlen(trim($frontImage->caption)) == 0) ) {
                         $frontImage->caption = $aiData['caption'];
-                        $do_replace = true;
+                        // $do_replace is already true here
                     }
                 }
 

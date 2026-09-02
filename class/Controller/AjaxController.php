@@ -1705,6 +1705,9 @@ class AjaxController
 		$aiPreserve = isset($_POST['aiPreserve']) ? filter_var(sanitize_text_field($_POST['aiPreserve']), FILTER_VALIDATE_BOOLEAN) : null; 
 		$backgroundProcess = filter_var(sanitize_text_field($_POST['backgroundProcess']), FILTER_VALIDATE_BOOLEAN);
 
+		// Optional three-state content replacement mode for bulk runs.
+		$ai_content_replace = isset($_POST['ai_content_replace']) ? sanitize_text_field($_POST['ai_content_replace']) : null;
+
 		// Can be hidden
 		if (isset($_POST['thumbsActive'])) {
 			$doThumbs = filter_var(sanitize_text_field($_POST['thumbsActive']), FILTER_VALIDATE_BOOLEAN);
@@ -1719,6 +1722,10 @@ class AjaxController
 		if (false === is_null($aiPreserve))
 		{
 			\wpSPIO()->settings()->aiPreserve = $aiPreserve;
+		}
+
+		if (! is_null($ai_content_replace) && in_array($ai_content_replace, ['none','missing','overwrite'], true)) {
+			\wpSPIO()->settings()->ai_content_replace = $ai_content_replace;
 		}
 
 		$bulkControl = BulkController::getInstance();

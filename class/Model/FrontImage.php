@@ -52,6 +52,11 @@ class FrontImage
 	protected $srcset;
 	/** @var string|null HTML `class` attribute. */
 	protected $class;
+	/** @var string|null Caption placeholder (not an HTML attribute; reserved)
+	 *  Present so callers can check for an existing caption without hitting
+	 *  the magic __get() fallback that always returns null.
+	 */
+	protected $caption;
 	/** @var string|null HTML `width` attribute. */
 	protected $width;
 	/** @var string|null HTML `height` attribute. */
@@ -172,16 +177,20 @@ class FrontImage
 		}
 
 		foreach ($image->attributes as $attr) {
-			// Skip is no value
-			if (strlen($attr->nodeValue) == 0)
-				continue;
+			// Preserve attributes even when they have an empty/nodeValue so
+			// boolean attributes (data-no-lazy, nopin, ...) survive a
+			// parse+rebuild cycle. Store the raw nodeValue (may be empty
+			// string) and mirror onto declared properties where present.
+
+			$value = $attr->nodeValue;
 
 			if (property_exists($this, $attr->nodeName)) {
-				
-				$this->{$attr->nodeName} = $attr->nodeValue;
+				$this->{$attr->nodeName} = $value;
 			}
 
-			$this->attributes[$attr->nodeName] = $attr->nodeValue;
+			// Preserve insertion order from the DOM so rebuilds keep the
+			// original attribute ordering as closely as possible.
+			$this->attributes[$attr->nodeName] = $value;
 		}
 
 		// Seen in wild, skipping over data-srcset because 
@@ -474,27 +483,60 @@ class FrontImage
 	 */
 	public function buildImage()
 	{
-		$src = $this->src;
-		$output = '<img src="' . $src . '" ';
 
-		// Get this from set attributes on class.
-		$attrs = array('id', 'height', 'width', 'srcset', 'sizes', 'class');
-		foreach ($attrs as $attr) {
-			if (! is_null($this->{$attr})) {
-				$output .= $attr . '="' . \esc_attr($this->{$attr}) . '" ';
+		// Rebuild by iterating the original attributes in insertion order
+		// so we preserve ordering and any custom/data-* attributes. If an
+		// attribute has been updated on the object (e.g. alt/src/srcset)
+		// prefer the object value.
+		$output = '<img';
+		$seen = array();
+
+		foreach ($this->attributes as $name => $origValue) {
+			$seen[$name] = true;
+			// Determine the effective value: prefer declared property when
+			// available, otherwise fall back to the original attribute value.
+			if (property_exists($this, $name) && ! is_null($this->{$name})) {
+				$value = $this->{$name};
+			} else {
+				$value = $origValue;
+			}
+
+			// For `src` ensure it's escaped so entities like &amp; are preserved.
+			if ($name === 'src') {
+				$value = \esc_attr($value);
+				$output .= ' src="' . $value . '"';
+				continue;
+			}
+
+			// Boolean / value-less attributes should be emitted without an ="".
+			if ($value === '' || is_null($value)) {
+				$output .= ' ' . $name;
+				continue;
+			}
+
+			$output .= ' ' . $name . '="' . \esc_attr($value) . '"';
+		}
+
+		// Ensure alt is always present (even if it wasn't part of the original)
+		if (! isset($seen['alt'])) {
+			$output .= ' alt="' . \esc_attr($this->alt) . '"';
+		}
+
+		// Any leftover attributes that were not present in the original map
+		// (unlikely) are appended now. This keeps behavior stable.
+		$leftAttrs = $this->getImageAttributes();
+		foreach ($leftAttrs as $name => $value) {
+			if (isset($seen[$name])) {
+				continue;
+			}
+			if ($value === '' || is_null($value)) {
+				$output .= ' ' . $name;
+			} else {
+				$output .= ' ' . $name . '="' . \esc_attr($value) . '"';
 			}
 		}
 
-		// Always output alt tag, because it's important to screen readers and otherwise.
-		$output .= 'alt="' . \esc_attr($this->alt) . '" ';
-
-		// Left over attributes that should be harmless, ie extra image data or other custom tags.
-		$leftAttrs = $this->getImageAttributes();
-		foreach ($leftAttrs as $name => $value) {
-			$output .= $name . '="' . \esc_attr($value) . '" ';
-		}
-
-		$output .= ' > '; // ending image.
+		$output .= '>';
 
 		return $output;
 	}

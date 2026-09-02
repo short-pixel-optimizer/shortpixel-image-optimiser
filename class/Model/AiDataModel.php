@@ -888,7 +888,7 @@ class AiDataModel
      * @param string $type      Media type; currently only 'media' is supported.
      * @return AiDataModel
      */
-    public static function getModelByAttachment($attach_id, $type = 'media')
+    public static function getModelByAttachment(int $attach_id, $type = 'media')
     {
         if (false === isset(self::$models[$attach_id])) {
             self::$models[$attach_id]  = new AiDataModel($attach_id, $type);

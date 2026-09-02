@@ -88,6 +88,11 @@ class SettingsModel extends \ShortPixel\Model
         'autoAI' => ['s' => 'boolean', 'default' => false],
         'autoAIBulk' => ['s' => 'boolean', 'default' => false],
         'aiPreserve' => ['s' => 'boolean', 'default' => false ],
+        // Controls how generated AI data is written back into post content:
+        // - 'none'    : never modify post content (Media-Library-only)
+        // - 'missing' : only fill in empty/missing in-content alt/caption (safe default)
+        // - 'overwrite': overwrite existing in-content alt/caption
+        'ai_content_replace' => ['s' => 'string', 'default' => 'missing'],
         'ai_general_context' => ['s' => 'string', 'default' => 'callback', 'maxlength' => 500],
         'ai_use_post' => ['s' => 'boolean', 'default' => true],
         'ai_gen_alt' => ['s' => 'boolean', 'default' => true],

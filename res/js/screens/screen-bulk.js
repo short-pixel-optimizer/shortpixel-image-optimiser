@@ -291,6 +291,11 @@ class ShortPixelScreen extends ShortPixelScreenBase
      {
         data.aiActive = (document.getElementById('autoai_checkbox').checked) ? true : false;
         data.aiPreserve = (document.getElementById('aipreserve_checkbox').checked) ? true : false;
+        if (document.getElementById('ai_content_replace_select') !== null) {
+          data.ai_content_replace = document.getElementById('ai_content_replace_select').value;
+        } else {
+          data.ai_content_replace = null;
+        }
      }
      else
      {
