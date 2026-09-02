@@ -64,6 +64,11 @@ class OptimizeMediaAbility
 			return [ 'error' => true, 'message' => sprintf( 'Image not found: ID %d, type "%s"', $id, $type ) ];
 		}
 
+		$accessDenied = ItemAccessGuard::denyIfNotEditable( $imageModel );
+		if ( $accessDenied !== null ) {
+			return $accessDenied;
+		}
+
 		// Build queue arguments
 		$queueArgs = [ 'action' => 'optimize' ];
 

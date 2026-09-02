@@ -48,6 +48,11 @@ class GetAiSeoStatusAbility
 			return [ 'error' => true, 'message' => sprintf( 'Media Library image not found: ID %d', $id ) ];
 		}
 
+		$accessDenied = ItemAccessGuard::denyIfNotEditable( $imageModel );
+		if ( $accessDenied !== null ) {
+			return $accessDenied;
+		}
+
 		$payload = self::buildStatus( $id );
 		$payload['error'] = false;
 		$payload['ai_enabled'] = OptimizeAiController::getInstance()->isAiEnabled();

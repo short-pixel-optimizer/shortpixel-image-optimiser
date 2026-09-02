@@ -54,6 +54,11 @@ class GetMediaStatusAbility
 			];
 		}
 
+		$accessDenied = ItemAccessGuard::denyIfNotEditable( $imageModel );
+		if ( $accessDenied !== null ) {
+			return $accessDenied;
+		}
+
 		$status     = $imageModel->getMeta( 'status' );
 		$statusLabel = self::statusLabel( $status );
 

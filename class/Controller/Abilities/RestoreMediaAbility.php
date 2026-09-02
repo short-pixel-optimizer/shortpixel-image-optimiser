@@ -47,6 +47,11 @@ class RestoreMediaAbility
 			return [ 'error' => true, 'message' => sprintf( 'Image not found: ID %d, type "%s"', $id, $type ) ];
 		}
 
+		$accessDenied = ItemAccessGuard::denyIfNotEditable( $imageModel );
+		if ( $accessDenied !== null ) {
+			return $accessDenied;
+		}
+
 		if ( false === $imageModel->isOptimized() ) {
 			return [ 'error' => true, 'message' => 'This image is not optimized, nothing to restore' ];
 		}

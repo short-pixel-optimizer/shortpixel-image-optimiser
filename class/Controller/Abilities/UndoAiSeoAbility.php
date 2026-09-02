@@ -48,6 +48,11 @@ class UndoAiSeoAbility
 			return [ 'error' => true, 'message' => sprintf( 'Media Library image not found: ID %d', $id ) ];
 		}
 
+		$accessDenied = ItemAccessGuard::denyIfNotEditable( $imageModel );
+		if ( $accessDenied !== null ) {
+			return $accessDenied;
+		}
+
 		$aiModel = AiDataModel::getModelByAttachment( $id, 'media' );
 
 		if ( false === $aiModel->isSomeThingGenerated()
