@@ -289,6 +289,16 @@ class MultiSiteViewController extends SettingsViewController
        * `$_POST['request_url']` when this controller has been selected via the
        * `is_network_admin` routing flag.
        *
+       * Idempotency guard (bug #49, fixed 2026-09-01 by ccde551a): since
+       * e4d1d0a8 request_url is captured from window.location on the client,
+       * which on a network-admin page ALREADY contains '/wp-admin/network/'.
+       * The rewrite therefore runs only when the incoming URL does NOT
+       * already carry '/wp-admin/network/' — without that guard the
+       * unconditional str_replace produced '/wp-admin/network/network/…',
+       * breaking the redirect after saving network settings. Regression test:
+       * tests/Multisite/test-Multisite.php::
+       * test_setControllerURL_is_idempotent_for_network_admin_urls_regression_49.
+       *
        * @param string $url The URL captured from the request; typically an /wp-admin/ URL.
        * @return void
        */
