@@ -7,7 +7,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use ShortPixel\Controller\ApiKeyController;
 use ShortPixel\Controller\BulkController;
-use ShortPixel\Controller\QueueController;
 use ShortPixel\Controller\QuotaController;
 
 /**
@@ -57,8 +56,6 @@ class BulkOptimizeAbility
 				'message' => 'Queues must be "media", "custom", or an array of those values',
 			];
 		}
-
-		QueueController::resetQueues();
 
 		$bulkControl = BulkController::getInstance();
 		$started     = [];

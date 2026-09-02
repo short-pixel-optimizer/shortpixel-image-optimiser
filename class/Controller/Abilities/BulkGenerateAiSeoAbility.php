@@ -8,7 +8,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ShortPixel\Controller\ApiKeyController;
 use ShortPixel\Controller\BulkController;
 use ShortPixel\Controller\Optimizer\OptimizeAiController;
-use ShortPixel\Controller\QueueController;
 use ShortPixel\Controller\QuotaController;
 
 /**
@@ -55,8 +54,6 @@ class BulkGenerateAiSeoAbility
 		if ( false === (bool) $quota->AIUnlimited && (int) $quota->ai->remaining <= 0 ) {
 			return [ 'error' => true, 'message' => 'AI credits are exhausted. Buy more AI credits or wait for the monthly renewal' ];
 		}
-
-		QueueController::resetQueues();
 
 		$settings = \wpSPIO()->settings();
 		$previousAutoAiBulk = (bool) $settings->autoAIBulk;
