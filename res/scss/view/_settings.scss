@@ -97,6 +97,14 @@
 			//top: 160px;
 			margin: 13px auto;
 			background: darken(#ff0000, 10%);
+			font-family: "Roboto";
+			font-weight: 700;
+			border-radius: 6px;
+			text-decoration: none;
+			transition: all 0.1s ease-in-out;
+			box-shadow: none;
+			color: #fff; 
+			border: 0;
 			//background: #ED3; // just for check ctrl+shift reload worked :)
 			&:hover {
 				background: #ff0000;

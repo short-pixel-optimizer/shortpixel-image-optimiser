@@ -82,7 +82,14 @@ class QueueController
   /**
    * Add a single item to the queue
    *
-   * @param ImageModel $imageModel 
+   * For requestAlt actions on WPML-duplicated attachments, each language
+   * variant is enqueued separately first (addWpmlAiItemsToQueue), and the
+   * duplicate-active check is skipped — every attachment record needs its
+   * own AI request, and the just-queued variants must not make the original
+   * count as an active duplicate (d55dbeca, fix for #42; f08c31b2 widened
+   * the exemption to retrieveAlt so the poll step is not blocked either).
+   *
+   * @param ImageModel $imageModel
    * @param array $args
    * @return Object Result object
    */
@@ -139,8 +146,8 @@ class QueueController
           }
       }
 
-      // These checks are across all actions.
-      if ($queue->isDuplicateActive($imageModel))
+      $exceptionActions = ['requestAlt', 'retrieveAlt'];
+      if (false === in_array($args['action'], $exceptionActions) && true === $queue->isDuplicateActive($imageModel))
       {
         $qItem->addResult([
             'fileStatus' => ImageModel::FILE_STATUS_UNPROCESSED,

@@ -177,6 +177,9 @@ class BulkViewController extends \ShortPixel\ViewController
           case 'bulk-undoAI':
             $label = __('Bulk Remove AI Data', 'shortpixel-image-optimiser');           
           break; 
+          case 'redoAiReplacement': 
+            $label = __('Bulk Redo AI Replacement', 'shortpixel-image-optimiser');                     
+          break; 
       }
 
       return $label;
@@ -210,6 +213,9 @@ class BulkViewController extends \ShortPixel\ViewController
          break; 
          case 'bulk-removeLegacy': 
             $action = 'removeLegacy'; 
+         break; 
+         case 'bulk-redoAiReplacement':
+            $action = 'redoAiReplacement';
          break; 
       }
 
@@ -307,6 +313,13 @@ class BulkViewController extends \ShortPixel\ViewController
    * (date|filename|item_id|message) and renders each as a styled 'fatal' div.
    * Single-cell entries (empty lines) are skipped.
    *
+   * Each text cell ($date, $message, $filename) is esc_html'd at build time
+   * so the caller-side echo in view/bulk/part-finished.php and
+   * part-process.php (which was intentionally un-escaped in 50719048 to let
+   * the kbinfo <span>/<a> markup render) stays XSS-safe. The kbinfo markup
+   * built below is left raw by design. (Regression test:
+   * test_loadCurrentLog_escapes_filename_and_message_cells; fix 042cb64a.)
+   *
    * @param string $type 'media' or 'custom'. Default 'media'.
    * @return string|false Formatted HTML log output, or false when no log is present.
    */
@@ -339,14 +352,14 @@ class BulkViewController extends \ShortPixel\ViewController
 				$message = isset($cells[3]) ? $cells[3] : false;
 
 				$kblink = UIHelper::getKBSearchLink($message);
-				$kbinfo = '<span class="kbinfo"><a href="' . $kblink . '" target="_blank" ><span class="dashicons dashicons-editor-help">&nbsp;</span></a></span>';
+				$kbinfo = '<span class="kbinfo"><a href="' . esc_url($kblink) . '" target="_blank" ><span class="dashicons dashicons-editor-help">&nbsp;</span></a></span>';
 
 				$output .= '<div class="fatal">';
-				$output .= $date . ': ';
+				$output .= esc_html($date) . ': ';
 				if ($message)
-					$output .= $message;
+					$output .= esc_html($message);
 				if ($filename)
-					$output .= ' ( '. __('in file ','shortpixel-image-optimiser') . ' ' . $filename . ' ) ' . $kbinfo;
+					$output .= ' ( '. __('in file ','shortpixel-image-optimiser') . ' ' . esc_html($filename) . ' ) ' . $kbinfo;
 
 				$output .= '</div>';
 		 }

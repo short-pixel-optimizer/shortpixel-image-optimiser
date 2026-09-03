@@ -821,7 +821,7 @@ class FileModel extends \ShortPixel\Model
 	 * readability / writability flags accordingly so the potentially
 	 * expensive real filesystem calls are never triggered.
 	 *
-	 * @return void
+	 * @return bool True when trusted mode is active (flags were set), false otherwise.
 	 */
 	protected function checkTrustedMode()
 	{
@@ -850,7 +850,11 @@ class FileModel extends \ShortPixel\Model
 				{
 					$this->filesize = 0;
 				}
+
+        return true; 
 		}
+
+    return false;
 
 	}
 
@@ -942,9 +946,14 @@ class FileModel extends \ShortPixel\Model
 			 $site_url = str_replace('http:', '', home_url('', 'http'));
 		 }
 
+
+     // Used in cases when integrations / plugins change the home_url, such as wpml 
+     $site_url = apply_filters('shortpixel/image/file_filter_site_url', $site_url, $this);
+
      $url = str_replace(array('http:', 'https:'), '', $url);
      $fs = \wpSPIO()->filesystem();
 
+     $base_site_url = basename($site_url);
 		 // The site URL domain is included in the URL string
      if (strpos($url, $site_url) !== false)
      {

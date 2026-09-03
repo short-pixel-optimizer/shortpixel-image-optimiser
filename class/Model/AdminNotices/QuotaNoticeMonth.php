@@ -29,11 +29,6 @@ class QuotaNoticeMonth extends \ShortPixel\Model\AdminNoticeModel
 	{
     $bool = parent::load();
 
-  //	 $this->callback = array(AdminNoticesController::getInstance(), 'proposeUpgradePopup');
-    if (true === $bool && is_object($this->notice))
-    {
-       AdminNoticesController::getInstance()->proposeUpgradePopup();
-    }
 
 	}
 
@@ -78,7 +73,12 @@ class QuotaNoticeMonth extends \ShortPixel\Model\AdminNoticeModel
 		$message = '<p>' . sprintf(__("You add an average of %s %d images and thumbnails %s to your Media Library every month and you have <strong>a plan of %d images/month (and %d one-time images)</strong>.%s"
 					. " You may need to upgrade your plan to have all your images optimized.", 'shortpixel-image-optimiser'), '<strong>', $average, '</strong>', $month_total, $onetime_remaining, '<br>') . '</p>';
 
-		$message .= '  <button class="button button-primary" id="shortpixel-upgrade-advice" onclick="ShortPixel.proposeUpgrade()" style="margin-right:10px;"><strong>' .  __('Show me the best available options', 'shortpixel-image-optimiser') . '</strong></button>';
+		$upgradeButton = sprintf('<a href="https://shortpixel.com/ms/af/KZYK08Q28044" target="_blank" class="button button-primary" style="margin-right:10px;" >
+							%s </a> ',
+				   __('Upgrade to Unlimited', 'shortpixel-image-optimiser'));
+
+
+		$message .= $upgradeButton;
 
 		return $message;
 	}

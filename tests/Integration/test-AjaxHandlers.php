@@ -340,6 +340,9 @@ class AjaxHandlersTest extends SPIO_AjaxTestCase {
 
 	public function test_remove_backup_requires_the_secondary_tools_nonce() {
 		$this->_setRole( 'administrator' );
+		// Since 4acf1395 (#37) the tools are gated on is_super_admin →
+		// manage_network, which single-site admins lack (see pin44 below).
+		wp_get_current_user()->add_cap( 'manage_network' );
 
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->purgeQueueTable();
@@ -361,6 +364,7 @@ class AjaxHandlersTest extends SPIO_AjaxTestCase {
 
 	public function test_remove_backup_deletes_the_backup_folder() {
 		$this->_setRole( 'administrator' );
+		wp_get_current_user()->add_cap( 'manage_network' );
 
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->purgeQueueTable();
@@ -378,6 +382,31 @@ class AjaxHandlersTest extends SPIO_AjaxTestCase {
 		$this->assertIsObject( $response );
 		$this->assertStringContainsString( 'removed', $response->settings->results );
 		$this->assertFalse( is_dir( SHORTPIXEL_BACKUP_FOLDER ), 'The backup folder must be gone' );
+	}
+
+	public function test_pin44_single_site_administrator_cannot_remove_backups() {
+		$this->_setRole( 'administrator' );
+
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+		$this->optimizeAttachment( $attachment_id );
+		$this->assertTrue( is_dir( SHORTPIXEL_BACKUP_FOLDER ), 'Precondition: backups exist' );
+
+		$response = $this->doScreenAction(
+			'toolsRemoveBackup',
+			array(
+				'type'        => 'settings',
+				'tools-nonce' => wp_create_nonce( 'empty-backup' ),
+			)
+		);
+
+		$this->assertIsObject( $response );
+		$this->assertSame(
+			AjaxController::NO_ACCESS,
+			$response->error,
+			'PINNED BUG #44: since 4acf1395 (#37) toolsRemoveBackup/toolsRemoveAll require is_super_admin → the raw manage_network cap, which single-site administrators never have — so on single-site installs nobody can use the Remove backups / Remove all data tools, while part-tools.php still shows the buttons. WP core\'s is_super_admin() would be true for these admins. FLIP this test when fixed: a single-site administrator should then get the normal handler response.'
+		);
+		$this->assertTrue( is_dir( SHORTPIXEL_BACKUP_FOLDER ) );
 	}
 
 	// -------------------------------------------------------------------
@@ -618,6 +647,94 @@ class AjaxHandlersTest extends SPIO_AjaxTestCase {
 		$this->assertTrue(
 			$this->freshImageModel( $attachment_id )->isOptimized(),
 			'Image must be optimized again after editor reprocess'
+		);
+	}
+
+	// -------------------------------------------------------------------
+	// ai/redoAiReplacement — regression for bug #46
+	// -------------------------------------------------------------------
+
+	/**
+	 * REGRESSION bug #46 (introduced in 90d1a316 "Bulk redo AI
+	 * replacement"): AjaxController::redoAiReplacement() used to call
+	 * `$api->redoAiReplacement($queueItem)` — an undefined method (the real
+	 * name is redoAIReplace(), "...Replace" not "...Replacement", so PHP's
+	 * method-name case-insensitivity could not save it) — making every
+	 * single-item `ai/redoAiReplacement` AJAX request fatal. Fixed by
+	 * renaming the call to redoAIReplace().
+	 *
+	 * End-to-end check of the recovery scenario: AI data is GENERATED but
+	 * the embedding post still has alt="" (the pre-97f2c1f4 replacer2
+	 * singleton stuck state). The single-item redo must not fatal, must
+	 * return status=true, and must re-apply the stored alt to the post
+	 * content synchronously — no new API calls, no queue round-trip.
+	 */
+	public function test_single_redo_ai_replacement_reapplies_in_content_alt() {
+		$this->_setRole( 'administrator' );
+
+		$settings                  = \wpSPIO()->settings();
+		$settings->enable_ai       = 1;
+		$settings->ai_gen_alt      = 1;
+		$settings->ai_gen_caption  = 1;
+		$settings->ai_gen_filename = 0;
+		$settings->aiPreserve      = false;
+
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$img_tag       = '<img src="' . esc_url( wp_get_attachment_url( $attachment_id ) ) . '" alt="" />';
+		$post_id       = self::factory()->post->create( array( 'post_content' => $img_tag ) );
+
+		global $wpdb;
+		$suppress = $wpdb->suppress_errors( true );
+		$wpdb->query( "DELETE FROM `{$wpdb->prefix}shortpixel_aipostmeta`" );
+		$wpdb->suppress_errors( $suppress );
+
+		$ref  = new ReflectionClass( \ShortPixel\Model\AiDataModel::class );
+		$prop = $ref->getProperty( 'models' );
+		$prop->setAccessible( true );
+		$prop->setValue( null, array() );
+
+		$this->purgeQueueTable();
+
+		// Generate the AI data through the queue + mock API.
+		$imageModel = \wpSPIO()->filesystem()->getImage( $attachment_id, 'media' );
+		( new QueueController() )->addItemToQueue( $imageModel, array( 'action' => 'requestAlt' ) );
+		$this->runQueueUntilEmpty();
+
+		clean_post_cache( $post_id );
+		$this->assertStringContainsString(
+			'A mock ai alt text.',
+			get_post( $post_id )->post_content,
+			'Precondition: the initial generation must fill the in-content alt.'
+		);
+
+		// Recreate the stuck state: aipostmeta GENERATED, in-content alt empty.
+		wp_update_post( array( 'ID' => $post_id, 'post_content' => $img_tag ) );
+		clean_post_cache( $post_id );
+		$this->assertStringNotContainsString( 'A mock ai alt text.', get_post( $post_id )->post_content );
+		$prop->setValue( null, array() );
+
+		$response = $this->doScreenAction(
+			'ai/redoAiReplacement',
+			array(
+				'id'   => $attachment_id,
+				'type' => 'media',
+			)
+		);
+
+		$this->assertIsObject(
+			$response,
+			'Regression #46: ai/redoAiReplacement must return JSON, not fatal; raw: ' . $this->lastRawResponse()
+		);
+		$this->assertTrue(
+			$response->status,
+			'Regression #46: the single-item redo handler must report success.'
+		);
+
+		clean_post_cache( $post_id );
+		$this->assertStringContainsString(
+			'alt="A mock ai alt text."',
+			get_post( $post_id )->post_content,
+			'Regression #46: the single-item redo must re-apply the stored AI alt to the embedding post content.'
 		);
 	}
 }

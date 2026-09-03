@@ -49,7 +49,7 @@ if ( ! defined( 'ABSPATH' ) ) {
   <menu>
 			<ul>
         <?php if (true === $this->is_network_page): ?>
-        <li>
+        <li class='network'>
           <?php echo $this->settingLink([
             'part' => 'network',
             'title' => __('Network Control', 'shortpixel-image-optimiser'),
@@ -165,10 +165,11 @@ if ( ! defined( 'ABSPATH' ) ) {
                   <p><?php _e('SmartCompress & more ', 'shortpixel-image-optimiser'); ?></p>
               </div>
               <div class='banner-upgrade-button'>
-                  <button type="button" class="button button-primary" id="upgrade" onclick="window.open('https://shortpixel.com/ms/af/KZYK08Q28044', '_blank');">
-                      <i class="shortpixel-icon cart"></i>
+                  <a href="https://shortpixel.com/ms/af/KZYK08Q28044" target="_blank" class="button button-primary" >
+                  <i class="shortpixel-icon cart"></i>
                       <?php _e('Upgrade Now', 'shortpixel-image-optimiser'); ?>
-                  </button>
+                  </a>
+
               </div>
           </div>
 <?php endif; ?>
@@ -186,6 +187,9 @@ if ( ! defined( 'ABSPATH' ) ) {
           <?php if (true === $this->is_network_page)
           {
              $this->loadView('settings/part-network-override'); 
+             ?>
+             <input type="hidden" name="is_network_admin" value="1" /> 
+             <?php 
           }
           ?>
 

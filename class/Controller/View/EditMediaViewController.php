@@ -15,6 +15,7 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Helper\UiHelper as UiHelper;
 
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
+use ShortPixel\Helper\DownloadHelper;
 use ShortPixel\Model\AiDataModel;
 use ShortPixel\Model\Converter\Converter;
 use ShortPixel\Model\File\DirectoryModel;
@@ -65,6 +66,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
             add_action( 'add_meta_boxes_attachment', array( $this, 'addMetaBox') );
           //  add_action( 'attachment_fields_to_edit', [ $this, 'addAIAlter'], 10, 2);
             $this->hooked = true;
+      
       }
 
       /**
@@ -334,6 +336,12 @@ class EditMediaViewController extends \ShortPixel\ViewController
 					$debugInfo[] = array(__('Restorable'), $restorable);
 					$debugInfo[] = array(__('Record'), $hasrecord);
 
+          $lastSave = $imageObj->getMeta('lastSave'); 
+          if (null !== $lastSave)
+          {
+             $debugInfo[] = array(__('Last Saved', 'shortpixel-image-optimiser'), $lastSave);
+          }
+
 					if ($imageObj->getMeta()->convertMeta()->didTry())
 					{
 						 $debugInfo[] = array(__('Converted'), ($imageObj->getMeta()->convertMeta()->isConverted() ?'<span class="green">Yes</span>' : '<span class="red">No</span> '));
@@ -389,6 +397,8 @@ class EditMediaViewController extends \ShortPixel\ViewController
             {
               $debugInfo[] = ['Ai -Generated ', $aiDataModel->getGeneratedData()];
             }
+
+            $debugInfo[] = ['', '<a href="javascript:window.ShortPixelProcessor.screen.RedoAiReplacement(' . $this->post_id . ');">Redo Ai Replacement</a>'];
 
           }
 

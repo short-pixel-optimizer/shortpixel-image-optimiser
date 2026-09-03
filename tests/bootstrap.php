@@ -57,6 +57,9 @@ if ( '1' === getenv( 'SPIO_PARTNER_PLUGINS' ) ) {
 				// Commercial — extracted from tests/partner-plugins/ when
 				// present; silently skipped (like the rest) when not.
 				'sitepress-multilingual-cms/sitepress.php',
+				// WPML add-on: translations may point at their OWN file
+				// (vs shared-file duplicates). Must load AFTER sitepress.
+				'wpml-media-translation/plugin.php',
 			);
 			$active = array();
 			foreach ( $partners as $partner ) {

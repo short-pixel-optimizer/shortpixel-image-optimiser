@@ -85,6 +85,9 @@ class OptimizeAiController extends OptimizerBase
             case 'undoAI':
                 return $this->undoAltData($qItem);
                 break;
+            case 'redoAiReplacement':
+                $this->redoAiReplace($qItem);
+            break; 
             default:
                 $this->api->processMediaItem($qItem);
                 break;
@@ -409,7 +412,7 @@ class OptimizeAiController extends OptimizerBase
         // Generic number of strlen here. Disallow filename not to be very short, because because. 
         if (isset($aiData['filebase']) && is_string($aiData['filebase']) && strlen($aiData['filebase']) > 5) // ?? 
         {
-            // @todo This and the ReplaceAtttributes is similar code + Replacer2 doesn't reset at all due to getINstance implementation
+            // @todo This and the ReplaceAtttributes is similar code. (Replacer2's Setup::getInstance() returns a fresh instance per call since 97f2c1f4, so URL data no longer leaks between items.)
             $currentFileBase = ($imageModel->isScaled()) ? $imageModel->getOriginalFile()->getFileBase() : $imageModel->getFileBase();
 
             $urls = $qItem->data()->urls;
@@ -432,7 +435,11 @@ class OptimizeAiController extends OptimizerBase
                     'url' => $url, 
                 ];
 
-                $this->replaceFiles($qItem, $aiData['filebase'], $args);
+                $files_replaced = $this->replaceFiles($qItem, $aiData['filebase'], $args);
+                if (true === $files_replaced)
+                {
+                     $qItem->addResult(['redirect' => 'reload']);
+                }
             }
 
             // Reset when files change.
@@ -465,6 +472,9 @@ class OptimizeAiController extends OptimizerBase
     /**
      * Get post IDs for the same WPML language as the given attachment.
      *
+     * Disabled — replaced by the per-result WPMLCheckReplace() guard below,
+     * which filters at replace time instead of pre-filtering the finder query.
+     *
      * @param int $item_id
      * @return int[]
      */
@@ -493,16 +503,20 @@ class OptimizeAiController extends OptimizerBase
     } */
 
     /**
-     * Undocumented function
+     * Decide whether an AI text replacement may run on a given post (WPML guard).
      *
-     * @param [int] $post_id - The post_id of the page / post 
-     * @param [int] $queue_item_id - The ID of the queue item image
-     * @return boolean
+     * When WPML is active, both the target post and the queue item (attachment)
+     * are resolved through the `wpml_post_language_details` filter; replacement
+     * is only allowed when both languages are known and identical, so pages in
+     * other languages are left untouched. Without WPML the check always passes.
+     *
+     * @param int $post_id       The post_id of the page / post to replace in.
+     * @param int $queue_item_id The attachment ID of the queue item image.
+     * @return bool True when replacing on this post is allowed.
      */
-    protected function WPMLCheckReplace($post_id, $queue_item_id) : bool 
+    protected function WPMLCheckReplace($post_id, $queue_item_id) : bool
     {
         if (!\wpSPIO()->env()->plugin_active('wpml')) {
-            Log::addTemp('WPML not active');
             return true;
         }
 
@@ -513,9 +527,9 @@ class OptimizeAiController extends OptimizerBase
             return false;
         }
 
-        if ($language['code'] !== $language_queue['code'])
+        if ($language['language_code'] !== $language_queue['language_code'])
         {
-            Log::addTemp('wrong language ( ' . $language['code'] . ' - '  . $language_queue['code'] . ' ) - not replacing this page ', $post_id); 
+            Log::addTemp('wrong language ( ' . $language['language_code'] . ' - '  . $language_queue['language_code'] . ' ) - not replacing this page ', $post_id); 
              return false; 
         } 
 
@@ -524,18 +538,25 @@ class OptimizeAiController extends OptimizerBase
     }
 
 
-    /** Replace Image Attributes ( others? ) on images via BaseURL 
-     * 
-     * The finder is passed a callback to which the results will be returned.  
-     * 
-     * @param QueueItem $qItem 
-     * @param mixed $new_text The new text 
-     * @return array 
+    /** Replace Image Attributes ( others? ) on images via BaseURL
+     *
+     * Resolves this item's (original-file) URL, feeds it to a FRESH
+     * replacer2 Setup (Setup::getInstance() is intentionally NOT a
+     * singleton since 97f2c1f4 — a shared instance accumulated URLs
+     * across items and getBaseURL() then searched with the first item's
+     * URL, leaving every later image's in-content alt untouched), and
+     * runs the Finder over post_content. Matching posts are passed to
+     * the handleReplace() callback, which does the actual attribute
+     * replacement and save.
+     *
+     * @param QueueItem $qItem
+     * @param array $aiData Generated AI data (alt / caption are strings, or int status codes when not generated).
+     * @return array|void Finder results; void when alt AND caption are int status codes.
      */
     protected function replaceImageAttributes(QueueItem $qItem, $aiData)
     {
         if (is_int($aiData['alt']) && is_int($aiData['caption'])) {
-            Log::addInfo('Alt/Caption returned integer/status, not replace');
+            Log::addInfo('Alt and Caption returned integer/status, not replacing : ' . $qItem->item_id );
             return;
         }
 
@@ -587,14 +608,38 @@ class OptimizeAiController extends OptimizerBase
      *   5. Replaces source/target URL pairs in post content via Replacer2.
      *   6. Updates WordPress attachment metadata and the attached-file postmeta.
      * Supports a dry_run mode that logs all planned operations without making any changes.
-     * Always returns false (the return value is currently unused by callers).
+     *
+     * BUG #51 (open, pinned in tests/Integration/test-ChangeFilename.php as
+     * test_pin51_..._pinned_for_deferred_fix): $target_url below (and the
+     * $base_url computed above it) is built with an unanchored
+     * str_replace($base_filename, ...) over the WHOLE URL/path, so when the
+     * filename base is a substring of a directory segment (e.g.
+     * uploads/photo/photo.jpg) the directory gets rewritten too — the
+     * search/replace URLs no longer match the real locations, files are moved
+     * but post_content keeps dead links to the old name. Fix: anchor the
+     * replacement to the basename portion of the URL.
+     *
+     * BUG #52 (open, pinned in tests/Controller/test-OptimizeAiController.php
+     * as test_pin52_..._pinned_for_deferred_fix): the results of
+     * $sourceFile->move(), renameBackup() and $replacer->replace() are all
+     * discarded — on partial failure (some files moved, some not) this method
+     * still returns true, the DB rewrite runs for ALL pairs and the user is
+     * told "Files were replaced". No rollback exists.
+     *
+     * NOTE on the recent_upload=false usage guard: on a stock WP install
+     * _wp_attached_file / _wp_attachment_metadata store RELATIVE paths, so the
+     * full-URL LIKE probe matches nothing and the guard passes; it only counts
+     * references on sites where full URLs land in post_content/postmeta
+     * (page builders etc.). Contract-pinned in test-ChangeFilename.php
+     * (test_pin53_...). The manual Change Filename path bypasses this guard
+     * entirely (ajax_replaceFile() hardcodes recent_upload=true).
      *
      * @param QueueItem $qItem       The queue item providing the image model.
      * @param string    $newFileBase New filename base (without extension) from the AI.
      * @param array     $args        Optional: dry_run (bool), imageThreshold (int), url (string), recent_upload (bool).
-     * @return bool Always returns false.
+     * @return bool True if it made it to the end of the replace functions; false on usage-guard block or filename conflict.
      */
-    protected function replaceFiles($qItem, $newFileBase, $args = [])
+    protected function replaceFiles($qItem, $newFileBase, $args = []) : bool
     {
         $defaults = [
             'dry_run' => false,
@@ -630,7 +675,6 @@ class OptimizeAiController extends OptimizerBase
             }
         }
 
-
         $imageModel = $qItem->imageModel;
         $item_id = $qItem->item_id;
 
@@ -640,7 +684,6 @@ class OptimizeAiController extends OptimizerBase
         $files['files'] = array_unique($files['files']);
         $files['webp'] = array_unique($files['webp']);
         $files['avif'] = array_unique($files['avif']);
-
 
         $fs = \wpSPIO()->filesystem();
 
@@ -752,7 +795,79 @@ class OptimizeAiController extends OptimizerBase
 
         $this->replaceMetaData($item_id, $base_filename, $newFileBase, $args['dry_run']);
 
-        return false;
+        return true;
+    }
+
+    /**
+     * Entry point for the manual "Change Filename" AJAX action (media/replaceFileName).
+     *
+     * Derives the new file base via pathinfo(basename(), PATHINFO_FILENAME) —
+     * this strips any directory prefix (neutralising path traversal) AND the
+     * extension, so the rename can never change a file's extension. Calls
+     * replaceFiles() with recent_upload=true, deliberately bypassing the
+     * usage-count guard: the user explicitly asked for the rename, including
+     * for images already referenced in content (see the guard NOTE on
+     * replaceFiles()). Fully decoupled from AI state — works on attachments
+     * that never had AI data.
+     *
+     * @param QueueItem $qItem       Queue item wrapping the image model.
+     * @param string    $newFileName Sanitised filename from the request (may include extension).
+     * @return bool Result of replaceFiles().
+     */
+    public function ajax_replaceFile($qItem, $newFileName)
+    {
+         $imageModel = $qItem->imageModel;
+         if (true === $imageModel->isScaled()) {
+                $url = $imageModel->getOriginalFile()->getURL();
+         } else {
+                $url = $qItem->imageModel->getUrl();
+        }
+
+         $baseReplace = pathinfo(basename($newFileName), PATHINFO_FILENAME); 
+
+         $args = [
+            'url' => $url, 
+            'recent_upload' => true,
+         ];
+
+         $result = $this->replaceFiles($qItem, $baseReplace, $args);
+
+         return $result;
+    }
+
+    /**
+     * Re-run the in-content attribute replacement from STORED AI data.
+     *
+     * Recovery path (Tools → "Redo Ai Replacement", 90d1a316) for items whose
+     * aipostmeta row is GENERATED but whose embedding posts missed the
+     * replacement (e.g. the pre-97f2c1f4 replacer2 Setup-singleton bug). No
+     * API request is made: the generated data is read from AiDataModel and
+     * pushed through replaceImageAttributes(). Queue dispatch reaches this
+     * via sendToProcessing()'s `$this->redoAiReplace()` call — PHP method
+     * names are case-insensitive, so that resolves here.
+     *
+     * @param QueueItem $qItem The redoAiReplacement queue item.
+     * @return void Marks the item done (STATUS_NOT_API) via addResult().
+     */
+    public function redoAIReplace($qItem)
+    {
+        $imageModel = $qItem->imageModel;
+        $item_id = $imageModel->get('id');
+
+        $aiModel = AiDataModel::getModelByAttachment($item_id, 'media');
+		$aiData = $aiModel->getGeneratedData();
+
+        $this->replaceImageAttributes($qItem, $aiData);   
+    
+        $this->finishItemProcess($qItem);
+
+
+        $qItem->addResult([
+         'is_done' => true,
+         'is_error' => false,
+         'message' => __('Item checked ', 'shortpixel-image-optimiser'),
+         'apiStatus' => ApiController::STATUS_NOT_API,
+        ]);
     }
 
     /*
@@ -833,13 +948,19 @@ class OptimizeAiController extends OptimizerBase
     }
 
     // @todo This might be returned in multiple formats / post data / postmeta data?  Public because of callback
-    /** This is the callback for Finder results for replacing attributes on the Images  
-     * 
-     * This function also saves the results!
-     * 
-     * @param mixed $results 
-     * @param mixed $args 
-     * @return void 
+    /** This is the callback for Finder results for replacing attributes on the Images
+     *
+     * This function also saves the results! Each result is first passed through
+     * WPMLCheckReplace(), so posts in a different WPML language are skipped.
+     * Within each post only <img> tags whose src matches THIS item's file base
+     * (incl. -WxH thumbnail and -scaled variants) are touched. With the
+     * aiPreserve setting enabled, only EMPTY alt/caption attributes are
+     * filled; existing values are left alone. Int values in aiData (status
+     * codes) mean "no generated text" and never replace anything.
+     *
+     * @param array $results Finder results: arrays with post_id + content.
+     * @param array $args    'aiData' (generated data) and 'qItem' (QueueItem).
+     * @return void
      */
     public function handleReplace($results, $args)
     {
@@ -871,11 +992,18 @@ class OptimizeAiController extends OptimizerBase
                 $frontImage = new \ShortPixel\Model\FrontImage($match);
                 $src = $frontImage->src;
 
+                if (is_null($src))
+                {
+                     continue; 
+                }
                 // Only replace in post content the image we did
                 $pattern = '/' . preg_quote($image_filebase, '/') . '(-\d+x\d+\.|\.|-scaled\.)' . $imageModel->getExtension() . '/i';
                 if (preg_match($pattern, $src) !== 1) {
                     continue;
                 }
+
+
+               $aiPreserve = \wpSPIO()->settings()->aiPreserve; 
 
                 /*   if (strpos($src, $aiData['replace_filebase']) === false)
              {
@@ -885,12 +1013,20 @@ class OptimizeAiController extends OptimizerBase
                 $do_replace = false;
 
                 if (isset($aiData['alt']) && false === is_int($aiData['alt'])) {
-                    $frontImage->alt = $aiData['alt'];
-                    $do_replace = true;
+
+                    if (false === $aiPreserve || (is_null($frontImage->alt) || strlen(trim($frontImage->alt)) == 0) )
+                    {
+                        $frontImage->alt = $aiData['alt'];
+                        $do_replace = true;
+                    }
                 }
                 if (isset($aiData['caption']) && false === is_int($aiData['caption'])) {
-                    $frontImage->caption = $aiData['caption'];
-                    $do_replace = true;
+
+                    if (false === $aiPreserve || (is_null($frontImage->caption) || strlen(trim($frontImage->caption)) == 0) )
+                    {
+                        $frontImage->caption = $aiData['caption'];
+                        $do_replace = true;
+                    }
                 }
 
                 if (true === $do_replace) {
@@ -1058,6 +1194,7 @@ class OptimizeAiController extends OptimizerBase
     public function getAltData(QueueItem $qItem)
     {
         $item_id = $qItem->item_id;
+        $imageModel = $qItem->imageModel;
 
         $aiModel = AiDataModel::getModelByAttachment($item_id, 'media');
 
@@ -1103,6 +1240,7 @@ class OptimizeAiController extends OptimizerBase
             //      'isSupported' => $this->isSupported($qItem),
             'dataItems' => $dataItems,  // This seems not used(?)
             'isDifferent' =>  $aiModel->currentIsDifferent(),
+            'filename' => ($imageModel->isScaled()) ? $imageModel->getOriginalFile()->getFileName() : $imageModel->getFileName(), 
         ]);
 
 

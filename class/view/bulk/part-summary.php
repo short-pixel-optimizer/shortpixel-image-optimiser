@@ -184,7 +184,10 @@ if ( ! defined( 'ABSPATH' ) ) {
       <span><img src="<?php echo esc_url(wpSPIO()->plugin_url('res/img/bulk/over-quota.svg')) ?>" /></span>
             <p><?php printf(esc_html('In your ShortPixel account you %shave only %s credits available %s, but you have chosen %s  images to be optimized in this bulk process. You can either go back and select less images, or you can upgrade to a higher plan or buy one-time credits.','shortpixel-image-optimiser'), '<span class="red">', esc_html($this->formatNumber($quotaData->total->remaining, 0)), '</span>', '<b data-stats-total="images-images">0</b>'); ?>
 
-       <button type="button" class="button" onClick="ShortPixel.proposeUpgrade();"><?php esc_html_e('Show me the best options', 'shortpixel-image-optimiser') ?></button>
+                 <p><a href="https://shortpixel.com/ms/af/KZYK08Q28044" target="_blank" class="button button-primary" >
+                  <!--<i class="shortpixel-icon cart"></i> -->
+                      <?php _e('Buy credits or upgrade to Unlimited', 'shortpixel-image-optimiser'); ?>
+                  </a> </p>
      </p>
 
        <span class='hidden' data-quota-remaining><?php
@@ -192,7 +195,6 @@ if ( ! defined( 'ABSPATH' ) ) {
                 echo esc_html($quotaData->total->remaining);
              ?></span>
     </div>
-    <?php $this->loadView('snippets/part-upgrade-options'); ?>
     
 
     <?php endif; // check unlimited ?> 

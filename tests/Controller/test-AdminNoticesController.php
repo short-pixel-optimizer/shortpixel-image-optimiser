@@ -19,6 +19,8 @@
  *     invoked via reflection).
  *   - parse_update_notice() — returns empty string when current version >= new
  *     version (private method via reflection).
+ *   - parse_readme_content() — associates each upgrade message with its version
+ *     heading (private method via reflection).
  *
  * Out of scope (and why):
  *   - displayNotices() — requires an active WP_Screen and admin_notices hook
@@ -505,5 +507,16 @@ class AdminNoticesControllerTest extends WP_UnitTestCase {
 		$result = $this->invokePrivate( $ctrl, 'parse_update_notice', array( '', $response ) );
 
 		$this->assertSame( '', $result );
+	}
+
+	public function test_parse_readme_content_uses_the_current_version_for_messages() {
+		$ctrl = $this->freshController();
+		$content = "== Upgrade Notice ==\n\n= 99.0.0 =\n\nFirst **message**.\n\n= 98.0.0 =\n\nSecond message.";
+		$response = new stdClass();
+
+		$result = $this->invokePrivate( $ctrl, 'parse_readme_content', array( $content, '99.0.0', $response ) );
+
+		$this->assertStringContainsString( 'First <strong>message</strong>.', $result );
+		$this->assertStringContainsString( 'Second message.', $result );
 	}
 }

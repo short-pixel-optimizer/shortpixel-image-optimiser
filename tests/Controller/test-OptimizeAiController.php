@@ -20,8 +20,13 @@
  *     was removed so file base names are never sentence-formatted (12603b56 had
  *     added it, mangling the original_filebase fallback with ucfirst + period).
  *     Prefix/postfix for filebase still applies via the ai_filename_* settings.
- *   - replaceFiles() — PINNED BUG: always returns false on both success and
- *     conflict paths (see test_replaceFiles_returns_false_on_success_and_conflict_pinned_for_deferred_fix).
+ *   - replaceFiles() — returns false on conflict-abort; the old pinned bug
+ *     (success path also returned false) was FIXED in 1fc98025 (`return true`
+ *     at ~line 765). Conflict path covered in
+ *     test_replaceFiles_returns_false_on_conflict.
+ *   - ajax_replaceFile() — bug #45 (c44f0369 dropped `return $result;`)
+ *     FIXED in 370fb5db; regression-tested in
+ *     test_ajax_replaceFile_returns_the_replaceFiles_result.
  *   - sendToProcessing() dispatch: 'undoAI' is routed locally; other actions
  *     reach api->processMediaItem() (routing verified via spy).
  *
@@ -35,7 +40,8 @@
  *     loaded; also calls AiDataModel::getModelByAttachment() which reads from DB.
  *   - undoAltData(): calls AiDataModel + replaceImageAttributes() — integration.
  *   - replaceImageAttributes() / replaceMetaData(): touch Replacer2 + WP metadata — integration.
- *   - getWpmlLanguagePostIds(): requires WPML active and a populated translations table.
+ *   - WPMLCheckReplace() (replaced getWpmlLanguagePostIds in f232c607): requires
+ *     WPML active — covered in tests/Compat/test-CompatWPML.php.
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -564,25 +570,17 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 	}
 
 	/*
-	 * PINNED BUG: replaceFiles() always returns false — both on conflict-abort and on success.
+	 * replaceFiles() conflict-abort contract: returns false when the target
+	 * filename already exists on disk.
 	 *
-	 * Expected (correct) behaviour:
-	 *   - When a target filename conflict is detected (~line 674) the method should
-	 *     return false to signal the abort.
-	 *   - When all file moves and URL replacements complete successfully (~line 726)
-	 *     the method should return true to signal success.
-	 *
-	 * Actual behaviour:
-	 *   - BOTH branches return `false` unconditionally. The success path at the very
-	 *     end of the function (line 726) says `return false;` — a copy-paste of the
-	 *     conflict-abort guard.
-	 *   - The caller (HandleSuccess, ~line 436) ignores the return value entirely, so
-	 *     a conflict-abort is indistinguishable from a successful rename. This makes
-	 *     silent failures invisible to the user.
-	 *
-	 * This test pins the CURRENT (broken) behaviour. It will START FAILING once the
-	 * bug is fixed — at that point the success path should return true and the assertions
-	 * should be updated to reflect the corrected contract.
+	 * History: this used to pin a bug where the SUCCESS path also returned
+	 * false (copy-paste of the conflict guard). FIXED in 1fc98025 — the
+	 * success path now ends with `return true;` (~line 765) and HandleSuccess
+	 * (~line 435) consumes it for the reload redirect. The conflict path
+	 * correctly stayed false, so this test's assertions were already the
+	 * post-fix contract; only the docs changed. The success path still can't
+	 * be exercised in a clean unit test (see below) — it is covered
+	 * indirectly by the integration AI pipeline.
 	 *
 	 * How we construct the conflict fixture without touching production code:
 	 *   1. Build a QueueItem whose imageModel is mocked via an anonymous class that
@@ -597,18 +595,7 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 	 * Replacer2 to be fully set up. So we assert only the conflict-abort branch here,
 	 * and document that both branches return the same false for the same reason.
 	 */
-	public function test_replaceFiles_returns_false_on_success_and_conflict_pinned_for_deferred_fix() {
-		/*
-		 * Expected when fixed:
-		 *   conflict-abort path  → return false  (correct: abort on conflict)
-		 *   success path         → return true   (CURRENTLY returns false — BUG)
-		 *
-		 * This test asserts both currently return false, which will break once
-		 * the success path is corrected to return true.
-		 *
-		 * Bug location: OptimizeAiController::replaceFiles(), line ~726.
-		 */
-
+	public function test_replaceFiles_returns_false_on_conflict() {
 		$ctrl = new OptimizeAiController();
 
 		// Build the QueueItem with a minimal ImageModel that supplies getAllFiles().
@@ -708,16 +695,245 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 		@unlink( $src_path );
 		@unlink( $tgt_path );
 
-		/*
-		 * BOTH the conflict-abort and the success path currently return false.
-		 * When the bug is fixed:
-		 *   - conflict_result should remain false (correct abort signal).
-		 *   - A parallel test against the success path should assert true.
-		 * This test will start failing at that point — update accordingly.
-		 */
 		$this->assertFalse(
 			$conflict_result,
-			'replaceFiles() conflict-abort path returns false (as expected; pinned because success path also returns false — BUG).'
+			'replaceFiles() must return false when the target filename already exists (conflict abort).'
 		);
+	}
+
+	/*
+	 * Regression test for bug #45 (FIXED in 370fb5db, flipped from pin45):
+	 * c44f0369 "Fixes - Reload when renaming" had removed `return $result;`
+	 * from ajax_replaceFile(), so it always returned null and its caller,
+	 * AjaxController::replaceFileName(), showed "Files were not replaced"
+	 * even on success. The fix restored the return; this test stubs the
+	 * replaceFiles() chain to return true and asserts the value is passed
+	 * through by ajax_replaceFile.
+	 */
+	public function test_ajax_replaceFile_returns_the_replaceFiles_result() {
+		$ctrl = new class() extends OptimizeAiController {
+			protected function replaceFiles( $qItem, $newFileBase, $args = [] ): bool {
+				return true; // simulate a fully successful replace
+			}
+		};
+
+		$model = new class() extends ImageModel {
+			public function __construct() {}
+			public function get( $name ) { return null; }
+			public function getOptimizeUrls() { return []; }
+			protected function saveMeta() {}
+			protected function loadMeta() {}
+			protected function getImprovements() { return false; }
+			protected function getExcludePatterns() { return []; }
+			protected function preventNextTry( $reason = '' ) {}
+			public function isOptimizePrevented() { return false; }
+			public function resetPrevent() {}
+			public function isScaled() { return false; }
+			public function getUrl() { return 'http://example.org/wp-content/uploads/spio-pin45.jpg'; }
+		};
+
+		$qItem  = new QueueItem( [ 'imageModel' => $model ] );
+		$result = $ctrl->ajax_replaceFile( $qItem, 'spio-pin45-new.jpg' );
+
+		$this->assertTrue(
+			$result,
+			'Regression #45: ajax_replaceFile() must return the replaceFiles() result — it used to drop it (always null), making every rename report "Files were not replaced".'
+		);
+	}
+
+	/**
+	 * PINNED BUG #52 (MEDIUM): Partial-failure blindness.
+	 *
+	 * class/Controller/Optimizer/OptimizeAiController.php replaceFiles():
+	 *   line 736 : `$result = $sourceFile->move($targetFileObj);`   // return dropped
+	 *   line 754 : `$backupModel->renameBackup($newFileBase);`      // return dropped
+	 *   line 766 : `$replacer->replace();`                          // return dropped
+	 *   line 774 : `return true;`
+	 *
+	 * So replaceFiles() returns true — and the user sees "Files were
+	 * replaced" — even when every single physical move failed. There is
+	 * also no rollback: if some moves succeed and others fail, the
+	 * attachment is left in an inconsistent on-disk state while the
+	 * database is rewritten as if everything succeeded.
+	 *
+	 * We construct a fixture where the SOURCE file's move() ALWAYS
+	 * returns false (by stubbing FileModel::move() to a no-op false).
+	 * The conflict guard passes because we do NOT pre-create the target.
+	 * Under the buggy contract replaceFiles() then reaches the
+	 * `return true` at :774 despite the failed move.
+	 *
+	 * SENTINEL principles:
+	 *  - Principle 2: `assertIsBool` before the value assertion — the
+	 *    method's `: bool` return type could otherwise mask a shape drift.
+	 *  - Principle 5: verify move() *did* return false (via the spy
+	 *    counter) and that the source file *is* still on disk after
+	 *    the buggy run — so a fix that silently starts respecting the
+	 *    return value cannot slip past as a coincidental green.
+	 *
+	 * FLIP INSTRUCTIONS when SPIO fixes #52 (e.g. accumulating move
+	 * results and returning false on any failure, with or without
+	 * rollback): change `assertTrue($result)` to `assertFalse($result)`
+	 * and update the sentinel that asserts the source file is still on
+	 * disk (a rollback fix would also restore any partially moved files).
+	 */
+	public function test_pin52_replaceFiles_returns_true_when_move_fails_pinned_for_deferred_fix() {
+		// Create a real attachment (so BackupController + replaceMetaData
+		// don't blow up on a naked ImageModel stub), then wrap the loaded
+		// ImageModel in a spy that returns a spy FileModel whose move()
+		// ALWAYS returns false and touches no disk. The conflict guard
+		// passes because we do NOT pre-create the target file.
+		$fixture_dir = ABSPATH . 'wp-content/uploads/pin52-fixtures';
+		wp_mkdir_p( $fixture_dir );
+		$src_path = $fixture_dir . '/pin52-src-' . uniqid() . '.jpg';
+		// A tiny valid JPEG so wp_generate_attachment_metadata() has something to read.
+		if ( function_exists( 'imagecreatetruecolor' ) ) {
+			$im = imagecreatetruecolor( 4, 4 );
+			imagejpeg( $im, $src_path );
+			imagedestroy( $im );
+		} else {
+			// GD unavailable — the test relies on it; skip cleanly.
+			$this->markTestSkipped( 'GD not available; cannot build pin52 fixture without it.' );
+		}
+
+		$attach_id = wp_insert_attachment(
+			[
+				'post_mime_type' => 'image/jpeg',
+				'post_title'     => 'pin52',
+				'post_content'   => '',
+				'post_status'    => 'inherit',
+			],
+			$src_path
+		);
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+		$metadata = wp_generate_attachment_metadata( $attach_id, $src_path );
+		wp_update_attachment_metadata( $attach_id, $metadata );
+
+		$realImage = \wpSPIO()->filesystem()->getImage( $attach_id, 'media' );
+		$this->assertNotFalse( $realImage, 'Precondition: image model must load for the fresh attachment' );
+
+		$src_filename = basename( $src_path );
+		$src_base     = pathinfo( $src_filename, PATHINFO_FILENAME );
+		$upload_dir   = wp_upload_dir();
+		$base_url_dir = trailingslashit( $upload_dir['baseurl'] ) . 'pin52-fixtures/';
+
+		// Spy FileModel:
+		//  - returns a controllable URL,
+		//  - stubs move() to always return false and record the call,
+		//  - never touches disk.
+		$srcFileStub = new class( $src_path, $base_url_dir . $src_filename ) extends \ShortPixel\Model\File\FileModel {
+			public $moveCalls = 0;
+			public $lastMoveTo = null;
+			private $spyUrl;
+			public function __construct( string $path, string $url ) {
+				parent::__construct( $path );
+				$this->spyUrl = $url;
+			}
+			public function getURL(): string { return $this->spyUrl; }
+			public function move( \ShortPixel\Model\File\FileModel $destination ) {
+				$this->moveCalls++;
+				$this->lastMoveTo = $destination;
+				return false;
+			}
+		};
+
+		// ImageModel wrapper: delegates to $realImage for everything except
+		// getAllFiles(), which we short-circuit to a single spy file so the
+		// move-failure blindness is the only thing being tested.
+		$model = new class( $realImage, $srcFileStub, $src_base ) extends ImageModel {
+			private $inner;
+			private $fileObj;
+			private $fileBase;
+			public function __construct( $inner, $fileObj, $fileBase ) {
+				$this->inner    = $inner;
+				$this->fileObj  = $fileObj;
+				$this->fileBase = $fileBase;
+			}
+			public function get( $name ) { return $this->inner->get( $name ); }
+			public function getMeta( $name = false ) { return $this->inner->getMeta( $name ); }
+			public function getOptimizeUrls() { return []; }
+			protected function saveMeta() {}
+			protected function loadMeta() {}
+			protected function getImprovements() { return false; }
+			protected function getExcludePatterns() { return []; }
+			protected function preventNextTry( $reason = '' ) {}
+			public function isOptimizePrevented() { return false; }
+			public function resetPrevent() {}
+			public function getFileBase() { return $this->fileBase; }
+			public function getImageKey( $key ) { return 'main'; }
+			public function isScaled() { return false; }
+			public function getAllFiles() {
+				return [ 'files' => [ 'main' => $this->fileObj ], 'webp' => [], 'avif' => [] ];
+			}
+		};
+
+		$qItem = new QueueItem( [ 'imageModel' => $model ] );
+
+		// Suppress the replaceMetaData step so the pin does not spuriously
+		// mutate WP core metadata — replaceMetaData() would rewrite
+		// _wp_attached_file with the new base even though no move happened.
+		$ctrl = new class() extends OptimizeAiController {
+			protected function replaceMetaData( $item_id, $old_file, $new_file, $dry_run = false ) {
+				// intentional no-op — out of scope for pin #52 (return-value blindness).
+			}
+		};
+
+		// Inject a stub BackupModel into BackupController::$models cache so
+		// getBackupController()->getModel($imageModel) does not try to build
+		// a LocalBackupModel around our wrapper (which would trip on the
+		// spy FileModel not being an ImageModel). This keeps the pin
+		// focused strictly on the move()-return-value blindness.
+		$bcSingleton = \ShortPixel\Controller\Backup\BackupController::getBackupController();
+		$stubBackup  = new class( $bcSingleton, $realImage ) extends \ShortPixel\Model\Backup\LocalBackupModel {
+			public $renameBackupCalls = 0;
+			public function renameBackup( $newBaseFileName ) : bool {
+				$this->renameBackupCalls++;
+				return false; // simulate a failed backup rename — return dropped by replaceFiles()
+			}
+		};
+		$bcRef = new ReflectionClass( \ShortPixel\Controller\Backup\BackupController::class );
+		$modelsProp = $bcRef->getProperty( 'models' );
+		$modelsProp->setAccessible( true );
+		$modelsProp->setValue( null, [ 'media' => [ $attach_id => $stubBackup ] ] );
+
+		$ref = new ReflectionClass( OptimizeAiController::class );
+		$m   = $ref->getMethod( 'replaceFiles' );
+		$m->setAccessible( true );
+
+		$tgt_base = 'pin52-tgt-' . uniqid();
+		$result   = $m->invoke(
+			$ctrl,
+			$qItem,
+			$tgt_base,
+			[ 'dry_run' => false, 'recent_upload' => true ] // bypass usage guard
+		);
+
+		// Sentinel principle 5: move() must have been called at least once —
+		// otherwise the "move return dropped" bug is not exercised.
+		$this->assertGreaterThanOrEqual(
+			1,
+			$srcFileStub->moveCalls,
+			'Sentinel: replaceFiles() must have invoked move() at least once for #52 to apply.'
+		);
+		// Sentinel principle 5: source file must still be on disk (the stub
+		// short-circuits, doing no actual move).
+		$this->assertFileExists(
+			$src_path,
+			'Sentinel: the stubbed move() did not touch disk, so the source must still be there.'
+		);
+		// Sentinel principle 2: value + type — the : bool return could mask
+		// a null-vs-false drift if we only asserted a truthy value.
+		$this->assertIsBool( $result );
+		$this->assertTrue(
+			$result,
+			'PINNED BUG #52: replaceFiles() returns true even when move() failed on every source — ' .
+			'the move() return value at OptimizeAiController.php:736 is DISCARDED. ' .
+			'FLIP INSTRUCTIONS when fixed: expect false here (and, if a rollback path is added, ' .
+			'update the sentinel accordingly).'
+		);
+
+		// Clean up.
+		wp_delete_attachment( $attach_id, true );
+		@unlink( $src_path );
+		@rmdir( $fixture_dir );
 	}
 }

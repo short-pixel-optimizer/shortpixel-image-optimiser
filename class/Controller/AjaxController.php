@@ -41,7 +41,6 @@ use ShortPixel\ViewController;
  * - `wp_ajax_shortpixel_ajax`            → ajaxRequest()
  * - `wp_ajax_shortpixel_settings`        → settingsRequest()
  * - `wp_ajax_shortpixel_checkquota`      → ajax_checkquota()
- * - `wp_ajax_shortpixel_propose_upgrade` → ajax_proposeQuotaUpgrade()
  *
  * ## Request routing
  *
@@ -408,6 +407,9 @@ class AjaxController
 			case 'ai/undoAlt':
 				$json = $this->undoAltData($json, $data);			
 			break;
+			case 'ai/redoAiReplacement': 
+				$json = $this->redoAiReplacement($json, $data); 
+			break;
 			case 'unMarkCompleted':
 				$json = $this->unMarkCompleted($json, $data);
 				break;
@@ -439,6 +441,10 @@ class AjaxController
 				$this->checkActionAccess($action, 'is_admin_user');
 				$json = $this->startMigrateAll($json, $data);
 				break;
+			case 'startBulkRedoAiReplacement':
+				$this->checkActionAccess($action, 'is_admin_user');
+				$json = $this->startBulkRedoAiReplacement($json, $data);
+				break;			
 			case 'startRemoveLegacy':
 				$this->checkActionAccess($action, 'is_admin_user');
 				$json = $this->startRemoveLegacy($json, $data);
@@ -506,6 +512,9 @@ class AjaxController
 			case 'media/getEditorPreview': 
 				$this->getEditorPreview($data);
 			break;
+			case 'media/replaceFileName': 
+				$this->replaceFileName($data);
+			break; 
 			default:
 				$json->$type->message = __('Ajaxrequest - no action found', 'shortpixel-image-optimiser');
 				$json->error = self::NO_ACTION;
@@ -525,6 +534,14 @@ class AjaxController
 	 * form), `action_addkey`, `action_debug_*`, `action_request_new_key`,
 	 * `action_end_quick_tour`.  Any other value logs an error and exits with '0'.
 	 *
+	 * Since e4d1d0a8 the network-vs-site view controller is selected by
+	 * `$_POST['is_network_admin']` inside `settingsFormSubmit()`; the
+	 * `$screen_action` here is only the action-method name and the
+	 * `checkActionAccess` gate. The `$isM = is_multisite();` local below is
+	 * currently DEAD (never read); it was left in place by the routing rework
+	 * pending Bas's follow-up on bug #41 (per-branch multisite capability
+	 * gate).
+	 *
 	 * @return void
 	 */
 	public function settingsRequest()
@@ -535,6 +552,9 @@ class AjaxController
 		$action = isset($_POST['screen_action']) ? sanitize_text_field($_POST['screen_action']) : false;
 
 		$this->checkActionAccess($action, 'is_admin_user');
+
+		$isM = \is_multisite();
+
 
 		switch ($action) {
 			case 'save-settings': // usual settings 
@@ -567,26 +587,54 @@ class AjaxController
 	/**
 	 * Delegate a settings form action to the settings view controller.
 	 *
-	 * Instantiates `MultiSiteViewController` for `save-multi-settings` (network
-	 * settings form) or `SettingsViewController` otherwise, marks it as processing
-	 * an AJAX save, sets the redirect URL from `$_POST['request_url']`, and calls
-	 * the action method on the view controller if it exists, otherwise falls back
-	 * to `load()`.  Exits afterwards.
+	 * ROUTING (updated e4d1d0a8, 2026-08-28): the controller class is chosen
+	 * from the client-supplied `$_POST['is_network_admin']` flag rather than
+	 * from `$action`. The flag is set by shortpixel-settings.js when the
+	 * hidden `<input name="is_network_admin" value="1">` in view-settings.php
+	 * is present on the rendered form (i.e. the network settings screen).
+	 * When present -> `MultiSiteViewController`; when absent ->
+	 * `SettingsViewController`.
+	 *
+	 * SECURITY NOTE (bug #41, still open): the routing flag is CLIENT input
+	 * and is not corroborated server-side. Combined with the `is_admin_user`
+	 * (manage_options) gate in `settingsRequest()`, a subsite administrator
+	 * can select the MultiSiteViewController branch by posting the flag
+	 * themselves and write to the network-wide spio_wpmu option. See the
+	 * paired pinned tests in tests/Multisite/test-MultisiteNetworkSave.php
+	 * (test_pin41_regular_admin_can_save_network_settings_pinned_for_deferred_fix
+	 * and test_pin41_widened_vector_client_flag_alone_reaches_network_save_pinned_for_deferred_fix).
+	 *
+	 * The view controller is marked as processing an AJAX save, its redirect
+	 * URL is set from `$_POST['request_url']`, and the named `$action` method
+	 * is invoked if it exists on the controller — otherwise `load()` is
+	 * called. Exits afterwards via `wp_send_json()` inside the view
+	 * controller's save flow.
+	 *
+	 * DEBUG NOTE: the trailing `exit('ajaxcontroller - formsubmit')` at the
+	 * end of the method is a debug marker (should never be reached in
+	 * production because the save path always exits via wp_send_json). If a
+	 * request does fall through — e.g. an invalid `$action` on a controller
+	 * that also has no matching save side-effect — this raw exit dumps the
+	 * literal string into the ajax response body and would kill the PHPUnit
+	 * runner mid-suite (see 2026-08-31 ms false-green investigation).
 	 *
 	 * @param string $action The action method name to invoke on the view controller.
 	 * @return void  Always exits.
 	 */
 	protected function settingsFormSubmit($action)
 	{
-		if ('save-multi-settings' === $action)
+
+
+		// This is submitted by a separate field to justify the correct nonce and load Multisite if it's there on other actions as well. Set via shortpixel-settings AjaxRequest
+		$is_network_admin = isset($_POST['is_network_admin']) ? true : false;
+		if (true === $is_network_admin)
 		{
 			$viewController =  new MultiSiteViewController();
 		}
-		else 
+		else
 		{
 			$viewController =  new SettingsViewController();
 		}
-		
 
 		$viewController->indicateAjaxSave(); // set ajax save method
 
@@ -1309,6 +1357,74 @@ class AjaxController
 	}
 
 	/**
+	 * Handle the 'media/replaceFileName' screen action (manual "Change Filename").
+	 *
+	 * Meant as a safeguard/manual override after an AI-generated rename (undo does
+	 * not revert filename changes), but also works standalone on attachments with
+	 * no AI data. Reads `$_POST['newFileName']`, loads the image model with an
+	 * access check, and delegates to OptimizeAiController::ajax_replaceFile().
+	 * Always responds with redirect='reload'; is_error is set when the replace
+	 * returned false (conflict and real failures share the same message).
+	 *
+	 * BUG #50 (open, pinned in tests/Integration/test-ChangeFilename.php as
+	 * test_pin50_..._pinned_for_deferred_fix): sanitize_file_name() never
+	 * returns false, so only a MISSING newFileName key is rejected below — an
+	 * empty (or sanitised-to-empty) value passes through, yields an empty file
+	 * base in ajax_replaceFile() and renames every file to an extension-only
+	 * dotfile ('.jpg') while rewriting content URLs accordingly. Fix: reject
+	 * when the sanitised value (or its PATHINFO_FILENAME base) is empty or
+	 * shorter than a sane minimum.
+	 *
+	 * @param array $data Dispatch data: 'id' (attachment id) and 'type' ('media').
+	 * @return void Exits via send().
+	 */
+	protected function replaceFileName($data)
+	{
+		$id = $data['id'];
+		$type = $data['type'];	
+
+		$newFileName = isset($_POST['newFileName']) ? sanitize_file_name($_POST['newFileName']) : false; 
+
+		if (false === $newFileName)
+		{
+		
+			$result_json = [
+			'error' => __('Something went wrong', 'shortpixel-image-optimiser'), 
+			'is_error' => true, 
+			];
+
+		 	$result_json['message'] = __('This image could not be loaded', 'shortpixel-image-optimiser'); 
+		 	$this->send((object) $result_json);
+		}
+
+
+		$imageModel = $this->getMediaItem($id, $type);
+		$this->checkImageAccess($imageModel);
+		
+
+		$queueItem = new QueueItem(['imageModel' => $imageModel]);
+
+		$apiController =  $queueItem->getApiController('requestAlt');
+
+		$result = $apiController->ajax_replaceFile($queueItem, $newFileName);
+
+		// Todo Send this QueueItem to the replaceFiles method. 
+		$result_json = [
+			'is_done' => true, 
+			'message' => (true === $result) ? __('Files were replaced', 'shortpixel-image-optimiser') : __('Files were not replaced', 'shortpixel-image-optimiser'),
+			'redirect' => 'reload', 
+		];
+
+		if (false === $result)
+		{
+			 $result_json['is_error'] = true; 
+		}
+
+		$this->send((object) $result_json);
+
+	}
+
+	/**
 	 * Request AI-generated alt text for an image.
 	 *
 	 * Adds the image to the queue with `action => 'requestAlt'`.  Reads
@@ -1443,6 +1559,39 @@ class AjaxController
 		$json->$type = $altData;
 		$json->status = true;
 		
+		return $json;
+	}
+
+
+	/**
+	 * Single-item "redo AI replacement" handler (screen_action
+	 * ai/redoAiReplacement).
+	 *
+	 * Builds a redoAiReplacement QueueItem for the media item and hands it
+	 * straight to OptimizeAiController::redoAIReplace(), which re-applies
+	 * the stored AI data without any API call.
+	 *
+	 * @param \stdClass $json JSON accumulator object.
+	 * @param array     $data Dispatch data: id + type of the media item.
+	 * @return \stdClass Updated JSON response object.
+	 */
+	protected function redoAiReplacement($json, $data)
+	{
+		$id = $data['id'];
+		$type = $data['type'];
+		
+		$imageModel = $this->getMediaItem($id, $type); 
+		$this->checkImageAccess($imageModel);
+	 
+
+		$queueItem = new QueueItem(['imageModel' => $imageModel]);
+		$queueItem->newRedoAiReplacementAction(); 
+
+		$api = $queueItem->getApiController('getAltData'); 
+
+		$api->redoAIReplace($queueItem);
+
+		$json->status = true;	
 		return $json;
 	}
 
@@ -1727,6 +1876,34 @@ class AjaxController
 	}
 
 	/**
+	 * Set up the bulk "Redo Ai Replacement" operation for the media queue
+	 * (Tools menu, beta).
+	 *
+	 * Resets all queues, creates a new bulk for 'media' with
+	 * `customOp => 'redoAiReplacement'`. Preparation then selects every
+	 * attachment with a GENERATED aipostmeta row and enqueues a
+	 * redoAiReplacement action per item, which re-applies the stored AI
+	 * texts to the embedding post content (no API requests).
+	 *
+	 * Returns:
+	 * - `$json->media->stats` object  Updated media queue statistics.
+	 *
+	 * @param \stdClass $json JSON accumulator object.
+	 * @param array     $data Dispatch data array (unused).
+	 * @return \stdClass Updated JSON response object.
+	 */
+	protected function startBulkRedoAiReplacement($json, $data)
+	{
+		$bulkControl = BulkController::getInstance();
+		QueueController::resetQueues(); // prevent any weirdness
+
+		$stats = $bulkControl->createNewBulk('media', ['customOp' => 'redoAiReplacement']);
+		$json->media->stats = $stats;
+
+		return $json;
+	}
+
+	/**
 	 * Set up a bulk legacy-file-removal operation for the media queue.
 	 *
 	 * Resets all queues, creates a new bulk for 'media' with
@@ -1915,7 +2092,7 @@ class AjaxController
 					}
 					else
 					{
-						Log::addTemp('AiData not set in Ajax');
+						//Log::addTemp('AiData not set in Ajax');
 					}
 					
 					if ($result->is_done)
@@ -2411,27 +2588,6 @@ class AjaxController
 		exit();
 	}
 	*/
-	
-	/**
-	 * AJAX handler: trigger a remote quota-upgrade proposal popup.
-	 *
-	 * Action: `wp_ajax_shortpixel_propose_upgrade`.
-	 *
-	 * Verifies the nonce (`ajax_request`) and `is_editor` capability, then calls
-	 * `AdminNoticesController::proposeUpgradeRemote()` which fetches and outputs the
-	 * upgrade fragment from ShortPixel's servers.  Exits immediately after.
-	 *
-	 * @return void  Always exits.
-	 */
-	public function ajax_proposeQuotaUpgrade()
-	{
-		$this->checkNonce('ajax_request');
-		$this->checkActionAccess('propose_upgrade', 'is_editor');
-
-		$notices = AdminNoticesController::getInstance();
-		$notices->proposeUpgradeRemote();
-		exit();
-	}
 
 	/**
 	 * AJAX handler: force a remote quota refresh and report the current state.
@@ -2615,10 +2771,9 @@ class AjaxController
 	 * Verify that the current user has the required capability for an action.
 	 *
 	 * Delegates to `AccessModel::userIsAllowed()` with the provided `$access` level
-	 * (e.g. 'is_author', 'is_editor', 'is_admin_user').  On multisite, the site-wide
-	 * tool actions `toolsRemoveAll` / `toolsRemoveBackup` are additionally denied
-	 * unless the request runs in the network admin. On failure, sends a JSON error
-	 * with `error = NO_ACCESS` and exits.
+	 * (e.g. 'is_author', 'is_editor', 'is_admin_user', 'is_super_admin' — the latter
+	 * used by the site-wide tools `toolsRemoveAll` / `toolsRemoveBackup`). On failure,
+	 * sends a JSON error with `error = NO_ACCESS` and exits.
 	 *
 	 * @param string $action The action name (used only for the error message).
 	 * @param string $access The capability level string as understood by AccessModel.

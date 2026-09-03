@@ -354,6 +354,21 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 		this.processor.AjaxRequest(data);
 	}
 
+	RedoAiReplacement(id)
+	{
+		var data = {
+			id: id,
+			type: this.type,
+			'screen_action': 'ai/redoAiReplacement',
+		//	'action_type' : action_type, 
+		//	'callback': 'shortpixel.HandleUndoAlt',
+		};
+
+		this.processor.AjaxRequest(data);
+
+
+	}
+
 	Optimize(id, force, compressionType) {
 		var data = {
 			id: id,

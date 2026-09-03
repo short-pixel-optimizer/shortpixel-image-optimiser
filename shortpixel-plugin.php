@@ -186,11 +186,30 @@ class ShortPixelPlugin {
 	 * debug shortcut that was making it load unconditionally was
 	 * removed in 399b29e2.
 	 *
+	 * LOGGER INIT (moved here in a31087a1, 2026-08-28): ShortPixelLogger is
+	 * spun up on `init` instead of at plugin-file load time. The multisite
+	 * user-level debug check in ShortPixelLogger::debugIsActive() reads
+	 * user meta, which is not safe to touch before the WP user layer is
+	 * ready — the previous ordering caused a fatal on multisite. The
+	 * matching block in wp-shortpixel.php is now commented out.
+	 *
 	 * @return void
 	 */
 	public function init() : void
 	{
 		Controller\CronController::getInstance();  // cron jobs - must be init to function!
+
+		// New - init logger a bit later ( = safer ), nothing really lost here.
+		// See method docblock: deferred to init to make multisite user-level
+		// debug meta reads safe.
+		if (false === defined( 'WP_CLI' ) || false === \WP_CLI)
+		{
+			$log = \ShortPixel\ShortPixelLogger\ShortPixelLogger::getInstance();
+			if (\ShortPixel\ShortPixelLogger\ShortPixelLogger::debugIsActive() )
+			{
+				$log->setLogPath(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
+			}
+		}
 
 		$access = AccessModel::getInstance();
 
@@ -329,7 +348,10 @@ class ShortPixelPlugin {
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_scripts' ) ); // admin scripts
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_styles' ) ); // admin styles
 		add_action( 'admin_enqueue_scripts', array( $this, 'load_admin_scripts' ), 90 ); // loader via route.
-		add_action( 'enqueue_block_assets', array($this, 'load_admin_scripts'), 90);
+
+		// This enqueue_block_assets turned off .  Because it doesn't call the admin_scripts / styles on the same hook it will misfire the loading. 
+		// Plus it seems that admin_enqueue_scripts also fires on the same page, so unneeded.  If need to re-activate, a way to load all admin scripts / styles is needed.
+		//add_action( 'enqueue_block_assets', array($this, 'load_admin_scripts'), 90);
 
 		// defer notices a little to allow other hooks ( notable adminnotices )
 
@@ -645,9 +667,24 @@ class ShortPixelPlugin {
 		wp_register_script('shortpixel-media', plugins_url('res/js/shortpixel-media.js',  SHORTPIXEL_PLUGIN_FILE), array('jquery'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
 		wp_register_script('shortpixel-inline-help', plugins_url('res/js/shortpixel-inline-help.js',  SHORTPIXEL_PLUGIN_FILE), [], SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
-		wp_register_script('shortpixel-chatbot', 
-		apply_filters('shortpixel/plugin/nohelp', 'https://spcdn.shortpixel.ai/assets/js/ext/ai-chat-agent.js'), [], SHORTPIXEL_IMAGE_OPTIMISER_VERSION, $args_footer_async);
 
+		/*
+		 * Chatbot registration gate — filter semantics are inverted vs the
+		 * filter name. `shortpixel/plugin/nohelp` defaults to TRUE and TRUE
+		 * REGISTERS the chatbot script (script URL is now hard-coded on the
+		 * line below). Return FALSE from the filter to suppress the chatbot.
+		 * Renaming the filter would break existing integrations; leaving the
+		 * name and documenting the polarity here instead.
+		 *
+		 * Prior form (pre-50719048 batch): the filter's return value was USED
+		 * as the script URL — passing a string swapped the chatbot script,
+		 * passing null unregistered it. That mechanism is gone: only the
+		 * boolean gate remains.
+		 */
+		if (true === apply_filters('shortpixel/plugin/nohelp', true))
+		{
+			wp_register_script('shortpixel-chatbot', 'https://spcdn.shortpixel.ai/assets/js/ext/ai-chat-agent.js', [], SHORTPIXEL_IMAGE_OPTIMISER_VERSION, $args_footer_async);
+		}
 		// This filter is from ListMediaViewController for the media library grid display, executive script in shortpixel-media.js.
 
 		$filters = array('optimized' => array(
@@ -822,8 +859,6 @@ class ShortPixelPlugin {
 	public function admin_styles() {
 
 		wp_register_style( 'shortpixel-folderbrowser', plugins_url( '/res/css/shortpixel-folderbrowser.css', SHORTPIXEL_PLUGIN_FILE ),[], SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
-
-		//wp_register_style( 'shortpixel', plugins_url( '/res/css/short-pixel.css', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
 
 		// notices. additional styles for SPIO.
 		wp_register_style( 'shortpixel-notices', plugins_url( '/res/css/shortpixel-notices.css', SHORTPIXEL_PLUGIN_FILE ), array( 'shortpixel-admin' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );

@@ -62,7 +62,7 @@ class QueueItemData
         protected $block;
         /** @var \stdClass|null Ad-hoc counters used by the UI (built up via addCount()). */
         protected $counts;
-        /** @var int|null Optional queue-position hint so re-queued items doesn't sink to the bottom. */
+        /** @var int|null Optional queue-position hint so re-queued items don't sink to the bottom. */
         protected $queue_list_order;
         /** @var bool|null True when the item was added by the upload hook, so recent-upload heuristics can apply. */
         protected $recent_upload;
@@ -264,7 +264,8 @@ class QueueItemData
          * the field name, and the current value of that field will be
          * captured at getKeepDataArgs() time) or a name/value pair (string
          * key → the value is used verbatim). A non-array $args is wrapped
-         * so single-value calls are convenient.
+         * so single-value calls are convenient. Repeated registrations of the
+         * same entry are deduplicated (array_unique).
          *
          * @param mixed $args Preserved-data entries; see semantics above.
          * @return void

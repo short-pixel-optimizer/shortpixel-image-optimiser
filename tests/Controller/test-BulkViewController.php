@@ -16,9 +16,15 @@
  *     (QuotaController, BulkController, AdminNoticesController, …).
  *   - getLogs() — BulkController::getLogs() requires the backup-folder file
  *     system to be populated; no isolation possible without a full install.
- *   - loadCurrentLog() — reads a log file from disk; not available in unit context.
  *   - loadDashboard() — depends on AdminNoticesController::getRemoteOffer()
  *     which makes remote HTTP calls.
+ *
+ * Regression tests:
+ *   - loadCurrentLog() — regression for bug #48 (stored XSS via unescaped
+ *     $date/$message/$filename cells in the bulk error log; fixed 2026-09-01
+ *     by 042cb64a). Writes a payload row to current_bulk_media.log, invokes
+ *     loadCurrentLog through reflection, asserts raw payload is escaped and
+ *     kbinfo markup is preserved.
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -251,5 +257,135 @@ class BulkViewControllerTest extends WP_UnitTestCase {
 		// Sentinel: has_custom must exist so the template can conditionally show the
 		// custom-media section. Missing it would always show or always hide the block.
 		$this->assertObjectHasProperty( 'has_custom', $result->custom );
+	}
+
+	// -----------------------------------------------------------------
+	// loadCurrentLog — bug #48 regression (error-log cells escaped)
+	// -----------------------------------------------------------------
+
+	/**
+	 * Regression test for bug #48 (fixed 2026-09-01 by 042cb64a):
+	 * BulkViewController::loadCurrentLog concatenated the raw $date /
+	 * $message / $filename cells parsed from current_bulk_{type}.log
+	 * straight into the returned HTML, while the part-finished.php /
+	 * part-process.php views echo that HTML raw (esc_html was intentionally
+	 * removed at the view layer in 50719048 so the kbinfo <span>/<a>
+	 * markup renders). Because the log filename cell can carry any string
+	 * an attacker gets stored in a media filename, this was stored XSS in
+	 * wp-admin.
+	 *
+	 * The fix (042cb64a) wraps each of the three text cells in esc_html()
+	 * at build time inside loadCurrentLog, while leaving the kbinfo
+	 * <span>/<a> markup raw. This regression test writes a log row whose
+	 * filename and message carry <script>/<img onerror> payloads, invokes
+	 * loadCurrentLog through reflection, and asserts:
+	 *   - the raw payload markup MUST NOT appear (would-be XSS);
+	 *   - the HTML-escaped form MUST appear (proves the cell survived, was
+	 *     only escaped);
+	 *   - the kbinfo <span>/<a> markup MUST remain raw (guards against a
+	 *     future "escape the whole line" over-correction that would break
+	 *     the help-link UI).
+	 *
+	 * Sentinel guards (per feedback_pinned_test_sentinels.md #3):
+	 *   - Two independent payloads (filename + message) with different
+	 *     characteristic substrings so a partial fix that only escaped one
+	 *     of the two cells would still fail one assertion.
+	 *   - Positive assertion on the esc_html'd form (&lt;script&gt;) so the
+	 *     test can't false-pass by loadCurrentLog silently dropping the
+	 *     cell entirely.
+	 *   - Positive assertion on the raw kbinfo markup so an over-correction
+	 *     that escaped the kbinfo span too would fail.
+	 */
+	public function test_loadCurrentLog_escapes_filename_and_message_cells() {
+		// Bulk log paths depend on the plugin's backup folder constant; the
+		// wp-shortpixel.php bootstrap defines it. Ensure the directory
+		// exists (fresh test installs may not have created it yet).
+		if ( ! defined( 'SHORTPIXEL_BACKUP_FOLDER' ) ) {
+			$this->markTestSkipped( 'SHORTPIXEL_BACKUP_FOLDER not defined — plugin bootstrap did not run.' );
+		}
+		$backup_dir = SHORTPIXEL_BACKUP_FOLDER;
+		if ( ! is_dir( $backup_dir ) ) {
+			if ( ! wp_mkdir_p( $backup_dir ) ) {
+				$this->markTestSkipped( 'Cannot create backup dir at ' . $backup_dir );
+			}
+		}
+
+		$log_path = rtrim( $backup_dir, '/\\' ) . '/current_bulk_media.log';
+
+		// Row format expected by loadCurrentLog(): date|filename|item_id|message
+		// separated by ';' between rows. Filename and message carry the XSS payloads.
+		$xss_filename = '<script>alert(1)</script>.jpg';
+		$xss_message  = '<img src=x onerror=alert(2)>';
+		$row          = '2026-08-31 12:00:00|' . $xss_filename . '|42|' . $xss_message;
+
+		// Preserve any pre-existing log so we don't stomp on unrelated state.
+		$prior = file_exists( $log_path ) ? file_get_contents( $log_path ) : null;
+		file_put_contents( $log_path, $row . ';' );
+
+		try {
+			$c      = $this->freshController();
+			$output = $this->invokeProtected( $c, 'loadCurrentLog', array( 'media' ) );
+
+			// If getLog() couldn't resolve the file (backup path realpath
+			// mismatch on some hosts), the method returns false — that's a
+			// harness limitation, not a pass, so skip rather than false-pass.
+			if ( false === $output ) {
+				$this->markTestSkipped( 'BulkController::getLog() could not resolve ' . $log_path . ' — harness path limitation.' );
+			}
+
+			$this->assertIsString( $output );
+
+			// Regression: the raw <script>/<img onerror> payloads MUST NOT
+			// survive — that was the stored-XSS vector before 042cb64a.
+			$this->assertStringNotContainsString(
+				'<script>alert(1)</script>',
+				$output,
+				'Regression #48: the filename cell must be esc_html\'d in loadCurrentLog output — a raw <script> tag would re-open the stored-XSS vector.'
+			);
+			$this->assertStringNotContainsString(
+				'<img src=x onerror=alert(2)>',
+				$output,
+				'Regression #48: the message cell must be esc_html\'d — a raw <img onerror> would re-open the stored-XSS vector.'
+			);
+
+			// Positive sentinel: the escaped forms MUST appear. This proves
+			// the cells were escaped (not silently dropped) and pins the
+			// exact esc_html transform. If loadCurrentLog ever stops
+			// emitting these cells at all, the assertions here fail loudly
+			// instead of the "not-contains" assertions above false-passing.
+			$this->assertStringContainsString(
+				'&lt;script&gt;alert(1)&lt;/script&gt;.jpg',
+				$output,
+				'Regression #48: the filename cell must survive as the esc_html-encoded form.'
+			);
+			$this->assertStringContainsString(
+				'&lt;img src=x onerror=alert(2)&gt;',
+				$output,
+				'Regression #48: the message cell must survive as the esc_html-encoded form.'
+			);
+
+			// The kbinfo <span>/<a> markup is intentionally kept raw (that's
+			// why esc_html was removed from the views in 50719048). A future
+			// over-correction that escaped the whole line would break the
+			// help-link UI — guard against it.
+			$this->assertStringContainsString(
+				'class="kbinfo"',
+				$output,
+				'Regression #48: the kbinfo helper span must remain raw HTML — escaping the whole line would over-correct and break the help-link UI.'
+			);
+			$this->assertStringContainsString(
+				'<a href=',
+				$output,
+				'Regression #48: the kbinfo <a> tag must remain raw — same rationale as the <span class="kbinfo"> assertion above.'
+			);
+		} finally {
+			// Restore prior content (or delete if none) so the test does not
+			// leak fixture state into other bulk-log tests.
+			if ( null === $prior ) {
+				@unlink( $log_path );
+			} else {
+				file_put_contents( $log_path, $prior );
+			}
+		}
 	}
 }

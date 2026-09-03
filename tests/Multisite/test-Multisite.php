@@ -17,8 +17,8 @@
  *     network admin menu entry, the network_settings_override_enabled read
  *     path on the per-site SettingsModel (network defaults win by design —
  *     ex-#36, closed as intended), the fixed #37 super-admin AJAX access
- *     (4acf1395), and pinned bug #39 (is_super_admin missing from the
- *     AccessModel caps map).
+ *     (4acf1395), and the fixed #39 (is_super_admin now maps to
+ *     manage_network since 1fc98025 — regression-tested).
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -391,19 +391,19 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * PINNED bug #39: the 'is_super_admin' access level used by the #37 fix
-	 * (4acf1395) is NOT defined in AccessModel::setDefaultPermissions(), so
-	 * getCap() falls back to the default 'manage_options' — a capability every
-	 * regular site administrator holds on multisite. The intended restriction
-	 * ("super admins only" per the commit message) therefore does not restrict
-	 * anything: a plain subsite admin can still run the site-wide destructive
-	 * tools (Remove All Data / Remove Backups).
+	 * Regression for bug #39 (FIXED in 1fc98025): 'is_super_admin' used to be
+	 * missing from the AccessModel caps map, so getCap() fell back to
+	 * 'manage_options' and a plain subsite admin could run the site-wide
+	 * destructive tools (Remove All Data / Remove Backups). 1fc98025 mapped
+	 * 'is_super_admin' => 'manage_network', which only super admins hold on
+	 * multisite, so the invocation must now be denied.
 	 *
-	 * FLIP when fixed (caps map entry or real is_super_admin() check): the
-	 * invocation below will be denied — then assert $allowed is false and the
-	 * JSON error is NO_ACCESS.
+	 * Note: the same mapping introduced bug #44 on SINGLE-site installs
+	 * (administrators never hold manage_network there) — see
+	 * test_pin44_single_site_administrator_cannot_remove_backups in
+	 * tests/Integration/test-AjaxHandlers.php.
 	 */
-	public function test_pin39_regular_site_admin_can_still_run_sitewide_tools() {
+	public function test_regular_site_admin_is_denied_sitewide_tools() {
 		$admin_id = self::factory()->user->create( array( 'role' => 'administrator' ) );
 		wp_set_current_user( $admin_id );
 
@@ -413,9 +413,15 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 
 		list( $allowed, $output ) = $this->invokeCheckActionAccess( 'toolsRemoveAll', 'is_super_admin' );
 
-		$this->assertTrue(
+		$this->assertFalse(
 			$allowed,
-			"PINNED bug #39 — 'is_super_admin' is missing from the AccessModel caps map, so it falls back to 'manage_options' and a regular site admin passes. When the check truly restricts to super admins, flip this to assert denial."
+			'Regression #39: a regular subsite admin must be DENIED the site-wide destructive tools (is_super_admin => manage_network since 1fc98025).'
+		);
+		$json = json_decode( $output );
+		$this->assertSame(
+			\ShortPixel\Controller\AjaxController::NO_ACCESS,
+			isset( $json->error ) ? $json->error : null,
+			'The denial must be reported as a NO_ACCESS JSON error.'
 		);
 	}
 
@@ -618,6 +624,65 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
+	 * Regression test for bug #47 (fixed 2026-08-31): during e4d1d0a8 the
+	 * self-redirect literal in MultiSiteViewController::processSave was broken
+	 * across two physical lines, truncating the page slug to 'shortpixel-' +
+	 * newline + indentation. The redirect URL must carry the full
+	 * 'shortpixel-network-settings' slug with no embedded whitespace.
+	 *
+	 * We can only observe the URL by intercepting handleAjaxSave() — the
+	 * production caller passes redirect='self' so the URL never lands in the
+	 * JSON body. A subclass captures both args and short-circuits the
+	 * response.
+	 */
+	public function test_process_save_builds_clean_network_redirect_url() {
+		delete_site_option( 'spio_wpmu' );
+
+		$capturing = new class extends \ShortPixel\Controller\View\MultiSiteViewController {
+			public $capturedUrl = null;
+			protected function handleAjaxSave( $redirect, $url = false ) {
+				$this->capturedUrl = $url;
+				throw new \WPDieException( 'captured' );
+			}
+		};
+
+		$_POST = array(
+			'network_settings_override_enabled' => 'on',
+			'compressionType'                   => '1',
+		);
+
+		$method = new ReflectionMethod( $capturing, 'processSave' );
+		$method->setAccessible( true );
+
+		$ob_level = ob_get_level();
+		ob_start();
+		try {
+			$method->invoke( $capturing );
+		} catch ( \WPDieException $e ) {
+			unset( $e );
+		}
+		while ( ob_get_level() > $ob_level ) {
+			ob_end_clean();
+		}
+		$_POST = array();
+
+		$this->assertNotNull(
+			$capturing->capturedUrl,
+			'processSave must have called handleAjaxSave with a URL.'
+		);
+
+		// The part value is 'overview' by default (base class) because
+		// processSave() doesn't seed display_part to 'network' on its own —
+		// this test guards the SLUG, so the part value is unconstrained.
+		$this->assertMatchesRegularExpression(
+			"/settings\\.php\\?page=shortpixel-network-settings(?:&|&amp;)part=\\w+\$/",
+			(string) $capturing->capturedUrl,
+			'Regression #47: the redirect must carry the full shortpixel-network-settings slug with no embedded whitespace. '
+			. 'Actual URL: ' . (string) $capturing->capturedUrl
+		);
+	}
+
+	/**
 	 * Unchecked checkboxes are absent from the POST body; processSave() must
 	 * collapse every stored-but-unposted boolean to false (the same behavior
 	 * the site-level save has — and the class of bug behind earlier settings
@@ -803,5 +868,86 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 		$settings = \wpSPIO()->settings();
 		$this->assertSame( 2, $settings->compressionType, 'A dirty int must be cast clean by the sanitizer on the override read path.' );
 		$this->assertTrue( (bool) $settings->createWebp, 'A truthy string must sanitize to a boolean true.' );
+	}
+
+	// -------------------------------------------------------------------
+	// Bug #49 regression — network URL rewrite must be idempotent
+	// -------------------------------------------------------------------
+
+	/**
+	 * Read the protected $url property from a ViewController instance via
+	 * reflection (the property is declared protected on the base class and
+	 * MultiSiteViewController overrides only the setter).
+	 *
+	 * @param object $controller Instance to read from.
+	 * @return mixed             The stored URL, or null if unset.
+	 */
+	private function readControllerUrl( object $controller ) {
+		$ref  = new ReflectionClass( \ShortPixel\ViewController::class );
+		$prop = $ref->getProperty( 'url' );
+		$prop->setAccessible( true );
+		return $prop->getValue( $controller );
+	}
+
+	/**
+	 * Regression test for bug #49 (fixed 2026-09-01 by ccde551a):
+	 * MultiSiteViewController::setControllerURL used to blindly
+	 * str_replace('/wp-admin/', '/wp-admin/network/', $url) on every call.
+	 * Since e4d1d0a8 the AJAX save flow reads request_url from
+	 * $_POST['request_url'], which is populated from window.location on the
+	 * client — and on a network-admin page window.location already contains
+	 * '/wp-admin/network/'. The unguarded str_replace therefore rewrote
+	 * '…/wp-admin/network/…' to '…/wp-admin/network/network/…', producing a
+	 * broken redirect after saving network settings with an API key change.
+	 *
+	 * Fix ccde551a wraps the rewrite in
+	 * `if (false === strpos($url, '/wp-admin/network/'))`, making the method
+	 * idempotent for callers that already pass a network-admin URL while
+	 * preserving the original rewrite for callers that don't (single-site
+	 * routes that reach the network controller via routing flags).
+	 *
+	 * Sentinel guards (per feedback_pinned_test_sentinels.md):
+	 *   - Two independent call paths (already-network vs plain-admin) are
+	 *     exercised on the SAME instance in sequence, so any state-order bug
+	 *     surfaces.
+	 *   - The plain-admin case asserts the FULL rewritten URL (not just
+	 *     "contains network") so a fix that dropped the rewrite entirely
+	 *     would fail loudly instead of false-passing on the idempotency
+	 *     assertion.
+	 *   - The already-network case asserts assertSame (strict identity, no
+	 *     coercion) so a stray trim or trailing-slash mutation is caught.
+	 */
+	public function test_setControllerURL_is_idempotent_for_network_admin_urls_regression_49() {
+		$controller = new \ShortPixel\Controller\View\MultiSiteViewController();
+
+		// Case (i): a plain /wp-admin/ URL (single-site route) must be
+		// rewritten to /wp-admin/network/ so the AJAX redirect targets the
+		// network settings screen. This is the original bug-fix scenario.
+		$plain = '/wp-admin/settings.php?page=shortpixel-network-settings&part=network';
+		$controller->setControllerURL( $plain );
+		$this->assertSame(
+			'/wp-admin/network/settings.php?page=shortpixel-network-settings&part=network',
+			$this->readControllerUrl( $controller ),
+			'Regression #49: a plain /wp-admin/ URL must still be rewritten to /wp-admin/network/ — dropping the rewrite entirely would break single-site → network routing.'
+		);
+
+		// Case (ii): a URL already carrying /wp-admin/network/ (the shape
+		// AJAX save receives since e4d1d0a8, because window.location on a
+		// network-admin page already contains /network/) must pass through
+		// UNCHANGED — the unguarded str_replace used to double it to
+		// /wp-admin/network/network/, breaking the redirect after save.
+		$already = '/wp-admin/network/settings.php?page=shortpixel-network-settings&part=network';
+		$controller->setControllerURL( $already );
+		$stored = $this->readControllerUrl( $controller );
+		$this->assertSame(
+			$already,
+			$stored,
+			'Regression #49: a URL that already contains /wp-admin/network/ must pass through unchanged. Prior to ccde551a, str_replace produced /wp-admin/network/network/, breaking the network-settings redirect.'
+		);
+		$this->assertStringNotContainsString(
+			'/wp-admin/network/network/',
+			(string) $stored,
+			'Regression #49 sentinel: the doubled /wp-admin/network/network/ shape must never appear.'
+		);
 	}
 }

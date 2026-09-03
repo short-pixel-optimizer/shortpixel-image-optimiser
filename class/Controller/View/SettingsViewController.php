@@ -380,22 +380,26 @@ class SettingsViewController extends \ShortPixel\ViewController
 
 				$action = isset($_REQUEST['bulk']) ? sanitize_text_field($_REQUEST['bulk']) : null;
 
-				if ('migrate' == $action)
-				{
-					$this->doRedirect('bulk-migrate');
-				}
-				elseif ('restore' == $action)
-				{
-					$this->doRedirect('bulk-restore');
-				}
-        elseif ('restoreAI' == $action)
+        switch($action)
         {
-          $this->doRedirect('bulk-restoreAI');
+          case 'migrate': 
+					  $this->doRedirect('bulk-migrate');
+          break;
+          case 'restore': 
+            $this->doRedirect('bulk-restore');
+          break; 
+          case 'restoreAI': 
+            $this->doRedirect('bulk-restoreAI');
+          break; 
+          case 'removeLegacy': 
+            $this->doRedirect('bulk-removeLegacy');
+          break; 
+          case 'redoAiReplacement':
+            $this->doRedirect('bulk-redoAiReplacement');
+          break; 
         }
-				elseif ('removeLegacy' == $action)
-				{
-					 $this->doRedirect('bulk-removeLegacy');
-				}
+
+          exit('action not found');
 			}
 
       /** Button in part-debug, routed via custom Action */
@@ -1426,7 +1430,6 @@ class SettingsViewController extends \ShortPixel\ViewController
 
         $url = null;
 
-
         if ($redirect == 'self'  || $redirect == 'reload')
         {
           if (true === $this->is_ajax_save)
@@ -1459,6 +1462,11 @@ class SettingsViewController extends \ShortPixel\ViewController
 				{
 						$url = admin_url('upload.php?page=wp-short-pixel-bulk&panel=bulk-removeLegacy');
 				}
+        elseif ('bulk-redoAiReplacement' === $redirect)
+        {
+						$url = admin_url('upload.php?page=wp-short-pixel-bulk&panel=bulk-redoAiReplacement');
+
+        }
 
         if (true === $this->is_ajax_save)
 				{

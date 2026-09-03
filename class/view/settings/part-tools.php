@@ -75,6 +75,19 @@ $queueRunning = $bulk->isAnyBulkRunning();
             </content>
         </setting>
 
+        <setting>
+        <!--    <name>
+              <?php esc_html_e('Reapply Generated AI DATA','shortpixel-image-optimiser'); ?>
+            </name> -->
+            <content>
+        				<a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'redoAiReplacement', 'part' => 'tools', 'noheader' => true), $url)); ?>" class="button"><?php esc_html_e('Redo Ai Replacement','shortpixel-image-optimiser'); ?></a>
+
+                <info>
+                  <?php printf(esc_html__('Will run through all content and see if any already generated Ai Data was missed with current settings and try to reapply','shortpixel-image-optimiser') , '<br>', '<b>','</b>'); ?>
+                </info>
+            </content>
+        </setting>
+
     </settinglist>
 
     <h3><?php _e('CDN Tools', 'shortpixel-image-optimiser'); ?></h3>
@@ -114,13 +127,6 @@ $queueRunning = $bulk->isAnyBulkRunning();
       <div id='settings-purge-message' class='tools-message purge-message'>&nbsp;</div>
       
     </settinglist>
-
-        <setting>
-
-            <content>
-              <a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'migrate', 'noheader' => true), $url)); ?>" class="button">
-                  <?php esc_html_e('Search and Migrate All', 'shortpixel-image-optimiser'); ?>
-              </a>
 
     <h3><?php _e('Settings Import / Export', 'shortpixel-image-optimiser'); ?></h3>
     <settinglist class='setting-importexport'>
@@ -247,8 +253,6 @@ $queueRunning = $bulk->isAnyBulkRunning();
         <info>
             <?php esc_html_e('When backups are enabled, original images are stored in a backup folder. If you remove the backup folder, you will not be able to restore or reoptimize the images. We strongly recommend that you keep a copy of the backup folder (/wp-content/uploads/ShortpixelBackups/) somewhere safe.','shortpixel-image-optimiser');?>
         </info>
-              <?php wp_nonce_field('empty-backup', 'tools-nonce'); ?>
-
               <div class='remove-backup modalTarget' id="ToolsRemoveBackup">
 
                 <input type="hidden" name="screen_action" value="toolsRemoveBackup" />

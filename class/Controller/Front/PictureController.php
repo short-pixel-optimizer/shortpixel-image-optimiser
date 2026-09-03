@@ -144,7 +144,7 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
 			{
 				 return $content;
 			}
-      if(function_exists('amp_is_request') && amp_is_request()) {
+      if(function_exists('amp_is_request') && \amp_is_request()) {
           //for AMP pages the <picture> tag is not allowed
 					// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
           return $content . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG is AMP -->' : '');
@@ -555,7 +555,14 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
             // Fix: The originals are not being put anymore because this would lead to double images and that's not a good thing.
             //            $new_urldef = "url('" . $checkedFile . "') $image_data ;";
             // Fix2 :: The image_data should not be matched anymore via main match, perhaps it works in all cases to leave it alone? 
-            $new_urldef = "url('" . $checkedFile . "') ";
+            // Fix3 :: Removed the ' ' around the newdef image since this can cause issues if the main image is wrapped in the same. 
+            // Fix4 :: Recommended to str_replace the checkedFile URL for things that might break CSS. 
+            $checkedFile = str_replace(
+                array(' ', '(', ')', "'", '"'),
+                array('%20', '%28', '%29', '%27', '%22'),
+                $checkedFile
+            );            
+            $new_urldef = "url(" . $checkedFile . ") ";
             $content = str_replace($target_urldef, $new_urldef, $content);
           }
       }

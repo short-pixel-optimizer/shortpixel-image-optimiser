@@ -7,16 +7,29 @@
  * dropped into tests/partner-plugins/ (gitignored); without that zip
  * every test here SKIPS.
  *
- * Covers the two SPIO x WPML integration surfaces:
+ * Covers the SPIO x WPML integration surfaces:
  *
  *   - class/external/wpml.php — the AI alt-text locale shim: its two
  *     filters are only wired when plugin_active('wpml') is true, and
  *     checkParamList() injects the attachment's WPML locale into the
  *     outgoing AI request params.
+ *   - OptimizeAiController::WPMLCheckReplace() (f232c607) — the replace-time
+ *     language guard for AI text replacement, incl. the #40 regression
+ *     (fixed in af2414cc: compares 'language_code' instead of the
+ *     non-existent 'code' key) at both the guard level and end-to-end
+ *     through handleReplace().
  *   - MediaLibraryModel::getWPMLDuplicates() — translation duplicates
  *     found via the real icl_translations table (same-trid siblings),
  *     restricted to attachments sharing the same physical file; on
  *     optimize, handleOptimized() propagates meta to every duplicate.
+ *   - QueueController::addWpmlAiItemsToQueue() (f232c607) — the requestAlt
+ *     per-language fan-out, incl. the #42 regression (fixed in d55dbeca:
+ *     requestAlt is exempt from the duplicate-active check, so the ORIGINAL
+ *     attachment is queued alongside its fan-out variants), and the
+ *     isDuplicateActive() skip for same-file translations.
+ *
+ * Own-file translations (WPML Media Translation add-on) are covered in
+ * test-CompatWPMLMedia.php.
  *
  * The icl_translations rows are seeded per test (WPML only fills them
  * once its setup wizard ran); the table itself is created by WPML's
@@ -163,6 +176,65 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 
 		$params = apply_filters( 'shortpixel/aidatamodel/paramlist', array(), $id );
 		$this->assertArrayNotHasKey( 'languages', $params, 'No locale means no languages param.' );
+	}
+
+	// -------------------------------------------------------------------
+	// AI replace-time language guard (WPMLCheckReplace, f232c607)
+	// -------------------------------------------------------------------
+
+	/** Reflection access to the protected OptimizeAiController::WPMLCheckReplace(). */
+	private function invokeWpmlCheckReplace( int $post_id, int $queue_item_id ): bool {
+		$controller = \ShortPixel\Controller\Optimizer\OptimizeAiController::getInstance();
+		$method     = new ReflectionMethod( \ShortPixel\Controller\Optimizer\OptimizeAiController::class, 'WPMLCheckReplace' );
+		$method->setAccessible( true );
+		return $method->invoke( $controller, $post_id, $queue_item_id );
+	}
+
+	/**
+	 * When WPML cannot resolve a language for either side, the guard must
+	 * refuse the replacement (fail closed). This path correctly reads the
+	 * `language_code` key, so it behaves the same before and after bug #40.
+	 */
+	public function test_wpml_replace_guard_fails_closed_without_language_details() {
+		remove_all_filters( 'wpml_post_language_details' );
+		add_filter( 'wpml_post_language_details', '__return_null' );
+
+		$this->assertFalse(
+			$this->invokeWpmlCheckReplace( 12345, 67890 ),
+			'With no WPML language details available, the replace guard must refuse the replacement.'
+		);
+	}
+
+	/**
+	 * Regression test for bug #40 (FIXED in af2414cc, flipped from pin40):
+	 * WPMLCheckReplace() used to compare `$language['code']` vs
+	 * `$language_queue['code']` — a key WPML never provides — so both sides
+	 * were undefined and different-language pages were replaced anyway
+	 * (plus "Undefined array key" warnings on PHP 8). The fix compares the
+	 * real `language_code` keys: a post in a different language than the
+	 * queued item must now be refused, with no warning raised.
+	 */
+	public function test_wpml_replace_guard_blocks_other_languages() {
+		$post_id  = 12345;
+		$queue_id = 67890;
+
+		remove_all_filters( 'wpml_post_language_details' );
+		add_filter(
+			'wpml_post_language_details',
+			function ( $details, $id ) use ( $post_id ) {
+				// Realistic WPML payload: language_code + locale, no 'code' key.
+				return ( $id === $post_id )
+					? array( 'language_code' => 'de', 'locale' => 'de_DE' )
+					: array( 'language_code' => 'en', 'locale' => 'en_US' );
+			},
+			10,
+			2
+		);
+
+		$this->assertFalse(
+			$this->invokeWpmlCheckReplace( $post_id, $queue_id ),
+			'Regression #40: a post in a different WPML language must be refused by the replace guard (the old code compared undefined \'code\' keys and let it through).'
+		);
 	}
 
 	// -------------------------------------------------------------------
@@ -372,6 +444,149 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 		$this->assertFileDoesNotExist(
 			$backupPath,
 			'Backup must be removed once the last attachment sharing the physical file is deleted.'
+		);
+	}
+
+	// -------------------------------------------------------------------
+	// AI requestAlt fan-out (addWpmlAiItemsToQueue, f232c607)
+	// -------------------------------------------------------------------
+
+	/** All item_ids currently persisted in the ShortQ queue table. */
+	private function queuedItemIds(): array {
+		global $wpdb;
+		$table = $wpdb->prefix . 'shortpixel_queue';
+		return array_map( 'intval', (array) $wpdb->get_col( "SELECT item_id FROM `$table`" ) );
+	}
+
+	/**
+	 * requestAlt on an image with a WPML translation must enqueue BOTH
+	 * language variants: each duplicate is a separate attachment record and
+	 * needs its own AI request (QueueController::addWpmlAiItemsToQueue).
+	 *
+	 * Regression test for bug #42 (FIXED in d55dbeca, flipped from pin42):
+	 * addItemToQueue() ran addWpmlAiItemsToQueue() before the
+	 * isDuplicateActive() check, so the just-queued language variants made
+	 * the original count as "duplicate already active in queue" and it was
+	 * skipped — its own alt text was never generated. The fix exempts
+	 * requestAlt actions from the duplicate-active check.
+	 */
+	public function test_requestalt_fanout_queues_translation_and_original() {
+		$id     = $this->uploadFixture( 'fixture-small.jpg' );
+		$dup_id = $this->createDuplicateAttachment( $id );
+
+		$trid = 997;
+		$this->insertTranslationRow( $id, $trid, 'en' );
+		$this->insertTranslationRow( $dup_id, $trid, 'de', 'en' );
+
+		// Drop the auto-enqueued optimize items so only the requestAlt adds count.
+		$this->purgeQueueTable();
+
+		( new QueueController() )->addItemToQueue(
+			$this->freshImageModel( $id ),
+			array( 'action' => 'requestAlt' )
+		);
+
+		$queued = $this->queuedItemIds();
+		$this->assertContains( $dup_id, $queued, 'The WPML language variant must get its own requestAlt queue item.' );
+		$this->assertContains(
+			$id,
+			$queued,
+			'Regression #42: the original must be queued too — it used to be skipped as "duplicate active" right after its own fan-out.'
+		);
+	}
+
+	// -------------------------------------------------------------------
+	// Queue::isDuplicateActive — translation of a queued item is skipped
+	// -------------------------------------------------------------------
+
+	/**
+	 * Enqueuing a translation while its same-file sibling is already in the
+	 * queue must be refused (Queue::isDuplicateActive) — the physical file
+	 * would otherwise be optimized twice.
+	 */
+	public function test_translation_of_queued_item_is_skipped_as_duplicate() {
+		$id     = $this->uploadFixture( 'fixture-small.jpg' );
+		$dup_id = $this->createDuplicateAttachment( $id );
+
+		$trid = 998;
+		$this->insertTranslationRow( $id, $trid, 'en' );
+		$this->insertTranslationRow( $dup_id, $trid, 'de', 'en' );
+
+		$this->purgeQueueTable();
+
+		$queueController = new QueueController();
+		$queueController->addItemToQueue( $this->freshImageModel( $id ) );
+		$this->assertContains( $id, $this->queuedItemIds(), 'The original must be queued for optimization.' );
+
+		$queueController->addItemToQueue( $this->freshImageModel( $dup_id ) );
+
+		$this->assertNotContains(
+			$dup_id,
+			$this->queuedItemIds(),
+			'A same-file WPML translation must be skipped while its sibling is already queued.'
+		);
+	}
+
+	// -------------------------------------------------------------------
+	// handleReplace end-to-end — regression for bug #40
+	// -------------------------------------------------------------------
+
+	/**
+	 * Regression test for bug #40, end-to-end leg (FIXED in af2414cc,
+	 * flipped from pin40): handleReplace() runs every result through
+	 * WPMLCheckReplace(). The guard used to compare the non-existent
+	 * 'code' key on both sides, so posts in a DIFFERENT language were
+	 * replaced anyway. With the `language_code` comparison the
+	 * same-language post gets the AI alt while the other-language post is
+	 * left untouched.
+	 */
+	public function test_handlereplace_skips_other_language_posts_end_to_end() {
+		$id         = $this->uploadFixture( 'fixture-small.jpg' );
+		$imageModel = $this->freshImageModel( $id );
+
+		$img_tag    = '<img src="' . esc_url( wp_get_attachment_url( $id ) ) . '" alt="old alt" />';
+		$post_same  = self::factory()->post->create( array( 'post_content' => $img_tag ) );
+		$post_other = self::factory()->post->create( array( 'post_content' => $img_tag ) );
+
+		remove_all_filters( 'wpml_post_language_details' );
+		add_filter(
+			'wpml_post_language_details',
+			function ( $details, $lookup_id ) use ( $post_other ) {
+				// Realistic WPML payload: language_code + locale, no 'code' key.
+				return ( (int) $lookup_id === (int) $post_other )
+					? array( 'language_code' => 'de', 'locale' => 'de_DE' )
+					: array( 'language_code' => 'en', 'locale' => 'en_US' );
+			},
+			10,
+			2
+		);
+
+		$qItem   = \ShortPixel\Controller\Queue\QueueItems::getImageItem( $imageModel );
+		$results = array(
+			array( 'post_id' => $post_same, 'content' => get_post( $post_same )->post_content ),
+			array( 'post_id' => $post_other, 'content' => get_post( $post_other )->post_content ),
+		);
+		$args    = array(
+			'aiData' => array( 'alt' => 'AI pinned alt', 'caption' => 0 ),
+			'qItem'  => $qItem,
+		);
+
+		\ShortPixel\Controller\Optimizer\OptimizeAiController::getInstance()->handleReplace( $results, $args );
+
+		// Replacer's Updater writes post_content via direct SQL — invalidate
+		// the WP post cache before re-reading.
+		clean_post_cache( $post_same );
+		clean_post_cache( $post_other );
+
+		$this->assertStringContainsString(
+			'AI pinned alt',
+			get_post( $post_same )->post_content,
+			'The same-language post must receive the AI alt text.'
+		);
+		$this->assertStringNotContainsString(
+			'AI pinned alt',
+			get_post( $post_other )->post_content,
+			'Regression #40: the different-language post must NOT be replaced (the old guard compared undefined \'code\' keys and replaced it anyway).'
 		);
 	}
 }

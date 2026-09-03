@@ -279,6 +279,24 @@ class QueueItem
    }
 
    /**
+    * Schedule this slot to re-run the in-content AI text replacement from
+    * the STORED aipostmeta data (no new API request).
+    *
+    * Dispatched by getApiController('redoAiReplacement') to
+    * OptimizeAiController, whose sendToProcessing() routes the action to
+    * redoAIReplace(). item_count is 0 — no credits are consumed.
+    *
+    * @return void
+    */
+   public function newRedoAiReplacementAction()
+   {
+      $this->newAction(); 
+      $this->data->action = 'redoAiReplacement'; 
+
+      $this->item_count = 0;
+   }
+
+   /**
     * Schedule this slot for re-optimization with (optionally) a new
     * compression type and/or smartcrop policy.
     *
@@ -293,7 +311,7 @@ class QueueItem
     */
    public function newReOptimizeAction($args = [])
    {
-      $this->newAction();
+       $this->newAction();
 
        $this->data->action = 'reoptimize';
        $this->data->next_actions = ['optimize'];
@@ -557,7 +575,9 @@ class QueueItem
     * `preview_only=true`, in which case no chained retrieval is scheduled.
     *
     * If `recent_upload=true` is passed, that flag is added to keep_data so
-    * it propagates onto the chained retrieveAlt action.
+    * it propagates onto the chained retrieveAlt action. The same applies to
+    * `preview_only` and — when present in the payload — the `languages`
+    * paramlist entry.
     *
     * @param array{preview_only?: bool, recent_upload?: bool} $args Options; forwarded verbatim to AiDataModel::getOptimizeData().
     * @return void
@@ -862,6 +882,7 @@ class QueueItem
          case 'getAltData': 
          case 'undoAI': 
          case 'redoAI': 
+         case 'redoAiReplacement': 
             $api = OptimizeAiController::getInstance();
             break;
          case 'restore':

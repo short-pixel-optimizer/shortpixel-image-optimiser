@@ -77,7 +77,7 @@ class BulkController
       {
         $customOp = $args['customOp'];
         
-        if ($customOp == 'bulk-restore' ||  $customOp == 'bulk-undoAI')
+        if ($customOp == 'bulk-restore' ||  $customOp == 'bulk-undoAI' || 'redoAiReplacement' === $customOp)
         {
           $args['numitems'] = 5;
           $args['retry_limit'] = 5;
