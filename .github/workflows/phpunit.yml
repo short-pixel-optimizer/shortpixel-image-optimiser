@@ -2,7 +2,7 @@ name: SPIO PHPUnit Tests
 
 on:
   push:
-    branches: [ unit-tests, integration-tests ]
+    branches: [ unit-tests, integration-tests, mcp ]
   pull_request:
     branches: [ updates, master ]
 
@@ -207,9 +207,9 @@ jobs:
       fail-fast: false
       # Budget decision: PRs run PHP 8.3 / WP latest (the common production
       # combo) plus WP 5.9 — the oldest version that runs on this test
-      # setup — on PHP 7.4 and 8.3. Pushes to the integration-tests branch
-      # run the full PHP 7.4/8.3/8.5 matrix on WP latest, plus WP 5.9 on
-      # PHP 7.4 and 8.3. Old WP + PHP 8.5 is skipped: a WP core that
+      # setup — on PHP 7.4 and 8.3. Pushes (to any of the branches in the
+      # `on: push` list) run the full PHP 7.4/8.3/8.5 matrix on WP latest,
+      # plus WP 5.9 on PHP 7.4 and 8.3. Old WP + PHP 8.5 is skipped: a WP core that
       # predates PHP 8.x-era fixes only produces deprecation noise there,
       # not signal.
       matrix: ${{ github.event_name == 'pull_request'

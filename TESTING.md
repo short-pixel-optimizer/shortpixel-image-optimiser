@@ -43,9 +43,19 @@ bin/test.sh --testsuite External
 # Specific test method
 bin/test.sh --filter test_isProcessable
 
-# Specific test file
-bin/test.sh tests/Model/test-ImageModel.php
+# Single test file — filter on its CLASS name (see note below)
+bin/test.sh --testsuite model --filter ImageModelTest
 ```
+
+> **Note — running a single file:** passing a file path directly
+> (`bin/test.sh tests/Model/test-ImageModel.php`) does NOT work: PHPUnit 9
+> derives the expected class name from the file name, and our WP-convention
+> `test-Foo.php` → `FooTest` naming never matches ("Class test-ImageModel
+> could not be found"). Use `--filter <ClassName>` instead; adding
+> `--testsuite` narrows the scan and speeds it up. `--filter` is a
+> substring/regex match — `ImageModelTest` also catches
+> `CustomImageModelTest`; anchor it (`--filter '^ImageModelTest'`) when
+> you need exactly one class.
 
 ### PHP version matrix
 
@@ -91,6 +101,16 @@ directly and assert on SPIO's reaction: `test-EMRIntegration.php`
 (Enable Media Replace), `test-RTAIntegration.php` (Regenerate Thumbnails
 Advanced), `test-MediaPress.php`, and `test-PhotoEngine.php` (WP/LR Sync).
 These run as part of the plain `--integration` pass.
+
+The MCP/Abilities layer (WP Abilities API, `class/Controller/Abilities/`)
+is covered on two levels: unit (`tests/Controller/test-AbilitiesController.php`
+for the catalog/permission/registration surface — the live-registration
+tests self-skip on WP < 6.9 — and `test-AbilitiesExecute.php` for the
+execute-callback guard rails) and end-to-end
+(`tests/Integration/test-AbilitiesIntegration.php`, which drives the
+ability callbacks against the real queue + optimizer pipeline the way an
+MCP agent would). The execute callbacks are plain PHP, so the integration
+tests run on every WP version.
 
 ```bash
 # Integration suite only
@@ -255,7 +275,8 @@ bin/test.sh --shell
 
 # From inside the shell:
 vendor-tests/bin/phpunit --testsuite Model
-vendor-tests/bin/phpunit --filter test_foo tests/Model/test-Bar.php
+vendor-tests/bin/phpunit --testsuite model --filter BarTest        # one file (by class)
+vendor-tests/bin/phpunit --filter 'BarTest::test_foo'              # one method
 ```
 
 ### Cache / reset
@@ -355,8 +376,9 @@ vendor-tests/bin/phpunit --testsuite External
 # Specific test method
 vendor-tests/bin/phpunit --filter test_isProcessable
 
-# Specific file
-vendor-tests/bin/phpunit tests/Model/test-ImageModel.php
+# Specific file — filter on its class name (file paths don't work with
+# the test-Foo.php naming, see the note in the Quick start section)
+vendor-tests/bin/phpunit --testsuite model --filter ImageModelTest
 ```
 
 ## Running against the CI reference
