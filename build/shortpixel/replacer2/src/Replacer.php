@@ -484,32 +484,6 @@ class Replacer
 		return $content;
 	}
 
-	private function containsMagicMethods($serialized_content) : bool 
-	{
-		preg_match_all('/[OC]:\d+:"([^"]+)":/', $serialized_content, $matches);
-
-		$magic_methods = array(
-			'__construct', '__destruct', '__call', '__callStatic',
-			'__get', '__set', '__isset', '__unset', '__sleep',
-			'__wakeup', '__serialize', '__unserialize', '__set_state',
-			'__clone', '__debugInfo', '__toString', '__invoke'
-		);
-
-		foreach (array_unique($matches[1]) as $class_name) {
-			if (!class_exists($class_name, false)) {
-				continue;
-			}
-
-			$reflection = new \ReflectionClass($class_name);
-			foreach ($magic_methods as $method_name) {
-				if ($reflection->hasMethod($method_name)) {
-					return true;
-				}
-			}
-		}
-
-		return false;
-	}
 
 	/** Check if path is allowed within openbasedir restrictions. This is an attempt to limit notices in file funtions if so.  Most likely the path will be relative in that case.
 	 * @param String Path as String
