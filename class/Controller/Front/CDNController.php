@@ -846,6 +846,26 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 	 * are moved to the end of the returned array so the shorter, absolute-URL
 	 * variants are replaced first.
 	 *
+	 * BUG #55 (deferred fix — see tests/Controller/test-CDNController.php pin tests
+	 * `test_pin55_*`): the assembled replace_url uses raw commas to join CDN
+	 * arguments (implode(',', $replaceBlock->args) below), producing URLs like
+	 * `https://cdn.example.com/spio/ret_img,q_cdnize,to_webp,s_webp/host/img.jpg`.
+	 * When these URLs are written into srcset attributes (via processFront ->
+	 * pregReplaceByString), WHATWG-conformant browser parsers handle them fine
+	 * (URL token = run of non-whitespace; commas mid-token do not split), but
+	 * naive comma-splitting crawlers (SEO tools, indexers, some link checkers)
+	 * shatter each URL into fragments like `s_webp/host/img.jpg 1031w`, which
+	 * resolve to broken relative URLs and generate 404 floods (one customer
+	 * report: 62k logged 404s). src attributes and inline background url()
+	 * contexts are comma-safe (no splitting is defined there), so the fix only
+	 * NEEDS to touch srcset — but a global switch from ',' to '+' or '%2C'
+	 * is simpler and safe everywhere. Both delimiters have been verified against
+	 * the live spcdn.shortpixel.ai CDN (2026-09-03) as byte-identical to the
+	 * comma form including correct WebP content negotiation. '+' is preferred:
+	 * legal in URL path per RFC 3986, no per-attribute divergence, and NOT
+	 * decoded to space in URL paths (only in query strings). See the pin tests
+	 * for a full WHATWG srcset-parser demonstration.
+	 *
 	 * @param \stdClass[] $replaceBlocks Replace-block objects with url, parsed, and args set.
 	 * @return \stdClass[] Same blocks with replace_url populated; relative-URL blocks appended last.
 	 */

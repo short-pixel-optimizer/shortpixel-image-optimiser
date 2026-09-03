@@ -950,4 +950,412 @@ class CDNControllerTest extends WP_UnitTestCase {
 			'The scheme-stripped asset URL must be embedded in replace_url after the CDN prefix.'
 		);
 	}
+
+	// -------------------------------------------------------------------------
+	// BUG #55 pins — raw commas in CDN URLs break naive srcset parsers.
+	//
+	// createReplacements() joins the CDN argument tokens with a raw ',' via
+	// implode(',', ...) producing URLs like
+	//   https://cdn.example.com/spio/ret_img,q_cdnize,to_webp,s_webp/host/img.jpg
+	// These URLs are then written into BOTH src and srcset attributes by
+	// processFront() -> pregReplaceByString(). Impact:
+	//
+	//   - Conformant WHATWG srcset parsers (browsers) do NOT split mid-URL
+	//     commas — a URL token is a run of non-whitespace, only trailing
+	//     commas split — so browsers render the CDN URLs fine.
+	//   - Naive srcset parsers (SEO crawlers, indexers, link checkers) split
+	//     on every comma, producing garbage relative URLs such as
+	//     `s_webp/example.com/uploads/img.jpg 1031w` that are resolved against
+	//     the page URL and 404. One customer reported 62,000 such 404s in
+	//     their access log because of this.
+	//   - src attributes and inline CSS url() contexts are comma-safe because
+	//     no comma-split parsing rule is defined there — the bug is srcset
+	//     only. However, a global switch from ',' to '+' (or '%2C') would be
+	//     simpler and safe everywhere.
+	//
+	// Fix candidates verified against the live spcdn.shortpixel.ai CDN
+	// (parent session, 2026-09-03): `ret_img+q_cdnize+to_webp+s_webp` (plus)
+	// and `ret_img%2Cq_cdnize%2Cto_webp%2Cs_webp` (%2C) both return
+	// byte-identical 200 responses to the comma form including correct
+	// WebP content negotiation. Garbage tokens return 307, so the CDN really
+	// does parse the tokens. '+' is the cleaner delimiter: legal URL path
+	// character (RFC 3986 sub-delims), NOT decoded to space in URL paths
+	// (only in query strings), and no per-attribute divergence needed.
+	// -------------------------------------------------------------------------
+
+	/**
+	 * BUG #55 — Rewritten srcset attribute values contain raw commas inside
+	 * each CDN URL, which naive comma-splitting parsers shatter into invalid
+	 * URL fragments.
+	 *
+	 * This test exercises the tail of processFront() by:
+	 *   1. Building a two-candidate srcset markup with absolute upload URLs.
+	 *   2. Running each srcset URL through createReplacements() (the buggy
+	 *      code path — line ~869 does implode(',', $replaceBlock->args)).
+	 *   3. Running pregReplaceByString() on the full <img> tag to obtain the
+	 *      final rewritten HTML the browser would receive.
+	 *   4. Extracting the rewritten srcset attribute value and asserting the
+	 *      raw-comma bug is present.
+	 *
+	 * Current buggy behaviour asserted here:
+	 *   - The srcset value contains 'ret_img,q_cdnize' (raw comma between
+	 *     tokens INSIDE each candidate URL) at least once.
+	 *
+	 * FLIP INSTRUCTIONS (when Bas ships fix #55):
+	 *   Replace the assertions below with:
+	 *
+	 *     $this->assertStringNotContainsString(
+	 *         'ret_img,q_cdnize',
+	 *         $srcset_value,
+	 *         'After fix #55 the CDN argument delimiter inside srcset URLs '
+	 *         . 'must not be a raw comma.'
+	 *     );
+	 *     // The four argument tokens must still be present in order,
+	 *     // joined by a srcset-safe delimiter ('+' or '%2C').
+	 *     $this->assertMatchesRegularExpression(
+	 *         '#ret_img[+%]{1,3}[Cc]?q_cdnize[+%]{1,3}[Cc]?to_webp[+%]{1,3}[Cc]?s_webp#',
+	 *         $srcset_value,
+	 *         'The four CDN arg tokens must remain in order with a srcset-safe delimiter.'
+	 *     );
+	 *
+	 * Both '+' (single char) and '%2C' (percent-encoded comma) are acceptable
+	 * fixes; the regex above matches either. Rename this method by dropping
+	 * `_pinned_for_deferred_fix` when flipping.
+	 *
+	 * Manual plan row: BUG #55
+	 *
+	 * @return void
+	 */
+	public function test_pin55_srcset_urls_contain_raw_commas_pinned_for_deferred_fix() {
+		$ctrl = $this->freshController( 'https://cdn.example.com/spio/', 'https://example.com', 'example.com' );
+
+		$url_1 = 'https://example.com/wp-content/uploads/2024/photo-800.jpg';
+		$url_2 = 'https://example.com/wp-content/uploads/2024/photo-1600.jpg';
+
+		$img_tag = '<img src="' . $url_1 . '" '
+			. 'srcset="' . $url_1 . ' 800w, ' . $url_2 . ' 1600w" '
+			. 'sizes="(max-width: 800px) 100vw, 1600px" alt="Photo">';
+
+		// Build blocks the way extractImageMatches() would, then run through
+		// the exact same createReplacements() the bug lives in.
+		$args_stub = array(
+			'return'      => 'ret_img',
+			'compression' => 'q_cdnize',
+			'webp'        => 'to_webp',
+			'webarg'      => 's_webp',
+		);
+
+		$block_1         = $this->makeBlock( $url_1 );
+		$block_1->args   = $args_stub;
+		$block_2         = $this->makeBlock( $url_2 );
+		$block_2->args   = $args_stub;
+
+		$blocks = $this->invokePrivate( $ctrl, 'createReplacements', array( array( $block_1, $block_2 ) ) );
+
+		// Both replace_urls must carry the raw-comma delimiter — this is the bug.
+		$this->assertStringContainsString(
+			'ret_img,q_cdnize',
+			$blocks[0]->replace_url,
+			'BUG #55: CDN URL uses raw commas between argument tokens (candidate 1).'
+		);
+		$this->assertStringContainsString(
+			'ret_img,q_cdnize',
+			$blocks[1]->replace_url,
+			'BUG #55: CDN URL uses raw commas between argument tokens (candidate 2).'
+		);
+
+		// Now perform the same replacement processFront() would do to produce
+		// the final HTML the browser sees.
+		$urls         = array( $url_1, $url_2 );
+		$replace_urls = array( $blocks[0]->replace_url, $blocks[1]->replace_url );
+		$rewritten    = $this->invokePrivate( $ctrl, 'pregReplaceByString', array( $img_tag, $urls, $replace_urls ) );
+
+		// Extract the srcset attribute value from the rewritten tag.
+		$matched = preg_match( '/srcset="([^"]*)"/', $rewritten, $srcset_match );
+		$this->assertSame( 1, $matched, 'Rewritten <img> tag must still carry a srcset attribute.' );
+		$srcset_value = $srcset_match[1];
+
+		// Sentinel: the buggy raw-comma delimiter appears inside srcset URLs.
+		$this->assertStringContainsString(
+			'ret_img,q_cdnize',
+			$srcset_value,
+			'BUG #55 pinned: srcset value contains raw commas mid-URL. '
+			. 'After fix, flip to assertStringNotContainsString + assert delimiter is + or %2C.'
+		);
+
+		// Belt-and-braces: there should be MORE commas in the srcset than the
+		// single legal one that separates the two candidates. In a fix world
+		// (delimiter = '+' or '%2C') the srcset would have exactly 1 comma.
+		$this->assertGreaterThan(
+			1,
+			substr_count( $srcset_value, ',' ),
+			'BUG #55 pinned: srcset has more than one comma because argument tokens '
+			. 'are comma-joined inside each URL. Post-fix comma count must be exactly 1.'
+		);
+	}
+
+	/**
+	 * BUG #55 companion — Naive comma-splitting of the emitted srcset value
+	 * yields broken URL fragments (the exact garbage the customer's 404 log
+	 * contains).
+	 *
+	 * This test documents the concrete failure mode a naive parser produces
+	 * when it encounters the current buggy output. It splits the srcset on
+	 * ',' the way an unaware crawler would, then asserts at least one
+	 * resulting fragment starts with 's_webp/' or 'q_cdnize' — a CDN
+	 * argument token, not a URL. Such fragments are resolved against the
+	 * page's base URL, producing 404-generating requests like
+	 * https://example.com/s_webp/example.com/wp-content/uploads/...
+	 *
+	 * FLIP INSTRUCTIONS (when Bas ships fix #55):
+	 *   After the fix, naive comma-splitting the srcset must yield exactly
+	 *   2 fragments each starting with an absolute URL. Replace the
+	 *   assertion below with:
+	 *
+	 *     $this->assertCount(
+	 *         2,
+	 *         $fragments,
+	 *         'Post-fix: naive comma-split must yield exactly 2 candidates.'
+	 *     );
+	 *     foreach ( $fragments as $fragment ) {
+	 *         $this->assertMatchesRegularExpression(
+	 *             '#^https?://#',
+	 *             trim( $fragment ),
+	 *             'Post-fix: each naive-split fragment must start with an absolute URL.'
+	 *         );
+	 *     }
+	 *
+	 * Rename this method by dropping `_pinned_for_deferred_fix` when flipping.
+	 *
+	 * Manual plan row: BUG #55
+	 *
+	 * @return void
+	 */
+	public function test_pin55_naive_comma_split_of_srcset_yields_broken_url_fragments_pinned_for_deferred_fix() {
+		$ctrl = $this->freshController( 'https://cdn.example.com/spio/', 'https://example.com', 'example.com' );
+
+		$url_1 = 'https://example.com/wp-content/uploads/2024/photo-800.jpg';
+		$url_2 = 'https://example.com/wp-content/uploads/2024/photo-1600.jpg';
+
+		$img_tag = '<img src="' . $url_1 . '" '
+			. 'srcset="' . $url_1 . ' 800w, ' . $url_2 . ' 1600w" alt="Photo">';
+
+		$args_stub = array(
+			'return'      => 'ret_img',
+			'compression' => 'q_cdnize',
+			'webp'        => 'to_webp',
+			'webarg'      => 's_webp',
+		);
+		$b1        = $this->makeBlock( $url_1 );
+		$b1->args  = $args_stub;
+		$b2        = $this->makeBlock( $url_2 );
+		$b2->args  = $args_stub;
+
+		$blocks    = $this->invokePrivate( $ctrl, 'createReplacements', array( array( $b1, $b2 ) ) );
+		$rewritten = $this->invokePrivate(
+			$ctrl,
+			'pregReplaceByString',
+			array( $img_tag, array( $url_1, $url_2 ), array( $blocks[0]->replace_url, $blocks[1]->replace_url ) )
+		);
+
+		preg_match( '/srcset="([^"]*)"/', $rewritten, $srcset_match );
+		$srcset_value = $srcset_match[1];
+
+		// Simulate a naive crawler: split on every comma.
+		$fragments = array_map( 'trim', explode( ',', $srcset_value ) );
+
+		// Bug proof: at least one fragment starts with a CDN argument token
+		// (s_webp, q_cdnize, to_webp, ret_img) rather than a URL — because the
+		// naive splitter cut mid-URL, exposing the next segment of the CDN
+		// argument string as a bare relative path fragment.
+		$garbage_fragment_found = false;
+		$garbage_prefixes       = array( 's_webp/', 'q_cdnize', 'to_webp', 'ret_img' );
+		foreach ( $fragments as $fragment ) {
+			foreach ( $garbage_prefixes as $prefix ) {
+				if ( 0 === strpos( $fragment, $prefix ) ) {
+					$garbage_fragment_found = true;
+					break 2;
+				}
+			}
+		}
+
+		$this->assertTrue(
+			$garbage_fragment_found,
+			'BUG #55 pinned: naive comma-split of the rewritten srcset must yield '
+			. 'at least one fragment beginning with a bare CDN argument token '
+			. '(s_webp/, q_cdnize, to_webp, ret_img). This is the exact garbage '
+			. 'that shows up in customer 404 logs. Fragments observed: '
+			. implode( ' || ', $fragments )
+		);
+
+		// And there must be MORE than 2 fragments (2 candidates × N tokens
+		// each, minus the shared comma) — proving the split shattered URLs.
+		$this->assertGreaterThan(
+			2,
+			count( $fragments ),
+			'BUG #55 pinned: a comma-shattered srcset produces >2 naive fragments '
+			. 'for a 2-candidate srcset. Post-fix (delimiter = + or %2C), count is 2.'
+		);
+	}
+
+	/**
+	 * Safety proof for the '+' delimiter fix — a plus-joined CDN URL survives
+	 * BOTH a WHATWG-conformant srcset parser AND a naive comma-splitting
+	 * parser, unlike the current comma-joined form.
+	 *
+	 * This test is production-code-free: it builds two candidate URLs
+	 * manually, once with '+' between arg tokens and once with ',' (the
+	 * current bug), then runs each through:
+	 *
+	 *   (i)  a minimal WHATWG srcset parser implemented inline per spec
+	 *        (https://html.spec.whatwg.org/multipage/images.html#parsing-a-srcset-attribute)
+	 *        — the URL token is a run of non-whitespace; only trailing
+	 *        commas split; the descriptor is consumed up to the next comma.
+	 *   (ii) a naive splitter that just explodes on ','.
+	 *
+	 * Assertions:
+	 *   - '+'-joined: (i) yields 2 candidates, (ii) also yields 2 fragments,
+	 *     each containing a valid absolute URL. Both parser classes agree.
+	 *   - ','-joined: (i) yields 2 candidates (browsers still work),
+	 *     (ii) yields >2 fragments with garbage tokens (crawlers break).
+	 *
+	 * This test remains valid after the bug is fixed — it does not depend
+	 * on production code and doubles as a regression guard confirming that
+	 * '+' is safe under both parser classes.
+	 *
+	 * @return void
+	 */
+	public function test_plus_delimited_cdn_url_survives_both_conformant_and_naive_srcset_parsing() {
+		$cdn_domain = 'https://cdn.example.com/spio/';
+		$asset_1    = 'example.com/wp-content/uploads/2024/photo-800.jpg';
+		$asset_2    = 'example.com/wp-content/uploads/2024/photo-1600.jpg';
+
+		$args_comma = 'ret_img,q_cdnize,to_webp,s_webp';
+		$args_plus  = 'ret_img+q_cdnize+to_webp+s_webp';
+
+		$srcset_comma = $cdn_domain . $args_comma . '/' . $asset_1 . ' 800w, '
+			. $cdn_domain . $args_comma . '/' . $asset_2 . ' 1600w';
+
+		$srcset_plus = $cdn_domain . $args_plus . '/' . $asset_1 . ' 800w, '
+			. $cdn_domain . $args_plus . '/' . $asset_2 . ' 1600w';
+
+		// --------------------------------------------------------------------
+		// PLUS delimiter — must parse correctly under BOTH parser classes.
+		// --------------------------------------------------------------------
+
+		$whatwg_plus = $this->parseSrcsetWhatwg( $srcset_plus );
+		$this->assertCount(
+			2,
+			$whatwg_plus,
+			"WHATWG parser must produce 2 candidates for '+'-delimited srcset."
+		);
+		$this->assertStringContainsString( $args_plus, $whatwg_plus[0]['url'] );
+		$this->assertStringContainsString( $asset_1,   $whatwg_plus[0]['url'] );
+		$this->assertSame( '800w',  $whatwg_plus[0]['descriptor'] );
+		$this->assertStringContainsString( $args_plus, $whatwg_plus[1]['url'] );
+		$this->assertStringContainsString( $asset_2,   $whatwg_plus[1]['url'] );
+		$this->assertSame( '1600w', $whatwg_plus[1]['descriptor'] );
+
+		$naive_plus = array_map( 'trim', explode( ',', $srcset_plus ) );
+		$this->assertCount(
+			2,
+			$naive_plus,
+			"Naive comma-split of '+'-delimited srcset must also yield exactly 2 fragments."
+		);
+		foreach ( $naive_plus as $i => $fragment ) {
+			$this->assertMatchesRegularExpression(
+				'#^https?://[^\s]+\s+\d+[wx]$#',
+				$fragment,
+				"Naive-split fragment #" . ( $i + 1 ) . " ('+') must be a full URL + descriptor."
+			);
+		}
+
+		// --------------------------------------------------------------------
+		// COMMA delimiter — WHATWG parser works, but naive parser shatters.
+		// --------------------------------------------------------------------
+
+		$whatwg_comma = $this->parseSrcsetWhatwg( $srcset_comma );
+		$this->assertCount(
+			2,
+			$whatwg_comma,
+			'Contrast: WHATWG parser also handles the current comma form correctly '
+			. '(this is why browsers still render CDN images).'
+		);
+
+		$naive_comma = array_map( 'trim', explode( ',', $srcset_comma ) );
+		$this->assertGreaterThan(
+			2,
+			count( $naive_comma ),
+			'Contrast: naive comma-split of the CURRENT comma-delimited srcset '
+			. 'produces >2 fragments — this is BUG #55 and the source of customer 404 floods.'
+		);
+	}
+
+	/**
+	 * Minimal WHATWG-conformant srcset parser used by the '+'-safety test.
+	 *
+	 * Implements the essential shape of the algorithm from
+	 * https://html.spec.whatwg.org/multipage/images.html#parsing-a-srcset-attribute :
+	 *
+	 *   loop:
+	 *     - skip whitespace and commas
+	 *     - collect a URL: everything up to the next whitespace (a URL that
+	 *       ENDS with a comma may consume it as a splitter; otherwise the
+	 *       URL includes all non-whitespace, and a trailing comma inside the
+	 *       URL is part of the URL, not a splitter)
+	 *     - skip whitespace
+	 *     - collect a descriptor: everything up to (but not including) the
+	 *       next comma, honouring the parenthesis nesting used by sizes-style
+	 *       descriptors (kept simple here — we only support Nw / Nx forms)
+	 *
+	 * Returns an array of ['url' => …, 'descriptor' => …].
+	 *
+	 * @param string $srcset The srcset attribute value.
+	 * @return array<int, array{url: string, descriptor: string}>
+	 */
+	private function parseSrcsetWhatwg( string $srcset ): array {
+		$candidates = array();
+		$len        = strlen( $srcset );
+		$i          = 0;
+
+		while ( $i < $len ) {
+			// Skip whitespace and commas between candidates.
+			while ( $i < $len && ( ctype_space( $srcset[ $i ] ) || ',' === $srcset[ $i ] ) ) {
+				++$i;
+			}
+			if ( $i >= $len ) {
+				break;
+			}
+
+			// Collect URL: run of non-whitespace.
+			$url_start = $i;
+			while ( $i < $len && ! ctype_space( $srcset[ $i ] ) ) {
+				++$i;
+			}
+			$url = substr( $srcset, $url_start, $i - $url_start );
+
+			// Per spec: a URL ending in trailing commas has those commas
+			// stripped off and treated as candidate separators.
+			$url = rtrim( $url, ',' );
+
+			// Skip whitespace between URL and descriptor.
+			while ( $i < $len && ctype_space( $srcset[ $i ] ) ) {
+				++$i;
+			}
+
+			// Collect descriptor: everything up to the next comma.
+			$desc_start = $i;
+			while ( $i < $len && ',' !== $srcset[ $i ] ) {
+				++$i;
+			}
+			$descriptor = trim( substr( $srcset, $desc_start, $i - $desc_start ) );
+
+			$candidates[] = array(
+				'url'        => $url,
+				'descriptor' => $descriptor,
+			);
+		}
+
+		return $candidates;
+	}
 }
