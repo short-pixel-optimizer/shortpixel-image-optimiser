@@ -566,6 +566,12 @@ class OptimizeAiController extends OptimizerBase
             return;
         }
 
+        if (false !== wp_check_post_lock($qItem->item_id))
+        {
+           Log::addDebug('Replace Image Attributes - Post lock is active, skipping'); 
+           return;
+        }
+
         // Replacer Part 
         $urls = $qItem->data()->urls;
         if (is_null($urls)) // can be empty on restore action 
