@@ -509,11 +509,13 @@ class FrontImage
 			}
 
 			// Boolean / value-less attributes should be emitted without an ="".
-			if ($value === '' || is_null($value)) {
+			// Fix - Don't do this for the ALT tag since it ends up invalid.
+			if ( ($value === '' || is_null($value)) && $name !== 'alt' ) {
 				$output .= ' ' . $name;
 				continue;
 			}
 
+			Log::addTemp("Replacement - $name - $value");
 			$output .= ' ' . $name . '="' . \esc_attr($value) . '"';
 		}
 
