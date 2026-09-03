@@ -33,7 +33,7 @@ class Updater
 
         $update = [
             'ID' => $post_id,
-            'post_content' => $content,
+            'post_content' => wp_slash($content),
         ];
 
         $result = wp_update_post($update, true);

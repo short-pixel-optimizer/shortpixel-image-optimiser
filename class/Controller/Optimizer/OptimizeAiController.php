@@ -1038,7 +1038,7 @@ class OptimizeAiController extends OptimizerBase
                         $frontImage->alt = $aiData['alt'];
                         $do_replace = true;
                     } elseif ($contentReplace === 'missing') {
-                        if (false === $aiPreserve || (is_null($frontImage->alt) || strlen(trim($frontImage->alt)) == 0) ) {
+                        if ( (is_null($frontImage->alt) || strlen(trim($frontImage->alt)) == 0) ) {
                             $frontImage->alt = $aiData['alt'];
                             $do_replace = true;
                         }
