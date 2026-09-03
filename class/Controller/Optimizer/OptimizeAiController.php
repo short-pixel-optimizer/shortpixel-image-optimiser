@@ -614,12 +614,36 @@ class OptimizeAiController extends OptimizerBase
      *   5. Replaces source/target URL pairs in post content via Replacer2.
      *   6. Updates WordPress attachment metadata and the attached-file postmeta.
      * Supports a dry_run mode that logs all planned operations without making any changes.
-     * Always returns false (the return value is currently unused by callers).
+     *
+     * BUG #51 (open, pinned in tests/Integration/test-ChangeFilename.php as
+     * test_pin51_..._pinned_for_deferred_fix): $target_url below (and the
+     * $base_url computed above it) is built with an unanchored
+     * str_replace($base_filename, ...) over the WHOLE URL/path, so when the
+     * filename base is a substring of a directory segment (e.g.
+     * uploads/photo/photo.jpg) the directory gets rewritten too — the
+     * search/replace URLs no longer match the real locations, files are moved
+     * but post_content keeps dead links to the old name. Fix: anchor the
+     * replacement to the basename portion of the URL.
+     *
+     * BUG #52 (open, pinned in tests/Controller/test-OptimizeAiController.php
+     * as test_pin52_..._pinned_for_deferred_fix): the results of
+     * $sourceFile->move(), renameBackup() and $replacer->replace() are all
+     * discarded — on partial failure (some files moved, some not) this method
+     * still returns true, the DB rewrite runs for ALL pairs and the user is
+     * told "Files were replaced". No rollback exists.
+     *
+     * NOTE on the recent_upload=false usage guard: on a stock WP install
+     * _wp_attached_file / _wp_attachment_metadata store RELATIVE paths, so the
+     * full-URL LIKE probe matches nothing and the guard passes; it only counts
+     * references on sites where full URLs land in post_content/postmeta
+     * (page builders etc.). Contract-pinned in test-ChangeFilename.php
+     * (test_pin53_...). The manual Change Filename path bypasses this guard
+     * entirely (ajax_replaceFile() hardcodes recent_upload=true).
      *
      * @param QueueItem $qItem       The queue item providing the image model.
      * @param string    $newFileBase New filename base (without extension) from the AI.
      * @param array     $args        Optional: dry_run (bool), imageThreshold (int), url (string), recent_upload (bool).
-     * @return bool .True if it made it to end of replace functions.
+     * @return bool True if it made it to the end of the replace functions; false on usage-guard block or filename conflict.
      */
     protected function replaceFiles($qItem, $newFileBase, $args = []) : bool
     {
@@ -780,6 +804,22 @@ class OptimizeAiController extends OptimizerBase
         return true;
     }
 
+    /**
+     * Entry point for the manual "Change Filename" AJAX action (media/replaceFileName).
+     *
+     * Derives the new file base via pathinfo(basename(), PATHINFO_FILENAME) —
+     * this strips any directory prefix (neutralising path traversal) AND the
+     * extension, so the rename can never change a file's extension. Calls
+     * replaceFiles() with recent_upload=true, deliberately bypassing the
+     * usage-count guard: the user explicitly asked for the rename, including
+     * for images already referenced in content (see the guard NOTE on
+     * replaceFiles()). Fully decoupled from AI state — works on attachments
+     * that never had AI data.
+     *
+     * @param QueueItem $qItem       Queue item wrapping the image model.
+     * @param string    $newFileName Sanitised filename from the request (may include extension).
+     * @return bool Result of replaceFiles().
+     */
     public function ajax_replaceFile($qItem, $newFileName)
     {
          $imageModel = $qItem->imageModel;

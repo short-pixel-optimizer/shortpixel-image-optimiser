@@ -1356,6 +1356,28 @@ class AjaxController
 		return $json;
 	}
 
+	/**
+	 * Handle the 'media/replaceFileName' screen action (manual "Change Filename").
+	 *
+	 * Meant as a safeguard/manual override after an AI-generated rename (undo does
+	 * not revert filename changes), but also works standalone on attachments with
+	 * no AI data. Reads `$_POST['newFileName']`, loads the image model with an
+	 * access check, and delegates to OptimizeAiController::ajax_replaceFile().
+	 * Always responds with redirect='reload'; is_error is set when the replace
+	 * returned false (conflict and real failures share the same message).
+	 *
+	 * BUG #50 (open, pinned in tests/Integration/test-ChangeFilename.php as
+	 * test_pin50_..._pinned_for_deferred_fix): sanitize_file_name() never
+	 * returns false, so only a MISSING newFileName key is rejected below — an
+	 * empty (or sanitised-to-empty) value passes through, yields an empty file
+	 * base in ajax_replaceFile() and renames every file to an extension-only
+	 * dotfile ('.jpg') while rewriting content URLs accordingly. Fix: reject
+	 * when the sanitised value (or its PATHINFO_FILENAME base) is empty or
+	 * shorter than a sane minimum.
+	 *
+	 * @param array $data Dispatch data: 'id' (attachment id) and 'type' ('media').
+	 * @return void Exits via send().
+	 */
 	protected function replaceFileName($data)
 	{
 		$id = $data['id'];

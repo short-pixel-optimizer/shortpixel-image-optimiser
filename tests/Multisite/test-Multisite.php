@@ -869,4 +869,85 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 		$this->assertSame( 2, $settings->compressionType, 'A dirty int must be cast clean by the sanitizer on the override read path.' );
 		$this->assertTrue( (bool) $settings->createWebp, 'A truthy string must sanitize to a boolean true.' );
 	}
+
+	// -------------------------------------------------------------------
+	// Bug #49 regression — network URL rewrite must be idempotent
+	// -------------------------------------------------------------------
+
+	/**
+	 * Read the protected $url property from a ViewController instance via
+	 * reflection (the property is declared protected on the base class and
+	 * MultiSiteViewController overrides only the setter).
+	 *
+	 * @param object $controller Instance to read from.
+	 * @return mixed             The stored URL, or null if unset.
+	 */
+	private function readControllerUrl( object $controller ) {
+		$ref  = new ReflectionClass( \ShortPixel\ViewController::class );
+		$prop = $ref->getProperty( 'url' );
+		$prop->setAccessible( true );
+		return $prop->getValue( $controller );
+	}
+
+	/**
+	 * Regression test for bug #49 (fixed 2026-09-01 by ccde551a):
+	 * MultiSiteViewController::setControllerURL used to blindly
+	 * str_replace('/wp-admin/', '/wp-admin/network/', $url) on every call.
+	 * Since e4d1d0a8 the AJAX save flow reads request_url from
+	 * $_POST['request_url'], which is populated from window.location on the
+	 * client — and on a network-admin page window.location already contains
+	 * '/wp-admin/network/'. The unguarded str_replace therefore rewrote
+	 * '…/wp-admin/network/…' to '…/wp-admin/network/network/…', producing a
+	 * broken redirect after saving network settings with an API key change.
+	 *
+	 * Fix ccde551a wraps the rewrite in
+	 * `if (false === strpos($url, '/wp-admin/network/'))`, making the method
+	 * idempotent for callers that already pass a network-admin URL while
+	 * preserving the original rewrite for callers that don't (single-site
+	 * routes that reach the network controller via routing flags).
+	 *
+	 * Sentinel guards (per feedback_pinned_test_sentinels.md):
+	 *   - Two independent call paths (already-network vs plain-admin) are
+	 *     exercised on the SAME instance in sequence, so any state-order bug
+	 *     surfaces.
+	 *   - The plain-admin case asserts the FULL rewritten URL (not just
+	 *     "contains network") so a fix that dropped the rewrite entirely
+	 *     would fail loudly instead of false-passing on the idempotency
+	 *     assertion.
+	 *   - The already-network case asserts assertSame (strict identity, no
+	 *     coercion) so a stray trim or trailing-slash mutation is caught.
+	 */
+	public function test_setControllerURL_is_idempotent_for_network_admin_urls_regression_49() {
+		$controller = new \ShortPixel\Controller\View\MultiSiteViewController();
+
+		// Case (i): a plain /wp-admin/ URL (single-site route) must be
+		// rewritten to /wp-admin/network/ so the AJAX redirect targets the
+		// network settings screen. This is the original bug-fix scenario.
+		$plain = '/wp-admin/settings.php?page=shortpixel-network-settings&part=network';
+		$controller->setControllerURL( $plain );
+		$this->assertSame(
+			'/wp-admin/network/settings.php?page=shortpixel-network-settings&part=network',
+			$this->readControllerUrl( $controller ),
+			'Regression #49: a plain /wp-admin/ URL must still be rewritten to /wp-admin/network/ — dropping the rewrite entirely would break single-site → network routing.'
+		);
+
+		// Case (ii): a URL already carrying /wp-admin/network/ (the shape
+		// AJAX save receives since e4d1d0a8, because window.location on a
+		// network-admin page already contains /network/) must pass through
+		// UNCHANGED — the unguarded str_replace used to double it to
+		// /wp-admin/network/network/, breaking the redirect after save.
+		$already = '/wp-admin/network/settings.php?page=shortpixel-network-settings&part=network';
+		$controller->setControllerURL( $already );
+		$stored = $this->readControllerUrl( $controller );
+		$this->assertSame(
+			$already,
+			$stored,
+			'Regression #49: a URL that already contains /wp-admin/network/ must pass through unchanged. Prior to ccde551a, str_replace produced /wp-admin/network/network/, breaking the network-settings redirect.'
+		);
+		$this->assertStringNotContainsString(
+			'/wp-admin/network/network/',
+			(string) $stored,
+			'Regression #49 sentinel: the doubled /wp-admin/network/network/ shape must never appear.'
+		);
+	}
 }
