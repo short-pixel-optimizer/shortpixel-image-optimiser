@@ -14,7 +14,12 @@ use ShortPixel\Model\AiDataModel;
  * Returns the AI Image SEO state for a Media Library attachment:
  * generation status, processability, and original/generated/current
  * values for alt, caption, description, post title and filename.
- * Custom Media is not supported for AI SEO
+ * Custom Media is not supported for AI SEO.
+ *
+ * Access model: ItemAccessGuard::denyIfNotEditable() (since c91cd01c) is
+ * consulted BEFORE returning the AI status payload — reading the AI
+ * alt/caption history of another author's attachment is itself a
+ * disclosure that must be gated by edit_post/edit_others_posts
  *
  * @package ShortPixel\Controller\Abilities
  */

@@ -553,6 +553,16 @@ class AbilitiesController
 
 	/**
 	 * Permission callback for settings-level abilities (read/write settings)
+	 * AND for destructive site-wide bulk operations.
+	 *
+	 * Used by: shortpixel/get-settings, shortpixel/update-settings,
+	 * shortpixel/bulk-restore, shortpixel/bulk-undo-ai-seo.
+	 *
+	 * Bulk restore + bulk undo-ai-seo were tightened from userCanOptimize to
+	 * userCanManage in c83f344d: an editor should be able to optimize
+	 * everyone's images (that mirrors the SPIO bulk page), but purging
+	 * backups site-wide or wiping AI SEO metadata site-wide are admin-only
+	 * destructive actions
 	 *
 	 * @return bool
 	 */
@@ -563,7 +573,13 @@ class AbilitiesController
 
 	/**
 	 * Permission callback for optimization-level abilities (stats, quota,
-	 * optimize, restore). Same capability as the SPIO bulk/media pages
+	 * optimize, restore-single, bulk-optimize, generate-ai-seo, ...).
+	 * Same capability as the SPIO bulk/media pages.
+	 *
+	 * Single-image abilities layer ItemAccessGuard::denyIfNotEditable() on
+	 * top of this role check so an editor cannot poke at attachments they
+	 * do not personally own on sites where the effective cap is image_user
+	 * (edit_post, meta cap) instead of image_all (edit_others_posts)
 	 *
 	 * @return bool
 	 */

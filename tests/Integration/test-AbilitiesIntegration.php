@@ -50,10 +50,18 @@ class AbilitiesIntegrationTest extends SPIO_IntegrationTestCase {
 		$settings->autoAIBulk      = 0;
 
 		$this->purgeAiData();
+
+		// Since c91cd01c every single-image ability calls ItemAccessGuard.
+		// The suite ran under user 0 originally, which now fails the guard —
+		// an admin session is what a REST/MCP caller with the site's
+		// application password would look like, and lets the pre-existing
+		// end-to-end assertions exercise the pipeline they were written for.
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
 	}
 
 	public function tear_down() {
 		$this->purgeAiData();
+		wp_set_current_user( 0 );
 		parent::tear_down();
 	}
 
@@ -468,5 +476,112 @@ class AbilitiesIntegrationTest extends SPIO_IntegrationTestCase {
 
 		$this->assertTrue( $result['error'] );
 		$this->assertStringContainsString( 'API key is not verified', $result['message'] );
+	}
+
+	// ------------------------------------------------------------------
+	// Regression: bulk abilities must not wipe unrelated queues (c82c9817)
+	// ------------------------------------------------------------------
+
+	/**
+	 * Regression for c82c9817: BulkOptimizeAbility and BulkGenerateAiSeoAbility
+	 * used to call QueueController::resetQueues() before creating their own
+	 * bulk. resetQueues() wipes ALL FOUR queues (media, mediaSingle, custom,
+	 * customSingle), so any pending single-image optimize enqueued by the
+	 * classic AJAX flow was silently discarded the moment an MCP agent
+	 * kicked off a bulk. The fix removes those calls — bulk creation now
+	 * only touches its own bulk queue.
+	 *
+	 * Test shape: seed the mediaSingle queue via OptimizeMediaAbility with
+	 * process=false, then start bulk-optimize with process=false, then assert
+	 * the single item is still there. Also verifies bulk-optimize actually
+	 * created its own bulk queue (started stats > 0).
+	 */
+	public function test_bulk_optimize_does_not_wipe_the_media_single_queue() {
+		$single_id = $this->freshAttachment();
+
+		OptimizeMediaAbility::execute( array( 'id' => $single_id, 'process' => false ) );
+
+		$statusBefore = GetQueueStatusAbility::execute( array( 'bulk' => false ) );
+		$this->assertGreaterThanOrEqual(
+			1,
+			$statusBefore['queues']['media']['in_queue'],
+			'Precondition: single-optimize seeds the mediaSingle queue'
+		);
+
+		// Second attachment so the bulk has something to enqueue.
+		$this->uploadFixture( 'fixture-small.jpg' );
+
+		$result = BulkOptimizeAbility::execute( array(
+			'confirm' => true,
+			'process' => false,
+		) );
+		$this->assertFalse( $result['error'], 'bulk-optimize must start: ' . print_r( $result, true ) );
+
+		$statusAfter = GetQueueStatusAbility::execute( array( 'bulk' => false ) );
+		$this->assertGreaterThanOrEqual(
+			$statusBefore['queues']['media']['in_queue'],
+			$statusAfter['queues']['media']['in_queue'],
+			'Regression #C1-fix (c82c9817): bulk-optimize must not wipe the single-item queue that an admin AJAX call enqueued'
+		);
+	}
+
+	/**
+	 * Same regression as above, for bulk-generate-ai-seo. The AI SEO bulk
+	 * was hitting resetQueues() too — a media-only AI bulk from the MCP
+	 * agent was dropping pending single-image optimize items in mediaSingle
+	 * AND pending items in the custom queues. Fixed in c82c9817.
+	 */
+	public function test_bulk_generate_ai_seo_does_not_wipe_the_media_single_queue() {
+		$single_id = $this->freshAttachment();
+
+		OptimizeMediaAbility::execute( array( 'id' => $single_id, 'process' => false ) );
+
+		$statusBefore = GetQueueStatusAbility::execute( array( 'bulk' => false ) );
+		$this->assertGreaterThanOrEqual( 1, $statusBefore['queues']['media']['in_queue'] );
+
+		$result = BulkGenerateAiSeoAbility::execute( array( 'confirm' => true, 'process' => false ) );
+		$this->assertFalse( $result['error'], 'bulk-generate-ai-seo must start: ' . print_r( $result, true ) );
+
+		$statusAfter = GetQueueStatusAbility::execute( array( 'bulk' => false ) );
+		$this->assertGreaterThanOrEqual(
+			$statusBefore['queues']['media']['in_queue'],
+			$statusAfter['queues']['media']['in_queue'],
+			'Regression (c82c9817): bulk-generate-ai-seo must not wipe the mediaSingle queue'
+		);
+	}
+
+	// ------------------------------------------------------------------
+	// Regression: single-image abilities honour per-image edit permission
+	// (c91cd01c)
+	// ------------------------------------------------------------------
+
+	/**
+	 * End-to-end pin for c91cd01c: a subscriber (no edit_others_posts, no
+	 * ownership over the admin's attachment) hitting optimize-media must
+	 * bounce with access_denied BEFORE the queue receives an item. The
+	 * ability's role-level permission_callback wouldn't help here — MCP
+	 * infrastructure calls the execute callback directly in unit tests, so
+	 * the per-image guard is the only barrier.
+	 */
+	public function test_optimize_media_denies_non_editable_users_end_to_end() {
+		$attachment_id = $this->freshAttachment();
+		$subscriber    = self::factory()->user->create( array( 'role' => 'subscriber' ) );
+		wp_set_current_user( $subscriber );
+
+		$result = OptimizeMediaAbility::execute( array( 'id' => $attachment_id ) );
+
+		$this->assertTrue( $result['error'] );
+		$this->assertTrue( ! empty( $result['access_denied'] ) );
+
+		// Guard must run before the queue enqueue — verify no queue item landed.
+		$status = GetQueueStatusAbility::execute( array( 'bulk' => false ) );
+		$this->assertSame(
+			0,
+			(int) $status['queues']['media']['in_queue'],
+			'Access-denied requests must not leave items in the queue'
+		);
+
+		$imageModel = $this->freshImageModel( $attachment_id );
+		$this->assertFalse( $imageModel->isOptimized(), 'A denied request must not have optimized anything' );
 	}
 }

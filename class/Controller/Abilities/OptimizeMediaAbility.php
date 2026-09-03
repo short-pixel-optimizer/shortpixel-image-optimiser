@@ -17,7 +17,11 @@ use ShortPixel\Model\Image\ImageModel;
  * synchronously within a bounded time budget. Because optimization is
  * asynchronous (remote API), the job may not finish within one request —
  * the response reports progress and the agent can call
- * shortpixel/run-queue to continue processing
+ * shortpixel/run-queue to continue processing.
+ *
+ * Access model: ItemAccessGuard::denyIfNotEditable() (since c91cd01c) runs
+ * before the queue is touched, so an unauthorised MCP call never spends
+ * quota or enqueues work
  *
  * @package ShortPixel\Controller\Abilities
  */

@@ -15,7 +15,15 @@ use ShortPixel\Controller\QuotaController;
  * Starts a bulk optimization of all unoptimized images, mirroring the
  * admin Bulk Optimize / WP-CLI `wp spio bulk create` flow. Consumes
  * ShortPixel credits. Processing is asynchronous — call
- * shortpixel/run-queue until queues empty
+ * shortpixel/run-queue until queues empty.
+ *
+ * Queue-scope note (c82c9817): does NOT call
+ * QueueController::resetQueues() before creating the bulk. resetQueues()
+ * wipes all four queue instances (media, mediaSingle, custom,
+ * customSingle), which would silently discard any single-image
+ * optimize/restore work the classic AJAX path had enqueued. The admin
+ * createBulk AJAX handler doesn't reset either — only destructive
+ * customOp flows (bulk-restore, bulk-undoAI, migrate, removeLegacy) do
  *
  * @package ShortPixel\Controller\Abilities
  */

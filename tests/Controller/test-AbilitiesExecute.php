@@ -36,6 +36,15 @@ class AbilitiesExecuteTest extends WP_UnitTestCase {
 	public function set_up() {
 		parent::set_up();
 		$this->settingsBackup = array();
+
+		// Since c91cd01c every single-image ability calls ItemAccessGuard, so
+		// the execute callbacks now need a WP user with edit-others-posts
+		// capability to get past the guard. Test files that predate the guard
+		// implicitly ran with user 0; we log an admin in so the ORIGINAL
+		// behaviour under test (validation, error paths, settings writes) is
+		// what we actually exercise. Access-denied paths get their own
+		// dedicated test below.
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
 	}
 
 	public function tear_down() {
@@ -43,6 +52,7 @@ class AbilitiesExecuteTest extends WP_UnitTestCase {
 		foreach ( $this->settingsBackup as $key => $value ) {
 			$settings->$key = $value;
 		}
+		wp_set_current_user( 0 );
 		parent::tear_down();
 	}
 
@@ -340,5 +350,93 @@ class AbilitiesExecuteTest extends WP_UnitTestCase {
 		$this->assertIsInt( $result['totals']['to_optimize'] );
 		$this->assertGreaterThanOrEqual( 0, $result['totals']['to_optimize'] );
 		$this->assertIsFloat( $result['average_compression_percent'] );
+	}
+
+	// ------------------------------------------------------------------
+	// ItemAccessGuard integration with the 6 single-image abilities
+	// (regression coverage for c91cd01c)
+	// ------------------------------------------------------------------
+
+	/**
+	 * Every single-image ability must run ItemAccessGuard::denyIfNotEditable()
+	 * before doing any real work. A subscriber uploading an attachment does
+	 * NOT get edit_others_posts (they only have edit_post on their OWN
+	 * uploads); an attachment owned by ANOTHER user (an admin here) must be
+	 * off-limits — even though the ability's role-level permission_callback
+	 * would let editors through for the optimize/generate variants.
+	 *
+	 * Cross-ability parameterized loop rather than 4 near-identical methods,
+	 * following the shape used by test_bulk_abilities_refuse_to_run_without_confirm_true.
+	 *
+	 * Only 4 of the 6 guarded abilities appear here: optimize-media and
+	 * generate-ai-seo short-circuit on the API-key check (the unit baseline
+	 * has an empty, unverified key) BEFORE reaching the guard, so they can't
+	 * demonstrate the access_denied payload in unit isolation. Their
+	 * per-image guard is covered end-to-end in
+	 * tests/Integration/test-AbilitiesIntegration.php against the verified
+	 * mock API baseline (test_optimize_media_denies_non_editable_users_end_to_end).
+	 */
+	public function test_single_image_abilities_block_users_without_edit_post_on_the_attachment() {
+		// Attachment owned by the admin already logged in (set_up).
+		$admin_id      = get_current_user_id();
+		$attachment_id = self::factory()->attachment->create_upload_object(
+			dirname( __DIR__ ) . '/fixtures/fixture-small.jpg',
+			0,
+			array( 'post_author' => $admin_id )
+		);
+
+		// Switch to a subscriber (no edit_others_posts, no edit_post on this attachment).
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
+
+		$cases = array(
+			'get-media-status'  => array( GetMediaStatusAbility::class, array( 'id' => $attachment_id ) ),
+			'restore-media'     => array( RestoreMediaAbility::class, array( 'id' => $attachment_id ) ),
+			'get-ai-seo-status' => array( GetAiSeoStatusAbility::class, array( 'id' => $attachment_id ) ),
+			'undo-ai-seo'       => array( UndoAiSeoAbility::class, array( 'id' => $attachment_id ) ),
+		);
+
+		foreach ( $cases as $label => list( $ability, $args ) ) {
+			$result = $ability::execute( $args );
+
+			$this->assertTrue( $result['error'], "$label must return an error for a non-editable user" );
+			$this->assertTrue(
+				! empty( $result['access_denied'] ),
+				"$label must set access_denied=true so callers can distinguish auth failures from validation failures"
+			);
+			$this->assertSame( $attachment_id, $result['id'], "$label must echo the disputed id back" );
+		}
+
+		wp_delete_attachment( $attachment_id, true );
+	}
+
+	/**
+	 * Guard sits BEFORE the isOptimized / isSomeThingGenerated / isProcessable
+	 * checks, so a non-editable user never triggers the AI request pipeline
+	 * or the queue enqueue. This pins the ordering — otherwise a future
+	 * refactor could accidentally leak "no backup available" or
+	 * "no AI SEO data to undo" messages to unauthorised users, which is
+	 * information disclosure about the target attachment's state.
+	 */
+	public function test_access_guard_runs_before_state_specific_error_paths() {
+		$admin_id      = get_current_user_id();
+		$attachment_id = self::factory()->attachment->create_upload_object(
+			dirname( __DIR__ ) . '/fixtures/fixture-small.jpg',
+			0,
+			array( 'post_author' => $admin_id )
+		);
+
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
+
+		// Fresh upload: not optimized → without the guard would say "not optimized".
+		$result = RestoreMediaAbility::execute( array( 'id' => $attachment_id ) );
+		$this->assertTrue( ! empty( $result['access_denied'] ), 'restore-media must fail on access before reporting item state' );
+		$this->assertStringNotContainsString( 'not optimized', $result['message'] );
+
+		// Fresh upload: nothing generated → without the guard would say "No AI SEO data to undo".
+		$result = UndoAiSeoAbility::execute( array( 'id' => $attachment_id ) );
+		$this->assertTrue( ! empty( $result['access_denied'] ), 'undo-ai-seo must fail on access before reporting item state' );
+		$this->assertStringNotContainsString( 'No AI SEO data', $result['message'] );
+
+		wp_delete_attachment( $attachment_id, true );
 	}
 }

@@ -18,7 +18,11 @@ use ShortPixel\Model\AiDataModel;
  * optional filename) for a Media Library attachment, then advances the
  * queue within a time budget. Generation is asynchronous (requestAlt +
  * retrieveAlt): if it does not finish in one call, use run-queue.
- * Consumes AI credits. Custom Media is not supported
+ * Consumes AI credits. Custom Media is not supported.
+ *
+ * Access model: ItemAccessGuard::denyIfNotEditable() (since c91cd01c) runs
+ * after the image model loads and before AiDataModel is touched — no
+ * AI credits are spent on attachments the caller cannot edit
  *
  * @package ShortPixel\Controller\Abilities
  */

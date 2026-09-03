@@ -16,7 +16,13 @@ use ShortPixel\Controller\QuotaController;
  * Starts a media-only bulk that generates AI Image SEO for processable
  * attachments (doMedia=false, doAi=true). Mirrors the admin bulk when only
  * AI is selected. Consumes AI credits. Asynchronous: call run-queue until
- * queues empty. Custom Media is not supported
+ * queues empty. Custom Media is not supported.
+ *
+ * Queue-scope note (c82c9817): does NOT call
+ * QueueController::resetQueues(). Same rationale as BulkOptimizeAbility —
+ * the AI bulk owns only the media (bulk) queue, and wiping the three
+ * unrelated queues (mediaSingle, custom, customSingle) as a "safety
+ * reset" was silently dropping other work in flight
  *
  * @package ShortPixel\Controller\Abilities
  */

@@ -14,7 +14,12 @@ use ShortPixel\Controller\QueueController;
  * Starts a bulk restore of all optimized images from backup (de-optimize),
  * mirroring the admin Bulk Restore All flow (AjaxController::startRestoreAll).
  * Destructive and non-reversible. Does not consume optimization credits.
- * Processing is asynchronous — call shortpixel/run-queue until queues empty
+ * Processing is asynchronous — call shortpixel/run-queue until queues empty.
+ *
+ * Permission: gated on userCanManage (manage_options) since c83f344d —
+ * this used to accept editors (userCanOptimize), which was too weak for a
+ * site-wide destructive action. Editors can still bulk-optimize; only
+ * bulk-restore and bulk-undo-ai-seo were tightened
  *
  * @package ShortPixel\Controller\Abilities
  */

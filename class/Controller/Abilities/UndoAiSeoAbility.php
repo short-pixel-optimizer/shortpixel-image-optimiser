@@ -15,7 +15,11 @@ use ShortPixel\Model\Queue\QueueItem;
  * Reverts AI-generated SEO metadata (alt, caption, description, post title)
  * back to the values stored before generation. Does not consume credits.
  * Filename renames performed by AI are not reversed. Custom Media is not
- * supported
+ * supported.
+ *
+ * Access model: ItemAccessGuard::denyIfNotEditable() (since c91cd01c) runs
+ * before AiDataModel::undoAltData(), so an unauthorised caller cannot
+ * revert another author's AI metadata by guessing an id
  *
  * @package ShortPixel\Controller\Abilities
  */

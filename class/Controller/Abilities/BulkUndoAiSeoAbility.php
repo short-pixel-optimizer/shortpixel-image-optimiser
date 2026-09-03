@@ -14,7 +14,11 @@ use ShortPixel\Controller\QueueController;
  * Starts a media-only bulk that reverts AI-generated SEO metadata for all
  * attachments that have AI data stored. Mirrors admin Bulk Undo AI
  * (customOp=bulk-undoAI). Does not consume credits. Filename renames are
- * not reversed. Custom Media is not supported
+ * not reversed. Custom Media is not supported.
+ *
+ * Permission: gated on userCanManage (manage_options) since c83f344d —
+ * wiping AI SEO metadata site-wide is destructive and must not be
+ * available to editors (userCanOptimize)
  *
  * @package ShortPixel\Controller\Abilities
  */
