@@ -21,7 +21,7 @@ use ShortPixel\Replacer\Replacer as Replacer;
  * JS/CSS) URLs so they are served through a ShortPixel CDN domain.  It runs as
  * an output-buffer callback (processFront) that receives the fully-rendered HTML
  * of each front-end page and returns it with qualifying URLs prefixed by the CDN
- * domain and a comma-separated argument string (compression, WebP/AVIF format
+ * domain and a '+'-separated argument string (compression, WebP/AVIF format
  * tokens, scheme hints, etc.).
  *
  * Lifecycle:
@@ -41,8 +41,10 @@ use ShortPixel\Replacer\Replacer as Replacer;
  *  - JSON responses (detected via checkContent/checkJson) receive additional
  *    JSON-slash encoding so CDN URLs do not break serialised HTML payloads.
  *
- * CDN argument format: comma-separated tokens assembled by createArguments(),
- * e.g. "ret_img,q_cdnize,to_webp,s_webp" prefixed to the host-stripped URL.
+ * CDN argument format: '+'-separated tokens assembled by createArguments(),
+ * e.g. "ret_img+q_cdnize+to_webp+s_webp" prefixed to the host-stripped URL
+ * (delimiter switched from ',' to '+' for bug #55 — raw commas broke naive
+ * srcset parsers).
  */
 class CDNController extends \ShortPixel\Controller\Front\PageConverter
 {
@@ -291,9 +293,9 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 	/**
 	 * Builds the CDN argument array for a URL replacement block.
 	 *
-	 * Assembles key=value tokens that are later joined with commas and inserted
+	 * Assembles key=value tokens that are later joined with '+' and inserted
 	 * between the CDN domain and the asset URL, e.g.
-	 * "https://cdn.example.com/spio/ret_img,q_cdnize,to_webp,s_webp/example.com/…".
+	 * "https://cdn.example.com/spio/ret_img+q_cdnize+to_webp+s_webp/example.com/…".
 	 *
 	 * Compression is always 'q_cdnize'.  The 'return' key defaults to 'ret_img'
 	 * but callers may override it (e.g. 'ret_auto' for scripts).  WebP/AVIF
@@ -301,7 +303,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 	 * environment capability flags.
 	 *
 	 * @param array $args Initial argument overrides; supports 'return' and 'version'.
-	 * @return array Associative array of CDN argument tokens ready for implode(',').
+	 * @return array Associative array of CDN argument tokens ready for implode('+').
 	 */
 	protected function createArguments($args = [])
 	{
@@ -840,31 +842,24 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 	 * Populates replace_url on each block by prepending the CDN domain and argument string.
 	 *
 	 * For every block, strips the scheme from the URL (CDN expects a schemeless
-	 * path) and assembles: <cdn_domain><args,joined>/<scheme-stripped-url>.  Any
+	 * path) and assembles: <cdn_domain><args+joined>/<scheme-stripped-url>.  Any
 	 * HTTP URLs add a 'p_h' scheme argument via checkScheme().  Blocks whose URL
 	 * has no host (relative) are made absolute via checkDomain(); those blocks
 	 * are moved to the end of the returned array so the shorter, absolute-URL
 	 * variants are replaced first.
 	 *
-	 * BUG #55 (deferred fix — see tests/Controller/test-CDNController.php pin tests
-	 * `test_pin55_*`): the assembled replace_url uses raw commas to join CDN
-	 * arguments (implode(',', $replaceBlock->args) below), producing URLs like
-	 * `https://cdn.example.com/spio/ret_img,q_cdnize,to_webp,s_webp/host/img.jpg`.
-	 * When these URLs are written into srcset attributes (via processFront ->
-	 * pregReplaceByString), WHATWG-conformant browser parsers handle them fine
-	 * (URL token = run of non-whitespace; commas mid-token do not split), but
-	 * naive comma-splitting crawlers (SEO tools, indexers, some link checkers)
-	 * shatter each URL into fragments like `s_webp/host/img.jpg 1031w`, which
+	 * BUG #55 (FIXED 2026-09-03): CDN arguments were previously joined with a
+	 * raw ',' — harmless in WHATWG-conformant browser srcset parsers (URL token
+	 * = run of non-whitespace; commas mid-token do not split), but naive
+	 * comma-splitting crawlers (SEO tools, indexers, link checkers) shattered
+	 * each srcset URL into fragments like `s_webp/host/img.jpg 1031w`, which
 	 * resolve to broken relative URLs and generate 404 floods (one customer
-	 * report: 62k logged 404s). src attributes and inline background url()
-	 * contexts are comma-safe (no splitting is defined there), so the fix only
-	 * NEEDS to touch srcset — but a global switch from ',' to '+' or '%2C'
-	 * is simpler and safe everywhere. Both delimiters have been verified against
-	 * the live spcdn.shortpixel.ai CDN (2026-09-03) as byte-identical to the
-	 * comma form including correct WebP content negotiation. '+' is preferred:
-	 * legal in URL path per RFC 3986, no per-attribute divergence, and NOT
-	 * decoded to space in URL paths (only in query strings). See the pin tests
-	 * for a full WHATWG srcset-parser demonstration.
+	 * report: 62k logged 404s). The delimiter is now '+': verified against the
+	 * live spcdn.shortpixel.ai CDN (2026-09-03) as byte-identical to the comma
+	 * form including correct WebP content negotiation; legal in URL paths per
+	 * RFC 3986 and NOT decoded to space there (only in query strings). See
+	 * tests/Controller/test-CDNController.php for a WHATWG srcset-parser
+	 * demonstration and regression tests.
 	 *
 	 * @param \stdClass[] $replaceBlocks Replace-block objects with url, parsed, and args set.
 	 * @return \stdClass[] Same blocks with replace_url populated; relative-URL blocks appended last.
@@ -886,7 +881,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			$url = str_replace(['http://', 'https://'], '', $url); // always remove scheme
 			$url = apply_filters('shortpixel/front/cdn/url', $url);
 
-			$cdnArgs = implode(',', $replaceBlock->args);
+			$cdnArgs = implode('+', $replaceBlock->args);
 
 			$cdn_prefix = trailingslashit($cdn_domain) . trailingslashit($cdnArgs);
 			$replaceBlock->replace_url = $cdn_prefix . trim($url);
