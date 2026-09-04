@@ -277,6 +277,21 @@ class AiController extends RequestManager
      * Note: the guard condition `false === is_null(...)` is a double negation that means
      * "only proceed if returndatalist is not null".
      *
+     * BUG NOTE (EBUG-1, customer report tests/partner-plugins/bug-editor-ai-corruption.md):
+     * the backfilled 'status' is an INTEGER (AiDataModel::F_STATUS_EXCLUDESETTING = -3
+     * for a field disabled in settings, AiDataModel::F_STATUS_PREVENTOVERRIDE = -4 for
+     * aiPreserve-skipped). These integers intentionally flow through the returned aiData
+     * → OptimizeAiController::formatResultData() → the ajax payload sent to the browser
+     * (via screen-media.js), where Gutenberg's UpdateGutenBerg() used to hand them to
+     * wp.data.dispatch(...).updateBlockAttributes → core/image save() throws on an
+     * integer 'alt' or 'caption' → the block serialises to an empty void comment →
+     * image destroyed on publish/autosave. The ONLY guard against that corruption is the
+     * client-side string-only allowlist added in commit ea764111
+     * (res/js/screens/screen-media.js UpdateGutenBerg). A defense-in-depth server-side
+     * fix — filtering ints out of aiData on this method or before payload dispatch —
+     * remains open. Any such fix must gate on is_int(), NOT on -3 specifically, because
+     * OptimizeAiController::formatGenerated() normalises -4 → -3 (see its docblock).
+     *
      * @param array     $aiData Fields and values received from the AI API (alt, caption,
      *                          description, post_title, relevance, filebase, etc.).
      * @param QueueItem $qItem  The queue item holding the returndatalist configuration.

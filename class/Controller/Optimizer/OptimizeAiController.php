@@ -547,9 +547,46 @@ class OptimizeAiController extends OptimizerBase
      * the handleReplace() callback, which does the actual attribute
      * replacement and save.
      *
+     * THREE-STATE content-replacement toggle (efbd5ac9): reads
+     * settings->ai_content_replace which is one of:
+     *   - 'none'    : early-return here — no post_content is ever touched.
+     *                 Media Library alt meta writes are unaffected (they
+     *                 flow through AiDataModel, not this method).
+     *   - 'missing' : delegate to handleReplace() which only fills empty
+     *                 in-content alts (#56 fixed in dc65f17e).
+     *   - 'overwrite': delegate to handleReplace() which always writes.
+     *
+     * BUG #58 (open, pinned in tests/Integration/test-AiPipeline.php as
+     * test_pin58_..._pinned_for_deferred_fix): the 'none' early-return
+     * ALSO fires when this method is called from undoAltData() — so a
+     * user who switches to 'none' after AI ran finds Undo silently no
+     * longer restores post content (only the Media Library alt reverts).
+     * Fix will need an undo-aware bypass or a separate reason parameter.
+     *
+     * BUG #59 (MEDIUM, STILL open, pinned in tests/Integration/test-AiPipeline.php
+     * as test_pin59_..._pinned_for_deferred_fix): posts open in a Gutenberg
+     * editor are rewritten behind the editor's back; the next editor save
+     * silently wins with no conflict warning (customer report EBUG-3b,
+     * tests/partner-plugins/bug-editor-ai-corruption.md). The guard added in
+     * 3f86b55b below misses the target three ways:
+     *   1. Wrong ID — it checks the lock on $qItem->item_id (the ATTACHMENT),
+     *      but the posts being rewritten are the $post_id values in
+     *      handleReplace()'s loop; a containing post's lock never blocks it
+     *      (pin59 locks the containing post and still passes).
+     *   2. wp_check_post_lock() lives in wp-admin/includes/post.php — not
+     *      loaded under WP-CLI / front-end cron queue processing → fatal.
+     *      Needs function_exists() or a direct _edit_lock meta check.
+     *   3. wp_check_post_lock() returns false for the CURRENT user's own
+     *      lock — the reported single-admin scenario (editor open, same
+     *      admin's AJAX processes the queue) is never skipped. Check
+     *      _edit_lock freshness regardless of owner; the editor JS path
+     *      (UpdateGutenBerg) already applies the alt in the open session.
+     * Side effect of the current guard: while someone edits the ATTACHMENT
+     * screen, replacement AND undo are silently skipped for every post.
+     *
      * @param QueueItem $qItem
      * @param array $aiData Generated AI data (alt / caption are strings, or int status codes when not generated).
-     * @return array|void Finder results; void when alt AND caption are int status codes.
+     * @return array|void Finder results; void when alt AND caption are int status codes, or when 'none' mode is active.
      */
     protected function replaceImageAttributes(QueueItem $qItem, $aiData, $prevAiData = [])
     {
@@ -957,11 +994,36 @@ class OptimizeAiController extends OptimizerBase
      *
      * This function also saves the results! Each result is first passed through
      * WPMLCheckReplace(), so posts in a different WPML language are skipped.
-     * Within each post only <img> tags whose src matches THIS item's file base
-     * (incl. -WxH thumbnail and -scaled variants) are touched. With the
-     * aiPreserve setting enabled, only EMPTY alt/caption attributes are
-     * filled; existing values are left alone. Int values in aiData (status
-     * codes) mean "no generated text" and never replace anything.
+     * Within each post only <img> tags whose src BASENAME matches THIS item's
+     * file base with an anchored regex `^base(-\d+x\d+|-scaled)?\.ext$` are
+     * touched (efbd5ac9). Before this fix the filter was an unanchored URL
+     * substring test and confused e.g. photo.jpg with my-photo.jpg.
+     *
+     * Content-replacement mode is read from
+     * settings->ai_content_replace (efbd5ac9), three states:
+     *   - 'overwrite': always write alt (regardless of aiPreserve).
+     *   - 'missing'  : write alt only when the in-content alt is null/empty
+     *     (dc65f17e — aiPreserve no longer affects the alt branch; it still
+     *     gates the caption branch below).
+     *   - (any other, including 'none'): the alt branch does NOT run here;
+     *     'none' is normally short-circuited earlier in
+     *     replaceImageAttributes() but this method is defensively re-checked.
+     *
+     * Caption branch now only runs when the alt was ALSO replaced
+     * (`$do_replace` is already true) — a caption-only signal never triggers
+     * a tag rebuild, avoiding lossy DOM roundtrips that alter surrounding
+     * whitespace / order without any user-visible payload (16149a3c).
+     *
+     * Int values in aiData (F_STATUS_PREVENTOVERRIDE / EXCLUDESETTING) mean
+     * "no generated text" and never replace anything.
+     *
+     * BUG #56 was fixed in dc65f17e (the 'missing' branch dropped its
+     * `false === $aiPreserve` OR-leg, so a non-empty in-content alt is now
+     * always respected); regression coverage in
+     * tests/Integration/test-AiPipeline.php
+     * (test_missing_mode_preserves_existing_in_content_alt). Side effect:
+     * undoAltData()'s restore now also runs into the missing-only guard —
+     * see BUG #60 there.
      *
      * @param array $results Finder results: arrays with post_id + content.
      * @param array $args    'aiData' (generated data) and 'qItem' (QueueItem).
@@ -1184,6 +1246,24 @@ class OptimizeAiController extends OptimizerBase
      *
      * Note: file renaming that may have occurred during HandleSuccess() is not reversed here.
      *
+     * BUG #58 (open, pinned in tests/Integration/test-AiPipeline.php as
+     * test_pin58_..._pinned_for_deferred_fix): this method routes the post-
+     * content restore through replaceImageAttributes(), which early-returns
+     * when settings->ai_content_replace='none'. So a user who switches to
+     * 'none' AFTER generating AI data finds Undo silently no longer restores
+     * post content — only the Media Library alt (via aiModel->revert()) is
+     * reverted. Fix will need a per-call override or a separate un-do path
+     * that bypasses the content-replace toggle.
+     *
+     * BUG #60 (open, pinned as test_pin60_..._pinned_for_deferred_fix):
+     * since dc65f17e the same applies under the DEFAULT 'missing' mode —
+     * handleReplace()'s missing branch only writes when the in-content alt
+     * is empty, and after an AI run the alt holds the (non-empty) AI text,
+     * so the undo restore is blocked there too. Undo previously worked only
+     * via the buggy #56 aiPreserve leg. Net effect: undo restores post
+     * content only in 'overwrite' mode. Same fix as #58: undo must bypass
+     * the ai_content_replace guards entirely.
+     *
      * @param QueueItem $qItem The queue item for the attachment to revert.
      * @return array Return value of getAltData() containing snippet, generated, original, and current data.
      */
@@ -1311,13 +1391,34 @@ class OptimizeAiController extends OptimizerBase
     }
 
     /**
-     * Generate the AI Data so that it can be shown public-facing. 
-     * 
-     * @param mixed $generated 
-     * @param mixed $current 
-     * @param mixed $original 
-     * @param bool $isPreview 
-     * @return (string[]|mixed)[] 
+     * Generate the AI Data so that it can be shown public-facing.
+     *
+     * Iterates the standard fields (alt, caption, description, post_title,
+     * filebase) present in $generated and:
+     *   - Collects a human-readable label into $dataItems for each field
+     *     whose value is a non-int, non-null string longer than 1 char
+     *     (used by the UX to say "AI generated: Alt, Caption, Filename").
+     *   - Normalises any integer status value that matches
+     *     AiDataModel::F_STATUS_PREVENTOVERRIDE (-4) OR
+     *     AiDataModel::F_STATUS_EXCLUDESETTING (-3) down to a single -3 in
+     *     the returned generated array. Consequence: the browser payload
+     *     CANNOT distinguish "field skipped by aiPreserve" from "field
+     *     excluded in settings" — both look like -3. Any future server-side
+     *     filter that strips these int status codes before dispatch MUST
+     *     gate on is_int($value) rather than on the -3 sentinel specifically,
+     *     or it will silently miss data that was already coalesced here.
+     *
+     * BUG NOTE (EBUG-4, tests/partner-plugins/bug-editor-ai-corruption.md):
+     * this int-in-payload contract is precisely what corrupts core/image
+     * blocks — see AiController::handleSuccess() docblock for the full
+     * chain and the client-side allowlist guard (ea764111,
+     * res/js/screens/screen-media.js UpdateGutenBerg).
+     *
+     * @param mixed $generated
+     * @param mixed $current
+     * @param mixed $original
+     * @param bool $isPreview
+     * @return (string[]|mixed)[]  [$dataItems, $generated] — labels list + normalised generated array.
      */
     public function formatGenerated($generated, $current, $original, $isPreview = false)
     {

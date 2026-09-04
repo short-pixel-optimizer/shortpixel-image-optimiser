@@ -150,6 +150,48 @@ class FrontendDeliveryTest extends SPIO_IntegrationTestCase {
 		$this->assertStringContainsString( '.webp 1024w', $output, 'Webp srcset must keep the 1024w descriptor' );
 	}
 
+	/**
+	 * Regression for efbd5ac9 (FrontImage::buildImage rework): buildImage()
+	 * is also the frontend WebP/AVIF delivery path via parseReplacement()'s
+	 * fallback <img> inside the <picture> block. After the rewrite:
+	 *   - Custom / data-* attributes on the original <img> must survive into
+	 *     the fallback <img> (they went through the same rebuild loop).
+	 *   - The fallback <img> tag ends with a bare `>` (no ` >` trailing).
+	 *
+	 * This is a stability check on the delivery path — a rebuild loop
+	 * regression would silently strip attributes from every WebP-wrapped
+	 * image on the frontend.
+	 */
+	public function test_picture_fallback_img_preserves_custom_attrs_and_ends_with_bare_gt_regression() {
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->makeCompanion( $attachment_id, 'webp' );
+
+		$url  = wp_get_attachment_url( $attachment_id );
+		// Custom attribute + data-* attribute + width — all three should
+		// survive the parseReplacement() rebuild into the fallback <img>.
+		$html = '<img src="' . $url . '" data-role="hero" data-track="123" width="120" alt="ok">';
+
+		$output = $this->convertHtml( $html );
+
+		// Precondition: the <picture> wrap ran.
+		$this->assertStringContainsString( '<picture>', $output );
+
+		// Extract the fallback <img> from inside the <picture>. The rebuild
+		// output ends the tag with '>', so match up to the first '>' after
+		// the '<img'.
+		$this->assertSame( 1, preg_match( '/<img [^>]*>/', $output, $imgMatch ), 'The wrapped fallback <img> must be present in the output' );
+		$imgTag = $imgMatch[0];
+
+		$this->assertStringContainsString( 'data-role="hero"', $imgTag, 'data-role must survive the rebuild loop' );
+		$this->assertStringContainsString( 'data-track="123"', $imgTag, 'data-track must survive the rebuild loop' );
+		$this->assertStringContainsString( 'width="120"', $imgTag, 'width must survive the rebuild loop' );
+		$this->assertStringContainsString( 'alt="ok"', $imgTag );
+
+		// Bare '>' close — no ' >' trailing space. The old algorithm produced
+		// ' > ' which some parsers rendered as an extra text node.
+		$this->assertMatchesRegularExpression( '/[^ ]>/', $imgTag, 'The <img> must end with a bare > (no leading space)' );
+	}
+
 	public function test_inline_css_background_is_rewritten_to_webp() {
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->makeCompanion( $attachment_id, 'webp' );

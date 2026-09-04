@@ -737,4 +737,103 @@ class AjaxHandlersTest extends SPIO_AjaxTestCase {
 			'Regression #46: the single-item redo must re-apply the stored AI alt to the embedding post content.'
 		);
 	}
+
+	// -------------------------------------------------------------------
+	// applyBulkSelection — ai_content_replace three-state persistence
+	// (efbd5ac9)
+	// -------------------------------------------------------------------
+
+	/**
+	 * Base POST fields for applyBulkSelection so each ai_content_replace
+	 * variant test only has to override the interesting field.
+	 */
+	private function bulkSelectionBaseFields(): array {
+		return array(
+			'mediaActive'       => 'true',
+			'customActive'      => 'false',
+			'webpActive'        => 'false',
+			'avifActive'        => 'false',
+			'aiActive'          => 'true',
+			'thumbsActive'      => 'true',
+			'backgroundProcess' => 'false',
+		);
+	}
+
+	/**
+	 * A valid ai_content_replace POST value (efbd5ac9): applyBulkSelection
+	 * must persist it to \wpSPIO()->settings()->ai_content_replace.
+	 */
+	public function test_apply_bulk_selection_persists_valid_ai_content_replace() {
+		$this->_setRole( 'administrator' );
+
+		\wpSPIO()->settings()->ai_content_replace = 'missing'; // baseline
+
+		$response = $this->doScreenAction(
+			'applyBulkSelection',
+			array_merge(
+				$this->bulkSelectionBaseFields(),
+				array( 'ai_content_replace' => 'overwrite' )
+			)
+		);
+
+		$this->assertIsObject( $response, 'Raw: ' . $this->lastRawResponse() );
+		$this->assertTrue( $response->status );
+		$this->assertSame(
+			'overwrite',
+			\wpSPIO()->settings()->ai_content_replace,
+			'A valid ai_content_replace value must be persisted to settings'
+		);
+	}
+
+	/**
+	 * An INVALID ai_content_replace POST value must be silently ignored —
+	 * the whitelist at AjaxController::applyBulkSelection accepts only
+	 * 'none' | 'missing' | 'overwrite', anything else must leave the
+	 * setting at its previous value.
+	 */
+	public function test_apply_bulk_selection_ignores_invalid_ai_content_replace() {
+		$this->_setRole( 'administrator' );
+
+		\wpSPIO()->settings()->ai_content_replace = 'missing'; // baseline
+
+		$response = $this->doScreenAction(
+			'applyBulkSelection',
+			array_merge(
+				$this->bulkSelectionBaseFields(),
+				array( 'ai_content_replace' => 'garbage_value' )
+			)
+		);
+
+		$this->assertIsObject( $response, 'Raw: ' . $this->lastRawResponse() );
+		$this->assertTrue( $response->status );
+		$this->assertSame(
+			'missing',
+			\wpSPIO()->settings()->ai_content_replace,
+			'Invalid ai_content_replace POST value must be ignored (whitelist enforcement)'
+		);
+	}
+
+	/**
+	 * The 'none' value must round-trip identically — separate test because
+	 * the 'none' branch has additional downstream behaviour (early return in
+	 * OptimizeAiController::replaceImageAttributes) that motivated its
+	 * whitelisting.
+	 */
+	public function test_apply_bulk_selection_persists_none_value() {
+		$this->_setRole( 'administrator' );
+
+		\wpSPIO()->settings()->ai_content_replace = 'missing';
+
+		$response = $this->doScreenAction(
+			'applyBulkSelection',
+			array_merge(
+				$this->bulkSelectionBaseFields(),
+				array( 'ai_content_replace' => 'none' )
+			)
+		);
+
+		$this->assertIsObject( $response );
+		$this->assertTrue( $response->status );
+		$this->assertSame( 'none', \wpSPIO()->settings()->ai_content_replace );
+	}
 }

@@ -130,9 +130,12 @@ class FrontImage
 	 *   3. Picks the first `<img>` element; falls back to the first
 	 *      `<source>` for cases where the fragment came from a `<picture>`
 	 *      block. Bails out on truly malformed inputs.
-	 *   4. Iterates the element's attributes, dropping empty values,
-	 *      assigning to the declared property when one exists, and always
-	 *      storing on `$attributes` for later reconstruction.
+	 *   4. Iterates the element's attributes, PRESERVING empty/value-less
+	 *      attributes as the empty string '' (efbd5ac9 — the old algorithm
+	 *      dropped them, losing boolean flags like data-no-lazy / nopin).
+	 *      Assigns to the declared property when one exists; always stores
+	 *      on `$attributes` for later reconstruction. Iteration order is the
+	 *      DOM insertion order, which buildImage() then reuses.
 	 *   5. If `srcset` is empty but `data-srcset` is present, promotes
 	 *      `data-srcset` to be the working srcset value (common with
 	 *      lazy-loading plugins that swap the two).
@@ -466,20 +469,38 @@ class FrontImage
 	}
 
 	/**
-	 * Rebuild the original `<img>` element, preserving the standard
-	 * attributes plus any extra ones the caller had on the source markup.
+	 * Rebuild the original `<img>` element preserving DOM insertion order.
 	 *
-	 * Rules:
-	 *   - `id`, `height`, `width`, `srcset`, `sizes`, `class` are only
-	 *     emitted when non-null.
-	 *   - `alt` is ALWAYS emitted (even empty) for screen-reader compatibility.
-	 *   - Any other attribute (e.g. `data-*`, custom tags) that wasn't
-	 *     already handled by getImageAttributes()'s deny-list is passed
-	 *     through untouched.
+	 * Rewritten in efbd5ac9 to iterate the original $attributes map rather
+	 * than a fixed list of standard attributes. Rules:
+	 *   - Iterate $attributes in the order populated by loadImageDom() (DOM
+	 *     insertion order — so the emitted tag keeps the source ordering,
+	 *     load-bearing for post_content byte-stability checks after AI runs).
+	 *   - For each attribute, prefer the declared-property value (alt, src,
+	 *     srcset, class, …) over the original $attributes value when the
+	 *     property has been set (non-null). This lets callers mutate e.g.
+	 *     $fi->alt = 'new' and see it in the output.
+	 *   - `src` runs through esc_attr so `&` re-escapes back to `&amp;`
+	 *     — otherwise entity-encoded query strings would be corrupted.
+	 *   - Empty / value-less attributes are emitted as BARE booleans (no
+	 *     ="") — this preserves data-no-lazy, nopin, etc. through a
+	 *     parse+rebuild cycle. EXCEPTION: `alt` is always emitted with the
+	 *     `="..."` form even when empty (`alt=""`), per ff2305e4 — bare
+	 *     `alt` is invalid HTML and breaks screen-reader compatibility.
+	 *   - If the original had no `alt`, one is appended as `alt=""` before
+	 *     the tag closes.
+	 *   - The tag ends with a bare `>` — no trailing ` >` (that produced
+	 *     visible whitespace in some renderers before this rewrite).
 	 *
-	 * Values are run through `esc_attr` for output safety.
+	 * Also invoked by the frontend WebP/AVIF delivery pipeline via
+	 * parseReplacement() (picture fallback img) — regressions here affect
+	 * every <picture>-wrapped image on the frontend as well.
 	 *
-	 * @return string The `<img ...>` markup.
+	 * BUG? The Log::addTemp() call inside the loop is a debug leftover that
+	 * fires on every rebuilt <img> attribute on the frontend delivery hot
+	 * path — reported to Bas separately for removal.
+	 *
+	 * @return string The `<img ...>` markup, ending in a bare `>`.
 	 */
 	public function buildImage()
 	{
@@ -545,12 +566,18 @@ class FrontImage
 	/**
 	 * Return the "leftover" attributes from `$attributes` — everything the
 	 * caller had on the original element that isn't part of the standard
-	 * set already handled by buildImage().
+	 * set.
 	 *
 	 * The deny-list covers `src`, `data-src`, `data-lazy-src`, `srcset`,
 	 * `sizes`, plus the standard-attribute set (id, alt, height, width,
-	 * srcset, sizes, class) — these are all emitted explicitly by
-	 * buildImage() so echoing them again would produce duplicates.
+	 * srcset, sizes, class).
+	 *
+	 * Since efbd5ac9, buildImage() emits ALL attributes (including the
+	 * deny-listed ones) via its insertion-order loop over $attributes —
+	 * getImageAttributes()'s deny-list is now redundant for buildImage()'s
+	 * primary loop. It remains in use for the trailing "leftover" pass that
+	 * appends attributes NOT seen in the original DOM (edge case where a
+	 * property was set post-parse on an attribute that never existed).
 	 *
 	 * @return array<string, string>
 	 */

@@ -425,6 +425,107 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 		$this->assertCount( 2, $result );
 	}
 
+	/**
+	 * EBUG-4 (customer report tests/partner-plugins/bug-editor-ai-corruption.md):
+	 * formatGenerated() normalises F_STATUS_PREVENTOVERRIDE (-4, aiPreserve-skipped)
+	 * to -3 in the returned generated array — the SAME int the browser payload
+	 * shows for F_STATUS_EXCLUDESETTING (-3, field disabled in settings). After
+	 * this normalisation the client CANNOT distinguish "preserve-skipped" from
+	 * "excluded by settings" — both fields look identical downstream.
+	 *
+	 * Consequence for any future SERVER-SIDE defense-in-depth fix (see
+	 * AiController::handleSuccess() docblock): stripping int statuses out of the
+	 * ajax payload MUST gate on is_int($value), NOT on the specific -3 sentinel.
+	 * A filter that only strips -3 would still let a pre-normalisation -4 slip
+	 * through if the code path skips formatGenerated(), and a caption field set to
+	 * some other status int (e.g. F_STATUS_OK = 1) would also survive.
+	 */
+	public function test_formatGenerated_normalises_preventoverride_to_minus_three_and_caption_too() {
+		$ctrl      = new OptimizeAiController();
+		$generated = [
+			'alt'         => 'A generated alt.',
+			'caption'     => AiDataModel::F_STATUS_PREVENTOVERRIDE, // -4, aiPreserve blocked
+			'description' => null,
+			'post_title'  => null,
+			'filebase'    => null,
+		];
+
+		[ , $out ] = $ctrl->formatGenerated( $generated, [], [] );
+
+		// The -4 becomes -3 — indistinguishable from EXCLUDESETTING for the browser.
+		$this->assertSame( -3, $out['caption'], 'F_STATUS_PREVENTOVERRIDE (-4) must be normalised to -3 in the returned generated array (EBUG-4).' );
+		$this->assertIsInt( $out['caption'], 'Normalised value is still an int (any is_int() filter downstream must still catch it).' );
+
+		// Sanity: the alt string was left untouched.
+		$this->assertSame( 'A generated alt.', $out['alt'] );
+	}
+
+	/**
+	 * formatGenerated() must leave STRING values untouched, and their labels
+	 * must appear in $dataItems while integer statuses produce no label
+	 * entry (labels drive the user-visible "AI generated: Alt, Caption, …"
+	 * summary — an int status means "nothing was generated for this field",
+	 * so it must NOT be advertised as generated).
+	 */
+	public function test_formatGenerated_string_values_survive_and_int_statuses_produce_no_label() {
+		$ctrl      = new OptimizeAiController();
+		$generated = [
+			'alt'         => 'A dog runs.',
+			'caption'     => AiDataModel::F_STATUS_EXCLUDESETTING, // -3, setting-disabled
+			'description' => 'A dog running across the field.',
+			'post_title'  => null,
+			'filebase'    => null,
+		];
+
+		[ $dataItems, $out ] = $ctrl->formatGenerated( $generated, [], [] );
+
+		// Strings untouched.
+		$this->assertSame( 'A dog runs.', $out['alt'] );
+		$this->assertSame( 'A dog running across the field.', $out['description'] );
+
+		// Labels present for the two string fields, absent for the int-status field.
+		$this->assertContains( __( 'Alt', 'shortpixel-image-optimiser' ), $dataItems );
+		$this->assertContains( __( 'Description', 'shortpixel-image-optimiser' ), $dataItems );
+		$this->assertNotContains( __( 'Caption', 'shortpixel-image-optimiser' ), $dataItems, 'Int-status field must produce no label entry.' );
+	}
+
+	/**
+	 * PAYLOAD CONTRACT (EBUG-1, tests/partner-plugins/bug-editor-ai-corruption.md):
+	 * integers CAN appear in the generated data that OptimizeAiController hands
+	 * to the browser via the ajax result. formatGenerated() does NOT strip them
+	 * out — it only normalises -4 to -3. The Gutenberg image-block corruption
+	 * described in the customer report is guarded ONLY by the CLIENT-SIDE
+	 * string-only allowlist in res/js/screens/screen-media.js UpdateGutenBerg
+	 * (commit ea764111). If a future defense-in-depth fix ever strips int
+	 * statuses on the server (in AiController::handleSuccess() or here in
+	 * formatGenerated()), this test WILL and MUST fail — flip the assertion
+	 * from assertIsInt to assertArrayNotHasKey (or equivalent) so it locks in
+	 * the new server-side contract, and note that the client-side allowlist
+	 * becomes redundant belt-and-braces.
+	 */
+	public function test_formatGenerated_leaks_int_status_into_browser_payload_contract() {
+		$ctrl      = new OptimizeAiController();
+		$generated = [
+			'alt'         => AiDataModel::F_STATUS_EXCLUDESETTING, // -3, setting-disabled
+			'caption'     => 'A dog runs.',
+			'description' => null,
+			'post_title'  => null,
+			'filebase'    => null,
+		];
+
+		[ , $out ] = $ctrl->formatGenerated( $generated, [], [] );
+
+		// CONTRACT: the -3 int survives into $out and is still an int (payload leak).
+		$this->assertArrayHasKey( 'alt', $out );
+		$this->assertIsInt(
+			$out['alt'],
+			'Server-side leak of int status into the aiData payload is the current contract; ' .
+			'client-side screen-media.js UpdateGutenBerg (ea764111) is the ONLY guard. ' .
+			'FLIP this test when the server side ever strips ints (defense-in-depth fix).'
+		);
+		$this->assertSame( -3, $out['alt'] );
+	}
+
 	/*
 	 * formatResultData — numeric-1 → empty string, prefix/postfix, original_filebase
 	 *

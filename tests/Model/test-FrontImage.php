@@ -83,16 +83,18 @@ class FrontImageTest extends WP_UnitTestCase {
 		$this->assertFalse( $this->getPrivate( $fi, 'image_loaded' ) );
 	}
 
-	public function test_loadImageDom_skips_empty_attribute_values() {
+	public function test_loadImageDom_preserves_empty_attribute_values() {
+		// FLIPPED 2026-09-03: efbd5ac9 fixed the lossy behavior where empty /
+		// value-less attributes (boolean flags like data-no-lazy, nopin) were
+		// dropped during parse+rebuild. Empty values are now stored as ''.
 		$url = $this->sampleUrl();
 		$fi  = new FrontImage( '<img src="' . $url . '" alt="" class="" />' );
 
-		// Empty attributes are not stored on the declared properties nor in $attributes.
-		$this->assertNull( $fi->alt );
-		$this->assertNull( $fi->class );
+		$this->assertSame( '', $fi->alt );
+		$this->assertSame( '', $fi->class );
 		$attributes = $this->getPrivate( $fi, 'attributes' );
-		$this->assertArrayNotHasKey( 'alt', $attributes );
-		$this->assertArrayNotHasKey( 'class', $attributes );
+		$this->assertSame( '', $attributes['alt'] );
+		$this->assertSame( '', $attributes['class'] );
 	}
 
 	public function test_loadImageDom_promotes_data_srcset_when_srcset_is_missing() {
@@ -346,6 +348,133 @@ class FrontImageTest extends WP_UnitTestCase {
 		$fi = new FrontImage( '<img src="' . $this->sampleUrl() . '" />' );
 
 		$this->assertStringContainsString( 'alt=""', $fi->buildImage() );
+	}
+
+	/**
+	 * Regression for efbd5ac9: boolean / value-less attributes (data-no-lazy,
+	 * nopin, etc.) must survive a parse+rebuild as BARE attributes — the old
+	 * behavior dropped them entirely, breaking Pinterest / lazy-loading opt-outs.
+	 * The FrontImage rebuild loop must emit the name without an ="" value, EXCEPT
+	 * for `alt` which stays `alt=""` (ff2305e4, see separate test below).
+	 */
+	public function test_buildImage_preserves_bare_boolean_attributes_regression_bug3() {
+		$url = $this->sampleUrl();
+		$fi  = new FrontImage(
+			'<img src="' . $url . '" data-no-lazy nopin />'
+		);
+
+		$out = $fi->buildImage();
+
+		$this->assertMatchesRegularExpression(
+			'/\sdata-no-lazy(?![=\w-])/',
+			$out,
+			'data-no-lazy must be emitted as a bare attribute (no ="")'
+		);
+		$this->assertMatchesRegularExpression(
+			'/\snopin(?![=\w-])/',
+			$out,
+			'nopin must be emitted as a bare attribute (no ="")'
+		);
+		$this->assertStringNotContainsString( 'data-no-lazy=""', $out );
+		$this->assertStringNotContainsString( 'nopin=""', $out );
+	}
+
+	/**
+	 * Regression for efbd5ac9: buildImage() now iterates the ORIGINAL
+	 * $attributes map in insertion order rather than emitting a fixed list
+	 * of standard attributes first. Any custom order the source markup used
+	 * must be preserved so post-content byte comparisons after AI runs
+	 * remain stable.
+	 */
+	public function test_buildImage_preserves_original_attribute_insertion_order() {
+		$url = $this->sampleUrl();
+		$fi  = new FrontImage(
+			'<img data-x="1" class="foo" src="' . $url . '" alt="hi" width="10" />'
+		);
+
+		$out = $fi->buildImage();
+
+		$posDataX  = strpos( $out, 'data-x=' );
+		$posClass  = strpos( $out, 'class=' );
+		$posSrc    = strpos( $out, 'src=' );
+		$posAlt    = strpos( $out, 'alt=' );
+		$posWidth  = strpos( $out, 'width=' );
+
+		$this->assertNotFalse( $posDataX );
+		$this->assertLessThan( $posClass, $posDataX,  'data-x must precede class' );
+		$this->assertLessThan( $posSrc,   $posClass,  'class must precede src' );
+		$this->assertLessThan( $posAlt,   $posSrc,    'src must precede alt' );
+		$this->assertLessThan( $posWidth, $posAlt,    'alt must precede width' );
+	}
+
+	/**
+	 * Regression for efbd5ac9: src values with entity-encoded ampersands
+	 * (`&amp;`) must survive rebuild — the src is run through esc_attr which
+	 * re-escapes `&` back to `&amp;`. The old algorithm would frequently
+	 * corrupt entities in URLs with query strings.
+	 */
+	public function test_buildImage_escapes_ampersand_in_src_back_to_amp_entity_regression_bug3() {
+		$url = $this->sampleUrl( 'sample.jpg?w=100&amp;h=50' );
+		$fi  = new FrontImage( '<img src="' . $url . '" />' );
+
+		$out = $fi->buildImage();
+
+		$this->assertMatchesRegularExpression(
+			'/src="[^"]*sample\.jpg\?w=100&amp;h=50"/',
+			$out,
+			'The &amp; entity in src must survive rebuild'
+		);
+	}
+
+	/**
+	 * Regression for efbd5ac9: buildImage() output must end with a bare `>`
+	 * (no `' > '` with trailing space) — the old algorithm concatenated the
+	 * closing chevron with surrounding whitespace and produced invalid-ish
+	 * `<img ... >` markup that some parsers rendered oddly.
+	 */
+	public function test_buildImage_ends_with_bare_gt_no_trailing_space() {
+		$fi = new FrontImage( '<img src="' . $this->sampleUrl() . '" alt="ok" />' );
+
+		$out = $fi->buildImage();
+
+		$this->assertStringEndsWith( '>', $out );
+		$this->assertStringNotContainsString( ' >', $out, 'No stray space before the closing >' );
+	}
+
+	/**
+	 * Regression for ff2305e4 ("Fix for Alt"): an alt attribute with an empty
+	 * value must be emitted as `alt=""` (screen-reader-valid), NOT as a bare
+	 * `alt`. Every other value-less attribute (data-no-lazy, nopin) does emit
+	 * bare; alt is the specific exception at FrontImage.php:513.
+	 */
+	public function test_buildImage_emits_alt_as_empty_string_form_even_when_value_is_empty_regression_ff2305e4() {
+		$url = $this->sampleUrl();
+		$fi  = new FrontImage( '<img src="' . $url . '" alt="" />' );
+
+		$out = $fi->buildImage();
+
+		$this->assertStringContainsString( 'alt=""', $out );
+		$this->assertDoesNotMatchRegularExpression(
+			'/\salt(?![=\w-])/',
+			$out,
+			'alt must NOT be emitted as a bare attribute — always alt="" form'
+		);
+	}
+
+	/**
+	 * Regression: the $caption protected property added in efbd5ac9 is a
+	 * PLACEHOLDER only. It is not an HTML attribute; buildImage() must
+	 * never leak `caption="..."` into the emitted <img>. If this test fails,
+	 * the rebuild loop has started iterating declared properties rather than
+	 * the $attributes map — a lossy regression.
+	 */
+	public function test_buildImage_never_leaks_caption_property_as_html_attribute() {
+		$fi = new FrontImage( '<img src="' . $this->sampleUrl() . '" alt="hi" />' );
+		$fi->caption = 'some caption text';
+
+		$out = $fi->buildImage();
+
+		$this->assertStringNotContainsString( 'caption=', $out, 'caption is not an HTML attribute — must not appear in <img>' );
 	}
 
 	/*
