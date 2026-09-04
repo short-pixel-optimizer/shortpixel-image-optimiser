@@ -106,29 +106,6 @@ Release Date: January 23, 2025
 
 Update now to take full advantage of these enhancements and new features! 🌟
 
-= 6.1.5 =
-
-🛡️ The AI & Replacer Stability Update
-
-Release Date: September 02, 2026
-
-🛠️ Fixes & Improvements
-
-* Frontend HTML Preservation: Fixed lossy rebuilding of <img>/<source> markup — boolean attributes (e.g. `loading`, `decoding`, `data-*` flags) are preserved, attribute order is retained, `src` is properly escaped and stray trailing characters removed. (class/Model/FrontImage.php)
-* Safe Post Updates: Replacer updater now uses WordPress APIs (`get_post()` + `wp_update_post()`), preserves `post_modified` timestamps, and clears post cache to ensure hooks, revisions and caches fire correctly. (build/shortpixel/replacer2/src/Classes/Updater.php)
-* AI Content Replacement Controls: Added a three-state `ai_content_replace` setting (`none`, `missing`, `overwrite`) and UI to control whether AI-generated alt/caption text is applied. (class/Model/SettingsModel.php, class/view/settings/part-ai.php)
-* Precise Filename Matching: Tightened matching logic for image filename comparisons to avoid accidental collisions between similarly named files (e.g. `photo.jpg` vs `my-photo.jpg`). (class/Controller/Optimizer/OptimizeAiController.php)
-* Caption & Rebuild Behaviour: Prevented caption-only AI responses from forcing unnecessary post rebuilds; alt-text-only or caption+alt replacement behavior is respected per settings. (class/Controller/Optimizer/OptimizeAiController.php)
-* Bulk UI Integration: Exposed content-replacement option in bulk UI and AJAX flow so operators can choose replacement behavior per-run. (class/view/bulk/part-selection.php, res/js/screens/screen-bulk.js, class/Controller/AjaxController.php)
-
-✅ Tests & Validation
-
-* Targeted unit tests for the AI replacement controller were run locally and passed: `OptimizeAiController` tests — 36 tests, 43 assertions (green).
-
-Notes
-
-* These changes are applied in the working tree but not committed or pushed. If you want, I can prepare a branch and a PR containing these edits and the changelog entry for review.
-
 = 6.0.5 =
 Release Date: January 16, 2025
 
