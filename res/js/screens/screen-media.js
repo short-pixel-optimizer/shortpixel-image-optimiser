@@ -1059,6 +1059,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 		var attach_id = resultItem.item_id;
 		var aiData = resultItem.aiData;
+console.log('Update GB', attach_id, aiData); 
 
 		if (!wp.data || !wp.data.select('core')) {
 			return false;

@@ -602,9 +602,11 @@ abstract class Queue
                       }
                       elseif ('bulk-undoAI' == $operation)
                       {
-                         $qObject = new \stdClass;
-                         $qObject->action = 'undoAI';
-                         $queue[] = ['id' => $mediaItem->get('id'), 'value' => $qObject];
+                         $qItem = QueueItems::getImageItem($mediaItem);
+                         $qItem->undoAltDataAction();
+                         $queue[] = $qItem->returnEnqueue();
+
+                         
                       }
                       elseif('redoAiReplacement' === $operation)
                       {

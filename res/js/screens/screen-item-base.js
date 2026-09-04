@@ -344,7 +344,21 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 				}
 			}
 			this.FetchAltView(original,id);
+/*
+			let imageItem = {
+				item_id: id, 
+				aiData: original,
+				message: '', 
+				apiName: 'ai', 
+			}; */
 
+	       this.processor.broadcaster.postMessage({
+                'reason' : 'handleImage', 
+                'imageItem': data, 
+                'type' : 'media', 
+				
+            });
+			//this.UpdateGutenBerg(resultItem);
 		}.bind(this), {once: true});
 
 	/*	if (!this.processor.CheckActive())
@@ -415,6 +429,11 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 	}
 	
 	AttachAiInterface()
+	{
+		 console.error('not implemented for this view!');
+	}
+
+	UpdateGutenBerg(resultItem)
 	{
 		 console.error('not implemented for this view!');
 	}

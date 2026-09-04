@@ -278,6 +278,14 @@ class QueueItem
        $this->item_count = 0;
    }
 
+
+   public function undoAltDataAction()
+   {
+       $this->newAction(); 
+       $this->data->action = 'undoAltData'; 
+       $this->item_count = 0;
+   }
+
    /**
     * Schedule this slot to re-run the in-content AI text replacement from
     * the STORED aipostmeta data (no new API request).

@@ -411,6 +411,7 @@ class Replacer
 		if (true === is_serialized($content)) {
 			$serialized_content = $content; // use to return content back if incomplete classes are found, prevent destroying the original information
 
+	
 			//if (true === $strict_check) {
 				$args = array('allowed_classes' => false);
 			//} else {
@@ -459,6 +460,7 @@ class Replacer
 				} else { // else just return the content.
 					return $content;
 				}
+
 			}
 			foreach ($content as $key => $value) {
 				$content->{$key} = $this->replaceContent($value, $search, $replace, true, $strict_check);
@@ -481,6 +483,8 @@ class Replacer
 		}
 		return $content;
 	}
+
+
 
 	/** Check if path is allowed within openbasedir restrictions. This is an attempt to limit notices in file funtions if so.  Most likely the path will be relative in that case.
 	 * @param String Path as String

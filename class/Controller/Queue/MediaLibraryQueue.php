@@ -311,7 +311,6 @@ class MediaLibraryQueue extends Queue
        $prepare[] = $limit;
 
        $sql = $wpdb->prepare($sql, $prepare);
-Log::addTemp('Prepare AI ', $sql);
        $results = $wpdb->get_col($sql);
 
        $items = [];

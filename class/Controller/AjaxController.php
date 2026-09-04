@@ -1545,7 +1545,7 @@ class AjaxController
 
 
 		$queueItem = new QueueItem(['imageModel' => $imageModel]);
-		$queueItem->getAltDataAction(); 
+		$queueItem->undoAltDataAction(); 
 
 		$api = $queueItem->getApiController('getAltData'); 
 
@@ -1556,7 +1556,12 @@ class AjaxController
 			 return $this->requestAlt($json, $data);
 		} 
 
-		$json->$type = $altData;
+		$queueItem->addResult([
+			'apiName' => 'ai', 
+
+		]); 
+
+		$json->$type = $queueItem->result();   //$altData;
 		$json->status = true;
 		
 		return $json;

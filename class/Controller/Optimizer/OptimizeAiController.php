@@ -529,11 +529,9 @@ class OptimizeAiController extends OptimizerBase
 
         if ($language['language_code'] !== $language_queue['language_code'])
         {
-            Log::addTemp('wrong language ( ' . $language['language_code'] . ' - '  . $language_queue['language_code'] . ' ) - not replacing this page ', $post_id); 
              return false; 
         } 
 
-        Log::addTemp("WPML Approved $post_id - $queue_item_id ");
         return true; 
     }
 
@@ -553,7 +551,7 @@ class OptimizeAiController extends OptimizerBase
      * @param array $aiData Generated AI data (alt / caption are strings, or int status codes when not generated).
      * @return array|void Finder results; void when alt AND caption are int status codes.
      */
-    protected function replaceImageAttributes(QueueItem $qItem, $aiData)
+    protected function replaceImageAttributes(QueueItem $qItem, $aiData, $prevAiData = [])
     {
         // New setting that allows skipping post-content modifications entirely.
         $contentReplace = \wpSPIO()->settings()->ai_content_replace ?? 'missing';
@@ -564,12 +562,6 @@ class OptimizeAiController extends OptimizerBase
         if (is_int($aiData['alt']) && is_int($aiData['caption'])) {
             Log::addInfo('Alt and Caption returned integer/status, not replacing : ' . $qItem->item_id );
             return;
-        }
-
-        if (false !== wp_check_post_lock($qItem->item_id))
-        {
-           Log::addDebug('Replace Image Attributes - Post lock is active, skipping'); 
-           return;
         }
 
         // Replacer Part 
@@ -595,6 +587,7 @@ class OptimizeAiController extends OptimizerBase
         $finder = $replacer2->Finder(['base_url' => $base_url, 'callback' => [$this, 'handleReplace'], 'return_data' => [
             'aiData' => $aiData,
             'qItem' => $qItem,
+            'prevAiData' => $prevAiData,
         ]]);
 
         $results = $finder->posts();
@@ -980,12 +973,27 @@ class OptimizeAiController extends OptimizerBase
         $replacer2 = \ShortPixel\Replacer\Replacer::getInstance();
         $aiData = $args['aiData'];
         $qItem = $args['qItem'];
+        $prevAiData = $args['prevAiData'];
 
         $imageModel = $qItem->imageModel;
+
+        $aiPreserve = \wpSPIO()->settings()->aiPreserve; 
+        // Determine content-replacement mode: 'missing' or 'overwrite'.
+        $contentReplace = \wpSPIO()->settings()->ai_content_replace ?? 'missing';
+
+        $action = $qItem->data()->action; 
+
 
         foreach ($results as $result) {
             $post_id = $result['post_id'];
             $content = $result['content'];
+
+            if (false !== wp_check_post_lock($post_id))
+            {
+                Log::addDebug('Replace Image Attributes - Post lock is active, skipping'); 
+                continue; 
+            }
+
 
             // Check if language is correct in case of WPML.  Don't replace different language pages. 
             if (false === $this->WPMLCheckReplace($post_id, $qItem->item_id))
@@ -1021,19 +1029,31 @@ class OptimizeAiController extends OptimizerBase
                     continue;
                 }
 
-
-               $aiPreserve = \wpSPIO()->settings()->aiPreserve; 
-               // Determine content-replacement mode: 'missing' or 'overwrite'.
-               $contentReplace = \wpSPIO()->settings()->ai_content_replace ?? 'missing';
-
                 /*   if (strpos($src, $aiData['replace_filebase']) === false)
              {
                 continue; 
              } */
 
                 $do_replace = false;
+                $altIsSet = (isset($aiData['alt']) && false === is_int($aiData['alt'])) ? true : false; 
+                $isUndo = ('undoAltData' === $action); 
 
-                if (isset($aiData['alt']) && false === is_int($aiData['alt'])) {
+                //undoAltData
+                if ($isUndo && $altIsSet)
+                {
+                    $prevAlt = isset($prevAiData['alt']) ? $prevAiData['alt'] : '';
+
+                    if ($contentReplace === 'overwrite') {
+                        $frontImage->alt = $aiData['alt'];
+                        $do_replace = true;
+                    } elseif ($contentReplace === 'missing') {
+                        if ( trim($frontImage->alt) == trim($prevAlt) ) {
+                            $frontImage->alt = $aiData['alt'];
+                            $do_replace = true;
+                        }
+                    }                    
+                }
+                elseif ($altIsSet){
                     if ($contentReplace === 'overwrite') {
                         $frontImage->alt = $aiData['alt'];
                         $do_replace = true;
@@ -1183,11 +1203,13 @@ class OptimizeAiController extends OptimizerBase
             'replace_filebase' => $generated['filebase'],
         ];
 
+        
+
         $aiModel->revert();
         AiDataModel::flushModelCache($item_id);
 
         // The results is what the system finds on used images in the database for this base url. 
-        $this->replaceImageAttributes($qItem, $aiData);
+        $this->replaceImageAttributes($qItem, $aiData, $generated);
 
 
         // @todo This probably needs to reverse file renaming as well? 
@@ -1199,6 +1221,10 @@ class OptimizeAiController extends OptimizerBase
             'is_error' => false,
             'message' => __('AI Data reverted ', 'shortpixel-image-optimiser'),
             'apiStatus' => ApiController::STATUS_NOT_API,
+            'fileStatus' => ImageModel::FILE_STATUS_SUCCESS, 
+            'aiData' => $aiData, 
+            
+
         ]);
         $this->finishItemProcess($qItem);
 

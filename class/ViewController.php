@@ -135,7 +135,6 @@ class ViewController extends Controller
     {
       // See method docblock — the full $_POST array (including any API key
       // field on the site settings form) reaches the debug log here.
-      Log::addInfo('Check Post succeeds nonce check, action : ' . $this->form_action, array($_POST) );
 
       check_admin_referer( $this->form_action, 'sp-nonce' ); // extra check, when we are wrong here, it dies.
 

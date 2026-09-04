@@ -515,7 +515,6 @@ class FrontImage
 				continue;
 			}
 
-			Log::addTemp("Replacement - $name - $value");
 			$output .= ' ' . $name . '="' . \esc_attr($value) . '"';
 		}
 
