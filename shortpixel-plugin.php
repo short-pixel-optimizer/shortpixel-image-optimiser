@@ -476,6 +476,9 @@ class ShortPixelPlugin {
 		add_action( 'wp_ajax_shortpixel_ajaxRequest', array( AjaxController::getInstance(), 'ajaxRequest' ) );
 		add_action( 'wp_ajax_shortpixel_settingsRequest', array( AjaxController::getInstance(), 'settingsRequest'));
 
+		// NPS-style survey embedded in ReviewNotice (class/Model/AdminNotices/ReviewNotice.php)
+		add_action( 'wp_ajax_shortpixel_survey_submit', array( AjaxController::getInstance(), 'ajax_submitSurvey' ) );
+
 	}
 
 
