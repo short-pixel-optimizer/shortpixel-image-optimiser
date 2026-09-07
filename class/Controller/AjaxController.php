@@ -2948,4 +2948,185 @@ class AjaxController
 
 		return $json;
 	}
+
+	/**
+	 * AJAX handler for the  survey embedded in ReviewNotice
+	 * (class/Model/AdminNotices/ReviewNotice.php).
+	 *
+	 * Registered as `wp_ajax_shortpixel_survey_submit` in
+	 * ShortPixelPlugin::ajaxHooks(). Requires the `shortpixel_survey_submit`
+	 * nonce and the `is_admin_user` capability (manage_options).
+	 *
+	 * POST params:
+	 * - survey_action  string  One of 'rating', 'feedback', 'dismiss'.
+	 * - rating         int     1-10, required for 'rating' and 'feedback'.
+	 * - feedback       string  Free text, only used for 'feedback'.
+	 *
+	 * Once the survey status is 'answered' or 'dismissed' further calls are
+	 * refused, so a user cannot resubmit or replay the request.
+	 *
+	 * Note: a 1-8 'rating' click already forwards the bare score externally
+	 * (see sendSurveyFeedback()) even though the survey status stays
+	 * 'pending' until the feedback textarea is submitted - this is so the
+	 * score isn't lost if the user abandons the flow before writing anything.
+	 *
+	 * @return void  Always exits via wp_send_json().
+	 */
+	public function ajax_submitSurvey()
+	{
+		$this->checkNonce('shortpixel_survey_submit');
+		$this->checkActionAccess('survey_submit', 'is_admin_user');
+
+		$settings = \wpSPIO()->settings();
+
+		$json = new \stdClass;
+		$json->status = true;
+
+		// Idempotency guard - a closed survey cannot be reopened or replayed.
+		if (in_array($settings->surveyStatus, array('answered', 'dismissed'), true)) {
+			$json->status = false;
+			$json->message = __('This survey has already been closed.', 'shortpixel-image-optimiser');
+			$this->send($json);
+		}
+
+		$surveyAction = isset($_POST['survey_action']) ? sanitize_key($_POST['survey_action']) : false;
+
+		switch ($surveyAction) {
+
+			case 'dismiss':
+				$settings->surveyStatus = 'dismissed';
+				$settings->surveyAnsweredAt = time();
+				break;
+
+			case 'rating':
+			case 'feedback':
+				$rating = isset($_POST['rating']) ? intval($_POST['rating']) : 0;
+				$rating = max(1, min(10, $rating)); // clamp to the 1-10 scale, reject anything else.
+				$settings->surveyScore = $rating;
+
+				if ($surveyAction === 'rating') {
+					if ($rating >= 9) {
+						$settings->surveyStatus = 'answered';
+						$settings->surveyAnsweredAt = time();
+						$json->cta = 'review';
+					} else {
+						// keep the survey open (status stays
+						// 'pending') until the feedback form is submitted, but send
+						// the bare score right away: if the user closes the tab or
+						// clicks the "X" instead of filling in the textarea, we
+						// still keep the signal instead of losing it
+						$this->sendSurveyFeedback($rating, '', 'rating');
+						$json->cta = 'feedback';
+					}
+				} else { // 'feedback' - final submit with rating + free text.
+					$feedback = isset($_POST['feedback']) ? sanitize_textarea_field(wp_unslash($_POST['feedback'])) : '';
+					$feedback = mb_substr($feedback, 0, 2000); // hard cap, avoid abuse payloads.
+
+					$settings->surveyFeedback = $feedback;
+					$settings->surveyStatus = 'answered';
+					$settings->surveyAnsweredAt = time();
+
+					// Second, final call for the same 'unique'+'score' pair - the
+					// 'stage' field lets the backend tell this apart from the
+					// earlier bare-score ping above.
+					$this->sendSurveyFeedback($rating, $feedback, 'feedback_submitted');
+
+					$json->cta = 'thanks';
+				}
+				break;
+
+			default:
+				$json->status = false;
+				$json->message = __('Unknown survey action.', 'shortpixel-image-optimiser');
+				break;
+		}
+
+		$this->send($json);
+	}
+
+	/**
+	 * Forward a low/medium NPS score (1-8) - and, when available, its
+	 * free-text feedback - to the ShortPixel feedback endpoint
+	 * Called up to twice per survey response:
+	 * - bare score on the 1-8 click (so abandon-after-click still signals)
+	 * - score + feedback text on Submit
+	 *
+	 * @param int    $rating   1-10 score given by the user.
+	 * @param string $feedback Free-text feedback, already sanitised/capped. Empty for the bare-score ping.
+	 * @param string $stage    Unused for the API; kept for call-site clarity (rating vs feedback_submitted).
+	 * @return void
+	 */
+	private function sendSurveyFeedback($rating, $feedback, $stage = 'feedback_submitted')
+	{
+		if (! function_exists('get_plugin_data')) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+
+		$pluginData = get_plugin_data(SHORTPIXEL_PLUGIN_FILE);
+		$details = 'Rating: ' . $rating;
+		if ($feedback !== '') {
+			$details .= ' - Feedback: ' . $feedback;
+		}
+
+		//  posts to v2/feedback.php (and same payload shape as SPAI)
+		$body = array(
+			'wordpress' => array(
+				'deactivated_plugin' => array(
+					'slug' => isset($pluginData['TextDomain']) ? $pluginData['TextDomain'] : 'shortpixel-image-optimiser',
+					'name' => isset($pluginData['Name']) ? $pluginData['Name'] : 'ShortPixel Image Optimizer',
+					'version' => isset($pluginData['Version']) ? $pluginData['Version'] : SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
+					'author' => isset($pluginData['AuthorName']) ? $pluginData['AuthorName'] : '',
+					'uninstall_reason' => 'rating',
+					'uninstall_details' => $details,
+				),
+			),
+			'user' => array(
+				'email' => '',
+				'first_name' => '',
+				'last_name' => '',
+				'domain' => '',
+			),
+		);
+
+		// Survey is not anonymous - include the current admin
+		$user = wp_get_current_user();
+		if ($user && $user->exists()) {
+			$body['user']['email'] = $user->user_email;
+			$body['user']['first_name'] = $user->first_name;
+			$body['user']['last_name'] = $user->last_name;
+			$body['user']['domain'] = wp_parse_url(home_url(), PHP_URL_HOST);
+		}
+
+		$apiKey = ApiKeyController::getInstance()->forceGetApiKey();
+		if (! empty($apiKey)) {
+			$body['key'] = $apiKey;
+		}
+
+		$response = wp_remote_post('https://' . SHORTPIXEL_API . '/v2/feedback.php', array(
+			'method' => 'POST',
+			'timeout' => 20,
+			'redirection' => 5,
+			'httpversion' => '1.1',
+			'blocking' => true,
+			'body' => $body,
+			'user-agent' => 'MT/EPSILON-CUSTOMER-TRACKING/' . esc_url(home_url()),
+		));
+
+		if (is_wp_error($response)) {
+			Log::addWarn('Survey feedback could not be sent to ShortPixel', array(
+				'error' => $response,
+				'stage' => $stage,
+			));
+			return;
+		}
+
+		$code = wp_remote_retrieve_response_code($response);
+		if ($code < 200 || $code >= 300) {
+			Log::addWarn('Survey feedback endpoint returned unexpected HTTP status', array(
+				'status' => $code,
+				'body' => wp_remote_retrieve_body($response),
+				'stage' => $stage,
+			));
+		}
+	}
 }

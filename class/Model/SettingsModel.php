@@ -73,6 +73,10 @@ class SettingsModel extends \ShortPixel\Model
 				'httpProto' => ['s' => 'string', 'default' => 'https'], // Less than optimal setting for using http(s)
 				'downloadProto' => ['s' => 'string', 'default' => 'https'], // Less than optimal setting for using http(s) when Downloading
 				'activationDate' => ['s' => 'int', 'default' => null, 'export' => false], // date of activation
+				'surveyStatus' => ['s' => 'string', 'default' => 'pending', 'export' => false], // pending, answered, dismissed
+				'surveyScore' => ['s' => 'int', 'default' => 0, 'export' => false, 'max' => 10], // 1-10 score given by the user
+				'surveyFeedback' => ['s' => 'string', 'default' => '', 'export' => false, 'maxlength' => 2000], // free text feedback for scores 1-8
+				'surveyAnsweredAt' => ['s' => 'int', 'default' => null, 'export' => false], // timestamp of answer/dismiss
 				'unlistedCounter' => ['s' => 'int', 'default' => 0], // counter to prevent checking unlisted files too much
 				'currentStats' => ['s' => 'array', 'default' => array(), 'export' => false], // whatever the current stats are.
         'currentVersion' => ['s' => 'string', 'default' => '', 'export' => false],
