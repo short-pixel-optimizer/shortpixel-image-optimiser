@@ -157,6 +157,45 @@ class SettingsModelTest extends WP_UnitTestCase {
 	}
 
 	/*
+	 * NPS survey fields (2aac87c6) — declared, typed, capped, not exported
+	 */
+
+	public function test_survey_fields_are_declared_with_expected_types_and_defaults() {
+		$s = $this->freshSettings();
+
+		$this->assertSame( 'string', $s->getType( 'surveyStatus' ) );
+		$this->assertSame( 'int',    $s->getType( 'surveyScore' ) );
+		$this->assertSame( 'string', $s->getType( 'surveyFeedback' ) );
+		$this->assertSame( 'int',    $s->getType( 'surveyAnsweredAt' ) );
+
+		$this->assertSame( 'pending', $s->surveyStatus );
+		$this->assertSame( 0, $s->surveyScore );
+		$this->assertSame( '', $s->surveyFeedback );
+	}
+
+	public function test_survey_score_is_clamped_to_10_and_feedback_capped_at_2000() {
+		$s = $this->freshSettings();
+
+		$s->surveyScore = 99;
+		$this->assertSame( 10, $s->surveyScore );
+
+		$s->surveyFeedback = str_repeat( 'f', 2500 );
+		$this->assertSame( 2000, strlen( $s->surveyFeedback ) );
+	}
+
+	public function test_survey_fields_are_excluded_from_settings_export() {
+		$s = $this->freshSettings();
+		$s->surveyStatus = 'answered';
+		$s->surveyScore  = 3;
+
+		$out = $s->getExport();
+		$this->assertArrayNotHasKey( 'surveyStatus', $out );
+		$this->assertArrayNotHasKey( 'surveyScore', $out );
+		$this->assertArrayNotHasKey( 'surveyFeedback', $out );
+		$this->assertArrayNotHasKey( 'surveyAnsweredAt', $out );
+	}
+
+	/*
 	 * Defaults on read
 	 */
 
