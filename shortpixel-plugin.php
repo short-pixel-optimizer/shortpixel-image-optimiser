@@ -157,6 +157,9 @@ class ShortPixelPlugin {
 		$admin        = Controller\AdminController::getInstance();
 		$adminNotices = Controller\AdminNoticesController::getInstance(); // Hook in the admin notices.
 
+		// Abilities API integration (WP 6.9+). Hooks on abilities_api_init, silent no-op on older WP
+		Controller\Abilities\AbilitiesController::getInstance();
+
 //		$this->initHooks();
 		$this->ajaxHooks();
 

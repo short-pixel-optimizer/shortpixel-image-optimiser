@@ -449,6 +449,11 @@ abstract class Queue
      * Handles normal optimisation, bulk-restore, bulk-undoAI, migrate, and removeLegacy
      * operations. Breaks early if memory or time limits are reached.
      *
+     * AI items are added when AI is enabled, queueOptions['doAi'] is set, and
+     * either the autoAIBulk setting or the per-bulk
+     * queueOptions['allowAiWithoutBulkSetting'] override (used by the MCP bulk
+     * abilities so a one-shot call does not persist the setting) is active.
+     *
      * @param array $items Array of integer item IDs to process.
      * @return array Associative array with keys: items (int), images (int), results (int), overlimit (bool).
      */
@@ -462,6 +467,7 @@ abstract class Queue
 			$settings = \wpSPIO()->settings();
         $env = \wpSPIO()->env();
         $queueOptions = $this->getOptions();
+        $allowAiWithoutBulkSetting = true === ($queueOptions['allowAiWithoutBulkSetting'] ?? false);
 
           if (count($items) == 0)
           {
@@ -531,7 +537,7 @@ abstract class Queue
                   }
 
                   if (true === $optimizeAiController->isAiEnabled() &&
-                  true === $settings->autoAIBulk &&
+                  (true === $settings->autoAIBulk || true === $allowAiWithoutBulkSetting) &&
                   true === ($queueOptions['doAi'] ?? false) )
                   {
                     $aiDataModel = AiDataModel::getModelByAttachment($mediaItem->get('id'));

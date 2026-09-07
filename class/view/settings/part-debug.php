@@ -4,6 +4,7 @@ use ShortPixel\Notices\NoticeController as NoticeController;
 use ShortPixel\Controller\StatsController as StatsController;
 use ShortPixel\Controller\QueueController as QueueController;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
+use ShortPixel\Controller\Abilities\AbilitiesController as AbilitiesController;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 
@@ -182,6 +183,51 @@ if (Log::isManualDebug())
 			<?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
       <button class='button' type='submit'>Clear statistics cache</button>
       </form>
+  </div>
+
+  <?php
+    $abilitiesController = AbilitiesController::getInstance();
+    $abilitiesCatalog = $abilitiesController->getAbilities();
+    $abilitiesApiAvailable = $abilitiesController->isApiAvailable();
+    $abilitiesInitEnabled = (bool) apply_filters( 'shortpixel/abilities/init', true );
+  ?>
+  <div class="mcp-abilities env">
+    <h3><?php esc_html_e('SPIO MCP Abilities', 'shortpixel-image-optimiser'); ?> (<?php echo esc_html(count($abilitiesCatalog)); ?>)</h3>
+    <div class='flex'>
+      <span>Abilities API</span><span><?php var_export($abilitiesApiAvailable); ?></span>
+      <span>Registration enabled</span><span><?php var_export($abilitiesInitEnabled); ?></span>
+    </div>
+
+    <div class='table mcp-abilities-list'>
+      <div class='head'>
+        <span>Name</span>
+        <span>Label</span>
+        <span>Permission</span>
+        <span>MCP</span>
+        <span>Registered</span>
+      </div>
+      <?php foreach ( $abilitiesCatalog as $abilityName => $abilityArgs ) :
+        $permission = 'unknown';
+        if ( isset( $abilityArgs['permission_callback'] ) && is_array( $abilityArgs['permission_callback'] ) ) {
+          $callbackMethod = $abilityArgs['permission_callback'][1] ?? '';
+          if ( 'userCanManage' === $callbackMethod ) {
+            $permission = 'manage_options';
+          } elseif ( 'userCanOptimize' === $callbackMethod ) {
+            $permission = 'edit_others_posts';
+          }
+        }
+        $mcpPublic = ! empty( $abilityArgs['meta']['mcp']['public'] );
+        $isRegistered = $abilitiesController->isAbilityRegistered( $abilityName );
+      ?>
+      <div title="<?php echo esc_attr( $abilityArgs['description'] ?? '' ); ?>">
+        <span><?php echo esc_html( $abilityName ); ?></span>
+        <span><?php echo esc_html( $abilityArgs['label'] ?? '' ); ?></span>
+        <span><?php echo esc_html( $permission ); ?></span>
+        <span><?php echo $mcpPublic ? 'Y' : 'N'; ?></span>
+        <span><?php echo $isRegistered ? 'Y' : 'N'; ?></span>
+      </div>
+      <?php endforeach; ?>
+    </div>
   </div>
 
   <?php $noticeController =  NoticeController::getInstance();
