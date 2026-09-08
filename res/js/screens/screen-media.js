@@ -1058,8 +1058,9 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 	UpdateGutenBerg(resultItem) {
 
 		var attach_id = resultItem.item_id;
-		var aiData = resultItem.aiData;
-console.log('Update GB', attach_id, aiData); 
+		// Replaced content is specialized in returning back what was actually replaced, default to that.
+		var aiData = resultItem.aiData;  // Should be replaced_content when it has item_id (?)
+console.log('Update GB', attach_id, aiData, resultItem); 
 
 		if (!wp.data || !wp.data.select('core')) {
 			return false;

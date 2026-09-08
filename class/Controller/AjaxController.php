@@ -1558,7 +1558,6 @@ class AjaxController
 
 		$queueItem->addResult([
 			'apiName' => 'ai', 
-
 		]); 
 
 		$json->$type = $queueItem->result();   //$altData;

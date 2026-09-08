@@ -1096,6 +1096,11 @@ class OptimizeAiController extends OptimizerBase
                 continue; 
              } */
 
+                $replaced_content = [
+                    'alt' => false, 
+                    'caption' => false, 
+                ];
+
                 $do_replace = false;
                 $altIsSet = (isset($aiData['alt']) && false === is_int($aiData['alt'])) ? true : false; 
                 $isUndo = ('undoAltData' === $action); 
@@ -1108,20 +1113,25 @@ class OptimizeAiController extends OptimizerBase
                     if ($contentReplace === 'overwrite') {
                         $frontImage->alt = $aiData['alt'];
                         $do_replace = true;
+                        $replaced_content['alt'] = $aiData['alt'];
                     } elseif ($contentReplace === 'missing') {
                         if ( trim($frontImage->alt) == trim($prevAlt) ) {
                             $frontImage->alt = $aiData['alt'];
                             $do_replace = true;
+                            $replaced_content['alt'] = $aiData['alt'];
+
                         }
                     }                    
                 }
                 elseif ($altIsSet){
                     if ($contentReplace === 'overwrite') {
                         $frontImage->alt = $aiData['alt'];
+                        $replaced_content['alt'] = $aiData['alt'];
                         $do_replace = true;
                     } elseif ($contentReplace === 'missing') {
                         if ( (is_null($frontImage->alt) || strlen(trim($frontImage->alt)) == 0) ) {
                             $frontImage->alt = $aiData['alt'];
+                            $replaced_content['alt'] = $aiData['alt'];
                             $do_replace = true;
                         }
                     }
@@ -1135,6 +1145,8 @@ class OptimizeAiController extends OptimizerBase
                 if ($do_replace && isset($aiData['caption']) && false === is_int($aiData['caption'])) {
                     if (false === $aiPreserve || (is_null($frontImage->caption) || strlen(trim($frontImage->caption)) == 0) ) {
                         $frontImage->caption = $aiData['caption'];
+                        $replaced_content['caption'] = $aiData['caption'];
+
                         // $do_replace is already true here
                     }
                 }
@@ -1149,6 +1161,11 @@ class OptimizeAiController extends OptimizerBase
                 Log::addInfo('Running Ai Replace : ', [$aiData, $sources, $replaces]);
                 $content = $replacer2->replaceContent($content, $sources, $replaces, false, true);
                 $replacer2->Updater()->updatePost($post_id, $content);
+
+                $result_replaced_content = $qItem->result()->replaced_content; 
+                $result_replaced_content[$post_id] = $replaced_content; 
+                $qItem->result()->replaced_content = $result_replaced_content; 
+               
             }
         }
     }
@@ -1283,14 +1300,11 @@ class OptimizeAiController extends OptimizerBase
             'replace_filebase' => $generated['filebase'],
         ];
 
-        
-
         $aiModel->revert();
         AiDataModel::flushModelCache($item_id);
 
         // The results is what the system finds on used images in the database for this base url. 
         $this->replaceImageAttributes($qItem, $aiData, $generated);
-
 
         // @todo This probably needs to reverse file renaming as well? 
 

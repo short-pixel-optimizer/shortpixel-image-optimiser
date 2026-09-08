@@ -74,6 +74,8 @@ class QueueItemResult implements JsonSerializable
    /** @var array<string, string>|null Human-readable labels for AI data, shown on bulk screens. */
    protected $aiDataLabels;
 
+   // Method to signal back replaced content, mainly now for replacing Ai Data / UX in editors. 
+   protected $replaced_content = []; 
 
    /**
     * Constructor.
