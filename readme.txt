@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 4.8.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 6.5.5
+Stable tag: 6.5.6
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -452,6 +452,23 @@ Disable the feedback survey when the plugin is deactivated:
 14. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 6.5.6 =
+
+🛡️ The Security & Fixes Update
+
+Release Date: September 9, 2026
+
+🔒 Security
+
+* Hardened Content Replacement: The content replacer now blocks PHP object instantiation when processing serialized data, preventing potential object injection through crafted content, resposibly disclosed by the WordFence and PatchStack teams.
+
+🛠️ Fixes
+
+* Automatic Backup Removal: Fixed an issue that prevented the automatic removal of old backups from ever running, even when the option was enabled.
+* CDN Links & Crawlers: Changed the parameter separator in CDN links from a comma to a plus sign, preventing some crawlers and SEO tools from misreading srcset URLs and reporting false 404 errors.
+
+Update now for improved security and reliability! 🚀
 
 = 6.5.5 =
 
