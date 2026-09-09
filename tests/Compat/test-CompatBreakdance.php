@@ -22,8 +22,8 @@
  *     a decoded tree via \Breakdance\Data\get_tree — we seed a real
  *     Breakdance-shaped postmeta row and verify the module returns the
  *     expected tree structure (with URLs in it).
- *   - End-to-end conversion: PINNED AS BROKEN (production bug, candidate
- *     for the Bas ledger). Breakdance stores `_breakdance_data` DOUBLE
+ *   - End-to-end conversion: PINNED AS BROKEN (production bug #65,
+ *     ledgered 2026-09-09). Breakdance stores `_breakdance_data` DOUBLE
  *     JSON-encoded (set_meta → encode_before_writing_to_wp json_encodes
  *     the outer array whose `tree_json_string` value is ITSELF a JSON
  *     string), so every `/` in a URL lands in the DB as `\\\/` (three
@@ -255,7 +255,7 @@ class CompatBreakdanceTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// End-to-end (documents current behavior — PRODUCTION BUG): PNG→JPG
+	// End-to-end (PINNED BUG #65): PNG→JPG
 	// conversion runs the FULL Replacer against a real Breakdance-shaped
 	// `_breakdance_data` postmeta row and the row survives UNCHANGED.
 	//
@@ -273,7 +273,7 @@ class CompatBreakdanceTest extends SPIO_IntegrationTestCase {
 	// would go through \Breakdance\Data\save_document → set_meta).
 	// -------------------------------------------------------------------
 
-	public function test_png_conversion_leaves_breakdance_meta_unchanged_documents_current_behavior() {
+	public function test_pin65_png_conversion_leaves_breakdance_meta_unchanged_pinned_for_deferred_fix() {
 		$id  = $this->uploadPngForQueuePath( 'fixture-small.png' );
 		$url = wp_get_attachment_url( $id );
 		$this->assertStringEndsWith( '.png', $url );
@@ -311,12 +311,12 @@ class CompatBreakdanceTest extends SPIO_IntegrationTestCase {
 		$this->assertStringContainsString(
 			'.png',
 			$raw_after,
-			'DOCUMENTS CURRENT BEHAVIOR (production bug): Breakdance meta stays .png — the module\'s single-escaped LIKE pattern cannot match Breakdance\'s double-JSON-encoded storage (Modules/Breakdance.php:74-82 addSlash).'
+			'PINNED BUG #65: Breakdance meta stays .png — the module\'s single-escaped LIKE pattern cannot match Breakdance\'s double-JSON-encoded storage (Modules/Breakdance.php:74-82 addSlash). FLIP to a positive-rewrite assertion when fixed.'
 		);
 		$this->assertStringNotContainsString(
 			'.jpg',
 			$raw_after,
-			'DOCUMENTS CURRENT BEHAVIOR (production bug): Breakdance meta never gained a .jpg reference — the breakdance replace-query never matches any row.'
+			'PINNED BUG #65: Breakdance meta never gained a .jpg reference — the breakdance replace-query never matches any row.'
 		);
 	}
 }

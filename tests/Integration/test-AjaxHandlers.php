@@ -340,9 +340,8 @@ class AjaxHandlersTest extends SPIO_AjaxTestCase {
 
 	public function test_remove_backup_requires_the_secondary_tools_nonce() {
 		$this->_setRole( 'administrator' );
-		// Since 4acf1395 (#37) the tools are gated on is_super_admin →
-		// manage_network, which single-site admins lack (see pin44 below).
-		wp_get_current_user()->add_cap( 'manage_network' );
+		// #44 FIXED (8520324e): on single-site 'is_super_admin' now maps to
+		// delete_users, which administrators hold — no cap grant needed.
 
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->purgeQueueTable();
@@ -364,7 +363,6 @@ class AjaxHandlersTest extends SPIO_AjaxTestCase {
 
 	public function test_remove_backup_deletes_the_backup_folder() {
 		$this->_setRole( 'administrator' );
-		wp_get_current_user()->add_cap( 'manage_network' );
 
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->purgeQueueTable();
@@ -384,7 +382,16 @@ class AjaxHandlersTest extends SPIO_AjaxTestCase {
 		$this->assertFalse( is_dir( SHORTPIXEL_BACKUP_FOLDER ), 'The backup folder must be gone' );
 	}
 
-	public function test_pin44_single_site_administrator_cannot_remove_backups() {
+	/**
+	 * Regression for bug #44 (FIXED in 8520324e): on single-site,
+	 * AccessModel::setDefaultPermissions() now remaps 'is_super_admin' to
+	 * 'delete_users' (manage_network is a multisite-only cap that single-site
+	 * administrators never hold), so a plain administrator can use the
+	 * Remove backups / Remove all data tools again. On multisite the mapping
+	 * stays manage_network (super admins only) — see
+	 * tests/Multisite/test-Multisite.php.
+	 */
+	public function test_single_site_administrator_can_remove_backups_regression_44() {
 		$this->_setRole( 'administrator' );
 
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
@@ -401,12 +408,13 @@ class AjaxHandlersTest extends SPIO_AjaxTestCase {
 		);
 
 		$this->assertIsObject( $response );
-		$this->assertSame(
-			AjaxController::NO_ACCESS,
-			$response->error,
-			'PINNED BUG #44: since 4acf1395 (#37) toolsRemoveBackup/toolsRemoveAll require is_super_admin → the raw manage_network cap, which single-site administrators never have — so on single-site installs nobody can use the Remove backups / Remove all data tools, while part-tools.php still shows the buttons. WP core\'s is_super_admin() would be true for these admins. FLIP this test when fixed: a single-site administrator should then get the normal handler response.'
+		$this->assertObjectNotHasProperty(
+			'error',
+			$response,
+			'Regression #44: a single-site administrator (delete_users) must pass the is_super_admin gate since 8520324e.'
 		);
-		$this->assertTrue( is_dir( SHORTPIXEL_BACKUP_FOLDER ) );
+		$this->assertStringContainsString( 'removed', $response->settings->results );
+		$this->assertFalse( is_dir( SHORTPIXEL_BACKUP_FOLDER ), 'The backup folder must be gone' );
 	}
 
 	// -------------------------------------------------------------------

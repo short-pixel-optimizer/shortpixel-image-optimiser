@@ -57,6 +57,11 @@ class AccessModel
 	/**
 	 * Defines the default mapping between SPIO capabilities and WordPress capabilities.
 	 *
+	 * 'is_super_admin' maps to 'manage_network' on multisite (super admins
+	 * only), but that cap does not exist on single-site installs — there it
+	 * is remapped to 'delete_users' (an administrator-level cap) so the
+	 * site-wide tools stay usable (bug #44, fixed in 8520324e).
+	 *
 	 * Applies the 'shortpixel/init/permissions' filter so third parties can
 	 * extend or override the capability map.
 	 *

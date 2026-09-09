@@ -162,4 +162,34 @@ class QueueItemResultTest extends WP_UnitTestCase {
 		$this->assertSame( 'msg', $decoded->message );
 		$this->assertObjectNotHasProperty( 'files', $decoded );
 	}
+
+	/*
+	 * replaced_content channel (456bb470)
+	 */
+
+	/**
+	 * Unlike every other field, replaced_content defaults to [] (not null),
+	 * so arrayFilterNullValues keeps it: EVERY result payload now ships a
+	 * replaced_content member ([] when nothing was replaced). This is what
+	 * makes the JS truthiness check in screen-media.js UpdateGutenBerg fire
+	 * on every AI result. If this test starts failing because the field is
+	 * gone from the empty payload, the default was changed to null — update
+	 * the JS-side expectations too.
+	 */
+	public function test_replaced_content_defaults_to_empty_array_and_is_always_serialized() {
+		$r = new QueueItemResult( 7 );
+
+		$this->assertSame( array(), $r->replaced_content );
+
+		$obj = $r->forReturn();
+		$this->assertObjectHasProperty( 'replaced_content', $obj );
+		$this->assertSame( array(), $obj->replaced_content );
+
+		// Populated per-post map round-trips through json_encode as an
+		// object keyed by post ID (non-sequential numeric keys).
+		$r->replaced_content = array( 123 => array( 'alt' => 'new alt', 'caption' => false ) );
+		$decoded = json_decode( json_encode( $r ), true );
+		$this->assertSame( 'new alt', $decoded['replaced_content'][123]['alt'] );
+		$this->assertFalse( $decoded['replaced_content'][123]['caption'] );
+	}
 }

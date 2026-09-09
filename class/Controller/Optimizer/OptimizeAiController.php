@@ -1017,6 +1017,15 @@ class OptimizeAiController extends OptimizerBase
      * Int values in aiData (F_STATUS_PREVENTOVERRIDE / EXCLUDESETTING) mean
      * "no generated text" and never replace anything.
      *
+     * REPLACED-CONTENT FEEDBACK (456bb470): every post that is actually
+     * rewritten records what was applied into
+     * $qItem->result()->replaced_content[$post_id] = ['alt' => string|false,
+     * 'caption' => string|false], so editor UIs can apply exactly what
+     * changed. NOTE the map is keyed by the CONTAINING POST's ID — the JS
+     * consumer (screen-media.js UpdateGutenBerg) currently indexes it by
+     * the ATTACHMENT id and misspells the property (replaced__content),
+     * so the channel is not yet functional client-side (reported, 8520324e).
+     *
      * BUG #56 was fixed in dc65f17e (the 'missing' branch dropped its
      * `false === $aiPreserve` OR-leg, so a non-empty in-content alt is now
      * always respected); regression coverage in

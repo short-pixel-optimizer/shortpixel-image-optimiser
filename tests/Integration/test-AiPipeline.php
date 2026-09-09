@@ -1156,6 +1156,71 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
+	 * Contract for the replaced_content feedback channel (456bb470):
+	 * handleReplace() must record what it actually wrote into each post as
+	 * $qItem->result()->replaced_content[$post_id] = ['alt' => string|false,
+	 * 'caption' => string|false] — and must NOT record posts it preserved.
+	 *
+	 * NOTE the map is keyed by the CONTAINING POST's ID, not the attachment
+	 * ID. The JS consumer (screen-media.js UpdateGutenBerg since 8520324e)
+	 * indexes the map by resultItem.item_id (the ATTACHMENT) and misspells
+	 * the property on top (replaced__content) — reported to Bas. If the
+	 * server-side keying ever changes to fix that mismatch, this test
+	 * documents the current contract and must be updated deliberately.
+	 */
+	public function test_handleReplace_records_replaced_content_per_rewritten_post_only() {
+		$id         = $this->freshAttachment();
+		$imageModel = $this->freshImageModel( $id );
+		$src        = esc_url( wp_get_attachment_url( $id ) );
+
+		\wpSPIO()->settings()->ai_content_replace = 'missing';
+		\wpSPIO()->settings()->aiPreserve         = 0;
+
+		$post_empty_alt = self::factory()->post->create(
+			array( 'post_content' => '<img src="' . $src . '" alt="" />' )
+		);
+		$post_kept_alt  = self::factory()->post->create(
+			array( 'post_content' => '<img src="' . $src . '" alt="editor wrote this" />' )
+		);
+
+		$qItem = \ShortPixel\Controller\Queue\QueueItems::getImageItem( $imageModel );
+		$args  = array(
+			'aiData' => array( 'alt' => 'A mock ai alt text.', 'caption' => 0 ),
+			'qItem'  => $qItem,
+		);
+
+		\ShortPixel\Controller\Optimizer\OptimizeAiController::getInstance()->handleReplace(
+			array(
+				array( 'post_id' => $post_empty_alt, 'content' => get_post( $post_empty_alt )->post_content ),
+				array( 'post_id' => $post_kept_alt, 'content' => get_post( $post_kept_alt )->post_content ),
+			),
+			$args
+		);
+
+		$map = $qItem->result()->replaced_content;
+		$this->assertIsArray( $map );
+
+		$this->assertArrayHasKey(
+			$post_empty_alt,
+			$map,
+			'replaced_content must gain an entry keyed by the CONTAINING POST id for a rewritten post'
+		);
+		$this->assertSame( 'A mock ai alt text.', $map[ $post_empty_alt ]['alt'] );
+		$this->assertFalse( $map[ $post_empty_alt ]['caption'], 'No caption was generated (int status) — must stay false' );
+
+		$this->assertArrayNotHasKey(
+			$post_kept_alt,
+			$map,
+			'A post whose alt was preserved (missing mode) must NOT appear in replaced_content'
+		);
+		$this->assertArrayNotHasKey(
+			$id,
+			$map,
+			'The map is keyed by post id, never by the attachment id (documents the JS-side mismatch)'
+		);
+	}
+
+	/**
 	 * Regression for BUG #57 (fixed in dc65f17e): Updater::updatePost()
 	 * used to pass UNSLASHED $content to wp_update_post(), which unslashes
 	 * again — stripping the backslashes that serialize_block_attributes()

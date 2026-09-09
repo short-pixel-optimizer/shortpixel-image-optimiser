@@ -595,14 +595,15 @@ class AjaxController
 	 * When present -> `MultiSiteViewController`; when absent ->
 	 * `SettingsViewController`.
 	 *
-	 * SECURITY NOTE (bug #41, still open): the routing flag is CLIENT input
-	 * and is not corroborated server-side. Combined with the `is_admin_user`
-	 * (manage_options) gate in `settingsRequest()`, a subsite administrator
-	 * can select the MultiSiteViewController branch by posting the flag
-	 * themselves and write to the network-wide spio_wpmu option. See the
-	 * paired pinned tests in tests/Multisite/test-MultisiteNetworkSave.php
-	 * (test_pin41_regular_admin_can_save_network_settings_pinned_for_deferred_fix
-	 * and test_pin41_widened_vector_client_flag_alone_reaches_network_save_pinned_for_deferred_fix).
+	 * SECURITY (bug #41, FIXED in 8520324e): the routing flag is still
+	 * CLIENT input, but the network branch now runs
+	 * checkActionAccess($action, 'is_super_admin') — 'manage_network' on
+	 * multisite — before instantiating MultiSiteViewController, so posting
+	 * the flag without super-admin rights yields NO_ACCESS and exits. See
+	 * the paired regression tests in
+	 * tests/Multisite/test-MultisiteNetworkSave.php
+	 * (test_pin41_flipped_regular_admin_is_refused_network_save_regression_41
+	 * and test_pin41_flipped_client_flag_alone_no_longer_reaches_network_save_regression_41).
 	 *
 	 * The view controller is marked as processing an AJAX save, its redirect
 	 * URL is set from `$_POST['request_url']`, and the named `$action` method
