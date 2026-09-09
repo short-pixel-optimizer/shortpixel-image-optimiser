@@ -614,7 +614,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			$url = str_replace(['http://', 'https://'], '', $url); // always remove scheme
 			$url = apply_filters('shortpixel/front/cdn/url', $url);
 
-			$cdnArgs = implode(',', $replaceBlock->args);
+			$cdnArgs = implode('+', $replaceBlock->args);
 
 			$cdn_prefix = trailingslashit($cdn_domain) . trailingslashit($cdnArgs);
 			$replaceBlock->replace_url = $cdn_prefix . trim($url);
