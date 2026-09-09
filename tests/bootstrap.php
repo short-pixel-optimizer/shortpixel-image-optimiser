@@ -54,12 +54,22 @@ if ( '1' === getenv( 'SPIO_PARTNER_PLUGINS' ) ) {
 				'woocommerce/woocommerce.php',
 				'nextgen-gallery/nggallery.php',
 				'amazon-s3-and-cloudfront/wordpress-s3.php',
+				// Wave 4 — replacer2 module coverage. All four load their
+				// own detection constant / action, which the corresponding
+				// SPIO Replacer module keys off (Elementor.php, YoastSeo.php,
+				// WpBakery.php, Breakdance.php).
+				'elementor/elementor.php',
+				'wordpress-seo/wp-seo.php',
 				// Commercial — extracted from tests/partner-plugins/ when
 				// present; silently skipped (like the rest) when not.
 				'sitepress-multilingual-cms/sitepress.php',
 				// WPML add-on: translations may point at their OWN file
 				// (vs shared-file duplicates). Must load AFTER sitepress.
 				'wpml-media-translation/plugin.php',
+				// Commercial (WPBakery) — tests/partner-plugins/js_composer.zip.
+				'js_composer/js_composer.php',
+				// Commercial (Breakdance) — tests/partner-plugins/breakdance-*.zip.
+				'breakdance/plugin.php',
 			);
 			$active = array();
 			foreach ( $partners as $partner ) {
