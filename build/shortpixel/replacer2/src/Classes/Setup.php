@@ -17,8 +17,6 @@ class Setup
 
     protected $new_datatype; 
     protected $new_action; 
-    
-    
 
     protected static $instance; 
     

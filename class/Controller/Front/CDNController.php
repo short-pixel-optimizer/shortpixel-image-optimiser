@@ -388,8 +388,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		// FilterDoubles should prob. be off if we are doing a own htmlReplace only. 
 	//	$replaceBlocks = $this->filterDoubles($replaceBlocks);
 
-		//  $replace_function = ($this->replace_method == 'preg') ? 'pregReplaceContent' : 'stringReplaceContent';
-
 		$replace_function = 'pregReplaceByString'; // undercooked, will defer to next version
 		$imageIndexes = array_column($replaceBlocks, 'imageId');
 
@@ -616,7 +614,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			$url = str_replace(['http://', 'https://'], '', $url); // always remove scheme
 			$url = apply_filters('shortpixel/front/cdn/url', $url);
 
-			$cdnArgs = implode(',', $replaceBlock->args);
+			$cdnArgs = implode('+', $replaceBlock->args);
 
 			$cdn_prefix = trailingslashit($cdn_domain) . trailingslashit($cdnArgs);
 			$replaceBlock->replace_url = $cdn_prefix . trim($url);
@@ -667,21 +665,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		{
 			$replaceBlock->url = substr($replaceBlock->url, 2); 
 		}
-	}
-
-	/** Simple string replace using the replacer ( current unused ) 
-	 * 
-	 * @param mixed $content 
-	 * @param array $urls 
-	 * @param array $new_urls 
-	 * @return mixed 
-	 */
-	protected function stringReplaceContent($content, $urls, $new_urls)
-	{
-		$replacer = new Replacer();
-		$content = $replacer->replaceContent($content, $urls, $new_urls, false, true);
-
-		return $content;
 	}
 
 	/** Do a regex replace on the found strings. Try to prevent it picking up relative paths / doubling the CDN path. 

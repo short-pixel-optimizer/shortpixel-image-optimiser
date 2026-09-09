@@ -173,7 +173,7 @@ abstract class BackupController
         }
 
         // After many double checks, -better fail than fault- perhaps return true.
-        if (is_string($removePeriod) && false === empty($removeperiod) && true === $removeBackups)
+        if (is_string($removePeriod) && false === empty($removePeriod) && true === $removeBackups)
         {
            return true;
         }
