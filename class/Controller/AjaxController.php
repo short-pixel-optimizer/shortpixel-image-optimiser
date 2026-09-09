@@ -629,6 +629,9 @@ class AjaxController
 		$is_network_admin = isset($_POST['is_network_admin']) ? true : false;
 		if (true === $is_network_admin)
 		{
+			// Extra user check, because here we need super_admin to save. 
+			$this->checkActionAccess($action, 'is_super_admin');
+
 			$viewController =  new MultiSiteViewController();
 		}
 		else

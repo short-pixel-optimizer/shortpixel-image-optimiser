@@ -51,6 +51,7 @@ class AccessModel
 	public function __construct()
 	{
 		 $this->setDefaultPermissions();
+
 	}
 
 	/**
@@ -64,7 +65,7 @@ class AccessModel
 	protected function setDefaultPermissions()
 	{
 
-			$spioCaps = array(
+		$spioCaps = array(
 					'notices' =>  'activate_plugins',				// used in AdminNoticesController
 					'quota-warning' => 'manage_options',    // used in AdminController
 					'image_all' =>  'edit_others_posts',
@@ -75,8 +76,15 @@ class AccessModel
 					'is_editor' => 'edit_others_posts',  // used in AjaxController
 					'is_author' => 'edit_posts', // used in AjaxController
 					'actions' => array(),
-			);
+		);
 
+		 $env = \wpSPIO()->env(); 
+		 // On Single Site Manage_network is not a cap, so use alternative not to run into issues here. 
+		 if ( false === $env->is_multisite) 
+		 {
+		 	$spioCaps['is_super_admin'] = 'delete_users';
+		 }
+		
 		 $spioCaps = apply_filters('shortpixel/init/permissions', $spioCaps);
 		 $this->caps = $spioCaps;
 

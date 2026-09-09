@@ -1059,7 +1059,17 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 		var attach_id = resultItem.item_id;
 		// Replaced content is specialized in returning back what was actually replaced, default to that.
-		var aiData = resultItem.aiData;  // Should be replaced_content when it has item_id (?)
+		
+
+		if (resultItem.replaced_content && resultItem.replaced__content[attach_id])
+		{
+			var aiData = resultItem.replaced_content[attach_id];  // Should be replaced_content when it has item_id (?)	 
+		}
+		else 
+		{
+		 	return false;
+		}
+
 console.log('Update GB', attach_id, aiData, resultItem); 
 
 		if (!wp.data || !wp.data.select('core')) {
@@ -1068,7 +1078,7 @@ console.log('Update GB', attach_id, aiData, resultItem);
 
 		// Fields disabled in settings, or skipped by 'preserve existing', come back as
 		// integer status codes instead of text. Only apply real core/image attributes
-		// holding a string: an integer caption makes the block's save() throw, after
+		// holding a string: an Iinteger caption makes the block's save() throw, after
 		// which Gutenberg serializes the image block as an empty void comment.
 		var attributes = {};
 
