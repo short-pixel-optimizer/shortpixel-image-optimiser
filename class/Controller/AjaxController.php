@@ -624,7 +624,6 @@ class AjaxController
 	protected function settingsFormSubmit($action)
 	{
 
-
 		// This is submitted by a separate field to justify the correct nonce and load Multisite if it's there on other actions as well. Set via shortpixel-settings AjaxRequest
 		$is_network_admin = isset($_POST['is_network_admin']) ? true : false;
 		if (true === $is_network_admin)
@@ -1399,12 +1398,20 @@ class AjaxController
 		 	$result_json['message'] = __('This image could not be loaded', 'shortpixel-image-optimiser'); 
 		 	$this->send((object) $result_json);
 		}
+		elseif (strlen($newFileName) < 3) // min length of 3 here. 
+		{
+			$result_json = [
+			'error' => __('Filename very short - minimum 3 characters', 'shortpixel-image-optimiser'), 
+			'is_error' => true, 
+			];
 
+		 	$result_json['message'] = __('This image could not be loaded', 'shortpixel-image-optimiser'); 
+		 	$this->send((object) $result_json);
+		}
 
 		$imageModel = $this->getMediaItem($id, $type);
 		$this->checkImageAccess($imageModel);
 		
-
 		$queueItem = new QueueItem(['imageModel' => $imageModel]);
 
 		$apiController =  $queueItem->getApiController('requestAlt');
@@ -2104,10 +2111,7 @@ class AjaxController
 						 break;  // safe guards.
 
 					}
-					else
-					{
-						//Log::addTemp('AiData not set in Ajax');
-					}
+
 					
 					if ($result->is_done)
 					{

@@ -87,7 +87,7 @@ class OptimizeAiController extends OptimizerBase
                 break;
             case 'redoAiReplacement':
                 $this->redoAiReplace($qItem);
-            break; 
+                break;
             default:
                 $this->api->processMediaItem($qItem);
                 break;
@@ -272,7 +272,7 @@ class OptimizeAiController extends OptimizerBase
 
         // Result for retrieveAlt
         if (property_exists($qItem->result(), 'aiData') && false === is_null($qItem->result()->aiData)) {
-             $this->HandleSuccess($qItem);
+            $this->HandleSuccess($qItem);
         }
     }
 
@@ -430,15 +430,14 @@ class OptimizeAiController extends OptimizerBase
 
             if ($currentFileBase !== $aiData['filebase']) {
                 $args = [
-                    'dry_run' => false,  
+                    'dry_run' => false,
                     'recent_upload' => $qItem->data()->recent_upload,
-                    'url' => $url, 
+                    'url' => $url,
                 ];
 
                 $files_replaced = $this->replaceFiles($qItem, $aiData['filebase'], $args);
-                if (true === $files_replaced)
-                {
-                     $qItem->addResult(['redirect' => 'reload']);
+                if (true === $files_replaced) {
+                    $qItem->addResult(['redirect' => 'reload']);
                 }
             }
 
@@ -466,7 +465,6 @@ class OptimizeAiController extends OptimizerBase
         $this->unBlockItem($qItem);
 
         $this->finishItemProcess($qItem);
-
     }
 
     /**
@@ -514,7 +512,7 @@ class OptimizeAiController extends OptimizerBase
      * @param int $queue_item_id The attachment ID of the queue item image.
      * @return bool True when replacing on this post is allowed.
      */
-    protected function WPMLCheckReplace($post_id, $queue_item_id) : bool
+    protected function WPMLCheckReplace($post_id, $queue_item_id): bool
     {
         if (!\wpSPIO()->env()->plugin_active('wpml')) {
             return true;
@@ -523,16 +521,15 @@ class OptimizeAiController extends OptimizerBase
         $language = apply_filters('wpml_post_language_details', null, $post_id);
         $language_queue = apply_filters('wpml_post_language_details', null, $queue_item_id);
 
-        if ( (!is_array($language) || empty($language['language_code'])) || !is_array($language_queue) || empty($language_queue['language_code']) ) {
+        if ((!is_array($language) || empty($language['language_code'])) || !is_array($language_queue) || empty($language_queue['language_code'])) {
             return false;
         }
 
-        if ($language['language_code'] !== $language_queue['language_code'])
-        {
-             return false; 
-        } 
+        if ($language['language_code'] !== $language_queue['language_code']) {
+            return false;
+        }
 
-        return true; 
+        return true;
     }
 
 
@@ -597,7 +594,7 @@ class OptimizeAiController extends OptimizerBase
             return;
         }
         if (is_int($aiData['alt']) && is_int($aiData['caption'])) {
-            Log::addInfo('Alt and Caption returned integer/status, not replacing : ' . $qItem->item_id );
+            Log::addInfo('Alt and Caption returned integer/status, not replacing : ' . $qItem->item_id);
             return;
         }
 
@@ -651,15 +648,9 @@ class OptimizeAiController extends OptimizerBase
      *   6. Updates WordPress attachment metadata and the attached-file postmeta.
      * Supports a dry_run mode that logs all planned operations without making any changes.
      *
-     * BUG #51 (open, pinned in tests/Integration/test-ChangeFilename.php as
-     * test_pin51_..._pinned_for_deferred_fix): $target_url below (and the
-     * $base_url computed above it) is built with an unanchored
-     * str_replace($base_filename, ...) over the WHOLE URL/path, so when the
-     * filename base is a substring of a directory segment (e.g.
-     * uploads/photo/photo.jpg) the directory gets rewritten too — the
-     * search/replace URLs no longer match the real locations, files are moved
-     * but post_content keeps dead links to the old name. Fix: anchor the
-     * replacement to the basename portion of the URL.
+     * URL replacement is anchored to the basename portion of the URL, so a
+     * filename base that also appears in a directory segment does not rename
+     * the directory in the Replacer URLs.
      *
      * BUG #52 (open, pinned in tests/Controller/test-OptimizeAiController.php
      * as test_pin52_..._pinned_for_deferred_fix): the results of
@@ -681,21 +672,20 @@ class OptimizeAiController extends OptimizerBase
      * @param array     $args        Optional: dry_run (bool), imageThreshold (int), url (string), recent_upload (bool).
      * @return bool True if it made it to the end of the replace functions; false on usage-guard block or filename conflict.
      */
-    protected function replaceFiles($qItem, $newFileBase, $args = []) : bool
+    protected function replaceFiles($qItem, $newFileBase, $args = []): bool
     {
         $defaults = [
             'dry_run' => false,
             'imageThreshold' => 1, // How much references before not replacing this image.
-            'url' => false, 
-            'recent_upload' => false, 
+            'url' => false,
+            'recent_upload' => false,
         ];
 
         $args = wp_parse_args($args, $defaults);
 
         // If recent upload is true, bypass the check if the image is used. 
-        if (false === $args['recent_upload'])
-        {
-            $url = $args['url'];       
+        if (false === $args['recent_upload']) {
+            $url = $args['url'];
 
             $replacer2 = \ShortPixel\Replacer\Replacer::getInstance();
             $setup = $replacer2->Setup();
@@ -739,10 +729,14 @@ class OptimizeAiController extends OptimizerBase
         $base_filename = $baseFileObj->getFileBase();
 
         $base_url = parse_url($url, PHP_URL_PATH);
-        $base_url = str_replace('.' . pathinfo($base_url, PATHINFO_EXTENSION), '', $base_url);
-        $base_url = str_replace($base_filename, '', $base_url);
+        $base_url = trailingslashit(dirname($base_url));
 
-        $target_url = str_replace($base_filename, $newFileBase, $source_url);
+        $target_filename = str_replace(
+            $base_filename,
+            $newFileBase,
+            basename($source_url)
+        );
+        $target_url = str_replace(basename($source_url), $target_filename, $source_url);
 
         $searchArray = $replaceArray = $sourceFiles = $targetFiles = [];
 
@@ -791,6 +785,7 @@ class OptimizeAiController extends OptimizerBase
             $targetFileObjs[$key] = $targetFileObj;
         }
 
+        $copySource = [];  // Copy now, delete the source files after metadata redo, because some plugins (WPML) can deny deletion otherwise
         foreach ($sourceFiles as $key => $sourceFile) {
             $targetFileObj = isset($targetFileObjs[$key]) ? $targetFileObjs[$key] : null;
             if (is_null($targetFileObj)) {
@@ -799,18 +794,32 @@ class OptimizeAiController extends OptimizerBase
             }
 
             if (false === $args['dry_run']) {
-                $result = $sourceFile->move($targetFileObj);
+                $result = $sourceFile->copy($targetFileObj);
+                if (true === $result) {
+                    $copySource[] = $sourceFile;
+                }
             } else {
                 Log::addInfo('[Dry-run] Would have moved file : ' . $sourceFile->getFullPath() . ' to ' . $targetFileObj->getFullPath());
             }
 
-        /*    if (false === $args['recent_upload']) {
+            /*    if (false === $args['recent_upload']) {
                 if (false === $args['dry_run']) {
                     $this->createSymlink($sourceFile, $targetFileObj);
                 } else {
                     Log::addInfo('[Dry-run] Would have symlinked ' . $sourceFile->getFullPath()  . ' to ' . $targetFileObj->getFullpath());
                 }
             } */
+        }
+
+        $this->replaceMetaData($item_id, $base_filename, $newFileBase, $args);
+        if (method_exists($imageModel, 'getWPMLDuplicates')) {
+            $duplicates = $imageModel->getWPMLDuplicates();
+            Log::addTemp("Duplicate WPML REPLACE", $duplicates);
+            foreach ($duplicates as $duplicate_id) {
+                // Update the duplicates
+                $args['is_duplicate'] = true;
+                $this->replaceMetaData($duplicate_id, $base_filename, $newFileBase, $args);
+            }
         }
 
         // @Todo  Here probably we should check the backup and move that as well.
@@ -835,7 +844,15 @@ class OptimizeAiController extends OptimizerBase
             Log::addInfo('ReplaceArray ', $replaceArray);
         }
 
-        $this->replaceMetaData($item_id, $base_filename, $newFileBase, $args['dry_run']);
+        // 
+
+
+        if (isset($copySource) && is_array($copySource)) {
+            foreach ($copySource as $fileItem) {
+                $fileItem->delete();
+            }
+        }
+
 
         return true;
     }
@@ -858,23 +875,23 @@ class OptimizeAiController extends OptimizerBase
      */
     public function ajax_replaceFile($qItem, $newFileName)
     {
-         $imageModel = $qItem->imageModel;
-         if (true === $imageModel->isScaled()) {
-                $url = $imageModel->getOriginalFile()->getURL();
-         } else {
-                $url = $qItem->imageModel->getUrl();
+        $imageModel = $qItem->imageModel;
+        if (true === $imageModel->isScaled()) {
+            $url = $imageModel->getOriginalFile()->getURL();
+        } else {
+            $url = $qItem->imageModel->getUrl();
         }
 
-         $baseReplace = pathinfo(basename($newFileName), PATHINFO_FILENAME); 
+        $baseReplace = pathinfo(basename($newFileName), PATHINFO_FILENAME);
 
-         $args = [
-            'url' => $url, 
+        $args = [
+            'url' => $url,
             'recent_upload' => true,
-         ];
+        ];
 
-         $result = $this->replaceFiles($qItem, $baseReplace, $args);
+        $result = $this->replaceFiles($qItem, $baseReplace, $args);
 
-         return $result;
+        return $result;
     }
 
     /**
@@ -897,18 +914,18 @@ class OptimizeAiController extends OptimizerBase
         $item_id = $imageModel->get('id');
 
         $aiModel = AiDataModel::getModelByAttachment($item_id, 'media');
-		$aiData = $aiModel->getGeneratedData();
+        $aiData = $aiModel->getGeneratedData();
 
-        $this->replaceImageAttributes($qItem, $aiData);   
-    
+        $this->replaceImageAttributes($qItem, $aiData);
+
         $this->finishItemProcess($qItem);
 
 
         $qItem->addResult([
-         'is_done' => true,
-         'is_error' => false,
-         'message' => __('Item checked ', 'shortpixel-image-optimiser'),
-         'apiStatus' => ApiController::STATUS_NOT_API,
+            'is_done' => true,
+            'is_error' => false,
+            'message' => __('Item checked ', 'shortpixel-image-optimiser'),
+            'apiStatus' => ApiController::STATUS_NOT_API,
         ]);
     }
 
@@ -947,27 +964,47 @@ class OptimizeAiController extends OptimizerBase
      * @param bool   $dry_run  When true, log changes without writing to the database.
      * @return void
      */
-    protected function replaceMetaData($item_id, $old_file, $new_file, $dry_run = false)
+    protected function replaceMetaData($item_id, $old_file, $new_file, $args = [])
     {
+        $defaults = [
+            'dry_run' => false,
+            'is_duplicate' => false,
+        ];
+
+        $args = wp_parse_args($args, $defaults);
+
+        $dry_run = $args['dry_run'];
+        $is_duplicate = $args['is_duplicate'];
+
+
         $metadata = wp_get_attachment_metadata($item_id);
         if (isset($metadata['file']) && strpos($metadata['file'], $old_file) !== false) {
-            $metadata['file'] = str_replace($old_file, $new_file, $metadata['file']);
+
+            // This fixes situation where dirname is similar to image name 
+            $filebase = trailingslashit(pathinfo($metadata['file'], PATHINFO_DIRNAME));
+            $metadata['file'] = $filebase . str_replace($old_file, $new_file, basename($metadata['file']));
             if (true === $dry_run) {
                 Log::addInfo('Dry Run, would update metadata', $metadata['file']);
-            } else {
             }
         }
 
-        if (true === $dry_run) {
-            Log::addInfo('Dry Run - would update attached file with ' . $new_file);
-        } else {
+        if (false === $is_duplicate) // Duplicate WPML items somehow update the attached_file but not the metadata
+        {
             $attached_file = get_attached_file($item_id);
             if (false === $attached_file && isset($metadata['file'])) {
                 $attached_file = $metadata['file'];
             }
 
-            $new_attached_file = str_replace($old_file, $new_file, $attached_file);
-            update_attached_file($item_id, $new_attached_file);
+            $filebase = trailingslashit(pathinfo($attached_file, PATHINFO_DIRNAME));
+            Log::addTemp('Filebase ' . $filebase, $attached_file);
+            $new_attached_file = $filebase . str_replace($old_file, $new_file, basename($attached_file));
+
+            if (true === $dry_run) {
+                Log::addInfo('Dry Run - would update attached file with ' . $new_attached_file);
+            } else {
+                Log::addTemp('New Atached file', $new_attached_file);
+                update_attached_file($item_id, $new_attached_file);
+            }
         }
 
         if (isset($metadata['original_image']) && strpos($metadata['original_image'], $old_file) !== false) {
@@ -1039,28 +1076,26 @@ class OptimizeAiController extends OptimizerBase
 
         $imageModel = $qItem->imageModel;
 
-        $aiPreserve = \wpSPIO()->settings()->aiPreserve; 
+        $aiPreserve = \wpSPIO()->settings()->aiPreserve;
         // Determine content-replacement mode: 'missing' or 'overwrite'.
         $contentReplace = \wpSPIO()->settings()->ai_content_replace ?? 'missing';
 
-        $action = $qItem->data()->action; 
+        $action = $qItem->data()->action;
 
 
         foreach ($results as $result) {
             $post_id = $result['post_id'];
             $content = $result['content'];
 
-            if (false !== wp_check_post_lock($post_id))
-            {
-                Log::addDebug('Replace Image Attributes - Post lock is active, skipping'); 
-                continue; 
+            if (false !== wp_check_post_lock($post_id)) {
+                Log::addDebug('Replace Image Attributes - Post lock is active, skipping');
+                continue;
             }
 
 
             // Check if language is correct in case of WPML.  Don't replace different language pages. 
-            if (false === $this->WPMLCheckReplace($post_id, $qItem->item_id))
-            {
-                continue; 
+            if (false === $this->WPMLCheckReplace($post_id, $qItem->item_id)) {
+                continue;
             }
 
             $matches = $this->fetchImageMatches($content);
@@ -1074,9 +1109,8 @@ class OptimizeAiController extends OptimizerBase
                 $frontImage = new \ShortPixel\Model\FrontImage($match);
                 $src = $frontImage->src;
 
-                if (is_null($src))
-                {
-                     continue; 
+                if (is_null($src)) {
+                    continue;
                 }
                 // Only replace in post content the image we did
                 // Only match against the filename portion to avoid substring
@@ -1097,17 +1131,16 @@ class OptimizeAiController extends OptimizerBase
              } */
 
                 $replaced_content = [
-                    'alt' => false, 
-                    'caption' => false, 
+                    'alt' => false,
+                    'caption' => false,
                 ];
 
                 $do_replace = false;
-                $altIsSet = (isset($aiData['alt']) && false === is_int($aiData['alt'])) ? true : false; 
-                $isUndo = ('undoAltData' === $action); 
+                $altIsSet = (isset($aiData['alt']) && false === is_int($aiData['alt'])) ? true : false;
+                $isUndo = ('undoAltData' === $action);
 
                 //undoAltData
-                if ($isUndo && $altIsSet)
-                {
+                if ($isUndo && $altIsSet) {
                     $prevAlt = isset($prevAiData['alt']) ? $prevAiData['alt'] : '';
 
                     if ($contentReplace === 'overwrite') {
@@ -1115,21 +1148,19 @@ class OptimizeAiController extends OptimizerBase
                         $do_replace = true;
                         $replaced_content['alt'] = $aiData['alt'];
                     } elseif ($contentReplace === 'missing') {
-                        if ( trim($frontImage->alt) == trim($prevAlt) ) {
+                        if (trim($frontImage->alt) == trim($prevAlt)) {
                             $frontImage->alt = $aiData['alt'];
                             $do_replace = true;
                             $replaced_content['alt'] = $aiData['alt'];
-
                         }
-                    }                    
-                }
-                elseif ($altIsSet){
+                    }
+                } elseif ($altIsSet) {
                     if ($contentReplace === 'overwrite') {
                         $frontImage->alt = $aiData['alt'];
                         $replaced_content['alt'] = $aiData['alt'];
                         $do_replace = true;
                     } elseif ($contentReplace === 'missing') {
-                        if ( (is_null($frontImage->alt) || strlen(trim($frontImage->alt)) == 0) ) {
+                        if ((is_null($frontImage->alt) || strlen(trim($frontImage->alt)) == 0)) {
                             $frontImage->alt = $aiData['alt'];
                             $replaced_content['alt'] = $aiData['alt'];
                             $do_replace = true;
@@ -1143,7 +1174,7 @@ class OptimizeAiController extends OptimizerBase
                 // alter unrelated attributes while leaving the caption
                 // silently un-written.
                 if ($do_replace && isset($aiData['caption']) && false === is_int($aiData['caption'])) {
-                    if (false === $aiPreserve || (is_null($frontImage->caption) || strlen(trim($frontImage->caption)) == 0) ) {
+                    if (false === $aiPreserve || (is_null($frontImage->caption) || strlen(trim($frontImage->caption)) == 0)) {
                         $frontImage->caption = $aiData['caption'];
                         $replaced_content['caption'] = $aiData['caption'];
 
@@ -1162,10 +1193,9 @@ class OptimizeAiController extends OptimizerBase
                 $content = $replacer2->replaceContent($content, $sources, $replaces, false, true);
                 $replacer2->Updater()->updatePost($post_id, $content);
 
-                $result_replaced_content = $qItem->result()->replaced_content; 
-                $result_replaced_content[$post_id] = $replaced_content; 
-                $qItem->result()->replaced_content = $result_replaced_content; 
-               
+                $result_replaced_content = $qItem->result()->replaced_content;
+                $result_replaced_content[$post_id] = $replaced_content;
+                $qItem->result()->replaced_content = $result_replaced_content;
             }
         }
     }
@@ -1315,9 +1345,9 @@ class OptimizeAiController extends OptimizerBase
             'is_error' => false,
             'message' => __('AI Data reverted ', 'shortpixel-image-optimiser'),
             'apiStatus' => ApiController::STATUS_NOT_API,
-            'fileStatus' => ImageModel::FILE_STATUS_SUCCESS, 
-            'aiData' => $aiData, 
-            
+            'fileStatus' => ImageModel::FILE_STATUS_SUCCESS,
+            'aiData' => $aiData,
+
 
         ]);
         $this->finishItemProcess($qItem);
@@ -1388,7 +1418,7 @@ class OptimizeAiController extends OptimizerBase
             //      'isSupported' => $this->isSupported($qItem),
             'dataItems' => $dataItems,  // This seems not used(?)
             'isDifferent' =>  $aiModel->currentIsDifferent(),
-            'filename' => ($imageModel->isScaled()) ? $imageModel->getOriginalFile()->getFileName() : $imageModel->getFileName(), 
+            'filename' => ($imageModel->isScaled()) ? $imageModel->getOriginalFile()->getFileName() : $imageModel->getFileName(),
         ]);
 
 

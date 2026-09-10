@@ -488,7 +488,7 @@ class FileModel extends \ShortPixel\Model
   *
   * @param $destination String Full Path to new file.
   */
-  public function copy(FileModel $destination)
+  public function copy(FileModel $destination) : bool
   {
       $sourcePath = $this->getFullPath();
       $destinationPath = $destination->getFullPath();
@@ -557,7 +557,7 @@ class FileModel extends \ShortPixel\Model
   {
      if ($this->exists())
 		 {
-      \wp_delete_file($this->fullpath);  // delete file hook via wp_delete_file
+      $delete = \wp_delete_file($this->fullpath);  // delete file hook via wp_delete_file
 		 }
 		 else
 		 {

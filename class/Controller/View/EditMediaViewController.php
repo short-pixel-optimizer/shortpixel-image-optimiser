@@ -162,6 +162,49 @@ class EditMediaViewController extends \ShortPixel\ViewController
 						return false;
 					}
 
+ /*       
+          $base_filename = 'UafdAjMulWI_woman_in_gray_coat_standing_on_snow_covered_ground_4608x3072';
+          $url = 'http://tunnel.vrijwazig.org:8080/wp-content/uploads/2026/09/UafdAjMulWI_woman_in_gray_coat_standing_on_snow_covered_ground_4608x3072.jpg';
+
+          $replacer2 = \ShortPixel\Replacer\Replacer::getInstance();
+          $setup = $replacer2->Setup();
+          $setup->forSearch()->URL()->addData($url);
+
+          $base_url = $setup->forSearch()->URL()->getBaseURL();
+
+          $base_url = parse_url($url, PHP_URL_PATH);
+          $base_url = str_replace('.' . pathinfo($base_url, PATHINFO_EXTENSION), '', $base_url);
+          $base_url = str_replace($base_filename, '', $base_url);
+
+          echo $base_url;
+
+          $qItem = new \stdClass; 
+          $qItem->item_id = $this->imageModel->item_id; 
+          $qItem->imageModel = $this->imageModel; 
+
+          $newFileBase = 'replaced_file';
+
+          $ref = new \ReflectionClass( OptimizeAiController::class );
+          $controller = new OptimizeAiController(); 
+		      $m   = $ref->getMethod( 'replaceFiles' );
+		      $m->setAccessible( true );
+
+          $m->invoke($controller, $qItem, $newFileBase, [
+            'dry_run' => true, 
+            'recent_upload' => true, 
+          ]);
+*/
+/*
+          $file = '2026/09/09.jpg'; 
+          $search = '09'; 
+          $target = 'replaced'; 
+
+          $res = basename($file); 
+          $filebase = trailingslashit(pathinfo($file, PATHINFO_DIRNAME));
+          $result = str_replace($search, $target, $file); 
+
+*/
+
           $this->view->status_message = null;
 
          	$this->view->text = UiHelper::getStatusText($this->imageModel);

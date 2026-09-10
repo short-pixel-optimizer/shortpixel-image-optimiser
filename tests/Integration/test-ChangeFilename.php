@@ -688,7 +688,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	// -------------------------------------------------------------------
 
 	/**
-	 * PINNED BUG #51 (MEDIUM): replaceFiles() builds the TARGET URL at
+	 * REGRESSION #51 (MEDIUM): replaceFiles() must build the TARGET URL at
 	 * class/Controller/Optimizer/OptimizeAiController.php:679 as
 	 *
 	 *     $target_url = str_replace($base_filename, $newFileBase, $source_url);
@@ -718,13 +718,10 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	 *  - Principle 2: assertions are string-contains + string-not-contains
 	 *    on the actual post_content, not on truthy-but-wrong return values.
 	 *
-	 * FLIP INSTRUCTIONS when SPIO fixes #51 (e.g. by anchoring the base
-	 * replacement to the basename portion of the URL): change the
-	 * assertions to expect the CORRECT rewritten URL
-	 * `.../uploads/<orig-dir>/<newbase>.jpg` and to assert that the
-	 * mangled URL `.../uploads/<newbase>/<newbase>.jpg` is NOT present.
+	 * The assertions below verify that only the final path segment is
+	 * rewritten, leaving the containing directory unchanged.
 	 */
-	public function test_pin51_base_url_mangling_when_dir_contains_file_base_pinned_for_deferred_fix() {
+	public function test_pin51_base_url_mangling_when_dir_contains_file_base() {
 		$this->_setRole( 'administrator' );
 
 		// Force uploads under a subdir named "photo" so the fixture ends
@@ -815,23 +812,14 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		);
 
 		$this->assertStringContainsString(
-			$mangled_url,
-			$after_content,
-			'PINNED BUG #51: post_content contains the mangled URL ' .
-			'(directory ALSO renamed to the new base) because ' .
-			'OptimizeAiController.php:679 uses str_replace($base_filename, ' .
-			'$newFileBase, $source_url) — every occurrence, including the ' .
-			'directory segment. The physical file was NOT moved to that ' .
-			'directory, so the URL now points to a non-existent path. ' .
-			'FLIP INSTRUCTIONS when fixed: assert $after_content contains ' .
-			'$correct_url (basename-anchored) instead of $mangled_url.'
-		);
-		$this->assertStringNotContainsString(
 			$correct_url,
 			$after_content,
-			'PINNED BUG #51: the correctly-rewritten URL is absent from post_content ' .
-			'because the mangling replaced the directory segment too. ' .
-			'FLIP INSTRUCTIONS when fixed: this assertion becomes assertStringContainsString.'
+			'Only the filename segment should be rewritten in post_content.'
+		);
+		$this->assertStringNotContainsString(
+			$mangled_url,
+			$after_content,
+			'The containing directory must not be rewritten with the filename base.'
 		);
 	}
 
