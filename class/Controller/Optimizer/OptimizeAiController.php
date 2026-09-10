@@ -659,6 +659,33 @@ class OptimizeAiController extends OptimizerBase
      * still returns true, the DB rewrite runs for ALL pairs and the user is
      * told "Files were replaced". No rollback exists.
      *
+     * BUG #68 (open, HIGH, pinned in tests/Compat/test-CompatOffloadMedia.php
+     * as test_pin68_*_pinned_for_deferred_fix): offloaded media (WP Offload
+     * Media & co) is never told about the rename — no hook fires after a
+     * successful replace and the as3cf item keeps the OLD remote key. With a
+     * local copy present the rewritten URLs 404 once served from the bucket;
+     * remote-only ("remove local files") is worse: every move() fails
+     * silently (see #52) yet the DB/metadata rewrite still runs, leaving the
+     * attachment pointing at a filename that exists nowhere. Fix directions:
+     * update/re-upload the offload item after the move loop, or refuse the
+     * rename when Offloader reports the item as offloaded.
+     *
+     * BUG #69 (open, HIGH, pinned in tests/Compat/test-CompatWPML.php +
+     * test-CompatPolylang.php as test_pin69_*_pinned_for_deferred_fix):
+     * replaceMetaData() below updates ONLY the one $item_id — WPML/Polylang
+     * translations sharing the physical file (guid duplicates) keep
+     * _wp_attached_file/metadata on the now-deleted old filename → every
+     * other language 404s. getWPMLDuplicates() has the sibling list but the
+     * rename engine never consults it.
+     *
+     * BUG #70 (open, HIGH, pinned in
+     * tests/Integration/test-VirtualFilesystemRename.php as
+     * test_pin70_*_pinned_for_deferred_fix; same family as #68): virtual
+     * filesystems (S3-Uploads by Human Made, InfiniteUploads — the
+     * VirtualFileSystem adapter) have no rename handling either; on a
+     * stateless install (no local files) every move() fails silently (see
+     * #52) yet the DB/metadata rewrite still runs and true is returned.
+     *
      * NOTE on the recent_upload=false usage guard: on a stock WP install
      * _wp_attached_file / _wp_attachment_metadata store RELATIVE paths, so the
      * full-URL LIKE probe matches nothing and the guard passes; it only counts

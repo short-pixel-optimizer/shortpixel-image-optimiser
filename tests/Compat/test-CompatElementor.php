@@ -188,6 +188,69 @@ class CompatElementorTest extends SPIO_IntegrationTestCase {
 		$this->assertSame( 'widget', $decoded[0]['elType'] ?? null, 'Nested structure must survive the URL rewrite.' );
 	}
 
+	// -------------------------------------------------------------------
+	// Manual file rename rewrites _elementor_data too
+	// -------------------------------------------------------------------
+
+	/**
+	 * The "Change Filename" / AI-filename rename shares the SAME Replacer
+	 * pass as the conversion path (OptimizeAiController::replaceFiles →
+	 * new Replacer), so renaming a file referenced from a real Elementor
+	 * `_elementor_data` row must rewrite the JSON to the new base and the
+	 * value must still round-trip as valid JSON.
+	 */
+	public function test_manual_rename_rewrites_elementor_data_json_postmeta() {
+		$id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+
+		$url      = wp_get_attachment_url( $id );
+		$old_base = pathinfo( get_attached_file( $id ), PATHINFO_FILENAME );
+
+		$carrier = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+		$json    = wp_json_encode(
+			array(
+				array(
+					'id'         => 'widget-1',
+					'elType'     => 'widget',
+					'widgetType' => 'image',
+					'settings'   => array( 'image' => array( 'url' => $url, 'id' => $id ) ),
+				),
+			),
+			JSON_UNESCAPED_SLASHES
+		);
+		add_post_meta( $carrier, '_elementor_data', wp_slash( $json ) );
+
+		wp_cache_delete( $carrier, 'post_meta' );
+		$this->assertStringContainsString(
+			$old_base . '.jpg',
+			get_post_meta( $carrier, '_elementor_data', true ),
+			'Sentinel: pre-rename Elementor JSON must reference the old base.'
+		);
+
+		$new_base = 'elementor-rn-' . wp_generate_password( 6, false );
+		$this->assertTrue( $this->renameAttachment( $id, $new_base ), 'The rename must report success.' );
+		$this->assertStringContainsString( $new_base, get_attached_file( $id ), 'Sanity: _wp_attached_file must carry the new base.' );
+
+		wp_cache_delete( $carrier, 'post_meta' );
+		$after = get_post_meta( $carrier, '_elementor_data', true );
+
+		$this->assertStringNotContainsString( $old_base . '.jpg', $after, 'Elementor JSON must no longer reference the old base after the rename.' );
+		$this->assertStringContainsString( $new_base . '.jpg', $after, 'Elementor JSON must reference the new base.' );
+
+		$decoded = json_decode( $after, true );
+		$this->assertIsArray( $decoded, 'Rewritten _elementor_data must remain valid JSON after the rename.' );
+		$this->assertSame( 'widget', $decoded[0]['elType'] ?? null, 'Nested structure must survive the rename rewrite.' );
+	}
+
+	/** Run the shared rename engine exactly like AjaxController::replaceFileName does (:1409-1413). */
+	private function renameAttachment( int $attachment_id, string $new_base ): bool {
+		$this->resetPluginSingletons();
+		$imageModel = \wpSPIO()->filesystem()->getImage( $attachment_id, 'media' );
+		$queueItem  = new \ShortPixel\Model\Queue\QueueItem( array( 'imageModel' => $imageModel ) );
+
+		return $queueItem->getApiController( 'requestAlt' )->ajax_replaceFile( $queueItem, $new_base );
+	}
+
 	/**
 	 * Elementor-rendered images embedded in plain post_content (a normal
 	 * classic <img src>) must still be rewritten with the Elementor module

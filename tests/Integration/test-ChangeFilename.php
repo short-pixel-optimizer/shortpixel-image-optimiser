@@ -503,6 +503,120 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	}
 
 	// -------------------------------------------------------------------
+	// Editor markup: Gutenberg block + Classic srcset
+	// -------------------------------------------------------------------
+
+	/**
+	 * Block Editor (Gutenberg) stores images as wp:image block comments with
+	 * JSON attributes plus a figure/img body carrying the wp-image-<ID>
+	 * class. The rename rewrite runs plain URL replacement over
+	 * post_content, so the block must come out with the new URL while the
+	 * comment-delimited structure still parses via parse_blocks() and the
+	 * id attribute / wp-image class stay intact (they are what ties the
+	 * block to the attachment).
+	 */
+	public function test_gutenberg_image_block_is_rewritten_and_still_parses() {
+		$this->_setRole( 'administrator' );
+
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+
+		$original_url  = wp_get_attachment_url( $attachment_id );
+		$original_file = get_attached_file( $attachment_id );
+		$original_base = pathinfo( $original_file, PATHINFO_FILENAME );
+
+		$block_markup = '<!-- wp:image {"id":' . $attachment_id . ',"sizeSlug":"full","linkDestination":"none"} -->' . "\n"
+			. '<figure class="wp-block-image size-full"><img src="' . esc_url( $original_url ) . '" alt="" class="wp-image-' . $attachment_id . '"/></figure>' . "\n"
+			. '<!-- /wp:image -->';
+
+		$post_id = self::factory()->post->create( array( 'post_content' => $block_markup ) );
+		$this->assertStringContainsString(
+			$original_base . '.jpg',
+			get_post( $post_id )->post_content,
+			'Sentinel: the block must embed the original URL before the rename'
+		);
+
+		$new_base = 'gberg-rename-' . wp_generate_password( 6, false );
+		$response = $this->doReplaceFileName( $attachment_id, $new_base );
+
+		$this->assertIsObject( $response, 'Raw: ' . $this->lastRawResponse() );
+		$this->assertTrue( $response->is_done );
+		$this->assertObjectNotHasProperty( 'is_error', $response );
+
+		clean_post_cache( $post_id );
+		$content = get_post( $post_id )->post_content;
+
+		$this->assertStringNotContainsString( $original_base . '.jpg', $content, 'Old filename must be gone from the block markup' );
+		$this->assertStringContainsString( $new_base . '.jpg', $content, 'New filename must be written into the block markup' );
+
+		// The block must still be a valid, parseable wp:image block.
+		$blocks = array_values( array_filter( parse_blocks( $content ), function ( $b ) {
+			return 'core/image' === $b['blockName'];
+		} ) );
+		$this->assertCount( 1, $blocks, 'The rewritten content must still parse as exactly one core/image block' );
+		$this->assertSame( $attachment_id, $blocks[0]['attrs']['id'] ?? null, 'The block id attribute must survive the rewrite' );
+		$this->assertStringContainsString(
+			'wp-image-' . $attachment_id,
+			$blocks[0]['innerHTML'],
+			'The wp-image-<ID> class (attachment linkage) must survive the rewrite'
+		);
+		$this->assertStringContainsString( $new_base . '.jpg', $blocks[0]['innerHTML'], 'The parsed block body must carry the new URL' );
+	}
+
+	/**
+	 * Classic Editor content commonly carries a responsive srcset listing
+	 * the thumbnail URLs. replaceFiles() feeds EVERY file of the family
+	 * (main + each size) into the Replacer search/replace arrays
+	 * (OptimizeAiController.php:758-785), so every srcset entry must be
+	 * rewritten — a partial rewrite would leave dead thumbnail URLs.
+	 */
+	public function test_classic_editor_srcset_entries_are_all_rewritten() {
+		$this->_setRole( 'administrator' );
+
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+
+		$original_url  = wp_get_attachment_url( $attachment_id );
+		$original_file = get_attached_file( $attachment_id );
+		$original_base = pathinfo( $original_file, PATHINFO_FILENAME );
+		$meta          = wp_get_attachment_metadata( $attachment_id );
+		$this->assertNotEmpty( $meta['sizes'], 'Precondition: thumbnails must exist for a srcset' );
+
+		$base_url = trailingslashit( dirname( $original_url ) );
+		$srcset   = array( esc_url( $original_url ) . ' ' . $meta['width'] . 'w' );
+		foreach ( $meta['sizes'] as $sizeData ) {
+			$srcset[] = esc_url( $base_url . $sizeData['file'] ) . ' ' . $sizeData['width'] . 'w';
+		}
+		$content = '<img src="' . esc_url( $original_url ) . '" srcset="' . implode( ', ', $srcset ) . '" alt="classic srcset" />';
+
+		$post_id = self::factory()->post->create( array( 'post_content' => $content ) );
+
+		$new_base = 'srcset-rename-' . wp_generate_password( 6, false );
+		$response = $this->doReplaceFileName( $attachment_id, $new_base );
+
+		$this->assertIsObject( $response, 'Raw: ' . $this->lastRawResponse() );
+		$this->assertTrue( $response->is_done );
+		$this->assertObjectNotHasProperty( 'is_error', $response );
+
+		clean_post_cache( $post_id );
+		$after = get_post( $post_id )->post_content;
+
+		$this->assertStringNotContainsString(
+			$original_base,
+			$after,
+			'No srcset entry may still reference the old base — every size URL must be rewritten'
+		);
+		foreach ( wp_get_attachment_metadata( $attachment_id )['sizes'] as $sizeName => $sizeData ) {
+			$this->assertStringContainsString(
+				$sizeData['file'],
+				$after,
+				"srcset entry for size $sizeName must reference the renamed thumbnail"
+			);
+		}
+		$this->assertStringContainsString( $new_base . '.jpg', $after, 'The main src must carry the new base' );
+	}
+
+	// -------------------------------------------------------------------
 	// Access control
 	// -------------------------------------------------------------------
 

@@ -177,4 +177,64 @@ class CompatWpBakeryTest extends SPIO_IntegrationTestCase {
 			'Rewritten WPBakery shortcode must reference .jpg (raw or urlencoded).'
 		);
 	}
+
+	// -------------------------------------------------------------------
+	// Manual file rename rewrites the urlencoded shortcode too
+	// -------------------------------------------------------------------
+
+	/** Run the shared rename engine exactly like AjaxController::replaceFileName does (:1409-1413). */
+	private function renameAttachment( int $attachment_id, string $new_base ): bool {
+		$this->resetPluginSingletons();
+		$imageModel = \wpSPIO()->filesystem()->getImage( $attachment_id, 'media' );
+		$queueItem  = new \ShortPixel\Model\Queue\QueueItem( array( 'imageModel' => $imageModel ) );
+
+		return $queueItem->getApiController( 'requestAlt' )->ajax_replaceFile( $queueItem, $new_base );
+	}
+
+	/**
+	 * The "Change Filename" / AI-filename rename runs the same Replacer
+	 * pass as conversions, so a [vc_single_image image_url="<urlencoded>"]
+	 * shortcode referencing the renamed file must be rewritten in its
+	 * ENCODED form — the WpBakery module urlencodes both search and
+	 * replace URL sets.
+	 */
+	public function test_manual_rename_rewrites_urlencoded_wpbakery_shortcode() {
+		$id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+
+		$url      = wp_get_attachment_url( $id );
+		$old_base = pathinfo( get_attached_file( $id ), PATHINFO_FILENAME );
+
+		$post_id = self::factory()->post->create(
+			array(
+				'post_status'  => 'publish',
+				'post_content' => '[vc_single_image image_url="' . urlencode( $url ) . '"]',
+			)
+		);
+
+		clean_post_cache( $post_id );
+		$this->assertStringContainsString(
+			urlencode( $url ),
+			get_post( $post_id )->post_content,
+			'Sentinel: pre-rename urlencoded URL must be present in the WPBakery shortcode.'
+		);
+
+		$new_base = 'bakery-rn-' . wp_generate_password( 6, false );
+		$this->assertTrue( $this->renameAttachment( $id, $new_base ), 'The rename must report success.' );
+		$this->assertStringContainsString( $new_base, get_attached_file( $id ), 'Sanity: _wp_attached_file must carry the new base.' );
+
+		clean_post_cache( $post_id );
+		$content = get_post( $post_id )->post_content;
+
+		$this->assertStringNotContainsString(
+			urlencode( $old_base . '.jpg' ),
+			$content,
+			'The WpBakery module must rewrite the urlencoded old base out of the shortcode on rename.'
+		);
+		$this->assertStringContainsString(
+			$new_base,
+			urldecode( $content ),
+			'The rewritten shortcode must reference the new base (encoded form decodes to it).'
+		);
+	}
 }

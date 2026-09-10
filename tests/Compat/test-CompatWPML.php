@@ -112,6 +112,15 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 		return \wpSPIO()->filesystem()->getImage( $attachment_id, 'media', false );
 	}
 
+	/** Run the shared rename engine exactly like AjaxController::replaceFileName does (:1409-1413). */
+	private function renameAttachment( int $attachment_id, string $new_base ): bool {
+		$this->resetPluginSingletons();
+		$imageModel = \wpSPIO()->filesystem()->getImage( $attachment_id, 'media' );
+		$queueItem  = new \ShortPixel\Model\Queue\QueueItem( array( 'imageModel' => $imageModel ) );
+
+		return $queueItem->getApiController( 'requestAlt' )->ajax_replaceFile( $queueItem, $new_base );
+	}
+
 	// -------------------------------------------------------------------
 	// Coexistence + wiring
 	// -------------------------------------------------------------------
@@ -587,6 +596,58 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 			'AI pinned alt',
 			get_post( $post_other )->post_content,
 			'Regression #40: the different-language post must NOT be replaced (the old guard compared undefined \'code\' keys and replaced it anyway).'
+		);
+	}
+
+	// -------------------------------------------------------------------
+	// PIN — file rename never reaches WPML same-file translations
+	// -------------------------------------------------------------------
+
+	/**
+	 * PIN #69 (same engine gap as the Polylang pin in
+	 * test-CompatPolylang.php): renaming the original
+	 * moves the SHARED physical file, but replaceMetaData()
+	 * (OptimizeAiController.php:961-1001) rewrites only the one $item_id.
+	 * The WPML same-file translation keeps _wp_attached_file/metadata on
+	 * the OLD filename, which no longer exists on disk → the translated
+	 * attachment is broken. getWPMLDuplicates() would have listed the
+	 * sibling, but the rename engine never consults it.
+	 *
+	 * Flip when: replaceFiles()/replaceMetaData() also updates every
+	 * getWPMLDuplicates() sibling.
+	 */
+	public function test_pin69_rename_leaves_wpml_duplicate_meta_on_old_filename_pinned_for_deferred_fix() {
+		$id     = $this->uploadFixture( 'fixture-small.jpg' );
+		$dup_id = $this->createDuplicateAttachment( $id );
+		$this->insertTranslationRow( $id, 9101, 'en' );
+		$this->insertTranslationRow( $dup_id, 9101, 'de', 'en' );
+		$this->purgeQueueTable();
+
+		$old_file = get_attached_file( $id );
+		$old_base = pathinfo( $old_file, PATHINFO_FILENAME );
+		$this->assertSame( $old_file, get_attached_file( $dup_id ), 'Sentinel: original and translation must share the physical file.' );
+		$this->assertContains(
+			$dup_id,
+			array_map( 'intval', $this->freshImageModel( $id )->getWPMLDuplicates() ),
+			'Sentinel: the sibling must be listed as a WPML duplicate — the fix has the data it needs.'
+		);
+
+		$new_base = 'wpml-rename-' . wp_generate_password( 6, false );
+		$this->assertTrue( $this->renameAttachment( $id, $new_base ), 'Sanity: the rename must report success.' );
+
+		$this->assertStringContainsString( $new_base, get_attached_file( $id ), 'Sanity: original _wp_attached_file must carry the new base.' );
+		$this->assertFileDoesNotExist( $old_file, 'Sanity: the shared physical file was moved to the new name.' );
+
+		clean_post_cache( $dup_id );
+		$dup_attached = get_attached_file( $dup_id );
+		$this->assertStringContainsString(
+			$old_base,
+			$dup_attached,
+			'PIN #69: fixed? The WPML translation now tracks the rename — flip this pin to a regression test.'
+		);
+		$this->assertFileDoesNotExist(
+			$dup_attached,
+			'PIN #69: the translation references a file that no longer exists after the rename.'
 		);
 	}
 }

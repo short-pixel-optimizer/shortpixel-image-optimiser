@@ -124,6 +124,7 @@ class ConversionReplacementTest extends SPIO_IntegrationTestCase {
 			\ShortPixel\Replacer\Modules\WpBakery::class,
 			\ShortPixel\Replacer\Modules\YoastSeo::class,
 			\ShortPixel\Replacer\Modules\Breakdance::class,
+			\ShortPixel\Replacer\Modules\SmartSlider::class,
 		);
 		foreach ( $classes as $class ) {
 			if ( ! class_exists( $class ) ) {
@@ -675,6 +676,38 @@ class ConversionReplacementTest extends SPIO_IntegrationTestCase {
 			'/(?:\.jpg|%2Ejpg)/i',
 			$content,
 			'Rewritten WPBakery content must reference .jpg (raw or urlencoded).'
+		);
+	}
+
+	// -------------------------------------------------------------------
+	// SmartSlider module: DELIBERATELY DISABLED upstream
+	// -------------------------------------------------------------------
+
+	/**
+	 * DOCUMENTS CURRENT BEHAVIOR: the SmartSlider module is intentionally
+	 * switched off — its constructor returns before registering anything
+	 * (build/shortpixel/replacer2/src/Modules/SmartSlider.php:34, commit
+	 * 416c9e10 "Smartslider integration off until fix is found for the
+	 * slide / base64 encoding on images"). Even with the plugin's
+	 * NEXTEND_SMARTSLIDER_3 constant defined, no replace_urls action may
+	 * be registered — conversions and renames leave SmartSlider tables
+	 * untouched BY DESIGN. If the integration is re-enabled upstream this
+	 * test fails and real SmartSlider coverage (own DB table) is needed.
+	 */
+	public function test_smartslider_module_is_deliberately_disabled_documents_current_behavior() {
+		if ( ! defined( 'NEXTEND_SMARTSLIDER_3' ) ) {
+			define( 'NEXTEND_SMARTSLIDER_3', '3.5-test' );
+		}
+
+		$this->resetReplacerModuleSingletons();
+		remove_all_actions( 'shortpixel/replacer/replace_urls' );
+
+		$replacer = \ShortPixel\Replacer\Replacer::getInstance();
+		$module   = \ShortPixel\Replacer\Modules\SmartSlider::getInstance( $replacer );
+
+		$this->assertFalse(
+			has_action( 'shortpixel/replacer/replace_urls', array( $module, 'doReplaceQueries' ) ),
+			'SmartSlider must NOT register its replace_urls action — the integration is deliberately disabled (SmartSlider.php:34). If this fires, the upstream off-switch was removed: add real coverage.'
 		);
 	}
 
