@@ -1535,8 +1535,13 @@ class AjaxController
 	 * - `id`   int    Image ID.
 	 * - `type` string 'media' or 'custom'.
 	 *
+	 * Marks the queue slot with undoAltDataAction() ('undoAltData' action —
+	 * required so handleReplace() applies the exact-match undo branch, see
+	 * ba9fc3ef) and calls OptimizeAiController::undoAltData() directly.
+	 *
 	 * Returns (for 'undo'):
-	 * - `$json->$type`  mixed  Alt-data object returned by the API controller.
+	 * - `$json->$type`  mixed  The QueueItem result object (since ba9fc3ef;
+	 *                          previously the raw alt-data array).
 	 * - `$json->status` bool   true.
 	 *
 	 * @param \stdClass $json JSON accumulator object.

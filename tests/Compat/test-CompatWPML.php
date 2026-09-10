@@ -548,12 +548,16 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 	 * replaced anyway. With the `language_code` comparison the
 	 * same-language post gets the AI alt while the other-language post is
 	 * left untouched.
+	 *
+	 * The in-content alt starts EMPTY: since dc65f17e the default 'missing'
+	 * mode only fills empty alts, so an empty alt is the shape that gets
+	 * written — the WPML language discrimination stays the point under test.
 	 */
 	public function test_handlereplace_skips_other_language_posts_end_to_end() {
 		$id         = $this->uploadFixture( 'fixture-small.jpg' );
 		$imageModel = $this->freshImageModel( $id );
 
-		$img_tag    = '<img src="' . esc_url( wp_get_attachment_url( $id ) ) . '" alt="old alt" />';
+		$img_tag    = '<img src="' . esc_url( wp_get_attachment_url( $id ) ) . '" alt="" />';
 		$post_same  = self::factory()->post->create( array( 'post_content' => $img_tag ) );
 		$post_other = self::factory()->post->create( array( 'post_content' => $img_tag ) );
 
@@ -576,8 +580,11 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 			array( 'post_id' => $post_other, 'content' => get_post( $post_other )->post_content ),
 		);
 		$args    = array(
-			'aiData' => array( 'alt' => 'AI pinned alt', 'caption' => 0 ),
-			'qItem'  => $qItem,
+			'aiData'     => array( 'alt' => 'AI pinned alt', 'caption' => 0 ),
+			'qItem'      => $qItem,
+			// Since ba9fc3ef handleReplace() reads args['prevAiData'] (undo
+			// exact-match support); production callers always pass it.
+			'prevAiData' => array(),
 		);
 
 		\ShortPixel\Controller\Optimizer\OptimizeAiController::getInstance()->handleReplace( $results, $args );

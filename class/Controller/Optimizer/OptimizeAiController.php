@@ -73,6 +73,15 @@ class OptimizeAiController extends OptimizerBase
      * 'undoAI' is handled locally via undoAltData(). All other actions (requestAlt,
      * retrieveAlt) are delegated to AiController::processMediaItem().
      *
+     * BUG #61 (HIGH, pinned in tests/Integration/test-BulkOptimization.php as
+     * test_pin61_..._pinned_for_deferred_fix): ba9fc3ef renamed the bulk-undo
+     * enqueue action to 'undoAltData' (Queue::prepareItems now uses
+     * QueueItem::undoAltDataAction()), but this switch still only knows
+     * 'undoAI' — bulk undo items fall through to the default branch and are
+     * sent to the AI API via processMediaItem() instead of reverting.
+     * QueueItem::getApiController() has the same missing case. Fix: handle
+     * 'undoAltData' in both switches (or enqueue as 'undoAI').
+     *
      * @param QueueItem $qItem The item to process.
      * @return mixed Return value of undoAltData() for the undoAI action; void otherwise.
      */
@@ -560,29 +569,32 @@ class OptimizeAiController extends OptimizerBase
      * longer restores post content (only the Media Library alt reverts).
      * Fix will need an undo-aware bypass or a separate reason parameter.
      *
-     * BUG #59 (MEDIUM, STILL open, pinned in tests/Integration/test-AiPipeline.php
-     * as test_pin59_..._pinned_for_deferred_fix): posts open in a Gutenberg
-     * editor are rewritten behind the editor's back; the next editor save
-     * silently wins with no conflict warning (customer report EBUG-3b,
-     * tests/partner-plugins/bug-editor-ai-corruption.md). The guard added in
-     * 3f86b55b below misses the target three ways:
-     *   1. Wrong ID — it checks the lock on $qItem->item_id (the ATTACHMENT),
-     *      but the posts being rewritten are the $post_id values in
-     *      handleReplace()'s loop; a containing post's lock never blocks it
-     *      (pin59 locks the containing post and still passes).
-     *   2. wp_check_post_lock() lives in wp-admin/includes/post.php — not
+     * BUG #59 (LARGELY FIXED in ba9fc3ef): 3f86b55b's misplaced guard here
+     * (it checked the lock on $qItem->item_id — the ATTACHMENT) was moved
+     * into handleReplace()'s results loop as wp_check_post_lock($post_id),
+     * so containing posts under an active Gutenberg edit lock are now
+     * correctly skipped (customer report EBUG-3b; regression test
+     * test_replace_skips_posts_with_active_edit_lock). Two residual caveats
+     * remain open under #59:
+     *   1. wp_check_post_lock() lives in wp-admin/includes/post.php — not
      *      loaded under WP-CLI / front-end cron queue processing → fatal.
      *      Needs function_exists() or a direct _edit_lock meta check.
-     *   3. wp_check_post_lock() returns false for the CURRENT user's own
+     *   2. wp_check_post_lock() returns false for the CURRENT user's own
      *      lock — the reported single-admin scenario (editor open, same
      *      admin's AJAX processes the queue) is never skipped. Check
      *      _edit_lock freshness regardless of owner; the editor JS path
      *      (UpdateGutenBerg) already applies the alt in the open session.
-     * Side effect of the current guard: while someone edits the ATTACHMENT
-     * screen, replacement AND undo are silently skipped for every post.
+     *
+     * UNDO support (ba9fc3ef): when the queue item action is 'undoAltData',
+     * $prevAiData carries the previously GENERATED data so handleReplace()
+     * can apply the exact-match restore rule (see its docblock). NOTE the
+     * 'none' early-return above still also blocks undo (BUG #58), and the
+     * BULK undo path never reaches here at all (BUG #61 — action-name
+     * dispatch mismatch, pinned in test-BulkOptimization.php).
      *
      * @param QueueItem $qItem
-     * @param array $aiData Generated AI data (alt / caption are strings, or int status codes when not generated).
+     * @param array $aiData Generated AI data (alt / caption are strings, or int status codes when not generated); for undo, the ORIGINAL data to restore.
+     * @param array $prevAiData For undo only: the previously generated AI data used for the exact-match comparison.
      * @return array|void Finder results; void when alt AND caption are int status codes, or when 'none' mode is active.
      */
     protected function replaceImageAttributes(QueueItem $qItem, $aiData, $prevAiData = [])
@@ -1106,12 +1118,26 @@ class OptimizeAiController extends OptimizerBase
      * `false === $aiPreserve` OR-leg, so a non-empty in-content alt is now
      * always respected); regression coverage in
      * tests/Integration/test-AiPipeline.php
-     * (test_missing_mode_preserves_existing_in_content_alt). Side effect:
-     * undoAltData()'s restore now also runs into the missing-only guard —
-     * see BUG #60 there.
+     * (test_missing_mode_preserves_existing_in_content_alt).
+     *
+     * UNDO branch (ba9fc3ef, fixes BUG #60 for the single-item path): when
+     * the queue item action is 'undoAltData', the alt branch applies the
+     * EXACT-MATCH restore rule instead — 'overwrite' restores always;
+     * 'missing' restores only where the current in-content alt exactly
+     * matches the previously generated AI text ($prevAiData, trim-compared),
+     * so a manually edited alt counts as reviewed and is left alone.
+     * Regression coverage: test_undo_under_default_settings_restores_in_content_alt
+     * + test_undo_preserves_manually_edited_in_content_alt. The BULK undo
+     * path never reaches this branch (BUG #61, action-name dispatch
+     * mismatch — see sendToProcessing()).
+     *
+     * Post-lock guard (ba9fc3ef, fixes the wrong-ID leg of BUG #59): each
+     * $post_id is skipped while wp_check_post_lock() reports a live edit
+     * lock. Residual #59 caveats (admin-only function; own lock returns
+     * false) are documented on replaceImageAttributes().
      *
      * @param array $results Finder results: arrays with post_id + content.
-     * @param array $args    'aiData' (generated data) and 'qItem' (QueueItem).
+     * @param array $args    'aiData' (generated data), 'qItem' (QueueItem), 'prevAiData' (previous AI data for undo matching).
      * @return void
      */
     public function handleReplace($results, $args)
@@ -1350,14 +1376,15 @@ class OptimizeAiController extends OptimizerBase
      * reverted. Fix will need a per-call override or a separate un-do path
      * that bypasses the content-replace toggle.
      *
-     * BUG #60 (open, pinned as test_pin60_..._pinned_for_deferred_fix):
-     * since dc65f17e the same applies under the DEFAULT 'missing' mode —
-     * handleReplace()'s missing branch only writes when the in-content alt
-     * is empty, and after an AI run the alt holds the (non-empty) AI text,
-     * so the undo restore is blocked there too. Undo previously worked only
-     * via the buggy #56 aiPreserve leg. Net effect: undo restores post
-     * content only in 'overwrite' mode. Same fix as #58: undo must bypass
-     * the ai_content_replace guards entirely.
+     * BUG #60 (FIXED by ba9fc3ef for this single-item path): handleReplace()
+     * now has an undo branch keyed on the 'undoAltData' action — under
+     * 'missing' mode it restores the original alt where the in-content alt
+     * exactly matches the previously generated text ($generated is passed as
+     * $prevAiData below); a manually edited alt is treated as reviewed and
+     * left alone. See the handleReplace() docblock. Callers MUST mark the
+     * slot via QueueItem::undoAltDataAction() first (AjaxController does) or
+     * the undo branch never engages. BUG #61: the bulk-undo queue path never
+     * reaches this method at all (dispatch switches still expect 'undoAI').
      *
      * @param QueueItem $qItem The queue item for the attachment to revert.
      * @return array Return value of getAltData() containing snippet, generated, original, and current data.
