@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 
 <div id="spioSettingsModalShade" class="spio-modal-shade" style="display:none;"></div>
-			 <div id="spioSettingsModal" class="spio-modal spio-hide" style="min-width:610px;margin-left:-305px;">
+			 <div id="spioSettingsModal" class="spio-modal spio-hide" style="min-width:610px">
 					 <div class="spio-modal-title">
 							 <button type="button" class="spio-close-help-button" onclick="">&times;</button>
 					 </div>
