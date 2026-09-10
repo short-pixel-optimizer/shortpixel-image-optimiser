@@ -1369,14 +1369,13 @@ class AjaxController
 	 * Always responds with redirect='reload'; is_error is set when the replace
 	 * returned false (conflict and real failures share the same message).
 	 *
-	 * BUG #50 (open, pinned in tests/Integration/test-ChangeFilename.php as
-	 * test_pin50_..._pinned_for_deferred_fix): sanitize_file_name() never
-	 * returns false, so only a MISSING newFileName key is rejected below — an
-	 * empty (or sanitised-to-empty) value passes through, yields an empty file
-	 * base in ajax_replaceFile() and renames every file to an extension-only
-	 * dotfile ('.jpg') while rewriting content URLs accordingly. Fix: reject
-	 * when the sanitised value (or its PATHINFO_FILENAME base) is empty or
-	 * shorter than a sane minimum.
+	 * BUG #50 fixed (202c6e3c): the strlen<3 guard below runs on the
+	 * SANITISED value, so empty and sanitised-to-empty/short names are
+	 * rejected before any rename (previously they produced extension-only
+	 * '.jpg' dotfiles). Regression-tested in
+	 * tests/Integration/test-ChangeFilename.php (test_regression50_*).
+	 * Note: the rejection reuses the generic "This image could not be
+	 * loaded" message alongside the specific 'error' text.
 	 *
 	 * @param array $data Dispatch data: 'id' (attachment id) and 'type' ('media').
 	 * @return void Exits via send().

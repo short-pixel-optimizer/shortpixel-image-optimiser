@@ -604,17 +604,22 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 	// -------------------------------------------------------------------
 
 	/**
-	 * PIN #69 (same engine gap as the Polylang pin in
-	 * test-CompatPolylang.php): renaming the original
-	 * moves the SHARED physical file, but replaceMetaData()
-	 * (OptimizeAiController.php:961-1001) rewrites only the one $item_id.
-	 * The WPML same-file translation keeps _wp_attached_file/metadata on
-	 * the OLD filename, which no longer exists on disk → the translated
-	 * attachment is broken. getWPMLDuplicates() would have listed the
-	 * sibling, but the rename engine never consults it.
+	 * PIN #69 — attempted fix in 202c6e3c is INEFFECTIVE for WPML:
+	 * replaceFiles() now loops getWPMLDuplicates() and calls
+	 * replaceMetaData() for every sibling (this works for Polylang, see
+	 * test-CompatPolylang.php), but for WPML the loop never finds the
+	 * sibling. Ordering bug: replaceMetaData() for the ORIGINAL runs
+	 * FIRST and rewrites its _wp_attached_file to the new base; only THEN
+	 * is getWPMLDuplicates() called, whose WPML branch
+	 * (MediaLibraryModel.php:2299) only accepts siblings whose
+	 * get_attached_file() EQUALS the original's — which is no longer true
+	 * after the original was just updated. Result: the translation keeps
+	 * BOTH _wp_attachment_metadata['file'] AND _wp_attached_file on the
+	 * OLD filename, pointing at a file that no longer exists on disk.
 	 *
-	 * Flip when: replaceFiles()/replaceMetaData() also updates every
-	 * getWPMLDuplicates() sibling.
+	 * Flip when: the duplicates are enumerated BEFORE the original's meta
+	 * rewrite (or the equality guard is relaxed) AND the duplicate's
+	 * _wp_attached_file is also rewritten.
 	 */
 	public function test_pin69_rename_leaves_wpml_duplicate_meta_on_old_filename_pinned_for_deferred_fix() {
 		$id     = $this->uploadFixture( 'fixture-small.jpg' );
@@ -638,12 +643,22 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 		$this->assertStringContainsString( $new_base, get_attached_file( $id ), 'Sanity: original _wp_attached_file must carry the new base.' );
 		$this->assertFileDoesNotExist( $old_file, 'Sanity: the shared physical file was moved to the new name.' );
 
+		// THE PIN: the 202c6e3c duplicates loop never fires for WPML (the
+		// original's attached_file was already rewritten, so the equality
+		// guard in getWPMLDuplicates() rejects the sibling) — metadata AND
+		// attached_file both stay on the old, now-deleted filename.
 		clean_post_cache( $dup_id );
+		$dup_meta = wp_get_attachment_metadata( $dup_id );
+		$this->assertStringContainsString(
+			$old_base,
+			(string) ( $dup_meta['file'] ?? '' ),
+			'PIN #69: fixed? The WPML translation metadata[file] now tracks the rename — flip this pin to a regression test.'
+		);
 		$dup_attached = get_attached_file( $dup_id );
 		$this->assertStringContainsString(
 			$old_base,
 			$dup_attached,
-			'PIN #69: fixed? The WPML translation now tracks the rename — flip this pin to a regression test.'
+			'PIN #69: fixed? The WPML translation _wp_attached_file now tracks the rename — flip this pin to a regression test.'
 		);
 		$this->assertFileDoesNotExist(
 			$dup_attached,

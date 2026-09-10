@@ -642,10 +642,16 @@ class OptimizeAiController extends OptimizerBase
      * if the count meets or exceeds imageThreshold (default 1) the rename is skipped. Otherwise:
      *   1. Collects all image file objects (main, thumbnails, WebP, AVIF) from the image model.
      *   2. Checks that no target filename already exists (conflict guard).
-     *   3. Moves each source file to its new name.
-     *   4. Renames backup files via BackupController.
-     *   5. Replaces source/target URL pairs in post content via Replacer2.
-     *   6. Updates WordPress attachment metadata and the attached-file postmeta.
+     *   3. COPIES each source file to its new name (successful copies are
+     *      collected in $copySource; the sources are deleted only at the very
+     *      end, after the metadata/content rewrite — some plugins (WPML) can
+     *      deny the deletion otherwise).
+     *   4. Updates attachment metadata + attached-file postmeta for the item
+     *      AND (202c6e3c) for every getWPMLDuplicates() sibling with
+     *      is_duplicate=true (metadata only — see replaceMetaData()).
+     *   5. Renames backup files via BackupController.
+     *   6. Replaces source/target URL pairs in post content via Replacer2.
+     *   7. Deletes the successfully-copied source files.
      * Supports a dry_run mode that logs all planned operations without making any changes.
      *
      * URL replacement is anchored to the basename portion of the URL, so a
@@ -653,37 +659,50 @@ class OptimizeAiController extends OptimizerBase
      * the directory in the Replacer URLs.
      *
      * BUG #52 (open, pinned in tests/Controller/test-OptimizeAiController.php
-     * as test_pin52_..._pinned_for_deferred_fix): the results of
-     * $sourceFile->move(), renameBackup() and $replacer->replace() are all
-     * discarded — on partial failure (some files moved, some not) this method
-     * still returns true, the DB rewrite runs for ALL pairs and the user is
-     * told "Files were replaced". No rollback exists.
+     * as test_pin52_..._pinned_for_deferred_fix): still present after the
+     * copy+deferred-delete refactor (202c6e3c) — a failed copy() is merely
+     * omitted from $copySource (so its source survives), but no error is
+     * surfaced; renameBackup() and $replacer->replace() results are still
+     * discarded. On partial failure this method still returns true, the DB
+     * rewrite runs for ALL pairs and the user is told "Files were replaced".
+     * No rollback exists.
      *
      * BUG #68 (open, HIGH, pinned in tests/Compat/test-CompatOffloadMedia.php
      * as test_pin68_*_pinned_for_deferred_fix): offloaded media (WP Offload
      * Media & co) is never told about the rename — no hook fires after a
      * successful replace and the as3cf item keeps the OLD remote key. With a
-     * local copy present the rewritten URLs 404 once served from the bucket;
-     * remote-only ("remove local files") is worse: every move() fails
+     * local copy present the rewritten URLs 404 once served from the bucket
+     * (the earlier _wp_attached_file provider-URL corruption is gone since
+     * 202c6e3c: metadata is rewritten while the old local file still exists,
+     * so as3cf's get_attached_file filter stays out of the way);
+     * remote-only ("remove local files") is worse: every copy() fails
      * silently (see #52) yet the DB/metadata rewrite still runs, leaving the
      * attachment pointing at a filename that exists nowhere. Fix directions:
-     * update/re-upload the offload item after the move loop, or refuse the
+     * update/re-upload the offload item after the copy loop, or refuse the
      * rename when Offloader reports the item as offloaded.
      *
-     * BUG #69 (open, HIGH, pinned in tests/Compat/test-CompatWPML.php +
-     * test-CompatPolylang.php as test_pin69_*_pinned_for_deferred_fix):
-     * replaceMetaData() below updates ONLY the one $item_id — WPML/Polylang
-     * translations sharing the physical file (guid duplicates) keep
-     * _wp_attached_file/metadata on the now-deleted old filename → every
-     * other language 404s. getWPMLDuplicates() has the sibling list but the
-     * rename engine never consults it.
+     * BUG #69 (attempted fix 202c6e3c, still open — pinned in
+     * tests/Compat/test-CompatWPML.php + test-CompatPolylang.php as
+     * test_pin69_*_pinned_for_deferred_fix). Two residual problems:
+     *   - Polylang (partially fixed): the getWPMLDuplicates() loop updates
+     *     each sibling's _wp_attachment_metadata, but is_duplicate=true
+     *     skips update_attached_file() and Polylang does not sync it — the
+     *     sibling's _wp_attached_file stays on the now-deleted old name.
+     *   - WPML (fix ineffective): replaceMetaData() for the ORIGINAL runs
+     *     BEFORE the duplicates loop and rewrites its attached file; the
+     *     WPML branch of getWPMLDuplicates() (MediaLibraryModel.php:2299)
+     *     only accepts siblings whose get_attached_file() equals the
+     *     original's — no longer true at that point — so no sibling is
+     *     found and the translation keeps metadata AND attached_file on
+     *     the old filename. Enumerate the duplicates before the original's
+     *     meta rewrite to fix.
      *
      * BUG #70 (open, HIGH, pinned in
      * tests/Integration/test-VirtualFilesystemRename.php as
      * test_pin70_*_pinned_for_deferred_fix; same family as #68): virtual
      * filesystems (S3-Uploads by Human Made, InfiniteUploads — the
      * VirtualFileSystem adapter) have no rename handling either; on a
-     * stateless install (no local files) every move() fails silently (see
+     * stateless install (no local files) every copy() fails silently (see
      * #52) yet the DB/metadata rewrite still runs and true is returned.
      *
      * NOTE on the recent_upload=false usage guard: on a stock WP install
@@ -978,16 +997,21 @@ class OptimizeAiController extends OptimizerBase
      * Replaces occurrences of $old_file with $new_file in the 'file', 'original_image', and
      * per-size 'file' entries of the attachment metadata array, then calls
      * wp_update_attachment_metadata(). Also updates the _wp_attached_file postmeta via
-     * update_attached_file(). In dry_run mode all changes are logged but not persisted.
+     * update_attached_file() — but ONLY when is_duplicate is false: for
+     * WPML/Polylang duplicate siblings (202c6e3c) the attached-file update
+     * is skipped on the assumption the translation plugin syncs it, which
+     * the compat suite shows neither actually does → residual bug #69
+     * (see replaceFiles()). In dry_run mode all changes are logged but not
+     * persisted.
      *
-     * Note: when is_dry_run is true the metadata 'file' string replacement is computed but
+     * Note: when dry_run is true the metadata 'file' string replacement is computed but
      * wp_update_attachment_metadata() is not called; the replaced $metadata variable is
      * only logged and then silently discarded.
      *
      * @param int    $item_id  WordPress attachment post ID.
      * @param string $old_file Original filename base to replace.
      * @param string $new_file New filename base to substitute.
-     * @param bool   $dry_run  When true, log changes without writing to the database.
+     * @param array  $args     Optional: dry_run (bool, log-only mode), is_duplicate (bool, skip the attached-file update for translation siblings).
      * @return void
      */
     protected function replaceMetaData($item_id, $old_file, $new_file, $args = [])

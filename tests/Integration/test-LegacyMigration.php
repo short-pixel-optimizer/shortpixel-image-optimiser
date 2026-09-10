@@ -210,4 +210,77 @@ class LegacyMigrationTest extends SPIO_IntegrationTestCase {
 		$this->assertSame( 'Optimization error', $image->getMeta( 'errorMessage' ), 'The legacy error message must carry over.' );
 		$this->assertIsNumeric( get_post_meta( $id, '_shortpixel_was_converted', true ), 'The error migration still counts as converted (guard stamped).' );
 	}
+
+	// -------------------------------------------------------------------
+	// REGRESSION #67 (fixed b168c8a0): migrate() self-heal checks the
+	// ORIGINAL file's own backup, not the main file's.
+	// -------------------------------------------------------------------
+
+	/**
+	 * REGRESSION TEST for BUG #67 (fixed in b168c8a0): the self-heal pass
+	 * in MediaLibraryModel::migrate() marks family members optimized when
+	 * they have a backup but no SUCCESS status. The original-file branch
+	 * used `$backupModel->hasBackup($this)` — probing the MAIN (-scaled)
+	 * file's backup instead of the original's — so an original with its
+	 * own backup was never healed unless the main happened to have one
+	 * too. Now it probes `hasBackup($originalFile)`.
+	 *
+	 * Shape: optimize a scaled attachment (backups on), then delete the
+	 * MAIN's backup and wipe the SPIO rows. Only the ORIGINAL still has a
+	 * backup. Under the old bug the original stayed unhealed (the probe
+	 * hit the main's missing backup); with the fix it is marked SUCCESS
+	 * while the main correctly stays unoptimized.
+	 */
+	public function test_regression67_migrate_selfheal_checks_original_files_own_backup() {
+		\wpSPIO()->settings()->backupImages = 1;
+
+		$id = $this->uploadFixture( 'fixture-large.jpg' ); // 3200×2400 → -scaled main + original
+		$this->purgeQueueTable();
+		$this->optimizeAttachment( $id );
+
+		$image = \wpSPIO()->filesystem()->getImage( $id, 'media', false );
+		$this->assertTrue( $image->isScaled(), 'Sentinel: the fixture must produce a -scaled main + original pair.' );
+
+		$mainPath     = get_attached_file( $id );
+		$originalPath = wp_get_original_image_path( $id );
+		$this->assertNotSame( $mainPath, $originalPath, 'Sentinel: main and original must be distinct files.' );
+
+		$fs        = \wpSPIO()->filesystem();
+		$backupDir = $fs->getBackupDirectory( $fs->getFile( $mainPath ) );
+		$this->assertNotFalse( $backupDir, 'Sentinel: the backup directory must exist after optimization.' );
+
+		$mainBackup     = trailingslashit( $backupDir->getPath() ) . wp_basename( $mainPath );
+		$originalBackup = trailingslashit( $backupDir->getPath() ) . wp_basename( $originalPath );
+		$this->assertFileExists( $mainBackup, 'Sentinel: optimization must have backed up the main file.' );
+		$this->assertFileExists( $originalBackup, 'Sentinel: optimization must have backed up the ORIGINAL file.' );
+
+		// Craft the #67 shape: only the ORIGINAL keeps its backup.
+		unlink( $mainBackup );
+
+		// Wipe this attachment's SPIO rows so nothing reads as optimized.
+		global $wpdb;
+		$wpdb->query( $wpdb->prepare( 'DELETE FROM `' . $wpdb->prefix . 'shortpixel_postmeta` WHERE attach_id = %d', $id ) );
+		delete_post_meta( $id, '_shortpixel_was_converted' );
+
+		$this->resetPluginSingletons();
+		$fs->flushImageCache();
+
+		$image = \wpSPIO()->filesystem()->getImage( $id, 'media', false );
+		$this->assertFalse( $image->isOptimized(), 'Precondition: the wiped attachment must not read as optimized.' );
+
+		$image->migrate();
+
+		$this->resetPluginSingletons();
+		\wpSPIO()->filesystem()->flushImageCache();
+		$image = \wpSPIO()->filesystem()->getImage( $id, 'media', false );
+
+		$this->assertTrue(
+			$image->getOriginalFile()->isOptimized(),
+			'REGRESSION #67: the original (with its own backup) must be self-healed to SUCCESS by migrate().'
+		);
+		$this->assertFalse(
+			$image->isOptimized(),
+			'The main file has no backup and must NOT be marked optimized by the self-heal.'
+		);
+	}
 }

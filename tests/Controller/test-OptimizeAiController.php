@@ -845,39 +845,42 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 	/**
 	 * PINNED BUG #52 (MEDIUM): Partial-failure blindness.
 	 *
-	 * class/Controller/Optimizer/OptimizeAiController.php replaceFiles():
-	 *   line 736 : `$result = $sourceFile->move($targetFileObj);`   // return dropped
-	 *   line 754 : `$backupModel->renameBackup($newFileBase);`      // return dropped
-	 *   line 766 : `$replacer->replace();`                          // return dropped
-	 *   line 774 : `return true;`
+	 * Still present after 202c6e3c replaced move() with copy() + deferred
+	 * source delete. In replaceFiles():
+	 *   - `$result = $sourceFile->copy($targetFileObj);` — a false result
+	 *     merely omits the source from the $copySource delete list; no
+	 *     error is surfaced;
+	 *   - `$backupModel->renameBackup($newFileBase);`  // return dropped
+	 *   - `$replacer->replace();`                      // return dropped
+	 *   - `return true;`
 	 *
 	 * So replaceFiles() returns true — and the user sees "Files were
-	 * replaced" — even when every single physical move failed. There is
-	 * also no rollback: if some moves succeed and others fail, the
+	 * replaced" — even when every single physical copy failed. There is
+	 * also no rollback: if some copies succeed and others fail, the
 	 * attachment is left in an inconsistent on-disk state while the
 	 * database is rewritten as if everything succeeded.
 	 *
-	 * We construct a fixture where the SOURCE file's move() ALWAYS
-	 * returns false (by stubbing FileModel::move() to a no-op false).
+	 * We construct a fixture where the SOURCE file's copy() ALWAYS
+	 * returns false (by stubbing FileModel::copy() to a no-op false).
 	 * The conflict guard passes because we do NOT pre-create the target.
-	 * Under the buggy contract replaceFiles() then reaches the
-	 * `return true` at :774 despite the failed move.
+	 * Under the buggy contract replaceFiles() then reaches the final
+	 * `return true` despite the failed copy.
 	 *
 	 * SENTINEL principles:
 	 *  - Principle 2: `assertIsBool` before the value assertion — the
 	 *    method's `: bool` return type could otherwise mask a shape drift.
-	 *  - Principle 5: verify move() *did* return false (via the spy
+	 *  - Principle 5: verify copy() *did* return false (via the spy
 	 *    counter) and that the source file *is* still on disk after
 	 *    the buggy run — so a fix that silently starts respecting the
 	 *    return value cannot slip past as a coincidental green.
 	 *
-	 * FLIP INSTRUCTIONS when SPIO fixes #52 (e.g. accumulating move
+	 * FLIP INSTRUCTIONS when SPIO fixes #52 (e.g. accumulating copy
 	 * results and returning false on any failure, with or without
 	 * rollback): change `assertTrue($result)` to `assertFalse($result)`
 	 * and update the sentinel that asserts the source file is still on
-	 * disk (a rollback fix would also restore any partially moved files).
+	 * disk (a rollback fix would also restore any partially copied files).
 	 */
-	public function test_pin52_replaceFiles_returns_true_when_move_fails_pinned_for_deferred_fix() {
+	public function test_pin52_replaceFiles_returns_true_when_copy_fails_pinned_for_deferred_fix() {
 		// Create a real attachment (so BackupController + replaceMetaData
 		// don't blow up on a naked ImageModel stub), then wrap the loaded
 		// ImageModel in a spy that returns a spy FileModel whose move()
@@ -919,20 +922,26 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 
 		// Spy FileModel:
 		//  - returns a controllable URL,
-		//  - stubs move() to always return false and record the call,
-		//  - never touches disk.
+		//  - stubs copy() to always return false and record the call,
+		//  - never touches disk (delete() is also stubbed so the deferred
+		//    source-delete loop cannot remove the fixture even if reached).
 		$srcFileStub = new class( $src_path, $base_url_dir . $src_filename ) extends \ShortPixel\Model\File\FileModel {
-			public $moveCalls = 0;
-			public $lastMoveTo = null;
+			public $copyCalls = 0;
+			public $lastCopyTo = null;
+			public $deleteCalls = 0;
 			private $spyUrl;
 			public function __construct( string $path, string $url ) {
 				parent::__construct( $path );
 				$this->spyUrl = $url;
 			}
 			public function getURL(): string { return $this->spyUrl; }
-			public function move( \ShortPixel\Model\File\FileModel $destination ) {
-				$this->moveCalls++;
-				$this->lastMoveTo = $destination;
+			public function copy( \ShortPixel\Model\File\FileModel $destination ): bool {
+				$this->copyCalls++;
+				$this->lastCopyTo = $destination;
+				return false;
+			}
+			public function delete() {
+				$this->deleteCalls++;
 				return false;
 			}
 		};
@@ -971,9 +980,9 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 
 		// Suppress the replaceMetaData step so the pin does not spuriously
 		// mutate WP core metadata — replaceMetaData() would rewrite
-		// _wp_attached_file with the new base even though no move happened.
+		// _wp_attached_file with the new base even though no copy happened.
 		$ctrl = new class() extends OptimizeAiController {
-			protected function replaceMetaData( $item_id, $old_file, $new_file, $dry_run = false ) {
+			protected function replaceMetaData( $item_id, $old_file, $new_file, $args = [] ) {
 				// intentional no-op — out of scope for pin #52 (return-value blindness).
 			}
 		};
@@ -1008,26 +1017,32 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 			[ 'dry_run' => false, 'recent_upload' => true ] // bypass usage guard
 		);
 
-		// Sentinel principle 5: move() must have been called at least once —
-		// otherwise the "move return dropped" bug is not exercised.
+		// Sentinel principle 5: copy() must have been called at least once —
+		// otherwise the "copy return dropped" bug is not exercised.
 		$this->assertGreaterThanOrEqual(
 			1,
-			$srcFileStub->moveCalls,
-			'Sentinel: replaceFiles() must have invoked move() at least once for #52 to apply.'
+			$srcFileStub->copyCalls,
+			'Sentinel: replaceFiles() must have invoked copy() at least once for #52 to apply.'
+		);
+		// A failed copy must never land in the deferred-delete list.
+		$this->assertSame(
+			0,
+			$srcFileStub->deleteCalls,
+			'Sentinel: a failed copy must not have its source deleted by the deferred-delete loop.'
 		);
 		// Sentinel principle 5: source file must still be on disk (the stub
-		// short-circuits, doing no actual move).
+		// short-circuits, doing no actual copy).
 		$this->assertFileExists(
 			$src_path,
-			'Sentinel: the stubbed move() did not touch disk, so the source must still be there.'
+			'Sentinel: the stubbed copy() did not touch disk, so the source must still be there.'
 		);
 		// Sentinel principle 2: value + type — the : bool return could mask
 		// a null-vs-false drift if we only asserted a truthy value.
 		$this->assertIsBool( $result );
 		$this->assertTrue(
 			$result,
-			'PINNED BUG #52: replaceFiles() returns true even when move() failed on every source — ' .
-			'the move() return value at OptimizeAiController.php:736 is DISCARDED. ' .
+			'PINNED BUG #52: replaceFiles() returns true even when copy() failed on every source — ' .
+			'the copy() result only controls the deferred-delete list, no error is surfaced. ' .
 			'FLIP INSTRUCTIONS when fixed: expect false here (and, if a rollback path is added, ' .
 			'update the sentinel accordingly).'
 		);

@@ -26,13 +26,14 @@
  * keep working unchanged (the appended filter entry is simply redundant
  * when the bootstrap already lists polylang).
  *
- * RENAME DESYNC — guid-duplicate translations — BUG #69 (open, HIGH):
- * OptimizeAiController::replaceFiles() renames the
- * PHYSICAL file (shared by every Polylang translation) but
- * replaceMetaData() (OptimizeAiController.php:961-1001) updates ONLY the
- * one $item_id it was called for. Every guid-duplicate sibling keeps
- * _wp_attached_file/_wp_attachment_metadata pointing at the now-deleted
- * old filename → all translations 404. Pinned below.
+ * RENAME DESYNC — guid-duplicate translations — BUG #69 (PARTIALLY
+ * fixed in 202c6e3c, residual open HIGH):
+ * OptimizeAiController::replaceFiles() now loops getWPMLDuplicates() and
+ * updates each sibling's _wp_attachment_metadata (regression-covered
+ * below), but the duplicate call passes is_duplicate=true which skips
+ * update_attached_file() — every guid-duplicate sibling still keeps
+ * _wp_attached_file pointing at the now-deleted old filename →
+ * get_attached_file() for translations remains broken. Residual pin below.
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -386,18 +387,20 @@ class CompatPolylangTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * PIN #69 (see file docblock):
-	 * renaming the original moves the SHARED physical file, but only the
-	 * original's _wp_attached_file/metadata are rewritten. The Polylang
-	 * guid-duplicate keeps the OLD filename in its meta while the file it
-	 * points at no longer exists → the translation's media is broken in
-	 * every language but the one that was renamed.
+	 * PIN #69 — PARTIALLY fixed in 202c6e3c (see file docblock):
+	 * replaceFiles() now loops getWPMLDuplicates() and calls
+	 * replaceMetaData() for every sibling, so the duplicate's
+	 * _wp_attachment_metadata['file'] DOES track the rename (regression
+	 * assertions below). But the duplicate call passes is_duplicate=true,
+	 * which deliberately SKIPS update_attached_file() — so the duplicate's
+	 * _wp_attached_file still carries the OLD filename, pointing at a file
+	 * that no longer exists on disk → get_attached_file() for the
+	 * translation is still broken after the rename (residual pin).
 	 *
-	 * Flip when: replaceMetaData() (or replaceFiles()) also updates every
-	 * getWPMLDuplicates() sibling — then assert the duplicate's meta
-	 * carries the new base too.
+	 * Flip the residual pin when: the duplicate's _wp_attached_file is
+	 * also rewritten (or WPML/Polylang syncing is made to cover it).
 	 */
-	public function test_pin69_rename_leaves_polylang_duplicate_meta_on_old_filename_pinned_for_deferred_fix() {
+	public function test_pin69_rename_leaves_polylang_duplicate_attached_file_on_old_filename_pinned_for_deferred_fix() {
 		$id     = $this->uploadFixture( 'fixture-small.jpg' );
 		$dup_id = $this->createPolylangDuplicate( $id );
 		$this->purgeQueueTable();
@@ -413,29 +416,32 @@ class CompatPolylangTest extends SPIO_IntegrationTestCase {
 		$this->assertStringContainsString( $new_base, get_attached_file( $id ), 'Sanity: original _wp_attached_file must carry the new base.' );
 		$this->assertFileDoesNotExist( $old_file, 'Sanity: the shared physical file was moved to the new name.' );
 
-		// …but the guid-duplicate still points at the old, now-deleted file.
+		// REGRESSION (202c6e3c): the duplicate's metadata['file'] now
+		// tracks the rename via the getWPMLDuplicates() loop.
 		clean_post_cache( $dup_id );
+		$dup_meta = wp_get_attachment_metadata( $dup_id );
+		$this->assertStringContainsString(
+			$new_base,
+			(string) ( $dup_meta['file'] ?? '' ),
+			'REGRESSION #69: the duplicate metadata[file] must carry the new base (getWPMLDuplicates loop in replaceFiles).'
+		);
+		$this->assertStringNotContainsString(
+			$old_base,
+			(string) ( $dup_meta['file'] ?? '' ),
+			'REGRESSION #69: the duplicate metadata[file] must no longer reference the old filename.'
+		);
+
+		// RESIDUAL PIN: is_duplicate=true skips update_attached_file(), so
+		// _wp_attached_file still points at the old, now-deleted file.
 		$dup_attached = get_attached_file( $dup_id );
 		$this->assertStringContainsString(
 			$old_base,
 			$dup_attached,
-			'PIN #69: fixed? The Polylang duplicate now tracks the rename — flip this pin to a regression test.'
-		);
-		$this->assertStringNotContainsString(
-			$new_base,
-			$dup_attached,
-			'PIN #69: the duplicate must NOT know the new base while the bug is present.'
+			'PIN #69 (residual): fixed? The duplicate _wp_attached_file now tracks the rename — flip this pin to a regression test.'
 		);
 		$this->assertFileDoesNotExist(
 			$dup_attached,
-			'PIN #69: the duplicate references a file that no longer exists — its media is broken after the rename.'
-		);
-
-		$dup_meta = wp_get_attachment_metadata( $dup_id );
-		$this->assertStringContainsString(
-			$old_base,
-			(string) ( $dup_meta['file'] ?? '' ),
-			'PIN #69: the duplicate metadata[file] still references the old filename.'
+			'PIN #69 (residual): the duplicate attached_file references a file that no longer exists — its media is broken after the rename.'
 		);
 	}
 }

@@ -23,16 +23,16 @@
  * WP Offload Media: no hook fires after a successful rename and
  * wp-offload-media.php contains no rename handling at all. The as3cf item
  * record (wp_as3cf_items) keeps the OLD remote key, so:
- *   - local + remote ("keep local copy"): the disk move happens, but
- *     as3cf filters get_attached_file() into the provider URL, so the
- *     meta rewrite stores THAT — _wp_attached_file ends up holding a
- *     full provider URL, and the rewritten URLs point at a remote object
- *     name that does not exist in the bucket → 404s once as3cf serves
- *     from the provider;
- *   - remote only ("remove local files"): the local move() finds no
- *     source file, fails silently (result discarded — bug #52), yet the
- *     DB/metadata rewrite still runs → the attachment now references a
- *     filename that exists NEITHER locally NOR remotely.
+ *   - local + remote ("keep local copy"): the disk rename happens and —
+ *     since 202c6e3c's copy + deferred delete — _wp_attached_file gets a
+ *     correct relative path (the earlier provider-URL corruption is
+ *     regression-covered below), but the rewritten URLs still point at a
+ *     remote object name that does not exist in the bucket → 404s once
+ *     as3cf serves from the provider;
+ *   - remote only ("remove local files"): the local copy() finds no
+ *     source file, fails silently (dropped from the delete list — bug
+ *     #52), yet the DB/metadata rewrite still runs → the attachment now
+ *     references a filename that exists NEITHER locally NOR remotely.
  * The offloaded state is simulated by saving a real as3cf
  * Media_Library_Item row (no S3 credentials needed — approved approach);
  * the desync is asserted on that record, exactly what as3cf uses for
@@ -146,22 +146,23 @@ class CompatOffloadMediaTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * PIN #68a — local + remote copy. Observed (worse than expected): with
-	 * an as3cf item row present, as3cf filters get_attached_file() into
-	 * the provider URL. The disk move itself still happens (the imageModel
-	 * builds its paths from unfiltered metadata), but the meta rewrite
-	 * reads the filtered value. Result:
+	 * PIN #68a — local + remote copy.
+	 *
+	 * Since 202c6e3c (copy + deferred delete) the earlier provider-URL
+	 * meta corruption is gone: replaceMetaData() runs while the OLD local
+	 * file still exists, so as3cf's get_attached_file() filter returns
+	 * the local path and _wp_attached_file gets a correct RELATIVE
+	 * uploads path with the new base (regression assertions below).
+	 *
+	 * Remaining pinned behaviour:
 	 *   - the local files ARE renamed on disk;
-	 *   - _wp_attached_file is CORRUPTED into a full provider URL
-	 *     ("http://bucket.s3...../pin68-local-x.jpg") instead of the
-	 *     relative uploads path;
 	 *   - the as3cf item record still points at the OLD remote key, so the
 	 *     rewritten URLs 404 on the provider;
 	 *   - and success is still reported.
 	 *
-	 * Flip when: replaceFiles() resolves the true local path for offloaded
-	 * media and updates the offload item (or triggers an as3cf re-upload /
-	 * refuses the rename for offloaded media).
+	 * Flip the residual pin when: replaceFiles() updates the offload item
+	 * (or triggers an as3cf re-upload / refuses the rename for offloaded
+	 * media).
 	 */
 	public function test_pin68_rename_leaves_offload_item_on_old_remote_key_pinned_for_deferred_fix() {
 		$id = $this->uploadFixture( 'fixture-small.jpg' );
@@ -176,15 +177,15 @@ class CompatOffloadMediaTest extends SPIO_IntegrationTestCase {
 
 		$this->assertTrue( $result, 'PIN #68: fixed? The rename no longer blindly reports success for offloaded media — flip this pin.' );
 
-		// THE PIN (part 1): _wp_attached_file now holds a provider URL —
-		// the engine renamed the as3cf-filtered path, not the local file.
+		// REGRESSION (202c6e3c): _wp_attached_file stays a RELATIVE uploads
+		// path with the new base — the deferred source delete means as3cf's
+		// get_attached_file() filter still sees the local file at meta-
+		// rewrite time (previously it was corrupted to the provider URL).
 		$attached_meta = (string) get_post_meta( $id, '_wp_attached_file', true );
-		$this->assertStringContainsString( $new_base, $attached_meta, 'PIN #68: the meta was rewritten to the new base.' );
-		$this->assertStringStartsWith( 'http', $attached_meta, 'PIN #68: fixed? _wp_attached_file is a relative uploads path again — flip this pin.' );
+		$this->assertStringContainsString( $new_base, $attached_meta, 'REGRESSION #68: the meta was rewritten to the new base.' );
+		$this->assertStringStartsNotWith( 'http', $attached_meta, 'REGRESSION #68: _wp_attached_file must be a relative uploads path, not a provider URL.' );
 
-		// Sanity: the LOCAL rename really ran (the imageModel resolves its
-		// paths from unfiltered metadata, so the disk move still happens —
-		// only the _wp_attached_file rewrite reads the filtered URL).
+		// Sanity: the LOCAL rename really ran.
 		$this->assertFileDoesNotExist( $old_file, 'Precondition: the local file left the old name.' );
 		$this->assertFileExists( $dir . $new_base . '.jpg', 'Precondition: the local file was renamed on disk.' );
 
@@ -211,8 +212,9 @@ class CompatOffloadMediaTest extends SPIO_IntegrationTestCase {
 
 	/**
 	 * PIN #68b — remote only ("remove local files"). With no local source
-	 * files, every FileModel::move() fails silently (discarded result —
-	 * bug #52 territory), yet replaceFiles() still returns true and
+	 * files, every FileModel::copy() fails silently (dropped from the
+	 * $copySource delete list — bug #52 territory), yet replaceFiles()
+	 * still returns true and
 	 * rewrites _wp_attached_file + metadata to the new base. Combined
 	 * with the untouched offload item, the attachment now references a
 	 * filename that exists neither locally nor remotely.
