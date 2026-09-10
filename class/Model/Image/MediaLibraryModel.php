@@ -3140,7 +3140,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		}
 		if ($this->hasOriginal()) {
 			$originalFile = $this->getOriginalFile();
-			if (! $originalFile->isOptimized() && $originalFile->hasBackup()) {
+			if (! $originalFile->isOptimized() && $backupModel->hasBackup($originalFile) ) {
 				$originalFile->setMeta('status', self::FILE_STATUS_SUCCESS);
 				$result = true;
 			}

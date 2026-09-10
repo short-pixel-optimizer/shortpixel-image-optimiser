@@ -814,7 +814,6 @@ class OptimizeAiController extends OptimizerBase
         $this->replaceMetaData($item_id, $base_filename, $newFileBase, $args);
         if (method_exists($imageModel, 'getWPMLDuplicates')) {
             $duplicates = $imageModel->getWPMLDuplicates();
-            Log::addTemp("Duplicate WPML REPLACE", $duplicates);
             foreach ($duplicates as $duplicate_id) {
                 // Update the duplicates
                 $args['is_duplicate'] = true;
@@ -996,13 +995,11 @@ class OptimizeAiController extends OptimizerBase
             }
 
             $filebase = trailingslashit(pathinfo($attached_file, PATHINFO_DIRNAME));
-            Log::addTemp('Filebase ' . $filebase, $attached_file);
             $new_attached_file = $filebase . str_replace($old_file, $new_file, basename($attached_file));
 
             if (true === $dry_run) {
                 Log::addInfo('Dry Run - would update attached file with ' . $new_attached_file);
             } else {
-                Log::addTemp('New Atached file', $new_attached_file);
                 update_attached_file($item_id, $new_attached_file);
             }
         }
@@ -1053,15 +1050,6 @@ class OptimizeAiController extends OptimizerBase
      *
      * Int values in aiData (F_STATUS_PREVENTOVERRIDE / EXCLUDESETTING) mean
      * "no generated text" and never replace anything.
-     *
-     * REPLACED-CONTENT FEEDBACK (456bb470): every post that is actually
-     * rewritten records what was applied into
-     * $qItem->result()->replaced_content[$post_id] = ['alt' => string|false,
-     * 'caption' => string|false], so editor UIs can apply exactly what
-     * changed. NOTE the map is keyed by the CONTAINING POST's ID — the JS
-     * consumer (screen-media.js UpdateGutenBerg) currently indexes it by
-     * the ATTACHMENT id and misspells the property (replaced__content),
-     * so the channel is not yet functional client-side (reported, 8520324e).
      *
      * BUG #56 was fixed in dc65f17e (the 'missing' branch dropped its
      * `false === $aiPreserve` OR-leg, so a non-empty in-content alt is now
