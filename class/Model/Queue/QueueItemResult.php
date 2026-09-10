@@ -74,8 +74,16 @@ class QueueItemResult implements JsonSerializable
    /** @var array<string, string>|null Human-readable labels for AI data, shown on bulk screens. */
    protected $aiDataLabels;
 
-   // Method to signal back replaced content, mainly now for replacing Ai Data / UX in editors. 
-   protected $replaced_content = []; 
+   /**
+    * Per-post map of the AI content actually written into post_content by
+    * replaceImageAttributes(): [post_id => ['alt' => string|false, 'caption' => string|false]].
+    * Lets editor UIs (Gutenberg) apply exactly what was replaced instead of
+    * the raw aiData. NOTE: unlike the other fields this defaults to [] (not
+    * null), so forReturn() always includes it in the JSON payload.
+    *
+    * @var array<int, array{alt: string|false, caption: string|false}>
+    */
+   protected $replaced_content = [];
 
    /**
     * Constructor.

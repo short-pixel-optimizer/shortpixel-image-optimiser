@@ -300,7 +300,6 @@ abstract class BackupController
         }
 
         return false;
-
     }
 
 } // class

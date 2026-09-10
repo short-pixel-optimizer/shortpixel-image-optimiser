@@ -71,6 +71,13 @@ class Breakdance
 		}
 
 		// @todo This function is duplicated w/ elementor, so possibly at some point needs a Module main class for utils.
+		// BUG #65 (2026-09-09): this single `/`→`\/` escape suits Elementor's
+		// single-JSON-encoded storage, but Breakdance double-JSON-encodes
+		// `_breakdance_data` (set_meta → encode_before_writing_to_wp), so URLs
+		// sit in the DB as `\\\/` — the resulting LIKE pattern never matches
+		// and Breakdance documents are never URL-rewritten. Fix: escape twice
+		// for this component (or LIKE on both forms). Pinned in
+		// tests/Compat/test-CompatBreakdance.php (test_pin65_*).
 		public function addSlash($value)
     {
         global $wpdb;
