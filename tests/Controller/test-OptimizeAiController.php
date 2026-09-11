@@ -27,7 +27,8 @@
  *   - ajax_replaceFile() — bug #45 (c44f0369 dropped `return $result;`)
  *     FIXED in 370fb5db; regression-tested in
  *     test_ajax_replaceFile_returns_the_replaceFiles_result.
- *   - sendToProcessing() dispatch: 'undoAI' is routed locally; other actions
+ *   - sendToProcessing() dispatch: 'undoAltData' (renamed from 'undoAI' in
+ *     fc86de1a, fix #61) is routed locally; other actions
  *     reach api->processMediaItem() (routing verified via spy).
  *
  * Out of scope / why:
@@ -64,7 +65,7 @@ class OptimizeAiControllerSpy extends OptimizeAiController {
 
 	public function undoAltData( QueueItem $qItem ) {
 		$this->undoCalledWith = $qItem;
-		$this->lastDispatch   = 'undoAI';
+		$this->lastDispatch   = 'undo';
 		$qItem->addResult( [ 'is_done' => true, 'is_error' => false ] );
 		return [];
 	}
@@ -656,17 +657,19 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 	}
 
 	/*
-	 * sendToProcessing dispatch — undoAI is handled locally
+	 * sendToProcessing dispatch — the 'undoAltData' action is handled locally.
+	 * fc86de1a (fix #61) renamed the case from 'undoAI' to match the action
+	 * name that Queue::prepareItems()/undoAltDataAction() actually enqueue.
 	 */
 
-	public function test_sendToProcessing_routes_undoAI_to_undoAltData() {
+	public function test_sendToProcessing_routes_undoAltData_to_undoAltData() {
 		$spy   = new OptimizeAiControllerSpy();
 		$qItem = $this->makeQueueItem();
-		$qItem->setData( 'action', 'undoAI' );
+		$qItem->setData( 'action', 'undoAltData' );
 
 		$spy->sendToProcessing( $qItem );
 
-		$this->assertSame( 'undoAI', $spy->lastDispatch );
+		$this->assertSame( 'undo', $spy->lastDispatch );
 		$this->assertSame( $qItem, $spy->undoCalledWith );
 	}
 

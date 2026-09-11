@@ -459,7 +459,7 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		);
 
 		// Undo via the model's revert() method — the same path OptimizeAiController
-		// calls for the 'undoAI' action (undoAltData()).
+		// calls for the 'undoAltData' action (undoAltData()).
 		AiDataModel::flushModelCache( $attachment_id );
 		$aiModel = AiDataModel::getModelByAttachment( $attachment_id, 'media' );
 		$aiModel->revert();
@@ -1368,9 +1368,9 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 	 * alt counts as reviewed and is left alone. 'overwrite' mode restores
 	 * unconditionally.
 	 *
-	 * NB: the BULK undo path cannot reach this branch yet — PIN #61
-	 * (tests/Integration/test-BulkOptimization.php) pins the action-name
-	 * dispatch mismatch. 'none' mode still blocks undo entirely (PIN #58).
+	 * NB: the BULK undo path reaches this branch too since fc86de1a fixed the
+	 * #61 action-name dispatch mismatch (regression test in
+	 * test-BulkOptimization.php). 'none' mode still blocks undo entirely (PIN #58).
 	 *
 	 * Formerly
 	 * test_pin60_undo_under_default_settings_no_longer_restores_in_content_alt_pinned_for_deferred_fix.

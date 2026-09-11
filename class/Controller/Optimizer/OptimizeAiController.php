@@ -70,20 +70,20 @@ class OptimizeAiController extends OptimizerBase
     /**
      * Dispatches the queue item to the correct AI handler based on its action.
      *
-     * 'undoAI' is handled locally via undoAltData(). All other actions (requestAlt,
-     * retrieveAlt) are delegated to AiController::processMediaItem().
+     * 'undoAltData' is handled locally via undoAltData(). All other actions
+     * (requestAlt, retrieveAlt) are delegated to AiController::processMediaItem().
      *
-     * BUG #61 (HIGH, pinned in tests/Integration/test-BulkOptimization.php as
-     * test_pin61_..._pinned_for_deferred_fix): ba9fc3ef renamed the bulk-undo
-     * enqueue action to 'undoAltData' (Queue::prepareItems now uses
-     * QueueItem::undoAltDataAction()), but this switch still only knows
-     * 'undoAI' — bulk undo items fall through to the default branch and are
-     * sent to the AI API via processMediaItem() instead of reverting.
-     * QueueItem::getApiController() has the same missing case. Fix: handle
-     * 'undoAltData' in both switches (or enqueue as 'undoAI').
+     * BUG #61 FIXED (fc86de1a): the case was renamed 'undoAI' → 'undoAltData'
+     * to match what Queue::prepareItems()/QueueItem::undoAltDataAction()
+     * enqueue (ba9fc3ef had renamed the enqueue side only, leaving bulk undo
+     * items mis-dispatched to the AI API). QueueItem::getApiController() got
+     * the same rename; nothing produces the old 'undoAI' action anymore.
+     * Regression+pin test: test_regression61_bulk_undo_reverts_alt_but_pin71_...
+     * (tests/Integration/test-BulkOptimization.php) — see BUG #71 on
+     * HandleSuccess() for the serious residual this fix exposed.
      *
      * @param QueueItem $qItem The item to process.
-     * @return mixed Return value of undoAltData() for the undoAI action; void otherwise.
+     * @return mixed Return value of undoAltData() for the undoAltData action; void otherwise.
      */
     public function sendToProcessing(QueueItem $qItem)
     {
@@ -382,7 +382,29 @@ class OptimizeAiController extends OptimizerBase
      * Persists AI-generated data and performs all post-processing on a successful retrieve result.
      *
      * Applies the 'shortpixel/ai/success' filter to the raw aiData, formats it via
-     * formatResultData(), and saves it through AiDataModel::handleNewData(). Then:
+     * formatResultData() — SKIPPED for 'undoAltData' items since fc86de1a, so
+     * restored original values are saved verbatim instead of being re-formatted
+     * (filename prefix/postfix etc.) — and saves it through
+     * AiDataModel::handleNewData().
+     *
+     * BUG #71 (HIGH, pinned in tests/Integration/test-BulkOptimization.php as
+     * test_regression61_bulk_undo_reverts_alt_but_pin71_..._pinned_for_deferred_fix):
+     * since the #61 fix (fc86de1a) BULK 'undoAltData' items land here too —
+     * handleAPIResult() routes ANY result carrying aiData to this method, and
+     * undoAltData() puts getCurrentData() on its result. Consequences:
+     *   1. handleNewData() RESURRECTS the aipostmeta row that revert() just
+     *      deleted (status GENERATED, restored originals stored as generated);
+     *   2. $aiData['original_filebase'] (below) is an undefined key for
+     *      getCurrentData() payloads → PHP warning;
+     *   3. WORST: getCurrentData()'s 'filebase' is basename(get_attached_file())
+     *      INCLUDING the extension, so the filebase comparison further down
+     *      always mismatches → replaceFiles() renames every undone file to a
+     *      DOUBLE EXTENSION (photo.jpg → photo.jpg.jpg), rewriting metadata
+     *      and content with it (empirically confirmed).
+     * The single-item AJAX undo is unaffected (calls undoAltData() directly).
+     * Fix: early-return here for 'undoAltData' items (undoAltData() already
+     * finishes the item), or don't route undo results into HandleSuccess.
+     * Then:
      *   - Replaces in-post image attributes (alt, caption) via replaceImageAttributes().
      *   - Renames physical files and updates WordPress metadata via replaceFiles() when
      *     the AI returned a new filebase that differs from the current one, and only when
@@ -598,9 +620,9 @@ class OptimizeAiController extends OptimizerBase
      * UNDO support (ba9fc3ef): when the queue item action is 'undoAltData',
      * $prevAiData carries the previously GENERATED data so handleReplace()
      * can apply the exact-match restore rule (see its docblock). NOTE the
-     * 'none' early-return above still also blocks undo (BUG #58), and the
-     * BULK undo path never reaches here at all (BUG #61 — action-name
-     * dispatch mismatch, pinned in test-BulkOptimization.php).
+     * 'none' early-return above still also blocks undo (BUG #58). The BULK
+     * undo path reaches here again since fc86de1a fixed the #61 action-name
+     * dispatch mismatch.
      *
      * @param QueueItem $qItem
      * @param array $aiData Generated AI data (alt / caption are strings, or int status codes when not generated); for undo, the ORIGINAL data to restore.
@@ -1140,8 +1162,8 @@ class OptimizeAiController extends OptimizerBase
      * so a manually edited alt counts as reviewed and is left alone.
      * Regression coverage: test_undo_under_default_settings_restores_in_content_alt
      * + test_undo_preserves_manually_edited_in_content_alt. The BULK undo
-     * path never reaches this branch (BUG #61, action-name dispatch
-     * mismatch — see sendToProcessing()).
+     * path also reaches this branch since fc86de1a fixed the #61 dispatch
+     * mismatch (see sendToProcessing()).
      *
      * Post-lock guard (ba9fc3ef, fixes the wrong-ID leg of BUG #59): each
      * $post_id is skipped while wp_check_post_lock() reports a live edit
@@ -1395,8 +1417,9 @@ class OptimizeAiController extends OptimizerBase
      * $prevAiData below); a manually edited alt is treated as reviewed and
      * left alone. See the handleReplace() docblock. Callers MUST mark the
      * slot via QueueItem::undoAltDataAction() first (AjaxController does) or
-     * the undo branch never engages. BUG #61: the bulk-undo queue path never
-     * reaches this method at all (dispatch switches still expect 'undoAI').
+     * the undo branch never engages. BUG #61 FIXED (fc86de1a): the bulk-undo
+     * queue path reaches this method again — both dispatch switches now
+     * handle 'undoAltData'.
      *
      * @param QueueItem $qItem The queue item for the attachment to revert.
      * @return array Return value of getAltData() containing snippet, generated, original, and current data.
