@@ -82,7 +82,7 @@ class OptimizeAiController extends OptimizerBase
         $action = $qItem->data()->action;
 
         switch ($action) {
-            case 'undoAI':
+            case 'undoAltData': 
                 return $this->undoAltData($qItem);
                 break;
             case 'redoAiReplacement':
@@ -382,10 +382,15 @@ class OptimizeAiController extends OptimizerBase
      */
     protected function HandleSuccess(QueueItem $qItem)
     {
+        $action = $qItem->data()->action;
+    
         $aiData = $qItem->result()->aiData;
         $aiData = apply_filters('shortpixel/ai/success', $aiData, $qItem);
-        $aiData = $this->formatResultData($aiData, $qItem);
 
+        if ('undoAltData' !== $action) // Don't format things on undo.
+        {
+            $aiData = $this->formatResultData($aiData, $qItem);
+        }
         // Description : From POST CONTENT 
         // Caption : From POST EXCERPT 
         // Alt  : Own Metadata field 
