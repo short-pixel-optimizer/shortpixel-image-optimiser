@@ -290,9 +290,10 @@ class QueueItem
     * 'undoAltData' (renamed from 'undoAI'), so bulk undo items revert again.
     * Single-item AJAX undo bypasses the dispatch: AjaxController calls
     * OptimizeAiController::undoAltData() directly after this setter.
-    * NOTE the bulk path is still broken end-to-end: the undo result flows
-    * into HandleSuccess() which resurrects the record and double-extension
-    * renames the file (BUG #71 HIGH, pinned in test-BulkOptimization.php).
+    * BUG #71 FIXED (4a1b7a91): the bulk undo result no longer flows into
+    * HandleSuccess() (handleAPIResult early-returns for 'undoAltData'), so
+    * the record resurrection + double-extension renames are gone; the bulk
+    * path works end-to-end (regression test in test-BulkOptimization.php).
     *
     * @return void
     */

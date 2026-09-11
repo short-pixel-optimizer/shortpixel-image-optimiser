@@ -668,48 +668,33 @@ class BulkOptimizationTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * BUG #61 regression (fixed by fc86de1a) + residual PIN #71: bulk Undo AI
-	 * runs again — both dispatch switches now recognise the 'undoAltData'
-	 * action that Queue::prepareItems() (bulk-undoAI branch) enqueues via
-	 * QueueItem::undoAltDataAction():
-	 *   - OptimizeAiController::sendToProcessing() case renamed
-	 *     'undoAI' → 'undoAltData' (routes locally to undoAltData());
-	 *   - QueueItem::getApiController() case renamed likewise.
-	 * fc86de1a also skips formatResultData() in HandleSuccess() for undo
-	 * results. REGRESSION part: AiDataModel::revert() runs, the alt meta
-	 * reverts away from the AI value (manual plan 32.15).
+	 * BUG #61 + BUG #71 regression test: bulk Undo AI works end-to-end again
+	 * (manual plan 32.15).
 	 *
-	 * PIN #71 (HIGH, pinned_for_deferred_fix): the BULK undo result then
-	 * flows back through handleAPIResult() → HandleSuccess() (any result
-	 * carrying aiData does — undoAltData() puts getCurrentData() on it).
-	 * Three symptoms, all pinned/verified here:
-	 *   1. handleNewData($aiData) RESURRECTS the just-deleted aipostmeta row
-	 *      as AI_STATUS_GENERATED, with the restored ORIGINAL values stored
-	 *      as "generated" data;
-	 *   2. undefined-key PHP warning on $aiData['original_filebase'] (:418 —
-	 *      getCurrentData() has no such key);
-	 *   3. WORST: the :447 filebase comparison runs with an extension-bearing
-	 *      value (current 'filebase' = basename(get_attached_file()) INCL.
-	 *      extension, never equal to getFileBase()) → replaceFiles() fires
-	 *      and RENAMES every undone file to a DOUBLE EXTENSION
-	 *      (fixture-small-N.jpg → fixture-small-N.jpg.jpg), rewriting
-	 *      metadata and content along with it — empirically confirmed.
-	 * The single-item AJAX undo path is NOT affected (AjaxController calls
-	 * undoAltData() directly — no HandleSuccess).
-	 * Fix: HandleSuccess() must early-return (or handleAPIResult must not
-	 * route) for 'undoAltData' items — undoAltData() already finishes the
-	 * item itself.
+	 * #61 (fixed fc86de1a): both dispatch switches recognise the
+	 * 'undoAltData' action that Queue::prepareItems() (bulk-undoAI branch)
+	 * enqueues via QueueItem::undoAltDataAction() — sendToProcessing() routes
+	 * it locally to undoAltData(), getApiController() maps it to
+	 * OptimizeAiController.
 	 *
-	 * FLIP-when-fixed:
-	 *   assertSame( AiDataModel::AI_STATUS_NOTHING, $aiModel->getStatus() ),
-	 *   assertStringNotContainsString( '.jpg.jpg', basename(...) ),
-	 * drop the resurrection discriminators + suffix.
+	 * #71 (fixed 4a1b7a91): handleAPIResult() now early-returns for
+	 * 'undoAltData' items (undoAltData() already adds its own result and
+	 * finishes the item), so the undo result no longer falls through to
+	 * HandleSuccess(). That fall-through used to (1) resurrect the
+	 * just-deleted aipostmeta row via handleNewData(), (2) warn on the
+	 * missing 'original_filebase' key, and (3) WORST: double-extension
+	 * rename every undone file (photo.jpg → photo.jpg.jpg) because
+	 * getCurrentData()'s extension-bearing 'filebase' never equals
+	 * getFileBase(). All three asserted gone below.
 	 *
-	 * SENTINEL: the generation pre-condition proves the pipeline runs; the
-	 * resurrection discriminator (generated == restored original, NOT the mock
-	 * AI text) proves revert ran before the record was rebuilt.
+	 * History: green pre-ba9fc3ef → pin61 (bulk undo dead, dispatch
+	 * mismatch) → regression61 + pin71 (dispatch fixed, HandleSuccess
+	 * fall-through found) → fully flipped after 4a1b7a91.
+	 *
+	 * SENTINEL: the generation pre-condition proves the pipeline runs — the
+	 * revert assertions cannot false-pass on a no-op bulk.
 	 */
-	public function test_regression61_bulk_undo_reverts_alt_but_pin71_resurrects_record_pinned_for_deferred_fix() {
+	public function test_regression61_71_bulk_undo_ai_reverts_generated_data() {
 		$settings                  = \wpSPIO()->settings();
 		$settings->enable_ai       = 1;
 		$settings->ai_gen_alt      = 1;
@@ -768,49 +753,25 @@ class BulkOptimizationTest extends SPIO_IntegrationTestCase {
 			'Regression #61: after the undoAI bulk the alt text must revert away from the AI-generated value (plan 32.15).'
 		);
 
-		// PIN #71: HandleSuccess() re-persists the reverted data — the
-		// aipostmeta row is resurrected as GENERATED instead of staying gone.
+		// Regression #71 (symptom 1): the aipostmeta row stays GONE — the
+		// undo result no longer falls into HandleSuccess()/handleNewData().
 		$prop->setValue( null, array() );
 		$aiModel = \ShortPixel\Model\AiDataModel::getModelByAttachment( $id, 'media' );
 		$this->assertSame(
-			\ShortPixel\Model\AiDataModel::AI_STATUS_GENERATED,
+			\ShortPixel\Model\AiDataModel::AI_STATUS_NOTHING,
 			$aiModel->getStatus(),
-			'PIN #71: bulk undo resurrects the aipostmeta record via HandleSuccess()/handleNewData(). '
-			. 'Flip to assertSame(AI_STATUS_NOTHING) when HandleSuccess skips undoAltData items.'
+			'Regression #71: AI status must be AI_STATUS_NOTHING after undoAI reverts the record (plan 32.15).'
 		);
 
-		// DISCRIMINATOR: the resurrected "generated" alt is the restored
-		// ORIGINAL value, not the mock AI text — proving revert() DID run
-		// (regression #61) before HandleSuccess rebuilt the record from
-		// getCurrentData(). If the dispatch were broken again, generated
-		// would still hold the mock AI text and this would fail.
-		$resurrected = $aiModel->getGeneratedData();
-		$this->assertSame(
-			$restoredAlt,
-			$resurrected['alt'],
-			'PIN #71 discriminator: the resurrected record holds the restored original alt as "generated".'
-		);
-		$this->assertNotSame(
-			$generatedAlt,
-			$resurrected['alt'],
-			'PIN #71 discriminator: the resurrected record must NOT hold the mock AI alt.'
-		);
-
-		// PIN #71 symptom 3: HandleSuccess's :447 filebase mismatch
-		// (extension-bearing current filebase vs getFileBase()) escalates
-		// into a replaceFiles() rename — the undone file gets a DOUBLE
-		// EXTENSION. Flip to assertStringNotContainsString when HandleSuccess
-		// skips undoAltData items.
+		// Regression #71 (symptom 3): no double-extension rename — the
+		// attached file keeps its single .jpg extension and exists on disk.
 		$attached = get_attached_file( $id );
-		$this->assertStringContainsString(
+		$this->assertStringNotContainsString(
 			'.jpg.jpg',
 			basename( $attached ),
-			'PIN #71: the undo bulk renames the file to a double extension via HandleSuccess()/replaceFiles(). '
-			. 'Flip to assertStringNotContainsString when undo results no longer reach HandleSuccess.'
+			'Regression #71: the undo bulk must not double-extension-rename the file (HandleSuccess fall-through).'
 		);
-		// Sentinel: the rename is internally consistent — the double-extension
-		// file really exists on disk (replaceFiles moved it and rewrote meta).
-		$this->assertFileExists( $attached, 'PIN #71 sentinel: the renamed (double-extension) file exists on disk.' );
+		$this->assertFileExists( $attached, 'Undo bulk must leave the attached file on disk.' );
 	}
 
 	/**
