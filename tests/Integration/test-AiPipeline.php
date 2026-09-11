@@ -755,6 +755,8 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$args    = array(
 			'aiData' => array( 'alt' => 'A mock ai alt text.', 'caption' => 0 ),
 			'qItem'  => $qItem,
+			// Since ba9fc3ef handleReplace() reads args['prevAiData'].
+			'prevAiData' => array(),
 		);
 
 		\ShortPixel\Controller\Optimizer\OptimizeAiController::getInstance()->handleReplace( $results, $args );
@@ -833,6 +835,8 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$args  = array(
 			'aiData' => array( 'alt' => 'A mock ai alt text.', 'caption' => 0 ),
 			'qItem'  => $qItem,
+			// Since ba9fc3ef handleReplace() reads args['prevAiData'].
+			'prevAiData' => array(),
 		);
 
 		\ShortPixel\Controller\Optimizer\OptimizeAiController::getInstance()->handleReplace(
@@ -1001,6 +1005,8 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 			// alt is an int (status), caption is a string.
 			'aiData' => array( 'alt' => \ShortPixel\Model\AiDataModel::F_STATUS_PREVENTOVERRIDE, 'caption' => 'a caption' ),
 			'qItem'  => $qItem,
+			// Since ba9fc3ef handleReplace() reads args['prevAiData'].
+			'prevAiData' => array(),
 		);
 
 		\ShortPixel\Controller\Optimizer\OptimizeAiController::getInstance()->handleReplace(
@@ -1133,6 +1139,8 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$args  = array(
 			'aiData' => array( 'alt' => 'A mock ai alt text.', 'caption' => 0 ),
 			'qItem'  => $qItem,
+			// Since ba9fc3ef handleReplace() reads args['prevAiData'].
+			'prevAiData' => array(),
 		);
 
 		\ShortPixel\Controller\Optimizer\OptimizeAiController::getInstance()->handleReplace(
@@ -1187,6 +1195,8 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$args  = array(
 			'aiData' => array( 'alt' => 'A mock ai alt text.', 'caption' => 0 ),
 			'qItem'  => $qItem,
+			// Since ba9fc3ef handleReplace() reads args['prevAiData'].
+			'prevAiData' => array(),
 		);
 
 		\ShortPixel\Controller\Optimizer\OptimizeAiController::getInstance()->handleReplace(
@@ -1320,12 +1330,14 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		// Step 2: user switches ai_content_replace='none' after the fact.
 		\wpSPIO()->settings()->ai_content_replace = 'none';
 
-		// Step 3: trigger the undo path. Use undoAltData directly the same
-		// way the ajax "undoAI" screen action does.
+		// Step 3: trigger the undo path the same way AjaxController::undoAltData
+		// does — since ba9fc3ef it marks the slot with undoAltDataAction()
+		// (action 'undoAltData') before calling the controller.
 		$imageModel = $this->freshImageModel( $id );
 		// freshImageModel() resets SettingsModel — re-apply after.
 		\wpSPIO()->settings()->ai_content_replace = 'none';
 		$qItem = \ShortPixel\Controller\Queue\QueueItems::getImageItem( $imageModel );
+		$qItem->undoAltDataAction();
 		\ShortPixel\Controller\Optimizer\OptimizeAiController::getInstance()->undoAltData( $qItem );
 
 		// Media Library alt IS reverted (that path is not gated by 'none').
@@ -1348,23 +1360,22 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * PIN #60 (MEDIUM, pinned_for_deferred_fix): since dc65f17e the
-	 * 'missing' branch in handleReplace() only writes when the in-content
-	 * alt is EMPTY — but undoAltData() routes its restore through the very
-	 * same branch. After an AI run the in-content alt IS the (non-empty)
-	 * AI text, so under default settings the undo content revert is now
-	 * silently blocked: only the Media Library alt meta reverts. Before
-	 * dc65f17e undo worked by accident (via the buggy #56 aiPreserve leg).
-	 * Same root cause as PIN #58: undo must not be gated by the
-	 * ai_content_replace content-write guards at all.
+	 * BUG #60 regression test (fixed by ba9fc3ef for the single-item path):
+	 * handleReplace() now has a dedicated undo branch — when the queue item
+	 * action is 'undoAltData', 'missing' mode restores the original alt where
+	 * the current in-content alt EXACTLY matches the previously generated AI
+	 * text (prevAiData), i.e. Pedro's exact-match proposal: a manually edited
+	 * alt counts as reviewed and is left alone. 'overwrite' mode restores
+	 * unconditionally.
 	 *
-	 * FLIP-when-fixed: when undo bypasses the mode guards (e.g. a reason
-	 * parameter forcing overwrite semantics), this test fails on the
-	 * "A mock ai alt text." assertion — flip to
-	 * assertStringContainsString('alt="original human alt"') and drop the
-	 * _pinned_for_deferred_fix suffix.
+	 * NB: the BULK undo path cannot reach this branch yet — PIN #61
+	 * (tests/Integration/test-BulkOptimization.php) pins the action-name
+	 * dispatch mismatch. 'none' mode still blocks undo entirely (PIN #58).
+	 *
+	 * Formerly
+	 * test_pin60_undo_under_default_settings_no_longer_restores_in_content_alt_pinned_for_deferred_fix.
 	 */
-	public function test_pin60_undo_under_default_settings_no_longer_restores_in_content_alt_pinned_for_deferred_fix() {
+	public function test_undo_under_default_settings_restores_in_content_alt() {
 		$id  = $this->freshAttachment();
 		$src = esc_url( wp_get_attachment_url( $id ) );
 
@@ -1389,7 +1400,10 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 
 		$imageModel = $this->freshImageModel( $id );
 		// Default settings: ai_content_replace stays at 'missing'.
+		// Mirror AjaxController::undoAltData — since ba9fc3ef it marks the
+		// slot with undoAltDataAction() (action 'undoAltData') first.
 		$qItem = \ShortPixel\Controller\Queue\QueueItems::getImageItem( $imageModel );
+		$qItem->undoAltDataAction();
 		\ShortPixel\Controller\Optimizer\OptimizeAiController::getInstance()->undoAltData( $qItem );
 
 		// SENTINEL: the Media Library alt meta revert is NOT mode-gated and
@@ -1397,50 +1411,102 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$this->assertSame(
 			'original human alt',
 			get_post_meta( $id, '_wp_attachment_image_alt', true ),
-			'PIN #60 sentinel: Media Library alt must still revert under default-settings undo'
+			'Fix #60 sentinel: Media Library alt must revert under default-settings undo'
 		);
+
+		clean_post_cache( $post_id );
+		$content = get_post( $post_id )->post_content;
+		$this->assertStringNotContainsString(
+			'alt="A mock ai alt text."',
+			$content,
+			'Fix #60: default-mode undo must remove the AI alt from post content'
+		);
+		$this->assertStringContainsString(
+			'alt="original human alt"',
+			$content,
+			'Fix #60: default-mode undo restores the original in-content alt (exact-match rule)'
+		);
+	}
+
+	/**
+	 * BUG #60 companion — the exact-match rule: if the user manually edited
+	 * the in-content alt AFTER generation, 'missing'-mode undo must NOT touch
+	 * it (a changed alt counts as reviewed). Only alts still exactly equal to
+	 * the generated AI text are restored.
+	 */
+	public function test_undo_preserves_manually_edited_in_content_alt() {
+		$id  = $this->freshAttachment();
+		$src = esc_url( wp_get_attachment_url( $id ) );
+
+		update_post_meta( $id, '_wp_attachment_image_alt', 'original human alt' );
+
+		$post_id = self::factory()->post->create(
+			array( 'post_content' => '<img src="' . $src . '" alt="" />' )
+		);
+
+		$this->enqueueAi( $id );
+		$this->runQueueUntilEmpty();
 
 		clean_post_cache( $post_id );
 		$this->assertStringContainsString(
 			'alt="A mock ai alt text."',
 			get_post( $post_id )->post_content,
-			'PIN #60: default-mode undo no longer restores the in-content alt — the missing-only guard ' .
-			'blocks the restore because the AI alt is non-empty. Flip to assertStringContainsString' .
-			'(\'alt="original human alt"\') when undo bypasses the mode guards.'
+			'Precondition: the AI run filled the empty in-content alt'
+		);
+
+		// The user reviews and edits the alt in the post after generation.
+		$edited = str_replace(
+			'alt="A mock ai alt text."',
+			'alt="my reviewed alt"',
+			get_post( $post_id )->post_content
+		);
+		wp_update_post( array( 'ID' => $post_id, 'post_content' => $edited ) );
+
+		$imageModel = $this->freshImageModel( $id );
+		$qItem = \ShortPixel\Controller\Queue\QueueItems::getImageItem( $imageModel );
+		$qItem->undoAltDataAction();
+		\ShortPixel\Controller\Optimizer\OptimizeAiController::getInstance()->undoAltData( $qItem );
+
+		// SENTINEL: meta revert proves undo ran.
+		$this->assertSame(
+			'original human alt',
+			get_post_meta( $id, '_wp_attachment_image_alt', true ),
+			'Sentinel: Media Library alt must revert — undo ran'
+		);
+
+		clean_post_cache( $post_id );
+		$this->assertStringContainsString(
+			'alt="my reviewed alt"',
+			get_post( $post_id )->post_content,
+			'Exact-match rule: a manually edited in-content alt must survive the undo untouched'
 		);
 	}
 
 	/**
-	 * PIN #59 (MEDIUM, pinned_for_deferred_fix): replaceImageAttributes() (and
-	 * its handleReplace() callback) rewrites post_content with NO effective
-	 * regard for an active Gutenberg edit lock — a post open in an editor is
-	 * rewritten behind the editor's back, and the next editor save silently
-	 * wins with no conflict warning. Customer report EBUG-3b
-	 * (tests/partner-plugins/bug-editor-ai-corruption.md). 3f86b55b added a
-	 * wp_check_post_lock() guard but it checks the ATTACHMENT id, not the
-	 * containing posts, so this pin still holds.
+	 * BUG #59 regression test (largely fixed by ba9fc3ef): handleReplace() now
+	 * calls wp_check_post_lock($post_id) per CONTAINING POST inside the
+	 * results loop (ba9fc3ef moved the guard from replaceImageAttributes(),
+	 * where 3f86b55b had it checking the ATTACHMENT id), so a post under an
+	 * active Gutenberg edit lock is skipped and not rewritten behind the
+	 * editor's back. Customer report EBUG-3b
+	 * (tests/partner-plugins/bug-editor-ai-corruption.md).
 	 *
-	 * FLIP-when-fixed: when handleReplace() skips posts with a fresh
-	 * _edit_lock (regardless of lock owner — see the docblock on
-	 * replaceImageAttributes() for why 3f86b55b's guard misses), the AI alt
-	 * will NOT land in post_content while the lock is fresh — flip
-	 *   assertStringContainsString('A mock ai alt text.', $content)
-	 * to
-	 *   assertStringNotContainsString('A mock ai alt text.', $content)
-	 * and drop the _pinned_for_deferred_fix suffix.
+	 * Residual #59 caveats (reported to Bas, not covered here):
+	 *   - wp_check_post_lock() returns false for the CURRENT user's own lock,
+	 *     so the single-admin repro scenario is still rewritten under lock;
+	 *   - wp_check_post_lock() is admin-only (wp-admin/includes/post.php) —
+	 *     undefined in WP-CLI/cron queue runs unless loaded.
 	 *
-	 * SENTINEL: enqueueAi + runQueueUntilEmpty is the same path that PIN #58
-	 * and other AI-run tests rely on; if the pipeline silently no-ops, the
-	 * "AI alt landed" assertion will fail — the pin cannot false-pass on an
-	 * untouched post.
+	 * Formerly
+	 * test_pin59_replace_rewrites_post_content_despite_active_edit_lock_pinned_for_deferred_fix.
 	 */
-	public function test_pin59_replace_rewrites_post_content_despite_active_edit_lock_pinned_for_deferred_fix() {
+	public function test_replace_skips_posts_with_active_edit_lock() {
 		$id  = $this->freshAttachment();
 		$src = esc_url( wp_get_attachment_url( $id ) );
 
 		// In-content alt starts EMPTY: since dc65f17e default 'missing' mode
-		// only fills empty alts, so this is the shape that still gets written
-		// — the bug under test is that the write happens DESPITE the lock.
+		// only fills empty alts, so without the lock this shape WOULD be
+		// written — only the lock skip can keep it out.
 		$post_id = self::factory()->post->create(
 			array( 'post_content' => '<img src="' . $src . '" alt="" />' )
 		);
@@ -1468,21 +1534,28 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		clean_post_cache( $post_id );
 		$content = get_post( $post_id )->post_content;
 
-		// PIN: current behaviour — the AI alt landed in post_content even though
-		// the post was under an active edit lock. When Bas adds the lock skip,
-		// this assertion will fail and must be flipped (see docblock).
-		$this->assertStringContainsString(
-			'alt="A mock ai alt text."',
-			$content,
-			'PIN #59: post_content was rewritten by AI despite an active _edit_lock (bug). ' .
-			'Flip to assertStringNotContainsString when replaceImageAttributes() skips posts ' .
-			'with a fresh _edit_lock (EBUG-3b).'
+		// SENTINEL: the pipeline really ran and generated — the Media Library
+		// alt meta write is not lock-gated. Without this, the flipped
+		// assertion below could false-pass on a silently no-oping pipeline.
+		$this->assertSame(
+			'A mock ai alt text.',
+			get_post_meta( $id, '_wp_attachment_image_alt', true ),
+			'Fix #59 sentinel: the AI pipeline must have run and written the Media Library alt meta.'
 		);
 
-		// Sentinel companion: the lock was still live when the write happened.
+		// Fix #59: the AI alt must NOT land in post_content while another
+		// user's fresh edit lock is live — handleReplace skips locked posts.
+		$this->assertStringNotContainsString(
+			'alt="A mock ai alt text."',
+			$content,
+			'Fix #59: post_content must not be rewritten by AI while the post has an active _edit_lock (EBUG-3b).'
+		);
+
+		// Sentinel companion: the lock was still live throughout the run, so
+		// the skip (not lock expiry) is what protected the post.
 		$this->assertNotFalse(
 			wp_check_post_lock( $post_id ),
-			'PIN #59 sentinel: the edit lock must still be live after the AI run — the rewrite happened under lock.'
+			'Fix #59 sentinel: the edit lock must still be live after the AI run.'
 		);
 	}
 
@@ -1541,6 +1614,8 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$args  = array(
 			'aiData' => array( 'alt' => 'A mock ai alt text.', 'caption' => 0 ),
 			'qItem'  => $qItem,
+			// Since ba9fc3ef handleReplace() reads args['prevAiData'].
+			'prevAiData' => array(),
 		);
 
 		\ShortPixel\Controller\Optimizer\OptimizeAiController::getInstance()->handleReplace(

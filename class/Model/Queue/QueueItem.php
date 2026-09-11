@@ -279,10 +279,25 @@ class QueueItem
    }
 
 
+   /**
+    * Schedule this slot to undo (revert) AI-generated alt data (ba9fc3ef).
+    *
+    * The 'undoAltData' action gates handleReplace()'s exact-match restore
+    * branch. item_count is 0 — no credits are consumed.
+    *
+    * BUG #61 (pinned in tests/Integration/test-BulkOptimization.php): the
+    * bulk path enqueues with this action, but getApiController() below and
+    * OptimizeAiController::sendToProcessing() still only recognise the old
+    * name 'undoAI' — bulk undo items are mis-dispatched to the AI API and
+    * never revert. Single-item AJAX undo works: AjaxController calls
+    * OptimizeAiController::undoAltData() directly after this setter.
+    *
+    * @return void
+    */
    public function undoAltDataAction()
    {
-       $this->newAction(); 
-       $this->data->action = 'undoAltData'; 
+       $this->newAction();
+       $this->data->action = 'undoAltData';
        $this->item_count = 0;
    }
 

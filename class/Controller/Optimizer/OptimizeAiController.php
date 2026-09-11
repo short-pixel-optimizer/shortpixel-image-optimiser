@@ -73,6 +73,15 @@ class OptimizeAiController extends OptimizerBase
      * 'undoAI' is handled locally via undoAltData(). All other actions (requestAlt,
      * retrieveAlt) are delegated to AiController::processMediaItem().
      *
+     * BUG #61 (HIGH, pinned in tests/Integration/test-BulkOptimization.php as
+     * test_pin61_..._pinned_for_deferred_fix): ba9fc3ef renamed the bulk-undo
+     * enqueue action to 'undoAltData' (Queue::prepareItems now uses
+     * QueueItem::undoAltDataAction()), but this switch still only knows
+     * 'undoAI' — bulk undo items fall through to the default branch and are
+     * sent to the AI API via processMediaItem() instead of reverting.
+     * QueueItem::getApiController() has the same missing case. Fix: handle
+     * 'undoAltData' in both switches (or enqueue as 'undoAI').
+     *
      * @param QueueItem $qItem The item to process.
      * @return mixed Return value of undoAltData() for the undoAI action; void otherwise.
      */
@@ -565,29 +574,32 @@ class OptimizeAiController extends OptimizerBase
      * longer restores post content (only the Media Library alt reverts).
      * Fix will need an undo-aware bypass or a separate reason parameter.
      *
-     * BUG #59 (MEDIUM, STILL open, pinned in tests/Integration/test-AiPipeline.php
-     * as test_pin59_..._pinned_for_deferred_fix): posts open in a Gutenberg
-     * editor are rewritten behind the editor's back; the next editor save
-     * silently wins with no conflict warning (customer report EBUG-3b,
-     * tests/partner-plugins/bug-editor-ai-corruption.md). The guard added in
-     * 3f86b55b below misses the target three ways:
-     *   1. Wrong ID — it checks the lock on $qItem->item_id (the ATTACHMENT),
-     *      but the posts being rewritten are the $post_id values in
-     *      handleReplace()'s loop; a containing post's lock never blocks it
-     *      (pin59 locks the containing post and still passes).
-     *   2. wp_check_post_lock() lives in wp-admin/includes/post.php — not
+     * BUG #59 (LARGELY FIXED in ba9fc3ef): 3f86b55b's misplaced guard here
+     * (it checked the lock on $qItem->item_id — the ATTACHMENT) was moved
+     * into handleReplace()'s results loop as wp_check_post_lock($post_id),
+     * so containing posts under an active Gutenberg edit lock are now
+     * correctly skipped (customer report EBUG-3b; regression test
+     * test_replace_skips_posts_with_active_edit_lock). Two residual caveats
+     * remain open under #59:
+     *   1. wp_check_post_lock() lives in wp-admin/includes/post.php — not
      *      loaded under WP-CLI / front-end cron queue processing → fatal.
      *      Needs function_exists() or a direct _edit_lock meta check.
-     *   3. wp_check_post_lock() returns false for the CURRENT user's own
+     *   2. wp_check_post_lock() returns false for the CURRENT user's own
      *      lock — the reported single-admin scenario (editor open, same
      *      admin's AJAX processes the queue) is never skipped. Check
      *      _edit_lock freshness regardless of owner; the editor JS path
      *      (UpdateGutenBerg) already applies the alt in the open session.
-     * Side effect of the current guard: while someone edits the ATTACHMENT
-     * screen, replacement AND undo are silently skipped for every post.
+     *
+     * UNDO support (ba9fc3ef): when the queue item action is 'undoAltData',
+     * $prevAiData carries the previously GENERATED data so handleReplace()
+     * can apply the exact-match restore rule (see its docblock). NOTE the
+     * 'none' early-return above still also blocks undo (BUG #58), and the
+     * BULK undo path never reaches here at all (BUG #61 — action-name
+     * dispatch mismatch, pinned in test-BulkOptimization.php).
      *
      * @param QueueItem $qItem
-     * @param array $aiData Generated AI data (alt / caption are strings, or int status codes when not generated).
+     * @param array $aiData Generated AI data (alt / caption are strings, or int status codes when not generated); for undo, the ORIGINAL data to restore.
+     * @param array $prevAiData For undo only: the previously generated AI data used for the exact-match comparison.
      * @return array|void Finder results; void when alt AND caption are int status codes, or when 'none' mode is active.
      */
     protected function replaceImageAttributes(QueueItem $qItem, $aiData, $prevAiData = [])
@@ -647,10 +659,16 @@ class OptimizeAiController extends OptimizerBase
      * if the count meets or exceeds imageThreshold (default 1) the rename is skipped. Otherwise:
      *   1. Collects all image file objects (main, thumbnails, WebP, AVIF) from the image model.
      *   2. Checks that no target filename already exists (conflict guard).
-     *   3. Moves each source file to its new name.
-     *   4. Renames backup files via BackupController.
-     *   5. Replaces source/target URL pairs in post content via Replacer2.
-     *   6. Updates WordPress attachment metadata and the attached-file postmeta.
+     *   3. COPIES each source file to its new name (successful copies are
+     *      collected in $copySource; the sources are deleted only at the very
+     *      end, after the metadata/content rewrite — some plugins (WPML) can
+     *      deny the deletion otherwise).
+     *   4. Updates attachment metadata + attached-file postmeta for the item
+     *      AND (202c6e3c) for every getWPMLDuplicates() sibling with
+     *      is_duplicate=true (metadata only — see replaceMetaData()).
+     *   5. Renames backup files via BackupController.
+     *   6. Replaces source/target URL pairs in post content via Replacer2.
+     *   7. Deletes the successfully-copied source files.
      * Supports a dry_run mode that logs all planned operations without making any changes.
      *
      * URL replacement is anchored to the basename portion of the URL, so a
@@ -658,11 +676,51 @@ class OptimizeAiController extends OptimizerBase
      * the directory in the Replacer URLs.
      *
      * BUG #52 (open, pinned in tests/Controller/test-OptimizeAiController.php
-     * as test_pin52_..._pinned_for_deferred_fix): the results of
-     * $sourceFile->move(), renameBackup() and $replacer->replace() are all
-     * discarded — on partial failure (some files moved, some not) this method
-     * still returns true, the DB rewrite runs for ALL pairs and the user is
-     * told "Files were replaced". No rollback exists.
+     * as test_pin52_..._pinned_for_deferred_fix): still present after the
+     * copy+deferred-delete refactor (202c6e3c) — a failed copy() is merely
+     * omitted from $copySource (so its source survives), but no error is
+     * surfaced; renameBackup() and $replacer->replace() results are still
+     * discarded. On partial failure this method still returns true, the DB
+     * rewrite runs for ALL pairs and the user is told "Files were replaced".
+     * No rollback exists.
+     *
+     * BUG #68 (open, HIGH, pinned in tests/Compat/test-CompatOffloadMedia.php
+     * as test_pin68_*_pinned_for_deferred_fix): offloaded media (WP Offload
+     * Media & co) is never told about the rename — no hook fires after a
+     * successful replace and the as3cf item keeps the OLD remote key. With a
+     * local copy present the rewritten URLs 404 once served from the bucket
+     * (the earlier _wp_attached_file provider-URL corruption is gone since
+     * 202c6e3c: metadata is rewritten while the old local file still exists,
+     * so as3cf's get_attached_file filter stays out of the way);
+     * remote-only ("remove local files") is worse: every copy() fails
+     * silently (see #52) yet the DB/metadata rewrite still runs, leaving the
+     * attachment pointing at a filename that exists nowhere. Fix directions:
+     * update/re-upload the offload item after the copy loop, or refuse the
+     * rename when Offloader reports the item as offloaded.
+     *
+     * BUG #69 (attempted fix 202c6e3c, still open — pinned in
+     * tests/Compat/test-CompatWPML.php + test-CompatPolylang.php as
+     * test_pin69_*_pinned_for_deferred_fix). Two residual problems:
+     *   - Polylang (partially fixed): the getWPMLDuplicates() loop updates
+     *     each sibling's _wp_attachment_metadata, but is_duplicate=true
+     *     skips update_attached_file() and Polylang does not sync it — the
+     *     sibling's _wp_attached_file stays on the now-deleted old name.
+     *   - WPML (fix ineffective): replaceMetaData() for the ORIGINAL runs
+     *     BEFORE the duplicates loop and rewrites its attached file; the
+     *     WPML branch of getWPMLDuplicates() (MediaLibraryModel.php:2299)
+     *     only accepts siblings whose get_attached_file() equals the
+     *     original's — no longer true at that point — so no sibling is
+     *     found and the translation keeps metadata AND attached_file on
+     *     the old filename. Enumerate the duplicates before the original's
+     *     meta rewrite to fix.
+     *
+     * BUG #70 (open, HIGH, pinned in
+     * tests/Integration/test-VirtualFilesystemRename.php as
+     * test_pin70_*_pinned_for_deferred_fix; same family as #68): virtual
+     * filesystems (S3-Uploads by Human Made, InfiniteUploads — the
+     * VirtualFileSystem adapter) have no rename handling either; on a
+     * stateless install (no local files) every copy() fails silently (see
+     * #52) yet the DB/metadata rewrite still runs and true is returned.
      *
      * NOTE on the recent_upload=false usage guard: on a stock WP install
      * _wp_attached_file / _wp_attachment_metadata store RELATIVE paths, so the
@@ -956,16 +1014,21 @@ class OptimizeAiController extends OptimizerBase
      * Replaces occurrences of $old_file with $new_file in the 'file', 'original_image', and
      * per-size 'file' entries of the attachment metadata array, then calls
      * wp_update_attachment_metadata(). Also updates the _wp_attached_file postmeta via
-     * update_attached_file(). In dry_run mode all changes are logged but not persisted.
+     * update_attached_file() — but ONLY when is_duplicate is false: for
+     * WPML/Polylang duplicate siblings (202c6e3c) the attached-file update
+     * is skipped on the assumption the translation plugin syncs it, which
+     * the compat suite shows neither actually does → residual bug #69
+     * (see replaceFiles()). In dry_run mode all changes are logged but not
+     * persisted.
      *
-     * Note: when is_dry_run is true the metadata 'file' string replacement is computed but
+     * Note: when dry_run is true the metadata 'file' string replacement is computed but
      * wp_update_attachment_metadata() is not called; the replaced $metadata variable is
      * only logged and then silently discarded.
      *
      * @param int    $item_id  WordPress attachment post ID.
      * @param string $old_file Original filename base to replace.
      * @param string $new_file New filename base to substitute.
-     * @param bool   $dry_run  When true, log changes without writing to the database.
+     * @param array  $args     Optional: dry_run (bool, log-only mode), is_duplicate (bool, skip the attached-file update for translation siblings).
      * @return void
      */
     protected function replaceMetaData($item_id, $old_file, $new_file, $args = [])
@@ -1060,12 +1123,26 @@ class OptimizeAiController extends OptimizerBase
      * `false === $aiPreserve` OR-leg, so a non-empty in-content alt is now
      * always respected); regression coverage in
      * tests/Integration/test-AiPipeline.php
-     * (test_missing_mode_preserves_existing_in_content_alt). Side effect:
-     * undoAltData()'s restore now also runs into the missing-only guard —
-     * see BUG #60 there.
+     * (test_missing_mode_preserves_existing_in_content_alt).
+     *
+     * UNDO branch (ba9fc3ef, fixes BUG #60 for the single-item path): when
+     * the queue item action is 'undoAltData', the alt branch applies the
+     * EXACT-MATCH restore rule instead — 'overwrite' restores always;
+     * 'missing' restores only where the current in-content alt exactly
+     * matches the previously generated AI text ($prevAiData, trim-compared),
+     * so a manually edited alt counts as reviewed and is left alone.
+     * Regression coverage: test_undo_under_default_settings_restores_in_content_alt
+     * + test_undo_preserves_manually_edited_in_content_alt. The BULK undo
+     * path never reaches this branch (BUG #61, action-name dispatch
+     * mismatch — see sendToProcessing()).
+     *
+     * Post-lock guard (ba9fc3ef, fixes the wrong-ID leg of BUG #59): each
+     * $post_id is skipped while wp_check_post_lock() reports a live edit
+     * lock. Residual #59 caveats (admin-only function; own lock returns
+     * false) are documented on replaceImageAttributes().
      *
      * @param array $results Finder results: arrays with post_id + content.
-     * @param array $args    'aiData' (generated data) and 'qItem' (QueueItem).
+     * @param array $args    'aiData' (generated data), 'qItem' (QueueItem), 'prevAiData' (previous AI data for undo matching).
      * @return void
      */
     public function handleReplace($results, $args)
@@ -1304,14 +1381,15 @@ class OptimizeAiController extends OptimizerBase
      * reverted. Fix will need a per-call override or a separate un-do path
      * that bypasses the content-replace toggle.
      *
-     * BUG #60 (open, pinned as test_pin60_..._pinned_for_deferred_fix):
-     * since dc65f17e the same applies under the DEFAULT 'missing' mode —
-     * handleReplace()'s missing branch only writes when the in-content alt
-     * is empty, and after an AI run the alt holds the (non-empty) AI text,
-     * so the undo restore is blocked there too. Undo previously worked only
-     * via the buggy #56 aiPreserve leg. Net effect: undo restores post
-     * content only in 'overwrite' mode. Same fix as #58: undo must bypass
-     * the ai_content_replace guards entirely.
+     * BUG #60 (FIXED by ba9fc3ef for this single-item path): handleReplace()
+     * now has an undo branch keyed on the 'undoAltData' action — under
+     * 'missing' mode it restores the original alt where the in-content alt
+     * exactly matches the previously generated text ($generated is passed as
+     * $prevAiData below); a manually edited alt is treated as reviewed and
+     * left alone. See the handleReplace() docblock. Callers MUST mark the
+     * slot via QueueItem::undoAltDataAction() first (AjaxController does) or
+     * the undo branch never engages. BUG #61: the bulk-undo queue path never
+     * reaches this method at all (dispatch switches still expect 'undoAI').
      *
      * @param QueueItem $qItem The queue item for the attachment to revert.
      * @return array Return value of getAltData() containing snippet, generated, original, and current data.

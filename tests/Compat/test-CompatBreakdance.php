@@ -319,4 +319,52 @@ class CompatBreakdanceTest extends SPIO_IntegrationTestCase {
 			'PINNED BUG #65: Breakdance meta never gained a .jpg reference — the breakdance replace-query never matches any row.'
 		);
 	}
+
+	// -------------------------------------------------------------------
+	// PIN #65 companion: the manual/AI file RENAME shares the same
+	// Replacer pass, so Breakdance documents are equally never rewritten
+	// on rename — the renamed file's old URL stays in _breakdance_data
+	// (dead reference). Same root cause, same flip condition as above.
+	// -------------------------------------------------------------------
+
+	/** Run the shared rename engine exactly like AjaxController::replaceFileName does (:1409-1413). */
+	private function renameAttachment( int $attachment_id, string $new_base ): bool {
+		$this->resetPluginSingletons();
+		$imageModel = \wpSPIO()->filesystem()->getImage( $attachment_id, 'media' );
+		$queueItem  = new \ShortPixel\Model\Queue\QueueItem( array( 'imageModel' => $imageModel ) );
+
+		return $queueItem->getApiController( 'requestAlt' )->ajax_replaceFile( $queueItem, $new_base );
+	}
+
+	public function test_pin65_manual_rename_leaves_breakdance_meta_unchanged_pinned_for_deferred_fix() {
+		$id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+
+		$url      = wp_get_attachment_url( $id );
+		$old_base = pathinfo( get_attached_file( $id ), PATHINFO_FILENAME );
+
+		$post_id = self::factory()->post->create( array( 'post_status' => 'publish', 'post_title' => 'BD rename sentinel' ) );
+		$this->seedBreakdanceDocument( $post_id, $url );
+
+		$raw_before = get_post_meta( $post_id, '_breakdance_data', true );
+		$this->assertStringContainsString( $old_base, $raw_before, 'Sentinel: _breakdance_data must reference the old base before the rename.' );
+
+		$new_base = 'bd-rename-' . wp_generate_password( 6, false );
+		$this->assertTrue( $this->renameAttachment( $id, $new_base ), 'Sanity: the rename itself must succeed (SPIO side works).' );
+		$this->assertStringContainsString( $new_base, get_attached_file( $id ), 'Sanity: _wp_attached_file must carry the new base.' );
+
+		wp_cache_delete( $post_id, 'post_meta' );
+		$raw_after = get_post_meta( $post_id, '_breakdance_data', true );
+
+		$this->assertStringContainsString(
+			$old_base,
+			$raw_after,
+			'PINNED BUG #65 (rename flavor): _breakdance_data still references the OLD filename after a rename — the single-escaped LIKE pattern never matches the double-JSON-encoded storage. FLIP to a positive-rewrite assertion when addSlash is fixed.'
+		);
+		$this->assertStringNotContainsString(
+			$new_base,
+			$raw_after,
+			'PINNED BUG #65 (rename flavor): the new base never reaches the Breakdance document.'
+		);
+	}
 }

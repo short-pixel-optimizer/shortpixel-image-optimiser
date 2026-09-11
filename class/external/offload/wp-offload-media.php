@@ -47,6 +47,15 @@ use ShortPixel\Controller\ResponseController as ResponseController;
  *     rewriting files and doesn't want as3cf to react to intermediate
  *     states.
  *
+ * BUG #68 (open, HIGH): this class has NO handling for SPIO's file
+ * renaming (OptimizeAiController::replaceFiles() — AI filename + manual
+ * "Change Filename"). A rename moves local files and rewrites all DB
+ * URLs but the as3cf item keeps the old remote key, so offloaded
+ * attachments 404 after a rename (remote-only installs end up with a
+ * name that exists nowhere). The only healing path is a restore
+ * (`image_restore` re-syncs the bucket). Pinned in
+ * tests/Compat/test-CompatOffloadMedia.php (test_pin68_*).
+ *
  * The class is a singleton bound to the as3cf instance; only
  * `Offloader::initS3Offload()` is expected to call `getInstance()`.
  *

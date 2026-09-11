@@ -60,6 +60,10 @@ if ( '1' === getenv( 'SPIO_PARTNER_PLUGINS' ) ) {
 				// WpBakery.php, Breakdance.php).
 				'elementor/elementor.php',
 				'wordpress-seo/wp-seo.php',
+				// Real Polylang (free, wp.org) — rename/hook coverage. The
+				// faked-active tests in test-CompatPolylang.php coexist:
+				// this option override lists it, and the real plugin loads.
+				'polylang/polylang.php',
 				// Commercial — extracted from tests/partner-plugins/ when
 				// present; silently skipped (like the rest) when not.
 				'sitepress-multilingual-cms/sitepress.php',

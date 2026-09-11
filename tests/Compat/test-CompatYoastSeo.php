@@ -246,4 +246,48 @@ class CompatYoastSeoTest extends SPIO_IntegrationTestCase {
 			'DOCUMENTS CURRENT BEHAVIOR: YoastSeo module keys its LIKE on the URL PATH (search_urls[\'base\'|\'file\']), NOT on the bare filename — a row that only mentions the filename survives. See build/shortpixel/replacer2/src/Modules/YoastSeo.php:38-55.'
 		);
 	}
+
+	// -------------------------------------------------------------------
+	// Manual file rename also purges stale indexables
+	// -------------------------------------------------------------------
+
+	/** Run the shared rename engine exactly like AjaxController::replaceFileName does (:1409-1413). */
+	private function renameAttachment( int $attachment_id, string $new_base ): bool {
+		$this->resetPluginSingletons();
+		$imageModel = \wpSPIO()->filesystem()->getImage( $attachment_id, 'media' );
+		$queueItem  = new \ShortPixel\Model\Queue\QueueItem( array( 'imageModel' => $imageModel ) );
+
+		return $queueItem->getApiController( 'requestAlt' )->ajax_replaceFile( $queueItem, $new_base );
+	}
+
+	/**
+	 * The "Change Filename" / AI-filename rename runs the same Replacer
+	 * pass as conversions, so an indexable row whose og/twitter image
+	 * references the OLD filename must be deleted after a rename (Yoast
+	 * rebuilds it on the next request); unrelated rows must survive.
+	 */
+	public function test_manual_rename_deletes_yoast_indexable_rows_referencing_old_url() {
+		$id  = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+		$url = wp_get_attachment_url( $id );
+
+		$row_a = $this->insertIndexableRow( $url, $url );
+		$row_b = $this->insertIndexableRow( 'https://example.com/some-other-image.jpg' );
+
+		$this->assertTrue( $this->indexableRowExists( $row_a ), 'Sentinel: row A (old URL) must exist pre-rename.' );
+		$this->assertTrue( $this->indexableRowExists( $row_b ), 'Sentinel: row B (unrelated) must exist pre-rename.' );
+
+		$new_base = 'yoast-rn-' . wp_generate_password( 6, false );
+		$this->assertTrue( $this->renameAttachment( $id, $new_base ), 'The rename must report success.' );
+		$this->assertStringContainsString( $new_base, get_attached_file( $id ), 'Sanity: _wp_attached_file must carry the new base.' );
+
+		$this->assertFalse(
+			$this->indexableRowExists( $row_a ),
+			'YoastSeo module must DELETE the indexable row that referenced the pre-rename URL.'
+		);
+		$this->assertTrue(
+			$this->indexableRowExists( $row_b ),
+			'YoastSeo module must NOT touch indexable rows unrelated to the renamed file.'
+		);
+	}
 }

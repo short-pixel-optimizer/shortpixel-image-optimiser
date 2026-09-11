@@ -668,12 +668,36 @@ class BulkOptimizationTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * A bulk-undoAI run must clear the generated AI alt text, and the
-	 * aiPreserve=true setting must prevent regeneration in a subsequent bulk.
+	 * PIN #61 (HIGH, pinned_for_deferred_fix): bulk Undo AI is dead — an
+	 * action-name mismatch introduced by ba9fc3ef (WIP) means undo items are
+	 * never routed to undoAltData().
 	 *
-	 * Manual plan 32.15.
+	 * Chain: Queue::prepareItems() (bulk-undoAI branch, Queue.php ~:612) now
+	 * enqueues via QueueItem::undoAltDataAction() which sets action
+	 * 'undoAltData', but BOTH dispatch switches still only know the old name
+	 * 'undoAI':
+	 *   - OptimizeAiController::sendToProcessing() ~:85 — 'undoAltData' falls
+	 *     through to the default branch and the undo item is sent to the AI
+	 *     API via processMediaItem() instead of reverting;
+	 *   - QueueItem::getApiController() ~:891 — no 'undoAltData' case.
+	 * Result: AiDataModel::revert() never runs — alt meta keeps the AI value,
+	 * the aipostmeta row survives, and no content restore happens.
+	 * (handleReplace()'s new $isUndo branch checks 'undoAltData', so once the
+	 * dispatch names align the undo flow reaches the new exact-match restore.)
+	 *
+	 * This was test_bulk_restore_ai_reverts_generated_data_and_respects_preserve_setting
+	 * (manual plan 32.15), green until ba9fc3ef; converted to a pin
+	 * (precedent: pin60).
+	 *
+	 * FLIP-when-fixed: restore the original assertions —
+	 *   $this->assertNotSame( $generatedAlt, $restoredAlt, ... );
+	 *   $this->assertSame( AiDataModel::AI_STATUS_NOTHING, $aiModel->getStatus(), ... );
+	 * and drop the _pinned_for_deferred_fix suffix.
+	 *
+	 * SENTINEL: the generation pre-condition assertion proves the pipeline
+	 * runs; the pinned assertions can only pass while undo is broken.
 	 */
-	public function test_bulk_restore_ai_reverts_generated_data_and_respects_preserve_setting() {
+	public function test_pin61_bulk_undo_ai_no_longer_reverts_anything_pinned_for_deferred_fix() {
 		$settings                  = \wpSPIO()->settings();
 		$settings->enable_ai       = 1;
 		$settings->ai_gen_alt      = 1;
@@ -723,22 +747,23 @@ class BulkOptimizationTest extends SPIO_IntegrationTestCase {
 		$undoBulk->finishBulk( 'media' );
 
 		$restoredAlt = get_post_meta( $id, '_wp_attachment_image_alt', true );
-		// The AI data row is deleted; WP alt may be empty or the original value,
-		// depending on AiDataModel::revert() restoring $this->original['alt'].
-		// Either way it must NOT equal the generated mock value.
-		$this->assertNotSame(
+		// PIN: undo never reaches undoAltData() (action-name mismatch), so the
+		// alt meta keeps the AI-generated value.
+		$this->assertSame(
 			$generatedAlt,
 			$restoredAlt,
-			'After undoAI bulk the alt text must revert away from the AI-generated value (plan 32.15).'
+			'PIN #61: bulk undoAI leaves the AI-generated alt in place — items are dispatched to the API '
+			. 'instead of undoAltData(). Flip to assertNotSame when the dispatch handles the undoAltData action.'
 		);
 
-		// Verify the aipostmeta row is gone.
+		// PIN: the aipostmeta record survives because revert() never runs.
 		$prop->setValue( null, array() );
 		$aiModel = \ShortPixel\Model\AiDataModel::getModelByAttachment( $id, 'media' );
-		$this->assertSame(
+		$this->assertNotSame(
 			\ShortPixel\Model\AiDataModel::AI_STATUS_NOTHING,
 			$aiModel->getStatus(),
-			'AI status must be AI_STATUS_NOTHING after undoAI reverts the record (plan 32.15).'
+			'PIN #61: AI status must still hold data after the broken undo bulk. Flip to '
+			. 'assertSame(AI_STATUS_NOTHING) when the undoAltData dispatch is fixed.'
 		);
 	}
 

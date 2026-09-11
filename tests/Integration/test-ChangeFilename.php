@@ -28,9 +28,10 @@
  *     pathinfo(basename(), PATHINFO_FILENAME) at :786.
  *   - Access control: author on someone else's attachment → NO_ACCESS.
  *   - Missing newFileName key → error response, no rename.
- *   - Pin #50 (HIGH): empty newFileName produces extension-only dotfiles.
- *   - Pin #51 (MEDIUM): base_url mangling when file base appears in the
- *     directory path (uploads subdir named like the file base).
+ *   - Regression #50 (fixed 202c6e3c): empty/short newFileName rejected
+ *     by the strlen<3 guard, no rename, no extension-only dotfiles.
+ *   - Regression #51 (fixed 202c6e3c): base_url built basename-anchored,
+ *     no mangling when the file base appears in the directory path.
  *   - Pin #53 (MEDIUM, AI-auto path): recent_upload=false guard matches
  *     the attachment's OWN _wp_attached_file rows.
  *
@@ -503,6 +504,120 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	}
 
 	// -------------------------------------------------------------------
+	// Editor markup: Gutenberg block + Classic srcset
+	// -------------------------------------------------------------------
+
+	/**
+	 * Block Editor (Gutenberg) stores images as wp:image block comments with
+	 * JSON attributes plus a figure/img body carrying the wp-image-<ID>
+	 * class. The rename rewrite runs plain URL replacement over
+	 * post_content, so the block must come out with the new URL while the
+	 * comment-delimited structure still parses via parse_blocks() and the
+	 * id attribute / wp-image class stay intact (they are what ties the
+	 * block to the attachment).
+	 */
+	public function test_gutenberg_image_block_is_rewritten_and_still_parses() {
+		$this->_setRole( 'administrator' );
+
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+
+		$original_url  = wp_get_attachment_url( $attachment_id );
+		$original_file = get_attached_file( $attachment_id );
+		$original_base = pathinfo( $original_file, PATHINFO_FILENAME );
+
+		$block_markup = '<!-- wp:image {"id":' . $attachment_id . ',"sizeSlug":"full","linkDestination":"none"} -->' . "\n"
+			. '<figure class="wp-block-image size-full"><img src="' . esc_url( $original_url ) . '" alt="" class="wp-image-' . $attachment_id . '"/></figure>' . "\n"
+			. '<!-- /wp:image -->';
+
+		$post_id = self::factory()->post->create( array( 'post_content' => $block_markup ) );
+		$this->assertStringContainsString(
+			$original_base . '.jpg',
+			get_post( $post_id )->post_content,
+			'Sentinel: the block must embed the original URL before the rename'
+		);
+
+		$new_base = 'gberg-rename-' . wp_generate_password( 6, false );
+		$response = $this->doReplaceFileName( $attachment_id, $new_base );
+
+		$this->assertIsObject( $response, 'Raw: ' . $this->lastRawResponse() );
+		$this->assertTrue( $response->is_done );
+		$this->assertObjectNotHasProperty( 'is_error', $response );
+
+		clean_post_cache( $post_id );
+		$content = get_post( $post_id )->post_content;
+
+		$this->assertStringNotContainsString( $original_base . '.jpg', $content, 'Old filename must be gone from the block markup' );
+		$this->assertStringContainsString( $new_base . '.jpg', $content, 'New filename must be written into the block markup' );
+
+		// The block must still be a valid, parseable wp:image block.
+		$blocks = array_values( array_filter( parse_blocks( $content ), function ( $b ) {
+			return 'core/image' === $b['blockName'];
+		} ) );
+		$this->assertCount( 1, $blocks, 'The rewritten content must still parse as exactly one core/image block' );
+		$this->assertSame( $attachment_id, $blocks[0]['attrs']['id'] ?? null, 'The block id attribute must survive the rewrite' );
+		$this->assertStringContainsString(
+			'wp-image-' . $attachment_id,
+			$blocks[0]['innerHTML'],
+			'The wp-image-<ID> class (attachment linkage) must survive the rewrite'
+		);
+		$this->assertStringContainsString( $new_base . '.jpg', $blocks[0]['innerHTML'], 'The parsed block body must carry the new URL' );
+	}
+
+	/**
+	 * Classic Editor content commonly carries a responsive srcset listing
+	 * the thumbnail URLs. replaceFiles() feeds EVERY file of the family
+	 * (main + each size) into the Replacer search/replace arrays
+	 * (OptimizeAiController.php:758-785), so every srcset entry must be
+	 * rewritten — a partial rewrite would leave dead thumbnail URLs.
+	 */
+	public function test_classic_editor_srcset_entries_are_all_rewritten() {
+		$this->_setRole( 'administrator' );
+
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+
+		$original_url  = wp_get_attachment_url( $attachment_id );
+		$original_file = get_attached_file( $attachment_id );
+		$original_base = pathinfo( $original_file, PATHINFO_FILENAME );
+		$meta          = wp_get_attachment_metadata( $attachment_id );
+		$this->assertNotEmpty( $meta['sizes'], 'Precondition: thumbnails must exist for a srcset' );
+
+		$base_url = trailingslashit( dirname( $original_url ) );
+		$srcset   = array( esc_url( $original_url ) . ' ' . $meta['width'] . 'w' );
+		foreach ( $meta['sizes'] as $sizeData ) {
+			$srcset[] = esc_url( $base_url . $sizeData['file'] ) . ' ' . $sizeData['width'] . 'w';
+		}
+		$content = '<img src="' . esc_url( $original_url ) . '" srcset="' . implode( ', ', $srcset ) . '" alt="classic srcset" />';
+
+		$post_id = self::factory()->post->create( array( 'post_content' => $content ) );
+
+		$new_base = 'srcset-rename-' . wp_generate_password( 6, false );
+		$response = $this->doReplaceFileName( $attachment_id, $new_base );
+
+		$this->assertIsObject( $response, 'Raw: ' . $this->lastRawResponse() );
+		$this->assertTrue( $response->is_done );
+		$this->assertObjectNotHasProperty( 'is_error', $response );
+
+		clean_post_cache( $post_id );
+		$after = get_post( $post_id )->post_content;
+
+		$this->assertStringNotContainsString(
+			$original_base,
+			$after,
+			'No srcset entry may still reference the old base — every size URL must be rewritten'
+		);
+		foreach ( wp_get_attachment_metadata( $attachment_id )['sizes'] as $sizeName => $sizeData ) {
+			$this->assertStringContainsString(
+				$sizeData['file'],
+				$after,
+				"srcset entry for size $sizeName must reference the renamed thumbnail"
+			);
+		}
+		$this->assertStringContainsString( $new_base . '.jpg', $after, 'The main src must carry the new base' );
+	}
+
+	// -------------------------------------------------------------------
 	// Access control
 	// -------------------------------------------------------------------
 
@@ -561,7 +676,8 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	 * When the POST does not contain the newFileName key at all,
 	 * replaceFileName() short-circuits with a "This image could not be
 	 * loaded" error and no rename takes place. Note this is DIFFERENT
-	 * from newFileName='' — that reaches the pinned #50 bug below.
+	 * from newFileName='' — that is rejected by the strlen<3 guard
+	 * (regression #50 below).
 	 */
 	public function test_missing_newFileName_key_returns_error_without_rename() {
 		$this->_setRole( 'administrator' );
@@ -580,40 +696,29 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// PIN #50 (HIGH): empty newFileName produces extension-only dotfiles
+	// REGRESSION #50 (fixed 202c6e3c): empty/short newFileName is rejected
 	// -------------------------------------------------------------------
 
 	/**
-	 * PINNED BUG #50 (HIGH): AjaxController::replaceFileName() reads
-	 * `$newFileName = isset($_POST['newFileName']) ? sanitize_file_name($_POST['newFileName']) : false`
-	 * at class/Controller/AjaxController.php:1364. sanitize_file_name('')
-	 * returns '' (NOT false), so the empty string passes the false-check
-	 * at :1366 and reaches OptimizeAiController::ajax_replaceFile() at
-	 * :777. Line :786 computes `$baseReplace = pathinfo(basename(''),
-	 * PATHINFO_FILENAME)` → ''. replaceFiles() then runs
-	 * `str_replace($base_filename, '', $fileObj->getFileName())` at :689
-	 * on every file, so every filename collapses to '.<ext>' — an
-	 * extension-only dotfile on POSIX. The Replacer2 pass also rewrites
-	 * content URLs to those dotfile URLs.
+	 * REGRESSION TEST for BUG #50 (fixed in 202c6e3c): an empty
+	 * newFileName used to pass the `false === $newFileName` check (because
+	 * sanitize_file_name('') returns '', not false), reach
+	 * OptimizeAiController::ajax_replaceFile() with an empty file base and
+	 * rename every file to an extension-only dotfile ('.jpg') while the
+	 * Replacer2 pass rewrote content URLs accordingly.
 	 *
-	 * There is NO minimum-length / non-empty guard on the manual path
-	 * (the strlen>5 guard at ~:413 lives on the AI path only).
+	 * The fix adds a `strlen($newFileName) < 3` guard in
+	 * AjaxController::replaceFileName() that fires AFTER sanitisation, so
+	 * both an empty string and a value that sanitises to fewer than 3
+	 * characters are rejected with an error response before any rename.
+	 * (WP's sanitize_file_name also trims leading dots, so a '.jpg'-style
+	 * input cannot smuggle an empty PATHINFO_FILENAME base past the
+	 * length guard either.)
 	 *
-	 * SENTINEL: sentinels the test setup so a "no-op" (fixed) implementation
-	 * cannot pass by coincidence — the sentinel_prefix ensures the ORIGINAL
-	 * filename is NOT itself a dotfile, and we assert BOTH that (a) a real
-	 * dotfile was created AND (b) the original main file is gone AND
-	 * (c) replaceFiles() reported true (which drives the "Files were
-	 * replaced" message the user sees). A fix must reject the empty base
-	 * BEFORE any move; when it lands the response will carry is_error and
-	 * no dotfile will exist.
-	 *
-	 * FLIP INSTRUCTIONS when SPIO fixes #50: assert that the response
-	 * carries is_error=true (or an early error), that the original main
-	 * file is still on disk, and that no `.jpg` dotfile was created in
-	 * the uploads dir.
+	 * The rejection response shape differs from the success path: it has
+	 * `error` + `is_error` + `message` and NO `is_done`/`redirect`.
 	 */
-	public function test_pin50_empty_new_filename_produces_extension_only_dotfile_pinned_for_deferred_fix() {
+	public function test_regression50_empty_new_filename_rejected_without_rename() {
 		$this->_setRole( 'administrator' );
 
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
@@ -623,72 +728,68 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$original_dir  = dirname( $original_file );
 		$dotfile       = $original_dir . '/.jpg';
 
-		// Sentinel pre-condition (principle 5): make sure no leftover
-		// `.jpg` dotfile from another test sits in the uploads dir — that
-		// would make (a) pass without the bug firing here.
+		// Sentinel: no leftover `.jpg` dotfile from another test — the
+		// dotfile absence assertion below must be attributable to THIS call.
 		if ( file_exists( $dotfile ) ) {
 			@unlink( $dotfile );
 		}
-		$this->assertFileDoesNotExist(
-			$dotfile,
-			'Sentinel: no leftover .jpg dotfile before the buggy rename'
-		);
+		$this->assertFileDoesNotExist( $dotfile, 'Sentinel: no leftover .jpg dotfile before the rename attempt' );
 
-		// Also verify sanitize_file_name('') is still '' (not false) —
-		// principle 2: if WP core ever changes this the test would silently
-		// stop firing the bug and land in the missing-key branch instead.
-		$this->assertSame(
-			'',
-			sanitize_file_name( '' ),
-			'Sentinel: sanitize_file_name("") must still return "" for #50 to fire'
-		);
+		// Sentinel: sanitize_file_name('') is still '' (not false) — the
+		// empty value must reach the strlen guard, not the missing-key branch.
+		$this->assertSame( '', sanitize_file_name( '' ), 'Sentinel: sanitize_file_name("") must still return ""' );
 
 		$response = $this->doReplaceFileName( $attachment_id, '' );
 
 		$this->assertIsObject( $response, 'Raw: ' . $this->lastRawResponse() );
-		$this->assertTrue(
-			$response->is_done,
-			'PINNED BUG #50: an empty newFileName is currently accepted (is_done=true). ' .
-			'FLIP INSTRUCTIONS when fixed: expect an error response and no rename.'
-		);
-		$this->assertObjectNotHasProperty(
-			'is_error',
-			$response,
-			'PINNED BUG #50: the current buggy path reports success ("Files were replaced"). ' .
-			'FLIP INSTRUCTIONS when fixed: expect is_error=true here.'
-		);
+		$this->assertTrue( (bool) ( $response->is_error ?? false ), 'REGRESSION #50: empty newFileName must be rejected with is_error' );
+		$this->assertObjectNotHasProperty( 'is_done', $response, 'REGRESSION #50: the rejection path must not report is_done' );
+		$this->assertNotEmpty( $response->error ?? '', 'REGRESSION #50: the rejection carries an error text' );
 
-		// The ORIGINAL main file is gone — the buggy code renamed it to `.jpg`.
-		$this->assertFileDoesNotExist(
-			$original_file,
-			'PINNED BUG #50: the buggy path physically moves the main file. ' .
-			'FLIP INSTRUCTIONS when fixed: the original main file must still exist.'
-		);
+		// No rename happened: original intact, no extension-only dotfile.
+		$this->assertFileExists( $original_file, 'REGRESSION #50: the original main file must be untouched' );
+		$this->assertFileDoesNotExist( $dotfile, 'REGRESSION #50: no extension-only ".jpg" dotfile may be created' );
+	}
 
-		// And an extension-only dotfile now sits in its place.
-		$this->assertFileExists(
-			$dotfile,
-			'PINNED BUG #50: the buggy path leaves an extension-only ".jpg" dotfile. ' .
-			'FLIP INSTRUCTIONS when fixed: assert this file does NOT exist.'
-		);
+	/**
+	 * REGRESSION TEST for BUG #50 (companion): a 1-2 character name is
+	 * rejected by the same `strlen($newFileName) < 3` guard, and a value
+	 * that SANITISES below 3 characters (guard runs post-sanitisation) is
+	 * rejected too.
+	 */
+	public function test_regression50_short_new_filename_rejected_without_rename() {
+		$this->_setRole( 'administrator' );
 
-		// Type sentinel (principle 2): is_done is really the PHP bool true,
-		// not a truthy string that could survive a partial fix that changed
-		// the response shape.
-		$this->assertIsBool( $response->is_done );
-		$this->assertTrue( $response->is_done );
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
 
-		// Clean up the dotfile so it does not pollute later tests.
-		@unlink( $dotfile );
+		$original_file = get_attached_file( $attachment_id );
+
+		// Two characters: below the minimum of 3.
+		$response = $this->doReplaceFileName( $attachment_id, 'ab' );
+
+		$this->assertIsObject( $response, 'Raw: ' . $this->lastRawResponse() );
+		$this->assertTrue( (bool) ( $response->is_error ?? false ), 'REGRESSION #50: 2-char newFileName must be rejected' );
+		$this->assertFileExists( $original_file );
+
+		// Sanitises to below 3: '???a' → 'a' after sanitize_file_name().
+		$this->assertLessThan( 3, strlen( sanitize_file_name( '???a' ) ), 'Sentinel: the crafted input must sanitise below 3 chars' );
+
+		$response = $this->doReplaceFileName( $attachment_id, '???a' );
+
+		$this->assertIsObject( $response, 'Raw: ' . $this->lastRawResponse() );
+		$this->assertTrue( (bool) ( $response->is_error ?? false ), 'REGRESSION #50: sanitised-below-minimum newFileName must be rejected' );
+		$this->assertFileExists( $original_file, 'REGRESSION #50: no rename may occur on rejection' );
 	}
 
 	// -------------------------------------------------------------------
-	// PIN #51 (MEDIUM): base_url mangling when the file base appears
-	// inside the directory path.
+	// REGRESSION #51 (fixed 202c6e3c): base_url no longer mangled when
+	// the file base appears inside the directory path.
 	// -------------------------------------------------------------------
 
 	/**
-	 * REGRESSION #51 (MEDIUM): replaceFiles() must build the TARGET URL at
+	 * REGRESSION TEST for BUG #51 (fixed in 202c6e3c — URL building is
+	 * now basename-anchored): replaceFiles() used to build the TARGET URL at
 	 * class/Controller/Optimizer/OptimizeAiController.php:679 as
 	 *
 	 *     $target_url = str_replace($base_filename, $newFileBase, $source_url);
@@ -721,7 +822,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	 * The assertions below verify that only the final path segment is
 	 * rewritten, leaving the containing directory unchanged.
 	 */
-	public function test_pin51_base_url_mangling_when_dir_contains_file_base() {
+	public function test_regression51_base_url_not_mangled_when_dir_contains_file_base() {
 		$this->_setRole( 'administrator' );
 
 		// Force uploads under a subdir named "photo" so the fixture ends
