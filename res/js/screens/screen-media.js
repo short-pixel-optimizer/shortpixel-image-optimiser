@@ -1061,7 +1061,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		// Replaced content is specialized in returning back what was actually replaced, default to that.
 		
 
-		if (resultItem.replaced_content && resultItem.replaced__content[attach_id])
+		if (resultItem.replaced_content && resultItem.replaced_content[attach_id])
 		{
 			var aiData = resultItem.replaced_content[attach_id];  // Should be replaced_content when it has item_id (?)	 
 		}

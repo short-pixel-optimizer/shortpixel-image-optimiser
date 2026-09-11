@@ -397,8 +397,6 @@ class wpOffload
 	 */
 	public function image_restore($mediaItem, $id, $clean)
 	{
-		$settings = \wpSPIO()->settings();
-
 		// Only medialibrary offloading supported.
 		if ('media' !== $mediaItem->get('type')) {
 			return false;

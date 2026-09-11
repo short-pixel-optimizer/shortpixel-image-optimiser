@@ -2605,7 +2605,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	 * @param array $args Reserved for subclass compatibility; currently unused.
 	 * @return bool True when every member (main, thumbnails, retinas, scaled original) restored successfully; false if any restore failed.
 	 */
-	public function restore($args = [])
+	public function restore($args = []) : bool
 	{
 		$fs = \wpSPIO()->filesystem();
 
@@ -2827,7 +2827,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	 *
 	 * @return bool
 	 */
-	public function hasDBRecord()
+	public function hasDBRecord() : bool
 	{
 
 		global $wpdb;
@@ -2842,6 +2842,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		} elseif (is_numeric($id)) {
 			return true;
 		}
+
+		return false;
 	}
 
 

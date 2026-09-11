@@ -244,6 +244,11 @@ class OptimizeAiController extends OptimizerBase
      */
     public function handleAPIResult(QueueItem $qItem)
     {
+        // No API handling needed for undo, it does everything already.  Might be solved more elegantly in the future perhaps.
+        if ($qItem->data()->action === 'undoAltData')
+        {
+             return; 
+        }
         $queue = $this->currentQueue;
 
         $qItem->addResult(['apiName' => $this->apiName]);
@@ -875,6 +880,8 @@ class OptimizeAiController extends OptimizerBase
         }
 
         $this->replaceMetaData($item_id, $base_filename, $newFileBase, $args);
+        // Trigger updates 
+
         if (method_exists($imageModel, 'getWPMLDuplicates')) {
             $duplicates = $imageModel->getWPMLDuplicates();
             foreach ($duplicates as $duplicate_id) {

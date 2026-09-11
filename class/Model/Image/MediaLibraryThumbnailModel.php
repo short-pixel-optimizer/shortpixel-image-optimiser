@@ -514,7 +514,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 	 *
 	 * @return bool
 	 */
-	public function hasDBRecord()
+	public function hasDBRecord() : bool
 	{
 		global $wpdb;
 
@@ -528,6 +528,8 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 		} elseif (is_numeric($id)) {
 			return true;
 		}
+
+		return false; 
 	}
 
 	/**
@@ -540,7 +542,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 	 *
 	 * @return bool True on successful restore, false otherwise.
 	 */
-	public function restore()
+	public function restore() : bool
 	{
 		if ($this->is_virtual()) {
 			$fs = \wpSPIO()->filesystem();
@@ -587,7 +589,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 	 * @return bool True when a local file is available (or the source was
 	 *              already real); false when the download failed.
 	 */
-	public function checkVirtualForBackup()
+	public function checkVirtualForBackup() : bool
 	{
 		if ($this->is_virtual()) // download remote file to backup.
 		{
@@ -636,7 +638,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 		}
 
 		return true; 
-		//return parent::createBackup();
 	}
 
 } // class
