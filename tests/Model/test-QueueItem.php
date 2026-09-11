@@ -469,7 +469,9 @@ class QueueItemTest extends WP_UnitTestCase {
 
 	public function test_getAPIController_routes_ai_family_to_OptimizeAiController() {
 		$q = new QueueItem();
-		foreach ( array( 'requestAlt', 'retrieveAlt', 'getAltData', 'undoAI', 'redoAI' ) as $action ) {
+		// fc86de1a (fix #61) renamed the undo case 'undoAI' → 'undoAltData'
+		// to match what Queue::prepareItems()/undoAltDataAction() enqueue.
+		foreach ( array( 'requestAlt', 'retrieveAlt', 'getAltData', 'undoAltData', 'redoAI', 'redoAiReplacement' ) as $action ) {
 			$this->assertInstanceOf(
 				\ShortPixel\Controller\Optimizer\OptimizeAiController::class,
 				$q->getAPIController( $action ),

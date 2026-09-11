@@ -285,12 +285,14 @@ class QueueItem
     * The 'undoAltData' action gates handleReplace()'s exact-match restore
     * branch. item_count is 0 — no credits are consumed.
     *
-    * BUG #61 (pinned in tests/Integration/test-BulkOptimization.php): the
-    * bulk path enqueues with this action, but getApiController() below and
-    * OptimizeAiController::sendToProcessing() still only recognise the old
-    * name 'undoAI' — bulk undo items are mis-dispatched to the AI API and
-    * never revert. Single-item AJAX undo works: AjaxController calls
+    * BUG #61 FIXED (fc86de1a): getApiController() below and
+    * OptimizeAiController::sendToProcessing() now both dispatch on
+    * 'undoAltData' (renamed from 'undoAI'), so bulk undo items revert again.
+    * Single-item AJAX undo bypasses the dispatch: AjaxController calls
     * OptimizeAiController::undoAltData() directly after this setter.
+    * NOTE the bulk path is still broken end-to-end: the undo result flows
+    * into HandleSuccess() which resurrects the record and double-extension
+    * renames the file (BUG #71 HIGH, pinned in test-BulkOptimization.php).
     *
     * @return void
     */
