@@ -930,19 +930,24 @@ class OptimizeAiController extends OptimizerBase
 
         if (false === $args['dry_run']) {
             $replacer->replace();
+            $result_replaced_content = $qItem->result()->replaced_content;
+
+            // Doesn't have a post_id here but will piggyback on the alt / other results and hope.
+            $result_replaced_content['replaced_url'] = $target_url;
+                        
+            $qItem->result()->replaced_content = $result_replaced_content;        
         } else {
             Log::addInfo('Dry-Run Replacer', $searchArray);
             Log::addInfo('ReplaceArray ', $replaceArray);
         }
-
-        // 
-
 
         if (isset($copySource) && is_array($copySource)) {
             foreach ($copySource as $fileItem) {
                 $fileItem->delete();
             }
         }
+
+
 
 
         return true;
@@ -1195,7 +1200,7 @@ class OptimizeAiController extends OptimizerBase
             $post_id = $result['post_id'];
             $content = $result['content'];
 
-            if (false !== wp_check_post_lock($post_id)) {
+            if (function_exists('wp_check_post_lock') && false !== wp_check_post_lock($post_id)) {
                 Log::addDebug('Replace Image Attributes - Post lock is active, skipping');
                 continue;
             }
@@ -1303,6 +1308,7 @@ class OptimizeAiController extends OptimizerBase
 
                 $result_replaced_content = $qItem->result()->replaced_content;
                 $result_replaced_content[$post_id] = $replaced_content;
+                Log::addTemp('ReplaceContentResuklt', $result_replaced_content);
                 $qItem->result()->replaced_content = $result_replaced_content;
             }
         }
