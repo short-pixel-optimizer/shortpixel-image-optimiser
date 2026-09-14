@@ -11,7 +11,7 @@
  *      would "unexpectedly pass" and the run would go red).
  */
 import { test, expect } from '../fixtures';
-import { adminUrls, expectNoHorizontalOverflow } from '../helpers/spio';
+import { adminUrls, expectNoHorizontalOverflow, expectSettingsStylesheetApplied } from '../helpers/spio';
 
 test.describe('Wave 0 smoke', () => {
 	test.beforeEach(async ({ spio }) => {
@@ -33,17 +33,7 @@ test.describe('Wave 0 smoke', () => {
 		// Tab sections are rendered (the settings JS wires them up on load).
 		await expect(page.locator('section.setting-tab[data-part]').first()).toBeAttached();
 
-		// Stylesheet-collapse check: the settings UI is built from custom
-		// elements (<settinglist>, <setting>…) that have NO user-agent styling.
-		// If shortpixel-settings.css failed to load they would render inline
-		// and the page collapses to a wall of text.
-		const display = await page.evaluate(() => {
-			const el = document.querySelector('settinglist, setting, gridbox');
-			return el ? getComputedStyle(el).display : 'no-custom-element-found';
-		});
-		expect(display, 'custom settings elements must be styled by shortpixel-settings.css').not.toBe('inline');
-		expect(display).not.toBe('no-custom-element-found');
-
+		await expectSettingsStylesheetApplied(page);
 		await expectNoHorizontalOverflow(page);
 	});
 

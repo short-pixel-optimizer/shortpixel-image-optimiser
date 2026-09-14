@@ -73,6 +73,10 @@ class SPIO_E2E_MockApi {
 			'aiAddStatus'     => null,
 			'aiWaitingRounds' => 0,
 			'aiFields'        => array(),
+			// api-status.php (key validation / quota): null = healthy paying
+			// account; -401 = invalid key; -403 = quota exceeded (APICallsMade
+			// is then reported at the quota ceiling, like the real API).
+			'apiStatusCode'   => null,
 		);
 	}
 
@@ -184,8 +188,34 @@ class SPIO_E2E_MockApi {
 		update_option( self::OPTION_REQUESTS, $log, false );
 	}
 
-	/** Healthy paying account with optimization + AI credits. */
+	/** Healthy paying account with optimization + AI credits — or the forced failure code from the apiStatusCode knob. */
 	private function handleApiStatus( array $args ) {
+		$forced = $this->knobs['apiStatusCode'];
+		if ( null !== $forced && (int) $forced !== self::CODE_SUCCESS ) {
+			$messages = array(
+				self::CODE_INVALID_KEY    => 'Invalid API key',
+				self::CODE_QUOTA_EXCEEDED => 'Quota exceeded',
+			);
+			$body = array(
+				'Status'                 => array(
+					'Code'    => (int) $forced,
+					'Message' => isset( $messages[ (int) $forced ] ) ? $messages[ (int) $forced ] : 'Forced by E2E test',
+				),
+				'Unlimited'              => 'false',
+				'PlanType'               => 'Monthly',
+				'DateSubscription'       => gmdate( 'Y-m-d', time() - 5 * DAY_IN_SECONDS ),
+				'DomainCheck'            => 'Accessible',
+				'APICallsMade'           => ( self::CODE_QUOTA_EXCEEDED === (int) $forced ) ? 10000 : 100,
+				'APICallsQuota'          => 10000,
+				'APICallsMadeOneTime'    => 0,
+				'APICallsQuotaOneTime'   => 0,
+				'CaptionsCallsMade'      => 5,
+				'CaptionsCallsQuota'     => 1000,
+				'CaptionsCallsRemaining' => 995,
+			);
+			return $this->httpResponse( wp_json_encode( $body ), $args );
+		}
+
 		$body = array(
 			'Status'                 => array( 'Code' => 2, 'Message' => 'Success' ),
 			'Unlimited'              => 'false',
@@ -224,8 +254,16 @@ class SPIO_E2E_MockApi {
 
 	private function buildUrlEntry( $sourceUrl, $index, array $request ) {
 		if ( null !== $this->knobs['forceStatusCode'] ) {
+			// Real-API-like messages: the plugin shows Status->Message verbatim.
+			$messages = array(
+				self::CODE_INVALID_URL    => 'Invalid URL',
+				self::CODE_UNREACHABLE    => 'URL inaccessible (forced by E2E test)',
+				self::CODE_INVALID_KEY    => 'Invalid API key',
+				self::CODE_QUOTA_EXCEEDED => 'Quota exceeded',
+			);
+			$code = (int) $this->knobs['forceStatusCode'];
 			return array(
-				'Status'      => array( 'Code' => (int) $this->knobs['forceStatusCode'], 'Message' => 'Forced by E2E test' ),
+				'Status'      => array( 'Code' => $code, 'Message' => isset( $messages[ $code ] ) ? $messages[ $code ] : 'Forced by E2E test' ),
 				'OriginalURL' => $sourceUrl,
 			);
 		}

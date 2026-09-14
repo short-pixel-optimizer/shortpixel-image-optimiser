@@ -3,7 +3,7 @@
  * tests/E2E/mu-plugins/spio-e2e-support.php) plus SPIO-specific page
  * helpers (CustomEvent waits, admin URLs).
  */
-import { expect, type APIRequestContext, type Page } from '@playwright/test';
+import { expect, type APIRequestContext, type Locator, type Page } from '@playwright/test';
 
 export type MockKnobs = Partial<{
 	forceStatusCode: number | null;
@@ -13,7 +13,19 @@ export type MockKnobs = Partial<{
 	aiAddStatus: number | null;
 	aiWaitingRounds: number;
 	aiFields: Record<string, string>;
+	/** api-status.php (key validation / quota): null = healthy, -401 invalid key, -403 quota exceeded. */
+	apiStatusCode: number | null;
 }>;
+
+/** Status codes the mock ShortPixel API understands (mirror of the mu-plugin constants). */
+export const ApiCode = {
+	SUCCESS: 2,
+	WAITING: 1,
+	INVALID_URL: -102,
+	UNREACHABLE: -106,
+	INVALID_KEY: -401,
+	QUOTA_EXCEEDED: -403,
+} as const;
 
 export type MockRequest = { time: string; url: string; path: string; request: unknown };
 
@@ -65,6 +77,11 @@ export class SpioSupport {
 	/** Set SPIO settings (wpSPIO()->settings()->key = value). */
 	setSettings(settings: Record<string, unknown>): Promise<{ ok: boolean }> {
 		return this.post('settings', settings);
+	}
+
+	/** Read the persisted spio_settings option (server-side truth for save tests). */
+	getSettings(): Promise<Record<string, unknown>> {
+		return this.get('settings');
 	}
 
 	/** update_option(name, value). */
@@ -147,6 +164,43 @@ export async function withSpioEvent<T>(
 	const result = await action();
 	await waiter;
 	return result;
+}
+
+/**
+ * Stylesheet-collapse check: the settings UI is built from custom HTML
+ * elements (<settinglist>, <setting>, <gridbox>…) that have NO user-agent
+ * styling. If shortpixel-settings.css fails to load they render inline and
+ * the page collapses to a wall of text — assert a sample element is styled.
+ */
+export async function expectSettingsStylesheetApplied(page: Page): Promise<void> {
+	const display = await page.evaluate(() => {
+		const el = document.querySelector('settinglist, setting, gridbox');
+		return el ? getComputedStyle(el).display : 'no-custom-element-found';
+	});
+	expect(display, 'custom settings elements must be styled by shortpixel-settings.css').not.toBe('inline');
+	expect(display).not.toBe('no-custom-element-found');
+}
+
+/**
+ * Set a checkbox/radio that is VISUALLY HIDDEN behind a custom control
+ * (SPIO's `<switch>` toggles, the compression radios, the bulk error-box
+ * toggle): Playwright's check() cannot click a display:none input, so flip
+ * it in the DOM and dispatch the events the plugin's JS listens for.
+ */
+export async function setChecked(locator: Locator, on: boolean): Promise<void> {
+	await locator.evaluate((el, value) => {
+		const input = el as HTMLInputElement;
+		if (input.checked !== value) {
+			input.checked = value;
+			input.dispatchEvent(new Event('input', { bubbles: true }));
+			input.dispatchEvent(new Event('change', { bubbles: true }));
+		}
+	}, on);
+	if (on) {
+		await expect(locator).toBeChecked();
+	} else {
+		await expect(locator).not.toBeChecked();
+	}
 }
 
 /** Cheap layout sanity: the document never scrolls horizontally. */

@@ -13,6 +13,7 @@
  *                         hostile snippets; then re-apply the seed
  *   POST seed             apply the healthy-install baseline (see spio_e2e_apply_seed)
  *   POST settings         { key: value, … } → wpSPIO()->settings()
+ *   GET  settings         the persisted spio_settings option
  *   POST option           { name, value } → update_option
  *   POST fixture          { name } → upload tests/fixtures/<name> as an attachment
  *   GET  attachment/<id>  SPIO view of one attachment (optimized?, meta, alt, file)
@@ -67,6 +68,21 @@ function spio_e2e_apply_seed() {
 		$settings->autoMediaLibrary   = 0;
 		$settings->redirectedSettings = 3;
 		$settings->enable_ai          = 1;
+
+		// Values the settings specs mutate — pinned back to their defaults so
+		// a save in one test can never masquerade as a save in the next
+		// (bit us on pin62: compressionType=2 survived from an earlier test).
+		$settings->compressionType   = 1;
+		$settings->createWebp        = 0;
+		$settings->createAvif        = 0;
+		$settings->showCustomMedia   = 0;
+		$settings->ai_use_exif       = 0;
+		$settings->ai_use_post       = 0;
+		$settings->aiPreserve        = 0;
+		$settings->cloudflareZoneID  = '';
+		$settings->cloudflareToken   = '';
+		$settings->excludeSizes      = array();
+		$settings->excludePatterns   = array();
 	}
 }
 
@@ -96,6 +112,7 @@ function spio_e2e_register_routes() {
 	register_rest_route( $ns, '/reset', $def + array( 'methods' => 'POST', 'callback' => 'spio_e2e_route_reset' ) );
 	register_rest_route( $ns, '/seed', $def + array( 'methods' => 'POST', 'callback' => 'spio_e2e_route_seed' ) );
 	register_rest_route( $ns, '/settings', $def + array( 'methods' => 'POST', 'callback' => 'spio_e2e_route_settings' ) );
+	register_rest_route( $ns, '/settings', $def + array( 'methods' => 'GET', 'callback' => 'spio_e2e_route_get_settings' ) );
 	register_rest_route( $ns, '/option', $def + array( 'methods' => 'POST', 'callback' => 'spio_e2e_route_option' ) );
 	register_rest_route( $ns, '/fixture', $def + array( 'methods' => 'POST', 'callback' => 'spio_e2e_route_fixture' ) );
 	register_rest_route( $ns, '/attachment/(?P<id>\d+)', $def + array( 'methods' => 'GET', 'callback' => 'spio_e2e_route_attachment' ) );
@@ -139,6 +156,17 @@ function spio_e2e_route_reset( WP_REST_Request $request ) {
 	delete_option( SPIO_E2E_HOSTILE_OPTION );
 	delete_transient( 'spio_ai_jwt_token' );
 
+	// Per-user preferences a test may have changed: hidden Media Library
+	// columns (Screen Options → user OPTION "manageuploadcolumnshidden",
+	// stored blog-prefixed, e.g. wp_manageuploadcolumnshidden) and SPIO's
+	// simple/advanced settings mode. delete_user_option() handles the prefix.
+	foreach ( get_users( array( 'fields' => 'ID' ) ) as $user_id ) {
+		delete_user_option( $user_id, 'manageuploadcolumnshidden' );
+		delete_user_option( $user_id, 'manageuploadcolumnshidden', true );
+		delete_user_option( $user_id, 'shortpixel-settings-mode' );
+		delete_user_option( $user_id, 'shortpixel-settings-mode', true );
+	}
+
 	// The JS processor's single-runner lock: a 2-minute 'bulk-secret'
 	// transient set by whichever page last processed. If it survives from a
 	// previous test (or run), CheckActive() in shortpixel-processor.js sees a
@@ -166,6 +194,11 @@ function spio_e2e_route_settings( WP_REST_Request $request ) {
 		$applied[ $key ] = $value;
 	}
 	return rest_ensure_response( array( 'ok' => true, 'applied' => $applied ) );
+}
+
+/** The persisted spio_settings option — server-side truth for save round-trips. */
+function spio_e2e_route_get_settings( WP_REST_Request $request ) {
+	return rest_ensure_response( (array) get_option( 'spio_settings', array() ) );
 }
 
 function spio_e2e_route_option( WP_REST_Request $request ) {

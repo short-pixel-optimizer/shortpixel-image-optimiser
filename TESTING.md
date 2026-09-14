@@ -459,6 +459,15 @@ waits), `specs/` (one file per flow; `auth.setup.ts` logs in once).
   'shortpixel.processor.responseHandled', …)`) instead of sleeping.
 - A spec that expects JS errors (a pin for a known bug) opts out with
   `test.use({ allowConsoleErrors: true })` and asserts on `consoleErrors`.
+- SPIO's switches, compression radios and the bulk error-box toggle are
+  `display:none` inputs behind custom controls — Playwright's `check()`
+  cannot click them. Use `setChecked(locator, on)` from `helpers/spio.ts`
+  (sets the DOM state and dispatches `input`/`change`).
+- Use the page objects in `helpers/` (`SettingsPage`, `MediaList`,
+  `BulkPage`) rather than raw selectors; they encode the verified DOM facts
+  (e.g. the settings save banner is *always* `display:flex` — success is the
+  `show` class, and the media status filter needs `filter_action` in the
+  request).
 - Pinned tests follow the same rules as the PHPUnit ones (`_pinned_for_deferred_fix`,
   sentinel that proves the flow ran, flip note in the docblock).
 - Artifacts (traces, screenshots, videos, HTML report) land in
