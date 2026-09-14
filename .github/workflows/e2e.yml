@@ -1,0 +1,50 @@
+# Browser end-to-end tests (Playwright) against a real served WordPress —
+# the same Docker stack bin/test-e2e.sh runs locally (docker-compose.e2e.yml),
+# so a green run here means a green run on any developer machine.
+#
+# Chromium only for now; Firefox + WebKit projects join in Wave 4.
+name: E2E (browser)
+
+on:
+  push:
+    branches: [e2e-tests, updates]
+  pull_request:
+    branches: [updates, master]
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: Playwright / Chromium / WP latest
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Run the E2E suite
+        env:
+          CI: "1"
+        run: bin/test-e2e.sh
+
+      - name: WordPress container logs (on failure)
+        if: failure()
+        run: docker compose -f docker-compose.e2e.yml logs --no-color wordpress | tail -n 200
+
+      - name: Upload Playwright artifacts (traces, screenshots, report)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: |
+            tests/E2E/artifacts/html-report
+            tests/E2E/artifacts/test-results
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Tear down
+        if: always()
+        run: docker compose -f docker-compose.e2e.yml down -v --remove-orphans

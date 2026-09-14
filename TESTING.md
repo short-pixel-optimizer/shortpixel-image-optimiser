@@ -398,6 +398,69 @@ environment byte-for-byte — same PHP versions, same MySQL image, same
 `bin/install-wp-tests.sh` script. If a test passes locally via `bin/test.sh`,
 it should pass on CI.
 
+## Browser end-to-end tests (Playwright)
+
+The PHPUnit suites above never load a browser, so the plugin's JavaScript
+(`res/js/`, ~9,650 lines) and its admin layout had no automated coverage.
+The E2E suite closes that gap: a REAL served WordPress with SPIO installed,
+driven by [Playwright](https://playwright.dev) in a browser, asserting what a
+user actually sees — and failing on any uncaught JS error.
+
+```bash
+bin/test-e2e.sh                          # provision + run the suite (Chromium, Docker)
+bin/test-e2e.sh --grep "settings"        # subset by title
+bin/test-e2e.sh specs/smoke.spec.ts      # one spec (paths relative to tests/E2E)
+bin/test-e2e.sh --headed                 # visible browser, natively on the host (needs Node.js)
+bin/test-e2e.sh --ui                     # Playwright UI mode, natively on the host
+bin/test-e2e.sh --report                 # open the last HTML report
+bin/test-e2e.sh --provision-only         # just bring the site up at http://localhost:8030
+bin/test-e2e.sh --wp 6.5                 # against an older WordPress (fresh volumes)
+bin/test-e2e.sh --clean                  # wipe DB / core / node_modules volumes
+```
+
+**Stack** (`docker-compose.e2e.yml`, fully separate from the PHPUnit stack —
+different database, volumes and images, so the two never collide):
+
+| Service | What |
+|---|---|
+| `mysql-e2e` | MySQL 8.0, database `wordpress_e2e` |
+| `wordpress` | official `wordpress:php8.3-apache` image; the repo is bind-mounted as `wp-content/plugins/shortpixel-image-optimiser`; served on **http://localhost:8030** (admin / password) |
+| `wpcli` | one-shot provisioning (`tests/E2E/provision/provision.sh`): core install, theme, plugin activation, seed |
+| `playwright` | `mcr.microsoft.com/playwright` (pinned to the `@playwright/test` version in `tests/E2E/package.json`), shares the wordpress container's network so the same URL works everywhere |
+
+**Test-support mu-plugins** (`tests/E2E/mu-plugins/`, only active when
+`SPIO_E2E` is defined — never in production):
+
+- `spio-e2e-mock-api.php` — the ShortPixel API mock, ported from the PHPUnit
+  `MockShortPixelApi` to a live install (disk-backed download stash, knobs
+  and counters in options). No traffic leaves the container.
+- `spio-e2e-support.php` — REST endpoint `spio-e2e/v1` the tests call to
+  reset state, seed the healthy-install baseline, upload fixtures, backdate
+  the queue, steer the mock and inject "hostile" third-party scripts
+  (`hostile-snippets/`, e.g. the `window.URL` overwrite behind bug #62).
+
+**Layout** (`tests/E2E/`): `playwright.config.ts` (serial, one worker — every
+spec shares one install), `fixtures.ts` (the console-error tripwire, hermetic
+routing, the `spio` support client), `helpers/` (page helpers, CustomEvent
+waits), `specs/` (one file per flow; `auth.setup.ts` logs in once).
+
+**Writing E2E specs**
+
+- Import `test`/`expect` from `../fixtures`, never from `@playwright/test`
+  directly — that is what arms the tripwire.
+- Start each test from a known state: `await spio.reset()` in `beforeEach`.
+- Wait on SPIO's own window CustomEvents (`withSpioEvent(page,
+  'shortpixel.processor.responseHandled', …)`) instead of sleeping.
+- A spec that expects JS errors (a pin for a known bug) opts out with
+  `test.use({ allowConsoleErrors: true })` and asserts on `consoleErrors`.
+- Pinned tests follow the same rules as the PHPUnit ones (`_pinned_for_deferred_fix`,
+  sentinel that proves the flow ran, flip note in the docblock).
+- Artifacts (traces, screenshots, videos, HTML report) land in
+  `tests/E2E/artifacts/` (gitignored); on CI they are uploaded on every run.
+
+CI: `.github/workflows/e2e.yml` runs the identical Docker stack on
+`ubuntu-latest` for pushes to `e2e-tests`/`updates` and PRs to `updates`/`master`.
+
 ## Writing new tests
 
 - Test files: `tests/<Group>/test-<ClassName>.php`.
