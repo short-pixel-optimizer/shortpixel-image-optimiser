@@ -81,7 +81,13 @@ class QueueItemResult implements JsonSerializable
     * the raw aiData. NOTE: unlike the other fields this defaults to [] (not
     * null), so forReturn() always includes it in the JSON payload.
     *
-    * @var array<int, array{alt: string|false, caption: string|false}>
+    * Since a5ad9805 the SAME map also carries one string key, 'replaced_url'
+    * (the new file URL), set by OptimizeAiController::replaceFiles() after an
+    * AI filename rename — consumers iterating the map must skip non-numeric
+    * keys. The Gutenberg consumer reads both by the editor's current post id
+    * (screen-media.js UpdateGutenBerg).
+    *
+    * @var array<int|string, array{alt: string|false, caption: string|false}|string>
     */
    protected $replaced_content = [];
 
