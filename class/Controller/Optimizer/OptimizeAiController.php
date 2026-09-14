@@ -78,9 +78,10 @@ class OptimizeAiController extends OptimizerBase
      * enqueue (ba9fc3ef had renamed the enqueue side only, leaving bulk undo
      * items mis-dispatched to the AI API). QueueItem::getApiController() got
      * the same rename; nothing produces the old 'undoAI' action anymore.
-     * Regression+pin test: test_regression61_bulk_undo_reverts_alt_but_pin71_...
-     * (tests/Integration/test-BulkOptimization.php) — see BUG #71 on
-     * HandleSuccess() for the serious residual this fix exposed.
+     * The HandleSuccess fall-through this fix exposed (#71) was closed by
+     * 4a1b7a91 (handleAPIResult early-return). Regression test:
+     * test_regression61_71_bulk_undo_ai_reverts_generated_data
+     * (tests/Integration/test-BulkOptimization.php).
      *
      * @param QueueItem $qItem The item to process.
      * @return mixed Return value of undoAltData() for the undoAltData action; void otherwise.
@@ -239,6 +240,13 @@ class OptimizeAiController extends OptimizerBase
      * retrieveAlt path: when aiData is present on the result, delegates to HandleSuccess()
      * which applies the 'shortpixel/ai/success' filter and persists the data.
      *
+     * undoAltData path (4a1b7a91, fixes BUG #71): early-returns immediately —
+     * undoAltData() already adds its result and finishes the item, and letting
+     * the undo result (which carries aiData) fall through to HandleSuccess()
+     * used to resurrect the reverted aipostmeta record and double-extension
+     * rename the undone files. Regression-tested in
+     * test_regression61_71_bulk_undo_ai_reverts_generated_data.
+     *
      * @param QueueItem $qItem The queue item whose result should be evaluated.
      * @return void
      */
@@ -387,23 +395,16 @@ class OptimizeAiController extends OptimizerBase
      * (filename prefix/postfix etc.) — and saves it through
      * AiDataModel::handleNewData().
      *
-     * BUG #71 (HIGH, pinned in tests/Integration/test-BulkOptimization.php as
-     * test_regression61_bulk_undo_reverts_alt_but_pin71_..._pinned_for_deferred_fix):
-     * since the #61 fix (fc86de1a) BULK 'undoAltData' items land here too —
-     * handleAPIResult() routes ANY result carrying aiData to this method, and
-     * undoAltData() puts getCurrentData() on its result. Consequences:
-     *   1. handleNewData() RESURRECTS the aipostmeta row that revert() just
-     *      deleted (status GENERATED, restored originals stored as generated);
-     *   2. $aiData['original_filebase'] (below) is an undefined key for
-     *      getCurrentData() payloads → PHP warning;
-     *   3. WORST: getCurrentData()'s 'filebase' is basename(get_attached_file())
-     *      INCLUDING the extension, so the filebase comparison further down
-     *      always mismatches → replaceFiles() renames every undone file to a
-     *      DOUBLE EXTENSION (photo.jpg → photo.jpg.jpg), rewriting metadata
-     *      and content with it (empirically confirmed).
-     * The single-item AJAX undo is unaffected (calls undoAltData() directly).
-     * Fix: early-return here for 'undoAltData' items (undoAltData() already
-     * finishes the item), or don't route undo results into HandleSuccess.
+     * BUG #71 FIXED (4a1b7a91): handleAPIResult() now early-returns for
+     * 'undoAltData' items, so bulk-undo results no longer land here. The
+     * fall-through used to resurrect the just-deleted aipostmeta row,
+     * warn on the missing 'original_filebase' key, and double-extension
+     * rename every undone file (getCurrentData()'s extension-bearing
+     * 'filebase' never equals getFileBase()). Regression test:
+     * test_regression61_71_bulk_undo_ai_reverts_generated_data
+     * (tests/Integration/test-BulkOptimization.php). NOTE the fc86de1a
+     * format-skip guard below is now dead code in practice (no undo item
+     * reaches this method), kept as defense-in-depth.
      * Then:
      *   - Replaces in-post image attributes (alt, caption) via replaceImageAttributes().
      *   - Renames physical files and updates WordPress metadata via replaceFiles() when
