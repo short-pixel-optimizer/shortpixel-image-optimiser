@@ -139,6 +139,15 @@ function spio_e2e_route_reset( WP_REST_Request $request ) {
 	delete_option( SPIO_E2E_HOSTILE_OPTION );
 	delete_transient( 'spio_ai_jwt_token' );
 
+	// The JS processor's single-runner lock: a 2-minute 'bulk-secret'
+	// transient set by whichever page last processed. If it survives from a
+	// previous test (or run), CheckActive() in shortpixel-processor.js sees a
+	// server key that doesn't match the new page's localStorage key, parks the
+	// processor and only re-checks after 3 minutes — the queue silently stalls
+	// (first flaky run, 2026-09-14). Every test starts lock-free; the auth
+	// setup clears the localStorage half. InstallHelper does the same delete.
+	delete_transient( 'bulk-secret' );
+
 	spio_e2e_apply_seed();
 
 	return rest_ensure_response( array( 'ok' => true ) );

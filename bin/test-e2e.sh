@@ -13,6 +13,7 @@
 #     bin/test-e2e.sh --project chromium       # one browser project (firefox/webkit from Wave 4)
 #     bin/test-e2e.sh --update-snapshots       # refresh screenshot baselines (Wave 4)
 #     bin/test-e2e.sh --wp 6.5                 # against WordPress 6.5 instead of latest (fresh volumes!)
+#     bin/test-e2e.sh --pull-only              # just pull the images (with retry) — CI's first step
 #     bin/test-e2e.sh --provision-only         # bring the site up + seed it, run nothing
 #     bin/test-e2e.sh --headed                 # run natively on the host with a visible browser
 #     bin/test-e2e.sh --ui                     # Playwright UI mode, natively on the host
@@ -46,6 +47,21 @@ fi
 
 COMPOSE=(docker compose -f docker-compose.e2e.yml)
 E2E_DIR="tests/E2E"
+
+# spio_retry <attempts> <delay> <cmd...> — exponential-backoff retry helper.
+# shellcheck source=bin/lib/retry.sh
+. "bin/lib/retry.sh"
+
+# Pull every image of the stack up front, with retries. Registry pulls from
+# CI runners sporadically fail mid-handshake ("connection reset by peer"
+# fetching the Docker Hub auth token — first e2e.yml run, 2026-09-14);
+# `compose up` would abort on that, while a retried `pull` shrugs it off.
+# 5 attempts × doubling delay from 10s = up to ~2.5 min of patience.
+pull_images() {
+    echo "==> Pulling images (with retry)..."
+    # --quiet on CI keeps the log readable; locally the progress bars are useful.
+    spio_retry 5 10 "${COMPOSE[@]}" pull ${CI:+--quiet}
+}
 SITE_URL="http://localhost:8030"
 PROVISION_SCRIPT="wp-content/plugins/shortpixel-image-optimiser/tests/E2E/provision/provision.sh"
 
@@ -59,6 +75,7 @@ while [ $# -gt 0 ]; do
     case "$1" in
         --clean)          MODE="clean"; shift ;;
         --down)           MODE="down"; shift ;;
+        --pull-only)      MODE="pull"; shift ;;
         --provision-only) MODE="provision"; shift ;;
         --shell)          MODE="shell"; shift ;;
         --wp-shell)       MODE="wp-shell"; shift ;;
@@ -94,6 +111,10 @@ case "$MODE" in
         "${COMPOSE[@]}" down --remove-orphans
         exit 0
         ;;
+    pull)
+        pull_images
+        exit 0
+        ;;
     logs)
         exec "${COMPOSE[@]}" logs -f wordpress
         ;;
@@ -110,6 +131,9 @@ if [ "${WP_SWITCH:-0}" = "1" ]; then
     echo "==> WordPress version switch requested ($E2E_WP_TAG): recreating the stack with fresh volumes..."
     "${COMPOSE[@]}" down -v --remove-orphans
 fi
+
+# --- Images ---------------------------------------------------------------
+pull_images
 
 # --- Bring the site up -------------------------------------------------
 echo "==> Starting MySQL + WordPress ($E2E_WP_TAG)..."

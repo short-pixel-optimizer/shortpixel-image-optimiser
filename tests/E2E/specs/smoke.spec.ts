@@ -57,6 +57,16 @@ test.describe('Wave 0 smoke', () => {
 		const cell = page.locator(`#shortpixel-data-${id}`);
 		await expect(cell).toBeVisible();
 
+		// SENTINEL: this page must OWN the processor lock, otherwise the queue
+		// never advances past the first tick and the wait below would time out
+		// with a misleading message. Both halves of SPIO's lock (server
+		// transient + localStorage key) are cleared by reset()/auth setup.
+		await expect
+			.poll(() => page.evaluate(() => (window as any).ShortPixelProcessor?.isActive === true), {
+				message: 'the page must be the active SPIO processor (stale bulk-secret lock?)',
+			})
+			.toBe(true);
+
 		// The per-item "Optimize now" action (a javascript: link rendered by
 		// UiHelper::getAction('optimize')) kicks the processor for this item.
 		const optimizeLink = cell.locator('a.optimize');

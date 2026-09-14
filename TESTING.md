@@ -414,6 +414,7 @@ bin/test-e2e.sh --headed                 # visible browser, natively on the host
 bin/test-e2e.sh --ui                     # Playwright UI mode, natively on the host
 bin/test-e2e.sh --report                 # open the last HTML report
 bin/test-e2e.sh --provision-only         # just bring the site up at http://localhost:8030
+bin/test-e2e.sh --pull-only              # pull the images with retry (CI's first step)
 bin/test-e2e.sh --wp 6.5                 # against an older WordPress (fresh volumes)
 bin/test-e2e.sh --clean                  # wipe DB / core / node_modules volumes
 ```
@@ -449,6 +450,11 @@ waits), `specs/` (one file per flow; `auth.setup.ts` logs in once).
 - Import `test`/`expect` from `../fixtures`, never from `@playwright/test`
   directly — that is what arms the tripwire.
 - Start each test from a known state: `await spio.reset()` in `beforeEach`.
+  Besides content and tables this clears SPIO's processor lock (the 2-minute
+  `bulk-secret` transient); the auth setup persists cookies only, so every
+  page starts with an empty localStorage and becomes the processor itself.
+  A page whose `window.ShortPixelProcessor.isActive` is false never advances
+  the queue — assert it (see the smoke spec) before waiting on processing.
 - Wait on SPIO's own window CustomEvents (`withSpioEvent(page,
   'shortpixel.processor.responseHandled', …)`) instead of sleeping.
 - A spec that expects JS errors (a pin for a known bug) opts out with
