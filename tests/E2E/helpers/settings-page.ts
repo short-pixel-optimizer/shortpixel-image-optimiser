@@ -73,14 +73,25 @@ export class SettingsPage {
 		return /\badvanced\b/.test(cls);
 	}
 
-	/** Toggle simple/advanced (persisted per user, applied immediately). */
+	/**
+	 * Toggle simple/advanced. SwitchViewModeEvent flips the root class
+	 * synchronously but persists the mode with a fire-and-forget AJAX call
+	 * (settings/changemode via the Web Worker) — so besides the class we wait
+	 * for the processor's response event, otherwise a reload right after the
+	 * toggle can race the user-option write (flaky on CI, 2026-09-15).
+	 */
 	async setViewMode(mode: 'simple' | 'advanced'): Promise<void> {
 		const toggle = this.page.locator('#viewmode-toggles input[type="checkbox"]');
-		if (mode === 'advanced') {
-			await toggle.check({ force: true });
-		} else {
-			await toggle.uncheck({ force: true });
+		if (await this.isAdvanced() === (mode === 'advanced')) {
+			return; // already there — no request would be sent
 		}
+		await withSpioEvent(this.page, 'shortpixel.processor.responseHandled', async () => {
+			if (mode === 'advanced') {
+				await toggle.check({ force: true });
+			} else {
+				await toggle.uncheck({ force: true });
+			}
+		});
 		await expect(this.root).toHaveClass(new RegExp(`\\b${mode}\\b`));
 	}
 

@@ -20,9 +20,12 @@ export default defineConfig({
 
 	fullyParallel: false,
 	workers: 1,
-	// One retry on CI only, and a retried pass is still visible in the report
-	// as "flaky" — never silently green.
-	retries: isCI ? 1 : 0,
+	// No retries anywhere. A test that fails once and passes on retry is
+	// exactly the intermittent JS/timing problem this suite exists to catch,
+	// and Playwright counts such a "flaky" test as a PASS for the exit code —
+	// which let a real race hide behind a green CI run (2026-09-15). Failures
+	// must go red the first time; fix the race, don't retry past it.
+	retries: 0,
 	forbidOnly: isCI,
 
 	timeout: 90_000,

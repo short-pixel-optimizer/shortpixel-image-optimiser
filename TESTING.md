@@ -484,6 +484,12 @@ waits), `specs/` (one file per flow; `auth.setup.ts` logs in once).
   sentinel that proves the flow ran, flip note in the docblock).
 - Artifacts (traces, screenshots, videos, HTML report) land in
   `tests/E2E/artifacts/` (gitignored); on CI they are uploaded on every run.
+- **No retries, locally or on CI.** Playwright counts a test that passes on
+  retry as "flaky", which is a *pass* for the exit code — a real timing race
+  once hid behind a green CI run that way. Intermittent failures are the
+  bugs this suite exists to catch, so a first failure goes red; fix the
+  race (usually: wait on the right `shortpixel.*` event) instead of
+  retrying past it.
 
 CI: `.github/workflows/e2e.yml` runs the identical Docker stack on
 `ubuntu-latest` for pushes to `e2e-tests`/`updates` and PRs to `updates`/`master`.
