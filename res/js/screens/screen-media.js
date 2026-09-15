@@ -1057,13 +1057,20 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 	UpdateGutenBerg(resultItem) {
 
+console.log('UpdateGutenberg function', resultItem);
+		if (!wp.data || !wp.data.select('core/editor')) {
+			return false;
+		}
+
+		const post_id = wp.data.select( 'core/editor' ).getCurrentPostId();
+
 		var attach_id = resultItem.item_id;
 		// Replaced content is specialized in returning back what was actually replaced, default to that.
 		
-
-		if (resultItem.replaced_content && resultItem.replaced_content[attach_id])
+		if (resultItem.replaced_content && resultItem.replaced_content[post_id])
 		{
-			var aiData = resultItem.replaced_content[attach_id];  // Should be replaced_content when it has item_id (?)	 
+			var aiData = resultItem.replaced_content[post_id];  // Should be replaced_content when it has item_id (?)	 
+			var replacedUrl = (resultItem.replaced_content.replaced_url) ? resultItem.replaced_content.replaced_url : null;
 		}
 		else 
 		{
@@ -1071,10 +1078,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		}
 
 console.log('Update GB', attach_id, aiData, resultItem); 
-
-		if (!wp.data || !wp.data.select('core')) {
-			return false;
-		}
 
 		// Fields disabled in settings, or skipped by 'preserve existing', come back as
 		// integer status codes instead of text. Only apply real core/image attributes
@@ -1088,6 +1091,10 @@ console.log('Update GB', attach_id, aiData, resultItem);
 			}
 			if (typeof aiData.caption === 'string') {
 				attributes.caption = aiData.caption;
+			}
+			if (replacedUrl != null)
+			{
+			   attributes.url = resultItem.replaced_content.replaced_url; 
 			}
 		}
 

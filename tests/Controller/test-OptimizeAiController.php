@@ -1050,6 +1050,16 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 			'update the sentinel accordingly).'
 		);
 
+		// CONTRACT (a5ad9805, part of the #66 Gutenberg fix — independent of
+		// #52): after a non-dry-run replace, replaceFiles() piggybacks the new
+		// file URL on the result's replaced_content map under the string key
+		// 'replaced_url', which screen-media.js UpdateGutenBerg() uses to
+		// refresh the image block's url in an open editor.
+		$replaced = $qItem->result()->replaced_content;
+		$this->assertIsArray( $replaced );
+		$this->assertArrayHasKey( 'replaced_url', $replaced, 'replaceFiles() must record the new URL as replaced_content[replaced_url].' );
+		$this->assertStringContainsString( $tgt_base, (string) $replaced['replaced_url'], 'replaced_url must point at the NEW file base.' );
+
 		// Clean up.
 		wp_delete_attachment( $attach_id, true );
 		@unlink( $src_path );

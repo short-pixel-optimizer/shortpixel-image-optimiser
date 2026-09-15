@@ -607,16 +607,18 @@ class OptimizeAiController extends OptimizerBase
      * into handleReplace()'s results loop as wp_check_post_lock($post_id),
      * so containing posts under an active Gutenberg edit lock are now
      * correctly skipped (customer report EBUG-3b; regression test
-     * test_replace_skips_posts_with_active_edit_lock). Two residual caveats
-     * remain open under #59:
-     *   1. wp_check_post_lock() lives in wp-admin/includes/post.php — not
-     *      loaded under WP-CLI / front-end cron queue processing → fatal.
-     *      Needs function_exists() or a direct _edit_lock meta check.
-     *   2. wp_check_post_lock() returns false for the CURRENT user's own
-     *      lock — the reported single-admin scenario (editor open, same
-     *      admin's AJAX processes the queue) is never skipped. Check
-     *      _edit_lock freshness regardless of owner; the editor JS path
-     *      (UpdateGutenBerg) already applies the alt in the open session.
+     * test_replace_skips_posts_with_active_edit_lock). Residuals:
+     *   #59a FIXED (a5ad9805): wp_check_post_lock() lives in
+     *      wp-admin/includes/post.php and is undefined under WP-CLI / cron
+     *      queue processing — handleReplace() now guards the call with
+     *      function_exists(), degrading to "no lock check" outside admin
+     *      (correct: no editor session can conflict there).
+     *   #59b OPEN, deferred to 6.6.x: wp_check_post_lock() returns false
+     *      for the CURRENT user's own lock — the reported single-admin
+     *      scenario (editor open, same admin's AJAX processes the queue) is
+     *      never skipped. Fix = check _edit_lock freshness regardless of
+     *      owner; the editor JS path (UpdateGutenBerg, keyed by post id
+     *      since a5ad9805) applies the alt in the open session meanwhile.
      *
      * UNDO support (ba9fc3ef): when the queue item action is 'undoAltData',
      * $prevAiData carries the previously GENERATED data so handleReplace()
@@ -757,6 +759,15 @@ class OptimizeAiController extends OptimizerBase
      * (page builders etc.). Contract-pinned in test-ChangeFilename.php
      * (test_pin53_...). The manual Change Filename path bypasses this guard
      * entirely (ajax_replaceFile() hardcodes recent_upload=true).
+     *
+     * Editor feedback (a5ad9805, #66): after a non-dry-run replace the new
+     * file URL is stored on the queue result as
+     * replaced_content['replaced_url'] (a string key next to the per-post
+     * integer keys handleReplace() writes) so the Gutenberg consumer can
+     * refresh the block's url. NOTE the consumer only reads it when the
+     * same post also has an alt/caption entry in replaced_content — a
+     * rename without any content replacement for the open post leaves the
+     * block's url stale in the editor (the DB content was rewritten).
      *
      * @param QueueItem $qItem       The queue item providing the image model.
      * @param string    $newFileBase New filename base (without extension) from the AI.
@@ -931,19 +942,24 @@ class OptimizeAiController extends OptimizerBase
 
         if (false === $args['dry_run']) {
             $replacer->replace();
+            $result_replaced_content = $qItem->result()->replaced_content;
+
+            // Doesn't have a post_id here but will piggyback on the alt / other results and hope.
+            $result_replaced_content['replaced_url'] = $target_url;
+                        
+            $qItem->result()->replaced_content = $result_replaced_content;        
         } else {
             Log::addInfo('Dry-Run Replacer', $searchArray);
             Log::addInfo('ReplaceArray ', $replaceArray);
         }
-
-        // 
-
 
         if (isset($copySource) && is_array($copySource)) {
             foreach ($copySource as $fileItem) {
                 $fileItem->delete();
             }
         }
+
+
 
 
         return true;
@@ -1168,8 +1184,16 @@ class OptimizeAiController extends OptimizerBase
      *
      * Post-lock guard (ba9fc3ef, fixes the wrong-ID leg of BUG #59): each
      * $post_id is skipped while wp_check_post_lock() reports a live edit
-     * lock. Residual #59 caveats (admin-only function; own lock returns
-     * false) are documented on replaceImageAttributes().
+     * lock; the call is function_exists()-guarded since a5ad9805 (#59a —
+     * the function is admin-only, WP-CLI/cron would fatal). The remaining
+     * own-lock caveat (#59b) is documented on replaceImageAttributes().
+     *
+     * replaced_content channel (456bb470): the per-post map written below is
+     * keyed by POST id. The Gutenberg consumer (screen-media.js
+     * UpdateGutenBerg) reads it by wp.data's getCurrentPostId() since
+     * a5ad9805 (BUG #66 fixed — it used to index by attachment id and never
+     * matched). replaceFiles() adds a string key 'replaced_url' to the same
+     * map after a rename so the editor can refresh the block's url.
      *
      * @param array $results Finder results: arrays with post_id + content.
      * @param array $args    'aiData' (generated data), 'qItem' (QueueItem), 'prevAiData' (previous AI data for undo matching).
@@ -1196,7 +1220,7 @@ class OptimizeAiController extends OptimizerBase
             $post_id = $result['post_id'];
             $content = $result['content'];
 
-            if (false !== wp_check_post_lock($post_id)) {
+            if (function_exists('wp_check_post_lock') && false !== wp_check_post_lock($post_id)) {
                 Log::addDebug('Replace Image Attributes - Post lock is active, skipping');
                 continue;
             }
@@ -1304,6 +1328,7 @@ class OptimizeAiController extends OptimizerBase
 
                 $result_replaced_content = $qItem->result()->replaced_content;
                 $result_replaced_content[$post_id] = $replaced_content;
+                Log::addTemp('ReplaceContentResuklt', $result_replaced_content);
                 $qItem->result()->replaced_content = $result_replaced_content;
             }
         }
