@@ -39,6 +39,23 @@ export type AttachmentStatus = {
 	file: string | null;
 };
 
+/**
+ * Headers for EVERY request made from Node (a Playwright request context)
+ * to the WordPress container.
+ *
+ * Playwright's request client shares one keep-alive HTTP agent per worker
+ * process, while Apache in the container closes idle keep-alive connections
+ * after 5 s (`KeepAliveTimeout 5`). A socket that sat idle while a test
+ * drove the browser can be closed by Apache at the very moment the next
+ * support call reuses it — the request dies with "socket hang up"
+ * (ECONNRESET) before a single byte reaches WordPress. Chromium retries that
+ * race transparently; Node does not, and with retries: 0 the test goes red
+ * (seen once in a 3× stability run: `reset` failing in 37 ms).
+ * `Connection: close` gives every request a fresh socket, which removes the
+ * race instead of retrying past it.
+ */
+export const NO_KEEPALIVE_HEADERS = { Connection: 'close' } as const;
+
 export class SpioSupport {
 	private readonly token = process.env.E2E_TOKEN || 'spio-e2e-local';
 
@@ -52,7 +69,7 @@ export class SpioSupport {
 	private async post<T = unknown>(route: string, data?: unknown): Promise<T> {
 		const response = await this.request.post(this.url(route), {
 			data: data ?? {},
-			headers: { 'X-SPIO-E2E-TOKEN': this.token },
+			headers: { ...NO_KEEPALIVE_HEADERS, 'X-SPIO-E2E-TOKEN': this.token },
 		});
 		expect(response.ok(), `support endpoint ${route}: HTTP ${response.status()} ${await response.text()}`).toBe(true);
 		return (await response.json()) as T;
@@ -60,7 +77,7 @@ export class SpioSupport {
 
 	private async get<T = unknown>(route: string): Promise<T> {
 		const response = await this.request.get(this.url(route), {
-			headers: { 'X-SPIO-E2E-TOKEN': this.token },
+			headers: { ...NO_KEEPALIVE_HEADERS, 'X-SPIO-E2E-TOKEN': this.token },
 		});
 		expect(response.ok(), `support endpoint ${route}: HTTP ${response.status()} ${await response.text()}`).toBe(true);
 		return (await response.json()) as T;
@@ -114,6 +131,11 @@ export class SpioSupport {
 	/** Raw post_content as stored (cache-busted). */
 	getPost(id: number): Promise<{ id: number; content: string; status: string; title: string }> {
 		return this.get(`post/${id}`);
+	}
+
+	/** Seed a Custom Media folder under uploads with fixture copies; returns the picker relpath. */
+	createCustomFolder(args: { name?: string; fixtures?: string[] } = {}): Promise<{ path: string; relpath: string; files: string[] }> {
+		return this.post('custom-folder', args);
 	}
 
 	/** Put the install into the no-key (onboarding) state or back to a verified key. */

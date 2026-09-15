@@ -20,6 +20,8 @@
  *                         (the latter as a Gutenberg core/image block)
  *   GET  post/<id>        raw post_content + status
  *   POST key              { state: 'none' | 'verified'[, key] } → API-key state
+ *   POST custom-folder    { name?, fixtures? } → uploads/<name>/ seeded with fixtures
+ *                         (Custom Media target; removed again by reset)
  *   GET  attachment/<id>  SPIO view of one attachment (optimized?, meta, alt, file)
  *   POST queue/backdate   age every queue row past ShortQ's process_timeout
  *   POST mock             merge knobs into the mock API (see spio-e2e-mock-api.php)
@@ -122,6 +124,7 @@ function spio_e2e_register_routes() {
 	register_rest_route( $ns, '/post', $def + array( 'methods' => 'POST', 'callback' => 'spio_e2e_route_post' ) );
 	register_rest_route( $ns, '/post/(?P<id>\d+)', $def + array( 'methods' => 'GET', 'callback' => 'spio_e2e_route_get_post' ) );
 	register_rest_route( $ns, '/key', $def + array( 'methods' => 'POST', 'callback' => 'spio_e2e_route_key' ) );
+	register_rest_route( $ns, '/custom-folder', $def + array( 'methods' => 'POST', 'callback' => 'spio_e2e_route_custom_folder' ) );
 	register_rest_route( $ns, '/attachment/(?P<id>\d+)', $def + array( 'methods' => 'GET', 'callback' => 'spio_e2e_route_attachment' ) );
 	register_rest_route( $ns, '/queue/backdate', $def + array( 'methods' => 'POST', 'callback' => 'spio_e2e_route_backdate' ) );
 	register_rest_route( $ns, '/mock', $def + array( 'methods' => 'POST', 'callback' => 'spio_e2e_route_mock' ) );
@@ -148,12 +151,31 @@ function spio_e2e_route_reset( WP_REST_Request $request ) {
 		wp_delete_post( $id, true );
 	}
 
-	// SPIO tables (queue + per-attachment meta + AI meta). Folders/custom
-	// media meta are left alone until a wave needs them.
-	foreach ( array( 'shortpixel_queue', 'shortpixel_postmeta', 'shortpixel_aipostmeta' ) as $table ) {
+	// Bulk/queue STATUS lives outside the queue table (ShortQ status options
+	// + SPIO's per-queue cache: preparing/running/finished/bulk_running).
+	// Truncating the rows alone leaves a half-finished bulk "preparing", and
+	// the next bulk page load then skips the dashboard (Wave 3 conflict
+	// tests failed on `#start-optimize` because of exactly that). Reset the
+	// queues through SPIO's own controller first.
+	if ( class_exists( '\ShortPixel\Controller\QueueController' ) ) {
+		\ShortPixel\Controller\QueueController::resetQueues();
+	}
+
+	// SPIO tables: queue, per-attachment meta, AI meta, and (Wave 3) the
+	// custom-media folders + file meta, so a folder added by one test never
+	// leaks into the next ("subfolder of an existing folder" refusals).
+	foreach ( array( 'shortpixel_queue', 'shortpixel_postmeta', 'shortpixel_aipostmeta', 'shortpixel_folders', 'shortpixel_meta' ) as $table ) {
 		$name = $wpdb->prefix . $table;
 		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $name ) ) === $name ) {
 			$wpdb->query( "DELETE FROM `$name`" );
+		}
+	}
+
+	// Custom-media folders seeded under uploads (see the custom-folder route).
+	$uploads = wp_get_upload_dir();
+	foreach ( (array) glob( trailingslashit( $uploads['basedir'] ) . 'e2e-custom*' ) as $dir ) {
+		if ( is_dir( $dir ) ) {
+			spio_e2e_rmdir_recursive( $dir );
 		}
 	}
 
@@ -349,6 +371,52 @@ function spio_e2e_route_key( WP_REST_Request $request ) {
 	}
 
 	return rest_ensure_response( array( 'ok' => true, 'state' => $state ) );
+}
+
+/** rm -rf inside the uploads dir only (guarded). */
+function spio_e2e_rmdir_recursive( $dir ) {
+	$uploads = wp_get_upload_dir();
+	if ( 0 !== strpos( realpath( $dir ), realpath( $uploads['basedir'] ) ) ) {
+		return; // never delete outside uploads
+	}
+	foreach ( new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $dir, FilesystemIterator::SKIP_DOTS ), RecursiveIteratorIterator::CHILD_FIRST ) as $item ) {
+		$item->isDir() ? @rmdir( $item->getPathname() ) : @unlink( $item->getPathname() );
+	}
+	@rmdir( $dir );
+}
+
+/**
+ * Create a Custom/Other Media folder to add through the UI:
+ * { name?: 'e2e-custom', fixtures: ['fixture-small.jpg', …] } →
+ * wp-content/uploads/<name>/ with copies of the fixtures. A NON-numeric
+ * direct child of uploads passes every DirectoryOtherMediaModel::checkDirectory()
+ * rule (the numeric year dirs are refused as "Media Library"), lives in the
+ * Docker volume (never the host checkout — the bind-mounted plugin tree would
+ * be ALLOWED and get its fixtures overwritten), and is www-data-writable.
+ * Returns the picker's relpath for the folder ("wp-content/uploads/<name>/").
+ */
+function spio_e2e_route_custom_folder( WP_REST_Request $request ) {
+	$params   = (array) $request->get_json_params();
+	$name     = isset( $params['name'] ) ? sanitize_file_name( (string) $params['name'] ) : 'e2e-custom';
+	$fixtures = isset( $params['fixtures'] ) ? (array) $params['fixtures'] : array( 'fixture-small.jpg' );
+	if ( '' === $name || ! preg_match( '/^e2e-custom/', $name ) ) {
+		return new WP_Error( 'spio_e2e_bad_request', 'name must start with e2e-custom', array( 'status' => 400 ) );
+	}
+
+	$uploads = wp_get_upload_dir();
+	$dir     = trailingslashit( $uploads['basedir'] ) . $name . '/';
+	wp_mkdir_p( $dir );
+
+	$copied = array();
+	foreach ( $fixtures as $fixture ) {
+		$source = SPIO_E2E_PLUGIN_DIR . '/tests/fixtures/' . basename( (string) $fixture );
+		if ( is_file( $source ) && copy( $source, $dir . basename( $source ) ) ) {
+			$copied[] = $dir . basename( $source );
+		}
+	}
+
+	$relpath = str_replace( trailingslashit( ABSPATH ), '', $dir );
+	return rest_ensure_response( array( 'path' => $dir, 'relpath' => $relpath, 'files' => $copied ) );
 }
 
 function spio_e2e_route_attachment( WP_REST_Request $request ) {

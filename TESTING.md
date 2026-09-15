@@ -480,6 +480,36 @@ waits), `specs/` (one file per flow; `auth.setup.ts` logs in once).
 - In the no-key state SPIO logs `console.error('No API Key set…')` on
   every admin page; onboarding specs relax the tripwire and assert that this
   is the only error.
+- **Third-party conflict registry** (`specs/conflicts.spec.ts` +
+  `mu-plugins/hostile-snippets/`): each snippet mimics a real class of
+  hostile admin script (a `window.URL` overwrite, an enumerable
+  `Array.prototype` extension, neutered `console` methods, a late
+  `jQuery.noConflict(true)`) and is injected *before* SPIO's scripts; the
+  same settings / media-list / bulk flows are then driven with it active.
+  Keep new snippets realistic — one that takes down WordPress core itself
+  (e.g. polluting `Object.prototype`, deleting `console.warn`) proves
+  nothing about SPIO. A failing combination is a finding: pin it, don't
+  skip it.
+- `spio.reset()` also resets SPIO's queues through
+  `QueueController::resetQueues()`; a bulk left half-prepared by a previous
+  test otherwise makes the bulk page skip its dashboard.
+- Front-end delivery specs create their own unauthenticated
+  `browser.newContext()` to view a post as a visitor, and must switch
+  `deliverWebp`/`useCDN` back off in `afterEach` (the seed does not touch
+  them). Enable CDN only through the support route: the settings form
+  path makes real outbound calls to `no-cdn.shortpixel.ai`, which the mock
+  does not intercept.
+- Custom Media specs add `wp-content/uploads/e2e-custom/` (seeded by the
+  `custom-folder` support route) — the only safe target: the numeric year
+  folders are refused as Media Library, and the bind-mounted plugin tree
+  would be *accepted* and then have its fixtures overwritten in the host
+  checkout. The comparer's script is lazy-loaded and races the data
+  request on the first click; the spec pre-warms it.
+- Multisite network settings are **not** covered by the E2E suite: the page
+  is only registered on a multisite install, which this stack is not. They
+  need a dedicated multisite stack (own compose project, `WP_ALLOW_MULTISITE`
+  baked in on first boot, `wp core multisite-convert`, a real hostname).
+  The PHP side is pinned by `tests/Multisite/`.
 - Pinned tests follow the same rules as the PHPUnit ones (`_pinned_for_deferred_fix`,
   sentinel that proves the flow ran, flip note in the docblock).
 - Artifacts (traces, screenshots, videos, HTML report) land in
@@ -490,6 +520,13 @@ waits), `specs/` (one file per flow; `auth.setup.ts` logs in once).
   bugs this suite exists to catch, so a first failure goes red; fix the
   race (usually: wait on the right `shortpixel.*` event) instead of
   retrying past it.
+- **Node-side HTTP to the container sends `Connection: close`.** Playwright's
+  request client shares one keep-alive agent per worker and Apache closes
+  idle keep-alive sockets after 5 s, so a support call made right after a
+  long browser-driven stretch could die with "socket hang up" before
+  reaching WordPress (Chromium retries that race silently, Node does not).
+  `NO_KEEPALIVE_HEADERS` in `helpers/spio.ts` is applied by the support
+  client and must be passed to any direct `request.get()`/`post()` you add.
 
 CI: `.github/workflows/e2e.yml` runs the identical Docker stack on
 `ubuntu-latest` for pushes to `e2e-tests`/`updates` and PRs to `updates`/`master`.
