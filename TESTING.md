@@ -464,10 +464,22 @@ waits), `specs/` (one file per flow; `auth.setup.ts` logs in once).
   cannot click them. Use `setChecked(locator, on)` from `helpers/spio.ts`
   (sets the DOM state and dispatches `input`/`change`).
 - Use the page objects in `helpers/` (`SettingsPage`, `MediaList`,
-  `BulkPage`) rather than raw selectors; they encode the verified DOM facts
-  (e.g. the settings save banner is *always* `display:flex` — success is the
-  `show` class, and the media status filter needs `filter_action` in the
-  request).
+  `BulkPage`, `AiEditorModal`, `BlockEditor`, `OnboardingPage`) rather than
+  raw selectors; they encode the verified DOM facts (e.g. the settings save
+  banner is *always* `display:flex` — success is the `show` class, and the
+  media status filter needs `filter_action` in the request).
+- Block editor: SPIO never starts AI generation from the editor UI by itself
+  (selecting an image block only kicks the queue processor). Tests trigger
+  it with `BlockEditor.requestAlt(id)` — the same call the "AI Image SEO"
+  button makes — and read the result from `wp.data` (`BlockEditor.imageBlock`),
+  never from the iframed canvas. Support routes exist to create a post with
+  a real core/image block (`spio.createPost({ image_id })`) and to flip the
+  API-key state (`spio.setKeyState('none' | 'verified')`).
+- The AI editor modal's Save creates a NEW attachment (never replaces) and
+  the server blocks up to ~45s polling the API — budget generous timeouts.
+- In the no-key state SPIO logs `console.error('No API Key set…')` on
+  every admin page; onboarding specs relax the tripwire and assert that this
+  is the only error.
 - Pinned tests follow the same rules as the PHPUnit ones (`_pinned_for_deferred_fix`,
   sentinel that proves the flow ran, flip note in the docblock).
 - Artifacts (traces, screenshots, videos, HTML report) land in

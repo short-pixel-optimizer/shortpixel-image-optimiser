@@ -15,6 +15,8 @@ export type MockKnobs = Partial<{
 	aiFields: Record<string, string>;
 	/** api-status.php (key validation / quota): null = healthy, -401 invalid key, -403 quota exceeded. */
 	apiStatusCode: number | null;
+	/** free-sign-up-plugin (new-account onboarding): 'success' (fresh key) | 'existing' | 'error'. */
+	signupStatus: 'success' | 'existing' | 'error';
 }>;
 
 /** Status codes the mock ShortPixel API understands (mirror of the mu-plugin constants). */
@@ -99,6 +101,26 @@ export class SpioSupport {
 		return this.get(`attachment/${id}`);
 	}
 
+	/** Create a published post; `image_id` builds a Gutenberg core/image block for that attachment. */
+	createPost(args: { content?: string; image_id?: number; alt?: string; title?: string; status?: string }): Promise<{
+		id: number;
+		edit_url: string;
+		url: string;
+		content: string;
+	}> {
+		return this.post('post', args);
+	}
+
+	/** Raw post_content as stored (cache-busted). */
+	getPost(id: number): Promise<{ id: number; content: string; status: string; title: string }> {
+		return this.get(`post/${id}`);
+	}
+
+	/** Put the install into the no-key (onboarding) state or back to a verified key. */
+	setKeyState(state: 'none' | 'verified', extra: { key?: string; redirectedSettings?: number } = {}): Promise<{ ok: boolean }> {
+		return this.post('key', { state, ...extra });
+	}
+
 	/** Age every queue row past ShortQ's process_timeout. */
 	backdateQueue(): Promise<{ ok: boolean; rows: number }> {
 		return this.post('queue/backdate');
@@ -132,6 +154,8 @@ export const adminUrls = {
 	customMedia: '/wp-admin/upload.php?page=wp-short-pixel-custom',
 	mediaList: '/wp-admin/upload.php?mode=list',
 	mediaGrid: '/wp-admin/upload.php?mode=grid',
+	editAttachment: (id: number) => `/wp-admin/post.php?post=${id}&action=edit`,
+	editPost: (id: number) => `/wp-admin/post.php?post=${id}&action=edit`,
 };
 
 /**

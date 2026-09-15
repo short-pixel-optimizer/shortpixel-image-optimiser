@@ -77,6 +77,8 @@ class SPIO_E2E_MockApi {
 			// account; -401 = invalid key; -403 = quota exceeded (APICallsMade
 			// is then reported at the quota ceiling, like the real API).
 			'apiStatusCode'   => null,
+			// free-sign-up-plugin (new-account onboarding): 'success' | 'existing' | 'error'.
+			'signupStatus'    => 'success',
 		);
 	}
 
@@ -163,6 +165,21 @@ class SPIO_E2E_MockApi {
 					return new WP_Error( 'http_request_failed', $this->knobs['wpErrorMessage'] );
 				}
 				return $this->handleApiStatus( $args );
+			}
+
+			// Onboarding "create a new account" (SettingsViewController::action_request_new_key
+			// → POST https://shortpixel.com/free-sign-up-plugin). Knob signupStatus:
+			// 'success' (default) → a fresh 20-char key, 'existing' → email already
+			// in use, anything else → the unexpected-body error branch.
+			if ( false !== strpos( $path, 'free-sign-up-plugin' ) ) {
+				$status = isset( $this->knobs['signupStatus'] ) ? (string) $this->knobs['signupStatus'] : 'success';
+				if ( 'success' === $status ) {
+					return $this->httpResponse( wp_json_encode( array( 'Status' => 'success', 'Details' => str_repeat( 'n', 20 ) ) ), $args );
+				}
+				if ( 'existing' === $status ) {
+					return $this->httpResponse( wp_json_encode( array( 'Status' => 'existing' ) ), $args );
+				}
+				return $this->httpResponse( wp_json_encode( array( 'Status' => 'error', 'Details' => 'Forced by E2E test' ) ), $args );
 			}
 
 			// Anything else on *.shortpixel.com (notices, heartbeat…): benign

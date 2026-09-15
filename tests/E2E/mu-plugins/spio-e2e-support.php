@@ -16,6 +16,10 @@
  *   GET  settings         the persisted spio_settings option
  *   POST option           { name, value } → update_option
  *   POST fixture          { name } → upload tests/fixtures/<name> as an attachment
+ *   POST post             { content } or { image_id[, alt] } → published post
+ *                         (the latter as a Gutenberg core/image block)
+ *   GET  post/<id>        raw post_content + status
+ *   POST key              { state: 'none' | 'verified'[, key] } → API-key state
  *   GET  attachment/<id>  SPIO view of one attachment (optimized?, meta, alt, file)
  *   POST queue/backdate   age every queue row past ShortQ's process_timeout
  *   POST mock             merge knobs into the mock API (see spio-e2e-mock-api.php)
@@ -115,6 +119,9 @@ function spio_e2e_register_routes() {
 	register_rest_route( $ns, '/settings', $def + array( 'methods' => 'GET', 'callback' => 'spio_e2e_route_get_settings' ) );
 	register_rest_route( $ns, '/option', $def + array( 'methods' => 'POST', 'callback' => 'spio_e2e_route_option' ) );
 	register_rest_route( $ns, '/fixture', $def + array( 'methods' => 'POST', 'callback' => 'spio_e2e_route_fixture' ) );
+	register_rest_route( $ns, '/post', $def + array( 'methods' => 'POST', 'callback' => 'spio_e2e_route_post' ) );
+	register_rest_route( $ns, '/post/(?P<id>\d+)', $def + array( 'methods' => 'GET', 'callback' => 'spio_e2e_route_get_post' ) );
+	register_rest_route( $ns, '/key', $def + array( 'methods' => 'POST', 'callback' => 'spio_e2e_route_key' ) );
 	register_rest_route( $ns, '/attachment/(?P<id>\d+)', $def + array( 'methods' => 'GET', 'callback' => 'spio_e2e_route_attachment' ) );
 	register_rest_route( $ns, '/queue/backdate', $def + array( 'methods' => 'POST', 'callback' => 'spio_e2e_route_backdate' ) );
 	register_rest_route( $ns, '/mock', $def + array( 'methods' => 'POST', 'callback' => 'spio_e2e_route_mock' ) );
@@ -247,6 +254,101 @@ function spio_e2e_route_fixture( WP_REST_Request $request ) {
 	wp_update_attachment_metadata( $id, wp_generate_attachment_metadata( $id, $upload['file'] ) );
 
 	return rest_ensure_response( array( 'id' => (int) $id, 'url' => $upload['url'], 'file' => $upload['file'] ) );
+}
+
+/**
+ * Create a published post. Either raw `content`, or `image_id` (+ optional
+ * `alt`) to build a Gutenberg core/image block referencing that attachment
+ * with the exact markup the block editor serializes — so SPIO's in-content
+ * matcher (filename-anchored regex) and the editor both recognise it.
+ */
+function spio_e2e_route_post( WP_REST_Request $request ) {
+	$params  = (array) $request->get_json_params();
+	$content = isset( $params['content'] ) ? (string) $params['content'] : '';
+
+	if ( '' === $content && ! empty( $params['image_id'] ) ) {
+		$image_id = (int) $params['image_id'];
+		$alt      = isset( $params['alt'] ) ? (string) $params['alt'] : '';
+		$src      = wp_get_attachment_image_url( $image_id, 'large' );
+		if ( ! $src ) {
+			$src = wp_get_attachment_url( $image_id );
+		}
+		$content = sprintf(
+			'<!-- wp:image {"id":%1$d,"sizeSlug":"large","linkDestination":"none"} -->' . "\n" .
+			'<figure class="wp-block-image size-large"><img src="%2$s" alt="%3$s" class="wp-image-%1$d"/></figure>' . "\n" .
+			'<!-- /wp:image -->',
+			$image_id,
+			esc_url( $src ),
+			esc_attr( $alt )
+		);
+	}
+
+	$post_id = wp_insert_post(
+		array(
+			'post_type'    => isset( $params['post_type'] ) ? (string) $params['post_type'] : 'post',
+			'post_status'  => isset( $params['status'] ) ? (string) $params['status'] : 'publish',
+			'post_title'   => isset( $params['title'] ) ? (string) $params['title'] : 'SPIO E2E post',
+			'post_content' => $content,
+		),
+		true
+	);
+	if ( is_wp_error( $post_id ) ) {
+		return new WP_Error( 'spio_e2e_post_failed', $post_id->get_error_message(), array( 'status' => 500 ) );
+	}
+
+	return rest_ensure_response(
+		array(
+			'id'       => (int) $post_id,
+			'edit_url' => admin_url( 'post.php?post=' . (int) $post_id . '&action=edit' ),
+			'url'      => get_permalink( $post_id ),
+			'content'  => get_post( $post_id )->post_content,
+		)
+	);
+}
+
+/** Raw post_content (server-side truth for in-content replacement checks). */
+function spio_e2e_route_get_post( WP_REST_Request $request ) {
+	$post = get_post( (int) $request['id'] );
+	if ( ! $post ) {
+		return new WP_Error( 'spio_e2e_not_found', 'No such post', array( 'status' => 404 ) );
+	}
+	clean_post_cache( $post->ID );
+	$post = get_post( $post->ID );
+	return rest_ensure_response(
+		array(
+			'id'      => (int) $post->ID,
+			'content' => $post->post_content,
+			'status'  => $post->post_status,
+			'title'   => $post->post_title,
+		)
+	);
+}
+
+/**
+ * API-key state: { state: 'none' | 'verified' [, key] }.
+ * 'none' = fresh install with no key (onboarding view); 'verified' = the seed's
+ * option-based key (or the given one) with remote validation short-circuited.
+ * redirectedSettings is set so no first-run redirect fires (0 would make
+ * ApiKeyModel::checkRedirect() bounce every admin page to the settings once).
+ */
+function spio_e2e_route_key( WP_REST_Request $request ) {
+	$params = (array) $request->get_json_params();
+	$state  = isset( $params['state'] ) ? (string) $params['state'] : 'verified';
+
+	if ( 'none' === $state ) {
+		update_option( 'spio_key', array( 'apiKey' => '', 'verifiedKey' => false, 'apiKeyTried' => '' ) );
+		if ( function_exists( 'wpSPIO' ) ) {
+			\wpSPIO()->settings()->redirectedSettings = isset( $params['redirectedSettings'] ) ? (int) $params['redirectedSettings'] : 2;
+		}
+	} else {
+		$key = isset( $params['key'] ) ? (string) $params['key'] : str_repeat( 'a', 20 );
+		update_option( 'spio_key', array( 'apiKey' => $key, 'verifiedKey' => true, 'apiKeyTried' => '' ) );
+		if ( function_exists( 'wpSPIO' ) ) {
+			\wpSPIO()->settings()->redirectedSettings = 3;
+		}
+	}
+
+	return rest_ensure_response( array( 'ok' => true, 'state' => $state ) );
 }
 
 function spio_e2e_route_attachment( WP_REST_Request $request ) {
