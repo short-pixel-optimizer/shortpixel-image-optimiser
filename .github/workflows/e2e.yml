@@ -2,7 +2,9 @@
 # the same Docker stack bin/test-e2e.sh runs locally (docker-compose.e2e.yml),
 # so a green run here means a green run on any developer machine.
 #
-# Chromium only for now; Firefox + WebKit projects join in Wave 4.
+# One job per browser engine, in parallel on separate runners (a serial
+# three-engine run would take ~35 min). The screenshot regression project
+# (`visual`, Chromium-only baselines) rides along in the Chromium job.
 name: E2E (browser)
 
 on:
@@ -18,9 +20,22 @@ concurrency:
 
 jobs:
   e2e:
-    name: Playwright / Chromium / WP latest
+    name: Playwright / ${{ matrix.engine }} / WP latest
     runs-on: ubuntu-latest
     timeout-minutes: 30
+
+    strategy:
+      # Every engine reports its own verdict; one red engine must not hide
+      # whether the others are green.
+      fail-fast: false
+      matrix:
+        include:
+          - engine: chromium
+            projects: --project chromium --project visual
+          - engine: firefox
+            projects: --project firefox
+          - engine: webkit
+            projects: --project webkit
 
     steps:
       - uses: actions/checkout@v5
@@ -43,20 +58,21 @@ jobs:
           CI: "1"
         run: bin/test-e2e.sh --pull-only
 
-      - name: Run the E2E suite
+      - name: Run the E2E suite (${{ matrix.engine }})
         env:
           CI: "1"
-        run: bin/test-e2e.sh
+        run: bin/test-e2e.sh ${{ matrix.projects }}
 
       - name: WordPress container logs (on failure)
         if: failure()
         run: docker compose -f docker-compose.e2e.yml logs --no-color wordpress | tail -n 200
 
-      - name: Upload Playwright artifacts (traces, screenshots, report)
+      # On a visual failure the report holds expected / actual / diff PNGs.
+      - name: Upload Playwright artifacts (traces, screenshots, diffs, report)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-artifacts
+          name: playwright-artifacts-${{ matrix.engine }}
           path: |
             tests/E2E/artifacts/html-report
             tests/E2E/artifacts/test-results

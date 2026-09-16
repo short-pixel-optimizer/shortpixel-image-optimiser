@@ -7,11 +7,11 @@
 # independent (separate compose file, database, volumes, images).
 #
 # Usage:
-#     bin/test-e2e.sh                          # provision (idempotent) + run the whole suite (Chromium)
+#     bin/test-e2e.sh                          # provision (idempotent) + run EVERY project (chromium, firefox, webkit, visual)
 #     bin/test-e2e.sh --grep "settings"        # only tests whose title matches
 #     bin/test-e2e.sh specs/smoke.spec.ts      # one spec file (paths relative to tests/E2E)
-#     bin/test-e2e.sh --project chromium       # one browser project (firefox/webkit from Wave 4)
-#     bin/test-e2e.sh --update-snapshots       # refresh screenshot baselines (Wave 4)
+#     bin/test-e2e.sh --project chromium       # one browser project: chromium | firefox | webkit | visual (repeatable)
+#     bin/test-e2e.sh --project visual --update-snapshots   # refresh the screenshot baselines after an intended UI change
 #     bin/test-e2e.sh --wp 6.5                 # against WordPress 6.5 instead of latest (fresh volumes!)
 #     bin/test-e2e.sh --pull-only              # just pull the images (with retry) — CI's first step
 #     bin/test-e2e.sh --provision-only         # bring the site up + seed it, run nothing
@@ -163,8 +163,10 @@ case "$MODE" in
         if [ ! -d node_modules/@playwright/test ]; then
             echo "==> Installing Playwright on the host (first native run)..."
             npm install --no-audit --no-fund
-            npx playwright install chromium
+            npx playwright install chromium firefox webkit
         fi
+        # Screenshot assertions are no-ops here (E2E_IN_DOCKER unset): host
+        # fonts/rendering differ from the Linux image the baselines come from.
         echo "==> Running Playwright natively against $SITE_URL"
         # ${arr[@]+"${arr[@]}"} — safe expansion of a possibly-empty array
         # under `set -u` on macOS's bash 3.2.

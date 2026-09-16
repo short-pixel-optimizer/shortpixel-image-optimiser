@@ -128,6 +128,8 @@ services:
     environment:
       E2E_BASE_URL: http://localhost:8030
       E2E_TOKEN: spio-e2e-local
+      # Screenshot assertions only run where baselines were made (this image).
+      E2E_IN_DOCKER: "1"
       CI: ${CI:-}
     volumes:
       - ./tests/E2E:/e2e

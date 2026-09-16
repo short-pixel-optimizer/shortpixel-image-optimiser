@@ -407,7 +407,9 @@ driven by [Playwright](https://playwright.dev) in a browser, asserting what a
 user actually sees — and failing on any uncaught JS error.
 
 ```bash
-bin/test-e2e.sh                          # provision + run the suite (Chromium, Docker)
+bin/test-e2e.sh                          # provision + run every project (chromium, firefox, webkit, visual)
+bin/test-e2e.sh --project chromium       # one engine: chromium | firefox | webkit | visual (repeatable)
+bin/test-e2e.sh --project visual --update-snapshots   # refresh screenshot baselines after an intended UI change
 bin/test-e2e.sh --grep "settings"        # subset by title
 bin/test-e2e.sh specs/smoke.spec.ts      # one spec (paths relative to tests/E2E)
 bin/test-e2e.sh --headed                 # visible browser, natively on the host (needs Node.js)
@@ -528,8 +530,75 @@ waits), `specs/` (one file per flow; `auth.setup.ts` logs in once).
   `NO_KEEPALIVE_HEADERS` in `helpers/spio.ts` is applied by the support
   client and must be passed to any direct `request.get()`/`post()` you add.
 
+**Browser projects** (`playwright.config.ts`): the functional suite runs
+once per engine — `chromium`, `firefox`, `webkit` — at the same 1366×768
+viewport. A test must pass on all three; an engine difference is either a
+real SPIO cross-browser bug (pin it) or a test assumption to fix. Skipping
+an engine is allowed only for a proven ENGINE limitation that has nothing
+to do with SPIO, and every such skip needs a sentinel in
+`specs/engine-limits.spec.ts` that goes red once the limitation is gone.
+
+- Known engine limitation: Playwright's Linux WebKit hangs in layout on
+  WordPress core's attachment edit screen (`post.php?action=edit` for an
+  attachment). It reproduces with SPIO deactivated, so `ai-editor.spec.ts`
+  skips WebKit and the sentinel watches for a Playwright/WordPress update
+  that fixes it.
+- Wait on a class or event the JS itself sets once its listeners are
+  attached (e.g. the quick tour's `active-step-0`), never on
+  server-rendered markup that is there before any JS ran.
+- Known cross-engine difference that produced a real SPIO finding:
+  dispatching a synthetic `new CustomEvent('click')` on an `<a href>` runs
+  the link's navigation in WebKit only (Chromium/Firefox just run the
+  listeners). The event is not cancelable, so a listener's
+  `preventDefault()` cannot stop it. The quick tour does exactly that and
+  reloads the settings page in WebKit — pinned in `onboarding.spec.ts`.
+- `bin/test-e2e.sh` passes arguments straight to Playwright, whose
+  `--project` takes several values: put a spec path BEFORE `--project`
+  (`bin/test-e2e.sh specs/x.spec.ts --project webkit`), or it is read as a
+  project name.
+
+**Visual regression** (`specs/visual.spec.ts`, project `visual`):
+
+- Chromium only, one set of baselines in `tests/E2E/snapshots/visual.spec.ts/`
+  (committed). Covers every settings tab in advanced mode, the overview in
+  simple mode and at 780px (menu closed/open), the bulk dashboard /
+  selection / summary / finished panels, and both AI editor modals.
+- Screenshots are compared only inside the Playwright Docker image
+  (`E2E_IN_DOCKER`); on a native `--headed`/`--ui` run they are no-ops,
+  because host fonts and rendering differ from the Linux baselines.
+- Capture SPIO's own container (element screenshot), never the full page —
+  the WP admin bar, menu and version footer change with every WordPress
+  release. Wait for fonts and images first (`settle()`), and mask any
+  region that legitimately differs between runs, with a comment saying why.
+- A capture taller than the viewport scrolls the page, and every
+  `position: fixed` element gets painted into the element's pixels —
+  including things users never see at rest (SPIO parks its settings
+  "saved" banner just below the viewport). `helpers/screenshot.css`
+  (config `stylePath`) hides the WP admin bar/menu and the resting banner
+  with `visibility: hidden`, so nothing reflows. On narrow viewports,
+  where SPIO's header is fixed too, use a viewport capture
+  (`expect(page).toHaveScreenshot()`) instead of an element one.
+- Prefer clearing leftover state in `spio.reset()` over masking it. Bulk
+  history (option `shortpixel-bulk-logs`) and SPIO's cached statistics
+  (`currentStats`, the `average_compression` transient) are wiped there,
+  because the settings overview prints them.
+- The comparison budget is ABSOLUTE: `maxDiffPixels: 100`. Rendering in the
+  pinned image is pixel-stable, so this only absorbs stray anti-aliasing. A
+  ratio (`maxDiffPixelRatio: 0.01`) was tried first and let a whole panel
+  swap and a leftover banner strip pass on a tall tab.
+- `--update-snapshots` only rewrites a PNG that fails the comparison. To be
+  sure a baseline reflects the current page, delete the PNG and regenerate.
+- A failing comparison uploads expected / actual / diff PNGs in the HTML
+  report. If the change was intended, refresh with
+  `bin/test-e2e.sh --project visual --update-snapshots` and review the PNG
+  diff in the commit like code. Expect a refresh after WordPress majors
+  (admin CSS changes).
+
 CI: `.github/workflows/e2e.yml` runs the identical Docker stack on
-`ubuntu-latest` for pushes to `e2e-tests`/`updates` and PRs to `updates`/`master`.
+`ubuntu-latest` for pushes to `e2e-tests`/`updates` and PRs to `updates`/`master`,
+as a matrix of one job per engine (`visual` rides in the Chromium job,
+`fail-fast: false` so every engine reports its own verdict). Artifacts are
+uploaded per engine.
 
 ## Writing new tests
 

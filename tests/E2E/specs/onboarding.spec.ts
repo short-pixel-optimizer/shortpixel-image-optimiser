@@ -157,13 +157,20 @@ test.describe('Quick tour', () => {
 		await spio.setSettings({ redirectedSettings: 2 });
 	});
 
-	test('walks all five steps, switching tabs, and finishing persists the flag', async ({ page, spio }) => {
+	test('walks all five steps, switching tabs, and finishing persists the flag', async ({ page, spio, browserName }) => {
+		test.skip(browserName === 'webkit', 'WebKit reloads the page on Next — see the pinned test below');
 		const settings = new SettingsPage(page);
 		await settings.goto();
 		await expect(settings.root).toHaveClass(/\bpage-quick-tour\b/);
 		const tour = page.locator('div.quick-tour');
 		await expect(tour).toBeVisible();
 		await expect(tour.locator('.step.step-0')).toHaveClass(/\bactive\b/);
+		// step-0's `active` class is server-rendered, so it proves nothing
+		// about JS. The click handlers are attached by InitQuickTour(), which
+		// only runs on `shortpixel.settings.loaded` and ends by adding
+		// `active-step-0` to the root — wait for THAT before clicking, so the
+		// first click can never land before a listener exists.
+		await expect(settings.root).toHaveClass(/\bactive-step-0\b/);
 
 		const next = tour.locator('.navigation button.next');
 		for (let step = 1; step <= 4; step++) {
@@ -183,5 +190,48 @@ test.describe('Quick tour', () => {
 		await expect(page.locator('div.quick-tour')).toHaveCount(0);
 		await expect(settings.root).not.toHaveClass(/\bpage-quick-tour\b/);
 		expect(Number((await spio.getSettings()).redirectedSettings)).toBe(3);
+	});
+
+	/**
+	 * PIN (unnumbered — E2E seed finding, WebKit/Safari only):
+	 * shortpixel-onboarding.js QuickTourSwitchToItem() switches the settings
+	 * tab by dispatching `new CustomEvent('click')` on the menu's
+	 * `<a href="…&part=<tab>" data-menu-link>`. That event is NOT
+	 * cancelable, so the preventDefault() in SettingsPage's
+	 * SwitchMenuTabEvent is a no-op. Chromium and Firefox never run a link's
+	 * activation behaviour for a CustomEvent; WebKit does — it follows the
+	 * href. Result on WebKit: clicking "Start Tour" reloads the settings
+	 * page at `&part=overview` and the tour starts over at step 0, forever.
+	 * Engine behaviour verified in isolation on a bare page (2026-09-16).
+	 * Likely fix: dispatch `new MouseEvent('click', { cancelable: true })`,
+	 * or call the settings tab switch directly instead of faking a click.
+	 *
+	 * FLIP-when-fixed: this test fails (no navigation), then delete it and
+	 * the webkit skip in the test above.
+	 */
+	test('pin: WebKit reloads the page on Next and the tour never advances (pinned_for_deferred_fix)', async ({ page, browserName }) => {
+		test.skip(browserName !== 'webkit', 'WebKit-only defect');
+		const settings = new SettingsPage(page);
+		await settings.goto();
+		const tour = page.locator('div.quick-tour');
+		await expect(settings.root).toHaveClass(/\bactive-step-0\b/); // listeners attached
+		expect(page.url(), 'starting URL carries no part= parameter').not.toMatch(/part=/);
+		await page.evaluate(() => {
+			(window as any).__spioSameDocument = true;
+		});
+
+		// SENTINEL: the click took SPIO's tab-switch path — the navigation
+		// target is exactly the menu link of step 1's screen (overview).
+		await Promise.all([
+			page.waitForURL(/page=wp-shortpixel-settings&part=overview/, { waitUntil: 'load' }),
+			tour.locator('.navigation button.next').click(),
+		]);
+
+		// PIN: a full reload happened (the marker is gone) and the tour
+		// re-initialised at step 0 instead of advancing to step 1.
+		expect(await page.evaluate(() => (window as any).__spioSameDocument), 'the page was reloaded').toBeUndefined();
+		await expect(settings.root).toHaveClass(/\bactive-step-0\b/);
+		await expect(page.locator('div.quick-tour .step.step-0')).toHaveClass(/\bactive\b/);
+		await expect(page.locator('div.quick-tour .step.step-1')).not.toHaveClass(/\bactive\b/);
 	});
 });

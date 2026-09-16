@@ -204,6 +204,20 @@ function spio_e2e_route_reset( WP_REST_Request $request ) {
 	// (first flaky run, 2026-09-14). Every test starts lock-free; the auth
 	// setup clears the localStorage half. InstallHelper does the same delete.
 	delete_transient( 'bulk-secret' );
+	// Bulk history (BulkController::$logName). The settings overview prints
+	// "The last bulk processing ran on: <date>" from it, which would leak a
+	// timestamp from any earlier bulk test into later tests and screenshots.
+	delete_option( 'shortpixel-bulk-logs' );
+	// Cached statistics survive the table truncation above: StatsModel keeps
+	// its counters in the `currentStats` setting (the overview's "N Optimized
+	// images and thumbnails" line) and StatsController caches the "Average
+	// Optimization" dial for an hour in the `average_compression` transient.
+	// Left alone, a bulk run in one test changes the overview layout of every
+	// later test (caught by the visual determinism check, 2026-09-16).
+	if ( class_exists( '\ShortPixel\Controller\StatsController' ) ) {
+		\ShortPixel\Controller\StatsController::getInstance()->reset();
+	}
+	delete_transient( 'average_compression' );
 
 	spio_e2e_apply_seed();
 

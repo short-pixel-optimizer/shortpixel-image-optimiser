@@ -9,10 +9,13 @@
  * (uploads, settings, queue). workers: 1 + fullyParallel: false keeps tests
  * from racing each other; the `spio` fixture resets state per test.
  */
+import path from 'path';
 import { defineConfig, devices } from '@playwright/test';
 
 const baseURL = process.env.E2E_BASE_URL || 'http://localhost:8030';
 const isCI = !!process.env.CI;
+const DESKTOP = { width: 1366, height: 768 };
+const AUTH = './artifacts/.auth/admin.json';
 
 export default defineConfig({
 	testDir: './specs',
@@ -29,7 +32,26 @@ export default defineConfig({
 	forbidOnly: isCI,
 
 	timeout: 90_000,
-	expect: { timeout: 15_000 },
+	expect: {
+		timeout: 15_000,
+		toHaveScreenshot: {
+			// Deterministic captures: no CSS animations/transitions mid-frame,
+			// no blinking caret, CSS pixels regardless of device scale.
+			animations: 'disabled',
+			caret: 'hide',
+			scale: 'css',
+			// Tight ABSOLUTE budget. Rendering inside the pinned Playwright
+			// image is pixel-stable run to run, so this only absorbs stray
+			// anti-aliasing. A ratio was too lax: 1% of a tall settings tab
+			// is ~24,000 pixels — enough to let a whole panel change (help
+			// text ↔ "30 %" dial) or a leftover banner strip pass unnoticed
+			// (2026-09-16). Per-pixel colour tolerance stays at the default.
+			maxDiffPixels: 100,
+			// Screenshot-only CSS: hides WP admin chrome and SPIO's parked
+			// off-screen save banner (see the file for why).
+			stylePath: path.join(__dirname, 'helpers', 'screenshot.css'),
+		},
+	},
 
 	reporter: [
 		['list'],
@@ -46,21 +68,51 @@ export default defineConfig({
 		navigationTimeout: 30_000,
 	},
 
+	// Visual baselines (specs/visual.spec.ts) live next to the specs, one PNG
+	// per screenshot name. No platform/browser suffix: baselines are only
+	// ever produced and compared by the `visual` project inside the pinned
+	// Playwright Docker image (Linux, fixed fonts + browser build).
+	snapshotPathTemplate: '{testDir}/../snapshots/{testFileName}/{arg}{ext}',
+	// Outside Docker (native --headed / --ui runs on a Mac) fonts and
+	// rendering differ, so screenshot assertions are no-ops there instead of
+	// failing on every pixel. bin/test-e2e.sh's container sets E2E_IN_DOCKER.
+	ignoreSnapshots: !process.env.E2E_IN_DOCKER,
+
 	projects: [
 		{
 			// Logs in once and stores the admin session for every other project.
 			name: 'setup',
 			testMatch: /.*\.setup\.ts/,
 		},
+		// Functional suite, once per engine. Same viewport everywhere so a
+		// layout-dependent assertion means the same thing in all three.
 		{
 			name: 'chromium',
-			use: {
-				...devices['Desktop Chrome'],
-				viewport: { width: 1366, height: 768 },
-				storageState: './artifacts/.auth/admin.json',
-			},
+			testIgnore: /visual\.spec\.ts/,
+			use: { ...devices['Desktop Chrome'], viewport: DESKTOP, storageState: AUTH },
 			dependencies: ['setup'],
 		},
-		// Wave 4 adds firefox + webkit projects here (same shape).
+		{
+			name: 'firefox',
+			testIgnore: /visual\.spec\.ts/,
+			use: { ...devices['Desktop Firefox'], viewport: DESKTOP, storageState: AUTH },
+			dependencies: ['setup'],
+		},
+		{
+			name: 'webkit',
+			testIgnore: /visual\.spec\.ts/,
+			use: { ...devices['Desktop Safari'], viewport: DESKTOP, storageState: AUTH },
+			dependencies: ['setup'],
+		},
+		// Screenshot regression, Chromium only: one set of baselines to review
+		// and maintain; cross-engine coverage comes from the functional
+		// projects above. Refresh with `bin/test-e2e.sh --project visual
+		// --update-snapshots` (routine after a WordPress major).
+		{
+			name: 'visual',
+			testMatch: /visual\.spec\.ts/,
+			use: { ...devices['Desktop Chrome'], viewport: DESKTOP, storageState: AUTH },
+			dependencies: ['setup'],
+		},
 	],
 });
