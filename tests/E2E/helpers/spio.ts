@@ -81,7 +81,7 @@ export const NO_KEEPALIVE_HEADERS = { Connection: 'close' } as const;
  * already match the current one — a reload, or a form that posts back to
  * the same admin page. waitForURL resolves IMMEDIATELY in that case, so the
  * wait returns before the navigation starts and every assertion after it
- * races the page swap. That cost two CI runs on 2026-09-17: a bulk panel
+ * races the page swap. That cost two CI runs on 2026-09-16: a bulk panel
  * assertion straddled the reload (class seen, then gone), and a follow-up
  * `page.goto` was refused with "interrupted by another navigation". The
  * `load` event is the real document load and cannot resolve early.

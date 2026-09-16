@@ -47,7 +47,7 @@ export class BulkPage {
 	 * Deliberately not two assertions: the screen can switch panels while a
 	 * second assertion is still polling, which produced a baffling CI
 	 * failure ("class active" passed, then the element was reported hidden
-	 * with the class already gone, 2026-09-17). One predicate reports the
+	 * with the class already gone, 2026-09-16). One predicate reports the
 	 * real state and never straddles a switch.
 	 */
 	async expectPanel(name: BulkPanel, timeoutMs = 30_000): Promise<void> {
@@ -141,7 +141,7 @@ export class BulkPage {
 	 * panel from the startup data of that request, so a reload served while
 	 * finishBulk is still clearing the queues lands on process/summary/
 	 * finished and switches away from the server-rendered dashboard (CI
-	 * flake in Chromium and WebKit, 2026-09-17). So: wait for the SERVER to
+	 * flake in Chromium and WebKit, 2026-09-16). So: wait for the SERVER to
 	 * report the queues clear — which is what this test is really about —
 	 * and only then assert the dashboard on a fresh load.
 	 */

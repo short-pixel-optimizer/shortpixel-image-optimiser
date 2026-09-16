@@ -50,7 +50,7 @@ function attachTripwire(page: Page, sink: string[]): void {
 	page.on('pageerror', (error) => {
 		// A page that throws a non-Error (`throw {…}`) gives us an error whose
 		// message is the useless "[object Object]" — that is exactly what a
-		// WebKit CI failure reported (2026-09-17). Prefer the stack, and fall
+		// WebKit CI failure reported (2026-09-16). Prefer the stack, and fall
 		// back to serialising the payload so the attachment names something.
 		let detail = error?.stack || [error?.name, error?.message].filter(Boolean).join(': ');
 		if (!detail || /\[object Object\]/.test(detail)) {

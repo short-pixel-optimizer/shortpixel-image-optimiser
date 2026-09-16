@@ -200,7 +200,7 @@ test.describe('Settings page', () => {
 	 * Key validation is an IN-PLACE AJAX form post (multipart POST to
 	 * admin-ajax.php carrying `display_part`), answered in ~100 ms; the
 	 * notices are rendered into the same document and the page never
-	 * navigates (probed 2026-09-17: window marker survives, no `load` event
+	 * navigates (probed 2026-09-16: window marker survives, no `load` event
 	 * in 30 s). An earlier version waited with `waitForURL(settings page)`,
 	 * which only "worked" because the URL already matched — it waited for
 	 * nothing. Wait on the actual response instead.

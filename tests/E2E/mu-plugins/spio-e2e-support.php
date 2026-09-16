@@ -147,7 +147,7 @@ add_action( 'rest_api_init', 'spio_e2e_register_routes' );
  * dashboard. A test that wants "the bulk is really over" must wait on this,
  * not on a page load: the reload after Stop can be served before finishBulk
  * has cleared the queues, and the screen then switches away from the
- * server-rendered dashboard (CI flake, both engines, 2026-09-17).
+ * server-rendered dashboard (CI flake, both engines, 2026-09-16).
  *
  * `formatNumbers = false` keeps the counters raw instead of localized
  * strings ("1,000"), so they can be compared numerically.

@@ -385,6 +385,12 @@ vendor-tests/bin/phpunit --testsuite model --filter ImageModelTest
 
 The CI configuration lives at `.github/workflows/phpunit.yml`. It:
 
+- Runs on every push to `updates` and on pull requests into `updates` or
+  `master`; any other branch can be run by hand (Actions → "Run workflow").
+  Pull requests whose source branch is `updates` (the release PR into
+  `master`) are skipped, because the push already tested that commit.
+  Stale runs of the same pull request are cancelled; every `updates` commit
+  keeps its own run.
 - Runs on `ubuntu-latest` GitHub Actions runners.
 - Uses a matrix strategy across PHP 7.4 / 8.3 / 8.5 (three jobs per push).
 - Installs PHP via `shivammathur/setup-php@v2`.
@@ -508,7 +514,7 @@ waits), `specs/` (one file per flow; `auth.setup.ts` logs in once).
 - **Never `waitForURL` for a page that reloads the SAME url.** It resolves
   immediately when the pattern already matches the current URL, so the wait
   returns before the reload starts and everything after it races the
-  navigation (this produced both CI failures on 2026-09-17: a panel
+  navigation (this produced both CI failures on 2026-09-16: a panel
   assertion straddling the reload, and a `page.goto` refused with
   "interrupted by another navigation"). Wait for the document instead:
   `withSelfReload(page, action)` from `helpers/spio.ts` arms
@@ -641,7 +647,10 @@ to do with SPIO, and every such skip needs a sentinel in
   (admin CSS changes).
 
 CI: `.github/workflows/e2e.yml` runs the identical Docker stack on
-`ubuntu-latest` for pushes to `e2e-tests`/`updates` and PRs to `updates`/`master`,
+`ubuntu-latest` for every push to `updates` and for pull requests into
+`updates` or `master` (any branch can also be run by hand via Actions →
+"Run workflow"; the same de-duplication as PHPUnit applies — the release
+PR from `updates` is skipped, stale PR runs are cancelled),
 as a matrix of one job per engine (`visual` rides in the Chromium job,
 `fail-fast: false` so every engine reports its own verdict). Artifacts are
 uploaded per engine.

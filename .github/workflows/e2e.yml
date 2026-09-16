@@ -9,20 +9,34 @@
 # blocking (see continue-on-error below).
 name: E2E (browser)
 
+# Every commit pushed to `updates` runs the browser suite, and so does every
+# pull request into `updates` (feature branches) or `master` (release PRs).
+# Any branch can still be run by hand from the Actions tab
+# (workflow_dispatch).
 on:
   push:
-    branches: [e2e-tests, updates]
+    branches: [updates]
   pull_request:
     branches: [updates, master]
   workflow_dispatch:
 
+# Pull requests: one group per PR, so a newer push cancels the stale run.
+# Pushes and manual runs: a unique group per run, so every commit on
+# `updates` keeps its own verdict. (A shared group is not enough even with
+# cancel-in-progress off: GitHub keeps only ONE pending run per group and
+# silently cancels the older pending one when a third arrives.)
 concurrency:
-  group: e2e-${{ github.ref }}
-  cancel-in-progress: true
+  group: e2e-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   e2e:
     name: Playwright / ${{ matrix.engine }} / WP latest
+    # Skip pull_request runs whose SOURCE branch is `updates` in this
+    # repository (the release PR into `master`): the push to `updates` has
+    # already tested that exact commit. A job skipped by `if` reports as
+    # passing, so it never blocks the PR.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.ref != 'updates' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 30
 

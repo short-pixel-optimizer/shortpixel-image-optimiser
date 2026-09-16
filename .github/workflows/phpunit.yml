@@ -1,14 +1,36 @@
 name: SPIO PHPUnit Tests
 
+# Every push to `updates` (the release branch) runs the PHPUnit suites, in
+# parallel with the E2E workflow, and so does every pull request into
+# `updates` or `master`. Feature branches are covered by their pull request;
+# anything else can be run by hand from the Actions tab (workflow_dispatch).
 on:
   push:
-    branches: [ unit-tests, integration-tests, mcp ]
+    branches: [ updates ]
   pull_request:
     branches: [ updates, master ]
+  workflow_dispatch:
+
+# Pull requests: one group per PR, so a newer push cancels the stale run.
+# Pushes and manual runs: a unique group per run, so every commit on
+# `updates` keeps its own verdict. (A shared group is not enough even with
+# cancel-in-progress off: GitHub keeps only ONE pending run per group and
+# silently cancels the older pending one when a third arrives.)
+concurrency:
+  group: phpunit-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Every job below skips pull_request runs whose SOURCE branch is `updates`
+# in this repository (the release PR into `master`): the push to `updates`
+# has already tested that exact commit, so the PR would only run everything
+# a second time. GitHub reports a job skipped by `if` as passing, so it
+# never blocks the PR. `master` only ever receives `updates`, so the
+# PR-merged state matches the tested `updates` head.
 
 jobs:
   build:
     name: Run Tests (PHP ${{ matrix.php-version }})
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.ref != 'updates' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
 
     strategy:
@@ -201,14 +223,15 @@ jobs:
 
   integration:
     name: Run Integration Tests (PHP ${{ matrix.php-version }}, WP ${{ matrix.wp-version }})
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.ref != 'updates' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       # Budget decision: PRs run PHP 8.3 / WP latest (the common production
       # combo) plus WP 5.9 — the oldest version that runs on this test
-      # setup — on PHP 7.4 and 8.3. Pushes (to any of the branches in the
-      # `on: push` list) run the full PHP 7.4/8.3/8.5 matrix on WP latest,
+      # setup — on PHP 7.4 and 8.3. Pushes to `updates` and manual runs
+      # run the full PHP 7.4/8.3/8.5 matrix on WP latest,
       # plus WP 5.9 on PHP 7.4 and 8.3. Old WP + PHP 8.5 is skipped: a WP core that
       # predates PHP 8.x-era fixes only produces deprecation noise there,
       # not signal.
@@ -283,6 +306,7 @@ jobs:
     # job — the multisite-specific surface doesn't vary by PHP version,
     # which the unit/integration matrices already cover.
     name: Run Multisite Tests (PHP 8.3, WP latest)
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.ref != 'updates' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
 
     services:
@@ -352,6 +376,7 @@ jobs:
     # floors (WP Offload Media Lite needs PHP 8.1+); mirrors
     # bin/test.sh --compat.
     name: Run Compat Tests (PHP ${{ matrix.php }}, WP latest)
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.ref != 'updates' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
 
     strategy:
