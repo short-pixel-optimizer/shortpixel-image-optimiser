@@ -138,6 +138,8 @@ class ApiKeyModel extends \ShortPixel\Model
   /** Load the key from storage. This can be a constant, or the database. Check if key is valid.
   *
   * Migrates legacy per-option values to the consolidated option on first run.
+  * A stored value that is not an array (e.g. an empty leftover row or corrupted
+  * serialized data) is treated as missing and rebuilt the same way.
   * If SHORTPIXEL_API_KEY is defined, any database-stored key is cleared and the
   * constant value is used instead.
   *
@@ -146,6 +148,13 @@ class ApiKeyModel extends \ShortPixel\Model
   public function loadKey()
   {
  		$apikeySettings = get_option($this->option_name, null);
+
+		// A non-array value (empty leftover row, corrupted serialization) would fatal below. Treat as missing so it gets rebuilt.
+		if (! is_null($apikeySettings) && ! is_array($apikeySettings))
+		{
+			Log::addWarn('spio_key option is not an array, rebuilding', $apikeySettings);
+			$apikeySettings = null;
+		}
 
 		if (is_null($apikeySettings))
 		{
@@ -167,7 +176,7 @@ class ApiKeyModel extends \ShortPixel\Model
 
 		$this->apiKey = isset($apikeySettings['apiKey']) ? $apikeySettings['apiKey'] : '';
     $this->verifiedKey = isset($apikeySettings['verifiedKey']) ? $apikeySettings['verifiedKey'] : false;
-		$this->apiKeyTried = $apikeySettings['apiKeyTried'];
+		$this->apiKeyTried = isset($apikeySettings['apiKeyTried']) ? $apikeySettings['apiKeyTried'] : null;
 
 
     if ($this->key_is_constant)

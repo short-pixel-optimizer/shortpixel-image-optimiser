@@ -373,6 +373,96 @@ class ApiKeyModelTest extends WP_UnitTestCase {
 	}
 
 	/*
+	 * loadKey() — non-array spio_key regression.
+	 * Reported on 6.5.6 / PHP 8.4: a leftover empty spio_key row made loadKey()
+	 * read $apikeySettings['apiKeyTried'] on a string → fatal TypeError on init,
+	 * taking down wp-admin. A non-array value must be treated as missing and the
+	 * option rebuilt as a proper array.
+	 */
+
+	/**
+	 * Writes a raw option_value, bypassing maybe_serialize(), so a corrupted
+	 * serialized string is stored exactly as a broken migration would leave it.
+	 */
+	private function storeRawOption( string $rawValue ): void {
+		global $wpdb;
+		delete_option( self::OPTION_NAME );
+		$wpdb->insert( $wpdb->options, array(
+			'option_name'  => self::OPTION_NAME,
+			'option_value' => $rawValue,
+			'autoload'     => 'yes',
+		) );
+		wp_cache_delete( self::OPTION_NAME, 'options' );
+		wp_cache_delete( 'alloptions', 'options' );
+		wp_cache_delete( 'notoptions', 'options' );
+	}
+
+	public static function nonArrayOptionProvider(): array {
+		return array(
+			'empty leftover row'          => array( '' ),
+			'plain key string'            => array( self::VALID_KEY ),
+			// maybe_unserialize() turns this into false (warning-only before the
+			// fix, not the fatal), but it's still a non-array that must be rebuilt.
+			'corrupted serialized array'  => array( 'a:3:{s:6:"apiKey";s:99:"ABCDEFGHIJKLMNOPQRST";s:11:"verifiedKey";b:1;}' ),
+		);
+	}
+
+	/**
+	 * @dataProvider nonArrayOptionProvider
+	 */
+	public function test_loadKey_rebuilds_non_array_option_instead_of_fatal( string $rawValue ) {
+		$this->storeRawOption( $rawValue );
+		// Sentinel: the fixture must really come back as a non-null non-array,
+		// otherwise loadKey() takes the normal paths and the test proves nothing.
+		$loaded = get_option( self::OPTION_NAME, null );
+		$this->assertNotNull( $loaded );
+		$this->assertIsNotArray( $loaded );
+
+		// Hidden mode keeps checkKey('') from clearing the rebuilt option.
+		$m = $this->freshModel( false, true );
+
+		$this->assertFalse( $m->loadKey() );
+		$this->assertSame( '', $m->getKey() );
+
+		wp_cache_delete( self::OPTION_NAME, 'options' );
+		wp_cache_delete( 'alloptions', 'options' );
+		$stored = get_option( self::OPTION_NAME );
+		$this->assertIsArray( $stored, 'Non-array spio_key must be rewritten as an array' );
+		$this->assertSame( array( 'apiKey', 'verifiedKey', 'apiKeyTried' ), array_keys( $stored ) );
+		$this->assertSame( '', $stored['apiKey'] );
+	}
+
+	public function test_loadKey_non_array_option_falls_back_to_legacy_migration() {
+		$this->storeRawOption( '' );
+		update_option( self::LEGACY_KEY_OPTION, self::VALID_KEY );
+		update_option( self::LEGACY_VERIFIED_OPTION, true );
+		update_option( self::LEGACY_TRIED_OPTION, '' );
+
+		$m = $this->freshModel();
+
+		$this->assertTrue( $m->loadKey() );
+		$this->assertSame( self::VALID_KEY, $m->getKey() );
+
+		$stored = get_option( self::OPTION_NAME );
+		$this->assertIsArray( $stored );
+		$this->assertSame( self::VALID_KEY, $stored['apiKey'] );
+		$this->assertFalse( get_option( self::LEGACY_KEY_OPTION, false ) );
+	}
+
+	public function test_loadKey_array_without_apiKeyTried_defaults_to_null() {
+		update_option( self::OPTION_NAME, array(
+			'apiKey'      => self::VALID_KEY,
+			'verifiedKey' => true,
+		) );
+
+		$m = $this->freshModel();
+
+		$this->assertTrue( $m->loadKey() );
+		$this->assertSame( self::VALID_KEY, $m->getKey() );
+		$this->assertNull( $this->getPrivate( $m, 'apiKeyTried' ) );
+	}
+
+	/*
 	 * checkKey() — safe branches only.
 	 */
 
