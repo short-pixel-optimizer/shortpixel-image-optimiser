@@ -25,3 +25,9 @@ composer.lock
 /tests/partner-plugins/
 # Manual tests, not needed in the repo
 /tests/manual/
+# Browser E2E suite (bin/test-e2e.sh): dependencies + run output.
+# package-lock.json IS tracked (reproducible installs in CI).
+/tests/E2E/node_modules/
+/tests/E2E/artifacts/
+/tests/E2E/test-results/
+/tests/E2E/playwright-report/

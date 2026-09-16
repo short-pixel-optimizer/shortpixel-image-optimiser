@@ -385,6 +385,12 @@ vendor-tests/bin/phpunit --testsuite model --filter ImageModelTest
 
 The CI configuration lives at `.github/workflows/phpunit.yml`. It:
 
+- Runs on every push to `updates` and on pull requests into `updates` or
+  `master`; any other branch can be run by hand (Actions → "Run workflow").
+  Pull requests whose source branch is `updates` (the release PR into
+  `master`) are skipped, because the push already tested that commit.
+  Stale runs of the same pull request are cancelled; every `updates` commit
+  keeps its own run.
 - Runs on `ubuntu-latest` GitHub Actions runners.
 - Uses a matrix strategy across PHP 7.4 / 8.3 / 8.5 (three jobs per push).
 - Installs PHP via `shivammathur/setup-php@v2`.
@@ -397,6 +403,257 @@ The Docker-based local setup (`.docker/Dockerfile.tests` +
 environment byte-for-byte — same PHP versions, same MySQL image, same
 `bin/install-wp-tests.sh` script. If a test passes locally via `bin/test.sh`,
 it should pass on CI.
+
+## Browser end-to-end tests (Playwright)
+
+The PHPUnit suites above never load a browser, so the plugin's JavaScript
+(`res/js/`, ~9,650 lines) and its admin layout had no automated coverage.
+The E2E suite closes that gap: a REAL served WordPress with SPIO installed,
+driven by [Playwright](https://playwright.dev) in a browser, asserting what a
+user actually sees — and failing on any uncaught JS error.
+
+```bash
+bin/test-e2e.sh                          # provision + run every project (chromium, firefox, webkit, visual)
+bin/test-e2e.sh --project chromium       # one engine: chromium | firefox | webkit | visual (repeatable)
+bin/test-e2e.sh --project visual --update-snapshots   # refresh screenshot baselines after an intended UI change
+bin/test-e2e.sh --grep "settings"        # subset by title
+bin/test-e2e.sh specs/smoke.spec.ts      # one spec (paths relative to tests/E2E)
+bin/test-e2e.sh --headed                 # visible browser, natively on the host (needs Node.js)
+bin/test-e2e.sh --ui                     # Playwright UI mode, natively on the host
+bin/test-e2e.sh --report                 # open the last HTML report
+bin/test-e2e.sh --provision-only         # just bring the site up at http://localhost:8030
+bin/test-e2e.sh --pull-only              # pull the images with retry (CI's first step)
+bin/test-e2e.sh --wp 6.5                 # against an older WordPress (fresh volumes)
+bin/test-e2e.sh --clean                  # wipe DB / core / node_modules volumes
+```
+
+**Stack** (`docker-compose.e2e.yml`, fully separate from the PHPUnit stack —
+different database, volumes and images, so the two never collide):
+
+| Service | What |
+|---|---|
+| `mysql-e2e` | MySQL 8.0, database `wordpress_e2e` |
+| `wordpress` | official `wordpress:php8.3-apache` image; the repo is bind-mounted as `wp-content/plugins/shortpixel-image-optimiser`; served on **http://localhost:8030** (admin / password) |
+| `wpcli` | one-shot provisioning (`tests/E2E/provision/provision.sh`): core install, theme, plugin activation, seed |
+| `playwright` | `mcr.microsoft.com/playwright` (pinned to the `@playwright/test` version in `tests/E2E/package.json`), shares the wordpress container's network so the same URL works everywhere |
+
+**Test-support mu-plugins** (`tests/E2E/mu-plugins/`, only active when
+`SPIO_E2E` is defined — never in production):
+
+- `spio-e2e-mock-api.php` — the ShortPixel API mock, ported from the PHPUnit
+  `MockShortPixelApi` to a live install (disk-backed download stash, knobs
+  and counters in options). No traffic leaves the container.
+- `spio-e2e-support.php` — REST endpoint `spio-e2e/v1` the tests call to
+  reset state, seed the healthy-install baseline, upload fixtures, backdate
+  the queue, steer the mock and inject "hostile" third-party scripts
+  (`hostile-snippets/`, e.g. the `window.URL` overwrite behind bug #62).
+
+**Layout** (`tests/E2E/`): `playwright.config.ts` (serial, one worker — every
+spec shares one install), `fixtures.ts` (the console-error tripwire, hermetic
+routing, the `spio` support client), `helpers/` (page helpers, CustomEvent
+waits), `specs/` (one file per flow; `auth.setup.ts` logs in once).
+
+**Writing E2E specs**
+
+- Import `test`/`expect` from `../fixtures`, never from `@playwright/test`
+  directly — that is what arms the tripwire.
+- Start each test from a known state: `await spio.reset()` in `beforeEach`.
+  Besides content and tables this clears SPIO's processor lock (the 2-minute
+  `bulk-secret` transient); the auth setup persists cookies only, so every
+  page starts with an empty localStorage and becomes the processor itself.
+  A page whose `window.ShortPixelProcessor.isActive` is false never advances
+  the queue — assert it (see the smoke spec) before waiting on processing.
+- Wait on SPIO's own window CustomEvents (`withSpioEvent(page,
+  'shortpixel.processor.responseHandled', …)`) instead of sleeping.
+- A spec that expects JS errors (a pin for a known bug) opts out with
+  `test.use({ allowConsoleErrors: true })` and asserts on `consoleErrors`.
+- SPIO's switches, compression radios and the bulk error-box toggle are
+  `display:none` inputs behind custom controls — Playwright's `check()`
+  cannot click them. Use `setChecked(locator, on)` from `helpers/spio.ts`
+  (sets the DOM state and dispatches `input`/`change`).
+- Use the page objects in `helpers/` (`SettingsPage`, `MediaList`,
+  `BulkPage`, `AiEditorModal`, `BlockEditor`, `OnboardingPage`) rather than
+  raw selectors; they encode the verified DOM facts (e.g. the settings save
+  banner is *always* `display:flex` — success is the `show` class, and the
+  media status filter needs `filter_action` in the request).
+- Block editor: SPIO never starts AI generation from the editor UI by itself
+  (selecting an image block only kicks the queue processor). Tests trigger
+  it with `BlockEditor.requestAlt(id)` — the same call the "AI Image SEO"
+  button makes — and read the result from `wp.data` (`BlockEditor.imageBlock`),
+  never from the iframed canvas. Support routes exist to create a post with
+  a real core/image block (`spio.createPost({ image_id })`) and to flip the
+  API-key state (`spio.setKeyState('none' | 'verified')`).
+- The AI editor modal's Save creates a NEW attachment (never replaces) and
+  the server blocks up to ~45s polling the API — budget generous timeouts.
+- In the no-key state SPIO logs `console.error('No API Key set…')` on
+  every admin page; onboarding specs relax the tripwire and assert that this
+  is the only error.
+- **Third-party conflict registry** (`specs/conflicts.spec.ts` +
+  `mu-plugins/hostile-snippets/`): each snippet mimics a real class of
+  hostile admin script (a `window.URL` overwrite, an enumerable
+  `Array.prototype` extension, neutered `console` methods, a late
+  `jQuery.noConflict(true)`) and is injected *before* SPIO's scripts; the
+  same settings / media-list / bulk flows are then driven with it active.
+  Keep new snippets realistic — one that takes down WordPress core itself
+  (e.g. polluting `Object.prototype`, deleting `console.warn`) proves
+  nothing about SPIO. A failing combination is a finding: pin it, don't
+  skip it.
+- `spio.reset()` also resets SPIO's queues through
+  `QueueController::resetQueues()`; a bulk left half-prepared by a previous
+  test otherwise makes the bulk page skip its dashboard.
+- **A page load is not proof of server state.** `screen-bulk.js` chooses its
+  panel from the startup data of each request (preparing → selection,
+  running → process, finished + done → finished, queued → summary, else
+  dashboard). The reload after "Stop" can be served while `finishBulk` is
+  still clearing the queues, so the screen switches away from the
+  server-rendered dashboard — which failed the stop test on CI in Chromium
+  *and* WebKit while passing locally. `BulkPage.stop(spio)` therefore waits
+  for `spio.bulkStatus()` (support route `GET bulk-status`, the same
+  `QueueController::getStartupData()` the JS reads) to report both queues
+  clear, and only then asserts the dashboard.
+- **Never `waitForURL` for a page that reloads the SAME url.** It resolves
+  immediately when the pattern already matches the current URL, so the wait
+  returns before the reload starts and everything after it races the
+  navigation (this produced both CI failures on 2026-09-16: a panel
+  assertion straddling the reload, and a `page.goto` refused with
+  "interrupted by another navigation"). Wait for the document instead:
+  `withSelfReload(page, action)` from `helpers/spio.ts` arms
+  `page.waitForEvent('load')` before running the action. It applies to the
+  screens that really reload themselves: bulk stop/finish, and the
+  onboarding/quick-tour redirects (the onboarding screen *is* the settings
+  page). `wp-login.php` navigates to a different URL, so there a paired
+  `waitForURL` is fine.
+- **Check that a navigation actually happens before waiting for one.**
+  API-key validation on the settings overview looks like a form submit but
+  is an in-place AJAX post (`admin-ajax.php` with `display_part`); the
+  notices render without any navigation. A `waitForURL` there waited for
+  nothing, and a `load` wait times out. Wait on the AJAX response
+  (`page.waitForResponse`, armed before the click), as `settings.spec.ts`
+  does.
+- Assert a panel with `BulkPage.expectPanel()`, which polls "active AND
+  visible" as ONE predicate. Two separate assertions can straddle a panel
+  switch and report a nonsensical state (class present, then hidden with
+  the class gone).
+- Front-end delivery specs create their own unauthenticated
+  `browser.newContext()` to view a post as a visitor, and must switch
+  `deliverWebp`/`useCDN` back off in `afterEach` (the seed does not touch
+  them). Enable CDN only through the support route: the settings form
+  path makes real outbound calls to `no-cdn.shortpixel.ai`, which the mock
+  does not intercept.
+- Custom Media specs add `wp-content/uploads/e2e-custom/` (seeded by the
+  `custom-folder` support route) — the only safe target: the numeric year
+  folders are refused as Media Library, and the bind-mounted plugin tree
+  would be *accepted* and then have its fixtures overwritten in the host
+  checkout. The comparer's script is lazy-loaded and races the data
+  request on the first click; the spec pre-warms it.
+- Multisite network settings are **not** covered by the E2E suite: the page
+  is only registered on a multisite install, which this stack is not. They
+  need a dedicated multisite stack (own compose project, `WP_ALLOW_MULTISITE`
+  baked in on first boot, `wp core multisite-convert`, a real hostname).
+  The PHP side is pinned by `tests/Multisite/`.
+- Pinned tests follow the same rules as the PHPUnit ones (`_pinned_for_deferred_fix`,
+  sentinel that proves the flow ran, flip note in the docblock).
+- Artifacts (traces, screenshots, videos, HTML report) land in
+  `tests/E2E/artifacts/` (gitignored); on CI they are uploaded on every run.
+- **No retries, locally or on CI.** Playwright counts a test that passes on
+  retry as "flaky", which is a *pass* for the exit code — a real timing race
+  once hid behind a green CI run that way. Intermittent failures are the
+  bugs this suite exists to catch, so a first failure goes red; fix the
+  race (usually: wait on the right `shortpixel.*` event) instead of
+  retrying past it.
+- **Node-side HTTP to the container sends `Connection: close`.** Playwright's
+  request client shares one keep-alive agent per worker and Apache closes
+  idle keep-alive sockets after 5 s, so a support call made right after a
+  long browser-driven stretch could die with "socket hang up" before
+  reaching WordPress (Chromium retries that race silently, Node does not).
+  `NO_KEEPALIVE_HEADERS` in `helpers/spio.ts` is applied by the support
+  client and must be passed to any direct `request.get()`/`post()` you add.
+
+**Browser projects** (`playwright.config.ts`): the functional suite runs
+once per engine — `chromium`, `firefox`, `webkit` — at the same 1366×768
+viewport. A test must pass on all three; an engine difference is either a
+real SPIO cross-browser bug (pin it) or a test assumption to fix. Skipping
+an engine is allowed only for a proven ENGINE limitation that has nothing
+to do with SPIO, and every such skip needs a sentinel in
+`specs/engine-limits.spec.ts` that goes red once the limitation is gone.
+
+- **Playwright's Linux WebKit gets flaky when the machine is starved.**
+  Observed faults, all engine-level and none reproducible on an
+  unconstrained machine: `page.goto` failing with "WebKit encountered an
+  internal error" (the web process died; seen on a GitHub runner), and a
+  `pageerror` claiming SPIO's worker script was blocked "due to access
+  control checks" (reproduced locally only with the Playwright container
+  capped at 2 GB). Videos are therefore not recorded on CI (`video: 'off'`
+  when `CI` is set; traces still are). If one of these appears, check
+  whether it reproduces unconstrained before treating it as a SPIO bug —
+  but never paper over it with a retry. Because of this, the CI WebKit job
+  is `continue-on-error`: it reports but does not gate, while Chromium and
+  Firefox do. A WebKit failure still shows red in the run and is still
+  worth reading — treat a repeatable one as a real finding.
+- Known engine limitation: Playwright's Linux WebKit hangs in layout on
+  WordPress core's attachment edit screen (`post.php?action=edit` for an
+  attachment). It reproduces with SPIO deactivated, so `ai-editor.spec.ts`
+  skips WebKit and the sentinel watches for a Playwright/WordPress update
+  that fixes it.
+- Wait on a class or event the JS itself sets once its listeners are
+  attached (e.g. the quick tour's `active-step-0`), never on
+  server-rendered markup that is there before any JS ran.
+- Known cross-engine difference that produced a real SPIO finding:
+  dispatching a synthetic `new CustomEvent('click')` on an `<a href>` runs
+  the link's navigation in WebKit only (Chromium/Firefox just run the
+  listeners). The event is not cancelable, so a listener's
+  `preventDefault()` cannot stop it. The quick tour does exactly that and
+  reloads the settings page in WebKit — pinned in `onboarding.spec.ts`.
+- `bin/test-e2e.sh` passes arguments straight to Playwright, whose
+  `--project` takes several values: put a spec path BEFORE `--project`
+  (`bin/test-e2e.sh specs/x.spec.ts --project webkit`), or it is read as a
+  project name.
+
+**Visual regression** (`specs/visual.spec.ts`, project `visual`):
+
+- Chromium only, one set of baselines in `tests/E2E/snapshots/visual.spec.ts/`
+  (committed). Covers every settings tab in advanced mode, the overview in
+  simple mode and at 780px (menu closed/open), the bulk dashboard /
+  selection / summary / finished panels, and both AI editor modals.
+- Screenshots are compared only inside the Playwright Docker image
+  (`E2E_IN_DOCKER`); on a native `--headed`/`--ui` run they are no-ops,
+  because host fonts and rendering differ from the Linux baselines.
+- Capture SPIO's own container (element screenshot), never the full page —
+  the WP admin bar, menu and version footer change with every WordPress
+  release. Wait for fonts and images first (`settle()`), and mask any
+  region that legitimately differs between runs, with a comment saying why.
+- A capture taller than the viewport scrolls the page, and every
+  `position: fixed` element gets painted into the element's pixels —
+  including things users never see at rest (SPIO parks its settings
+  "saved" banner just below the viewport). `helpers/screenshot.css`
+  (config `stylePath`) hides the WP admin bar/menu and the resting banner
+  with `visibility: hidden`, so nothing reflows. On narrow viewports,
+  where SPIO's header is fixed too, use a viewport capture
+  (`expect(page).toHaveScreenshot()`) instead of an element one.
+- Prefer clearing leftover state in `spio.reset()` over masking it. Bulk
+  history (option `shortpixel-bulk-logs`) and SPIO's cached statistics
+  (`currentStats`, the `average_compression` transient) are wiped there,
+  because the settings overview prints them.
+- The comparison budget is ABSOLUTE: `maxDiffPixels: 100`. Rendering in the
+  pinned image is pixel-stable, so this only absorbs stray anti-aliasing. A
+  ratio (`maxDiffPixelRatio: 0.01`) was tried first and let a whole panel
+  swap and a leftover banner strip pass on a tall tab.
+- `--update-snapshots` only rewrites a PNG that fails the comparison. To be
+  sure a baseline reflects the current page, delete the PNG and regenerate.
+- A failing comparison uploads expected / actual / diff PNGs in the HTML
+  report. If the change was intended, refresh with
+  `bin/test-e2e.sh --project visual --update-snapshots` and review the PNG
+  diff in the commit like code. Expect a refresh after WordPress majors
+  (admin CSS changes).
+
+CI: `.github/workflows/e2e.yml` runs the identical Docker stack on
+`ubuntu-latest` for every push to `updates` and for pull requests into
+`updates` or `master` (any branch can also be run by hand via Actions →
+"Run workflow"; the same de-duplication as PHPUnit applies — the release
+PR from `updates` is skipped, stale PR runs are cancelled),
+as a matrix of one job per engine (`visual` rides in the Chromium job,
+`fail-fast: false` so every engine reports its own verdict). Artifacts are
+uploaded per engine.
 
 ## Writing new tests
 
