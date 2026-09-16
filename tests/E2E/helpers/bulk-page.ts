@@ -25,7 +25,7 @@
  *               backdates the queue between ticks (support endpoint).
  */
 import { expect, type Locator, type Page } from '@playwright/test';
-import { adminUrls, setChecked, withSpioEvent, type SpioSupport } from './spio';
+import { adminUrls, setChecked, withSelfReload, withSpioEvent, type SpioSupport } from './spio';
 
 export type BulkPanel = 'dashboard' | 'selection' | 'summary' | 'process' | 'finished';
 
@@ -41,9 +41,30 @@ export class BulkPage {
 		return this.page.locator(`section.panel[data-panel="${name}"]`);
 	}
 
+	/**
+	 * Wait until a panel is BOTH active and visible, in one poll.
+	 *
+	 * Deliberately not two assertions: the screen can switch panels while a
+	 * second assertion is still polling, which produced a baffling CI
+	 * failure ("class active" passed, then the element was reported hidden
+	 * with the class already gone, 2026-09-17). One predicate reports the
+	 * real state and never straddles a switch.
+	 */
 	async expectPanel(name: BulkPanel, timeoutMs = 30_000): Promise<void> {
-		await expect(this.panel(name)).toHaveClass(/\bactive\b/, { timeout: timeoutMs });
-		await expect(this.panel(name)).toBeVisible();
+		const panel = this.panel(name);
+		await expect
+			.poll(
+				() =>
+					panel
+						.evaluate((el) => ({
+							active: el.classList.contains('active'),
+							shown: !!(el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden'),
+						}))
+						.then((state) => state.active && state.shown)
+						.catch(() => false),
+				{ timeout: timeoutMs, message: `bulk panel "${name}" must be the active, visible panel` },
+			)
+			.toBe(true);
 	}
 
 	stat(scope: 'media' | 'custom' | 'total', key: string): Locator {
@@ -113,22 +134,40 @@ export class BulkPage {
 		await expect(this.page.locator('#processPaused')).toBeHidden();
 	}
 
-	/** Stop = native confirm() + server finishBulk + reload to the dashboard. */
-	async stop(): Promise<void> {
+	/**
+	 * Stop = native confirm() + server finishBulk + a JS-triggered reload.
+	 *
+	 * The reload is NOT proof the bulk is over: screen-bulk.js picks its
+	 * panel from the startup data of that request, so a reload served while
+	 * finishBulk is still clearing the queues lands on process/summary/
+	 * finished and switches away from the server-rendered dashboard (CI
+	 * flake in Chromium and WebKit, 2026-09-17). So: wait for the SERVER to
+	 * report the queues clear — which is what this test is really about —
+	 * and only then assert the dashboard on a fresh load.
+	 */
+	async stop(spio: SpioSupport): Promise<void> {
 		this.page.once('dialog', (dialog) => dialog.accept());
-		await Promise.all([
-			this.page.waitForURL(/page=wp-short-pixel-bulk/, { waitUntil: 'load' }),
-			this.page.locator('[data-action="StopBulk"]').click(),
-		]);
+		await withSelfReload(this.page,() => this.page.locator('[data-action="StopBulk"]').click());
+
+		await expect
+			.poll(
+				async () => {
+					const { media, custom } = await spio.bulkStatus();
+					const clear = (s: typeof media.stats) =>
+						!s.is_preparing && !s.is_running && Number(s.in_queue) === 0 && Number(s.in_process) === 0;
+					return clear(media.stats) && clear(custom.stats);
+				},
+				{ timeout: 30_000, message: 'finishBulk must clear both queues server-side' },
+			)
+			.toBe(true);
+
+		await this.goto();
 		await this.expectPanel('dashboard');
 	}
 
-	/** finished → dashboard (server finishBulk + reload). */
+	/** finished → dashboard (server finishBulk + the same self-reload). */
 	async finish(): Promise<void> {
-		await Promise.all([
-			this.page.waitForURL(/page=wp-short-pixel-bulk/, { waitUntil: 'load' }),
-			this.page.locator('#FinishBulkButton').click(),
-		]);
+		await withSelfReload(this.page,() => this.page.locator('#FinishBulkButton').click());
 		await this.expectPanel('dashboard');
 	}
 

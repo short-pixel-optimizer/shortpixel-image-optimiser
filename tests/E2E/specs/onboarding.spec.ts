@@ -12,7 +12,7 @@
 import { test, expect } from '../fixtures';
 import { OnboardingPage } from '../helpers/onboarding';
 import { SettingsPage } from '../helpers/settings-page';
-import { adminUrls, ApiCode } from '../helpers/spio';
+import { adminUrls, ApiCode, withSelfReload } from '../helpers/spio';
 
 /**
  * In the no-key state SPIO's processor logs `console.error('No API Key set
@@ -56,11 +56,10 @@ test.describe('Onboarding (no API key)', () => {
 		await onboarding.useExistingKey();
 		await onboarding.keyInput.fill('k'.repeat(20));
 
-		await Promise.all([
-			// FormAddKeyResponse applies json.redirect after a hard 3000ms.
-			page.waitForURL(/page=wp-shortpixel-settings/, { waitUntil: 'load', timeout: 30_000 }),
-			onboarding.submit.click(),
-		]);
+		// The onboarding screen IS the settings page, so the redirect target
+		// matches the current URL — wait for the document, not the URL.
+		// FormAddKeyResponse applies json.redirect after a hard 3000ms.
+		await withSelfReload(page, () => onboarding.submit.click(), 30_000);
 
 		await expect(page.locator('.wrap.is-shortpixel-settings-page')).not.toHaveClass(/\bonboarding\b/);
 		// (part-nokey is always rendered inside the form; it is just not the active section.)
@@ -123,10 +122,7 @@ test.describe('Onboarding (no API key)', () => {
 		await onboarding.emailInput.fill('someone@example.com');
 		await onboarding.tos.check({ force: true });
 
-		await Promise.all([
-			page.waitForURL(/page=wp-shortpixel-settings/, { waitUntil: 'load', timeout: 45_000 }),
-			onboarding.submit.click(),
-		]);
+		await withSelfReload(page, () => onboarding.submit.click(), 45_000);
 
 		await expect(page.locator('.wrap.is-shortpixel-settings-page')).not.toHaveClass(/\bonboarding\b/);
 		const signup = (await spio.mockRequests()).filter((r) => r.path.includes('free-sign-up-plugin'));
@@ -186,7 +182,7 @@ test.describe('Quick tour', () => {
 		await expect(finish).not.toHaveClass(/\bhide\b/);
 		await expect(settings.section('help')).toHaveClass(/\bactive\b/);
 
-		await Promise.all([page.waitForURL(/page=wp-shortpixel-settings/, { waitUntil: 'load' }), finish.click()]);
+		await withSelfReload(page, () => finish.click());
 		await expect(page.locator('div.quick-tour')).toHaveCount(0);
 		await expect(settings.root).not.toHaveClass(/\bpage-quick-tour\b/);
 		expect(Number((await spio.getSettings()).redirectedSettings)).toBe(3);

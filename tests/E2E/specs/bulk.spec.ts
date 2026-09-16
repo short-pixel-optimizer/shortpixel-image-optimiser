@@ -90,8 +90,10 @@ test.describe('Bulk page', () => {
 		await bulk.calculate();
 		await bulk.startBulk();
 
-		await bulk.stop();
-		// A fresh visit lands on the dashboard too: the queue was reset.
+		// stop() waits for the server to report both queues clear, then
+		// asserts the dashboard on a fresh load.
+		await bulk.stop(spio);
+		// And it stays that way on the next visit.
 		await bulk.goto();
 		await bulk.expectPanel('dashboard');
 	});

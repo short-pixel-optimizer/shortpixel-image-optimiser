@@ -31,6 +31,23 @@ export const ApiCode = {
 
 export type MockRequest = { time: string; url: string; path: string; request: unknown };
 
+/** One queue's counters as the bulk screen receives them (raw, unformatted). */
+export type BulkQueueStats = {
+	is_preparing: boolean;
+	is_running: boolean;
+	is_finished: boolean;
+	in_queue: number | string;
+	in_process: number | string;
+	done: number | string;
+	bulk_running: boolean;
+};
+
+/** GET bulk-status: QueueController::getStartupData(false). */
+export type BulkStatus = {
+	media: { stats: BulkQueueStats };
+	custom: { stats: BulkQueueStats };
+};
+
 export type AttachmentStatus = {
 	id: number;
 	optimized: boolean | null;
@@ -55,6 +72,29 @@ export type AttachmentStatus = {
  * race instead of retrying past it.
  */
 export const NO_KEEPALIVE_HEADERS = { Connection: 'close' } as const;
+
+/**
+ * Run an action that makes the PAGE navigate itself, and wait for the new
+ * document.
+ *
+ * Use this instead of `page.waitForURL(...)` whenever the target URL may
+ * already match the current one — a reload, or a form that posts back to
+ * the same admin page. waitForURL resolves IMMEDIATELY in that case, so the
+ * wait returns before the navigation starts and every assertion after it
+ * races the page swap. That cost two CI runs on 2026-09-17: a bulk panel
+ * assertion straddled the reload (class seen, then gone), and a follow-up
+ * `page.goto` was refused with "interrupted by another navigation". The
+ * `load` event is the real document load and cannot resolve early.
+ */
+export async function withSelfReload(
+	page: Page,
+	action: () => Promise<unknown>,
+	timeoutMs = 30_000,
+): Promise<void> {
+	const loaded = page.waitForEvent('load', { timeout: timeoutMs });
+	await action();
+	await loaded;
+}
 
 export class SpioSupport {
 	private readonly token = process.env.E2E_TOKEN || 'spio-e2e-local';
@@ -111,6 +151,15 @@ export class SpioSupport {
 	/** Upload tests/fixtures/<name> as a real attachment. */
 	uploadFixture(name: string): Promise<{ id: number; url: string; file: string }> {
 		return this.post('fixture', { name });
+	}
+
+	/**
+	 * Server-side bulk/queue state: the same startup data screen-bulk.js
+	 * branches on when choosing which panel to show. Wait on this (not on a
+	 * page load) whenever a test needs the bulk to be genuinely over.
+	 */
+	bulkStatus(): Promise<BulkStatus> {
+		return this.get('bulk-status');
 	}
 
 	/** Server-side truth about one attachment. */

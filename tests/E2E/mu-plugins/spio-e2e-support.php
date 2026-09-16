@@ -127,6 +127,7 @@ function spio_e2e_register_routes() {
 	register_rest_route( $ns, '/custom-folder', $def + array( 'methods' => 'POST', 'callback' => 'spio_e2e_route_custom_folder' ) );
 	register_rest_route( $ns, '/attachment/(?P<id>\d+)', $def + array( 'methods' => 'GET', 'callback' => 'spio_e2e_route_attachment' ) );
 	register_rest_route( $ns, '/queue/backdate', $def + array( 'methods' => 'POST', 'callback' => 'spio_e2e_route_backdate' ) );
+	register_rest_route( $ns, '/bulk-status', $def + array( 'methods' => 'GET', 'callback' => 'spio_e2e_route_bulk_status' ) );
 	register_rest_route( $ns, '/mock', $def + array( 'methods' => 'POST', 'callback' => 'spio_e2e_route_mock' ) );
 	register_rest_route( $ns, '/mock/reset', $def + array( 'methods' => 'POST', 'callback' => 'spio_e2e_route_mock_reset' ) );
 	register_rest_route( $ns, '/mock/requests', $def + array( 'methods' => 'GET', 'callback' => 'spio_e2e_route_mock_requests' ) );
@@ -137,6 +138,33 @@ add_action( 'rest_api_init', 'spio_e2e_register_routes' );
 // -----------------------------------------------------------------------
 // Route handlers
 // -----------------------------------------------------------------------
+
+/**
+ * Server-side bulk/queue state — the SAME startup data the bulk screen's JS
+ * branches on (QueueController::getStartupData()). screen-bulk.js picks its
+ * panel from it on every page load: is_preparing → selection, is_running →
+ * process, is_finished + done → finished, in_queue > 0 → summary, otherwise
+ * dashboard. A test that wants "the bulk is really over" must wait on this,
+ * not on a page load: the reload after Stop can be served before finishBulk
+ * has cleared the queues, and the screen then switches away from the
+ * server-rendered dashboard (CI flake, both engines, 2026-09-17).
+ *
+ * `formatNumbers = false` keeps the counters raw instead of localized
+ * strings ("1,000"), so they can be compared numerically.
+ */
+function spio_e2e_route_bulk_status( WP_REST_Request $request ) {
+	if ( ! class_exists( '\ShortPixel\Controller\QueueController' ) ) {
+		return new WP_Error( 'spio_e2e_no_spio', 'SPIO is not active', array( 'status' => 500 ) );
+	}
+
+	$class      = '\ShortPixel\Controller\QueueController';
+	$controller = method_exists( $class, 'getInstance' ) ? $class::getInstance() : new $class();
+	$data       = $controller->getStartupData( false );
+
+	// json_encode/decode: hand back plain arrays whatever object graph the
+	// controller returns.
+	return rest_ensure_response( json_decode( wp_json_encode( $data ), true ) );
+}
 
 function spio_e2e_route_reset( WP_REST_Request $request ) {
 	global $wpdb;

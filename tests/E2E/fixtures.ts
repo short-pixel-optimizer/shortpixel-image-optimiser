@@ -48,7 +48,19 @@ const CONSOLE_ALLOWLIST: RegExp[] = [
 
 function attachTripwire(page: Page, sink: string[]): void {
 	page.on('pageerror', (error) => {
-		sink.push(`pageerror: ${error.message}`);
+		// A page that throws a non-Error (`throw {…}`) gives us an error whose
+		// message is the useless "[object Object]" — that is exactly what a
+		// WebKit CI failure reported (2026-09-17). Prefer the stack, and fall
+		// back to serialising the payload so the attachment names something.
+		let detail = error?.stack || [error?.name, error?.message].filter(Boolean).join(': ');
+		if (!detail || /\[object Object\]/.test(detail)) {
+			try {
+				detail = `${detail} ${JSON.stringify(error, Object.getOwnPropertyNames(error ?? {}))}`.trim();
+			} catch {
+				detail = String(error);
+			}
+		}
+		sink.push(`pageerror: ${detail}`);
 	});
 	page.on('console', (msg) => {
 		if (msg.type() !== 'error') {

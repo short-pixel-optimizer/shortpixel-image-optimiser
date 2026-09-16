@@ -194,6 +194,28 @@ test.describe('Settings page', () => {
 		await page.locator('#validate').click();
 	}
 
+	/**
+	 * Submit a key and wait for SPIO's answer.
+	 *
+	 * Key validation is an IN-PLACE AJAX form post (multipart POST to
+	 * admin-ajax.php carrying `display_part`), answered in ~100 ms; the
+	 * notices are rendered into the same document and the page never
+	 * navigates (probed 2026-09-17: window marker survives, no `load` event
+	 * in 30 s). An earlier version waited with `waitForURL(settings page)`,
+	 * which only "worked" because the URL already matched — it waited for
+	 * nothing. Wait on the actual response instead.
+	 */
+	async function submitApiKeyAndWait(page: import('@playwright/test').Page, key: string): Promise<void> {
+		const answered = page.waitForResponse(
+			(res) =>
+				res.url().includes('/wp-admin/admin-ajax.php') &&
+				res.request().method() === 'POST' &&
+				(res.request().postData() || '').includes('name="display_part"'),
+		);
+		await submitApiKey(page, key);
+		expect((await answered).status(), 'the settings form post must succeed').toBe(200);
+	}
+
 	test('API key: the eye toggle reveals the key', async ({ page }) => {
 		const settings = new SettingsPage(page);
 		await settings.goto('overview');
@@ -209,8 +231,8 @@ test.describe('Settings page', () => {
 		const settings = new SettingsPage(page);
 		await settings.goto('overview');
 
-		// Failed validation makes the server answer with a redirect → full page load.
-		await Promise.all([page.waitForURL(/page=wp-shortpixel-settings/, { waitUntil: 'load' }), submitApiKey(page, 'too-short')]);
+		// Validation is answered in place over AJAX (no reload).
+		await submitApiKeyAndWait(page, 'too-short');
 
 		await expect(settings.notices('error').filter({ hasText: /20 characters/i })).toBeVisible();
 		// NB: the reloaded settings page refreshes the quota (api-status.php)
@@ -227,7 +249,7 @@ test.describe('Settings page', () => {
 		const settings = new SettingsPage(page);
 		await settings.goto('overview');
 
-		await Promise.all([page.waitForURL(/page=wp-shortpixel-settings/, { waitUntil: 'load' }), submitApiKey(page, 'b'.repeat(20))]);
+		await submitApiKeyAndWait(page, 'b'.repeat(20));
 
 		// (The notice renders twice on the reloaded page — assert on the first.)
 		const verifyNotice = settings.notices('error').filter({ hasText: /Error during verifying API key/i }).first();
@@ -242,7 +264,7 @@ test.describe('Settings page', () => {
 		const settings = new SettingsPage(page);
 		await settings.goto('overview');
 
-		await Promise.all([page.waitForURL(/page=wp-shortpixel-settings/, { waitUntil: 'load' }), submitApiKey(page, 'b'.repeat(20))]);
+		await submitApiKeyAndWait(page, 'b'.repeat(20));
 
 		await expect(settings.notices('error').filter({ hasText: /Error during verifying API key/i }).first()).toContainText(/Quota exceeded/i);
 	});

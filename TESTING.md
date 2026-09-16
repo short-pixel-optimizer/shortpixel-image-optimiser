@@ -495,6 +495,39 @@ waits), `specs/` (one file per flow; `auth.setup.ts` logs in once).
 - `spio.reset()` also resets SPIO's queues through
   `QueueController::resetQueues()`; a bulk left half-prepared by a previous
   test otherwise makes the bulk page skip its dashboard.
+- **A page load is not proof of server state.** `screen-bulk.js` chooses its
+  panel from the startup data of each request (preparing → selection,
+  running → process, finished + done → finished, queued → summary, else
+  dashboard). The reload after "Stop" can be served while `finishBulk` is
+  still clearing the queues, so the screen switches away from the
+  server-rendered dashboard — which failed the stop test on CI in Chromium
+  *and* WebKit while passing locally. `BulkPage.stop(spio)` therefore waits
+  for `spio.bulkStatus()` (support route `GET bulk-status`, the same
+  `QueueController::getStartupData()` the JS reads) to report both queues
+  clear, and only then asserts the dashboard.
+- **Never `waitForURL` for a page that reloads the SAME url.** It resolves
+  immediately when the pattern already matches the current URL, so the wait
+  returns before the reload starts and everything after it races the
+  navigation (this produced both CI failures on 2026-09-17: a panel
+  assertion straddling the reload, and a `page.goto` refused with
+  "interrupted by another navigation"). Wait for the document instead:
+  `withSelfReload(page, action)` from `helpers/spio.ts` arms
+  `page.waitForEvent('load')` before running the action. It applies to the
+  screens that really reload themselves: bulk stop/finish, and the
+  onboarding/quick-tour redirects (the onboarding screen *is* the settings
+  page). `wp-login.php` navigates to a different URL, so there a paired
+  `waitForURL` is fine.
+- **Check that a navigation actually happens before waiting for one.**
+  API-key validation on the settings overview looks like a form submit but
+  is an in-place AJAX post (`admin-ajax.php` with `display_part`); the
+  notices render without any navigation. A `waitForURL` there waited for
+  nothing, and a `load` wait times out. Wait on the AJAX response
+  (`page.waitForResponse`, armed before the click), as `settings.spec.ts`
+  does.
+- Assert a panel with `BulkPage.expectPanel()`, which polls "active AND
+  visible" as ONE predicate. Two separate assertions can straddle a panel
+  switch and report a nonsensical state (class present, then hidden with
+  the class gone).
 - Front-end delivery specs create their own unauthenticated
   `browser.newContext()` to view a post as a visitor, and must switch
   `deliverWebp`/`useCDN` back off in `afterEach` (the seed does not touch
