@@ -25,7 +25,28 @@ FROM php:${PHP_VERSION}-cli
 #                            via wp_generate_attachment_metadata(), which
 #                            needs a WP image editor (GD).
 #   - curl / ca-certificates: WP-CLI download + HTTPS to the SVN endpoint.
-RUN apt-get update && apt-get install -y --no-install-recommends \
+#
+# ARCHIVED BASE (PHP 7.4): php:7.4-cli is built on Debian 11 "bullseye",
+# whose long-term support has ended. deb.debian.org still lists
+# bullseye-security package versions but returns 404 for the files
+# (2026-09-16: ca-certificates, curl), so `apt-get install` fails and the
+# PHP 7.4 image cannot be built. For bullseye only, apt is pointed at
+# archive.debian.org, which carries `bullseye` + `bullseye-updates` (it has
+# NO bullseye-security yet — listing it would make `apt-get update` fail).
+# Archived Release files are past their Valid-Until date, hence
+# Check-Valid-Until=false. Fine for a disposable test runner; images on
+# newer Debian releases (PHP 8.x) are left untouched. The sources file is
+# written from scratch rather than edited in place.
+RUN . /etc/os-release \
+    && if [ "$VERSION_CODENAME" = "bullseye" ]; then \
+        printf '%s\n' \
+            'deb http://archive.debian.org/debian bullseye main' \
+            'deb http://archive.debian.org/debian bullseye-updates main' \
+            > /etc/apt/sources.list \
+        && rm -f /etc/apt/sources.list.d/* \
+        && echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99archived-release; \
+    fi \
+    && apt-get update && apt-get install -y --no-install-recommends \
         subversion \
         default-mysql-client \
         git \
