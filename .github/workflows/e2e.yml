@@ -5,6 +5,8 @@
 # One job per browser engine, in parallel on separate runners (a serial
 # three-engine run would take ~35 min). The screenshot regression project
 # (`visual`, Chromium-only baselines) rides along in the Chromium job.
+# Chromium and Firefox gate the push; the WebKit job reports without
+# blocking (see continue-on-error below).
 name: E2E (browser)
 
 on:
@@ -23,6 +25,16 @@ jobs:
     name: Playwright / ${{ matrix.engine }} / WP latest
     runs-on: ubuntu-latest
     timeout-minutes: 30
+
+    # WebKit reports but does not gate. Playwright's Linux WebKit dies in
+    # ways that have nothing to do with SPIO when the runner is starved
+    # (2 cores / 7 GB): a web process killed mid-navigation ("WebKit
+    # encountered an internal error"), or the SPIO worker script refused
+    # "due to access control checks" — ~1 fault per 7 runs with the
+    # container capped locally, none unconstrained. Chromium and Firefox
+    # still gate every push, and a red WebKit job stays visible in the run.
+    # This is NOT a retry: the failing test still fails (retries: 0).
+    continue-on-error: ${{ matrix.engine == 'webkit' }}
 
     strategy:
       # Every engine reports its own verdict; one red engine must not hide

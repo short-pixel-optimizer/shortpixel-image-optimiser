@@ -63,7 +63,13 @@ export default defineConfig({
 		// Post-mortem material only when something went wrong.
 		trace: 'retain-on-failure',
 		screenshot: 'only-on-failure',
-		video: 'retain-on-failure',
+		// Recording every test and throwing the file away on success costs
+		// memory and CPU for the whole run. On a 2-core / 7 GB CI runner that
+		// overhead is a plausible trigger for WebKit's web process dying
+		// mid-navigation ("WebKit encountered an internal error", CI
+		// 2026-09-16) — unproven, but traces already carry the post-mortem
+		// material, so the video is not worth the pressure there.
+		video: isCI ? 'off' : 'retain-on-failure',
 		actionTimeout: 15_000,
 		navigationTimeout: 30_000,
 	},

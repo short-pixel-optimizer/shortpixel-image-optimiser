@@ -538,6 +538,19 @@ an engine is allowed only for a proven ENGINE limitation that has nothing
 to do with SPIO, and every such skip needs a sentinel in
 `specs/engine-limits.spec.ts` that goes red once the limitation is gone.
 
+- **Playwright's Linux WebKit gets flaky when the machine is starved.**
+  Observed faults, all engine-level and none reproducible on an
+  unconstrained machine: `page.goto` failing with "WebKit encountered an
+  internal error" (the web process died; seen on a GitHub runner), and a
+  `pageerror` claiming SPIO's worker script was blocked "due to access
+  control checks" (reproduced locally only with the Playwright container
+  capped at 2 GB). Videos are therefore not recorded on CI (`video: 'off'`
+  when `CI` is set; traces still are). If one of these appears, check
+  whether it reproduces unconstrained before treating it as a SPIO bug —
+  but never paper over it with a retry. Because of this, the CI WebKit job
+  is `continue-on-error`: it reports but does not gate, while Chromium and
+  Firefox do. A WebKit failure still shows red in the run and is still
+  worth reading — treat a repeatable one as a real finding.
 - Known engine limitation: Playwright's Linux WebKit hangs in layout on
   WordPress core's attachment edit screen (`post.php?action=edit` for an
   attachment). It reproduces with SPIO deactivated, so `ai-editor.spec.ts`
