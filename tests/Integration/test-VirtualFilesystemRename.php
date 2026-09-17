@@ -9,7 +9,9 @@
  *
  * S3-Uploads by Human Made is GitHub-only (no wp.org zip), and SPIO's
  * detection is a bare class_exists('\S3_Uploads\Plugin') — so a class
- * alias is a faithful stand-in for the dispatcher/adapter wiring. The
+ * alias of the empty user-defined SPIO_Test_S3_Uploads_Plugin_Stub
+ * (bottom of this file) is a faithful stand-in for the dispatcher/adapter
+ * wiring on every supported PHP version. The
  * VirtualFileSystem adapter treats EVERY file as VIRTUAL_STATELESS for
  * this offloader (virtual-filesystem.php:76-79).
  *
@@ -159,7 +161,13 @@ class VirtualFilesystemRenameTest extends SPIO_IntegrationTestCase {
 
 	private function activateS3Uploads(): Offloader {
 		if ( ! class_exists( '\S3_Uploads\Plugin' ) ) {
-			class_alias( \stdClass::class, 'S3_Uploads\Plugin' );
+			// Alias a USER-DEFINED stub (declared at the bottom of this file),
+			// never an internal class: class_alias() only accepts internal
+			// classes such as \stdClass from PHP 8.3. PHP 7.4 refuses with a
+			// warning and returns false (the class never exists, so the
+			// dispatcher fell through to InfiniteUploads — CI PHP 7.4 failure,
+			// 2026-09-16), and PHP 8.0-8.2 throw a fatal ValueError.
+			class_alias( SPIO_Test_S3_Uploads_Plugin_Stub::class, 'S3_Uploads\Plugin' );
 		}
 		return $this->rebootOffloader();
 	}
@@ -250,4 +258,14 @@ class VirtualFilesystemRenameTest extends SPIO_IntegrationTestCase {
 			'PIN #70: no local file was created under the new name — and no remote rename happened either (no handler exists).'
 		);
 	}
+}
+
+/**
+ * Empty stand-in for Human Made S3-Uploads' `\S3_Uploads\Plugin`, aliased by
+ * VirtualFilesystemRenameTest::activateS3Uploads(). It must be a USER-DEFINED
+ * class: class_alias() rejects internal classes (e.g. \stdClass) before
+ * PHP 8.3.
+ */
+if ( ! class_exists( 'SPIO_Test_S3_Uploads_Plugin_Stub', false ) ) {
+	final class SPIO_Test_S3_Uploads_Plugin_Stub {}
 }
