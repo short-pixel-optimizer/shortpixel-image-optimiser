@@ -218,6 +218,7 @@ class wpOffload
 		}
 
 		add_action('shortpixel/image/optimised', array($this, 'image_upload'), 10);
+		add_filter('shortpixel/image/replace_files', array($this, 'replaceFiles'), 10, 4);
 		add_action('shortpixel/image/after_restore', array($this, 'image_restore'), 10, 3); // hit this when restoring.
 		add_action('shortpixel-thumbnails-before-regenerate', array($this, 'remove_remote'), 10);
 		add_action('shortpixel/converter/prevent-offload', array($this, 'preventOffload'), 10);
@@ -447,6 +448,136 @@ class wpOffload
 
 		return true;
 
+	}
+
+	/**
+	 * Rename the provider objects belonging to an attachment.
+	 *
+	 * The optimizer already has the complete source file list, including
+	 * thumbnails and WebP/AVIF companions. Accept that list directly so the
+	 * provider rename does not need to rediscover files that may not exist
+	 * locally on remove-local-files installations.
+	 *
+	 * @param bool  $applied   Shortcircuit if returned true, regulare replace will not happen.
+	 * @param array $sourceFiles   Source file objects keyed by the optimizer.
+	 * @param int   $attachment_id WordPress attachment id.
+	 * @param string $newFileBase  New filename base without an extension.
+	 * @return bool True when all remote objects were renamed or no rename was needed.
+	 */
+	public function replaceFiles($applied, $sourceFiles, $imageModel, $newFileBase)
+	{
+		$attachment_id = $imageModel->get('id');
+		$item = $this->getItemById($attachment_id);
+		if (false === $item || ! $item->served_by_provider(true) || ! is_array($sourceFiles)) {
+			return false;
+		}
+
+		$objects = $item->objects();
+		$updated_objects = $objects;
+		$renames = [];
+
+        if (isset($sourceFiles[$imageModel->getImageKey('original')])) {
+            $baseFileObj = $sourceFiles[$imageModel->getImageKey('original')];
+        } else {
+            $baseFileObj = $sourceFiles[$imageModel->getImageKey('main')];
+        }
+
+		$fileBaseName = $baseFileObj->getFileBase();
+
+		foreach ($sourceFiles as $sourceFile) {
+			if (! is_object($sourceFile)) {
+				continue;
+			}
+
+			if (method_exists($sourceFile, 'getFileName')) {
+				$sourceFilename = $sourceFile->getFileName();
+			} elseif (method_exists($sourceFile, 'getFilename')) {
+				$sourceFilename = $sourceFile->getFilename();
+			} else {
+				continue;
+			}
+
+			$sourceBase = pathinfo($sourceFilename, PATHINFO_FILENAME);
+			$targetFilename = str_replace($sourceBase, $newFileBase, $sourceFilename);
+			$renames[basename($sourceFilename)] = $targetFilename;
+		}
+
+		$keyRenames = [];
+		foreach ($objects as $objectKey => $object) {
+			if (empty($object['source_file'])) {
+				continue;
+			}
+
+			$sourceFilename = basename($object['source_file']);
+			if (! isset($renames[$sourceFilename])) {
+				continue;
+			}
+
+			$oldKey = $item->provider_key($objectKey);
+			$sourceDirectory = dirname($object['source_file']);
+			$updated_objects[$objectKey]['source_file'] = ('.' === $sourceDirectory)
+				? $renames[$sourceFilename]
+				: trailingslashit($sourceDirectory) . $renames[$sourceFilename];
+			$newFilename = basename($updated_objects[$objectKey]['source_file']);
+			$lastSeparator = strrpos($oldKey, '/');
+			
+			$filebase = trailingslashit(pathinfo($oldKey, PATHINFO_DIRNAME));
+
+			//$base_filename = basename($oldKey);
+		    $target_filename = str_replace(
+            $fileBaseName,
+            $newFileBase,
+            basename($oldKey)
+        );
+		    
+			$newKey = $filebase . str_replace(basename($oldKey), $target_filename, basename($oldKey));
+
+			if ($oldKey !== $newKey) {
+				$keyRenames[] = [$oldKey, $newKey];
+			}
+		}
+
+		if (empty($keyRenames)) {
+			return true;
+		}
+
+		$client = $this->as3cf->get_provider_client($item->region(), true);
+		$copyRequests = [];
+		foreach ($keyRenames as $keys) {
+			$copyRequests[] = [
+				'Bucket' => $item->bucket(),
+				'Key' => $keys[1],
+				'CopySource' => $item->bucket() . '/' . $keys[0],
+				'MetadataDirective' => 'COPY',  // Keep same ACL / Permissions
+				'ACL'        => 'public-read',
+			];
+		}
+Log::addTemp('Copy requests', $copyRequests);
+		$failures = $client->copy_objects($copyRequests);
+		if (! empty($failures)) {
+			Log::addError('Remote file rename failed; old provider objects were left untouched', $failures);
+			return false;
+		}
+
+		$client->delete_objects([
+			'Bucket' => $item->bucket(),
+			'Delete' => ['Objects' => array_map(function ($keys) {
+				return ['Key' => $keys[0]];
+			}, $keyRenames)],
+		]);
+
+		$item->set_objects($updated_objects);
+		$primaryKey = $this->getMediaClass()::primary_object_key();
+		if (isset($updated_objects[$primaryKey]['source_file'])) {
+			$path = $item->path();
+			$originalPath = $item->original_path();
+			$newFilename = basename($updated_objects[$primaryKey]['source_file']);
+			$item->set_path(trailingslashit(dirname($path)) . $newFilename);
+			$item->set_original_path(trailingslashit(dirname($originalPath)) . $newFilename);
+		}
+		$item->save();
+
+		return true;
 	}
 
 

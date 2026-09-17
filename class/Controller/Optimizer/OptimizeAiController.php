@@ -888,29 +888,35 @@ class OptimizeAiController extends OptimizerBase
         }
 
         $copySource = [];  // Copy now, delete the source files after metadata redo, because some plugins (WPML) can deny deletion otherwise
-        foreach ($sourceFiles as $key => $sourceFile) {
-            $targetFileObj = isset($targetFileObjs[$key]) ? $targetFileObjs[$key] : null;
-            if (is_null($targetFileObj)) {
-                Log::addError('Source/Target mismatch in replacements. This should not happen!');
-                continue;
-            }
+        $applied = apply_filters('shortpixel/image/replace_files', false, $sourceFiles, $imageModel, $newFileBase);
 
-            if (false === $args['dry_run']) {
-                $result = $sourceFile->copy($targetFileObj);
-                if (true === $result) {
-                    $copySource[] = $sourceFile;
+        if (false === $applied)
+        {
+            foreach ($sourceFiles as $key => $sourceFile) {
+                $targetFileObj = isset($targetFileObjs[$key]) ? $targetFileObjs[$key] : null;
+                if (is_null($targetFileObj)) {
+                    Log::addError('Source/Target mismatch in replacements. This should not happen!');
+                    continue;
                 }
-            } else {
-                Log::addInfo('[Dry-run] Would have moved file : ' . $sourceFile->getFullPath() . ' to ' . $targetFileObj->getFullPath());
-            }
 
-            /*    if (false === $args['recent_upload']) {
                 if (false === $args['dry_run']) {
-                    $this->createSymlink($sourceFile, $targetFileObj);
-                } else {
-                    Log::addInfo('[Dry-run] Would have symlinked ' . $sourceFile->getFullPath()  . ' to ' . $targetFileObj->getFullpath());
+                    $result = $sourceFile->copy($targetFileObj);
+                    if (true === $result) {
+                        $copySource[] = $sourceFile;
+                    }
                 }
-            } */
+                else {
+                    Log::addInfo('[Dry-run] Would have moved file : ' . $sourceFile->getFullPath() . ' to ' . $targetFileObj->getFullPath());
+                }
+
+                /*    if (false === $args['recent_upload']) {
+                    if (false === $args['dry_run']) {
+                        $this->createSymlink($sourceFile, $targetFileObj);
+                    } else {
+                        Log::addInfo('[Dry-run] Would have symlinked ' . $sourceFile->getFullPath()  . ' to ' . $targetFileObj->getFullpath());
+                    }
+                } */
+            }
         }
 
         $this->replaceMetaData($item_id, $base_filename, $newFileBase, $args);
@@ -953,7 +959,7 @@ class OptimizeAiController extends OptimizerBase
             Log::addInfo('ReplaceArray ', $replaceArray);
         }
 
-        if (isset($copySource) && is_array($copySource)) {
+        if (isset($copySource) && is_array($copySource) && false === $applied) {
             foreach ($copySource as $fileItem) {
                 $fileItem->delete();
             }
@@ -966,14 +972,11 @@ class OptimizeAiController extends OptimizerBase
     }
 
     /**
-     * Entry point for the manual "Change Filename" AJAX action (media/replaceFileName).
-     *
      * Derives the new file base via pathinfo(basename(), PATHINFO_FILENAME) —
      * this strips any directory prefix (neutralising path traversal) AND the
      * extension, so the rename can never change a file's extension. Calls
      * replaceFiles() with recent_upload=true, deliberately bypassing the
      * usage-count guard: the user explicitly asked for the rename, including
-     * for images already referenced in content (see the guard NOTE on
      * replaceFiles()). Fully decoupled from AI state — works on attachments
      * that never had AI data.
      *
