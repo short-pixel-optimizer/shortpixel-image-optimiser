@@ -1408,12 +1408,12 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         $webp = $this->getWebp();
         $avif = $this->getAvif();
 
-        if ($webp !== false && $webp->exists() && $this->getExtension() !== 'webp')
+        if ($webp !== false && is_object($webp) && $webp->exists() && $this->getExtension() !== 'webp')
         {
           $webp->delete();
         }
 
-        if ($avif !== false && $avif->exists() && $this->getExtension() !== 'avif')
+        if ($avif !== false && is_object($avif) && $avif->exists() && $this->getExtension() !== 'avif')
         {
            $avif->delete();
         }
