@@ -894,7 +894,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 	  protected function setAvif()
 	  {
 	      $avif = $this->getImageType('avif');
-	      if ($avif !== false && $avif->exists())
+	      if ($avif !== false && is_object($avif) && $avif->exists())
         {
 	        $this->setMeta('avif', $avif->getFileName() );
         }
