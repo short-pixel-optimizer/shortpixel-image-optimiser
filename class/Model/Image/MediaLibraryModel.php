@@ -3716,6 +3716,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
          return; */
 		$searchUnlisted = \wpSPIO()->settings()->optimizeUnlisted;
 
+		// Don't do this in trustedMode, many file operations here. 
+		if (true === $this->checkTrustedMode())
+		{
+			return;
+		}
+
+
 		// Don't check this more than once per run-time.
 		if (in_array($this->get('id'), self::$unlistedChecked) && $check_only === false) {
 			return;

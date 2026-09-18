@@ -880,7 +880,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 	  protected function setWebp()
 	  {
 	      $webp = $this->getImageType('webp');
-	      if ($webp !== false && $webp->exists())
+	      if ($webp !== false && is_object($webp) && $webp->exists())
         {
 	        $this->setMeta('webp', $webp->getFileName() );
         }
