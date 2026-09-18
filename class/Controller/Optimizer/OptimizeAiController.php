@@ -15,6 +15,7 @@ use ShortPixel\Controller\Api\ApiController;
 use ShortPixel\Controller\Queue\Queue;
 use ShortPixel\Controller\Queue\QueueItems as QueueItems;
 use ShortPixel\Controller\Backup\BackupController;
+use ShortPixel\External\Offload\Offloader;
 use ShortPixel\Model\AiDataModel;
 use ShortPixel\Model\Queue\QueueItemResult;
 use ShortPixel\Replacer\Replacer;
@@ -785,6 +786,19 @@ class OptimizeAiController extends OptimizerBase
 
         $args = wp_parse_args($args, $defaults);
 
+        $imageModel = $qItem->imageModel;
+        $item_id = $qItem->item_id;
+
+        if ($imageModel->is_virtual())
+        {
+            $supported = $this->isVirtualSupported(); 
+            if (false === $supported)
+            {
+                 Log::addInfo('Offloaded item not supported for renaming -' . $item_id ); 
+                 return false; 
+            }
+        }
+
         // If recent upload is true, bypass the check if the image is used. 
         if (false === $args['recent_upload']) {
             $url = $args['url'];
@@ -809,8 +823,6 @@ class OptimizeAiController extends OptimizerBase
             }
         }
 
-        $imageModel = $qItem->imageModel;
-        $item_id = $qItem->item_id;
 
         $files = $imageModel->getAllFiles();
 
@@ -890,7 +902,12 @@ class OptimizeAiController extends OptimizerBase
         $copySource = [];  // Copy now, delete the source files after metadata redo, because some plugins (WPML) can deny deletion otherwise
         $applied = apply_filters('shortpixel/image/replace_files', false, $sourceFiles, $imageModel, $newFileBase);
 
-        if (false === $applied)
+        if (false === $applied && true === $imageModel->is_virtual())
+        {
+            Log::addError('Virtual system fails renaming files, bailing out' . $item_id, $sourceFiles);
+            return false; 
+        }
+        elseif (false === $applied)
         {
             foreach ($sourceFiles as $key => $sourceFile) {
                 $targetFileObj = isset($targetFileObjs[$key]) ? $targetFileObjs[$key] : null;
@@ -917,6 +934,12 @@ class OptimizeAiController extends OptimizerBase
                     }
                 } */
             }
+        }
+
+        if (count($copySource) === 0)
+        {
+             Log::addError('Copy failed to copy anything. Bailing out' . $item_id, $sourceFiles); 
+             return false; 
         }
 
         $this->replaceMetaData($item_id, $base_filename, $newFileBase, $args);
@@ -964,9 +987,6 @@ class OptimizeAiController extends OptimizerBase
                 $fileItem->delete();
             }
         }
-
-
-
 
         return true;
     }
@@ -1211,6 +1231,8 @@ class OptimizeAiController extends OptimizerBase
         $prevAiData = $args['prevAiData'];
 
         $imageModel = $qItem->imageModel;
+
+
 
         $aiPreserve = \wpSPIO()->settings()->aiPreserve;
         // Determine content-replacement mode: 'missing' or 'overwrite'.
@@ -1541,6 +1563,12 @@ class OptimizeAiController extends OptimizerBase
 
         list($dataItems, $generated) = $this->formatGenerated($generated, $current, $original);
 
+        // If offloaded, prevent renaming for system we don't have support for atm.
+        $is_renameable = true;
+        if (true === $imageModel->is_virtual())
+        {
+            $is_renameable = $this->isVirtualSupported();
+        }
 
         $view = new ViewController();
         $view->addData([
@@ -1549,6 +1577,7 @@ class OptimizeAiController extends OptimizerBase
             'result_alt' => $generated['alt'],
             'has_data' => ($status == AiDataModel::AI_STATUS_GENERATED) ? true : false,
             'is_processable' => $aiModel->isProcessable(),
+            'is_renameable' => $is_renameable, 
             'processable_reason' => $aiModel->getProcessableReason(),
             'processable_status' => $aiModel->getProcessableReason(true),
             'image_url' => $image_url,
@@ -1634,5 +1663,21 @@ class OptimizeAiController extends OptimizerBase
         }
 
         return [$dataItems, $generated];
+    }
+
+    private function isVirtualSupported() : bool
+    {
+            $offloader = Offloader::getInstance(); 
+            $offload_name = $offloader->getOffloadName(); 
+            if (is_null($offload_name) || $offload_name === 'wp-offload')
+            {
+                $is_renameable = true; 
+            }
+            else
+            {
+                $is_renameable = false; 
+            }
+
+            return $is_renameable;
     }
 } // class 

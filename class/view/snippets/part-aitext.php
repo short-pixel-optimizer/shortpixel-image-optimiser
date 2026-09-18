@@ -19,6 +19,7 @@ $isDifferent = $this->data['isDifferent'];
 $dataItems = implode(', ',$this->data['dataItems']);
 
 $is_processable = $this->data['is_processable']; 
+$is_renameable = $this->data['is_renameable'];
 $processable_reason = $this->data['processable_reason'];
 $processable_status = $this->data['processable_status'];
 $filename = $this->data['filename'];
@@ -91,7 +92,7 @@ elseif (false === $has_data):
 
 <?php endif; ?>
 
-
+<?php if (true === $is_renameable) : ?> 
 <div class="shortpixel-ai-replace-file hidden">
 	<?php _e('File Name :', 'shortpixel-image-optimiser'); ?>
 	<input type="text" name="filename_replace" value="<?php echo esc_attr($filename); ?>" 
@@ -101,3 +102,4 @@ elseif (false === $has_data):
 	<button type="button" class='button button-secondary' name="filename_replace_submit" value="1"><?php _e('Change Filename') ?></button>
 	</span>
 </div>
+<?php endif; ?> 

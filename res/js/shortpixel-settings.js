@@ -673,7 +673,7 @@ class ShortPixelSettings {
 	{
 		event.preventDefault();
 		var chatBot = document.getElementById('chatbase-bubble-button');
-		var event = new CustomEvent('click'); 
+		var event = new MouseEvent('click', { bubbles: true, cancelable: true });  
 		chatBot.dispatchEvent(event);
 	}
 
@@ -1037,10 +1037,14 @@ class ShortPixelSettings {
 		formData.append('screen_action', form_action);
 		formData.append('form-nonce', formData.get('nonce'));
 
-
 		// Special Actions
-		let formaction_parsed = URL.parse(form.action);
-		if (formaction_parsed.searchParams && formaction_parsed.searchParams.has('sp-action')) {
+		let formaction_parsed = null;
+		try {
+			formaction_parsed = new URL(form.action);
+		} catch (error) {
+			// form.action not a parsable URL - no special action to extract.
+		}
+		if (formaction_parsed !== null && formaction_parsed.searchParams.has('sp-action')) {
 			formData.set('screen_action', formaction_parsed.searchParams.get('sp-action'));
 		}
 

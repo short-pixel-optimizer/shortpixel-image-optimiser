@@ -328,7 +328,8 @@ class ShortPixelOnboarding
        this.steps[item_number].classList.add('active');
        if (typeof this.steps[item_number].dataset.screen !== 'undefined')
        {
-           var ev = new CustomEvent('click');
+           var ev = new MouseEvent('click', { bubbles: true, cancelable: true }); 
+
            var menuItem = this.root.querySelector('menu ul [data-menu-link="' + this.steps[item_number].dataset.screen + '"]');
            if (menuItem !== null)
            {

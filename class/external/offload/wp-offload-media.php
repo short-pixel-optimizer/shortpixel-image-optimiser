@@ -142,9 +142,8 @@ class wpOffload
 	 */
 	public static function getInstance($as3cf)
 	{
-		if (is_null(self::$instance))
-		{
-		 	self::$instance = new wpOffload($as3cf);
+		if (is_null(self::$instance)) {
+			self::$instance = new wpOffload($as3cf);
 		}
 
 		return self::$instance;
@@ -226,7 +225,7 @@ class wpOffload
 
 		add_filter('as3cf_attachment_file_paths', array($this, 'add_webp_paths'), 10, 3);
 
-	//	add_filter('as3cf_remove_source_files_from_provider', array($this, 'remove_webp_paths'));
+		//	add_filter('as3cf_remove_source_files_from_provider', array($this, 'remove_webp_paths'));
 
 		add_filter('as3cf_pre_update_attachment_metadata', array($this, 'preventUpdateMetaData'), 10, 4);
 		add_filter('as3cf_pre_handle_item_upload', array($this, 'preventInitialUploadHandler'), 10, 3);
@@ -300,7 +299,7 @@ class wpOffload
 	 */
 	public function isActive()
 	{
-		 return $this->active && $this->offloading;
+		return $this->active && $this->offloading;
 	}
 
 	/**
@@ -405,13 +404,12 @@ class wpOffload
 
 		$result = $this->remove_remote($id);
 
-		if (false === $this->isActive())
-		{
-			return false; 
+		if (false === $this->isActive()) {
+			return false;
 		}
 
 		// If there are excluded sizes, there are not in backups. might not be left on remote, or ( if delete ) on server, so just generate the images and move them.
-		$mediaItem->wpCreateImageSizes();		
+		$mediaItem->wpCreateImageSizes();
 		$this->image_upload($mediaItem);
 	}
 
@@ -447,7 +445,6 @@ class wpOffload
 
 
 		return true;
-
 	}
 
 	/**
@@ -476,11 +473,11 @@ class wpOffload
 		$updated_objects = $objects;
 		$renames = [];
 
-        if (isset($sourceFiles[$imageModel->getImageKey('original')])) {
-            $baseFileObj = $sourceFiles[$imageModel->getImageKey('original')];
-        } else {
-            $baseFileObj = $sourceFiles[$imageModel->getImageKey('main')];
-        }
+		if (isset($sourceFiles[$imageModel->getImageKey('original')])) {
+			$baseFileObj = $sourceFiles[$imageModel->getImageKey('original')];
+		} else {
+			$baseFileObj = $sourceFiles[$imageModel->getImageKey('main')];
+		}
 
 		$fileBaseName = $baseFileObj->getFileBase();
 
@@ -520,16 +517,16 @@ class wpOffload
 				: trailingslashit($sourceDirectory) . $renames[$sourceFilename];
 			$newFilename = basename($updated_objects[$objectKey]['source_file']);
 			$lastSeparator = strrpos($oldKey, '/');
-			
+
 			$filebase = trailingslashit(pathinfo($oldKey, PATHINFO_DIRNAME));
 
 			//$base_filename = basename($oldKey);
-		    $target_filename = str_replace(
-            $fileBaseName,
-            $newFileBase,
-            basename($oldKey)
-        );
-		    
+			$target_filename = str_replace(
+				$fileBaseName,
+				$newFileBase,
+				basename($oldKey)
+			);
+
 			$newKey = $filebase . str_replace(basename($oldKey), $target_filename, basename($oldKey));
 
 			if ($oldKey !== $newKey) {
@@ -552,7 +549,6 @@ class wpOffload
 				'ACL'        => 'public-read',
 			];
 		}
-Log::addTemp('Copy requests', $copyRequests);
 		$failures = $client->copy_objects($copyRequests);
 		if (! empty($failures)) {
 			Log::addError('Remote file rename failed; old provider objects were left untouched', $failures);
@@ -838,9 +834,7 @@ Log::addTemp('Copy requests', $copyRequests);
 						}
 					}
 				}
-
 			}
-
 		}
 
 		return $source_id;
@@ -880,17 +874,15 @@ Log::addTemp('Copy requests', $copyRequests);
 			return false;
 		}
 
-		if (false === is_null($imageModel) && is_object($imageModel))
-		{
-			$size = $imageModel->get('size'); 
+		if (false === is_null($imageModel) && is_object($imageModel)) {
+			$size = $imageModel->get('size');
 			$name = $imageModel->get('name');
-			
+
 			// First trick, try to find the ImageModel Thumbnail name from the paths cache. 
-			if (null !== $size && isset(static::$paths[$source_id]) && isset(static::$paths[$source_id][$size]))
-			{
+			if (null !== $size && isset(static::$paths[$source_id]) && isset(static::$paths[$source_id][$size])) {
 				return static::$paths[$source_id][$size];
 			}
-			
+
 			/*elseif (null !== $name && isset(static::$paths[$source_id]) && isset(static::$paths[$source_id][$name])) 
 			{
 				return static::$paths[$source_id][$name];
@@ -903,13 +895,10 @@ Log::addTemp('Copy requests', $copyRequests);
 			
 		} */
 
-		if (isset(self::$paths[$source_id]))
-		{
-			$base_url = basename($url); 
-			foreach(self::$paths[$source_id] as $key => $path)
-			{
-				if (true === str_contains($path, $base_url))
-				{
+		if (isset(self::$paths[$source_id])) {
+			$base_url = basename($url);
+			foreach (self::$paths[$source_id] as $key => $path) {
+				if (true === str_contains($path, $base_url)) {
 					return self::$paths[$source_id][$key];
 				}
 			}
@@ -1092,11 +1081,10 @@ Log::addTemp('Copy requests', $copyRequests);
 			return $error;
 		}
 
-		if (true === $bool)
-		{
+		if (true === $bool) {
 			Log::addDebug('Offload Prevented via bool for ' . $post_id);
 		}
-		
+
 
 		return $bool;
 	}
@@ -1210,15 +1198,13 @@ Log::addTemp('Copy requests', $copyRequests);
 			$newPaths[$size] = $path;
 
 			// If webp/avif is native, don't add them. 
-			$addWebp = $addAvif = true; 
-			if ('webp' == $file->getExtension())
-			{
-				 $addWebp = false; 
+			$addWebp = $addAvif = true;
+			if ('webp' == $file->getExtension()) {
+				$addWebp = false;
 			}
 
-			if ('avif' == $file->getExtension())
-			{
-				$addAvif = false; 
+			if ('avif' == $file->getExtension()) {
+				$addAvif = false;
 			}
 
 			$webpformat1 = $basepath . $file->getFileName() . '.webp';
@@ -1228,26 +1214,23 @@ Log::addTemp('Copy requests', $copyRequests);
 			$avifformat2 = $basepath . $file->getFileBase() . '.avif';
 
 
-			if (true === $addWebp)
-			{
+			if (true === $addWebp) {
 				if ($check_exists) {
 					if (file_exists($webpformat1))
 						$newPaths[$size . '_webp'] =  $webpformat1;
 				} else {
 					$newPaths[$size . '_webp'] =  $webpformat1;
 				}
-	
+
 				if ($check_exists) {
 					if (file_exists($webpformat2))
 						$newPaths[$size . '_webp2'] =  $webpformat2;
 				} else {
 					$newPaths[$size . '_webp2'] =  $webpformat2;
 				}
-	
 			}
 
-			if (true === $addAvif)
-			{
+			if (true === $addAvif) {
 				if ($check_exists) {
 					if (file_exists($avifformat)) {
 						$newPaths[$size . '_avif'] = $avifformat;
@@ -1255,16 +1238,15 @@ Log::addTemp('Copy requests', $copyRequests);
 				} else {
 					$newPaths[$size . '_avif'] = $avifformat;
 				}
-	
+
 				if ($check_exists) {
 					if (file_exists($avifformat2)) {
 						$newPaths[$size . '_avif2'] = $avifformat2;
 					}
 				} else {
 					$newPaths[$size . '_avif2'] = $avifformat2;
-				}	
+				}
 			}
-
 		}
 
 		return $newPaths;
@@ -1290,8 +1272,7 @@ Log::addTemp('Copy requests', $copyRequests);
 	 */
 	public function add_webp_paths($paths, $attachment_id, $meta)
 	{ // @todo Check if this works.
-		if (isset(self::$paths[$attachment_id]))
-		{
+		if (isset(self::$paths[$attachment_id])) {
 			return self::$paths[$attachment_id];
 		}
 
