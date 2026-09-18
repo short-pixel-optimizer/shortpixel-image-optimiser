@@ -157,14 +157,14 @@ if ( ! defined( 'ABSPATH' ) ) {
         <span><b><?php echo esc_html($this->formatNumber($quotaData->ai->remaining, 0)) ?></b></span>
 
       </p>
-
+<!--
       <p><span><?php esc_html_e('Your monthly plan','shortpixel-image-optimiser'); ?></span>
          <span><b><?php echo esc_html($quotaData->monthly->text) ?></b> |
               <?php esc_html_e('Used:', 'shortpixel-image-optimiser'); ?> <b><?php echo esc_html($this->formatNumber($quotaData->ai->consumed, 0)); ?></b> |
               <?php esc_html_e('Remaining:', 'shortpixel-image-optimiser'); ?> <b><?php echo esc_html($this->formatNumber($quotaData->ai->remaining, 0)); ?></b>
           </span>
       </p>
-
+      -->
       <?php if (false === $quotaData->AIUnlimited): ?>
       <p>				
         <span>
