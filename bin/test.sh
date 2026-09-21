@@ -7,12 +7,12 @@
 # Usage:
 #     bin/test.sh                                  # Every testsuite on PHP 8.3 (matches CI default)
 #     bin/test.sh --php 7.4                        # Same, but on PHP 7.4
-#     bin/test.sh --php 8.5 --testsuite Model      # One suite on PHP 8.5
+#     bin/test.sh --php 8.5 --testsuite model      # One suite on PHP 8.5
 #     bin/test.sh --matrix                         # Run everything on 7.4, 8.3, AND 8.5 in sequence
-#     bin/test.sh --testsuite Model                # One testsuite
+#     bin/test.sh --testsuite model                # One testsuite (names are case-sensitive)
 #     bin/test.sh --testsuite External             # One testsuite
 #     bin/test.sh --filter test_something          # One test method
-#     bin/test.sh tests/Model/test-ImageModel.php  # One test file
+#     bin/test.sh --testsuite model --filter ImageModelTest   # One file, by CLASS name
 #     bin/test.sh --integration                    # Integration suite (phpunit-integration.xml)
 #     bin/test.sh --integration --php 7.4          # Integration suite on PHP 7.4
 #     bin/test.sh --matrix --integration           # Integration suite on 7.4, 8.3 AND 8.5
@@ -90,6 +90,41 @@ if [ "${1:-}" = "--matrix" ]; then
         exit 1
     fi
     exit 0
+fi
+
+# --verify: prove the toolchain actually works before trusting any other
+# result. Runs the smallest unit suite and REQUIRES a real passing test
+# run — it is not satisfied by exit code 0 alone, because PHPUnit answers
+# an unmatched --testsuite/--filter with "No tests executed!" and exit 0.
+# Intended as the first command a new contributor (or an AI agent) runs.
+if [ "${1:-}" = "--verify" ]; then
+    shift
+    echo "==> Verifying the test environment (Docker + MySQL + WP test framework)."
+    echo "    First run on a cold machine takes several minutes; later runs are seconds."
+    echo ""
+    VERIFY_LOG=$(mktemp)
+    VERIFY_RC=0
+    "$0" --testsuite "SPIO Main" "$@" >"$VERIFY_LOG" 2>&1 || VERIFY_RC=$?
+    tail -n 15 "$VERIFY_LOG"
+    VERIFY_OUT=$(cat "$VERIFY_LOG")
+    VERIFY_SAW_TESTS=0
+    case "$VERIFY_OUT" in
+        *"OK ("*|*"OK, but"*) VERIFY_SAW_TESTS=1 ;;
+    esac
+    echo ""
+    if [ "$VERIFY_RC" = "0" ] && [ "$VERIFY_SAW_TESTS" = "1" ]; then
+        echo "==> ENVIRONMENT OK — tests really ran and passed."
+        echo "    You can now use: bin/test.sh [--testsuite <name>] [--filter <TestClass>]"
+        rm -f "$VERIFY_LOG"
+        exit 0
+    fi
+    echo "!!! ENVIRONMENT NOT READY — no passing test run was produced."
+    if [ "$VERIFY_SAW_TESTS" = "0" ]; then
+        echo "    Nothing was executed (no PHPUnit result line). Check that Docker is"
+        echo "    running: docker info"
+    fi
+    echo "    Full output kept at: $VERIFY_LOG"
+    exit 1
 fi
 
 # --php <version>: pick the PHP version to run against. Defaults to 8.3.
@@ -192,6 +227,73 @@ case "$WP_VERSION" in
         exit 1
         ;;
 esac
+
+# Validate a user-supplied --testsuite against the names the phpunit
+# configs actually declare.
+#
+# WHY THIS GUARD EXISTS: PHPUnit matches testsuite names CASE-SENSITIVELY,
+# and answers an unknown name with "No tests executed!" and exit code 0.
+# That is a silent green — `--testsuite Model` (the suite is `model`)
+# reports success having run nothing, so a human or an agent can "verify"
+# a change against zero tests. Fail loudly instead, listing the real names.
+REQUESTED_SUITE=""
+NEXT_ARG_IS_SUITE=0
+for ARG in "$@"; do
+    if [ "$NEXT_ARG_IS_SUITE" = "1" ]; then
+        REQUESTED_SUITE="$ARG"
+        NEXT_ARG_IS_SUITE=0
+        continue
+    fi
+    case "$ARG" in
+        --testsuite)   NEXT_ARG_IS_SUITE=1 ;;
+        --testsuite=*) REQUESTED_SUITE="${ARG#--testsuite=}" ;;
+    esac
+done
+
+if [ -n "$REQUESTED_SUITE" ]; then
+    if [ "$INTEGRATION" = "1" ] || [ "$MS" = "1" ] || [ "$COMPAT" = "1" ] || [ "$SMOKE" = "1" ]; then
+        VALID_CONFIG="phpunit-integration.xml"
+        VALID_SUITES="Integration
+IntegrationIsolated
+Smoke
+Compat
+Multisite"
+    else
+        VALID_CONFIG="phpunit.xml.dist"
+        VALID_SUITES="Helper
+model
+External
+Controllers
+SPIO Main"
+    fi
+
+    SUITE_OK=0
+    OLD_IFS="$IFS"
+    IFS="
+"
+    for VALID in $VALID_SUITES; do
+        if [ "$VALID" = "$REQUESTED_SUITE" ]; then
+            SUITE_OK=1
+        fi
+    done
+    IFS="$OLD_IFS"
+
+    if [ "$SUITE_OK" = "0" ]; then
+        echo "!!! Unknown testsuite: '$REQUESTED_SUITE'"
+        echo "    Testsuite names are CASE-SENSITIVE. Declared in $VALID_CONFIG:"
+        OLD_IFS="$IFS"
+        IFS="
+"
+        for VALID in $VALID_SUITES; do
+            echo "      $VALID"
+        done
+        IFS="$OLD_IFS"
+        echo
+        echo "    (Without this check PHPUnit would print 'No tests executed!'"
+        echo "     and exit 0 — a green run that tested nothing.)"
+        exit 1
+    fi
+fi
 
 # --all: re-invoke ourselves twice — once for the unit suites, once for
 # the integration suite — so each pass behaves exactly like a standalone
