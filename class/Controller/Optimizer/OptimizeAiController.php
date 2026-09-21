@@ -1544,6 +1544,13 @@ class OptimizeAiController extends OptimizerBase
      * current, action, item_id, and labels. Used both as the return value of undoAltData()
      * and as the final result payload added to the queue item in HandleSuccess().
      *
+     * Also decides whether the snippet may offer a rename (0db02498): the view
+     * data carries `is_renameable`, which is true for local media and, for
+     * offloaded (virtual) images, only when isVirtualSupported() says the active
+     * offloader can handle it. part-aitext.php renders the "File Name" field and
+     * its "Change Filename" button solely under that flag, so unsupported
+     * offloaders never show a control whose rename replaceFiles() would refuse.
+     *
      * @param QueueItem $qItem The queue item for the target attachment.
      * @return array Associative array with keys: snippet, generated, original, current, action, item_id, labels.
      */
@@ -1691,7 +1698,7 @@ class OptimizeAiController extends OptimizerBase
      * InfiniteUploads (`infinite-uploads`), Bitpoke Stack (`stack`) — has no
      * rename handling, so virtual images on those installs are refused by
      * replaceFiles() and the "Change Filename" field is hidden
-     * (is_renameable=false in getAltView()). No offloader detected at all
+     * (is_renameable=false in getAltData()). No offloader detected at all
      * also counts as supported (plain local media).
      *
      * @return bool True when no offloader or WP Offload Media is active.

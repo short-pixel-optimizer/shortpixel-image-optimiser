@@ -711,20 +711,6 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 		);
 	}
 
-	/** Group a file list into its filename bases, ignoring -WxH thumbnail suffixes. */
-	private function distinctFileBases( array $files ): array {
-		return array_values(
-			array_unique(
-				array_map(
-					function ( $f ) {
-						return preg_replace( '/(-\d+x\d+)?\.\w+$/', '', $f );
-					},
-					$files
-				)
-			)
-		);
-	}
-
 	/**
 	 * PIN #74 — per-language AI renames DUPLICATE the image on disk.
 	 *
@@ -752,7 +738,8 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 	 * Flip when: #69 is fixed (siblings rewritten before/with the rename) so
 	 * nothing references the old name by deletion time, OR the rename is run
 	 * once per shared file instead of once per language. This test should
-	 * then assert ONE base, not two.
+	 * then assert that ONE physical file backs both languages — i.e. only the
+	 * last-renamed base exists and the other is gone.
 	 */
 	public function test_pin74_per_language_rename_leaves_a_full_extra_copy_on_disk() {
 		$id     = $this->uploadFixture( 'fixture-small.jpg' );
@@ -763,7 +750,6 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 
 		$old_file = get_attached_file( $id );
 		$dir      = dirname( $old_file );
-		$old_base = pathinfo( $old_file, PATHINFO_FILENAME );
 		$en_base  = 'wpml-en-' . wp_generate_password( 6, false );
 		$de_base  = 'wpml-de-' . wp_generate_password( 6, false );
 
@@ -789,31 +775,32 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 		// Language 2 now renames that SURVIVING original a second time.
 		$this->assertTrue( $this->renameAttachment( $dup_id, $de_base ), 'Sanity: the second rename must report success.' );
 
-		$files = array();
-		foreach ( (array) glob( trailingslashit( $dir ) . '*' ) as $f ) {
-			$name = wp_basename( $f );
-			foreach ( array( $old_base, $en_base, $de_base ) as $base ) {
-				if ( 0 === strpos( $name, $base ) ) {
-					$files[] = $name;
-					break;
-				}
-			}
-		}
-		$bases = $this->distinctFileBases( $files );
-		sort( $bases );
-
 		// THE PIN (second half): two languages, two complete copies on disk.
-		$this->assertSame(
-			array( $de_base, $en_base ),
-			$bases,
-			'PIN #74: fixed? Expected the two per-language copies ' . $en_base . ' + ' . $de_base
-			. ' to both exist on disk (2 languages = 2 duplicates of the same image). Got: ' . implode( ', ', $bases )
-			. '. If only one base remains, the duplication is fixed — flip this pin to a regression test.'
+		// Asserted on exact paths rather than by globbing the uploads
+		// directory: fixtures from other tests in the same run share the
+		// "fixture-small" prefix, which made a prefix-glob order-dependent.
+		$ext          = pathinfo( $old_file, PATHINFO_EXTENSION );
+		$en_main      = trailingslashit( $dir ) . $en_base . '.' . $ext;
+		$de_main      = trailingslashit( $dir ) . $de_base . '.' . $ext;
+		$en_thumbnail = trailingslashit( $dir ) . $en_base . '-150x150.' . $ext;
+		$de_thumbnail = trailingslashit( $dir ) . $de_base . '-150x150.' . $ext;
+
+		$this->assertFileExists(
+			$en_main,
+			'PIN #74: the first language left its own copy of the image on disk.'
 		);
-		$this->assertCount(
-			2,
-			$bases,
-			'PIN #74: N languages leave N physical copies of one image (here 2), multiplying disk usage.'
+		$this->assertFileExists(
+			$de_main,
+			'PIN #74: fixed? The second language no longer leaves a SEPARATE copy — one shared file would mean the duplication is gone, flip this pin to a regression test.'
+		);
+		// Not just the main file: every generated size is duplicated too.
+		$this->assertFileExists( $en_thumbnail, 'PIN #74: thumbnails are duplicated along with the main file.' );
+		$this->assertFileExists( $de_thumbnail, 'PIN #74: thumbnails are duplicated along with the main file.' );
+
+		$this->assertNotSame(
+			$en_main,
+			$de_main,
+			'PIN #74: two languages, two distinct physical files for one logical image — N languages multiply disk usage by N.'
 		);
 	}
 }
