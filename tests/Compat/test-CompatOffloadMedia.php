@@ -63,11 +63,14 @@ class CompatOffloadMediaTest extends SPIO_IntegrationTestCase {
 		if ( ! class_exists( 'Amazon_S3_And_CloudFront' ) ) {
 			$this->markTestSkipped( 'WP Offload Media is not loaded — run via bin/test.sh --compat.' );
 		}
-		// DDL BEFORE parent::set_up(): items_table() auto-installs
-		// wp_as3cf_items (CREATE TABLE auto-commits in MySQL). Running it
-		// here keeps the implicit COMMIT outside the per-test transaction
-		// that parent::set_up() opens, so fixtures never leak.
-		Media_Library_Item::items_table();
+		// Both as3cf tables (as3cf_items AND as3cf_files) are installed once
+		// in tests/Integration/bootstrap.php, before the first test
+		// transaction — see the note there on as3cf's lazy-install static,
+		// which makes a per-test call unreliable. This call is kept as a
+		// cheap safety net: get_table_name() is a no-op once the table is
+		// known to exist, and it keeps the DDL outside the per-test
+		// transaction that parent::set_up() opens.
+		Media_Library_Item::get_table_name();
 		parent::set_up();
 	}
 

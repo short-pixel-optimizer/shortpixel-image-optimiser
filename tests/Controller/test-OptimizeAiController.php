@@ -887,7 +887,11 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 		if ( function_exists( 'imagecreatetruecolor' ) ) {
 			$im = imagecreatetruecolor( 4, 4 );
 			imagejpeg( $im, $src_path );
-			imagedestroy( $im );
+			if ( PHP_VERSION_ID < 80000 ) {
+				// No-op from 8.0 and deprecated in 8.5; still frees memory on 7.4.
+				// Same guard as tests/Integration/Helpers/MockShortPixelApi.php.
+				imagedestroy( $im );
+			}
 		} else {
 			// GD unavailable — the test relies on it; skip cleanly.
 			$this->markTestSkipped( 'GD not available; cannot build pin52 fixture without it.' );
