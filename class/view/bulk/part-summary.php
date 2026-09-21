@@ -174,6 +174,9 @@ if ( ! defined( 'ABSPATH' ) ) {
           </a>
         </span>
       </p>
+      <?php else : ?>
+        <p><span><?php _e('This site is currently on the ShortPixel Unlimited AI plan, so you do not have to worry about AI credits. Enjoy!', 'shortpixel-image-optimiser'); ?></span></p>
+
       <?php endif;  ?>
 
   </div>
