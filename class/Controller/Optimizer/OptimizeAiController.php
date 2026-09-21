@@ -706,28 +706,50 @@ class OptimizeAiController extends OptimizerBase
      * filename base that also appears in a directory segment does not rename
      * the directory in the Replacer URLs.
      *
-     * BUG #52 (open, pinned in tests/Controller/test-OptimizeAiController.php
-     * as test_pin52_..._pinned_for_deferred_fix): still present after the
-     * copy+deferred-delete refactor (202c6e3c) — a failed copy() is merely
-     * omitted from $copySource (so its source survives), but no error is
-     * surfaced; renameBackup() and $replacer->replace() results are still
-     * discarded. On partial failure this method still returns true, the DB
-     * rewrite runs for ALL pairs and the user is told "Files were replaced".
-     * No rollback exists.
+     * Offloaded / virtual media (1d61b243 + 0db02498):
+     *   - Unsupported virtual offloaders (S3-Uploads, InfiniteUploads,
+     *     Bitpoke Stack — anything but WP Offload Media, see
+     *     isVirtualSupported()) are refused up front: a virtual image
+     *     returns false before anything is touched, and the "Change
+     *     Filename" field is not rendered for them (getAltView() passes
+     *     is_renameable=false to part-aitext.php). This closes BUG #70
+     *     (regression-covered in tests/Integration/test-VirtualFilesystemRename.php).
+     *   - The rename is first offered to the `shortpixel/image/replace_files`
+     *     filter (false, $sourceFiles, $imageModel, $newFileBase). An
+     *     offloader returns true when it renamed the files itself
+     *     (wpOffload::replaceFiles() does this for provider-served items);
+     *     the local copy loop is then skipped. When the filter declines and
+     *     the image is virtual, the rename is refused ("Virtual system fails
+     *     renaming files"). This replaces the old BUG #68 desync (local files
+     *     renamed behind the bucket's back / DB rewritten while nothing
+     *     moved), but the provider path has its own defects — see BUG #73.
      *
-     * BUG #68 (open, HIGH, pinned in tests/Compat/test-CompatOffloadMedia.php
-     * as test_pin68_*_pinned_for_deferred_fix): offloaded media (WP Offload
-     * Media & co) is never told about the rename — no hook fires after a
-     * successful replace and the as3cf item keeps the OLD remote key. With a
-     * local copy present the rewritten URLs 404 once served from the bucket
-     * (the earlier _wp_attached_file provider-URL corruption is gone since
-     * 202c6e3c: metadata is rewritten while the old local file still exists,
-     * so as3cf's get_attached_file filter stays out of the way);
-     * remote-only ("remove local files") is worse: every copy() fails
-     * silently (see #52) yet the DB/metadata rewrite still runs, leaving the
-     * attachment pointing at a filename that exists nowhere. Fix directions:
-     * update/re-upload the offload item after the copy loop, or refuse the
-     * rename when Offloader reports the item as offloaded.
+     * BUG #73 (open, HIGH, pinned in tests/Integration/test-ChangeFilename.php
+     * as test_pin73_*_pinned_for_deferred_fix): the "Copy failed to copy
+     * anything" bail-out below (`count($copySource) === 0` → return false)
+     * runs for EVERY path, including the two where no local copy is
+     * expected:
+     *   - `true === $applied`: the offloader already renamed (and, for
+     *     wpOffload, deleted) the remote objects, but this method returns
+     *     false BEFORE replaceMetaData(), the duplicates loop, the backup
+     *     rename and the Replacer — WP keeps the old filename everywhere
+     *     while the bucket only has the new one;
+     *   - dry_run: nothing is ever copied, so every dry-run returns false
+     *     without logging its plan (no user-facing caller today).
+     * Fix direction: only apply the empty-$copySource check when
+     * `false === $applied && false === $args['dry_run']` — but ONLY together
+     * with the wpOffload facets pinned in tests/External/Offload/test-wpOffload.php
+     * (it answers true when no provider object matched, provider exceptions
+     * escape uncaught, copies are forced public-read, and thumbnail objects
+     * record the main filename); otherwise an "applied" rename that renamed
+     * nothing would go on to rewrite the DB to filenames that exist nowhere.
+     *
+     * BUG #52 (all-copies-fail FIXED in 0db02498, regression-covered in
+     * tests/Controller/test-OptimizeAiController.php): when not a single
+     * copy succeeds the method now returns false before rewriting anything.
+     * Residual (deferred to 6.6.x): PARTIAL failure still returns true —
+     * the DB rewrite runs for ALL pairs, renameBackup() and
+     * $replacer->replace() results are discarded, no rollback exists.
      *
      * BUG #69 (attempted fix 202c6e3c, still open — pinned in
      * tests/Compat/test-CompatWPML.php + test-CompatPolylang.php as
@@ -744,14 +766,6 @@ class OptimizeAiController extends OptimizerBase
      *     found and the translation keeps metadata AND attached_file on
      *     the old filename. Enumerate the duplicates before the original's
      *     meta rewrite to fix.
-     *
-     * BUG #70 (open, HIGH, pinned in
-     * tests/Integration/test-VirtualFilesystemRename.php as
-     * test_pin70_*_pinned_for_deferred_fix; same family as #68): virtual
-     * filesystems (S3-Uploads by Human Made, InfiniteUploads — the
-     * VirtualFileSystem adapter) have no rename handling either; on a
-     * stateless install (no local files) every copy() fails silently (see
-     * #52) yet the DB/metadata rewrite still runs and true is returned.
      *
      * NOTE on the recent_upload=false usage guard: on a stock WP install
      * _wp_attached_file / _wp_attachment_metadata store RELATIVE paths, so the
@@ -773,7 +787,7 @@ class OptimizeAiController extends OptimizerBase
      * @param QueueItem $qItem       The queue item providing the image model.
      * @param string    $newFileBase New filename base (without extension) from the AI.
      * @param array     $args        Optional: dry_run (bool), imageThreshold (int), url (string), recent_upload (bool).
-     * @return bool True if it made it to the end of the replace functions; false on usage-guard block or filename conflict.
+     * @return bool True if it made it to the end of the replace functions; false on an unsupported virtual offloader, usage-guard block, filename conflict, a declined virtual rename, or when no file was copied (see BUG #73 for the cases where that last check misfires).
      */
     protected function replaceFiles($qItem, $newFileBase, $args = []): bool
     {
@@ -992,11 +1006,14 @@ class OptimizeAiController extends OptimizerBase
     }
 
     /**
+     * Entry point for the manual "Change Filename" AJAX action (media/replaceFileName).
+     *
      * Derives the new file base via pathinfo(basename(), PATHINFO_FILENAME) —
      * this strips any directory prefix (neutralising path traversal) AND the
      * extension, so the rename can never change a file's extension. Calls
      * replaceFiles() with recent_upload=true, deliberately bypassing the
      * usage-count guard: the user explicitly asked for the rename, including
+     * for images already referenced in content (see the guard NOTE on
      * replaceFiles()). Fully decoupled from AI state — works on attachments
      * that never had AI data.
      *
@@ -1665,6 +1682,20 @@ class OptimizeAiController extends OptimizerBase
         return [$dataItems, $generated];
     }
 
+    /**
+     * Whether renaming is supported for the active offloader.
+     *
+     * Only WP Offload Media (`wp-offload`) handles renames, through the
+     * `shortpixel/image/replace_files` filter (wpOffload::replaceFiles()).
+     * Every other detected offloader — S3-Uploads (`s3-uploads-human`),
+     * InfiniteUploads (`infinite-uploads`), Bitpoke Stack (`stack`) — has no
+     * rename handling, so virtual images on those installs are refused by
+     * replaceFiles() and the "Change Filename" field is hidden
+     * (is_renameable=false in getAltView()). No offloader detected at all
+     * also counts as supported (plain local media).
+     *
+     * @return bool True when no offloader or WP Offload Media is active.
+     */
     private function isVirtualSupported() : bool
     {
             $offloader = Offloader::getInstance(); 

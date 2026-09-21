@@ -3700,6 +3700,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	 *     scans each attachment once.
 	 *   - Virtual attachments skip the scan unless heavy virtual functions
 	 *     are enabled — scandir() on an offloaded directory is expensive.
+	 *   - Trusted mode skips the scan entirely (d45e95ca): the method is
+	 *     heavy on file operations, which trusted mode exists to avoid.
 	 *
 	 * The matched files are filtered against $currentFiles (main + all
 	 * thumbnails + retinas + original) so nothing already tracked is

@@ -19,11 +19,23 @@
  * is covered separately in test-ConstantsAndFilters.php (the constant
  * cannot be defined here without poisoning the whole PHP process).
  *
- * Also pins BUG #43 (see the pinned tests at the bottom): the trusted-mode
- * branch returns boolean true instead of the documented FileModel|false,
- * which fatals downstream in setWebp()/setAvif() (true->exists()) on every
- * image model load while trusted mode is active with createWebp/createAvif
- * enabled — i.e. the Media Library list and edit screens on trusted setups.
+ * BUG #43 (see the tests at the bottom): the trusted-mode branch returns
+ * boolean true instead of the documented FileModel|false.
+ *   - FIXED for the load path (d45e95ca, regression test below): setWebp()
+ *     now checks is_object() before ->exists(), so loading an image model
+ *     in trusted mode with createWebp on no longer fatals (Media Library
+ *     list / edit screens). The unlisted-thumbnail search is also skipped
+ *     in trusted mode.
+ *   - FIXED for the AVIF half of the load path (4980c516, setAvif()) and
+ *     for the delete path (dec06050, onDelete() — both regression-covered
+ *     below; the delete crash was reproduced end to end before the fix).
+ *   - STILL PINNED (root cause, no user-facing path today): getImageType()
+ *     still returns boolean true. Callers that would break on it but only
+ *     run with trusted mode OFF today (trusted mode is started solely by the
+ *     Media Library list / edit views' load(), never in AJAX): the
+ *     getWebps()/getAvifs() collectors feeding getAllUrls() / getAllFiles()
+ *     (→ rename), the Media Library and custom-media restore loops,
+ *     checkLegacyFileTypeFileName().
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -47,9 +59,10 @@ class TrustedModeTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * Load the image model while trusted mode is OFF (loading it while ON
-	 * fatals in setWebp() — see pin43b), so trusted-mode behaviour can be
-	 * probed on the getters afterwards.
+	 * Load the image model while trusted mode is OFF, so the getters can be
+	 * probed in trusted mode afterwards on an image whose meta was built
+	 * from real file checks. (Loading while ON used to fatal in setWebp() —
+	 * fixed in d45e95ca, see the #43 regression test.)
 	 */
 	private function imageLoadedOutsideTrustedMode( int $attachment_id ) {
 		FileModel::$TRUSTED_MODE      = false;
@@ -168,24 +181,92 @@ class TrustedModeTest extends SPIO_IntegrationTestCase {
 		$this->assertSame(
 			true,
 			$image->getWebp(),
-			'PINNED BUG #43: getImageType() returns boolean true in trusted mode, but its contract (and every caller) expects FileModel|false. '
-			. 'Callers like setWebp()/setAvif() (true->exists()), checkLegacyFileTypeFileName() (true->getFileName()) and cloudflare pathToUrl(true) break on it. '
+			'PINNED BUG #43 (root cause, still open after d45e95ca): getImageType() returns boolean true in trusted mode, but its contract expects FileModel|false. '
+			. 'The user-facing callers are guarded now (setWebp d45e95ca, setAvif 4980c516, onDelete dec06050), but getWebps()/getAvifs() → getAllUrls()/getAllFiles(), the restore loops, checkLegacyFileTypeFileName() and cloudflare pathToUrl(true) would still break if they ever ran in trusted mode. '
 			. 'FLIP this test when fixed: it should then assert instanceOf FileModel (or whatever the corrected contract is).'
 		);
 	}
 
-	public function test_pin43_loading_image_in_trusted_mode_fatals_in_setWebp() {
+	/**
+	 * REGRESSION #43 — load path (flipped from pin43b, 2026-09-18).
+	 * d45e95ca added `is_object($webp)` to ImageModel::setWebp(), so
+	 * loadMeta() → verifyImage() → setWebp() no longer calls
+	 * (true)->exists(): the Media Library list / edit screens load again
+	 * when SHORTPIXEL_TRUSTED_MODE is on and createWebp is enabled.
+	 */
+	public function test_regression43_loading_image_in_trusted_mode_no_longer_fatals() {
 		\wpSPIO()->settings()->createWebp = true;
 
 		$id = $this->uploadFixture( 'fixture-small.jpg' );
 
 		$this->enableTrustedMode();
 
-		// loadMeta() → verifyImage() → setWebp() → (true)->exists()
-		// This is what happens on the Media Library list / edit screens for
-		// every image when SHORTPIXEL_TRUSTED_MODE is on and createWebp is
-		// enabled: the whole page fatals.
-		$this->expectException( \Error::class );
-		\wpSPIO()->filesystem()->getImage( $id, 'media', false );
+		$image = \wpSPIO()->filesystem()->getImage( $id, 'media', false );
+		$this->assertInstanceOf( ImageModel::class, $image, 'REGRESSION #43: the image model must load in trusted mode.' );
+		// SENTINEL: the trusted-mode branch that used to crash was really hit.
+		$this->assertSame( true, $image->getWebp(), 'Sentinel: trusted mode still reports the webp as present (boolean true), so setWebp() did face the old crash input.' );
+	}
+
+	/**
+	 * REGRESSION #43 — load path with AVIF on (4980c516, 2026-09-18).
+	 * d45e95ca guarded setWebp() only; with createAvif enabled the load still
+	 * fataled in setAvif() ((true)->exists()). 4980c516 added the same
+	 * is_object() guard there.
+	 */
+	public function test_regression43_loading_image_with_avif_on_in_trusted_mode_no_longer_fatals() {
+		\wpSPIO()->settings()->createWebp = true;
+		\wpSPIO()->settings()->createAvif = true;
+
+		$id = $this->uploadFixture( 'fixture-small.jpg' );
+
+		$this->enableTrustedMode();
+
+		$image = \wpSPIO()->filesystem()->getImage( $id, 'media', false );
+		$this->assertInstanceOf( ImageModel::class, $image, 'REGRESSION #43: the image model must load in trusted mode with AVIF creation on.' );
+		// SENTINEL: the AVIF branch really handed setAvif() the old crash input.
+		$this->assertSame( true, $image->getAvif(), 'Sentinel: trusted mode still reports the avif as present (boolean true).' );
+	}
+
+	/**
+	 * REGRESSION #43 — delete path (flipped from the residual pin, 2026-09-18;
+	 * fixed in dec06050).
+	 *
+	 * ImageModel::onDelete() used to guard with `$webp !== false &&
+	 * $webp->exists()`; boolean true (the trusted-mode answer) passed, so
+	 * deleting an image in trusted mode with createWebp / createAvif on
+	 * called (true)->exists() and fataled. dec06050 added is_object() to
+	 * both checks. Before the fix this was reproduced end to end (E2E
+	 * WordPress, SHORTPIXEL_TRUSTED_MODE true): "Delete permanently" on the
+	 * attachment edit screen answered HTTP 500 and the image was NOT
+	 * deleted — reachable because route() starts trusted mode through the
+	 * view controllers' load() on load-post.php / load-upload.php, before
+	 * WordPress runs the delete. After the fix the same flow redirects to
+	 * the Media Library and the image is gone.
+	 */
+	public function test_regression43_deleting_an_image_in_trusted_mode_no_longer_fatals() {
+		\wpSPIO()->settings()->createWebp = true;
+		\wpSPIO()->settings()->createAvif = true;
+
+		$id = $this->uploadFixture( 'fixture-small.jpg' );
+
+		$this->enableTrustedMode();
+
+		$image = \wpSPIO()->filesystem()->getImage( $id, 'media', false );
+		$this->assertInstanceOf( ImageModel::class, $image, 'Sentinel: the image model loads in trusted mode.' );
+		// SENTINEL: onDelete() really faces the old crash input for both types.
+		$this->assertSame( true, $image->getWebp(), 'Sentinel: trusted mode hands out boolean true for the webp.' );
+		$this->assertSame( true, $image->getAvif(), 'Sentinel: trusted mode hands out boolean true for the avif.' );
+
+		$error = null;
+		try {
+			$image->onDelete();
+		} catch ( \Error $e ) {
+			$error = $e;
+		}
+
+		$this->assertNull(
+			$error,
+			'REGRESSION #43: onDelete() must complete in trusted mode — got: ' . ( $error ? $error->getMessage() : '' )
+		);
 	}
 }
