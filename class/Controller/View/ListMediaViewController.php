@@ -155,8 +155,8 @@ class ListMediaViewController extends \ShortPixel\ViewController
      }
      $this->view->mediaItem = $mediaItem;
 
-     $actions = array();
-     $list_actions = array();
+     $actions = [];
+     $list_actions = [];
 
      $optimizeAiController = OptimizeAiController::getInstance(); 
 
@@ -204,7 +204,8 @@ class ListMediaViewController extends \ShortPixel\ViewController
 				$checkBoxActions[] = 'is-restorable';
 		}
 
-    if (array_key_exists('shortpixel-generateai', $allActions))
+    // Ugly exception ( second part ) because UiHelper hides button in list_actions if list is not being displayed
+    if (array_key_exists('shortpixel-generateai', $allActions) )
     {
        $checkBoxActions[] = 'ai-action'; 
     }

@@ -478,10 +478,12 @@ class OptimizeAiController extends OptimizerBase
                     'url' => $url,
                 ];
 
+
                 $files_replaced = $this->replaceFiles($qItem, $aiData['filebase'], $args);
                 if (true === $files_replaced) {
                     $qItem->addResult(['redirect' => 'reload']);
                 }
+
             }
 
             // Reset when files change.
@@ -797,6 +799,12 @@ class OptimizeAiController extends OptimizerBase
                  Log::addInfo('Offloaded item not supported for renaming -' . $item_id ); 
                  return false; 
             }
+        }
+
+        if (true === $qItem->data()->is_duplicate)
+        {
+            Log::addInfo('Duplicate image detected, not replacing the file' . $item_id);
+            return false; 
         }
 
         // If recent upload is true, bypass the check if the image is used. 

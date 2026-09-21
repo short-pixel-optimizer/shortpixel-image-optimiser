@@ -502,7 +502,7 @@ class UiHelper
 
       if (false === is_null($aiDataModel) && $aiDataModel->isProcessable() && 'media' === $mediaItem->get('type') )
       {
-         if (true === $mediaItem->isSomethingOptimized()) // Prevent displaying this when only the 'optimize now' buttons are visible.
+         //if (true === $mediaItem->isSomethingOptimized()) // Prevent displaying this when only the 'optimize now' buttons are visible.
            $list_actions['shortpixel-generateai'] = self::getAction('shortpixel-generateai', $id);
       }
 

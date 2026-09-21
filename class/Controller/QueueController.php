@@ -282,6 +282,8 @@ class QueueController
               continue;
           }
 
+          $args['is_duplicate'] = true; 
+          
           $qItem = QueueItems::getImageItem($mediaItem);
           $qItem->requestAltAction($args);
           $status = $queue->addQueueItem($qItem);

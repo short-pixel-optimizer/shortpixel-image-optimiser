@@ -22,7 +22,7 @@ if (property_exists($this->view, 'infoData'))
 <div class='sp-column-info <?php echo property_exists($this->view, 'infoClass') ? esc_attr($this->view->infoClass) : '' ?>'
 	 	  <?php echo $datastring; ?>
 			id='shortpixel-data-<?php echo esc_attr($this->view->id );?>'>
-<?php	if (isset($this->view->list_actions))
+<?php	if (isset($this->view->list_actions) && false === property_exists($this->view, 'actions'))
 	{
 	   echo $this->view->list_actions;
 	}

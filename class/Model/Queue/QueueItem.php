@@ -651,6 +651,11 @@ class QueueItem
           $this->data()->addKeepDataArgs('languages');
       }
 
+      if (isset($args['is_duplicate']) && true === $args['is_duplicate'])
+      {
+         $this->data()->addKeepDataArgs(['is_duplicate']);
+      }
+
       $this->data->addCount(['aiCount' => 1]); // @todo Check if this is really a one credito operation.
 
       $this->data->action = 'requestAlt'; // For Queue

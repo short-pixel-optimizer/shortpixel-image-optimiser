@@ -67,6 +67,9 @@ class QueueItemData
         /** @var bool|null True when the item was added by the upload hook, so recent-upload heuristics can apply. */
         protected $recent_upload;
 
+        /** @var bool|null True when this is a WPML duplicate, Used for checking certain functions who should or shouldn't run */
+        protected $is_duplicate;  
+
         /**
          * Constructor.
          *
