@@ -672,4 +672,148 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 			'PIN #69: the translation references a file that no longer exists after the rename.'
 		);
 	}
+
+	// -------------------------------------------------------------------
+	// PIN — per-language AI renames duplicate the image on disk
+	// -------------------------------------------------------------------
+
+	/**
+	 * WPML core's own deletion guard (class-wpml-attachment-action.php:114-128,
+	 * SitePress 4.9.6), replicated verbatim.
+	 *
+	 * It is NOT registered in this test install (WPML's attachment action is
+	 * only booted on a configured site, and has_filter('wp_delete_file') is
+	 * false here), so pin74 installs it explicitly — without it the bug
+	 * cannot be observed at all. Note get_file_name() strips any -WxH size
+	 * suffix before looking the file up, so ONE sibling still holding the
+	 * full-size name protects every thumbnail of that image too.
+	 */
+	private function addWpmlDeleteFileGuard(): void {
+		add_filter(
+			'wp_delete_file',
+			function ( $file ) {
+				global $wpdb;
+				if ( ! $file ) {
+					return $file;
+				}
+				$upload    = wp_upload_dir();
+				$ext       = pathinfo( $file, PATHINFO_EXTENSION );
+				$full_size = preg_replace( '/(-\d+x\d+)?\.' . $ext . '$/', ".$ext", $file );
+				$relative  = ltrim( str_replace( $upload['basedir'], '', $full_size ), '/' );
+				$has_owner = $wpdb->get_var(
+					$wpdb->prepare(
+						"SELECT meta_id FROM {$wpdb->postmeta} WHERE meta_value = %s AND meta_key = '_wp_attached_file'",
+						$relative
+					)
+				);
+				return $has_owner ? null : $file;
+			}
+		);
+	}
+
+	/** Group a file list into its filename bases, ignoring -WxH thumbnail suffixes. */
+	private function distinctFileBases( array $files ): array {
+		return array_values(
+			array_unique(
+				array_map(
+					function ( $f ) {
+						return preg_replace( '/(-\d+x\d+)?\.\w+$/', '', $f );
+					},
+					$files
+				)
+			)
+		);
+	}
+
+	/**
+	 * PIN #74 — per-language AI renames DUPLICATE the image on disk.
+	 *
+	 * Same root cause as PIN #69 (the getWPMLDuplicates() ordering bug), but
+	 * a distinct and more damaging symptom, and only visible when WPML's
+	 * delete_file_filter is live:
+	 *
+	 *   1. QueueController queues the AI job once PER LANGUAGE
+	 *      (addWpmlAiItemsToQueue), and each language's AI answer carries its
+	 *      own translated filebase, so HandleSuccess() fires a rename per
+	 *      language on ONE shared physical file.
+	 *   2. replaceFiles() copies the whole file set to the new base, rewrites
+	 *      the metadata, then deletes the sources LAST — deliberately, so
+	 *      WPML sees the new state ("some plugins (WPML) can deny deletion
+	 *      otherwise", OptimizeAiController.php:915).
+	 *   3. But #69 means the siblings were never rewritten, so they still
+	 *      hold the OLD filename — and WPML's guard therefore refuses to
+	 *      delete the old files. The original set survives.
+	 *   4. The next language then renames that surviving original again,
+	 *      producing yet another full copy.
+	 *
+	 * Net effect: N languages leave N complete copies (main + every
+	 * thumbnail, plus WebP/AVIF companions) of the same image on disk.
+	 *
+	 * Flip when: #69 is fixed (siblings rewritten before/with the rename) so
+	 * nothing references the old name by deletion time, OR the rename is run
+	 * once per shared file instead of once per language. This test should
+	 * then assert ONE base, not two.
+	 */
+	public function test_pin74_per_language_rename_leaves_a_full_extra_copy_on_disk() {
+		$id     = $this->uploadFixture( 'fixture-small.jpg' );
+		$dup_id = $this->createDuplicateAttachment( $id );
+		$this->insertTranslationRow( $id, 9102, 'en' );
+		$this->insertTranslationRow( $dup_id, 9102, 'de', 'en' );
+		$this->purgeQueueTable();
+
+		$old_file = get_attached_file( $id );
+		$dir      = dirname( $old_file );
+		$old_base = pathinfo( $old_file, PATHINFO_FILENAME );
+		$en_base  = 'wpml-en-' . wp_generate_password( 6, false );
+		$de_base  = 'wpml-de-' . wp_generate_password( 6, false );
+
+		$this->assertSame( $old_file, get_attached_file( $dup_id ), 'Sentinel: both languages share one physical file.' );
+
+		$this->addWpmlDeleteFileGuard();
+		// SENTINEL: the guard that makes this bug observable is really armed.
+		$this->assertNull(
+			apply_filters( 'wp_delete_file', $old_file ),
+			'Sentinel: WPML\'s delete guard must refuse the shared file while an attachment still references it.'
+		);
+
+		// Language 1 renames the shared file to its own translated base.
+		$this->assertTrue( $this->renameAttachment( $id, $en_base ), 'Sanity: the first rename must report success.' );
+
+		// THE PIN (first half): the original set could not be deleted, because
+		// the German sibling still points at it (#69) — so it is still there.
+		$this->assertFileExists(
+			$old_file,
+			'PIN #74: fixed? The original file was deleted after the first rename — the duplication is gone, flip this pin.'
+		);
+
+		// Language 2 now renames that SURVIVING original a second time.
+		$this->assertTrue( $this->renameAttachment( $dup_id, $de_base ), 'Sanity: the second rename must report success.' );
+
+		$files = array();
+		foreach ( (array) glob( trailingslashit( $dir ) . '*' ) as $f ) {
+			$name = wp_basename( $f );
+			foreach ( array( $old_base, $en_base, $de_base ) as $base ) {
+				if ( 0 === strpos( $name, $base ) ) {
+					$files[] = $name;
+					break;
+				}
+			}
+		}
+		$bases = $this->distinctFileBases( $files );
+		sort( $bases );
+
+		// THE PIN (second half): two languages, two complete copies on disk.
+		$this->assertSame(
+			array( $de_base, $en_base ),
+			$bases,
+			'PIN #74: fixed? Expected the two per-language copies ' . $en_base . ' + ' . $de_base
+			. ' to both exist on disk (2 languages = 2 duplicates of the same image). Got: ' . implode( ', ', $bases )
+			. '. If only one base remains, the duplication is fixed — flip this pin to a regression test.'
+		);
+		$this->assertCount(
+			2,
+			$bases,
+			'PIN #74: N languages leave N physical copies of one image (here 2), multiplying disk usage.'
+		);
+	}
 }
