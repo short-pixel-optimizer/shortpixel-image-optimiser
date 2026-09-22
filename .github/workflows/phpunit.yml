@@ -150,8 +150,21 @@ jobs:
             # Pipe through tee for capture. GitHub Actions logs aren't a
             # TTY, so keep colours off — the captured log stays scannable.
             if vendor-tests/bin/phpunit --testsuite "$SUITE" --testdox --colors=never 2>&1 | tee "$LOG" && [ "${PIPESTATUS[0]}" -eq 0 ]; then
-              echo ""
-              echo "=== Testsuite '$SUITE' passed"
+              # A testsuite name PHPUnit doesn't recognise (they are matched
+              # case-sensitively) yields "No tests executed!" AND exit 0 — a
+              # green run that tested nothing. The list above is a second
+              # copy of the names in phpunit.xml.dist, so guard against it
+              # drifting rather than trusting the exit code alone.
+              if grep -q "No tests executed!" "$LOG"; then
+                FAILED=1
+                FAILED_SUITES="$FAILED_SUITES '$SUITE'(no tests ran)"
+                echo ""
+                echo "=== Testsuite '$SUITE' executed NO TESTS — failing:"
+                echo "    the name must match phpunit.xml.dist exactly (case-sensitive)."
+              else
+                echo ""
+                echo "=== Testsuite '$SUITE' passed"
+              fi
             else
               FAILED=1
               FAILED_SUITES="$FAILED_SUITES '$SUITE'"

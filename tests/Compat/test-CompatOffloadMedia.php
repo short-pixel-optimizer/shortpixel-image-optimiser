@@ -16,28 +16,39 @@
  *   - Optimizing a normal (non-offloaded) attachment works end to end
  *     and the files stay local.
  *
- * RENAME DESYNC — BUG #68 (open, HIGH), pinned below:
- * OptimizeAiController::replaceFiles() (the single engine behind both the
- * AI filename rename and the manual "Change Filename" action) renames the
- * local files, backups, DB URLs and attachment metadata but NEVER informs
- * WP Offload Media: no hook fires after a successful rename and
- * wp-offload-media.php contains no rename handling at all. The as3cf item
- * record (wp_as3cf_items) keeps the OLD remote key, so:
- *   - local + remote ("keep local copy"): the disk rename happens and —
- *     since 202c6e3c's copy + deferred delete — _wp_attached_file gets a
- *     correct relative path (the earlier provider-URL corruption is
- *     regression-covered below), but the rewritten URLs still point at a
- *     remote object name that does not exist in the bucket → 404s once
- *     as3cf serves from the provider;
- *   - remote only ("remove local files"): the local copy() finds no
- *     source file, fails silently (dropped from the delete list — bug
- *     #52), yet the DB/metadata rewrite still runs → the attachment now
- *     references a filename that exists NEITHER locally NOR remotely.
+ * RENAME — BUG #68 (1d61b243 + 0db02498; regression-covered below for the
+ * paths this suite can reach):
+ * OptimizeAiController::replaceFiles() now offers the rename to the
+ * `shortpixel/image/replace_files` filter first. wpOffload::replaceFiles()
+ * answers it for items served by the provider: it copies every provider
+ * object to the new key, deletes the old keys and saves the as3cf item
+ * with the new path. When the filter declines (item not served by a
+ * configured provider) and the image is virtual, the rename is refused.
  * The offloaded state is simulated by saving a real as3cf
- * Media_Library_Item row (no S3 credentials needed — approved approach);
- * the desync is asserted on that record, exactly what as3cf uses for
- * serving. Pins flip when replaceFiles() starts updating/re-uploading the
- * offload item (or refuses to rename offloaded attachments).
+ * Media_Library_Item row (no S3 credentials needed; the plugin is
+ * unconfigured, so its storage provider is the Null_Provider).
+ *
+ * The ORIGINAL #68 desync (local files renamed while the item kept the
+ * old remote key, or the DB rewritten while nothing moved) no longer
+ * happens: the two regression tests below assert that, with no usable
+ * provider, a rename leaves NOTHING half-done. They are outcome-only on
+ * purpose. Probed 2026-09-18: which path fires depends on how as3cf lazily
+ * builds the item's objects from its as3cf_files table (which the WP test
+ * framework may have created as a TEMPORARY table mid-run — hence the
+ * "Can't reopen table" noise): with no objects, wpOffload::replaceFiles()
+ * answers "handled" and the rename ends on the "copied nothing" bail-out;
+ * with objects, copy_objects() on the Null_Provider throws and nothing
+ * catches it.
+ *
+ * The new provider path is itself broken — BUG #73 (open, HIGH), pinned
+ * deterministically elsewhere:
+ *   - tests/External/Offload/test-wpOffload.php (stubbed item + client):
+ *     "handled" claimed when no provider object matched; provider
+ *     exceptions escape; every copy forced 'ACL' => 'public-read'; after a
+ *     successful rename every thumbnail object records the MAIN filename;
+ *   - tests/Integration/test-ChangeFilename.php: an "applied" rename
+ *     returns false BEFORE the metadata / content / backup rewrite; every
+ *     dry-run returns false.
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -52,11 +63,14 @@ class CompatOffloadMediaTest extends SPIO_IntegrationTestCase {
 		if ( ! class_exists( 'Amazon_S3_And_CloudFront' ) ) {
 			$this->markTestSkipped( 'WP Offload Media is not loaded — run via bin/test.sh --compat.' );
 		}
-		// DDL BEFORE parent::set_up(): items_table() auto-installs
-		// wp_as3cf_items (CREATE TABLE auto-commits in MySQL). Running it
-		// here keeps the implicit COMMIT outside the per-test transaction
-		// that parent::set_up() opens, so fixtures never leak.
-		Media_Library_Item::items_table();
+		// Both as3cf tables (as3cf_items AND as3cf_files) are installed once
+		// in tests/Integration/bootstrap.php, before the first test
+		// transaction — see the note there on as3cf's lazy-install static,
+		// which makes a per-test call unreliable. This call is kept as a
+		// cheap safety net: get_table_name() is a no-op once the table is
+		// known to exist, and it keeps the DDL outside the per-test
+		// transaction that parent::set_up() opens.
+		Media_Library_Item::get_table_name();
 		parent::set_up();
 	}
 
@@ -146,89 +160,91 @@ class CompatOffloadMediaTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * PIN #68a — local + remote copy.
+	 * Run the rename, recording (at priority 1, i.e. BEFORE wpOffload's
+	 * callback, which may throw) that the `shortpixel/image/replace_files`
+	 * filter was consulted, and capturing an escaping exception as the
+	 * result instead of failing the test on it.
 	 *
-	 * Since 202c6e3c (copy + deferred delete) the earlier provider-URL
-	 * meta corruption is gone: replaceMetaData() runs while the OLD local
-	 * file still exists, so as3cf's get_attached_file() filter returns
-	 * the local path and _wp_attached_file gets a correct RELATIVE
-	 * uploads path with the new base (regression assertions below).
-	 *
-	 * Remaining pinned behaviour:
-	 *   - the local files ARE renamed on disk;
-	 *   - the as3cf item record still points at the OLD remote key, so the
-	 *     rewritten URLs 404 on the provider;
-	 *   - and success is still reported.
-	 *
-	 * Flip the residual pin when: replaceFiles() updates the offload item
-	 * (or triggers an as3cf re-upload / refuses the rename for offloaded
-	 * media).
+	 * @return array{0: bool|\Throwable, 1: int} [rename result or the thrown error, times the filter was consulted]
 	 */
-	public function test_pin68_rename_leaves_offload_item_on_old_remote_key_pinned_for_deferred_fix() {
-		$id = $this->uploadFixture( 'fixture-small.jpg' );
+	private function renameWithFilterSpy( int $attachment_id, string $new_base ): array {
+		$consulted = 0;
+		$spy       = function ( $applied ) use ( &$consulted ) {
+			$consulted++;
+			return $applied;
+		};
+		add_filter( 'shortpixel/image/replace_files', $spy, 1 );
+		try {
+			$result = $this->renameAttachment( $attachment_id, $new_base );
+		} catch ( \Throwable $e ) {
+			$result = $e;
+		} finally {
+			remove_filter( 'shortpixel/image/replace_files', $spy, 1 );
+		}
 
-		$old_file = get_attached_file( $id );
-		$old_base = pathinfo( $old_file, PATHINFO_FILENAME );
-		$dir      = trailingslashit( dirname( $old_file ) );
-		$this->makeOffloadItem( $id );
-
-		$new_base = 'pin68-local-' . wp_generate_password( 6, false );
-		$result   = $this->renameAttachment( $id, $new_base );
-
-		$this->assertTrue( $result, 'PIN #68: fixed? The rename no longer blindly reports success for offloaded media — flip this pin.' );
-
-		// REGRESSION (202c6e3c): _wp_attached_file stays a RELATIVE uploads
-		// path with the new base — the deferred source delete means as3cf's
-		// get_attached_file() filter still sees the local file at meta-
-		// rewrite time (previously it was corrupted to the provider URL).
-		$attached_meta = (string) get_post_meta( $id, '_wp_attached_file', true );
-		$this->assertStringContainsString( $new_base, $attached_meta, 'REGRESSION #68: the meta was rewritten to the new base.' );
-		$this->assertStringStartsNotWith( 'http', $attached_meta, 'REGRESSION #68: _wp_attached_file must be a relative uploads path, not a provider URL.' );
-
-		// Sanity: the LOCAL rename really ran.
-		$this->assertFileDoesNotExist( $old_file, 'Precondition: the local file left the old name.' );
-		$this->assertFileExists( $dir . $new_base . '.jpg', 'Precondition: the local file was renamed on disk.' );
-
-		// THE PIN: the offload item was never told about the rename.
-		wp_cache_flush();
-		$item = Media_Library_Item::get_by_source_id( $id );
-		$this->assertNotFalse( $item, 'The as3cf item row must still exist.' );
-		$this->assertStringContainsString(
-			$old_base,
-			$item->path(),
-			'PIN #68: fixed? The offload item now tracks the rename — flip this pin to a regression test.'
-		);
-		$this->assertStringNotContainsString(
-			$new_base,
-			$item->path(),
-			'PIN #68: the remote key must NOT know the new base while the bug is present.'
-		);
-		$this->assertStringContainsString(
-			$old_base,
-			$item->source_path(),
-			'PIN #68: the item source_path still references the old filename.'
-		);
+		return array( $result, $consulted );
 	}
 
 	/**
-	 * PIN #68b — remote only ("remove local files"). With no local source
-	 * files, every FileModel::copy() fails silently (dropped from the
-	 * $copySource delete list — bug #52 territory), yet replaceFiles()
-	 * still returns true and
-	 * rewrites _wp_attached_file + metadata to the new base. Combined
-	 * with the untouched offload item, the attachment now references a
-	 * filename that exists neither locally nor remotely.
+	 * REGRESSION #68a — local + remote copy (replaces pin68a, 2026-09-18).
 	 *
-	 * Flip when: replaceFiles() detects the missing/offloaded source and
-	 * either refuses the rename or renames the remote object instead.
+	 * Before 1d61b243/0db02498 the local files were renamed and success
+	 * reported while the as3cf item kept the OLD remote key (404s once
+	 * served from the bucket). Now the rename goes through
+	 * wpOffload::replaceFiles() first. With WP Offload Media present but no
+	 * usable provider, whichever path the rename takes it must leave NOTHING
+	 * half-done: no DB rewrite, local files and the offload item untouched.
+	 *
+	 * Deliberately outcome-only: which path fires (wpOffload claiming
+	 * "handled" → the #73 "copied nothing" bail-out, or copy_objects()
+	 * throwing) depends on how as3cf lazily builds the item's objects from
+	 * its as3cf_files table in this test process. Those #73 facets are
+	 * pinned deterministically in tests/External/Offload/test-wpOffload.php.
 	 */
-	public function test_pin68_remote_only_rename_rewrites_db_while_no_file_moves_pinned_for_deferred_fix() {
+	public function test_regression68_offloaded_rename_with_local_copy_leaves_nothing_half_done() {
 		$id = $this->uploadFixture( 'fixture-small.jpg' );
 
 		$old_file = get_attached_file( $id );
 		$old_base = pathinfo( $old_file, PATHINFO_FILENAME );
 		$dir      = trailingslashit( dirname( $old_file ) );
 		$this->makeOffloadItem( $id );
+		$raw_attached_before = (string) get_post_meta( $id, '_wp_attached_file', true );
+
+		$new_base = 'reg68-local-' . wp_generate_password( 6, false );
+		list( $result, $consulted ) = $this->renameWithFilterSpy( $id, $new_base );
+
+		// SENTINEL: the rename really reached the offloader hand-off.
+		$this->assertSame( 1, $consulted, 'Sentinel: the replace_files filter must have been consulted exactly once.' );
+
+		$this->assertNotTrue( $result, 'REGRESSION #68: without a usable provider the rename cannot report success.' );
+		$this->assertSame( $raw_attached_before, (string) get_post_meta( $id, '_wp_attached_file', true ), 'REGRESSION #68: _wp_attached_file must be untouched.' );
+		$this->assertFileExists( $old_file, 'REGRESSION #68: the local file keeps its name.' );
+		$this->assertFileDoesNotExist( $dir . $new_base . '.jpg', 'REGRESSION #68: no file may appear under the new name.' );
+
+		wp_cache_flush();
+		$item = Media_Library_Item::get_by_source_id( $id );
+		$this->assertNotFalse( $item, 'The as3cf item row must still exist.' );
+		$this->assertStringContainsString( $old_base, $item->path(), 'REGRESSION #68: the offload item keeps its (still valid) old key.' );
+		$this->assertStringNotContainsString( $new_base, $item->path(), 'REGRESSION #68: the offload item must not point at a key that was never created.' );
+	}
+
+	/**
+	 * REGRESSION #68b — remote only, "remove local files" (replaces pin68b,
+	 * 2026-09-18). Before, every copy() failed silently while the
+	 * DB/metadata rewrite still ran and true was returned — the attachment
+	 * then referenced a filename that existed nowhere. Now nothing is
+	 * rewritten, whichever path the rename takes (outcome-only for the same
+	 * reason as #68a; the uncaught provider exception it can hit here is a
+	 * #73 facet pinned in tests/External/Offload/test-wpOffload.php).
+	 */
+	public function test_regression68_remote_only_rename_leaves_the_db_untouched() {
+		$id = $this->uploadFixture( 'fixture-small.jpg' );
+
+		$old_file = get_attached_file( $id );
+		$old_base = pathinfo( $old_file, PATHINFO_FILENAME );
+		$dir      = trailingslashit( dirname( $old_file ) );
+		$this->makeOffloadItem( $id );
+		$raw_attached_before = (string) get_post_meta( $id, '_wp_attached_file', true );
 
 		// Simulate as3cf "remove local files": wipe main + thumbnails.
 		$meta = wp_get_attachment_metadata( $id );
@@ -238,31 +254,24 @@ class CompatOffloadMediaTest extends SPIO_IntegrationTestCase {
 		}
 		$this->assertFileDoesNotExist( $old_file, 'Precondition: local main file removed.' );
 
-		$new_base = 'pin68-remote-' . wp_generate_password( 6, false );
-		$result   = $this->renameAttachment( $id, $new_base );
+		$new_base = 'reg68-remote-' . wp_generate_password( 6, false );
+		list( $result, $consulted ) = $this->renameWithFilterSpy( $id, $new_base );
 
-		// THE PIN: success is reported although nothing could be moved.
-		$this->assertTrue(
-			$result,
-			'PIN #68: fixed? replaceFiles() now refuses/handles a remote-only rename — flip this pin.'
-		);
+		$this->assertSame( 1, $consulted, 'Sentinel: the replace_files filter must have been consulted exactly once.' );
+		$this->assertNotTrue( $result, 'REGRESSION #68: a remote-only rename without a usable provider cannot report success.' );
 
-		// DB was rewritten to the new base anyway... (raw meta — as3cf
-		// filters get_attached_file() into the provider URL once an item
-		// row exists).
-		$this->assertStringContainsString(
-			$new_base,
+		// (raw meta — as3cf filters get_attached_file() into the provider
+		// URL once an item row exists)
+		$this->assertSame(
+			$raw_attached_before,
 			(string) get_post_meta( $id, '_wp_attached_file', true ),
-			'PIN #68: _wp_attached_file was rewritten despite no file moving.'
+			'REGRESSION #68: _wp_attached_file must not be rewritten when nothing moved.'
 		);
+		$this->assertFileDoesNotExist( $dir . $new_base . '.jpg', 'REGRESSION #68: no file may appear under the new name.' );
 
-		// ...but the new file exists nowhere locally...
-		$this->assertFileDoesNotExist( $dir . $new_base . '.jpg', 'PIN #68: no local file was created under the new name.' );
-
-		// ...and the offload item still points at the old remote key.
 		wp_cache_flush();
 		$item = Media_Library_Item::get_by_source_id( $id );
 		$this->assertNotFalse( $item, 'The as3cf item row must still exist.' );
-		$this->assertStringContainsString( $old_base, $item->path(), 'PIN #68: the remote key is still the old filename.' );
+		$this->assertStringContainsString( $old_base, $item->path(), 'REGRESSION #68: the offload item keeps its old key.' );
 	}
 }

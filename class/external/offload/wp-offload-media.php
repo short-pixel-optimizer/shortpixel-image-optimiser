@@ -450,16 +450,53 @@ class wpOffload
 	/**
 	 * Rename the provider objects belonging to an attachment.
 	 *
-	 * The optimizer already has the complete source file list, including
-	 * thumbnails and WebP/AVIF companions. Accept that list directly so the
-	 * provider rename does not need to rediscover files that may not exist
-	 * locally on remove-local-files installations.
+	 * Hooked on `shortpixel/image/replace_files` (1d61b243), which
+	 * OptimizeAiController::replaceFiles() applies before its local copy
+	 * loop. The optimizer already has the complete source file list,
+	 * including thumbnails and WebP/AVIF companions. Accept that list
+	 * directly so the provider rename does not need to rediscover files that
+	 * may not exist locally on remove-local-files installations.
 	 *
-	 * @param bool  $applied   Shortcircuit if returned true, regulare replace will not happen.
-	 * @param array $sourceFiles   Source file objects keyed by the optimizer.
-	 * @param int   $attachment_id WordPress attachment id.
-	 * @param string $newFileBase  New filename base without an extension.
-	 * @return bool True when all remote objects were renamed or no rename was needed.
+	 * Only acts on items served by the provider; otherwise it returns false
+	 * and SPIO falls back to its own handling (a virtual image is then
+	 * refused, see replaceFiles()). For every object whose source file is in
+	 * the list it copies the object to the new key (copy_objects), deletes
+	 * the old keys (delete_objects), and saves the item with the renamed
+	 * objects and path.
+	 *
+	 * NOTES (review 2026-09-18) — BUG #73 (open, HIGH), pinned in
+	 * tests/External/Offload/test-wpOffload.php and
+	 * tests/Integration/test-ChangeFilename.php:
+	 *   - $renames is built with str_replace($sourceBase, $newFileBase,
+	 *     $sourceFilename), $sourceBase being each file's OWN base: every
+	 *     thumbnail ('photo-300x225.jpg') maps to the MAIN new name
+	 *     ('renamed-photo.jpg'). The bucket keys are computed separately and
+	 *     are correct, but set_objects() records every size's source_file as
+	 *     the main image;
+	 *   - when this returns true, replaceFiles() skips the local copy loop
+	 *     and then returns false on its "copied nothing" check BEFORE
+	 *     rewriting WP metadata, backups and content — the bucket holds only
+	 *     the new keys while WordPress keeps the old filename;
+	 *   - it also returns true when NO provider object matched
+	 *     (`empty($keyRenames)`), e.g. an item without objects: SPIO then
+	 *     skips its own local rename although nothing was renamed anywhere;
+	 *   - get_provider_client() / copy_objects() exceptions are not caught
+	 *     (the unconfigured Null_Provider throws; so can a real client with
+	 *     bad credentials) — the rename request crashes;
+	 *   - The copy requests set 'ACL' => 'public-read' explicitly (the
+	 *     MetadataDirective COPY does not copy ACLs): media that WP Offload
+	 *     Media serves privately becomes public after a rename, and buckets
+	 *     with ACLs disabled (Object Ownership "bucket owner enforced", the
+	 *     S3 default for new buckets) reject the request — the rename then
+	 *     fails and, for virtual images, is refused.
+	 *   - Local files are not renamed here; on "keep local copy" installs
+	 *     the local copies keep their old names.
+	 *
+	 * @param bool                                   $applied     Filter value: false unless an earlier callback already handled the rename. Returning true makes replaceFiles() skip its regular local copy.
+	 * @param array                                  $sourceFiles Source FileModel objects keyed by the optimizer (main, thumbnails, webp_*, avif_*).
+	 * @param \ShortPixel\Model\Image\ImageModel     $imageModel  The attachment's image model (the attachment id is read via get('id')).
+	 * @param string                                 $newFileBase New filename base without an extension.
+	 * @return bool True when all remote objects were renamed or no rename was needed; false when the item is not provider-served or a copy failed (old objects are left untouched).
 	 */
 	public function replaceFiles($applied, $sourceFiles, $imageModel, $newFileBase)
 	{

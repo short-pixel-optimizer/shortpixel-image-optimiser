@@ -47,42 +47,139 @@ tests_add_filter( 'muplugins_loaded', '_manually_load_plugin' );
  * a partial download never fatals the whole suite.
  */
 if ( '1' === getenv( 'SPIO_PARTNER_PLUGINS' ) ) {
+	/**
+	 * The partner plugins, as "<dir>/<entry-file>.php".
+	 *
+	 * Declared once and reused by both the active_plugins override below
+	 * and the deprecation filter after it, so the two cannot drift apart.
+	 */
+	$spio_partner_plugins = array(
+		'woocommerce/woocommerce.php',
+		'nextgen-gallery/nggallery.php',
+		'amazon-s3-and-cloudfront/wordpress-s3.php',
+		// Wave 4 — replacer2 module coverage. All four load their
+		// own detection constant / action, which the corresponding
+		// SPIO Replacer module keys off (Elementor.php, YoastSeo.php,
+		// WpBakery.php, Breakdance.php).
+		'elementor/elementor.php',
+		'wordpress-seo/wp-seo.php',
+		// Real Polylang (free, wp.org) — rename/hook coverage. The
+		// faked-active tests in test-CompatPolylang.php coexist:
+		// this option override lists it, and the real plugin loads.
+		'polylang/polylang.php',
+		// Commercial — extracted from tests/partner-plugins/ when
+		// present; silently skipped (like the rest) when not.
+		'sitepress-multilingual-cms/sitepress.php',
+		// WPML add-on: translations may point at their OWN file
+		// (vs shared-file duplicates). Must load AFTER sitepress.
+		'wpml-media-translation/plugin.php',
+		// Commercial (WPBakery) — tests/partner-plugins/js_composer.zip.
+		'js_composer/js_composer.php',
+		// Commercial (Breakdance) — tests/partner-plugins/breakdance-*.zip.
+		'breakdance/plugin.php',
+	);
+
 	tests_add_filter(
 		'pre_option_active_plugins',
-		function () {
-			$partners = array(
-				'woocommerce/woocommerce.php',
-				'nextgen-gallery/nggallery.php',
-				'amazon-s3-and-cloudfront/wordpress-s3.php',
-				// Wave 4 — replacer2 module coverage. All four load their
-				// own detection constant / action, which the corresponding
-				// SPIO Replacer module keys off (Elementor.php, YoastSeo.php,
-				// WpBakery.php, Breakdance.php).
-				'elementor/elementor.php',
-				'wordpress-seo/wp-seo.php',
-				// Real Polylang (free, wp.org) — rename/hook coverage. The
-				// faked-active tests in test-CompatPolylang.php coexist:
-				// this option override lists it, and the real plugin loads.
-				'polylang/polylang.php',
-				// Commercial — extracted from tests/partner-plugins/ when
-				// present; silently skipped (like the rest) when not.
-				'sitepress-multilingual-cms/sitepress.php',
-				// WPML add-on: translations may point at their OWN file
-				// (vs shared-file duplicates). Must load AFTER sitepress.
-				'wpml-media-translation/plugin.php',
-				// Commercial (WPBakery) — tests/partner-plugins/js_composer.zip.
-				'js_composer/js_composer.php',
-				// Commercial (Breakdance) — tests/partner-plugins/breakdance-*.zip.
-				'breakdance/plugin.php',
-			);
+		function () use ( $spio_partner_plugins ) {
 			$active = array();
-			foreach ( $partners as $partner ) {
+			foreach ( $spio_partner_plugins as $partner ) {
 				if ( file_exists( WP_PLUGIN_DIR . '/' . $partner ) ) {
 					$active[] = $partner;
 				}
 			}
 			return $active;
 		}
+	);
+
+	/**
+	 * Hide E_DEPRECATED raised from inside the PARTNER plugins' own code.
+	 *
+	 * On PHP 8.5 a single Breakdance loop (plugin/icons/functions.php,
+	 * fgetcsv() without the new $escape argument) emits ~2,500 identical
+	 * deprecations while its icon CSV is read at load time — 98% of the
+	 * whole compat run's output, and enough to bury a real problem. We
+	 * cannot fix their code, and the alternative (error_reporting without
+	 * E_DEPRECATED) would also hide OUR deprecations, which is precisely
+	 * how the imagedestroy() one was spotted.
+	 *
+	 * Narrow on three axes: only E_DEPRECATED, only when the raising FILE
+	 * sits inside one of the partner plugin directories above, and only
+	 * under SPIO_PARTNER_PLUGINS. SPIO's own deprecations, and every other
+	 * error level from anywhere, fall through to normal handling.
+	 *
+	 * These all fire while the plugins load, before PHPUnit installs its
+	 * own error handler, so this never competes with PHPUnit's reporting.
+	 */
+	$spio_partner_dirs = array();
+	foreach ( $spio_partner_plugins as $spio_partner_plugin ) {
+		$spio_partner_dirs[] = '/plugins/' . strtok( $spio_partner_plugin, '/' ) . '/';
+	}
+	unset( $spio_partner_plugin );
+
+	set_error_handler( // phpcs:ignore WordPress.PHP.DevelopmentFunctions.prevent_path_disclosure_set_error_handler
+		static function ( $errno, $errstr, $errfile = '' ) use ( $spio_partner_dirs ) {
+			if ( E_DEPRECATED === $errno ) {
+				foreach ( $spio_partner_dirs as $spio_partner_dir ) {
+					if ( false !== strpos( (string) $errfile, $spio_partner_dir ) ) {
+						return true; // Handled: swallow it.
+					}
+				}
+			}
+			return false; // Everything else: normal PHP handling.
+		},
+		E_ALL
+	);
+
+	/**
+	 * Silence _doing_it_wrong() notices raised by the PARTNER plugins only.
+	 *
+	 * Several load their textdomain before `init` (NextGen, WooCommerce,
+	 * Yoast) and WooCommerce runs a user query before `plugins_loaded`.
+	 * None is actionable from this repo, they fire on every compat run
+	 * during WP bootstrap, and at ~550 bytes each they dominated what was
+	 * left of the output once the as3cf errors were fixed.
+	 *
+	 * Registered HERE, before the WP test bootstrap loads, because the
+	 * notices are emitted while the partner plugins load — a filter added
+	 * after WP is up (e.g. in tests/Integration/bootstrap.php) runs far
+	 * too late to catch them.
+	 *
+	 * Deliberately narrow: the textdomain notice is only suppressed for a
+	 * known partner domain, so if SPIO itself ever loads
+	 * 'shortpixel-image-optimiser' too early the notice still surfaces.
+	 * Gated on SPIO_PARTNER_PLUGINS, so unit and plain integration runs
+	 * are completely unaffected.
+	 */
+	tests_add_filter(
+		'doing_it_wrong_trigger_error',
+		static function ( $trigger, $function_name, $message = '' ) {
+			if ( 'WP_User_Query::query' === $function_name ) {
+				return false;
+			}
+			if ( '_load_textdomain_just_in_time' === $function_name ) {
+				$partner_domains = array(
+					'nggallery',
+					'woocommerce',
+					'wordpress-seo',
+					'sitepress',
+					'wpml-media-translation',
+					'elementor',
+					'js_composer',
+					'breakdance',
+					'polylang',
+					'amazon-s3-and-cloudfront',
+				);
+				foreach ( $partner_domains as $partner_domain ) {
+					if ( false !== strpos( (string) $message, '<code>' . $partner_domain . '</code>' ) ) {
+						return false;
+					}
+				}
+			}
+			return $trigger;
+		},
+		10,
+		3
 	);
 }
 

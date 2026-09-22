@@ -6,8 +6,9 @@
  * simple/advanced mode toggle persists; each tab's AJAX save persists a
  * representative setting (DOM after reload + server-side option); API-key
  * activation states through the mock (wrong length, -401 invalid, -403 quota,
- * valid); the exclusions editor happy path; and PIN #62 (a third-party
- * `window.URL` overwrite kills every settings save).
+ * valid); the exclusions editor happy path; and REGRESSION #62 (a
+ * third-party `window.URL` overwrite used to kill every settings save —
+ * fixed in 0db02498).
  *
  * Every test starts from the healthy-install seed (spio.reset()), which also
  * sets redirectedSettings=3 so the quick tour never intercepts clicks.
@@ -286,18 +287,24 @@ test.describe('Settings page', () => {
 });
 
 // -----------------------------------------------------------------------
-// PIN #62 — third-party window.URL overwrite kills every settings save
+// REGRESSION #62 — third-party window.URL overwrite no longer kills saves
 // -----------------------------------------------------------------------
 
-test.describe('PIN #62 — window.URL overwritten by a third-party script', () => {
-	// The bug IS an uncaught error; we assert on it instead of tripping on it.
-	test.use({ allowConsoleErrors: true });
-
+/**
+ * Flipped from pin62 on 2026-09-18 (fixed in 0db02498): FormSendEvent used
+ * `URL.parse(form.action)`, a static that third-party scripts such as the
+ * EMC – Embed Calendly widget remove when they replace window.URL — every
+ * settings save threw after preventDefault() and silently did nothing. It
+ * now uses `new URL(form.action)` inside try/catch with a null guard. The
+ * console-error tripwire is armed again: any error during the save fails
+ * the test.
+ */
+test.describe('Regression #62 — window.URL overwritten by a third-party script', () => {
 	test.beforeEach(async ({ spio }) => {
 		await spio.reset();
 	});
 
-	test('pin62: settings save dies silently when URL.parse is missing (pinned_for_deferred_fix)', async ({
+	test('regression62: settings save still works when a third-party script removed URL.parse', async ({
 		page,
 		spio,
 		consoleErrors,
@@ -320,17 +327,15 @@ test.describe('PIN #62 — window.URL overwritten by a third-party script', () =
 		await settings.checkRadio('compressionType', '2');
 		await settings.saveButton('optimisation').click();
 
-		// PINNED: FormSendEvent throws at `URL.parse(form.action)` AFTER
-		// preventDefault() — no AJAX save, no native submit, no banner, no
-		// error shown to the user.
-		await expect.poll(() => consoleErrors.join('\n'), { timeout: 5_000 }).toMatch(/URL\.parse is not a function/);
-		await page.waitForTimeout(3_000);
-		await expect(settings.saveBanner, 'PIN #62: the save banner never appears').not.toHaveClass(/\bshow\b/);
-		expect(Number((await spio.getSettings()).compressionType), 'PIN #62: nothing was saved').not.toBe(2);
-
-		// FLIP-when-fixed (try/catch `new URL(form.action)` + null guard):
-		//   expect no "URL.parse" error, expect the banner to show, and expect
-		//   compressionType to be 2 on the server; drop the suffix and the
-		//   allowConsoleErrors opt-out.
+		// The AJAX save completes: success banner, value persisted server-side.
+		await expect(settings.saveBanner, 'REGRESSION #62: the save banner must appear').toHaveClass(/\bshow\b/, {
+			timeout: 15_000,
+		});
+		await expect
+			.poll(async () => Number((await spio.getSettings()).compressionType), {
+				message: 'REGRESSION #62: the new compressionType must be saved',
+			})
+			.toBe(2);
+		expect(consoleErrors.join('\n'), 'REGRESSION #62: no URL.parse error any more').not.toMatch(/URL\.parse/);
 	});
 });

@@ -6,7 +6,7 @@ this file lives in the repo for the dev team.
 
 ## What's in the suite
 
-The suite lives under `tests/` and is split into four PHPUnit testsuites via
+The suite lives under `tests/` and is split into five PHPUnit testsuites via
 `phpunit.xml.dist`:
 
 | Testsuite     | Path                                | Covers                                                  |
@@ -33,11 +33,15 @@ Composer, WP-CLI, or SVN required.
 ### Quick start
 
 ```bash
+# First: prove the environment works. Requires a real passing test run, so
+# it cannot report success on a broken setup. Run this before anything else.
+bin/test.sh --verify
+
 # Default — every testsuite on PHP 8.3 (matches the CI baseline)
 bin/test.sh
 
 # Specific testsuite
-bin/test.sh --testsuite Model
+bin/test.sh --testsuite model
 bin/test.sh --testsuite External
 
 # Specific test method
@@ -66,7 +70,7 @@ between versions is cache-warm after the first build per version.
 ```bash
 # One specific PHP version
 bin/test.sh --php 7.4
-bin/test.sh --php 8.5 --testsuite Model
+bin/test.sh --php 8.5 --testsuite model
 
 # All three sequentially — same as CI's matrix strategy
 bin/test.sh --matrix
@@ -274,7 +278,7 @@ verdict.
 bin/test.sh --shell
 
 # From inside the shell:
-vendor-tests/bin/phpunit --testsuite Model
+vendor-tests/bin/phpunit --testsuite model
 vendor-tests/bin/phpunit --testsuite model --filter BarTest        # one file (by class)
 vendor-tests/bin/phpunit --filter 'BarTest::test_foo'              # one method
 ```
@@ -370,7 +374,7 @@ The install script:
 vendor-tests/bin/phpunit
 
 # Specific testsuite
-vendor-tests/bin/phpunit --testsuite Model
+vendor-tests/bin/phpunit --testsuite model
 vendor-tests/bin/phpunit --testsuite External
 
 # Specific test method

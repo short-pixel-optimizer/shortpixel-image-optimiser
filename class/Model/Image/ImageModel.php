@@ -875,6 +875,13 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     /**
      * Persist the WebP companion filename onto image_meta when one exists on disk.
      *
+     * BUG #43 (load path fixed in d45e95ca): in trusted mode getImageType()
+     * returns boolean true instead of a FileModel, so the is_object() check
+     * here is what keeps loadMeta() → verifyImage() → setWebp() from calling
+     * (true)->exists() on every image load. The same guard now also sits in
+     * setAvif() (4980c516) and onDelete() (dec06050); the root cause (the
+     * trusted-mode answer is not a FileModel) is still open.
+     *
      * @return void
      */
 	  protected function setWebp()
@@ -889,12 +896,16 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     /**
      * Persist the AVIF companion filename onto image_meta when one exists on disk.
      *
+     * BUG #43 (load path, AVIF half fixed in 4980c516): same is_object() guard
+     * as setWebp() — in trusted mode getImageType() returns boolean true, and
+     * with createAvif on the load used to fatal here.
+     *
      * @return void
      */
 	  protected function setAvif()
 	  {
 	      $avif = $this->getImageType('avif');
-	      if ($avif !== false && $avif->exists())
+	      if ($avif !== false && is_object($avif) && $avif->exists())
         {
 	        $this->setMeta('avif', $avif->getFileName() );
         }
@@ -1397,6 +1408,16 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
      * Cleans up the associated backup and any WebP / AVIF companion files
      * that aren't the primary file itself.
      *
+     * BUG #43 delete path (fixed in dec06050, regression-covered in
+     * tests/Integration/test-TrustedMode.php): in trusted mode with
+     * createWebp / createAvif on, getWebp() / getAvif() return boolean true,
+     * which passes the `!== false` checks — the is_object() guards below
+     * keep (true)->exists() from being called. Before the fix, "Delete
+     * permanently" (attachment edit screen, Media Library bulk delete)
+     * answered HTTP 500 and left the image in place: trusted mode is started
+     * by the view controllers' load() on load-post.php / load-upload.php,
+     * before WordPress runs the delete.
+     *
      * @return void
      */
     public function onDelete()
@@ -1408,12 +1429,12 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         $webp = $this->getWebp();
         $avif = $this->getAvif();
 
-        if ($webp !== false && $webp->exists() && $this->getExtension() !== 'webp')
+        if ($webp !== false && is_object($webp) && $webp->exists() && $this->getExtension() !== 'webp')
         {
           $webp->delete();
         }
 
-        if ($avif !== false && $avif->exists() && $this->getExtension() !== 'avif')
+        if ($avif !== false && is_object($avif) && $avif->exists() && $this->getExtension() !== 'avif')
         {
            $avif->delete();
         }

@@ -157,6 +157,19 @@ if ( ! defined( 'ABSPATH' ) ) {
         <span><b><?php echo esc_html($this->formatNumber($quotaData->ai->remaining, 0)) ?></b></span>
 
       </p>
+<?php /*
+      Hidden in f504e178 ("Bulk Summary AI month data incorrect"): the line
+      below paired the IMAGE monthly plan text ($quotaData->monthly->text)
+      with AI credit numbers ($quotaData->ai->consumed / ->remaining), which
+      reads as an AI monthly allowance the account does not have. Kept rather
+      than deleted pending a correct AI-plan line.
+
+      HEADS UP: it is hidden with an HTML comment, so every PHP tag inside it
+      STILL EXECUTES on each render and its values are still emitted into the
+      page source — only the browser hides them. Switching the delimiters to
+      `<?php /* ... *_/ ?>` would suppress the work and the markup entirely.
+      Left as-is deliberately: that is a behaviour change, Bas's call.
+*/ ?>
 <!--
       <p><span><?php esc_html_e('Your monthly plan','shortpixel-image-optimiser'); ?></span>
          <span><b><?php echo esc_html($quotaData->monthly->text) ?></b> |
@@ -174,6 +187,9 @@ if ( ! defined( 'ABSPATH' ) ) {
           </a>
         </span>
       </p>
+      <?php else : ?>
+        <p><span><?php _e('This site is currently on the ShortPixel Unlimited AI plan, so you do not have to worry about AI credits. Enjoy!', 'shortpixel-image-optimiser'); ?></span></p>
+
       <?php endif;  ?>
 
   </div>

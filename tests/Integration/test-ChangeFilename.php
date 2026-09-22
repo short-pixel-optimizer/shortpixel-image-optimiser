@@ -34,6 +34,13 @@
  *     no mangling when the file base appears in the directory path.
  *   - Pin #53 (MEDIUM, AI-auto path): recent_upload=false guard matches
  *     the attachment's OWN _wp_attached_file rows.
+ *   - #66 contract: a successful rename records replaced_content
+ *     ['replaced_url'] for the Gutenberg editor (moved here from the
+ *     flipped #52 unit test).
+ *   - Pin #73 (HIGH, 0db02498): the "copied nothing" bail-out also fires
+ *     when an offloader handled the rename via the
+ *     `shortpixel/image/replace_files` filter (no metadata / content
+ *     rewrite at all) and on every dry-run.
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -79,6 +86,29 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	private function uploadsBasedir(): string {
 		$u = wp_upload_dir();
 		return trailingslashit( $u['basedir'] );
+	}
+
+	/**
+	 * Run the rename engine directly (the same call AjaxController::
+	 * replaceFileName() makes) and hand back both the bool result and the
+	 * QueueItem, so tests can inspect what replaceFiles() recorded on it.
+	 *
+	 * @return array{0: bool, 1: QueueItem}
+	 */
+	private function renameViaEngine( int $attachment_id, string $new_base ): array {
+		$imageModel = $this->freshImageModel( $attachment_id );
+		$queueItem  = new QueueItem( array( 'imageModel' => $imageModel ) );
+		$result     = $queueItem->getApiController( 'requestAlt' )->ajax_replaceFile( $queueItem, $new_base );
+		return array( $result, $queueItem );
+	}
+
+	/** Invoke the protected replaceFiles() with explicit args (e.g. dry_run). */
+	private function replaceFilesWithArgs( int $attachment_id, string $new_base, array $args ): bool {
+		$imageModel = $this->freshImageModel( $attachment_id );
+		$queueItem  = new QueueItem( array( 'imageModel' => $imageModel ) );
+		$method     = new ReflectionMethod( OptimizeAiController::class, 'replaceFiles' );
+		$method->setAccessible( true );
+		return $method->invoke( new OptimizeAiController(), $queueItem, $new_base, $args );
 	}
 
 	// -------------------------------------------------------------------
@@ -1094,5 +1124,128 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 				'FLIP INSTRUCTIONS when fixed: the original file must be GONE (renamed).'
 			);
 		}
+	}
+
+	// -------------------------------------------------------------------
+	// #66 editor contract — moved here from the (flipped) #52 unit test
+	// -------------------------------------------------------------------
+
+	/**
+	 * CONTRACT (a5ad9805, part of the #66 Gutenberg fix): after a real,
+	 * successful, non-dry-run rename, replaceFiles() stores the new file URL
+	 * on the queue result as replaced_content['replaced_url'], which
+	 * screen-media.js UpdateGutenBerg() uses to refresh the image block's url
+	 * in an open editor. Previously asserted inside the #52 pin on a
+	 * copy-failure path; since 0db02498 that path bails out before recording
+	 * anything, so the contract is verified here on a real rename.
+	 */
+	public function test_successful_rename_records_replaced_url_for_the_editor() {
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+
+		$new_base = 'replaced-url-' . wp_generate_password( 6, false );
+		list( $result, $queueItem ) = $this->renameViaEngine( $attachment_id, $new_base );
+
+		$this->assertTrue( $result, 'Sanity: a plain local rename must succeed.' );
+		$this->assertStringContainsString( $new_base, get_attached_file( $attachment_id ), 'Sanity: the rename really happened.' );
+
+		$replaced = $queueItem->result()->replaced_content;
+		$this->assertIsArray( $replaced );
+		$this->assertArrayHasKey( 'replaced_url', $replaced, 'replaceFiles() must record the new URL as replaced_content[replaced_url].' );
+		$this->assertStringContainsString( $new_base, (string) $replaced['replaced_url'], 'replaced_url must point at the NEW file base.' );
+	}
+
+	// -------------------------------------------------------------------
+	// BUG #73 — the "copied nothing" bail-out fires when no local copy is
+	// EXPECTED (offloader-handled renames, dry-run)
+	// -------------------------------------------------------------------
+
+	/**
+	 * PIN #73 (HIGH, found 2026-09-18 in 0db02498 on top of 1d61b243).
+	 *
+	 * 1d61b243 added the `shortpixel/image/replace_files` filter: an
+	 * offloader returns true when it renamed the files itself (wpOffload::
+	 * replaceFiles() renames the provider objects, DELETES the old keys and
+	 * saves the as3cf item with the new path). replaceFiles() then skips the
+	 * local copy loop — so $copySource stays empty by design. 0db02498 then
+	 * added `if (count($copySource) === 0) return false;` directly AFTER
+	 * that branch, so an offloader-handled rename ALWAYS bails out before
+	 * replaceMetaData(), the WPML/Polylang duplicates loop, the backup
+	 * rename and the Replacer. On a configured WP Offload Media install the
+	 * remote objects end up renamed while _wp_attached_file, the attachment
+	 * metadata, the backups and every post-content URL keep the OLD name,
+	 * and the user is told the rename failed.
+	 *
+	 * Simulated with a filter that reports "applied" exactly like
+	 * wpOffload::replaceFiles() does (no S3 bucket needed); the sentinel
+	 * proves the filter received the real source file list.
+	 *
+	 * Flip when: an applied rename continues to the metadata / content
+	 * rewrite and returns true (e.g. only count $copySource when
+	 * `false === $applied`).
+	 */
+	public function test_pin73_offloader_handled_rename_bails_out_before_metadata_update_pinned_for_deferred_fix() {
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+		$old_file = get_attached_file( $attachment_id );
+		$old_base = pathinfo( $old_file, PATHINFO_FILENAME );
+
+		$seen = array();
+		$offloader = function ( $applied, $sourceFiles ) use ( &$seen ) {
+			$seen[] = is_array( $sourceFiles ) ? count( $sourceFiles ) : -1;
+			return true; // "the offloader renamed the files itself"
+		};
+		add_filter( 'shortpixel/image/replace_files', $offloader, 10, 2 );
+
+		$new_base = 'pin73-' . wp_generate_password( 6, false );
+		list( $result ) = $this->renameViaEngine( $attachment_id, $new_base );
+		remove_filter( 'shortpixel/image/replace_files', $offloader, 10 );
+
+		// SENTINEL: the offloader filter really ran with the real file list.
+		$this->assertCount( 1, $seen, 'Sentinel: the replace_files filter must have been consulted exactly once.' );
+		$this->assertGreaterThan( 0, $seen[0], 'Sentinel: the filter must have received the source files it is meant to rename.' );
+
+		// THE PIN.
+		$this->assertFalse(
+			$result,
+			'PIN #73: fixed? An offloader-handled rename now completes and reports success — flip this pin.'
+		);
+		$this->assertStringContainsString(
+			$old_base,
+			get_attached_file( $attachment_id ),
+			'PIN #73: _wp_attached_file was never rewritten, although the offloader already renamed (and deleted) the originals remotely.'
+		);
+		$this->assertStringNotContainsString(
+			$new_base,
+			(string) ( wp_get_attachment_metadata( $attachment_id )['file'] ?? '' ),
+			'PIN #73: the attachment metadata still carries the old name.'
+		);
+	}
+
+	/**
+	 * PIN #73 (dry-run variant, LOW — no user-facing caller: the only
+	 * production dry_run call is inside a commented-out debug block in
+	 * EditMediaViewController). Dry-run never copies, so $copySource is
+	 * always empty and the same 0db02498 bail-out makes every dry-run
+	 * return false without logging the metadata / Replacer plan.
+	 *
+	 * Flip when: dry-run reaches the end and returns true.
+	 */
+	public function test_pin73_dry_run_always_returns_false_pinned_for_deferred_fix() {
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+		$old_file = get_attached_file( $attachment_id );
+
+		$new_base = 'pin73-dry-' . wp_generate_password( 6, false );
+		$result   = $this->replaceFilesWithArgs( $attachment_id, $new_base, array( 'dry_run' => true, 'recent_upload' => true ) );
+
+		// SENTINEL: dry-run really changed nothing.
+		$this->assertFileExists( $old_file, 'Sentinel: dry-run must not touch the file.' );
+		$this->assertSame( $old_file, get_attached_file( $attachment_id ), 'Sentinel: dry-run must not touch _wp_attached_file.' );
+
+		$this->assertFalse(
+			$result,
+			'PIN #73 (dry-run): fixed? A dry-run now reports true — flip this pin.'
+		);
 	}
 }

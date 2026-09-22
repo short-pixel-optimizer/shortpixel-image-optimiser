@@ -1,0 +1,10 @@
+Read AGENTS.md at the repo root first; it is the entry point for AI agents.
+Detail lives in CLAUDE.md (architecture, commands) and TESTING.md (tests).
+
+Key rules:
+- Verify the environment before changing anything: bin/test.sh --verify
+- PHPUnit testsuite names are CASE-SENSITIVE (Helper, model, External,
+  Controllers, "SPIO Main"). An unknown name prints "No tests executed!" and
+  exits 0 — always check the test count.
+- --filter takes a CLASS name, not a file path.
+- Never edit build/shortpixel/ (bundled/generated from ../modules/*).

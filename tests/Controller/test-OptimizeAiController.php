@@ -846,44 +846,35 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * PINNED BUG #52 (MEDIUM): Partial-failure blindness.
+	 * REGRESSION #52 — all-copies-fail (flipped from pin52, 2026-09-18).
 	 *
-	 * Still present after 202c6e3c replaced move() with copy() + deferred
-	 * source delete. In replaceFiles():
-	 *   - `$result = $sourceFile->copy($targetFileObj);` — a false result
-	 *     merely omits the source from the $copySource delete list; no
-	 *     error is surfaced;
-	 *   - `$backupModel->renameBackup($newFileBase);`  // return dropped
-	 *   - `$replacer->replace();`                      // return dropped
-	 *   - `return true;`
+	 * Fixed by 0db02498: replaceFiles() now bails out with `return false`
+	 * when $copySource is empty after the copy loop ("Copy failed to copy
+	 * anything"), BEFORE replaceMetaData(), the duplicates loop, the backup
+	 * rename and the Replacer run — so a rename where every physical copy
+	 * failed no longer reports "Files were replaced" and rewrites nothing.
 	 *
-	 * So replaceFiles() returns true — and the user sees "Files were
-	 * replaced" — even when every single physical copy failed. There is
-	 * also no rollback: if some copies succeed and others fail, the
-	 * attachment is left in an inconsistent on-disk state while the
-	 * database is rewritten as if everything succeeded.
+	 * RESIDUAL (still open, part of #52, deferred to 6.6.x): PARTIAL
+	 * failure — some copies succeed, some fail — still returns true and
+	 * rewrites the DB for every pair; renameBackup() and Replacer::replace()
+	 * results are still discarded; no rollback exists.
 	 *
-	 * We construct a fixture where the SOURCE file's copy() ALWAYS
-	 * returns false (by stubbing FileModel::copy() to a no-op false).
-	 * The conflict guard passes because we do NOT pre-create the target.
-	 * Under the buggy contract replaceFiles() then reaches the final
-	 * `return true` despite the failed copy.
+	 * The fixture: a real attachment wrapped in a spy ImageModel whose only
+	 * file is a spy FileModel with copy() stubbed to false (no disk I/O).
+	 * The conflict guard passes because the target is NOT pre-created.
 	 *
 	 * SENTINEL principles:
-	 *  - Principle 2: `assertIsBool` before the value assertion — the
-	 *    method's `: bool` return type could otherwise mask a shape drift.
-	 *  - Principle 5: verify copy() *did* return false (via the spy
-	 *    counter) and that the source file *is* still on disk after
-	 *    the buggy run — so a fix that silently starts respecting the
-	 *    return value cannot slip past as a coincidental green.
+	 *  - Principle 2: `assertIsBool` before the value assertion.
+	 *  - Principle 5: copy() WAS attempted (spy counter) and the source is
+	 *    still on disk — the false comes from the copy check, not from an
+	 *    earlier guard (conflict, usage count, virtual offloader).
 	 *
-	 * FLIP INSTRUCTIONS when SPIO fixes #52 (e.g. accumulating copy
-	 * results and returning false on any failure, with or without
-	 * rollback): change `assertTrue($result)` to `assertFalse($result)`
-	 * and update the sentinel that asserts the source file is still on
-	 * disk (a rollback fix would also restore any partially copied files).
+	 * The #66 `replaced_url` contract (a5ad9805) used to be asserted here
+	 * on the (buggy) success path; it now lives in
+	 * tests/Integration/test-ChangeFilename.php on a real successful rename.
+	 * On this failure path nothing may be recorded.
 	 */
-	public function test_pin52_replaceFiles_returns_true_when_copy_fails_pinned_for_deferred_fix() {
+	public function test_regression52_replaceFiles_returns_false_when_every_copy_fails() {
 		// Create a real attachment (so BackupController + replaceMetaData
 		// don't blow up on a naked ImageModel stub), then wrap the loaded
 		// ImageModel in a spy that returns a spy FileModel whose move()
@@ -896,7 +887,11 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 		if ( function_exists( 'imagecreatetruecolor' ) ) {
 			$im = imagecreatetruecolor( 4, 4 );
 			imagejpeg( $im, $src_path );
-			imagedestroy( $im );
+			if ( PHP_VERSION_ID < 80000 ) {
+				// No-op from 8.0 and deprecated in 8.5; still frees memory on 7.4.
+				// Same guard as tests/Integration/Helpers/MockShortPixelApi.php.
+				imagedestroy( $im );
+			}
 		} else {
 			// GD unavailable — the test relies on it; skip cleanly.
 			$this->markTestSkipped( 'GD not available; cannot build pin52 fixture without it.' );
@@ -1040,25 +1035,24 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 			'Sentinel: the stubbed copy() did not touch disk, so the source must still be there.'
 		);
 		// Sentinel principle 2: value + type — the : bool return could mask
-		// a null-vs-false drift if we only asserted a truthy value.
+		// a null-vs-false drift if we only asserted a falsy value.
 		$this->assertIsBool( $result );
-		$this->assertTrue(
+		$this->assertFalse(
 			$result,
-			'PINNED BUG #52: replaceFiles() returns true even when copy() failed on every source — ' .
-			'the copy() result only controls the deferred-delete list, no error is surfaced. ' .
-			'FLIP INSTRUCTIONS when fixed: expect false here (and, if a rollback path is added, ' .
-			'update the sentinel accordingly).'
+			'REGRESSION #52: replaceFiles() must return false when copy() failed on every source (0db02498 "Copy failed to copy anything").'
 		);
 
-		// CONTRACT (a5ad9805, part of the #66 Gutenberg fix — independent of
-		// #52): after a non-dry-run replace, replaceFiles() piggybacks the new
-		// file URL on the result's replaced_content map under the string key
-		// 'replaced_url', which screen-media.js UpdateGutenBerg() uses to
-		// refresh the image block's url in an open editor.
+		// The bail-out happens before the backup rename and the Replacer.
+		$this->assertSame(
+			0,
+			$stubBackup->renameBackupCalls,
+			'REGRESSION #52: the backup must not be renamed when no file was copied.'
+		);
 		$replaced = $qItem->result()->replaced_content;
-		$this->assertIsArray( $replaced );
-		$this->assertArrayHasKey( 'replaced_url', $replaced, 'replaceFiles() must record the new URL as replaced_content[replaced_url].' );
-		$this->assertStringContainsString( $tgt_base, (string) $replaced['replaced_url'], 'replaced_url must point at the NEW file base.' );
+		$this->assertFalse(
+			is_array( $replaced ) && array_key_exists( 'replaced_url', $replaced ),
+			'REGRESSION #52: a failed rename must not record a replaced_url for the editor.'
+		);
 
 		// Clean up.
 		wp_delete_attachment( $attach_id, true );
