@@ -146,40 +146,30 @@ if ( ! defined( 'ABSPATH' ) ) {
 
       <p class='heading totals'><span>
         
-        <?php   $quotaData->unlimited ? esc_html_e('Total','shortpixel-image-optimiser') : esc_html_e('Total AI credits needed','shortpixel-image-optimiser');
+        <?php $quotaData->unlimited ? esc_html_e('Total','shortpixel-image-optimiser') : esc_html_e('Total AI credits needed','shortpixel-image-optimiser');
               ?>: 
         </span>
         <span class="number" data-stats-media="images-images_ai" >0</span>
 
       </p>
-
-      <p class='heading'><span><?php esc_html_e('Your ShortPixel AI Credits Available', 'shortpixel-image-optimiser'); ?></span>
+<!--
+      <p class='heading'><span><?php esc_html_e('Your AI Credits Available', 'shortpixel-image-optimiser'); ?></span>
         <span><b><?php echo esc_html($this->formatNumber($quotaData->ai->remaining, 0)) ?></b></span>
 
       </p>
-<?php /*
-      Hidden in f504e178 ("Bulk Summary AI month data incorrect"): the line
-      below paired the IMAGE monthly plan text ($quotaData->monthly->text)
-      with AI credit numbers ($quotaData->ai->consumed / ->remaining), which
-      reads as an AI monthly allowance the account does not have. Kept rather
-      than deleted pending a correct AI-plan line.
+  -->
 
-      HEADS UP: it is hidden with an HTML comment, so every PHP tag inside it
-      STILL EXECUTES on each render and its values are still emitted into the
-      page source — only the browser hides them. Switching the delimiters to
-      `<?php /* ... *_/ ?>` would suppress the work and the markup entirely.
-      Left as-is deliberately: that is a behaviour change, Bas's call.
-*/ ?>
-<!--
-      <p><span><?php esc_html_e('Your monthly plan','shortpixel-image-optimiser'); ?></span>
-         <span><b><?php echo esc_html($quotaData->monthly->text) ?></b> |
+
+
+
+      <?php if (false === $quotaData->AIUnlimited): ?>
+      <p><span><?php esc_html_e('Your AI credits available: ','shortpixel-image-optimiser'); ?></span>
+         <span><b><?php echo esc_html($quotaData->ai->text) ?> </b> |
               <?php esc_html_e('Used:', 'shortpixel-image-optimiser'); ?> <b><?php echo esc_html($this->formatNumber($quotaData->ai->consumed, 0)); ?></b> |
               <?php esc_html_e('Remaining:', 'shortpixel-image-optimiser'); ?> <b><?php echo esc_html($this->formatNumber($quotaData->ai->remaining, 0)); ?></b>
           </span>
       </p>
-      -->
-      <?php if (false === $quotaData->AIUnlimited): ?>
-      <p>				
+        <p>				
         <span>
           <a href="<?php echo esc_url($this->view->buyMoreHref) ?>" target="_new" class='button button-primary unlimited'>
           <span><?php echo UIHelper::getIcon('res/images/icon/shortpixel.svg', ); ?></span>

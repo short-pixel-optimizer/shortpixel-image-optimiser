@@ -131,7 +131,7 @@ class QuotaController
         'remaining' => $quotaData['APICallsQuotaOneTime'] - $quotaData['APICallsMadeOneTime'],
       ],
       'ai' => (object) [
-        'text' => number_format($quotaData['CaptionsCallsQuota']) . __(' credits', 'shortpixel-image-optimiser'),
+        'text' => number_format($quotaData['CaptionsCallsQuota']) . __(' credits / month', 'shortpixel-image-optimiser'),
         'total' => $quotaData['CaptionsCallsQuota'],
         'consumed' => $quotaData['CaptionsCallsMade'],
         'remaining' => $quotaData['CaptionsCallsRemaining'],
