@@ -70,8 +70,8 @@ class SettingsModel extends \ShortPixel\Model
 				'currentVersion' => ['s' => 'string', 'default' => null, 'export' => false], // last known version of plugin. Used for updating
 				'hasCustomFolders' => ['s' => 'int', 'default' => false], // timestamp used for custom folders
 				'quotaExceeded' => ['s' => 'int', 'default' => 0, 'export' => false], // indicator for quota
-				'httpProto' => ['s' => 'string', 'default' => 'https'], // Less than optimal setting for using http(s)
-				'downloadProto' => ['s' => 'string', 'default' => 'https'], // Less than optimal setting for using http(s) when Downloading
+				//'httpProto' => ['s' => 'string', 'default' => 'https'], // Less than optimal setting for using http(s) - Legacy!
+				//'downloadProto' => ['s' => 'string', 'default' => 'https'], // Less than optimal setting for using http(s) when Downloading - Legacy!
 				'activationDate' => ['s' => 'int', 'default' => null, 'export' => false], // date of activation
 				'surveyStatus' => ['s' => 'string', 'default' => 'pending', 'export' => false], // pending, answered, dismissed
 				'surveyScore' => ['s' => 'int', 'default' => 0, 'export' => false, 'max' => 10], // 1-10 score given by the user

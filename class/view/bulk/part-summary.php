@@ -153,7 +153,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
       </p>
 
-      <p class='heading'><span><?php esc_html_e('Your ShortPixel Credits Available', 'shortpixel-image-optimiser'); ?></span>
+      <p class='heading'><span><?php esc_html_e('Your ShortPixel AI Credits Available', 'shortpixel-image-optimiser'); ?></span>
         <span><b><?php echo esc_html($this->formatNumber($quotaData->ai->remaining, 0)) ?></b></span>
 
       </p>

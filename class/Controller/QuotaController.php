@@ -214,11 +214,9 @@ class QuotaController
       'CaptionsCallsRemaining'
     ];
 
-    if ($settings->httpProto !== 'https' && $settings->httpProto !== 'http') {
-      $settings->httpProto = 'https';
-    }
+   $httpProto = \wpSPIO()->env()->getRequestProtocol();
 
-    $requestURL = $settings->httpProto . '://' . SHORTPIXEL_API . '/v2/api-status.php';
+    $requestURL = $httpProto . '://' . SHORTPIXEL_API . '/v2/api-status.php';
 
     $args = array(
       'timeout' => 15, // wait for 15 secs.
@@ -258,7 +256,7 @@ class QuotaController
     }
 
     //Try first HTTPS post. add the sslverify = false if https
-    if ($settings->httpProto === 'https') {
+    if ($httpProto === 'https') {
       $args['sslverify'] = apply_filters('shortpixel/system/sslverify', true);
     }
 
@@ -267,11 +265,11 @@ class QuotaController
     //some hosting providers won't allow https:// POST connections so we try http:// as well
     if (is_wp_error($response)) {
 
-      $requestURL = $settings->httpProto == 'https' ?
+      $requestURL = $httpProto == 'https' ?
         str_replace('https://', 'http://', $requestURL) :
         str_replace('http://', 'https://', $requestURL);
       // add or remove the sslverify
-      if ($settings->httpProto === 'https') {
+      if ($httpProto === 'https') {
         $args['sslverify'] = apply_filters('shortpixel/system/sslverify', true);
       } else {
         unset($args['sslverify']);
@@ -279,7 +277,7 @@ class QuotaController
       $response = wp_remote_post($requestURL, $args);
 
       if (!is_wp_error($response)) {
-        $settings->httpProto = ($settings->httpProto == 'https' ? 'http' : 'https');
+        $httpProto = ($httpProto == 'https' ? 'http' : 'https');
       } else {
       }
     }
