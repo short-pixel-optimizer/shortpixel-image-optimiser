@@ -162,7 +162,7 @@ class SpioCommandBase
 	 * ## EXAMPLES
 	 *
 	 *   wp spio [bulk] add 123
-	 *   wp spio [bulk] add 21 --type=custom --halt
+	 *   wp spio [bulk] add 21 --type=custom --action=optimize --halt
 	 *
 	 * @when after_wp_load
 	 *
@@ -189,9 +189,10 @@ class SpioCommandBase
 			\WP_CLI::Error(__('Image object not found / non-existing in database by this ID', 'shortpixel-image-optimiser'));
 		}
 
-		$result = $controller->addItemtoQueue($imageObj);
+		$args = []; 
+		$args['action'] = isset($assoc['action']) ? sanitize_text_field($assoc['action']) : 'optimize';
 
-		//	$complete = isset($assoc['complete']) ? true : false;
+		$result = $controller->addItemtoQueue($imageObj, $args);
 
 		$message = '';
 		if (property_exists($result, 'message')) {

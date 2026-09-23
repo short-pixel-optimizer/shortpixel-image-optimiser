@@ -914,14 +914,15 @@ class OptimizeAiController extends OptimizerBase
         }
 
         $copySource = [];  // Copy now, delete the source files after metadata redo, because some plugins (WPML) can deny deletion otherwise
-        $applied = apply_filters('shortpixel/image/replace_files', false, $sourceFiles, $imageModel, $newFileBase);
+        $applied = apply_filters('shortpixel/image/replace_files', false, $sourceFiles, $imageModel, $newFileBase, $args['dry_run']);
 
         if (false === $applied && true === $imageModel->is_virtual())
         {
             Log::addError('Virtual system fails renaming files, bailing out' . $item_id, $sourceFiles);
             return false; 
-        }
-        elseif (false === $applied)
+        } 
+        // Note here; both can be applied and not respond as is_virtual if the files are also on local disk, not just on remote!
+        elseif (false === $applied || false === $imageModel->is_virtual()) 
         {
             foreach ($sourceFiles as $key => $sourceFile) {
                 $targetFileObj = isset($targetFileObjs[$key]) ? $targetFileObjs[$key] : null;
@@ -950,7 +951,7 @@ class OptimizeAiController extends OptimizerBase
             }
         }
 
-        if (count($copySource) === 0)
+        if (count($copySource) === 0 || true === $args['dry_run'])
         {
              Log::addError('Copy failed to copy anything. Bailing out' . $item_id, $sourceFiles); 
              return false; 
@@ -996,7 +997,7 @@ class OptimizeAiController extends OptimizerBase
             Log::addInfo('ReplaceArray ', $replaceArray);
         }
 
-        if (isset($copySource) && is_array($copySource) && false === $applied) {
+        if (isset($copySource) && is_array($copySource)) {
             foreach ($copySource as $fileItem) {
                 $fileItem->delete();
             }
@@ -1021,7 +1022,7 @@ class OptimizeAiController extends OptimizerBase
      * @param string    $newFileName Sanitised filename from the request (may include extension).
      * @return bool Result of replaceFiles().
      */
-    public function ajax_replaceFile($qItem, $newFileName)
+    public function ajax_replaceFile($qItem, $newFileName, $args = [])
     {
         $imageModel = $qItem->imageModel;
         if (true === $imageModel->isScaled()) {
@@ -1032,10 +1033,13 @@ class OptimizeAiController extends OptimizerBase
 
         $baseReplace = pathinfo(basename($newFileName), PATHINFO_FILENAME);
 
-        $args = [
+        $defaults = [
             'url' => $url,
             'recent_upload' => true,
+            'dry_run' => false, 
         ];
+
+        $args = wp_parse_args($args, $defaults);
 
         $result = $this->replaceFiles($qItem, $baseReplace, $args);
 
@@ -1129,16 +1133,28 @@ class OptimizeAiController extends OptimizerBase
         $dry_run = $args['dry_run'];
         $is_duplicate = $args['is_duplicate'];
 
+        $post = get_post($item_id); 
+
 
         $metadata = wp_get_attachment_metadata($item_id);
         if (isset($metadata['file']) && strpos($metadata['file'], $old_file) !== false) {
 
+            if (false === $dry_run)
+            {
+                $guid_replacement = str_replace($old_file, $new_file, $metadata['file']);
+                $post->post_name = $new_file; 
+                $post->guid = str_replace($metadata['file'], $guid_replacement, $post->guid);
+                $post->post_title = $new_file;
+                wp_update_post($post);
+            }
             // This fixes situation where dirname is similar to image name 
             $filebase = trailingslashit(pathinfo($metadata['file'], PATHINFO_DIRNAME));
             $metadata['file'] = $filebase . str_replace($old_file, $new_file, basename($metadata['file']));
             if (true === $dry_run) {
                 Log::addInfo('Dry Run, would update metadata', $metadata['file']);
             }
+
+
         }
 
         if (false === $is_duplicate) // Duplicate WPML items somehow update the attached_file but not the metadata
@@ -1173,7 +1189,9 @@ class OptimizeAiController extends OptimizerBase
         if (true === $dry_run) {
             Log::addInfo('Dry Run - Would have updated attachment metadata', $metadata);
         } else {
+            do_action('shortpixel/converter/prevent-offload', $item_id); 
             wp_update_attachment_metadata($item_id, $metadata);
+            do_action('shortpixel/converter/prevent-offload-off', $item_id); 
         }
     }
 

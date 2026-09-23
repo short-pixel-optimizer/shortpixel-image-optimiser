@@ -217,7 +217,7 @@ class wpOffload
 		}
 
 		add_action('shortpixel/image/optimised', array($this, 'image_upload'), 10);
-		add_filter('shortpixel/image/replace_files', array($this, 'replaceFiles'), 10, 4);
+		add_filter('shortpixel/image/replace_files', array($this, 'replaceFiles'), 10, 5);
 		add_action('shortpixel/image/after_restore', array($this, 'image_restore'), 10, 3); // hit this when restoring.
 		add_action('shortpixel-thumbnails-before-regenerate', array($this, 'remove_remote'), 10);
 		add_action('shortpixel/converter/prevent-offload', array($this, 'preventOffload'), 10);
@@ -498,7 +498,7 @@ class wpOffload
 	 * @param string                                 $newFileBase New filename base without an extension.
 	 * @return bool True when all remote objects were renamed or no rename was needed; false when the item is not provider-served or a copy failed (old objects are left untouched).
 	 */
-	public function replaceFiles($applied, $sourceFiles, $imageModel, $newFileBase)
+	public function replaceFiles($applied, $sourceFiles, $imageModel, $newFileBase, $dry_run = false)
 	{
 		$attachment_id = $imageModel->get('id');
 		$item = $this->getItemById($attachment_id);
@@ -586,29 +586,41 @@ class wpOffload
 				'ACL'        => 'public-read',
 			];
 		}
-		$failures = $client->copy_objects($copyRequests);
-		if (! empty($failures)) {
-			Log::addError('Remote file rename failed; old provider objects were left untouched', $failures);
-			return false;
+		
+		if (false === $dry_run)
+		{
+			$failures = $client->copy_objects($copyRequests);
+			if (! empty($failures)) {
+				Log::addError('Remote file rename failed; old provider objects were left untouched', $failures);
+				return false;
+			}
+		
+			$res = $client->delete_objects([
+				'Bucket' => $item->bucket(),
+				'Delete' => ['Objects' => array_map(function ($keys) {
+					return ['Key' => $keys[0]];
+				}, $keyRenames)],
+			]);
+		
+			$item->set_objects($updated_objects);
+			$primaryKey = $this->getMediaClass()::primary_object_key();
+			if (isset($updated_objects[$primaryKey]['source_file'])) {
+				$path = $item->path();
+				$originalPath = $item->original_path();
+				$newFilename = basename($updated_objects[$primaryKey]['source_file']);
+				$item->set_path(trailingslashit(dirname($path)) . $newFilename);
+				$item->set_original_path(trailingslashit(dirname($originalPath)) . $newFilename);
+			}
+			else 
+			{
+				Log::addWarning('Offload - Path doesnt have updated objects?', $updated_objects);
+			}
+			$item->save();
 		}
-
-		$client->delete_objects([
-			'Bucket' => $item->bucket(),
-			'Delete' => ['Objects' => array_map(function ($keys) {
-				return ['Key' => $keys[0]];
-			}, $keyRenames)],
-		]);
-
-		$item->set_objects($updated_objects);
-		$primaryKey = $this->getMediaClass()::primary_object_key();
-		if (isset($updated_objects[$primaryKey]['source_file'])) {
-			$path = $item->path();
-			$originalPath = $item->original_path();
-			$newFilename = basename($updated_objects[$primaryKey]['source_file']);
-			$item->set_path(trailingslashit(dirname($path)) . $newFilename);
-			$item->set_original_path(trailingslashit(dirname($originalPath)) . $newFilename);
+		else 
+		{ 
+			Log::addInfo('Offload Media Dry run - copyRequests ', $copyRequests);
 		}
-		$item->save();
 
 		return true;
 	}

@@ -1385,6 +1385,7 @@ class AjaxController
 		$id = $data['id'];
 		$type = $data['type'];	
 
+		
 		$newFileName = isset($_POST['newFileName']) ? sanitize_file_name($_POST['newFileName']) : false; 
 
 		if (false === $newFileName)
