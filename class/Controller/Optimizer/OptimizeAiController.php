@@ -447,7 +447,7 @@ class OptimizeAiController extends OptimizerBase
         // Block this item to prevent a double process on this. 
         $this->blockItem($qItem);
 
-        $results = $this->replaceImageAttributes($qItem, $aiData);
+        $this->replaceImageAttributes($qItem, $aiData);
         $imageModel = $qItem->imageModel;
 
         // If the file was just uploaded, assume it's not already widely linked and doesn't need replacing / symlinking 
@@ -478,9 +478,27 @@ class OptimizeAiController extends OptimizerBase
                     'url' => $url,
                 ];
 
-                $files_replaced = $this->replaceFiles($qItem, $aiData['filebase'], $args);
-                if (true === $files_replaced) {
-                    $qItem->addResult(['redirect' => 'reload']);
+                $wpmlAllDuplicates = $imageModel->getWPMLDuplicates(true); 
+                $do_replace_files = true; 
+                if (count($wpmlAllDuplicates) > 0)
+                {
+                    $do_replace_files = false; 
+                    if (isset($wpmlAllDuplicates[$item_id]) &&  true === $wpmlAllDuplicates[$item_id]['is_main_language'])
+                    {
+                        $do_replace_files = true;
+                    }
+                }
+                        
+                if (true === $do_replace_files)
+                {
+                    $files_replaced = $this->replaceFiles($qItem, $aiData['filebase'], $args);
+                    if (true === $files_replaced) {
+                        $qItem->addResult(['redirect' => 'reload']);
+                    }
+                }
+                else 
+                {
+                    Log::addInfo('Replace files cancelled due to duplicate situation'); 
                 }
             }
 
@@ -1157,8 +1175,8 @@ class OptimizeAiController extends OptimizerBase
 
         }
 
-        if (false === $is_duplicate) // Duplicate WPML items somehow update the attached_file but not the metadata
-        {
+      //  if (false === $is_duplicate) // Duplicate WPML items somehow update the attached_file but not the metadata
+      //  {
             $attached_file = get_attached_file($item_id);
             if (false === $attached_file && isset($metadata['file'])) {
                 $attached_file = $metadata['file'];
@@ -1172,7 +1190,7 @@ class OptimizeAiController extends OptimizerBase
             } else {
                 update_attached_file($item_id, $new_attached_file);
             }
-        }
+      //  }
 
         if (isset($metadata['original_image']) && strpos($metadata['original_image'], $old_file) !== false) {
             $metadata['original_image'] = str_replace($old_file, $new_file, $metadata['original_image']);
@@ -1266,8 +1284,6 @@ class OptimizeAiController extends OptimizerBase
         $prevAiData = $args['prevAiData'];
 
         $imageModel = $qItem->imageModel;
-
-
 
         $aiPreserve = \wpSPIO()->settings()->aiPreserve;
         // Determine content-replacement mode: 'missing' or 'overwrite'.
@@ -1388,7 +1404,6 @@ class OptimizeAiController extends OptimizerBase
 
                 $result_replaced_content = $qItem->result()->replaced_content;
                 $result_replaced_content[$post_id] = $replaced_content;
-                Log::addTemp('ReplaceContentResuklt', $result_replaced_content);
                 $qItem->result()->replaced_content = $result_replaced_content;
             }
         }
