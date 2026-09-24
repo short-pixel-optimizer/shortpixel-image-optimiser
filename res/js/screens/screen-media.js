@@ -1071,6 +1071,7 @@ console.log('UpdateGutenberg function', resultItem);
 		{
 			var aiData = resultItem.replaced_content[post_id];  // Should be replaced_content when it has item_id (?)	 
 			var replacedUrl = (resultItem.replaced_content.replaced_url) ? resultItem.replaced_content.replaced_url : null;
+			var replaceFileName = (resultItem.replaced_content.target_filename) ? resultItem.replaced_content.target_filename : null;
 		}
 		else 
 		{
@@ -1092,13 +1093,9 @@ console.log('Update GB', attach_id, aiData, resultItem);
 			if (typeof aiData.caption === 'string') {
 				attributes.caption = aiData.caption;
 			}
-			if (replacedUrl != null)
-			{
-			   attributes.url = resultItem.replaced_content.replaced_url; 
-			}
 		}
 
-		if (Object.keys(attributes).length === 0) {
+		if (Object.keys(attributes).length === 0 && replacedUrl == null) {
 			return false;
 		}
 
@@ -1108,6 +1105,32 @@ console.log('Update GB', attach_id, aiData, resultItem);
 
 			if (block.attributes.id == attach_id) {
 				let clientId = block.clientId;
+
+				if (replacedUrl != null) {
+					let currentUrl = block.attributes.url;
+					let targetFilename = replaceFileName || new URL(replacedUrl).pathname.split('/').pop();
+					let targetParts = targetFilename.match(/^(.*)(\.[^.]+)$/);
+					let thumbnailSuffix = '';
+
+					if (currentUrl && targetParts) {
+						let currentUrlObject = new URL(currentUrl, window.location.href);
+						let currentFilename = currentUrlObject.pathname.split('/').pop();
+						let thumbnailMatch = currentFilename.match(/(-\d+x\d+)(\.[^.]+)$/);
+
+						if (thumbnailMatch) {
+							thumbnailSuffix = thumbnailMatch[1];
+						}
+
+						currentUrlObject.pathname = currentUrlObject.pathname.replace(
+							/[^/]+$/,
+							targetParts[1] + thumbnailSuffix + targetParts[2]
+						);
+						attributes.url = currentUrlObject.toString();
+					}
+					else {
+						attributes.url = replacedUrl;
+					}
+				}
 
 				wp.data.dispatch('core/block-editor').updateBlockAttributes(clientId,
 					attributes);

@@ -969,7 +969,7 @@ class OptimizeAiController extends OptimizerBase
             }
         }
 
-        if (count($copySource) === 0 || true === $args['dry_run'])
+        if ((count($copySource) === 0 || true === $args['dry_run']) && false === $applied  )
         {
              Log::addError('Copy failed to copy anything. Bailing out' . $item_id, $sourceFiles); 
              return false; 
@@ -1008,6 +1008,7 @@ class OptimizeAiController extends OptimizerBase
 
             // Doesn't have a post_id here but will piggyback on the alt / other results and hope.
             $result_replaced_content['replaced_url'] = $target_url;
+            $result_replaced_content['target_filename'] = $target_filename;
                         
             $qItem->result()->replaced_content = $result_replaced_content;        
         } else {
@@ -1162,7 +1163,7 @@ class OptimizeAiController extends OptimizerBase
                 $guid_replacement = str_replace($old_file, $new_file, $metadata['file']);
                 $post->post_name = $new_file; 
                 $post->guid = str_replace($metadata['file'], $guid_replacement, $post->guid);
-                $post->post_title = $new_file;
+              //  $post->post_title = $new_file;
                 wp_update_post($post);
             }
             // This fixes situation where dirname is similar to image name 
@@ -1334,11 +1335,6 @@ class OptimizeAiController extends OptimizerBase
                     continue;
                 }
 
-                /*   if (strpos($src, $aiData['replace_filebase']) === false)
-             {
-                continue; 
-             } */
-
                 $replaced_content = [
                     'alt' => false,
                     'caption' => false,
@@ -1404,6 +1400,7 @@ class OptimizeAiController extends OptimizerBase
 
                 $result_replaced_content = $qItem->result()->replaced_content;
                 $result_replaced_content[$post_id] = $replaced_content;
+                Log::addTemp('ReplaceContentResuklt', $result_replaced_content);
                 $qItem->result()->replaced_content = $result_replaced_content;
             }
         }
