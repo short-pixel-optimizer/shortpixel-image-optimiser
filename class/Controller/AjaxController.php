@@ -2893,7 +2893,7 @@ class AjaxController
 		$pKey = $this->getProcessorKey();
 		if ($pKey !== false)
 			$json->processorKey = $pKey;
-
+Log::addTemp('Send AjaxControl' , $json);
 		wp_send_json($json);
 		exit();
 	}

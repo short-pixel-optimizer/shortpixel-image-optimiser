@@ -699,8 +699,10 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		}
 
 		if (fileStatus == 'FILE_DONE' && apiName == 'ai') {
+			console.log('UpdateGutenBerg', resultItem);
 			this.UpdateGutenBerg(resultItem);
 		}
+		
 
 		var wp_screen_id = this.settings.wp_screen_id; // What type of screen
 		var item_id = resultItem.item_id; // Get if result item_id is our item_id
@@ -1081,6 +1083,8 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			return false;
 		}
 
+		console.log('Updategberg resultItem', resultItem);
+
 		const post_id = wp.data.select( 'core/editor' ).getCurrentPostId();
 
 		var attach_id = resultItem.item_id;
@@ -1096,7 +1100,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			var replaceFileName = (resultItem.replaced_content.target_filename) ? resultItem.replaced_content.target_filename : null;
 		}
 
-		if (typeof aiData === 'undefined' && typeof replaceUrl === 'undefined')
+		if (typeof aiData === 'undefined' && typeof replacedUrl === 'undefined')
 		{
 			return false; 
 		}
@@ -1119,6 +1123,7 @@ console.log('Update GB', attach_id, aiData, resultItem);
 		}
 
 		if (Object.keys(attributes).length === 0 && replacedUrl == null) {
+			console.log('object keys and replaced_url null');
 			return false;
 		}
 
@@ -1155,6 +1160,7 @@ console.log('Update GB', attach_id, aiData, resultItem);
 					}
 				}
 
+				console.log('dispatch new attrs', attributes);
 				wp.data.dispatch('core/block-editor').updateBlockAttributes(clientId,
 					attributes);
 
