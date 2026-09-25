@@ -705,6 +705,11 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		if (fileStatus == 'FILE_DONE' && apiName == 'ai') {
 			this.UpdateGutenBerg(resultItem);
 		}
+
+		if (resultItem.redirect && 'reload' == resultItem.redirect )
+		{
+			window.location.reload();
+		}
 	}
 
 	RedoLegacy(id) {
@@ -924,9 +929,8 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 								this.SetMessageProcessing(id);
 								this.processor.AjaxRequest(data);
 
-								window.addEventListener('ShortPixelMedia.reloadWindow', (data) => 
+								window.addEventListener('ShortPixelMedia.reloadWindow', (event) => 
 								{
-									
 									window.location.reload(); 
 								}, { 'once' : true });
 
@@ -1057,7 +1061,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 	UpdateGutenBerg(resultItem) {
 
-console.log('UpdateGutenberg function', resultItem);
+
 		if (!wp.data || !wp.data.select('core/editor')) {
 			return false;
 		}
@@ -1070,6 +1074,9 @@ console.log('UpdateGutenberg function', resultItem);
 		if (resultItem.replaced_content && resultItem.replaced_content[post_id])
 		{
 			var aiData = resultItem.replaced_content[post_id];  // Should be replaced_content when it has item_id (?)	 
+		}
+		else if (resultItem.replaced_content.replaced_url)
+		{
 			var replacedUrl = (resultItem.replaced_content.replaced_url) ? resultItem.replaced_content.replaced_url : null;
 			var replaceFileName = (resultItem.replaced_content.target_filename) ? resultItem.replaced_content.target_filename : null;
 		}

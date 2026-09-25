@@ -49,7 +49,6 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 
 		if (element !== null && apiName !== 'ai')  {
 			element.innerHTML = '';
-			//  var event = new CustomEvent('shortpixel.loadItemView', {detail: {'type' : type, 'id': result.id }}); // send for new item view.
 			var fileStatus = this.processor.fStatus[resultItem.fileStatus];
 
 			if (fileStatus == 'FILE_DONE' || fileStatus == 'FILE_RESTORED' || resultItem.is_done == true) {
@@ -69,7 +68,6 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 				if (fileStatus == 'FILE_DONE' || true == resultItem.is_done)
 				{
 					this.processor.LoadItemView({ id: item_id, type: type });
-
 				}
 			}
 			 this.FetchAltView(resultItem.aiData, item_id);
