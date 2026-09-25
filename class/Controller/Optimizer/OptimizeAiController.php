@@ -1021,7 +1021,6 @@ class OptimizeAiController extends OptimizerBase
             $result_replaced_content['target_filename'] = $target_filename;
                         
             $qItem->result()->replaced_content = $result_replaced_content;      
-            Log::addTemp('Replaced Content - Qitem result', $qItem->result());
         } else {
             Log::addInfo('Dry-Run Replacer', $searchArray);
             Log::addInfo('ReplaceArray ', $replaceArray);
@@ -1189,7 +1188,7 @@ class OptimizeAiController extends OptimizerBase
 
       //  if (false === $is_duplicate) // Duplicate WPML items somehow update the attached_file but not the metadata
       //  {
-            $attached_file = get_attached_file($item_id);
+            $attached_file = get_attached_file($item_id, true);
             if (false === $attached_file && isset($metadata['file'])) {
                 $attached_file = $metadata['file'];
             }
@@ -1417,12 +1416,9 @@ class OptimizeAiController extends OptimizerBase
 
                 }
             } // foreach 
-            Log::addTemp('ReplaceContentResuklt', $result_replaced_content);
             $qItem->result()->replaced_content = $result_replaced_content;
         }
-        Log::addTemp('FInihsed Handle Replace'); 
     }
-
 
 
     // @todo Direct copy from CDNController. In future might be merged somewhere. 
