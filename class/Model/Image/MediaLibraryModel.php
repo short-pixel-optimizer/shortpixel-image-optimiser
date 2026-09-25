@@ -2273,31 +2273,35 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	 *
 	 * @return int[] Deduplicated list of duplicate attachment IDs (never contains $this->id).
 	 */
-	public function getWPMLDuplicates()
+	public function getWPMLDuplicates($returnalldata = false)
 	{
 		global $wpdb;
 		$env = \wpSPIO()->env();
 
-		$duplicates = array();
+		$duplicates = [];
+		$alldata = []; 
 
 		if ($env->plugin_active('wpml')) {
-			$sql = "select element_id from " . $wpdb->prefix . "icl_translations where trid in (select trid from " . $wpdb->prefix . "icl_translations where element_id = %d) and element_id <> %d";
+			$sql = "select * from " . $wpdb->prefix . "icl_translations where trid in (select trid from " . $wpdb->prefix . "icl_translations where element_id = %d) ";
 
-			$sql = $wpdb->prepare($sql, $this->id, $this->id);
+			$sql = $wpdb->prepare($sql, $this->id);
 			$results = $wpdb->get_results($sql);
+			$this_attached_file = get_attached_file($this->id);
 
 			if (is_array($results)) {
 				foreach ($results as $result) {
-					if ($result->element_id == $this->id)  // don't select your own.
+					if ($result->element_id == $this->id && false === $returnalldata)  // don't select your own.
 					{
 						continue;
 					}
-					//$duplicateFile = $fs->getMediaImage($result->element_id);
-
 					// Check if the path is the same. WPML translations can be linked to different images, so this is important.
 					// Add. Prev. it loaded to whole media Image but this doesn't go well with loadDbMeta checks, so a rougher check now to see if files are similar. In any case if not identifical, should not be threated as such
-					if (get_attached_file($this->id) == get_attached_file($result->element_id)) {
+					if ($this_attached_file == get_attached_file($result->element_id)) {
 						$duplicates[] = $result->element_id;
+						$alldata[$result->element_id] = [
+							'language_code' => $result->language_code, 
+							'is_main_language' => is_null($result->source_language_code) ? true : false, 
+						];
 					}
 				}
 			}
@@ -2316,6 +2320,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			}
 		}
 
+		if (true === $returnalldata) 
+		{
+			return $alldata; 
+		}
 		return array_unique($duplicates);
 	}
 
@@ -3700,6 +3708,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	 *     scans each attachment once.
 	 *   - Virtual attachments skip the scan unless heavy virtual functions
 	 *     are enabled — scandir() on an offloaded directory is expensive.
+	 *   - Trusted mode skips the scan entirely (d45e95ca): the method is
+	 *     heavy on file operations, which trusted mode exists to avoid.
 	 *
 	 * The matched files are filtered against $currentFiles (main + all
 	 * thumbnails + retinas + original) so nothing already tracked is

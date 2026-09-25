@@ -69,7 +69,32 @@ class QuotaController
   }
 
   /**
-   * Retrieve quota information for this account
+   * Retrieve quota information for this account, shaped for the UI.
+   *
+   * Reads the cached remote payload via getQuotaData() and reshapes its flat
+   * API field names into the nested object the views consume:
+   *
+   *   unlimited    bool    Unlimited IMAGE plan.
+   *   AIUnlimited  bool    Unlimited AI plan (set from PlanType in
+   *                        getRemoteQuota()). class/view/bulk/part-summary.php
+   *                        keys its AI message on this: false renders "Buy
+   *                        Unlimited AI credits", true the unlimited notice.
+   *   monthly      object  text, total, consumed, remaining (clamped at 0), renew
+   *                        (days until the 30-day cycle resets).
+   *   onetime      object  text, total, consumed, remaining. NOT clamped.
+   *   ai           object  text, total, consumed, remaining. `remaining` is the
+   *                        API's own CaptionsCallsRemaining, not total-consumed.
+   *   total        object  monthly+onetime totals/consumed/remaining. Excludes
+   *                        `ai` — AI credits are a separate pool.
+   *
+   * The legacy-data provision below calls forceCheckRemoteQuota() and
+   * re-fetches. A typo (fixed 2026-09-21) used to assign the result to
+   * `$quotData` instead of `$quotaData`, so the refresh was discarded and the
+   * stale non-numeric value reached number_format() → TypeError on PHP 8,
+   * i.e. it crashed on exactly the case it exists to prevent. Regression
+   * test: test_getQuota_refreshes_legacy_non_numeric_quota_from_the_api
+   * (tests/Controller/test-QuotaController.php).
+   *
    * @return object quotadata SPIO format
    */
   public function getQuota()
@@ -81,7 +106,7 @@ class QuotaController
     // Provision since we slashes fields and removed numeric, prevent version with old quotaData from crashing.
     if (isset($quotaData['APICallsQuota']) && false === is_numeric($quotaData['APICallsQuota'])) {
       $this->forceCheckRemoteQuota();
-      $quotData = $this->getQuotaData();
+      $quotaData = $this->getQuotaData();
     }
 
     // This check to prevent IIS issue on 32Bit PHP to have complaints (?) .  //https://support.shortpixel.com/conversation/240212
@@ -106,7 +131,7 @@ class QuotaController
         'remaining' => $quotaData['APICallsQuotaOneTime'] - $quotaData['APICallsMadeOneTime'],
       ],
       'ai' => (object) [
-        'text' => number_format($quotaData['CaptionsCallsQuota']) . __(' credits', 'shortpixel-image-optimiser'),
+        'text' => number_format($quotaData['CaptionsCallsQuota']) . __(' credits / month', 'shortpixel-image-optimiser'),
         'total' => $quotaData['CaptionsCallsQuota'],
         'consumed' => $quotaData['CaptionsCallsMade'],
         'remaining' => $quotaData['CaptionsCallsRemaining'],
@@ -188,7 +213,29 @@ class QuotaController
 
 
   /**
-   * [getRemoteQuota description]
+   * Fetch the account's quota straight from api.shortpixel.com.
+   *
+   * POSTs to /v2/api-status.php, with two fallbacks on transport failure:
+   * the protocol is flipped (https↔http, and the working one is persisted to
+   * the httpProto setting) and retried, then a final wp_remote_get with the
+   * arguments moved into the query string.
+   *
+   * Every failure mode — WP_Error, non-200, unparseable body, or a Status
+   * Code other than 2 — returns $defaultData: APIKeyValid/GetSuccess false
+   * with all numeric fields zeroed, so a connectivity blip can never render
+   * as stale credits. An API-supplied Status message replaces the generic
+   * connectivity text when there is one.
+   *
+   * Response normalisation: each field in $numericResults is coerced with
+   * `(int) max($value, 0)` (missing → 0), APICallsRemaining is recomputed
+   * locally from the monthly + one-time pools, and `AIUnlimited` is derived
+   * from `PlanType == 'Unlimited AI'` — the flag the bulk summary keys its AI
+   * message on. Side effect: sets or resets the quota-exceeded state (and its
+   * admin notices) based on the computed remaining credits.
+   *
+   * Callers reach this only through getQuotaData()'s cache miss; it is never
+   * called directly on a warm cache.
+   *
    * @param  string $apiKey                 User account key
    * @param  boolean $validate               Api should also validate key or not
    * @return array            Quotadata array (remote format) [with validated key]
@@ -214,11 +261,9 @@ class QuotaController
       'CaptionsCallsRemaining'
     ];
 
-    if ($settings->httpProto !== 'https' && $settings->httpProto !== 'http') {
-      $settings->httpProto = 'https';
-    }
+   $httpProto = \wpSPIO()->env()->getRequestProtocol();
 
-    $requestURL = $settings->httpProto . '://' . SHORTPIXEL_API . '/v2/api-status.php';
+    $requestURL = $httpProto . '://' . SHORTPIXEL_API . '/v2/api-status.php';
 
     $args = array(
       'timeout' => 15, // wait for 15 secs.
@@ -258,7 +303,7 @@ class QuotaController
     }
 
     //Try first HTTPS post. add the sslverify = false if https
-    if ($settings->httpProto === 'https') {
+    if ($httpProto === 'https') {
       $args['sslverify'] = apply_filters('shortpixel/system/sslverify', true);
     }
 
@@ -267,11 +312,11 @@ class QuotaController
     //some hosting providers won't allow https:// POST connections so we try http:// as well
     if (is_wp_error($response)) {
 
-      $requestURL = $settings->httpProto == 'https' ?
+      $requestURL = $httpProto == 'https' ?
         str_replace('https://', 'http://', $requestURL) :
         str_replace('http://', 'https://', $requestURL);
       // add or remove the sslverify
-      if ($settings->httpProto === 'https') {
+      if ($httpProto === 'https') {
         $args['sslverify'] = apply_filters('shortpixel/system/sslverify', true);
       } else {
         unset($args['sslverify']);
@@ -279,7 +324,7 @@ class QuotaController
       $response = wp_remote_post($requestURL, $args);
 
       if (!is_wp_error($response)) {
-        $settings->httpProto = ($settings->httpProto == 'https' ? 'http' : 'https');
+        $httpProto = ($httpProto == 'https' ? 'http' : 'https');
       } else {
       }
     }
@@ -355,7 +400,6 @@ class QuotaController
       $this->setQuotaExceeded();
     }
 
-    Log::addTemp('getRemoteQUota', $dataArray);
     return $dataArray;
   }
 } // Class

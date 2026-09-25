@@ -447,7 +447,7 @@ class OptimizeAiController extends OptimizerBase
         // Block this item to prevent a double process on this. 
         $this->blockItem($qItem);
 
-        $results = $this->replaceImageAttributes($qItem, $aiData);
+        $this->replaceImageAttributes($qItem, $aiData);
         $imageModel = $qItem->imageModel;
 
         // If the file was just uploaded, assume it's not already widely linked and doesn't need replacing / symlinking 
@@ -478,12 +478,28 @@ class OptimizeAiController extends OptimizerBase
                     'url' => $url,
                 ];
 
-
-                $files_replaced = $this->replaceFiles($qItem, $aiData['filebase'], $args);
-                if (true === $files_replaced) {
-                    $qItem->addResult(['redirect' => 'reload']);
+                $wpmlAllDuplicates = $imageModel->getWPMLDuplicates(true); 
+                $do_replace_files = true; 
+                if (count($wpmlAllDuplicates) > 0)
+                {
+                    $do_replace_files = false; 
+                    if (isset($wpmlAllDuplicates[$item_id]) &&  true === $wpmlAllDuplicates[$item_id]['is_main_language'])
+                    {
+                        $do_replace_files = true;
+                    }
                 }
-
+                        
+                if (true === $do_replace_files)
+                {
+                    $files_replaced = $this->replaceFiles($qItem, $aiData['filebase'], $args);
+                    if (true === $files_replaced) {
+                        $qItem->addResult(['redirect' => 'reload']);
+                    }
+                }
+                else 
+                {
+                    Log::addInfo('Replace files cancelled due to duplicate situation'); 
+                }
             }
 
             // Reset when files change.
@@ -708,28 +724,50 @@ class OptimizeAiController extends OptimizerBase
      * filename base that also appears in a directory segment does not rename
      * the directory in the Replacer URLs.
      *
-     * BUG #52 (open, pinned in tests/Controller/test-OptimizeAiController.php
-     * as test_pin52_..._pinned_for_deferred_fix): still present after the
-     * copy+deferred-delete refactor (202c6e3c) — a failed copy() is merely
-     * omitted from $copySource (so its source survives), but no error is
-     * surfaced; renameBackup() and $replacer->replace() results are still
-     * discarded. On partial failure this method still returns true, the DB
-     * rewrite runs for ALL pairs and the user is told "Files were replaced".
-     * No rollback exists.
+     * Offloaded / virtual media (1d61b243 + 0db02498):
+     *   - Unsupported virtual offloaders (S3-Uploads, InfiniteUploads,
+     *     Bitpoke Stack — anything but WP Offload Media, see
+     *     isVirtualSupported()) are refused up front: a virtual image
+     *     returns false before anything is touched, and the "Change
+     *     Filename" field is not rendered for them (getAltView() passes
+     *     is_renameable=false to part-aitext.php). This closes BUG #70
+     *     (regression-covered in tests/Integration/test-VirtualFilesystemRename.php).
+     *   - The rename is first offered to the `shortpixel/image/replace_files`
+     *     filter (false, $sourceFiles, $imageModel, $newFileBase). An
+     *     offloader returns true when it renamed the files itself
+     *     (wpOffload::replaceFiles() does this for provider-served items);
+     *     the local copy loop is then skipped. When the filter declines and
+     *     the image is virtual, the rename is refused ("Virtual system fails
+     *     renaming files"). This replaces the old BUG #68 desync (local files
+     *     renamed behind the bucket's back / DB rewritten while nothing
+     *     moved), but the provider path has its own defects — see BUG #73.
      *
-     * BUG #68 (open, HIGH, pinned in tests/Compat/test-CompatOffloadMedia.php
-     * as test_pin68_*_pinned_for_deferred_fix): offloaded media (WP Offload
-     * Media & co) is never told about the rename — no hook fires after a
-     * successful replace and the as3cf item keeps the OLD remote key. With a
-     * local copy present the rewritten URLs 404 once served from the bucket
-     * (the earlier _wp_attached_file provider-URL corruption is gone since
-     * 202c6e3c: metadata is rewritten while the old local file still exists,
-     * so as3cf's get_attached_file filter stays out of the way);
-     * remote-only ("remove local files") is worse: every copy() fails
-     * silently (see #52) yet the DB/metadata rewrite still runs, leaving the
-     * attachment pointing at a filename that exists nowhere. Fix directions:
-     * update/re-upload the offload item after the copy loop, or refuse the
-     * rename when Offloader reports the item as offloaded.
+     * BUG #73 (open, HIGH, pinned in tests/Integration/test-ChangeFilename.php
+     * as test_pin73_*_pinned_for_deferred_fix): the "Copy failed to copy
+     * anything" bail-out below (`count($copySource) === 0` → return false)
+     * runs for EVERY path, including the two where no local copy is
+     * expected:
+     *   - `true === $applied`: the offloader already renamed (and, for
+     *     wpOffload, deleted) the remote objects, but this method returns
+     *     false BEFORE replaceMetaData(), the duplicates loop, the backup
+     *     rename and the Replacer — WP keeps the old filename everywhere
+     *     while the bucket only has the new one;
+     *   - dry_run: nothing is ever copied, so every dry-run returns false
+     *     without logging its plan (no user-facing caller today).
+     * Fix direction: only apply the empty-$copySource check when
+     * `false === $applied && false === $args['dry_run']` — but ONLY together
+     * with the wpOffload facets pinned in tests/External/Offload/test-wpOffload.php
+     * (it answers true when no provider object matched, provider exceptions
+     * escape uncaught, copies are forced public-read, and thumbnail objects
+     * record the main filename); otherwise an "applied" rename that renamed
+     * nothing would go on to rewrite the DB to filenames that exist nowhere.
+     *
+     * BUG #52 (all-copies-fail FIXED in 0db02498, regression-covered in
+     * tests/Controller/test-OptimizeAiController.php): when not a single
+     * copy succeeds the method now returns false before rewriting anything.
+     * Residual (deferred to 6.6.x): PARTIAL failure still returns true —
+     * the DB rewrite runs for ALL pairs, renameBackup() and
+     * $replacer->replace() results are discarded, no rollback exists.
      *
      * BUG #69 (attempted fix 202c6e3c, still open — pinned in
      * tests/Compat/test-CompatWPML.php + test-CompatPolylang.php as
@@ -746,14 +784,6 @@ class OptimizeAiController extends OptimizerBase
      *     found and the translation keeps metadata AND attached_file on
      *     the old filename. Enumerate the duplicates before the original's
      *     meta rewrite to fix.
-     *
-     * BUG #70 (open, HIGH, pinned in
-     * tests/Integration/test-VirtualFilesystemRename.php as
-     * test_pin70_*_pinned_for_deferred_fix; same family as #68): virtual
-     * filesystems (S3-Uploads by Human Made, InfiniteUploads — the
-     * VirtualFileSystem adapter) have no rename handling either; on a
-     * stateless install (no local files) every copy() fails silently (see
-     * #52) yet the DB/metadata rewrite still runs and true is returned.
      *
      * NOTE on the recent_upload=false usage guard: on a stock WP install
      * _wp_attached_file / _wp_attachment_metadata store RELATIVE paths, so the
@@ -775,7 +805,7 @@ class OptimizeAiController extends OptimizerBase
      * @param QueueItem $qItem       The queue item providing the image model.
      * @param string    $newFileBase New filename base (without extension) from the AI.
      * @param array     $args        Optional: dry_run (bool), imageThreshold (int), url (string), recent_upload (bool).
-     * @return bool True if it made it to the end of the replace functions; false on usage-guard block or filename conflict.
+     * @return bool True if it made it to the end of the replace functions; false on an unsupported virtual offloader, usage-guard block, filename conflict, a declined virtual rename, or when no file was copied (see BUG #73 for the cases where that last check misfires).
      */
     protected function replaceFiles($qItem, $newFileBase, $args = []): bool
     {
@@ -908,14 +938,15 @@ class OptimizeAiController extends OptimizerBase
         }
 
         $copySource = [];  // Copy now, delete the source files after metadata redo, because some plugins (WPML) can deny deletion otherwise
-        $applied = apply_filters('shortpixel/image/replace_files', false, $sourceFiles, $imageModel, $newFileBase);
+        $applied = apply_filters('shortpixel/image/replace_files', false, $sourceFiles, $imageModel, $newFileBase, $args['dry_run']);
 
         if (false === $applied && true === $imageModel->is_virtual())
         {
             Log::addError('Virtual system fails renaming files, bailing out' . $item_id, $sourceFiles);
             return false; 
-        }
-        elseif (false === $applied)
+        } 
+        // Note here; both can be applied and not respond as is_virtual if the files are also on local disk, not just on remote!
+        elseif (false === $applied || false === $imageModel->is_virtual()) 
         {
             foreach ($sourceFiles as $key => $sourceFile) {
                 $targetFileObj = isset($targetFileObjs[$key]) ? $targetFileObjs[$key] : null;
@@ -944,7 +975,7 @@ class OptimizeAiController extends OptimizerBase
             }
         }
 
-        if (count($copySource) === 0)
+        if ((count($copySource) === 0 || true === $args['dry_run']) && false === $applied  )
         {
              Log::addError('Copy failed to copy anything. Bailing out' . $item_id, $sourceFiles); 
              return false; 
@@ -983,6 +1014,7 @@ class OptimizeAiController extends OptimizerBase
 
             // Doesn't have a post_id here but will piggyback on the alt / other results and hope.
             $result_replaced_content['replaced_url'] = $target_url;
+            $result_replaced_content['target_filename'] = $target_filename;
                         
             $qItem->result()->replaced_content = $result_replaced_content;        
         } else {
@@ -990,7 +1022,7 @@ class OptimizeAiController extends OptimizerBase
             Log::addInfo('ReplaceArray ', $replaceArray);
         }
 
-        if (isset($copySource) && is_array($copySource) && false === $applied) {
+        if (isset($copySource) && is_array($copySource)) {
             foreach ($copySource as $fileItem) {
                 $fileItem->delete();
             }
@@ -1000,11 +1032,14 @@ class OptimizeAiController extends OptimizerBase
     }
 
     /**
+     * Entry point for the manual "Change Filename" AJAX action (media/replaceFileName).
+     *
      * Derives the new file base via pathinfo(basename(), PATHINFO_FILENAME) —
      * this strips any directory prefix (neutralising path traversal) AND the
      * extension, so the rename can never change a file's extension. Calls
      * replaceFiles() with recent_upload=true, deliberately bypassing the
      * usage-count guard: the user explicitly asked for the rename, including
+     * for images already referenced in content (see the guard NOTE on
      * replaceFiles()). Fully decoupled from AI state — works on attachments
      * that never had AI data.
      *
@@ -1012,7 +1047,7 @@ class OptimizeAiController extends OptimizerBase
      * @param string    $newFileName Sanitised filename from the request (may include extension).
      * @return bool Result of replaceFiles().
      */
-    public function ajax_replaceFile($qItem, $newFileName)
+    public function ajax_replaceFile($qItem, $newFileName, $args = [])
     {
         $imageModel = $qItem->imageModel;
         if (true === $imageModel->isScaled()) {
@@ -1023,10 +1058,13 @@ class OptimizeAiController extends OptimizerBase
 
         $baseReplace = pathinfo(basename($newFileName), PATHINFO_FILENAME);
 
-        $args = [
+        $defaults = [
             'url' => $url,
             'recent_upload' => true,
+            'dry_run' => false, 
         ];
+
+        $args = wp_parse_args($args, $defaults);
 
         $result = $this->replaceFiles($qItem, $baseReplace, $args);
 
@@ -1120,20 +1158,32 @@ class OptimizeAiController extends OptimizerBase
         $dry_run = $args['dry_run'];
         $is_duplicate = $args['is_duplicate'];
 
+        $post = get_post($item_id); 
+
 
         $metadata = wp_get_attachment_metadata($item_id);
         if (isset($metadata['file']) && strpos($metadata['file'], $old_file) !== false) {
 
+            if (false === $dry_run)
+            {
+                $guid_replacement = str_replace($old_file, $new_file, $metadata['file']);
+                $post->post_name = $new_file; 
+                $post->guid = str_replace($metadata['file'], $guid_replacement, $post->guid);
+              //  $post->post_title = $new_file;
+                wp_update_post($post);
+            }
             // This fixes situation where dirname is similar to image name 
             $filebase = trailingslashit(pathinfo($metadata['file'], PATHINFO_DIRNAME));
             $metadata['file'] = $filebase . str_replace($old_file, $new_file, basename($metadata['file']));
             if (true === $dry_run) {
                 Log::addInfo('Dry Run, would update metadata', $metadata['file']);
             }
+
+
         }
 
-        if (false === $is_duplicate) // Duplicate WPML items somehow update the attached_file but not the metadata
-        {
+      //  if (false === $is_duplicate) // Duplicate WPML items somehow update the attached_file but not the metadata
+      //  {
             $attached_file = get_attached_file($item_id);
             if (false === $attached_file && isset($metadata['file'])) {
                 $attached_file = $metadata['file'];
@@ -1147,7 +1197,7 @@ class OptimizeAiController extends OptimizerBase
             } else {
                 update_attached_file($item_id, $new_attached_file);
             }
-        }
+      //  }
 
         if (isset($metadata['original_image']) && strpos($metadata['original_image'], $old_file) !== false) {
             $metadata['original_image'] = str_replace($old_file, $new_file, $metadata['original_image']);
@@ -1164,7 +1214,9 @@ class OptimizeAiController extends OptimizerBase
         if (true === $dry_run) {
             Log::addInfo('Dry Run - Would have updated attachment metadata', $metadata);
         } else {
+            do_action('shortpixel/converter/prevent-offload', $item_id); 
             wp_update_attachment_metadata($item_id, $metadata);
+            do_action('shortpixel/converter/prevent-offload-off', $item_id); 
         }
     }
 
@@ -1240,8 +1292,6 @@ class OptimizeAiController extends OptimizerBase
 
         $imageModel = $qItem->imageModel;
 
-
-
         $aiPreserve = \wpSPIO()->settings()->aiPreserve;
         // Determine content-replacement mode: 'missing' or 'overwrite'.
         $contentReplace = \wpSPIO()->settings()->ai_content_replace ?? 'missing';
@@ -1290,11 +1340,6 @@ class OptimizeAiController extends OptimizerBase
                 if (preg_match($pattern, $basename) !== 1) {
                     continue;
                 }
-
-                /*   if (strpos($src, $aiData['replace_filebase']) === false)
-             {
-                continue; 
-             } */
 
                 $replaced_content = [
                     'alt' => false,
@@ -1384,12 +1429,6 @@ class OptimizeAiController extends OptimizerBase
         return $matches;
     }
 
-    /*
-  protected function fetchCaptionMatches($content, $qItem)
-  {
-       $pattern = '/' 
-  }
-*/
     /**
      * Check if setting AI is enabled in settings. 
      *
@@ -1535,6 +1574,13 @@ class OptimizeAiController extends OptimizerBase
      * current, action, item_id, and labels. Used both as the return value of undoAltData()
      * and as the final result payload added to the queue item in HandleSuccess().
      *
+     * Also decides whether the snippet may offer a rename (0db02498): the view
+     * data carries `is_renameable`, which is true for local media and, for
+     * offloaded (virtual) images, only when isVirtualSupported() says the active
+     * offloader can handle it. part-aitext.php renders the "File Name" field and
+     * its "Change Filename" button solely under that flag, so unsupported
+     * offloaders never show a control whose rename replaceFiles() would refuse.
+     *
      * @param QueueItem $qItem The queue item for the target attachment.
      * @return array Associative array with keys: snippet, generated, original, current, action, item_id, labels.
      */
@@ -1673,6 +1719,20 @@ class OptimizeAiController extends OptimizerBase
         return [$dataItems, $generated];
     }
 
+    /**
+     * Whether renaming is supported for the active offloader.
+     *
+     * Only WP Offload Media (`wp-offload`) handles renames, through the
+     * `shortpixel/image/replace_files` filter (wpOffload::replaceFiles()).
+     * Every other detected offloader — S3-Uploads (`s3-uploads-human`),
+     * InfiniteUploads (`infinite-uploads`), Bitpoke Stack (`stack`) — has no
+     * rename handling, so virtual images on those installs are refused by
+     * replaceFiles() and the "Change Filename" field is hidden
+     * (is_renameable=false in getAltData()). No offloader detected at all
+     * also counts as supported (plain local media).
+     *
+     * @return bool True when no offloader or WP Offload Media is active.
+     */
     private function isVirtualSupported() : bool
     {
             $offloader = Offloader::getInstance(); 

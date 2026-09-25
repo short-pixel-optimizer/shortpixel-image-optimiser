@@ -21,16 +21,18 @@
  * InfiniteUploads detection test therefore runs FIRST in this file and
  * self-skips defensively if the S3 alias already exists.
  *
- * RENAME DESYNC — VIRTUAL FILESYSTEMS — BUG #70 (open, HIGH; same
- * family as #68/wp-offload): neither Offloader,
- * VirtualFileSystem, nor InfiniteUploads contains ANY rename handling,
- * and replaceFiles() fires no hook a virtual adapter could answer. On a
- * stateless install (no local files — the normal S3-Uploads state) every
- * FileModel::move() fails silently (copy() returns false on a missing
- * source, result discarded — bug #52), yet the DB/metadata rewrite still
- * runs and replaceFiles() returns true: the attachment then references a
- * filename that exists neither locally nor on the remote bucket. Pinned
- * below.
+ * RENAME ON VIRTUAL FILESYSTEMS — BUG #70 (FIXED by refusal in 0db02498,
+ * regression-covered below): renaming is only supported for WP Offload
+ * Media. OptimizeAiController::isVirtualSupported() answers true only when
+ * no offloader or `wp-offload` is active, so for S3-Uploads,
+ * InfiniteUploads and Bitpoke Stack:
+ *   - replaceFiles() returns false up front for a virtual image ("Offloaded
+ *     item not supported for renaming") — nothing is copied, no metadata
+ *     or content is rewritten;
+ *   - the "Change Filename" field is not rendered on the edit screen
+ *     (part-aitext.php only renders it when `is_renameable` is true).
+ * Previously every copy() failed silently on a stateless install while the
+ * DB rewrite still ran and true was returned.
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -211,17 +213,13 @@ class VirtualFilesystemRenameTest extends SPIO_IntegrationTestCase {
 	// -------------------------------------------------------------------
 
 	/**
-	 * PIN #70 (see file docblock):
-	 * the normal S3-Uploads state is "no local files". The rename engine
-	 * finds no source file to move (every FileModel::move() fails
-	 * silently), no hook informs the adapter, yet the DB/metadata rewrite
-	 * still runs and success is reported — the attachment now references
-	 * a filename that exists nowhere.
-	 *
-	 * Flip when: replaceFiles() detects a virtual/offloaded source and
-	 * either refuses the rename or delegates it to the offload handler.
+	 * REGRESSION #70 (flipped from pin70, 2026-09-18; fixed by refusal in
+	 * 0db02498): on the normal S3-Uploads state ("no local files") the
+	 * rename is now refused — replaceFiles() returns false and leaves the
+	 * database untouched, instead of rewriting _wp_attached_file to a
+	 * filename that exists nowhere and reporting success.
 	 */
-	public function test_pin70_stateless_rename_rewrites_db_while_no_file_moves_pinned_for_deferred_fix() {
+	public function test_regression70_stateless_rename_is_refused_and_leaves_the_db_untouched() {
 		$id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->purgeQueueTable();
 
@@ -237,25 +235,32 @@ class VirtualFilesystemRenameTest extends SPIO_IntegrationTestCase {
 		}
 		$this->assertFileDoesNotExist( $old_file, 'Precondition: local main file removed (stateless install).' );
 
-		$this->activateS3Uploads();
+		$offloader = $this->activateS3Uploads();
+		// SENTINEL: the unsupported virtual offloader is really the active one.
+		$this->assertSame( 's3-uploads-human', $offloader->getOffloadName(), 'Sentinel: S3-Uploads must be the detected offloader.' );
+
+		$raw_attached_before = (string) get_post_meta( $id, '_wp_attached_file', true );
 
 		$new_base = 'vfs-rename-' . wp_generate_password( 6, false );
 		$result   = $this->renameAttachment( $id, $new_base );
 
-		// THE PIN: success is reported although nothing could be moved and
-		// the virtual adapter was never consulted (no rename hook exists).
-		$this->assertTrue(
+		$this->assertFalse(
 			$result,
-			'PIN #70: fixed? replaceFiles() now refuses/handles a rename on a virtual filesystem — flip this pin.'
+			'REGRESSION #70: a rename on an unsupported virtual filesystem must be refused.'
 		);
-		$this->assertStringContainsString(
+		$this->assertSame(
+			$raw_attached_before,
+			(string) get_post_meta( $id, '_wp_attached_file', true ),
+			'REGRESSION #70: _wp_attached_file must be left untouched by a refused rename.'
+		);
+		$this->assertStringNotContainsString(
 			$new_base,
-			get_attached_file( $id ),
-			'PIN #70: _wp_attached_file was rewritten despite no file moving.'
+			(string) ( wp_get_attachment_metadata( $id )['file'] ?? '' ),
+			'REGRESSION #70: the attachment metadata must not carry the new base.'
 		);
 		$this->assertFileDoesNotExist(
 			$dir . $new_base . '.jpg',
-			'PIN #70: no local file was created under the new name — and no remote rename happened either (no handler exists).'
+			'REGRESSION #70: no file may appear under the new name.'
 		);
 	}
 }

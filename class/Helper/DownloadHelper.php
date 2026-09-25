@@ -108,7 +108,7 @@ class DownloadHelper
 
         $methods = array(
             "download_url" => array(array($this, 'downloadURLMethod'), $url, false),
-            "download_url_force" => array(array($this, 'downloadURLMethod'), $url, true),
+         //   "download_url_force" => array(array($this, 'downloadURLMethod'), $url, true),
             "remote_get" => array(array($this, 'remoteGetMethod'), $url)
         );
 
@@ -270,7 +270,7 @@ class DownloadHelper
 
         $downloadTimeout = $this->getMaxDownloadTime();
 
-        $url = $this->setPreferredProtocol(urldecode($url), $force);
+        //$url = $this->setPreferredProtocol(urldecode($url), $force);
         $tempFile = \download_url($url, $downloadTimeout);
 
         if (is_wp_error($tempFile))
@@ -373,16 +373,22 @@ class DownloadHelper
 		 * @param bool   $reset Whether to force re-detection of the working protocol. Default false.
 		 * @return string The URL with the preferred protocol applied.
 		 */
+    
 		private function setPreferredProtocol($url, $reset = false) {
 		      //switch protocol based on the formerly detected working protocol
 		      $settings = \wpSPIO()->settings();
+          $httpProto = \wpSPIO()->env()->getRequestProtocol();
 
-		      if($settings->downloadProto == '' || $reset) {
+		      if(true === $reset) {
 		          //make a test to see if the http is working
 		          $testURL = 'https://' . SHORTPIXEL_API . '/img/connection-test-image.png';
 		          $result = download_url($testURL, 10);
-		          $settings->downloadProto = is_wp_error( $result ) ? 'http' : 'https';
+		          $httpProto = is_wp_error( $result ) ? 'http' : 'https';
 
+              if ('http' === $httpProto)
+              {
+                Log::addError('DownloadHelper - Possible issue with https detected! ', $url);
+              }
               // remove test.
               if (false === is_wp_error($result))
               {
@@ -390,7 +396,7 @@ class DownloadHelper
               }
 
 		      }
-		      return $settings->downloadProto == 'http' ?
+		      return $httpProto == 'http' ?
 		              str_replace('https://', 'http://', $url) :
 		              str_replace('http://', 'https://', $url);
 		  }

@@ -193,7 +193,6 @@ class EnvironmentModel extends \ShortPixel\Model
   public function getSystemLoad()
   {
       $load = sys_getloadavg();
-
   }
 
   /**
@@ -232,6 +231,14 @@ class EnvironmentModel extends \ShortPixel\Model
 			else
 				return true;
 	}
+
+  /* Return https or http via filter to use for remote requests / download requests. 
+  * @return string 
+  */
+  public function getRequestProtocol() : string
+  {
+      return apply_filters('shortpixel/env/httpProto', 'https'); 
+  }
 
   /**
    * Returns the identifier of the active offload plugin, if any.

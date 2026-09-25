@@ -328,7 +328,13 @@ class ShortPixelOnboarding
        this.steps[item_number].classList.add('active');
        if (typeof this.steps[item_number].dataset.screen !== 'undefined')
        {
-           var ev = new MouseEvent('click', { bubbles: true, cancelable: true }); 
+           // Must be a CANCELABLE MouseEvent, never `new CustomEvent('click')`:
+           // the target is a real <a href="…&part=<tab>">, and WebKit (Safari)
+           // runs a link's activation for a non-cancelable synthetic click —
+           // the page reloaded and the tour restarted at step 0 forever
+           // (bug #72, fixed 0db02498). SwitchMenuTabEvent's preventDefault()
+           // only takes effect on a cancelable event.
+           var ev = new MouseEvent('click', { bubbles: true, cancelable: true });
 
            var menuItem = this.root.querySelector('menu ul [data-menu-link="' + this.steps[item_number].dataset.screen + '"]');
            if (menuItem !== null)

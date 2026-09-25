@@ -107,7 +107,7 @@ abstract class RequestManager
    */
   protected function getRequest($requestBody = [], $requestParameters = [])
   {
-    $settings = \wpSPIO()->settings();
+    $httpProto = \wpSPIO()->env()->getRequestProtocol();
 
     $requestBody = apply_filters('shortpixel/api/request', $requestBody, $requestBody['item_id']);
 
@@ -123,8 +123,9 @@ abstract class RequestManager
         'cookies' => [],
     );
 
+
     //add this explicitely only for https, otherwise (for http) it slows down the request
-    if($settings->httpProto !== 'https') {
+    if($httpProto !== 'https') {
         unset($arguments['sslverify']);
     }
 

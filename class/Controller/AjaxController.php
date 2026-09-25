@@ -513,7 +513,7 @@ class AjaxController
 				$this->getEditorPreview($data);
 			break;
 			case 'media/replaceFileName': 
-				$this->replaceFileName($data);
+				$this->replaceFileName($json, $data);
 			break; 
 			default:
 				$json->$type->message = __('Ajaxrequest - no action found', 'shortpixel-image-optimiser');
@@ -1380,11 +1380,12 @@ class AjaxController
 	 * @param array $data Dispatch data: 'id' (attachment id) and 'type' ('media').
 	 * @return void Exits via send().
 	 */
-	protected function replaceFileName($data)
+	protected function replaceFileName($json, $data)
 	{
 		$id = $data['id'];
 		$type = $data['type'];	
 
+		
 		$newFileName = isset($_POST['newFileName']) ? sanitize_file_name($_POST['newFileName']) : false; 
 
 		if (false === $newFileName)
@@ -1416,21 +1417,23 @@ class AjaxController
 
 		$apiController =  $queueItem->getApiController('requestAlt');
 
-		$result = $apiController->ajax_replaceFile($queueItem, $newFileName);
+		$replace_result = $apiController->ajax_replaceFile($queueItem, $newFileName);
 
 		// Todo Send this QueueItem to the replaceFiles method. 
-		$result_json = [
-			'is_done' => true, 
-			'message' => (true === $result) ? __('Files were replaced', 'shortpixel-image-optimiser') : __('Files were not replaced', 'shortpixel-image-optimiser'),
-			'redirect' => 'reload', 
-		];
+		$queueItem->addResult(
+			[
+				'is_done' => true, 
+				'is_error' => (false === $replace_result) ? true : false, 
+				'fileStatus' => ImageModel::FILE_STATUS_SUCCESS, 
+				'message' => (true === $replace_result) ? __('Files were replaced', 'shortpixel-image-optimiser') : __('Files were not replaced', 'shortpixel-image-optimiser'),
+				'apiName' => 'ai', 
+				'item_id' => $id, 
+			]
+		);
 
-		if (false === $result)
-		{
-			 $result_json['is_error'] = true; 
-		}
-
-		$this->send((object) $result_json);
+		$json->$type->results = [$queueItem->result()];
+		$json->$type->qstatus = RequestManager::STATUS_SUCCESS;
+		$this->send($json);
 
 	}
 
@@ -2177,7 +2180,7 @@ class AjaxController
 			$attach_id = $id; 
 		}
 
-		$imageModel = \wpSPIO()->fileSystem()->getMediaImage($attach_id);
+		$imageModel = (false === is_null($attach_id)) ? \wpSPIO()->fileSystem()->getMediaImage($attach_id) : false;
 
         if (is_null($attach_id) || false === $imageModel)
         {

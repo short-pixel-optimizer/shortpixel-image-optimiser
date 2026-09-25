@@ -58,9 +58,9 @@ class ApiController extends RequestManager
 	 */
 	public function __construct()
 	{
-		$settings = \wpSPIO()->settings();
-		$this->apiEndPoint = $settings->httpProto . '://' . SHORTPIXEL_API . '/v2/reducer.php';
-		$this->apiDumpEndPoint = $settings->httpProto . '://' . SHORTPIXEL_API . '/v2/cleanup.php';
+		$httpProto = \wpSPIO()->env()->getRequestProtocol();
+		$this->apiEndPoint = $httpProto . '://' . SHORTPIXEL_API . '/v2/reducer.php';
+		$this->apiDumpEndPoint = $httpProto . '://' . SHORTPIXEL_API . '/v2/cleanup.php';
 	}
 
 	/**

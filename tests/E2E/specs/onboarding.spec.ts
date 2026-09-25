@@ -153,8 +153,9 @@ test.describe('Quick tour', () => {
 		await spio.setSettings({ redirectedSettings: 2 });
 	});
 
-	test('walks all five steps, switching tabs, and finishing persists the flag', async ({ page, spio, browserName }) => {
-		test.skip(browserName === 'webkit', 'WebKit reloads the page on Next — see the pinned test below');
+	test('walks all five steps, switching tabs, and finishing persists the flag', async ({ page, spio }) => {
+		// Runs on every engine again since #72 was fixed (0db02498) — it used
+		// to skip WebKit, where the tour reloaded the page on Next.
 		const settings = new SettingsPage(page);
 		await settings.goto();
 		await expect(settings.root).toHaveClass(/\bpage-quick-tour\b/);
@@ -189,45 +190,34 @@ test.describe('Quick tour', () => {
 	});
 
 	/**
-	 * PIN (unnumbered — E2E seed finding, WebKit/Safari only):
-	 * shortpixel-onboarding.js QuickTourSwitchToItem() switches the settings
-	 * tab by dispatching `new CustomEvent('click')` on the menu's
-	 * `<a href="…&part=<tab>" data-menu-link>`. That event is NOT
-	 * cancelable, so the preventDefault() in SettingsPage's
-	 * SwitchMenuTabEvent is a no-op. Chromium and Firefox never run a link's
-	 * activation behaviour for a CustomEvent; WebKit does — it follows the
-	 * href. Result on WebKit: clicking "Start Tour" reloads the settings
-	 * page at `&part=overview` and the tour starts over at step 0, forever.
-	 * Engine behaviour verified in isolation on a bare page (2026-09-16).
-	 * Likely fix: dispatch `new MouseEvent('click', { cancelable: true })`,
-	 * or call the settings tab switch directly instead of faking a click.
-	 *
-	 * FLIP-when-fixed: this test fails (no navigation), then delete it and
-	 * the webkit skip in the test above.
+	 * REGRESSION #72 (flipped from the WebKit-only pin, 2026-09-18; fixed in
+	 * 0db02498): QuickTourSwitchToItem() used to switch the settings tab by
+	 * dispatching a NON-cancelable `new CustomEvent('click')` on the menu's
+	 * `<a href="…&part=<tab>">`. WebKit (Safari) runs a link's activation for
+	 * such an event, so "Start Tour" reloaded the page and the tour restarted
+	 * at step 0 forever. It now dispatches
+	 * `new MouseEvent('click', { bubbles: true, cancelable: true })`, whose
+	 * preventDefault() in SwitchMenuTabEvent is honoured by every engine.
+	 * Runs on all engines: the page must stay the SAME document and advance.
 	 */
-	test('pin: WebKit reloads the page on Next and the tour never advances (pinned_for_deferred_fix)', async ({ page, browserName }) => {
-		test.skip(browserName !== 'webkit', 'WebKit-only defect');
+	test('regression72: Next advances the tour in place, without reloading the page', async ({ page }) => {
 		const settings = new SettingsPage(page);
 		await settings.goto();
 		const tour = page.locator('div.quick-tour');
 		await expect(settings.root).toHaveClass(/\bactive-step-0\b/); // listeners attached
-		expect(page.url(), 'starting URL carries no part= parameter').not.toMatch(/part=/);
 		await page.evaluate(() => {
 			(window as any).__spioSameDocument = true;
 		});
 
-		// SENTINEL: the click took SPIO's tab-switch path — the navigation
-		// target is exactly the menu link of step 1's screen (overview).
-		await Promise.all([
-			page.waitForURL(/page=wp-shortpixel-settings&part=overview/, { waitUntil: 'load' }),
-			tour.locator('.navigation button.next').click(),
-		]);
+		await tour.locator('.navigation button.next').click();
 
-		// PIN: a full reload happened (the marker is gone) and the tour
-		// re-initialised at step 0 instead of advancing to step 1.
-		expect(await page.evaluate(() => (window as any).__spioSameDocument), 'the page was reloaded').toBeUndefined();
-		await expect(settings.root).toHaveClass(/\bactive-step-0\b/);
-		await expect(page.locator('div.quick-tour .step.step-0')).toHaveClass(/\bactive\b/);
-		await expect(page.locator('div.quick-tour .step.step-1')).not.toHaveClass(/\bactive\b/);
+		// The tour advanced...
+		await expect(tour.locator('.step.step-1')).toHaveClass(/\bactive\b/);
+		await expect(settings.root).toHaveClass(/\bactive-step-1\b/);
+		// ...in the same document: the marker survived, so nothing reloaded.
+		expect(
+			await page.evaluate(() => (window as any).__spioSameDocument),
+			'REGRESSION #72: the page must not reload when the tour switches tabs',
+		).toBe(true);
 	});
 });

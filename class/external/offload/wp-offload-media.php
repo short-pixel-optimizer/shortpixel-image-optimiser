@@ -217,7 +217,7 @@ class wpOffload
 		}
 
 		add_action('shortpixel/image/optimised', array($this, 'image_upload'), 10);
-		add_filter('shortpixel/image/replace_files', array($this, 'replaceFiles'), 10, 4);
+		add_filter('shortpixel/image/replace_files', array($this, 'replaceFiles'), 10, 5);
 		add_action('shortpixel/image/after_restore', array($this, 'image_restore'), 10, 3); // hit this when restoring.
 		add_action('shortpixel-thumbnails-before-regenerate', array($this, 'remove_remote'), 10);
 		add_action('shortpixel/converter/prevent-offload', array($this, 'preventOffload'), 10);
@@ -450,18 +450,55 @@ class wpOffload
 	/**
 	 * Rename the provider objects belonging to an attachment.
 	 *
-	 * The optimizer already has the complete source file list, including
-	 * thumbnails and WebP/AVIF companions. Accept that list directly so the
-	 * provider rename does not need to rediscover files that may not exist
-	 * locally on remove-local-files installations.
+	 * Hooked on `shortpixel/image/replace_files` (1d61b243), which
+	 * OptimizeAiController::replaceFiles() applies before its local copy
+	 * loop. The optimizer already has the complete source file list,
+	 * including thumbnails and WebP/AVIF companions. Accept that list
+	 * directly so the provider rename does not need to rediscover files that
+	 * may not exist locally on remove-local-files installations.
 	 *
-	 * @param bool  $applied   Shortcircuit if returned true, regulare replace will not happen.
-	 * @param array $sourceFiles   Source file objects keyed by the optimizer.
-	 * @param int   $attachment_id WordPress attachment id.
-	 * @param string $newFileBase  New filename base without an extension.
-	 * @return bool True when all remote objects were renamed or no rename was needed.
+	 * Only acts on items served by the provider; otherwise it returns false
+	 * and SPIO falls back to its own handling (a virtual image is then
+	 * refused, see replaceFiles()). For every object whose source file is in
+	 * the list it copies the object to the new key (copy_objects), deletes
+	 * the old keys (delete_objects), and saves the item with the renamed
+	 * objects and path.
+	 *
+	 * NOTES (review 2026-09-18) — BUG #73 (open, HIGH), pinned in
+	 * tests/External/Offload/test-wpOffload.php and
+	 * tests/Integration/test-ChangeFilename.php:
+	 *   - $renames is built with str_replace($sourceBase, $newFileBase,
+	 *     $sourceFilename), $sourceBase being each file's OWN base: every
+	 *     thumbnail ('photo-300x225.jpg') maps to the MAIN new name
+	 *     ('renamed-photo.jpg'). The bucket keys are computed separately and
+	 *     are correct, but set_objects() records every size's source_file as
+	 *     the main image;
+	 *   - when this returns true, replaceFiles() skips the local copy loop
+	 *     and then returns false on its "copied nothing" check BEFORE
+	 *     rewriting WP metadata, backups and content — the bucket holds only
+	 *     the new keys while WordPress keeps the old filename;
+	 *   - it also returns true when NO provider object matched
+	 *     (`empty($keyRenames)`), e.g. an item without objects: SPIO then
+	 *     skips its own local rename although nothing was renamed anywhere;
+	 *   - get_provider_client() / copy_objects() exceptions are not caught
+	 *     (the unconfigured Null_Provider throws; so can a real client with
+	 *     bad credentials) — the rename request crashes;
+	 *   - The copy requests set 'ACL' => 'public-read' explicitly (the
+	 *     MetadataDirective COPY does not copy ACLs): media that WP Offload
+	 *     Media serves privately becomes public after a rename, and buckets
+	 *     with ACLs disabled (Object Ownership "bucket owner enforced", the
+	 *     S3 default for new buckets) reject the request — the rename then
+	 *     fails and, for virtual images, is refused.
+	 *   - Local files are not renamed here; on "keep local copy" installs
+	 *     the local copies keep their old names.
+	 *
+	 * @param bool                                   $applied     Filter value: false unless an earlier callback already handled the rename. Returning true makes replaceFiles() skip its regular local copy.
+	 * @param array                                  $sourceFiles Source FileModel objects keyed by the optimizer (main, thumbnails, webp_*, avif_*).
+	 * @param \ShortPixel\Model\Image\ImageModel     $imageModel  The attachment's image model (the attachment id is read via get('id')).
+	 * @param string                                 $newFileBase New filename base without an extension.
+	 * @return bool True when all remote objects were renamed or no rename was needed; false when the item is not provider-served or a copy failed (old objects are left untouched).
 	 */
-	public function replaceFiles($applied, $sourceFiles, $imageModel, $newFileBase)
+	public function replaceFiles($applied, $sourceFiles, $imageModel, $newFileBase, $dry_run = false)
 	{
 		$attachment_id = $imageModel->get('id');
 		$item = $this->getItemById($attachment_id);
@@ -549,29 +586,41 @@ class wpOffload
 				'ACL'        => 'public-read',
 			];
 		}
-		$failures = $client->copy_objects($copyRequests);
-		if (! empty($failures)) {
-			Log::addError('Remote file rename failed; old provider objects were left untouched', $failures);
-			return false;
+		
+		if (false === $dry_run)
+		{
+			$failures = $client->copy_objects($copyRequests);
+			if (! empty($failures)) {
+				Log::addError('Remote file rename failed; old provider objects were left untouched', $failures);
+				return false;
+			}
+		
+			$res = $client->delete_objects([
+				'Bucket' => $item->bucket(),
+				'Delete' => ['Objects' => array_map(function ($keys) {
+					return ['Key' => $keys[0]];
+				}, $keyRenames)],
+			]);
+		
+			$item->set_objects($updated_objects);
+			$primaryKey = $this->getMediaClass()::primary_object_key();
+			if (isset($updated_objects[$primaryKey]['source_file'])) {
+				$path = $item->path();
+				$originalPath = $item->original_path();
+				$newFilename = basename($updated_objects[$primaryKey]['source_file']);
+				$item->set_path(trailingslashit(dirname($path)) . $newFilename);
+				$item->set_original_path(trailingslashit(dirname($originalPath)) . $newFilename);
+			}
+			else 
+			{
+				Log::addWarning('Offload - Path doesnt have updated objects?', $updated_objects);
+			}
+			$item->save();
 		}
-
-		$client->delete_objects([
-			'Bucket' => $item->bucket(),
-			'Delete' => ['Objects' => array_map(function ($keys) {
-				return ['Key' => $keys[0]];
-			}, $keyRenames)],
-		]);
-
-		$item->set_objects($updated_objects);
-		$primaryKey = $this->getMediaClass()::primary_object_key();
-		if (isset($updated_objects[$primaryKey]['source_file'])) {
-			$path = $item->path();
-			$originalPath = $item->original_path();
-			$newFilename = basename($updated_objects[$primaryKey]['source_file']);
-			$item->set_path(trailingslashit(dirname($path)) . $newFilename);
-			$item->set_original_path(trailingslashit(dirname($originalPath)) . $newFilename);
+		else 
+		{ 
+			Log::addInfo('Offload Media Dry run - copyRequests ', $copyRequests);
 		}
-		$item->save();
 
 		return true;
 	}
