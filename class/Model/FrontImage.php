@@ -460,10 +460,10 @@ class FrontImage
 
 		$sizeOutput = '';
 		if (! is_null($this->sizes)) {
-			$sizeOutput = $this->dataTags['sizes'] . 'sizes="' . $this->sizes . '"';
+			$sizeOutput = $this->dataTags['sizes'] . 'sizes="' . \esc_attr($this->sizes) . '"';
 		}
 
-		$output = '<source ' . $prefix . 'srcset="' . $srcset . '" ' . $sizeOutput . ' type="image/' . $fileFormat . '">';
+		$output = '<source ' . \esc_attr($prefix) . 'srcset="' . \esc_attr($srcset) . '" ' . $sizeOutput . ' type="image/' . \esc_attr($fileFormat) . '">';
 
 		return $output;
 	}
@@ -513,6 +513,7 @@ class FrontImage
 		$seen = array();
 
 		foreach ($this->attributes as $name => $origValue) {
+			$name = sanitize_text_field($name); // make sure nothing weird here. 
 			$seen[$name] = true;
 			// Determine the effective value: prefer declared property when
 			// available, otherwise fall back to the original attribute value.
@@ -524,8 +525,7 @@ class FrontImage
 
 			// For `src` ensure it's escaped so entities like &amp; are preserved.
 			if ($name === 'src') {
-				$value = \esc_attr($value);
-				$output .= ' src="' . $value . '"';
+				$output .= ' src="' . \esc_attr($value) . '"';
 				continue;
 			}
 
