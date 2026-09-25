@@ -412,10 +412,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			return;
 		}
 
-		// If we pass AiData for interface make sure it's the correct item_id
-		if (aiData && (!attachmentAlt.dataset.shortpixelAlt || attachmentAlt.dataset.shortpixelAlt != item_id)) {
-			return;
-		}
 
 		var wp_screen_id = this.settings.wp_screen_id;
 
@@ -706,8 +702,15 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			this.UpdateGutenBerg(resultItem);
 		}
 
-		if (resultItem.redirect && 'reload' == resultItem.redirect )
+		var wp_screen_id = this.settings.wp_screen_id; // What type of screen
+		var item_id = resultItem.item_id; // Get if result item_id is our item_id
+		var attachmentAlt = this.GetPageAttachmentAlt(); 
+		var is_our_item = (attachmentAlt !== null && attachmentAlt.dataset.shortpixelAlt && attachmentAlt.dataset.shortpixelAlt == item_id) 
+
+		// Reload for now only on edit-media screen, otherwise it refreshes half the open tabs. 
+		if (resultItem.redirect && 'reload' == resultItem.redirect && wp_screen_id == 'attachment' && true == is_our_item)
 		{
+			console.log('HandleImage - Reload'); 
 			window.location.reload();
 		}
 	}
@@ -1087,14 +1090,15 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		{
 			var aiData = resultItem.replaced_content[post_id];  // Should be replaced_content when it has item_id (?)	 
 		}
-		else if (resultItem.replaced_content.replaced_url)
+		if (resultItem.replaced_content && resultItem.replaced_content.replaced_url)
 		{
 			var replacedUrl = (resultItem.replaced_content.replaced_url) ? resultItem.replaced_content.replaced_url : null;
 			var replaceFileName = (resultItem.replaced_content.target_filename) ? resultItem.replaced_content.target_filename : null;
 		}
-		else 
+
+		if (typeof aiData === 'undefined' && typeof replaceUrl === 'undefined')
 		{
-		 	return false;
+			return false; 
 		}
 
 console.log('Update GB', attach_id, aiData, resultItem); 

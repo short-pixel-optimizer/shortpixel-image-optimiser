@@ -171,6 +171,15 @@ class UtilHelper
     return $val !== null;
   }
 
+  public static function arrayFilterEmptyArrays($val)
+  {
+     if (is_array($val) && count($val) === 0)
+     {
+      return false; 
+     }
+     return true; 
+  }
+
   /**
    * Checks whether a string contains syntactically valid JSON.
    *

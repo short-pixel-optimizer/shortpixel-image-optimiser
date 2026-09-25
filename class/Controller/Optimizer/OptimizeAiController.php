@@ -1020,7 +1020,8 @@ class OptimizeAiController extends OptimizerBase
             $result_replaced_content['replaced_url'] = $target_url;
             $result_replaced_content['target_filename'] = $target_filename;
                         
-            $qItem->result()->replaced_content = $result_replaced_content;        
+            $qItem->result()->replaced_content = $result_replaced_content;      
+            Log::addTemp('Replaced Content - Qitem result', $qItem->result());
         } else {
             Log::addInfo('Dry-Run Replacer', $searchArray);
             Log::addInfo('ReplaceArray ', $replaceArray);
@@ -1302,118 +1303,124 @@ class OptimizeAiController extends OptimizerBase
 
         $action = $qItem->data()->action;
 
+        if (count($results) > 0)
+        {
+            $result_replaced_content = $qItem->result()->replaced_content;
 
-        foreach ($results as $result) {
-            $post_id = $result['post_id'];
-            $content = $result['content'];
+            foreach ($results as $result) {
+                $post_id = $result['post_id'];
+                $content = $result['content'];
 
-            if (function_exists('wp_check_post_lock') && false !== wp_check_post_lock($post_id)) {
-                Log::addDebug('Replace Image Attributes - Post lock is active, skipping');
-                continue;
-            }
-
-
-            // Check if language is correct in case of WPML.  Don't replace different language pages. 
-            if (false === $this->WPMLCheckReplace($post_id, $qItem->item_id)) {
-                continue;
-            }
-
-            $matches = $this->fetchImageMatches($content);
-            $sources = [];
-            $replaces = [];
-
-            $image_filebase = ($imageModel->isScaled()) ? $imageModel->getOriginalFile()->getFileBase() : $imageModel->getFileBase();
-
-            foreach ($matches as $match) {
-
-                $frontImage = new \ShortPixel\Model\FrontImage($match);
-                $src = $frontImage->src;
-
-                if (is_null($src)) {
-                    continue;
-                }
-                // Only replace in post content the image we did
-                // Only match against the filename portion to avoid substring
-                // collisions (e.g. my-photo vs photo). Parse the URL path and
-                // compare the basename with an anchored regex that allows
-                // typical thumbnail suffixes.
-                $path = parse_url($src, PHP_URL_PATH);
-                $basename = basename($path);
-                $ext = preg_quote($imageModel->getExtension(), '/');
-                $pattern = '/^' . preg_quote($image_filebase, '/') . '(-\d+x\d+|-scaled)?\.' . $ext . '$/i';
-                if (preg_match($pattern, $basename) !== 1) {
+                if (function_exists('wp_check_post_lock') && false !== wp_check_post_lock($post_id)) {
+                    Log::addDebug('Replace Image Attributes - Post lock is active, skipping');
                     continue;
                 }
 
-                $replaced_content = [
-                    'alt' => false,
-                    'caption' => false,
-                ];
 
-                $do_replace = false;
-                $altIsSet = (isset($aiData['alt']) && false === is_int($aiData['alt'])) ? true : false;
-                $isUndo = ('undoAltData' === $action);
+                // Check if language is correct in case of WPML.  Don't replace different language pages. 
+                if (false === $this->WPMLCheckReplace($post_id, $qItem->item_id)) {
+                    continue;
+                }
 
-                //undoAltData
-                if ($isUndo && $altIsSet) {
-                    $prevAlt = isset($prevAiData['alt']) ? $prevAiData['alt'] : '';
+                $matches = $this->fetchImageMatches($content);
+                $sources = [];
+                $replaces = [];
 
-                    if ($contentReplace === 'overwrite') {
-                        $frontImage->alt = $aiData['alt'];
-                        $do_replace = true;
-                        $replaced_content['alt'] = $aiData['alt'];
-                    } elseif ($contentReplace === 'missing') {
-                        if (trim($frontImage->alt) == trim($prevAlt)) {
+                $image_filebase = ($imageModel->isScaled()) ? $imageModel->getOriginalFile()->getFileBase() : $imageModel->getFileBase();
+
+                foreach ($matches as $match) {
+
+                    $frontImage = new \ShortPixel\Model\FrontImage($match);
+                    $src = $frontImage->src;
+
+                    if (is_null($src)) {
+                        continue;
+                    }
+                    // Only replace in post content the image we did
+                    // Only match against the filename portion to avoid substring
+                    // collisions (e.g. my-photo vs photo). Parse the URL path and
+                    // compare the basename with an anchored regex that allows
+                    // typical thumbnail suffixes.
+                    $path = parse_url($src, PHP_URL_PATH);
+                    $basename = basename($path);
+                    $ext = preg_quote($imageModel->getExtension(), '/');
+                    $pattern = '/^' . preg_quote($image_filebase, '/') . '(-\d+x\d+|-scaled)?\.' . $ext . '$/i';
+                    if (preg_match($pattern, $basename) !== 1) {
+                        continue;
+                    }
+
+                    $replaced_content = [
+                        'alt' => false,
+                        'caption' => false,
+                    ];
+
+                    $do_replace = false;
+                    $altIsSet = (isset($aiData['alt']) && false === is_int($aiData['alt'])) ? true : false;
+                    $isUndo = ('undoAltData' === $action);
+
+                    //undoAltData
+                    if ($isUndo && $altIsSet) {
+                        $prevAlt = isset($prevAiData['alt']) ? $prevAiData['alt'] : '';
+
+                        if ($contentReplace === 'overwrite') {
                             $frontImage->alt = $aiData['alt'];
                             $do_replace = true;
                             $replaced_content['alt'] = $aiData['alt'];
+                        } elseif ($contentReplace === 'missing') {
+                            if (trim($frontImage->alt) == trim($prevAlt)) {
+                                $frontImage->alt = $aiData['alt'];
+                                $do_replace = true;
+                                $replaced_content['alt'] = $aiData['alt'];
+                            }
                         }
-                    }
-                } elseif ($altIsSet) {
-                    if ($contentReplace === 'overwrite') {
-                        $frontImage->alt = $aiData['alt'];
-                        $replaced_content['alt'] = $aiData['alt'];
-                        $do_replace = true;
-                    } elseif ($contentReplace === 'missing') {
-                        if ((is_null($frontImage->alt) || strlen(trim($frontImage->alt)) == 0)) {
+                    } elseif ($altIsSet) {
+                        if ($contentReplace === 'overwrite') {
                             $frontImage->alt = $aiData['alt'];
                             $replaced_content['alt'] = $aiData['alt'];
                             $do_replace = true;
+                        } elseif ($contentReplace === 'missing') {
+                            if ((is_null($frontImage->alt) || strlen(trim($frontImage->alt)) == 0)) {
+                                $frontImage->alt = $aiData['alt'];
+                                $replaced_content['alt'] = $aiData['alt'];
+                                $do_replace = true;
+                            }
                         }
                     }
-                }
-                // Only perform a caption-only replacement when we're also
-                // changing the tag in a way that will actually be written
-                // into the post (for now, only when alt is also replaced).
-                // This avoids triggering a full parse+rebuild that would
-                // alter unrelated attributes while leaving the caption
-                // silently un-written.
-                if ($do_replace && isset($aiData['caption']) && false === is_int($aiData['caption'])) {
-                    if (false === $aiPreserve || (is_null($frontImage->caption) || strlen(trim($frontImage->caption)) == 0)) {
-                        $frontImage->caption = $aiData['caption'];
-                        $replaced_content['caption'] = $aiData['caption'];
+                    // Only perform a caption-only replacement when we're also
+                    // changing the tag in a way that will actually be written
+                    // into the post (for now, only when alt is also replaced).
+                    // This avoids triggering a full parse+rebuild that would
+                    // alter unrelated attributes while leaving the caption
+                    // silently un-written.
+                    if ($do_replace && isset($aiData['caption']) && false === is_int($aiData['caption'])) {
+                        if (false === $aiPreserve || (is_null($frontImage->caption) || strlen(trim($frontImage->caption)) == 0)) {
+                            $frontImage->caption = $aiData['caption'];
+                            $replaced_content['caption'] = $aiData['caption'];
 
-                        // $do_replace is already true here
+                            // $do_replace is already true here
+                        }
+                    }
+
+                    if (true === $do_replace) {
+                        $sources[] = $match;
+                        $replaces[] = $frontImage->buildImage();
                     }
                 }
 
-                if (true === $do_replace) {
-                    $sources[] = $match;
-                    $replaces[] = $frontImage->buildImage();
+                if (count($sources) > 0 && count($replaces) > 0) {
+                    Log::addInfo('Running Ai Replace : ', [$aiData, $sources, $replaces]);
+                    $content = $replacer2->replaceContent($content, $sources, $replaces, false, true);
+                    $replacer2->Updater()->updatePost($post_id, $content);
+
+
+                    $result_replaced_content[$post_id] = $replaced_content;
+
                 }
-            }
-
-            if (count($sources) > 0 && count($replaces) > 0) {
-                Log::addInfo('Running Ai Replace : ', [$aiData, $sources, $replaces]);
-                $content = $replacer2->replaceContent($content, $sources, $replaces, false, true);
-                $replacer2->Updater()->updatePost($post_id, $content);
-
-                $result_replaced_content = $qItem->result()->replaced_content;
-                $result_replaced_content[$post_id] = $replaced_content;
-                Log::addTemp('ReplaceContentResuklt', $result_replaced_content);
-                $qItem->result()->replaced_content = $result_replaced_content;
-            }
+            } // foreach 
+            Log::addTemp('ReplaceContentResuklt', $result_replaced_content);
+            $qItem->result()->replaced_content = $result_replaced_content;
         }
+        Log::addTemp('FInihsed Handle Replace'); 
     }
 
 

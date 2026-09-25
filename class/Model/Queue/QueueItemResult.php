@@ -190,6 +190,7 @@ class QueueItemResult implements JsonSerializable
    {
       $vars = get_object_vars($this);
       $vars = array_filter($vars, ['\ShortPixel\Helper\UtilHelper','arrayFilterNullValues']);
+      $vars = array_filter($vars, ['\ShortPixel\Helper\UtilHelper','arrayFilterEmptyArrays']);
       return (object) $vars;
    }
 

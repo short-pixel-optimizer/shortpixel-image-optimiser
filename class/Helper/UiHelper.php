@@ -526,7 +526,7 @@ class UiHelper
    * @param \ShortPixel\Model\Image\MediaLibraryModel $mediaItem The media item to build actions for.
    * @return array<string, array> Associative array of action name => action data array.
    */
-  public static function getActions($mediaItem)
+  public static function getActions($mediaItem) : array
   {
     $actions = [];
     $id = $mediaItem->get('id');
