@@ -937,6 +937,11 @@ class OptimizeAiController extends OptimizerBase
             $targetFileObjs[$key] = $targetFileObj;
         }
 
+        // Get duplicates before moving / copying files to otherwise it might not recognize duplicate files after renaming ( attached_file issue )
+        if (method_exists($imageModel, 'getWPMLDuplicates')) {
+            $duplicates = $imageModel->getWPMLDuplicates();
+        }
+
         $copySource = [];  // Copy now, delete the source files after metadata redo, because some plugins (WPML) can deny deletion otherwise
         $applied = apply_filters('shortpixel/image/replace_files', false, $sourceFiles, $imageModel, $newFileBase, $args['dry_run']);
 
@@ -982,10 +987,9 @@ class OptimizeAiController extends OptimizerBase
         }
 
         $this->replaceMetaData($item_id, $base_filename, $newFileBase, $args);
-        // Trigger updates 
 
-        if (method_exists($imageModel, 'getWPMLDuplicates')) {
-            $duplicates = $imageModel->getWPMLDuplicates();
+        // Trigger updates 
+        if (isset($duplicates) && count($duplicates) > 0) {
             foreach ($duplicates as $duplicate_id) {
                 // Update the duplicates
                 $args['is_duplicate'] = true;

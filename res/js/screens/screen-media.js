@@ -931,7 +931,19 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 								window.addEventListener('ShortPixelMedia.reloadWindow', (event) => 
 								{
-									window.location.reload(); 
+									var data = event.detail; 
+									var result = data.media.results[0]; 
+									if (true === result.is_error)
+									{
+										let msg = document.createElement('p'); 
+										msg.innerHTML = result.message; 
+										msg.classList.add('error'); 
+										pubFileName.append(msg); 
+									}
+									else
+									{
+										window.location.reload(); 
+									}									
 								}, { 'once' : true });
 
 							}
