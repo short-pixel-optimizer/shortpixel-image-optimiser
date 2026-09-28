@@ -171,6 +171,16 @@ class UtilHelper
     return $val !== null;
   }
 
+  /**
+   * array_filter callback: keeps every value except an empty array.
+   *
+   * Used by QueueItemResult::forReturn() (ffde74bf) so empty array fields
+   * are left out of the JSON response. Non-array values, including empty
+   * strings, 0 and false, are kept.
+   *
+   * @param mixed $val
+   * @return bool False only for an empty array.
+   */
   public static function arrayFilterEmptyArrays($val)
   {
      if (is_array($val) && count($val) === 0)

@@ -113,9 +113,10 @@ class SPIO_E2E_MockApi {
 	// -------------------------------------------------------------------
 
 	/**
-	 * pre_http_request callback. Non-shortpixel hosts pass through untouched
-	 * (WordPress' own update/version checks etc. simply reach the internet,
-	 * or fail soft in an offline CI runner).
+	 * pre_http_request callback. Non-shortpixel hosts pass through untouched,
+	 * reaching the internet or failing soft in an offline CI runner. WordPress'
+	 * core/plugin/theme update checks no longer get this far: spio-e2e-support.php
+	 * answers their transients with "no updates" (see spio_e2e_no_updates()).
 	 *
 	 * @param false|array $preempt
 	 * @param array       $args

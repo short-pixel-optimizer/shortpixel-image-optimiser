@@ -478,6 +478,9 @@ class OptimizeAiController extends OptimizerBase
                     'url' => $url,
                 ];
 
+                // #74 fix (faa1e4cc): every WPML language is queued for AI and each answer
+                // carries its own filebase, so only the main language may rename the shared
+                // file. See MediaLibraryModel::getWPMLDuplicates() for what this does NOT cover.
                 $wpmlAllDuplicates = $imageModel->getWPMLDuplicates(true); 
                 $do_replace_files = true; 
                 if (count($wpmlAllDuplicates) > 0)
@@ -711,14 +714,22 @@ class OptimizeAiController extends OptimizerBase
      *   3. COPIES each source file to its new name (successful copies are
      *      collected in $copySource; the sources are deleted only at the very
      *      end, after the metadata/content rewrite — some plugins (WPML) can
-     *      deny the deletion otherwise).
+     *      deny the deletion otherwise). Since e165198f this local copy also
+     *      runs when an offloader already renamed the remote objects, as long
+     *      as the image is not virtual (i.e. the files are on disk too).
      *   4. Updates attachment metadata + attached-file postmeta for the item
      *      AND (202c6e3c) for every getWPMLDuplicates() sibling with
-     *      is_duplicate=true (metadata only — see replaceMetaData()).
+     *      is_duplicate=true (see replaceMetaData()). Since 11aa2065 the
+     *      sibling list is collected BEFORE step 3, while every sibling still
+     *      shares this item's attached file.
      *   5. Renames backup files via BackupController.
      *   6. Replaces source/target URL pairs in post content via Replacer2.
-     *   7. Deletes the successfully-copied source files.
-     * Supports a dry_run mode that logs all planned operations without making any changes.
+     *   7. Deletes the successfully-copied source files (since e165198f also
+     *      when an offloader applied the rename).
+     * Supports a dry_run mode that logs the planned operations and changes
+     * nothing; it always returns false (explicit since e165198f, which also
+     * passes dry_run on to the offloader filter). Its bail-out still logs
+     * "Copy failed to copy anything", which is misleading for a dry-run.
      *
      * URL replacement is anchored to the basename portion of the URL, so a
      * filename base that also appears in a directory segment does not rename
@@ -729,38 +740,49 @@ class OptimizeAiController extends OptimizerBase
      *     Bitpoke Stack — anything but WP Offload Media, see
      *     isVirtualSupported()) are refused up front: a virtual image
      *     returns false before anything is touched, and the "Change
-     *     Filename" field is not rendered for them (getAltView() passes
+     *     Filename" field is not rendered for them (getAltData() passes
      *     is_renameable=false to part-aitext.php). This closes BUG #70
      *     (regression-covered in tests/Integration/test-VirtualFilesystemRename.php).
      *   - The rename is first offered to the `shortpixel/image/replace_files`
-     *     filter (false, $sourceFiles, $imageModel, $newFileBase). An
-     *     offloader returns true when it renamed the files itself
-     *     (wpOffload::replaceFiles() does this for provider-served items);
-     *     the local copy loop is then skipped. When the filter declines and
-     *     the image is virtual, the rename is refused ("Virtual system fails
-     *     renaming files"). This replaces the old BUG #68 desync (local files
-     *     renamed behind the bucket's back / DB rewritten while nothing
-     *     moved), but the provider path has its own defects — see BUG #73.
+     *     filter (false, $sourceFiles, $imageModel, $newFileBase, $dry_run —
+     *     the fifth argument since e165198f). An offloader returns true when
+     *     it renamed the remote files itself (wpOffload::replaceFiles() does
+     *     this for provider-served items). The local copy loop is then
+     *     skipped only for VIRTUAL images; when the files are on disk too it
+     *     still runs, so the local copies follow the remote rename. When the
+     *     filter declines and the image is virtual, the rename is refused
+     *     ("Virtual system fails renaming files").
      *
-     * BUG #73 (open, HIGH, pinned in tests/Integration/test-ChangeFilename.php
-     * as test_pin73_*_pinned_for_deferred_fix): the "Copy failed to copy
-     * anything" bail-out below (`count($copySource) === 0` → return false)
-     * runs for EVERY path, including the two where no local copy is
-     * expected:
-     *   - `true === $applied`: the offloader already renamed (and, for
-     *     wpOffload, deleted) the remote objects, but this method returns
-     *     false BEFORE replaceMetaData(), the duplicates loop, the backup
-     *     rename and the Replacer — WP keeps the old filename everywhere
-     *     while the bucket only has the new one;
-     *   - dry_run: nothing is ever copied, so every dry-run returns false
-     *     without logging its plan (no user-facing caller today).
-     * Fix direction: only apply the empty-$copySource check when
-     * `false === $applied && false === $args['dry_run']` — but ONLY together
-     * with the wpOffload facets pinned in tests/External/Offload/test-wpOffload.php
-     * (it answers true when no provider object matched, provider exceptions
-     * escape uncaught, copies are forced public-read, and thumbnail objects
-     * record the main filename); otherwise an "applied" rename that renamed
-     * nothing would go on to rewrite the DB to filenames that exist nowhere.
+     * BUG #73 (open, HIGH) — state after 88b2bcfe (2026-09-24):
+     *   - (a) FIXED. The "Copy failed to copy anything" bail-out now only
+     *     fires when the offloader did NOT apply the rename
+     *     (`(count($copySource) === 0 || dry_run) && false === $applied`,
+     *     88b2bcfe), so both local+remote (e165198f) and REMOTE-ONLY images
+     *     carry on to replaceMetaData() / duplicates / backup / Replacer.
+     *     The remote-only case had been confirmed on a real WP Offload Media
+     *     site (log line, bucket renamed, slug unchanged). Regression-covered
+     *     in tests/Integration/test-ChangeFilename.php:
+     *     test_regression73_offloader_handled_rename_with_local_copy_completes,
+     *     test_regression73_remote_only_offloader_handled_rename_completes.
+     *   - Reachable only since that fix, and FIXED in 80eecd0f: a remote-only
+     *     rename wrote the REMOTE location into _wp_attached_file — see
+     *     replaceMetaData() (it now reads get_attached_file() unfiltered).
+     *   - (b) STILL OPEN and now does damage in BOTH layouts, because the (a)
+     *     fix trusts "applied": wpOffload::replaceFiles() answers true when no
+     *     provider object matched (pinned in tests/External/Offload/test-wpOffload.php).
+     *       · local+remote: local files + _wp_attached_file move, the as3cf
+     *         item keeps the OLD key (the original #68 desync);
+     *       · remote-only: success is reported and WordPress is rewritten to a
+     *         filename that exists NOWHERE (nothing was renamed in the bucket).
+     *     Pinned in tests/Compat/test-CompatOffloadMedia.php
+     *     (test_pin73_offload_claims_handled_without_renaming_so_item_keeps_old_key_…,
+     *     test_pin73_remote_only_rename_claims_success_without_renaming_anything_…).
+     *     This is why (a) had to ship together with (b) — see the #77 report.
+     *   - Also still open, pinned in tests/External/Offload/test-wpOffload.php:
+     *     provider exceptions escape uncaught, and after a successful rename
+     *     every thumbnail object records the MAIN filename. The forced
+     *     'ACL' => 'public-read' on every copy is tracked as BUG #76 (see
+     *     wpOffload::replaceFiles()).
      *
      * BUG #52 (all-copies-fail FIXED in 0db02498, regression-covered in
      * tests/Controller/test-OptimizeAiController.php): when not a single
@@ -769,21 +791,34 @@ class OptimizeAiController extends OptimizerBase
      * the DB rewrite runs for ALL pairs, renameBackup() and
      * $replacer->replace() results are discarded, no rollback exists.
      *
-     * BUG #69 (attempted fix 202c6e3c, still open — pinned in
-     * tests/Compat/test-CompatWPML.php + test-CompatPolylang.php as
-     * test_pin69_*_pinned_for_deferred_fix). Two residual problems:
-     *   - Polylang (partially fixed): the getWPMLDuplicates() loop updates
-     *     each sibling's _wp_attachment_metadata, but is_duplicate=true
-     *     skips update_attached_file() and Polylang does not sync it — the
-     *     sibling's _wp_attached_file stays on the now-deleted old name.
-     *   - WPML (fix ineffective): replaceMetaData() for the ORIGINAL runs
-     *     BEFORE the duplicates loop and rewrites its attached file; the
-     *     WPML branch of getWPMLDuplicates() (MediaLibraryModel.php:2299)
-     *     only accepts siblings whose get_attached_file() equals the
-     *     original's — no longer true at that point — so no sibling is
-     *     found and the translation keeps metadata AND attached_file on
-     *     the old filename. Enumerate the duplicates before the original's
-     *     meta rewrite to fix.
+     * BUG #69 — FIXED (Polylang 2026-09-24, WPML 11aa2065 2026-09-25):
+     *   - Polylang: the getWPMLDuplicates() loop updates each sibling's
+     *     metadata (202c6e3c) and, since faa1e4cc removed the is_duplicate
+     *     skip, its _wp_attached_file too. Regression-covered:
+     *     test_regression69_polylang_duplicate_tracks_the_rename
+     *     (tests/Compat/test-CompatPolylang.php).
+     *   - WPML: the loop used to run AFTER replaceMetaData() had rewritten
+     *     this item's attached file, and the WPML branch of
+     *     getWPMLDuplicates() only accepts siblings with the SAME attached
+     *     file — so no sibling was found. 11aa2065 collects the list before
+     *     anything is touched. The user-visible case was renaming FROM A
+     *     TRANSLATION (WPML core only syncs _wp_attached_file from originals).
+     *     This also fixed the #74 residual: WPML's delete guard no longer
+     *     keeps the old file alive, so one file backs every language.
+     *     Regression-covered in tests/Compat/test-CompatWPML.php
+     *     (test_regression69_rename_updates_wpml_duplicate_meta_and_attached_file,
+     *     test_regression69_rename_from_the_translation_updates_the_original,
+     *     test_regression74_residual_main_language_rename_leaves_one_file_for_all_languages).
+     *
+     * OPEN (unnumbered, 2026-09-25): the is_duplicate early return below
+     * (ce9b1261) never fires. QueueController::addWpmlAiItemsToQueue()
+     * passes is_duplicate=true to requestAltAction(), but that only calls
+     * addKeepDataArgs(['is_duplicate']), which records the NAME;
+     * getKeepDataArgs() then reads the (never set) property and drops the
+     * null — so data()->is_duplicate is always null. recent_upload has the
+     * same defect. The #74 main-language gate in HandleSuccess() still
+     * prevents per-language renames, so today the guard is redundant rather
+     * than harmful.
      *
      * NOTE on the recent_upload=false usage guard: on a stock WP install
      * _wp_attached_file / _wp_attachment_metadata store RELATIVE paths, so the
@@ -791,21 +826,28 @@ class OptimizeAiController extends OptimizerBase
      * references on sites where full URLs land in post_content/postmeta
      * (page builders etc.). Contract-pinned in test-ChangeFilename.php
      * (test_pin53_...). The manual Change Filename path bypasses this guard
-     * entirely (ajax_replaceFile() hardcodes recent_upload=true).
+     * entirely (ajax_replaceFile() hardcodes recent_upload=true). The AI path
+     * (HandleSuccess) passes $qItem->data()->recent_upload, which is ALWAYS
+     * null (same keep-data defect as is_duplicate, see above), so the
+     * strict `false ===` check fails and the guard is skipped there too —
+     * in practice it never runs (verified 2026-09-25).
      *
      * Editor feedback (a5ad9805, #66): after a non-dry-run replace the new
      * file URL is stored on the queue result as
      * replaced_content['replaced_url'] (a string key next to the per-post
      * integer keys handleReplace() writes) so the Gutenberg consumer can
-     * refresh the block's url. NOTE the consumer only reads it when the
-     * same post also has an alt/caption entry in replaced_content — a
-     * rename without any content replacement for the open post leaves the
-     * block's url stale in the editor (the DB content was rewritten).
+     * refresh the block's url. The consumer (screen-media.js UpdateGutenBerg)
+     * reads alt/caption and replaced_url independently since ffde74bf (the
+     * 8b625159 else-if dropped the url when the same run also wrote alt).
+     * ffde74bf's early return tested `typeof replaceUrl` (undeclared) instead
+     * of `replacedUrl`, so rename-only results never refreshed the block;
+     * fixed in ceab8910. Regression-covered in tests/E2E/specs/gutenberg.spec.ts
+     * ('regression: an AI rename without an alt write moves the block…').
      *
      * @param QueueItem $qItem       The queue item providing the image model.
      * @param string    $newFileBase New filename base (without extension) from the AI.
      * @param array     $args        Optional: dry_run (bool), imageThreshold (int), url (string), recent_upload (bool).
-     * @return bool True if it made it to the end of the replace functions; false on an unsupported virtual offloader, usage-guard block, filename conflict, a declined virtual rename, or when no file was copied (see BUG #73 for the cases where that last check misfires).
+     * @return bool True if it made it to the end of the replace functions; false on an unsupported virtual offloader, usage-guard block, filename conflict, a declined virtual rename, a dry-run, or when no file was copied (see BUG #73 for the remote-only case where that last check misfires).
      */
     protected function replaceFiles($qItem, $newFileBase, $args = []): bool
     {
@@ -1047,8 +1089,14 @@ class OptimizeAiController extends OptimizerBase
      * replaceFiles()). Fully decoupled from AI state — works on attachments
      * that never had AI data.
      *
+     * Since e165198f callers may pass $args, merged over the defaults
+     * (url, recent_upload=true, dry_run=false) with wp_parse_args() — so a
+     * caller could also turn the usage guard back on with
+     * recent_upload=false. AjaxController::replaceFileName() passes none.
+     *
      * @param QueueItem $qItem       Queue item wrapping the image model.
      * @param string    $newFileName Sanitised filename from the request (may include extension).
+     * @param array     $args        Optional overrides for replaceFiles(): url, recent_upload, dry_run.
      * @return bool Result of replaceFiles().
      */
     public function ajax_replaceFile($qItem, $newFileName, $args = [])
@@ -1133,16 +1181,42 @@ class OptimizeAiController extends OptimizerBase
      * Replaces occurrences of $old_file with $new_file in the 'file', 'original_image', and
      * per-size 'file' entries of the attachment metadata array, then calls
      * wp_update_attachment_metadata(). Also updates the _wp_attached_file postmeta via
-     * update_attached_file() — but ONLY when is_duplicate is false: for
-     * WPML/Polylang duplicate siblings (202c6e3c) the attached-file update
-     * is skipped on the assumption the translation plugin syncs it, which
-     * the compat suite shows neither actually does → residual bug #69
-     * (see replaceFiles()). In dry_run mode all changes are logged but not
-     * persisted.
+     * update_attached_file() — for the item AND, since faa1e4cc, for
+     * WPML/Polylang duplicate siblings too (202c6e3c had skipped it for
+     * is_duplicate=true, which left Polylang translations on the old, deleted
+     * file). In dry_run mode all changes are logged but not persisted.
      *
      * Note: when dry_run is true the metadata 'file' string replacement is computed but
      * wp_update_attachment_metadata() is not called; the replaced $metadata variable is
      * only logged and then silently discarded.
+     *
+     * FIXED in 80eecd0f (found 2026-09-24): the attached-file update used to
+     * read the FILTERED `get_attached_file($item_id)`. For a file missing
+     * locally WP Offload Media returns the remote location there (a
+     * stream-wrapper path s3://…, or the provider URL), so a remote-only
+     * rename stored that absolute location in _wp_attached_file instead of
+     * the relative "YYYY/MM/name.jpg" (confirmed on a real site). It now
+     * reads `get_attached_file($item_id, true)` (unfiltered). Regression:
+     * test_regression_remote_only_rename_keeps_attached_file_relative
+     * (tests/Integration/test-ChangeFilename.php).
+     *
+     * Attachment POST fields: when the metadata 'file' still holds the old
+     * name, the attachment post is updated through wp_update_post() —
+     * `post_name` (the attachment slug, i.e. the attachment page URL) follows
+     * the new file base. `post_title` is left alone since 88b2bcfe (e165198f
+     * had overwritten it with the filename; regression-covered by
+     * test_rename_keeps_a_custom_attachment_title_and_updates_the_slug). The
+     * `guid` assignment in the same block is a NO-OP on every setup:
+     * wp_insert_post() re-reads the stored guid for an existing post
+     * (wp-includes/post.php, the $update branch) and discards any passed
+     * value. Verified 2026-09-24 with a real-upload-style guid. Leaving it
+     * unchanged is what WordPress intends, and SPIO's own Polylang duplicate
+     * lookup in getWPMLDuplicates() matches on guid. wp_update_post() also
+     * fires the save_post / attachment_updated hooks for the attachment.
+     *
+     * The wp_update_attachment_metadata() call is wrapped in the
+     * `shortpixel/converter/prevent-offload` / `-off` actions (e165198f), so
+     * WP Offload Media does not re-upload the files on the metadata update.
      *
      * @param int    $item_id  WordPress attachment post ID.
      * @param string $old_file Original filename base to replace.

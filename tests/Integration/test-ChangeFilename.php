@@ -64,6 +64,23 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		return $this->doAjax( 'shortpixel_ajaxRequest' );
 	}
 
+	/**
+	 * The rename result inside a media/replaceFileName response.
+	 *
+	 * Since 8b625159 (the #77 fix) a rename that reached the engine answers
+	 * like the queue does: `media.results[0]` carries is_done / is_error /
+	 * message / item_id / apiName='ai', and `media.qstatus` is
+	 * STATUS_SUCCESS. The JS 'ShortPixelMedia.reloadWindow' listener reads
+	 * results[0] and only reloads when is_error is false; on an error it
+	 * shows the message. The input-validation rejections (missing, empty or
+	 * too-short name) still answer with the old flat object.
+	 */
+	private function renameResult( ?object $response ): object {
+		$this->assertIsObject( $response, 'Raw: ' . $this->lastRawResponse() );
+		$this->assertTrue( isset( $response->media->results[0] ), 'The rename result must sit in media.results[0]. Raw: ' . $this->lastRawResponse() );
+		return (object) $response->media->results[0];
+	}
+
 	/** Fire the same action WITHOUT the newFileName key at all. */
 	private function doReplaceFileNameMissingKey( int $attachment_id ): ?object {
 		$_POST = array(
@@ -119,7 +136,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	 * End-to-end rename: main file + thumbnails on disk, _wp_attached_file
 	 * updated, metadata['sizes'][*]['file'] rewritten, embedding
 	 * post_content URL rewritten by Replacer2, guid NOT touched, response
-	 * carries is_done=true / redirect=reload.
+	 * result carries is_done=true / is_error=false (see renameResult()).
 	 */
 	public function test_happy_path_renames_files_updates_meta_and_rewrites_post_content() {
 		$this->_setRole( 'administrator' );
@@ -145,10 +162,10 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$response = $this->doReplaceFileName( $attachment_id, $new_base );
 
 		$this->assertIsObject( $response, 'Raw: ' . $this->lastRawResponse() );
-		$this->assertTrue( $response->is_done );
-		$this->assertSame( 'reload', $response->redirect );
-		$this->assertObjectNotHasProperty( 'is_error', $response, 'Happy path must not set is_error' );
-		$this->assertStringContainsString( 'replaced', $response->message );
+		$this->assertTrue( $this->renameResult( $response )->is_done );
+		$this->assertSame( $attachment_id, (int) $this->renameResult( $response )->item_id );
+		$this->assertFalse( $this->renameResult( $response )->is_error, 'Happy path must report is_error=false' );
+		$this->assertSame( 'Files were replaced', $this->renameResult( $response )->message );
 
 		// The old main file must be gone; the new one must be there.
 		$this->assertFileDoesNotExist( $original_file, 'Old file must be moved off disk' );
@@ -229,7 +246,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$response = $this->doReplaceFileName( $attachment_id, $new_base );
 
 		$this->assertIsObject( $response, 'Raw: ' . $this->lastRawResponse() );
-		$this->assertTrue( $response->is_done );
+		$this->assertTrue( $this->renameResult( $response )->is_done );
 		$this->assertFileDoesNotExist( $original_file );
 		$this->assertFileExists( dirname( $original_file ) . '/' . $new_base . '.jpg' );
 
@@ -280,9 +297,9 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$response = $this->doReplaceFileName( $attachment_id, $target_base );
 
 		$this->assertIsObject( $response, 'Raw: ' . $this->lastRawResponse() );
-		$this->assertTrue( $response->is_done, 'is_done is always true — this is the current wire contract' );
-		$this->assertTrue( (bool) ( $response->is_error ?? false ), 'Conflict must set is_error=true' );
-		$this->assertStringContainsString( 'not replaced', $response->message );
+		$this->assertTrue( $this->renameResult( $response )->is_done, 'is_done is always true — this is the current wire contract' );
+		$this->assertTrue( $this->renameResult( $response )->is_error, 'Conflict must set is_error=true (#77: the JS shows the message instead of reloading)' );
+		$this->assertStringContainsString( 'not replaced', $this->renameResult( $response )->message );
 
 		// No physical move happened.
 		$this->assertFileExists( $original_file, 'Source main file must survive a conflict abort' );
@@ -342,7 +359,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$response = $this->doReplaceFileName( $attachment_id, $evil );
 
 		$this->assertIsObject( $response, 'Raw: ' . $this->lastRawResponse() );
-		$this->assertTrue( $response->is_done );
+		$this->assertTrue( $this->renameResult( $response )->is_done );
 		$this->assertObjectNotHasProperty( 'is_error', $response, 'Sanitised base must succeed' );
 
 		$new_file = $original_dir . '/' . $expected_base . '.jpg';
@@ -397,7 +414,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$response = $this->doReplaceFileName( $attachment_id, $new_base );
 
 		$this->assertIsObject( $response, 'Raw: ' . $this->lastRawResponse() );
-		$this->assertTrue( $response->is_done );
+		$this->assertTrue( $this->renameResult( $response )->is_done );
 		$this->assertObjectNotHasProperty( 'is_error', $response );
 
 		$this->assertFileDoesNotExist( $original_scaled_file, 'Old -scaled file must be moved' );
@@ -455,7 +472,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$response = $this->doReplaceFileName( $attachment_id, $new_base );
 
 		$this->assertIsObject( $response, 'Raw: ' . $this->lastRawResponse() );
-		$this->assertTrue( $response->is_done );
+		$this->assertTrue( $this->renameResult( $response )->is_done );
 		$this->assertObjectNotHasProperty( 'is_error', $response );
 
 		$new_file = $original_dir . '/' . $new_base . '.jpg';
@@ -509,7 +526,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$response = $this->doReplaceFileName( $attachment_id, $new_base );
 
 		$this->assertIsObject( $response, 'Raw: ' . $this->lastRawResponse() );
-		$this->assertTrue( $response->is_done );
+		$this->assertTrue( $this->renameResult( $response )->is_done );
 
 		// Force WP to re-read from DB so the assertion sees the Replacer2 write.
 		wp_cache_delete( $carrier_id, 'post_meta' );
@@ -571,7 +588,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$response = $this->doReplaceFileName( $attachment_id, $new_base );
 
 		$this->assertIsObject( $response, 'Raw: ' . $this->lastRawResponse() );
-		$this->assertTrue( $response->is_done );
+		$this->assertTrue( $this->renameResult( $response )->is_done );
 		$this->assertObjectNotHasProperty( 'is_error', $response );
 
 		clean_post_cache( $post_id );
@@ -626,7 +643,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$response = $this->doReplaceFileName( $attachment_id, $new_base );
 
 		$this->assertIsObject( $response, 'Raw: ' . $this->lastRawResponse() );
-		$this->assertTrue( $response->is_done );
+		$this->assertTrue( $this->renameResult( $response )->is_done );
 		$this->assertObjectNotHasProperty( 'is_error', $response );
 
 		clean_post_cache( $post_id );
@@ -692,8 +709,8 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$response = $this->doReplaceFileName( $attachment_id, $new_base );
 
 		$this->assertIsObject( $response, 'Raw: ' . $this->lastRawResponse() );
-		$this->assertTrue( $response->is_done );
-		$this->assertObjectNotHasProperty( 'is_error', $response );
+		$this->assertTrue( $this->renameResult( $response )->is_done );
+		$this->assertFalse( $this->renameResult( $response )->is_error );
 		$this->assertFileDoesNotExist( $original_file );
 		$this->assertFileExists( dirname( $original_file ) . '/' . $new_base . '.jpg' );
 	}
@@ -912,7 +929,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		remove_filter( 'upload_dir', $filter );
 
 		$this->assertIsObject( $response, 'Raw: ' . $this->lastRawResponse() );
-		$this->assertTrue( $response->is_done );
+		$this->assertTrue( $this->renameResult( $response )->is_done );
 
 		// The physical file moved to <orig-dir>/<newbase>.jpg — the dir
 		// itself was NOT renamed (that's the whole point of the bug).
@@ -1156,96 +1173,234 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// BUG #73 — the "copied nothing" bail-out fires when no local copy is
-	// EXPECTED (offloader-handled renames, dry-run)
+	// BUG #73 — offloader-handled renames (WP Offload Media)
 	// -------------------------------------------------------------------
 
 	/**
-	 * PIN #73 (HIGH, found 2026-09-18 in 0db02498 on top of 1d61b243).
-	 *
-	 * 1d61b243 added the `shortpixel/image/replace_files` filter: an
-	 * offloader returns true when it renamed the files itself (wpOffload::
-	 * replaceFiles() renames the provider objects, DELETES the old keys and
-	 * saves the as3cf item with the new path). replaceFiles() then skips the
-	 * local copy loop — so $copySource stays empty by design. 0db02498 then
-	 * added `if (count($copySource) === 0) return false;` directly AFTER
-	 * that branch, so an offloader-handled rename ALWAYS bails out before
-	 * replaceMetaData(), the WPML/Polylang duplicates loop, the backup
-	 * rename and the Replacer. On a configured WP Offload Media install the
-	 * remote objects end up renamed while _wp_attached_file, the attachment
-	 * metadata, the backups and every post-content URL keep the OLD name,
-	 * and the user is told the rename failed.
-	 *
-	 * Simulated with a filter that reports "applied" exactly like
-	 * wpOffload::replaceFiles() does (no S3 bucket needed); the sentinel
-	 * proves the filter received the real source file list.
-	 *
-	 * Flip when: an applied rename continues to the metadata / content
-	 * rewrite and returns true (e.g. only count $copySource when
-	 * `false === $applied`).
+	 * Make the attachment look the way WP Offload Media leaves it after
+	 * "Remove files from server": the attached file resolves to a remote URL
+	 * and the offload hook vouches for it. FileModel::UrlToPath() then marks
+	 * the main file (and the thumbnails derived from it) as VIRTUAL.
 	 */
-	public function test_pin73_offloader_handled_rename_bails_out_before_metadata_update_pinned_for_deferred_fix() {
-		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
-		$this->purgeQueueTable();
-		$old_file = get_attached_file( $attachment_id );
-		$old_base = pathinfo( $old_file, PATHINFO_FILENAME );
+	private function makeRemoteOnly( int $attachment_id ): void {
+		$local = get_attached_file( $attachment_id );
+		$meta  = wp_get_attachment_metadata( $attachment_id );
+		$dir   = trailingslashit( dirname( $local ) );
+		@unlink( $local );
+		foreach ( (array) ( $meta['sizes'] ?? array() ) as $size ) {
+			@unlink( $dir . $size['file'] );
+		}
 
-		$seen = array();
-		$offloader = function ( $applied, $sourceFiles ) use ( &$seen ) {
-			$seen[] = is_array( $sourceFiles ) ? count( $sourceFiles ) : -1;
-			return true; // "the offloader renamed the files itself"
-		};
-		add_filter( 'shortpixel/image/replace_files', $offloader, 10, 2 );
-
-		$new_base = 'pin73-' . wp_generate_password( 6, false );
-		list( $result ) = $this->renameViaEngine( $attachment_id, $new_base );
-		remove_filter( 'shortpixel/image/replace_files', $offloader, 10 );
-
-		// SENTINEL: the offloader filter really ran with the real file list.
-		$this->assertCount( 1, $seen, 'Sentinel: the replace_files filter must have been consulted exactly once.' );
-		$this->assertGreaterThan( 0, $seen[0], 'Sentinel: the filter must have received the source files it is meant to rename.' );
-
-		// THE PIN.
-		$this->assertFalse(
-			$result,
-			'PIN #73: fixed? An offloader-handled rename now completes and reports success — flip this pin.'
+		$remote   = 'https://bucket.example.test/wp-content/uploads/' . get_post_meta( $attachment_id, '_wp_attached_file', true );
+		$old_base = pathinfo( $local, PATHINFO_FILENAME );
+		add_filter(
+			'get_attached_file',
+			static function ( $file, $id ) use ( $attachment_id, $remote ) {
+				return ( (int) $id === $attachment_id ) ? $remote : $file;
+			},
+			10,
+			2
 		);
-		$this->assertStringContainsString(
-			$old_base,
-			get_attached_file( $attachment_id ),
-			'PIN #73: _wp_attached_file was never rewritten, although the offloader already renamed (and deleted) the originals remotely.'
-		);
-		$this->assertStringNotContainsString(
-			$new_base,
-			(string) ( wp_get_attachment_metadata( $attachment_id )['file'] ?? '' ),
-			'PIN #73: the attachment metadata still carries the old name.'
+		// Vouch ONLY for objects that exist in the bucket (the old name and
+		// its sizes), like the real offload hook. Vouching for every URL would
+		// make the not-yet-created target names look taken, and the rename
+		// would stop at the filename-conflict guard instead.
+		add_filter(
+			'shortpixel/image/urltopath',
+			static function ( $result, $url ) use ( $old_base ) {
+				return ( false !== strpos( (string) $url, $old_base ) ) ? \ShortPixel\Model\File\FileModel::$VIRTUAL_REMOTE : $result;
+			},
+			10,
+			2
 		);
 	}
 
 	/**
-	 * PIN #73 (dry-run variant, LOW — no user-facing caller: the only
-	 * production dry_run call is inside a commented-out debug block in
-	 * EditMediaViewController). Dry-run never copies, so $copySource is
-	 * always empty and the same 0db02498 bail-out makes every dry-run
-	 * return false without logging the metadata / Replacer plan.
+	 * REGRESSION #73(a) — local + remote copy (flipped from the pin,
+	 * 2026-09-24, fixed in e165198f).
 	 *
-	 * Flip when: dry-run reaches the end and returns true.
+	 * 0db02498 bailed out whenever $copySource was empty, and an offloader
+	 * that reported "applied" skipped the local copy loop, so every
+	 * offloader-handled rename stopped before replaceMetaData() and told the
+	 * user it failed. e165198f now also runs the local copy loop when the
+	 * image is NOT virtual (`false === $applied || false === is_virtual()`),
+	 * i.e. when the files exist on disk as well as in the bucket, and deletes
+	 * the local sources afterwards whether or not the offloader applied.
+	 *
+	 * Simulated with a filter reporting "applied" exactly like
+	 * wpOffload::replaceFiles() does (no S3 bucket needed).
 	 */
-	public function test_pin73_dry_run_always_returns_false_pinned_for_deferred_fix() {
+	public function test_regression73_offloader_handled_rename_with_local_copy_completes() {
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+		$old_file = get_attached_file( $attachment_id );
+		$dir      = trailingslashit( dirname( $old_file ) );
+
+		$seen      = array();
+		$offloader = function ( $applied, $sourceFiles ) use ( &$seen ) {
+			$seen[] = is_array( $sourceFiles ) ? count( $sourceFiles ) : -1;
+			return true; // "the offloader renamed the remote files itself"
+		};
+		add_filter( 'shortpixel/image/replace_files', $offloader, 10, 2 );
+
+		$new_base = 'reg73-' . wp_generate_password( 6, false );
+		list( $result ) = $this->renameViaEngine( $attachment_id, $new_base );
+		remove_filter( 'shortpixel/image/replace_files', $offloader, 10 );
+
+		// SENTINEL: the offloader hand-off really happened, with the real files.
+		$this->assertCount( 1, $seen, 'Sentinel: the replace_files filter must have been consulted exactly once.' );
+		$this->assertGreaterThan( 0, $seen[0], 'Sentinel: the filter must have received the source files.' );
+
+		$this->assertTrue( $result, 'REGRESSION #73: an offloader-handled rename of a local+remote image must complete and report success.' );
+		$this->assertStringContainsString( $new_base, get_attached_file( $attachment_id ), 'REGRESSION #73: _wp_attached_file must carry the new name.' );
+		$this->assertStringContainsString(
+			$new_base,
+			(string) ( wp_get_attachment_metadata( $attachment_id )['file'] ?? '' ),
+			'REGRESSION #73: the attachment metadata must carry the new name.'
+		);
+		$this->assertFileExists( $dir . $new_base . '.jpg', 'REGRESSION #73: the local copy must now exist under the new name.' );
+		$this->assertFileDoesNotExist( $old_file, 'REGRESSION #73: the local source must be removed after the rename.' );
+	}
+
+	/** Rename a remote-only image while an offloader reports it renamed the bucket. */
+	private function renameRemoteOnlyWithOffloaderApplied( int $attachment_id, string $new_base ): array {
+		$seen      = 0;
+		$offloader = function () use ( &$seen ) {
+			$seen++;
+			return true; // the offloader renamed (and deleted) the remote objects
+		};
+		add_filter( 'shortpixel/image/replace_files', $offloader, 10, 1 );
+		list( $result ) = $this->renameViaEngine( $attachment_id, $new_base );
+		remove_filter( 'shortpixel/image/replace_files', $offloader, 10 );
+		return array( $result, $seen );
+	}
+
+	/**
+	 * REGRESSION #73(a) — remote-only images (flipped 2026-09-24, fixed in
+	 * 88b2bcfe; the defect was confirmed by Pedro on a real WP Offload Media
+	 * site: "Copy failed to copy anything" in the log, bucket renamed,
+	 * attachment slug unchanged).
+	 *
+	 * With "Remove files from server" the image is virtual, so no local copy
+	 * is made and $copySource stays empty. The bail-out used to fire anyway and
+	 * return false BEFORE replaceMetaData(). 88b2bcfe only bails when the
+	 * offloader did NOT apply (`... && false === $applied`), so the rename now
+	 * carries on to the metadata / slug / backup / content steps.
+	 *
+	 * The virtual state is simulated with an https:// URL; real WP Offload
+	 * Media hands back a stream-wrapper path (s3://…). Both contain "://", so
+	 * pathIsUrl() treats both as virtual.
+	 */
+	public function test_regression73_remote_only_offloader_handled_rename_completes() {
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+		$this->makeRemoteOnly( $attachment_id );
+		// SENTINEL: the image really is virtual.
+		$this->assertTrue( $this->freshImageModel( $attachment_id )->is_virtual(), 'Sentinel: the attachment must resolve as a virtual (remote-only) image.' );
+
+		$new_base = 'reg73-remote-' . wp_generate_password( 6, false );
+		list( $result, $seen ) = $this->renameRemoteOnlyWithOffloaderApplied( $attachment_id, $new_base );
+
+		$this->assertSame( 1, $seen, 'Sentinel: the replace_files filter must have been consulted exactly once.' );
+		$this->assertTrue( $result, 'REGRESSION #73(a): a remote-only rename the offloader applied must complete.' );
+		$this->assertStringContainsString(
+			$new_base,
+			(string) ( wp_get_attachment_metadata( $attachment_id )['file'] ?? '' ),
+			'REGRESSION #73(a): the attachment metadata must carry the new name.'
+		);
+	}
+
+	/**
+	 * REGRESSION (fixed in 80eecd0f, 2026-09-25; confirmed by Pedro on a real
+	 * WP Offload Media site before the fix) — a remote-only rename must keep
+	 * _wp_attached_file RELATIVE.
+	 *
+	 * The bug: replaceMetaData() read `get_attached_file($item_id)` — the
+	 * FILTERED value. For a file missing locally WP Offload Media returns the
+	 * remote location there (a stream-wrapper path s3://…, or the provider
+	 * URL), so update_attached_file() stored that absolute location instead
+	 * of "YYYY/MM/name.jpg". 80eecd0f reads it unfiltered
+	 * (`get_attached_file($item_id, true)`).
+	 */
+	public function test_regression_remote_only_rename_keeps_attached_file_relative() {
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+		$raw_before = (string) get_post_meta( $attachment_id, '_wp_attached_file', true );
+		// SENTINEL: WordPress stores a relative path to begin with.
+		$this->assertStringNotContainsString( '://', $raw_before, 'Sentinel: _wp_attached_file starts relative.' );
+
+		$this->makeRemoteOnly( $attachment_id );
+		$new_base = 'pin-attached-' . wp_generate_password( 6, false );
+		list( $result ) = $this->renameRemoteOnlyWithOffloaderApplied( $attachment_id, $new_base );
+		$this->assertTrue( $result, 'Sanity: the remote-only rename completes (#73(a) fixed).' );
+
+		$raw_after = (string) get_post_meta( $attachment_id, '_wp_attached_file', true );
+		$this->assertStringContainsString( $new_base, $raw_after, 'Sanity: _wp_attached_file was rewritten.' );
+		$this->assertStringNotContainsString(
+			'://',
+			$raw_after,
+			'REGRESSION: _wp_attached_file must stay relative after a remote-only rename (no s3:// or URL).'
+		);
+		$this->assertStringStartsWith( dirname( $raw_before ) . '/', $raw_after, 'REGRESSION: same YYYY/MM directory, relative.' );
+	}
+
+	/**
+	 * CONTRACT — dry-run returns false (by design since e165198f) — when NO
+	 * offloader applied the rename. Since 88b2bcfe the bail-out only fires
+	 * when `false === $applied`, so a dry-run on an offloaded image the
+	 * offloader "applied" (wpOffload skips its provider calls on dry_run but
+	 * still returns true) carries on and reports true.
+	 *
+	 * Formerly pinned as a #73 facet: dry-run never copies, so the
+	 * `count($copySource) === 0` bail-out made it return false. e165198f made
+	 * that explicit (`|| true === $args['dry_run']`) and now also passes
+	 * dry_run to the offloader filter so wpOffload skips the provider calls.
+	 * No user-facing caller exists (the only production dry_run call sits in
+	 * a commented-out debug block in EditMediaViewController). Note the
+	 * bail-out still logs "Copy failed to copy anything" for a dry-run,
+	 * which is misleading in a debug log.
+	 */
+	public function test_dry_run_always_returns_false_and_changes_nothing() {
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->purgeQueueTable();
 		$old_file = get_attached_file( $attachment_id );
 
-		$new_base = 'pin73-dry-' . wp_generate_password( 6, false );
+		$new_base = 'dry-' . wp_generate_password( 6, false );
 		$result   = $this->replaceFilesWithArgs( $attachment_id, $new_base, array( 'dry_run' => true, 'recent_upload' => true ) );
 
-		// SENTINEL: dry-run really changed nothing.
-		$this->assertFileExists( $old_file, 'Sentinel: dry-run must not touch the file.' );
-		$this->assertSame( $old_file, get_attached_file( $attachment_id ), 'Sentinel: dry-run must not touch _wp_attached_file.' );
+		$this->assertFileExists( $old_file, 'Dry-run must not touch the file.' );
+		$this->assertSame( $old_file, get_attached_file( $attachment_id ), 'Dry-run must not touch _wp_attached_file.' );
+		$this->assertFalse( $result, 'Dry-run returns false by design (e165198f).' );
+	}
 
-		$this->assertFalse(
-			$result,
-			'PIN #73 (dry-run): fixed? A dry-run now reports true — flip this pin.'
-		);
+	// -------------------------------------------------------------------
+	// Renaming keeps the attachment title (fixed in 88b2bcfe)
+	// -------------------------------------------------------------------
+
+	/**
+	 * REGRESSION (flipped 2026-09-24): e165198f made replaceMetaData() set
+	 * post_title to the new file base on every rename, so a title the user
+	 * wrote was lost (and WPML/Polylang translations would all have got the
+	 * same untranslated filename). 88b2bcfe stopped touching post_title. The
+	 * slug (post_name) still follows the new file base — that is intended.
+	 */
+	public function test_rename_keeps_a_custom_attachment_title_and_updates_the_slug() {
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+
+		$custom_title = 'Red boots on a mountain trail';
+		wp_update_post( array( 'ID' => $attachment_id, 'post_title' => $custom_title ) );
+		clean_post_cache( $attachment_id );
+		// SENTINEL: the attachment really carries a human-written title.
+		$this->assertSame( $custom_title, get_post( $attachment_id )->post_title, 'Sentinel: the custom title must be stored before the rename.' );
+
+		$new_base = 'reg-title-' . strtolower( wp_generate_password( 6, false ) );
+		list( $result ) = $this->renameViaEngine( $attachment_id, $new_base );
+		$this->assertTrue( $result, 'Sanity: the rename itself must succeed.' );
+
+		clean_post_cache( $attachment_id );
+		$post = get_post( $attachment_id );
+		$this->assertSame( $custom_title, $post->post_title, 'REGRESSION: the custom title must survive the rename.' );
+		$this->assertSame( sanitize_title( $new_base ), $post->post_name, 'The attachment slug follows the new file base.' );
 	}
 }

@@ -51,20 +51,35 @@ export class BulkPage {
 	 * real state and never straddles a switch.
 	 */
 	async expectPanel(name: BulkPanel, timeoutMs = 30_000): Promise<void> {
-		const panel = this.panel(name);
+		// Resolves to the wanted name on success, and otherwise to a short
+		// description of what IS on screen. Returning the name (rather than
+		// a boolean) means a CI failure reports which panel actually won —
+		// without that, a timeout said only "dashboard must be active" and
+		// gave nothing to reason about (2026-09-22).
 		await expect
 			.poll(
 				() =>
-					panel
-						.evaluate((el) => ({
-							active: el.classList.contains('active'),
-							shown: !!(el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden'),
-						}))
-						.then((state) => state.active && state.shown)
-						.catch(() => false),
+					this.page
+						.evaluate((wanted) => {
+							const all = Array.from(document.querySelectorAll('section.panel'));
+							const target = all.find((el) => el.getAttribute('data-panel') === wanted);
+							const visible = (el: Element) =>
+								!!(el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden');
+							if (target && target.classList.contains('active') && visible(target)) {
+								return wanted;
+							}
+							const active = all.find((el) => el.classList.contains('active'));
+							const activeName = active ? active.getAttribute('data-panel') : 'none';
+							const shown = all
+								.filter(visible)
+								.map((el) => el.getAttribute('data-panel'))
+								.join(',');
+							return `active=${activeName} visible=[${shown || 'none'}]`;
+						}, name)
+						.catch((e) => `evaluate failed: ${String(e)}`),
 				{ timeout: timeoutMs, message: `bulk panel "${name}" must be the active, visible panel` },
 			)
-			.toBe(true);
+			.toBe(name);
 	}
 
 	stat(scope: 'media' | 'custom' | 'total', key: string): Locator {
@@ -143,9 +158,22 @@ export class BulkPage {
 	 * finished and switches away from the server-rendered dashboard (CI
 	 * flake in Chromium and WebKit, 2026-09-16). So: wait for the SERVER to
 	 * report the queues clear — which is what this test is really about —
-	 * and only then assert the dashboard on a fresh load.
+	 * and only then assert the panel on a fresh load.
+	 *
+	 * WHICH panel is correct depends on the server state, and clearing the
+	 * queues is not enough to pin it down. screen-bulk.js:44 picks
+	 * "finished" whenever `is_finished && done > 0`, and only falls through
+	 * to "dashboard" when nothing was completed. Whether any item finishes
+	 * before the stop click lands is a race: locally nothing does, on a
+	 * slower CI runner one does — which is what failed Firefox in CI on
+	 * 2026-09-21 ("dashboard must be the active, visible panel"). Showing
+	 * the finished summary after a partially-completed run is correct
+	 * product behaviour, so this asserts the panel the server state
+	 * entails, and returns it so the caller can continue deterministically.
+	 *
+	 * @return The panel SPIO legitimately landed on.
 	 */
-	async stop(spio: SpioSupport): Promise<void> {
+	async stop(spio: SpioSupport): Promise<'dashboard' | 'finished'> {
 		this.page.once('dialog', (dialog) => dialog.accept());
 		await withSelfReload(this.page,() => this.page.locator('[data-action="StopBulk"]').click());
 
@@ -161,8 +189,14 @@ export class BulkPage {
 			)
 			.toBe(true);
 
+		// Read the terminal state the client will render from.
+		const { media, custom } = await spio.bulkStatus();
+		const done = Number(media.stats.done) + Number(custom.stats.done);
+		const expected: 'dashboard' | 'finished' = done > 0 ? 'finished' : 'dashboard';
+
 		await this.goto();
-		await this.expectPanel('dashboard');
+		await this.expectPanel(expected);
+		return expected;
 	}
 
 	/** finished → dashboard (server finishBulk + the same self-reload). */

@@ -215,10 +215,13 @@ class QuotaController
   /**
    * Fetch the account's quota straight from api.shortpixel.com.
    *
-   * POSTs to /v2/api-status.php, with two fallbacks on transport failure:
-   * the protocol is flipped (https↔http, and the working one is persisted to
-   * the httpProto setting) and retried, then a final wp_remote_get with the
-   * arguments moved into the query string.
+   * POSTs to /v2/api-status.php over the protocol from
+   * EnvironmentModel::getRequestProtocol() — the `shortpixel/env/httpProto`
+   * filter, 'https' by default (30359b9e; the old hidden httpProto /
+   * downloadProto settings are gone). Two fallbacks on transport failure:
+   * the protocol is flipped (https↔http) for a retry — for this request
+   * only, nothing is persisted any more — then a final wp_remote_get with
+   * the arguments moved into the query string.
    *
    * Every failure mode — WP_Error, non-200, unparseable body, or a Status
    * Code other than 2 — returns $defaultData: APIKeyValid/GetSuccess false

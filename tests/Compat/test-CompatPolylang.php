@@ -26,14 +26,13 @@
  * keep working unchanged (the appended filter entry is simply redundant
  * when the bootstrap already lists polylang).
  *
- * RENAME DESYNC — guid-duplicate translations — BUG #69 (PARTIALLY
- * fixed in 202c6e3c, residual open HIGH):
- * OptimizeAiController::replaceFiles() now loops getWPMLDuplicates() and
- * updates each sibling's _wp_attachment_metadata (regression-covered
- * below), but the duplicate call passes is_duplicate=true which skips
- * update_attached_file() — every guid-duplicate sibling still keeps
- * _wp_attached_file pointing at the now-deleted old filename →
- * get_attached_file() for translations remains broken. Residual pin below.
+ * RENAME DESYNC — guid-duplicate translations — BUG #69, FIXED for
+ * Polylang (202c6e3c + faa1e4cc; regression-covered below):
+ * OptimizeAiController::replaceFiles() loops getWPMLDuplicates() and runs
+ * replaceMetaData() for every sibling. 202c6e3c updated only the sibling's
+ * _wp_attachment_metadata (is_duplicate=true skipped update_attached_file());
+ * faa1e4cc removed that skip, so the sibling's _wp_attached_file follows the
+ * rename too. #69 stays OPEN for WPML (see test-CompatWPML.php).
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -387,20 +386,18 @@ class CompatPolylangTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * PIN #69 — PARTIALLY fixed in 202c6e3c (see file docblock):
-	 * replaceFiles() now loops getWPMLDuplicates() and calls
-	 * replaceMetaData() for every sibling, so the duplicate's
-	 * _wp_attachment_metadata['file'] DOES track the rename (regression
-	 * assertions below). But the duplicate call passes is_duplicate=true,
-	 * which deliberately SKIPS update_attached_file() — so the duplicate's
-	 * _wp_attached_file still carries the OLD filename, pointing at a file
-	 * that no longer exists on disk → get_attached_file() for the
-	 * translation is still broken after the rename (residual pin).
+	 * REGRESSION #69 — Polylang (flipped 2026-09-24, fully fixed in faa1e4cc).
 	 *
-	 * Flip the residual pin when: the duplicate's _wp_attached_file is
-	 * also rewritten (or WPML/Polylang syncing is made to cover it).
+	 * 202c6e3c made replaceFiles() loop getWPMLDuplicates() and call
+	 * replaceMetaData() for every sibling, so the duplicate's
+	 * _wp_attachment_metadata['file'] tracked the rename — but it passed
+	 * is_duplicate=true, which SKIPPED update_attached_file(), leaving the
+	 * duplicate's _wp_attached_file on the old, deleted file. faa1e4cc removed
+	 * that skip, so both now follow the rename. (Polylang siblings are found
+	 * by guid, which the rename never changes, so the duplicates lookup is not
+	 * affected by the WPML ordering bug that keeps #69 open for WPML.)
 	 */
-	public function test_pin69_rename_leaves_polylang_duplicate_attached_file_on_old_filename_pinned_for_deferred_fix() {
+	public function test_regression69_polylang_duplicate_tracks_the_rename() {
 		$id     = $this->uploadFixture( 'fixture-small.jpg' );
 		$dup_id = $this->createPolylangDuplicate( $id );
 		$this->purgeQueueTable();
@@ -431,17 +428,17 @@ class CompatPolylangTest extends SPIO_IntegrationTestCase {
 			'REGRESSION #69: the duplicate metadata[file] must no longer reference the old filename.'
 		);
 
-		// RESIDUAL PIN: is_duplicate=true skips update_attached_file(), so
-		// _wp_attached_file still points at the old, now-deleted file.
+		// REGRESSION (faa1e4cc): the duplicate's _wp_attached_file follows too,
+		// so the translation points at the file that actually exists.
 		$dup_attached = get_attached_file( $dup_id );
 		$this->assertStringContainsString(
-			$old_base,
+			$new_base,
 			$dup_attached,
-			'PIN #69 (residual): fixed? The duplicate _wp_attached_file now tracks the rename — flip this pin to a regression test.'
+			'REGRESSION #69: the duplicate _wp_attached_file must carry the new base.'
 		);
-		$this->assertFileDoesNotExist(
+		$this->assertFileExists(
 			$dup_attached,
-			'PIN #69 (residual): the duplicate attached_file references a file that no longer exists — its media is broken after the rename.'
+			'REGRESSION #69: the duplicate must reference a file that exists after the rename.'
 		);
 	}
 }

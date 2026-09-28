@@ -155,6 +155,16 @@ class SpioCommandBase
 	 *   - custom
 	 * ---
 	 *
+	 * [--action=<action>]
+	 * : Queue action to run for the item (e165198f). Common values: optimize,
+	 * reoptimize, restore, requestAlt (generate AI Image SEO data),
+	 * undoAltData (undo AI Image SEO). Passed to
+	 * QueueController::addItemToQueue() after sanitize_text_field() only —
+	 * the value is not checked against a list.
+	 * ---
+	 * default: optimize
+	 * ---
+	 *
 	 * [--halt]
 	 * : Stops (does not process the queues) after the item is added.
 	 *

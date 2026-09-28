@@ -473,30 +473,46 @@ class wpOffload
 	 *     ('renamed-photo.jpg'). The bucket keys are computed separately and
 	 *     are correct, but set_objects() records every size's source_file as
 	 *     the main image;
-	 *   - when this returns true, replaceFiles() skips the local copy loop
-	 *     and then returns false on its "copied nothing" check BEFORE
-	 *     rewriting WP metadata, backups and content — the bucket holds only
-	 *     the new keys while WordPress keeps the old filename;
-	 *   - it also returns true when NO provider object matched
-	 *     (`empty($keyRenames)`), e.g. an item without objects: SPIO then
-	 *     skips its own local rename although nothing was renamed anywhere;
+	 *   - #73(a) FIXED: when this returns true, replaceFiles() now carries on
+	 *     to the WordPress metadata / backup / content steps for local+remote
+	 *     images (e165198f) and remote-only images (88b2bcfe) alike.
+	 *   - #73(b) STILL OPEN: it also returns true when NO provider object
+	 *     matched (`empty($keyRenames)`), e.g. an item without objects. Since
+	 *     the (a) fix, replaceFiles() trusts that "handled" in both layouts:
+	 *     local+remote → local files and _wp_attached_file move while the item
+	 *     keeps its OLD key (the original BUG #68 desync); remote-only →
+	 *     success is reported and WordPress is rewritten to a filename that
+	 *     exists nowhere. Both pinned in tests/Compat/test-CompatOffloadMedia.php.
+	 *     Fix: return false here;
 	 *   - get_provider_client() / copy_objects() exceptions are not caught
 	 *     (the unconfigured Null_Provider throws; so can a real client with
 	 *     bad credentials) — the rename request crashes;
-	 *   - The copy requests set 'ACL' => 'public-read' explicitly (the
-	 *     MetadataDirective COPY does not copy ACLs): media that WP Offload
-	 *     Media serves privately becomes public after a rename, and buckets
-	 *     with ACLs disabled (Object Ownership "bucket owner enforced", the
-	 *     S3 default for new buckets) reject the request — the rename then
-	 *     fails and, for virtual images, is refused.
-	 *   - Local files are not renamed here; on "keep local copy" installs
-	 *     the local copies keep their old names.
+	 *   - BUG #76 (split out of #73 on 2026-09-24): the copy requests set
+	 *     'ACL' => 'public-read' for every object. SOME ACL is needed — S3
+	 *     CopyObject does not carry the source ACL over and MetadataDirective
+	 *     COPY preserves metadata, not permissions, so without one the copies
+	 *     turn private and renamed images 403 on public-ACL buckets. But a
+	 *     fixed value ignores the rule WP Offload Media applies to its own
+	 *     uploads (classes/items/upload-handler.php): private ACL for private
+	 *     objects, get_default_acl() otherwise, and NO ACL at all unless
+	 *     $this->as3cf->use_acl_for_intermediate_size() says the bucket accepts
+	 *     one. Result: private media becomes public after a rename, and buckets
+	 *     with ACLs disabled / Block Public Access (AWS defaults for new
+	 *     buckets) reject the copy. Pinned in tests/External/Offload/test-wpOffload.php
+	 *     (test_pin76_*); the fix was verified against those stubs.
+	 *   - Local files are not renamed here; replaceFiles() renames the local
+	 *     copies itself when the image is not virtual (since e165198f).
+	 *
+	 * Dry run (e165198f): with $dry_run true the copy/delete requests are
+	 * only logged and the item is not saved, but the method still returns
+	 * true — replaceFiles() then returns false for every dry-run anyway.
 	 *
 	 * @param bool                                   $applied     Filter value: false unless an earlier callback already handled the rename. Returning true makes replaceFiles() skip its regular local copy.
 	 * @param array                                  $sourceFiles Source FileModel objects keyed by the optimizer (main, thumbnails, webp_*, avif_*).
 	 * @param \ShortPixel\Model\Image\ImageModel     $imageModel  The attachment's image model (the attachment id is read via get('id')).
 	 * @param string                                 $newFileBase New filename base without an extension.
-	 * @return bool True when all remote objects were renamed or no rename was needed; false when the item is not provider-served or a copy failed (old objects are left untouched).
+	 * @param bool                                   $dry_run     Log the provider requests instead of sending them, and do not save the item.
+	 * @return bool True when all remote objects were renamed, no rename was needed, or on a dry run; false when the item is not provider-served or a copy failed (old objects are left untouched).
 	 */
 	public function replaceFiles($applied, $sourceFiles, $imageModel, $newFileBase, $dry_run = false)
 	{

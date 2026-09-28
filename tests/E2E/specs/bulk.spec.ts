@@ -91,9 +91,18 @@ test.describe('Bulk page', () => {
 		await bulk.startBulk();
 
 		// stop() waits for the server to report both queues clear, then
-		// asserts the dashboard on a fresh load.
-		await bulk.stop(spio);
-		// And it stays that way on the next visit.
+		// asserts the panel that server state entails: "finished" when the
+		// run completed anything before the stop landed, "dashboard" when
+		// it did not. Which one happens is a timing race (see stop()), so
+		// the test drives it to the dashboard rather than assuming it.
+		const landed = await bulk.stop(spio);
+		if ('finished' === landed) {
+			// Finish clears the completed-run summary — the same button a
+			// user clicks — and must return to the dashboard.
+			await bulk.finish();
+		}
+
+		// Either way we end on the dashboard, and it stays that way.
 		await bulk.goto();
 		await bulk.expectPanel('dashboard');
 	});
