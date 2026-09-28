@@ -274,12 +274,21 @@ class wpOffloadTest extends WP_UnitTestCase {
 	private function offloadWithStubs( $item, $as3cf ): wpOffload {
 		$o = new class() extends wpOffload {
 			public $stubItem;
+			public $stubItems;
+			public $duplicateLookupAfterPrimarySave = false;
 			public function __construct() {} // skip init($as3cf)
 			protected function getItemById( $id, $create = false ) {
-				return $this->stubItem;
+				if ( 4242 !== (int) $id && isset( $this->stubItems[4242] ) && $this->stubItems[4242]->saveCalls > 0 ) {
+					$this->duplicateLookupAfterPrimarySave = true;
+				}
+				return is_array( $this->stubItems ) ? ( $this->stubItems[ $id ] ?? false ) : $this->stubItem;
 			}
 		};
-		$o->stubItem = $item;
+		if ( is_array( $item ) ) {
+			$o->stubItems = $item;
+		} else {
+			$o->stubItem = $item;
+		}
 		$this->setPrivate( $o, 'as3cf', $as3cf );
 		return $o;
 	}
@@ -289,15 +298,17 @@ class wpOffloadTest extends WP_UnitTestCase {
 	 * provider. Records what a completed rename writes back (set_objects,
 	 * set_path, set_original_path, save).
 	 */
-	private function stubItem( array $objects ) {
-		return new class( $objects ) {
+	private function stubItem( array $objects, bool $providerServed = true ) {
+		return new class( $objects, $providerServed ) {
 			private $objects;
+			private $providerServed;
 			public $savedObjects      = null;
 			public $savedPath         = null;
 			public $savedOriginalPath = null;
 			public $saveCalls         = 0;
-			public function __construct( array $objects ) {
+			public function __construct( array $objects, bool $providerServed ) {
 				$this->objects = $objects;
+				$this->providerServed = $providerServed;
 			}
 			public function set_objects( array $objects ) {
 				$this->savedObjects = $objects;
@@ -319,7 +330,7 @@ class wpOffloadTest extends WP_UnitTestCase {
 				return 1;
 			}
 			public function served_by_provider( $skip_rewrite_check = false ) {
-				return true;
+				return $this->providerServed;
 			}
 			public function objects() {
 				return $this->objects;
@@ -401,15 +412,21 @@ class wpOffloadTest extends WP_UnitTestCase {
 	}
 
 	/** An image model exposing only what replaceFiles() reads. */
-	private function stubImageModel() {
-		return new class() {
+	private function stubImageModel( array $duplicates = array() ) {
+		$imageModel = new class() {
+			public $duplicates = array();
 			public function get( $name ) {
 				return 'id' === $name ? 4242 : null;
 			}
 			public function getImageKey( $key ) {
 				return 'main';
 			}
+			public function getWPMLDuplicates() {
+				return $this->duplicates;
+			}
 		};
+		$imageModel->duplicates = $duplicates;
+		return $imageModel;
 	}
 
 	/** Source files as the optimizer hands them over (only names are read). */
@@ -600,19 +617,10 @@ class wpOffloadTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * PIN #73 — after a SUCCESSFUL provider rename, every thumbnail object is
-	 * recorded with the MAIN file's new name as its source_file.
-	 * $renames is built with str_replace($sourceBase, $newFileBase,
-	 * $sourceFilename), where $sourceBase is each file's OWN base
-	 * ('photo-300x225'), so 'photo-300x225.jpg' maps to 'renamed-photo.jpg'.
-	 * The bucket keys are computed separately (and correctly), but
-	 * set_objects() then saves every size as pointing at the main image —
-	 * as3cf would serve the full-size file for every thumbnail.
-	 *
-	 * Flip when: the thumbnail's recorded source_file keeps its size suffix
-	 * ('renamed-photo-300x225.jpg').
+	 * Each object record must retain its filename suffix when the provider
+	 * rename updates the as3cf item's source_file metadata.
 	 */
-	public function test_pin73_successful_rename_records_the_main_filename_for_every_thumbnail_pinned_for_deferred_fix() {
+	public function test_successful_rename_preserves_thumbnail_source_filename_suffix() {
 		$requests = array();
 		$calls    = 0;
 		$item     = $this->stubItem(
@@ -632,12 +640,43 @@ class wpOffloadTest extends WP_UnitTestCase {
 		$this->assertContains( 'wp-content/uploads/2026/09/renamed-photo-300x225.jpg', array_column( $requests, 'Key' ), 'Sentinel: the thumbnail object is copied to the correct new key.' );
 		$this->assertSame( 'renamed-photo.jpg', $item->savedObjects['__as3cf_primary']['source_file'] ?? null, 'Sentinel: the main object is recorded correctly.' );
 
-		// THE PIN.
 		$this->assertSame(
-			'renamed-photo.jpg',
+			'renamed-photo-300x225.jpg',
 			$item->savedObjects['medium']['source_file'] ?? null,
-			'PIN #73: fixed? The medium object now keeps its size suffix (renamed-photo-300x225.jpg) — flip this pin.'
+			'Regression: the medium object must retain its size suffix.'
 		);
+	}
+
+	public function test_wpml_duplicate_offload_item_metadata_tracks_shared_rename() {
+		$requests = array();
+		$calls    = 0;
+		$objects  = array(
+			'__as3cf_primary' => array( 'source_file' => 'photo.jpg', 'is_private' => false ),
+			'medium'          => array( 'source_file' => 'photo-300x225.jpg', 'is_private' => false ),
+		);
+		$primary   = $this->stubItem( $objects );
+		$duplicate = $this->stubItem( $objects, false );
+		$o         = $this->offloadWithStubs(
+			array( 4242 => $primary, 4243 => $duplicate ),
+			$this->stubAs3cf( null, $requests, $calls )
+		);
+		$this->setPrivate( $o, 'itemClassName', SPIO_Test_As3cf_Media_Class_Stub::class );
+
+		$result = $o->replaceFiles(
+			false,
+			$this->sourceFiles(),
+			$this->stubImageModel( array( 4243 ) ),
+			'renamed-photo'
+		);
+
+		$this->assertTrue( $result, 'The provider rename must complete.' );
+		$this->assertCount( 2, $requests, 'The shared remote objects must be copied only once.' );
+		$this->assertSame( 1, $primary->saveCalls, 'The main attachment item must be saved.' );
+		$this->assertSame( 1, $duplicate->saveCalls, 'The WPML duplicate item must also be saved.' );
+		$this->assertFalse( $o->duplicateLookupAfterPrimarySave, 'WPML items must be resolved before the primary as3cf item is changed.' );
+		$this->assertSame( 'renamed-photo.jpg', $duplicate->savedObjects['__as3cf_primary']['source_file'] ?? null );
+		$this->assertSame( 'renamed-photo-300x225.jpg', $duplicate->savedObjects['medium']['source_file'] ?? null );
+		$this->assertSame( 'wp-content/uploads/2026/09/renamed-photo.jpg', $duplicate->savedPath );
 	}
 }
 

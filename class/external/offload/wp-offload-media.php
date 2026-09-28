@@ -522,6 +522,19 @@ class wpOffload
 			return false;
 		}
 
+		$wpmlItems = [];
+		if (method_exists($imageModel, 'getWPMLDuplicates')) {
+			foreach ($imageModel->getWPMLDuplicates() as $duplicateId) {
+				$duplicateItem = $this->getItemById($duplicateId);
+				if (false !== $duplicateItem) {
+					$wpmlItems[$duplicateId] = [
+						'item' => $duplicateItem,
+						'objects' => $duplicateItem->objects(),
+					];
+				}
+			}
+		}
+
 		$objects = $item->objects();
 		$updated_objects = $objects;
 		$renames = [];
@@ -547,8 +560,7 @@ class wpOffload
 				continue;
 			}
 
-			$sourceBase = pathinfo($sourceFilename, PATHINFO_FILENAME);
-			$targetFilename = str_replace($sourceBase, $newFileBase, $sourceFilename);
+			$targetFilename = str_replace($fileBaseName, $newFileBase, $sourceFilename);
 			$renames[basename($sourceFilename)] = $targetFilename;
 		}
 
@@ -630,13 +642,52 @@ class wpOffload
 			if (isset($updated_objects[$primaryKey]['source_file'])) {
 				$path = $item->path();
 				$originalPath = $item->original_path();
-				$newFilename = basename($updated_objects[$primaryKey]['source_file']);
-				$item->set_path(trailingslashit(dirname($path)) . $newFilename);
-				$item->set_original_path(trailingslashit(dirname($originalPath)) . $newFilename);
+				$pathFilename = $renames[basename($path)] ?? basename($updated_objects[$primaryKey]['source_file']);
+				$originalFilename = $renames[basename($originalPath)] ?? basename($updated_objects[$primaryKey]['source_file']);
+				$item->set_path(trailingslashit(dirname($path)) . $pathFilename);
+				$item->set_original_path(trailingslashit(dirname($originalPath)) . $originalFilename);
 			}
 			else 
 			{
 				Log::addWarning('Offload - Path doesnt have updated objects?', $updated_objects);
+			}
+			foreach ($wpmlItems as $duplicateId => $wpmlData) {
+				$duplicateItem = $wpmlData['item'];
+				$duplicateObjects = $wpmlData['objects'];
+				$updatedDuplicateObjects = $duplicateObjects;
+				$duplicateMatched = false;
+				foreach ($duplicateObjects as $duplicateObjectKey => $duplicateObject) {
+					if (empty($duplicateObject['source_file'])) {
+						continue;
+					}
+
+					$duplicateFilename = basename($duplicateObject['source_file']);
+					if (! isset($renames[$duplicateFilename])) {
+						continue;
+					}
+
+					$duplicateDirectory = dirname($duplicateObject['source_file']);
+					$updatedDuplicateObjects[$duplicateObjectKey]['source_file'] = ('.' === $duplicateDirectory)
+						? $renames[$duplicateFilename]
+						: trailingslashit($duplicateDirectory) . $renames[$duplicateFilename];
+					$duplicateMatched = true;
+				}
+
+				if (! $duplicateMatched) {
+					Log::addWarning('Offload WPML duplicate has no matching objects to rename', $duplicateId);
+					continue;
+				}
+
+				$duplicateItem->set_objects($updatedDuplicateObjects);
+				if (isset($updatedDuplicateObjects[$primaryKey]['source_file'])) {
+					$duplicatePath = $duplicateItem->path();
+					$duplicateOriginalPath = $duplicateItem->original_path();
+					$duplicatePathFilename = $renames[basename($duplicatePath)] ?? basename($updatedDuplicateObjects[$primaryKey]['source_file']);
+					$duplicateOriginalFilename = $renames[basename($duplicateOriginalPath)] ?? basename($updatedDuplicateObjects[$primaryKey]['source_file']);
+					$duplicateItem->set_path(trailingslashit(dirname($duplicatePath)) . $duplicatePathFilename);
+					$duplicateItem->set_original_path(trailingslashit(dirname($duplicateOriginalPath)) . $duplicateOriginalFilename);
+				}
+				$duplicateItem->save();
 			}
 			$item->save();
 		}
