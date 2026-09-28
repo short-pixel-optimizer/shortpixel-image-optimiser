@@ -1170,7 +1170,7 @@ class OptimizeAiController extends OptimizerBase
 
             if (false === $dry_run)
             {
-                $guid_replacement = str_replace($old_file, $new_file, $metadata['file']);
+                $guid_replacement = $this->replaceFileBaseInPath($metadata['file'], $old_file, $new_file);
                 $post->post_name = $new_file; 
                 $post->guid = str_replace($metadata['file'], $guid_replacement, $post->guid);
               //  $post->post_title = $new_file;
@@ -1178,7 +1178,7 @@ class OptimizeAiController extends OptimizerBase
             }
             // This fixes situation where dirname is similar to image name 
             $filebase = trailingslashit(pathinfo($metadata['file'], PATHINFO_DIRNAME));
-            $metadata['file'] = $filebase . str_replace($old_file, $new_file, basename($metadata['file']));
+            $metadata['file'] = $filebase . $this->replaceFileBaseInPath(basename($metadata['file']), $old_file, $new_file);
             if (true === $dry_run) {
                 Log::addInfo('Dry Run, would update metadata', $metadata['file']);
             }
@@ -1194,7 +1194,7 @@ class OptimizeAiController extends OptimizerBase
             }
 
             $filebase = trailingslashit(pathinfo($attached_file, PATHINFO_DIRNAME));
-            $new_attached_file = $filebase . str_replace($old_file, $new_file, basename($attached_file));
+            $new_attached_file = $filebase . $this->replaceFileBaseInPath(basename($attached_file), $old_file, $new_file);
 
             if (true === $dry_run) {
                 Log::addInfo('Dry Run - would update attached file with ' . $new_attached_file);
@@ -1204,13 +1204,13 @@ class OptimizeAiController extends OptimizerBase
       //  }
 
         if (isset($metadata['original_image']) && strpos($metadata['original_image'], $old_file) !== false) {
-            $metadata['original_image'] = str_replace($old_file, $new_file, $metadata['original_image']);
+            $metadata['original_image'] = $this->replaceFileBaseInPath($metadata['original_image'], $old_file, $new_file);
         }
 
         if (isset($metadata['sizes']) && is_array($metadata['sizes'])) {
             foreach ($metadata['sizes'] as $sizeName => $sizeData) {
                 if (isset($sizeData['file']) && strpos($sizeData['file'], $old_file) !== false) {
-                    $metadata['sizes'][$sizeName]['file'] = str_replace($old_file, $new_file, $sizeData['file']);
+                    $metadata['sizes'][$sizeName]['file'] = $this->replaceFileBaseInPath($sizeData['file'], $old_file, $new_file);
                 }
             }
         }
@@ -1222,6 +1222,29 @@ class OptimizeAiController extends OptimizerBase
             wp_update_attachment_metadata($item_id, $metadata);
             do_action('shortpixel/converter/prevent-offload-off', $item_id); 
         }
+    }
+
+    /**
+     * Replace a filename base without applying the same rename twice.
+     * WPML may synchronize a translated attachment during the original
+     * metadata update, before replaceFiles() reaches its duplicate pass.
+     */
+    protected function replaceFileBaseInPath($filename, $old_file, $new_file)
+    {
+        $basename = basename($filename);
+        $name = pathinfo($basename, PATHINFO_FILENAME);
+        $new_name_pattern = '/^' . preg_quote($new_file, '/') . '(?:-scaled)?(?:-\\d+x\\d+)?$/';
+
+        if (preg_match($new_name_pattern, $name)) {
+            return $filename;
+        }
+
+        $renamed = str_replace($old_file, $new_file, $basename);
+        if ($basename !== $filename) {
+            return trailingslashit(pathinfo($filename, PATHINFO_DIRNAME)) . $renamed;
+        }
+
+        return $renamed;
     }
 
     // @todo This might be returned in multiple formats / post data / postmeta data?  Public because of callback
