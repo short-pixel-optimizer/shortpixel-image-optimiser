@@ -1366,8 +1366,16 @@ class AjaxController
 	 * not revert filename changes), but also works standalone on attachments with
 	 * no AI data. Reads `$_POST['newFileName']`, loads the image model with an
 	 * access check, and delegates to OptimizeAiController::ajax_replaceFile().
-	 * Always responds with redirect='reload'; is_error is set when the replace
-	 * returned false (conflict and real failures share the same message).
+	 * Since 8b625159 (the #77 fix) it answers like the queue: the result
+	 * (is_done, is_error, message, item_id, apiName='ai') is in
+	 * $json->media->results[0] and the request's 'callback'
+	 * ('ShortPixelMedia.reloadWindow') is echoed, so the JS listener reloads
+	 * only when is_error is false and otherwise shows the message under the
+	 * filename field. Conflict and real failures still share "Files were not
+	 * replaced". The input-validation rejections below still send the old
+	 * flat object WITHOUT the callback, so the listener never fires and the
+	 * user gets no feedback on an empty or too-short name (OPEN, unnumbered,
+	 * 2026-09-25).
 	 *
 	 * BUG #50 fixed (202c6e3c): the strlen<3 guard below runs on the
 	 * SANITISED value, so empty and sanitised-to-empty/short names are
@@ -1377,7 +1385,8 @@ class AjaxController
 	 * Note: the rejection reuses the generic "This image could not be
 	 * loaded" message alongside the specific 'error' text.
 	 *
-	 * @param array $data Dispatch data: 'id' (attachment id) and 'type' ('media').
+	 * @param object $json Base JSON response (carries the echoed callback).
+	 * @param array  $data Dispatch data: 'id' (attachment id) and 'type' ('media').
 	 * @return void Exits via send().
 	 */
 	protected function replaceFileName($json, $data)

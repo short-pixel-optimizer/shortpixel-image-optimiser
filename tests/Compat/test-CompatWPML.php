@@ -607,28 +607,28 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// PIN — file rename never reaches WPML same-file translations
+	// REGRESSION — file rename reaches WPML same-file translations
 	// -------------------------------------------------------------------
 
 	/**
-	 * PIN #69 — attempted fix in 202c6e3c is INEFFECTIVE for WPML:
-	 * replaceFiles() now loops getWPMLDuplicates() and calls
-	 * replaceMetaData() for every sibling (this works for Polylang, see
-	 * test-CompatPolylang.php), but for WPML the loop never finds the
-	 * sibling. Ordering bug: replaceMetaData() for the ORIGINAL runs
-	 * FIRST and rewrites its _wp_attached_file to the new base; only THEN
-	 * is getWPMLDuplicates() called, whose WPML branch
-	 * (MediaLibraryModel.php:2299) only accepts siblings whose
-	 * get_attached_file() EQUALS the original's — which is no longer true
-	 * after the original was just updated. Result: the translation keeps
-	 * BOTH _wp_attachment_metadata['file'] AND _wp_attached_file on the
-	 * OLD filename, pointing at a file that no longer exists on disk.
+	 * REGRESSION #69 (WPML part fixed in 11aa2065, 2026-09-25).
 	 *
-	 * Flip when: the duplicates are enumerated BEFORE the original's meta
-	 * rewrite (or the equality guard is relaxed) AND the duplicate's
-	 * _wp_attached_file is also rewritten.
+	 * The bug: replaceFiles() looped getWPMLDuplicates() only AFTER
+	 * replaceMetaData() had rewritten the renamed item's _wp_attached_file,
+	 * and the WPML branch of getWPMLDuplicates() only accepts siblings whose
+	 * attached file EQUALS the item's — no longer true by then — so the
+	 * siblings were never updated and kept both _wp_attachment_metadata
+	 * ['file'] and _wp_attached_file on the old, deleted filename.
+	 * 11aa2065 collects the duplicates BEFORE any file is copied or any meta
+	 * is rewritten, and loops that list after replaceMetaData().
+	 *
+	 * On a real WPML site WPML core's own syncAttachedFile hook already
+	 * propagates a rename made on the ORIGINAL (it only syncs from
+	 * originals), so the user-visible case was renaming FROM A TRANSLATION —
+	 * covered by the next test. This one drives the original (the WPML hook
+	 * is not active in this install) and checks SPIO's own propagation.
 	 */
-	public function test_pin69_rename_leaves_wpml_duplicate_meta_on_old_filename_pinned_for_deferred_fix() {
+	public function test_regression69_rename_updates_wpml_duplicate_meta_and_attached_file() {
 		$id     = $this->uploadFixture( 'fixture-small.jpg' );
 		$dup_id = $this->createDuplicateAttachment( $id );
 		$this->insertTranslationRow( $id, 9101, 'en' );
@@ -650,27 +650,63 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 		$this->assertStringContainsString( $new_base, get_attached_file( $id ), 'Sanity: original _wp_attached_file must carry the new base.' );
 		$this->assertFileDoesNotExist( $old_file, 'Sanity: the shared physical file was moved to the new name.' );
 
-		// THE PIN: the 202c6e3c duplicates loop never fires for WPML (the
-		// original's attached_file was already rewritten, so the equality
-		// guard in getWPMLDuplicates() rejects the sibling) — metadata AND
-		// attached_file both stay on the old, now-deleted filename.
 		clean_post_cache( $dup_id );
 		$dup_meta = wp_get_attachment_metadata( $dup_id );
 		$this->assertStringContainsString(
-			$old_base,
+			$new_base,
 			(string) ( $dup_meta['file'] ?? '' ),
-			'PIN #69: fixed? The WPML translation metadata[file] now tracks the rename — flip this pin to a regression test.'
+			'REGRESSION #69: the WPML translation metadata[file] must track the rename.'
 		);
+		$this->assertStringNotContainsString( $old_base, (string) ( $dup_meta['file'] ?? '' ) );
 		$dup_attached = get_attached_file( $dup_id );
+		$this->assertSame(
+			get_attached_file( $id ),
+			$dup_attached,
+			'REGRESSION #69: the WPML translation _wp_attached_file must point at the renamed file, same as the original.'
+		);
+		$this->assertFileExists( $dup_attached, 'REGRESSION #69: the translation references a file that exists.' );
+	}
+
+	/**
+	 * REGRESSION #69 — the real-site repro: rename started FROM THE
+	 * TRANSLATION (Pedro reproduced the de-sync this way on 2026-09-25,
+	 * before 11aa2065). The original must follow, one file backs both.
+	 */
+	public function test_regression69_rename_from_the_translation_updates_the_original() {
+		$id     = $this->uploadFixture( 'fixture-small.jpg' );
+		$dup_id = $this->createDuplicateAttachment( $id );
+		$this->insertTranslationRow( $id, 9104, 'en' );
+		$this->insertTranslationRow( $dup_id, 9104, 'de', 'en' );
+		$this->purgeQueueTable();
+
+		$old_file = get_attached_file( $id );
+		$old_base = pathinfo( $old_file, PATHINFO_FILENAME );
+		$this->assertSame( $old_file, get_attached_file( $dup_id ), 'Sentinel: original and translation must share the physical file.' );
+		$this->assertContains(
+			$id,
+			array_map( 'intval', $this->freshImageModel( $dup_id )->getWPMLDuplicates() ),
+			'Sentinel: seen from the translation, the original must be listed as a WPML duplicate.'
+		);
+
+		$new_base = 'wpml-from-de-' . wp_generate_password( 6, false );
+		$this->assertTrue( $this->renameAttachment( $dup_id, $new_base ), 'Sanity: the rename must report success.' );
+		$this->assertStringContainsString( $new_base, get_attached_file( $dup_id ), 'Sanity: the translation carries the new base.' );
+		$this->assertFileDoesNotExist( $old_file, 'Sanity: the shared physical file was moved.' );
+
+		clean_post_cache( $id );
+		$orig_meta = wp_get_attachment_metadata( $id );
 		$this->assertStringContainsString(
-			$old_base,
-			$dup_attached,
-			'PIN #69: fixed? The WPML translation _wp_attached_file now tracks the rename — flip this pin to a regression test.'
+			$new_base,
+			(string) ( $orig_meta['file'] ?? '' ),
+			'REGRESSION #69: renaming from the translation must update the ORIGINAL metadata[file] too.'
 		);
-		$this->assertFileDoesNotExist(
-			$dup_attached,
-			'PIN #69: the translation references a file that no longer exists after the rename.'
+		$this->assertStringNotContainsString( $old_base, (string) ( $orig_meta['file'] ?? '' ) );
+		$this->assertSame(
+			get_attached_file( $dup_id ),
+			get_attached_file( $id ),
+			'REGRESSION #69: renaming from the translation must update the ORIGINAL _wp_attached_file too.'
 		);
+		$this->assertFileExists( get_attached_file( $id ) );
 	}
 
 	// -------------------------------------------------------------------
@@ -683,7 +719,7 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 	 *
 	 * It is NOT registered in this test install (WPML's attachment action is
 	 * only booted on a configured site, and has_filter('wp_delete_file') is
-	 * false here), so pin74 installs it explicitly — without it the bug
+	 * false here), so the #74 residual test installs it explicitly — without it the bug
 	 * cannot be observed at all. Note get_file_name() strips any -WxH size
 	 * suffix before looking the file up, so ONE sibling still holding the
 	 * full-size name protects every thumbnail of that image too.
@@ -712,36 +748,55 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * PIN #74 — per-language AI renames DUPLICATE the image on disk.
+	 * REGRESSION #74 (main part fixed in faa1e4cc, 2026-09-24) — the AI rename
+	 * now runs for the MAIN language only.
 	 *
-	 * Same root cause as PIN #69 (the getWPMLDuplicates() ordering bug), but
-	 * a distinct and more damaging symptom, and only visible when WPML's
-	 * delete_file_filter is live:
+	 * #74: QueueController queues the AI job once per WPML language, each
+	 * answer carried its own translated filebase, and HandleSuccess() renamed
+	 * the ONE shared file once per language — N languages, N copies on disk
+	 * (WPML's delete guard kept each old set alive). faa1e4cc gates the AI
+	 * rename in HandleSuccess() on getWPMLDuplicates(true): when the image has
+	 * WPML translation rows, only the item whose row has no
+	 * source_language_code (the main language) renames; translations log
+	 * "Replace files cancelled due to duplicate situation".
 	 *
-	 *   1. QueueController queues the AI job once PER LANGUAGE
-	 *      (addWpmlAiItemsToQueue), and each language's AI answer carries its
-	 *      own translated filebase, so HandleSuccess() fires a rename per
-	 *      language on ONE shared physical file.
-	 *   2. replaceFiles() copies the whole file set to the new base, rewrites
-	 *      the metadata, then deletes the sources LAST — deliberately, so
-	 *      WPML sees the new state ("some plugins (WPML) can deny deletion
-	 *      otherwise", OptimizeAiController.php:915).
-	 *   3. But #69 means the siblings were never rewritten, so they still
-	 *      hold the OLD filename — and WPML's guard therefore refuses to
-	 *      delete the old files. The original set survives.
-	 *   4. The next language then renames that surviving original again,
-	 *      producing yet another full copy.
-	 *
-	 * Net effect: N languages leave N complete copies (main + every
-	 * thumbnail, plus WebP/AVIF companions) of the same image on disk.
-	 *
-	 * Flip when: #69 is fixed (siblings rewritten before/with the rename) so
-	 * nothing references the old name by deletion time, OR the rename is run
-	 * once per shared file instead of once per language. This test should
-	 * then assert that ONE physical file backs both languages — i.e. only the
-	 * last-renamed base exists and the other is gone.
+	 * This covers the data that gate reads. The HandleSuccess() branch itself
+	 * needs a full AI result and is not driven here.
 	 */
-	public function test_pin74_per_language_rename_leaves_a_full_extra_copy_on_disk() {
+	public function test_regression74_getWPMLDuplicates_alldata_marks_the_main_language() {
+		$id     = $this->uploadFixture( 'fixture-small.jpg' );
+		$dup_id = $this->createDuplicateAttachment( $id );
+		$this->insertTranslationRow( $id, 9103, 'en' );
+		$this->insertTranslationRow( $dup_id, 9103, 'de', 'en' );
+
+		foreach ( array( $id, $dup_id ) as $asked ) {
+			$all = $this->freshImageModel( $asked )->getWPMLDuplicates( true );
+
+			// Includes the item ITSELF (the gate looks itself up by id)...
+			$this->assertArrayHasKey( $id, $all, 'The main-language item must be listed (asked for ' . $asked . ').' );
+			$this->assertArrayHasKey( $dup_id, $all, 'The translation must be listed (asked for ' . $asked . ').' );
+			// ...and flags which one may rename.
+			$this->assertTrue( $all[ $id ]['is_main_language'], 'REGRESSION #74: the source-language item is the main language.' );
+			$this->assertFalse( $all[ $dup_id ]['is_main_language'], 'REGRESSION #74: the translation is not — its AI rename is skipped.' );
+			$this->assertSame( 'de', $all[ $dup_id ]['language_code'] );
+		}
+
+		// Contract: the default call still returns sibling ids only, never self.
+		$this->assertSame( array( $dup_id ), array_map( 'intval', array_values( $this->freshImageModel( $id )->getWPMLDuplicates() ) ) );
+	}
+
+	/**
+	 * REGRESSION #74 residual (fixed with #69 WPML in 11aa2065, 2026-09-25) —
+	 * after the (single) main-language rename, ONE file backs every language.
+	 *
+	 * The bug was a pure symptom of #69 on WPML: the translations were never
+	 * updated, still referenced the old filename, and WPML's
+	 * delete_file_filter (class-wpml-attachment-action.php:114-128, replicated
+	 * in addWpmlDeleteFileGuard()) refused to delete it — two copies on disk,
+	 * translations showing the OLD file. Now the translations follow the
+	 * rename, the guard lets the old file go.
+	 */
+	public function test_regression74_residual_main_language_rename_leaves_one_file_for_all_languages() {
 		$id     = $this->uploadFixture( 'fixture-small.jpg' );
 		$dup_id = $this->createDuplicateAttachment( $id );
 		$this->insertTranslationRow( $id, 9102, 'en' );
@@ -751,7 +806,6 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 		$old_file = get_attached_file( $id );
 		$dir      = dirname( $old_file );
 		$en_base  = 'wpml-en-' . wp_generate_password( 6, false );
-		$de_base  = 'wpml-de-' . wp_generate_password( 6, false );
 
 		$this->assertSame( $old_file, get_attached_file( $dup_id ), 'Sentinel: both languages share one physical file.' );
 
@@ -762,45 +816,21 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 			'Sentinel: WPML\'s delete guard must refuse the shared file while an attachment still references it.'
 		);
 
-		// Language 1 renames the shared file to its own translated base.
-		$this->assertTrue( $this->renameAttachment( $id, $en_base ), 'Sanity: the first rename must report success.' );
+		// The main language renames the shared file (the only rename the AI
+		// performs since faa1e4cc).
+		$this->assertTrue( $this->renameAttachment( $id, $en_base ), 'Sanity: the main-language rename must report success.' );
 
-		// THE PIN (first half): the original set could not be deleted, because
-		// the German sibling still points at it (#69) — so it is still there.
-		$this->assertFileExists(
+		$ext = pathinfo( $old_file, PATHINFO_EXTENSION );
+		$this->assertFileExists( trailingslashit( $dir ) . $en_base . '.' . $ext, 'Sanity: the renamed file exists.' );
+
+		$this->assertFileDoesNotExist(
 			$old_file,
-			'PIN #74: fixed? The original file was deleted after the first rename — the duplication is gone, flip this pin.'
+			'REGRESSION #74 residual: the original file must be gone after the main-language rename — one copy per image.'
 		);
-
-		// Language 2 now renames that SURVIVING original a second time.
-		$this->assertTrue( $this->renameAttachment( $dup_id, $de_base ), 'Sanity: the second rename must report success.' );
-
-		// THE PIN (second half): two languages, two complete copies on disk.
-		// Asserted on exact paths rather than by globbing the uploads
-		// directory: fixtures from other tests in the same run share the
-		// "fixture-small" prefix, which made a prefix-glob order-dependent.
-		$ext          = pathinfo( $old_file, PATHINFO_EXTENSION );
-		$en_main      = trailingslashit( $dir ) . $en_base . '.' . $ext;
-		$de_main      = trailingslashit( $dir ) . $de_base . '.' . $ext;
-		$en_thumbnail = trailingslashit( $dir ) . $en_base . '-150x150.' . $ext;
-		$de_thumbnail = trailingslashit( $dir ) . $de_base . '-150x150.' . $ext;
-
-		$this->assertFileExists(
-			$en_main,
-			'PIN #74: the first language left its own copy of the image on disk.'
-		);
-		$this->assertFileExists(
-			$de_main,
-			'PIN #74: fixed? The second language no longer leaves a SEPARATE copy — one shared file would mean the duplication is gone, flip this pin to a regression test.'
-		);
-		// Not just the main file: every generated size is duplicated too.
-		$this->assertFileExists( $en_thumbnail, 'PIN #74: thumbnails are duplicated along with the main file.' );
-		$this->assertFileExists( $de_thumbnail, 'PIN #74: thumbnails are duplicated along with the main file.' );
-
-		$this->assertNotSame(
-			$en_main,
-			$de_main,
-			'PIN #74: two languages, two distinct physical files for one logical image — N languages multiply disk usage by N.'
+		$this->assertSame(
+			get_attached_file( $id ),
+			get_attached_file( $dup_id ),
+			'REGRESSION #74 residual: the translation must reference the renamed file.'
 		);
 	}
 }

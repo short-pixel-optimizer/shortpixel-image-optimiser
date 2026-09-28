@@ -158,12 +158,20 @@ test.describe('AI editor modal — edit-media opener', () => {
 		await openEditScreen(page, id);
 		const modal = new AiEditorModal(page);
 
+		// Let the preview land BEFORE closing. Opening fires a preview
+		// request, and closing while it is still in flight makes the
+		// response handler throw (see pin75 below) — an unrelated defect
+		// that failed this test intermittently on Firefox in CI, where the
+		// slower run let the response arrive after the close. This test is
+		// about modal/shade removal and the stylesheet, so it waits.
 		await modal.open('scale');
+		await modal.expectPreviewLoaded();
 		await modal.close();
 		await expect(page.locator('#shortpixel-media-modal-css')).toHaveCount(1);
 
 		// Re-open on the same page: no second <link>, popup works again.
 		await modal.open('remove');
+		await modal.expectPreviewLoaded();
 		await expect(page.locator('#shortpixel-media-modal-css')).toHaveCount(1);
 		await modal.expectStyled();
 		await modal.close();
@@ -204,5 +212,73 @@ test.describe('AI editor modal — pinned defects', () => {
 		await spio.setMock({ waitingRounds: 0 });
 		await modal.expectPreviewLoaded();
 		await modal.close();
+	});
+});
+
+/**
+ * PIN #75 — closing the AI editor while a preview request is in flight
+ * throws an uncaught TypeError when the response lands.
+ *
+ * screen-media.js MediaEditorPreviewEvent() (:376-377) resolves the preview
+ * element with `document.querySelector('.modal-wrapper .image-preview i')`
+ * and dereferences it unguarded. Every other lookup in that same function
+ * goes through the captured `modal` reference, which keeps working on the
+ * detached subtree — this one line reaches into `document`, so once the
+ * modal has been removed it is null:
+ *
+ *     TypeError: can't access property "style", previewImage is null
+ *
+ * The listener is registered `{ once: true }` in MediaEditorDoAction() and
+ * is never removed when the modal closes, so the handler always runs.
+ *
+ * This is what failed CI on Firefox (ai-editor.spec.ts "closing removes the
+ * modal and shade"): nothing Firefox-specific, it simply lost the race on a
+ * slower runner. Reproduced deterministically on BOTH firefox and chromium
+ * by holding the response with waitingRounds — that test now waits for the
+ * preview before closing, and the defect itself is pinned here.
+ *
+ * Suggested fix: scope the lookup to the modal and guard it, matching the
+ * rest of the function —
+ *     const previewImage = modal.querySelector('.image-preview i');
+ *     if (previewImage) { previewImage.style.backgroundImage = ...; }
+ * (:303-304 has the same `document.querySelector` pattern but runs
+ * synchronously while the modal is open, so it is safe today.)
+ *
+ * FLIP-when-fixed: drop `allowConsoleErrors`, assert no page errors, and
+ * let the tripwire guard it.
+ */
+test.describe('AI editor modal — pin75 (preview response after close)', () => {
+	test.use({ allowConsoleErrors: true });
+
+	test.beforeEach(async ({ spio }) => {
+		await spio.reset();
+	});
+
+	test('pin75: preview response after modal close throws (pinned_for_deferred_fix)', async ({ page, spio }) => {
+		const id = (await spio.uploadFixture('fixture-small.jpg')).id;
+		// Hold the response so it cannot land before we close.
+		await spio.setMock({ waitingRounds: 3 });
+		await openEditScreen(page, id);
+		const modal = new AiEditorModal(page);
+
+		const pageErrors: string[] = [];
+		page.on('pageerror', (e) => pageErrors.push(String(e)));
+
+		await modal.open('scale');
+		// SENTINEL: the request really is still in flight at close time —
+		// without this the test could pass for the wrong reason.
+		await expect(modal.spinner).not.toHaveClass(/\bshortpixel-hide\b/);
+		await modal.close();
+
+		// Let the held response come back to a page with no modal.
+		await expect
+			.poll(() => pageErrors.length, {
+				timeout: 30_000,
+				message: 'PIN #75: fixed? No uncaught error after a post-close preview response — flip this pin.',
+			})
+			.toBeGreaterThan(0);
+
+		// Engine wording differs (Firefox names the variable, Chromium does not).
+		expect(pageErrors.join('\n')).toMatch(/previewImage is null|Cannot read properties of null \(reading 'style'\)/);
 	});
 });

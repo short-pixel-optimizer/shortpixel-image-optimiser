@@ -46,6 +46,35 @@ define( 'SPIO_E2E_PLUGIN_DIR', WP_PLUGIN_DIR . '/shortpixel-image-optimiser' );
 define( 'SPIO_E2E_HOSTILE_OPTION', 'spio_e2e_hostile_snippets' );
 
 /**
+ * Hermetic update state: report "no core, plugin or theme updates", always.
+ *
+ * WordPress otherwise asks api.wordpress.org, and the answer changes with
+ * every upstream release. On 2026-09-24 the site ran 7.1.1 while 7.1.2 had
+ * shipped, so every admin page grew the core `.update-nag` notice. The visual
+ * specs mask third-party notices, but a mask only hides an element's
+ * content — it still paints where the element now EXISTS, and the notice
+ * pushed the panels down. Result: all four admin-page baselines failed
+ * (settings overview ×3, bulk dashboard) with no SPIO change at all.
+ *
+ * Returning a fresh, empty transient also means WordPress never makes the
+ * update request, so the run stops depending on the internet for it.
+ */
+function spio_e2e_no_updates() {
+	return (object) array(
+		'last_checked'    => time(),
+		'version_checked' => get_bloginfo( 'version' ),
+		'updates'         => array(),
+		'response'        => array(),
+		'no_update'       => array(),
+		'translations'    => array(),
+		'checked'         => array(),
+	);
+}
+add_filter( 'pre_site_transient_update_core', 'spio_e2e_no_updates' );
+add_filter( 'pre_site_transient_update_plugins', 'spio_e2e_no_updates' );
+add_filter( 'pre_site_transient_update_themes', 'spio_e2e_no_updates' );
+
+/**
  * The "healthy paying install" baseline — a port of
  * SPIO_IntegrationHelpers::spioSetUpBaseline(). Also called by WP-CLI during
  * provisioning (tests/E2E/provision/seed.php).
@@ -85,6 +114,21 @@ function spio_e2e_apply_seed() {
 		$settings->ai_use_exif       = 0;
 		$settings->ai_use_post       = 0;
 		$settings->aiPreserve        = 0;
+
+		// AI generation switches, pinned to their SettingsModel defaults.
+		// Specs switch some of these off (e.g. the Gutenberg "switched-off
+		// field" guard) and nothing put them back, so the AI settings tab
+		// rendered whatever the previous spec left behind: its visual
+		// baseline was recorded with fields collapsed, and on a freshly
+		// provisioned site (defaults, fields expanded) the tab came out 304px
+		// taller (2026-09-24).
+		$settings->ai_gen_alt                = 1;
+		$settings->ai_gen_caption            = 1;
+		$settings->ai_gen_description        = 1;
+		$settings->ai_gen_post_title         = 1;
+		$settings->ai_gen_filename           = 0;
+		$settings->ai_filename_prefercurrent = 0;
+		$settings->ai_content_replace        = 'missing';
 		$settings->cloudflareZoneID  = '';
 		$settings->cloudflareToken   = '';
 		$settings->excludeSizes      = array();

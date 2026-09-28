@@ -168,22 +168,33 @@ class QueueItemResultTest extends WP_UnitTestCase {
 	 */
 
 	/**
-	 * Unlike every other field, replaced_content defaults to [] (not null),
-	 * so arrayFilterNullValues keeps it: EVERY result payload now ships a
-	 * replaced_content member ([] when nothing was replaced). This is what
-	 * makes the JS truthiness check in screen-media.js UpdateGutenBerg fire
-	 * on every AI result. If this test starts failing because the field is
-	 * gone from the empty payload, the default was changed to null — update
-	 * the JS-side expectations too.
+	 * replaced_content defaults to [] (not null). Until ffde74bf that meant
+	 * EVERY payload shipped a replaced_content member; since ffde74bf
+	 * forReturn() also drops empty arrays (UtilHelper::arrayFilterEmptyArrays),
+	 * so the member is ABSENT until something was replaced. The JS consumer
+	 * (screen-media.js UpdateGutenBerg) guards `resultItem.replaced_content`
+	 * on both reads since the same commit.
 	 */
-	public function test_replaced_content_defaults_to_empty_array_and_is_always_serialized() {
+	public function test_replaced_content_defaults_to_empty_array_and_is_left_out_while_empty() {
 		$r = new QueueItemResult( 7 );
 
 		$this->assertSame( array(), $r->replaced_content );
 
 		$obj = $r->forReturn();
-		$this->assertObjectHasProperty( 'replaced_content', $obj );
-		$this->assertSame( array(), $obj->replaced_content );
+		$this->assertObjectNotHasProperty( 'replaced_content', $obj, 'An empty replaced_content is left out of the payload (ffde74bf).' );
+
+		// Only EMPTY ARRAYS are dropped: falsy scalars survive.
+		$r->is_error = false;
+		$r->message  = '';
+		$obj         = $r->forReturn();
+		$this->assertObjectHasProperty( 'is_error', $obj );
+		$this->assertFalse( $obj->is_error );
+		$this->assertObjectHasProperty( 'message', $obj );
+		$this->assertSame( '', $obj->message );
+
+		// A rename-only map (string keys, no per-post entry) is kept.
+		$r->replaced_content = array( 'replaced_url' => 'https://example.test/new.jpg', 'target_filename' => 'new.jpg' );
+		$this->assertObjectHasProperty( 'replaced_content', $r->forReturn() );
 
 		// Populated per-post map round-trips through json_encode as an
 		// object keyed by post ID (non-sequential numeric keys).

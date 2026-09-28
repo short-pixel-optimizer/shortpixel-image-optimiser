@@ -166,4 +166,55 @@ test.describe('Gutenberg AI — pinned', () => {
 		await page.waitForTimeout(3_000);
 		expect((await editor.imageBlock(image.id)).alt, 'PIN: block alt not reverted in the open editor').toBe('A mock ai alt text.');
 	});
+
+	/**
+	 * REGRESSION (found 2026-09-25 in ffde74bf, fixed in ceab8910 the same day)
+	 * — an AI rename that writes NO alt into the open post must still move the
+	 * block to the new URL.
+	 *
+	 * ffde74bf's early return in UpdateGutenBerg (screen-media.js) tested
+	 * `typeof replaceUrl` — an undeclared name, always 'undefined' — instead of
+	 * `replacedUrl`, so every rename-only result (post alt already filled in
+	 * 'missing' mode, 'none' mode, alt off…) returned before the url refresh:
+	 * the server renamed the file and rewrote post_content, the editor kept the
+	 * old URL and the next save wrote it back (broken image). Lives in the
+	 * "pinned" describe because it shares its setup; it is a regression test.
+	 */
+	test('regression: an AI rename without an alt write moves the block to the new URL', async ({ page, spio }) => {
+		await spio.setSettings({ enable_ai: 1, ai_gen_alt: 1, ai_gen_caption: 0, ai_gen_filename: 1, ai_content_replace: 'missing' });
+		const newBase = 'gb-renamed-' + Date.now();
+		await spio.setMock({ aiFields: { generated_file_name: newBase } });
+
+		const image = await spio.uploadFixture('fixture-small.jpg');
+		// An alt already in the post → 'missing' mode writes no alt → rename-only result.
+		const post = await spio.createPost({ image_id: image.id, alt: 'Existing alt' });
+
+		const editor = new BlockEditor(page);
+		await editor.open(post.id);
+		await expectProcessorActive(page);
+		const oldUrl = String((await editor.imageBlock(image.id)).url);
+		expect(oldUrl, 'precondition: the block starts on the old file').not.toContain(newBase);
+
+		// SENTINEL: the rename result (carrying replaced_url) really reaches this page.
+		const delivered = page.waitForResponse(
+			async (r) => r.url().includes('admin-ajax.php') && (await r.text().catch(() => '')).includes('replaced_url'),
+			{ timeout: 90_000 }
+		);
+		await editor.selectImageBlock(image.id);
+		await editor.requestAlt(image.id);
+		await delivered;
+
+		// SENTINEL: the server renamed the file and rewrote the stored content.
+		await expect.poll(async () => (await spio.attachment(image.id)).attached_file, { timeout: 30_000 }).toContain(newBase);
+		await expect.poll(async () => (await spio.getPost(post.id)).content, { timeout: 30_000 }).toContain(newBase);
+
+		// The open editor's block follows the rename (thumbnail suffix kept).
+		await expect
+			.poll(async () => String((await editor.imageBlock(image.id)).url), {
+				timeout: 30_000,
+				message: 'REGRESSION: the block url must follow a rename-only result',
+			})
+			.toContain(newBase);
+		expect(String((await editor.imageBlock(image.id)).url)).not.toBe(oldUrl);
+	});
 });

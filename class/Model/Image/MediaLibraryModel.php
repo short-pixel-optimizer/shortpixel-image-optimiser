@@ -2271,7 +2271,25 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	 *
 	 * The legacy `_icl_lang_duplicate_of` fallback has been removed.
 	 *
-	 * @return int[] Deduplicated list of duplicate attachment IDs (never contains $this->id).
+	 * $returnalldata (faa1e4cc): instead of sibling ids, return a map
+	 * `element_id => ['language_code' => …, 'is_main_language' => bool]`
+	 * that INCLUDES this item itself; is_main_language is true for the row
+	 * without a source_language_code. HandleSuccess() uses it to run the AI
+	 * rename for the main language only (the #74 fix). Only the WPML branch
+	 * fills the map — Polylang siblings are never included, so for Polylang
+	 * every language still triggers its own AI rename of the shared file
+	 * (no duplicate files, since Polylang has no delete guard: the last
+	 * language processed wins). Because this item is always in the map, a
+	 * WPML translation whose image is its OWN file (Media Translation) is
+	 * never AI-renamed either.
+	 *
+	 * The same-file check compares against this item's CURRENT attached file,
+	 * so it must be called BEFORE this item's _wp_attached_file is rewritten;
+	 * OptimizeAiController::replaceFiles() does so since 11aa2065 (the BUG #69
+	 * WPML fix — called afterwards it found no WPML siblings).
+	 *
+	 * @param bool $returnalldata Return the per-language map (self included) instead of sibling ids.
+	 * @return int[]|array Deduplicated sibling ids (never contains $this->id), or the map described above.
 	 */
 	public function getWPMLDuplicates($returnalldata = false)
 	{

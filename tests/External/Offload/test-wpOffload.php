@@ -333,6 +333,10 @@ class wpOffloadTest extends WP_UnitTestCase {
 			public function bucket() {
 				return 'spio-test-bucket';
 			}
+			/** Same signature as as3cf Item::is_private() (items/item.php). */
+			public function is_private( ?string $object_key = null ): bool {
+				return ! empty( $this->objects[ $object_key ]['is_private'] );
+			}
 		};
 	}
 
@@ -340,8 +344,16 @@ class wpOffloadTest extends WP_UnitTestCase {
 	 * Stand-in for the as3cf main object: get_provider_client() hands out a
 	 * client whose copy_objects() records the requests and then either
 	 * throws $throw or reports no failures.
+	 *
+	 * Also answers the ACL API WP Offload Media's own upload handler uses
+	 * (classes/items/upload-handler.php), so a fix that adopts it (#76) runs
+	 * against these stubs instead of dying on an undefined method:
+	 * get_storage_provider()->get_default_acl() / get_private_acl(), and
+	 * use_acl_for_intermediate_size() — $useAcl false models a bucket that
+	 * does not accept ACLs (Object Ownership "bucket owner enforced" /
+	 * Block Public Access).
 	 */
-	private function stubAs3cf( ?\Throwable $throw, array &$copyRequests, int &$clientCalls ) {
+	private function stubAs3cf( ?\Throwable $throw, array &$copyRequests, int &$clientCalls, bool $useAcl = true ) {
 		$client = new class( $throw, $copyRequests ) {
 			private $throw;
 			private $requests;
@@ -359,16 +371,31 @@ class wpOffloadTest extends WP_UnitTestCase {
 			public function delete_objects( array $args ) {}
 		};
 
-		return new class( $client, $clientCalls ) {
+		return new class( $client, $clientCalls, $useAcl ) {
 			private $client;
 			private $calls;
-			public function __construct( $client, &$calls ) {
+			private $useAcl;
+			public function __construct( $client, &$calls, bool $useAcl ) {
 				$this->client = $client;
 				$this->calls  = &$calls;
+				$this->useAcl = $useAcl;
 			}
 			public function get_provider_client( $region = '', $force = false ) {
 				$this->calls++;
 				return $this->client;
+			}
+			public function get_storage_provider() {
+				return new class() {
+					public function get_default_acl() {
+						return 'public-read';
+					}
+					public function get_private_acl() {
+						return 'private';
+					}
+				};
+			}
+			public function use_acl_for_intermediate_size( int $attachment_id, string $size, ?string $bucket = null, $as3cf_item = null ): bool {
+				return $this->useAcl;
 			}
 		};
 	}
@@ -424,19 +451,20 @@ class wpOffloadTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * PIN #73 — provider exceptions escape, and every copy is forced public.
+	 * PIN #73(c) — provider exceptions escape.
 	 * With matching objects, replaceFiles() builds one copy request per
 	 * object and calls copy_objects(). Nothing catches an exception from the
 	 * client (the unconfigured Null_Provider throws "Failed to instantiate
 	 * the provider client"; a real client with bad credentials can too), so
-	 * the rename request crashes. Each request also sets
-	 * 'ACL' => 'public-read' explicitly — private media becomes public, and
-	 * buckets with ACLs disabled reject the call.
+	 * the rename request crashes.
 	 *
-	 * Flip when: the exception is caught (rename refused cleanly) and the
-	 * ACL follows the object's is_private flag / the bucket setting.
+	 * (Until 2026-09-24 this test also pinned the forced 'public-read' ACL;
+	 * that is now BUG #76 with its own pins below, so the two can flip
+	 * independently.)
+	 *
+	 * Flip when: the exception is caught (rename refused cleanly).
 	 */
-	public function test_pin73_replaceFiles_lets_provider_exceptions_escape_and_forces_public_read_pinned_for_deferred_fix() {
+	public function test_pin73_replaceFiles_lets_provider_exceptions_escape_pinned_for_deferred_fix() {
 		$requests = array();
 		$calls    = 0;
 		$failure  = new \Exception( 'Failed to instantiate the provider client.' );
@@ -464,17 +492,109 @@ class wpOffloadTest extends WP_UnitTestCase {
 		$this->assertContains( 'wp-content/uploads/2026/09/renamed-photo.jpg', $keys, 'Sentinel: the main object is copied to the new key.' );
 		$this->assertContains( 'wp-content/uploads/2026/09/renamed-photo-300x225.jpg', $keys, 'Sentinel: thumbnails follow the new base.' );
 
-		// THE PINS.
+		// THE PIN.
 		$this->assertSame(
 			$failure,
 			$thrown,
-			'PIN #73: fixed? A provider failure no longer escapes replaceFiles() — flip this pin.'
+			'PIN #73(c): fixed? A provider failure no longer escapes replaceFiles() — flip this pin.'
 		);
+	}
+
+	/*
+	 * BUG #76 — every rename copy is forced to 'ACL' => 'public-read'.
+	 *
+	 * S3 CopyObject does NOT carry the source object's ACL over (the copy gets
+	 * the bucket default, i.e. private on an ACL-enabled bucket), and
+	 * 'MetadataDirective' => 'COPY' preserves metadata, not permissions. So
+	 * SOME ACL must be sent, or renamed public images return 403 on classic
+	 * public-ACL setups — that is what the hardcoded value solves. But
+	 * hardcoding it ignores the rule WP Offload Media applies to its own
+	 * uploads (classes/items/upload-handler.php, 3.4.2):
+	 *
+	 *     $acl = $item->is_private($key) ? $provider->get_private_acl()
+	 *                                    : $provider->get_default_acl();
+	 *     only if $as3cf->use_acl_for_intermediate_size($id, $key, $bucket, $item)
+	 *
+	 * Two consequences, one pin each. Both flip when the copy requests follow
+	 * that rule.
+	 */
+
+	/**
+	 * PIN #76 — a PRIVATE object is copied as public-read.
+	 * On an ACL-enabled bucket, media WP Offload Media keeps private (private
+	 * media / signed URLs) becomes readable by everyone after a rename.
+	 *
+	 * Flip when: the private object's copy carries the private ACL and the
+	 * public one the default ACL.
+	 */
+	public function test_pin76_private_object_is_copied_public_read_pinned_for_deferred_fix() {
+		$requests = array();
+		$calls    = 0;
+		$item     = $this->stubItem(
+			array(
+				'__as3cf_primary' => array( 'source_file' => 'photo.jpg', 'is_private' => false ),
+				'medium'          => array( 'source_file' => 'photo-300x225.jpg', 'is_private' => true ),
+			)
+		);
+		$o = $this->offloadWithStubs( $item, $this->stubAs3cf( null, $requests, $calls, true ) );
+		// A completed rename resolves the primary object key via the media class.
+		$this->setPrivate( $o, 'itemClassName', SPIO_Test_As3cf_Media_Class_Stub::class );
+
+		$result = $o->replaceFiles( false, $this->sourceFiles(), $this->stubImageModel(), 'renamed-photo' );
+
+		// SENTINELS: the rename really reached copy_objects(), and the medium
+		// object really is private while the primary is not.
+		$this->assertTrue( $result, 'Sentinel: with a succeeding client the provider rename completes.' );
+		$this->assertCount( 2, $requests, 'Sentinel: one copy request per matched object.' );
+		$this->assertTrue( $item->is_private( 'medium' ), 'Sentinel: the medium object is private.' );
+		$this->assertFalse( $item->is_private( '__as3cf_primary' ), 'Sentinel: the primary object is public.' );
+
+		$byKey = array_column( $requests, 'ACL', 'Key' );
+		$this->assertSame(
+			'public-read',
+			$byKey['wp-content/uploads/2026/09/renamed-photo-300x225.jpg'] ?? null,
+			'PIN #76: fixed? The PRIVATE object is no longer copied as public-read — flip this pin to expect the private ACL.'
+		);
+	}
+
+	/**
+	 * PIN #76 — an ACL is sent although the bucket does not accept ACLs.
+	 * With Object Ownership "bucket owner enforced" (the AWS default for new
+	 * buckets) or Block Public Access, S3 rejects a copy that sets an ACL, so
+	 * every rename on such a bucket fails remotely (→ #73(f)).
+	 * use_acl_for_intermediate_size() is how WP Offload Media knows this.
+	 *
+	 * Flip when: no 'ACL' key is sent when use_acl_for_intermediate_size()
+	 * answers false.
+	 */
+	public function test_pin76_acl_is_sent_although_the_bucket_disallows_acls_pinned_for_deferred_fix() {
+		$requests = array();
+		$calls    = 0;
+		$as3cf    = $this->stubAs3cf( null, $requests, $calls, false );
+		$o        = $this->offloadWithStubs(
+			$this->stubItem(
+				array(
+					'__as3cf_primary' => array( 'source_file' => 'photo.jpg', 'is_private' => false ),
+					'medium'          => array( 'source_file' => 'photo-300x225.jpg', 'is_private' => false ),
+				)
+			),
+			$as3cf
+		);
+		// A completed rename resolves the primary object key via the media class.
+		$this->setPrivate( $o, 'itemClassName', SPIO_Test_As3cf_Media_Class_Stub::class );
+
+		$o->replaceFiles( false, $this->sourceFiles(), $this->stubImageModel(), 'renamed-photo' );
+
+		// SENTINELS: copy requests were built, and the bucket really reports
+		// that ACLs must not be used.
+		$this->assertCount( 2, $requests, 'Sentinel: one copy request per matched object.' );
+		$this->assertFalse( $as3cf->use_acl_for_intermediate_size( 4242, '__as3cf_primary' ), 'Sentinel: the stub bucket does not accept ACLs.' );
+
 		foreach ( $requests as $request ) {
 			$this->assertSame(
 				'public-read',
 				$request['ACL'] ?? null,
-				'PIN #73: every copy is forced public-read, even the private medium object — flip when the ACL follows is_private.'
+				'PIN #76: fixed? No ACL is sent to a bucket that does not accept ACLs — flip this pin to assert the ACL key is absent.'
 			);
 		}
 	}
