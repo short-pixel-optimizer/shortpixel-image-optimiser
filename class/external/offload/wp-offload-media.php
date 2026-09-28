@@ -592,6 +592,8 @@ class wpOffload
 		}
 
 		$client = $this->as3cf->get_provider_client($item->region(), true);
+ 		$provider     = $this->as3cf->get_storage_provider();
+
 		$copyRequests = [];
 		foreach ($keyRenames as $keys) {
 			$copyRequests[] = [
@@ -617,6 +619,11 @@ class wpOffload
 					return ['Key' => $keys[0]];
 				}, $keyRenames)],
 			]);
+		    if ($this->as3cf->use_acl_for_intermediate_size($attachment_id, $objectKey, $item->bucket(), $item)) {
+        		  $request['ACL'] = $item->is_private($objectKey)
+              ? $provider->get_private_acl()    // 'private' on S3, 'projectPrivate' on GCS
+              : $provider->get_default_acl();   // 'public-read' / 'publicRead', and honours the site's ACL filter
+      		}
 		
 			$item->set_objects($updated_objects);
 			$primaryKey = $this->getMediaClass()::primary_object_key();
