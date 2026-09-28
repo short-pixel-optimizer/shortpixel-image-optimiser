@@ -1028,16 +1028,20 @@ class OptimizeAiController extends OptimizerBase
              return false; 
         }
 
+        if (count($duplicates) > 0) 
+        {
+             $args['duplicates'] = $duplicates; 
+        }
         $this->replaceMetaData($item_id, $base_filename, $newFileBase, $args);
 
         // Trigger updates 
-        if (isset($duplicates) && count($duplicates) > 0) {
+        /*if (isset($duplicates) && count($duplicates) > 0) {
             foreach ($duplicates as $duplicate_id) {
                 // Update the duplicates
                 $args['is_duplicate'] = true;
                 $this->replaceMetaData($duplicate_id, $base_filename, $newFileBase, $args);
             }
-        }
+        } */
 
         // @Todo  Here probably we should check the backup and move that as well.
         $backupController = BackupController::getBackupController();
@@ -1228,27 +1232,33 @@ class OptimizeAiController extends OptimizerBase
     {
         $defaults = [
             'dry_run' => false,
-            'is_duplicate' => false,
+       //     'is_duplicate' => false,
+            'duplicates' => [], 
         ];
 
         $args = wp_parse_args($args, $defaults);
 
         $dry_run = $args['dry_run'];
-        $is_duplicate = $args['is_duplicate'];
-
-        $post = get_post($item_id); 
-
+       // $is_duplicate = $args['is_duplicate'];
 
         $metadata = wp_get_attachment_metadata($item_id);
         if (isset($metadata['file']) && strpos($metadata['file'], $old_file) !== false) {
 
             if (false === $dry_run)
             {
+                $post = get_post($item_id); 
                 $guid_replacement = $this->replaceFileBaseInPath($metadata['file'], $old_file, $new_file);
                 $post->post_name = $new_file; 
                 $post->guid = str_replace($metadata['file'], $guid_replacement, $post->guid);
-              //  $post->post_title = $new_file;
                 wp_update_post($post);
+
+                foreach($args['duplicates'] as $duplicate_id)
+                {
+                   $dup_post = get_post($duplicate_id);
+                   $dup_post->guid = $post->guid; 
+                   $dup_post->post_name = $new_file; 
+                   wp_update_post($dup_post);     
+                }
             }
             // This fixes situation where dirname is similar to image name 
             $filebase = trailingslashit(pathinfo($metadata['file'], PATHINFO_DIRNAME));
@@ -1274,6 +1284,10 @@ class OptimizeAiController extends OptimizerBase
                 Log::addInfo('Dry Run - would update attached file with ' . $new_attached_file);
             } else {
                 update_attached_file($item_id, $new_attached_file);
+                foreach($args['duplicates'] as $duplicate_id)
+                {
+                    update_attached_file($duplicate_id, $new_attached_file);
+                }
             }
       //  }
 
@@ -1295,6 +1309,13 @@ class OptimizeAiController extends OptimizerBase
             do_action('shortpixel/converter/prevent-offload', $item_id); 
             wp_update_attachment_metadata($item_id, $metadata);
             do_action('shortpixel/converter/prevent-offload-off', $item_id); 
+
+            foreach($args['duplicates'] as $duplicate_id)
+            {
+                do_action('shortpixel/converter/prevent-offload', $duplicate_id); 
+                wp_update_attachment_metadata($duplicate_id, $metadata);
+                do_action('shortpixel/converter/prevent-offload-off', $duplicate_id); 
+            }
         }
     }
 

@@ -651,6 +651,8 @@ class wpOffload
 			{
 				Log::addWarning('Offload - Path doesnt have updated objects?', $updated_objects);
 			}
+
+			// @todo This should probably be split off to it's own function / or combine it with the main loop
 			foreach ($wpmlItems as $duplicateId => $wpmlData) {
 				$duplicateItem = $wpmlData['item'];
 				$duplicateObjects = $wpmlData['objects'];
