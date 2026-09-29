@@ -47,8 +47,8 @@
  * deterministically elsewhere:
  *   - tests/External/Offload/test-wpOffload.php (stubbed item + client):
  *     "handled" claimed when no provider object matched; provider
- *     exceptions escape; after a successful rename every thumbnail object
- *     records the MAIN filename. (The forced 'ACL' => 'public-read' on
+ *     exceptions escape. (Thumbnail objects recording the MAIN filename,
+ *     #73(e), was fixed in 31c93f71.) (The forced 'ACL' => 'public-read' on
  *     every copy is BUG #76, pinned in the same file.)
  *   - tests/Integration/test-ChangeFilename.php: an "applied" rename of a
  *     REMOTE-ONLY (virtual) image still returns false before the metadata /

@@ -148,9 +148,14 @@ export class SpioSupport {
 		return this.post('option', { name, value });
 	}
 
-	/** Upload tests/fixtures/<name> as a real attachment. */
-	uploadFixture(name: string): Promise<{ id: number; url: string; file: string }> {
-		return this.post('fixture', { name });
+	/**
+	 * Upload tests/fixtures/<name> as a real attachment, optionally under
+	 * another filename (`as`, same extension). WordPress's own naming rules
+	 * still apply to `as` (wp_unique_filename: e.g. "-1" is appended to a
+	 * name ending in -scaled / -rotated / -WxH).
+	 */
+	uploadFixture(name: string, as?: string): Promise<{ id: number; url: string; file: string }> {
+		return this.post('fixture', as ? { name, as } : { name });
 	}
 
 	/**

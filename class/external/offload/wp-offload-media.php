@@ -467,12 +467,16 @@ class wpOffload
 	 * NOTES (review 2026-09-18) — BUG #73 (open, HIGH), pinned in
 	 * tests/External/Offload/test-wpOffload.php and
 	 * tests/Integration/test-ChangeFilename.php:
-	 *   - $renames is built with str_replace($sourceBase, $newFileBase,
-	 *     $sourceFilename), $sourceBase being each file's OWN base: every
-	 *     thumbnail ('photo-300x225.jpg') maps to the MAIN new name
-	 *     ('renamed-photo.jpg'). The bucket keys are computed separately and
-	 *     are correct, but set_objects() records every size's source_file as
-	 *     the main image;
+	 *   - #73(e) FIXED in 31c93f71 (2026-09-28): $renames used each file's
+	 *     OWN base, so every thumbnail's recorded source_file became the MAIN
+	 *     new name. It now replaces the original's base ($fileBaseName), and
+	 *     the item's path / original_path are looked up per file in $renames
+	 *     (the scaled file and the original keep their own names). Regression:
+	 *     test_successful_rename_preserves_thumbnail_source_filename_suffix.
+	 *   - WPML (31c93f71): the as3cf items of getWPMLDuplicates() siblings are
+	 *     resolved BEFORE the primary item changes and saved with the same
+	 *     renamed objects/paths (the bucket objects are shared, copied once).
+	 *     Test: test_wpml_duplicate_offload_item_metadata_tracks_shared_rename;
 	 *   - #73(a) FIXED: when this returns true, replaceFiles() now carries on
 	 *     to the WordPress metadata / backup / content steps for local+remote
 	 *     images (e165198f) and remote-only images (88b2bcfe) alike.
@@ -500,6 +504,14 @@ class wpOffload
 	 *     with ACLs disabled / Block Public Access (AWS defaults for new
 	 *     buckets) reject the copy. Pinned in tests/External/Offload/test-wpOffload.php
 	 *     (test_pin76_*); the fix was verified against those stubs.
+	 *     3bc80619 (2026-09-28) added the right rule but in the wrong place:
+	 *     it runs AFTER copy_objects()/delete_objects(), writes the ACL into
+	 *     a local $request that is never sent, and reads $objectKey left over
+	 *     from the last loop iteration. The copies still go out with the fixed
+	 *     'public-read', so both pins stay green. The rule has to be applied
+	 *     per object when $copyRequests is built (per objectKey: set 'ACL' to
+	 *     the private/default ACL only when use_acl_for_intermediate_size()
+	 *     allows one, otherwise omit the key).
 	 *   - Local files are not renamed here; replaceFiles() renames the local
 	 *     copies itself when the image is not virtual (since e165198f).
 	 *

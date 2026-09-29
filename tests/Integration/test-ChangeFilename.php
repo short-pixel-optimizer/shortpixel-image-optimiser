@@ -1403,4 +1403,66 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$this->assertSame( $custom_title, $post->post_title, 'REGRESSION: the custom title must survive the rename.' );
 		$this->assertSame( sanitize_title( $new_base ), $post->post_name, 'The attachment slug follows the new file base.' );
 	}
+
+	/**
+	 * PIN #81 (found 2026-09-28 in 3fd40001) — stripping a
+	 * dimension or "-scaled" suffix from a filename breaks the main image.
+	 *
+	 * 3fd40001 added replaceFileBaseInPath() to stop WPML-synced translations
+	 * from being renamed twice. It skips any path whose name already matches
+	 * `^<new>(-scaled)?(-\d+x\d+)?$` — but the CURRENT name of the image being
+	 * renamed matches that too when the new name is the old one minus such a
+	 * suffix ("banner-1920x600" → "banner", "photo-scaled" → "photo"). The
+	 * files are moved on disk and the thumbnail metadata follows, but
+	 * _wp_attached_file and metadata['file'] keep the old, now-deleted name,
+	 * and the rename reports success. The skip runs on EVERY rename (main
+	 * item too), not only on WPML duplicates. Worked before 3fd40001.
+	 *
+	 * Reach: a fresh upload cannot carry such a name — wp_unique_filename()
+	 * always appends "-1" to names ending in -scaled / -rotated / -WxH
+	 * (WP 5.3+, e.g. "…-scaled.jpg" is stored as "…-scaled-1.jpg"). It
+	 * takes a name from before WP 5.3, a previous SPIO rename (a typed name
+	 * does not go through wp_unique_filename — this test uses that route),
+	 * or an import that bypasses it.
+	 *
+	 * Suggested fix: don't guess from the pattern — give the duplicate pass
+	 * the renamed item's NEW values (duplicates share the file, so their
+	 * _wp_attached_file / metadata['file'] must simply equal the item's),
+	 * and use the plain replacement for the item itself.
+	 * FLIP-when-fixed: _wp_attached_file and metadata['file'] carry the new
+	 * base and point at an existing file.
+	 */
+	public function test_pin81_stripping_a_dimension_suffix_leaves_the_main_file_on_the_deleted_name_pinned_for_deferred_fix() {
+		$this->_setRole( 'administrator' );
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+
+		// A real-world name with a dimension suffix that is NOT a registered
+		// thumbnail size (so the target-conflict guard stays out of the way).
+		$base = 'banner' . wp_generate_password( 4, false, false );
+		list( $first ) = $this->renameViaEngine( $attachment_id, $base . '-1920x600' );
+		$this->assertTrue( $first, 'Sanity: the first rename (adding the suffix) works.' );
+		$this->assertSame( $base . '-1920x600.jpg', basename( get_attached_file( $attachment_id ) ), 'Sentinel: the image is now called <base>-1920x600.' );
+		$dir = dirname( get_attached_file( $attachment_id ) );
+
+		list( $result ) = $this->renameViaEngine( $attachment_id, $base );
+		$this->assertTrue( $result, 'The rename reports success.' );
+
+		// SENTINEL: the files really moved to the new name on disk.
+		$this->assertFileExists( $dir . '/' . $base . '.jpg', 'Sentinel: the main file was renamed on disk.' );
+		$this->assertFileDoesNotExist( $dir . '/' . $base . '-1920x600.jpg', 'Sentinel: the old main file is gone.' );
+
+		clean_post_cache( $attachment_id );
+		$raw  = (string) get_post_meta( $attachment_id, '_wp_attached_file', true );
+		$meta = wp_get_attachment_metadata( $attachment_id );
+
+		// THE PIN: WordPress still points at the deleted name.
+		$this->assertSame(
+			$base . '-1920x600.jpg',
+			basename( $raw ),
+			'PIN #81: fixed? _wp_attached_file now follows the rename — flip this pin (expect "' . $base . '.jpg" and an existing file).'
+		);
+		$this->assertSame( $base . '-1920x600.jpg', basename( (string) ( $meta['file'] ?? '' ) ), 'PIN #81: metadata[file] also stays on the old name.' );
+		$this->assertFileDoesNotExist( $dir . '/' . basename( $raw ), 'PIN #81: the referenced main file does not exist.' );
+	}
 }
