@@ -938,6 +938,9 @@ class UiHelper
 	/**
 	 * Returns an escaped URL linking to the ShortPixel knowledge-base search.
 	 *
+	 * The UTM parameters (campaign plugin_error_help) come after the search
+	 * subject, since the subject is appended to the `s` query parameter.
+	 *
 	 * @param string $subject Search subject
 	 * @return string Escaped URL string.
 	 */
@@ -945,7 +948,7 @@ class UiHelper
 	{
 		$subject = sanitize_text_field($subject);   // collapse whitespace, strip tags
 		$subject = str_replace(' ', '-', $subject); // spaces -> dashes
-		return esc_url(self::$knowledge_url . $subject);
+		return esc_url(self::$knowledge_url . $subject . '&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_error_help');
 	}
 
 	/**

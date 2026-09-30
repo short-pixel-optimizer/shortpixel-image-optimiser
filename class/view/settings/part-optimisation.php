@@ -57,7 +57,7 @@ if (! defined('ABSPATH')) {
             </label><label class="lossless" title="<?php esc_html_e('Make sure not a single pixel looks different in the optimized image compared with the original. In some rare cases you will need to use this type of compression. Some technical drawings or images from vector graphics are possible situations.', 'shortpixel-image-optimiser'); ?>">
               <input type="radio" class="shortpixel-radio-lossless" name="compressionType" value="0" <?php echo ($view->data->compressionType == 0 ? "checked" : ""); ?>><span><?php esc_html_e('Lossless', 'shortpixel-image-optimiser'); ?></span>
             </label>
-            <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/lossy-glossy-or-lossless-which-one-is-the-best-for-me/?target=iframe"></i>
+            <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/lossy-glossy-or-lossless-which-one-is-the-best-for-me/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings"></i>
           </div>
 
           <info>
@@ -81,7 +81,7 @@ if (! defined('ABSPATH')) {
           <h4><?php esc_html_e('What is SmartCompression?', 'shortpixel-image-optimiser'); ?></h4>
 
           <?php _e('Images that look just good as the original, but with the smallest possible file size', 'shortpixel-image-optimiser'); ?>
-          <a href="https://shortpixel.com/blog/introducing-smartcompress/" target="_blank" class="shortpixel-help-link"><?php _e('Learn more', 'shortpixel-image-optimiser'); ?></a>
+          <a href="https://shortpixel.com/blog/introducing-smartcompress/?utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings" target="_blank" class="shortpixel-help-link"><?php _e('Learn more', 'shortpixel-image-optimiser'); ?></a>
         </content>
       </div>
 
@@ -111,7 +111,7 @@ if (! defined('ABSPATH')) {
           );
           ?>
 
-          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-optimize-thumbnails/?target=iframe"></i>
+          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-optimize-thumbnails/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings"></i>
           <name>
             <?php printf(esc_html__('Apply compression to image thumbnails', 'shortpixel-image-optimiser')); ?>
           </name>
@@ -134,7 +134,7 @@ if (! defined('ABSPATH')) {
           );
           ?>
 
-          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings---optimize-other-thumbs/?target=iframe"></i>
+          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings---optimize-other-thumbs/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings"></i>
           <name>
             <?php esc_html_e('Optimize unlisted thumbnails, if found.', 'shortpixel-image-optimiser'); ?>
           </name>
@@ -142,7 +142,7 @@ if (! defined('ABSPATH')) {
         </content>
         <warning class="heavy-feature-virtual unlisted">
           <message>
-            <?php printf(esc_html__('This feature has been disabled in offload mode for performance reasons. You can enable it again with a %s filter hook %s ', 'shortpixel-image-optimiser'), '<a target="_blank" href="https://shortpixel.com/knowledge-base/article/performance-improvement-shortpixel-image-optimization-media-offload-plugin/">', '</a>'); ?>
+            <?php printf(esc_html__('This feature has been disabled in offload mode for performance reasons. You can enable it again with a %s filter hook %s ', 'shortpixel-image-optimiser'), '<a target="_blank" href="https://shortpixel.com/knowledge-base/article/performance-improvement-shortpixel-image-optimization-media-offload-plugin/?utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings">', '</a>'); ?>
           </message>
         </warning>
       </setting>
@@ -158,7 +158,7 @@ if (! defined('ABSPATH')) {
             ]
           );
           ?>
-          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-optimize-pdfs/?target=iframe"></i>
+          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-optimize-pdfs/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings"></i>
           <name>
             <?php esc_html_e('Also optimize PDF documents.', 'shortpixel-image-optimiser'); ?>
           </name>
@@ -177,7 +177,7 @@ if (! defined('ABSPATH')) {
           );
           ?>
 
-          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-optimize-retina-images/?target=iframe"></i>
+          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-optimize-retina-images/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings"></i>
           <name>
             <?php esc_html_e('Also optimize the Retina images (@2x) if they exist.', 'shortpixel-image-optimiser'); ?>
           </name>
@@ -185,7 +185,7 @@ if (! defined('ABSPATH')) {
 
         <warning class='heavy-feature-virtual retina'>
           <message>
-            <?php printf(esc_html__('This feature has been disabled in offload mode for performance reasons. You can enable it again with a %s filter hook %s ', 'shortpixel-image-optimiser'), '<a target="_blank" href="https://shortpixel.com/knowledge-base/article/performance-improvement-shortpixel-image-optimization-media-offload-plugin/">', '</a>'); ?>
+            <?php printf(esc_html__('This feature has been disabled in offload mode for performance reasons. You can enable it again with a %s filter hook %s ', 'shortpixel-image-optimiser'), '<a target="_blank" href="https://shortpixel.com/knowledge-base/article/performance-improvement-shortpixel-image-optimization-media-offload-plugin/?utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings">', '</a>'); ?>
           </message>
         </warning>
       </setting>
@@ -206,7 +206,7 @@ if (! defined('ABSPATH')) {
               ]
             );
             ?>
-            <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/how-to-optimize-your-nextgen-galleries-with-shortpixel-image-optimizer/?target=iframe"></i>
+            <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/how-to-optimize-your-nextgen-galleries-with-shortpixel-image-optimizer/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings"></i>
             <name>
               <?php esc_html_e('Enable this option to optimize automatically the NextGen galleries.', 'shortpixel-image-optimiser'); ?>
             </name>
@@ -235,7 +235,7 @@ if (! defined('ABSPATH')) {
             </label>
           </switch>
 
-          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-convert-png-images-to-jpeg/?target=iframe"></i>
+          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-convert-png-images-to-jpeg/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings"></i>
           <name>
             <?php esc_html_e('Automatically convert the PNG images to JPEG, if possible.', 'shortpixel-image-optimiser'); ?>
           </name>
@@ -268,7 +268,7 @@ if (! defined('ABSPATH')) {
               <?php esc_html_e('Force conversion of transparent images', 'shortpixel-image-optimiser'); ?>
             </label>
           </switch>
-          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-force-conversion-of-images-when-transparent/?target=iframe"></i>
+          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-force-conversion-of-images-when-transparent/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings"></i>
           <name>
             <?php esc_html_e('The transparency will be lost.', 'shortpixel-image-optimiser'); ?>
           </name>
@@ -287,7 +287,7 @@ if (! defined('ABSPATH')) {
             ]
           );
           ?>
-          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings---cmyk-to-rgb-conversion/?target=iframe"></i>
+          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings---cmyk-to-rgb-conversion/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings"></i>
           <name>
             <?php esc_html_e('Adjust your images\' colors for computer and mobile displays.', 'shortpixel-image-optimiser'); ?>
           </name>
@@ -312,7 +312,7 @@ if (! defined('ABSPATH')) {
 
           </label>
         </switch>
-        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/spai-remove-exif/?target=iframe"></i>
+        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/spai-remove-exif/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings"></i>
         <name>
           <?php esc_html_e('Remove the EXIF data of the images (recommended).', 'shortpixel-image-optimiser'); ?>
         </name>
@@ -334,7 +334,7 @@ if (! defined('ABSPATH')) {
     <setting>
       <content class="exif-ai">
         <name>
-          <?php printf(esc_html__('Allow or prevent your images from being used for AI/ML training. %sRead more%s.', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/prevent-ai-data-mining-on-images/" target="_blank">', '</a>'); ?>
+          <?php printf(esc_html__('Allow or prevent your images from being used for AI/ML training. %sRead more%s.', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/prevent-ai-data-mining-on-images/?utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings" target="_blank">', '</a>'); ?>
         </name>
         <?php
         $ai_options = [
@@ -353,7 +353,7 @@ if (! defined('ABSPATH')) {
           ?>
 
         </select>
-        <i class='documentation dashicons dashicons-editor-help exif-ai' data-link="https://shortpixel.com/knowledge-base/article/settings-ai-ml-training-usage-control/?target=iframe"></i>
+        <i class='documentation dashicons dashicons-editor-help exif-ai' data-link="https://shortpixel.com/knowledge-base/article/settings-ai-ml-training-usage-control/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings"></i>
         <?php echo UiHelper::getIcon('res/images/icon/new.svg'); ?>
       </content>
 
@@ -374,12 +374,12 @@ if (! defined('ABSPATH')) {
 
           </label>
         </switch>
-        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/what-is-smart-cropping/?target=iframe"></i>
+        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/what-is-smart-cropping/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings"></i>
         <name>
           <?php printf(esc_html__('Smart crop images where applicable.', 'shortpixel-image-optimiser')); ?>
         </name>
         <info>
-          <?php printf(esc_html__('Generate subject-centered thumbnails using ShortPixel\'s AI engine (%ssee example%s). These new thumbnails appear sharper and may be slightly larger than those created by WordPress, making them ideal for e-commerce websites and blogs where images are key to showcasing products and content.', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/what-is-smart-cropping/" target="_blank">', '</a>'); ?>
+          <?php printf(esc_html__('Generate subject-centered thumbnails using ShortPixel\'s AI engine (%ssee example%s). These new thumbnails appear sharper and may be slightly larger than those created by WordPress, making them ideal for e-commerce websites and blogs where images are key to showcasing products and content.', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/what-is-smart-cropping/?utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings" target="_blank">', '</a>'); ?>
         </info>
         <?php
         $smartcrop = (
@@ -421,7 +421,7 @@ if (! defined('ABSPATH')) {
             <?php esc_html_e('Resize large images', 'shortpixel-image-optimiser'); ?>
           </label>
         </switch>
-        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/can-shortpixel-automatically-resize-new-image-uploads/?target=iframe"></i>
+        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/can-shortpixel-automatically-resize-new-image-uploads/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings"></i>
 
         <info>
           <?php esc_html_e('Resize to maximum', 'shortpixel-image-optimiser') ?>

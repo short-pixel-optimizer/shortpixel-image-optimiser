@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     ?>" target="_blank"><?php esc_html_e( 'Buy credits', 'shortpixel-image-optimiser' );?></a> |
 	  <?php endif; ?>
 
-    <a href="https://shortpixel.com/knowledge-base/" target="_blank"><?php esc_html_e('Knowledge Base','shortpixel-image-optimiser');?></a> |
+    <a href="https://shortpixel.com/knowledge-base/?utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings" target="_blank"><?php esc_html_e('Knowledge Base','shortpixel-image-optimiser');?></a> |
     <a href="https://shortpixel.com/contact" target="_blank"><?php esc_html_e('Contact Support','shortpixel-image-optimiser');?></a> |
     <a href="https://shortpixel.com/<?php
         echo esc_attr(($view->key->apiKey ? "login/". $view->key->apiKey . "/dashboard" : "login"));
