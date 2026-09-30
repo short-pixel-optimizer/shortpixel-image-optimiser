@@ -1084,13 +1084,29 @@ class ShortPixelPlugin {
 	public function route() {
 		global $plugin_page;
 
-		$default_action = 'load'; // generic action on controller.
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
-		$action         = isset( $_REQUEST['sp-action'] ) ? sanitize_text_field( wp_unslash($_REQUEST['sp-action']) ) : $default_action;
+		$action         = isset( $_REQUEST['sp-action'] ) ? sanitize_text_field( wp_unslash($_REQUEST['sp-action']) ) : 'load';
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
 		$template_part  = isset( $_GET['part'] ) ? sanitize_text_field( wp_unslash($_GET['part']) ) : false;
 
 		$controller = false;
+
+		$allowed_actions = [
+			'action_addkey',
+			'action_debug_redirectBulk',
+			'action_debug_removePrevented',
+			'action_debug_removeProcessorKey',
+			'action_debug_resetNotices',
+			'action_debug_resetQueue',
+			'action_debug_resetquota',
+			'action_debug_resetStats',
+			'action_debug_triggerNotice',
+			'action_request_new_key',
+			'action_debug_editSetting',
+			'action_end_quick_tour',
+			'load',
+		];
+		
 
 		$url = '';
 		if (! is_null($plugin_page))
@@ -1140,11 +1156,12 @@ class ShortPixelPlugin {
 		if ( $controller !== false ) {
 			$c = $controller::getInstance();
 			$c->setControllerURL( $url );
-			if ( method_exists( $c, $action ) ) {
+			if ( method_exists( $c, $action ) && in_array($action, $allowed_actions) ) {
 				$c->$action();
-			} else {
-				Log::addWarn( "Attempted Action $action on $controller does not exist!" );
-				$c->$default_action();
+			}
+			else
+			{
+				Log::addError('Could not route for action!' . $action);
 			}
 		}
 	}

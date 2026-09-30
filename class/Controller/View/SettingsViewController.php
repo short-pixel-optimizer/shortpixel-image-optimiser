@@ -332,7 +332,20 @@ class SettingsViewController extends \ShortPixel\ViewController
       {
 
         $this->loadEnv();
-        $this->checkPost(false);
+        $bool = $this->checkPost(false);
+
+        if (false === $bool)
+        {
+          Log::addWarning('Checkpost check failed'); 
+          return false; 
+        }
+
+        $accessModel = AccessModel::getInstance();
+        if (false === $accessModel->userIsAllowed('is_admin_user'))
+        {
+          Log::addWarning('Debug editSetting is not allowed for this user'); 
+           $this->doRedirect(); 
+        }
 
         $setting_name =  isset($_POST['edit_setting']) ? sanitize_text_field($_POST['edit_setting']) : false;
         $new_value = isset($_POST['new_value']) ? sanitize_text_field($_POST['new_value']) : false;
