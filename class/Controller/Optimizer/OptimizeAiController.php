@@ -471,6 +471,7 @@ class OptimizeAiController extends OptimizerBase
                 $url = $urls[0];
             }
 
+            Log::addTemp('HandleSucces -> QIteM DATa', $qItem->data());
             if ($currentFileBase !== $aiData['filebase']) {
                 $args = [
                     'dry_run' => false,

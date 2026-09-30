@@ -65,6 +65,7 @@ class AdminController extends \ShortPixel\Controller
     public function addAttachmentHook($post_id)
     {
           $fs = \wpSPIO()->filesystem();
+          $env = \wpSPIO()->env();
 
           // If attachment doesn't come back as an valid image
           $mediaItem = $fs->getImage($post_id, 'media');
@@ -75,12 +76,15 @@ class AdminController extends \ShortPixel\Controller
 
           self::$recentUploads[] = $post_id; 
 
-          $converter = Converter::getConverter($mediaItem, true);
-
-            if (is_object($converter) && $converter->isConvertable())
-            {
-              do_action('shortpixel/converter/prevent-offload', $post_id);
-            }
+          // This only when the autoprocess is on ( can also be reached for AI process here )
+          if (true === $env->is_autoprocess)
+          {
+            $converter = Converter::getConverter($mediaItem, true);
+              if (is_object($converter) && $converter->isConvertable())
+              {
+                do_action('shortpixel/converter/prevent-offload', $post_id);
+              }
+          }
     }
 
 

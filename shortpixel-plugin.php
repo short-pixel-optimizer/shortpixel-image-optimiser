@@ -395,7 +395,6 @@ class ShortPixelPlugin {
 				add_action( 'enable-media-replace-upload-done', array( $admin, 'handleReplaceEnqueue' ), 10, 3 );
 
 				add_filter( 'wp_generate_attachment_metadata', array( $admin, 'handleImageUploadHook' ), 5, 2 );
-				add_action('add_attachment', array($admin, 'addAttachmentHook'));
 
 				// @integration MediaPress
 				add_filter( 'mpp_generate_metadata', array( $admin, 'handleImageUploadHook' ), 10, 2 );
@@ -413,6 +412,10 @@ class ShortPixelPlugin {
 
 		}
 
+		// If either is active, this hook must be registered, because of recent-uploads static.; 
+		if ( $this->env()->is_autoprocess || true === $optimizeAiController->isAutoAiEnabled()) {
+			add_action('add_attachment', array($admin, 'addAttachmentHook'));
+		}
 
 		$this->env()->setDefaultViewModeList();// set default mode as list. only @ first run
 
