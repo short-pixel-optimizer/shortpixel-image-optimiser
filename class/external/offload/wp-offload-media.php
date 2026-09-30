@@ -607,7 +607,7 @@ class wpOffload
 			$newKey = $filebase . str_replace(basename($oldKey), $target_filename, basename($oldKey));
 
 			if ($oldKey !== $newKey) {
-				$keyRenames[] = [$oldKey, $newKey];
+				$keyRenames[] = [$oldKey, $newKey, $objectKey];
 			}
 		}
 
@@ -620,13 +620,21 @@ class wpOffload
 
 		$copyRequests = [];
 		foreach ($keyRenames as $keys) {
-			$copyRequests[] = [
+			list($oldKey, $newKey, $objectKey) = $keys;
+			$request = [
 				'Bucket' => $item->bucket(),
-				'Key' => $keys[1],
-				'CopySource' => $item->bucket() . '/' . $keys[0],
+				'Key' => $newKey,
+				'CopySource' => $item->bucket() . '/' . $oldKey,
 				'MetadataDirective' => 'COPY',  // Keep same ACL / Permissions
-				'ACL'        => 'public-read',
 			];
+
+			if ($this->as3cf->use_acl_for_intermediate_size($attachment_id, $objectKey, $item->bucket(), $item)) {
+        		  $request['ACL'] = $item->is_private($objectKey)
+              ? $provider->get_private_acl()    // 'private' on S3, 'projectPrivate' on GCS
+              : $provider->get_default_acl();   // 'public-read' / 'publicRead', and honours the site's ACL filter
+      		}
+
+			$copyRequests[] = $request; 
 		}
 		
 		if (false === $dry_run)
@@ -637,17 +645,13 @@ class wpOffload
 				return false;
 			}
 		
-			$res = $client->delete_objects([
+			$client->delete_objects([
 				'Bucket' => $item->bucket(),
 				'Delete' => ['Objects' => array_map(function ($keys) {
 					return ['Key' => $keys[0]];
 				}, $keyRenames)],
 			]);
-		    if ($this->as3cf->use_acl_for_intermediate_size($attachment_id, $objectKey, $item->bucket(), $item)) {
-        		  $request['ACL'] = $item->is_private($objectKey)
-              ? $provider->get_private_acl()    // 'private' on S3, 'projectPrivate' on GCS
-              : $provider->get_default_acl();   // 'public-read' / 'publicRead', and honours the site's ACL filter
-      		}
+
 		
 			$item->set_objects($updated_objects);
 			$primaryKey = $this->getMediaClass()::primary_object_key();
