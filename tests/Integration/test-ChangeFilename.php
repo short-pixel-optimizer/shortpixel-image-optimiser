@@ -972,48 +972,23 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// PIN #53 (MEDIUM, AI-auto path): the recent_upload=false threshold
-	// guard counts the attachment's OWN postmeta rows.
+	// REGRESSION #53 (fixed in 80ac531b): the usage check ignores the
+	// attachment's OWN postmeta rows.
 	// -------------------------------------------------------------------
 
 	/**
-	 * PINNED CONTRACT #53 (MEDIUM, AI-auto path): the recent_upload=false
-	 * usage-threshold guard at class/Controller/Optimizer/
-	 * OptimizeAiController.php:630-651 uses Finder::posts +
-	 * Finder::postmeta with a base_url (extension-stripped path) LIKE
-	 * pattern. For an attachment stored under WP core defaults
-	 * (_wp_attached_file = 'YYYY/MM/foo.jpg', _wp_attachment_metadata
-	 * as a serialised array with the same relative path), neither WP
-	 * core postmeta row contains the FULL URL, so the base_url LIKE
-	 * does NOT self-match — the guard reports imagePostCount = 0 and
-	 * replaceFiles() proceeds with the rename.
-	 *
-	 * The originally-suspected bug (guard always self-matches → blocks
-	 * every AI auto-rename) does NOT fire on this shape; it would fire
-	 * on installs where a plugin (Elementor, WPML, EMR) stores the FULL
-	 * URL in postmeta. Pedro to confirm with Bas whether that asymmetry
-	 * is intentional or the guard should EXPLICITLY exclude self-rows
-	 * to be safe against those partner-plugin shapes.
-	 *
-	 * We PIN the current WP-core-default behavior here (0 self-hits →
-	 * guard passes → rename happens). The branch below defends against
-	 * a future WP-core / test-lib change that silently starts putting
-	 * the full URL somewhere the LIKE catches.
-	 *
-	 * SENTINELS:
-	 *  - Principle 5: pre-count self-hits via the same LIKE the
-	 *    production guard would run, so a green result cannot come from
-	 *    the guard silently changing shape.
-	 *  - Principle 2: assertIsBool on the strict return.
-	 *
-	 * FLIP INSTRUCTIONS when SPIO tightens the guard to exclude self-
-	 * rows in all shapes (or replaces the LIKE with an id-based check):
-	 * the test still passes if the exclusion is correct. If SPIO
-	 * INSTEAD widens the guard so self-postmeta rows count, the
-	 * else-branch below will fire — flip it to assertTrue()/assertFile
-	 * DoesNotExist() and remove the wpdb pre-count altogether.
+	 * REGRESSION #53 (self-match) — replaceFiles() skips the rename of an
+	 * image that published content already uses (recent_upload !== true). It
+	 * probes post_content and postmeta with a LIKE on the extension-stripped
+	 * URL path. Postmeta of ATTACHMENTS (post_status 'inherit') is included, so
+	 * on sites where a plugin stores the FULL URL in the attachment's own
+	 * postmeta the image matched ITSELF and every AI rename was blocked.
+	 * WP core itself stores relative paths, so a stock install never
+	 * self-matched — this test plants the full URL to reproduce the shape.
+	 * 80ac531b excludes the item (and its WPML/Polylang siblings) from the
+	 * postmeta probe (Finder::postmeta 'exclude_post_ids').
 	 */
-	public function test_pin53_recent_upload_false_matches_attachments_own_postmeta_pinned_for_deferred_fix() {
+	public function test_regression53_usage_check_ignores_the_attachments_own_postmeta() {
 		$this->_setRole( 'administrator' );
 
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
@@ -1023,124 +998,42 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$original_url  = $imageModel->getURL();
 		$original_file = get_attached_file( $attachment_id );
 
+		// The shape a builder / partner plugin leaves: the full URL in the
+		// attachment's OWN postmeta.
+		add_post_meta( $attachment_id, '_spio_test_full_url', $original_url );
+
+		// SENTINEL (principle 5): the same LIKE the guard runs really matches
+		// the attachment's own row — without the exclusion it would self-block.
 		global $wpdb;
-
-		// Sentinel principle 5: verify the exact query the production
-		// guard runs. Setup::URL()->getBaseURL() computes the path minus
-		// the extension; Finder::posts() and Finder::postmeta() both
-		// LIKE-match `%<base_url>%` against post_content / meta_value.
-		// If NEITHER a post nor postmeta row matches this base_url even
-		// though the attachment (with its own post_content='' and its
-		// own _wp_attached_file storing just the relative path
-		// `YYYY/MM/foo.jpg`) is the only row present, the guard passes
-		// (imagePostCount = 0 < threshold = 1) and replaceFiles reaches
-		// the move loop. That is the ACTUAL current behavior — the
-		// hardcoded recent_upload=true bypass on the manual path exists
-		// for a different reason.
-		$path     = parse_url( $original_url, PHP_URL_PATH );
-		$base_url = preg_replace( '/\\.[^.\\/]+$/', '', $path );
-
-		$post_hits = (int) $wpdb->get_var(
+		$base_url  = preg_replace( '/\\.[^.\\/]+$/', '', parse_url( $original_url, PHP_URL_PATH ) );
+		$self_hits = (int) $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT COUNT(*) FROM {$wpdb->posts}
-				  WHERE post_status='publish'
-				    AND post_content LIKE %s",
+				"SELECT COUNT(*) FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_value LIKE %s",
+				$attachment_id,
 				'%' . $wpdb->esc_like( $base_url ) . '%'
 			)
 		);
-		$meta_hits = (int) $wpdb->get_var(
-			$wpdb->prepare(
-				"SELECT COUNT(*) FROM {$wpdb->postmeta} pm
-				 INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
-				 WHERE p.post_status IN ('publish','inherit')
-				   AND pm.meta_value LIKE %s",
-				'%' . $wpdb->esc_like( $base_url ) . '%'
-			)
-		);
+		$this->assertGreaterThan( 0, $self_hits, 'Sentinel: the attachment\'s own postmeta matches the usage probe.' );
 
 		$ctrl  = OptimizeAiController::getInstance();
 		$qItem = new QueueItem( array( 'imageModel' => $imageModel ) );
-
-		$ref = new ReflectionClass( OptimizeAiController::class );
-		$m   = $ref->getMethod( 'replaceFiles' );
+		$m     = ( new ReflectionClass( OptimizeAiController::class ) )->getMethod( 'replaceFiles' );
 		$m->setAccessible( true );
 
 		$result = $m->invoke(
 			$ctrl,
 			$qItem,
-			'pin53wouldberenamed',
+			'regression53-' . strtolower( wp_generate_password( 4, false, false ) ),
 			array(
 				'dry_run'        => false,
-				'recent_upload'  => false, // exercise the buggy guard
+				'recent_upload'  => false, // run the usage check
 				'imageThreshold' => 1,
 				'url'            => $original_url,
 			)
 		);
 
-		$this->assertIsBool(
-			$result,
-			'PINNED BUG #53: return type must be a strict bool for the assertion below to be meaningful.'
-		);
-
-		// The current guard behavior depends on whether posts/postmeta
-		// LIKE-match the base_url. WP core stores _wp_attached_file as
-		// `YYYY/MM/foo.jpg` (no /wp-content/uploads/ prefix) and
-		// _wp_attachment_metadata as a serialised array holding the
-		// same relative path — NEITHER contains the full URL path
-		// `/wp-content/uploads/YYYY/MM/foo`, so a fresh upload with no
-		// other references passes the guard and the rename proceeds.
-		//
-		// The recent_upload=true bypass on the manual path
-		// (OptimizeAiController.php:790) therefore does NOT protect
-		// against a self-postmeta-count guard as previously believed;
-		// its real purpose is elsewhere (likely: skipping the check for
-		// the manual UX where the user already accepted the risk).
-		//
-		// PINNED BUG #53: the guard treats DIFFERENT storage shapes
-		// asymmetrically — attachments stored under WP core defaults
-		// pass (0 self-hits) but attachments stored via plugins like
-		// WPML/EMR whose postmeta carries the FULL URL (Elementor,
-		// serialised builder JSON) match themselves and fail. That
-		// asymmetry is the concrete deferred bug: the guard should
-		// EXPLICITLY exclude the attachment's own postmeta rows.
-		//
-		// We PIN the current WP-core-default behavior here (guard passes
-		// for a bare fresh upload — result MUST be true). When SPIO
-		// hardens the guard to also handle the WPML/EMR case by
-		// explicitly excluding self-rows, the test still passes because
-		// the exclusion makes the count 0 either way. If SPIO instead
-		// changes the semantics (e.g. checks the attachment's OWN
-		// postmeta on purpose), the assertion below will flip and the
-		// contract change becomes visible.
-		if ( 0 === $post_hits && 0 === $meta_hits ) {
-			// Guard passes → rename happened → replaceFiles returned true.
-			$this->assertTrue(
-				$result,
-				'PINNED BUG #53 (WP-core-default shape): with 0 self-hits the ' .
-				'guard passes and replaceFiles returns true. If this flips to false ' .
-				'SPIO has newly self-count attachments — investigate before flipping the pin.'
-			);
-			$this->assertFileDoesNotExist(
-				$original_file,
-				'PINNED BUG #53: the rename actually happened. FLIP INSTRUCTIONS: ' .
-				'when SPIO fixes #53 to explicitly exclude self-rows in all shapes ' .
-				'(WPML/EMR postmeta with full URLs), this assertion stays green.'
-			);
-		} else {
-			// Some plugin / test-lib WP variant stores the URL in a way
-			// that self-matches; the guard blocks the rename.
-			$this->assertFalse(
-				$result,
-				'PINNED BUG #53: the guard is counting the attachments own ' .
-				'postmeta rows (' . $meta_hits . ' self-hits) via Finder::postmeta ' .
-				'(post_status=inherit). FLIP INSTRUCTIONS when fixed: expect true here.'
-			);
-			$this->assertFileExists(
-				$original_file,
-				'PINNED BUG #53: no move happened (guard blocked it). ' .
-				'FLIP INSTRUCTIONS when fixed: the original file must be GONE (renamed).'
-			);
-		}
+		$this->assertTrue( $result, 'REGRESSION #53: the attachment\'s own postmeta must not count as a use — the rename goes ahead.' );
+		$this->assertFileDoesNotExist( $original_file, 'REGRESSION #53: the file was really renamed.' );
 	}
 
 	// -------------------------------------------------------------------
@@ -1405,34 +1298,26 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	}
 
 	/**
-	 * PIN #81 (found 2026-09-28 in 3fd40001) — stripping a
-	 * dimension or "-scaled" suffix from a filename breaks the main image.
+	 * REGRESSION #81 (found 2026-09-28 in 3fd40001, fixed in dfa346be) —
+	 * stripping a dimension or "-scaled" suffix from a filename must keep the
+	 * main image intact.
 	 *
-	 * 3fd40001 added replaceFileBaseInPath() to stop WPML-synced translations
-	 * from being renamed twice. It skips any path whose name already matches
-	 * `^<new>(-scaled)?(-\d+x\d+)?$` — but the CURRENT name of the image being
+	 * 3fd40001 added a skip to replaceFileBaseInPath() for any path whose name
+	 * already matched `^<new>(-scaled)?(-\d+x\d+)?$` (to stop WPML-synced
+	 * translations being renamed twice). The CURRENT name of the image being
 	 * renamed matches that too when the new name is the old one minus such a
-	 * suffix ("banner-1920x600" → "banner", "photo-scaled" → "photo"). The
-	 * files are moved on disk and the thumbnail metadata follows, but
-	 * _wp_attached_file and metadata['file'] keep the old, now-deleted name,
-	 * and the rename reports success. The skip runs on EVERY rename (main
-	 * item too), not only on WPML duplicates. Worked before 3fd40001.
+	 * suffix ("banner-1920x600" → "banner"), so the files moved on disk but
+	 * _wp_attached_file and metadata['file'] kept the deleted name, and the
+	 * rename reported success. dfa346be removed the skip: since 8153f606 the
+	 * WPML siblings get the item's new values directly, so it guarded nothing.
 	 *
 	 * Reach: a fresh upload cannot carry such a name — wp_unique_filename()
 	 * always appends "-1" to names ending in -scaled / -rotated / -WxH
-	 * (WP 5.3+, e.g. "…-scaled.jpg" is stored as "…-scaled-1.jpg"). It
-	 * takes a name from before WP 5.3, a previous SPIO rename (a typed name
-	 * does not go through wp_unique_filename — this test uses that route),
-	 * or an import that bypasses it.
-	 *
-	 * Suggested fix: don't guess from the pattern — give the duplicate pass
-	 * the renamed item's NEW values (duplicates share the file, so their
-	 * _wp_attached_file / metadata['file'] must simply equal the item's),
-	 * and use the plain replacement for the item itself.
-	 * FLIP-when-fixed: _wp_attached_file and metadata['file'] carry the new
-	 * base and point at an existing file.
+	 * (WP 5.3+). It takes a name from before WP 5.3, a previous SPIO rename
+	 * (a typed name does not go through wp_unique_filename — this test uses
+	 * that route), or an import that bypasses it.
 	 */
-	public function test_pin81_stripping_a_dimension_suffix_leaves_the_main_file_on_the_deleted_name_pinned_for_deferred_fix() {
+	public function test_regression81_stripping_a_dimension_suffix_keeps_the_main_file_intact() {
 		$this->_setRole( 'administrator' );
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->purgeQueueTable();
@@ -1456,14 +1341,14 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$raw  = (string) get_post_meta( $attachment_id, '_wp_attached_file', true );
 		$meta = wp_get_attachment_metadata( $attachment_id );
 
-		// THE PIN: WordPress still points at the deleted name.
+		// REGRESSION #81: WordPress follows the rename and points at a file that exists.
 		$this->assertSame(
-			$base . '-1920x600.jpg',
+			$base . '.jpg',
 			basename( $raw ),
-			'PIN #81: fixed? _wp_attached_file now follows the rename — flip this pin (expect "' . $base . '.jpg" and an existing file).'
+			'REGRESSION #81: _wp_attached_file must follow the rename.'
 		);
-		$this->assertSame( $base . '-1920x600.jpg', basename( (string) ( $meta['file'] ?? '' ) ), 'PIN #81: metadata[file] also stays on the old name.' );
-		$this->assertFileDoesNotExist( $dir . '/' . basename( $raw ), 'PIN #81: the referenced main file does not exist.' );
+		$this->assertSame( $base . '.jpg', basename( (string) ( $meta['file'] ?? '' ) ), 'REGRESSION #81: metadata[file] must follow the rename.' );
+		$this->assertFileExists( $dir . '/' . basename( $raw ), 'REGRESSION #81: the referenced main file exists.' );
 	}
 
 	/**
@@ -1573,5 +1458,59 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		foreach ( glob( $dir . '/' . $new_base . '*' ) as $leftover ) {
 			unlink( $leftover ); // keep the shared uploads dir clean for later runs
 		}
+	}
+
+	/**
+	 * PIN (found 2026-10-01 on Pedro's test site with a persistent object
+	 * cache) — after a rename, the URL rewrite in posts leaves the post cache
+	 * stale.
+	 *
+	 * Replacer::replace() → doReplaceQuery() updates post_content with a
+	 * direct `$wpdb->query( UPDATE … )` and never calls clean_post_cache(); the
+	 * postmeta / options / termmeta / usermeta / commentmeta updates in
+	 * handleMetaData() are direct SQL too, with no wp_cache_delete(). The
+	 * database holds the new URLs, but get_post() keeps serving the OLD
+	 * content from the object cache — on a persistent cache (Redis /
+	 * Memcached) for every later request, so the block editor opens the old
+	 * URLs (files already moved → broken images) and the next save or
+	 * autosave writes the old URLs back for good. (The alt-text writer,
+	 * Updater::updatePost(), uses wp_update_post() + clean_post_cache() and
+	 * is not affected.)
+	 *
+	 * The WP test framework's in-memory cache shows the same staleness inside
+	 * one request, so this pin needs no Redis.
+	 * FLIP-when-fixed: get_post() returns the new URL without a manual cache
+	 * flush.
+	 */
+	public function test_pin_rename_leaves_the_post_cache_with_the_old_url_pinned_for_deferred_fix() {
+		$this->_setRole( 'administrator' );
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+		$old_name = basename( get_attached_file( $attachment_id ) );
+
+		$post_id = self::factory()->post->create(
+			array(
+				'post_status'  => 'draft',
+				'post_content' => '<img src="' . esc_url( wp_get_attachment_url( $attachment_id ) ) . '" alt="" />',
+			)
+		);
+		// Prime the object cache the way any page view / editor load does.
+		$this->assertStringContainsString( $old_name, get_post( $post_id )->post_content, 'Sentinel: the post shows the image.' );
+
+		$new_base = 'cache-pin-' . strtolower( wp_generate_password( 4, false, false ) );
+		list( $result ) = $this->renameViaEngine( $attachment_id, $new_base );
+		$this->assertTrue( $result, 'Sentinel: the rename succeeded.' );
+
+		global $wpdb;
+		$db_content = (string) $wpdb->get_var( $wpdb->prepare( "SELECT post_content FROM {$wpdb->posts} WHERE ID = %d", $post_id ) );
+		// SENTINEL: the database really was rewritten.
+		$this->assertStringContainsString( $new_base, $db_content, 'Sentinel: the database holds the new URL.' );
+
+		// THE PIN: the cached post still has the old URL.
+		$this->assertStringContainsString(
+			$old_name,
+			get_post( $post_id )->post_content,
+			'PIN: fixed? get_post() now returns the renamed URL without a cache flush — flip this pin (expect the new URL).'
+		);
 	}
 }

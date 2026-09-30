@@ -708,8 +708,9 @@ class OptimizeAiController extends OptimizerBase
     /**
      * Renames all physical files for an attachment to use a new AI-generated filename base.
      *
-     * When recent_upload is false, first checks how many published posts reference this image;
-     * if the count meets or exceeds imageThreshold (default 1) the rename is skipped. Otherwise:
+     * Unless recent_upload is true, first checks whether published content already uses this
+     * image (see "Usage check" below); if the number of references meets or exceeds
+     * imageThreshold (default 1) the rename is skipped. Otherwise:
      *   1. Collects all image file objects (main, thumbnails, WebP, AVIF) from the image model.
      *   2. Checks that no target filename already exists (conflict guard).
      *   3. COPIES each source file to its new name (successful copies are
@@ -818,22 +819,27 @@ class OptimizeAiController extends OptimizerBase
      * passes is_duplicate=true to requestAltAction(), but that only calls
      * addKeepDataArgs(['is_duplicate']), which records the NAME;
      * getKeepDataArgs() then reads the (never set) property and drops the
-     * null — so data()->is_duplicate is always null. recent_upload has the
-     * same defect. The #74 main-language gate in HandleSuccess() still
+     * null — so data()->is_duplicate is always null. The #74 main-language gate in HandleSuccess() still
      * prevents per-language renames, so today the guard is redundant rather
      * than harmful.
      *
-     * NOTE on the recent_upload=false usage guard: on a stock WP install
-     * _wp_attached_file / _wp_attachment_metadata store RELATIVE paths, so the
-     * full-URL LIKE probe matches nothing and the guard passes; it only counts
-     * references on sites where full URLs land in post_content/postmeta
-     * (page builders etc.). Contract-pinned in test-ChangeFilename.php
-     * (test_pin53_...). The manual Change Filename path bypasses this guard
-     * entirely (ajax_replaceFile() hardcodes recent_upload=true). The AI path
-     * (HandleSuccess) passes $qItem->data()->recent_upload, which is ALWAYS
-     * null (same keep-data defect as is_duplicate, see above), so the
-     * strict `false ===` check fails and the guard is skipped there too —
-     * in practice it never runs (verified 2026-09-25).
+     * Usage check: runs unless $args['recent_upload'] is exactly true, so a
+     * missing or lost flag errs on the side of NOT renaming. It LIKE-matches
+     * the extension-stripped URL path (so thumbnail sizes count too) against
+     * post_content of published posts, and against postmeta of published
+     * posts and attachments — excluding the item itself and its WPML/Polylang
+     * siblings, whose own metadata is not a use. WP core stores RELATIVE paths
+     * in _wp_attached_file / _wp_attachment_metadata, so what counts is a full
+     * URL: an image placed in post content or in page-builder data. Drafts,
+     * scheduled and private posts are not counted.
+     *   - New uploads: the add_attachment hook records the id and
+     *     handleAiImageUploadHook() queues it with recent_upload=true;
+     *     requestAltAction() / retrieveAltAction() carry the flag to
+     *     HandleSuccess(), so a new upload is renamed without the check.
+     *   - Bulk and Media Library AI runs: no flag, so the check runs and an
+     *     image already used in published content keeps its name.
+     *   - Manual Change Filename: ajax_replaceFile() passes recent_upload=true
+     *     — the user asked for this rename explicitly, so the check is skipped.
      *
      * Editor feedback (a5ad9805, #66): after a non-dry-run replace the new
      * file URL is stored on the queue result as

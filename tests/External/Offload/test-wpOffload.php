@@ -532,19 +532,17 @@ class wpOffloadTest extends WP_UnitTestCase {
 	 *                                    : $provider->get_default_acl();
 	 *     only if $as3cf->use_acl_for_intermediate_size($id, $key, $bucket, $item)
 	 *
-	 * Two consequences, one pin each. Both flip when the copy requests follow
-	 * that rule.
+	 * Two consequences, one test each. FIXED in 7a354daa (the copy requests
+	 * now follow that rule); both former pins are regression tests.
 	 */
 
 	/**
-	 * PIN #76 — a PRIVATE object is copied as public-read.
-	 * On an ACL-enabled bucket, media WP Offload Media keeps private (private
-	 * media / signed URLs) becomes readable by everyone after a rename.
-	 *
-	 * Flip when: the private object's copy carries the private ACL and the
-	 * public one the default ACL.
+	 * REGRESSION #76 (fixed in 7a354daa) — a PRIVATE object must keep the
+	 * private ACL when it is copied to its new name; a public one gets the
+	 * provider's default ACL. Before the fix every copy was forced to
+	 * public-read, so private media became readable by everyone.
 	 */
-	public function test_pin76_private_object_is_copied_public_read_pinned_for_deferred_fix() {
+	public function test_regression76_private_object_keeps_the_private_acl_on_rename() {
 		$requests = array();
 		$calls    = 0;
 		$item     = $this->stubItem(
@@ -568,23 +566,25 @@ class wpOffloadTest extends WP_UnitTestCase {
 
 		$byKey = array_column( $requests, 'ACL', 'Key' );
 		$this->assertSame(
-			'public-read',
+			'private',
 			$byKey['wp-content/uploads/2026/09/renamed-photo-300x225.jpg'] ?? null,
-			'PIN #76: fixed? The PRIVATE object is no longer copied as public-read — flip this pin to expect the private ACL.'
+			'REGRESSION #76: the PRIVATE object must be copied with the private ACL, not public-read.'
+		);
+		$this->assertSame(
+			'public-read',
+			$byKey['wp-content/uploads/2026/09/renamed-photo.jpg'] ?? null,
+			'The public object gets the provider default ACL.'
 		);
 	}
 
 	/**
-	 * PIN #76 — an ACL is sent although the bucket does not accept ACLs.
-	 * With Object Ownership "bucket owner enforced" (the AWS default for new
-	 * buckets) or Block Public Access, S3 rejects a copy that sets an ACL, so
-	 * every rename on such a bucket fails remotely (→ #73(f)).
+	 * REGRESSION #76 (fixed in 7a354daa) — no ACL may be sent when the bucket
+	 * does not accept ACLs (Object Ownership "bucket owner enforced", the AWS
+	 * default for new buckets, or Block Public Access): S3 rejects such a copy,
+	 * so every rename on those buckets failed remotely (→ #73(f)).
 	 * use_acl_for_intermediate_size() is how WP Offload Media knows this.
-	 *
-	 * Flip when: no 'ACL' key is sent when use_acl_for_intermediate_size()
-	 * answers false.
 	 */
-	public function test_pin76_acl_is_sent_although_the_bucket_disallows_acls_pinned_for_deferred_fix() {
+	public function test_regression76_no_acl_is_sent_to_a_bucket_that_disallows_acls() {
 		$requests = array();
 		$calls    = 0;
 		$as3cf    = $this->stubAs3cf( null, $requests, $calls, false );
@@ -608,10 +608,10 @@ class wpOffloadTest extends WP_UnitTestCase {
 		$this->assertFalse( $as3cf->use_acl_for_intermediate_size( 4242, '__as3cf_primary' ), 'Sentinel: the stub bucket does not accept ACLs.' );
 
 		foreach ( $requests as $request ) {
-			$this->assertSame(
-				'public-read',
-				$request['ACL'] ?? null,
-				'PIN #76: fixed? No ACL is sent to a bucket that does not accept ACLs — flip this pin to assert the ACL key is absent.'
+			$this->assertArrayNotHasKey(
+				'ACL',
+				$request,
+				'REGRESSION #76: no ACL may be sent to a bucket that does not accept ACLs.'
 			);
 		}
 	}

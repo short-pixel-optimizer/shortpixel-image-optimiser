@@ -1779,29 +1779,21 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * PIN #53 — the "is this image already used?" check never runs on AI
-	 * renames.
+	 * REGRESSION #53 (fixed in 80ac531b + bed0113a) — the "is this image
+	 * already used?" check must run on AI renames that are not fresh uploads.
 	 *
 	 * replaceFiles() skips the rename of an image that published content
-	 * already uses, but only when $args['recent_upload'] is exactly false
-	 * (OptimizeAiController.php ~:885). HandleSuccess() passes
-	 * $qItem->data()->recent_upload (~:477), which is ALWAYS null:
-	 * QueueItem::requestAltAction() only calls
-	 * addKeepDataArgs(['recent_upload']), which records the NAME, and
-	 * nothing sets the value. So bulk / manual AI runs rename images that
-	 * are used in published posts — against what the setting text promises
-	 * ("only for newly uploaded images, or for images that are not used in
-	 * any posts or pages").
-	 *
-	 * Suggested fix: in requestAltAction() set the value on the item,
-	 *     $this->data()->recent_upload = (isset($args['recent_upload']) && true === $args['recent_upload']);
-	 * (and keep it for the next action), same for is_duplicate.
-	 * FLIP-when-fixed: the used image keeps its name.
+	 * already uses unless recent_upload is true. The flag used to reach
+	 * HandleSuccess() as null (requestAltAction() only recorded the NAME for
+	 * keep-data, retrieveAltAction() never read it) and the guard only fired
+	 * on an exact false — so bulk / Media Library AI runs renamed images used
+	 * in published posts. Now a missing flag means "check" (`true !==`), and
+	 * the flag is carried through requestAlt → retrieveAlt.
 	 */
-	public function test_pin53_ai_rename_ignores_the_usage_check_and_renames_a_used_image_pinned_for_deferred_fix() {
+	public function test_regression53_ai_rename_keeps_the_name_of_an_image_used_in_a_published_post() {
 		\wpSPIO()->settings()->ai_gen_filename    = 1;
 		\wpSPIO()->settings()->ai_content_replace = 'missing';
-		$this->api->aiFields['generated_file_name'] = 'pin53-ai-name-' . strtolower( wp_generate_password( 4, false, false ) );
+		$this->api->aiFields['generated_file_name'] = 'reg53-ai-name-' . strtolower( wp_generate_password( 4, false, false ) );
 
 		$id       = $this->freshAttachment();
 		$old_file = get_attached_file( $id );
@@ -1814,19 +1806,174 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		// SENTINEL: the image really is used in published content (what the check looks for).
 		$this->assertStringContainsString( basename( $old_file ), get_post( $post_id )->post_content );
 
-		// A non-upload AI run (bulk / media library): QueueController passes recent_upload=false.
+		// A non-upload AI run (bulk / media library): no recent_upload flag.
 		$this->enqueueAi( $id );
 		$this->runQueueUntilEmpty();
 
 		clean_post_cache( $id );
 		$new_file = get_attached_file( $id );
 
-		// THE PIN: the used image was renamed anyway.
-		$this->assertStringContainsString(
-			$this->api->aiFields['generated_file_name'],
-			basename( $new_file ),
-			'PIN #53: fixed? A used image is no longer renamed by AI — flip this pin (expect the old name).'
+		// SENTINEL: the AI run itself completed (the alt was generated).
+		$this->assertNotEmpty( get_post_meta( $id, '_wp_attachment_image_alt', true ), 'Sentinel: the AI run completed and wrote the alt.' );
+
+		$this->assertSame( basename( $old_file ), basename( $new_file ), 'REGRESSION #53: an image used in a published post keeps its name.' );
+		$this->assertFileExists( $old_file, 'REGRESSION #53: the file was not moved.' );
+	}
+
+	/**
+	 * #53 counterpart — the fix must not block renames in general: an image
+	 * that no published content uses is still renamed by a non-upload AI run.
+	 */
+	public function test_ai_rename_still_renames_an_unused_image() {
+		\wpSPIO()->settings()->ai_gen_filename    = 1;
+		$this->api->aiFields['generated_file_name'] = 'unused-ai-name-' . strtolower( wp_generate_password( 4, false, false ) );
+
+		$id       = $this->freshAttachment();
+		$old_file = get_attached_file( $id );
+
+		$this->enqueueAi( $id );
+		$this->runQueueUntilEmpty();
+
+		clean_post_cache( $id );
+		$this->assertStringContainsString( $this->api->aiFields['generated_file_name'], basename( get_attached_file( $id ) ), 'An unused image is renamed by AI.' );
+		$this->assertFileDoesNotExist( $old_file, 'The old file was moved.' );
+	}
+
+	/**
+	 * #53 counterpart — a fresh upload (recent_upload=true) skips the usage
+	 * check: the flag must survive requestAlt → retrieveAlt, so an image that
+	 * is already used in a published post is still renamed when it was just
+	 * uploaded. Before the fix the flag was dropped on the way (the check was
+	 * skipped for everything, so this passed for the wrong reason); with the
+	 * `true !==` guard a lost flag would now block this rename.
+	 */
+	public function test_recent_upload_flag_survives_the_ai_queue_and_skips_the_usage_check() {
+		\wpSPIO()->settings()->ai_gen_filename    = 1;
+		$this->api->aiFields['generated_file_name'] = 'recent-ai-name-' . strtolower( wp_generate_password( 4, false, false ) );
+
+		$id       = $this->freshAttachment();
+		$old_file = get_attached_file( $id );
+		self::factory()->post->create(
+			array(
+				'post_status'  => 'publish',
+				'post_content' => '<img src="' . esc_url( wp_get_attachment_url( $id ) ) . '" alt="" />',
+			)
 		);
-		$this->assertFileDoesNotExist( $old_file, 'PIN #53: the old file was moved away.' );
+
+		$imageModel = \wpSPIO()->filesystem()->getImage( $id, 'media' );
+		( new QueueController() )->addItemToQueue( $imageModel, array( 'action' => 'requestAlt', 'recent_upload' => true ) );
+		$this->runQueueUntilEmpty();
+
+		clean_post_cache( $id );
+		$this->assertStringContainsString( $this->api->aiFields['generated_file_name'], basename( get_attached_file( $id ) ), 'A recent upload is renamed even when already used.' );
+		$this->assertFileDoesNotExist( $old_file, 'The old file was moved.' );
+	}
+
+	// -------------------------------------------------------------------
+	// Upload flag when only AI runs on upload (auto-optimize off)
+	// -------------------------------------------------------------------
+
+	/** Copy of every registered hook, so a test can re-run initHooks() and put things back. */
+	private function snapshotHooks(): array {
+		$saved = array();
+		foreach ( $GLOBALS['wp_filter'] as $name => $hook ) {
+			$saved[ $name ] = clone $hook;
+		}
+		return $saved;
+	}
+
+	private function restoreHooks( array $saved ): void {
+		$GLOBALS['wp_filter'] = $saved;
+	}
+
+	private function resetRecentUploads(): void {
+		$p = ( new ReflectionClass( \ShortPixel\Controller\AdminController::class ) )->getProperty( 'recentUploads' );
+		$p->setAccessible( true );
+		$p->setValue( null, array() );
+	}
+
+	/**
+	 * With "optimize on upload" OFF but "AI on upload" ON, the plugin must
+	 * still register the add_attachment hook: it is what marks an attachment
+	 * as a recent upload. It used to be registered only inside the
+	 * auto-optimize branch, so AI-only sites never flagged their uploads and
+	 * every AI rename of a new upload went through the usage check.
+	 */
+	public function test_ai_only_upload_setup_registers_the_add_attachment_hook() {
+		$settings                   = \wpSPIO()->settings();
+		$settings->autoMediaLibrary = 0;
+		$settings->enable_ai        = 1;
+		$settings->autoAI           = 1;
+		\wpSPIO()->env()->is_autoprocess = false;
+
+		$admin = \ShortPixel\Controller\AdminController::getInstance();
+		$saved = $this->snapshotHooks();
+		try {
+			remove_all_actions( 'add_attachment' );
+			remove_all_filters( 'wp_generate_attachment_metadata' );
+
+			\wpSPIO()->initHooks();
+
+			// SENTINELS: auto-optimize really is off, auto-AI really is on.
+			$this->assertFalse( has_filter( 'wp_generate_attachment_metadata', array( $admin, 'handleImageUploadHook' ) ), 'Sentinel: the optimize-on-upload hook is not registered.' );
+			$this->assertNotFalse( has_filter( 'wp_generate_attachment_metadata', array( $admin, 'handleAiImageUploadHook' ) ), 'Sentinel: the AI-on-upload hook is registered.' );
+
+			$this->assertNotFalse(
+				has_action( 'add_attachment', array( $admin, 'addAttachmentHook' ) ),
+				'With only AI on upload enabled, add_attachment must be hooked so new uploads are flagged as recent.'
+			);
+		} finally {
+			$this->restoreHooks( $saved );
+			\wpSPIO()->env()->is_autoprocess = true;
+		}
+	}
+
+	/**
+	 * End to end, AI-only upload: the upload is flagged as recent, the flag
+	 * survives the AI queue, and the new file is renamed even though a
+	 * published post already uses the image by the time the AI answers
+	 * (e.g. the image was inserted into a post straight after uploading).
+	 * Without the flag the usage check would find that post and keep the old
+	 * name.
+	 */
+	public function test_ai_only_upload_is_renamed_although_a_post_uses_it_before_the_ai_answers() {
+		$settings                   = \wpSPIO()->settings();
+		$settings->autoMediaLibrary = 0;
+		$settings->enable_ai        = 1;
+		$settings->autoAI           = 1;
+		$settings->ai_gen_filename  = 1;
+		$this->api->aiFields['generated_file_name'] = 'ai-only-upload-' . strtolower( wp_generate_password( 4, false, false ) );
+
+		$admin = \ShortPixel\Controller\AdminController::getInstance();
+		$saved = $this->snapshotHooks();
+		try {
+			// The hooks an AI-only site registers at boot (see the test above).
+			remove_all_actions( 'add_attachment' );
+			remove_all_filters( 'wp_generate_attachment_metadata' );
+			add_action( 'add_attachment', array( $admin, 'addAttachmentHook' ) );
+			add_filter( 'wp_generate_attachment_metadata', array( $admin, 'handleAiImageUploadHook' ), 4, 2 );
+			$this->resetRecentUploads();
+
+			$id       = $this->uploadFixture( 'fixture-small.jpg' );
+			$old_file = get_attached_file( $id );
+		} finally {
+			$this->restoreHooks( $saved );
+		}
+
+		// SENTINEL: the upload queued the AI job itself (nothing else did).
+		$this->assertTrue( $this->queueHasWork(), 'Sentinel: the AI-on-upload hook queued the item.' );
+
+		self::factory()->post->create(
+			array(
+				'post_status'  => 'publish',
+				'post_content' => '<img src="' . esc_url( wp_get_attachment_url( $id ) ) . '" alt="" />',
+			)
+		);
+
+		$this->runQueueUntilEmpty();
+
+		clean_post_cache( $id );
+		$this->assertStringContainsString( $this->api->aiFields['generated_file_name'], basename( get_attached_file( $id ) ), 'A new upload is renamed by AI even when a post already uses it.' );
+		$this->assertFileDoesNotExist( $old_file, 'The old file was moved.' );
 	}
 }

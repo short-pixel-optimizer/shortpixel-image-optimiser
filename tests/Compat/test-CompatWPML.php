@@ -976,4 +976,478 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 		$this->assertFileDoesNotExist( $abs( $stored . '.jpg' ), 'One set on disk: the old original is gone.' );
 		$this->assertSame( $new_base . '.jpg', $this->freshImageModel( $es )->getOriginalFile()->getFileName(), 'The field now shows the renamed original.' );
 	}
+
+	// -------------------------------------------------------------------
+	// AI rename usage check with translations (mocked AI API)
+	// -------------------------------------------------------------------
+
+	/**
+	 * AI settings for a rename run through the real queue: filename on, the
+	 * mock API answers with $name as the generated filename.
+	 */
+	private function enableAiRename( string $name ): void {
+		$settings                  = \wpSPIO()->settings();
+		$settings->enable_ai       = 1;
+		$settings->ai_gen_alt      = 1;
+		$settings->ai_gen_filename = 1;
+		$this->api->aiFields['generated_file_name'] = $name;
+
+		// Fresh AI state: no stored AI rows / cached models / token.
+		global $wpdb;
+		$suppress = $wpdb->suppress_errors( true );
+		$wpdb->query( "DELETE FROM `{$wpdb->prefix}shortpixel_aipostmeta`" );
+		$wpdb->suppress_errors( $suppress );
+		$prop = ( new ReflectionClass( \ShortPixel\Model\AiDataModel::class ) )->getProperty( 'models' );
+		$prop->setAccessible( true );
+		$prop->setValue( null, array() );
+		delete_transient( 'spio_ai_jwt_token' );
+	}
+
+	/** A published post in $lang (WPML post row in trid $trid) whose content is $content. */
+	private function createPostInLanguage( string $content, int $trid, string $lang, ?string $source = null ): int {
+		global $wpdb;
+		$post_id = self::factory()->post->create( array( 'post_status' => 'publish', 'post_content' => $content ) );
+		$wpdb->insert(
+			$wpdb->prefix . 'icl_translations',
+			array(
+				'element_type'         => 'post_post',
+				'element_id'           => $post_id,
+				'trid'                 => $trid,
+				'language_code'        => $lang,
+				'source_language_code' => $source,
+			)
+		);
+		return $post_id;
+	}
+
+	private function imgTag( int $attachment_id ): string {
+		return '<img src="' . esc_url( wp_get_attachment_url( $attachment_id ) ) . '" alt="" />';
+	}
+
+	/** Run the AI job for $start_id (a non-upload run: bulk / Media Library) until the queue is empty. */
+	private function runAiFor( int $start_id ): void {
+		$this->purgeQueueTable();
+		( new QueueController() )->addItemToQueue( $this->freshImageModel( $start_id ), array( 'action' => 'requestAlt' ) );
+		$this->runQueueUntilEmpty();
+	}
+
+	/**
+	 * An EN image with a DE same-file translation, used ONLY in the DE
+	 * translation of a post (the EN post does not show it). The AI job is a
+	 * per-language fan-out; only the main language (EN) may rename, and its
+	 * usage check must still find the DE post: the file keeps its name for
+	 * every language.
+	 */
+	public function test_ai_rename_keeps_the_name_when_only_a_translated_post_uses_the_image() {
+		$id     = $this->uploadFixture( 'fixture-small.jpg' );
+		$dup_id = $this->createDuplicateAttachment( $id );
+		$this->insertTranslationRow( $id, 9201, 'en' );
+		$this->insertTranslationRow( $dup_id, 9201, 'de', 'en' );
+		$old_file = get_attached_file( $id );
+
+		$this->createPostInLanguage( '<p>No image in the English version.</p>', 9202, 'en' );
+		$de_post = $this->createPostInLanguage( $this->imgTag( $dup_id ), 9202, 'de', 'en' );
+		// SENTINEL: the DE post really shows the shared file.
+		$this->assertStringContainsString( basename( $old_file ), get_post( $de_post )->post_content );
+
+		$this->enableAiRename( 'wpml-used-de-' . strtolower( wp_generate_password( 4, false, false ) ) );
+		$this->runAiFor( $id );
+
+		// SENTINEL: the AI run completed for the main language.
+		$this->assertNotEmpty( get_post_meta( $id, '_wp_attachment_image_alt', true ), 'Sentinel: the AI run completed.' );
+
+		foreach ( array( 'en' => $id, 'de' => $dup_id ) as $lang => $att ) {
+			clean_post_cache( $att );
+			$this->assertSame( $old_file, get_attached_file( $att ), "[$lang] An image used in a translated post keeps its name." );
+		}
+		$this->assertFileExists( $old_file, 'The shared file was not moved.' );
+	}
+
+	/**
+	 * Same as above, but the AI job is started from the TRANSLATION (the user
+	 * works in the DE Media Library). The fan-out still reaches the main
+	 * language, which must not rename a file the DE post uses.
+	 */
+	public function test_ai_rename_from_the_translation_keeps_the_name_when_a_translated_post_uses_the_image() {
+		$id     = $this->uploadFixture( 'fixture-small.jpg' );
+		$dup_id = $this->createDuplicateAttachment( $id );
+		$this->insertTranslationRow( $id, 9203, 'en' );
+		$this->insertTranslationRow( $dup_id, 9203, 'de', 'en' );
+		$old_file = get_attached_file( $id );
+
+		$this->createPostInLanguage( '<p>No image in the English version.</p>', 9204, 'en' );
+		$this->createPostInLanguage( $this->imgTag( $dup_id ), 9204, 'de', 'en' );
+
+		$this->enableAiRename( 'wpml-from-de-' . strtolower( wp_generate_password( 4, false, false ) ) );
+		$this->runAiFor( $dup_id );
+
+		$this->assertNotEmpty( get_post_meta( $dup_id, '_wp_attachment_image_alt', true ), 'Sentinel: the AI run completed for the translation.' );
+		foreach ( array( 'en' => $id, 'de' => $dup_id ) as $lang => $att ) {
+			clean_post_cache( $att );
+			$this->assertSame( $old_file, get_attached_file( $att ), "[$lang] The image keeps its name." );
+		}
+		$this->assertFileExists( $old_file );
+	}
+
+	/**
+	 * The image's ORIGINAL is in a non-default language (RO), the post that
+	 * uses it only exists in the EN translation. The RO item is the one that
+	 * may rename; its usage check must see the EN post.
+	 */
+	public function test_ai_rename_keeps_the_name_when_the_image_is_used_only_in_another_language_than_its_original() {
+		$ro_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$en_id = $this->createDuplicateAttachment( $ro_id );
+		$this->insertTranslationRow( $ro_id, 9205, 'ro' );
+		$this->insertTranslationRow( $en_id, 9205, 'en', 'ro' );
+		$old_file = get_attached_file( $ro_id );
+
+		$this->createPostInLanguage( '<p>Fără imagine.</p>', 9206, 'ro' );
+		$this->createPostInLanguage( $this->imgTag( $en_id ), 9206, 'en', 'ro' );
+
+		$this->enableAiRename( 'wpml-used-en-' . strtolower( wp_generate_password( 4, false, false ) ) );
+		$this->runAiFor( $en_id );
+
+		$this->assertNotEmpty( get_post_meta( $en_id, '_wp_attachment_image_alt', true ), 'Sentinel: the AI run completed.' );
+		foreach ( array( 'ro' => $ro_id, 'en' => $en_id ) as $lang => $att ) {
+			clean_post_cache( $att );
+			$this->assertSame( $old_file, get_attached_file( $att ), "[$lang] The image keeps its name." );
+		}
+		$this->assertFileExists( $old_file );
+	}
+
+	/**
+	 * Counterpart: no post uses the image in any language — the main language
+	 * renames it once, and every translation follows to the one new file.
+	 * Also proves the translation's own attachment metadata does not count as
+	 * a use (the usage probe excludes the item and its WPML siblings).
+	 */
+	public function test_ai_rename_of_an_unused_translated_image_renames_it_once_for_all_languages() {
+		$id     = $this->uploadFixture( 'fixture-small.jpg' );
+		$dup_id = $this->createDuplicateAttachment( $id );
+		$this->insertTranslationRow( $id, 9207, 'en' );
+		$this->insertTranslationRow( $dup_id, 9207, 'de', 'en' );
+		$old_file = get_attached_file( $id );
+		// The sibling's own postmeta holds the full URL (the shape some
+		// multilingual setups leave) — it must not count as a use.
+		add_post_meta( $dup_id, '_spio_test_full_url', wp_get_attachment_url( $dup_id ) );
+
+		$name = 'wpml-unused-' . strtolower( wp_generate_password( 4, false, false ) );
+		$this->enableAiRename( $name );
+		$this->runAiFor( $id );
+
+		clean_post_cache( $id );
+		clean_post_cache( $dup_id );
+		$this->assertStringContainsString( $name, basename( get_attached_file( $id ) ), 'The main language renamed the unused image.' );
+		$this->assertSame( get_attached_file( $id ), get_attached_file( $dup_id ), 'The translation follows the rename.' );
+		$this->assertFileExists( get_attached_file( $id ) );
+		$this->assertFileDoesNotExist( $old_file, 'One file on disk: the old one is gone.' );
+	}
+
+	/**
+	 * Upload flag with WPML: WPML creates the translations of a new upload
+	 * while it is being inserted (add_attachment), so the AI job fans out to
+	 * every language at upload time. The main item must carry the "recent
+	 * upload" flag through the queue: a new image is renamed even when a
+	 * translated post already uses it by the time the AI answers, and every
+	 * language follows to the same file.
+	 */
+	public function test_new_upload_with_wpml_translations_is_renamed_for_all_languages() {
+		$settings                   = \wpSPIO()->settings();
+		$settings->autoMediaLibrary = 0;
+		$settings->autoAI           = 1;
+		$name = 'wpml-upload-' . strtolower( wp_generate_password( 4, false, false ) );
+		$this->enableAiRename( $name );
+
+		$admin  = \ShortPixel\Controller\AdminController::getInstance();
+		$recent = ( new ReflectionClass( \ShortPixel\Controller\AdminController::class ) )->getProperty( 'recentUploads' );
+		$recent->setAccessible( true );
+		$recent->setValue( null, array() );
+
+		$saved = array();
+		foreach ( $GLOBALS['wp_filter'] as $hook_name => $hook ) {
+			$saved[ $hook_name ] = clone $hook;
+		}
+		$dup_id = 0;
+		try {
+			// The hooks an AI-only site registers at boot.
+			remove_all_actions( 'add_attachment' );
+			remove_all_filters( 'wp_generate_attachment_metadata' );
+			add_action( 'add_attachment', array( $admin, 'addAttachmentHook' ) );
+			add_filter( 'wp_generate_attachment_metadata', array( $admin, 'handleAiImageUploadHook' ), 4, 2 );
+
+			// WPML's media duplication, replicated: on insert of the original,
+			// create the DE translation pointing at the same file.
+			add_action(
+				'add_attachment',
+				function ( $post_id ) use ( &$dup_id ) {
+					if ( 0 !== $dup_id ) {
+						return; // the duplicate's own insert
+					}
+					$dup_id = -1;
+					$dup_id = $this->createDuplicateAttachment( $post_id );
+					$this->insertTranslationRow( $post_id, 9208, 'en' );
+					$this->insertTranslationRow( $dup_id, 9208, 'de', 'en' );
+				},
+				20
+			);
+
+			$id = $this->uploadFixture( 'fixture-small.jpg' );
+		} finally {
+			$GLOBALS['wp_filter'] = $saved;
+		}
+		$old_file = get_attached_file( $id );
+
+		// SENTINELS: WPML duplicated the upload, and the upload queued AI for both languages.
+		$this->assertGreaterThan( 0, $dup_id, 'Sentinel: the translation was created during the upload.' );
+		$this->assertContains( $id, $this->queuedItemIds(), 'Sentinel: the original is queued for AI.' );
+		$this->assertContains( $dup_id, $this->queuedItemIds(), 'Sentinel: the translation is queued for AI (fan-out).' );
+
+		// The DE post uses the image before the AI answers.
+		$this->createPostInLanguage( $this->imgTag( $dup_id ), 9209, 'de' );
+
+		$this->runQueueUntilEmpty();
+
+		clean_post_cache( $id );
+		clean_post_cache( $dup_id );
+		$this->assertStringContainsString( $name, basename( get_attached_file( $id ) ), 'The new upload is renamed although a post already uses it.' );
+		$this->assertSame( get_attached_file( $id ), get_attached_file( $dup_id ), 'The translation follows the rename.' );
+		$this->assertFileDoesNotExist( $old_file, 'One file on disk.' );
+	}
+
+	// -------------------------------------------------------------------
+	// Pedro's manual case (2026-10-01): image uploaded into a RO draft,
+	// EN + ES translations of the draft reuse it, AI run from the EN
+	// Media Library (bulk action "Generate image SEO data").
+	// -------------------------------------------------------------------
+
+	/**
+	 * Build the manual-test site: RO is the image's ORIGINAL (uploaded into
+	 * the RO draft), EN and ES are WPML media copies of the same file. Each
+	 * language has a DRAFT post showing the image with an alt the user typed.
+	 * wpml_post_language_details answers from this map (the test install's
+	 * WPML has no language setup of its own).
+	 *
+	 * @return array{att: array<string,int>, post: array<string,int>, file: string}
+	 */
+	private function buildRoOriginalWithEnEsDrafts(): array {
+		$ro = $this->uploadFixture( 'fixture-small.jpg' );
+		$en = $this->createDuplicateAttachment( $ro );
+		$es = $this->createDuplicateAttachment( $ro );
+		$this->insertTranslationRow( $ro, 9301, 'ro' );
+		$this->insertTranslationRow( $en, 9301, 'en', 'ro' );
+		$this->insertTranslationRow( $es, 9301, 'es', 'ro' );
+
+		$posts = array();
+		foreach ( array( 'ro' => $ro, 'en' => $en, 'es' => $es ) as $lang => $att ) {
+			$posts[ $lang ] = self::factory()->post->create(
+				array(
+					'post_status'  => 'draft',
+					'post_content' => '<!-- wp:image {"id":' . $att . '} --><figure class="wp-block-image"><img src="' . esc_url( wp_get_attachment_url( $att ) ) . '" alt="typed ' . $lang . ' alt" class="wp-image-' . $att . '"/></figure><!-- /wp:image -->',
+				)
+			);
+		}
+
+		$languages = array(
+			$ro => 'ro', $en => 'en', $es => 'es',
+			$posts['ro'] => 'ro', $posts['en'] => 'en', $posts['es'] => 'es',
+		);
+		remove_all_filters( 'wpml_post_language_details' );
+		add_filter(
+			'wpml_post_language_details',
+			function ( $details, $lookup_id ) use ( $languages ) {
+				$lang = $languages[ (int) $lookup_id ] ?? null;
+				return $lang ? array( 'language_code' => $lang, 'locale' => $lang ) : $details;
+			},
+			10,
+			2
+		);
+
+		return array(
+			'att'  => array( 'ro' => $ro, 'en' => $en, 'es' => $es ),
+			'post' => $posts,
+			'file' => get_attached_file( $ro ),
+		);
+	}
+
+	/** Run the AI job the way the Media Library bulk action does (AjaxController::requestAlt → addItemToQueue). */
+	private function runAiFromMediaLibrary( int $attachment_id ): void {
+		$settings            = \wpSPIO()->settings();
+		$settings->enable_ai = 1;
+		$settings->ai_gen_alt = 1;
+		$this->enableAiRename( 'unused' );
+		$this->api->aiFields = array(); // no filename: this case is about the text
+		$this->purgeQueueTable();
+		( new QueueController() )->addItemToQueue( $this->freshImageModel( $attachment_id ), array( 'action' => 'requestAlt' ) );
+		$this->runQueueUntilEmpty();
+	}
+
+	/**
+	 * Every language gets its own AI data: the bulk action on the EN copy
+	 * fans out to RO (the original) and ES too.
+	 */
+	public function test_ai_from_a_translation_generates_data_for_every_language_including_the_original() {
+		$site = $this->buildRoOriginalWithEnEsDrafts();
+
+		$this->runAiFromMediaLibrary( $site['att']['en'] );
+
+		foreach ( $site['att'] as $lang => $att ) {
+			$this->assertSame( 'A mock ai alt text.', get_post_meta( $att, '_wp_attachment_image_alt', true ), "[$lang] The attachment got AI alt text." );
+		}
+	}
+
+	/**
+	 * Default "Alt text in existing posts and pages" = "Add alt text only where
+	 * it's missing": the alts the user typed in the drafts are kept, in every
+	 * language. (Drafts ARE searched — the default statuses include draft.)
+	 */
+	public function test_missing_mode_keeps_the_alts_typed_in_translated_drafts() {
+		\wpSPIO()->settings()->ai_content_replace = 'missing';
+		$site = $this->buildRoOriginalWithEnEsDrafts();
+
+		$this->runAiFromMediaLibrary( $site['att']['en'] );
+
+		foreach ( $site['post'] as $lang => $post_id ) {
+			clean_post_cache( $post_id );
+			$content = get_post( $post_id )->post_content;
+			$this->assertStringContainsString( 'alt="typed ' . $lang . ' alt"', $content, "[$lang] The typed alt is kept in 'missing' mode." );
+			$this->assertStringNotContainsString( 'A mock ai alt text.', $content, "[$lang] No AI alt in 'missing' mode." );
+		}
+	}
+
+	/**
+	 * "Replace existing alt text": every language's DRAFT gets the AI alt of
+	 * ITS OWN language's attachment (each item only writes into posts of its
+	 * own language).
+	 */
+	public function test_overwrite_mode_replaces_the_alt_in_every_translated_draft() {
+		\wpSPIO()->settings()->ai_content_replace = 'overwrite';
+		$site = $this->buildRoOriginalWithEnEsDrafts();
+
+		$this->runAiFromMediaLibrary( $site['att']['en'] );
+
+		foreach ( $site['post'] as $lang => $post_id ) {
+			clean_post_cache( $post_id );
+			$this->assertSame( 'draft', get_post_status( $post_id ), "Sentinel: the $lang post is a draft." );
+			$this->assertStringContainsString( 'alt="A mock ai alt text."', get_post( $post_id )->post_content, "[$lang] The draft got the AI alt." );
+		}
+	}
+
+	/**
+	 * Same site with AI filenames ON, AI started from the EN copy. Only the
+	 * image's ORIGINAL-language item (RO here) may rename the shared file;
+	 * the EN and ES items skip the rename. Draft posts do not count as "used"
+	 * (the usage check only counts published content), so the RO item renames
+	 * the file once, every language follows, and the drafts are rewritten to
+	 * the new URL.
+	 */
+	public function test_ai_filename_from_a_translation_renames_via_the_original_for_all_languages_and_drafts() {
+		$site = $this->buildRoOriginalWithEnEsDrafts();
+		$name = 'wpml-drafts-' . strtolower( wp_generate_password( 4, false, false ) );
+		$this->enableAiRename( $name );
+
+		$this->purgeQueueTable();
+		( new QueueController() )->addItemToQueue( $this->freshImageModel( $site['att']['en'] ), array( 'action' => 'requestAlt' ) );
+		$this->runQueueUntilEmpty();
+
+		// SENTINEL: the RO original was processed (only it may rename).
+		$this->assertSame( 'A mock ai alt text.', get_post_meta( $site['att']['ro'], '_wp_attachment_image_alt', true ), 'Sentinel: the RO original got AI data.' );
+
+		$new_file = get_attached_file( $site['att']['ro'] );
+		$this->assertStringContainsString( $name, basename( $new_file ), 'The shared file got the AI filename.' );
+		foreach ( $site['att'] as $lang => $att ) {
+			clean_post_cache( $att );
+			$this->assertSame( $new_file, get_attached_file( $att ), "[$lang] The attachment follows the rename." );
+		}
+		$this->assertFileDoesNotExist( $site['file'], 'One file on disk.' );
+		foreach ( $site['post'] as $lang => $post_id ) {
+			clean_post_cache( $post_id );
+			$this->assertStringContainsString( basename( $new_file ), get_post( $post_id )->post_content, "[$lang] The draft points at the renamed file." );
+		}
+	}
+
+	/**
+	 * When the ORIGINAL-language item is not processed (only EN and ES got AI
+	 * data), nothing renames the file: the translations never rename the
+	 * shared file themselves. This is the shape of the 2026-10-01 manual test
+	 * (RO got no AI data → all three kept the old name).
+	 */
+	public function test_without_the_original_language_item_the_translations_never_rename_the_file() {
+		$site = $this->buildRoOriginalWithEnEsDrafts();
+		$this->enableAiRename( 'wpml-no-original-' . strtolower( wp_generate_password( 4, false, false ) ) );
+
+		// Queue ONLY the translations (no fan-out): the RO original is left out.
+		$this->purgeQueueTable();
+		foreach ( array( 'en', 'es' ) as $lang ) {
+			$qItem = \ShortPixel\Controller\Queue\QueueItems::getImageItem( $this->freshImageModel( $site['att'][ $lang ] ) );
+			$qItem->requestAltAction( array() );
+			( new QueueController() )->getQueue( 'media' )->addQueueItem( $qItem );
+		}
+		$this->runQueueUntilEmpty();
+
+		// SENTINELS: EN and ES were processed, RO was not.
+		$this->assertSame( 'A mock ai alt text.', get_post_meta( $site['att']['en'], '_wp_attachment_image_alt', true ), 'Sentinel: EN got AI data.' );
+		$this->assertSame( 'A mock ai alt text.', get_post_meta( $site['att']['es'], '_wp_attachment_image_alt', true ), 'Sentinel: ES got AI data.' );
+		$this->assertEmpty( get_post_meta( $site['att']['ro'], '_wp_attachment_image_alt', true ), 'Sentinel: RO got no AI data.' );
+
+		foreach ( $site['att'] as $lang => $att ) {
+			clean_post_cache( $att );
+			$this->assertSame( $site['file'], get_attached_file( $att ), "[$lang] The file keeps its name." );
+		}
+		$this->assertFileExists( $site['file'] );
+	}
+
+	/**
+	 * Pedro's follow-up (2026-10-01): a BIG camera image ("IMG_1234.jpg",
+	 * above the 2560px threshold, so WordPress serves "IMG_1234-scaled.jpg"),
+	 * uploaded into a RO draft; EN and ES drafts reuse it. Image blocks show
+	 * the "large" size (the block editor default) and the full "-scaled" file.
+	 * The AI rename runs on the RO original: every draft must point at the
+	 * renamed files afterwards.
+	 */
+	public function test_ai_rename_of_a_big_scaled_image_rewrites_every_translated_draft() {
+		$tmp = trailingslashit( get_temp_dir() ) . 'IMG_' . wp_rand( 1000, 9999 ) . strtolower( wp_generate_password( 3, false, false ) ) . '.jpg';
+		copy( $this->fixturePath( 'fixture-large.jpg' ), $tmp ); // 3200px wide
+		$ro = $this->uploadFile( $tmp );
+		$en = $this->createDuplicateAttachment( $ro );
+		$es = $this->createDuplicateAttachment( $ro );
+		$this->insertTranslationRow( $ro, 9401, 'ro' );
+		$this->insertTranslationRow( $en, 9401, 'en', 'ro' );
+		$this->insertTranslationRow( $es, 9401, 'es', 'ro' );
+
+		$this->assertStringEndsWith( '-scaled.jpg', get_attached_file( $ro ), 'Sentinel: WordPress serves the -scaled file.' );
+		$large = wp_get_attachment_image_url( $ro, 'large' );
+		$full  = wp_get_attachment_url( $ro );
+		$this->assertMatchesRegularExpression( '/-\d+x\d+\.jpg$/', $large, 'Sentinel: the large size is a resized file.' );
+
+		$posts = array();
+		foreach ( array( 'ro' => $ro, 'en' => $en, 'es' => $es ) as $lang => $att ) {
+			$posts[ $lang ] = self::factory()->post->create(
+				array(
+					'post_status'  => 'draft',
+					'post_content' => '<!-- wp:image {"id":' . $att . ',"sizeSlug":"large"} --><figure class="wp-block-image size-large"><img src="' . esc_url( $large ) . '" alt="typed ' . $lang . ' alt" class="wp-image-' . $att . '"/></figure><!-- /wp:image -->'
+						. '<!-- wp:image {"id":' . $att . ',"sizeSlug":"full"} --><figure class="wp-block-image size-full"><img src="' . esc_url( $full ) . '" alt="" class="wp-image-' . $att . '"/></figure><!-- /wp:image -->',
+				)
+			);
+		}
+
+		$name = 'wpml-big-' . strtolower( wp_generate_password( 4, false, false ) );
+		$this->enableAiRename( $name );
+		$this->purgeQueueTable();
+		( new QueueController() )->addItemToQueue( $this->freshImageModel( $ro ), array( 'action' => 'requestAlt' ) );
+		$this->runQueueUntilEmpty();
+
+		clean_post_cache( $ro );
+		$this->assertStringContainsString( $name, basename( get_attached_file( $ro ) ), 'Sentinel: the file was renamed.' );
+		$new_large = basename( wp_get_attachment_image_url( $ro, 'large' ) );
+		$new_full  = basename( wp_get_attachment_url( $ro ) );
+
+		foreach ( $posts as $lang => $post_id ) {
+			clean_post_cache( $post_id );
+			$content = get_post( $post_id )->post_content;
+			$this->assertStringContainsString( $new_large, $content, "[$lang] The large-size block points at the renamed file." );
+			$this->assertStringContainsString( $new_full, $content, "[$lang] The full-size block points at the renamed -scaled file." );
+			$this->assertStringNotContainsString( basename( $large ), $content, "[$lang] No old large URL is left." );
+			$this->assertStringNotContainsString( basename( $full ), $content, "[$lang] No old -scaled URL is left." );
+		}
+	}
 }
