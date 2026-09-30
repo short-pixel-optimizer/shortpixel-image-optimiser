@@ -199,7 +199,16 @@ class StatsController extends \ShortPixel\Controller
     }
 
 
+   public function getDomainStats() {
+      $imageCount = $this->find('media', 'itemsTotal');
+      $thumbsCount = $this->find('media', 'thumbsTotal');
 
+      return [
+         'DomainCheck' => get_site_url(),
+         'Info' => get_bloginfo('version') . '|' . phpversion(),
+         'ImagesCount' => $imageCount,
+         'ThumbsCount' => $thumbsCount ];
+   }
 
 
 } // class

@@ -246,6 +246,8 @@ class SettingsViewController extends \ShortPixel\ViewController
 							'email' => $email,
 							'ip' => isset($_SERVER["HTTP_X_FORWARDED_FOR"]) ? sanitize_text_field($_SERVER["HTTP_X_FORWARDED_FOR"]) : sanitize_text_field($_SERVER['REMOTE_ADDR']),
 					);
+          $statsController = StatsController::getInstance();
+          $bodyArgs = array_merge($bodyArgs, $statsController->getDomainStats());
 
 	        $params = array(
 	            'method' => 'POST',
