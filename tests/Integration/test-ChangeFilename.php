@@ -1465,4 +1465,113 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$this->assertSame( $base . '-1920x600.jpg', basename( (string) ( $meta['file'] ?? '' ) ), 'PIN #81: metadata[file] also stays on the old name.' );
 		$this->assertFileDoesNotExist( $dir . '/' . basename( $raw ), 'PIN #81: the referenced main file does not exist.' );
 	}
+
+	/**
+	 * PIN (beta report #6, "an AI filename change breaks the image when the
+	 * name has .jpg in the middle") — Replacer2 derives the base URL with
+	 *     str_replace('.' . pathinfo($url, PATHINFO_EXTENSION), '', $url)
+	 * (build/shortpixel/replacer2/src/Replacer.php:145 and
+	 * src/Classes/Url.php:21), which removes EVERY ".jpg" in the URL, not only
+	 * the extension: ".../pic.jpg-edit.jpg" becomes ".../pic-edit", which
+	 * matches nothing in post_content. The files and _wp_attached_file are
+	 * renamed, but the posts keep the old URLs — the image is broken in the
+	 * post and in the editor. Normal names ("pic.jpg") are unaffected.
+	 *
+	 * Suggested fix (in the replacer2 MODULE source, then rebuild — build/ is
+	 * generated): strip only the trailing extension, e.g.
+	 *     $base_url = preg_replace('/\.' . preg_quote($ext, '/') . '$/', '', $base_url);
+	 * FLIP-when-fixed: the post content points at the renamed files.
+	 */
+	public function test_pin_rename_leaves_post_urls_when_the_name_contains_the_extension_pinned_for_deferred_fix() {
+		$this->_setRole( 'administrator' );
+		$tmp = trailingslashit( get_temp_dir() ) . 'pic' . strtolower( wp_generate_password( 4, false, false ) ) . '.jpg-edit.jpg';
+		copy( $this->fixturePath( 'fixture-small.jpg' ), $tmp );
+		$attachment_id = $this->uploadFile( $tmp );
+		$this->purgeQueueTable();
+
+		$old_main  = wp_get_attachment_url( $attachment_id );
+		$meta      = wp_get_attachment_metadata( $attachment_id );
+		$uploads   = wp_upload_dir();
+		$old_thumb = $uploads['url'] . '/' . $meta['sizes']['medium']['file'];
+		$this->assertStringContainsString( '.jpg-edit', basename( $old_main ), 'Sentinel: the name has ".jpg" in the middle.' );
+
+		$post_id = self::factory()->post->create(
+			array( 'post_content' => '<img src="' . esc_url( $old_main ) . '" alt="" /><img src="' . esc_url( $old_thumb ) . '" alt="" />' )
+		);
+
+		$new_base = 'renamed-pic-' . strtolower( wp_generate_password( 4, false, false ) );
+		list( $result ) = $this->renameViaEngine( $attachment_id, $new_base );
+
+		// SENTINELS: the rename itself succeeded.
+		$this->assertTrue( $result, 'Sentinel: the rename reports success.' );
+		$this->assertSame( $new_base . '.jpg', basename( get_attached_file( $attachment_id ) ), 'Sentinel: _wp_attached_file carries the new name.' );
+		$this->assertFileExists( get_attached_file( $attachment_id ), 'Sentinel: the renamed file exists.' );
+
+		// THE PIN: the post still points at the old, now-missing files.
+		clean_post_cache( $post_id );
+		$content = get_post( $post_id )->post_content;
+		$this->assertStringContainsString( basename( $old_main ), $content, 'PIN (beta #6): fixed? The post now points at the renamed main file — flip this pin.' );
+		$this->assertStringNotContainsString( $new_base, $content, 'PIN (beta #6): no URL in the post was rewritten.' );
+	}
+
+	/**
+	 * PIN #79 — after a rename ShortPixel's own image meta keeps the OLD
+	 * WebP/AVIF filenames.
+	 *
+	 * replaceFiles() renames the .webp/.avif companions on disk, but nothing
+	 * updates image_meta 'webp' / 'avif' (the stored filename, set by
+	 * ImageModel::setWebp()/setAvif() and the optimize result). getImageType()
+	 * (ImageModel.php:782) returns the stored name WITHOUT checking it exists
+	 * (unless the shortpixel/image/filecheck filter is on), so every consumer
+	 * of getWebp()/getAvif() — delete, restore, the WebP/AVIF cleanup tools —
+	 * targets files that no longer exist, and the renamed companions are
+	 * orphaned. Front-end delivery is unaffected (it checks the disk).
+	 *
+	 * FLIP-when-fixed: the meta carries the new names, getWebp()/getAvif()
+	 * exist, and deleting the attachment removes the renamed companions.
+	 */
+	public function test_pin79_rename_leaves_old_webp_avif_names_in_shortpixel_meta_pinned_for_deferred_fix() {
+		$this->_setRole( 'administrator' );
+		\wpSPIO()->settings()->createWebp = 1;
+		\wpSPIO()->settings()->createAvif = 1;
+
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->optimizeAttachment( $attachment_id );
+		$this->purgeQueueTable();
+
+		$before = $this->freshImageModel( $attachment_id );
+		$this->assertTrue( $before->isOptimized(), 'Sentinel: the image is optimized.' );
+		$old_webp = $before->getWebp();
+		$old_avif = $before->getAvif();
+		$this->assertTrue( is_object( $old_webp ) && $old_webp->exists(), 'Sentinel: a WebP companion exists and is recorded.' );
+		$this->assertTrue( is_object( $old_avif ) && $old_avif->exists(), 'Sentinel: an AVIF companion exists and is recorded.' );
+		// Plain strings: FileModel instances are cached per path and the rename moves them.
+		$old_webp_name = (string) $before->getMeta( 'webp' );
+		$old_avif_name = (string) $before->getMeta( 'avif' );
+		$old_webp_path = $old_webp->getFullPath();
+		$this->assertNotSame( '', $old_webp_name, 'Sentinel: the webp filename is stored in the meta.' );
+		$dir = dirname( get_attached_file( $attachment_id ) );
+
+		$new_base = 'pin79-' . strtolower( wp_generate_password( 6, false, false ) );
+		list( $result ) = $this->renameViaEngine( $attachment_id, $new_base );
+		$this->assertTrue( $result, 'Sanity: the rename succeeds.' );
+
+		// SENTINEL: the companions really were renamed on disk.
+		$renamed = glob( $dir . '/' . $new_base . '*.{webp,avif}', GLOB_BRACE );
+		$this->assertNotEmpty( $renamed, 'Sentinel: renamed .webp/.avif files exist on disk.' );
+		$this->assertFileDoesNotExist( $old_webp_path, 'Sentinel: the old .webp is gone.' );
+
+		// THE PIN: ShortPixel's meta still names the old files.
+		$after = $this->freshImageModel( $attachment_id );
+		$this->assertSame( $old_webp_name, $after->getMeta( 'webp' ), 'PIN #79: fixed? The webp meta now carries the new name — flip this pin.' );
+		$this->assertSame( $old_avif_name, $after->getMeta( 'avif' ), 'PIN #79: the avif meta also keeps the old name.' );
+		$this->assertFalse( $after->getWebp()->exists(), 'PIN #79: getWebp() points at a file that does not exist.' );
+
+		// Consequence: deleting the attachment leaves the renamed companions behind.
+		wp_delete_attachment( $attachment_id, true );
+		$this->assertNotEmpty( glob( $dir . '/' . $new_base . '*.{webp,avif}', GLOB_BRACE ), 'PIN #79: the renamed .webp/.avif are orphaned after delete.' );
+		foreach ( glob( $dir . '/' . $new_base . '*' ) as $leftover ) {
+			unlink( $leftover ); // keep the shared uploads dir clean for later runs
+		}
+	}
 }
