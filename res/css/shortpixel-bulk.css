@@ -10,18 +10,6 @@
   font-style: normal;
   font-weight: 700;
 }
-.wrap.is-shortpixel-bulk-page {
-  /**** DASHBOARD ***/
-  /** GENERAL STYLES **/
-  /*  h1 {
-      font-size: 23px;
-      font-weight: 400;
-      line-height: 30px;
-      margin: 30px 0;
-    } */
-  /***************** SELECTION *************/
-  /**************** SUMMARY ******/
-}
 .wrap.is-shortpixel-bulk-page header {
   background: #fff;
   text-align: center;
@@ -62,7 +50,7 @@
   box-shadow: none;
 }
 .wrap.is-shortpixel-bulk-page header .top-buttons a:hover, .wrap.is-shortpixel-bulk-page header .top-buttons button:hover {
-  background: #32d7e5;
+  background: rgb(19.742002064%, 84.5046439628%, 89.6697626419%);
 }
 .wrap.is-shortpixel-bulk-page header .top-buttons a i.switch, .wrap.is-shortpixel-bulk-page header .top-buttons button i.switch {
   width: 18px;
@@ -239,24 +227,13 @@
   height: 104px;
   width: 60px;
 }
+.wrap.is-shortpixel-bulk-page {
+  /**** DASHBOARD ***/
+}
 .wrap.is-shortpixel-bulk-page section.panel.dashboard {
   max-width: 95%;
   margin: 20px auto;
   border-radius: 16px;
-  /*.bulk-welcome
-  {
-
-  	background-color:  $color-light;
-  	border-radius: 16px 16px 0 0;
-        h3 {
-          font-size: 28px;
-          font-weight: 700;
-          text-align: center;
-          padding-top: 16px;
-          margin-top: 0;
-        }
-
-  } */
 }
 .wrap.is-shortpixel-bulk-page section.panel.dashboard h3.heading {
   border: 0;
@@ -285,7 +262,7 @@
   width: 30px;
 }
 .wrap.is-shortpixel-bulk-page section.panel.dashboard .bulk-wrapper button.start:hover {
-  background: #1793ab;
+  background: rgb(9.0442890443%, 57.4578362814%, 67.0341423283%);
   color: #fff;
 }
 .wrap.is-shortpixel-bulk-page section.panel.dashboard .bulk-wrapper button.start:disabled {
@@ -306,6 +283,22 @@
 }
 .wrap.is-shortpixel-bulk-page section.panel.dashboard .bulk-wrapper .title-offer {
   margin: 0;
+}
+.wrap.is-shortpixel-bulk-page section.panel.dashboard {
+  /*.bulk-welcome
+  {
+
+  	background-color:  $color-light;
+  	border-radius: 16px 16px 0 0;
+        h3 {
+          font-size: 28px;
+          font-weight: 700;
+          text-align: center;
+          padding-top: 16px;
+          margin-top: 0;
+        }
+
+  } */
 }
 .wrap.is-shortpixel-bulk-page section.panel.dashboard .dashboard-text {
   /* @include breakpoint(0, 768px) {
@@ -373,8 +366,6 @@
   text-align: left;
   border-bottom: 1px solid #EBF5FF;
   border-top: 1px solid #EBF5FF;
-  font-size: 12px;
-  padding-left: 10px;
 }
 .wrap.is-shortpixel-bulk-page section.panel.dashboard .dashboard-log .data span:first-child {
   border-left: 1px solid #EBF5FF;
@@ -388,6 +379,10 @@
 }
 .wrap.is-shortpixel-bulk-page section.panel.dashboard .dashboard-log .data span:last-child {
   border-right: 1px solid #EBF5FF;
+}
+.wrap.is-shortpixel-bulk-page section.panel.dashboard .dashboard-log .data span {
+  font-size: 12px;
+  padding-left: 10px;
 }
 .wrap.is-shortpixel-bulk-page section.panel.dashboard .dashboard-log .data span.date {
   color: #1FBEC9;
@@ -461,6 +456,15 @@
 .wrap.is-shortpixel-bulk-page section.panel.dashboard .dashboard-modal .content a {
   color: #1ABDCA;
 }
+.wrap.is-shortpixel-bulk-page {
+  /** GENERAL STYLES **/
+  /*  h1 {
+      font-size: 23px;
+      font-weight: 400;
+      line-height: 30px;
+      margin: 30px 0;
+    } */
+}
 .wrap.is-shortpixel-bulk-page h3.heading {
   width: 90%;
   margin: 0 auto;
@@ -504,7 +508,7 @@
   line-height: 1;
 }
 .wrap.is-shortpixel-bulk-page .button:hover {
-  background: #32d7e5;
+  background: rgb(19.742002064%, 84.5046439628%, 89.6697626419%);
   color: #fff;
 }
 .wrap.is-shortpixel-bulk-page .button .dashicons {
@@ -534,7 +538,7 @@
   transition: all 0.1s ease-in-out;
 }
 .wrap.is-shortpixel-bulk-page .button-primary:hover {
-  background: #32d7e5;
+  background: rgb(19.742002064%, 84.5046439628%, 89.6697626419%);
 }
 .wrap.is-shortpixel-bulk-page nav {
   margin: 45px 0;
@@ -715,7 +719,7 @@
   display: none;
   margin: 25px auto;
   width: 95%;
-  background: #1fbec9;
+  background: rgb(31, 190, 201);
   border: 1px solid #ccc;
   font-size: 26px;
   line-height: 26px;
@@ -727,7 +731,7 @@
   transition: all 900ms;
 }
 .wrap.is-shortpixel-bulk-page .processor-paused:hover {
-  background: #1ca9b3;
+  background: rgb(10.8206558485%, 66.3201487492%, 70.1597363083%);
 }
 .wrap.is-shortpixel-bulk-page .processor-paused .dashicons {
   margin-right: 6px;
@@ -799,7 +803,7 @@
   font-weight: 700;
 }
 .wrap.is-shortpixel-bulk-page section.spio-progressbar .flex > div.result .line {
-  background: linear-gradient(90deg, #cccccc 0%, #cccccc 49.9%, #f4fbfc 51%, #f4fbfc 100%);
+  background: linear-gradient(90deg, rgb(204, 204, 204) 0%, rgb(204, 204, 204) 49.9%, #f4fbfc 51%, #f4fbfc 100%);
 }
 .wrap.is-shortpixel-bulk-page section.spio-progressbar .flex > div.select .line {
   left: 50%;
@@ -839,6 +843,12 @@
   color: #ccc;
   margin-top: 8px;
 }
+.wrap.is-shortpixel-bulk-page {
+  /***************** SELECTION *************/
+}
+.wrap.is-shortpixel-bulk-page section.panel.selection .spio-progressbar .select .line {
+  background: linear-gradient(90deg, rgb(31, 190, 201) 0%, rgb(31, 190, 201) 49.9%, rgb(204, 204, 204) 50%, rgb(204, 204, 204) 100%);
+}
 .wrap.is-shortpixel-bulk-page section.panel.selection .spio-progressbar .select {
   /*   .text,
      .step {
@@ -849,9 +859,6 @@
      .step {
        border-color: #1FBEC9;
      }*/
-}
-.wrap.is-shortpixel-bulk-page section.panel.selection .spio-progressbar .select .line {
-  background: linear-gradient(90deg, #1fbec9 0%, #1fbec9 49.9%, #cccccc 50%, #cccccc 100%);
 }
 .wrap.is-shortpixel-bulk-page section.panel.selection .load.wrapper,
 .wrap.is-shortpixel-bulk-page section.panel.selection .interface.wrapper {
@@ -1026,11 +1033,14 @@
 .wrap.is-shortpixel-bulk-page section.panel.selection .count_limited {
   color: #ff0000;
 }
+.wrap.is-shortpixel-bulk-page {
+  /**************** SUMMARY ******/
+}
 .wrap.is-shortpixel-bulk-page section.panel.summary .spio-progressbar .select .line {
   background: #1FBEC9;
 }
 .wrap.is-shortpixel-bulk-page section.panel.summary .spio-progressbar .summary .line {
-  background: linear-gradient(90deg, #1fbec9 0%, #1fbec9 49.9%, #cccccc 50%, #cccccc 100%);
+  background: linear-gradient(90deg, rgb(31, 190, 201) 0%, rgb(31, 190, 201) 49.9%, rgb(204, 204, 204) 50%, rgb(204, 204, 204) 100%);
 }
 .wrap.is-shortpixel-bulk-page section.panel.summary h3 {
   font-size: 24px;
@@ -1239,7 +1249,7 @@
 }
 .wrap.is-shortpixel-bulk-page section.panel.process .spio-progressbar .process .line,
 .wrap.is-shortpixel-bulk-page section.panel.finished .spio-progressbar .process .line {
-  background: linear-gradient(90deg, #1fbec9 0%, #1fbec9 49.9%, #cccccc 50%, #cccccc 100%);
+  background: linear-gradient(90deg, rgb(31, 190, 201) 0%, rgb(31, 190, 201) 49.9%, rgb(204, 204, 204) 50%, rgb(204, 204, 204) 100%);
 }
 .wrap.is-shortpixel-bulk-page section.panel.process .process_heading,
 .wrap.is-shortpixel-bulk-page section.panel.finished .process_heading {
@@ -1523,8 +1533,6 @@
   width: 100%;
   height: auto;
   object-fit: cover;
-  z-index: 10;
-  position: relative;
 }
 .wrap.is-shortpixel-bulk-page section.panel.process .image-preview-section .preview-wrapper .image img[src*="placeholder.svg"],
 .wrap.is-shortpixel-bulk-page section.panel.finished .image-preview-section .preview-wrapper .image img[src*="placeholder.svg"] {
@@ -1533,6 +1541,11 @@
 .wrap.is-shortpixel-bulk-page section.panel.process .image-preview-section .preview-wrapper .image img[src*="placeholder.svg"]:not(.notempty),
 .wrap.is-shortpixel-bulk-page section.panel.finished .image-preview-section .preview-wrapper .image img[src*="placeholder.svg"]:not(.notempty) {
   z-index: 1;
+}
+.wrap.is-shortpixel-bulk-page section.panel.process .image-preview-section .preview-wrapper .image img,
+.wrap.is-shortpixel-bulk-page section.panel.finished .image-preview-section .preview-wrapper .image img {
+  z-index: 10;
+  position: relative;
 }
 .wrap.is-shortpixel-bulk-page section.panel.process .image-preview-section .preview-wrapper .image .svg-loader,
 .wrap.is-shortpixel-bulk-page section.panel.finished .image-preview-section .preview-wrapper .image .svg-loader {
@@ -1650,7 +1663,7 @@
   transition: all 0.5s ease;
 }
 .wrap.is-shortpixel-bulk-page section.panel.finished nav button.finish:hover {
-  background: #24d1dd;
+  background: rgb(14.2114604462%, 82.0740365112%, 86.7689317106%);
 }
 .wrap.is-shortpixel-bulk-page .part-debug {
   background: #000;

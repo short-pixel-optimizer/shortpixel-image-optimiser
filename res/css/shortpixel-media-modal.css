@@ -227,10 +227,9 @@
   text-decoration: none;
   transition: all 0.1s ease-in-out;
   box-shadow: none;
-  padding: 8px 16px;
 }
 .shortpixel-media-modal .modal-wrapper .button-wrapper .button:hover {
-  background: #32d7e5;
+  background: rgb(19.742002064%, 84.5046439628%, 89.6697626419%);
 }
 .shortpixel-media-modal .modal-wrapper .button-wrapper .button i.switch {
   width: 18px;
@@ -240,6 +239,9 @@
   width: 14px;
   height: 14px;
   filter: brightness(0) saturate(100%) invert(100%) sepia(100%) saturate(0%) hue-rotate(251deg) brightness(108%) contrast(108%);
+}
+.shortpixel-media-modal .modal-wrapper .button-wrapper .button {
+  padding: 8px 16px;
 }
 .shortpixel-media-modal .modal-wrapper .button-wrapper .button i {
   width: 15px;
