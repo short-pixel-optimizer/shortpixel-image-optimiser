@@ -44,6 +44,32 @@ class QuotaNoticeMonthTest extends WP_UnitTestCase {
 		$this->assertFalse( $method->invoke( $m, $quotaData ) );
 	}
 
+	/**
+	 * REGRESSION (UI copy review, 2026-09-30): getMonthAverage() divided only
+	 * month 4 by the active-month count (operator precedence), so with 4
+	 * active months of 100 images each the "average per month" in the upgrade
+	 * notice was 325 instead of 100.
+	 */
+	public function test_getMonthAverage_divides_the_sum_of_all_active_months() {
+		\wpSPIO()->settings()->currentStats = array(
+			'period' => array( 'months' => array( '1' => 100, '2' => 100, '3' => 100, '4' => 100 ) ),
+			'time'   => time(),
+		);
+		// Fresh StatsController, so it reads the seeded stats.
+		$prop = ( new ReflectionClass( \ShortPixel\Controller\StatsController::class ) )->getProperty( 'instance' );
+		$prop->setAccessible( true );
+		$prop->setValue( null, null );
+
+		$stats = \ShortPixel\Controller\StatsController::getInstance();
+		$this->assertEquals( 100, $stats->find( 'period', 'months', 4 ), 'Sentinel: the seeded month-4 count is read.' );
+
+		$method = ( new ReflectionClass( QuotaNoticeMonth::class ) )->getMethod( 'getMonthAverage' );
+		$method->setAccessible( true );
+		$this->assertEquals( 100, $method->invoke( new QuotaNoticeMonth() ), 'Average of four active months of 100 must be 100.' );
+
+		$prop->setValue( null, null ); // don't leak the seeded controller into other tests
+	}
+
 	public function test_monthlyUpgradeNeeded_false_when_monthly_total_missing_from_quota_data() {
 		$m = new QuotaNoticeMonth();
 

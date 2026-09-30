@@ -183,13 +183,13 @@ $queueRunning = $bulk->isAnyBulkRunning();
        <!-- Bulk Restore AI DATA -->
        <setting>
          <name>
-              <?php esc_html_e('Undo AI generation :  Restore all images to previous state ','shortpixel-image-optimiser'); ?>
+              <?php esc_html_e('Undo AI generation: restore the image text from before AI','shortpixel-image-optimiser'); ?>
          </name>
          <content>
            <a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'restoreAI', 'noheader' => true), $url)) ?>" class="button danger"><?php _e('Bulk Undo AI', 'shortpixel-image-optimiser'); ?></a>
 
            <info>
-             <?php printf(esc_html__('%sUndoes%s all generated AI Data. Will restore AI Generated fields back to previous state', 'shortpixel-image-optimiser'), '<b>','</b>'); ?>
+             <?php printf(esc_html__('%sRestores%s the alt text, captions, descriptions and titles that existed before AI. Alt text that AI wrote into posts is reverted too, unless posts are set to "Don\'t change posts and pages". Files renamed by AI keep their new names.', 'shortpixel-image-optimiser'), '<b>','</b>'); ?>
            </info>
          </content>
       </setting>

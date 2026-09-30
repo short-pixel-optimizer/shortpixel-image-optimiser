@@ -129,7 +129,6 @@ if( $this->is_nginx ){
     <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/deliver-webp-avif-images-using-the-shortpixel-cdn-in-spio/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings"></i>
 
     </content>
-    <?php echo UiHelper::getIcon('res/images/icon/new.svg'); ?>
     <info>
            <?php printf(esc_html__('When enabled, the plugin replaces images with CDN URLs and delivers next-generation formats (e.g. WebP, AVIF, if enabled above). Otherwise, images are served locally, as usual. For this delivery method to work, your %sdomain will be associated%s automatically to your ShortPixel account. %sRead more%s.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/associated-domains" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/deliver-webp-avif-images-using-the-shortpixel-cdn-in-spio/?utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings" target="_blank">', '</a>' );?>
     </info>

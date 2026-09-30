@@ -83,7 +83,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         </name>
 
         <info>
-          <?php printf(esc_html__('Backups are saved on your server. For extra safety, we recommend also keeping a %local or cloud copy.%s','shortpixel-image-optimiser'),
+          <?php printf(esc_html__('Backups are saved on your server. For extra safety, we recommend also keeping a %slocal or cloud copy%s.','shortpixel-image-optimiser'),
              '<a href="https://shortpixel.com/knowledge-base/article/where-is-the-backup-folder-located/?utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings" target="_blank">','</a>'
              );
          ?>

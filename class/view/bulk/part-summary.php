@@ -188,7 +188,7 @@ if ( ! defined( 'ABSPATH' ) ) {
   <?php if (false == $quotaData->unlimited): ?>
   <div class="over-quota" data-check-visibility="false" data-control="data-quota-remaining" data-control-check="data-check-total-total">
       <span><img src="<?php echo esc_url(wpSPIO()->plugin_url('res/img/bulk/over-quota.svg')) ?>" /></span>
-            <p><?php printf(esc_html('In your ShortPixel account you %shave only %s credits available %s, but you have chosen %s  images to be optimized in this bulk process. You can either go back and select less images, or you can upgrade to a higher plan or buy one-time credits.','shortpixel-image-optimiser'), '<span class="red">', esc_html($this->formatNumber($quotaData->total->remaining, 0)), '</span>', '<b data-stats-total="images-images">0</b>'); ?>
+            <p><?php printf(esc_html__('In your ShortPixel account you %shave only %s credits available%s, but you have chosen %s images to be optimized in this bulk process. You can either go back and select fewer images, or you can upgrade to a higher plan or buy one-time credits.','shortpixel-image-optimiser'), '<span class="red">', esc_html($this->formatNumber($quotaData->total->remaining, 0)), '</span>', '<b data-stats-total="images-images">0</b>'); ?>
 
                  <p><a href="https://shortpixel.com/ms/af/KZYK08Q28044" target="_blank" class="button button-primary" >
                   <!--<i class="shortpixel-icon cart"></i> -->
@@ -219,7 +219,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<span class='dashicons dashicons-arrow-right'></span>
         <?php if ($view->customOperationMedia !== false) 
         {
-            printf(esc_html('%s Start %s %s', 'shortpixel-image-optimiser'), '<p>', $view->customOperationMedia, '</p>');
+            printf(esc_html__('%s Start %s %s', 'shortpixel-image-optimiser'), '<p>', $view->customOperationMedia, '</p>');
         }
         else
         {

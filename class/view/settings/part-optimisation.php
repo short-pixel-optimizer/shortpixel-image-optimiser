@@ -354,7 +354,6 @@ if (! defined('ABSPATH')) {
 
         </select>
         <i class='documentation dashicons dashicons-editor-help exif-ai' data-link="https://shortpixel.com/knowledge-base/article/settings-ai-ml-training-usage-control/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings"></i>
-        <?php echo UiHelper::getIcon('res/images/icon/new.svg'); ?>
       </content>
 
     </setting>

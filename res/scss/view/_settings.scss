@@ -267,6 +267,23 @@
 	}
   }
 
+  section#tab-ai
+  {
+	// The "New" badge next to the filename switch.
+	img.icon {
+		height: 40px;
+		margin-bottom: -20px;
+		margin-left: 20px;
+
+		@include breakpoint(0, 768px) {
+			height: 30px;
+			float: right;
+			margin-top: -30px;
+			margin-right: -5px;
+		}
+	}
+  }
+
   section#tab-webp
   {
 	img.icon {

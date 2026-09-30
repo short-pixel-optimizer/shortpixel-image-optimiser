@@ -78,7 +78,7 @@ $scale_sizes =
 
     <section class="remove action_wrapper">
 		<h3><?php _e("Options", 'shortpixel-image-optimiser'); ?></h3>
-		<p><?php __('Note: transparency options only work with supported file formats, such as PNG', 'shortpixel-image-optimiser'); ?></p>
+		<p><?php esc_html_e('Note: transparency options only work with supported file formats, such as PNG', 'shortpixel-image-optimiser'); ?></p>
 
 						<label for="transparent_background">
 							<input id="transparent_background" type="radio" name="background_type" value="transparent" <?php checked('transparent', $view->settings['bg_type']); ?> checked >

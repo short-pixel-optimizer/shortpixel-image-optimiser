@@ -1777,4 +1777,56 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		// THE PIN: the saved post has no caption.
 		$this->assertStringNotContainsString( 'A mock ai caption.', $content, 'PIN (beta #7): fixed? The caption is now in the saved post (or no longer reported) — flip this pin.' );
 	}
+
+	/**
+	 * PIN #53 — the "is this image already used?" check never runs on AI
+	 * renames.
+	 *
+	 * replaceFiles() skips the rename of an image that published content
+	 * already uses, but only when $args['recent_upload'] is exactly false
+	 * (OptimizeAiController.php ~:885). HandleSuccess() passes
+	 * $qItem->data()->recent_upload (~:477), which is ALWAYS null:
+	 * QueueItem::requestAltAction() only calls
+	 * addKeepDataArgs(['recent_upload']), which records the NAME, and
+	 * nothing sets the value. So bulk / manual AI runs rename images that
+	 * are used in published posts — against what the setting text promises
+	 * ("only for newly uploaded images, or for images that are not used in
+	 * any posts or pages").
+	 *
+	 * Suggested fix: in requestAltAction() set the value on the item,
+	 *     $this->data()->recent_upload = (isset($args['recent_upload']) && true === $args['recent_upload']);
+	 * (and keep it for the next action), same for is_duplicate.
+	 * FLIP-when-fixed: the used image keeps its name.
+	 */
+	public function test_pin53_ai_rename_ignores_the_usage_check_and_renames_a_used_image_pinned_for_deferred_fix() {
+		\wpSPIO()->settings()->ai_gen_filename    = 1;
+		\wpSPIO()->settings()->ai_content_replace = 'missing';
+		$this->api->aiFields['generated_file_name'] = 'pin53-ai-name-' . strtolower( wp_generate_password( 4, false, false ) );
+
+		$id       = $this->freshAttachment();
+		$old_file = get_attached_file( $id );
+		$post_id  = self::factory()->post->create(
+			array(
+				'post_status'  => 'publish',
+				'post_content' => '<img src="' . esc_url( wp_get_attachment_url( $id ) ) . '" alt="" />',
+			)
+		);
+		// SENTINEL: the image really is used in published content (what the check looks for).
+		$this->assertStringContainsString( basename( $old_file ), get_post( $post_id )->post_content );
+
+		// A non-upload AI run (bulk / media library): QueueController passes recent_upload=false.
+		$this->enqueueAi( $id );
+		$this->runQueueUntilEmpty();
+
+		clean_post_cache( $id );
+		$new_file = get_attached_file( $id );
+
+		// THE PIN: the used image was renamed anyway.
+		$this->assertStringContainsString(
+			$this->api->aiFields['generated_file_name'],
+			basename( $new_file ),
+			'PIN #53: fixed? A used image is no longer renamed by AI — flip this pin (expect the old name).'
+		);
+		$this->assertFileDoesNotExist( $old_file, 'PIN #53: the old file was moved away.' );
+	}
 }

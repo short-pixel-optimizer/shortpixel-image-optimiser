@@ -502,7 +502,7 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
          {
             $output .= sprintf('<input type="hidden" name="%s" value="%s">', $arg, $val);
          }
-         $output .= '<span class="displaying-num">'. sprintf(esc_html__('%d Images', 'shortpixel-image-optimiser'), $this->total_items) . '</span>';
+         $output .= '<span class="displaying-num">'. sprintf(esc_html(_n('%d folder', '%d folders', $this->total_items, 'shortpixel-image-optimiser')), $this->total_items) . '</span>';
 
          if ( $disable_first ) {
                   $page_links[] = '<span class="tablenav-pages-navspan button disabled" aria-hidden="true">&laquo;</span>';
