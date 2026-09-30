@@ -80,7 +80,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
     StopMonitoringFolder(id)
     {
 
-       if (confirm('Are you sure you want to stop optimizing this folder? '))
+       if (confirm(this.strings.removeFolderConfirm))
        {
          var data = {};
          data.id = id;

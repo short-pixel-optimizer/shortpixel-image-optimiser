@@ -239,9 +239,9 @@ test.describe('Settings page', () => {
 		// NB: the reloaded settings page refreshes the quota (api-status.php)
 		// on its own, so "no remote call at all" is not assertable here; the
 		// length check happening BEFORE validateKey() is a PHPUnit-level fact
-		// (ApiKeyModel::checkKey). The absence of "Error during verifying"
+		// (ApiKeyModel::checkKey). The absence of "Error while verifying"
 		// proves the remote validation branch was not taken.
-		await expect(settings.notices('error').filter({ hasText: /Error during verifying/i })).toHaveCount(0);
+		await expect(settings.notices('error').filter({ hasText: /Error while verifying/i })).toHaveCount(0);
 		void spio;
 	});
 
@@ -253,7 +253,7 @@ test.describe('Settings page', () => {
 		await submitApiKeyAndWait(page, 'b'.repeat(20));
 
 		// (The notice renders twice on the reloaded page — assert on the first.)
-		const verifyNotice = settings.notices('error').filter({ hasText: /Error during verifying API key/i }).first();
+		const verifyNotice = settings.notices('error').filter({ hasText: /Error while verifying the API key/i }).first();
 		await expect(verifyNotice).toBeVisible();
 		await expect(verifyNotice).toContainText(/Invalid API key/i);
 		const remote = (await spio.mockRequests()).filter((r) => r.path.includes('api-status'));
@@ -267,7 +267,7 @@ test.describe('Settings page', () => {
 
 		await submitApiKeyAndWait(page, 'b'.repeat(20));
 
-		await expect(settings.notices('error').filter({ hasText: /Error during verifying API key/i }).first()).toContainText(/Quota exceeded/i);
+		await expect(settings.notices('error').filter({ hasText: /Error while verifying the API key/i }).first()).toContainText(/Quota exceeded/i);
 	});
 
 	test('API key: a new valid key is accepted and marked verified', async ({ page }) => {

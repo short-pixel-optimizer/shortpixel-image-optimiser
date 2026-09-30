@@ -68,7 +68,7 @@ $this->loadView('custom/part-othermedia-top');
 			<div class='no-items'> <p>
 				<?php
 				if ($this->search === false):
-					printf(esc_html__('No folders available. ','shortpixel-image-optimiser'), '<a href="upload.php?page=wp-short-pixel-custom&part=folders">', '</a>');
+					esc_html_e('No folders yet. Use "Add a custom folder" above to add one.','shortpixel-image-optimiser');
 				 else:
 					 echo esc_html__('Your search query didn\'t result in any images. ', 'shortpixel-image-optimiser');
 				endif; ?>

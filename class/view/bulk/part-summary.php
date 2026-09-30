@@ -35,7 +35,7 @@ if ( ! defined( 'ABSPATH' ) ) {
       <!--- ### MEDIA BOX #### --> 
       <div class="section-wrapper" data-check-visibility data-control="data-check-media-total">
       <h4><span class='dashicons dashicons-images-alt2'>&nbsp;</span>
-				<?php esc_html_e('Media Library','shortpixel-image-optimiser'); ?> (<span data-stats-media="in_queue">0</span> <?php esc_html_e('items','shortpixel-image-optimiser'); ?>)</h4>
+				<?php esc_html_e('Media Library','shortpixel-image-optimiser'); ?> (<?php esc_html_e('items:', 'shortpixel-image-optimiser'); ?> <span data-stats-media="in_queue">0</span>)</h4>
         <div class="list-table">
 
 						<div  class='images'><span><?php esc_html_e('Images','shortpixel-image-optimiser'); ?></span>
@@ -56,7 +56,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
       <!--- ### CUSTOM BOX #### --> 
     <div class="section-wrapper" data-check-visibility data-control="data-check-custom-total">
-    <h4><span class='dashicons dashicons-open-folder'>&nbsp;</span><?php esc_html_e('Custom Media', 'shortpixel-image-optimiser') ?> (<span data-stats-custom="in_queue">0</span> <?php esc_html_e('items','shortpixel-image-optimiser'); ?>)</h4>
+    <h4><span class='dashicons dashicons-open-folder'>&nbsp;</span><?php esc_html_e('Custom Media', 'shortpixel-image-optimiser') ?> (<?php esc_html_e('items:', 'shortpixel-image-optimiser'); ?> <span data-stats-custom="in_queue">0</span>)</h4>
       <div class="list-table">
 
 				<div><span><?php esc_html_e('Images','shortpixel-image-optimiser'); ?></span>

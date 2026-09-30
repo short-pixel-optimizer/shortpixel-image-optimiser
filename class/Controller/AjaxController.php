@@ -2377,14 +2377,14 @@ class AjaxController
 
 		if (false === $folder_id) {
 			$json->folder->is_error = true;
-			$json->folder->message = __('An error has occured: no folder id', 'shortpixel-image-optimiser');
+			$json->folder->message = __('An error has occurred: no folder id', 'shortpixel-image-optimiser');
 		}
 
 		$folderObj = $otherMediaController->getFolderByID($folder_id);
 
 		if (false === $folderObj) {
 			$json->folder->is_error = true;
-			$json->folder->message = __('An error has occured: no folder object', 'shortpixel-image-optimiser');
+			$json->folder->message = __('An error has occurred: no folder object', 'shortpixel-image-optimiser');
 		}
 
 		$result = $folderObj->refreshFolder(true);
@@ -2440,7 +2440,7 @@ class AjaxController
 
 		if ($dirObj === false) {
 			$json->folder->is_error = true;
-			$json->folder->message = __('An error has occured: no folder object', 'shortpixel-image-optimiser');
+			$json->folder->message = __('An error has occurred: no folder object', 'shortpixel-image-optimiser');
 			return;
 		}
 

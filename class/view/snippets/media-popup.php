@@ -130,12 +130,12 @@ $scale_sizes =
 
 		<section class='new_file_title wrapper'>
 			<span>
-				<p><?php _e('New File Name', 'shortpixel-image-optimiser'); ?></p>
+				<p><?php _e('New filename', 'shortpixel-image-optimiser'); ?></p>
 				<input type="text" name="new_filename" value="<?php echo esc_attr($suggestedFileName) ?>">
 			</span>
 
 			<span>
-				<p><?php _e('New Image Title', 'shortpixel-image-optimiser'); ?></p>
+				<p><?php _e('New image title', 'shortpixel-image-optimiser'); ?></p>
 				<input type="text" name="new_posttitle" value="<?php echo esc_attr($post_title) ?>">
 			</span>
 

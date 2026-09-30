@@ -53,7 +53,7 @@ class NewExclusionFormat extends \ShortPixel\Model\AdminNoticeModel
 	 */
 	protected function getMessage()
 	{
-		$message = "<p>" . __('Since version 5.5.0, ShortPixel Image Optimiser also checks thumbnails for exclusions. This can change which images are optimized and which are excluded. Please check your exclusion rules in the '
+		$message = "<p>" . __('Since version 5.5.0, ShortPixel Image Optimizer also checks thumbnails for exclusions. This can change which images are optimized and which are excluded. Please check your exclusion rules in the '
 						. '<a href="options-general.php?page=wp-shortpixel-settings&part=exclusions">ShortPixel Settings</a> page.','shortpixel-image-optimiser') . "
 		</p>";
 

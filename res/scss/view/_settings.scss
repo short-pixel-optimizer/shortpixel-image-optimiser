@@ -282,6 +282,10 @@
 			margin-right: -5px;
 		}
 	}
+	// Help icon rendered inside the switch label (printSwitchButton tooltip_link): same gap as the icons placed after the switch.
+	switch label i.documentation {
+		margin-left: 8px;
+	}
   }
 
   section#tab-webp

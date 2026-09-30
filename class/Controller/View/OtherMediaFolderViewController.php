@@ -153,7 +153,7 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
      $removeAction = array('remove' => array(
         'function' => 'window.ShortPixelProcessor.screen.StopMonitoringFolder(' . intval($item->get('id')) . ')',
         'type' => 'js',
-        'text' => __('Stop Monitoring', 'shortpixel-image-optimiser'),
+        'text' => __('Remove folder', 'shortpixel-image-optimiser'),
         'display' => 'inline',
      ));
 

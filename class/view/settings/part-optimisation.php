@@ -20,11 +20,11 @@ if (! defined('ABSPATH')) {
   ?>
     <div class='compression-notice warning'>
       <p><?php
-          _e('Trusted file mode is active. This means that ShortPixel will depend on the metadata and not check the fileystem while loading the UI. Information may be incorrect and error may occur during optimization ', 'shortpixel-image-optimiser');
+          _e('Trusted file mode is active. This means that ShortPixel will depend on the metadata and not check the filesystem while loading the UI. Information may be incorrect and errors may occur during optimization.', 'shortpixel-image-optimiser');
           ?></p>
       <?php if (true === \ShortPixel\Pantheon::IsActive()) {
         echo '<p>';
-        _e('(You are on Pantheon. This setting was automatically activated)', 'shortpixel-image-optimser');
+        _e('(You are on Pantheon. This setting was automatically activated)', 'shortpixel-image-optimiser');
         echo '</p>';
       }
       ?>
@@ -62,7 +62,7 @@ if (! defined('ABSPATH')) {
 
           <info>
             <p class="settings-info shortpixel-radio-info shortpixel-radio-lossy" <?php echo ($view->data->compressionType == 1 ? "" : 'style="display:none"'); ?>>
-              <?php printf(esc_html__('%sLossy SmartCompression (recommended): %s offers the best compression rate.  This option is recommended for most users, as it produces results that appear identical to the original to the human eye.', 'shortpixel-image-optimiser'), '<b>', '</b>'); ?>
+              <?php printf(esc_html__('%sLossy SmartCompression (recommended): %s offers the best compression rate. This option is recommended for most users, as it produces results that appear identical to the original to the human eye.', 'shortpixel-image-optimiser'), '<b>', '</b>'); ?>
             </p>
             <p class="settings-info shortpixel-radio-info shortpixel-radio-glossy" <?php echo ($view->data->compressionType == 2 ? "" : 'style="display:none"'); ?>>
               <?php printf(esc_html__('%sGlossy SmartCompression: %s creates images that are nearly pixel-perfect replicas of the originals. It is the best option for photographers and other professionals who use high-quality images on their sites and want optimal compression without compromising quality.', 'shortpixel-image-optimiser'), '<b>', '</b>'); ?>
@@ -208,7 +208,7 @@ if (! defined('ABSPATH')) {
             ?>
             <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/how-to-optimize-your-nextgen-galleries-with-shortpixel-image-optimizer/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings"></i>
             <name>
-              <?php esc_html_e('Enable this option to optimize automatically the NextGen galleries.', 'shortpixel-image-optimiser'); ?>
+              <?php esc_html_e('Enable this option to automatically optimize your NextGEN Gallery images.', 'shortpixel-image-optimiser'); ?>
             </name>
           </content>
         </setting>
@@ -245,7 +245,7 @@ if (! defined('ABSPATH')) {
 
           <warning class='is-visible'>
             <message>
-              <?php esc_html_e('You need PHP GD with support for JPEG and PNG files for this feature. Please ask your hosting 	provider to install it.', 'shortpixel-image-optimiser');  ?>
+              <?php esc_html_e('You need PHP GD with support for JPEG and PNG files for this feature. Please ask your hosting provider to install it.', 'shortpixel-image-optimiser');  ?>
             </message>
           </warning>
         <?php endif; ?>
@@ -314,7 +314,7 @@ if (! defined('ABSPATH')) {
         </switch>
         <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/spai-remove-exif/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings"></i>
         <name>
-          <?php esc_html_e('Remove the EXIF data of the images (recommended).', 'shortpixel-image-optimiser'); ?>
+          <?php esc_html_e('Remove the EXIF data (camera details, location) from the images (recommended).', 'shortpixel-image-optimiser'); ?>
         </name>
       </content>
       <warning class="exif-warning">

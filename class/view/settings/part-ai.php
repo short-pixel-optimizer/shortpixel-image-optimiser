@@ -32,11 +32,11 @@ if (! defined('ABSPATH')) {
         ?>
 
         <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings#0-toc-title"></i>
-        <name>
+        <info>
 
-          <?php esc_html_e('Show AI image SEO options throughout ShortPixel Image Optimizer. The generated ALT tag is also very useful for accessibility.', 'shortpixel-image-optimiser'); ?>
+          <?php esc_html_e('Turn on AI-generated alt text, captions, descriptions, titles and filenames throughout ShortPixel Image Optimizer. Alt text also makes your images accessible to screen readers.', 'shortpixel-image-optimiser'); ?>
 
-        </name>
+        </info>
       </content>
     </setting>
 
@@ -53,11 +53,11 @@ if (! defined('ABSPATH')) {
         ?>
 
         <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings#1-toc-title"></i>
-        <name>
+        <info>
 
           <?php esc_html_e('Automatically generate image SEO data with AI after uploading the image, based on the settings below.', 'shortpixel-image-optimiser'); ?>
 
-        </name>
+        </info>
       </content>
     </setting>
 
@@ -68,22 +68,17 @@ if (! defined('ABSPATH')) {
           [
             'name' => 'autoAIBulk',
             'checked' => $view->data->autoAIBulk,
-            'label' => esc_html__('Generate image SEO data during Bulk Processing', 'shortpixel-image-optimiser'),
+            'label' => esc_html__('Generate image SEO data during Bulk','shortpixel-image-optimiser'),
             'tooltip_link' => 'https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings#2-toc-title',
           ]
         );
         ?>
 
-        <name>
+        <info>
 
-          <?php esc_html_e('When you run Bulk Processing, ShortPixel also generates AI Image SEO for every image it processes: alt text, caption, description and title, plus an SEO-friendly filename if that option is turned on below.', 'shortpixel-image-optimiser'); ?>
+          <?php esc_html_e('Bulk Processing also generates AI Image SEO for each image it processes, using the options below. You can change this on the Bulk Processing page too.', 'shortpixel-image-optimiser'); ?>
 
-        </name>
-        <name>
-
-          <?php esc_html_e('It uses the same options as new uploads. The settings on the right decide whether text that is already there is kept or replaced. You can also change these choices on the Bulk Processing page before starting a run.', 'shortpixel-image-optimiser'); ?>
-
-        </name>
+        </info>
       </content>
     </setting>
 
@@ -101,18 +96,18 @@ if (! defined('ABSPATH')) {
         ?>
         <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings#3-toc-title"></i>
 
-        <name>
+        <info>
 
-          <?php esc_html_e('On: AI only fills empty fields (alt text, caption, description, title) in the Media Library.', 'shortpixel-image-optimiser'); ?><br>
-          <?php esc_html_e('Off: AI replaces what is already there.', 'shortpixel-image-optimiser'); ?><br>
-          <?php esc_html_e('Filenames are handled by the filename setting below.', 'shortpixel-image-optimiser'); ?>
+          <?php esc_html_e('On: AI fills only empty fields.', 'shortpixel-image-optimiser'); ?><br>
+          <?php esc_html_e('Off: AI replaces existing text.', 'shortpixel-image-optimiser'); ?><br>
+          <?php esc_html_e('Filenames follow the filename setting below.', 'shortpixel-image-optimiser'); ?>
 
-        </name>
+        </info>
       </content>
 
       <content>
         <name><?php esc_html_e('Alt text in existing posts and pages', 'shortpixel-image-optimiser'); ?></name>
-        <info><?php esc_html_e('Images already placed in posts keep their own copy of the alt text. Choose whether AI updates that copy too. Only the alt text is changed in posts; captions, descriptions and titles are saved in the Media Library.', 'shortpixel-image-optimiser'); ?></info>
+        <info><?php esc_html_e('Images already placed in posts keep their own copy of the alt text. Choose whether AI updates that copy too.', 'shortpixel-image-optimiser'); ?></info>
         <select name="ai_content_replace">
           <option value="none" <?php selected($view->data->ai_content_replace, 'none'); ?>><?php esc_html_e("Don't change posts and pages", 'shortpixel-image-optimiser'); ?></option>
           <option value="missing" <?php selected($view->data->ai_content_replace, 'missing'); ?>><?php esc_html_e("Add alt text only where it's missing (recommended)", 'shortpixel-image-optimiser'); ?></option>
@@ -124,9 +119,9 @@ if (! defined('ABSPATH')) {
 
     </gridbox>
 
-    <hr>
+    <hr class='toggleTarget autoAiOptions'>
 
-    <setting class='textarea'>
+    <setting class='textarea toggleTarget autoAiOptions'>
       <content>
         <name><?php _e('General site context', 'shortpixel-image-optimiser'); ?></name>
         <info><?php _e('This is a general context that will be passed to the AI model to provide more relevant data for your website.', 'shortpixel-image-optimiser'); ?></info>
@@ -137,7 +132,7 @@ if (! defined('ABSPATH')) {
 
   </settinglist>
 
-  <settinglist class="generate_ai_items">
+  <settinglist class="generate_ai_items toggleTarget autoAiOptions">
 
     <gridbox class="width_half">
 
@@ -325,11 +320,11 @@ if (! defined('ABSPATH')) {
             ]
           );
           ?>
-          <?php echo UiHelper::getIcon('res/images/icon/new.svg'); ?>
           <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings#5-toc-title"></i>
-          <name>
+          <?php echo UiHelper::getIcon('res/images/icon/new.svg'); ?>
+          <info>
             <?php esc_html_e('An SEO-friendly filename is generated only for newly uploaded images, or for images that are not used in any posts or pages, including content made with well-known page builders. If an image was added in other ways, its links will stop working after the rename, just like links to it from other websites.', 'shortpixel-image-optimiser'); ?>
-          </name>
+          </info>
         </content>
 
         <content class='nextline ai_gen_filename is-advanced'>
@@ -373,7 +368,7 @@ if (! defined('ABSPATH')) {
     </gridbox>
   </settinglist>
 
-  <hr>
+  <hr class='toggleTarget autoAiOptions'>
 
   <!-- will add this later
     <setting class='switch'>
@@ -393,24 +388,23 @@ if (! defined('ABSPATH')) {
     </setting>
   -->
   <gridbox class="width_half step-highlight-2">
-    <setting class='switch'>
+    <setting class='switch toggleTarget autoAiOptions'>
       <content>
         <?php $this->printSwitchButton(
           [
             'name' => 'ai_use_post',
             'checked' => $view->data->ai_use_post,
-            'label' => esc_html__('Use parent Post / Page title for image SEO data', 'shortpixel-image-optimiser')
+            'label' => esc_html__('Use the post/page title for image SEO','shortpixel-image-optimiser'),
+            'tooltip_link' => 'https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings#6-toc-title',
           ]
         );
         ?>
-
-        <i class='documentation right dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/ai-image-seo-settings-explained/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings#6-toc-title"></i>
 
         <info><?php _e('When this is enabled, the title of the image\'s parent post or page will be sent to the AI model for more accurate image SEO results.', 'shortpixel-image-optimiser'); ?></info>
       </content>
     </setting>
 
-  <setting>
+  <setting class='toggleTarget autoAiOptions'>
     <content>
       <name><?php _e('Language', 'shortpixel-image-optimiser'); ?>
         <?php
@@ -429,7 +423,7 @@ if (! defined('ABSPATH')) {
   </gridbox>
   </settinglist>
 
-  <settingslist class='preview_wrapper'>
+  <settingslist class='preview_wrapper toggleTarget autoAiOptions'>
     <input type="hidden" name="ai_preview_image_id" value="" />
     <div class='ai_preview'>
       <gridbox class='width_half'>

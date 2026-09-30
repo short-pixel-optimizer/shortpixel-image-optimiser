@@ -65,7 +65,7 @@ $settings = \wpSPIO()->settings();
     <div class='bulk-summary' data-check-visibility data-control="data-check-media-total">
       <div class='heading'>
         <span><i class='dashicons dashicons-format-image'>&nbsp;</i> <?php esc_html_e('Media Library' ,'shortpixel-image-optimiser'); ?>
-              <?php printf(esc_html__('( %s items )', 'shortpixel-image-optimiser'), '<i data-stats-media="total">--</i>'); ?>
+              <?php printf(esc_html__('(items: %s)', 'shortpixel-image-optimiser'), '<i data-stats-media="total">--</i>'); ?>
         <?php if (false !== $this->view->customOperationMedia) {
             echo "</br><span class='special-op'>" . $this->view->customOperationMedia . "</span>";
          } ?>

@@ -25,7 +25,7 @@ $approx = $this->view->approx;
              <span><img src="<?php echo esc_url(\wpSPIO()->plugin_url('res/img/bulk/loading-hourglass.svg')); ?>" /></span>
              <span>
              <p><?php esc_html_e('Please wait, ShortPixel is checking the images to be processed...','shortpixel-image-optimiser'); ?><br>
-               <span class="number" data-stats-total="total">x</span> <?php esc_html_e('items found', 'shortpixel-image-optimiser'); ?></p>
+               <?php esc_html_e('Items found:', 'shortpixel-image-optimiser'); ?> <span class="number" data-stats-total="total">x</span></p>
            </span>
          </div>
 
@@ -36,7 +36,7 @@ $approx = $this->view->approx;
 
 					 </span>
 					 <span>
-	 						 <p><?php _e("Clicking this button will start optimization of the items added to the queue. The remaining items can be processed in a new bulk. After completion, you can start bulk and the system will continue with the unprocessed images.",'shortpixel-image-optimiser'); ?></p>
+	 						 <p><?php _e("Clicking this button will start optimization of the items added to the queue. The remaining items can be processed in a new bulk. After completion, you can start a new bulk and the system will continue with the unprocessed images.",'shortpixel-image-optimiser'); ?></p>
 						</span>
 					</nav>
 				</div>
@@ -95,13 +95,13 @@ $approx = $this->view->approx;
 								<div class="the_switch">&nbsp; </div>
 							</label>
 						</div>
-						<h4><label for="thumbnails_checkbox"><?php esc_html_e('Process Image Thumbnails','shortpixel-image-optimiser'); ?></label></h4>
+						<h4><label for="thumbnails_checkbox"><?php esc_html_e('Optimize thumbnails','shortpixel-image-optimiser'); ?></label></h4>
 						<div class='option'>
 							<label><?php esc_html_e('Thumbnails (estimate)','shortpixel-image-optimiser'); ?></label>
 							 <span class="number" ><?php echo esc_html($approx->media->total) ?> </span>
 						</div>
 
-						<p><?php esc_html_e('It is recommended to process the WordPress thumbnails. These are the small images that are most often used in posts and pages.This option changes the global ShortPixel settings of your site.','shortpixel-image-optimiser'); ?></p>
+						<p><?php esc_html_e('It is recommended to process the WordPress thumbnails. These are the small images that are most often used in posts and pages. This option changes the global ShortPixel settings of your site.','shortpixel-image-optimiser'); ?></p>
 
 					</div>
 				<?php endif; ?>
@@ -122,7 +122,7 @@ $approx = $this->view->approx;
 
 				</div>	
 
-				<div class='switch_button indent'>
+				<div class='switch_button indent' id='ai_bulk_options'>
 				<label>
 		               <input type="checkbox" class="switch" id="aipreserve_checkbox" name="aipreserve_checkbox"
 		                <?php checked(\wpSPIO()->settings()->aiPreserve); ?>  />
@@ -131,8 +131,8 @@ $approx = $this->view->approx;
 				 <h4><label for="aipreserve_checkbox">
 					<?php esc_html_e('Keep existing image SEO data', 'shortpixel-image-optimiser'); ?>
 				 </label></h4>
-				 <p><?php esc_html_e('On: AI only fills empty fields (alt text, caption, description, title).', 'shortpixel-image-optimiser'); ?><br>
-				 <?php esc_html_e('Off: AI replaces what is already there.', 'shortpixel-image-optimiser'); ?><br>
+				 <p><?php esc_html_e('On: AI fills only empty fields.', 'shortpixel-image-optimiser'); ?><br>
+				 <?php esc_html_e('Off: AI replaces existing text.', 'shortpixel-image-optimiser'); ?><br>
 				 <?php esc_html_e('Filenames are not affected by this option.', 'shortpixel-image-optimiser'); ?></p>
 
 				 <div class='ai_content_replace_inline'>
@@ -143,9 +143,8 @@ $approx = $this->view->approx;
 						<option value="overwrite" <?php selected(\wpSPIO()->settings()->ai_content_replace, 'overwrite'); ?>><?php esc_html_e('Replace existing alt text', 'shortpixel-image-optimiser'); ?></option>
 					</select>
 				 </div>
-				 <p><?php esc_html_e('These AI options change the global ShortPixel settings of your site.', 'shortpixel-image-optimiser'); ?></p>
-
 				</div>	
+				<p><?php esc_html_e('These AI options change the global ShortPixel settings of your site.', 'shortpixel-image-optimiser'); ?></p>
 
 			 </div>
 
@@ -190,7 +189,7 @@ $approx = $this->view->approx;
 
 				<label for="advanced-settings" class='advanced-label'>     
 					<span class='collap-arrow'><?php echo UIHelper::getIcon('res/images/icon/chevron.svg'); ?></span> 
-					<span class='title'><?php esc_html_e('Advanced Settings', 'shortpixel_image_optimizer'); ?></span>
+					<span class='title'><?php esc_html_e('Advanced Settings', 'shortpixel-image-optimiser'); ?></span>
 					<hr>
 				</label>
 
@@ -261,7 +260,7 @@ $approx = $this->view->approx;
          </div>
          <div class='option warning
          <?php echo (\wpSPIO()->settings()->doBackgroundProcess) ? '' : 'hidden' ?>'>
-         <p><?php _e('I understand that background optimization may pause if there are no visitors on the website.', 'shortpixel-image-optimiser'); ?></p></div>
+         <p><?php _e('Background optimization may pause when your website has no visitors.', 'shortpixel-image-optimiser'); ?></p></div>
 
        </div>
 

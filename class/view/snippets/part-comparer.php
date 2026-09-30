@@ -26,17 +26,17 @@ if ( ! defined( 'ABSPATH' ) ) {
     <div id="spUploadCompareSideBySide" class="shortpixel-modal shortpixel-hide">
       <div class="sp-modal-title">
         <button type="button" class="sp-close-button">&times;</button>
-        Compare Images
+        <?php esc_html_e('Compare Images', 'shortpixel-image-optimiser'); ?>
       </div>
       <div class="sp-modal-body" style="height:400px;padding:0;">
         <div class="shortpixel-slider" style="text-align: center;">
             <div class="side-by-side"  style="text-align: center; display:inline-block;">
                 <img class="spUploadCompareOriginal" style="margin: 10px"/><br>
-                Original
+                <?php esc_html_e('Original', 'shortpixel-image-optimiser'); ?>
             </div>
             <div class="side-by-side" style="text-align: center; display:inline-block;">
                 <img class="spUploadCompareOptimized" style="margin: 10px"/><br>
-                Optimized
+                <?php esc_html_e('Optimized', 'shortpixel-image-optimiser'); ?>
             </div>
         </div>
       </div>

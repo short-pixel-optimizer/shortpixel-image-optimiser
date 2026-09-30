@@ -251,17 +251,18 @@ class EditMediaViewController extends \ShortPixel\ViewController
             $from = $imageObj->getMeta('originalWidth') . 'x' . $imageObj->getMeta('originalHeight');
             $to  = $imageObj->getMeta('resizeWidth') . 'x' . $imageObj->getMeta('resizeHeight');
 						$type = ($imageObj->getMeta('resizeType') !== null) ? '(' . $imageObj->getMeta('resizeType') . ')' : '';
-            $stats[] = array(sprintf(__('Resized %s %s to %s'), $type, $from, $to), '');
+            // %1$s = resize type in brackets, or empty; trim() drops the gap when it is empty.
+            $stats[] = array(trim(preg_replace('/\s+/', ' ', sprintf(__('Resized %1$s %2$s to %3$s', 'shortpixel-image-optimiser'), $type, $from, $to))), '');
         }
 
         $tsOptimized = $imageObj->getMeta('tsOptimized');
         if ($tsOptimized !== null)
-          $stats[] = array(__("Optimized on :", 'shortpixel-image-optimiser') . "<br /> ", UiHelper::formatTS($tsOptimized) );
+          $stats[] = array(__("Optimized on:", 'shortpixel-image-optimiser') . "<br /> ", UiHelper::formatTS($tsOptimized) );
 
 				if ($imageObj->isOptimized())
 				{
-					$stats[] = array( sprintf(__('%s %s Read more about theses stats %s ', 'shortpixel-image-optimiser'), '
-					<p><img alt=' . esc_html('Info Icon', 'shortpixel-image-optimiser')  . ' src=' . esc_url( wpSPIO()->plugin_url('res/img/info-icon.png' )) . ' style="margin-bottom: -4px;"/>', '<a href="https://shortpixel.com/knowledge-base/article/the-stats-from-the-shortpixel-column-in-the-media-library-explained/?utm_source=plugin&utm_medium=spio&utm_campaign=plugin_media_library" target="_blank">', '</a></p>'), '');
+					$stats[] = array( sprintf(__('%s %s Read more about these stats %s', 'shortpixel-image-optimiser'), '
+					<p><img alt="' . esc_attr__('Info', 'shortpixel-image-optimiser') . '" src="' . esc_url( wpSPIO()->plugin_url('res/img/info-icon.png' )) . '" style="margin-bottom: -4px;"/>', '<a href="https://shortpixel.com/knowledge-base/article/the-stats-from-the-shortpixel-column-in-the-media-library-explained/?utm_source=plugin&utm_medium=spio&utm_campaign=plugin_media_library" target="_blank">', '</a></p>'), '');
 				}
 
         return $stats;
@@ -435,7 +436,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
             $debugInfo[] = array(__('Backup Folder'), (string) $backupFile->getFileDir() );
 						if ($backupModel->hasBackup($imageObj))
             {
-							$backupText = __('Backup File :');
+							$backupText = __('Backup File:');
               $debugInfo[] = array( $backupText, (string) $backupFile . '(' . UiHelper::formatBytes($backupFile->getFileSize()) . ')' );
 
               $debugInfo[] = ['Main Backup:', (string) $backupModel->getMainBackupFile()];
@@ -504,7 +505,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 							if ($backupModel->hasBackup($thumbObj) && is_object($backupFile))
 							{
 								$backup = $backupFile->getFullPath();
-								$backupText = __('Backup File :');
+								$backupText = __('Backup File:');
 							}
 							else {
 								$backupFile = $fs->getFile($fs->getBackupDirectory($thumbObj) . $backupModel->getBackupFileName($thumbObj));

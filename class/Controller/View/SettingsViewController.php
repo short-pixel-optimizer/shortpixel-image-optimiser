@@ -260,7 +260,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 
 	        $newKeyResponse = wp_remote_post("https://shortpixel.com/free-sign-up-plugin", $params);
 
-					$errorText = __("There was problem requesting a new code. Server response: ", 'shortpixel-image-optimiser');
+					$errorText = __("There was a problem requesting a new code. Server response: ", 'shortpixel-image-optimiser');
 
 	        if ( is_object($newKeyResponse) && get_class($newKeyResponse) == 'WP_Error' ) {
 	            //die(json_encode((object)array('Status' => 'fail', 'Details' => '503')));
@@ -850,7 +850,7 @@ class SettingsViewController extends \ShortPixel\ViewController
            $date = $latest['date'];
         }
 
-        $message = (count($logs) == 0) ? esc_html__('No bulk processing has been performed yet', 'shortpixel-image-optimiser') : sprintf(__('The last bulk processing ran on:  %s','shortpixel-image-optimiser'), $date );
+        $message = (count($logs) == 0) ? esc_html__('No bulk processing has been performed yet', 'shortpixel-image-optimiser') : sprintf(__('The last bulk processing ran on: %s','shortpixel-image-optimiser'), $date );
 
         $bulkblock = new \stdClass;
         $bulkblock->icon = 'ok';
@@ -1194,7 +1194,7 @@ class SettingsViewController extends \ShortPixel\ViewController
                     'old_value' => $post_CDNDomain, 
                     'new_value' => $check, 
                     'hook_query' => 'info.useCDN', 
-                    'message' => sprintf(__('CDN Domain has been changed from %s to %s . SPIO needs a path component', 'shortpixel-image-optimiser'), $post_CDNDomain, $check),
+                    'message' => sprintf(__('CDN Domain has been changed from %s to %s. SPIO needs a path component', 'shortpixel-image-optimiser'), $post_CDNDomain, $check),
                  ]);
                  $post['CDNDomain'] = $check;
               }
@@ -1391,7 +1391,7 @@ class SettingsViewController extends \ShortPixel\ViewController
              }
              catch (\Exception $e)
              {
-               Notice::addWarning(sprintf(__('Date format %s return an error %s . Accepted are formats that are valid for PHP dateFormat', 'shortpixel-image-optimiser'), 
+               Notice::addWarning(sprintf(__('Date format %s returns an error %s. Accepted are formats that are valid for PHP dateFormat', 'shortpixel-image-optimiser'), 
                  $pattern, $e->getMessage()
              ));
              }

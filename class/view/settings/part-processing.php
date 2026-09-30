@@ -60,7 +60,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     </content>
     <warning class="background_warning">
         <message>
-        <?php _e('I understand that background optimization may pause if there are no visitors on the website.', 'shortpixel-image-optimiser'); ?>
+        <?php _e('Background optimization may pause when your website has no visitors.', 'shortpixel-image-optimiser'); ?>
       </message>
     </warning>
   </setting>
@@ -141,6 +141,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         </name>
         <?php
           $removeperiods = [
+            ''       => __('Never', 'shortpixel-image-optimiser'), // nothing selected yet: no backups are removed
             'month'  =>  __('1 month', 'shortpixel-image-optimiser'), 
             '3month' => __('3 months', 'shortpixel-image-optimiser'),
             '6month' => __('6 months', 'shortpixel-image-optimiser'), 

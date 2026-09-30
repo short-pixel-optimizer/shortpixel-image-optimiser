@@ -21,8 +21,8 @@ if ( ! defined( 'ABSPATH' ) ) {
   <setting>
       <content>
         <?php if (! defined('SHORTPIXEL_HTTP_AUTH_USER')): ?>
-        <inputlabel>User</inputlabel> <input name="siteAuthUser" type="text" id="siteAuthUser" value="<?php echo( esc_html(wp_unslash($view->data->siteAuthUser )));?>" class="regular-text" placeholder="<?php esc_html_e('User','shortpixel-image-optimiser');?>" style="margin-bottom: 8px"><br>
-        <inputlabel>Password</inputlabel> <input name="siteAuthPass" type="password" id="siteAuthPass" value="<?php echo( esc_html(wp_unslash($view->data->siteAuthPass )));?>" class="regular-text" placeholder="<?php esc_html_e('Password','shortpixel-image-optimiser');?>" style="margin-bottom: 8px">
+        <inputlabel><?php esc_html_e('User', 'shortpixel-image-optimiser'); ?></inputlabel> <input name="siteAuthUser" type="text" id="siteAuthUser" value="<?php echo( esc_html(wp_unslash($view->data->siteAuthUser )));?>" class="regular-text" placeholder="<?php esc_html_e('User','shortpixel-image-optimiser');?>" style="margin-bottom: 8px"><br>
+        <inputlabel><?php esc_html_e('Password', 'shortpixel-image-optimiser'); ?></inputlabel> <input name="siteAuthPass" type="password" id="siteAuthPass" value="<?php echo( esc_html(wp_unslash($view->data->siteAuthPass )));?>" class="regular-text" placeholder="<?php esc_html_e('Password','shortpixel-image-optimiser');?>" style="margin-bottom: 8px">
         <info>
             <?php printf(esc_html__('Only fill in these fields if your website\'s front end is not publicly accessible and requires a username and password for visitors to connect.
                       If you\'re unsure, simply %sleave these fields empty%s. Please note that the CDN delivery method will not work if your site is protected by HTTP AUTH.','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
@@ -53,7 +53,7 @@ if(! $this->is_curl_installed) {
 <settinglist>
    <setting>
       <content>
-      <inputlabel>Zone ID  </inputlabel> <input name="cloudflareZoneID" type="text" id="cloudflare-zone-id" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>
+      <inputlabel><?php esc_html_e('Zone ID', 'shortpixel-image-optimiser'); ?></inputlabel> <input name="cloudflareZoneID" type="text" id="cloudflare-zone-id" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>
                value="<?php echo( esc_attr(wp_unslash($view->data->cloudflareZoneID))); ?>"
                class="regular-text">
         <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/cloudlfare/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings"></i>
@@ -62,7 +62,7 @@ if(! $this->is_curl_installed) {
             <?php esc_html_e('You can find this in your Cloudflare account in the "Overview" section for your domain.','shortpixel-image-optimiser');?>
         </info>
 
-        <inputlabel>Token</inputlabel> <input name="cloudflareToken" type="text"  id="cloudflare-token" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>  value="<?php echo esc_attr($view->data->cloudflareToken) ?>" class='regular-text' autocomplete="off">
+        <inputlabel><?php esc_html_e('Token', 'shortpixel-image-optimiser'); ?></inputlabel> <input name="cloudflareToken" type="text"  id="cloudflare-token" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>  value="<?php echo esc_attr($view->data->cloudflareToken) ?>" class='regular-text' autocomplete="off">
         <info>
             <?php printf(esc_html__('Enter your %s site token %s for authentication. This token must have %s Cache Purge permission %s! ', 'shortpixel-image-optimiser'), '<a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/using-shortpixel-image-optimizer-with-cloudflare-api-token/?utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings" target="_blank">', '</a>'); ?>
         <a href="https://shortpixel.com/knowledge-base/article/using-shortpixel-image-optimizer-with-cloudflare-api-token/?utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings" target="_blank" class="shortpixel-help-link">

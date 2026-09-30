@@ -233,11 +233,14 @@ if ( ! defined( 'ABSPATH' ) ) {
                          <div>
                            <label><?php _e('Type:', 'shortpixel-image-optimiser'); ?></label>
                             <select name="exclusion-type" class='new-exclusion-type'>
-                               <option value='name'><?php _e('Image Name', 'shortpixel-image-optimiser'); ?></option>
-                               <option value='path' data-example="/path/"><?php _e('Image Path', 'shortpixel-image-optimiser'); ?></option>
-                               <option value='size' data-example="widthXheight-widthXheight"><?php _e('Image Size', 'shortpixel-image-optimiser'); ?></option>
-                               <option value='filesize' data-example="500KB / 1MB"><?php _e('Image Filesize', 'shortpixel-image-optimiser'); ?></option>
-                               <option value='date' data-example="YYYY-MM-DD"><?php _e('Date', 'shortpixel-image-optimiser') ?></option> 
+                               <?php
+                               // Same labels as the saved-exclusions list (UiHelper::getSettingsStrings()).
+                               $typeExamples = ['path' => '/path/', 'size' => 'widthXheight-widthXheight', 'filesize' => '500KB / 1MB', 'date' => 'YYYY-MM-DD'];
+                               foreach (UiHelper::getSettingsStrings('exclusion_types') as $typeValue => $typeLabel) {
+                                   $example = isset($typeExamples[$typeValue]) ? ' data-example="' . esc_attr($typeExamples[$typeValue]) . '"' : '';
+                                   printf("<option value='%s'%s>%s</option>", esc_attr($typeValue), $example, esc_html($typeLabel));
+                               }
+                               ?>
                            </select>
                          </div>
 
@@ -298,8 +301,8 @@ if ( ! defined( 'ABSPATH' ) ) {
                             <option value="M"><?php _e('Megabytes (MB)', 'shortpixel-image-optimiser'); ?></option>
                           </select>
                           <select name='exclusion-filesize-operator'>
-                              <option value='<'><?php _e('Exclude smaller than given filesize', 'shortpixel-image-optimiser'); ?></option>
-                              <option value='>' selected><?php _e('Exclude higher than given filesize', 'shortpixel-image-optimiser'); ?></option>
+                              <option value='<'><?php _e('Exclude files smaller than the given file size', 'shortpixel-image-optimiser'); ?></option>
+                              <option value='>' selected><?php _e('Exclude files larger than the given file size', 'shortpixel-image-optimiser'); ?></option>
                           </select>
 
                         </div>
@@ -307,12 +310,12 @@ if ( ! defined( 'ABSPATH' ) ) {
                          <div class='applyto-option' >
                            <label><?php _e('Apply To:', 'shortpixel-image-optimiser'); ?></label>
                            <select name='apply-select' class='thumbnail-type-option'>
-                               <option value='all'><?php _e('All Images', 'shortpixel-image-optimiser'); ?></option>
-                               <option value='only-thumbs'><?php _e('Only Thumbnails','shortpixel-image-optimiser'); ?>
-                               </option>
-                               <option value='only-custom'><?php _e('Only Custom Media images', 'shortpixel-image-optimiser'); ?>
-                               </option>
-                               <option value='selected-thumbs'><?php _e('Selected thumbnails', 'shortpixel-image-optimiser'); ?></option>
+                               <?php
+                               // Same labels as the saved-exclusions list (UiHelper::getSettingsStrings()).
+                               foreach (UiHelper::getSettingsStrings('exclusion_apply') as $applyValue => $applyLabel) {
+                                   printf("<option value='%s'>%s</option>", esc_attr($applyValue), esc_html($applyLabel));
+                               }
+                               ?>
                            </select>
                          </div>
 
@@ -377,7 +380,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                          <?php _e('Add new Exclusion', 'shortpixel-image-optimiser'); ?>
                        </button>
 
-             <info class='exclusion-save-reminder hidden'><?php _e('Reminder: Save the settings for the   exclusion changes to take effect!', 'shortpixel-image-optimiser'); ?></info>
+             <info class='exclusion-save-reminder hidden'><?php _e('Reminder: Save the settings for the exclusion changes to take effect!', 'shortpixel-image-optimiser'); ?></info>
      </content>
  </setting>
  <!-- // Exclude patterns -->

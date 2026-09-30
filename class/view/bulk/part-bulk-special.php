@@ -149,14 +149,14 @@ $queueRunning = $bulk->isAnyBulkRunning();
 
 <section class='panel bulk-redoAiReplacement' data-panel="bulk-redoAiReplacement">
 	<h3 class='heading'>
-		<?php esc_html_e("Bulk Redo Ai Replacement", 'shortpixel-image-optimiser'); ?>
+		<?php esc_html_e("Bulk Redo AI Replacement", 'shortpixel-image-optimiser'); ?>
 	</h3>
 
 	<div class='bulk-special-wrapper'>
 
 		<h4 class='warning'><?php esc_html_e('Warning', 'shortpixel-image-optimiser'); ?></h4>
 
-		<p><?php printf(esc_html__('ShortPixel will redo the AI Replacement according to current settings.  This means it search through all post content and try to replace image tags with AI-generated results if any are available. This is not reversible.', 'shortpixel-image-optimiser'), '<b>', '</b>', '<b>', '</b>'); ?></p>
+		<p><?php printf(esc_html__('ShortPixel will redo the AI Replacement according to current settings. This means it searches through all post content and tries to replace image tags with AI-generated results, if any are available. This is not reversible.', 'shortpixel-image-optimiser'), '<b>', '</b>', '<b>', '</b>'); ?></p>
 
 		<p class='warning optiongroup'><?php esc_html_e('It is strongly advised to create a full backup before starting this process.', 'shortpixel-image-optimiser'); ?></p>
 

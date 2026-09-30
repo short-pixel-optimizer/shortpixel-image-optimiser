@@ -224,7 +224,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 
           if (count($removed) > 0)
           {
-            Notices::addWarning(sprintf(__('Some images were missing. They have been removed from the Custom Media overview : %s %s', 'shortpixel-image-optimiser'),
+            Notices::addWarning(sprintf(__('Some images were missing. They have been removed from the Custom Media overview: %s %s', 'shortpixel-image-optimiser'),
                 '<BR>', implode('<BR>', $removed)));
           }
 

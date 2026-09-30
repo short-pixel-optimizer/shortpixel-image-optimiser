@@ -999,6 +999,9 @@ div.spio-modal-title {
     margin-right: -5px;
   }
 }
+.wrap.is-shortpixel-settings-page section#tab-ai switch label i.documentation {
+  margin-left: 8px;
+}
 .wrap.is-shortpixel-settings-page section#tab-webp img.icon {
   height: 40px;
   margin-bottom: -20px;

@@ -80,10 +80,10 @@ $queueRunning = $bulk->isAnyBulkRunning();
               <?php esc_html_e('Reapply Generated AI DATA','shortpixel-image-optimiser'); ?>
             </name> -->
             <content>
-        				<a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'redoAiReplacement', 'part' => 'tools', 'noheader' => true), $url)); ?>" class="button"><?php esc_html_e('Redo Ai Replacement','shortpixel-image-optimiser'); ?></a>
+        				<a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'redoAiReplacement', 'part' => 'tools', 'noheader' => true), $url)); ?>" class="button"><?php esc_html_e('Redo AI Replacement','shortpixel-image-optimiser'); ?></a>
 
                 <info>
-                  <?php printf(esc_html__('Will run through all content and see if any already generated Ai Data was missed with current settings and try to reapply','shortpixel-image-optimiser') , '<br>', '<b>','</b>'); ?>
+                  <?php printf(esc_html__('Writes the AI alt text you already have into posts and pages, following the "Alt text in existing posts and pages" setting.','shortpixel-image-optimiser') , '<br>', '<b>','</b>'); ?>
                 </info>
             </content>
         </setting>
@@ -142,12 +142,12 @@ $queueRunning = $bulk->isAnyBulkRunning();
       <setting>
         <name><?php _e('Import settings', 'shortpixel-image-optimiser'); ?></name>
         <content>
-            <info><?php _e('Import settings will change all submitted settings', 'shortpixel-image-optimiser'); ?></info>
+            <info><?php _e('Settings in the pasted JSON replace your current values. Settings that are not in the JSON stay as they are.', 'shortpixel-image-optimiser'); ?></info>
             <textarea name="import-settings" id='spio-tools-import' class='import-textarea' placeholder="<?php _e('Paste settings JSON', 'shortpixel-image-optimiser'); ?>">&nbsp;</textarea>
             <br>
             <button setting-action="ImportSettingsEvent"><?php _e('Import', 'shortpixel-image-optimiser'); ?></button>
         </content>
-        <warning><message>This will remove all current settings!</message></warning>
+        <warning><message><?php esc_html_e('This will overwrite the settings included in the pasted JSON.', 'shortpixel-image-optimiser'); ?></message></warning>
       
       </setting>
     </settinglist>
@@ -200,7 +200,7 @@ $queueRunning = $bulk->isAnyBulkRunning();
             &nbsp;
         </name> -->
         <content>
-						<a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'removeLegacy', 'noheader' => true), $url)); ?>" class="button danger"><?php esc_html_e('Remove Legacy Data', 'shortpixel-image-optimser'); ?></a>
+						<a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'removeLegacy', 'noheader' => true), $url)); ?>" class="button danger"><?php esc_html_e('Remove Legacy Data', 'shortpixel-image-optimiser'); ?></a>
 
           <info>
             <?php printf(esc_html__('%sRemoves Legacy Data%s (the old format for storing image optimization information in the database, which was used before version 5). This may result in data loss. It is not recommended to do this manually.', 'shortpixel-image-optimiser'), '<b>','</b>'); ?>
