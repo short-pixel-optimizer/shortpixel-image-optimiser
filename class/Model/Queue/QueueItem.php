@@ -383,34 +383,6 @@ class QueueItem
     */
    public function addResult($data = [])
    {
-      // Should list every possible item, arrayfilter out.
-/*      $validation = [
-         'apiStatus', 
-         'message',
-         'is_error',
-         'is_done',
-         'file',  // should probably be merged these two.
-         'files',
-         'fileStatus',
-         'filename', // @todo figure out why this is here.
-         'error',  // might in time better be called error_code or so
-         'new_attach_id', // new attach id for background remove.
-         'success', // new
-         'improvements',
-         'original',
-         'optimized',
-         'redirect', // Redirection for background remove etc 
-         'queueType', // OptimizeController but (?) usage
-         'kblink',
-         'data', // Is returnDataList returned by apiController. (array)
-    //     'retrievedText', // Ai text returning from AIController  //  @todo Can probably be removed on release. 
-         'apiName', // NAme of the handling api, for JS / Response to show different results.
-         'remote_id', 
-         'aiData',   // Returning AI Data
-
-      ];
-*/
-
       foreach ($data as $name => $value) {
          $this->result()->$name = $value;
       }
@@ -643,6 +615,7 @@ class QueueItem
 
       if (isset($args['recent_upload']) && true === $args['recent_upload'])
       {
+         $this->data()->recent_upload = true; 
          $this->data()->addKeepDataArgs(['recent_upload']);
       }
 
@@ -654,6 +627,8 @@ class QueueItem
       if (isset($args['is_duplicate']) && true === $args['is_duplicate'])
       {
          $this->data()->addKeepDataArgs(['is_duplicate']);
+         $this->data()->is_duplicate = true;
+         
       }
 
       $this->data->addCount(['aiCount' => 1]); // @todo Check if this is really a one credito operation.

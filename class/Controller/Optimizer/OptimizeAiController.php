@@ -474,7 +474,7 @@ class OptimizeAiController extends OptimizerBase
             if ($currentFileBase !== $aiData['filebase']) {
                 $args = [
                     'dry_run' => false,
-                    'recent_upload' => $qItem->data()->recent_upload,
+                    'recent_upload' => is_bool($qItem->data()->recent_upload) ? $qItem->data()->recent_upload : false,
                     'url' => $url,
                 ];
 
@@ -861,9 +861,10 @@ class OptimizeAiController extends OptimizerBase
         ];
 
         $args = wp_parse_args($args, $defaults);
-
+Log::addTemp("Monitoring replaceFiles args", $args);
         $imageModel = $qItem->imageModel;
         $item_id = $qItem->item_id;
+
 
         if ($imageModel->is_virtual())
         {
@@ -881,8 +882,13 @@ class OptimizeAiController extends OptimizerBase
             return false; 
         }
 
+        // Get duplicates before moving / copying files to otherwise it might not recognize duplicate files after renaming ( attached_file issue )
+        if (method_exists($imageModel, 'getWPMLDuplicates')) {
+            $duplicates = $imageModel->getWPMLDuplicates();
+        }
+
         // If recent upload is true, bypass the check if the image is used. 
-        if (false === $args['recent_upload']) {
+        if (true !== $args['recent_upload']) {
             $url = $args['url'];
 
             $replacer2 = \ShortPixel\Replacer\Replacer::getInstance();
@@ -895,7 +901,15 @@ class OptimizeAiController extends OptimizerBase
 
             $results = $finder->posts(['post_status' => ['publish'], 'post_fields' => ['ID']]);
             // Check postmeta. This is broader than the attached_file and designed to find pagebuilders and the like.
-            $meta_results = $finder->postmeta(['post_status' => ['publish', 'inherit'], 'post_fields' => ['post_id']]);
+
+            $exclude_post_ids = [$item_id]; 
+            if (isset($duplicates) && is_array($duplicates) && count($duplicates) > 0)
+            {
+                 $exclude_post_ids = array_merge($exclude_post_ids, $duplicates);
+            }
+
+            $meta_results = $finder->postmeta(['post_status' => ['publish', 'inherit'], 'post_fields' => ['post_id'], 'exclude_post_ids' => $exclude_post_ids]);
+
 
             $imagePostCount = count($results) + count($meta_results);
 
@@ -903,6 +917,10 @@ class OptimizeAiController extends OptimizerBase
                 Log::addInfo('AI Replace File: Image is mentioned - ' . $qItem->item_id);
                 return false;
             }
+        }
+        else 
+        {
+            Log::addTemp('Got logged as recent upload', $args);
         }
 
 
@@ -979,11 +997,6 @@ class OptimizeAiController extends OptimizerBase
             }
 
             $targetFileObjs[$key] = $targetFileObj;
-        }
-
-        // Get duplicates before moving / copying files to otherwise it might not recognize duplicate files after renaming ( attached_file issue )
-        if (method_exists($imageModel, 'getWPMLDuplicates')) {
-            $duplicates = $imageModel->getWPMLDuplicates();
         }
 
         $copySource = [];  // Copy now, delete the source files after metadata redo, because some plugins (WPML) can deny deletion otherwise
