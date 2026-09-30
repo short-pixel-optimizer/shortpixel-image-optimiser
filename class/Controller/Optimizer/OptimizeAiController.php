@@ -1044,7 +1044,7 @@ Log::addTemp("Monitoring replaceFiles args", $args);
              return false; 
         }
 
-        if (count($duplicates) > 0) 
+        if (isset($duplicates) && count($duplicates) > 0) 
         {
              $args['duplicates'] = $duplicates; 
         }
@@ -1381,9 +1381,6 @@ Log::addTemp("Monitoring replaceFiles args", $args);
         $name = pathinfo($basename, PATHINFO_FILENAME);
         $new_name_pattern = '/^' . preg_quote($new_file, '/') . '(?:-scaled)?(?:-\\d+x\\d+)?$/';
 
-        if (preg_match($new_name_pattern, $name)) {
-            return $filename;
-        }
 
         $renamed = str_replace($old_file, $new_file, $basename);
         if ($basename !== $filename) {
