@@ -29,7 +29,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<name><?php esc_html_e('CDN Domain', 'shortpixel-image-optimiser'); ?></name>
 	<content>
 			<input type="text" name="CDNDomain" value="<?php echo esc_attr($view->data->CDNDomain) ?>">
-			<i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain/"></i>
+			<i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain/?utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings"></i>
 		</content>
 </setting>
 
@@ -37,7 +37,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<name><?php esc_html_e('CDN Domain', 'shortpixel-image-optimiser'); ?></name>
 		<content>
 				<input type="text" name="CDNDomain" value="<?php echo esc_attr($view->data->CDNDomain) ?>">
-				<i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain/"></i>
+				<i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain/?utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings"></i>
 			</content>
 		<info><php _esc_html_e('Change this only if you want to use your own CDN or if you want to set up your custom domain. ', 'shortpixel-image-optimiser'); ?></info>
 		</setting>
@@ -71,7 +71,7 @@ if(! $this->is_curl_installed) {
 
 <p>
   <?php esc_html_e("If you are using Cloudflare on your site, we recommend that you to fill in the details below. This will allow ShortPixel to work seamlessly with Cloudflare, so that any image optimized/restored by ShortPixel is automatically updated on Cloudflare as well.",'shortpixel-image-optimiser');?>
-  <i class="documentation dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/160-cloudlfare"></i>
+  <i class="documentation dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/cloudlfare/?utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings"></i>
 </p>
 
 <h3><?php esc_html_e('Cloudflare', 'shortpixel-image-optimiser') ?></h3>
@@ -82,7 +82,7 @@ if(! $this->is_curl_installed) {
       <inputlabel>Zone ID  </inputlabel> <input name="cloudflareZoneID" type="text" id="cloudflare-zone-id" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>
                value="<?php echo( esc_attr(wp_unslash($view->data->cloudflareZoneID))); ?>"
                class="regular-text">
-        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/160-cloudlfare"></i>
+        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/cloudlfare/?utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings"></i>
 
         <info>
             <?php esc_html_e('You can find this in your Cloudflare account in the "Overview" section for your domain.','shortpixel-image-optimiser');?>
@@ -90,9 +90,9 @@ if(! $this->is_curl_installed) {
 
         <inputlabel>Token</inputlabel> <input name="cloudflareToken" type="text"  id="cloudflare-token" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>  value="<?php echo esc_attr($view->data->cloudflareToken) ?>" class='regular-text' autocomplete="off">
         <info>
-            <?php printf(esc_html__('Enter your %s site token %s for authentication. This token needs %s Cache Purge permission %s! ', 'shortpixel-image-optimiser'), '<a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/325-using-shortpixel-image-optimizer-with-cloudflare-api-token" target="_blank">', '</a>'); ?>
+            <?php printf(esc_html__('Enter your %s site token %s for authentication. This token needs %s Cache Purge permission %s! ', 'shortpixel-image-optimiser'), '<a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/using-shortpixel-image-optimizer-with-cloudflare-api-token/?utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings" target="_blank">', '</a>'); ?>
         </info>
-        <p><a href="https://shortpixel.com/knowledge-base/article/325-using-shortpixel-image-optimizer-with-cloudflare-api-token" target="_blank" class="shortpixel-help-link">
+        <p><a href="https://shortpixel.com/knowledge-base/article/using-shortpixel-image-optimizer-with-cloudflare-api-token/?utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings" target="_blank" class="shortpixel-help-link">
               <?php esc_html_e('How to set it up','shortpixel-image-optimiser');?>
           </a></p>
      </content>
@@ -106,9 +106,9 @@ if(! $this->is_curl_installed) {
       <content>
         <input name="cloudflareToken" type="text"  id="cloudflare-token" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>  value="<?php echo esc_attr($view->data->cloudflareToken) ?>" class='regular-text' autocomplete="off">
         <info>
-            <?php printf(esc_html__('Enter your %s site token %s for authentication. This token needs %s Cache Purge permission %s! ', 'shortpixel-image-optimiser'), '<a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/325-using-shortpixel-image-optimizer-with-cloudflare-api-token" target="_blank">', '</a>'); ?>
+            <?php printf(esc_html__('Enter your %s site token %s for authentication. This token needs %s Cache Purge permission %s! ', 'shortpixel-image-optimiser'), '<a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/using-shortpixel-image-optimizer-with-cloudflare-api-token/?utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings" target="_blank">', '</a>'); ?>
         </info>
-        <p><a href="https://shortpixel.com/knowledge-base/article/325-using-shortpixel-image-optimizer-with-cloudflare-api-token" target="_blank" class="shortpixel-help-link">
+        <p><a href="https://shortpixel.com/knowledge-base/article/using-shortpixel-image-optimizer-with-cloudflare-api-token/?utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings" target="_blank" class="shortpixel-help-link">
               <?php esc_html_e('How to set it up','shortpixel-image-optimiser');?>
           </a></p>
      </content>

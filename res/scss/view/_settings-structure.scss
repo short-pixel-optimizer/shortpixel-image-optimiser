@@ -211,6 +211,11 @@
 				 setting:nth-child(odd) {
 					 margin-right: 15px;
 				 }
+				 // A setting that spans both columns (e.g. the AI filename card).
+				 setting.full-width {
+					 grid-column: 1 / -1;
+					 margin-right: 0;
+				 }
 
 			 }
 			 &.width_70

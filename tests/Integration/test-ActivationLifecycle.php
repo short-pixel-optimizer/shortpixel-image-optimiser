@@ -98,6 +98,34 @@ class ActivationLifecycleTest extends SPIO_IntegrationTestCase {
 		$this->assertTablesExist( 'after plugin activation' );
 	}
 
+	/**
+	 * "Remove EXIF" is recommended, so a FRESH install (no spio_settings row)
+	 * turns it on (exif = 0). Done at activation, not via the model default.
+	 */
+	public function test_fresh_install_activation_turns_on_remove_exif() {
+		delete_option( 'spio_settings' );
+		$this->resetPluginSingletons();
+		$this->assertFalse( get_option( 'spio_settings', false ), 'Sentinel: no settings stored — a fresh install.' );
+
+		InstallHelper::activatePlugin();
+
+		$this->assertSame( 0, (int) \wpSPIO()->settings()->exif, 'Fresh install: Remove EXIF is on (exif = 0).' );
+	}
+
+	/**
+	 * An EXISTING site that never saved the EXIF setting keeps keeping EXIF:
+	 * unsaved settings fall back to the model default (exif = 1) at read time,
+	 * and activation must not flip it.
+	 */
+	public function test_existing_site_activation_keeps_the_exif_behaviour() {
+		update_option( 'spio_settings', array( 'currentVersion' => '6.5.6' ) ); // no 'exif' key stored
+		$this->resetPluginSingletons();
+
+		InstallHelper::activatePlugin();
+
+		$this->assertSame( 1, (int) \wpSPIO()->settings()->exif, 'Existing site: EXIF is still kept (exif = 1).' );
+	}
+
 	public function test_activation_stamps_current_plugin_version_in_settings() {
 		InstallHelper::activatePlugin();
 

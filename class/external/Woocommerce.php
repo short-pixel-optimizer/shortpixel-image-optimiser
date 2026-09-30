@@ -187,7 +187,7 @@ class Woocommerce
 					$text .= sprintf(
 					'<br><br><strong class="red">%1$s</strong> %2$s',
 					__( 'ShortPixel Image Optimizer Note:', 'shortpixel-image-optimiser' ),
-					__( 'The ShortPixel Image Optimizer plugin is set to automatically optimize images on upload. When running the thumbnails tools, each image that is not optimized will be added to the queue. It is recommend to disable this option while running these tools', 'shortpixel-image-optimiser')
+					__( 'The ShortPixel Image Optimizer plugin is set to automatically optimize images on upload. When running the thumbnails tools, each image that is not optimized will be added to the queue. It is recommended to disable this option while running these tools.', 'shortpixel-image-optimiser')
 				);
 				$tools['regenerate_thumbnails']['desc'] = $text;
 			 }

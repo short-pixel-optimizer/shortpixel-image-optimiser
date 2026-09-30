@@ -22,6 +22,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
 			this.LoadPanels();
 			this.LoadActions();
       this.LoadDatePicker(); 
+      this.LoadAiOptionsToggle();
 
 			window.addEventListener('shortpixel.processor.paused', this.TogglePauseNotice.bind(this));
 			window.addEventListener('shortpixel.processor.responseHandled', this.CheckPanelData.bind(this));
@@ -97,6 +98,19 @@ class ShortPixelScreen extends ShortPixelScreenBase
 			}
 
 	}
+
+  // The AI sub-options (keep existing data, alt text in posts) only matter when AI runs during the bulk.
+  LoadAiOptionsToggle()
+  {
+    var checkbox = document.getElementById('autoai_checkbox');
+    var options = document.getElementById('ai_bulk_options');
+    if (null === checkbox || null === options)
+      return;
+
+    var toggle = function () { options.style.display = (checkbox.checked) ? '' : 'none'; };
+    checkbox.addEventListener('change', toggle);
+    toggle();
+  }
 
   LoadPanels()
   {

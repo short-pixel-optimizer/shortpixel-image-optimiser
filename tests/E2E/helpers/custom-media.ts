@@ -14,7 +14,7 @@
  *     dir, unwritable dirs and subfolders of registered folders — a
  *     non-numeric child of uploads (support route custom-folder) passes;
  *   - folder rows `.item.item-<id>` with `.status`/`.files-number` and the
- *     actions "Refresh Folder" (no confirm) / "Stop Monitoring" (native
+ *     actions "Refresh Folder" (no confirm) / "Remove folder" (native
  *     confirm()) / "Show all Files";
  *   - Files tab: rows `.list-overview .item.item-<metaId>`, SPIO column
  *     `#shortpixel-data-<id>` with `a.optimize`, progress in the sibling

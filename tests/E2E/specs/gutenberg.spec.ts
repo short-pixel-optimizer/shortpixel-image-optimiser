@@ -218,3 +218,101 @@ test.describe('Gutenberg AI — pinned', () => {
 		expect(String((await editor.imageBlock(image.id)).url)).not.toBe(oldUrl);
 	});
 });
+
+/**
+ * Beta-tester reports (6.6.0 beta, 2026-09-29) — both live in
+ * UpdateGutenBerg() (res/js/screens/screen-media.js), which pushes the AI
+ * result into the open editor.
+ */
+test.describe('Gutenberg AI — beta reports (pinned)', () => {
+	test.beforeEach(async ({ spio }) => {
+		await spio.reset();
+		await spio.setSettings({ enable_ai: 1, ai_gen_alt: 1, ai_gen_caption: 0, ai_gen_description: 0, ai_gen_post_title: 0, ai_gen_filename: 0, ai_content_replace: 'missing' });
+	});
+
+	/**
+	 * PIN (beta report #1, "saving a post erases the alt for images inside a
+	 * Group or Columns block") — UpdateGutenBerg() walks only the TOP-LEVEL
+	 * blocks (wp.data.select('core/block-editor').getBlocks()), so an image
+	 * nested in a Group/Columns block is never updated in the editor. The
+	 * server wrote the AI alt into post_content, but the editor still holds
+	 * alt="" — and the next Save writes that empty alt back, silently.
+	 *
+	 * Suggested fix: iterate getClientIdsWithDescendants() (or recurse into
+	 * innerBlocks) when looking for the attachment's image blocks.
+	 * FLIP-when-fixed: the nested block shows the AI alt and keeps it on save.
+	 */
+	test('pin: an image inside a Group block never gets the AI alt in the editor, and Save erases it (pinned_for_deferred_fix)', async ({ page, spio }) => {
+		const image = await spio.uploadFixture('fixture-small.jpg');
+		const content =
+			'<!-- wp:group {"layout":{"type":"constrained"}} -->\n<div class="wp-block-group">' +
+			`<!-- wp:image {"id":${image.id},"sizeSlug":"full","linkDestination":"none"} -->\n` +
+			`<figure class="wp-block-image size-full"><img src="${image.url}" alt="" class="wp-image-${image.id}"/></figure>\n` +
+			'<!-- /wp:image --></div>\n<!-- /wp:group -->';
+		const post = await spio.createPost({ content });
+
+		const editor = new BlockEditor(page);
+		await editor.open(post.id);
+		await expectProcessorActive(page);
+		expect((await editor.imageBlockDeep(image.id)).alt, 'precondition: empty alt').toBe('');
+
+		await editor.selectImageBlockDeep(image.id);
+		await editor.requestAlt(image.id);
+
+		// SENTINEL: the server really wrote the AI alt into the saved post.
+		await expect.poll(async () => (await spio.getPost(post.id)).content, { timeout: 90_000 }).toContain('alt="A mock ai alt text."');
+
+		// THE PIN (a): the nested block in the open editor never gets it.
+		await page.waitForTimeout(3_000);
+		expect((await editor.imageBlockDeep(image.id)).alt, 'PIN (beta #1): fixed? The nested image block now shows the AI alt — flip this pin.').toBe('');
+
+		// THE PIN (b): saving from the editor writes the empty alt back.
+		await editor.savePost();
+		await expect.poll(async () => (await spio.getPost(post.id)).content, { timeout: 30_000 }).not.toContain('A mock ai alt text.');
+	});
+
+	/**
+	 * PIN (beta report #2, EBUG-1 follow-up, "no alt text for an image added
+	 * to a post that hasn't been saved yet") — UpdateGutenBerg() only applies
+	 * what handleReplace() actually wrote into the SAVED post
+	 * (replaced_content[post_id]). An unsaved (auto-draft) post has no stored
+	 * content containing the image, so nothing is written and the editor gets
+	 * nothing: the Alternative text stays empty and the post is published
+	 * without alt, although the Media Library alt was generated. 6.5.5 used
+	 * the generated aiData and filled the block.
+	 *
+	 * Suggested fix: when replaced_content has no entry for the open post,
+	 * fall back to resultItem.aiData.alt for image blocks whose alt is still
+	 * empty (the same 'missing' rule, applied client-side).
+	 * FLIP-when-fixed: the block gets the AI alt before the first save.
+	 */
+	test('pin: an image in a never-saved post does not get the AI alt (pinned_for_deferred_fix)', async ({ page, spio }) => {
+		const image = await spio.uploadFixture('fixture-small.jpg');
+
+		await page.goto('/wp-admin/post-new.php');
+		await page.waitForFunction(() => !!(window as any).wp?.data?.select('core/editor')?.getCurrentPostId(), null, { timeout: 60_000 });
+		const editor = new BlockEditor(page);
+		await editor.dismissWelcomeGuide();
+		await expect.poll(() => page.evaluate(() => !!(window as any).ShortPixelProcessor?.screen)).toBe(true);
+		await expectProcessorActive(page);
+
+		// Insert an Image block for the uploaded attachment; do NOT save.
+		await page.evaluate(({ id, url }) => {
+			const wp = (window as any).wp;
+			const block = wp.blocks.createBlock('core/image', { id, url, alt: '', sizeSlug: 'full' });
+			wp.data.dispatch('core/block-editor').insertBlocks(block);
+			wp.data.dispatch('core/block-editor').selectBlock(block.clientId);
+		}, { id: image.id, url: image.url });
+		const status = await page.evaluate(() => (window as any).wp.data.select('core/editor').getEditedPostAttribute('status'));
+		expect(status, 'Sentinel: the post has never been saved').toBe('auto-draft');
+
+		await editor.requestAlt(image.id);
+
+		// SENTINEL: the AI alt was generated for the image (Media Library).
+		await expect.poll(async () => (await spio.attachment(image.id)).alt, { timeout: 90_000 }).toBe('A mock ai alt text.');
+
+		// THE PIN: the block in the unsaved post stays empty.
+		await page.waitForTimeout(3_000);
+		expect((await editor.imageBlockDeep(image.id)).alt, 'PIN (beta #2): fixed? The unsaved post\'s block now gets the AI alt — flip this pin.').toBe('');
+	});
+});

@@ -410,7 +410,7 @@ class ApiKeyModel extends \ShortPixel\Model
      if (! $checked_key)
      {
 			  Log::addError('Key is not validated', $quotaData['Message']);
-        Notice::addError(sprintf(__('Error during verifying API key: %s','shortpixel-image-optimiser'), $quotaData['Message'] ));
+        Notice::addError(sprintf(__('Error while verifying the API key: %s','shortpixel-image-optimiser'), $quotaData['Message'] ));
      }
      elseif ($checked_key) {
         if (false === $this->is_constant())
@@ -442,10 +442,10 @@ class ApiKeyModel extends \ShortPixel\Model
         Notice::addWarning($notice);
     } else {
         if ( function_exists("is_multisite") && is_multisite() && !defined("SHORTPIXEL_API_KEY"))
-            $notice = __("Great, your API Key is valid! <br>You seem to be running a multisite, please note that API Key can also be configured in wp-config.php like this:",'shortpixel-image-optimiser')
+            $notice = __("Your API key is valid. <br>You seem to be running a multisite, please note that the API key can also be configured in wp-config.php like this:",'shortpixel-image-optimiser')
                 . "<BR> <b>define('SHORTPIXEL_API_KEY', '". $this->apiKey ."');</b>";
         else
-            $notice = __('Great, your API Key is valid. Please take a few moments to review the plugin settings before starting to optimize your images.','shortpixel-image-optimiser');
+            $notice = __('Your API key is valid. Please take a few moments to review the plugin settings before starting to optimize your images.','shortpixel-image-optimiser');
 
         Notice::addSuccess($notice);
     }
@@ -453,7 +453,7 @@ class ApiKeyModel extends \ShortPixel\Model
     //test that the "uploads"  have the right rights and also we can create the backup dir for ShortPixel
     if ( \wpSPIO()->filesystem()->checkBackupFolder() === false)
     {
-        $notice = sprintf(__("There is something preventing us to create a new folder for backing up your original files.<BR>Please make sure that folder <b>%s</b> has the necessary write and read rights.",'shortpixel-image-optimiser'), WP_CONTENT_DIR . '/' . SHORTPIXEL_UPLOADS_NAME );
+        $notice = sprintf(__("There is something preventing us from creating a new folder for backing up your original files.<BR>Please make sure that folder <b>%s</b> has the necessary write and read rights.",'shortpixel-image-optimiser'), WP_CONTENT_DIR . '/' . SHORTPIXEL_UPLOADS_NAME );
        Notice::addError($notice);
     }
 

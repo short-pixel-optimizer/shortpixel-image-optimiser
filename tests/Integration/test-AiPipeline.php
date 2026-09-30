@@ -1630,4 +1630,203 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 			'#56 regression: missing mode must preserve the existing in-content alt even with aiPreserve off.'
 		);
 	}
+
+	// -------------------------------------------------------------------
+	// Beta-tester reports (6.6.0 beta, 2026-09-29)
+	// -------------------------------------------------------------------
+
+	/**
+	 * PIN (beta report #3, "tall photos at Large size never get alt") —
+	 * handleReplace() only matches in-content images whose basename fits
+	 * `^<base>(-\d+x\d+|-scaled)?\.<ext>$`. When a size file name is taken,
+	 * WordPress de-duplicates it with a trailing counter
+	 * ("photo-768x1024-1.jpg" — the tester sees this for 3:4 portraits, whose
+	 * Large and medium_large copies share 768x1024), so that <img> is skipped:
+	 * it keeps an empty alt while the other sizes in the same post are filled.
+	 * Affects Redo AI Replacement and the normal on-upload run alike.
+	 *
+	 * Suggested fix: allow the counter in the pattern —
+	 * `(-\d+x\d+(?:-\d+)?|-scaled)?`, or better, match against the file names
+	 * actually listed in the attachment metadata.
+	 * FLIP-when-fixed: the de-duplicated size gets the AI alt too.
+	 */
+	public function test_pin_size_with_wp_dedupe_counter_is_skipped_by_content_replace_pinned_for_deferred_fix() {
+		\wpSPIO()->settings()->ai_gen_caption     = 0;
+		\wpSPIO()->settings()->ai_content_replace = 'missing';
+
+		$id   = $this->freshAttachment();
+		$meta = wp_get_attachment_metadata( $id );
+		$dir  = dirname( get_attached_file( $id ) );
+		$u    = wp_upload_dir();
+
+		// Recreate WordPress's de-duplicated sub-size name for 'large'.
+		$large = $meta['sizes']['large']['file'];
+		$dedup = preg_replace( '/(\.jpg)$/', '-1$1', $large );
+		copy( $dir . '/' . $large, $dir . '/' . $dedup );
+		$meta['sizes']['large']['file'] = $dedup;
+		wp_update_attachment_metadata( $id, $meta );
+
+		$dedup_url  = $u['url'] . '/' . $dedup;
+		$normal_url = $u['url'] . '/' . $meta['sizes']['medium']['file'];
+		$post_id    = self::factory()->post->create(
+			array( 'post_content' => '<img src="' . esc_url( $dedup_url ) . '" alt="" /><img src="' . esc_url( $normal_url ) . '" alt="" />' )
+		);
+
+		$this->enqueueAi( $id );
+		$this->runQueueUntilEmpty();
+		clean_post_cache( $post_id );
+		$content = get_post( $post_id )->post_content;
+
+		// SENTINEL: the run did write alt into this post (the normal size).
+		$this->assertStringContainsString( 'alt="A mock ai alt text."', $content, 'Sentinel: the regular-size image in the same post was filled.' );
+
+		// THE PIN: the de-duplicated size keeps its empty alt.
+		$this->assertMatchesRegularExpression(
+			'#<img src="' . preg_quote( esc_url( $dedup_url ), '#' ) . '" alt="" ?/?>#',
+			$content,
+			'PIN (beta #3): fixed? The "-WxH-1" size now gets the AI alt — flip this pin.'
+		);
+	}
+
+	/**
+	 * PIN (beta report #5, "Undo can't bring back my own alt after
+	 * Overwrite") — in 'overwrite' mode the AI replaces an alt the user wrote
+	 * in the post, but that in-post text is never stored anywhere: undo only
+	 * knows the Media Library's ORIGINAL alt (empty here), and 'overwrite'
+	 * undo writes that back unconditionally, so the user's text becomes "".
+	 * No warning is shown before choosing Overwrite.
+	 *
+	 * Suggested fix: store the replaced in-post alt per post (e.g. next to
+	 * replaced_content) and restore THAT on undo; at minimum, warn in the
+	 * Overwrite option that post alts cannot be restored.
+	 * FLIP-when-fixed: the user's own alt comes back after undo.
+	 */
+	public function test_pin_undo_after_overwrite_loses_the_users_own_in_post_alt_pinned_for_deferred_fix() {
+		\wpSPIO()->settings()->ai_content_replace = 'overwrite';
+		\wpSPIO()->settings()->aiPreserve         = 0;
+
+		$id  = $this->freshAttachment();
+		$src = esc_url( wp_get_attachment_url( $id ) );
+		$this->assertSame( '', (string) get_post_meta( $id, '_wp_attachment_image_alt', true ), 'Sentinel: the Media Library alt starts empty.' );
+
+		$post_id = self::factory()->post->create(
+			array( 'post_content' => '<img src="' . $src . '" alt="my own alt" />' )
+		);
+
+		$this->enqueueAi( $id );
+		$this->runQueueUntilEmpty();
+		clean_post_cache( $post_id );
+		$this->assertStringContainsString( 'alt="A mock ai alt text."', get_post( $post_id )->post_content, 'Precondition: Overwrite replaced the user\'s alt (as the label says).' );
+
+		$qItem = \ShortPixel\Controller\Queue\QueueItems::getImageItem( $this->freshImageModel( $id ) );
+		$qItem->undoAltDataAction();
+		\ShortPixel\Controller\Optimizer\OptimizeAiController::getInstance()->undoAltData( $qItem );
+
+		clean_post_cache( $post_id );
+		$content = get_post( $post_id )->post_content;
+		// SENTINEL: undo ran and did rewrite the post (the AI alt is gone).
+		$this->assertStringNotContainsString( 'A mock ai alt text.', $content, 'Sentinel: undo removed the AI alt from the post.' );
+
+		// THE PIN: the user's own text is not restored — the alt is empty.
+		$this->assertStringNotContainsString( 'my own alt', $content, 'PIN (beta #5): fixed? The user\'s own alt is restored — flip this pin.' );
+		$this->assertMatchesRegularExpression( '#alt=""#', $content, 'PIN (beta #5): the alt was emptied.' );
+	}
+
+	/**
+	 * PIN (beta report #7 / BUG-6, "AI caption shows in the editor but not in
+	 * the saved post") — handleReplace() records the generated caption in
+	 * replaced_content (so the open Gutenberg editor shows it via
+	 * UpdateGutenBerg), but FrontImage::$caption is only a placeholder:
+	 * buildImage() never writes a caption into post_content. The saved post
+	 * therefore has no caption until the user saves from the editor.
+	 *
+	 * Suggested fix: pick one behaviour — either stop reporting the caption
+	 * in replaced_content (editor and post both without it), or really write
+	 * it (Gutenberg: the image block's <figcaption>).
+	 * FLIP-when-fixed: replaced_content caption and post_content agree.
+	 */
+	public function test_pin_caption_reported_to_editor_but_never_written_to_post_pinned_for_deferred_fix() {
+		\wpSPIO()->settings()->ai_content_replace = 'missing';
+		\wpSPIO()->settings()->aiPreserve         = 0;
+
+		$id         = $this->freshAttachment();
+		$imageModel = $this->freshImageModel( $id );
+		$src        = esc_url( wp_get_attachment_url( $id ) );
+		$post_id    = self::factory()->post->create(
+			array( 'post_content' => '<!-- wp:image {"id":' . $id . '} --><figure class="wp-block-image"><img src="' . $src . '" alt="" class="wp-image-' . $id . '"/></figure><!-- /wp:image -->' )
+		);
+
+		$qItem = \ShortPixel\Controller\Queue\QueueItems::getImageItem( $imageModel );
+		\ShortPixel\Controller\Optimizer\OptimizeAiController::getInstance()->handleReplace(
+			array( array( 'post_id' => $post_id, 'content' => get_post( $post_id )->post_content ) ),
+			array(
+				'aiData'     => array( 'alt' => 'A mock ai alt text.', 'caption' => 'A mock ai caption.' ),
+				'qItem'      => $qItem,
+				'prevAiData' => array(),
+			)
+		);
+
+		$map = $qItem->result()->replaced_content;
+		clean_post_cache( $post_id );
+		$content = get_post( $post_id )->post_content;
+
+		// SENTINELS: the alt went into the post, and the editor is told about a caption.
+		$this->assertStringContainsString( 'alt="A mock ai alt text."', $content, 'Sentinel: the alt was written into the post.' );
+		$this->assertSame( 'A mock ai caption.', $map[ $post_id ]['caption'] ?? null, 'Sentinel: replaced_content reports the caption to the editor.' );
+
+		// THE PIN: the saved post has no caption.
+		$this->assertStringNotContainsString( 'A mock ai caption.', $content, 'PIN (beta #7): fixed? The caption is now in the saved post (or no longer reported) — flip this pin.' );
+	}
+
+	/**
+	 * PIN #53 — the "is this image already used?" check never runs on AI
+	 * renames.
+	 *
+	 * replaceFiles() skips the rename of an image that published content
+	 * already uses, but only when $args['recent_upload'] is exactly false
+	 * (OptimizeAiController.php ~:885). HandleSuccess() passes
+	 * $qItem->data()->recent_upload (~:477), which is ALWAYS null:
+	 * QueueItem::requestAltAction() only calls
+	 * addKeepDataArgs(['recent_upload']), which records the NAME, and
+	 * nothing sets the value. So bulk / manual AI runs rename images that
+	 * are used in published posts — against what the setting text promises
+	 * ("only for newly uploaded images, or for images that are not used in
+	 * any posts or pages").
+	 *
+	 * Suggested fix: in requestAltAction() set the value on the item,
+	 *     $this->data()->recent_upload = (isset($args['recent_upload']) && true === $args['recent_upload']);
+	 * (and keep it for the next action), same for is_duplicate.
+	 * FLIP-when-fixed: the used image keeps its name.
+	 */
+	public function test_pin53_ai_rename_ignores_the_usage_check_and_renames_a_used_image_pinned_for_deferred_fix() {
+		\wpSPIO()->settings()->ai_gen_filename    = 1;
+		\wpSPIO()->settings()->ai_content_replace = 'missing';
+		$this->api->aiFields['generated_file_name'] = 'pin53-ai-name-' . strtolower( wp_generate_password( 4, false, false ) );
+
+		$id       = $this->freshAttachment();
+		$old_file = get_attached_file( $id );
+		$post_id  = self::factory()->post->create(
+			array(
+				'post_status'  => 'publish',
+				'post_content' => '<img src="' . esc_url( wp_get_attachment_url( $id ) ) . '" alt="" />',
+			)
+		);
+		// SENTINEL: the image really is used in published content (what the check looks for).
+		$this->assertStringContainsString( basename( $old_file ), get_post( $post_id )->post_content );
+
+		// A non-upload AI run (bulk / media library): QueueController passes recent_upload=false.
+		$this->enqueueAi( $id );
+		$this->runQueueUntilEmpty();
+
+		clean_post_cache( $id );
+		$new_file = get_attached_file( $id );
+
+		// THE PIN: the used image was renamed anyway.
+		$this->assertStringContainsString(
+			$this->api->aiFields['generated_file_name'],
+			basename( $new_file ),
+			'PIN #53: fixed? A used image is no longer renamed by AI — flip this pin (expect the old name).'
+		);
+		$this->assertFileDoesNotExist( $old_file, 'PIN #53: the old file was moved away.' );
+	}
 }

@@ -343,7 +343,15 @@ function spio_e2e_route_fixture( WP_REST_Request $request ) {
 	require_once ABSPATH . 'wp-admin/includes/file.php';
 	require_once ABSPATH . 'wp-admin/includes/media.php';
 
-	$upload = wp_upload_bits( $name, null, (string) file_get_contents( $source ) );
+	// Optional 'as': upload the fixture's bytes under another filename. It goes
+	// through wp_upload_bits() → wp_unique_filename(), so WordPress's own
+	// naming rules still apply (e.g. "-1" appended to names ending in -scaled).
+	$as = isset( $params['as'] ) ? sanitize_file_name( basename( (string) $params['as'] ) ) : '';
+	if ( '' !== $as && pathinfo( $as, PATHINFO_EXTENSION ) !== pathinfo( $name, PATHINFO_EXTENSION ) ) {
+		return new WP_Error( 'spio_e2e_bad_as', "'as' must keep the fixture's extension", array( 'status' => 400 ) );
+	}
+
+	$upload = wp_upload_bits( '' !== $as ? $as : $name, null, (string) file_get_contents( $source ) );
 	if ( ! empty( $upload['error'] ) ) {
 		return new WP_Error( 'spio_e2e_upload_failed', $upload['error'], array( 'status' => 500 ) );
 	}

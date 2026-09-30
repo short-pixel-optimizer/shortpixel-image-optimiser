@@ -131,7 +131,7 @@ $queueRunning = $bulk->isAnyBulkRunning();
 
 		<h4 class='warning'><?php esc_html_e('Warning', 'shortpixel-image-optimiser'); ?></h4>
 
-		<p><?php printf(esc_html__('By starting the %s Bulk undo AI %s process, the plugin will try to revert %s all AI-generated texts %s to the original state. This will impact post and post content and metadata of your installation.  ', 'shortpixel-image-optimiser'), '<b>', '</b>', '<b>', '</b>'); ?></p>
+		<p><?php printf(esc_html__('By starting the %s Bulk Undo AI %s process, the plugin restores %s the alt text, captions, descriptions and titles %s that existed before AI. Alt text that AI wrote into posts and pages is reverted too, unless "Alt text in existing posts and pages" is set to "Don\'t change posts and pages". Files renamed by AI keep their new names.', 'shortpixel-image-optimiser'), '<b>', '</b>', '<b>', '</b>'); ?></p>
 
 		<p class='warning'><?php esc_html_e('It is strongly advised to create a full backup before starting this process.', 'shortpixel-image-optimiser'); ?></p>
 
@@ -149,14 +149,14 @@ $queueRunning = $bulk->isAnyBulkRunning();
 
 <section class='panel bulk-redoAiReplacement' data-panel="bulk-redoAiReplacement">
 	<h3 class='heading'>
-		<?php esc_html_e("Bulk Redo Ai Replacement", 'shortpixel-image-optimiser'); ?>
+		<?php esc_html_e("Bulk Redo AI Replacement", 'shortpixel-image-optimiser'); ?>
 	</h3>
 
 	<div class='bulk-special-wrapper'>
 
 		<h4 class='warning'><?php esc_html_e('Warning', 'shortpixel-image-optimiser'); ?></h4>
 
-		<p><?php printf(esc_html__('ShortPixel will redo the AI Replacement according to current settings.  This means it search through all post content and try to replace image tags with AI-generated results if any are available. This is not reversible.', 'shortpixel-image-optimiser'), '<b>', '</b>', '<b>', '</b>'); ?></p>
+		<p><?php printf(esc_html__('ShortPixel will redo the AI Replacement according to current settings. This means it searches through all post content and tries to replace image tags with AI-generated results, if any are available. This is not reversible.', 'shortpixel-image-optimiser'), '<b>', '</b>', '<b>', '</b>'); ?></p>
 
 		<p class='warning optiongroup'><?php esc_html_e('It is strongly advised to create a full backup before starting this process.', 'shortpixel-image-optimiser'); ?></p>
 

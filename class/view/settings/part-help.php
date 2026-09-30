@@ -16,7 +16,7 @@ use ShortPixel\Helper\UiHelper as UiHelper;
           <h4><?php _e('Knowledge base', 'shortpixel-image-optimiser'); ?></h4>
           <p><?php esc_html_e('Most customer questions are answered in our Knowledge Base.', 'shortpixel-image-optimiser'); ?></p>
 
-          <a href="https://shortpixel.com/knowledge-base/" target="_blank" class="button-setting"><?php //echo UIHelper::getIcon('res/images/icon/external.svg'); ?>
+          <a href="https://shortpixel.com/knowledge-base/?utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings" target="_blank" class="button-setting"><?php //echo UIHelper::getIcon('res/images/icon/external.svg'); ?>
              <?php esc_html_e('Knowledge Base', 'shortpixel-image-optimiser'); ?>
            <?php //echo UIHelper::getIcon('res/images/icon/arrow-right.svg'); ?> </a>
       </div>

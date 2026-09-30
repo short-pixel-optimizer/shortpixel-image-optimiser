@@ -60,7 +60,7 @@ $this->loadView('custom/part-othermedia-top');
              }
              elseif (true === $view->hasFilter )
              {
-               printf(esc_html__('Filter didn\'t yield any results.  %s Show all Items %s ', 'shortpixel-image-optimiser'), '<a href="' . esc_url($this->url) . '">', '</a>');
+               printf(esc_html__('Filter didn\'t yield any results. %sShow all items%s', 'shortpixel-image-optimiser'), '<a href="' . esc_url($this->url) . '">', '</a>');
              }
              else
              {

@@ -324,6 +324,10 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page .shortpixel-settings gridbox.width_half setting:nth-child(odd) {
   margin-right: 15px;
 }
+.wrap.is-shortpixel-settings-page .shortpixel-settings gridbox.width_half setting.full-width {
+  grid-column: 1/-1;
+  margin-right: 0;
+}
 .wrap.is-shortpixel-settings-page .shortpixel-settings gridbox.width_70 {
   grid-template-columns: 70% 30%;
   column-gap: 50px;
@@ -981,6 +985,22 @@ div.spio-modal-title {
     margin-top: -70px;
     margin-right: -5px;
   }
+}
+.wrap.is-shortpixel-settings-page section#tab-ai img.icon {
+  height: 40px;
+  margin-bottom: -20px;
+  margin-left: 20px;
+}
+@media (max-width: 768px) {
+  .wrap.is-shortpixel-settings-page section#tab-ai img.icon {
+    height: 30px;
+    float: right;
+    margin-top: -30px;
+    margin-right: -5px;
+  }
+}
+.wrap.is-shortpixel-settings-page section#tab-ai switch label i.documentation {
+  margin-left: 8px;
 }
 .wrap.is-shortpixel-settings-page section#tab-webp img.icon {
   height: 40px;

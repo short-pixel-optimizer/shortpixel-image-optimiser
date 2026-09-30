@@ -93,6 +93,42 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 		);
 	}
 
+	/**
+	 * WPML core's own _wp_attached_file sync, replicated
+	 * (sitepress classes/media/duplication/Hooks.php syncAttachedFile, on
+	 * `update_postmeta`): when an ORIGINAL attachment's _wp_attached_file
+	 * changes, WPML copies the new value to every translation of it that
+	 * still holds the previous value. Only originals sync (IfOriginalPost /
+	 * PostTranslations::getIfOriginal) — a translation changing its file
+	 * propagates nothing. Not active in this test install, so tests that
+	 * need real-site ordering install it explicitly.
+	 */
+	private function addWpmlSyncAttachedFileHook(): void {
+		add_action(
+			'update_postmeta',
+			function ( $meta_id, $object_id, $meta_key, $meta_value ) {
+				global $wpdb;
+				if ( '_wp_attached_file' !== $meta_key ) {
+					return;
+				}
+				$table = $wpdb->prefix . 'icl_translations';
+				$row   = $wpdb->get_row( $wpdb->prepare( "SELECT trid, source_language_code FROM $table WHERE element_id = %d AND element_type = 'post_attachment'", $object_id ) );
+				if ( ! $row || null !== $row->source_language_code ) {
+					return; // Not an original: WPML does not sync.
+				}
+				$previous     = get_post_meta( $object_id, '_wp_attached_file', true );
+				$translations = $wpdb->get_col( $wpdb->prepare( "SELECT element_id FROM $table WHERE trid = %d AND element_id <> %d", $row->trid, $object_id ) );
+				foreach ( $translations as $translation_id ) {
+					if ( get_post_meta( (int) $translation_id, '_wp_attached_file', true ) === $previous ) {
+						update_post_meta( (int) $translation_id, '_wp_attached_file', $meta_value );
+					}
+				}
+			},
+			10,
+			4
+		);
+	}
+
 	/** A second attachment record pointing at the SAME file on disk (a WPML duplicate). */
 	private function createDuplicateAttachment( int $source_id ): int {
 		$dup_id = wp_insert_attachment(
@@ -611,10 +647,21 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 	// -------------------------------------------------------------------
 
 	/**
-	 * WPML may synchronize the translated metadata while the original is
-	 * updated, before replaceFiles() reaches its explicit duplicate pass.
-	 * Use a target name containing the source basename to ensure that pass
-	 * does not apply the rename twice.
+	 * REGRESSION #69 (WPML part fixed in 11aa2065) + 3fd40001 (no double
+	 * rename).
+	 *
+	 * #69: replaceFiles() used to enumerate the WPML siblings only AFTER the
+	 * renamed item's _wp_attached_file was rewritten, so the same-file check
+	 * in getWPMLDuplicates() never matched and translations stayed on the
+	 * old, deleted file. 11aa2065 collects the list before anything is
+	 * touched.
+	 *
+	 * 3fd40001: on a real site WPML's own sync hook may already have copied
+	 * the new _wp_attached_file to the translations while the original was
+	 * updated, before replaceFiles() reaches its duplicate pass; a plain
+	 * str_replace() would then rename a second time whenever the new base
+	 * contains the old one. The target name here contains the source
+	 * basename so that case is visible.
 	 */
 	public function test_rename_does_not_duplicate_basename_on_wpml_same_file_translation() {
 		$id     = $this->uploadFixture( 'fixture-small.jpg' );
@@ -632,6 +679,10 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 			'Sentinel: the sibling must be listed as a WPML duplicate — the fix has the data it needs.'
 		);
 
+		// Real-site ordering: WPML syncs the translation's _wp_attached_file
+		// the moment the original's is updated, before SPIO's duplicate pass.
+		$this->addWpmlSyncAttachedFileHook();
+
 		$new_base = $old_base . '-wpml-rename-' . wp_generate_password( 6, false );
 		$this->assertTrue( $this->renameAttachment( $id, $new_base ), 'Sanity: the rename must report success.' );
 
@@ -639,14 +690,21 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 		$this->assertFileDoesNotExist( $old_file, 'Sanity: the shared physical file was moved to the new name.' );
 
 		clean_post_cache( $dup_id );
-		$dup_meta = wp_get_attachment_metadata( $dup_id );
-		$this->assertStringContainsString(
-			$new_base,
-			(string) ( $dup_meta['file'] ?? '' ),
-			'REGRESSION #69: the WPML translation metadata[file] must track the rename.'
+		$dup_meta          = wp_get_attachment_metadata( $dup_id );
+		$expected_filename = $new_base . '.' . pathinfo( $old_file, PATHINFO_EXTENSION );
+		// The new base CONTAINS the old one on purpose, so a second
+		// str_replace() pass would yield "<old>-wpml-rename-x-wpml-rename-x".
+		$this->assertSame(
+			$expected_filename,
+			basename( (string) ( $dup_meta['file'] ?? '' ) ),
+			'REGRESSION #69 / 3fd40001: the WPML translation metadata[file] must carry the new basename exactly once.'
 		);
-		$this->assertStringNotContainsString( $old_base, (string) ( $dup_meta['file'] ?? '' ) );
 		$dup_attached = get_attached_file( $dup_id );
+		$this->assertSame(
+			$expected_filename,
+			basename( $dup_attached ),
+			'REGRESSION #69 / 3fd40001: the WPML translation _wp_attached_file must carry the new basename exactly once.'
+		);
 		$this->assertSame(
 			get_attached_file( $id ),
 			$dup_attached,
@@ -774,6 +832,35 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
+	 * CONTRACT — "main language" means the ORIGINAL of the image's
+	 * translation group, not the site's default language (Bas, 2026-09-28:
+	 * an image uploaded while the admin works in Romanian becomes the main
+	 * entry for THAT image).
+	 *
+	 * WPML rows for such an image: the Romanian attachment has no
+	 * source_language_code (it is the original), the English one has
+	 * source_language_code='ro'. getWPMLDuplicates(true) keys
+	 * is_main_language on source_language_code IS NULL, so the Romanian item
+	 * is the one whose AI filename is applied (HandleSuccess gate) — the
+	 * same item WPML's own _wp_attached_file sync propagates from. If the
+	 * product wants filenames in the SITE default language instead, this is
+	 * the test to change.
+	 */
+	public function test_wpml_original_uploaded_in_a_non_default_language_is_the_main_language() {
+		$ro_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$en_id = $this->createDuplicateAttachment( $ro_id );
+		$this->insertTranslationRow( $ro_id, 9105, 'ro' );
+		$this->insertTranslationRow( $en_id, 9105, 'en', 'ro' );
+
+		foreach ( array( $ro_id, $en_id ) as $asked ) {
+			$all = $this->freshImageModel( $asked )->getWPMLDuplicates( true );
+			$this->assertTrue( $all[ $ro_id ]['is_main_language'], 'The Romanian ORIGINAL is the main language (asked for ' . $asked . ').' );
+			$this->assertSame( 'ro', $all[ $ro_id ]['language_code'] );
+			$this->assertFalse( $all[ $en_id ]['is_main_language'], 'The English TRANSLATION is not, even if English is the site default.' );
+		}
+	}
+
+	/**
 	 * REGRESSION #74 residual (fixed with #69 WPML in 11aa2065, 2026-09-25) —
 	 * after the (single) main-language rename, ONE file backs every language.
 	 *
@@ -820,5 +907,73 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 			get_attached_file( $dup_id ),
 			'REGRESSION #74 residual: the translation must reference the renamed file.'
 		);
+	}
+
+	/**
+	 * REGRESSION — Pedro's real-site case (2026-09-28): a BIG image whose
+	 * upload name ends in "-scaled", uploaded in a secondary language
+	 * (Romanian = its original), renamed from ANOTHER secondary language
+	 * (Spanish) by prefixing "rename-".
+	 *
+	 * Two WordPress core behaviours explain the names he saw; neither is a
+	 * SPIO bug:
+	 *   1. wp_unique_filename() ALWAYS appends "-1" to a name ending in
+	 *      -scaled / -rotated / -WxH (reserved for generated sub-sizes), even
+	 *      with no clash: "…-047-scaled.jpg" is stored as "…-047-scaled-1.jpg".
+	 *   2. Images above big_image_size_threshold (2560px) keep the upload as
+	 *      metadata['original_image'] and serve "<name>-scaled.jpg", so the
+	 *      served file is "…-047-scaled-1-scaled.jpg" BEFORE any rename.
+	 * SPIO's Change Filename field shows the ORIGINAL's name for scaled
+	 * images (getAltData()), so prefixing it yields the new original
+	 * "rename-…-scaled-1.jpg" and the served "rename-…-scaled-1-scaled.jpg" —
+	 * the correct result, identical in all three languages, one set on disk.
+	 */
+	public function test_big_scaled_named_image_renamed_from_a_secondary_translation_stays_consistent() {
+		// Unique per run: the uploads dir persists between runs, and a leftover
+		// renamed set would (correctly) trip the target-conflict guard.
+		$upload_name = 'gucci-' . strtolower( wp_generate_password( 5, false, false ) ) . '-pre-fall-2025-collection-the-impression-047-scaled';
+		$tmp         = trailingslashit( get_temp_dir() ) . $upload_name . '.jpg';
+		copy( $this->fixturePath( 'fixture-large.jpg' ), $tmp ); // 3200px wide: above the 2560px threshold.
+		$ro = $this->uploadFile( $tmp );
+		$es = $this->createDuplicateAttachment( $ro );
+		$en = $this->createDuplicateAttachment( $ro );
+		$this->insertTranslationRow( $ro, 9200, 'ro' );        // uploaded in Romanian → the original
+		$this->insertTranslationRow( $es, 9200, 'es', 'ro' );
+		$this->insertTranslationRow( $en, 9200, 'en', 'ro' );
+		$this->purgeQueueTable();
+		$this->addWpmlSyncAttachedFileHook(); // real-site ordering (it does not fire here: Spanish is not the original)
+
+		$uploads = wp_upload_dir();
+		$dir     = dirname( (string) get_post_meta( $ro, '_wp_attached_file', true ) );
+		$abs     = function ( $name ) use ( $uploads, $dir ) {
+			return $uploads['basedir'] . '/' . $dir . '/' . $name;
+		};
+		$stored = $upload_name . '-1';
+
+		// SENTINELS — WordPress core, before SPIO does anything.
+		$meta = wp_get_attachment_metadata( $ro );
+		$this->assertSame( $stored . '.jpg', $meta['original_image'] ?? null, 'Sentinel: WP appended "-1" to a name ending in -scaled and kept it as the original.' );
+		$this->assertSame( $stored . '-scaled.jpg', basename( get_attached_file( $ro ) ), 'Sentinel: WP serves the big-image "-scaled" copy — the double "-scaled" exists BEFORE the rename.' );
+		$es_model = $this->freshImageModel( $es );
+		$this->assertTrue( $es_model->isScaled() );
+		$this->assertSame( $stored . '.jpg', $es_model->getOriginalFile()->getFileName(), 'Sentinel: the Change Filename field shows the ORIGINAL name.' );
+
+		// The user prefixes the field value on the SPANISH translation.
+		$new_base = 'rename-' . $stored;
+		$this->assertTrue( $this->renameAttachment( $es, $new_base ), 'The rename must report success.' );
+
+		foreach ( array( 'ro' => $ro, 'es' => $es, 'en' => $en ) as $lang => $id ) {
+			clean_post_cache( $id );
+			$m = wp_get_attachment_metadata( $id );
+			$this->assertSame( $dir . '/' . $new_base . '-scaled.jpg', (string) get_post_meta( $id, '_wp_attached_file', true ), "[$lang] _wp_attached_file = the renamed served file." );
+			$this->assertSame( $dir . '/' . $new_base . '-scaled.jpg', $m['file'] ?? null, "[$lang] metadata[file] follows." );
+			$this->assertSame( $new_base . '.jpg', $m['original_image'] ?? null, "[$lang] metadata[original_image] follows." );
+		}
+
+		$this->assertFileExists( $abs( $new_base . '-scaled.jpg' ) );
+		$this->assertFileExists( $abs( $new_base . '.jpg' ) );
+		$this->assertFileDoesNotExist( $abs( $stored . '-scaled.jpg' ), 'One set on disk: the old served file is gone.' );
+		$this->assertFileDoesNotExist( $abs( $stored . '.jpg' ), 'One set on disk: the old original is gone.' );
+		$this->assertSame( $new_base . '.jpg', $this->freshImageModel( $es )->getOriginalFile()->getFileName(), 'The field now shows the renamed original.' );
 	}
 }

@@ -119,7 +119,7 @@ class QuotaNoticeReached extends \ShortPixel\Model\AdminNoticeModel
 			
 			$upgradeButton = sprintf('<a href="https://shortpixel.com/ms/af/KZYK08Q28044" target="_blank" class="button button-primary" style="margin-right:10px;" >
 							%s </a> ',
-				   __('Buy credits', 'shortpixel-image-optimiser'));
+				   __('Buy one-time credits', 'shortpixel-image-optimiser'));
 
 			 $message .= sprintf('</p>
 					<div>
@@ -132,8 +132,8 @@ class QuotaNoticeReached extends \ShortPixel\Model\AdminNoticeModel
 				</div>', $upgradeButton, 
 				esc_url($login_url),
 				__('Go to My Account and choose a plan','shortpixel-image-optimiser'),
-				__('Upgrade to Unlimited','shortpixel-image-optimiser'),
-				__('Confirm new credits','shortpixel-image-optimiser')
+				__('Upgrade to the Unlimited plan','shortpixel-image-optimiser'),
+				__('I bought credits, check again','shortpixel-image-optimiser')
 				);
 
 			$message .= '</div>'; /// closing div

@@ -59,6 +59,13 @@ class InstallHelper
 		$q->getShortQ()->install(); // create table.
 
 
+		// Fresh install only (no settings stored yet): remove EXIF by default, as the
+		// setting recommends. Not done via the SettingsModel default, because unsaved
+		// settings fall back to the default at read time and existing sites would flip.
+		if (false === get_option('spio_settings', false)) {
+			$settings->exif = 0;
+		}
+
 		$settings->onActivate();
 		$settings->currentVersion = SHORTPIXEL_IMAGE_OPTIMISER_VERSION;
 

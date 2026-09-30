@@ -41,7 +41,7 @@ class LegacyNotice extends \ShortPixel\Model\AdminNoticeModel
 		$message .=  '<p>' . __('It is recommended to migrate all items to the modern format by clicking the button below.', 'shortpixel-image-optimiser') . '</p>';
 		$message .= '<p><a href="%s" class="button button-primary">%s</a></p>';
 
-		$read_link = esc_url('https://shortpixel.com/knowledge-base/article/spio-5-tells-me-to-convert-legacy-data-what-is-this/');
+		$read_link = esc_url('https://shortpixel.com/knowledge-base/article/spio-5-tells-me-to-convert-legacy-data-what-is-this/?utm_source=plugin&utm_medium=spio&utm_campaign=plugin_notices');
 		$action_link = esc_url(admin_url('upload.php?page=wp-short-pixel-bulk&panel=bulk-migrate'));
 		$action_name = __('Migrate optimization data', 'shortpixel-image-optimiser');
 

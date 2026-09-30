@@ -101,7 +101,8 @@ class QuotaNoticeMonth extends \ShortPixel\Model\AdminNoticeModel
 
 			}
 			// Sum last 4 months, and divide by number of active months to get number of avg per active month.
-			return ($stats->find('period', 'months', 1) + $stats->find('period', 'months', 2) + $stats->find('period', 'months', 3) + $stats->find('period', 'months', 4) / max(1,$count));
+			// The sum must be parenthesised: without it only month 4 was divided by the month count.
+			return ($stats->find('period', 'months', 1) + $stats->find('period', 'months', 2) + $stats->find('period', 'months', 3) + $stats->find('period', 'months', 4)) / max(1,$count);
 	}
 
 	/**

@@ -153,3 +153,126 @@ test.describe('Change Filename — too-short name pin', () => {
 		expect(await documentWasKept(page)).toBe(true);
 	});
 });
+
+/** Rename through the UI and wait for the page reload a success triggers. */
+async function renameAndReload(page: Page, value: string): Promise<void> {
+	await markDocument(page);
+	await page.locator(FIELD).fill(value);
+	const reloaded = page.waitForEvent('load', { timeout: 30_000 });
+	await page.locator(BUTTON).click();
+	await reloaded;
+	expect(await documentWasKept(page), 'A successful rename reloads the page').toBe(false);
+}
+
+/**
+ * "-scaled" in filenames (Pedro, 2026-09-28).
+ *
+ * Two WordPress core rules shape these names:
+ *   - wp_unique_filename() ALWAYS appends "-1" to an upload whose name ends
+ *     in -scaled / -rotated / -WxH: "photo-scaled.jpg" is stored as
+ *     "photo-scaled-1.jpg".
+ *   - An image above big_image_size_threshold (2560px) keeps the upload as
+ *     metadata['original_image'] and SERVES "<original>-scaled.jpg". SPIO's
+ *     Change Filename field shows the ORIGINAL name, so on such an image the
+ *     "-scaled" is not part of the editable name at all.
+ */
+test.describe('Change Filename — "-scaled" names', () => {
+	test.beforeEach(async ({ spio }) => {
+		await spio.reset();
+	});
+
+	for (const fixture of ['fixture-large.jpg', 'fixture-small.jpg']) {
+		test(`an upload named "…-scaled" (stored as "…-scaled-1") can drop the "-scaled" — ${fixture}`, async ({ page, spio }) => {
+			const stem = 'e2e-' + Date.now().toString(36) + '-photo';
+			const up = await spio.uploadFixture(fixture, `${stem}-scaled.jpg`);
+			const big = fixture === 'fixture-large.jpg';
+
+			// SENTINELS — WordPress core naming, before SPIO does anything.
+			const before = await spio.attachment(up.id);
+			expect(baseOf(before.attached_file), 'Sentinel: WP appended "-1" (and "-scaled" for a big image)').toBe(
+				big ? `${stem}-scaled-1-scaled` : `${stem}-scaled-1`
+			);
+			await openRenameField(page, up.id);
+			await expect(page.locator(FIELD), 'Sentinel: the field shows the ORIGINAL name').toHaveValue(`${stem}-scaled-1.jpg`);
+
+			await renameAndReload(page, `${stem}-1`);
+
+			const after = await spio.attachment(up.id);
+			expect(baseOf(after.attached_file)).toBe(big ? `${stem}-1-scaled` : `${stem}-1`);
+			await expect(page.locator(FIELD)).toHaveValue(`${stem}-1.jpg`);
+			const served = await page.request.get(`/wp-content/uploads/${after.attached_file}`);
+			expect(served.status(), 'The renamed file is served').toBe(200);
+		});
+	}
+
+	/**
+	 * CONTRACT — Pedro's observation: on a BIG image the "-scaled" of the
+	 * served file cannot be removed. The field already shows the original name
+	 * without it, so "removing -scaled" means submitting the current name, and
+	 * the only answer is the generic "Files were not replaced" (the same
+	 * message as a real failure — worth a clearer text, see the UI copy review).
+	 * Typing "<name>-scaled" is refused too: it would collide with the file
+	 * WordPress serves.
+	 */
+	test('on a big image the served "-scaled" is not editable: unchanged or "-scaled" names are refused, nothing moves', async ({ page, spio }) => {
+		const stem = 'e2e-' + Date.now().toString(36) + '-big';
+		const up = await spio.uploadFixture('fixture-large.jpg', `${stem}.jpg`);
+		const before = await spio.attachment(up.id);
+		expect(baseOf(before.attached_file), 'Sentinel: WP serves the big-image "-scaled" copy').toBe(`${stem}-scaled`);
+
+		for (const typed of [stem, `${stem}-scaled`]) {
+			await openRenameField(page, up.id);
+			await expect(page.locator(FIELD), 'The field shows the name WITHOUT "-scaled"').toHaveValue(`${stem}.jpg`);
+			await markDocument(page);
+			await page.locator(FIELD).fill(typed);
+			const answered = renameAnswered(page);
+			await page.locator(BUTTON).click();
+			await answered;
+			await expect(page.locator(ERROR)).toHaveText(/Files were not replaced/);
+			expect(await documentWasKept(page)).toBe(true);
+			expect((await spio.attachment(up.id)).attached_file, `Nothing moves for "${typed}"`).toBe(before.attached_file);
+		}
+	});
+});
+
+test.describe('Change Filename — "-scaled" pin81', () => {
+	test.use({ allowConsoleErrors: true });
+
+	test.beforeEach(async ({ spio }) => {
+		await spio.reset();
+	});
+
+	/**
+	 * PIN #81 (3fd40001) — the UI side of
+	 * test_pin81_stripping_a_dimension_suffix_… (test-ChangeFilename.php).
+	 * A name ENDING in "-scaled" can only come from an earlier rename (a typed
+	 * name skips wp_unique_filename) or a pre-WP-5.3 upload. Stripping the
+	 * suffix again reports success and reloads, but WordPress keeps pointing
+	 * at the old name, whose file was moved away: the image 404s.
+	 * Chromium also logs the 404 of the broken image on the reloaded edit
+	 * screen, so this block allows console errors and asserts that one.
+	 * FLIP-when-fixed: drop allowConsoleErrors, expect the attached file to
+	 * carry the stripped name and be served with 200.
+	 */
+	test('pin81: stripping a typed "-scaled" reports success but leaves WordPress on the deleted file (pinned_for_deferred_fix)', async ({ page, spio }) => {
+		const stem = 'e2e-' + Date.now().toString(36) + '-typed';
+		const up = await spio.uploadFixture('fixture-small.jpg', `${stem}.jpg`);
+
+		await openRenameField(page, up.id);
+		await renameAndReload(page, `${stem}-scaled`);
+		const mid = await spio.attachment(up.id);
+		expect(baseOf(mid.attached_file), 'Sentinel: the typed "-scaled" name was applied').toBe(`${stem}-scaled`);
+
+		await renameAndReload(page, stem); // reports success: the page reloads
+
+		const after = await spio.attachment(up.id);
+		// SENTINEL: the file itself was moved to the stripped name.
+		const moved = await page.request.get(`/wp-content/uploads/${after.attached_file.replace(`${stem}-scaled`, stem)}`);
+		expect(moved.status(), 'Sentinel: the file was renamed on disk').toBe(200);
+
+		// THE PIN: WordPress still points at the old name, which is gone.
+		expect(baseOf(after.attached_file), 'PIN #81: fixed? The attachment now follows the rename — flip this pin.').toBe(`${stem}-scaled`);
+		const served = await page.request.get(`/wp-content/uploads/${after.attached_file}`);
+		expect(served.status(), 'PIN #81: the image WordPress points at is gone').toBe(404);
+	});
+});

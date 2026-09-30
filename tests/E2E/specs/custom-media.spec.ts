@@ -162,10 +162,10 @@ test.describe('Custom Media', () => {
 		const folderId = await addSeededFolder(page, custom);
 
 		page.once('dialog', (dialog) => {
-			expect(dialog.message()).toMatch(/stop optimizing this folder/i);
+			expect(dialog.message()).toMatch(/Remove this folder from Custom Media/i);
 			void dialog.accept();
 		});
-		await custom.clickFolderAction(folderId, /Stop Monitoring/);
+		await custom.clickFolderAction(folderId, /Remove folder/);
 		await expect(custom.folderRow(folderId)).toHaveCount(0, { timeout: 30_000 });
 
 		// Server truth: the row is gone from the listing after a reload too.

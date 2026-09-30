@@ -79,7 +79,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     <label for="bulk-history">     
         <h3>
         <span class='icon white'><?php echo UIHelper::getIcon('res/images/icon/history.svg'); ?></span> 
-          <?php esc_html_e('Bulk History', 'shortpixel_image_optimizer'); ?>
+          <?php esc_html_e('Bulk History', 'shortpixel-image-optimiser'); ?>
           <span class='collap-arrow'><?php echo UIHelper::getIcon('res/images/icon/chevron.svg'); ?></span> 
         </h3>
     </label>

@@ -82,7 +82,7 @@ class ShortPixelFeedback {
             $html .= '</div><!-- .shortpixel-deactivate-options -->';
         }
         $html .= '<hr/>';
-        $html .= '<span title="' . __( 'Un-check this if you don\\\'t plan to use ShortPixel in the future on this website. You might also want to run a Bulk Delete SP Metadata before removing the plugin (Media Library -> Bulk ShortPixel).', 'shortpixel-image-optimiser' )
+        $html .= '<span title="' . __( 'Un-check this if you don\\\'t plan to use ShortPixel in the future on this website. You might also want to run a Bulk Delete SP Metadata before removing the plugin (Media -> Bulk ShortPixel).', 'shortpixel-image-optimiser' )
             . '">'
             . sprintf(esc_html__(  'If you want to completely uninstall ShortPixel from your site, please go to %s Settings → ShortPixel → Tools %s.', 'shortpixel-image-optimiser' ),'<a href="' . esc_url(admin_url('/options-general.php?page=wp-shortpixel-settings&part=tools'))  . '">', '</a>') . '</span><br>';
         $html .= '<hr/>';
@@ -187,11 +187,11 @@ class ShortPixelFeedback {
                     formContainer = $(formID),
                     deactivated = true,
                     detailsStrings = {
-                        'setup' : '<?php esc_html_e( 'What was the dificult part ?', 'shortpixel-image-optimiser') ?>',
-                        'docs' : '<?php esc_html_e( 'What can we describe more ?', 'shortpixel-image-optimiser' ) ?>',
-                        'features' : '<?php esc_html_e( 'How could we improve ?', 'shortpixel-image-optimiser' ) ?>',
-                        'better-plugin' : '<?php esc_html_e( 'Can you mention it ?', 'shortpixel-image-optimiser' ) ?>',
-                        'incompatibility' : '<?php esc_html_e( 'With what plugin or theme is incompatible ?', 'shortpixel-image-optimiser' ) ?>',
+                        'setup' : '<?php esc_html_e( 'What was the difficult part?', 'shortpixel-image-optimiser') ?>',
+                        'docs' : '<?php esc_html_e( 'What should we explain better?', 'shortpixel-image-optimiser' ) ?>',
+                        'features' : '<?php esc_html_e( 'How could we improve?', 'shortpixel-image-optimiser' ) ?>',
+                        'better-plugin' : '<?php esc_html_e( 'Which plugin is it?', 'shortpixel-image-optimiser' ) ?>',
+                        'incompatibility' : '<?php esc_html_e( 'Which plugin or theme is it incompatible with?', 'shortpixel-image-optimiser' ) ?>',
                         'maintenance' : '<?php esc_html_e( 'Please specify', 'shortpixel-image-optimiser') ?>',
 												'temporary' : '',
                     };
@@ -313,7 +313,7 @@ class ShortPixelFeedback {
             'incompatibility' => __( 'Incompatible with theme or plugin',  'shortpixel-image-optimiser' ),
             'maintenance'     => __( 'Other',  'shortpixel-image-optimiser' ),
         );
-        $form['details'] = __( 'How could we improve ?',  'shortpixel-image-optimiser');
+        $form['details'] = __( 'How could we improve?',  'shortpixel-image-optimiser');
         return $form;
     }
 

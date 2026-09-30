@@ -33,7 +33,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 						<p><?php _e('Here you can select which type of files should be optimized, as well as the settings for conversions and resizing/Smart Cropping.', 'shortpixel-image-optimiser'); ?></p>
         </div>
         <div class='step step-3' data-screen='webp'>
-						<p><?php _e('On this page you can select the type of next generation images to be created and choose a delivery method, either directly from your website or via our CDN.', 'shortpixel-image-optimiser'); ?></p>
+						<p><?php _e('On this page you can select the type of WebP/AVIF images to be created and choose a delivery method, either directly from your website or via our CDN.', 'shortpixel-image-optimiser'); ?></p>
         </div>
       <!--  <div class='step step-4'>
             switch to the upper right part and display a bubble with the text "This is where you will see most of the notifications from now on. You can also toggle between a simple and advanced mode of the settings, which will just hide or show some of the more advanced settings
@@ -58,7 +58,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 								<span class='next'><?php _e('Next', 'shortpixel-image-optimiser'); ?> <i class='shortpixel-icon arrow-right'></i></span>
           </button>
           <button type="button" class='close hide'>
-						<i class='shortpixel-icon robo'></i> <?php _e('Start images optimization', 'shortpixel-image-optimiser'); ?>
+						<i class='shortpixel-icon robo'></i> <?php _e('Start optimizing images', 'shortpixel-image-optimiser'); ?>
           </button>
       </div>
    </div>

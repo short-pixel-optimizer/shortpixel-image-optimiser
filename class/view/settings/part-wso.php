@@ -14,7 +14,7 @@ if (true === $view->hide_banner)
 
 <section class='wso banner'>
     <span class="image">
-      <a href="https://fastpixel.io/?utm_source=SPIO" target="_blank">
+      <a href="https://fastpixel.io/?utm_source=plugin&utm_medium=spio&utm_campaign=banner_bottom_main" target="_blank">
       <img src="<?php echo \wpSPIO()->plugin_url() ?>res/img/fastpixel-logo.svg" />
     </a>
     </span>

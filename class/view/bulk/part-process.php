@@ -47,8 +47,8 @@ $settings = \wpSPIO()->settings();
       <p class="description">
 
         <?php
-        $link = 'https://shortpixel.com/knowledge-base/article/background-processing-using-cron-jobs-in-shortpixel-image-optimizer/';
-        printf(esc_html('ShortPixel Bulk is processing in the background. You can close this browser window now and reopen it at any time to check the status of the bulk processing. %sLearn more%s','shortpixel-image-optimiser'), '<strong><a href="' . esc_attr($link) . '" target="_blank">','</a></strong>'); ?>
+        $link = 'https://shortpixel.com/knowledge-base/article/background-processing-using-cron-jobs-in-shortpixel-image-optimizer/?utm_source=plugin&utm_medium=spio&utm_campaign=plugin_bulk';
+        printf(esc_html__('ShortPixel Bulk is processing in the background. You can close this browser window now and reopen it at any time to check the status of the bulk processing. %sLearn more%s','shortpixel-image-optimiser'), '<strong><a href="' . esc_attr($link) . '" target="_blank">','</a></strong>'); ?>
       </p>
     <?php else: ?>
       <p class='description'>
@@ -65,7 +65,7 @@ $settings = \wpSPIO()->settings();
     <div class='bulk-summary' data-check-visibility data-control="data-check-media-total">
       <div class='heading'>
         <span><i class='dashicons dashicons-format-image'>&nbsp;</i> <?php esc_html_e('Media Library' ,'shortpixel-image-optimiser'); ?>
-              <?php printf(esc_html__('( %s items )', 'shortpixel-image-optimiser'), '<i data-stats-media="total">--</i>'); ?>
+              <?php printf(esc_html__('(items: %s)', 'shortpixel-image-optimiser'), '<i data-stats-media="total">--</i>'); ?>
         <?php if (false !== $this->view->customOperationMedia) {
             echo "</br><span class='special-op'>" . $this->view->customOperationMedia . "</span>";
          } ?>

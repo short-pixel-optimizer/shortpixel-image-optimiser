@@ -718,10 +718,12 @@ class OptimizeAiController extends OptimizerBase
      *      runs when an offloader already renamed the remote objects, as long
      *      as the image is not virtual (i.e. the files are on disk too).
      *   4. Updates attachment metadata + attached-file postmeta for the item
-     *      AND (202c6e3c) for every getWPMLDuplicates() sibling with
-     *      is_duplicate=true (see replaceMetaData()). Since 11aa2065 the
-     *      sibling list is collected BEFORE step 3, while every sibling still
-     *      shares this item's attached file.
+     *      AND for every getWPMLDuplicates() sibling (see replaceMetaData()).
+     *      Since 11aa2065 the sibling list is collected BEFORE step 3, while
+     *      every sibling still shares this item's attached file; since
+     *      8153f606 it is passed as $args['duplicates'] and the siblings get
+     *      the item's NEW values (slug, _wp_attached_file, metadata) instead
+     *      of a separate str_replace() pass of their own.
      *   5. Renames backup files via BackupController.
      *   6. Replaces source/target URL pairs in post content via Replacer2.
      *   7. Deletes the successfully-copied source files (since e165198f also
@@ -779,8 +781,8 @@ class OptimizeAiController extends OptimizerBase
      *     test_pin73_remote_only_rename_claims_success_without_renaming_anything_…).
      *     This is why (a) had to ship together with (b) — see the #77 report.
      *   - Also still open, pinned in tests/External/Offload/test-wpOffload.php:
-     *     provider exceptions escape uncaught, and after a successful rename
-     *     every thumbnail object records the MAIN filename. The forced
+     *     provider exceptions escape uncaught. (Thumbnail objects recording
+     *     the MAIN filename, #73(e), was fixed in 31c93f71.) The forced
      *     'ACL' => 'public-read' on every copy is tracked as BUG #76 (see
      *     wpOffload::replaceFiles()).
      *
@@ -1185,10 +1187,12 @@ class OptimizeAiController extends OptimizerBase
      * Replaces occurrences of $old_file with $new_file in the 'file', 'original_image', and
      * per-size 'file' entries of the attachment metadata array, then calls
      * wp_update_attachment_metadata(). Also updates the _wp_attached_file postmeta via
-     * update_attached_file() — for the item AND, since faa1e4cc, for
-     * WPML/Polylang duplicate siblings too (202c6e3c had skipped it for
-     * is_duplicate=true, which left Polylang translations on the old, deleted
-     * file). In dry_run mode all changes are logged but not persisted.
+     * update_attached_file() — for the item AND for the WPML/Polylang
+     * siblings in $args['duplicates'] (8153f606: they share the file, so each
+     * receives the item's NEW post_name, _wp_attached_file and full metadata
+     * array; previously replaceFiles() called this method once per sibling
+     * with is_duplicate=true). In dry_run mode all changes are logged but not
+     * persisted.
      *
      * Note: when dry_run is true the metadata 'file' string replacement is computed but
      * wp_update_attachment_metadata() is not called; the replaced $metadata variable is
@@ -1225,7 +1229,7 @@ class OptimizeAiController extends OptimizerBase
      * @param int    $item_id  WordPress attachment post ID.
      * @param string $old_file Original filename base to replace.
      * @param string $new_file New filename base to substitute.
-     * @param array  $args     Optional: dry_run (bool, log-only mode), is_duplicate (bool, skip the attached-file update for translation siblings).
+     * @param array  $args     Optional: dry_run (bool, log-only mode), duplicates (int[], WPML/Polylang siblings that receive the item's new values; since 8153f606 — replaces is_duplicate).
      * @return void
      */
     protected function replaceMetaData($item_id, $old_file, $new_file, $args = [])
@@ -1323,6 +1327,39 @@ class OptimizeAiController extends OptimizerBase
      * Replace a filename base without applying the same rename twice.
      * WPML may synchronize a translated attachment during the original
      * metadata update, before replaceFiles() reaches its duplicate pass.
+     *
+     * NOTE (8153f606): that separate duplicate pass no longer exists — the
+     * siblings now receive the item's new values directly — so the skip
+     * below guards nothing any more; its only remaining effect is BUG #81.
+     *
+     * (3fd40001) WPML core's syncAttachedFile hook copies the ORIGINAL's new
+     * _wp_attached_file to its translations as soon as it is written; the
+     * later duplicate pass would then str_replace() an already-new value and
+     * double the base whenever the new base contains the old one
+     * ("photo" → "photo-blue" → "photo-blue-blue"). Paths whose name already
+     * matches `^<new>(-scaled)?(-WxH)?$` are therefore returned unchanged.
+     * Regression-covered by test_rename_does_not_duplicate_basename_on_wpml_same_file_translation
+     * (tests/Compat/test-CompatWPML.php, with WPML's sync hook replicated).
+     *
+     * BUG #81 (OPEN, 2026-09-28): the skip also runs for the item being
+     * renamed, where the CURRENT name can match that pattern too — stripping
+     * a suffix ("banner-1920x600" → "banner", "photo-scaled" → "photo")
+     * moves the files but leaves _wp_attached_file and metadata['file'] on
+     * the deleted name, and the rename reports success. Reach: a fresh upload
+     * can never be named like that — wp_unique_filename() always appends
+     * "-1" to names ending in -scaled / -rotated / -WxH (WP 5.3+) — so it
+     * needs a name created before WP 5.3, by an earlier SPIO rename (typed
+     * names skip wp_unique_filename), or by an import that bypasses it. Pinned in
+     * tests/Integration/test-ChangeFilename.php
+     * (test_pin81_stripping_a_dimension_suffix_…) and tests/E2E/specs/rename.spec.ts (pin81). Verified fix (after 8153f606):
+     * delete the `preg_match($new_name_pattern, …)` skip — with it removed
+     * the #81 pins flip and the whole compat suite, incl. the WPML
+     * double-rename test with WPML's sync hook replicated, stays green.
+     *
+     * @param string $filename Path or basename to rename.
+     * @param string $old_file Old file base (no extension).
+     * @param string $new_file New file base (no extension).
+     * @return string The path with the base replaced, or unchanged when it already carries the new base.
      */
     protected function replaceFileBaseInPath($filename, $old_file, $new_file)
     {

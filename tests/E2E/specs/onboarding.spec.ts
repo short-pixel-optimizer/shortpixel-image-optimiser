@@ -77,7 +77,7 @@ test.describe('Onboarding (no API key)', () => {
 		await onboarding.submit.click();
 
 		await expect(onboarding.errors).toHaveClass(/\bis-visible\b/, { timeout: 15_000 });
-		await expect(onboarding.errors.locator('.shortpixel-notice.notice-error')).toContainText(/Error during verifying API key/i);
+		await expect(onboarding.errors.locator('.shortpixel-notice.notice-error')).toContainText(/Error while verifying the API key/i);
 		await expect(onboarding.submit).not.toHaveClass(/\bsubmitting\b/);
 		await page.waitForTimeout(3_500); // past the redirect timer
 		await expect(page.locator('.wrap.is-shortpixel-settings-page')).toHaveClass(/\bonboarding\b/);

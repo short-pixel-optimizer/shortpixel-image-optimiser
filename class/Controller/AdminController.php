@@ -730,7 +730,7 @@ class AdminController extends \ShortPixel\Controller
      * @return array Updated links array with the Settings link at the front.
      */
     public function generatePluginLinks($links) {
-        $in = '<a href="options-general.php?page=wp-shortpixel-settings">Settings</a>';
+        $in = '<a href="options-general.php?page=wp-shortpixel-settings">' . esc_html__('Settings', 'shortpixel-image-optimiser') . '</a>';
         array_unshift($links, $in);
         return $links;
     }

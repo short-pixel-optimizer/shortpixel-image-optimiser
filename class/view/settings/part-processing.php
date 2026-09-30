@@ -29,7 +29,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             ]);
       ?>
 
-      <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-optimize-media-on-upload/?target=iframe"></i>
+      <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-optimize-media-on-upload/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings"></i>
       <name>
 
         <?php esc_html_e('Automatically optimize images after they are uploaded (recommended).','shortpixel-image-optimiser');?>
@@ -51,7 +51,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             ]);
       ?>
 
-     <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/background-processing-using-cron-jobs-in-shortpixel-image-optimizer/?target=iframe"></i>
+     <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/background-processing-using-cron-jobs-in-shortpixel-image-optimizer/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings"></i>
 
      <name>
             <?php esc_html_e('Utilize this feature to optimize images without the need to keep a browser window open, using cron jobs.','shortpixel-image-optimiser');?>
@@ -60,7 +60,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     </content>
     <warning class="background_warning">
         <message>
-        <?php _e('I understand that background optimization may pause if there are no visitors on the website.', 'shortpixel-image-optimiser'); ?>
+        <?php _e('Background optimization may pause when your website has no visitors.', 'shortpixel-image-optimiser'); ?>
       </message>
     </warning>
   </setting>
@@ -77,14 +77,14 @@ if ( ! defined( 'ABSPATH' ) ) {
               ]);
         ?>
 
-        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-image-backup/?target=iframe"></i>
+        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-image-backup/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings"></i>
         <name>
           <?php esc_html_e('Keep a copy of your original files so you can restore them later if needed. Copies are stored in /wp-content/uploads/ShortpixelBackups/.','shortpixel-image-optimiser');?>
         </name>
 
         <info>
-          <?php printf(esc_html__('Backups are saved on your server. For extra safety, we recommend also keeping a %local or cloud copy.%s','shortpixel-image-optimiser'),
-             '<a href="https://shortpixel.com/knowledge-base/article/where-is-the-backup-folder-located/" target="_blank">','</a>'
+          <?php printf(esc_html__('Backups are saved on your server. For extra safety, we recommend also keeping a %slocal or cloud copy%s.','shortpixel-image-optimiser'),
+             '<a href="https://shortpixel.com/knowledge-base/article/where-is-the-backup-folder-located/?utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings" target="_blank">','</a>'
              );
          ?>
         </info>
@@ -141,6 +141,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         </name>
         <?php
           $removeperiods = [
+            ''       => __('Never', 'shortpixel-image-optimiser'), // nothing selected yet: no backups are removed
             'month'  =>  __('1 month', 'shortpixel-image-optimiser'), 
             '3month' => __('3 months', 'shortpixel-image-optimiser'),
             '6month' => __('6 months', 'shortpixel-image-optimiser'), 

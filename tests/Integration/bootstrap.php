@@ -84,6 +84,31 @@ if ( '1' === getenv( 'SPIO_PARTNER_PLUGINS' ) ) {
 	// before this file's code executes.
 }
 
+/**
+ * Pin the image editor to GD so results don't depend on the host's Imagick.
+ *
+ * Since WP 6.7, wp_generate_attachment_metadata() converts a HEIC upload to
+ * JPEG itself whenever the active image editor can read HEIC — which only
+ * Imagick built with HEIF support can. The HEIC tests (ApiConverterFlow,
+ * ConversionManual, ConversionRestore) model the common host WITHOUT that
+ * support, where the HEIC stays a .heic and SPIO's API conversion does the
+ * job. GitHub's runners get PHP (and php-imagick) refreshed from the PPA by
+ * setup-php on every run; from 2026-09-28 the Imagick build there reads
+ * HEIC, WordPress pre-converted the fixture to fixture-large-scaled.jpg, and
+ * those 3 tests failed on WP latest (not on 5.9, which predates the HEIC
+ * conversion) — the same commit that passed hours earlier failed on a
+ * re-run. The local harness has no Imagick at all, so it never saw it.
+ *
+ * Registered before the first test, so WP_UnitTestCase's hook backup keeps
+ * it for every test.
+ */
+add_filter(
+	'wp_image_editors',
+	static function () {
+		return array( 'WP_Image_Editor_GD' );
+	}
+);
+
 require_once __DIR__ . '/Helpers/MockShortPixelApi.php';
 require_once __DIR__ . '/Helpers/SPIO_IntegrationHelpers.php';
 require_once __DIR__ . '/Helpers/SPIO_IntegrationTestCase.php';

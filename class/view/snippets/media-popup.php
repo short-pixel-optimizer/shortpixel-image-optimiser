@@ -78,7 +78,7 @@ $scale_sizes =
 
     <section class="remove action_wrapper">
 		<h3><?php _e("Options", 'shortpixel-image-optimiser'); ?></h3>
-		<p><?php __('Note: transparency options only work with supported file formats, such as PNG', 'shortpixel-image-optimiser'); ?></p>
+		<p><?php esc_html_e('Note: transparency options only work with supported file formats, such as PNG', 'shortpixel-image-optimiser'); ?></p>
 
 						<label for="transparent_background">
 							<input id="transparent_background" type="radio" name="background_type" value="transparent" <?php checked('transparent', $view->settings['bg_type']); ?> checked >
@@ -130,12 +130,12 @@ $scale_sizes =
 
 		<section class='new_file_title wrapper'>
 			<span>
-				<p><?php _e('New File Name', 'shortpixel-image-optimiser'); ?></p>
+				<p><?php _e('New filename', 'shortpixel-image-optimiser'); ?></p>
 				<input type="text" name="new_filename" value="<?php echo esc_attr($suggestedFileName) ?>">
 			</span>
 
 			<span>
-				<p><?php _e('New Image Title', 'shortpixel-image-optimiser'); ?></p>
+				<p><?php _e('New image title', 'shortpixel-image-optimiser'); ?></p>
 				<input type="text" name="new_posttitle" value="<?php echo esc_attr($post_title) ?>">
 			</span>
 

@@ -71,6 +71,31 @@ export class BlockEditor {
 		return block!.attributes;
 	}
 
+	/**
+	 * Like imageBlock(), but also finds image blocks NESTED in Group /
+	 * Columns / etc. (walks every clientId incl. descendants).
+	 */
+	async imageBlockDeep(attachmentId: number): Promise<BlockAttributes & { clientId: string }> {
+		const found = await this.page.evaluate((id) => {
+			const be = (window as any).wp.data.select('core/block-editor');
+			for (const clientId of be.getClientIdsWithDescendants()) {
+				const b = be.getBlock(clientId);
+				if (b && b.name === 'core/image' && Number(b.attributes.id) === id) {
+					return { ...b.attributes, clientId };
+				}
+			}
+			return null;
+		}, attachmentId);
+		expect(found, `a (possibly nested) core/image block for attachment ${attachmentId} must exist`).toBeTruthy();
+		return found as BlockAttributes & { clientId: string };
+	}
+
+	/** Select a (possibly nested) image block by attachment id. */
+	async selectImageBlockDeep(attachmentId: number): Promise<void> {
+		const { clientId } = await this.imageBlockDeep(attachmentId);
+		await this.page.evaluate((cid) => (window as any).wp.data.dispatch('core/block-editor').selectBlock(cid), clientId);
+	}
+
 	/** Select the block for an attachment (drives SPIO's ListenGutenberg). */
 	async selectImageBlock(attachmentId: number): Promise<void> {
 		await this.page.evaluate((id) => {

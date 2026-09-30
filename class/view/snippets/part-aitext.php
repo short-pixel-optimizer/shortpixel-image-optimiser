@@ -55,11 +55,11 @@ elseif (false === $has_data):
 
 	elseif (false === $quotaControl->hasQuota() && false === $has_data):
 	?>
-	<p><?php _e('ShortPixel quota exhausted, the AI SEO data cannot be generated.', 'shortpixel-image-optimiser'); ?></p>
+	<p><?php _e('ShortPixel quota exhausted, the image SEO data cannot be generated.', 'shortpixel-image-optimiser'); ?></p>
 
 	<?php else: ?>
 
-        <a class='button button-secondary' title="Generate image SEO data with ShortPixel AI" href="javascript:window.ShortPixelProcessor.screen.RequestAlt(<?php echo esc_attr($item_id); ?>)">
+        <a class='button button-secondary' title="<?php esc_attr_e('Generate image SEO data with ShortPixel AI', 'shortpixel-image-optimiser'); ?>" href="javascript:window.ShortPixelProcessor.screen.RequestAlt(<?php echo esc_attr($item_id); ?>)">
 			<img class="shortpixel-ai-icon ai" src="<?php echo esc_url($ai_icon); ?>">	
 			<span><?php printf(__('AI Image SEO by ShortPixel %s', 'shortpixel-image-optimiser'), esc_html($dataItems)) ?></span>
 			<img class="shortpixel-ai-icon shortpixel" src="<?php echo esc_url($robo_icon); ?>">
@@ -81,25 +81,25 @@ elseif (false === $has_data):
 	<a class='button button-secondary' title="<?php _e('Redo', 'shortpixel-image-optimiser'); ?>" href="javascript:window.ShortPixelProcessor.screen.UndoAlt(<?php echo $item_id ?>, 'redo')"><?php _e('Redo', 'shortpixel-image-optimiser'); ?></a>
 	<?php endif; ?>
 
-	<a class='button button-secondary' title="<?php _e('Report to us, via e-mail, an incorrect image SEO data for this image', 'shortpixel-image-optimiser') ?>." href="<?php echo esc_attr($mailtolink); ?>"><?php _e('Report', 'shortpixel-image-optimiser'); ?></a>
+	<a class='button button-secondary' title="<?php _e('Report incorrect image SEO data for this image to us by e-mail.', 'shortpixel-image-optimiser') ?>" href="<?php echo esc_attr($mailtolink); ?>"><?php _e('Report', 'shortpixel-image-optimiser'); ?></a>
 
-	<a class='button button-secondary' title="<?php _e('Send us feedback about this feature, suggest other features, or vote on existing feature requests', 'shortpixel-image-optimiser'); ?> ." target="_blank" href="https://ideas.shortpixel.com/"><?php _e('Feedback', 'shortpixel-image-optimiser'); ?></a>
+	<a class='button button-secondary' title="<?php _e('Send us feedback about this feature, suggest other features, or vote on existing feature requests.', 'shortpixel-image-optimiser'); ?>" target="_blank" href="https://ideas.shortpixel.com/"><?php _e('Feedback', 'shortpixel-image-optimiser'); ?></a>
 
 	<?php if (true === $isDifferent)
 	{
-		 printf(__('%s The plugin has detected some fields were changed after generating AI Data. You can use the redo button to regenerate AI Data %s ', 'shortpixel-image-optimiser'), '<p>', '</p>');
+		 printf(__('%s The plugin has detected that some fields were changed after the image SEO data was generated. You can use the Redo button to generate it again. %s', 'shortpixel-image-optimiser'), '<p>', '</p>');
 	} ?>
 
 <?php endif; ?>
 
 <?php if (true === $is_renameable) : ?> 
 <div class="shortpixel-ai-replace-file hidden">
-	<?php _e('File Name :', 'shortpixel-image-optimiser'); ?>
+	<?php _e('Filename:', 'shortpixel-image-optimiser'); ?>
 	<input type="text" name="filename_replace" value="<?php echo esc_attr($filename); ?>" 
 	title="<?php _e('Warning - If this image is already indexed by search engines, please note that no automatic redirects are being added!', 'shortpixel-image-optimiser'); ?>">
 	
 	<span class="copy-to-clipboard-container">
-	<button type="button" class='button button-secondary' name="filename_replace_submit" value="1"><?php _e('Change Filename') ?></button>
+	<button type="button" class='button button-secondary' name="filename_replace_submit" value="1"><?php _e('Change Filename', 'shortpixel-image-optimiser') ?></button>
 	</span>
 </div>
 <?php endif; ?> 
