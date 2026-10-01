@@ -955,15 +955,15 @@ Log::addTemp("Monitoring replaceFiles args", $args);
 
         $searchArray = $replaceArray = $sourceFiles = $targetFiles = [];
 
-        foreach ($files['files'] as $key => $fileObj) {
-            $searchArray[$key] = $base_url . $fileObj->getFilename();
+        foreach ($files['files'] as $key => $thumbObj) {
+            $searchArray[$key] = $base_url . $thumbObj->getFilename();
 
-            $sourceFiles[$key] = $fileObj;
+            $sourceFiles[$key] = $thumbObj;
 
             // The Str replace leaves the extension intact here.
-            $filename = str_replace($base_filename, $newFileBase, $fileObj->getFileName());
+            $filename = str_replace($base_filename, $newFileBase, $thumbObj->getFileName());
             $replaceArray[$key] = $base_url . $filename;
-            $targetFiles[$key] = $fileObj->getFileDir() . $filename;
+            $targetFiles[$key] = $thumbObj->getFileDir() . $filename;
         }
 
         if (count($files['webp']) > 0) {
@@ -975,6 +975,12 @@ Log::addTemp("Monitoring replaceFiles args", $args);
                 $replaceArray['webp_' . $key] = $base_url . $webp_filename;
 
                 $targetFiles['webp_' . $key] =  $fileObj->getFileDir() . $webp_filename;
+
+               // Update meta value in postmeta as well.  
+               if (isset($files['files'][$key]))
+               {
+                     $files['files'][$key]->setMeta('webp', $webp_filename);
+               }
             }
         }
 
@@ -986,6 +992,11 @@ Log::addTemp("Monitoring replaceFiles args", $args);
                 $avif_filename = str_replace($base_filename, $newFileBase, $fileObj->getFileName());
                 $replaceArray['avif_' . $key] = $base_url . $avif_filename;
                 $targetFiles['avif_' . $key] =  $fileObj->getFileDir() . $avif_filename;
+
+               if (isset($files['files'][$key]))
+               {
+                     $files['files'][$key]->setMeta('avif', $avif_filename);
+               }
             }
         }
 
@@ -1036,6 +1047,13 @@ Log::addTemp("Monitoring replaceFiles args", $args);
                     }
                 } */
             }
+
+            // Copies are done, so update meta as well by saving. 
+            $imageModel->saveMeta();
+        }
+        elseif (true === $applied)
+        {
+            $imageModel->saveMeta();  
         }
 
         if ((count($copySource) === 0 || true === $args['dry_run']) && false === $applied  )
