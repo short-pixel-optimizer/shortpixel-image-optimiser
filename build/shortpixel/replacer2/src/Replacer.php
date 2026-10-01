@@ -278,6 +278,7 @@ class Replacer
 
 				if ($replaced_content !== $post_content) {
 
+					// @todo This should be moved indeed to wp_update_post ( And Updater.php class ) to better do with cache etc
 					//  $result = wp_update_post($post_ar);
 					$sql = 'UPDATE ' . $wpdb->posts . ' SET post_content = %s WHERE ID = %d';
 					$sql = $wpdb->prepare($sql, $replaced_content, $post_id);
@@ -288,6 +289,8 @@ class Replacer
 						// Notice::addError('Something went wrong while replacing' .  $result->get_error_message() );
 						Log::addError('WP-Error during post update', $result);
 					}
+			        clean_post_cache($post_id);
+
 				}
 			}
 		}
@@ -381,7 +384,7 @@ class Replacer
 					}
 				} // Loop
 			} // if
-		} // foreach
+		} // foreach on table options
 
 		return $number_of_updates;
 	} // function
