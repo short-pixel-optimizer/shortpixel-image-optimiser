@@ -138,31 +138,45 @@ if ( ! defined( 'ABSPATH' ) ) {
             		    	</label>
 			</div>
 
-<?php if (false == $view->is_unlimited && false === $view->hide_banner): ?>
+<?php if (false === $view->is_ai_unlimited && false === $view->hide_banner): ?>
           <div class='upgrade-banner'>
               <div class="robo-container">
                   <div class="robo-from-banner"> <?php echo UIHelper::getIcon('res/img/robo-slider.png'); ?></div>
-                  <h2><?php _e('Upgrade to ShortPixel Unlimited', 'shortpixel-image-optimiser'); ?> </h2>
+                  <div class="banner-title">
+                      <span class="banner-pretitle"><?php esc_html_e('Upgrade to', 'shortpixel-image-optimiser'); ?></span>
+                      <h2>ShortPixel <span class="banner-highlight"><?php esc_html_e('Unlimited AI', 'shortpixel-image-optimiser'); ?></span></h2>
+                  </div>
+              </div>
+              <div class="banner-audience">
+                  <span class="dashicons dashicons-building"></span>
+                  <span><?php esc_html_e('Ideal for agencies & multi‑site owners', 'shortpixel-image-optimiser'); ?></span>
               </div>
               <div class="banner-line-container">
                   <span class="shortpixel-icon ok"></span>
-                  <p><?php _e('Unlimited credits ', 'shortpixel-image-optimiser'); ?></p>
+                  <p><?php esc_html_e('Unlimited AI alt text', 'shortpixel-image-optimiser'); ?> <span class="banner-new-badge"><?php esc_html_e('NEW', 'shortpixel-image-optimiser'); ?></span></p>
               </div>
               <div class="banner-line-container">
                   <span class="shortpixel-icon ok"></span>
-                  <p><?php _e('Unlimited websites ', 'shortpixel-image-optimiser'); ?></p>
+                  <p><?php esc_html_e('Unlimited bg removal', 'shortpixel-image-optimiser'); ?> <span class="banner-new-badge"><?php esc_html_e('NEW', 'shortpixel-image-optimiser'); ?></span></p>
               </div>
               <div class="banner-line-container">
                   <span class="shortpixel-icon ok"></span>
-                  <p><?php _e('Unlimited WebP/AVIF ', 'shortpixel-image-optimiser'); ?></p>
+                  <p><?php esc_html_e('Unlimited credits', 'shortpixel-image-optimiser'); ?></p>
               </div>
               <div class="banner-line-container">
                   <span class="shortpixel-icon ok"></span>
-                  <p><?php _e('500GB CDN/month ', 'shortpixel-image-optimiser'); ?></p>
+                  <p><?php esc_html_e('Unlimited websites', 'shortpixel-image-optimiser'); ?></p>
               </div>
               <div class="banner-line-container">
                   <span class="shortpixel-icon ok"></span>
-                  <p><?php _e('SmartCompress & more ', 'shortpixel-image-optimiser'); ?></p>
+                  <p><?php esc_html_e('Unlimited WebP/AVIF', 'shortpixel-image-optimiser'); ?></p>
+              </div>
+              <div class="banner-price">
+                  <?php printf(
+                      /* translators: %s: monthly price, e.g. $13.33 */
+                      esc_html__('From %s /mo', 'shortpixel-image-optimiser'),
+                      '<strong>$13.33</strong>'
+                  ); ?>
               </div>
               <div class='banner-upgrade-button'>
                   <a href="https://shortpixel.com/pricing?utm_source=plugin&utm_medium=spio&utm_campaign=sidebar_banner_main" target="_blank" class="button button-primary" >

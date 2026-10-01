@@ -754,6 +754,8 @@ class SettingsViewController extends \ShortPixel\ViewController
          $offLoader = Offloader::getInstance();
          $this->view->cloudflare_constant = defined('SHORTPIXEL_CFTOKEN') ? true : false;
          $this->view->is_unlimited =  (!is_null($this->quotaData) && $this->quotaData->unlimited) ? true : false;
+         // The sidebar upgrade banner promotes the Unlimited AI plan: shown to everyone not on it (same flag as the Bulk summary).
+         $this->view->is_ai_unlimited = (!is_null($this->quotaData) && property_exists($this->quotaData, 'AIUnlimited') && true === $this->quotaData->AIUnlimited) ? true : false;
          $this->view->is_wpoffload = $offLoader->isActive('wp-offload');
 
          require_once( ABSPATH . 'wp-admin/includes/translation-install.php' );

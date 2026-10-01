@@ -17,6 +17,10 @@ export type MockKnobs = Partial<{
 	apiStatusCode: number | null;
 	/** free-sign-up-plugin (new-account onboarding): 'success' (fresh key) | 'existing' | 'error'. */
 	signupStatus: 'success' | 'existing' | 'error';
+	/** api-status.php PlanType, e.g. 'Monthly' (default) or 'Unlimited AI'. */
+	planType: string;
+	/** api-status.php Unlimited flag: 'true' = unlimited optimization credits. Default 'false'. */
+	unlimited: 'true' | 'false';
 }>;
 
 /** Status codes the mock ShortPixel API understands (mirror of the mu-plugin constants). */

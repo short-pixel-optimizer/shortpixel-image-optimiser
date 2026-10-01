@@ -79,6 +79,10 @@ class SPIO_E2E_MockApi {
 			'apiStatusCode'   => null,
 			// free-sign-up-plugin (new-account onboarding): 'success' | 'existing' | 'error'.
 			'signupStatus'    => 'success',
+			// api-status.php account plan: PlanType ('Monthly', 'Unlimited AI', …) and the
+			// Unlimited flag ('true' = unlimited optimization credits).
+			'planType'        => 'Monthly',
+			'unlimited'       => 'false',
 		);
 	}
 
@@ -87,6 +91,7 @@ class SPIO_E2E_MockApi {
 		delete_option( self::OPTION_KNOBS );
 		delete_option( self::OPTION_STATE );
 		delete_option( self::OPTION_REQUESTS );
+		delete_transient( 'quotaData' ); // SPIO's cached api-status answer (QuotaController::CACHE_NAME)
 
 		$dir = self::stashDir();
 		if ( is_dir( $dir ) ) {
@@ -219,8 +224,8 @@ class SPIO_E2E_MockApi {
 					'Code'    => (int) $forced,
 					'Message' => isset( $messages[ (int) $forced ] ) ? $messages[ (int) $forced ] : 'Forced by E2E test',
 				),
-				'Unlimited'              => 'false',
-				'PlanType'               => 'Monthly',
+				'Unlimited'              => (string) $this->knobs['unlimited'],
+				'PlanType'               => (string) $this->knobs['planType'],
 				'DateSubscription'       => gmdate( 'Y-m-d', time() - 5 * DAY_IN_SECONDS ),
 				'DomainCheck'            => 'Accessible',
 				'APICallsMade'           => ( self::CODE_QUOTA_EXCEEDED === (int) $forced ) ? 10000 : 100,
@@ -236,8 +241,8 @@ class SPIO_E2E_MockApi {
 
 		$body = array(
 			'Status'                 => array( 'Code' => 2, 'Message' => 'Success' ),
-			'Unlimited'              => 'false',
-			'PlanType'               => 'Monthly',
+			'Unlimited'              => (string) $this->knobs['unlimited'],
+			'PlanType'               => (string) $this->knobs['planType'],
 			'DateSubscription'       => gmdate( 'Y-m-d', time() - 5 * DAY_IN_SECONDS ),
 			'DomainCheck'            => 'Accessible',
 			'APICallsMade'           => 100,

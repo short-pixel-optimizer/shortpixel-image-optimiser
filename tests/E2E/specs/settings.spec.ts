@@ -339,3 +339,38 @@ test.describe('Regression #62 — window.URL overwritten by a third-party script
 		expect(consoleErrors.join('\n'), 'REGRESSION #62: no URL.parse error any more').not.toMatch(/URL\.parse/);
 	});
 });
+
+/**
+ * The sidebar upgrade banner promotes the Unlimited AI plan, so it shows for
+ * every account that is NOT on Unlimited AI — including the unlimited
+ * optimization plan — and hides for Unlimited AI (same AIUnlimited flag as
+ * the Bulk summary's "Buy Unlimited AI credits").
+ */
+test.describe('Settings — Unlimited AI upgrade banner', () => {
+	test.beforeEach(async ({ spio }) => {
+		await spio.reset();
+	});
+
+	const cases: Array<{ name: string; planType: string; unlimited: 'true' | 'false'; visible: boolean }> = [
+		{ name: 'a regular monthly plan', planType: 'Monthly', unlimited: 'false', visible: true },
+		{ name: 'the unlimited optimization plan (not AI)', planType: 'Unlimited', unlimited: 'true', visible: true },
+		{ name: 'the Unlimited AI plan', planType: 'Unlimited AI', unlimited: 'true', visible: false },
+	];
+
+	for (const c of cases) {
+		test(`banner ${c.visible ? 'shows' : 'is hidden'} for ${c.name}`, async ({ page, spio }) => {
+			await spio.setMock({ planType: c.planType, unlimited: c.unlimited });
+			const settings = new SettingsPage(page);
+			await settings.goto('overview');
+
+			const banner = page.locator('.upgrade-banner');
+			if (c.visible) {
+				await expect(banner).toBeVisible();
+				await expect(banner).toContainText('Unlimited AI');
+				await expect(banner.locator('.banner-upgrade-button a')).toHaveAttribute('href', /shortpixel\.com\/pricing/);
+			} else {
+				await expect(banner).toHaveCount(0);
+			}
+		});
+	}
+});

@@ -45,12 +45,13 @@
 
   .upgrade-banner
   {
-	  //height: 180px;
 	  width: 220px;
-	  height: 305px;
+	  box-sizing: border-box;
+	  padding: 14px 12px 4px;
 	  margin: 16px 9px 7px 2px;
 	  border-radius: 0.7rem;
-	  background-color: $blue_background;
+	  background-color: #fff;
+	  border: 1px solid $color-grey;
 
 	  .robo-container {
 		  display: flex;
@@ -59,13 +60,51 @@
 
 	  }
 	  	.robo-from-banner{
-			margin: 0 16px;
+			margin: 0 10px 0 0;
+			flex-shrink: 0;
+		}
+
+		.banner-pretitle {
+			display: block;
+			font-family: Roboto, serif;
+			font-size: 12px;
+			color: $black_default;
+			opacity: 0.7;
 		}
 
 	  	h2{
 			font-family: Roboto, serif;
 			font-weight: 700;
+			font-size: 17px;
+			line-height: 1.25;
+			margin: 2px 0 0;
+			color: $black_default;
+
+			.banner-highlight {
+				color: $blue_dark;
+			}
+		}
+
+		.banner-audience {
+			display: flex;
+			flex-direction: row;
+			align-items: flex-start;
+			margin: 12px 0 8px;
+			padding: 6px 8px;
+			border-radius: 6px;
+			background-color: $blue_extralight;
 			color: $blue_dark;
+			font-family: Roboto, serif;
+			font-size: 12px;
+			line-height: 1.35;
+
+			.dashicons {
+				font-size: 16px;
+				width: 16px;
+				height: 16px;
+				margin-right: 6px;
+				flex-shrink: 0;
+			}
 		}
 
 	  .banner-line-container {
@@ -73,18 +112,50 @@
 		  display: flex;
 		  flex-direction: row;
 		  align-items: center;
-		  height: 30px;
+		  min-height: 28px;
 		  font-family: Roboto, serif;
 		  font-weight: 400;
-		  color: $blue_dark;
+		  color: $black_default;
+
+		  p {
+			  margin: 3px 0;
+			  line-height: 1.4;
+		  }
 	  }
+
+	  	.banner-new-badge {
+			display: inline-block;
+			margin-left: 2px;
+			padding: 1px 6px;
+			border-radius: 8px;
+			background-color: $blue_extralight;
+			color: $blue_dark;
+			font-family: Roboto, serif;
+			font-size: 10px;
+			font-weight: 700;
+			letter-spacing: 0.3px;
+		}
 
 		  .shortpixel-icon.ok {
 			  width: 17px;
 			  height: 18px;
 			  margin-right: 8px;
-			  margin-left: 10px;
+			  margin-left: 2px;
+			  flex-shrink: 0;
 		  }
+
+		.banner-price {
+			margin-top: 10px;
+			text-align: center;
+			font-family: Roboto, serif;
+			font-size: 13px;
+			color: $black_default;
+
+			strong {
+				font-size: 20px;
+				font-weight: 700;
+			}
+		}
 
 	   	.button {
 			padding: 10px 12px;

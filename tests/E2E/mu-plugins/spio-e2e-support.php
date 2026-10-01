@@ -552,6 +552,11 @@ function spio_e2e_route_mock( WP_REST_Request $request ) {
 		(array) $request->get_json_params()
 	);
 	update_option( SPIO_E2E_MockApi::OPTION_KNOBS, $knobs, false );
+	// A plan change must be visible on the next page load: drop SPIO's cached quota.
+	$params = (array) $request->get_json_params();
+	if ( isset( $params['planType'] ) || isset( $params['unlimited'] ) || array_key_exists( 'apiStatusCode', $params ) ) {
+		delete_transient( 'quotaData' );
+	}
 	return rest_ensure_response( array( 'ok' => true, 'knobs' => $knobs ) );
 }
 
