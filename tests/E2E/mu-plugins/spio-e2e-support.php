@@ -114,6 +114,11 @@ function spio_e2e_apply_seed() {
 		$settings->ai_use_exif       = 0;
 		$settings->ai_use_post       = 0;
 		$settings->aiPreserve        = 0;
+		// Remove EXIF: a FRESH install turns it on at activation (exif = 0),
+		// an older site keeps the model default (1). Pinned to the fresh-install
+		// value so a long-lived local stack renders the Image Optimization tab
+		// like CI's freshly provisioned one (baseline mismatch 2026-10-01).
+		$settings->exif              = 0;
 
 		// AI generation switches, pinned to their SettingsModel defaults.
 		// Specs switch some of these off (e.g. the Gutenberg "switched-off

@@ -187,7 +187,9 @@ test.describe('Gutenberg AI — pinned', () => {
 
 		const image = await spio.uploadFixture('fixture-small.jpg');
 		// An alt already in the post → 'missing' mode writes no alt → rename-only result.
-		const post = await spio.createPost({ image_id: image.id, alt: 'Existing alt' });
+		// A DRAFT: a published post would count as "image in use", and since
+		// 80ac531b the AI rename (not a fresh upload) then keeps the old name.
+		const post = await spio.createPost({ image_id: image.id, alt: 'Existing alt', status: 'draft' });
 
 		const editor = new BlockEditor(page);
 		await editor.open(post.id);
