@@ -1450,4 +1450,34 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 			$this->assertStringNotContainsString( basename( $full ), $content, "[$lang] No old -scaled URL is left." );
 		}
 	}
+
+	/**
+	 * #79 with WPML (fix 9c3dab50, checked 2026-10-01) — WPML copies carry
+	 * their OWN ShortPixel meta (optimize propagates it to every same-file
+	 * translation). After the main language renames the shared file, the
+	 * translation's webp/avif names must follow too.
+	 */
+	public function test_rename_updates_the_webp_avif_meta_of_wpml_translations() {
+		\wpSPIO()->settings()->createWebp = 1;
+		\wpSPIO()->settings()->createAvif = 1;
+		$id     = $this->uploadFixture( 'fixture-small.jpg' );
+		$dup_id = $this->createDuplicateAttachment( $id );
+		$this->insertTranslationRow( $id, 9501, 'en' );
+		$this->insertTranslationRow( $dup_id, 9501, 'de', 'en' );
+		$this->optimizeAttachment( $id );
+		$this->purgeQueueTable();
+
+		$dup_before = $this->freshImageModel( $dup_id );
+		$this->assertNotEmpty( $dup_before->getMeta( 'webp' ), 'Sentinel: the translation has its own webp meta.' );
+
+		$new_base = 'wpml79-' . strtolower( wp_generate_password( 5, false, false ) );
+		$this->assertTrue( $this->renameAttachment( $id, $new_base ), 'Sentinel: the main-language rename succeeded.' );
+
+		$main = $this->freshImageModel( $id );
+		$dup  = $this->freshImageModel( $dup_id );
+		$this->assertStringStartsWith( $new_base, (string) $main->getMeta( 'webp' ), 'Sentinel: the main item\'s webp meta follows (#79 fix).' );
+		$this->assertStringStartsWith( $new_base, (string) $dup->getMeta( 'webp' ), 'The translation\'s webp meta follows the rename.' );
+		$this->assertStringStartsWith( $new_base, (string) $dup->getMeta( 'avif' ), 'The translation\'s avif meta follows the rename.' );
+		$this->assertTrue( $dup->getWebp()->exists(), 'The translation\'s webp points at an existing file.' );
+	}
 }
