@@ -235,26 +235,21 @@ test.describe('Change Filename — "-scaled" names', () => {
 	});
 });
 
-test.describe('Change Filename — "-scaled" pin81', () => {
-	test.use({ allowConsoleErrors: true });
-
+test.describe('Change Filename — "-scaled" regression81', () => {
 	test.beforeEach(async ({ spio }) => {
 		await spio.reset();
 	});
 
 	/**
-	 * PIN #81 (3fd40001) — the UI side of
-	 * test_pin81_stripping_a_dimension_suffix_… (test-ChangeFilename.php).
+	 * REGRESSION #81 (found in 3fd40001, fixed in dfa346be) — the UI side of
+	 * test_regression81_stripping_a_dimension_suffix_… (test-ChangeFilename.php).
 	 * A name ENDING in "-scaled" can only come from an earlier rename (a typed
 	 * name skips wp_unique_filename) or a pre-WP-5.3 upload. Stripping the
-	 * suffix again reports success and reloads, but WordPress keeps pointing
-	 * at the old name, whose file was moved away: the image 404s.
-	 * Chromium also logs the 404 of the broken image on the reloaded edit
-	 * screen, so this block allows console errors and asserts that one.
-	 * FLIP-when-fixed: drop allowConsoleErrors, expect the attached file to
-	 * carry the stripped name and be served with 200.
+	 * suffix again used to report success while WordPress kept pointing at the
+	 * old name, whose file was moved away (the image 404'd). No console errors
+	 * are allowed: the reloaded edit screen must not request a missing image.
 	 */
-	test('pin81: stripping a typed "-scaled" reports success but leaves WordPress on the deleted file (pinned_for_deferred_fix)', async ({ page, spio }) => {
+	test('regression81: stripping a typed "-scaled" moves WordPress to the stripped name', async ({ page, spio }) => {
 		const stem = 'e2e-' + Date.now().toString(36) + '-typed';
 		const up = await spio.uploadFixture('fixture-small.jpg', `${stem}.jpg`);
 
@@ -263,16 +258,11 @@ test.describe('Change Filename — "-scaled" pin81', () => {
 		const mid = await spio.attachment(up.id);
 		expect(baseOf(mid.attached_file), 'Sentinel: the typed "-scaled" name was applied').toBe(`${stem}-scaled`);
 
-		await renameAndReload(page, stem); // reports success: the page reloads
+		await renameAndReload(page, stem);
 
 		const after = await spio.attachment(up.id);
-		// SENTINEL: the file itself was moved to the stripped name.
-		const moved = await page.request.get(`/wp-content/uploads/${after.attached_file.replace(`${stem}-scaled`, stem)}`);
-		expect(moved.status(), 'Sentinel: the file was renamed on disk').toBe(200);
-
-		// THE PIN: WordPress still points at the old name, which is gone.
-		expect(baseOf(after.attached_file), 'PIN #81: fixed? The attachment now follows the rename — flip this pin.').toBe(`${stem}-scaled`);
+		expect(baseOf(after.attached_file), 'REGRESSION #81: the attachment follows the rename').toBe(stem);
 		const served = await page.request.get(`/wp-content/uploads/${after.attached_file}`);
-		expect(served.status(), 'PIN #81: the image WordPress points at is gone').toBe(404);
+		expect(served.status(), 'REGRESSION #81: the image WordPress points at exists').toBe(200);
 	});
 });
