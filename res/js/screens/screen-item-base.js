@@ -330,7 +330,7 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 
 		window.addEventListener('shortpixel.HandleUndoAlt', function (event) {
 			var data = event.detail.media;
-			var original = data.current; 
+			var original = data.aiData; 
 	
 			if ('redo' == action_type)
 			{

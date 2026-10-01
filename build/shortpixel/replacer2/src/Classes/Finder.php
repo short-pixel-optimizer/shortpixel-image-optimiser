@@ -153,7 +153,7 @@ class Finder
 				$prepare = array_merge($prepare, $post_ids);
 			}
 
-			if (is_array($args['exclude_post_ids']))
+			if (is_array($args['exclude_post_ids']) && count($args['exclude_post_ids']) > 0)
 			{
 				$exclude_post_ids = $args['exclude_post_ids'];
 				$placeholders = implode(',', array_fill(0, count($exclude_post_ids), '%d'));
@@ -163,6 +163,7 @@ class Finder
 			}
 
 			$postmeta_sql = $wpdb->prepare($postmeta_sql, $prepare);
+		Log::addTemp("POSTMETA SQL", $postmeta_sql);
 			$rs = $wpdb->get_results($postmeta_sql, \ARRAY_A);
 
 			if (false === is_null($this->callback) && true === is_callable($this->callback)) {

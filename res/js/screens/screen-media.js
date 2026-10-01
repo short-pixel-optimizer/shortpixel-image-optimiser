@@ -1084,11 +1084,19 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		const post_id = wp.data.select( 'core/editor' ).getCurrentPostId();
 
 		var attach_id = resultItem.item_id;
+		var overwriteMode = true; // if it comes back in results, overwrite it, unless it's the second aiData option. To keep things simple.
+
 		// Replaced content is specialized in returning back what was actually replaced, default to that.
-		
+		// The reason for this is probably more checking what the settings are and what should be replaced.
 		if (resultItem.replaced_content && resultItem.replaced_content[post_id])
 		{
 			var aiData = resultItem.replaced_content[post_id];  // Should be replaced_content when it has item_id (?)	 
+		}
+		else if (resultItem.aiData) // If not post_id, then the post it might not be saved in the first place. 
+		{
+			 var aiData = resultItem.aiData; 
+			overwriteMode = false; 
+			 
 		}
 		if (resultItem.replaced_content && resultItem.replaced_content.replaced_url)
 		{
@@ -1119,10 +1127,11 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		if (Object.keys(attributes).length === 0 && replacedUrl == null) {
 			return false;
 		}
-
-		let blocks = wp.data.select('core/block-editor').getBlocks();
-		for (let i = 0; i < blocks.length; i++) {
-			let block = blocks[i];
+console.log('Update GB', resultItem);
+		let blockEditor = wp.data.select('core/block-editor');
+		let clientIds = blockEditor.getClientIdsWithDescendants();
+		for (let i = 0; i < clientIds.length; i++) {
+			let block = blockEditor.getBlock(clientIds[i]);
 
 			if (block.attributes.id == attach_id) {
 				let clientId = block.clientId;
@@ -1151,6 +1160,16 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 					else {
 						attributes.url = replacedUrl;
 					}
+				}
+
+				if (false == overwriteMode && attributes.alt && block.attributes.alt && block.attributes.alt.length > 0)
+				{
+					delete attributes.alt; 
+				}
+
+				if (false == overwriteMode && attributes.caption && block.attributes.caption && block.attributes.caption.length > 0)
+				{
+					delete attributes.caption;
 				}
 
 				wp.data.dispatch('core/block-editor').updateBlockAttributes(clientId,

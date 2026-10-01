@@ -471,7 +471,6 @@ class OptimizeAiController extends OptimizerBase
                 $url = $urls[0];
             }
 
-            Log::addTemp('HandleSucces -> QIteM DATa', $qItem->data());
             if ($currentFileBase !== $aiData['filebase']) {
                 $args = [
                     'dry_run' => false,
@@ -1607,6 +1606,10 @@ Log::addTemp("Monitoring replaceFiles args", $args);
                 }
             } // foreach 
             $qItem->result()->replaced_content = $result_replaced_content;
+        }
+        else 
+        {
+             Log::addDebug('Handlereplace - Results returned zero.');
         }
     }
 
