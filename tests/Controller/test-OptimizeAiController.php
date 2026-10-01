@@ -959,7 +959,11 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 			public function get( $name ) { return $this->inner->get( $name ); }
 			public function getMeta( $name = false ) { return $this->inner->getMeta( $name ); }
 			public function getOptimizeUrls() { return []; }
-			protected function saveMeta() {}
+			// Public like the real MediaLibraryModel / CustomImageModel: since
+			// 9c3dab50 replaceFiles() calls $imageModel->saveMeta() after the
+			// copy loop. Counted so the call on the all-copies-failed path shows.
+			public $saveMetaCalls = 0;
+			public function saveMeta() { $this->saveMetaCalls++; }
 			protected function loadMeta() {}
 			protected function getImprovements() { return false; }
 			protected function getExcludePatterns() { return []; }
@@ -1052,6 +1056,18 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 		$this->assertFalse(
 			is_array( $replaced ) && array_key_exists( 'replaced_url', $replaced ),
 			'REGRESSION #52: a failed rename must not record a replaced_url for the editor.'
+		);
+
+		// PIN (found 2026-10-01 reviewing 9c3dab50, the #79 fix): saveMeta() runs
+		// right after the copy loop, BEFORE the "copy failed to copy anything"
+		// bail-out — so when every copy fails, ShortPixel's meta is still saved
+		// with the NEW webp/avif names set while building the plan (files that
+		// were never created). Fix: save the meta after that bail-out.
+		// FLIP-when-fixed: expect 0 calls.
+		$this->assertSame(
+			1,
+			$model->saveMetaCalls,
+			'PIN: fixed? saveMeta() is no longer called when every copy failed — flip this to assertSame( 0, … ).'
 		);
 
 		// Clean up.

@@ -1400,22 +1400,17 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	}
 
 	/**
-	 * PIN #79 — after a rename ShortPixel's own image meta keeps the OLD
-	 * WebP/AVIF filenames.
+	 * REGRESSION #79 (fixed in 9c3dab50) — after a rename ShortPixel's own
+	 * image meta must carry the NEW WebP/AVIF filenames, for the main image
+	 * and every thumbnail.
 	 *
-	 * replaceFiles() renames the .webp/.avif companions on disk, but nothing
-	 * updates image_meta 'webp' / 'avif' (the stored filename, set by
-	 * ImageModel::setWebp()/setAvif() and the optimize result). getImageType()
-	 * (ImageModel.php:782) returns the stored name WITHOUT checking it exists
-	 * (unless the shortpixel/image/filecheck filter is on), so every consumer
-	 * of getWebp()/getAvif() — delete, restore, the WebP/AVIF cleanup tools —
-	 * targets files that no longer exist, and the renamed companions are
-	 * orphaned. Front-end delivery is unaffected (it checks the disk).
-	 *
-	 * FLIP-when-fixed: the meta carries the new names, getWebp()/getAvif()
-	 * exist, and deleting the attachment removes the renamed companions.
+	 * replaceFiles() renamed the .webp/.avif companions on disk but left
+	 * image_meta 'webp' / 'avif' on the old names. getImageType() returns the
+	 * stored name without checking it exists, so delete, restore and the
+	 * WebP/AVIF cleanup tools targeted missing files and the renamed
+	 * companions were orphaned.
 	 */
-	public function test_pin79_rename_leaves_old_webp_avif_names_in_shortpixel_meta_pinned_for_deferred_fix() {
+	public function test_regression79_rename_updates_the_webp_avif_names_in_shortpixel_meta() {
 		$this->_setRole( 'administrator' );
 		\wpSPIO()->settings()->createWebp = 1;
 		\wpSPIO()->settings()->createAvif = 1;
@@ -1446,43 +1441,50 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$this->assertNotEmpty( $renamed, 'Sentinel: renamed .webp/.avif files exist on disk.' );
 		$this->assertFileDoesNotExist( $old_webp_path, 'Sentinel: the old .webp is gone.' );
 
-		// THE PIN: ShortPixel's meta still names the old files.
+		// REGRESSION #79: the meta names the renamed companions, for the main image…
 		$after = $this->freshImageModel( $attachment_id );
-		$this->assertSame( $old_webp_name, $after->getMeta( 'webp' ), 'PIN #79: fixed? The webp meta now carries the new name — flip this pin.' );
-		$this->assertSame( $old_avif_name, $after->getMeta( 'avif' ), 'PIN #79: the avif meta also keeps the old name.' );
-		$this->assertFalse( $after->getWebp()->exists(), 'PIN #79: getWebp() points at a file that does not exist.' );
+		$this->assertNotSame( $old_webp_name, $after->getMeta( 'webp' ), 'REGRESSION #79: the webp meta changed.' );
+		$this->assertStringStartsWith( $new_base, (string) $after->getMeta( 'webp' ), 'REGRESSION #79: the webp meta carries the new name.' );
+		$this->assertStringStartsWith( $new_base, (string) $after->getMeta( 'avif' ), 'REGRESSION #79: the avif meta carries the new name.' );
+		$this->assertTrue( $after->getWebp()->exists(), 'REGRESSION #79: getWebp() points at an existing file.' );
+		$this->assertTrue( $after->getAvif()->exists(), 'REGRESSION #79: getAvif() points at an existing file.' );
 
-		// Consequence: deleting the attachment leaves the renamed companions behind.
+		// …and for every thumbnail that has companions.
+		$checked = 0;
+		foreach ( $after->get( 'thumbnails' ) as $name => $thumb ) {
+			foreach ( array( 'webp', 'avif' ) as $type ) {
+				$stored = $thumb->getMeta( $type );
+				if ( empty( $stored ) ) {
+					continue;
+				}
+				$checked++;
+				$this->assertStringStartsWith( $new_base, (string) $stored, "REGRESSION #79: thumbnail $name $type meta carries the new name." );
+				$this->assertFileExists( $dir . '/' . $stored, "REGRESSION #79: thumbnail $name $type file exists." );
+			}
+		}
+		$this->assertGreaterThan( 0, $checked, 'Sentinel: thumbnails with webp/avif companions were checked.' );
+
+		// Deleting the attachment now removes the renamed companions.
 		wp_delete_attachment( $attachment_id, true );
-		$this->assertNotEmpty( glob( $dir . '/' . $new_base . '*.{webp,avif}', GLOB_BRACE ), 'PIN #79: the renamed .webp/.avif are orphaned after delete.' );
+		$this->assertEmpty( glob( $dir . '/' . $new_base . '*.{webp,avif}', GLOB_BRACE ), 'REGRESSION #79: no renamed .webp/.avif is orphaned after delete.' );
 		foreach ( glob( $dir . '/' . $new_base . '*' ) as $leftover ) {
 			unlink( $leftover ); // keep the shared uploads dir clean for later runs
 		}
 	}
 
 	/**
-	 * PIN (found 2026-10-01 on Pedro's test site with a persistent object
-	 * cache) — after a rename, the URL rewrite in posts leaves the post cache
-	 * stale.
+	 * REGRESSION (found 2026-10-01 on Pedro's test site with a persistent
+	 * object cache, fixed in ba79abb5) — after a rename, the URL rewrite in
+	 * post content must invalidate the post cache.
 	 *
-	 * Replacer::replace() → doReplaceQuery() updates post_content with a
-	 * direct `$wpdb->query( UPDATE … )` and never calls clean_post_cache(); the
-	 * postmeta / options / termmeta / usermeta / commentmeta updates in
-	 * handleMetaData() are direct SQL too, with no wp_cache_delete(). The
-	 * database holds the new URLs, but get_post() keeps serving the OLD
-	 * content from the object cache — on a persistent cache (Redis /
-	 * Memcached) for every later request, so the block editor opens the old
-	 * URLs (files already moved → broken images) and the next save or
-	 * autosave writes the old URLs back for good. (The alt-text writer,
-	 * Updater::updatePost(), uses wp_update_post() + clean_post_cache() and
-	 * is not affected.)
-	 *
-	 * The WP test framework's in-memory cache shows the same staleness inside
-	 * one request, so this pin needs no Redis.
-	 * FLIP-when-fixed: get_post() returns the new URL without a manual cache
-	 * flush.
+	 * Replacer::doReplaceQuery() updates post_content with direct SQL; without
+	 * clean_post_cache() get_post() kept serving the OLD content from the
+	 * object cache — on Redis / Memcached for every later request, so the
+	 * block editor opened old URLs (files already moved) and the next save or
+	 * autosave wrote them back. The WP test framework's in-memory cache shows
+	 * the same staleness inside one request, so no Redis is needed here.
 	 */
-	public function test_pin_rename_leaves_the_post_cache_with_the_old_url_pinned_for_deferred_fix() {
+	public function test_regression_rename_refreshes_the_post_cache_with_the_new_url() {
 		$this->_setRole( 'administrator' );
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->purgeQueueTable();
@@ -1506,11 +1508,82 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		// SENTINEL: the database really was rewritten.
 		$this->assertStringContainsString( $new_base, $db_content, 'Sentinel: the database holds the new URL.' );
 
-		// THE PIN: the cached post still has the old URL.
-		$this->assertStringContainsString(
-			$old_name,
-			get_post( $post_id )->post_content,
-			'PIN: fixed? get_post() now returns the renamed URL without a cache flush — flip this pin (expect the new URL).'
-		);
+		// REGRESSION: the cached post follows the database, no manual flush.
+		$content = get_post( $post_id )->post_content;
+		$this->assertStringContainsString( $new_base, $content, 'REGRESSION: get_post() returns the renamed URL.' );
+		$this->assertStringNotContainsString( $old_name, $content, 'REGRESSION: no stale old URL.' );
+	}
+
+	/**
+	 * PIN (found 2026-10-01 reviewing 9c3dab50, LOW: no user-facing caller
+	 * uses dry_run today) — a dry-run writes the NEW webp/avif names into
+	 * ShortPixel's meta although no file moves. 9c3dab50 calls setMeta() while
+	 * building the rename plan and saveMeta() after the copy loop, neither
+	 * guarded by dry_run; afterwards getWebp()/getAvif() point at files that
+	 * do not exist.
+	 * Fix: only setMeta()/saveMeta() when false === $args['dry_run'].
+	 * FLIP-when-fixed: the stored names stay the same and still exist.
+	 */
+	public function test_pin_dry_run_writes_the_new_webp_avif_names_into_the_meta_pinned_for_deferred_fix() {
+		\wpSPIO()->settings()->createWebp = 1;
+		\wpSPIO()->settings()->createAvif = 1;
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->optimizeAttachment( $attachment_id );
+		$this->purgeQueueTable();
+
+		$before = $this->freshImageModel( $attachment_id );
+		$webp   = (string) $before->getMeta( 'webp' );
+		$avif   = (string) $before->getMeta( 'avif' );
+		$this->assertNotSame( '', $webp, 'Sentinel: the webp name is stored.' );
+
+		$this->replaceFilesWithArgs( $attachment_id, 'dry79-' . wp_generate_password( 6, false ), array( 'dry_run' => true, 'recent_upload' => true ) );
+
+		$after = $this->freshImageModel( $attachment_id );
+		// SENTINEL: the dry-run really left the files alone.
+		$this->assertFileExists( dirname( get_attached_file( $attachment_id ) ) . '/' . $webp, 'Sentinel: the original .webp is still on disk.' );
+		// THE PIN: the meta now names files that were never created.
+		$this->assertNotSame( $webp, (string) $after->getMeta( 'webp' ), 'PIN: fixed? A dry-run no longer changes the stored webp name — flip this pin (assertSame).' );
+		$this->assertFalse( $after->getWebp()->exists(), 'PIN: the stored webp name points at a missing file.' );
+	}
+
+	/**
+	 * PIN #82 (found 2026-10-01 reviewing ba79abb5, deferred to 6.6.x) — after a rename, the URL
+	 * rewrite in POSTMETA (page builders: Elementor, Breakdance… keep image
+	 * URLs there) and in OPTIONS (widgets, theme mods) leaves the object cache
+	 * stale. ba79abb5 added clean_post_cache() to the post_content pass only;
+	 * Replacer::handleMetaData() still updates with direct SQL. On Redis /
+	 * Memcached a page builder then loads the old URLs and saves them back.
+	 * VERIFIED fix (temp-applied 2026-10-01): after each meta UPDATE,
+	 * wp_cache_delete(<object id>, 'post_meta'|'comment_meta'|'term_meta'|
+	 * 'user_meta'); for options wp_cache_delete('alloptions'/'notoptions',
+	 * 'options') + the option's own key.
+	 * FLIP-when-fixed: both cached reads return the new URL.
+	 */
+	public function test_pin82_rename_leaves_cached_postmeta_and_options_with_the_old_url_pinned_for_deferred_fix() {
+		$this->_setRole( 'administrator' );
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+		$url      = wp_get_attachment_url( $attachment_id );
+		$old_name = basename( $url );
+
+		$page_id = self::factory()->post->create( array( 'post_status' => 'draft', 'post_content' => '' ) );
+		update_post_meta( $page_id, '_spio_test_builder_data', 'image:' . $url );
+		update_option( 'spio_test_widget_image', 'image:' . $url );
+		// Prime the caches the way a page view does.
+		$this->assertStringContainsString( $old_name, get_post_meta( $page_id, '_spio_test_builder_data', true ) );
+		$this->assertStringContainsString( $old_name, get_option( 'spio_test_widget_image' ) );
+
+		$new_base = 'meta-cache-' . strtolower( wp_generate_password( 4, false, false ) );
+		list( $result ) = $this->renameViaEngine( $attachment_id, $new_base );
+		$this->assertTrue( $result, 'Sentinel: the rename succeeded.' );
+
+		global $wpdb;
+		// SENTINELS: the database itself was rewritten.
+		$this->assertStringContainsString( $new_base, (string) $wpdb->get_var( $wpdb->prepare( "SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key = '_spio_test_builder_data'", $page_id ) ), 'Sentinel: postmeta rewritten in the database.' );
+		$this->assertStringContainsString( $new_base, (string) $wpdb->get_var( "SELECT option_value FROM {$wpdb->options} WHERE option_name = 'spio_test_widget_image'" ), 'Sentinel: option rewritten in the database.' );
+
+		// THE PIN: the cached reads still return the old URL.
+		$this->assertStringContainsString( $old_name, get_post_meta( $page_id, '_spio_test_builder_data', true ), 'PIN #82: fixed? Cached postmeta now follows the rename — flip this pin.' );
+		$this->assertStringContainsString( $old_name, get_option( 'spio_test_widget_image' ), 'PIN #82: fixed? The cached option now follows the rename — flip this pin.' );
 	}
 }
