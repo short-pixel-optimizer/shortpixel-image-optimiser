@@ -1127,7 +1127,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		if (Object.keys(attributes).length === 0 && replacedUrl == null) {
 			return false;
 		}
-console.log('Update GB', resultItem);
 		let blockEditor = wp.data.select('core/block-editor');
 		let clientIds = blockEditor.getClientIdsWithDescendants();
 		for (let i = 0; i < clientIds.length; i++) {

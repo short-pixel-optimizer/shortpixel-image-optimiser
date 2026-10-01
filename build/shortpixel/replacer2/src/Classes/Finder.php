@@ -163,7 +163,6 @@ class Finder
 			}
 
 			$postmeta_sql = $wpdb->prepare($postmeta_sql, $prepare);
-		Log::addTemp("POSTMETA SQL", $postmeta_sql);
 			$rs = $wpdb->get_results($postmeta_sql, \ARRAY_A);
 
 			if (false === is_null($this->callback) && true === is_callable($this->callback)) {

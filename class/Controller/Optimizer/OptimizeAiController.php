@@ -867,7 +867,6 @@ class OptimizeAiController extends OptimizerBase
         ];
 
         $args = wp_parse_args($args, $defaults);
-Log::addTemp("Monitoring replaceFiles args", $args);
         $imageModel = $qItem->imageModel;
         $item_id = $qItem->item_id;
 
@@ -923,10 +922,6 @@ Log::addTemp("Monitoring replaceFiles args", $args);
                 Log::addInfo('AI Replace File: Image is mentioned - ' . $qItem->item_id);
                 return false;
             }
-        }
-        else 
-        {
-            Log::addTemp('Got logged as recent upload', $args);
         }
 
 

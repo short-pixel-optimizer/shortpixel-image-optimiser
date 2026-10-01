@@ -419,7 +419,6 @@ class QueueItem
       if (count($keepDataArgs) > 0)
       {
          $this->data()->next_keepdata = $next_keepdata;
-         Log::addTemp('new Action, keeping Data: ', $keepDataArgs);
          foreach($keepDataArgs as $name => $value)
          {
 
