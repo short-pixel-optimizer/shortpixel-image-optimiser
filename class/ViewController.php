@@ -125,8 +125,7 @@ class ViewController extends Controller
       // Obscure issue. Detected other plugin that adds information to $_POST without an actual form submit, which would trigger the nonce check on the settings page. In case this happens, be lenient.
       if ( ! isset($_POST['ajaxSave']) && ! isset($_POST['action']) && ! isset($_REQUEST['sp-action']) )
       {
-//         $_POST = []; 
-         Log::addTemp('POST seen - no nonce return false');
+         $_POST = []; 
          return false;
       }
       Log::addInfo('Check Post fails nonce check, action : ' . $this->form_action, array($_POST) );

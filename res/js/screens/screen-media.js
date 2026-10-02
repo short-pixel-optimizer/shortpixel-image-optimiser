@@ -1141,6 +1141,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 					let targetParts = targetFilename.match(/^(.*)(\.[^.]+)$/);
 					let thumbnailSuffix = '';
 
+
 					if (currentUrl && targetParts) {
 						let currentUrlObject = new URL(currentUrl, window.location.href);
 						let currentFilename = currentUrlObject.pathname.split('/').pop();
@@ -1150,6 +1151,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 							thumbnailSuffix = thumbnailMatch[1];
 						}
 
+						// Glue back. TargetParts[1] - Base image name + thumbNail + targetParts[2] = extension
 						currentUrlObject.pathname = currentUrlObject.pathname.replace(
 							/[^/]+$/,
 							targetParts[1] + thumbnailSuffix + targetParts[2]
