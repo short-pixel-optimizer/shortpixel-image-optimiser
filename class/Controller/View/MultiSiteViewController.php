@@ -92,7 +92,12 @@ class MultiSiteViewController extends SettingsViewController
       public function load()
       {
           $this->loadEnv();
-          $this->checkPost();
+          $check = $this->checkPost();
+
+          if ( false === $check)
+          {
+            return false; 
+          }
 
           if ($this->is_form_submit)
           {

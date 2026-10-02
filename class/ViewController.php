@@ -123,22 +123,29 @@ class ViewController extends Controller
     elseif (! isset($_POST['sp-nonce']) || ! wp_verify_nonce( sanitize_key($_POST['sp-nonce']), $this->form_action))
     {
       // Obscure issue. Detected other plugin that adds information to $_POST without an actual form submit, which would trigger the nonce check on the settings page. In case this happens, be lenient.
-      if ( ! isset($_POST['ajaxSave']) && ! isset($_POST['action']) )
+      if ( ! isset($_POST['ajaxSave']) && ! isset($_POST['action']) && ! isset($_REQUEST['sp-action']) )
       {
+//         $_POST = []; 
+         Log::addTemp('POST seen - no nonce return false');
          return false;
       }
       Log::addInfo('Check Post fails nonce check, action : ' . $this->form_action, array($_POST) );
 			wp_die('Nonce Failed');
-      return true;
     }
     elseif (isset($_POST) && count($_POST) > 0)
     {
       // See method docblock — the full $_POST array (including any API key
       // field on the site settings form) reaches the debug log here.
+      $check = check_admin_referer( $this->form_action, 'sp-nonce' ); // extra check, when we are wrong here, it dies.
 
-      check_admin_referer( $this->form_action, 'sp-nonce' ); // extra check, when we are wrong here, it dies.
+      // Check admin referer dies usually if not valid until action is -1, so this is extra check. 
+      if (false === $check)
+      {
+         wp_die('Nonce Failed');
+      }
 
       $this->is_form_submit = true;
+
       if (true === $processPostData) // only processData on form save.
       {
           $this->processPostData($_POST);

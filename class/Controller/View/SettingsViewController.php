@@ -140,8 +140,7 @@ class SettingsViewController extends \ShortPixel\ViewController
       public function load()
       {
         $this->loadEnv();
-        $this->checkPost(); // sets up post data
-
+        $check = $this->checkPost(); // sets up post data
 
         if ($this->model->redirectedSettings < 2)
         {
@@ -187,7 +186,12 @@ class SettingsViewController extends \ShortPixel\ViewController
       {
         $this->loadEnv();
 
-        $this->checkPost(false);
+        $check = $this->checkPost(false);
+
+        if (false === $check)
+        {
+           return false; 
+        }
 
         if ($this->is_form_submit && isset($_POST['apiKey']))
         {
@@ -229,7 +233,13 @@ class SettingsViewController extends \ShortPixel\ViewController
 			public function action_request_new_key()
 			{
 					$this->loadEnv();
- 	        $this->checkPost(false);
+ 	        $check = $this->checkPost(false);
+
+          if (false === $check)
+          { 
+            return false; 
+          }
+
 
 					$email = isset($_POST['pluginemail']) ? trim(sanitize_text_field($_POST['pluginemail'])) : null;
 
@@ -310,7 +320,13 @@ class SettingsViewController extends \ShortPixel\ViewController
       public function action_end_quick_tour()
       {
           $this->loadEnv();
-          $this->checkPost(false);
+          $check = $this->checkPost(false);
+
+          if (false === $check)
+          { 
+            return false; 
+          }
+
 
           $this->model->redirectedSettings = 3;
 
@@ -372,7 +388,6 @@ class SettingsViewController extends \ShortPixel\ViewController
             }
         }
         
-
         $this->doRedirect();
       }
 
@@ -387,7 +402,11 @@ class SettingsViewController extends \ShortPixel\ViewController
        */
 			public function action_debug_redirectBulk()
 			{
-				$this->checkPost(false);
+				$check = $this->checkPost(false);
+        if (false === $check)
+        {
+          return false; 
+        }
 
 				QueueController::resetQueues();
 
@@ -419,7 +438,13 @@ class SettingsViewController extends \ShortPixel\ViewController
       public function action_debug_resetStats()
       {
           $this->loadEnv();
-					$this->checkPost(false);
+					$check = $this->checkPost(false);
+          
+          if (false === $check)
+          {  
+            return false; 
+          }
+
           $statsController = StatsController::getInstance();
           $statsController->reset();
 					$this->doRedirect('reload');
@@ -434,7 +459,14 @@ class SettingsViewController extends \ShortPixel\ViewController
       {
 
           $this->loadEnv();
-					$this->checkPost(false);
+					$check = $this->checkPost(false);
+
+          if (false === $check)
+          { 
+            return false; 
+          }
+
+
           $quotaController = QuotaController::getInstance();
           $quotaController->forceCheckRemoteQuota();
 					$this->doRedirect('reload');
@@ -448,7 +480,14 @@ class SettingsViewController extends \ShortPixel\ViewController
       public function action_debug_resetNotices()
       {
           $this->loadEnv();
-					$this->checkPost(false);
+					$check = $this->checkPost(false);
+
+          if (false === $check)
+          { 
+            return false; 
+          }
+
+
           Notice::resetNotices();
           $nControl = new Notice(); // trigger reload.
 					$this->doRedirect('reload');
@@ -465,7 +504,13 @@ class SettingsViewController extends \ShortPixel\ViewController
        */
 			public function action_debug_triggerNotice()
 			{
-				$this->checkPost(false);
+				$check = $this->checkPost(false);
+        if (false === $check)
+        { 
+          return false; 
+        }
+
+
 				$key = isset($_REQUEST['notice_constant']) ? sanitize_text_field($_REQUEST['notice_constant']) : false;
 
 				if ($key !== false)
@@ -505,7 +550,12 @@ class SettingsViewController extends \ShortPixel\ViewController
 				 $queue = isset($_REQUEST['queue']) ? sanitize_text_field($_REQUEST['queue']) : null;
 
 				 $this->loadEnv();
-				 $this->checkPost(false);
+				 $check = $this->checkPost(false);
+
+         if (false === $check)
+         {
+            return false; 
+         }
 
          $uninstall = isset($_REQUEST['use_uninstall']) ? true : false;
 
@@ -568,7 +618,12 @@ class SettingsViewController extends \ShortPixel\ViewController
 			public function action_debug_removePrevented()
 			{
 				$this->loadEnv();
-				$this->checkPost(false);
+				$check = $this->checkPost(false);
+
+        if (false === $check)
+        { 
+          return false; 
+        }
 
 				global $wpdb;
 				$sql = 'delete from ' . $wpdb->postmeta . ' where meta_key = %s';
@@ -594,7 +649,13 @@ class SettingsViewController extends \ShortPixel\ViewController
        */
 			public function action_debug_removeProcessorKey()
 			{
-				$this->checkPost(false);
+				$check = $this->checkPost(false);
+
+        if (false === $check)
+        { 
+          return false; 
+        }
+
 
 				$cacheControl = new CacheController();
 				$cacheControl->deleteItem('bulk-secret');
