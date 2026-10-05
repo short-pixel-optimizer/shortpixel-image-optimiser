@@ -77,3 +77,30 @@
 			.green { color: green; }
 			.red { color: red; }
     }
+
+// Change Filename result under the field in the Save box (#submitdiv, outside
+// .view-edit-media): same look as the settings <warning>/<error> boxes, with a
+// green left border on success and red on error.
+.shortpixel-rename-result
+{
+    border-left: 4px solid $green_highlight;
+    // Thin top/right edge: the Save box is white too, so without it the box looks unfinished.
+    border-top: 1px solid #dcdcde;
+    border-right: 1px solid #dcdcde;
+    box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.1);
+    background: #fff;
+    padding: 8px;
+    margin: 8px 0;
+
+    &.is-error
+    {
+        border-left-color: #ff0000;
+    }
+}
+
+// "Warning:" above the Rename file button: same red as WordPress's own
+// "Delete permanently" link in the Save box (.submitdelete, #b32d2e).
+.shortpixel-rename-notice .shortpixel-rename-warning
+{
+    color: #b32d2e;
+}

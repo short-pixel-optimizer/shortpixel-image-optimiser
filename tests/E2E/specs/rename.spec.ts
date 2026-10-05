@@ -57,6 +57,31 @@ test.describe('Change Filename (edit-media)', () => {
 		await spio.reset();
 	});
 
+	test('a warning above the button links to the knowledge base, and the whole rename area has a tooltip', async ({ page, spio }) => {
+		const a = await spio.uploadFixture('fixture-small.jpg');
+		await openRenameField(page, a.id);
+		const row = page.locator('#submitdiv .misc-pub-filename.shortpixel-replace-if');
+		const notice = row.locator('.shortpixel-rename-notice');
+		await expect(notice).toBeVisible();
+		await expect(notice).toContainText('Warning: Please read before renaming.');
+		const warning = notice.locator('.shortpixel-rename-warning');
+		await expect(warning).toHaveText('Warning:');
+		await expect(warning, '"Warning:" uses the same red as "Delete permanently"').toHaveCSS('color', 'rgb(179, 45, 46)');
+		await expect(warning, '"Warning:" is not bold (the red is enough)').toHaveCSS('font-weight', '400');
+		const help = notice.locator('a.shortpixel-help-link');
+		await expect(help).toHaveAttribute('target', '_blank');
+		await expect(help).toHaveAttribute('href', /shortpixel\.com\/knowledge-base\/.*utm_campaign=plugin_media_library/);
+
+		// One tooltip covers the field, the warning and the button.
+		const area = row.locator('.shortpixel-rename-area');
+		await expect(area).toHaveAttribute('title', 'Renaming this file may break links to this image. External links and Google Images results using the old URL will no longer work. No redirect is created from the old filename.');
+		await expect(area.locator('input[name="filename_replace"]')).toHaveCount(1);
+		await expect(area.locator('.shortpixel-rename-notice')).toHaveCount(1);
+		await expect(area.locator('button[name="filename_replace_submit"]')).toHaveText('Rename file');
+		// The field has no title of its own that would hide the area's tooltip.
+		await expect(area.locator('input[name="filename_replace"]')).not.toHaveAttribute('title', /.+/);
+	});
+
 	test('regression #77: a failed rename shows the error and does NOT reload', async ({ page, spio }) => {
 		const a = await spio.uploadFixture('fixture-small.jpg');
 		const b = await spio.uploadFixture('fixture-small.jpg');
@@ -72,6 +97,9 @@ test.describe('Change Filename (edit-media)', () => {
 		await answered;
 
 		await expect(page.locator(ERROR)).toHaveText(/Files were not replaced/);
+		// Red left border, and only one result message at a time.
+		await expect(page.locator(ERROR)).toHaveClass(/shortpixel-rename-result/);
+		await expect(page.locator(ERROR)).toHaveCSS('border-left-color', 'rgb(255, 0, 0)');
 		expect(await documentWasKept(page), 'REGRESSION #77: a failed rename must not reload the page').toBe(true);
 		expect((await spio.attachment(a.id)).attached_file, 'Nothing may be renamed on a conflict').toBe(aBefore.attached_file);
 	});
@@ -90,6 +118,11 @@ test.describe('Change Filename (edit-media)', () => {
 		expect(await documentWasKept(page), 'A successful rename reloads the page').toBe(false);
 		expect((await spio.attachment(a.id)).attached_file).toContain(newBase);
 		await expect(page.locator(FIELD)).toHaveValue(new RegExp(newBase));
+
+		// Confirmation with a green left border (same box style as the settings warnings).
+		const ok = page.locator('#submitdiv .misc-pub-filename .shortpixel-rename-result.is-success');
+		await expect(ok).toHaveText('File successfully renamed!');
+		await expect(ok).toHaveCSS('border-left-color', 'rgb(0, 200, 152)');
 	});
 
 });

@@ -96,18 +96,23 @@ elseif (false === $has_data):
 
 <?php if (true === $is_renameable) : ?> 
 <div class="shortpixel-ai-replace-file hidden">
+	<?php // The inner wrapper carries the tooltip: only the CONTENT of this div is copied into the Save box (screen-media.js). ?>
+	<div class="shortpixel-rename-area" title="<?php esc_attr_e('Renaming this file may break links to this image. External links and Google Images results using the old URL will no longer work. No redirect is created from the old filename.', 'shortpixel-image-optimiser'); ?>">
 	<?php _e('Filename:', 'shortpixel-image-optimiser'); ?>
-	<input type="text" name="filename_replace" value="<?php echo esc_attr($filename); ?>" 
-	title="<?php _e('Warning - If this image is already indexed by search engines, please note that no automatic redirects are being added!', 'shortpixel-image-optimiser'); ?>">
-	
-	<span class="copy-to-clipboard-container">
-	<button type="button" class='button button-secondary' name="filename_replace_submit" value="1"><?php _e('Change Filename', 'shortpixel-image-optimiser') ?></button>
-	</span>
+	<input type="text" name="filename_replace" value="<?php echo esc_attr($filename); ?>">
 
-	<?php if (true === $files_replace_success)
-	{
-		printf(__('%s Files successfully replaced! %s', 'shortpixel-image-optimiser'), '<p>', '</p>');
-	}
-	?>
+	<p class="description shortpixel-rename-notice">
+		<?php printf(esc_html__('%1$sWarning:%2$s Please read before renaming.', 'shortpixel-image-optimiser'), '<span class="shortpixel-rename-warning">', '</span>'); ?>
+		<a class="shortpixel-help-link" style="text-decoration:none;" href="https://shortpixel.com/knowledge-base/article/how-to-rename-images-with-shortpixel-image-optimizer/?utm_source=plugin&utm_medium=spio&utm_campaign=plugin_media_library" target="_blank" rel="noopener" title="<?php esc_attr_e('Read more about renaming image files', 'shortpixel-image-optimiser'); ?>"><span class="dashicons dashicons-editor-help" aria-hidden="true" style="font-size:16px;width:16px;height:16px;vertical-align:text-bottom;"></span><span class="screen-reader-text"><?php esc_html_e('Read more about renaming image files', 'shortpixel-image-optimiser'); ?></span></a>
+	</p>
+
+	<span class="copy-to-clipboard-container">
+	<button type="button" class='button button-secondary' name="filename_replace_submit" value="1"><?php _e('Rename file', 'shortpixel-image-optimiser') ?></button>
+	</span>
+	</div><!-- .shortpixel-rename-area -->
+
+	<?php if (true === $files_replace_success) : ?>
+		<p class="shortpixel-rename-result is-success"><?php esc_html_e('File successfully renamed!', 'shortpixel-image-optimiser'); ?></p>
+	<?php endif; ?>
 </div>
 <?php endif; ?> 

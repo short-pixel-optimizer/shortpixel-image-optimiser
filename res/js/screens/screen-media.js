@@ -944,10 +944,12 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 									var result = data.media.results[0]; 
 									if (true === result.is_error)
 									{
-										let msg = document.createElement('p'); 
-										msg.innerHTML = result.message; 
-										msg.classList.add('error'); 
-										pubFileName.append(msg); 
+										// One result message at a time: drop an earlier success or error first.
+										pubFileName.querySelectorAll('.shortpixel-rename-result').forEach((old) => old.remove());
+										let msg = document.createElement('p');
+										msg.innerHTML = result.message;
+										msg.classList.add('error', 'shortpixel-rename-result', 'is-error');
+										pubFileName.append(msg);
 									}
 									else
 									{
