@@ -862,14 +862,12 @@ class OptimizeAiController extends OptimizerBase
         $defaults = [
             'dry_run' => false,
             'imageThreshold' => 1, // How much references before not replacing this image.
-            'url' => false,
             'recent_upload' => false,
         ];
 
         $args = wp_parse_args($args, $defaults);
         $imageModel = $qItem->imageModel;
         $item_id = $qItem->item_id;
-
 
         if ($imageModel->is_virtual())
         {
@@ -887,6 +885,21 @@ class OptimizeAiController extends OptimizerBase
             return false; 
         }
 
+        if (true === $imageModel->isScaled()) {
+            $url = $imageModel->getOriginalFile()->getURL();
+        } else {
+            $url = $imageModel->getUrl();
+        }
+
+        // S3 offload always puts URL to the S3.  Which causes issue replacing URls when timestamps are in use 
+        // To prevent issues, just check the (translated / local-pointed filepath ) and create URL on basis of that. 
+        if (\wpSPIO()->env()->plugin_active('s3-offload'))
+        {
+            $fs = \wpSPIO()->filesystem();  
+            $urlFile = ($imageModel->isScaled()) ? $imageModel->getOriginalFile() : $imageModel;      
+            $url = $fs->pathToUrl($urlFile); 
+        }
+
         // Get duplicates before moving / copying files to otherwise it might not recognize duplicate files after renaming ( attached_file issue )
         if (method_exists($imageModel, 'getWPMLDuplicates')) {
             $duplicates = $imageModel->getWPMLDuplicates();
@@ -894,7 +907,7 @@ class OptimizeAiController extends OptimizerBase
 
         // If recent upload is true, bypass the check if the image is used. 
         if (true !== $args['recent_upload']) {
-            $url = $args['url'];
+            //$url = $args['url'];
 
             $replacer2 = \ShortPixel\Replacer\Replacer::getInstance();
             $setup = $replacer2->Setup();
@@ -914,8 +927,6 @@ class OptimizeAiController extends OptimizerBase
             }
 
             $meta_results = $finder->postmeta(['post_status' => ['publish', 'inherit'], 'post_fields' => ['post_id'], 'exclude_post_ids' => $exclude_post_ids]);
-
-
             $imagePostCount = count($results) + count($meta_results);
 
             if (intval($imagePostCount) >= $args['imageThreshold']) {
@@ -923,7 +934,6 @@ class OptimizeAiController extends OptimizerBase
                 return false;
             }
         }
-
 
         $files = $imageModel->getAllFiles();
 
@@ -940,7 +950,7 @@ class OptimizeAiController extends OptimizerBase
             $baseFileObj = $files['files'][$imageModel->getImageKey('main')];
         }
 
-        $source_url = $url = $baseFileObj->getURL();
+        $source_url = $url;
         $base_filename = $baseFileObj->getFileBase();
 
         $base_url = parse_url($url, PHP_URL_PATH);
@@ -1066,6 +1076,7 @@ class OptimizeAiController extends OptimizerBase
         {
              $args['duplicates'] = $duplicates; 
         }
+
         $this->replaceMetaData($item_id, $base_filename, $newFileBase, $args);
 
         // Trigger updates 
@@ -1140,16 +1151,11 @@ class OptimizeAiController extends OptimizerBase
     public function ajax_replaceFile($qItem, $newFileName, $args = [])
     {
         $imageModel = $qItem->imageModel;
-        if (true === $imageModel->isScaled()) {
-            $url = $imageModel->getOriginalFile()->getURL();
-        } else {
-            $url = $qItem->imageModel->getUrl();
-        }
 
         $baseReplace = pathinfo(basename($newFileName), PATHINFO_FILENAME);
 
+
         $defaults = [
-            'url' => $url,
             'recent_upload' => true,
             'dry_run' => false, 
         ];
