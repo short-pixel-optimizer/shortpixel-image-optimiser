@@ -964,6 +964,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			$thumbnail = (isset($thumbObjs[$sizeName])) ? $thumbObjs[$sizeName] : false;
 
 			if (! is_object($thumbnail)) {
+				foreach ($thumbObjs as $candidateObj) {
+					if ($candidateObj->getFileName() === $fileName) { $thumbnail = $candidateObj; break; }
+				}
+			}
+
+			if (! is_object($thumbnail)) {
 				Log::addError('Thumbnail with size name: '  . $sizeName . ' is not registered in this image. This should not happen, skipping.', $thumbObjs);
 				Log::addError('OptimizeData', $optimizeData);
 				continue;
