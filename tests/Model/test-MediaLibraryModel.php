@@ -44,8 +44,15 @@
  *   - removeLegacyShortPixel / removeLegacy (post-meta + WP metadata cleanup)
  *   - __debugInfo (shape sentinel)
  *
+ * SESSION 6 (done) — handleOptimized thumbnail key mismatch:
+ *   - pinThumbKey: results keyed by file name (the addUnlisted shape) are
+ *     discarded instead of matched, which re-queues the item forever.
+ *     Reported from simplyhappenings.com on 6.5.6; reproduces unchanged on
+ *     this branch. Paired with a size-name control test.
+ *
  * STILL DEFERRED (integration territory — will need a full-fixture pass):
- *   - handleOptimized full flow (200 LOC + BackupModel + WPML)
+ *   - handleOptimized full flow (200 LOC + BackupModel + WPML) — only the
+ *     thumbnail-key lookup is covered, via session 6 above
  *   - restore full flow + restoreConversion (200+ LOC)
  *   - loadMeta / getDBMeta cascade (needs real WP attachment + checkLegacy)
  *   - isProcessable / isRestorable deep branches with real thumbs
@@ -91,14 +98,19 @@
  */
 
 use ShortPixel\Model\Image\MediaLibraryModel;
+use ShortPixel\Model\Image\MediaLibraryThumbnailModel;
 use ShortPixel\Model\Image\ImageModel;
 use ShortPixel\Model\Image\ImageMeta;
 use ShortPixel\Helper\InstallHelper;
+use ShortPixel\Controller\Api\RequestManager;
 
 class MediaLibraryModelTest extends WP_UnitTestCase {
 
 	/** @var string[] Absolute paths of fixture files created during tests. */
 	private $fixtureFiles = array();
+
+	/** @var int[] Attachment posts created during tests. */
+	private $fixtureAttachments = array();
 
 	/** @var mixed Snapshot of the optimizeUnlisted setting. */
 	private $savedOptimizeUnlisted;
@@ -149,6 +161,11 @@ class MediaLibraryModelTest extends WP_UnitTestCase {
 			}
 		}
 		$this->fixtureFiles = array();
+
+		foreach ( $this->fixtureAttachments as $attachId ) {
+			wp_delete_post( $attachId, true );
+		}
+		$this->fixtureAttachments = array();
 		parent::tear_down();
 	}
 
@@ -1764,5 +1781,196 @@ class MediaLibraryModelTest extends WP_UnitTestCase {
 		                   'image_meta', 'thumbnails', 'retinas', 'original_file',
 		                   'is_scaled', 'imageType' );
 		$this->assertSame( $expected, array_keys( $result ) );
+	}
+
+	/*
+	 * handleOptimized — thumbnail result key mismatch (customer loop).
+	 *
+	 * Field report, simplyhappenings.com on 6.5.6 / 2026-09-25: 24 of 36
+	 * attachments were re-sent to the API on every bulk run, forever. The
+	 * request's returnParams ("returndatalist.sizes") was keyed by FILE NAME
+	 * for those items — the shape addUnlisted() produces — while the model
+	 * handling the response had the same physical files keyed by registered
+	 * WP SIZE NAME. handleOptimized() matches the echoed-back key with a
+	 * plain isset($thumbObjs[$sizeName]), so all 603 already-paid-for
+	 * thumbnail results were dropped with
+	 *   "Thumbnail with size name: X is not registered in this image."
+	 * Nothing was marked optimized, the item stayed processable, and
+	 * OptimizeController re-queued it — so the next run repeated the whole
+	 * cycle and re-billed it.
+	 *
+	 * pinThumbKey below asserts the CURRENT (broken) outcome, so it flips red
+	 * when the mismatch is handled — e.g. by falling back to the file name,
+	 * which handleOptimized already has as the VALUE of $data['sizes'].
+	 * The control test next to it sends the identical payload keyed by size
+	 * name and proves the fixture applies cleanly that way, so the pin
+	 * cannot pass for an unrelated reason.
+	 */
+
+	/**
+	 * Two real thumbnail objects on real fixture files, keyed by registered
+	 * WP size name — the state of the model when a response is handled.
+	 *
+	 * @return array{0: MediaLibraryModel, 1: array<string, \ShortPixel\Model\Image\MediaLibraryThumbnailModel>}
+	 */
+	private function makeModelWithRegisteredThumbs(): array {
+		// A real attachment post, so wp_get_attachment_metadata() returns the
+		// sizes array the method writes back into — a post_id-only stub makes
+		// it return false and the apply path then deprecation-warns on
+		// `$wpmeta['sizes'][...] = ...` instead of exercising the real shape.
+		$attachId = $this->factory->post->create( array(
+			'post_type'      => 'attachment',
+			'post_mime_type' => 'image/png',
+		) );
+		$this->fixtureAttachments[] = $attachId;
+
+		$thumbs   = array();
+		$metaSizes = array();
+		foreach ( array( 'thumbnail', 'medium' ) as $size ) {
+			$path  = $this->makeImageFile( 'png' );
+			$thumb = new MediaLibraryThumbnailModel( $path, $attachId, $size );
+			$thumb->setName( $size );
+			$thumbs[ $size ] = $thumb;
+
+			$metaSizes[ $size ] = array(
+				'file'   => basename( $path ),
+				'width'  => 1,
+				'height' => 1,
+			);
+		}
+
+		wp_update_attachment_metadata( $attachId, array(
+			'width'  => 1,
+			'height' => 1,
+			'file'   => basename( $this->makeImageFile( 'png' ) ),
+			'sizes'  => $metaSizes,
+		) );
+
+		$model = $this->makeModelWithId( $attachId );
+		$this->setProtected( $model, 'thumbnails', $thumbs );
+
+		return array( $model, $thumbs );
+	}
+
+	/**
+	 * API result payload for the given thumbnails.
+	 *
+	 * STATUS_UNCHANGED (0) is deliberate: it is the one status whose apply
+	 * path in ImageModel::handleOptimized needs no downloaded temp file, so
+	 * the control test exercises the real apply path without faking a
+	 * download. Both tests use the same payload shape; only the KEY differs.
+	 *
+	 * @param array<string, \ShortPixel\Model\Image\MediaLibraryThumbnailModel> $thumbs Size-name-keyed thumbnails.
+	 * @param bool $keyByFileName true reproduces the unlisted/customer shape.
+	 * @return array{files: array, data: array}
+	 */
+	private function makeThumbResultPayload( array $thumbs, bool $keyByFileName ): array {
+		$files = array();
+		$sizes = array();
+
+		foreach ( $thumbs as $sizeName => $thumb ) {
+			$fileName = $thumb->getFileName();
+			$key      = $keyByFileName ? $fileName : $sizeName;
+
+			$files[ $key ] = array(
+				'image' => array(
+					'url'           => 'http://api.shortpixel.com/f/' . md5( $fileName ) . '-lossy.png',
+					'originalSize'  => 26110,
+					'optimizedSize' => 21715,
+					'status'        => RequestManager::STATUS_UNCHANGED,
+				),
+			);
+			// The file name is the VALUE in both shapes — that is what makes a
+			// fallback match possible without changing the API contract.
+			$sizes[ $key ] = $fileName;
+		}
+
+		return array(
+			'files' => $files,
+			'data'  => array(
+				'sizes'      => $sizes,
+				'doubles'    => array(),
+				'duplicates' => array(),
+			),
+		);
+	}
+
+	public function test_handleOptimized_discards_thumbnail_results_keyed_by_filename_pinThumbKey() {
+		$settings                = \wpSPIO()->settings();
+		$savedBackup             = $settings->backupImages;
+		$settings->backupImages  = false; // keep the apply path off the filesystem
+
+		try {
+			list( $model, $thumbs ) = $this->makeModelWithRegisteredThumbs();
+			$payload                = $this->makeThumbResultPayload( $thumbs, true );
+
+			// Sentinel 1 (principle 5): the model really is keyed by size name,
+			// and really does NOT carry the file-name keys. If a future loader
+			// change added both spellings the mismatch would not occur and this
+			// test would silently stop testing anything.
+			$objKeys = array_keys( $this->invokeProtected( $model, 'getThumbObjects' ) );
+			$this->assertSame( array( 'thumbnail', 'medium' ), $objKeys );
+			foreach ( array_keys( $payload['data']['sizes'] ) as $sentKey ) {
+				$this->assertNotContains( $sentKey, $objKeys, 'Payload key must not already be a thumbnail key' );
+			}
+
+			// Sentinel 2 (principle 1 / 4): the keys must be distinct from the
+			// size names AND present in $files, otherwise the earlier
+			// `! isset($files[$sizeName])` continue would skip the loop body and
+			// the pin would pass without ever reaching the mismatch branch.
+			foreach ( $payload['data']['sizes'] as $sentKey => $fileName ) {
+				$this->assertArrayHasKey( $sentKey, $payload['files'] );
+				$this->assertStringEndsWith( '.png', $sentKey );
+				$this->assertSame( $sentKey, $fileName );
+			}
+
+			// Sentinel 3: nothing is optimized going in, so a passing assertion
+			// below cannot be inherited state.
+			foreach ( $thumbs as $thumb ) {
+				$this->assertFalse( $thumb->isOptimized() );
+			}
+
+			$model->handleOptimized( $payload );
+
+			// PIN: every result is dropped. When the mismatch is handled these
+			// assertions flip red — that is the signal to retire the pin.
+			foreach ( $thumbs as $sizeName => $thumb ) {
+				$this->assertFalse(
+					$thumb->isOptimized(),
+					"Thumbnail $sizeName stayed unoptimized (bug); flip this pin when the key mismatch is handled"
+				);
+				$this->assertNotSame( ImageModel::FILE_STATUS_SUCCESS, $thumb->getMeta( 'status' ) );
+			}
+		} finally {
+			$settings->backupImages = $savedBackup;
+		}
+	}
+
+	public function test_handleOptimized_applies_the_same_thumbnail_results_when_keyed_by_size_name() {
+		$settings               = \wpSPIO()->settings();
+		$savedBackup            = $settings->backupImages;
+		$settings->backupImages = false;
+
+		try {
+			list( $model, $thumbs ) = $this->makeModelWithRegisteredThumbs();
+			// Identical payload, identical fixture — only the key spelling differs.
+			$payload = $this->makeThumbResultPayload( $thumbs, false );
+
+			$this->assertSame( array( 'thumbnail', 'medium' ), array_keys( $payload['data']['sizes'] ) );
+
+			$model->handleOptimized( $payload );
+
+			// Control: proves the discard in the pin above is caused by the key
+			// spelling, not by the fixture, the settings or an early return.
+			foreach ( $thumbs as $sizeName => $thumb ) {
+				$this->assertSame(
+					ImageModel::FILE_STATUS_SUCCESS,
+					$thumb->getMeta( 'status' ),
+					"Thumbnail $sizeName should be recorded as optimized when the result key is its size name"
+				);
+			}
+		} finally {
+			$settings->backupImages = $savedBackup;
+		}
 	}
 }
