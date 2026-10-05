@@ -27,6 +27,8 @@ $filename = $this->data['filename'];
 $quotaControl = QuotaController::getInstance();
 $keyControl = ApiKeyController::getInstance();
 
+$files_replace_success = isset($_POST['replace_done']) ? true : false;  
+
 
 if (true === apply_filters('shortpixel/settings/no_ai', false)):
 
@@ -101,5 +103,11 @@ elseif (false === $has_data):
 	<span class="copy-to-clipboard-container">
 	<button type="button" class='button button-secondary' name="filename_replace_submit" value="1"><?php _e('Change Filename', 'shortpixel-image-optimiser') ?></button>
 	</span>
+
+	<?php if (true === $files_replace_success)
+	{
+		printf(__('%s Files successfully replaced! %s', 'shortpixel-image-optimiser'), '<p>', '</p>');
+	}
+	?>
 </div>
 <?php endif; ?> 

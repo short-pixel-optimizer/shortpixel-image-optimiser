@@ -1440,6 +1440,7 @@ class AjaxController
 			]
 		);
 
+
 		$json->$type->results = [$queueItem->result()];
 		$json->$type->qstatus = RequestManager::STATUS_SUCCESS;
 		$this->send($json);

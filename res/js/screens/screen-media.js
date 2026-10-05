@@ -514,12 +514,19 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				return;
 			}
 
+			const replace_done = new URLSearchParams(window.location.search).get("manual_files_replaced");
+			
 			var data = {
 				id: item_id,
 				type: 'media',
 				screen_action: 'ai/getAltData',
 			}
 			data.callback = 'shortpixel.AttachAiInterface';
+
+			if (null !== replace_done)
+			{
+				 data.replace_done = true; 
+			}			
 			this.processor.AjaxRequest(data);
 
 			window.addEventListener('shortpixel.AttachAiInterface', this.AttachAiInterface.bind(this), { once: true });
@@ -689,7 +696,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		var fileStatus = this.processor.fStatus[resultItem.fileStatus];
 		var apiName = (typeof resultItem.apiName !== 'undefined') ? resultItem.apiName : 'optimize';
 
-
 		// If image editor is active and file is being restored because of this reason ( or otherwise ), remove the warning if this one exists.
 		if (fileStatus == 'FILE_RESTORED') {
 			var warning = document.getElementById('shortpixel-edit-image-warning');
@@ -702,7 +708,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			this.UpdateGutenBerg(resultItem);
 		}
 		
-
 		var wp_screen_id = this.settings.wp_screen_id; // What type of screen
 		var item_id = resultItem.item_id; // Get if result item_id is our item_id
 		var attachmentAlt = this.GetPageAttachmentAlt(); 
@@ -712,6 +717,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		if (resultItem.redirect && 'reload' == resultItem.redirect && wp_screen_id == 'attachment' && true == is_our_item)
 		{
 			window.location.reload();
+
 		}
 	}
 
@@ -945,8 +951,9 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 									}
 									else
 									{
-										window.location.reload(); 
-									}									
+										const url = new URL(window.location.href);
+										url.searchParams.set("manual_files_replaced", "1");
+										window.location.assign(url);									}									
 								}, { 'once' : true });
 
 							}
