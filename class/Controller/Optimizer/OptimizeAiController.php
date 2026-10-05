@@ -1059,11 +1059,17 @@ class OptimizeAiController extends OptimizerBase
             }
 
             // Copies are done, so update meta as well by saving. 
-            $imageModel->saveMeta();
+            if (false === $args['dry_run'] && count($copySource) > 0)
+            {
+                $imageModel->saveMeta();
+            }
         }
         elseif (true === $applied)
         {
-            $imageModel->saveMeta();  
+            if (false === $args['dry_run'])
+            {
+                $imageModel->saveMeta();
+            }
         }
 
         if ((count($copySource) === 0 || true === $args['dry_run']) && false === $applied  )
