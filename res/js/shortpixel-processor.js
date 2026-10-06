@@ -38,6 +38,7 @@ window.ShortPixelProcessor =
 		debugIsActive : false, // indicating is SPIO is in debug mode. Don't report certain things if not.
 		hasStartQuota: false, // if we start without quota, don't notice too much, don't run.
 		workerErrors: 0, // times worker encoutered an error.
+		isUnloading: false, // the page is navigating away: requests cut off from now on are not errors.
     broadcaster: null, 
     is_disabled: false, 
     qStatus: { // The Queue returns
@@ -81,6 +82,12 @@ window.ShortPixelProcessor =
     {
 
 			window.addEventListener('error', this.ScriptError.bind(this));
+			// A request still in flight when the user navigates away is rejected
+			// by the browser (WebKit reports it as "TypeError: Load failed"); the
+			// worker relays that like any other failure. Remember that the page
+			// is going away so CheckResponse() does not report it as an error.
+			window.addEventListener('beforeunload', this.MarkUnloading.bind(this));
+			window.addEventListener('pagehide', this.MarkUnloading.bind(this));
 
         this.isBulkPage = Boolean(ShortPixelProcessorData.isBulkPage);
         this.localSecret = localStorage.getItem('bulkSecret');
@@ -213,13 +220,13 @@ if (this.ShouldLog()) {
       if (this.isManualPaused)
       {
           this.isActive = false;
-         console.debug('Check Active: Paused');
+          if (this.ShouldLog()) console.debug('Check Active: Paused');
       }
       if (this.waitingForAction)
       {
           this.isActive = false;
 					this.tooltip.ProcessEnd();
-          console.debug('Check Active : Waiting for action');
+          if (this.ShouldLog()) console.debug('Check Active : Waiting for action');
       }
       return this.isActive;
     },
@@ -293,6 +300,10 @@ if (this.ShouldLog()) {
             window.addEventListener('beforeunload', this.ShutDownWorker.bind(this));
 
         }
+    },
+    MarkUnloading: function()
+    {
+        this.isUnloading = true;
     },
     ShutDownWorker: function()
     {
@@ -510,6 +521,10 @@ if (this.ShouldLog()) {
                   this.screen.GeneralResponses(response.responses);
               }
            }
+      }
+      else if (this.isUnloading) // the request was cut off by the page navigating away: nothing to report.
+      {
+            return;
       }
       else  // This is a worker error / http / nonce / generail fail
       {
@@ -772,7 +787,7 @@ if (this.ShouldLog()) {
       if (typeof messageType == 'undefined')
         messageType = 'debug';
 
-      if (messageType == 'debug')
+      if (messageType == 'debug' && this.ShouldLog())
       {
          console.debug(message);
       }
