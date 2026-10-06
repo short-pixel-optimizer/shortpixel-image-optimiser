@@ -53,7 +53,7 @@ class NextgenNotice extends \ShortPixel\Model\AdminNoticeModel
 	protected function getMessage()
 	{
 		$url = esc_url(admin_url('options-general.php?page=wp-shortpixel-settings&part=optimisation'));
-		$message = sprintf(__('You seem to be using NextGen Gallery. You can optimize your galleries with ShortPixel, but this is not currently enabled. To enable it, %sgo to settings and enable%s it!', 'shortpixel_image_optimiser'), '<a href="' . $url . '">', '</a>');
+		$message = sprintf(__('You seem to be using NextGen Gallery. You can optimize your galleries with ShortPixel, but this is not currently enabled. To enable it, %sgo to settings and enable%s it!', 'shortpixel-image-optimiser'), '<a href="' . $url . '">', '</a>');
 
 		return $message;
 

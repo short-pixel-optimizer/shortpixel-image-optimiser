@@ -99,7 +99,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<div data-error-media="message" data-presentation="append" class='errorbox media'>
 			<?php if(property_exists($this->view, 'mediaErrorLog') && $this->view->mediaErrorLog !== false)
 			{
-				echo esc_html($this->view->mediaErrorLog);
+        // Result is HTML! No escaping
+				echo $this->view->mediaErrorLog;
 			}
 			?>
 		</div>
@@ -143,7 +144,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     <div data-error-custom="message" data-presentation="append" class='errorbox custom'>
 			<?php if(property_exists($this->view, 'customErrorLog') && $this->view->customErrorLog !== false)
 			{
-				echo esc_html($this->view->customErrorLog);
+				echo $this->view->customErrorLog;
 			}
 			?>
 		</div>

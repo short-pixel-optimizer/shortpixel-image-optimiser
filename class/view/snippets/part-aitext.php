@@ -19,11 +19,15 @@ $isDifferent = $this->data['isDifferent'];
 $dataItems = implode(', ',$this->data['dataItems']);
 
 $is_processable = $this->data['is_processable']; 
+$is_renameable = $this->data['is_renameable'];
 $processable_reason = $this->data['processable_reason'];
 $processable_status = $this->data['processable_status'];
+$filename = $this->data['filename'];
 
 $quotaControl = QuotaController::getInstance();
 $keyControl = ApiKeyController::getInstance();
+
+$files_replace_success = isset($_POST['replace_done']) ? true : false;  
 
 
 if (true === apply_filters('shortpixel/settings/no_ai', false)):
@@ -53,11 +57,11 @@ elseif (false === $has_data):
 
 	elseif (false === $quotaControl->hasQuota() && false === $has_data):
 	?>
-	<p><?php _e('ShortPixel quota exhausted, the AI SEO data cannot be generated.', 'shortpixel-image-optimiser'); ?></p>
+	<p><?php _e('ShortPixel quota exhausted, the image SEO data cannot be generated.', 'shortpixel-image-optimiser'); ?></p>
 
 	<?php else: ?>
 
-        <a class='button button-secondary' title="Generate image SEO data with ShortPixel AI (Beta)" href="javascript:window.ShortPixelProcessor.screen.RequestAlt(<?php echo esc_attr($item_id); ?>)">
+        <a class='button button-secondary' title="<?php esc_attr_e('Generate image SEO data with ShortPixel AI', 'shortpixel-image-optimiser'); ?>" href="javascript:window.ShortPixelProcessor.screen.RequestAlt(<?php echo esc_attr($item_id); ?>)">
 			<img class="shortpixel-ai-icon ai" src="<?php echo esc_url($ai_icon); ?>">	
 			<span><?php printf(__('AI Image SEO by ShortPixel %s', 'shortpixel-image-optimiser'), esc_html($dataItems)) ?></span>
 			<img class="shortpixel-ai-icon shortpixel" src="<?php echo esc_url($robo_icon); ?>">
@@ -79,13 +83,36 @@ elseif (false === $has_data):
 	<a class='button button-secondary' title="<?php _e('Redo', 'shortpixel-image-optimiser'); ?>" href="javascript:window.ShortPixelProcessor.screen.UndoAlt(<?php echo $item_id ?>, 'redo')"><?php _e('Redo', 'shortpixel-image-optimiser'); ?></a>
 	<?php endif; ?>
 
-	<a class='button button-secondary' title="<?php _e('Report to us, via e-mail, an incorrect image SEO data for this image', 'shortpixel-image-optimiser') ?>." href="<?php echo esc_attr($mailtolink); ?>"><?php _e('Report', 'shortpixel-image-optimiser'); ?></a>
+	<a class='button button-secondary' title="<?php _e('Report incorrect image SEO data for this image to us by e-mail.', 'shortpixel-image-optimiser') ?>" href="<?php echo esc_attr($mailtolink); ?>"><?php _e('Report', 'shortpixel-image-optimiser'); ?></a>
 
-	<a class='button button-secondary' title="<?php _e('Send us feedback about this feature, suggest other features, or vote on existing feature requests', 'shortpixel-image-optimiser'); ?> ." target="_blank" href="https://ideas.shortpixel.com/"><?php _e('Feedback', 'shortpixel-image-optimiser'); ?></a>
+	<a class='button button-secondary' title="<?php _e('Send us feedback about this feature, suggest other features, or vote on existing feature requests.', 'shortpixel-image-optimiser'); ?>" target="_blank" href="https://ideas.shortpixel.com/"><?php _e('Feedback', 'shortpixel-image-optimiser'); ?></a>
 
 	<?php if (true === $isDifferent)
 	{
-		 printf(__('%s The plugin has detected some fields were changed after generating AI Data. You can use the redo button to regenerate AI Data %s ', 'shortpixel-image-optimiser'), '<p>', '</p>');
+		 printf(__('%s The plugin has detected that some fields were changed after the image SEO data was generated. You can use the Redo button to generate it again. %s', 'shortpixel-image-optimiser'), '<p>', '</p>');
 	} ?>
 
 <?php endif; ?>
+
+<?php if (true === $is_renameable) : ?> 
+<div class="shortpixel-ai-replace-file hidden">
+	<?php // The inner wrapper carries the tooltip: only the CONTENT of this div is copied into the Save box (screen-media.js). ?>
+	<div class="shortpixel-rename-area" title="<?php esc_attr_e('Renaming this file may break links to this image. External links and Google Images results using the old URL will no longer work. No redirect is created from the old filename.', 'shortpixel-image-optimiser'); ?>">
+	<?php _e('Filename:', 'shortpixel-image-optimiser'); ?>
+	<input type="text" name="filename_replace" value="<?php echo esc_attr($filename); ?>">
+
+	<p class="description shortpixel-rename-notice">
+		<?php printf(esc_html__('%1$sWarning:%2$s Please read before renaming.', 'shortpixel-image-optimiser'), '<span class="shortpixel-rename-warning">', '</span>'); ?>
+		<a class="shortpixel-help-link" style="text-decoration:none;" href="https://shortpixel.com/knowledge-base/article/how-to-rename-images-with-shortpixel-image-optimizer/?utm_source=plugin&utm_medium=spio&utm_campaign=plugin_media_library" target="_blank" rel="noopener" title="<?php esc_attr_e('Read more about renaming image files', 'shortpixel-image-optimiser'); ?>"><span class="dashicons dashicons-editor-help" aria-hidden="true" style="font-size:16px;width:16px;height:16px;vertical-align:text-bottom;"></span><span class="screen-reader-text"><?php esc_html_e('Read more about renaming image files', 'shortpixel-image-optimiser'); ?></span></a>
+	</p>
+
+	<span class="copy-to-clipboard-container">
+	<button type="button" class='button button-secondary' name="filename_replace_submit" value="1"><?php _e('Rename file', 'shortpixel-image-optimiser') ?></button>
+	</span>
+	</div><!-- .shortpixel-rename-area -->
+
+	<?php if (true === $files_replace_success) : ?>
+		<p class="shortpixel-rename-result is-success"><?php esc_html_e('File successfully renamed!', 'shortpixel-image-optimiser'); ?></p>
+	<?php endif; ?>
+</div>
+<?php endif; ?> 

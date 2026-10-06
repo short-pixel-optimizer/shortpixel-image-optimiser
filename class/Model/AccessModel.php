@@ -41,13 +41,26 @@ class AccessModel
 	private $current_user_id;
 
 
+	/**
+	 * Constructor.
+	 *
+	 * Seeds the capability map via setDefaultPermissions(). The map is
+	 * immediately filterable via `shortpixel/init/permissions` so third
+	 * parties can override slugs before any permission check runs.
+	 */
 	public function __construct()
 	{
 		 $this->setDefaultPermissions();
+
 	}
 
 	/**
 	 * Defines the default mapping between SPIO capabilities and WordPress capabilities.
+	 *
+	 * 'is_super_admin' maps to 'manage_network' on multisite (super admins
+	 * only), but that cap does not exist on single-site installs — there it
+	 * is remapped to 'delete_users' (an administrator-level cap) so the
+	 * site-wide tools stay usable.
 	 *
 	 * Applies the 'shortpixel/init/permissions' filter so third parties can
 	 * extend or override the capability map.
@@ -57,20 +70,27 @@ class AccessModel
 	protected function setDefaultPermissions()
 	{
 
-			$spioCaps = array(
+		$spioCaps = array(
 					'notices' =>  'activate_plugins',				// used in AdminNoticesController
 					'quota-warning' => 'manage_options',    // used in AdminController
 					'image_all' =>  'edit_others_posts',
 					'image_user' => 'edit_post',
 					'custom_all' => 'edit_others_posts',
 					'is_admin_user' => 'manage_options',
+					'is_super_admin' => 'manage_network',  // User for Multisite 
 					'is_editor' => 'edit_others_posts',  // used in AjaxController
 					'is_author' => 'edit_posts', // used in AjaxController
 					'actions' => array(),
-			);
+		);
 
+		 $env = \wpSPIO()->env(); 
+		 // On Single Site Manage_network is not a cap, so use alternative not to run into issues here. 
+		 if ( false === $env->is_multisite) 
+		 {
+		 	$spioCaps['is_super_admin'] = 'delete_users';
+		 }
+		
 		 $spioCaps = apply_filters('shortpixel/init/permissions', $spioCaps);
-		 // $this->cap_actions = bla.
 		 $this->caps = $spioCaps;
 
 	}

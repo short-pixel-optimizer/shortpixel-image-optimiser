@@ -22,6 +22,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
 			this.LoadPanels();
 			this.LoadActions();
       this.LoadDatePicker(); 
+      this.LoadAiOptionsToggle();
 
 			window.addEventListener('shortpixel.processor.paused', this.TogglePauseNotice.bind(this));
 			window.addEventListener('shortpixel.processor.responseHandled', this.CheckPanelData.bind(this));
@@ -97,6 +98,19 @@ class ShortPixelScreen extends ShortPixelScreenBase
 			}
 
 	}
+
+  // The AI sub-options (keep existing data, alt text in posts) only matter when AI runs during the bulk.
+  LoadAiOptionsToggle()
+  {
+    var checkbox = document.getElementById('autoai_checkbox');
+    var options = document.getElementById('ai_bulk_options');
+    if (null === checkbox || null === options)
+      return;
+
+    var toggle = function () { options.style.display = (checkbox.checked) ? '' : 'none'; };
+    checkbox.addEventListener('change', toggle);
+    toggle();
+  }
 
   LoadPanels()
   {
@@ -291,6 +305,11 @@ class ShortPixelScreen extends ShortPixelScreenBase
      {
         data.aiActive = (document.getElementById('autoai_checkbox').checked) ? true : false;
         data.aiPreserve = (document.getElementById('aipreserve_checkbox').checked) ? true : false;
+        if (document.getElementById('ai_content_replace_select') !== null) {
+          data.ai_content_replace = document.getElementById('ai_content_replace_select').value;
+        } else {
+          data.ai_content_replace = null;
+        }
      }
      else
      {
@@ -1123,7 +1142,6 @@ class ShortPixelScreen extends ShortPixelScreenBase
 		this.UpdatePanelStatus('loading', 'selection');
 		this.SwitchPanel('selection');
 
-  	//this.SwitchPanel('process');
     this.RemovePanelFromURL(shortPixelScreen.panel);
 
 
@@ -1132,6 +1150,23 @@ class ShortPixelScreen extends ShortPixelScreenBase
     window.addEventListener('shortpixel.bulk.onSwitchPanel', this.StartBulk.bind(this), {'once': true});
     this.processor.AjaxRequest(data);
   }
+
+  BulkRedoAiReplacement (event)
+  {
+    var data = {screen_action: 'startBulkRedoAiReplacement', callback: 'shortpixel.startBulkRedoAiReplacement'}; //
+		this.UpdatePanelStatus('loading', 'selection');
+		this.SwitchPanel('selection');
+
+    this.RemovePanelFromURL(shortPixelScreen.panel);
+
+
+    // Prepare should happen after selecting what the optimize.
+    window.addEventListener('shortpixel.startBulkRedoAiReplacement', this.PrepareBulk.bind(this), {'once': true} );
+    window.addEventListener('shortpixel.bulk.onSwitchPanel', this.StartBulk.bind(this), {'once': true});
+    this.processor.AjaxRequest(data);
+  }
+
+
 	BulkRemoveLegacy(event)
   {
 

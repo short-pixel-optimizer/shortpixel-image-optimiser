@@ -64,7 +64,14 @@ class ImageThumbnailMeta
   /** @var float|null Saved compression improvement percentage, used only by CustomImageModel. */
   public $customImprovement;
 
+  public $lastSave; 
 
+  /**
+   * Constructor.
+   *
+   * Seeds tsAdded with the current Unix timestamp so records always have a
+   * non-null creation time even when subclasses forget to set it.
+   */
   public function __construct()
   {
      $this->tsAdded = time(); // default

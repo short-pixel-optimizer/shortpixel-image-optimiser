@@ -100,7 +100,7 @@ $bulkblock = $dashboard->bulkblock;
      <div class='panel first-panel dashboard-optimize'>
 
         <i class='shortpixel-icon box-archive'></i>
-        <h4><?php _e('Optimize new Images', 'shortpixel-image-optimizer'); ?></h4>
+        <h4><?php _e('Optimize new Images', 'shortpixel-image-optimiser'); ?></h4>
 
         <span class='status-wrapper'><i class='shortpixel-icon status-icon ok'></i><span class='status-line'></span></span>
 
@@ -117,7 +117,7 @@ $bulkblock = $dashboard->bulkblock;
 
      <div class='panel second-panel dashboard-bulk'>
        <i class='shortpixel-icon bulk'></i>
-       <h4><?php _e('Bulk Actions', 'shortpixel-image-optimizer'); ?></h4>
+       <h4><?php _e('Bulk Actions', 'shortpixel-image-optimiser'); ?></h4>
 
 
         <span class='status-wrapper'>
@@ -140,7 +140,7 @@ $bulkblock = $dashboard->bulkblock;
      <div class='panel third-panel dashboard-webp'>
 
        <i class='shortpixel-icon photo'></i>
-       <h4><?php _e('WebP/AVIF', 'shortpixel-image-optimizer'); ?></h4>
+       <h4><?php _e('WebP/AVIF', 'shortpixel-image-optimiser'); ?></h4>
 
         <span class='status-wrapper'><i class='shortpixel-icon status-icon ok'></i><span class='status-line'></span></span>
 
@@ -161,14 +161,14 @@ $bulkblock = $dashboard->bulkblock;
         <input type="checkbox" id="toggle-content" style="display: none;">
         <closed-apikey-dropdown>
             <name>
-                <?php esc_html_e('API Key & Account Information ', 'shortpixel-image-optimiser'); ?>
+                <?php esc_html_e('API Key & Account Information', 'shortpixel-image-optimiser'); ?>
             </name>
             <info>
                 <?php if ($view->key->is_constant_key && !$view->key->hide_api_key ) {
                     esc_html_e('Key defined in wp-config.php.', 'shortpixel-image-optimiser');
                 } ?>
                 <span class="shortpixel-key-valid" <?php echo $view->key->is_verifiedkey ? '' : 'style="display:none;"' ?>>
-                <?php esc_html_e('Yay! Your API Key is Valid ', 'shortpixel-image-optimiser'); ?><i class="shortpixel-icon ok"></i>
+                <?php esc_html_e('Your API key is valid.', 'shortpixel-image-optimiser'); ?><i class="shortpixel-icon ok"></i>
             </span>
             </info>
 	    <?php if ( !$view->key->hide_api_key ) { ?>

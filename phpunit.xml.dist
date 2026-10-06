@@ -8,22 +8,30 @@
 	convertWarningsToExceptions="true"
 	>
 	<testsuites>
-		<testsuite name="fileSystem">
-			<directory prefix="test-" suffix=".php">./tests/filesystem</directory>
-		</testsuite>
-		<testsuite name="imageModel">
-			<directory prefix="test-" suffix=".php">./tests/Model/image</directory>
-		</testsuite>
-		<testsuite name="Controllers">
-			<directory prefix="test-" suffix=".php">./tests/Controller</directory>
-		</testsuite>
-		<testsuite name="queue">
-			<directory prefix="test-" suffix=".php">./tests/queue</directory>
+		<testsuite name="Helper">
+			<directory prefix="test-" suffix=".php">./tests/Helper</directory>
 		</testsuite>
 		<testsuite name="model">
 			<directory prefix="test-" suffix=".php">./tests/Model</directory>
 		</testsuite>
-
-
+		<testsuite name="External">
+			<directory prefix="test-" suffix=".php">./tests/External</directory>
+		</testsuite>
+		<testsuite name="Controllers">
+			<directory prefix="test-" suffix=".php">./tests/Controller</directory>
+		</testsuite>
+		<testsuite name="SPIO Main">
+			<directory prefix="test-" suffix=".php">./tests/</directory>
+			<exclude>./tests/Helper</exclude>
+			<exclude>./tests/Model</exclude>
+			<exclude>./tests/External</exclude>
+			<exclude>./tests/Controller</exclude>
+			<!-- Integration tests need a real WP install + their own bootstrap
+			     (phpunit-integration.xml); the unit bootstrap can't load them. -->
+			<exclude>./tests/Integration</exclude>
+			<exclude>./tests/Smoke</exclude>
+			<exclude>./tests/Compat</exclude>
+			<exclude>./tests/Multisite</exclude>
+		</testsuite>
 	</testsuites>
 </phpunit>

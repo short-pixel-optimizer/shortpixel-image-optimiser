@@ -1,7 +1,10 @@
 vendor
+# Test-only dependencies (composer.tests.json) — composer.tests.lock IS tracked.
+vendor-tests
 composer.lock
 .DS_Store
 .env.testing
+.phpunit.result.cache
 .idea/.gitignore
 .idea/misc.xml
 .idea/modules.xml
@@ -13,8 +16,18 @@ composer.lock
 /.idea/shortpixel-image-optimiser.iml
 /.idea/workspace.xml
 /.idea
-bin/
 /composer.phar
 .env.local
 /wordpress/
 /travis_output/
+# Commercial partner-plugin zips for bin/test.sh --compat (WPML etc.) —
+# never commit these; drop the zip in and the harness picks it up.
+/tests/partner-plugins/
+# Manual tests, not needed in the repo
+/tests/manual/
+# Browser E2E suite (bin/test-e2e.sh): dependencies + run output.
+# package-lock.json IS tracked (reproducible installs in CI).
+/tests/E2E/node_modules/
+/tests/E2E/artifacts/
+/tests/E2E/test-results/
+/tests/E2E/playwright-report/

@@ -49,7 +49,6 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 
 		if (element !== null && apiName !== 'ai')  {
 			element.innerHTML = '';
-			//  var event = new CustomEvent('shortpixel.loadItemView', {detail: {'type' : type, 'id': result.id }}); // send for new item view.
 			var fileStatus = this.processor.fStatus[resultItem.fileStatus];
 
 			if (fileStatus == 'FILE_DONE' || fileStatus == 'FILE_RESTORED' || resultItem.is_done == true) {
@@ -69,7 +68,6 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 				if (fileStatus == 'FILE_DONE' || true == resultItem.is_done)
 				{
 					this.processor.LoadItemView({ id: item_id, type: type });
-
 				}
 			}
 			 this.FetchAltView(resultItem.aiData, item_id);
@@ -332,7 +330,7 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 
 		window.addEventListener('shortpixel.HandleUndoAlt', function (event) {
 			var data = event.detail.media;
-			var original = data.current; 
+			var original = data.aiData; 
 	
 			if ('redo' == action_type)
 			{
@@ -344,7 +342,21 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 				}
 			}
 			this.FetchAltView(original,id);
+/*
+			let imageItem = {
+				item_id: id, 
+				aiData: original,
+				message: '', 
+				apiName: 'ai', 
+			}; */
 
+	       this.processor.broadcaster.postMessage({
+                'reason' : 'handleImage', 
+                'imageItem': data, 
+                'type' : 'media', 
+				
+            });
+			//this.UpdateGutenBerg(resultItem);
 		}.bind(this), {once: true});
 
 	/*	if (!this.processor.CheckActive())
@@ -352,6 +364,21 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 
 		//this.SetMessageProcessing(id, 'ai');
 		this.processor.AjaxRequest(data);
+	}
+
+	RedoAiReplacement(id)
+	{
+		var data = {
+			id: id,
+			type: this.type,
+			'screen_action': 'ai/redoAiReplacement',
+		//	'action_type' : action_type, 
+		//	'callback': 'shortpixel.HandleUndoAlt',
+		};
+
+		this.processor.AjaxRequest(data);
+
+
 	}
 
 	Optimize(id, force, compressionType) {
@@ -400,6 +427,11 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 	}
 	
 	AttachAiInterface()
+	{
+		 console.error('not implemented for this view!');
+	}
+
+	UpdateGutenBerg(resultItem)
 	{
 		 console.error('not implemented for this view!');
 	}

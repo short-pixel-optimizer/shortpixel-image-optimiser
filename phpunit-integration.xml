@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<phpunit
+	bootstrap="tests/Integration/bootstrap.php"
+	backupGlobals="false"
+	colors="true"
+	convertErrorsToExceptions="true"
+	convertNoticesToExceptions="true"
+	convertWarningsToExceptions="true"
+	defaultTestSuite="Integration"
+	>
+	<testsuites>
+		<testsuite name="Integration">
+			<directory prefix="test-" suffix=".php">./tests/Integration</directory>
+			<!-- Excluded: define()s SPIO constants that would poison every
+			     test running after it in the same process. Runs as the
+			     IntegrationIsolated suite (second phpunit invocation made
+			     by the integration mode of bin/test.sh). -->
+			<exclude>./tests/Integration/test-ConstantsAndFilters.php</exclude>
+		</testsuite>
+		<!-- Constant-defining tests: must run in their own PHP process
+		     (see the exclude above). -->
+		<testsuite name="IntegrationIsolated">
+			<file>./tests/Integration/test-ConstantsAndFilters.php</file>
+		</testsuite>
+		<!-- Live-API smoke tests: cost real quota credits and need
+		     SHORTPIXEL_SMOKE_KEY. Excluded from plain runs by
+		     defaultTestSuite above; opt in via the smoke flag of
+		     bin/test.sh (= phpunit with the Smoke testsuite). -->
+		<testsuite name="Smoke">
+			<directory prefix="test-" suffix=".php">./tests/Smoke</directory>
+		</testsuite>
+		<!-- Cross-plugin compatibility tests: need the partner plugins
+		     (WooCommerce, NextGen Gallery, WP Offload Media Lite)
+		     extracted + activated in the test install. Excluded from
+		     plain runs by defaultTestSuite above; opt in via the compat
+		     flag of bin/test.sh, which prepares the plugins and sets
+		     SPIO_PARTNER_PLUGINS=1. -->
+		<testsuite name="Compat">
+			<directory prefix="test-" suffix=".php">./tests/Compat</directory>
+		</testsuite>
+		<!-- Multisite tests: need a multisite WP test install, which the
+		     WP test bootstrap only builds when WP_MULTISITE=1 is in the
+		     environment. Excluded from plain runs by defaultTestSuite
+		     above; opt in via the ms flag of bin/test.sh, which sets the
+		     env var. Tests self-skip on a single-site install. -->
+		<testsuite name="Multisite">
+			<directory prefix="test-" suffix=".php">./tests/Multisite</directory>
+		</testsuite>
+	</testsuites>
+</phpunit>

@@ -47,8 +47,8 @@ $settings = \wpSPIO()->settings();
       <p class="description">
 
         <?php
-        $link = 'https://shortpixel.com/knowledge-base/article/background-processing-using-cron-jobs-in-shortpixel-image-optimizer/';
-        printf(esc_html('ShortPixel Bulk is processing in the background. You can close this browser window now and reopen it at any time to check the status of the bulk processing. %sLearn more%s','shortpixel-image-optimiser'), '<strong><a href="' . esc_attr($link) . '" target="_blank">','</a></strong>'); ?>
+        $link = 'https://shortpixel.com/knowledge-base/article/background-processing-using-cron-jobs-in-shortpixel-image-optimizer/?utm_source=plugin&utm_medium=spio&utm_campaign=plugin_bulk';
+        printf(esc_html__('ShortPixel Bulk is processing in the background. You can close this browser window now and reopen it at any time to check the status of the bulk processing. %sLearn more%s','shortpixel-image-optimiser'), '<strong><a href="' . esc_attr($link) . '" target="_blank">','</a></strong>'); ?>
       </p>
     <?php else: ?>
       <p class='description'>
@@ -65,7 +65,7 @@ $settings = \wpSPIO()->settings();
     <div class='bulk-summary' data-check-visibility data-control="data-check-media-total">
       <div class='heading'>
         <span><i class='dashicons dashicons-format-image'>&nbsp;</i> <?php esc_html_e('Media Library' ,'shortpixel-image-optimiser'); ?>
-              <?php printf(esc_html__('( %s items )', 'shortpixel-image-optimiser'), '<i data-stats-media="total">--</i>'); ?>
+              <?php printf(esc_html__('(items: %s)', 'shortpixel-image-optimiser'), '<i data-stats-media="total">--</i>'); ?>
         <?php if (false !== $this->view->customOperationMedia) {
             echo "</br><span class='special-op'>" . $this->view->customOperationMedia . "</span>";
          } ?>
@@ -105,7 +105,8 @@ $settings = \wpSPIO()->settings();
 		<div data-error-media="message" data-presentation="append" class='errorbox media'>
 				<?php if(property_exists($this->view, 'mediaErrorLog') && $this->view->mediaErrorLog !== false)
 				{
-				echo esc_html($this->view->mediaErrorLog);
+          // No esc_html here, because it's HTML! 
+				echo $this->view->mediaErrorLog;
         }
     ?>
     </div> 
@@ -136,7 +137,7 @@ $settings = \wpSPIO()->settings();
         <span><?php esc_html_e('Processed','shortpixel-image-optimiser'); ?>: <i data-stats-custom="done">-</i></span>
 
         <span><?php esc_html_e('Waiting','shortpixel-image-optimiser'); ?>: <i data-stats-custom="in_queue">-</i></span>
-        <span><?php esc_html_e('Errors') ?>: <i data-check-custom-fatalerrors  data-stats-custom="fatal_errors" class='error'>-</i>
+        <span><?php esc_html_e('Errors', 'shortpixel-image-optimiser') ?>: <i data-check-custom-fatalerrors  data-stats-custom="fatal_errors" class='error'>-</i>
 
 					<span class="display-error-box" data-check-visibility data-control="data-check-custom-fatalerrors" ><label title="<?php esc_html_e('Show Errors', 'shortpixel-image-optimiser'); ?>">
 						<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='custom' data-event='change'><?php esc_html_e('Show Errors','shortpixel-image-optimiser'); ?>
@@ -155,7 +156,8 @@ $settings = \wpSPIO()->settings();
     <div data-error-custom="message" data-presentation="append" class='errorbox custom'>
 			<?php if(property_exists($this->view, 'customErrorLog') && $this->view->customErrorLog !== false)
 			{
-				echo esc_html($this->view->customErrorLog);
+        // No esc HTML here!
+				echo $this->view->customErrorLog;
       }
       ?>
     </div>

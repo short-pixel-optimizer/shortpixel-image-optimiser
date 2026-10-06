@@ -103,6 +103,13 @@ class ViewController extends Controller
    * and store the submitted fields. Returns false and terminates execution on a
    * hard nonce failure; returns true silently when no POST data is present.
    *
+   * PRIVACY NOTE: on success and on failure this method
+   * dumps the FULL $_POST array into the debug log via Log::addInfo. Settings
+   * form submissions include the API key input on the site settings screen,
+   * so the shortpixel debug log can end up containing that key value in
+   * cleartext. Fine for developer debugging; something to be aware of before
+   * shipping a debug log to an external channel.
+   *
    * @param bool $processPostData Whether to call processPostData() on valid submission. Default true.
    * @return bool True when no POST or POST is valid; false on nonce mismatch with ajaxSave present.
    */
@@ -116,19 +123,28 @@ class ViewController extends Controller
     elseif (! isset($_POST['sp-nonce']) || ! wp_verify_nonce( sanitize_key($_POST['sp-nonce']), $this->form_action))
     {
       // Obscure issue. Detected other plugin that adds information to $_POST without an actual form submit, which would trigger the nonce check on the settings page. In case this happens, be lenient.
-      if ( ! isset($_POST['ajaxSave']) || ! isset($_POST['action']) )
+      if ( ! isset($_POST['ajaxSave']) && ! isset($_POST['action']) && ! isset($_REQUEST['sp-action']) )
       {
+         $_POST = []; 
          return false;
       }
       Log::addInfo('Check Post fails nonce check, action : ' . $this->form_action, array($_POST) );
 			wp_die('Nonce Failed');
-      return true;
     }
     elseif (isset($_POST) && count($_POST) > 0)
     {
-      check_admin_referer( $this->form_action, 'sp-nonce' ); // extra check, when we are wrong here, it dies.
+      // See method docblock — the full $_POST array (including any API key
+      // field on the site settings form) reaches the debug log here.
+      $check = check_admin_referer( $this->form_action, 'sp-nonce' ); // extra check, when we are wrong here, it dies.
+
+      // Check admin referer dies usually if not valid until action is -1, so this is extra check. 
+      if (false === $check)
+      {
+         wp_die('Nonce Failed');
+      }
 
       $this->is_form_submit = true;
+
       if (true === $processPostData) // only processData on form save.
       {
           $this->processPostData($_POST);

@@ -35,7 +35,7 @@ if ( ! defined( 'ABSPATH' ) ) {
       <!--- ### MEDIA BOX #### --> 
       <div class="section-wrapper" data-check-visibility data-control="data-check-media-total">
       <h4><span class='dashicons dashicons-images-alt2'>&nbsp;</span>
-				<?php esc_html_e('Media Library','shortpixel-image-optimiser'); ?> (<span data-stats-media="in_queue">0</span> <?php esc_html_e('items','shortpixel-image-optimiser'); ?>)</h4>
+				<?php esc_html_e('Media Library','shortpixel-image-optimiser'); ?> (<?php esc_html_e('items:', 'shortpixel-image-optimiser'); ?> <span data-stats-media="in_queue">0</span>)</h4>
         <div class="list-table">
 
 						<div  class='images'><span><?php esc_html_e('Images','shortpixel-image-optimiser'); ?></span>
@@ -56,7 +56,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
       <!--- ### CUSTOM BOX #### --> 
     <div class="section-wrapper" data-check-visibility data-control="data-check-custom-total">
-    <h4><span class='dashicons dashicons-open-folder'>&nbsp;</span><?php esc_html_e('Custom Media', 'shortpixel-image-optimiser') ?> (<span data-stats-custom="in_queue">0</span> <?php esc_html_e('items','shortpixel-image-optimiser'); ?>)</h4>
+    <h4><span class='dashicons dashicons-open-folder'>&nbsp;</span><?php esc_html_e('Custom Media', 'shortpixel-image-optimiser') ?> (<?php esc_html_e('items:', 'shortpixel-image-optimiser'); ?> <span data-stats-custom="in_queue">0</span>)</h4>
       <div class="list-table">
 
 				<div><span><?php esc_html_e('Images','shortpixel-image-optimiser'); ?></span>
@@ -108,7 +108,7 @@ if ( ! defined( 'ABSPATH' ) ) {
       </p>
 
       <p>
-          <span><?php esc_html_e('Your one-time credits') ?></span>
+          <span><?php esc_html_e('Your one-time credits', 'shortpixel-image-optimiser') ?></span>
           <span><b><?php echo esc_html($quotaData->onetime->text) ?></b> |
              <?php esc_html_e('Used:', 'shortpixel-image-optimiser'); ?> <b><?php echo esc_html($this->formatNumber($quotaData->onetime->consumed, 0)); ?></b> |
              <?php esc_html_e('; Remaining:', 'shortpixel-image-optimiser'); ?> <b><?php echo esc_html($this->formatNumber($quotaData->onetime->remaining, 0)) ?></b>
@@ -146,14 +146,30 @@ if ( ! defined( 'ABSPATH' ) ) {
 
       <p class='heading totals'><span>
         
-        <?php   $quotaData->unlimited ? esc_html_e('Total','shortpixel-image-optimiser') : esc_html_e('Total AI credits needed','shortpixel-image-optimiser');
+        <?php $quotaData->unlimited ? esc_html_e('Total','shortpixel-image-optimiser') : esc_html_e('Total AI credits needed','shortpixel-image-optimiser');
               ?>: 
         </span>
         <span class="number" data-stats-media="images-images_ai" >0</span>
-      </p>
 
-      <?php if (false === $quotaData->unlimited): ?>
-      <p>				
+      </p>
+<!--
+      <p class='heading'><span><?php esc_html_e('Your AI Credits Available', 'shortpixel-image-optimiser'); ?></span>
+        <span><b><?php echo esc_html($this->formatNumber($quotaData->ai->remaining, 0)) ?></b></span>
+
+      </p>
+  -->
+
+
+
+
+      <?php if (false === $quotaData->AIUnlimited): ?>
+      <p><span><?php esc_html_e('Your AI credits available: ','shortpixel-image-optimiser'); ?></span>
+         <span><b><?php echo esc_html($quotaData->ai->text) ?> </b> |
+              <?php esc_html_e('Used:', 'shortpixel-image-optimiser'); ?> <b><?php echo esc_html($this->formatNumber($quotaData->ai->consumed, 0)); ?></b> |
+              <?php esc_html_e('Remaining:', 'shortpixel-image-optimiser'); ?> <b><?php echo esc_html($this->formatNumber($quotaData->ai->remaining, 0)); ?></b>
+          </span>
+      </p>
+        <p>				
         <span>
           <a href="<?php echo esc_url($this->view->buyMoreHref) ?>" target="_new" class='button button-primary unlimited'>
           <span><?php echo UIHelper::getIcon('res/images/icon/shortpixel.svg', ); ?></span>
@@ -161,6 +177,9 @@ if ( ! defined( 'ABSPATH' ) ) {
           </a>
         </span>
       </p>
+      <?php else : ?>
+        <p><span><?php _e('This site is currently on the ShortPixel Unlimited AI plan, so you do not have to worry about AI credits. Enjoy!', 'shortpixel-image-optimiser'); ?></span></p>
+
       <?php endif;  ?>
 
   </div>
@@ -169,9 +188,12 @@ if ( ! defined( 'ABSPATH' ) ) {
   <?php if (false == $quotaData->unlimited): ?>
   <div class="over-quota" data-check-visibility="false" data-control="data-quota-remaining" data-control-check="data-check-total-total">
       <span><img src="<?php echo esc_url(wpSPIO()->plugin_url('res/img/bulk/over-quota.svg')) ?>" /></span>
-            <p><?php printf(esc_html('In your ShortPixel account you %shave only %s credits available %s, but you have chosen %s  images to be optimized in this bulk process. You can either go back and select less images, or you can upgrade to a higher plan or buy one-time credits.','shortpixel-image-optimiser'), '<span class="red">', esc_html($this->formatNumber($quotaData->total->remaining, 0)), '</span>', '<b data-stats-total="images-images">0</b>'); ?>
+            <p><?php printf(esc_html__('In your ShortPixel account you %shave only %s credits available%s, but you have chosen %s images to be optimized in this bulk process. You can either go back and select fewer images, or you can upgrade to a higher plan or buy one-time credits.','shortpixel-image-optimiser'), '<span class="red">', esc_html($this->formatNumber($quotaData->total->remaining, 0)), '</span>', '<b data-stats-total="images-images">0</b>'); ?>
 
-       <button type="button" class="button" onClick="ShortPixel.proposeUpgrade();"><?php esc_html_e('Show me the best options') ?></button>
+                 <p><a href="https://shortpixel.com/ms/af/KZYK08Q28044" target="_blank" class="button button-primary" >
+                  <!--<i class="shortpixel-icon cart"></i> -->
+                      <?php _e('Buy credits or upgrade to Unlimited', 'shortpixel-image-optimiser'); ?>
+                  </a> </p>
      </p>
 
        <span class='hidden' data-quota-remaining><?php
@@ -179,7 +201,6 @@ if ( ! defined( 'ABSPATH' ) ) {
                 echo esc_html($quotaData->total->remaining);
              ?></span>
     </div>
-    <?php $this->loadView('snippets/part-upgrade-options'); ?>
     
 
     <?php endif; // check unlimited ?> 
@@ -198,7 +219,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<span class='dashicons dashicons-arrow-right'></span>
         <?php if ($view->customOperationMedia !== false) 
         {
-            printf(esc_html('%s Start %s %s', 'shortpixel-image-optimiser'), '<p>', $view->customOperationMedia, '</p>');
+            printf(esc_html__('%s Start %s %s', 'shortpixel-image-optimiser'), '<p>', $view->customOperationMedia, '</p>');
         }
         else
         {

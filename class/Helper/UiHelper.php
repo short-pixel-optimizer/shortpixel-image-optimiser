@@ -34,7 +34,9 @@ class UiHelper
 	private static $outputMode = 'admin';
 
 	/**
-	 * Base URL for the ShortPixel knowledge-base article on bulk-processing errors.
+	 * Base URL for the ShortPixel knowledge-base search endpoint. The
+	 * search subject (see getKBSearchLink) is appended as the `s` query
+	 * parameter value.
 	 *
 	 * @var string
 	 */
@@ -67,9 +69,11 @@ class UiHelper
     $id = $imageObj->get('id');
     $primary = isset($actions['optimizethumbs']) ? 'button-primary' : '';
 
+    
+
     $output .= "<div class='sp-column-actions '>
                     <div class='sp-dropdown'>
-                        <button onclick='ShortPixel.openImageMenu(event);' class='sp-dropbtn button dashicons dashicons-menu $primary' title='ShortPixel Actions'></button>";
+                        <button type='button' onclick='ShortPixel.openImageMenu(event);' class='sp-dropbtn button dashicons dashicons-menu $primary' title='" . __('ShortPixel Actions', 'shortpixel-image-optimiser') . "'></button>";
     $output .= "<div id='sp-dd-$id' class='sp-dropdown-content'>";
 
     foreach($actions as $actionName => $actionData)
@@ -245,11 +249,11 @@ class UiHelper
     }
     if ($webpsTotal > 0)
     {
-      $output .=  '<div class="filetype webp">' . sprintf(__('+%s Webp images ','shortpixel-image-optimiser') , $webpsTotal) . '</div>';
+      $output .=  '<div class="filetype webp">' . sprintf(__('+%s WebP images','shortpixel-image-optimiser') , $webpsTotal) . '</div>';
     }
     if ($avifsTotal > 0)
     {
-        $output .=  '<div class="filetype avif">' . sprintf(__('+%s Avif images ','shortpixel-image-optimiser') , $avifsTotal) . '</div>';
+        $output .=  '<div class="filetype avif">' . sprintf(__('+%s AVIF images','shortpixel-image-optimiser') , $avifsTotal) . '</div>';
     }
 
     if ($imageObj->isSomethingOptimized() && $imageObj->isProcessable())
@@ -412,18 +416,18 @@ class UiHelper
 							else {
 								 $itemText = __('thumbnails', 'shortpixel-image-optimiser');
 							}
-               $action['text']  = sprintf(__('Optimize %s  %s','shortpixel-image-optimiser'),$total, $itemText);
+               $action['text']  = sprintf(__('Optimize %s %s','shortpixel-image-optimiser'),$total, $itemText);
 
 
              }
              else
              {
                  if ($optimizableWebp > 0 && $optimizableAvif > 0)
-                   $text  = sprintf(__('Optimize %s webps and %s avif','shortpixel-image-optimiser'),$optimizableWebp, $optimizableAvif);
+                   $text  = sprintf(__('Optimize %s WebP and %s AVIF files','shortpixel-image-optimiser'),$optimizableWebp, $optimizableAvif);
                  elseif ($optimizableWebp > 0)
-                   $text  = sprintf(__('Optimize %s webps','shortpixel-image-optimiser'),$optimizableWebp);
+                   $text  = sprintf(__('Optimize %s WebP files','shortpixel-image-optimiser'),$optimizableWebp);
                  else
-                    $text  = sprintf(__('Optimize %s avifs','shortpixel-image-optimiser'),$optimizableAvif);
+                    $text  = sprintf(__('Optimize %s AVIF files','shortpixel-image-optimiser'),$optimizableAvif);
                  $action['text'] = $text;
              }
              $list_actions['optimizethumbs'] = $action;
@@ -498,7 +502,7 @@ class UiHelper
 
       if (false === is_null($aiDataModel) && $aiDataModel->isProcessable() && 'media' === $mediaItem->get('type') )
       {
-         if (true === $mediaItem->isSomethingOptimized()) // Prevent displaying this when only the 'optimize now' buttons are visible.
+         //if (true === $mediaItem->isSomethingOptimized()) // Prevent displaying this when only the 'optimize now' buttons are visible.
            $list_actions['shortpixel-generateai'] = self::getAction('shortpixel-generateai', $id);
       }
 
@@ -522,7 +526,7 @@ class UiHelper
    * @param \ShortPixel\Model\Image\MediaLibraryModel $mediaItem The media item to build actions for.
    * @return array<string, array> Associative array of action name => action data array.
    */
-  public static function getActions($mediaItem)
+  public static function getActions($mediaItem) : array
   {
     $actions = [];
     $id = $mediaItem->get('id');
@@ -593,7 +597,7 @@ class UiHelper
 	{
 		 if ($mediaItem->isProcessable(true) === false)
 		 {
-			 $text = __('Not Processable: ','shortpixel_image_optimiser');
+			 $text = __('Not Processable: ','shortpixel-image-optimiser');
 			 $text  .= $mediaItem->getProcessableReason();
 		 }
 		 else {
@@ -612,7 +616,7 @@ class UiHelper
     }
     elseif (false === $mediaItem->isProcessable()  )
     {
-       $text = __('Not Processable: ','shortpixel_image_optimiser');
+       $text = __('Not Processable: ','shortpixel-image-optimiser');
        $text  .= $mediaItem->getProcessableReason();
     }
     elseif (! $mediaItem->exists())
@@ -677,7 +681,7 @@ class UiHelper
 				{
 					$text .= "<div class='shortpixel-image-error'><span class='shortpixel-error-reset'>";
 
-					$text .= sprintf(esc_html__('It seems you have older converted legacy data, which might cause this issue. You can try to %s %s %s . If nothing changes, this is not the cause. ','shortpixel-image-optimiser'), '<a href="javascript:' . $redo_legacy['function'] . '">', $redo_legacy['text'], '</a>');
+					$text .= sprintf(esc_html__('It seems you have older converted legacy data, which might cause this issue. You can try to %s %s %s. If nothing changes, this is not the cause. ','shortpixel-image-optimiser'), '<a href="javascript:' . $redo_legacy['function'] . '">', $redo_legacy['text'], '</a>');
 					$text .= "</span></div>";
 				}
 
@@ -721,12 +725,12 @@ class UiHelper
       ];
 
 
-      $mainline =  sprintf(__('Exif: %s'), ($removed) ? __('Removed', 'shortpixel-image-optimiser') : __('Kept', 'shortpixel-image-optimiser'));
+      $mainline =  sprintf(__('Exif: %s', 'shortpixel-image-optimiser'), ($removed) ? __('Removed', 'shortpixel-image-optimiser') : __('Kept', 'shortpixel-image-optimiser'));
 
       if (! is_null($ai))
       {
-         $mainline .=  sprintf(__(', AI %s '), ($ai) ? __('Allowed', 'shortpixel-image-optimiser') : __('Denied', 'shortpixel-image-optimiser'));
-         $mainline .=  sprintf(__(', SEO %s'), ($seo) ? __('Allowed', 'shortpixel-image-optimiser') : __('Denied', 'shortpixel-image-optimiser'));
+         $mainline .=  sprintf(__(', AI %s', 'shortpixel-image-optimiser'), ($ai) ? __('Allowed', 'shortpixel-image-optimiser') : __('Denied', 'shortpixel-image-optimiser'));
+         $mainline .=  sprintf(__(', SEO %s', 'shortpixel-image-optimiser'), ($seo) ? __('Allowed', 'shortpixel-image-optimiser') : __('Denied', 'shortpixel-image-optimiser'));
       }
 
       $status['line']  = $mainline;
@@ -934,6 +938,9 @@ class UiHelper
 	/**
 	 * Returns an escaped URL linking to the ShortPixel knowledge-base search.
 	 *
+	 * The UTM parameters (campaign plugin_error_help) come after the search
+	 * subject, since the subject is appended to the `s` query parameter.
+	 *
 	 * @param string $subject Search subject
 	 * @return string Escaped URL string.
 	 */
@@ -941,7 +948,7 @@ class UiHelper
 	{
 		$subject = sanitize_text_field($subject);   // collapse whitespace, strip tags
 		$subject = str_replace(' ', '-', $subject); // spaces -> dashes
-		return esc_url(self::$knowledge_url . $subject);
+		return esc_url(self::$knowledge_url . $subject . '&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_error_help');
 	}
 
 	/**
@@ -1005,7 +1012,6 @@ class UiHelper
    */
   public static function formatTS($ts)
   {
-      //$format = get_option('date_format') .' @ ' . date_i18n(get_option('time_format');
 		if (function_exists('wp_date'))
 		{
       	$date = wp_date(get_option('date_format'), $ts);
@@ -1154,10 +1160,10 @@ class UiHelper
       );
 
       $exclusion_apply = array(
-           'all' => __('All', 'shortpixel-image-optimiser'),
+           'all' => __('All Images', 'shortpixel-image-optimiser'),
            'only-thumbs' => __('Only Thumbnails', 'shortpixel-image-optimiser'),
            'only-custom' =>  __('Only Custom Media Images', 'shortpixel-image-optimiser'),
-           'selected-thumbs' => __('Selected Images', 'shortpixel-image-optimiser'),
+           'selected-thumbs' => __('Selected Thumbnails', 'shortpixel-image-optimiser'),
       );
 
       $dashboard_string = [
@@ -1167,9 +1173,9 @@ class UiHelper
       ];
 
       $ai_string = [
-            'imagemodaltitle' => __('Select an image for AI SEO data preview', 'shortpixel-image-optimiser'),
+            'imagemodaltitle' => __('Select an image for the image SEO data preview', 'shortpixel-image-optimiser'),
             'selectimage' => __('Use this image', 'shortpixel-image-optimiser'),
-            'preview_requested' => __('Working on your AI SEO data preview. This may take a while ... ', 'shortpixel-image-optimiser'),
+            'preview_requested' => __('Working on your image SEO data preview. This may take a while...', 'shortpixel-image-optimiser'),
       ];
 
       $strings['exclusion_types'] = $exclusion_types;

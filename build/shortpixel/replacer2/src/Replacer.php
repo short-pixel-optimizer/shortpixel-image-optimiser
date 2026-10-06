@@ -278,6 +278,7 @@ class Replacer
 
 				if ($replaced_content !== $post_content) {
 
+					// @todo This should be moved indeed to wp_update_post ( And Updater.php class ) to better do with cache etc
 					//  $result = wp_update_post($post_ar);
 					$sql = 'UPDATE ' . $wpdb->posts . ' SET post_content = %s WHERE ID = %d';
 					$sql = $wpdb->prepare($sql, $replaced_content, $post_id);
@@ -288,6 +289,8 @@ class Replacer
 						// Notice::addError('Something went wrong while replacing' .  $result->get_error_message() );
 						Log::addError('WP-Error during post update', $result);
 					}
+			        clean_post_cache($post_id);
+
 				}
 			}
 		}
@@ -381,7 +384,7 @@ class Replacer
 					}
 				} // Loop
 			} // if
-		} // foreach
+		} // foreach on table options
 
 		return $number_of_updates;
 	} // function
@@ -410,6 +413,7 @@ class Replacer
 
 		if (true === is_serialized($content)) {
 			$serialized_content = $content; // use to return content back if incomplete classes are found, prevent destroying the original information
+
 
 			$args = array('allowed_classes' => false);
 
@@ -456,6 +460,7 @@ class Replacer
 				} else { // else just return the content.
 					return $content;
 				}
+
 			}
 			foreach ($content as $key => $value) {
 				$content->{$key} = $this->replaceContent($value, $search, $replace, true, $strict_check);
@@ -478,6 +483,8 @@ class Replacer
 		}
 		return $content;
 	}
+
+
 
 	/** Check if path is allowed within openbasedir restrictions. This is an attempt to limit notices in file funtions if so.  Most likely the path will be relative in that case.
 	 * @param String Path as String

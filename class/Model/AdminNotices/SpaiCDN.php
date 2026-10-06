@@ -77,7 +77,7 @@ class SpaiCDN extends \ShortPixel\Model\AdminNoticeModel
     $path = 'shortpixel-adaptive-images/short-pixel-ai.php';
     $link = wp_nonce_url( admin_url( 'admin-post.php?action=shortpixel_deactivate_conflict_plugin&plugin=' . urlencode( $path ) ), 'sp_deactivate_plugin_nonce' );
 
-    $message .= sprintf('<p><a class="button button-primary" href="%s">%s</a></p>', $link, __('Deactivate ShortPixel Adaptive Images'));
+    $message .= sprintf('<p><a class="button button-primary" href="%s">%s</a></p>', $link, __('Deactivate ShortPixel Adaptive Images', 'shortpixel-image-optimiser'));
 
 		return $message;
 

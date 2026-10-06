@@ -46,19 +46,90 @@ abstract class Converter
 	/** @var object The ImageModel being processed. */
 	protected $imageModel;  // The current ImageModel from SPIO
 
-	// Method specific
+	// Method specific — implemented by every concrete converter.
+
+	/**
+	 * Run the conversion for the bound ImageModel.
+	 *
+	 * @param array $args Converter-specific options (e.g. force flags, checksum).
+	 * @return bool True when conversion succeeded, false when it failed or was skipped.
+	 */
 	abstract public function convert($args = array());
+
+	/**
+	 * Whether the bound ImageModel is a candidate for conversion right now.
+	 *
+	 * Subclasses may look at extension, previous-attempt markers, transparency,
+	 * or backup state to make this decision.
+	 *
+	 * @return bool
+	 */
 	abstract public function isConvertable();
+
+	/**
+	 * Roll back a previously completed conversion, restoring the original file
+	 * format and cleaning up the replacement.
+	 *
+	 * @return bool True on success.
+	 */
 	abstract public function restore();
+
+	/**
+	 * Return a stable checksum for the bound ImageModel that can be stored on
+	 * convertMeta's `setTried()` to prevent repeated failing attempts against
+	 * an unchanged source.
+	 *
+	 * @return string|int
+	 */
 	abstract public function getCheckSum();
 
-	// Media Library specific
+	// Media-library specific — implemented by MediaLibraryConverter and its subclasses.
+
+	/**
+	 * Rewrite the WordPress attachment metadata after a conversion so callers
+	 * downstream (thumbnail generation, URL replacer) see the new file.
+	 *
+	 * @param array $params Converter-specific parameters (e.g. filename mapping).
+	 * @return void
+	 */
 	abstract protected function updateMetaData($params);
+
+	/**
+	 * Return the freshly-computed WordPress attachment metadata payload that
+	 * the caller should write back via wp_update_attachment_metadata.
+	 *
+	 * @return array<string, mixed>
+	 */
 	abstract public function getUpdatedMeta();
+
+	/**
+	 * Instantiate the URL-replacement helper that rewrites references to the
+	 * old filename (posts, widgets, custom fields) after a rename-and-convert.
+	 *
+	 * @return void
+	 */
 	abstract protected function setupReplacer();
-	abstract protected function setTarget($file);
+
+	/**
+	 * Register the destination FileModel with the replacer so all subsequent
+	 * URL rewrites know the target path.
+	 *
+	 * @param FileModel $file Destination file that will hold the converted output.
+	 * @return void
+	 */
+	abstract protected function setTarget(FileModel $file);
 
 	// Prepare item for adding to queue, adding data, doing backup perhaps.
+
+	/**
+	 * Mutate a queued item so that the appropriate conversion action is
+	 * scheduled ahead of the optimize step. Called by QueueItem when a
+	 * ready-to-optimize item is discovered to also be a conversion candidate.
+	 *
+	 * @param QueueItem $item Queue slot to enrich.
+	 * @param array     $args Converter-specific options (e.g. debug_active).
+	 * @return void
+	 */
 	abstract public function filterQueue(QueueItem $item, $args = array());
 
 	/**
@@ -133,16 +204,16 @@ abstract class Converter
 			return false;
 		}
 
-		$extension = $imageModel->getExtension();
-
-		$converter = false;
-		$converter = self::getConverterByExt($extension, $imageModel);
-
 		// No Support (yet)
 		if ($imageModel->get('type') == 'custom') {
 			//	Log::addInfo('Converter fail - no support for custom types');
 			return false;
 		}
+
+		$extension = $imageModel->getExtension();
+
+		$converter = false;
+		$converter = self::getConverterByExt($extension, $imageModel);
 
 		// Second option for conversion is image who have been placeholdered.
 		if (true === $imageModel->getMeta()->convertMeta()->hasPlaceHolder() && false === $imageModel->getMeta()->convertMeta()->isConverted() && ! is_null($imageModel->getMeta()->convertMeta()->getFileFormat())) {
@@ -183,16 +254,15 @@ abstract class Converter
 	 *
 	 * @param DirectoryModel $dir    Target directory to check for collisions.
 	 * @param FileModel      $file   Proposed file object.
-	 * @param int            $number Starting suffix number (unused; always starts from 0 internally).
 	 * @return FileModel             A FileModel whose path does not already exist on disk.
 	 */
 	/** Own function to get a unique filename since the WordPress wp_unique_filename seems to not function properly w/ thumbnails */
-	protected function unique_file(DirectoryModel $dir, FileModel $file, $number = 0)
+	protected function unique_file(DirectoryModel $dir, FileModel $file) : FileModel
 	{
-		if (! $file->exists())
+		if (false === $file->exists())
 			return $file;
 
-		if ($file->is_virtual()) {
+		if (true === $file->is_virtual()) {
 			return $file;
 		}
 

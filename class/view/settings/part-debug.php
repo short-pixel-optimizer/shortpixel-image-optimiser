@@ -4,6 +4,7 @@ use ShortPixel\Notices\NoticeController as NoticeController;
 use ShortPixel\Controller\StatsController as StatsController;
 use ShortPixel\Controller\QueueController as QueueController;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
+use ShortPixel\Controller\Abilities\AbilitiesController as AbilitiesController;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 
@@ -32,13 +33,14 @@ if (Log::isManualDebug())
   </h2>
 
   <div class='env'>
-    <h3><?php esc_html_e('Environment', 'shortpixel'); ?></h3>
+    <h3><?php esc_html_e('Environment', 'shortpixel-image-optimiser'); ?></h3>
     <div class='flex'>
       <span>NGINX</span><span><?php var_export($this->is_nginx); ?></span>
       <span>KeyVerified</span><span><?php var_export($view->key->is_verifiedkey); ?></span>
       <span>HtAccess writable</span><span><?php var_export($this->is_htaccess_writable); ?></span>
       <span>Multisite</span><span><?php var_export($this->is_multisite); ?></span>
       <span>Main site</span><span><?php var_export($this->is_mainsite); ?></span>
+      <span>Network Admin</span><span><?php var_export($this->is_network_admin); ?></span>
       <span>Constant key</span><span><?php var_export($view->key->is_constant_key); ?></span>
       <span>Hide Key</span><span><?php var_export($view->key->hide_api_key); ?></span>
       <span>Has Nextgen</span><span><?php var_export($this->has_nextgen); ?></span>
@@ -72,8 +74,18 @@ if (Log::isManualDebug())
 		</div>
   </div> <!-- /env -->
 
+  <div class='functions'>
+    <h3><?php esc_html_e('Functions Usuable', 'shortpixel-image-optimiser'); ?></h3>
+    <div class='flex'>
+      <span>Finfo open</span><span><?php var_export(\wpSPIO()->env()->is_function_usable('finfo_open')); ?></span>
+      <span>MimeContent Type</span><span><?php var_export(\wpSPIO()->env()->is_function_usable('mime_content_type')) ?></span>
+      <span>Curl Init</span><span><?php var_export(\wpSPIO()->env()->is_function_usable('curl_init')); ?></span>    
+    </div>
+
+  </div>
+
   <div class='fs'>
-    <h3><?php esc_html_e('FileSystem', 'shortpixel'); ?></h3>
+    <h3><?php esc_html_e('FileSystem', 'shortpixel-image-optimiser'); ?></h3>
     <div class='flex'>
        <span>WpFileBase</span><span><?php var_export($fs->getWPFileBase()); ?></span>
        <span>Upload Base</span><span><?php var_export($fs->getWPUploadBase()); ?></span>
@@ -84,7 +96,7 @@ if (Log::isManualDebug())
   </div>
 
   <div class='settings'>
-    <h3><?php esc_html_e('Settings', 'shortpixel'); ?></h3>
+    <h3><?php esc_html_e('Settings', 'shortpixel-image-optimiser'); ?></h3>
     <?php $local = $this->view->key;
 
       $local->apiKey = strlen($local->apiKey) . ' chars'; ?>
@@ -120,7 +132,7 @@ if (Log::isManualDebug())
 
 
   <div class='quotadata'>
-    <h3><?php esc_html_e('Quota Data', 'shortpixel'); ?></h3>
+    <h3><?php esc_html_e('Quota Data', 'shortpixel-image-optimiser'); ?></h3>
     <pre><?php var_export($this->quotaData); ?></pre>
   </div>
 
@@ -171,6 +183,51 @@ if (Log::isManualDebug())
 			<?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
       <button class='button' type='submit'>Clear statistics cache</button>
       </form>
+  </div>
+
+  <?php
+    $abilitiesController = AbilitiesController::getInstance();
+    $abilitiesCatalog = $abilitiesController->getAbilities();
+    $abilitiesApiAvailable = $abilitiesController->isApiAvailable();
+    $abilitiesInitEnabled = (bool) apply_filters( 'shortpixel/abilities/init', true );
+  ?>
+  <div class="mcp-abilities env">
+    <h3><?php esc_html_e('SPIO MCP Abilities', 'shortpixel-image-optimiser'); ?> (<?php echo esc_html(count($abilitiesCatalog)); ?>)</h3>
+    <div class='flex'>
+      <span>Abilities API</span><span><?php var_export($abilitiesApiAvailable); ?></span>
+      <span>Registration enabled</span><span><?php var_export($abilitiesInitEnabled); ?></span>
+    </div>
+
+    <div class='table mcp-abilities-list'>
+      <div class='head'>
+        <span>Name</span>
+        <span>Label</span>
+        <span>Permission</span>
+        <span>MCP</span>
+        <span>Registered</span>
+      </div>
+      <?php foreach ( $abilitiesCatalog as $abilityName => $abilityArgs ) :
+        $permission = 'unknown';
+        if ( isset( $abilityArgs['permission_callback'] ) && is_array( $abilityArgs['permission_callback'] ) ) {
+          $callbackMethod = $abilityArgs['permission_callback'][1] ?? '';
+          if ( 'userCanManage' === $callbackMethod ) {
+            $permission = 'manage_options';
+          } elseif ( 'userCanOptimize' === $callbackMethod ) {
+            $permission = 'edit_others_posts';
+          }
+        }
+        $mcpPublic = ! empty( $abilityArgs['meta']['mcp']['public'] );
+        $isRegistered = $abilitiesController->isAbilityRegistered( $abilityName );
+      ?>
+      <div title="<?php echo esc_attr( $abilityArgs['description'] ?? '' ); ?>">
+        <span><?php echo esc_html( $abilityName ); ?></span>
+        <span><?php echo esc_html( $abilityArgs['label'] ?? '' ); ?></span>
+        <span><?php echo esc_html( $permission ); ?></span>
+        <span><?php echo $mcpPublic ? 'Y' : 'N'; ?></span>
+        <span><?php echo $isRegistered ? 'Y' : 'N'; ?></span>
+      </div>
+      <?php endforeach; ?>
+    </div>
   </div>
 
   <?php $noticeController =  NoticeController::getInstance();

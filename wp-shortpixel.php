@@ -3,14 +3,14 @@
  * Plugin Name: ShortPixel Image Optimizer
  * Plugin URI: https://shortpixel.com/
  * Description: ShortPixel optimizes images automatically, while guarding the quality of your images. Check your <a href="/wp-admin/options-general.php?page=wp-shortpixel-settings" target="_blank">Settings &gt; ShortPixel</a> page on how to start optimizing your image library and make your website load faster.
- * Version: 6.5.6
+ * Version: 6.6.0
  * Author: ShortPixel - Convert WebP/AVIF & Optimize Images
  * Author URI: https://shortpixel.com
  * GitHub Plugin URI: https://github.com/short-pixel-optimizer/shortpixel-image-optimiser
  * Text Domain: shortpixel-image-optimiser
- * Domain Path: /lang
  */
 
+use ShortPixel\ShortPixelPlugin;
 
  if ( ! defined( 'ABSPATH' ) ) {
  	exit('No Direct Access'); // Exit if accessed directly.
@@ -36,7 +36,7 @@ if (! defined('SHORTPIXEL_RESET_ON_ACTIVATE'))
 define('SHORTPIXEL_PLUGIN_FILE', __FILE__);
 define('SHORTPIXEL_PLUGIN_DIR', __DIR__);
 
-define('SHORTPIXEL_IMAGE_OPTIMISER_VERSION', "6.5.6");
+define('SHORTPIXEL_IMAGE_OPTIMISER_VERSION', "6.6.0");
 
 define('SHORTPIXEL_BACKUP', 'ShortpixelBackups');
 define('SHORTPIXEL_MAX_FAIL_RETRIES', 3);
@@ -51,12 +51,12 @@ if(!defined('SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION')) { //can be defined in wp-co
 
 define('SHORTPIXEL_API', 'api.shortpixel.com');
 
-$max_exec = intval(ini_get('max_execution_time'));
-if ($max_exec === 0) // max execution time of zero means infinite. Quantify.
-  $max_exec = 60;
-elseif($max_exec < 0) // some hosts like to set negative figures on this. Ignore that.
-  $max_exec = 30;
-define('SHORTPIXEL_MAX_EXECUTION_TIME', $max_exec);
+$spio_max_exec = intval(ini_get('max_execution_time'));
+if ($spio_max_exec === 0) // max execution time of zero means infinite. Quantify.
+  $spio_max_exec = 60;
+elseif($spio_max_exec < 0) // some hosts like to set negative figures on this. Ignore that.
+  $spio_max_exec = 30;
+define('SHORTPIXEL_MAX_EXECUTION_TIME', $spio_max_exec);
 
 // ** Load the modules */
 require_once(SHORTPIXEL_PLUGIN_DIR . '/build/shortpixel/autoload.php');
@@ -82,6 +82,7 @@ if (! defined('SHORTPIXEL_DEBUG'))
 }
 
 
+/*
 if (false === defined( 'WP_CLI' ) || false === WP_CLI)
 {
 	$log = \ShortPixel\ShortPixelLogger\ShortPixelLogger::getInstance();
@@ -89,14 +90,14 @@ if (false === defined( 'WP_CLI' ) || false === WP_CLI)
 	{
   	$log->setLogPath(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
 	}
-}
+} */
 
 /* Function to reach core function of ShortPixel
 * Use to get plugin url, plugin path, or certain core controllers
 */
 
 if (! function_exists("wpSPIO"))	{
-  function wpSPIO()
+  function wpSPIO() : ShortPixelPlugin
   {
      return \ShortPixel\ShortPixelPlugin::getInstance();
   }
@@ -105,7 +106,7 @@ if (! function_exists("wpSPIO"))	{
 require_once(SHORTPIXEL_PLUGIN_DIR . '/shortpixel-plugin.php'); // loads runtime and needed classes.
 
 // PSR-4 package loader.
-$loader = new ShortPixel\Build\PackageLoader();
+$loader = new \ShortPixel\Build\PackageLoader();
 $loader->setComposerFile(SHORTPIXEL_PLUGIN_DIR . '/class/plugin.json');
 $loader->load(SHORTPIXEL_PLUGIN_DIR);
 

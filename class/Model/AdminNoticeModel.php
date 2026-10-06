@@ -92,7 +92,13 @@ abstract class AdminNoticeModel
     */
    abstract protected function getMessage();
 
-	 // No stuff loading here, low init
+	 /**
+	  * Constructor.
+	  *
+	  * Intentionally empty — the class is instantiated eagerly during
+	  * low-init but must not touch the database or the notice controller
+	  * yet. Real setup happens on load().
+	  */
 	 public function __construct()
 	 {
 
@@ -148,6 +154,11 @@ abstract class AdminNoticeModel
       $this->notice = null;
 	 }
 
+	 /**
+	  * Return the unique key identifying this notice on the NoticeController.
+	  *
+	  * @return string
+	  */
 	 public function getKey()
 	 {
 		  return $this->key;

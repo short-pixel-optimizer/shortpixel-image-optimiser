@@ -57,11 +57,9 @@ class MediaLibraryQueue extends Queue
        $options = $this->options;
      }
 
-     // @todo  Here probably options thing should be replaced by querying custom_data from Q first and then set options
      $this->options = apply_filters('shortpixel/medialibraryqueue/options', $options);
 
-
-     $this->q->setOptions($options);
+     $this->q->setOptions($this->options);
    }
 
    /**
@@ -109,6 +107,12 @@ class MediaLibraryQueue extends Queue
 
    /**
     * Initialises a new bulk run, applying any provided filters before delegating to the parent.
+    *
+    * A raw 'filters' value in $args is consumed by addFilters() — which resolves
+    * date strings into bounding item IDs stored in $this->options['filters'] —
+    * and is then unset so the raw input cannot override the processed values
+    * during the merge. The returned options therefore always carry the queue's
+    * own (processed) filters.
     *
     * @param array $args Optional arguments including a 'filters' key for date/ID range filters.
     * @return array The merged options passed to the parent bulk initialisation.
@@ -300,14 +304,13 @@ class MediaLibraryQueue extends Queue
        if ($last_id > 0)
        {
           $sql .= " and attach_id < %d ";
-          $prepare [] = intval($last_id);
+          $prepare[] = intval($last_id);
        }
 
        $sql .= ' order by attach_id DESC LIMIT %d ';
        $prepare[] = $limit;
 
        $sql = $wpdb->prepare($sql, $prepare);
-
        $results = $wpdb->get_col($sql);
 
        $items = [];

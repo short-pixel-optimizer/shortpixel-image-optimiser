@@ -39,6 +39,7 @@ class OtherMediaController extends \ShortPixel\Controller
 
 
 
+    /** Delegates to the parent view controller; use {@see getInstance()} to obtain the singleton. */
     public function __construct()
     {
         parent::__construct();
@@ -508,14 +509,7 @@ class OtherMediaController extends \ShortPixel\Controller
 
 		}
 
-    private function checkDirStatus()
-    {
-        $status = 0;
 
-
-
-        return $status;
-    }
 
     /**
      * Check whether a given directory is part of the WordPress Media Library upload structure.

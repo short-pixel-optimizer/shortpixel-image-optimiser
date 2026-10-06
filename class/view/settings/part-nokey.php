@@ -18,7 +18,7 @@ if (! $view->key->is_verifiedkey && $view->key->hide_api_key && ! $view->key->is
 elseif ($view->key->is_constant_key && ! $view->key->is_verifiedkey)
 {
   $dkey = ($view->key->hide_api_key) ? '' : '(' . SHORTPIXEL_API_KEY.  ')';
-	$error_message = sprintf(__('Constant API Key is not verified. Please check if this is a valid API key %s'),$dkey);
+	$error_message = sprintf(__('Constant API Key is not verified. Please check if this is a valid API key %s', 'shortpixel-image-optimiser'),$dkey);
   Notice::addError($error_message);
 }
 
@@ -55,7 +55,7 @@ $disabled = ($view->key->is_editable) ? '' : 'disabled';
 	<h3><?php esc_html_e('New user?','shortpixel-image-optimiser');?></h3>
 	<?php echo UiHelper::getIcon('res/images/icon/new-user.svg'); ?>
 	<h2><?php esc_html_e('Create account','shortpixel-image-optimiser');?></h2>
-	<p><?php esc_html_e('If you don\'t have an API Key, you can request one for free. Just press the "Request Key" button after checking that the e-mail is correct.','shortpixel-image-optimiser');?></p>
+	<p><?php esc_html_e('If you don\'t have an API Key, you can request one for free. Check that the e-mail address is correct, then press the "Continue" button.','shortpixel-image-optimiser');?></p>
 
   <form method="POST" action="<?php echo esc_url(add_query_arg(array('noheader' => 'true', 'sp-action' => 'action_request_new_key'))) ?>"
       id="shortpixel-form-request-key">
@@ -81,7 +81,7 @@ $disabled = ($view->key->is_editable) ? '' : 'disabled';
                     <?php if($adminEmail) {
                         printf(esc_html__('%s %s %s is the e-mail address in your WordPress Settings. You can use it, or change it to any valid e-mail address that you own.','shortpixel-image-optimiser'), '<b>', esc_html(sanitize_email($adminEmail)),  '</b>');
                     } else {
-                        esc_html_e('Please input your e-mail address and press the Request Key button.','shortpixel-image-optimiser');
+                        esc_html_e('Please enter your e-mail address and press the "Continue" button.','shortpixel-image-optimiser');
                     }
                     ?>
                 </p>

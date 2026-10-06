@@ -27,13 +27,14 @@ class ShortPixelSettings {
 		var self = this;
 		this.strings = settings_strings;
 
-		this.InitToggle(); // data- toggles 
+		this.InitToggle(); // data-toggles 
 		this.InitExclusions(); // Exclusions 
 		this.InitWarnings(); // Settings warnings 
 		this.InitMenu(); // The menu 
 		this.InitModeSwitcher(); // Simple / Advanced mode 
 		this.InitActionEvents(); // Action events.
 		this.InitAiEvents(); 
+		this.InitNetworkActions();
 
 		// Modals
 		var modals = this.root.querySelectorAll('[data-action="open-modal"]');
@@ -76,13 +77,16 @@ class ShortPixelSettings {
 
 		// ApiKeyField toggle
 		var keyField = this.root.querySelector('.apifield i.eye');
-		keyField.addEventListener('click', self.ToggleApiFieldEvent.bind(self));
-
-			var compressionRadios = this.root.querySelectorAll('.shortpixel-compression-options input[type="radio"]');
-			for (var i = 0; i < compressionRadios.length; i++)
-			{
-				 compressionRadios[i].addEventListener('change', this.CompressionTypeChangeEvent.bind(this));
-			}
+		if (keyField !== null)
+		{
+			keyField.addEventListener('click', self.ToggleApiFieldEvent.bind(self));
+		}
+		
+		var compressionRadios = this.root.querySelectorAll('.shortpixel-compression-options input[type="radio"]');
+		for (var i = 0; i < compressionRadios.length; i++)
+		{
+			 compressionRadios[i].addEventListener('change', this.CompressionTypeChangeEvent.bind(this));
+		}
 	}
 
 	InitAjaxForm() {
@@ -293,7 +297,6 @@ class ShortPixelSettings {
 	}
 
 	InitMenu() {
-		//var menu_elements = this.root.querySelectorAll('menu ul li a');
 		var menu_elements = this.root.querySelectorAll('[data-menu-link]');
 		this.menu_elements = menu_elements;
 
@@ -322,11 +325,13 @@ class ShortPixelSettings {
 
 	InitModeSwitcher() {
 		var switcher = document.getElementById('viewmode-toggles');
-		var checkbox = switcher.querySelector('input[type="checkbox"]');
-
+		
 		if (null == switcher) {
 			return;
 		}
+
+		var checkbox = switcher.querySelector('input[type="checkbox"]');
+
 		if (this.root.classList.contains('advanced') || checkbox.checked) {
 			checkbox.checked = true;
 			this.current_mode = 'advanced';
@@ -338,15 +343,66 @@ class ShortPixelSettings {
 		switcher.addEventListener('change', this.SwitchViewModeEvent.bind(this));
 	}
 
+	// For multisite settings only. 
+	InitNetworkActions()
+	{
+		if (document.querySelector('input[name="is_network_admin"]') === null)
+		{
+			return; 
+		}
+
+		let action = document.querySelector('[data-action="override_network_action"]');
+		if (null === action)
+		{
+			 return; 
+		}
+
+		this.EnableNetworkOptionsEvent(null);
+
+
+
+	}
+
+	EnableNetworkOptionsEvent(event)
+	{
+		let action = document.querySelector('[data-action="override_network_action"]');
+
+		let active = action.checked; 
+
+		let menuElements = document.querySelectorAll('menu li:not(.network)'); 
+		for (let i = 0; i < menuElements.length; i++)
+		{
+			if (active)
+			{
+				menuElements[i].classList.remove('hidden'); 
+			}
+			else
+			{
+				menuElements[i].classList.add('hidden'); 
+			}
+			 
+		}
+
+		var switcher = document.querySelector('.adv_switcher'); 
+		if (null !== switcher)
+		{
+			if (active)
+			{
+				switcher.classList.remove('hidden');
+			}
+			else 
+			{
+				switcher.classList.add('hidden');
+			}
+			 
+		}
+
+	}
+
 	InitActionEvents() {
 		var actions = document.querySelectorAll('[setting-action]');
 		for (var i = 0; i < actions.length; i++) {
 			var actionElement = actions[i];
-			/*if (false === actionElement.hasAttribute('data-function'))
-			{
-				console.warn('Action without function', actionElement); 
-				continue; 
-			} */
 
 			var method = actionElement.getAttribute('setting-action');
 			if ('undefined' === typeof this[method]) {
@@ -452,6 +508,9 @@ class ShortPixelSettings {
 					button: {
 						text: self.strings.ai_strings.selectimage, 
 					},
+					library: {
+						type: 'image'  // Show only images
+					},					
 					multiple: false // Set to true to allow multiple image selection
 				});
 		
@@ -517,7 +576,7 @@ class ShortPixelSettings {
 			// @todo This response detail needs generated / original, not just the results. 
 
 			var elements = ['generated', 'original'];
-			var fields = ['filename', 'alt', 'caption', 'description', 'post_title'];
+			var fields = ['filebase', 'alt', 'caption', 'description', 'post_title'];
 
 			var currentData = document.querySelector('.current.result_info');
 			var generatedData = document.querySelector('.result.result_info');
@@ -614,7 +673,10 @@ class ShortPixelSettings {
 	{
 		event.preventDefault();
 		var chatBot = document.getElementById('chatbase-bubble-button');
-		var event = new CustomEvent('click'); 
+		// Cancelable MouseEvent rather than CustomEvent('click'), same as the
+		// quick tour: a non-cancelable synthetic click can trigger
+		// default activation in WebKit.
+		var event = new MouseEvent('click', { bubbles: true, cancelable: true });
 		chatBot.dispatchEvent(event);
 	}
 
@@ -974,12 +1036,18 @@ class ShortPixelSettings {
 			saveButtons.classList.add('saving');
 		}
 
-		formData.append('screen_action', 'form_submit');
+		let form_action = formData.get('form_action');
+		formData.append('screen_action', form_action);
 		formData.append('form-nonce', formData.get('nonce'));
 
 		// Special Actions
-		let formaction_parsed = URL.parse(form.action);
-		if (formaction_parsed.searchParams && formaction_parsed.searchParams.has('sp-action')) {
+		let formaction_parsed = null;
+		try {
+			formaction_parsed = new URL(form.action);
+		} catch (error) {
+			// form.action not a parsable URL - no special action to extract.
+		}
+		if (formaction_parsed !== null && formaction_parsed.searchParams.has('sp-action')) {
 			formData.set('screen_action', formaction_parsed.searchParams.get('sp-action'));
 		}
 
@@ -994,6 +1062,11 @@ class ShortPixelSettings {
 		formData.append('ajaxSave', 'true');
 
 		formData.append('request_url', window.location.toString());
+
+		if (document.querySelector('input[name="is_network_admin"]') !== null)
+		{
+				formData.append('is_network_admin', 'true');
+		}
 
 		if (false === formData.has('nonce')) {
 			formData.append('nonce', ShortPixelProcessorData.nonce_settingsrequest);
@@ -1108,7 +1181,13 @@ class ShortPixelSettings {
 
 	DashBoardWarningEvent(warning, matches) {
 
-		var dashBox = warning[0];
+		var dashBox = (warning.length > 0) ? warning[0] : null;
+
+		if (null === dashBox)
+		{
+			console.warn('Dashbox not set?', matches);
+			return; 
+		}
 		var status = (true === matches.allMatches) ? 'alert' : (true === matches.someMatch) ? 'warning' : 'ok';
 
 		let panelName;
@@ -1344,14 +1423,24 @@ class ShortPixelSettings {
 	}
 
 	ReceiveModal(elem) {
-		if (typeof elem.detail.settings.results !== 'undefined') {
+		if (typeof (elem.detail.settings) !== 'undefined' && typeof elem.detail.settings.results !== 'undefined') {
 			var modal = document.getElementById('spioSettingsModal');
 			var body = modal.querySelector('.spio-modal-body');
 
 			body.innerHTML = elem.detail.settings.results;
 		}
+		else if (typeof elem.detail.message !== 'undefined')
+		{
+			var modal = document.getElementById('spioSettingsModal');
+			var body = modal.querySelector('.spio-modal-body');
 
-		if (typeof elem.detail.settings.redirect !== 'undefined') {
+			let textNode = document.createElement('p');
+			textNode.innerText = elem.detail.message; 
+			body.append(textNode);
+
+		}
+
+		if (typeof (elem.detail.settings) !== 'undefined' && typeof elem.detail.settings.redirect !== 'undefined') {
 			window.location.href = elem.detail.settings.redirect;
 		}
 

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Plugin Overview
 
-ShortPixel Image Optimizer is a WordPress plugin (v6.4.3) for image optimization, WebP/AVIF conversion, and AI-powered image features (upscale, background removal, SEO alt text). Requires PHP 7.4+, WordPress 4.8+.
+ShortPixel Image Optimizer is a WordPress plugin for image optimization, WebP/AVIF conversion, and AI-powered image features (upscale, background removal, SEO alt text). Requires PHP 7.4+, WordPress 4.8+. For the current version read `wp-shortpixel.php` (the `Version:` header / `SHORTPIXEL_IMAGE_OPTIMISER_VERSION`) — it is deliberately not duplicated here, because a copied version number goes stale every release.
 
 ## Build & Dependencies
 
@@ -25,37 +25,65 @@ The `build/shortpixel/` directory contains bundled dependencies (notices, log, s
 
 ## Testing
 
-PHPUnit with WP_Mock (no live WordPress required for unit tests):
+Test dependencies (PHPUnit + Yoast polyfills) are kept SEPARATE from the main
+composer.json (which is the plugin/module build tool). They live in
+`composer.tests.json` / `composer.tests.lock` and install into `vendor-tests/`:
 
 ```bash
-# Run all tests
-vendor/bin/phpunit
-
-# Run a specific test suite
-vendor/bin/phpunit --testsuite fileSystem
-vendor/bin/phpunit --testsuite imageModel
-vendor/bin/phpunit --testsuite Controllers
-vendor/bin/phpunit --testsuite queue
-vendor/bin/phpunit --testsuite model
-
-# Run a single test file
-vendor/bin/phpunit tests/Model/image/test-ImageModel.php
+COMPOSER=composer.tests.json composer install
 ```
 
-Test bootstrap: `tests/bootstrap.php`. Test files follow the naming convention `test-*.php`.
+All suites run against a real WordPress test install inside Docker via
+`bin/test.sh` (see TESTING.md for the full reference):
 
-For integration/acceptance tests (requires a running WordPress instance):
 ```bash
-./test.sh
-./test.sh -t <suite_name>
+bin/test.sh --verify               # FIRST: prove the environment works (fails unless tests really ran)
+bin/test.sh                        # all unit suites (PHP 8.3, matches CI)
+bin/test.sh --testsuite Controllers
+bin/test.sh --integration          # integration suite (phpunit-integration.xml)
+bin/test.sh --ms                   # multisite suite
+bin/test.sh --compat               # cross-plugin compatibility suite
+bin/test.sh --all                  # unit + integration + compat
+bin/test.sh --php 8.5 --integration
+bin/test.sh --testsuite model --filter ImageModelTest   # single file: filter on CLASS name (file paths don't work — PHPUnit can't map test-Foo.php to FooTest)
 ```
+
+Testsuite names are **case-sensitive**: the unit suites are `Helper`, `model`
+(lowercase), `External`, `Controllers`, `SPIO Main`, declared in
+`phpunit.xml.dist`. `bin/test.sh` rejects an unknown name, but calling PHPUnit
+directly (`vendor-tests/bin/phpunit --testsuite Model`) prints
+`No tests executed!` and exits **0** — a green run that tested nothing. The
+same applies to a `--filter` that matches nothing, so always check the test
+count in the output.
+
+Unit bootstrap: `tests/bootstrap.php`; integration bootstrap:
+`tests/Integration/bootstrap.php`. Test files follow the naming convention
+`test-*.php`.
 
 ## Linting
 
+phpcs ships with the test dependencies (`composer.tests.json`), NOT with
+`composer.json` — same split as PHPUnit, so the binary lives in
+`vendor-tests/bin/`. Install it the same way:
+
 ```bash
-vendor/bin/phpcs --standard=phpcs-ruleset.xml class/
-vendor/bin/phpcs --standard=phpcs-security.xml class/
+COMPOSER=composer.tests.json composer install    # installs phpunit + phpcs into vendor-tests/
 ```
+
+```bash
+vendor-tests/bin/phpcs --standard=phpcs-ruleset.xml class/
+vendor-tests/bin/phpcs --standard=phpcs-security.xml class/
+```
+
+Both rulesets reference the `WordPress` standard, which comes from
+`wp-coding-standards/wpcs`; `dealerdirect/phpcodesniffer-composer-installer`
+registers it automatically on install, so no `installed_paths` setup is
+needed. Verify with `vendor-tests/bin/phpcs -i` (the list must include
+`WordPress`).
+
+Linting is NOT part of `bin/test.sh` or CI — the existing code does not pass
+these rulesets cleanly, so run it on the files you touched, not repo-wide,
+and treat the output as advisory rather than a gate.
 
 ## Architecture
 
@@ -108,3 +136,19 @@ build/shortpixel/     - Bundled vendor modules (do not edit directly)
 - **Queue system:** Image optimization runs through `shortq` queue library (in `build/shortpixel/shortq/`), orchestrated by `QueueController` and `MediaLibraryQueue`/`CustomQueue`
 - **Two image pipelines:** Media Library images (`MediaLibraryModel`) and Custom/other images (`CustomImageModel`) have separate models but share `ImageModel` base logic
 - **Frontend delivery:** `FrontController` → `PictureController`/`PageConverter` handles real-time WebP/AVIF `<picture>` tag injection and CDN URL replacement
+
+## Known bugs and @todo (no bug numbers in the repo)
+
+Bug tracking is internal (Asana), and its numbering must never appear in the
+code, tests or docs — no `BUG #42`, `pin42`, `regression42`, commit hashes as
+history, review dates or people's names. This holds until bug tracking moves
+to GitHub issues; only then may a public issue reference be used.
+
+- A known, not-yet-fixed defect is documented with a `@todo` in the nearest
+  docblock (`// @todo` inline, `# @todo` in shell/YAML): what is wrong, where,
+  and the suggested fix if known. Present tense, no number, no date.
+- A test that pins such a defect is named `test_<description>_pinned_for_deferred_fix`
+  and its docblock describes the defect and how to recognise the fix.
+- A fixed bug needs no mention at all. Keep only the reason the code is the way
+  it is, in the present tense (e.g. "the guard runs on the sanitised value so
+  that…"), never the history ("fixed in abc1234", "used to…").

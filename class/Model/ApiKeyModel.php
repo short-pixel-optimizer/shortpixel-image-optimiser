@@ -121,7 +121,13 @@ class ApiKeyModel extends \ShortPixel\Model
    */
 	private $option_name =  'spio_key';
 
-  /** Constructor. Check for constants, load the key */
+  /**
+   * Constructor.
+   *
+   * Detects the SHORTPIXEL_API_KEY and SHORTPIXEL_HIDE_API_KEY constants and
+   * caches the results in $key_is_constant / $key_is_hidden. The key itself is
+   * loaded lazily by loadKey().
+   */
   public function __construct()
   {
     $this->key_is_constant = (defined("SHORTPIXEL_API_KEY")) ? true : false;
@@ -132,6 +138,8 @@ class ApiKeyModel extends \ShortPixel\Model
   /** Load the key from storage. This can be a constant, or the database. Check if key is valid.
   *
   * Migrates legacy per-option values to the consolidated option on first run.
+  * A stored value that is not an array (e.g. an empty leftover row or corrupted
+  * serialized data) is treated as missing and rebuilt the same way.
   * If SHORTPIXEL_API_KEY is defined, any database-stored key is cleared and the
   * constant value is used instead.
   *
@@ -140,6 +148,13 @@ class ApiKeyModel extends \ShortPixel\Model
   public function loadKey()
   {
  		$apikeySettings = get_option($this->option_name, null);
+
+		// A non-array value (empty leftover row, corrupted serialization) would fatal below. Treat as missing so it gets rebuilt.
+		if (! is_null($apikeySettings) && ! is_array($apikeySettings))
+		{
+			Log::addWarn('spio_key option is not an array, rebuilding', $apikeySettings);
+			$apikeySettings = null;
+		}
 
 		if (is_null($apikeySettings))
 		{
@@ -161,7 +176,7 @@ class ApiKeyModel extends \ShortPixel\Model
 
 		$this->apiKey = isset($apikeySettings['apiKey']) ? $apikeySettings['apiKey'] : '';
     $this->verifiedKey = isset($apikeySettings['verifiedKey']) ? $apikeySettings['verifiedKey'] : false;
-		$this->apiKeyTried = $apikeySettings['apiKeyTried'];
+		$this->apiKeyTried = isset($apikeySettings['apiKeyTried']) ? $apikeySettings['apiKeyTried'] : null;
 
 
     if ($this->key_is_constant)
@@ -286,21 +301,49 @@ class ApiKeyModel extends \ShortPixel\Model
   }
 
 
+  /**
+   * Whether the current API key has been verified during this request.
+   *
+   * Reflects the runtime $key_is_verified flag set by checkKey(); this is not
+   * necessarily the same as the persisted $verifiedKey value.
+   *
+   * @return bool True if checkKey() has confirmed the key this request.
+   */
   public function is_verified()
   {
       return $this->key_is_verified;
   }
 
+  /**
+   * Whether the API key is provided via the SHORTPIXEL_API_KEY constant.
+   *
+   * @return bool True if the constant is defined.
+   */
   public function is_constant()
   {
       return $this->key_is_constant;
   }
 
+  /**
+   * Whether the API key should be hidden from the settings UI.
+   *
+   * Controlled by the SHORTPIXEL_HIDE_API_KEY constant.
+   *
+   * @return bool True if the key is hidden.
+   */
   public function is_hidden()
   {
       return $this->key_is_hidden;
   }
 
+  /**
+   * Get the current API key.
+   *
+   * Returns the constant value when SHORTPIXEL_API_KEY is defined, otherwise
+   * the value loaded from the database. May be an empty string if no key is set.
+   *
+   * @return string The API key, or empty string when unset.
+   */
   public function getKey()
   {
       return $this->apiKey;
@@ -367,7 +410,7 @@ class ApiKeyModel extends \ShortPixel\Model
      if (! $checked_key)
      {
 			  Log::addError('Key is not validated', $quotaData['Message']);
-        Notice::addError(sprintf(__('Error during verifying API key: %s','shortpixel-image-optimiser'), $quotaData['Message'] ));
+        Notice::addError(sprintf(__('Error while verifying the API key: %s','shortpixel-image-optimiser'), $quotaData['Message'] ));
      }
      elseif ($checked_key) {
         if (false === $this->is_constant())
@@ -399,10 +442,10 @@ class ApiKeyModel extends \ShortPixel\Model
         Notice::addWarning($notice);
     } else {
         if ( function_exists("is_multisite") && is_multisite() && !defined("SHORTPIXEL_API_KEY"))
-            $notice = __("Great, your API Key is valid! <br>You seem to be running a multisite, please note that API Key can also be configured in wp-config.php like this:",'shortpixel-image-optimiser')
+            $notice = __("Your API key is valid. <br>You seem to be running a multisite, please note that the API key can also be configured in wp-config.php like this:",'shortpixel-image-optimiser')
                 . "<BR> <b>define('SHORTPIXEL_API_KEY', '". $this->apiKey ."');</b>";
         else
-            $notice = __('Great, your API Key is valid. Please take a few moments to review the plugin settings before starting to optimize your images.','shortpixel-image-optimiser');
+            $notice = __('Your API key is valid. Please take a few moments to review the plugin settings before starting to optimize your images.','shortpixel-image-optimiser');
 
         Notice::addSuccess($notice);
     }
@@ -410,7 +453,7 @@ class ApiKeyModel extends \ShortPixel\Model
     //test that the "uploads"  have the right rights and also we can create the backup dir for ShortPixel
     if ( \wpSPIO()->filesystem()->checkBackupFolder() === false)
     {
-        $notice = sprintf(__("There is something preventing us to create a new folder for backing up your original files.<BR>Please make sure that folder <b>%s</b> has the necessary write and read rights.",'shortpixel-image-optimiser'), WP_CONTENT_DIR . '/' . SHORTPIXEL_UPLOADS_NAME );
+        $notice = sprintf(__("There is something preventing us from creating a new folder for backing up your original files.<BR>Please make sure that folder <b>%s</b> has the necessary write and read rights.",'shortpixel-image-optimiser'), WP_CONTENT_DIR . '/' . SHORTPIXEL_UPLOADS_NAME );
        Notice::addError($notice);
     }
 

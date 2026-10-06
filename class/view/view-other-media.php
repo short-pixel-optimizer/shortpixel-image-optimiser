@@ -60,7 +60,7 @@ $this->loadView('custom/part-othermedia-top');
              }
              elseif (true === $view->hasFilter )
              {
-               printf(esc_html__('Filter didn\'t yield any results.  %s Show all Items %s ', 'shortpixel-image-optimiser'), '<a href="' . esc_url($this->url) . '">', '</a>');
+               printf(esc_html__('Filter didn\'t yield any results. %sShow all items%s', 'shortpixel-image-optimiser'), '<a href="' . esc_url($this->url) . '">', '</a>');
              }
              else
              {
@@ -110,7 +110,7 @@ $this->loadView('custom/part-othermedia-top');
               $rowActions = $this->getRowActions($item);
 
               $folder = isset($folders[$folder_id]) ? $folders[$folder_id] : false;
-              $media_type = ($folder && $folder->get('is_nextgen')) ? __('Nextgen', 'shortpixel-image-optimiser') : __('Custom', 'shortpixel_image_optimiser');
+              $media_type = ($folder && $folder->get('is_nextgen')) ? __('Nextgen', 'shortpixel-image-optimiser') : __('Custom', 'shortpixel-image-optimiser');
               $img_url = $fs->pathToUrl($item);
               $is_heavy = ($filesize >= 500000 && $filesize > 0);
 

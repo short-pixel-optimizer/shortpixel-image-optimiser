@@ -44,7 +44,7 @@ class ApiConverter extends MediaLibraryConverter
 		$extension = $this->imageModel->getExtension();
 
 		// If extension is in list of allowed Api Converts.
-		if (in_array($extension, static::CONVERTABLE_EXTENSIONS) && $extension !== 'png') {
+		if (in_array($extension, static::CONVERTABLE_EXTENSIONS)) {
 			return true;
 		}
 
@@ -57,6 +57,8 @@ class ApiConverter extends MediaLibraryConverter
 		if (true === $this->imageModel->getMeta()->convertMeta()->isConverted()) {
 			return false;
 		}
+
+		return false;
 	}
 
 	/**
@@ -96,9 +98,7 @@ class ApiConverter extends MediaLibraryConverter
 
 		// Run converter to create backup and make placeholder to block similar heics from overwriting.
 		$converter_args = array('runReplacer' => false);
-		if (false === $args['debug_active']) {
-			$this->prepareQueue($converter_args);
-		}
+		$this->prepareQueue($converter_args);
 
 		//Lossless because thumbnails will otherwise be derived of compressed image, leaving to double compression.
 		if (property_exists($qItem->data(), 'compressionType')) {
@@ -216,37 +216,20 @@ class ApiConverter extends MediaLibraryConverter
 	/** Currently not in use */
 	public function convert($args = array())
 	{
-		return;
+		return false;
 	}
 
-	// Restore from original file. Search and replace everything else to death.
+	/**
+	 * Roll back an API-based conversion.
+	 *
+	 * Deliberate no-op — the API-side restore flow is handled elsewhere
+	 * (see MediaLibraryModel::restoreConversion). This override exists
+	 * only to satisfy the abstract contract.
+	 *
+	 * @return void
+	 */
 	public function restore()
 	{
-		/*$params = array('restore' => true);
-			$fs = \wpSPIO()->filesystem();
-
-			$this->setupReplacer();
-
-			$newExtension =  $this->imageModel->getMeta()->convertMeta()->getFileFormat();
-
-			$oldFileName = $this->imageModel->getFileName(); // Old File Name, Still .jpg
-			$newFileName =  $this->imageModel->getFileBase() . '.' . $newExtension;
-
-			if ($this->imageModel->isScaled())
-			{
-				 $oldFileName = $this->imageModel->getOriginalFile()->getFileName();
-				 $newFileName = $this->imageModel->getOriginalFile()->getFileBase() . '.' . $newExtension;
-			}
-
-			$fsNewFile = $fs->getFile($this->imageModel->getFileDir() . $newFileName);
-
-			$this->newFile = $fsNewFile;
-			$this->setTarget($fsNewFile);
-
-			$this->updateMetaData($params);
-	//		$result = $this->replacer->replace();
-
-			$fs->flushImageCache(); */
 	}
 
 	/**

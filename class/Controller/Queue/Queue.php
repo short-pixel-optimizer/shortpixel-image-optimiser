@@ -54,10 +54,39 @@ abstract class Queue
     const RESULT_UNKNOWN = -10;
 
 
+    /**
+     * Scan the source (media library / custom table) and enqueue the next batch of items.
+     *
+     * @return object Result object with items added and whether preparation is done.
+     */
     abstract protected function prepare();
+
+    /**
+     * Enqueue items for a bulk-restore run instead of a normal optimize run.
+     *
+     * @return object Result object with items added and whether preparation is done.
+     */
     abstract protected function prepareBulkRestore();
+
+    /**
+     * Enqueue items for a bulk undo-AI run.
+     *
+     * @return object Result object with items added and whether preparation is done.
+     */
     abstract protected function prepareUndoAI();
+
+    /**
+     * Return the queue type identifier ('media' or 'custom').
+     *
+     * @return string
+     */
     abstract public function getType();
+
+    /**
+     * Return the SQL fragments/values implementing the active bulk filters for this queue.
+     *
+     * @return array Query data used by prepare() to restrict the item selection.
+     */
     abstract protected function getFilterQueryData();
 
     /** @var string Human-readable queue name (e.g. 'Media', 'Custom'). */
@@ -121,7 +150,15 @@ abstract class Queue
 		$this->q->resetQueue();
 	}
 
-    // gateway to set custom options for queue.
+    /**
+     * Forwards the provided options array to the underlying ShortQ queue instance.
+     *
+     * Used by QueueController::getQueue() to reapply persisted options after
+     * construction (e.g. enqueue_limit, numitems, retry_limit).
+     *
+     * @param array $options Key-value pairs of ShortQ queue options.
+     * @return mixed Return value from the underlying ShortQ::setOptions() call.
+     */
     public function setOptions($options)
     {
         return $this->q->setOptions($options);
@@ -218,7 +255,7 @@ abstract class Queue
             {
               $prepared = $this->prepareBulkRestore();
             }
-            elseif (false !== $custom_operation && 'bulk-undoAI' === $custom_operation)
+            elseif (false !== $custom_operation && ('bulk-undoAI' === $custom_operation || 'redoAiReplacement' === $custom_operation))
             {
                $prepared = $this->prepareUndoAI();
             }
@@ -293,7 +330,6 @@ abstract class Queue
          $start_date = $end_date = false;
 
 
-         // @todo Probably move all of this to global function and only sql statement to child class
          if (isset($filters['start_date']))
          {
             try {
@@ -413,6 +449,11 @@ abstract class Queue
      * Handles normal optimisation, bulk-restore, bulk-undoAI, migrate, and removeLegacy
      * operations. Breaks early if memory or time limits are reached.
      *
+     * AI items are added when AI is enabled, queueOptions['doAi'] is set, and
+     * either the autoAIBulk setting or the per-bulk
+     * queueOptions['allowAiWithoutBulkSetting'] override (used by the MCP bulk
+     * abilities so a one-shot call does not persist the setting) is active.
+     *
      * @param array $items Array of integer item IDs to process.
      * @return array Associative array with keys: items (int), images (int), results (int), overlimit (bool).
      */
@@ -426,6 +467,7 @@ abstract class Queue
 			$settings = \wpSPIO()->settings();
         $env = \wpSPIO()->env();
         $queueOptions = $this->getOptions();
+        $allowAiWithoutBulkSetting = true === ($queueOptions['allowAiWithoutBulkSetting'] ?? false);
 
           if (count($items) == 0)
           {
@@ -495,8 +537,8 @@ abstract class Queue
                   }
 
                   if (true === $optimizeAiController->isAiEnabled() &&
-                  true === $settings->autoAIBulk &&
-                  true === $queueOptions['doAi'])
+                  (true === $settings->autoAIBulk || true === $allowAiWithoutBulkSetting) &&
+                  true === ($queueOptions['doAi'] ?? false) )
                   {
                     $aiDataModel = AiDataModel::getModelByAttachment($mediaItem->get('id'));
                     $enqueueAi = $aiDataModel->isProcessable();
@@ -566,9 +608,17 @@ abstract class Queue
                       }
                       elseif ('bulk-undoAI' == $operation)
                       {
-                         $qObject = new \stdClass;
-                         $qObject->action = 'undoAI';
-                         $queue[] = ['id' => $mediaItem->get('id'), 'value' => $qObject];
+                         $qItem = QueueItems::getImageItem($mediaItem);
+                         $qItem->undoAltDataAction();
+                         $queue[] = $qItem->returnEnqueue();
+
+                         
+                      }
+                      elseif('redoAiReplacement' === $operation)
+                      {
+                          $qItem = QueueItems::getImageItem($mediaItem);
+                          $qItem->newRedoAiReplacementAction();
+                          $queue[] = $qItem->returnEnqueue();
                       }
                    }
                    elseif(true === $enqueueAi)
@@ -638,7 +688,14 @@ abstract class Queue
           return $return; // only return real amount.
     }
 
-    // Used by Optimizecontroller on handlesuccess.
+    /**
+     * Returns the internal queue name string (e.g. 'Media', 'mediaSingle', 'custom').
+     *
+     * Used by optimiser controllers to reference the queue by name when logging
+     * or updating status after a successful optimisation.
+     *
+     * @return string The queue name assigned at construction time.
+     */
     public function getQueueName()
     {
           return $this->queueName;
@@ -952,7 +1009,7 @@ abstract class Queue
 	 * @param int $item_id The item ID to check.
 	 * @return bool True when the item is waiting or in-process, false otherwise.
 	 */
-	public function isItemInQueue($item_id)
+	public function isItemInQueue($item_id) : bool
 	{
         if (isset(self::$isInQueue[$item_id]))
         {
@@ -961,7 +1018,11 @@ abstract class Queue
         else
         {
           $itemObj = $this->q->getItem($item_id);
-          self::$isInQueue[$item_id] = $itemObj; // cache this, since interface requests this X amount of times.
+          if (is_object($itemObj))
+          {
+            self::$isInQueue[$item_id] = $itemObj; // cache this, since interface requests this X amount of times.
+          }
+
         }
 
 			$notQ = array(ShortQ::QSTATUS_DONE, ShortQ::QSTATUS_FATAL);
@@ -1033,10 +1094,11 @@ abstract class Queue
 	 * @param array      $queue     Current in-memory batch of enqueue arrays (each has an 'id' key).
 	 * @return bool True when a duplicate is already queued and the item should be skipped.
 	 */
-	public function isDuplicateActive($mediaItem, $queue = array() )
+	public function isDuplicateActive($mediaItem, $queue = array())
 	{
 		if ($mediaItem->get('type') === 'custom')
 			return false;
+
 
 		$WPMLduplicates = $mediaItem->getWPMLDuplicates();
 		$qitems = array();
@@ -1047,6 +1109,7 @@ abstract class Queue
 				  $qitems[] = $qitem['id'];
 			 }
 		}
+
 
 		if (is_array($WPMLduplicates) && count($WPMLduplicates) > 0)
 		{
@@ -1084,6 +1147,13 @@ abstract class Queue
     {
       $qItem = $this->mediaItemToQueue($item); // convert again
       $this->q->itemDone($qItem);
+
+      // Remove from cache
+      $item_id = $item->item_id;
+      if (isset(self::$isInQueue[$item_id])) 
+      {
+          unset(self::$isInQueue[$item_id]);
+      }
     }
 
     /**

@@ -1,0 +1,110 @@
+# Browser end-to-end tests (Playwright) against a real served WordPress —
+# the same Docker stack bin/test-e2e.sh runs locally (docker-compose.e2e.yml),
+# so a green run here means a green run on any developer machine.
+#
+# One job per browser engine, in parallel on separate runners (a serial
+# three-engine run would take ~35 min). The screenshot regression project
+# (`visual`, Chromium-only baselines) rides along in the Chromium job.
+# Chromium and Firefox gate the push; the WebKit job reports without
+# blocking (see continue-on-error below).
+name: E2E (browser)
+
+# Every commit pushed to `updates` runs the browser suite, and so does every
+# pull request into `updates` (feature branches) or `master` (release PRs).
+# Any branch can still be run by hand from the Actions tab
+# (workflow_dispatch).
+on:
+  push:
+    branches: [updates]
+  pull_request:
+    branches: [updates, master]
+  workflow_dispatch:
+
+# Pull requests: one group per PR, so a newer push cancels the stale run.
+# Pushes and manual runs: a unique group per run, so every commit on
+# `updates` keeps its own verdict. (A shared group is not enough even with
+# cancel-in-progress off: GitHub keeps only ONE pending run per group and
+# silently cancels the older pending one when a third arrives.)
+concurrency:
+  group: e2e-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  e2e:
+    name: Playwright / ${{ matrix.engine }} / WP latest
+    # Skip pull_request runs whose SOURCE branch is `updates` in this
+    # repository (the release PR into `master`): the push to `updates` has
+    # already tested that exact commit. A job skipped by `if` reports as
+    # passing, so it never blocks the PR.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.ref != 'updates' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    # WebKit reports but does not gate. Playwright's Linux WebKit dies in
+    # ways that have nothing to do with SPIO when the runner is starved
+    # (2 cores / 7 GB): a web process killed mid-navigation ("WebKit
+    # encountered an internal error"), or the SPIO worker script refused
+    # "due to access control checks" — ~1 fault per 7 runs with the
+    # container capped locally, none unconstrained. Chromium and Firefox
+    # still gate every push, and a red WebKit job stays visible in the run.
+    # This is NOT a retry: the failing test still fails (retries: 0).
+    continue-on-error: ${{ matrix.engine == 'webkit' }}
+
+    strategy:
+      # Every engine reports its own verdict; one red engine must not hide
+      # whether the others are green.
+      fail-fast: false
+      matrix:
+        include:
+          - engine: chromium
+            projects: --project chromium --project visual
+          - engine: firefox
+            projects: --project firefox
+          - engine: webkit
+            projects: --project webkit
+
+    steps:
+      - uses: actions/checkout@v5
+
+      # Optional: authenticated Docker Hub pulls get a much higher rate
+      # limit than the anonymous pool GitHub runners share. Add the two
+      # repository secrets and uncomment if pulls ever start failing with
+      # 429 / "toomanyrequests" rather than transient resets.
+      # - uses: docker/login-action@v3
+      #   with:
+      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Separate step so a registry hiccup is attributable at a glance.
+      # Pulls retry with exponential backoff (bin/lib/retry.sh) — the first
+      # ever run died on a "connection reset by peer" from Docker Hub's
+      # token endpoint while pulling wordpress:cli-php8.3.
+      - name: Pull images (with retry)
+        env:
+          CI: "1"
+        run: bin/test-e2e.sh --pull-only
+
+      - name: Run the E2E suite (${{ matrix.engine }})
+        env:
+          CI: "1"
+        run: bin/test-e2e.sh ${{ matrix.projects }}
+
+      - name: WordPress container logs (on failure)
+        if: failure()
+        run: docker compose -f docker-compose.e2e.yml logs --no-color wordpress | tail -n 200
+
+      # On a visual failure the report holds expected / actual / diff PNGs.
+      - name: Upload Playwright artifacts (traces, screenshots, diffs, report)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts-${{ matrix.engine }}
+          path: |
+            tests/E2E/artifacts/html-report
+            tests/E2E/artifacts/test-results
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Tear down
+        if: always()
+        run: docker compose -f docker-compose.e2e.yml down -v --remove-orphans

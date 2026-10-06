@@ -13,7 +13,6 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @package ShortPixel\Model\Image
  */
-// Base Class for ImageMeta
 class ImageMeta extends ImageThumbnailMeta
 {
 
@@ -26,6 +25,13 @@ class ImageMeta extends ImageThumbnailMeta
 	protected $convertMeta;
 
 
+	/**
+	 * Constructor.
+	 *
+	 * Calls the parent constructor (which seeds tsAdded) and eagerly instantiates
+	 * the convertMeta sub-object so downstream code can call convertMeta() without
+	 * a null check.
+	 */
 	public function __construct()
 	{
 		parent::__construct();

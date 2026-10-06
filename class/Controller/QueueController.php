@@ -1,5 +1,7 @@
 <?php
+declare(strict_types=1);
 namespace ShortPixel\Controller;
+
 
 use ShortPixel\Controller\Api\RequestManager;
 
@@ -21,20 +23,53 @@ use ShortPixel\Controller\Queue\Queue as Queue;
 use ShortPixel\Controller\Api\ApiController as ApiController;
 
 use ShortPixel\Helper\UiHelper as UiHelper;
+use stdClass;
 
-// Controller,  the glue between the Queue and the Optimizers.
+/**
+ * Orchestrates the two image-optimisation queues (Media Library and Custom).
+ *
+ * Acts as the glue between caller code (AJAX, WP-CLI, hooks) and the concrete
+ * Queue subclasses (MediaLibraryQueue / CustomQueue), which in turn wrap the
+ * bundled ShortQ library.  All public entry-points ultimately delegate to one of
+ * those two pipelines; the type string 'media' or 'custom' determines which.
+ *
+ * Typical flow for a single-image request:
+ *   1. Caller invokes addItemToQueue() with an ImageModel.
+ *   2. QueueController resolves the correct Queue, checks for duplicates and
+ *      in-queue status, then delegates to the appropriate ApiController to
+ *      validate and enqueue the item.
+ *   3. CronController notices the new item and calls processQueue(), which
+ *      drives runTick() on each active queue type.
+ *   4. runTick() calls Queue::run() (prepare or dequeue), then dispatches each
+ *      dequeued item through its ApiController (sendToProcessing / handleAPIResult).
+ *
+ * Bulk vs. single distinction:
+ *   The constructor $args['is_bulk'] flag switches getQueue() between the bulk
+ *   queue names ('media'/'custom') and the single-item names
+ *   ('mediaSingle'/'customSingle'), keeping bulk and single items in separate
+ *   ShortQ queues.
+ *
+ * @package ShortPixel\Controller
+ */
 class QueueController
 {
 
-  const IN_QUEUE_ACTION_ADDED = 1; 
-  const IN_QUEUE_SKIPPED = 2; 
+  /** @var int Returned by isItemInQueue() when a new action was appended to an existing item. */
+  const IN_QUEUE_ACTION_ADDED = 1;
+  /** @var int Returned by isItemInQueue() when the item already carries the requested action. */
+  const IN_QUEUE_SKIPPED = 2;
 
-  protected static $lastId; // Last item_id received / send. For catching errors.
-  protected $lastQStatus; // last status for reporting purposes.
+  /** @var int|null Last item_id processed; retained for error diagnostics. */
+  protected static $lastId;
+  /** @var int|null Last queue status code from the most recent enqueue/run operation. */
+  protected $lastQStatus;
 
-  //protected $optimiser;
+  /** @var array Runtime arguments: currently only 'is_bulk' (bool). */
   protected $args;
 
+  /**
+   * @param array $args Optional constructor arguments. Supports 'is_bulk' (bool, default false).
+   */
   public function __construct($args = [])
   {
      $defaults = [
@@ -47,7 +82,14 @@ class QueueController
   /**
    * Add a single item to the queue
    *
-   * @param ImageModel $imageModel 
+   * For requestAlt actions on WPML-duplicated attachments, each language
+   * variant is enqueued separately first (addWpmlAiItemsToQueue), and the
+   * duplicate-active check is skipped — every attachment record needs its
+   * own AI request, and the just-queued variants must not make the original
+   * count as an active duplicate (the exemption also covers retrieveAlt so
+   * the poll step is not blocked either).
+   *
+   * @param ImageModel $imageModel
    * @param array $args
    * @return Object Result object
    */
@@ -60,6 +102,7 @@ class QueueController
         'smartcrop' => null, 
         'next_actions' => [], 
         'returndatalist' => [], 
+        'recent_upload' => false, 
       );
       $args = wp_parse_args($args, $defaults);
 
@@ -91,9 +134,20 @@ class QueueController
         return $value !== null;
       });
 
-        
-      // These checks are across all actions. 
-      if ($queue->isDuplicateActive($imageModel))
+      // When generating AI data for WPML duplicates, queue each language variant separately.
+      if ($args['action'] === 'requestAlt' && $imageModel->get('type') !== 'custom' && method_exists($imageModel, 'getWPMLDuplicates'))
+      {
+          $WPMLduplicates = $imageModel->getWPMLDuplicates(); 
+          if (is_array($WPMLduplicates) && count($WPMLduplicates) > 0)
+          {
+            // @todo This probably not the way,  use the same function to add or something like this? 
+            // @todo Also calls duplicates function twice, should fix.  Move the Add WPML to WPML.php via filter here or something like this? 
+              $this->addWpmlAiItemsToQueue($imageModel, $WPMLduplicates, $args);
+          }
+      }
+
+      $exceptionActions = ['requestAlt', 'retrieveAlt'];
+      if (false === in_array($args['action'], $exceptionActions) && true === $queue->isDuplicateActive($imageModel))
       {
         $qItem->addResult([
             'fileStatus' => ImageModel::FILE_STATUS_UNPROCESSED,
@@ -110,7 +164,6 @@ class QueueController
       $in_queue = $this->isItemInQueue($imageModel, $args['action']);
       if (is_numeric($in_queue) && $in_queue !== false)
       {
-
         if (self::IN_QUEUE_ACTION_ADDED == $in_queue)
         {
           $qItem->addResult([
@@ -132,8 +185,10 @@ class QueueController
         }
 
         return $qItem->result();
-
       }
+
+
+      unset($in_queue);
 
       $optimizer = $qItem->getApiController($args['action']);
 
@@ -179,7 +234,8 @@ class QueueController
               //$json->status = 0;
             }
   
-            if (! property_exists($qItem->result(), 'message') || false === is_null($qItem->result->message) && strlen($qItem->result->message) <= 0)
+            $result = $qItem->result(); 
+            if (! property_exists($result, 'message') || is_null($result->message) || strlen( (string) $result->message) <= 0)
             {
               $qItem->addResult([
                 'message' => $message,
@@ -191,8 +247,70 @@ class QueueController
       }
 
       $result = $qItem->result();
+      return $result;
+  }
 
-      return $qItem->result();
+  /**
+   * Enqueue the selected item and all WPML language duplicates for AI generation.
+   *
+   * Each WPML duplicate is a separate attachment record and needs its own AI request.
+   *
+   * @param ImageModel $imageModel
+   * @param array $args
+   * @return object
+   */
+  protected function addWpmlAiItemsToQueue(ImageModel $imageModel, array $duplicateIds, $args)
+  {
+//      $itemIds = array_unique(array_merge([$imageModel->get('id')], $duplicateIds));
+      $queue = $this->getQueue($imageModel->get('type'));
+      $fs = \wpSPIO()->filesystem(); 
+      $totalItems = 0;
+      $skippedItems = 0;
+
+      $resultItem = QueueItems::getImageItem($imageModel);
+
+      foreach ($duplicateIds as $itemId)
+      {
+          $mediaItem = $fs->getImage($itemId, $imageModel->get('type'));
+          if (! is_object($mediaItem)) {
+              continue;
+          }
+
+          $inQueue = $this->isItemInQueue($mediaItem, 'requestAlt');
+          if (self::IN_QUEUE_ACTION_ADDED === $inQueue || self::IN_QUEUE_SKIPPED === $inQueue) {
+              $skippedItems++;
+              continue;
+          }
+
+          $args['is_duplicate'] = true; 
+          
+          $qItem = QueueItems::getImageItem($mediaItem);
+          $qItem->requestAltAction($args);
+          $status = $queue->addQueueItem($qItem);
+          $this->lastQStatus = $status->qstatus;
+          $totalItems += $status->numitems;
+      }
+
+      if ($totalItems > 0) {
+          $message = sprintf(__('%d AI language variants added to the queue.', 'shortpixel-image-optimiser'), $totalItems);
+      } else {
+          $message = __('No AI items were added to the queue because all language variants were already active.', 'shortpixel-image-optimiser');
+      }
+
+      if ($skippedItems > 0) {
+          $message .= ' ' . sprintf(_n('%d language variant was already active.', '%d language variants were already active.', $skippedItems, 'shortpixel-image-optimiser'), $skippedItems);
+      }
+
+      $resultItem->addResult([
+          'fileStatus' => ImageModel::FILE_STATUS_UNPROCESSED,
+          'is_error' => false,
+          'is_done' => ($totalItems === 0),
+          'message' => trim($message),
+          'qstatus' => $this->lastQStatus,
+          'numitems' => $totalItems,
+      ]);
+
+      return $resultItem->result();
   }
 
   /** Check if item and action is already listed in the queue 
@@ -207,6 +325,8 @@ class QueueController
       $q = $this->getQueue($type);
       $bool = $q->isItemInQueue($mediaItem->get('id'));
 
+      $status = 0; 
+
       if (true === $bool)
       { 
         // @todo This queueItem should maybe not to stuffed with 'addresult'm since it's a different object. 
@@ -214,6 +334,7 @@ class QueueController
           
           if (is_object($queueItem))
           {
+            // @todo There is a problem here, when queueItem return is not an object, only boolean is returned, but we want an integer for check in AddItemToQeueu
               $queueItem->setModel($mediaItem); 
               // @todo If item can be appended, probably add function in queueItem to add next_action and update to database (this q )?
               if (false === is_null($action) && false === $queueItem->data()->hasAction($action))
@@ -230,24 +351,31 @@ class QueueController
                   $bool = self::IN_QUEUE_SKIPPED; 
 
               }
-          }
-
-          
+          }          
       }
+
       
       // Preventing double queries here
-
       return $bool;
   }
 
   // Processing Part
 
-  // next tick of items to do.
-  /* Processes one tick of the queue
-  *
-  * @return Object JSON object detailing results of run
-  */
- // @todo This is the main function that starts the processing
+  /**
+   * Processes one tick of the queue for each requested queue type.
+   *
+   * Guards are applied in order: API key validity, quota availability (bypassed
+   * for custom operations such as restore/migrate), then one runTick() call per
+   * queue type.  If the media queue returns RESULT_PREPARING_OVERLIMIT the
+   * custom queue tick is skipped for that request.
+   *
+   * Combined stats across both queues are accumulated by calculateStatsTotals()
+   * and formatted by numberFormatStats() before returning.
+   *
+   * @param array $queueTypes Queue type identifiers to process, e.g. ['media', 'custom'].
+   * @return \stdClass Result object with per-type and aggregated 'total' stats,
+   *                   or an error object with status=false and an error code on failure.
+   */
   public function processQueue($queueTypes = array())
   {
       $keyControl = ApiKeyController::getInstance();
@@ -316,7 +444,16 @@ class QueueController
   }
 
 
-  public function getStartupData()
+  /**
+   * Returns combined stats for both queues without running a processing tick.
+   *
+   * Used by the bulk UI on page load to render initial counters.
+   *
+   * @param bool $formatNumbers Whether to apply locale-aware number formatting for display
+   * @return object Stats object containing media, custom and total sub-objects,
+   *                each with a stats property as returned by Queue::getStats()
+   */
+  public function getStartupData(bool $formatNumbers = true) : object
   {
       $mediaQ = $this->getQueue('media');
       $customQ = $this->getQueue('custom');
@@ -330,13 +467,31 @@ class QueueController
       $data->custom->stats = $customQ->getStats();
 
       $data->total = $this->calculateStatsTotals($data);
-      $data = $this->numberFormatStats($data);
+      if ($formatNumbers)
+      {
+        $data = $this->numberFormatStats($data);
+      }
       return $data;
   }
 
 
-  /** Run the Queue once with X amount of items, send to processor or handle.  */
-  // @todo Call by processQueue
+  /**
+   * Runs one processing tick on the given Queue.
+   *
+   * Calls Queue::run() which either prepares items (in preparing state) or
+   * dequeues a batch.  For each dequeued QueueItem the method:
+   *   1. Resolves the ApiController for the item's action.
+   *   2. Loads the ImageModel if not already attached.
+   *   3. Skips blocked items or items whose ImageModel failed to load.
+   *   4. Delegates to ApiController::sendToProcessing() then handleAPIResult().
+   *   5. Logs failed items to the per-type bulk log when running in bulk mode.
+   *
+   * The final queue stats and converted JSON are returned; a cleanQueue() is
+   * triggered automatically when the single-item queue empties.
+   *
+   * @param Queue $Q The Queue instance to tick (MediaLibraryQueue or CustomQueue).
+   * @return \stdClass JSON-formatted result object as produced by queueToJson().
+   */
   protected function runTick($Q)
   {
     $result = $Q->run();
@@ -479,6 +634,17 @@ class QueueController
       return $queue;
   }
 
+  /**
+   * Cleans the queue after a single-item run completes.
+   *
+   * Triggers Queue::cleanQueue() when the queue is empty and not running in
+   * bulk mode, but only when there are completed or fatally errored items to
+   * remove, avoiding spurious cleans on an already-empty queue.
+   *
+   * @param \stdClass $result Result object from runTick() containing a qstatus property.
+   * @param Queue     $q      The Queue instance that was just ticked.
+   * @return void
+   */
   protected function checkQueueClean($result, $q)
   {
       if ($result->qstatus == Queue::RESULT_QUEUE_EMPTY && false === $this->args['is_bulk'])
@@ -492,7 +658,12 @@ class QueueController
       }
   }
 
-  protected function getJsonResponse()
+  /**
+   * Returns a blank JSON response object with null-initialised standard fields.
+   *
+   * @return \stdClass Object with status, result, results, and message properties set to null.
+   */
+  protected function getJsonResponse() : object
   {
 
     $json = new \stdClass;
@@ -504,7 +675,18 @@ class QueueController
     return $json;
   }
 
-  /** If a result Queue Stdclass to a JSON send Object */
+  /**
+   * Converts a raw Queue result stdClass into a JSON-friendly response object.
+   *
+   * Switches on $result->qstatus and populates $json->message (and optionally
+   * $json->results for RESULT_ITEMS) with a human-readable string.  Stats are
+   * copied verbatim when present on $result.  When $json is not provided, a
+   * fresh blank response from getJsonResponse() is used.
+   *
+   * @param \stdClass       $result Raw result from Queue::run().
+   * @param \stdClass|false $json   Optional pre-existing response object to populate.
+   * @return \stdClass Populated response object with qstatus and optional stats properties.
+   */
   protected function queueToJson($result, $json = false)
   {
       if (! $json)
@@ -547,21 +729,48 @@ class QueueController
       return $json;
   }
 
+  /**
+   * Stores the most recently processed item ID in the static class property.
+   *
+   * @param int $item_id The item ID to record.
+   * @return void
+   */
   protected function setLastID($item_id)
   {
      self::$lastId = $item_id;
   }
 
+  /**
+   * Returns the queue status code from the most recent enqueue or run operation.
+   *
+   * @return int|null One of the Queue::RESULT_* constants, or null before any run.
+   */
   public function getLastQueueStatus()
   {
      return $this->lastQStatus;
   }
 
+  /**
+   * Returns the item ID that was most recently passed through the processing pipeline.
+   *
+   * Useful for diagnosing errors: when a fatal PHP error occurs mid-processing,
+   * this ID indicates which item caused the problem.
+   *
+   * @return int|null The last item ID, or null if no item has been processed yet.
+   */
   public static function getLastId()
   {
      return self::$lastId;
   }
 
+  /**
+   * Resets all four queue instances (bulk and single, for both pipelines) to a clean state.
+   *
+   * Called on plugin activation to discard any stale queue data from a previous
+   * installation or upgrade.
+   *
+   * @return void
+   */
   public static function resetQueues()
   {
       $queues = array('media', 'mediaSingle', 'custom', 'customSingle');
@@ -588,9 +797,24 @@ class QueueController
 
   }
 
-  /** Tries to calculate total stats of the process for bulk reporting
-  *  Format of results is   results [media|custom](object) -> stats
-  */
+  /**
+   * Merges per-queue stats into a single 'total' object for bulk reporting.
+   *
+   * Handles all four cases: media-only, custom-only, neither, or both.  When
+   * both are present, custom stats are cloned as the base and media values are
+   * added field-by-field.  Special rules apply:
+   *   - percentage_done: recalculated from the combined done+fatal/total ratio,
+   *     with fallback to the non-zero side when one queue has zero total items.
+   *   - bool fields: true wins over false except for is_finished (both must be true).
+   *   - object fields (e.g. images sub-object): child numeric values are summed.
+   *   - Keys present only in media stats are added as-is to the total.
+   *
+   * Input format: $results->media->stats and/or $results->custom->stats (stdClass).
+   *
+   * @param \stdClass $results Object with optional 'media' and 'custom' sub-objects.
+   * @return \stdClass|null Object with a 'stats' property containing merged totals,
+   *                        or null when neither pipeline has stats.
+   */
   private function calculateStatsTotals($results)
   {
       $has_media = $has_custom = false;
@@ -683,7 +907,19 @@ class QueueController
       return $object;
   }
 
-  private function numberFormatStats($results) // run the whole stats thing through the numberFormat.
+  /**
+   * Applies locale-aware number formatting to every stat value in all queue result objects.
+   *
+   * Iterates over the media, custom and total sub-objects of $results.  For each
+   * stats field: embedded objects (e.g. the images sub-object) have their numeric
+   * children formatted with 0 decimals; fields whose key contains 'percentage' are
+   * formatted with 2 decimals; all other numeric values are formatted with 0 decimals.
+   * Non-numeric, non-object values (booleans, strings) are left unchanged.
+   *
+   * @param \stdClass $results Combined result object from processQueue() or getStartupData().
+   * @return \stdClass The same object with formatted stat values applied in-place.
+   */
+  private function numberFormatStats($results)
   {
     //qn: array('media', 'custom', 'total')
      foreach($results as $qn => $item)
@@ -717,16 +953,35 @@ class QueueController
   }
 
   /**
-  * @integration Regenerate Thumbnails Advanced
-  * Called via Hook when plugins like RegenerateThumbnailsAdvanced Update an thumbnail
-  */
-// @todo - move this to the optimiser.
+   * Legacy hook shim for the Regenerate Thumbnails Advanced integration.
+   *
+   * Called with the extended four-argument signature used by older versions of
+   * RegenerateThumbnailsAdvanced; delegates immediately to thumbnailsChangedHook().
+   *
+   * @integration Regenerate Thumbnails Advanced
+   * @param int   $postId           Attachment post ID.
+   * @param mixed $originalMeta     Original attachment meta (unused).
+   * @param array $regeneratedSizes Map of size names to size arrays, as passed by the plugin.
+   * @param bool  $bulk             Whether the regeneration is a bulk run (unused).
+   * @return void
+   */
   public function thumbnailsChangedHookLegacy($postId, $originalMeta, $regeneratedSizes = array(), $bulk = false)
   {
       $this->thumbnailsChangedHook($postId, $regeneratedSizes);
   }
 
-  // @todo - move this to the optimiser.
+  /**
+   * Reacts to thumbnail regeneration by marking changed thumbnails as unprocessed.
+   *
+   * For each size reported as regenerated, the corresponding thumbnail's meta is
+   * reset to FILE_STATUS_UNPROCESSED and its optimised file is deleted (onDelete).
+   * When auto-processing is enabled and the parent attachment is still processable,
+   * it is re-queued for optimisation.
+   *
+   * @param int   $post_id Attachment post ID.
+   * @param array $sizes   Map of size name to size data arrays (must contain a 'file' key).
+   * @return void
+   */
   public function thumbnailsChangedHook($post_id, $sizes)
   {
      $fs = \wpSPIO()->filesystem();
@@ -781,7 +1036,18 @@ class QueueController
       }
   }
 
-  // @todo - move this to the optimiser.
+  /**
+   * Reacts to a scaled (full-size) image replacement by clearing its optimisation state.
+   *
+   * When WordPress replaces a scaled image (e.g. after an image edit), the old
+   * optimised file, its WebP/AVIF variants, the backup, and all related postmeta
+   * fields are wiped so that the new file is treated as unoptimised.  When
+   * $removed is false and auto-processing is enabled, the image is re-queued.
+   *
+   * @param int  $post_id Attachment post ID.
+   * @param bool $removed Whether the scaled image was removed (true) rather than replaced.
+   * @return void
+   */
   public function scaledImageChangedHook($post_id, $removed = false)
   {
       $fs = \wpSPIO()->filesystem();
@@ -833,6 +1099,17 @@ class QueueController
       }
   }
 
+  /**
+   * Appends a failed-item entry to the per-type bulk log file during a bulk run.
+   *
+   * The log is written to the ShortPixel backup directory as
+   * `current_bulk_{type}.log`.  Each line is pipe-delimited:
+   * `{timestamp}|{filename}|{item_id}|{formatted message}`.
+   * Returns silently when the item's type cannot be determined.
+   *
+   * @param QueueItem $qItem The failed queue item.
+   * @return void
+   */
   private function logBulk(QueueItem $qItem)
   {
     $item_id = $qItem->item_id;

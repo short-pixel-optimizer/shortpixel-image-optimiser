@@ -79,7 +79,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     <label for="bulk-history">     
         <h3>
         <span class='icon white'><?php echo UIHelper::getIcon('res/images/icon/history.svg'); ?></span> 
-          <?php esc_html_e('Bulk History', 'shortpixel_image_optimizer'); ?>
+          <?php esc_html_e('Bulk History', 'shortpixel-image-optimiser'); ?>
           <span class='collap-arrow'><?php echo UIHelper::getIcon('res/images/icon/chevron.svg'); ?></span> 
         </h3>
     </label>
@@ -123,7 +123,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 				 	 <span class="svg-spinner"><?php $this->loadView('snippets/part-svgloader', false); ?></span>
 
            <span>
-           <h2><?php esc_html_e('Please wait, ShortPixel is loading'); ?></h2>
+           <h2><?php esc_html_e('Please wait, ShortPixel is loading', 'shortpixel-image-optimiser'); ?></h2>
 
          </span>
 

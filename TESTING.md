@@ -1,0 +1,708 @@
+# Running the ShortPixel Image Optimiser tests
+
+This document describes how to run the PHPUnit test suite locally and how it
+maps to the GitHub Actions CI. Nothing here is shipped to WordPress.org —
+this file lives in the repo for the dev team.
+
+## What's in the suite
+
+The suite lives under `tests/` and is split into five PHPUnit testsuites via
+`phpunit.xml.dist`:
+
+| Testsuite     | Path                                | Covers                                                  |
+|---------------|-------------------------------------|---------------------------------------------------------|
+| `Helper`      | `tests/Helper/`                     | Utility classes under `class/Helper/`                   |
+| `model`       | `tests/Model/`                      | Data models + business logic under `class/Model/`       |
+| `External`    | `tests/External/`                   | Third-party integrations under `class/external/`        |
+| `Controllers` | `tests/Controller/`                 | Request handlers under `class/Controller/`              |
+| `SPIO Main`   | `tests/` (excluding the four above) | Root plugin classes (bootstrap, `ViewController`, etc.) |
+
+The tests run against a real WordPress test-environment (using the
+`WP_UnitTestCase` base class), not `WP_Mock`, so they need a MySQL database
+and a checkout of the WordPress test framework — see the setup section below.
+
+Test files follow the convention `test-<ClassName>.php`. Bootstrap lives at
+`tests/bootstrap.php`.
+
+## Recommended: run locally via Docker (OS-agnostic)
+
+**Prerequisite:** Docker Desktop (macOS / Windows) OR Docker Engine + the
+`docker compose` plugin (Linux). Nothing else — no local PHP, MySQL,
+Composer, WP-CLI, or SVN required.
+
+### Quick start
+
+```bash
+# First: prove the environment works. Requires a real passing test run, so
+# it cannot report success on a broken setup. Run this before anything else.
+bin/test.sh --verify
+
+# Default — every testsuite on PHP 8.3 (matches the CI baseline)
+bin/test.sh
+
+# Specific testsuite
+bin/test.sh --testsuite model
+bin/test.sh --testsuite External
+
+# Specific test method
+bin/test.sh --filter test_isProcessable
+
+# Single test file — filter on its CLASS name (see note below)
+bin/test.sh --testsuite model --filter ImageModelTest
+```
+
+> **Note — running a single file:** passing a file path directly
+> (`bin/test.sh tests/Model/test-ImageModel.php`) does NOT work: PHPUnit 9
+> derives the expected class name from the file name, and our WP-convention
+> `test-Foo.php` → `FooTest` naming never matches ("Class test-ImageModel
+> could not be found"). Use `--filter <ClassName>` instead; adding
+> `--testsuite` narrows the scan and speeds it up. `--filter` is a
+> substring/regex match — `ImageModelTest` also catches
+> `CustomImageModelTest`; anchor it (`--filter '^ImageModelTest'`) when
+> you need exactly one class.
+
+### PHP version matrix
+
+The setup supports PHP 7.4 (legacy minimum), 8.3 (current mainstream), and
+8.5 (upcoming). Each version gets its own Docker image tag, so switching
+between versions is cache-warm after the first build per version.
+
+```bash
+# One specific PHP version
+bin/test.sh --php 7.4
+bin/test.sh --php 8.5 --testsuite model
+
+# All three sequentially — same as CI's matrix strategy
+bin/test.sh --matrix
+
+# Combine matrix with a filter
+bin/test.sh --matrix --filter test_handleAvif
+```
+
+### Integration suite
+
+The integration suite (`tests/Integration/`, `phpunit-integration.xml`) runs
+the real optimize/restore pipeline against a WordPress test install, with
+only the outbound ShortPixel API mocked at the HTTP layer. It runs in its
+own phpunit invocation so the fast unit signal and the slow integration
+signal stay separated.
+
+One special case: the Cloudflare purge tests (`test-CloudflarePurge.php`)
+boot a local `php -S` capture server on port 8437 inside the container,
+because the purge uses raw cURL that the WP HTTP mock can't intercept.
+No real Cloudflare traffic is ever sent.
+
+A second special case: `test-ConstantsAndFilters.php` `define()`s SPIO
+behavior constants (wp-config style), which would poison every test that
+runs after it in the same PHP process. It is excluded from the main
+`Integration` suite and runs as the separate `IntegrationIsolated`
+testsuite — `bin/test.sh --integration` makes both phpunit invocations
+automatically.
+
+The suite also contains hook-level partner-integration tests that do NOT
+need the partner plugin installed — they fire the partner's public hooks
+directly and assert on SPIO's reaction: `test-EMRIntegration.php`
+(Enable Media Replace), `test-RTAIntegration.php` (Regenerate Thumbnails
+Advanced), `test-MediaPress.php`, and `test-PhotoEngine.php` (WP/LR Sync).
+These run as part of the plain `--integration` pass.
+
+The MCP/Abilities layer (WP Abilities API, `class/Controller/Abilities/`)
+is covered on two levels: unit (`tests/Controller/test-AbilitiesController.php`
+for the catalog/permission/registration surface — the live-registration
+tests self-skip on WP < 6.9 — and `test-AbilitiesExecute.php` for the
+execute-callback guard rails) and end-to-end
+(`tests/Integration/test-AbilitiesIntegration.php`, which drives the
+ability callbacks against the real queue + optimizer pipeline the way an
+MCP agent would). The execute callbacks are plain PHP, so the integration
+tests run on every WP version.
+
+```bash
+# Integration suite only
+bin/test.sh --integration
+bin/test.sh --integration --php 7.4
+bin/test.sh --integration --filter test_optimize
+
+# Integration suite on all three PHP versions
+bin/test.sh --matrix --integration
+```
+
+### Real-API smoke tests
+
+The smoke suite (`tests/Smoke/`) removes the HTTP mock and runs the
+pipeline against the **live** ShortPixel API — catching contract drift a
+mock can't see. It needs a valid API key and consumes real quota credits
+(about one per test), so it is never part of `--integration`, `--all`,
+or the push/PR CI runs; without the key every test skips. A dedicated
+CI workflow (`.github/workflows/smoke.yml`) runs the suite once a month
+(plus manual dispatch) using the `SHORTPIXEL_SMOKE_KEY` repository
+secret.
+
+```bash
+SHORTPIXEL_SMOKE_KEY=<your 20-char key> bin/test.sh --smoke
+```
+
+Because the live API fetches images by URL and can't reach the local
+test install, the suite remaps the request URL list to the committed
+fixtures' public `raw.githubusercontent.com` URLs (same bytes) and
+disables thumbnail processing — only main files have public counterparts.
+
+### Cross-plugin compatibility tests
+
+The compat suite (`tests/Compat/`) runs the SPIO integrations against the
+REAL partner plugins — WooCommerce, NextGen Gallery, and WP Offload Media
+Lite — downloaded from wordpress.org (latest stable, zips cached in the
+`wp-tests-cache` volume) and activated natively in the test install.
+
+WPML and its Media Translation add-on are commercial (no public
+download): drop their zips into `tests/partner-plugins/` (gitignored)
+and `--compat` extracts and activates them too. To update one, replace
+its zip — the harness re-extracts whenever the zip is newer than the
+extracted copy. Without the zips, the WPML / Media Translation tests
+self-skip. CI does not run these tests (the zips can't live in the
+public repo).
+
+WPML Media Translation gets its own suite (`test-CompatWPMLMedia.php`):
+its end state — a translation attachment pointing at its OWN physical
+file — must be treated by SPIO as an independent image (no duplicate
+propagation, own API call, no AI fan-out, files untouched when the
+original is deleted), unlike the shared-file duplicates covered in
+`test-CompatWPML.php`.
+
+Polylang is covered hook/data-level (`test-CompatPolylang.php`): the
+suite fakes Polylang's presence via the `pre_option_active_plugins`
+filter and reproduces its shared-guid media translations directly in the
+DB, so no Polylang zip or code is needed — the guid-duplicate detection
+in `MediaLibraryModel::getWPMLDuplicates()` is exercised for real.
+
+```bash
+bin/test.sh --compat
+bin/test.sh --compat --filter CompatWooCommerce
+```
+
+How it works:
+
+- `--compat` downloads + extracts the partner plugins into the test
+  install's `wp-content/plugins/`, then runs phpunit with
+  `SPIO_PARTNER_PLUGINS=1` and the `Compat` testsuite.
+- `tests/bootstrap.php` activates the partners via a
+  `pre_option_active_plugins` filter (real WP core plugin loading);
+  `tests/Integration/bootstrap.php` fires their activation hooks once so
+  their installers create the tables they need (DDL auto-commits, so the
+  tables survive per-test rollbacks).
+- Plain `--integration` / `--all` runs never load the partner plugins —
+  the env variable gates everything — so the standard suites are
+  unaffected.
+- The suite runs on PHP 8.3 or 8.5 with WP latest. PHP 7.4 and pinned
+  WP versions exit early with a skip note — partner plugin floors (WP
+  Offload Media Lite needs PHP 8.1+, current partner releases require
+  modern WP), not ours.
+- Each test also self-skips when its partner plugin isn't loaded, so an
+  accidental plain-phpunit run of the suite is harmless.
+
+### Multisite tests
+
+The multisite suite (`tests/Multisite/`) runs against a NETWORK WordPress
+test install and covers the plugin's multisite-specific surface: per-site
+custom tables (`wp_N_shortpixel_*`), per-site `spio_settings` isolation vs
+the network-wide `spio_wpmu` option, and the full optimization pipeline on
+a subsite (whose uploads live in `uploads/sites/N/`).
+
+```bash
+bin/test.sh --ms
+bin/test.sh --ms --filter test_optimization_pipeline_runs_on_a_subsite
+```
+
+How it works:
+
+- `--ms` sets `WP_MULTISITE=1`, which makes the WP test-lib bootstrap
+  (re)install the test database as a multisite network — no separate
+  config file or cache dir needed, since the install is rebuilt on every
+  run anyway.
+- The suite uses the integration config/bootstrap (mock API + the
+  `SPIO_IntegrationTestCase` base class) with the `Multisite` testsuite.
+- Every test self-skips on a single-site install, so selecting the suite
+  without the env flag yields skips, not failures.
+
+The admin-ajax dispatch tests (`tests/Integration/test-AjaxEndpoint.php`)
+are related coverage from the same WP test framework family: they use
+`WP_Ajax_UnitTestCase` to exercise the REAL `wp_ajax_*` path — hook
+wiring, nonce gate, capability gate, JSON termination — instead of
+calling `AjaxController` methods directly. They run as part of the
+normal Integration suite; no flags needed.
+
+### WordPress version
+
+Tests run against the latest WordPress by default. `--wp <version>` pins a
+specific version (pass the tag WordPress publishes — `5.9`, not `5.9.0`).
+Each WP version keeps its own cache dirs inside the `wp-tests-cache`
+volume, so switching versions is cache-warm after the first install.
+
+```bash
+bin/test.sh --wp 5.9                          # unit suites on WP 5.9
+bin/test.sh --wp 5.9 --php 7.4 --integration  # old WP + old PHP combo
+```
+
+CI mirrors this: pushes run the integration suite on WP latest across
+PHP 7.4/8.3/8.5, plus WP 5.9 (the oldest version that runs on this
+test setup) on PHP 7.4 and 8.3. Pull requests run PHP 8.3 / WP latest,
+plus the same WP 5.9 combos. Every run also includes the `compat` job
+(PHP 8.3 and 8.5, WP latest) that downloads the partner plugins and
+runs the Compat testsuite — same steps as `bin/test.sh --compat` — and
+the `multisite` job (PHP 8.3, WP latest), which mirrors
+`bin/test.sh --ms`.
+
+### Everything in one go
+
+```bash
+# Unit + integration + multisite + compat suites, one command
+# (PHP 8.3 / WP latest)
+bin/test.sh --all
+
+# The full local sweep: all four passes on PHP 7.4, 8.3 AND 8.5
+# (the compat pass self-skips on 7.4 — partner plugin floors)
+bin/test.sh --matrix --all
+
+# Unit + integration on a pinned combo (compat pass skips off-latest)
+bin/test.sh --all --wp 5.9 --php 7.4
+```
+
+All passes always run — a unit failure doesn't hide the integration or
+compat result (or vice versa); failures are aggregated in the final
+verdict.
+
+### Debug workflow
+
+```bash
+# Drop into an interactive bash shell inside the PHP container.
+# Handy for repeated iteration without booting a fresh container per run.
+bin/test.sh --shell
+
+# From inside the shell:
+vendor-tests/bin/phpunit --testsuite model
+vendor-tests/bin/phpunit --testsuite model --filter BarTest        # one file (by class)
+vendor-tests/bin/phpunit --filter 'BarTest::test_foo'              # one method
+```
+
+### Cache / reset
+
+```bash
+# Nuke all containers, volumes, and per-version PHP images.
+# Next run rebuilds everything from scratch (~3-5 min for one version).
+bin/test.sh --clean
+```
+
+Caches persisted between runs:
+
+- **`vendor-tests/`** — lives on the host via the bind mount, so the test-deps install (`COMPOSER=composer.tests.json composer install`) runs only when `vendor-tests/autoload.php` is missing.
+- **`/tmp/wordpress-tests-lib`** and **`/tmp/wordpress`** — persist in the `wp-tests-cache` named Docker volume, so the ~3-minute WordPress test-framework SVN checkout only happens once (per `--clean` cycle).
+- **PHP images** — Docker layer cache. Each PHP version keeps its own image tag (`spio-tests:php74` / `spio-tests:php83` / `spio-tests:php85`); switching PHP versions doesn't invalidate the others.
+
+### Timing expectations
+
+| Operation                                              | First run                                    | Subsequent runs |
+|--------------------------------------------------------|----------------------------------------------|-----------------|
+| Full suite on one PHP version                          | 3-5 min (image pull + WP-tests SVN checkout) | ~20-60 s        |
+| Full matrix (all 3 PHP versions)                       | 10-15 min                                    | ~1-3 min        |
+| Single testsuite                                       | (setup + ~10 s)                              | ~10 s           |
+| Integration suite on one PHP version                   | (setup + ~1 min)                             | ~1 min          |
+| `--matrix --all` (unit + integration × 3 PHP versions) | 15-20 min                                    | ~6-8 min        |
+
+## Alternative: run locally without Docker
+
+If Docker isn't an option, you can install the dependencies directly on your
+host. This is the setup the GitHub Actions runner uses under the hood.
+
+### System requirements
+
+- PHP 8.3 (or one of 7.4 / 8.5 for cross-version testing) with the `mbstring`, `mysqli`, `xml`, and `zip` extensions.
+- Composer 2.
+- MySQL 8.0 (any 5.7+ works but 8.0 matches CI).
+- WP-CLI (the `wp-cli.phar` binary somewhere on `$PATH` as `wp`).
+- SVN (`subversion` package) — required by `bin/install-wp-tests.sh` to check out the WordPress test framework.
+- `mysql` client — required by the same script to create the test database.
+
+### macOS install (Homebrew)
+
+```bash
+brew install php@8.3 composer mysql svn wp-cli
+brew services start mysql
+```
+
+### Linux install (Debian / Ubuntu)
+
+```bash
+sudo apt-get install php8.3-cli php8.3-mbstring php8.3-mysql php8.3-xml \
+                     php8.3-zip composer mysql-server subversion
+# WP-CLI:
+curl -sSL https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o /usr/local/bin/wp
+chmod +x /usr/local/bin/wp
+sudo service mysql start
+```
+
+### Windows
+
+Native Windows install is discouraged because `bin/install-wp-tests.sh` is a
+Bash script and depends on GNU-style tools (`grep -oP`, `sed -i`, `svn`).
+Use **WSL2** with a Debian/Ubuntu instance and follow the Linux instructions
+above, OR use the Docker path.
+
+### One-time bootstrap
+
+```bash
+# Install the test dependencies (PHPUnit + polyfills). Test deps live in
+# composer.tests.json / composer.tests.lock and install into vendor-tests/ —
+# the main composer.json is the plugin/module BUILD tool and is not needed
+# for running tests.
+COMPOSER=composer.tests.json composer install
+
+# Install the WordPress test framework (~3 min — SVN checkout).
+# Adjust the DB creds to match your local MySQL setup.
+bin/install-wp-tests.sh wordpress_test root '' 127.0.0.1 latest
+```
+
+The install script:
+1. Downloads the latest WordPress into `/tmp/wordpress` via WP-CLI.
+2. Creates a `wordpress_test` MySQL database.
+3. Runs `wp core install` to seed WordPress.
+4. SVN-checks-out the WordPress unit-test framework into `/tmp/wordpress-tests-lib`.
+5. Copies + patches `wp-tests-config.php` with the DB credentials.
+
+### Running tests
+
+```bash
+# All testsuites
+vendor-tests/bin/phpunit
+
+# Specific testsuite
+vendor-tests/bin/phpunit --testsuite model
+vendor-tests/bin/phpunit --testsuite External
+
+# Specific test method
+vendor-tests/bin/phpunit --filter test_isProcessable
+
+# Specific file — filter on its class name (file paths don't work with
+# the test-Foo.php naming, see the note in the Quick start section)
+vendor-tests/bin/phpunit --testsuite model --filter ImageModelTest
+```
+
+## Running against the CI reference
+
+The CI configuration lives at `.github/workflows/phpunit.yml`. It:
+
+- Runs on every push to `updates` and on pull requests into `updates` or
+  `master`; any other branch can be run by hand (Actions → "Run workflow").
+  Pull requests whose source branch is `updates` (the release PR into
+  `master`) are skipped, because the push already tested that commit.
+  Stale runs of the same pull request are cancelled; every `updates` commit
+  keeps its own run.
+- Runs on `ubuntu-latest` GitHub Actions runners.
+- Uses a matrix strategy across PHP 7.4 / 8.3 / 8.5 (three jobs per push).
+- Installs PHP via `shivammathur/setup-php@v2`.
+- Uses MySQL 8.0 as a service container on port 3306.
+- Runs each testsuite in its own `phpunit` invocation so per-suite exit codes
+  are visible even when an earlier suite fails.
+
+The Docker-based local setup (`.docker/Dockerfile.tests` +
+`docker-compose.tests.yml` + `bin/test.sh`) is designed to match this
+environment byte-for-byte — same PHP versions, same MySQL image, same
+`bin/install-wp-tests.sh` script. If a test passes locally via `bin/test.sh`,
+it should pass on CI.
+
+## Browser end-to-end tests (Playwright)
+
+The PHPUnit suites above never load a browser, so the plugin's JavaScript
+(`res/js/`, ~9,650 lines) and its admin layout had no automated coverage.
+The E2E suite closes that gap: a REAL served WordPress with SPIO installed,
+driven by [Playwright](https://playwright.dev) in a browser, asserting what a
+user actually sees — and failing on any uncaught JS error.
+
+```bash
+bin/test-e2e.sh                          # provision + run every project (chromium, firefox, webkit, visual)
+bin/test-e2e.sh --project chromium       # one engine: chromium | firefox | webkit | visual (repeatable)
+bin/test-e2e.sh --project visual --update-snapshots   # refresh screenshot baselines after an intended UI change
+bin/test-e2e.sh --grep "settings"        # subset by title
+bin/test-e2e.sh specs/smoke.spec.ts      # one spec (paths relative to tests/E2E)
+bin/test-e2e.sh --headed                 # visible browser, natively on the host (needs Node.js)
+bin/test-e2e.sh --ui                     # Playwright UI mode, natively on the host
+bin/test-e2e.sh --report                 # open the last HTML report
+bin/test-e2e.sh --provision-only         # just bring the site up at http://localhost:8030
+bin/test-e2e.sh --pull-only              # pull the images with retry (CI's first step)
+bin/test-e2e.sh --wp 6.5                 # against an older WordPress (fresh volumes)
+bin/test-e2e.sh --clean                  # wipe DB / core / node_modules volumes
+```
+
+**Stack** (`docker-compose.e2e.yml`, fully separate from the PHPUnit stack —
+different database, volumes and images, so the two never collide):
+
+| Service | What |
+|---|---|
+| `mysql-e2e` | MySQL 8.0, database `wordpress_e2e` |
+| `wordpress` | official `wordpress:php8.3-apache` image; the repo is bind-mounted as `wp-content/plugins/shortpixel-image-optimiser`; served on **http://localhost:8030** (admin / password) |
+| `wpcli` | one-shot provisioning (`tests/E2E/provision/provision.sh`): core install, theme, plugin activation, seed |
+| `playwright` | `mcr.microsoft.com/playwright` (pinned to the `@playwright/test` version in `tests/E2E/package.json`), shares the wordpress container's network so the same URL works everywhere |
+
+**Test-support mu-plugins** (`tests/E2E/mu-plugins/`, only active when
+`SPIO_E2E` is defined — never in production):
+
+- `spio-e2e-mock-api.php` — the ShortPixel API mock, ported from the PHPUnit
+  `MockShortPixelApi` to a live install (disk-backed download stash, knobs
+  and counters in options). No traffic leaves the container.
+- `spio-e2e-support.php` — REST endpoint `spio-e2e/v1` the tests call to
+  reset state, seed the healthy-install baseline, upload fixtures, backdate
+  the queue, steer the mock and inject "hostile" third-party scripts
+  (`hostile-snippets/`, e.g. a third-party `window.URL` overwrite).
+
+**Layout** (`tests/E2E/`): `playwright.config.ts` (serial, one worker — every
+spec shares one install), `fixtures.ts` (the console-error tripwire, hermetic
+routing, the `spio` support client), `helpers/` (page helpers, CustomEvent
+waits), `specs/` (one file per flow; `auth.setup.ts` logs in once).
+
+**Writing E2E specs**
+
+- Import `test`/`expect` from `../fixtures`, never from `@playwright/test`
+  directly — that is what arms the tripwire.
+- Start each test from a known state: `await spio.reset()` in `beforeEach`.
+  Besides content and tables this clears SPIO's processor lock (the 2-minute
+  `bulk-secret` transient); the auth setup persists cookies only, so every
+  page starts with an empty localStorage and becomes the processor itself.
+  A page whose `window.ShortPixelProcessor.isActive` is false never advances
+  the queue — assert it (see the smoke spec) before waiting on processing.
+- Wait on SPIO's own window CustomEvents (`withSpioEvent(page,
+  'shortpixel.processor.responseHandled', …)`) instead of sleeping.
+- A spec that expects JS errors (a pin for a known bug) opts out with
+  `test.use({ allowConsoleErrors: true })` and asserts on `consoleErrors`.
+- SPIO's switches, compression radios and the bulk error-box toggle are
+  `display:none` inputs behind custom controls — Playwright's `check()`
+  cannot click them. Use `setChecked(locator, on)` from `helpers/spio.ts`
+  (sets the DOM state and dispatches `input`/`change`).
+- Use the page objects in `helpers/` (`SettingsPage`, `MediaList`,
+  `BulkPage`, `AiEditorModal`, `BlockEditor`, `OnboardingPage`) rather than
+  raw selectors; they encode the verified DOM facts (e.g. the settings save
+  banner is *always* `display:flex` — success is the `show` class, and the
+  media status filter needs `filter_action` in the request).
+- Block editor: SPIO never starts AI generation from the editor UI by itself
+  (selecting an image block only kicks the queue processor). Tests trigger
+  it with `BlockEditor.requestAlt(id)` — the same call the "AI Image SEO"
+  button makes — and read the result from `wp.data` (`BlockEditor.imageBlock`),
+  never from the iframed canvas. Support routes exist to create a post with
+  a real core/image block (`spio.createPost({ image_id })`) and to flip the
+  API-key state (`spio.setKeyState('none' | 'verified')`).
+- The AI editor modal's Save creates a NEW attachment (never replaces) and
+  the server blocks up to ~45s polling the API — budget generous timeouts.
+- In the no-key state SPIO logs `console.error('No API Key set…')` on
+  every admin page; onboarding specs relax the tripwire and assert that this
+  is the only error.
+- **Third-party conflict registry** (`specs/conflicts.spec.ts` +
+  `mu-plugins/hostile-snippets/`): each snippet mimics a real class of
+  hostile admin script (a `window.URL` overwrite, an enumerable
+  `Array.prototype` extension, neutered `console` methods, a late
+  `jQuery.noConflict(true)`) and is injected *before* SPIO's scripts; the
+  same settings / media-list / bulk flows are then driven with it active.
+  Keep new snippets realistic — one that takes down WordPress core itself
+  (e.g. polluting `Object.prototype`, deleting `console.warn`) proves
+  nothing about SPIO. A failing combination is a finding: pin it, don't
+  skip it.
+- `spio.reset()` also resets SPIO's queues through
+  `QueueController::resetQueues()`; a bulk left half-prepared by a previous
+  test otherwise makes the bulk page skip its dashboard.
+- **A page load is not proof of server state.** `screen-bulk.js` chooses its
+  panel from the startup data of each request (preparing → selection,
+  running → process, finished + done → finished, queued → summary, else
+  dashboard). The reload after "Stop" can be served while `finishBulk` is
+  still clearing the queues, so the screen switches away from the
+  server-rendered dashboard — which failed the stop test on CI in Chromium
+  *and* WebKit while passing locally. `BulkPage.stop(spio)` therefore waits
+  for `spio.bulkStatus()` (support route `GET bulk-status`, the same
+  `QueueController::getStartupData()` the JS reads) to report both queues
+  clear, and only then asserts the dashboard.
+- **Never `waitForURL` for a page that reloads the SAME url.** It resolves
+  immediately when the pattern already matches the current URL, so the wait
+  returns before the reload starts and everything after it races the
+  navigation (this has failed CI in two ways: a panel
+  assertion straddling the reload, and a `page.goto` refused with
+  "interrupted by another navigation"). Wait for the document instead:
+  `withSelfReload(page, action)` from `helpers/spio.ts` arms
+  `page.waitForEvent('load')` before running the action. It applies to the
+  screens that really reload themselves: bulk stop/finish, and the
+  onboarding/quick-tour redirects (the onboarding screen *is* the settings
+  page). `wp-login.php` navigates to a different URL, so there a paired
+  `waitForURL` is fine.
+- **Check that a navigation actually happens before waiting for one.**
+  API-key validation on the settings overview looks like a form submit but
+  is an in-place AJAX post (`admin-ajax.php` with `display_part`); the
+  notices render without any navigation. A `waitForURL` there waited for
+  nothing, and a `load` wait times out. Wait on the AJAX response
+  (`page.waitForResponse`, armed before the click), as `settings.spec.ts`
+  does.
+- Assert a panel with `BulkPage.expectPanel()`, which polls "active AND
+  visible" as ONE predicate. Two separate assertions can straddle a panel
+  switch and report a nonsensical state (class present, then hidden with
+  the class gone).
+- Front-end delivery specs create their own unauthenticated
+  `browser.newContext()` to view a post as a visitor, and must switch
+  `deliverWebp`/`useCDN` back off in `afterEach` (the seed does not touch
+  them). Enable CDN only through the support route: the settings form
+  path makes real outbound calls to `no-cdn.shortpixel.ai`, which the mock
+  does not intercept.
+- Custom Media specs add `wp-content/uploads/e2e-custom/` (seeded by the
+  `custom-folder` support route) — the only safe target: the numeric year
+  folders are refused as Media Library, and the bind-mounted plugin tree
+  would be *accepted* and then have its fixtures overwritten in the host
+  checkout. The comparer's script is lazy-loaded and races the data
+  request on the first click; the spec pre-warms it.
+- Multisite network settings are **not** covered by the E2E suite: the page
+  is only registered on a multisite install, which this stack is not. They
+  need a dedicated multisite stack (own compose project, `WP_ALLOW_MULTISITE`
+  baked in on first boot, `wp core multisite-convert`, a real hostname).
+  The PHP side is pinned by `tests/Multisite/`.
+- Pinned tests follow the same rules as the PHPUnit ones (`_pinned_for_deferred_fix`,
+  sentinel that proves the flow ran, flip note in the docblock).
+- Artifacts (traces, screenshots, videos, HTML report) land in
+  `tests/E2E/artifacts/` (gitignored); on CI they are uploaded on every run.
+- **No retries, locally or on CI.** Playwright counts a test that passes on
+  retry as "flaky", which is a *pass* for the exit code — a real timing race
+  once hid behind a green CI run that way. Intermittent failures are the
+  bugs this suite exists to catch, so a first failure goes red; fix the
+  race (usually: wait on the right `shortpixel.*` event) instead of
+  retrying past it.
+- **Node-side HTTP to the container sends `Connection: close`.** Playwright's
+  request client shares one keep-alive agent per worker and Apache closes
+  idle keep-alive sockets after 5 s, so a support call made right after a
+  long browser-driven stretch could die with "socket hang up" before
+  reaching WordPress (Chromium retries that race silently, Node does not).
+  `NO_KEEPALIVE_HEADERS` in `helpers/spio.ts` is applied by the support
+  client and must be passed to any direct `request.get()`/`post()` you add.
+
+**Browser projects** (`playwright.config.ts`): the functional suite runs
+once per engine — `chromium`, `firefox`, `webkit` — at the same 1366×768
+viewport. A test must pass on all three; an engine difference is either a
+real SPIO cross-browser bug (pin it) or a test assumption to fix. Skipping
+an engine is allowed only for a proven ENGINE limitation that has nothing
+to do with SPIO, and every such skip needs a sentinel in
+`specs/engine-limits.spec.ts` that goes red once the limitation is gone.
+
+- **Playwright's Linux WebKit gets flaky when the machine is starved.**
+  Observed faults, all engine-level and none reproducible on an
+  unconstrained machine: `page.goto` failing with "WebKit encountered an
+  internal error" (the web process died; seen on a GitHub runner), and a
+  `pageerror` claiming SPIO's worker script was blocked "due to access
+  control checks" (reproduced locally only with the Playwright container
+  capped at 2 GB). Videos are therefore not recorded on CI (`video: 'off'`
+  when `CI` is set; traces still are). If one of these appears, check
+  whether it reproduces unconstrained before treating it as a SPIO bug —
+  but never paper over it with a retry. Because of this, the CI WebKit job
+  is `continue-on-error`: it reports but does not gate, while Chromium and
+  Firefox do. A WebKit failure still shows red in the run and is still
+  worth reading — treat a repeatable one as a real finding.
+- Known engine limitation: Playwright's Linux WebKit hangs in layout on
+  WordPress core's attachment edit screen (`post.php?action=edit` for an
+  attachment). It reproduces with SPIO deactivated, so `ai-editor.spec.ts`
+  skips WebKit and the sentinel watches for a Playwright/WordPress update
+  that fixes it.
+- Wait on a class or event the JS itself sets once its listeners are
+  attached (e.g. the quick tour's `active-step-0`), never on
+  server-rendered markup that is there before any JS ran.
+- Known cross-engine difference that produced a real SPIO finding:
+  dispatching a synthetic `new CustomEvent('click')` on an `<a href>` runs
+  the link's navigation in WebKit only (Chromium/Firefox just run the
+  listeners). The event is not cancelable, so a listener's
+  `preventDefault()` cannot stop it. The quick tour therefore dispatches a
+  cancelable `MouseEvent` — regression-tested in `onboarding.spec.ts`.
+- `bin/test-e2e.sh` passes arguments straight to Playwright, whose
+  `--project` takes several values: put a spec path BEFORE `--project`
+  (`bin/test-e2e.sh specs/x.spec.ts --project webkit`), or it is read as a
+  project name.
+
+**Visual regression** (`specs/visual.spec.ts`, project `visual`):
+
+- Chromium only, one set of baselines in `tests/E2E/snapshots/visual.spec.ts/`
+  (committed). Covers every settings tab in advanced mode, the overview in
+  simple mode and at 780px (menu closed/open), the bulk dashboard /
+  selection / summary / finished panels, and both AI editor modals.
+- Screenshots are compared only inside the Playwright Docker image
+  (`E2E_IN_DOCKER`); on a native `--headed`/`--ui` run they are no-ops,
+  because host fonts and rendering differ from the Linux baselines.
+- Capture SPIO's own container (element screenshot), never the full page —
+  the WP admin bar, menu and version footer change with every WordPress
+  release. Wait for fonts and images first (`settle()`), and mask any
+  region that legitimately differs between runs, with a comment saying why.
+- A capture taller than the viewport scrolls the page, and every
+  `position: fixed` element gets painted into the element's pixels —
+  including things users never see at rest (SPIO parks its settings
+  "saved" banner just below the viewport). `helpers/screenshot.css`
+  (config `stylePath`) hides the WP admin bar/menu and the resting banner
+  with `visibility: hidden`, so nothing reflows. On narrow viewports,
+  where SPIO's header is fixed too, use a viewport capture
+  (`expect(page).toHaveScreenshot()`) instead of an element one.
+- Prefer clearing leftover state in `spio.reset()` over masking it. Bulk
+  history (option `shortpixel-bulk-logs`) and SPIO's cached statistics
+  (`currentStats`, the `average_compression` transient) are wiped there,
+  because the settings overview prints them.
+- The comparison budget is ABSOLUTE: `maxDiffPixels: 100`. Rendering in the
+  pinned image is pixel-stable, so this only absorbs stray anti-aliasing. A
+  ratio (`maxDiffPixelRatio: 0.01`) was tried first and let a whole panel
+  swap and a leftover banner strip pass on a tall tab.
+- `--update-snapshots` only rewrites a PNG that fails the comparison. To be
+  sure a baseline reflects the current page, delete the PNG and regenerate.
+- Baselines must match a FRESH install of the latest WordPress, which is what
+  CI provisions. The official image copies core into the `e2e-wp-core` volume
+  only when it is empty, so `bin/test-e2e.sh` compares the core version in the
+  volume with the pulled image before every run and re-provisions the site
+  (DB + core, node_modules kept) when they differ. A different WordPress
+  version changes the admin CSS enough to fail every baseline by a pixel; if
+  visual fails locally but CI is green, that is the first thing to check.
+- A failing comparison uploads expected / actual / diff PNGs in the HTML
+  report. If the change was intended, refresh with
+  `bin/test-e2e.sh --project visual --update-snapshots` and review the PNG
+  diff in the commit like code. Expect a refresh after WordPress majors
+  (admin CSS changes).
+
+CI: `.github/workflows/e2e.yml` runs the identical Docker stack on
+`ubuntu-latest` for every push to `updates` and for pull requests into
+`updates` or `master` (any branch can also be run by hand via Actions →
+"Run workflow"; the same de-duplication as PHPUnit applies — the release
+PR from `updates` is skipped, stale PR runs are cancelled),
+as a matrix of one job per engine (`visual` rides in the Chromium job,
+`fail-fast: false` so every engine reports its own verdict). Artifacts are
+uploaded per engine.
+
+## Writing new tests
+
+- Test files: `tests/<Group>/test-<ClassName>.php`.
+- Extend `WP_UnitTestCase` (not raw `PHPUnit\Framework\TestCase`) — SPIO relies on real WordPress state (real `wpdb`, real filters, real cache).
+- Use the existing test-file headers as templates. Each declares a focus-areas section, a skipped-at-unit-level section (integration territory), and reflection helpers where private members need inspection.
+- For SPIO's own database tables (`shortpixel_meta`, `shortpixel_folders`, `shortpixel_postmeta`), call `InstallHelper::checkTables()` in `set_up()` — plugin activation hooks don't fire in the WP test harness. See `tests/Model/test-DirectoryOtherMediaModel.php` for the canonical pattern.
+- Settings mutation: snapshot in `set_up()`, restore in `tear_down()`. See `tests/Model/test-PNGConverter.php` for the pattern.
+- Pinned regression tests: suffix the method name with `_pinned_for_deferred_fix` and include a docblock that describes the defect, where it lives (file and function) and how to recognise the fix, so it's grep-able.
+- No bug numbers, ever: bug tracking is internal and its numbering stays out of the repo (no `BUG #42`, `pin42`, `regression42`, commit hashes as history, dates or names in test names, docblocks or assertion messages). A known open defect is described in words and, in production code, as a `@todo`; a fixed bug is not mentioned at all. See the "Known bugs and @todo" section of `CLAUDE.md`.
+
+## Troubleshooting
+
+**"Could not find bin/install-wp-tests.sh" or SVN errors on first run**
+The Docker approach installs SVN in the container. If running natively, install `subversion` (Homebrew / apt) and retry.
+
+**"Class 'WP_UnitTestCase' not found"**
+The WordPress test framework isn't installed. Run `bin/install-wp-tests.sh` (native) or `bin/test.sh` (Docker — installs automatically on first run).
+
+**Tests pass locally but fail on CI (or vice versa)**
+Run `bin/test.sh --matrix` locally to check across PHP versions. Most cross-env failures are PHP-version-specific deprecations (PHP 8.5 surfaces things 8.3 doesn't) or a stale test cache. Try `bin/test.sh --clean` and rerun.
+
+**Docker on macOS: "no matching manifest for linux/arm64"**
+All the images we use (`php:*-cli`, `mysql:8.0`, `composer:2`) publish arm64 tags natively. If you see this, Docker Desktop needs updating, or a specific PHP version tag doesn't ship arm64 yet — fall back to `--php 8.3` which definitely does.
+
+**Docker: "port 3306 already in use"**
+The MySQL service in `docker-compose.tests.yml` does NOT publish its port to the host, so this shouldn't happen. If it does, another Compose file in the repo is claiming that port — check your local overrides.
+
+**Docker: `ERROR 2026 (HY000): TLS/SSL error: self-signed certificate in certificate chain`**
+MySQL 8 auto-generates a self-signed TLS cert at startup and the MariaDB client (installed via Debian's `default-mysql-client`) rejects it. The Dockerfile ships a `/usr/local/bin/mysql` wrapper that always passes `--skip-ssl` to the underlying binary, avoiding TLS negotiation entirely. Safe because the mysql traffic never leaves Docker's internal network. If you still see this error, your image is stale — `bin/test.sh --clean` now runs `docker compose build --no-cache` to guarantee a fresh rebuild:
+
+```bash
+bin/test.sh --clean
+bin/test.sh
+```
+
+**Some tests are labeled `pinned_for_deferred_fix` — should I care?**
+Those tests pin known, not-yet-fixed defects: they assert the current (wrong) behaviour and go red once the defect is fixed. Each docblock describes the defect and where it lives. Don't "fix" a pinned test by changing its assertion; that defeats the sentinel.
+
+**PHPUnit prints a few dots + F then abruptly ends with no summary (exit code 0)**
+Something in the code-under-test called `exit()` mid-test, which kills PHPUnit before it can emit its summary. The tell: no `Tests: X, Assertions: Y` line, no `OK`/`FAILURES!` block. Common culprits inside SPIO: `ApiKeyModel::checkRedirect()` (`wp_safe_redirect() + exit()` when no verified key), `wp_die()` in AJAX paths, `wp_send_json*()`. The fix is per-test: seed whatever state short-circuits the exit — e.g. `\wpSPIO()->settings()->redirectedSettings = 1` for the redirect guard (pattern: `tests/Helper/test-UiHelper.php::set_up`). Running with `--debug` shows exactly which test the process died in.

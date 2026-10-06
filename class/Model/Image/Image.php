@@ -1,4 +1,5 @@
 <?php
+
 namespace ShortPixel\Model\Image;
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
@@ -31,6 +32,12 @@ Class Image extends \ShortPixel\Model\File\FileModel
 
 
         /**
+         * Constructor.
+         *
+         * Records the replacement path and detects which image library
+         * (GD or Imagick) is available via checkLibrary(). The image itself
+         * is not read from disk until loadImageResource() is called.
+         *
          * @param string $path            Absolute path of the source image file to load.
          * @param string $replacementPath Absolute path of the output file that will be created.
          */
@@ -45,7 +52,9 @@ Class Image extends \ShortPixel\Model\File\FileModel
         /**
          * Detect which image processing library is available and set $useLib accordingly.
          *
-         * Prefers Imagick over GD when both are installed.
+         * Prefers GD over Imagick when both are installed; falls back to
+         * Imagick when GD is unavailable. When neither is installed, $useLib
+         * stays unset and the conversion methods will bail out.
          *
          * @return void
          */
@@ -287,7 +296,7 @@ Class Image extends \ShortPixel\Model\File\FileModel
             }
 
             imagefill($bg, 0, 0, imagecolorallocate($bg, 255, 255, 255));
-		imagealphablending($bg, 1);
+		imagealphablending($bg, true);
 		imagecopy($bg, $this->image, 0, 0, 0, 0, $width, $height);
 
             $bool = imagejpeg($bg, $this->replacementPath, 90);

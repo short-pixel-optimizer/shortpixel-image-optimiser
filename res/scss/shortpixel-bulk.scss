@@ -82,8 +82,8 @@
       font-size: 26px;
       height: 26px;
       margin-right: 8px;
-      margin-top: -20px;
-      color: $color-darkest;
+      margin-top: -3px;
+      line-height: 1.2;
     }
     .icon 
     {
@@ -928,7 +928,6 @@
       //margin: 35px 60px;
 
       &.ai {
-        max-width: 33%;
         float: left;
       }
       >p {
@@ -1023,7 +1022,7 @@
       }
     }
 
-    button {
+    a {
       background: $color-brokenwhite;
       color: #1FBEC9;
       border: 1px solid #1FBEC9;

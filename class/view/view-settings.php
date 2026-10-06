@@ -29,17 +29,13 @@ if ( ! defined( 'ABSPATH' ) ) {
           <i class='shortpixel-icon user'></i><name><?php _e('ShortPixel Account','shortpixel-image-optimiser'); ?></name>
       </a>
     <?php } ?>
-    <!--<button><i class='shortpixel-icon notifications'></i><?php _e('Notifications','shortpixel-image-optimiser'); ?></button>-->
   </div>
 </header>
-
-
-<?php //$this->loadView('settings/part-header'); ?>
 
   <input type='checkbox' name='heavy_features' value='1' <?php echo ($this->disable_heavy_features) ? 'checked' : '' ?> class='shortpixel-hide' />
 
 <article class='shortpixel-settings'>
-  <?php if ($this->view->data->redirectedSettings < 3 && $view->key->is_verifiedkey)
+  <?php if ($this->view->data->redirectedSettings < 3 && $view->key->is_verifiedkey && false === $this->is_network_page)
   {
     $this->loadView('settings/part-quicktour');
   }
@@ -52,6 +48,15 @@ if ( ! defined( 'ABSPATH' ) ) {
     <input type='checkbox'></label>
   <menu>
 			<ul>
+        <?php if (true === $this->is_network_page): ?>
+        <li class='network'>
+          <?php echo $this->settingLink([
+            'part' => 'network',
+            'title' => __('Network Control', 'shortpixel-image-optimiser'),
+            'icon' => 'shortpixel-icon dashboard',
+          ]); ?>
+        </li>
+        <?php endif; ?> 
 				<li>
           <?php echo $this->settingLink([
               'part' => 'overview',
@@ -133,37 +138,52 @@ if ( ! defined( 'ABSPATH' ) ) {
             		    	</label>
 			</div>
 
-<?php if (false == $view->is_unlimited && false === $view->hide_banner): ?>
+<?php if (false === $view->is_ai_unlimited && false === $view->hide_banner): ?>
           <div class='upgrade-banner'>
               <div class="robo-container">
                   <div class="robo-from-banner"> <?php echo UIHelper::getIcon('res/img/robo-slider.png'); ?></div>
-                  <h2><?php _e('Upgrade to ShortPixel Unlimited', 'shortpixel-image-optimiser'); ?> </h2>
+                  <div class="banner-title">
+                      <span class="banner-pretitle"><?php esc_html_e('Upgrade to', 'shortpixel-image-optimiser'); ?></span>
+                      <h2>ShortPixel <span class="banner-highlight"><?php esc_html_e('Unlimited AI', 'shortpixel-image-optimiser'); ?></span></h2>
+                  </div>
+              </div>
+              <div class="banner-audience">
+                  <span class="dashicons dashicons-building"></span>
+                  <span><?php esc_html_e('Ideal for agencies & multi‑site owners', 'shortpixel-image-optimiser'); ?></span>
               </div>
               <div class="banner-line-container">
                   <span class="shortpixel-icon ok"></span>
-                  <p><?php _e('Unlimited credits ', 'shortpixel-image-optimiser'); ?></p>
+                  <p><?php esc_html_e('Unlimited AI alt text', 'shortpixel-image-optimiser'); ?> <span class="banner-new-badge"><?php esc_html_e('NEW', 'shortpixel-image-optimiser'); ?></span></p>
               </div>
               <div class="banner-line-container">
                   <span class="shortpixel-icon ok"></span>
-                  <p><?php _e('Unlimited websites ', 'shortpixel-image-optimiser'); ?></p>
+                  <p><?php esc_html_e('Unlimited bg removal', 'shortpixel-image-optimiser'); ?> <span class="banner-new-badge"><?php esc_html_e('NEW', 'shortpixel-image-optimiser'); ?></span></p>
               </div>
               <div class="banner-line-container">
                   <span class="shortpixel-icon ok"></span>
-                  <p><?php _e('Unlimited WebP/AVIF ', 'shortpixel-image-optimiser'); ?></p>
+                  <p><?php esc_html_e('Unlimited credits', 'shortpixel-image-optimiser'); ?></p>
               </div>
               <div class="banner-line-container">
                   <span class="shortpixel-icon ok"></span>
-                  <p><?php _e('500GB CDN/month ', 'shortpixel-image-optimiser'); ?></p>
+                  <p><?php esc_html_e('Unlimited websites', 'shortpixel-image-optimiser'); ?></p>
               </div>
               <div class="banner-line-container">
                   <span class="shortpixel-icon ok"></span>
-                  <p><?php _e('SmartCompress & more ', 'shortpixel-image-optimiser'); ?></p>
+                  <p><?php esc_html_e('Unlimited WebP/AVIF', 'shortpixel-image-optimiser'); ?></p>
+              </div>
+              <div class="banner-price">
+                  <?php printf(
+                      /* translators: %s: monthly price, e.g. $13.33 */
+                      esc_html__('From %s /mo', 'shortpixel-image-optimiser'),
+                      '<strong>$13.33</strong>'
+                  ); ?>
               </div>
               <div class='banner-upgrade-button'>
-                  <button type="button" class="button button-primary" id="upgrade" onclick="window.open('https://shortpixel.com/ms/af/KZYK08Q28044', '_blank');">
-                      <i class="shortpixel-icon cart"></i>
-                      <?php _e('Upgrade Now', 'shortpixel-image-optimizer'); ?>
-                  </button>
+                  <a href="https://shortpixel.com/pricing?utm_source=plugin&utm_medium=spio&utm_campaign=sidebar_banner_main" target="_blank" class="button button-primary" >
+                  <i class="shortpixel-icon cart"></i>
+                      <?php _e('Upgrade Now', 'shortpixel-image-optimiser'); ?>
+                  </a>
+
               </div>
           </div>
 <?php endif; ?>
@@ -172,10 +192,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 		</menu>
 		<section class="wrapper">
-      <form name='wp_shortpixel_options' action='<?php echo esc_url(add_query_arg('noheader', 'true')) ?>'  method='post' id='wp_shortpixel_options'>
-
+      <form name='wp_shortpixel_options' action='<?php echo esc_url(add_query_arg('noheader', 'true'), $this->url) ?>'  method='post' id='wp_shortpixel_options'>
         <input type='hidden' name='display_part' value="<?php echo esc_attr($this->display_part) ?>" />
+        <input type="hidden" name="form_action" value="<?php echo esc_attr($this->form_action); ?>" />
+
         <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
+
+          <?php if (true === $this->is_network_page)
+          {
+             $this->loadView('settings/part-network-override'); 
+             ?>
+             <input type="hidden" name="is_network_admin" value="1" /> 
+             <?php 
+          }
+          ?>
 
           <?php $this->loadView('settings/part-overview'); ?>
           <?php $this->loadView('settings/part-optimisation'); ?>
@@ -209,34 +239,5 @@ if ( ! defined( 'ABSPATH' ) ) {
         </div>
     </section>
 
-<article id="shortpixel-settings-tabs" class="sp-tabs">
-    <?php if (! $view->key->is_verifiedkey)
-    {
-    } ?>
-
-  <?php
-    if ($view->key->is_verifiedkey):
-      ?>
-      <div class='section-wrapper'>
-				<form name='wp_shortpixel_options' action='<?php echo esc_url(add_query_arg('noheader', 'true')) ?>'  method='post' id='wp_shortpixel_options'>
-	        <input type='hidden' name='display_part' value="<?php echo esc_attr($this->display_part) ?>" />
-	        <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
-
-        <?php
-        if (! $this->view->cloudflare_constant) // @todo
-        {
-
-        }
-
-
-        ?>
-			</form>
-
-			</div> <!-- wrappur -->
-      <?php
-    endif;
-    ?>
-
-</article>
 <?php $this->loadView('settings/part-wso'); ?>
 <?php $this->loadView('snippets/part-inline-modal'); ?>

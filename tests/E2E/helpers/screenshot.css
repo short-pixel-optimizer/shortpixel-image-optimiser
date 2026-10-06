@@ -1,0 +1,35 @@
+/*
+ * Injected into every toHaveScreenshot() capture (playwright.config.ts →
+ * expect.toHaveScreenshot.stylePath). Screenshot-only: never loaded by a
+ * real page. `visibility: hidden` everywhere so nothing reflows — the
+ * captured layout stays exactly what a user gets.
+ */
+
+/*
+ * WordPress admin chrome: not SPIO's to guard, and position:fixed — an
+ * element capture taller than the viewport scrolls the page, so the fixed
+ * admin bar gets painted INTO the element's pixels (seen in the bulk summary
+ * baseline), and the admin menu shows behind the AI editor modal.
+ */
+#wpadminbar,
+#adminmenuback,
+#adminmenuwrap {
+	visibility: hidden !important;
+}
+
+/*
+ * The settings "saved" banner never belongs in a baseline. At rest it is
+ * position:fixed and parked just BELOW the viewport (margin-bottom: -100px);
+ * a capture taller than the viewport paints that off-screen strip — it
+ * appeared across the middle of the tall settings baselines. FormResponseEvent
+ * also adds `.show` for 2s after any settings AJAX response.
+ *
+ * `display: none`, not `visibility: hidden`: the banner carries
+ * `transition: all 1s`, and a visibility-only hide still leaked into the tall
+ * Image Optimization capture. It is position:fixed, so removing it cannot
+ * reflow anything. Its behaviour is asserted functionally (settings.spec.ts
+ * save tests).
+ */
+.wrap.is-shortpixel-settings-page .ajax-save-done {
+	display: none !important;
+}

@@ -9,10 +9,24 @@ if (! defined('ABSPATH')) {
   exit; // Exit if accessed directly.
 }
 
-// Our newest Tools class
+/**
+ * Static utility class for miscellaneous helpers used across the plugin.
+ *
+ * Bundles small, dependency-light helpers for database table naming, plugin
+ * activation checks, timestamp conversion, image-size discovery, path
+ * normalisation, JSON validation, exclusion-pattern handling, and .htaccess
+ * rule management for WebP/AVIF delivery.
+ *
+ * @package ShortPixel\Helper
+ */
 class UtilHelper
 {
 
+  /**
+   * Returns the fully-prefixed name of the plugin's postmeta table.
+   *
+   * @return string Table name including the WordPress table prefix.
+   */
   public static function getPostMetaTable()
   {
     global $wpdb;
@@ -20,6 +34,15 @@ class UtilHelper
     return $wpdb->prefix . 'shortpixel_postmeta';
   }
 
+  /**
+   * Checks whether a given plugin is currently active on this site.
+   *
+   * On multisite installs, network-active (sitewide) plugins are considered as
+   * well as the per-site active list.
+   *
+   * @param string $plugin Plugin file identifier, e.g. "folder/plugin.php".
+   * @return bool True if the plugin is active, false otherwise.
+   */
   public static function shortPixelIsPluginActive($plugin)
   {
     $activePlugins = apply_filters('active_plugins', get_option('active_plugins', array()));
@@ -29,16 +52,38 @@ class UtilHelper
     return in_array($plugin, $activePlugins);
   }
 
+  /**
+   * Formats a Unix timestamp into a MySQL DATETIME string ("Y-m-d H:i:s").
+   *
+   * @param int $timestamp Unix timestamp in seconds.
+   * @return string MySQL-compatible datetime string.
+   */
   public static function timestampToDB($timestamp)
   {
     return date("Y-m-d H:i:s", $timestamp);
   }
 
+  /**
+   * Parses a MySQL DATETIME string back into a Unix timestamp.
+   *
+   * @param string $date MySQL datetime string.
+   * @return int|false Unix timestamp on success, false on parse failure.
+   */
   public static function DBtoTimestamp($date)
   {
     return strtotime($date);
   }
 
+  /**
+   * Returns all registered WordPress image sizes with their dimensions.
+   *
+   * Merges the built-in intermediate sizes (thumbnail/medium/large etc.) with
+   * any sizes added via add_image_size(). The result is filterable through the
+   * "shortpixel/settings/image_sizes" filter so integrations can extend the list.
+   *
+   * @return array<string, array{width:int,height:int,crop:mixed,nice-name?:string}>
+   *         Associative array keyed by size name.
+   */
   public static function getWordPressImageSizes()
   {
     global $_wp_additional_image_sizes;
@@ -63,19 +108,49 @@ class UtilHelper
 
 
 
-  // wp_normalize_path doesn't work for windows installs in some situations, so we can use it, but we still want some of the functions.
+  /**
+   * Collapses runs of forward slashes in a path to a single slash.
+   *
+   * Preserves a leading "//" (used by UNC-style network paths) by only matching
+   * duplicated slashes preceded by another character. Used as a lightweight
+   * alternative to wp_normalize_path(), which behaves inconsistently on some
+   * Windows installations.
+   *
+   * @param string $path Filesystem path to normalise.
+   * @return string Normalised path with collapsed internal slashes.
+   */
   public static function spNormalizePath($path)
   {
     $path = preg_replace('|(?<=.)/+|', '/', $path);
     return $path;
   }
 
+  /**
+   * Returns the combined EXIF setting value used by the optimisation API.
+   *
+   * Sums the "exif" (keep/remove) and "exif_ai" (AI allowed) setting flags into
+   * a single integer that encodes both behaviours.
+   *
+   * @return int Combined EXIF parameter value.
+   */
   public static function getExifParameter()
   {
     return (\wpSPIO()->settings()->exif + \wpSPIO()->settings()->exif_ai);
   }
 
-  // Copy of private https://developer.wordpress.org/reference/functions/_wp_relative_upload_path/
+  /**
+   * Converts an absolute path under the uploads directory into a path relative
+   * to that directory.
+   *
+   * Mirrors WordPress core's private _wp_relative_upload_path() so we can call
+   * it from any context. Paths that are not under wp_get_upload_dir()['basedir']
+   * are returned unchanged.
+   *
+   * @see https://developer.wordpress.org/reference/functions/_wp_relative_upload_path/
+   *
+   * @param string $path Absolute filesystem path.
+   * @return string Relative path if under the uploads dir, otherwise the input path.
+   */
   public static function getRelativeUploadPath($path)
   {
     $new_path = $path;
@@ -96,6 +171,36 @@ class UtilHelper
     return $val !== null;
   }
 
+  /**
+   * array_filter callback: keeps every value except an empty array.
+   *
+   * Used by QueueItemResult::forReturn() so empty array fields
+   * are left out of the JSON response. Non-array values, including empty
+   * strings, 0 and false, are kept.
+   *
+   * @param mixed $val
+   * @return bool False only for an empty array.
+   */
+  public static function arrayFilterEmptyArrays($val)
+  {
+     if (is_array($val) && count($val) === 0)
+     {
+      return false; 
+     }
+     return true; 
+  }
+
+  /**
+   * Checks whether a string contains syntactically valid JSON.
+   *
+   * Short-circuits to false for non-strings and for strings that contain
+   * neither "{" nor ":", so trivial inputs never hit the parser. Uses PHP 8.3's
+   * native json_validate() where available, otherwise falls back to a
+   * json_decode() + json_last_error() check.
+   *
+   * @param string $json Candidate JSON string.
+   * @return bool True if the input is a non-empty valid JSON string.
+   */
   public static function validateJSON($json)
   {
     if (!is_string($json)) {
@@ -121,6 +226,23 @@ class UtilHelper
     return json_last_error() === JSON_ERROR_NONE;
   }
 
+  /**
+   * Returns the configured exclusion patterns, optionally filtered by context.
+   *
+   * When $args['filter'] is true, only the patterns that apply to the given
+   * context (thumbnail vs. custom image, optional thumbnail name) are returned.
+   * Otherwise the full pattern list from settings is returned.
+   *
+   * @param array $args {
+   *     Optional filtering context.
+   *
+   *     @type bool        $filter       Whether to filter patterns by the other args. Default false.
+   *     @type string|null $thumbname    Thumbnail name to match against a pattern's thumblist. Default null.
+   *     @type bool        $is_thumbnail True when evaluating a thumbnail. Default false.
+   *     @type bool        $is_custom    True when evaluating a Custom Media image. Default false.
+   * }
+   * @return array<int, array> List of exclusion pattern definitions.
+   */
   public static function getExclusions($args = array())
   {
     $defaults = array(
@@ -157,6 +279,16 @@ class UtilHelper
       return $patterns;
   }
 
+  /**
+   * Evaluates whether a single exclusion pattern applies in the given context.
+   *
+   * Handles the four "apply" scopes ("all", "only-thumbs", "only-custom", and
+   * per-thumbnail via the pattern's thumblist).
+   *
+   * @param array $pattern Exclusion pattern definition (must include an 'apply' key).
+   * @param array $options Context flags: 'is_thumbnail', 'is_custom', 'thumbname'.
+   * @return bool True if the pattern matches the context.
+   */
   protected static function matchExclusion($pattern, $options)
   {
     $apply = $pattern['apply'];
@@ -178,9 +310,83 @@ class UtilHelper
     return $bool;
   }
 
+  /**
+   * Probe whether the current filesystem supports working symlinks.
+   *
+   * Writes a test file to the WordPress upload base, creates a symlink
+   * pointing at it, and verifies that (a) the symlink is visible on disk
+   * and (b) content written through the symlink is readable back from the
+   * target file. Both files are unlinked before returning.
+   *
+   * Used to decide whether SPIO can rely on symlinks (e.g. for de-duplicating
+   * backups or unlisted-thumbnail flows) on the host WordPress install.
+   *
+   * @return bool True when the symlink test round-tripped successfully; false when
+   *              the symlink was not created or its contents diverged from the target.
+   */
+  public static function testSymlink() : bool
+  {
+     $fs = \wpSPIO()->filesystem();
+
+     $base = $fs->getWPUploadBase();
+
+     $test_file = $base . 'test_file.txt'; 
+     $symlink_file = $base . 'test_symlink.txt'; 
+
+     if (file_exists($test_file))
+     {
+         unlink($test_file); 
+     }
+     if (file_exists($symlink_file))
+     {
+         unlink($symlink_file); 
+     }
+
+
+     touch($test_file);
+
+     symlink($test_file, $symlink_file); 
+
+     if (false === file_exists($symlink_file))
+     {
+        unlink($test_file);
+        return false;    
+     }
+
+     $content_check = '12345';  // Check if symlink is linked. 
+     file_put_contents($symlink_file, $content_check); 
+
+     if (file_get_contents($test_file) != file_get_contents($symlink_file))
+     {
+        $bool = false; 
+     }
+     else 
+     { 
+        $bool = true; 
+     }
+
+     
+     unlink($test_file);
+     unlink($symlink_file); 
+
+     
+     return $bool;
+  }
+
+  /**
+   * Builds the AI-feature settings payload, merged with caller-provided overrides.
+   *
+   * Reads every AI-related field from the plugin settings (generation flags,
+   * per-field character limits, context strings, language, EXIF handling) and
+   * merges them with any keys supplied in $params so callers can override
+   * individual values without repeating the full list.
+   *
+   * @param array $params Optional overrides keyed by setting name.
+   * @return array Merged AI settings array.
+   */
   public static function getAiSettings($params = [])
   {
-    $settings = \wpSPIO()->settings(); 
+    $settings = \wpSPIO()->settings();
 
     $defaults = [
     'ai_general_context' => $settings->ai_general_context, 
@@ -211,8 +417,22 @@ class UtilHelper
     return $params; 
   }
 
+  /**
+   * Converts a human-readable file-size string (e.g. "5k", "2MB", "1g") into
+   * a plain byte count.
+   *
+   * Accepts optional whitespace, an optional decimal-less integer prefix, and
+   * an optional case-insensitive suffix (K, M, G, T, each optionally followed
+   * by "B"). The 1024-based multipliers cascade via fall-through, so "1t"
+   * becomes 1024^4 bytes. Input that does not match the pattern is returned
+   * unchanged.
+   *
+   * @param string $value Size string to parse.
+   * @return string Numeric string representing the size in bytes, or the
+   *                original input if the pattern did not match.
+   */
   public static function convertExclusionFileSizeToBytes($value)
-  { 
+  {
     return preg_replace_callback('/^\s*(\d+)\s*(?:([kmgt]?)b?)?\s*$/i', function ($m) {
       switch (strtolower($m[2])) {
         case 't': $m[1] *= 1024;
@@ -225,6 +445,29 @@ class UtilHelper
 
   }
 
+  /**
+   * Writes or removes the ShortPixelWebp rewrite rules in the site's .htaccess files.
+   *
+   * When both $webp and $avif are false the rules are cleared from the root,
+   * uploads, and wp-content .htaccess files. Otherwise the combined AVIF + WebP
+   * rewrite block is written to the root .htaccess, and (unless disabled via the
+   * "shortpixel/install/write_deep_htaccess" filter) also to the uploads and
+   * wp-content .htaccess files with an inherited-rules preamble. The rules
+   * serve pre-generated .avif or .webp files to browsers that advertise
+   * support, set Cache-Control on the variants, and append Vary: Accept to
+   * every image response so shared caches key on the negotiated format.
+   *
+   * Both flags are passed together (rather than one-at-a-time) because previous
+   * versions of the plugin may have generated files of either format, so both
+   * rule sets are always written when any next-gen delivery is enabled.
+   *
+   * The finished block passes through the "shortpixel/install/htaccess_rules"
+   * filter, so a site can adapt it to its server or CDN.
+   *
+   * @param bool $webp Whether WebP delivery is enabled. Default false.
+   * @param bool $avif Whether AVIF delivery is enabled. Default false.
+   * @return void
+   */
   public static function alterHtaccess($webp = false, $avif = false)
   {
     // [BS] Backward compat. 11/03/2019 - remove possible settings from root .htaccess
@@ -258,6 +501,8 @@ class UtilHelper
            # Does the browser support avif?
            RewriteCond %{HTTP_ACCEPT} image/avif
            # AND is the request a JPG, PNG, or WebP? (no GIFs because the animation is sometimes lost in AVIF);
+		   # WebP is included on purpose: an .avif only exists when it came out smaller, so
+		   # serving it also pays off for WebP files uploaded straight to the media library.
 		   # (also grab the basepath %1 to match in the next rule)
            RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png|webp)$
            # AND does a .avif image exist?
@@ -277,10 +522,7 @@ class UtilHelper
 
            </IfModule>
            <IfModule mod_headers.c>
-           # If REDIRECT_avif env var exists, append Accept to the Vary header
-           Header append Vary Accept env=REDIRECT_avif
-
-           <FilesMatch ".(webp)$">
+           <FilesMatch "\.(avif)$">
                Header set Cache-Control "max-age=31536000, public"
            </FilesMatch>
            </IfModule>
@@ -293,14 +535,10 @@ class UtilHelper
            <IfModule mod_rewrite.c>
              RewriteEngine On
              ##### TRY FIRST the file appended with .webp (ex. test.jpg.webp) #####
-             # Is the browser Chrome?
-             RewriteCond %{HTTP_USER_AGENT} Chrome [OR]
-             # OR Is this request from Page Speed
-             RewriteCond %{HTTP_USER_AGENT} "Google Page Speed Insights" [OR]
-             # OR does this browser explicitly support webp
+             # Does the browser support webp? Only the Accept header decides: a
+             # user-agent match would also hand webp to a client that asked for
+             # "Accept: image/jpeg", and no Vary value can describe that.
              RewriteCond %{HTTP_ACCEPT} image/webp
-             # AND NOT MS EDGE 42/17 - doesnt work.
-             RewriteCond %{HTTP_USER_AGENT} !Edge/17
              # AND is the request a jpg, png, or gif?
              RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png|gif)$
              # AND does a .ext.webp image exist?
@@ -308,10 +546,7 @@ class UtilHelper
              # THEN send the webp image and set the env var webp
              RewriteRule ^(.+)$ $1.webp [NC,T=image/webp,E=webp,L]
              ##### IF NOT, try the file with replaced extension (test.webp) #####
-             RewriteCond %{HTTP_USER_AGENT} Chrome [OR]
-             RewriteCond %{HTTP_USER_AGENT} "Google Page Speed Insights" [OR]
              RewriteCond %{HTTP_ACCEPT} image/webp
-             RewriteCond %{HTTP_USER_AGENT} !Edge/17
              # AND is the request a jpg, png, or gif? (also grab the basepath %1 to match in the next rule)
              RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png|gif)$
              # AND does a .webp image exist?
@@ -320,9 +555,7 @@ class UtilHelper
              RewriteRule (.+)\.(?:jpe?g|png|gif)$ $1.webp [NC,T=image/webp,E=webp,L]
            </IfModule>
            <IfModule mod_headers.c>
-             # If REDIRECT_webp env var exists, append Accept to the Vary header
-             Header append Vary Accept env=REDIRECT_webp
-             <FilesMatch ".(avif)$">
+             <FilesMatch "\.(webp)$">
                Header set Cache-Control "max-age=31536000, public"
              </FilesMatch>
            </IfModule>
@@ -331,11 +564,47 @@ class UtilHelper
            </IfModule>
            ';
 
+      // Vary is emitted once for the whole mechanism, not per format: two
+      // appends would produce "Vary: Accept, Accept". It is unconditional
+      // because the rules above pick a format from the Accept header, so
+      // every response they can affect varies on it - including the
+      // untouched JPEG, which a shared cache must not reuse for a client
+      // that would have received AVIF or WebP. Gating this on the env var
+      // set by the RewriteRule only works on Apache, which renames it to
+      // REDIRECT_*; other servers reading these rules never send the header.
+      $vary_rules = '
+           <IfModule mod_headers.c>
+             <FilesMatch "\.(jpe?g|png|gif|webp|avif)$">
+               Header append Vary Accept
+             </FilesMatch>
+           </IfModule>
+           ';
+
       $rules = '';
       //    if ($avif)
       $rules .= $avif_rules;
       //  if ($webp)
       $rules .= $webp_rules;
+      $rules .= $vary_rules;
+
+      /**
+       * Filters the complete rule block before it is written to any .htaccess.
+       *
+       * Lets a site adapt the rules to its server or CDN - for example to drop
+       * the Vary header on a CDN that treats varying image responses as
+       * uncacheable, or to add directives of its own. Returning a non-string
+       * leaves the generated rules untouched.
+       *
+       * @param string $rules The generated rule block.
+       * @param array  $args  'webp' and 'avif' as passed to this method.
+       */
+      $filtered_rules = apply_filters('shortpixel/install/htaccess_rules', $rules, array('webp' => $webp, 'avif' => $avif));
+
+      if (is_string($filtered_rules)) {
+        $rules = $filtered_rules;
+      } else {
+        Log::addWarn('htaccess_rules filter returned a non-string value, using the generated rules', $filtered_rules);
+      }
 
       insert_with_markers(get_home_path() . '.htaccess', 'ShortPixelWebp', $rules);
 

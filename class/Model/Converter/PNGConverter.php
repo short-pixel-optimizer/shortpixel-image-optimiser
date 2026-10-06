@@ -32,6 +32,19 @@ class PNGConverter extends MediaLibraryConverter
 		protected $settingCheckSum;
 
 
+		/**
+		 * Constructor.
+		 *
+		 * Records the required env / settings state:
+		 *   - `converterActive` reflects the `png2jpg` setting AND the presence
+		 *     of at least one imaging library (GD or Imagick).
+		 *   - `forceConvertTransparent` is true when `png2jpg == 2` (the
+		 *     "convert even transparent PNGs" option).
+		 *   - `settingCheckSum` combines `png2jpg + backupImages` so a config
+		 *     change forces a retry of a previously-failed conversion.
+		 *
+		 * @param object $imageModel ImageModel bound for conversion.
+		 */
 		public function __construct($imageModel)
 		{
 			parent::__construct($imageModel);
@@ -56,6 +69,18 @@ class PNGConverter extends MediaLibraryConverter
 
 		}
 
+		/**
+		 * Whether the bound ImageModel is a valid PNG→JPG conversion candidate.
+		 *
+		 * All of the following must hold:
+		 *   - `converterActive` is true (setting is on + a library is present)
+		 *   - the source extension is `.png`
+		 *   - the file exists on disk
+		 *   - conversion has not already succeeded, and no previous attempt
+		 *     with the current settings checksum has been recorded
+		 *
+		 * @return bool
+		 */
 		public function isConvertable()
 		{
 				$imageModel = $this->imageModel;
@@ -87,6 +112,15 @@ class PNGConverter extends MediaLibraryConverter
 				return true;
 		}
 
+		/**
+		 * Compare a stored `didTry` checksum against the current settings
+		 * checksum. Returns true when the previous attempt was made under
+		 * identical settings — which means the conversion should NOT be
+		 * retried until the user changes settings again.
+		 *
+		 * @param int|string $checksum Previously-stored checksum from convertMeta.
+		 * @return bool
+		 */
 		protected function hasTried($checksum)
 		{
 			 if ( intval($checksum) === $this->getCheckSum())
@@ -96,6 +130,16 @@ class PNGConverter extends MediaLibraryConverter
 			 return false;
 		}
 
+    /**
+     * Enrich a queued item so PNG→JPG conversion runs before the current
+     * action. The original action (e.g. `optimize`) becomes the next action,
+     * and `compressionType` + `smartcrop` are added to keep_data so they
+     * survive the reset when the queue transitions to the follow-up action.
+     *
+     * @param QueueItem $qItem Queue slot to enrich.
+     * @param array     $args  Reserved for converter-specific hints.
+     * @return QueueItem The mutated queue slot (also mutated in place).
+     */
     public function filterQueue(QueueItem $qItem, $args = [])
     {
 		$currentAction = $qItem->data()->action; 
@@ -107,9 +151,31 @@ class PNGConverter extends MediaLibraryConverter
        return $qItem;
     }
 
+		/**
+		 * Full PNG→JPG conversion pipeline for the bound ImageModel.
+		 *
+		 * Pipeline:
+		 *   1. Refuse if isConvertable() rejects (settings, extension, existing conversion).
+		 *   2. Compute a unique replacement path via getReplacementPath(); on
+		 *      failure records ERROR_PATHFAIL on convertMeta and bails.
+		 *   3. Record the replacementImageBase on convertMeta so the backup
+		 *      layer can name files consistently.
+		 *   4. Ask the ImageModel to `conversionPrepare()` — this creates the
+		 *      backups needed to make the conversion reversible.
+		 *   5. Detect transparent PNGs; unless `forceConvertTransparent` is set,
+		 *      record ERROR_TRANSPARENT and fail.
+		 *   6. Run the actual GD/Imagick conversion via convertFile().
+		 *   7. On success: update WP metadata, optionally run the URL replacer
+		 *      (skipped when uploading fresh files where nothing points at the
+		 *      old URL yet), and call `conversionSuccess()` on the ImageModel.
+		 *   8. On failure: `conversionFailed()` — restores the state.
+		 *
+		 * @param array{runReplacer?: bool} $args Options. `runReplacer=false` for the upload-hook path.
+		 * @return bool
+		 */
 		public function convert($args = array())
 		{
-			 if (! $this->isConvertable($this->imageModel))
+			 if (! $this->isConvertable())
 			 {
 				 return false;
 			 }
@@ -128,7 +194,7 @@ class PNGConverter extends MediaLibraryConverter
 			 $replacementPath = $this->getReplacementPath();
 			 if (false === $replacementPath)
 			 {
-				 Log::addWarn('ApiConverter replacement path failed');
+				 Log::addWarn('PNGConverter replacement path failed');
 				 $this->imageModel->getMeta()->convertMeta()->setError(self::ERROR_PATHFAIL);
 
 				 return false; // @todo Add ResponseController something here.
@@ -192,12 +258,35 @@ class PNGConverter extends MediaLibraryConverter
 			 return false;
 		}
 
+		/**
+		 * Return the settings-derived checksum used by hasTried() to
+		 * detect whether the same conversion has already been attempted
+		 * under the current settings.
+		 *
+		 * @return int
+		 */
 		public function getCheckSum()
 		{
 			 return intval($this->settingCheckSum);
 		}
 
 
+		/**
+		 * Perform the actual PNG-to-JPG conversion on disk.
+		 *
+		 * Loads the source PNG through the Image wrapper (GD or Imagick),
+		 * writes the JPG replacement, then gates acceptance on file-size margin:
+		 * if the resulting JPG isn't at least ~5% smaller (or within the
+		 * `shortpixel/pngconverter/filesizeMargin` filter's tolerance), the
+		 * conversion is rolled back and ERROR_RESULTLARGER is recorded.
+		 *
+		 * Emits the `shortpixel/image/convertpng2jpg_before` action so
+		 * integrations can react to the pending conversion.
+		 *
+		 * @return bool True when the JPG replacement is on disk and accepted,
+		 *              false when the library failed, wrote nothing, or the
+		 *              result was too large.
+		 */
 		protected function convertFile()
 		{
 			do_action('shortpixel/image/convertpng2jpg_before', $this->imageModel);
@@ -274,31 +363,46 @@ class PNGConverter extends MediaLibraryConverter
 
 			$fs->flushImage($this->imageModel);
 
-			return true;
+			return $bool;
 		}
 
     /**
-     *  Function to check if the filesize of the imagetype (webp/avif) is smaller, or within bounds of size to be stored. If not, the webp is not downloaded and uses.
+     * Decide whether the converted JPG's filesize is acceptable relative to
+     * the original PNG.
      *
-     * @param  int $fileSize                 Filesize of the original
-     * @param  int $resultSize               Filesize of the optimized image
-     * @return [type]             [description]
+     * Rules, in order:
+     *   1. Result is 0 → reject (write issue).
+     *   2. Result is smaller or equal → accept.
+     *   3. Original filesize is 0 (unknown / virtual file) → accept.
+     *   4. Consult `shortpixel/pngconverter/filesizeMargin` filter. A
+     *      negative value short-circuits every subsequent check and accepts.
+     *      Otherwise, accept iff the percentage increase is within the
+     *      filter's tolerance.
+     *
+     * @param int $fileSize    Original PNG filesize in bytes.
+     * @param int $resultSize  Converted JPG filesize in bytes.
+     * @return bool True when the JPG should replace the PNG.
      */
-    private function checkFileSizeMargin($fileSize, $resultSize)
+    private function checkFileSizeMargin(int $fileSize, int $resultSize)
     {
-        // If the original filesize is bigger, it means we made it smaller, rejoice and allow.
-        if ($fileSize >= $resultSize)
-          return true;
 
-        // Fine suppose, but crashes the increase
-        if ($fileSize == 0)
-          return true;
-
-        // Indicates write issues
+		// Indicates write issues. If result size is zero, should not accept result.
         if ($resultSize == 0)
         {
            return false;
         }
+
+
+		// If the original filesize is bigger, it means we made it smaller, rejoice and allow.
+        if ($fileSize >= $resultSize)
+          return true;
+
+
+        // Fine suppose, but crashes the increase . This could happen when filesize is not properly set in metadata or passed. 
+        if ($fileSize == 0)
+          return true;
+
+
 
         $percentage = apply_filters('shortpixel/pngconverter/filesizeMargin', 0);
 
@@ -317,6 +421,18 @@ class PNGConverter extends MediaLibraryConverter
         return false;
     }
 
+		/**
+		 * Roll back a completed PNG→JPG conversion.
+		 *
+		 * The restore of the file itself is handled by MediaLibraryModel's
+		 * restoreConversion() before this method runs — here we handle only
+		 * the WordPress-side cleanup: register the target as the reinstated
+		 * `.png` file, update wp attachment metadata, and run the URL
+		 * replacer to rewrite references from the intermediate `.jpg` back
+		 * to the restored `.png`.
+		 *
+		 * @return bool Result of the URL-replacer run.
+		 */
 		public function restore()
 		{
 			$params = array(
@@ -338,13 +454,14 @@ class PNGConverter extends MediaLibraryConverter
 			$fsNewFile = $fs->getFile($this->imageModel->getFileDir() . $newFileName);
 
 			$this->newFile = $fsNewFile;
-			$this->setTarget($fsNewFile); // Sets the target base file 
+			$this->setTarget($fsNewFile); // Sets the target base file
 
-			$this->updateMetaData($params); // Triggers update of new Metadata - Sets the targets 
+			$this->updateMetaData($params); // Triggers update of new Metadata - Sets the targets
 			$result = $this->replacer->replace();
 
 			$fs->flushImageCache();
 
+			return $result;
 		}
     /** Checks if imageModel is transparent. Returns boolean.  --Note-- this is a  heavy function that might load the entire image multiple times and cause memory issues!
     *
@@ -391,7 +508,8 @@ class PNGConverter extends MediaLibraryConverter
 		 */
 		protected function getPNGImage()
 		{
-			if (is_object($this->current_image))
+			// False is fail-state. Don't repeat to repeat the fail.
+			if (is_object($this->current_image) || false === $this->current_image)
 			{
 				 return $this->current_image;
 			}
@@ -425,15 +543,12 @@ class PNGConverter extends MediaLibraryConverter
 
 			Log::addInfo("PNG Replacement Path: " . $replacementPath);
 
-
-
-			// @todo Add ResponseController support to here and getReplacementPath.
 			if (false === $replacementPath)
 			{
 				Log::addWarn('Png2Jpg replacement path failed');
 				$this->imageModel->getMeta()->convertMeta()->setError(self::ERROR_PATHFAIL);
 
-				return false; // @todo Add ResponseController something here.
+				return false; 
 			}
 
 			$image = new Image($imagePath, $replacementPath); 
@@ -441,7 +556,7 @@ class PNGConverter extends MediaLibraryConverter
 
 			$bool = $image->checkImageLoaded();
 
-		//	$image = @imagecreatefrompng($imagePath);
+
 			if (false === $bool)
 			{
 				$msg = __('Image source failed - Check if source image is PNG and library is working', 'shortpixel-image-optimiser');
@@ -461,7 +576,13 @@ class PNGConverter extends MediaLibraryConverter
 
 
 
-		// Try to increase limits when doing heavy processing
+		/**
+     * Ask WordPress to raise the PHP memory limit for image work if the
+     * helper is available. No-op on older WP versions that lack
+     * wp_raise_memory_limit().
+     *
+     * @return void
+     */
     private function raiseMemoryLimit()
     {
       if(function_exists('wp_raise_memory_limit')) {

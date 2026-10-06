@@ -1,0 +1,16 @@
+{
+  "name": "spio-e2e",
+  "private": true,
+  "description": "Browser end-to-end tests for ShortPixel Image Optimizer (Playwright). Run via bin/test-e2e.sh from the repo root.",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report artifacts/html-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.55.0",
+    "@types/node": "^20.17.0",
+    "typescript": "^5.6.0"
+  }
+}

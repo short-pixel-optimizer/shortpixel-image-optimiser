@@ -29,8 +29,11 @@ class ShortPixelOnboarding
          this.InitNewKeySwitch();
 
          var addButton = this.root.querySelector('button[name="add-key"]');
-         addButton.addEventListener('click', this.AddKeyEvent.bind(this));
-
+         if (null !== addButton)
+         {
+            addButton.addEventListener('click', this.AddKeyEvent.bind(this));
+         }
+         
          let inputs = ['pluginemail', 'new-key']; 
          for (let i = 0; i < inputs.length; i++)
          {
@@ -325,7 +328,14 @@ class ShortPixelOnboarding
        this.steps[item_number].classList.add('active');
        if (typeof this.steps[item_number].dataset.screen !== 'undefined')
        {
-           var ev = new CustomEvent('click');
+           // Must be a CANCELABLE MouseEvent, never `new CustomEvent('click')`:
+           // the target is a real <a href="…&part=<tab>">, and WebKit (Safari)
+           // runs a link's activation for a non-cancelable synthetic click —
+           // the page reloads and the tour restarts at step 0 forever.
+           // SwitchMenuTabEvent's preventDefault()
+           // only takes effect on a cancelable event.
+           var ev = new MouseEvent('click', { bubbles: true, cancelable: true });
+
            var menuItem = this.root.querySelector('menu ul [data-menu-link="' + this.steps[item_number].dataset.screen + '"]');
            if (menuItem !== null)
            {

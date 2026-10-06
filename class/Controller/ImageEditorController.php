@@ -22,6 +22,9 @@ class ImageEditorController
 	protected static $instance;
 
 
+	/**
+	 * Constructor. No setup required; hooks are registered by the caller.
+	 */
 	public function __construct()
 	{
 

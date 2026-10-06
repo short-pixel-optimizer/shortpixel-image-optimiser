@@ -84,7 +84,14 @@ class CustomQueue extends Queue
       return $this->prepareItems($items);
    }
 
-   // Not implemented, for abstract.
+   /**
+    * Not implemented for custom queues; exists only to satisfy the abstract contract.
+    *
+    * AI-generated alt text is a Media Library-only feature; custom-folder items
+    * never carry AI data so there is nothing to undo.
+    *
+    * @return array Empty array, since no items are ever prepared.
+    */
    protected function prepareUndoAI()
    {
        return [];

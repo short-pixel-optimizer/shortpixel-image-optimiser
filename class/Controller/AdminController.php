@@ -36,7 +36,14 @@ class AdminController extends \ShortPixel\Controller
 
     /** @var int[] Post IDs for which the upload hook should be suppressed. */
 		private static $preventUploadHook = array();
+    private static $recentUploads = [];  // Monitor recent uploads
 
+
+    /**
+     * Return the singleton instance, creating it on first call.
+     *
+     * @return AdminController The singleton instance.
+     */
     public static function getInstance()
     {
       if (is_null(self::$instance))
@@ -58,6 +65,7 @@ class AdminController extends \ShortPixel\Controller
     public function addAttachmentHook($post_id)
     {
           $fs = \wpSPIO()->filesystem();
+          $env = \wpSPIO()->env();
 
           // If attachment doesn't come back as an valid image
           $mediaItem = $fs->getImage($post_id, 'media');
@@ -66,12 +74,17 @@ class AdminController extends \ShortPixel\Controller
              return;
           }
 
-          $converter = Converter::getConverter($mediaItem, true);
+          self::$recentUploads[] = $post_id; 
 
-            if (is_object($converter) && $converter->isConvertable())
-            {
-              do_action('shortpixel/converter/prevent-offload', $post_id);
-            }
+          // This only when the autoprocess is on ( can also be reached for AI process here )
+          if (true === $env->is_autoprocess)
+          {
+            $converter = Converter::getConverter($mediaItem, true);
+              if (is_object($converter) && $converter->isConvertable())
+              {
+                do_action('shortpixel/converter/prevent-offload', $post_id);
+              }
+          }
     }
 
 
@@ -97,7 +110,6 @@ class AdminController extends \ShortPixel\Controller
 					 return $meta;
 				}
 
-        // todo add check here for mediaitem
 			  $fs = \wpSPIO()->filesystem();
 				$fs->flushImageCache(); // it's possible file just changed by external plugin.
         $mediaItem = $fs->getImage($id, 'media');
@@ -145,28 +157,23 @@ class AdminController extends \ShortPixel\Controller
 							$mediaItem = $fs->getImage($id, 'media', false);
 
 							$meta = $converter->getUpdatedMeta();
+          }
 
-              //do_action('shortpixel/converter/prevent-offload-off', $id);
-           }
-
-         // $autoAi = $settings->
-         $optimizeAiController = OptimizeAiController::getInstance(); 
          $queueController = new QueueController();
-
-        /* if ($optimizeAiController->isAutoAiEnabled())
-         {
-            $args = ['action' => 'requestAlt'];
-            $queueController->addItemToQueue($mediaItem, $args); 
-         } */
-                 
+                
+          $args = [
+            'recent_upload' => true, 
+          ];
           
-        	$result = $queueController->addItemToQueue($mediaItem);
+          
+        	$result = $queueController->addItemToQueue($mediaItem, $args);
 				}
 				else {
 					Log::addWarn('Passed mediaItem is not processable', $id);
 				}
         return $meta; // It's a filter, otherwise no thumbs
     }
+
 
     /**
      * Handles the upload hook to enqueue a newly uploaded image for AI alt-text generation.
@@ -196,9 +203,28 @@ class AdminController extends \ShortPixel\Controller
 					 return $meta;
 				}
 
-         $queueController = new QueueController();
+        $converter = Converter::getConverter($mediaItem, true);
+
+        // Convert only done by PNG atm, the rest is done via ImageModelToQueue.
+        if (is_object($converter) && $converter->isConvertable())
+				{
+							$args = array('runReplacer' => false);
+
+						 	$res = $converter->convert($args);
+							$mediaItem = $fs->getImage($id, 'media', false);
+
+							$meta = $converter->getUpdatedMeta();
+        }
+
+        $queueController = new QueueController();
         
         $args = ['action' => 'requestAlt'];
+
+        if (in_array($id, self::$recentUploads))
+        {
+           $args['recent_upload'] = true; 
+        }
+
         $result = $queueController->addItemToQueue($mediaItem, $args); 
          
         return $meta;
@@ -596,7 +622,7 @@ class AdminController extends \ShortPixel\Controller
 
                 $sql .= sprintf(' AND %s.ID not in ( SELECT attach_id FROM %s WHERE parent = 0 and status = %s)', $wpdb->posts, $tableName, ImageModel::FILE_STATUS_MARKED_DONE);
 
-                $where = $wpdb->prepare($sql, '_shortpixel_prevent_optimize');
+                $where .= $wpdb->prepare($sql, '_shortpixel_prevent_optimize');
             break;
         }
 
@@ -679,10 +705,19 @@ class AdminController extends \ShortPixel\Controller
 
 		}
 
-    /** This function is bound to enable-media-replace hook and fired when a file was replaced
-		*
-		*
-		*/
+    /**
+     * Re-enqueue an attachment for AI alt-text generation after it is replaced via Enable Media Replace.
+     *
+     * Delegates to `handleAiImageUploadHook()` so all standard upload checks are applied.
+     *
+     * @hook enable-media-replace/after_replace (or equivalent EMR hook)
+     * @integration Enable Media Replace
+     *
+     * @param string $target  Path to the replacement (new) file.
+     * @param string $source  Path to the original (old) file.
+     * @param int    $post_id Attachment post ID of the replaced item.
+     * @return void
+     */
     public function handleAiReplaceEnqueue($target, $source, $post_id)
 		{
 				// Delegate this to the hook, so all checks are done there.
@@ -691,8 +726,15 @@ class AdminController extends \ShortPixel\Controller
 		}
 
 
+    /**
+     * Prepend a 'Settings' link to the plugin's action links on the plugins list table.
+     *
+     * @hook plugin_action_links_{basename}
+     * @param array $links Existing action links for the plugin.
+     * @return array Updated links array with the Settings link at the front.
+     */
     public function generatePluginLinks($links) {
-        $in = '<a href="options-general.php?page=wp-shortpixel-settings">Settings</a>';
+        $in = '<a href="options-general.php?page=wp-shortpixel-settings">' . esc_html__('Settings', 'shortpixel-image-optimiser') . '</a>';
         array_unshift($links, $in);
         return $links;
     }
@@ -733,7 +775,18 @@ class AdminController extends \ShortPixel\Controller
         return $mimes;
     }
 
-		/** Media library gallery view, attempt to add fields that looks like the SPIO status */
+		/**
+		 * Stub for adding a ShortPixel field to the media edit attachment form.
+		 *
+		 * Currently disabled — the function returns immediately before any fields are
+		 * added.  The original implementation would have added a 'ShortPixel' status
+		 * field to `$fields` (excluding the single-attachment edit screen).
+		 *
+		 * @hook attachment_fields_to_edit
+		 * @param array    $fields Existing attachment form fields.
+		 * @param \WP_Post $post   The attachment post object.
+		 * @return void  Returns before modifying $fields.
+		 */
 		public function editAttachmentScreen($fields, $post)
 		{
       return;
@@ -753,6 +806,15 @@ class AdminController extends \ShortPixel\Controller
 				return $fields;
 		}
 
+		/**
+		 * Output the before/after image comparer widget on the media library list screen.
+		 *
+		 * Delegates to `ListMediaViewController::loadComparer()`.  Does nothing when the
+		 * current screen is not 'upload'.
+		 *
+		 * @hook admin_footer (or equivalent)
+		 * @return false|void Returns false when not on the upload screen; otherwise void.
+		 */
 		public function printComparer()
 		{
 

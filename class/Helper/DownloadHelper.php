@@ -27,8 +27,21 @@ class DownloadHelper
 		 */
 		  private static $instance;
 
-      protected $last_download_error; 
+      /**
+       * Message from the most recent failed download attempt.
+       *
+       * Populated by downloadFile() and its underlying strategies whenever a
+       * download fails. Retrieved by callers via getLastError() so the reason
+       * can be surfaced in admin notices or error responses.
+       *
+       * @var string|null
+       */
+      protected $last_download_error;
 
+			/**
+			 * Bootstraps the helper by ensuring the WordPress download_url() function
+			 * is available.
+			 */
 			public function __construct()
 			{
 					$this->checkEnv();
@@ -95,7 +108,7 @@ class DownloadHelper
 
         $methods = array(
             "download_url" => array(array($this, 'downloadURLMethod'), $url, false),
-            "download_url_force" => array(array($this, 'downloadURLMethod'), $url, true),
+         //   "download_url_force" => array(array($this, 'downloadURLMethod'), $url, true),
             "remote_get" => array(array($this, 'remoteGetMethod'), $url)
         );
 
@@ -131,13 +144,6 @@ class DownloadHelper
 						//Responsecontroller::addData('message', $tempFile->get_error_message());
 						return false;
 					}
-
-        /*
-        Log::addError('Nulling tempfile to zero for testing!');
-        $file = fopen($tempFile, 'r+');
-        ftruncate($file,0);
-        fclose($file);
-        */
 
 					$fs = \wpSPIO()->filesystem();
 					$file = $fs->getFile($tempFile);
@@ -180,6 +186,12 @@ class DownloadHelper
 					return $file;
 			}
 
+      /**
+       * Returns the error message from the most recent failed download attempt.
+       *
+       * @return string|null The last error message, or null if no failure has
+       *                     been recorded on this instance.
+       */
       public function getLastError()
       {
           return $this->last_download_error;
@@ -258,7 +270,7 @@ class DownloadHelper
 
         $downloadTimeout = $this->getMaxDownloadTime();
 
-        $url = $this->setPreferredProtocol(urldecode($url), $force);
+        //$url = $this->setPreferredProtocol(urldecode($url), $force);
         $tempFile = \download_url($url, $downloadTimeout);
 
         if (is_wp_error($tempFile))
@@ -270,7 +282,25 @@ class DownloadHelper
            return false;
         }
 
-        return $tempFile;
+        $extension = pathinfo($url, PATHINFO_EXTENSION);
+        $suffix = '';
+
+        if ('' !== $extension)
+        {
+            $suffix = '.' . $extension;
+        }
+
+        $tmpFilePath = $tempFile . $suffix;
+
+        // Rename to keep extension for checks
+        if (false === @rename($tempFile, $tmpFilePath))
+        {
+            @unlink($tempFile);
+            Log::addError('Failed to rename temp file for remote download', $url);
+            return false;
+        }
+
+        return $tmpFilePath;
       }
 
       /**
@@ -285,14 +315,36 @@ class DownloadHelper
        */
       private function remoteGetMethod($url)
       {
-            //get_temp_dir
+            $downloadTimeout = $this->getMaxDownloadTime();
+            $extension = pathinfo($url, PATHINFO_EXTENSION);
+            $suffix = '';
+
+            if ('' !== $extension)
+            {
+                $suffix = '.' . $extension;
+            }
+
             $tmpfname = tempnam(get_temp_dir(), 'spiotmp');
 
-            $downloadTimeout = $this->getMaxDownloadTime();
+            if (false === $tmpfname)
+            {
+                Log::addError('Failed to create temp file for remote download', $url);
+                return false;
+            }
+
+            // Rename the temp name to to original extension on the end to preserve PDF file checks
+            $tmpFilePath = $tmpfname . $suffix;
+
+            if (false === @rename($tmpfname, $tmpFilePath))
+            {
+                @unlink($tmpfname);
+                Log::addError('Failed to rename temp file for remote download', $url);
+                return false;
+            }
 
             $args_for_get = array(
               'stream' => true,
-              'filename' => $tmpfname,
+              'filename' => $tmpFilePath,
               'timeout' => $downloadTimeout,
             );
 
@@ -321,16 +373,22 @@ class DownloadHelper
 		 * @param bool   $reset Whether to force re-detection of the working protocol. Default false.
 		 * @return string The URL with the preferred protocol applied.
 		 */
+    
 		private function setPreferredProtocol($url, $reset = false) {
 		      //switch protocol based on the formerly detected working protocol
 		      $settings = \wpSPIO()->settings();
+          $httpProto = \wpSPIO()->env()->getRequestProtocol();
 
-		      if($settings->downloadProto == '' || $reset) {
+		      if(true === $reset) {
 		          //make a test to see if the http is working
-		          $testURL = 'http://' . SHORTPIXEL_API . '/img/connection-test-image.png';
+		          $testURL = 'https://' . SHORTPIXEL_API . '/img/connection-test-image.png';
 		          $result = download_url($testURL, 10);
-		          $settings->downloadProto = is_wp_error( $result ) ? 'https' : 'http';
+		          $httpProto = is_wp_error( $result ) ? 'http' : 'https';
 
+              if ('http' === $httpProto)
+              {
+                Log::addError('DownloadHelper - Possible issue with https detected! ', $url);
+              }
               // remove test.
               if (false === is_wp_error($result))
               {
@@ -338,7 +396,7 @@ class DownloadHelper
               }
 
 		      }
-		      return $settings->downloadProto == 'http' ?
+		      return $httpProto == 'http' ?
 		              str_replace('https://', 'http://', $url) :
 		              str_replace('http://', 'https://', $url);
 		  }
