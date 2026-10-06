@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests: custom media ("Other Media" folders) (Wave 2).
+ * Integration tests: custom media ("Other Media" folders).
  *
  * Custom media lets SPIO optimize images OUTSIDE the Media Library:
  * OtherMediaController::addDirectory() registers a folder (row in
@@ -170,12 +170,11 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// Wave-3 additions (rows 6.2 – 6.18)
+	// Folder management, refresh and processing options
 	// -------------------------------------------------------------------
 
 	/**
 	 * An empty directory (no images) is registered but reports zero total images.
-	 * Manual plan row 6.2.
 	 */
 	public function test_add_empty_directory_zero_images() {
 		// Replace the fixture images so the directory is empty.
@@ -191,13 +190,12 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 
 		$stats = $folder->getStats();
 		$total = is_array( $stats ) ? (int) $stats['total'] : 0;
-		$this->assertSame( 0, $total, 'A freshly-added empty directory must report zero images (row 6.2).' );
+		$this->assertSame( 0, $total, 'A freshly-added empty directory must report zero images.' );
 	}
 
 	/**
 	 * A registered custom folder does NOT auto-enqueue items into the bulk queue
 	 * unless a bulk run has been explicitly started.
-	 * Manual plan row 6.3.
 	 */
 	public function test_unprocessed_custom_folder_does_not_auto_bulk() {
 		// autoMediaLibrary controls auto-enqueue on upload; ensure it is off for
@@ -214,14 +212,13 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 		$this->assertSame(
 			0,
 			$inQueue,
-			'Adding a custom folder without starting a bulk must not auto-enqueue items on the bulk custom queue (row 6.3).'
+			'Adding a custom folder without starting a bulk must not auto-enqueue items on the bulk custom queue.'
 		);
 	}
 
 	/**
 	 * After a bulk completes and the folder is re-added (re-registered),
 	 * the fresh folder enters the bulk pipeline again.
-	 * Manual plan row 6.4.
 	 */
 	public function test_readded_custom_folder_re_enters_bulk() {
 		$folder    = $this->addCustomFolder();
@@ -241,7 +238,7 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 		// Also remove the images from disk to simulate a "fresh" folder scenario.
 		// Actually just re-add to test that re-registration works.
 		$reFolder = OtherMediaController::getInstance()->addDirectory( $this->customDir );
-		$this->assertNotFalse( $reFolder, 'Re-adding a previously-deleted folder must succeed (row 6.4).' );
+		$this->assertNotFalse( $reFolder, 'Re-adding a previously-deleted folder must succeed.' );
 		$this->assertGreaterThan( 0, (int) $reFolder->get( 'id' ), 'Re-added folder must get a DB id.' );
 
 		// The meta rows must exist again so the bulk can pick them up.
@@ -250,14 +247,13 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 		$this->assertGreaterThan(
 			0,
 			(int) $reStats['total'],
-			'Re-added folder must have images scanned and ready for bulk processing (row 6.4).'
+			'Re-added folder must have images scanned and ready for bulk processing.'
 		);
 	}
 
 	/**
 	 * addDirectory() rejects a path that contains a non-writable sub-folder;
 	 * checkDirectoryRecursive fails and returns false.
-	 * Manual plan row 6.4b.
 	 *
 	 * Note: this test is skipped when running as root (root ignores chmod).
 	 */
@@ -274,7 +270,7 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 			$result = OtherMediaController::getInstance()->addDirectory( $this->customDir );
 			$this->assertFalse(
 				$result,
-				'addDirectory() must return false when a sub-folder is not writable (row 6.4b).'
+				'addDirectory() must return false when a sub-folder is not writable.'
 			);
 		} finally {
 			// Restore permissions so tear_down() can clean up.
@@ -286,7 +282,6 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 	/**
 	 * A directory whose name contains a single quote is registered without
 	 * SQL errors or path mangling.
-	 * Manual plan row 6.4c.
 	 */
 	public function test_add_directory_with_single_quote_in_name() {
 		$quotedDir = trailingslashit( WP_CONTENT_DIR ) . "spio-it's-a-test-" . wp_generate_password( 6, false ) . '/';
@@ -297,7 +292,7 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 			$folder = OtherMediaController::getInstance()->addDirectory( $quotedDir );
 			$this->assertNotFalse(
 				$folder,
-				"addDirectory() must accept a path containing a single quote without SQL errors (row 6.4c)."
+				"addDirectory() must accept a path containing a single quote without SQL errors."
 			);
 			$this->assertGreaterThan( 0, (int) $folder->get( 'id' ), 'The folder with a quoted name must be persisted.' );
 		} finally {
@@ -309,7 +304,6 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 	/**
 	 * Deleting a registered custom folder removes (or soft-deletes) it so the
 	 * bulk queue no longer processes items from it.
-	 * Manual plan row 6.5.
 	 */
 	public function test_remove_custom_folder_stops_bulk_processing() {
 		$folder    = $this->addCustomFolder();
@@ -333,7 +327,7 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 		$this->assertSame(
 			0,
 			$remaining,
-			'After folder removal, no unprocessed meta rows may remain to be picked up by the bulk queue (row 6.5).'
+			'After folder removal, no unprocessed meta rows may remain to be picked up by the bulk queue.'
 		);
 	}
 
@@ -341,7 +335,6 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 	 * Re-adding a partially-processed custom folder (some images optimized,
 	 * folder soft-deleted) resumes from where optimization left off: already-
 	 * optimized images retain their status and new/unprocessed ones are queued.
-	 * Manual plan row 6.6.
 	 */
 	public function test_readded_partially_processed_folder_resumes_correctly() {
 		$folder    = $this->addCustomFolder();
@@ -365,20 +358,19 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 
 		// Re-add the folder.
 		$reFolder = OtherMediaController::getInstance()->addDirectory( $this->customDir );
-		$this->assertNotFalse( $reFolder, 'Re-adding a partially-processed folder must succeed (row 6.6).' );
+		$this->assertNotFalse( $reFolder, 'Re-adding a partially-processed folder must succeed.' );
 
 		// The already-optimized image must still report as optimized.
 		$reImage = $this->freshCustomImage( $firstId );
 		$this->assertTrue(
 			$reImage->isOptimized(),
-			'Already-optimized images must retain their optimized status after the folder is re-added (row 6.6).'
+			'Already-optimized images must retain their optimized status after the folder is re-added.'
 		);
 	}
 
 	/**
 	 * refreshFolder() detects images added to disk after the initial registration
 	 * and, when autoMediaLibrary=1 (the test baseline), auto-enqueues them.
-	 * Manual plan row 6.7.
 	 *
 	 * Note: EnvironmentModel::is_autoprocess is read once at singleton construction
 	 * from settings->autoMediaLibrary. The baseline sets autoMediaLibrary=1 so
@@ -398,7 +390,7 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 		$newFile = $this->customDir . 'new-arrival.jpg';
 		copy( $this->fixturePath( 'fixture-small.jpg' ), $newFile );
 
-		// --- 6.7 part A: detect-only — drain queue, refresh, confirm row added. ---
+		// --- Part A: detect-only — drain queue, refresh, confirm row added. ---
 		// Run anything already queued so we start from a known-empty state.
 		$this->runQueueUntilEmpty();
 		$this->purgeQueueTable();
@@ -411,10 +403,10 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 		$this->assertCount(
 			$beforeCount + 1,
 			$afterRows,
-			'refreshFolder() must detect the newly added disk file and insert a meta row (row 6.7).'
+			'refreshFolder() must detect the newly added disk file and insert a meta row.'
 		);
 
-		// --- 6.7 part B: with auto on (baseline), a further refresh enqueues new images. ---
+		// --- Part B: with auto on (baseline), a further refresh enqueues new images. ---
 		$anotherFile = $this->customDir . 'another-arrival.jpg';
 		copy( $this->fixturePath( 'fixture-small.jpg' ), $anotherFile );
 
@@ -427,7 +419,7 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 
 		$this->assertTrue(
 			$this->queueHasWork(),
-			'With autoMediaLibrary=1 (the baseline), refreshFolder() must auto-enqueue newly detected images (row 6.7).'
+			'With autoMediaLibrary=1 (the baseline), refreshFolder() must auto-enqueue newly detected images.'
 		);
 	}
 
@@ -435,7 +427,6 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 	 * When an image file is deleted from disk before the queue runs, the queue
 	 * handles it gracefully (marks the item as an error / unreachable) rather
 	 * than crashing.
-	 * Manual plan row 6.8.
 	 */
 	public function test_deleted_image_on_disk_handled_gracefully() {
 		$folder    = $this->addCustomFolder();
@@ -458,13 +449,12 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 		$reloaded = $this->freshCustomImage( $id );
 		$this->assertFalse(
 			$reloaded->isOptimized(),
-			'A custom image whose file was deleted before optimization must not end up marked as optimized (row 6.8).'
+			'A custom image whose file was deleted before optimization must not end up marked as optimized.'
 		);
 	}
 
 	/**
 	 * When backupImages=0 no backup file is created for custom images.
-	 * Manual plan row 6.11.
 	 */
 	public function test_no_backup_created_when_backups_disabled() {
 		// Reset FIRST: resetPluginSingletons() reloads SettingsModel from the
@@ -492,12 +482,12 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 		$this->assertSame(
 			array(),
 			array_values( $newBackups ),
-			'With backupImages=0 no new backup files must be created for custom media (row 6.11).'
+			'With backupImages=0 no new backup files must be created for custom media.'
 		);
 	}
 
 	// -------------------------------------------------------------------
-	// Wave-4 additions (rows 6.22, 6.24, 6.25)
+	// Bulk actions and folder scanning
 	// -------------------------------------------------------------------
 
 	/**
@@ -517,8 +507,6 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 	 *  1. Optimize two custom images sequentially — mirrors "select all → Optimize".
 	 *  2. Restore both so they are eligible for re-optimization.
 	 *  3. Re-optimize both at Lossless (compressionType=0) — mirrors "select all → Re-optimize Lossless".
-	 *
-	 * Manual plan row 6.22.
 	 */
 	public function test_custom_media_bulk_actions_via_ajax() {
 		// checkImageAccess() checks 'edit_others_posts' for type='custom'; an
@@ -554,7 +542,7 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 		foreach ( $ids as $custom_id ) {
 			$this->assertTrue(
 				$this->freshCustomImage( $custom_id )->isOptimized(),
-				"Custom image $custom_id must be optimized after bulk-optimize via the AJAX handler (row 6.22)."
+				"Custom image $custom_id must be optimized after bulk-optimize via the AJAX handler."
 			);
 		}
 
@@ -585,7 +573,7 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 			$json->custom = new \stdClass();
 			$result       = $reOptimizeMethod->invoke( $ajaxController, $json, $data );
 			$this->assertIsObject( $result );
-			$this->assertTrue( $result->status, "reOptimizeItem must return status=true for custom id $custom_id (row 6.22)." );
+			$this->assertTrue( $result->status, "reOptimizeItem must return status=true for custom id $custom_id." );
 		}
 
 		$this->runQueueUntilEmpty();
@@ -594,19 +582,19 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 			$reloaded = $this->freshCustomImage( $custom_id );
 			$this->assertTrue(
 				$reloaded->isOptimized(),
-				"Custom image $custom_id must be optimized again after bulk re-optimize (row 6.22)."
+				"Custom image $custom_id must be optimized again after bulk re-optimize."
 			);
 			$this->assertSame(
 				0,
 				(int) $reloaded->getMeta( 'compressionType' ),
-				"compressionType must be 0 (Lossless) after the re-optimize bulk action (row 6.22)."
+				"compressionType must be 0 (Lossless) after the re-optimize bulk action."
 			);
 		}
 
 		$this->assertGreaterThan(
 			$requestsBefore,
 			count( $this->api->requests ),
-			'Bulk re-optimize must have sent both custom images through the (mocked) API (row 6.22).'
+			'Bulk re-optimize must have sent both custom images through the (mocked) API.'
 		);
 	}
 
@@ -627,8 +615,6 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 	 * the "all done" sentinel), then immediately repeats: because ts_checked
 	 * was just set to NOW, the interval filter (default 1h) excludes all
 	 * folders and the very first call already returns false → is_done.
-	 *
-	 * Manual plan row 6.24.
 	 */
 	public function test_update_all_folders_scan_and_idempotent() {
 		// Register a second folder alongside the per-test one.
@@ -638,7 +624,7 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 
 		try {
 			$folder2 = OtherMediaController::getInstance()->addDirectory( $secondDir );
-			$this->assertNotFalse( $folder2, 'Precondition: second folder must be accepted (row 6.24).' );
+			$this->assertNotFalse( $folder2, 'Precondition: second folder must be accepted.' );
 
 			$folder1 = $this->addCustomFolder();
 
@@ -657,19 +643,19 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 					break;
 				}
 				$processedFolders++;
-				$this->assertArrayHasKey( 'folder_id', $result, 'Each scan result must include folder_id (row 6.24).' );
-				$this->assertArrayHasKey( 'new_count', $result, 'Each scan result must include new_count (row 6.24).' );
-				$this->assertGreaterThanOrEqual( 1, (int) $result['new_count'], 'Each scanned folder must report at least 1 file (row 6.24).' );
+				$this->assertArrayHasKey( 'folder_id', $result, 'Each scan result must include folder_id.' );
+				$this->assertArrayHasKey( 'new_count', $result, 'Each scan result must include new_count.' );
+				$this->assertGreaterThanOrEqual( 1, (int) $result['new_count'], 'Each scanned folder must report at least 1 file.' );
 			}
 
-			$this->assertGreaterThanOrEqual( 2, $processedFolders, 'Both registered folders must be scanned before is_done (row 6.24).' );
+			$this->assertGreaterThanOrEqual( 2, $processedFolders, 'Both registered folders must be scanned before is_done.' );
 
 			// Second run: ts_checked is now recent — the interval filter blocks all
 			// folders → the very first call must return false (is_done).
 			$secondRunResult = $otherMedia->doNextRefreshableFolder();
 			$this->assertFalse(
 				$secondRunResult,
-				'Immediately after scanning, a second scan pass must return false (is_done) because no folder has exceeded the interval (row 6.24).'
+				'Immediately after scanning, a second scan pass must return false (is_done) because no folder has exceeded the interval.'
 			);
 		} finally {
 			foreach ( glob( $secondDir . '*' ) as $f ) {
@@ -684,16 +670,14 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 	 * scan timestamps causes the next scan to detect the new file.
 	 *
 	 * This tests the "Scan" behaviour that is distinct from the idempotency
-	 * of 6.24: the administrator adds a file to disk, resets timestamps (via
+	 * test above: the administrator adds a file to disk, resets timestamps (via
 	 * the resetScanFolderChecked action or resetCheckedTimestamps()), and
 	 * triggers another scan — the new file must appear in the updated count.
 	 *
-	 * As in 6.24, OtherMediaController::doNextRefreshableFolder() is called
+	 * As above, OtherMediaController::doNextRefreshableFolder() is called
 	 * directly since it is the sole production call inside the scanNextFolder
 	 * AJAX handler.  OtherMediaController::resetCheckedTimestamps() mirrors
 	 * what the resetScanFolderChecked AJAX action does.
-	 *
-	 * Manual plan row 6.25.
 	 */
 	public function test_update_all_folders_rescan_on_second_run() {
 		$folder    = $this->addCustomFolder();
@@ -707,11 +691,11 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 
 		// First scan: folder now has NULL ts_checked, so it is eligible immediately.
 		$firstResult = $otherMedia->doNextRefreshableFolder( array( 'force' => true ) );
-		$this->assertIsArray( $firstResult, 'First scan must process the folder (row 6.25).' );
-		$this->assertSame( (string) $folder_id, (string) $firstResult['folder_id'], 'Row 6.25.' );
+		$this->assertIsArray( $firstResult, 'First scan must process the folder.' );
+		$this->assertSame( (string) $folder_id, (string) $firstResult['folder_id'], 'The first scan must report this folder.' );
 
 		$countAfterFirst = (int) $firstResult['new_count'];
-		$this->assertSame( 2, $countAfterFirst, 'Precondition: folder must report 2 files after the first scan (row 6.25).' );
+		$this->assertSame( 2, $countAfterFirst, 'Precondition: folder must report 2 files after the first scan.' );
 
 		// Drop a new image onto disk between scans.
 		$newFile = $this->customDir . 'late-arrival.jpg';
@@ -725,20 +709,20 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 
 		// Second scan: timestamps are NULL again so the folder is eligible.
 		$secondResult = $otherMedia->doNextRefreshableFolder( array( 'force' => true ) );
-		$this->assertIsArray( $secondResult, 'Second scan must process the folder after timestamp reset (row 6.25).' );
+		$this->assertIsArray( $secondResult, 'Second scan must process the folder after timestamp reset.' );
 
 		$countAfterSecond = (int) $secondResult['new_count'];
 		$this->assertGreaterThan(
 			$countAfterFirst,
 			$countAfterSecond,
-			'The second scan must detect the file added between scans, increasing the reported file count (row 6.25).'
+			'The second scan must detect the file added between scans, increasing the reported file count.'
 		);
 
 		$newRows = $this->customImageRows( $folder_id );
 		$this->assertCount(
 			3,
 			$newRows,
-			'After the second scan there must be 3 meta rows (2 original + 1 new arrival) in shortpixel_meta (row 6.25).'
+			'After the second scan there must be 3 meta rows (2 original + 1 new arrival) in shortpixel_meta.'
 		);
 	}
 
@@ -762,7 +746,6 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 	 * Re-optimizing a custom image at a different compression level updates
 	 * the stored compressionType metadata accordingly. The test cycle is:
 	 * optimize (lossy) → restore → optimize (lossless) → assert compressionType=0.
-	 * Manual plan row 6.13.
 	 */
 	public function test_reoptimize_with_different_compression_level() {
 		$folder    = $this->addCustomFolder();
@@ -799,21 +782,20 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 		$this->runQueueUntilEmpty();
 
 		$afterLossless = $this->freshCustomImage( $id );
-		$this->assertTrue( $afterLossless->isOptimized(), 'Image must be optimized after the lossless re-optimization (row 6.13).' );
+		$this->assertTrue( $afterLossless->isOptimized(), 'Image must be optimized after the lossless re-optimization.' );
 
 		// The stored compression type must reflect the lossless run.
 		$storedType = (int) $afterLossless->getMeta( 'compressionType' );
 		$this->assertSame(
 			0,
 			$storedType,
-			'compressionType in meta must be 0 (lossless) after the second optimization run (row 6.13).'
+			'compressionType in meta must be 0 (lossless) after the second optimization run.'
 		);
 	}
 
 	/**
 	 * An image whose filename matches a configured exclusion pattern is not
 	 * optimized by the custom-media pipeline.
-	 * Manual plan row 6.17.
 	 */
 	public function test_excluded_custom_image_not_optimized() {
 		// Configure an exclusion pattern matching the custom image filename.
@@ -832,7 +814,7 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 		$reloaded = $this->freshCustomImage( $id );
 		$this->assertFalse(
 			$reloaded->isOptimized(),
-			'A custom image whose filename matches an exclusion pattern must not be optimized (row 6.17).'
+			'A custom image whose filename matches an exclusion pattern must not be optimized.'
 		);
 	}
 
@@ -842,7 +824,6 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 	 * restore + re-run with createAvif=1 (AVIF companion added).
 	 * The restore→re-optimize cycle is necessary because the custom pipeline
 	 * skips already-optimized images.
-	 * Manual plan row 6.18.
 	 */
 	public function test_bulk_custom_only_webp_then_avif_generation() {
 		\wpSPIO()->settings()->createWebp = 0;
@@ -860,13 +841,13 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 		$this->purgeQueueTable();
 
 		$optimized = $this->freshCustomImage( $id );
-		$this->assertTrue( $optimized->isOptimized(), 'Precondition: baseline optimization must complete (row 6.18).' );
+		$this->assertTrue( $optimized->isOptimized(), 'Precondition: baseline optimization must complete.' );
 
 		// No WebP companion must exist after the baseline pass.
 		$webp = $optimized->getWebp();
 		$this->assertTrue(
 			( false === $webp || ! $webp->exists() ),
-			'No WebP companion must exist after a non-WebP optimization pass (row 6.18).'
+			'No WebP companion must exist after a non-WebP optimization pass.'
 		);
 
 		// --- Pass 2: restore then re-optimize with WebP enabled. ---
@@ -884,8 +865,8 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 
 		$withWebp = $this->freshCustomImage( $id );
 		$webpFile = $withWebp->getWebp();
-		$this->assertNotFalse( $webpFile, 'A WebP companion model must be returned after re-running with createWebp=1 (row 6.18).' );
-		$this->assertTrue( $webpFile->exists(), 'The WebP companion file must exist on disk after the second pass (row 6.18).' );
+		$this->assertNotFalse( $webpFile, 'A WebP companion model must be returned after re-running with createWebp=1.' );
+		$this->assertTrue( $webpFile->exists(), 'The WebP companion file must exist on disk after the second pass.' );
 
 		// --- Pass 3: restore then re-optimize with AVIF enabled. ---
 		( new QueueController() )->addItemToQueue( $this->freshCustomImage( $id ), array( 'action' => 'restore' ) );
@@ -901,17 +882,17 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 
 		$withAvif = $this->freshCustomImage( $id );
 		$avifFile = $withAvif->getAvif();
-		$this->assertNotFalse( $avifFile, 'An AVIF companion model must be returned after re-running with createAvif=1 (row 6.18).' );
-		$this->assertTrue( $avifFile->exists(), 'The AVIF companion file must exist on disk after the third pass (row 6.18).' );
+		$this->assertNotFalse( $avifFile, 'An AVIF companion model must be returned after re-running with createAvif=1.' );
+		$this->assertTrue( $avifFile->exists(), 'The AVIF companion file must exist on disk after the third pass.' );
 	}
 
 	// -------------------------------------------------------------------
-	// Meta persistence: lastSave timestamp (aecd4279)
+	// Meta persistence: lastSave timestamp
 	// -------------------------------------------------------------------
 
 	/**
-	 * Since aecd4279, CustomImageModel::saveMeta() ALWAYS json_encodes
-	 * extra_info (previously null when empty) and stamps it with a
+	 * CustomImageModel::saveMeta() ALWAYS json_encodes
+	 * extra_info (never null, even when empty) and stamps it with a
 	 * 'lastSave' datetime (for debugging / support). Optimizing a custom
 	 * image must leave a parseable, recent lastSave on its shortpixel_meta
 	 * row.
@@ -935,11 +916,11 @@ class CustomMediaFoldersTest extends SPIO_IntegrationTestCase {
 			"SELECT extra_info FROM {$wpdb->prefix}shortpixel_meta WHERE id = %d",
 			$id
 		) );
-		$this->assertNotEmpty( $extra_info, 'extra_info must never be null after a save (aecd4279: always json_encoded).' );
+		$this->assertNotEmpty( $extra_info, 'extra_info must never be null after a save (always json_encoded).' );
 
 		$decoded = json_decode( $extra_info, true );
 		$this->assertIsArray( $decoded, 'extra_info must be valid JSON.' );
-		$this->assertArrayHasKey( 'lastSave', $decoded, 'extra_info must contain the lastSave timestamp (aecd4279).' );
+		$this->assertArrayHasKey( 'lastSave', $decoded, 'extra_info must contain the lastSave timestamp.' );
 
 		$this->assertMatchesRegularExpression(
 			'/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/',

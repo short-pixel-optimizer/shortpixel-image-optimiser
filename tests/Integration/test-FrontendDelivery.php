@@ -151,9 +151,9 @@ class FrontendDeliveryTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * Regression for efbd5ac9 (FrontImage::buildImage rework): buildImage()
+	 * Regression for FrontImage::buildImage(): buildImage()
 	 * is also the frontend WebP/AVIF delivery path via parseReplacement()'s
-	 * fallback <img> inside the <picture> block. After the rewrite:
+	 * fallback <img> inside the <picture> block. Therefore:
 	 *   - Custom / data-* attributes on the original <img> must survive into
 	 *     the fallback <img> (they went through the same rebuild loop).
 	 *   - The fallback <img> tag ends with a bare `>` (no ` >` trailing).
@@ -214,22 +214,22 @@ class FrontendDeliveryTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * Fix4 regression (2c8908d1, 2026-09-01): CSS breaks when url() contains
-	 * literal space / paren / quote characters, because the URL is emitted
-	 * without wrapping quotes since Fix3 ("url(" . $checkedFile . ") "). If
-	 * the on-disk filename carries any of those characters, the emitted
-	 * declaration becomes invalid CSS ("url(a b.webp)" is not a valid
-	 * unquoted url() token) — or, worse, injects extra url()/style tokens if
-	 * the filename ends with ')'. Fix4 pre-escapes space, (, ), ', " in the
-	 * checkedFile URL to %20 / %28 / %29 / %27 / %22 immediately before the
-	 * str_replace that inserts it back into $content.
+	 * Regression: CSS breaks when url() contains literal space / paren /
+	 * quote characters, because the URL is emitted without wrapping quotes
+	 * ("url(" . $checkedFile . ") "). If the on-disk filename carries any of
+	 * those characters, the emitted declaration becomes invalid CSS
+	 * ("url(a b.webp)" is not a valid unquoted url() token) — or, worse,
+	 * injects extra url()/style tokens if the filename ends with ')'. The
+	 * converter pre-escapes space, (, ), ', " in the checkedFile URL to
+	 * %20 / %28 / %29 / %27 / %22 immediately before the str_replace that
+	 * inserts it back into $content.
 	 *
 	 * This test places a file with a literal space in its name in the
 	 * uploads dir (bypassing sanitize_file_name), drops a matching .webp
 	 * companion next to it, and feeds an inline style with the raw URL
 	 * through convertHtml. Assertions:
 	 *   - The emitted url() must carry the %20-encoded form (positive proof
-	 *     the Fix4 escape ran).
+	 *     the escape ran).
 	 *   - The emitted url() must NOT contain a raw space (regression: the
 	 *     invalid CSS shape that broke background delivery).
 	 *
@@ -237,24 +237,24 @@ class FrontendDeliveryTest extends SPIO_IntegrationTestCase {
 	 * tear_down cleanup; the source jpg is unlinked in the finally block
 	 * because it lives outside the attachment table.
 	 *
-	 * Coverage gap (reported, not fixed): Fix4 also maps ( → %28, ) → %29,
+	 * Coverage gap: the escape also maps ( → %28, ) → %29,
 	 * ' → %27, " → %22, but those branches are unreachable through the
 	 * current pipeline — the outer url() extractor at PictureController.php
 	 * :495 uses '/url\((.*)\)/imU' (ungreedy, no newline), truncating on the
 	 * first ')', and the URL sanitizer at :501 strips ' and " before the
 	 * filesystem lookup. Only the space branch has a reachable code path
-	 * end-to-end. Tracked as BUG #54 — pinned below in
-	 * test_pin54_inline_css_background_with_parens_is_silently_skipped_pinned_for_deferred_fix.
+	 * end-to-end. Pinned below in
+	 * test_inline_css_background_with_parens_is_silently_skipped_pinned_for_deferred_fix.
 	 */
-	public function test_inline_css_background_escapes_space_in_webp_url_regression_fix4() {
+	public function test_inline_css_background_escapes_space_in_webp_url() {
 		$fixture = $this->fixturePath( 'fixture-small.jpg' );
 		$uploads = wp_upload_dir();
 		$dir     = trailingslashit( $uploads['path'] );
 
 		// Place source jpg with a raw space in the filename — bypass
 		// sanitize_file_name / wp_unique_filename so the space survives.
-		$jpg_name  = 'fix4 space.jpg';
-		$webp_name = 'fix4 space.webp';
+		$jpg_name  = 'escape space.jpg';
+		$webp_name = 'escape space.webp';
 		$jpg_path  = $dir . $jpg_name;
 		$webp_path = $dir . $webp_name;
 
@@ -280,23 +280,23 @@ class FrontendDeliveryTest extends SPIO_IntegrationTestCase {
 			$this->assertStringContainsString(
 				'.webp',
 				$output,
-				'Fix4 sentinel: the converter must have swapped in the .webp companion — otherwise the escape assertions below have nothing to observe.'
+				'Sentinel: the converter must have swapped in the .webp companion — otherwise the escape assertions below have nothing to observe.'
 			);
 
-			// Positive proof the Fix4 str_replace ran on $checkedFile: the
+			// Positive proof the escaping str_replace ran on $checkedFile: the
 			// emitted url() carries the %20-encoded filename.
 			$this->assertStringContainsString(
-				'fix4%20space.webp',
+				'escape%20space.webp',
 				$output,
-				'Fix4 regression: the space in the webp filename must be emitted as %20 inside url(...) — without the pre-escape, url(fix4 space.webp) is invalid CSS.'
+				'The space in the webp filename must be emitted as %20 inside url(...) — without the pre-escape, url(escape space.webp) is invalid CSS.'
 			);
 
 			// Regression: the raw "space.webp" substring (with a literal
 			// space) must not survive inside a url(...) declaration.
 			$this->assertDoesNotMatchRegularExpression(
-				'/url\([^)]*fix4 space\.webp[^)]*\)/',
+				'/url\([^)]*escape space\.webp[^)]*\)/',
 				$output,
-				'Fix4 regression: no url(...) declaration may contain the raw " " space in the .webp filename. Before 2c8908d1 the emitted "url(fix4 space.webp)" was invalid CSS and broke background delivery.'
+				'No url(...) declaration may contain the raw " " space in the .webp filename. An emitted "url(escape space.webp)" is invalid CSS and breaks background delivery.'
 			);
 		} finally {
 			if ( file_exists( $jpg_path ) ) {
@@ -307,7 +307,7 @@ class FrontendDeliveryTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * BUG #54 (pinned_for_deferred_fix): inline CSS backgrounds whose
+	 * Pins a known defect: inline CSS backgrounds whose
 	 * filename contains parentheses are SILENTLY SKIPPED by the WebP
 	 * converter — no conversion, no error, no log.
 	 *
@@ -318,7 +318,7 @@ class FrontendDeliveryTest extends SPIO_IntegrationTestCase {
 	 * '/url\((.*)\)/imU', which truncates the capture at the FIRST ')' —
 	 * here yielding "'photo (1". After quote-stripping (:501) the string has
 	 * no extension, fails the $allowed_exts check (:505) and the entry is
-	 * skipped via continue. The Fix4 %28/%29/%27/%22 escape branches
+	 * skipped via continue. The %28/%29/%27/%22 escape branches
 	 * (:560-564) are therefore unreachable: no paren or quote ever survives
 	 * to them. Quote-in-filename inputs die similarly (:501 strips the
 	 * quote, the filesystem lookup misses, no conversion).
@@ -327,18 +327,18 @@ class FrontendDeliveryTest extends SPIO_IntegrationTestCase {
 	 * corrupted, the original background keeps working, but these files
 	 * never get WebP/AVIF delivery in inline styles.
 	 *
-	 * Proposed fix (extractor-level, per CSS url-token grammar):
+	 * @todo Proposed fix (extractor-level, per CSS url-token grammar):
 	 *   preg_match('/url\(\s*(?:\'([^\']*)\'|"([^"]*)"|([^)\'"\s]+))\s*\)/i', ...)
 	 * taking whichever group matched, without blanket quote-stripping —
-	 * then Fix4's paren/quote escapes become reachable and load-bearing.
+	 * then the paren/quote escapes become reachable and load-bearing.
 	 *
 	 * FLIP INSTRUCTIONS: when the extractor handles quoted url() tokens,
 	 * this test will fail on the "must NOT contain .webp" assertion —
 	 * then flip it: assert the output DOES contain the %28/%29-encoded
-	 * .webp url() (mirror the Fix4 space test above) and drop the
+	 * .webp url() (mirror the space test above) and drop the
 	 * _pinned_for_deferred_fix suffix.
 	 */
-	public function test_pin54_inline_css_background_with_parens_is_silently_skipped_pinned_for_deferred_fix() {
+	public function test_inline_css_background_with_parens_is_silently_skipped_pinned_for_deferred_fix() {
 		$fixture = $this->fixturePath( 'fixture-small.jpg' );
 		$uploads = wp_upload_dir();
 		$dir     = trailingslashit( $uploads['path'] );
@@ -346,8 +346,8 @@ class FrontendDeliveryTest extends SPIO_IntegrationTestCase {
 		// Stage a paren-named jpg + webp companion, bypassing
 		// sanitize_file_name / wp_unique_filename so the parens survive
 		// (FTP uploads / browser download-dedup names).
-		$jpg_name  = 'pin54 photo (1).jpg';
-		$webp_name = 'pin54 photo (1).webp';
+		$jpg_name  = 'paren photo (1).jpg';
+		$webp_name = 'paren photo (1).webp';
 		$jpg_path  = $dir . $jpg_name;
 		$webp_path = $dir . $webp_name;
 
@@ -370,7 +370,7 @@ class FrontendDeliveryTest extends SPIO_IntegrationTestCase {
 			$this->assertStringNotContainsString(
 				'.webp',
 				$output,
-				'BUG #54 pin: a paren-named background must currently be SKIPPED (extractor truncates at the first ")"). If this fails, the url() extractor was fixed — flip this test to assert the %28/%29-encoded .webp url() is emitted and drop _pinned_for_deferred_fix.'
+				'Pinned: a paren-named background must currently be SKIPPED (extractor truncates at the first ")"). If this fails, the url() extractor was fixed — flip this test to assert the %28/%29-encoded .webp url() is emitted and drop _pinned_for_deferred_fix.'
 			);
 
 			// And the original declaration survives byte-identical (silent
@@ -378,7 +378,7 @@ class FrontendDeliveryTest extends SPIO_IntegrationTestCase {
 			$this->assertStringContainsString(
 				'url(\'' . $raw_url . '\')',
 				$output,
-				'BUG #54 pin: the original quoted url() declaration must pass through unchanged — the failure mode is a silent skip, never a mangled declaration.'
+				'Pinned: the original quoted url() declaration must pass through unchanged — the failure mode is a silent skip, never a mangled declaration.'
 			);
 		} finally {
 			if ( file_exists( $jpg_path ) ) {
@@ -447,7 +447,7 @@ class FrontendDeliveryTest extends SPIO_IntegrationTestCase {
 	 * companion exists only for some sizes, the picture tag must still emit a
 	 * WebP <source> element in addition to the partial AVIF <source>.
 	 *
-	 * Scenario (plan rows 25.3 / 25.7):
+	 * Scenario:
 	 *  - Two srcset entries pointing at the same upload URL (mimics a real
 	 *    srcset such as "image-300x200.jpg 300w, image-large.jpg 1024w").
 	 *  - A WebP companion exists for the main (large) URL but NOT for the
@@ -463,8 +463,6 @@ class FrontendDeliveryTest extends SPIO_IntegrationTestCase {
 	 *    path at PictureController.php lines 390-392) in the AVIF srcset.
 	 *  - $webpCount > 0 → the WebP <source> block is also emitted.
 	 *  - The resulting <picture> offers both a WebP source and an AVIF source.
-	 *
-	 * Manual-plan rows: 25.3 / 25.7
 	 */
 	public function test_missing_large_avif_falls_back_to_webp_source_in_picture_tag() {
 		// Two attachments: the first will have both WebP and AVIF companions;

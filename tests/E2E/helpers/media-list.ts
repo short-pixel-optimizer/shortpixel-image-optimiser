@@ -2,7 +2,7 @@
  * Page object for the SPIO column in the Media Library LIST view
  * (wp-admin/upload.php?mode=list).
  *
- * Selector facts (Wave 1 exploration):
+ * Selector facts (verified against the live UI):
  *   - cell:        `#shortpixel-data-<id>` (`.sp-column-info`), re-rendered by
  *                  replacing outerHTML — always re-resolve through a Locator.
  *                  Capability classes: `is-optimizable`, `is-restorable`,

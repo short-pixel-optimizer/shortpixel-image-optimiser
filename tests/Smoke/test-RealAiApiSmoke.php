@@ -8,13 +8,10 @@
  * catching contract drift: changed response fields, new status sentinels,
  * JWT issuing behaviour.
  *
- * Endpoint note (Pedro, 2026-07-18): production uses
- * capi-gpt.shortpixel.com. AiController currently points at
- * devapigpt.shortpixel.com because Bas temporarily needs the dev API for
- * filename-generation work — so this suite reflection-overrides
- * AiController::$main_url to the production endpoint. Once the code flips
- * back to capi-gpt, pointAiApiAtProduction() becomes a no-op and can be
- * removed.
+ * Endpoint note: production uses capi-gpt.shortpixel.com. This suite
+ * reflection-overrides AiController::$main_url to the production endpoint
+ * (pointAiApiAtProduction()), so it never runs against a dev endpoint.
+ * It is a no-op while the code already points at capi-gpt.
  *
  * Requirements + costs:
  *   - SHORTPIXEL_SMOKE_KEY env var must hold a valid 20-char API key with
@@ -68,7 +65,7 @@ class RealAiApiSmokeTest extends SPIO_IntegrationTestCase {
 		$settings->quotaExceeded  = 0;
 		$settings->ai_gen_alt     = 1;
 		$settings->ai_gen_caption = 1;
-		// Filename generation is Bas's in-flight dev-API work — out of scope.
+		// Filename generation is out of scope.
 		$settings->ai_gen_filename   = 0;
 		$settings->processThumbnails = 0;
 

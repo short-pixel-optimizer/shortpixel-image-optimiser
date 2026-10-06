@@ -47,7 +47,7 @@ services:
     # Official image: Apache + PHP + the latest WordPress core baked in.
     # bin/test-e2e.sh --wp <version> switches the tag to
     # "<version>-php8.3-apache" for deliberate back-testing; the default is
-    # always the latest WordPress (Pedro's policy, same as the PHPUnit harness).
+    # always the latest WordPress (same policy as the PHPUnit harness).
     image: wordpress:${E2E_WP_TAG:-php8.3-apache}
     ports:
       - "127.0.0.1:8030:8030"

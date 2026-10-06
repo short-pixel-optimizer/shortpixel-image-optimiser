@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests: legacy → modern data migration (Wave 3).
+ * Integration tests: legacy → modern data migration.
  *
  * Three migration surfaces exist in the current code:
  *
@@ -14,14 +14,12 @@
  *     into shortpixel_postmeta rows when an image without a DB record is
  *     loaded. Triggered automatically from loadMeta()'s no-metadata branch.
  *
- * Bug #27 FULLY FIXED (c0bc8c17 + af5794d8): loadMeta() reloads the freshly
- * saved DB meta after a successful checkLegacy() (main-row half, c0bc8c17),
- * and checkLegacy() now populates $this->thumbnails via loadThumbnailsFromWP()
- * when the property is still empty (af5794d8), so thumbsOptList migrates too —
- * every thumbnail row gets its SUCCESS status. Bug #8 FIXED (867b3573):
- * check() now also writes the renamed exif value back into the returned
- * settings array, so a migrated keepExif choice persists. Note: since the
- * bug #9 fix (9b18a8e8) checkLegacy() no longer writes the undeclared
+ * loadMeta() reloads the freshly saved DB meta after a successful
+ * checkLegacy(), and checkLegacy() populates $this->thumbnails via
+ * loadThumbnailsFromWP() when the property is still empty, so thumbsOptList
+ * migrates too — every thumbnail row gets its SUCCESS status. check() also
+ * writes the renamed exif value back into the returned settings array, so a
+ * migrated keepExif choice persists. checkLegacy() does not write an
  * 'improvement' meta — improvement is computed from originalSize via
  * getImprovement().
  *
@@ -74,10 +72,10 @@ class LegacyMigrationTest extends SPIO_IntegrationTestCase {
 		$this->resetPluginSingletons();
 		$settings = \wpSPIO()->settings();
 
-		// Bug #8 FIXED (867b3573): check() now writes the renamed value into
-		// the returned settings array too (`$settings['exif'] = $settings['keepExif']`),
-		// so load() no longer discards the migration — keepExif=0 carries over.
-		$this->assertSame( 0, (int) $settings->exif, 'Since 867b3573 (bug #8 fix) the migrated keepExif=0 value must survive as exif=0.' );
+		// check() writes the renamed value into the returned settings array
+		// too (`$settings['exif'] = $settings['keepExif']`), so load() does
+		// not discard the migration — keepExif=0 carries over.
+		$this->assertSame( 0, (int) $settings->exif, 'The migrated keepExif=0 value must survive as exif=0.' );
 
 		// After the shutdown save the legacy key is gone and the renamed
 		// value is persisted.
@@ -143,8 +141,7 @@ class LegacyMigrationTest extends SPIO_IntegrationTestCase {
 
 		$this->assertTrue( $image->isOptimized(), 'A legacy-optimized attachment must load as optimized after migration.' );
 		$this->assertSame( ImageModel::COMPRESSION_LOSSY, (int) $image->getMeta( 'compressionType' ), "Legacy type 'lossy' must map to COMPRESSION_LOSSY." );
-		// Since 9b18a8e8 (bug #9 fix) checkLegacy() no longer writes the
-		// undeclared 'improvement' meta; the percentage is computed from the
+		// checkLegacy() does not write an undeclared 'improvement' meta; the percentage is computed from the
 		// back-calculated originalSize instead.
 		$this->assertEqualsWithDelta( 25.0, (float) $image->getImprovement(), 0.5, 'The legacy improvement percentage must be derivable via getImprovement().' );
 		$this->assertTrue( (bool) $image->getMeta( 'wasConverted' ), 'The migrated record must be flagged wasConverted.' );
@@ -167,15 +164,15 @@ class LegacyMigrationTest extends SPIO_IntegrationTestCase {
 		$statuses = $this->postmetaStatuses( $id );
 		$this->assertGreaterThanOrEqual( 2, count( $statuses ), 'Migration must write rows for the main image and its thumbnails.' );
 
-		// Bug #27 FULLY FIXED (c0bc8c17 + af5794d8): the main row keeps its
-		// migrated SUCCESS status AND checkLegacy() now loads the thumbnails
+		// The main row keeps its migrated SUCCESS status AND checkLegacy()
+		// loads the thumbnails
 		// from WP before its thumbnail loop, so every thumbsOptList entry
 		// migrates with SUCCESS too.
 		foreach ( $statuses as $status ) {
 			$this->assertSame(
 				ImageModel::FILE_STATUS_SUCCESS,
 				$status,
-				'Since af5794d8 (bug #27 full fix) every migrated row — main AND thumbnails — must carry FILE_STATUS_SUCCESS.'
+				'Every migrated row — main AND thumbnails — must carry FILE_STATUS_SUCCESS.'
 			);
 		}
 
@@ -212,26 +209,24 @@ class LegacyMigrationTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// REGRESSION #67 (fixed b168c8a0): migrate() self-heal checks the
-	// ORIGINAL file's own backup, not the main file's.
+	// migrate() self-heal checks the ORIGINAL file's own backup, not the
+	// main file's.
 	// -------------------------------------------------------------------
 
 	/**
-	 * REGRESSION TEST for BUG #67 (fixed in b168c8a0): the self-heal pass
-	 * in MediaLibraryModel::migrate() marks family members optimized when
-	 * they have a backup but no SUCCESS status. The original-file branch
-	 * used `$backupModel->hasBackup($this)` — probing the MAIN (-scaled)
-	 * file's backup instead of the original's — so an original with its
-	 * own backup was never healed unless the main happened to have one
-	 * too. Now it probes `hasBackup($originalFile)`.
+	 * Regression: the self-heal pass in MediaLibraryModel::migrate() marks
+	 * family members optimized when they have a backup but no SUCCESS
+	 * status. The original-file branch probes `hasBackup($originalFile)`;
+	 * probing `$backupModel->hasBackup($this)` would check the MAIN
+	 * (-scaled) file's backup instead, so an original with its own backup
+	 * would never be healed unless the main happened to have one too.
 	 *
 	 * Shape: optimize a scaled attachment (backups on), then delete the
 	 * MAIN's backup and wipe the SPIO rows. Only the ORIGINAL still has a
-	 * backup. Under the old bug the original stayed unhealed (the probe
-	 * hit the main's missing backup); with the fix it is marked SUCCESS
-	 * while the main correctly stays unoptimized.
+	 * backup; it must be marked SUCCESS while the main correctly stays
+	 * unoptimized.
 	 */
-	public function test_regression67_migrate_selfheal_checks_original_files_own_backup() {
+	public function test_migrate_selfheal_checks_original_files_own_backup() {
 		\wpSPIO()->settings()->backupImages = 1;
 
 		$id = $this->uploadFixture( 'fixture-large.jpg' ); // 3200×2400 → -scaled main + original
@@ -254,7 +249,7 @@ class LegacyMigrationTest extends SPIO_IntegrationTestCase {
 		$this->assertFileExists( $mainBackup, 'Sentinel: optimization must have backed up the main file.' );
 		$this->assertFileExists( $originalBackup, 'Sentinel: optimization must have backed up the ORIGINAL file.' );
 
-		// Craft the #67 shape: only the ORIGINAL keeps its backup.
+		// Craft the shape: only the ORIGINAL keeps its backup.
 		unlink( $mainBackup );
 
 		// Wipe this attachment's SPIO rows so nothing reads as optimized.
@@ -276,7 +271,7 @@ class LegacyMigrationTest extends SPIO_IntegrationTestCase {
 
 		$this->assertTrue(
 			$image->getOriginalFile()->isOptimized(),
-			'REGRESSION #67: the original (with its own backup) must be self-healed to SUCCESS by migrate().'
+			'The original (with its own backup) must be self-healed to SUCCESS by migrate().'
 		);
 		$this->assertFalse(
 			$image->isOptimized(),

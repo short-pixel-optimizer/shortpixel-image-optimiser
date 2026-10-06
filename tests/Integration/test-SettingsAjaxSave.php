@@ -205,11 +205,10 @@ class SettingsAjaxSaveTest extends SPIO_AjaxTestCase {
 	}
 
 	/**
-	 * Bug #12 FIXED (b8d8f38d): processWebP() now COMPARES
-	 * (`'deliverWebpAlteredGlobal' == $altering`, Yoda style) instead of
-	 * assigning, so an unknown altering type no longer silently enables
-	 * mode 1 (global .htaccess rewrite) — delivery stays disabled (0).
-	 * Flipped from the pinned always-truthy-branch assertion.
+	 * processWebP() COMPARES (`'deliverWebpAlteredGlobal' == $altering`,
+	 * Yoda style) rather than assigning, so an unknown altering type does not
+	 * silently enable mode 1 (global .htaccess rewrite) — delivery stays
+	 * disabled (0).
 	 */
 	public function test_deliverwebp_unknown_altering_type_stays_disabled() {
 		$this->_setRole( 'administrator' );
@@ -227,12 +226,12 @@ class SettingsAjaxSaveTest extends SPIO_AjaxTestCase {
 		$this->assertEquals(
 			0,
 			\wpSPIO()->settings()->deliverWebp,
-			'Since b8d8f38d (bug #12 fix) an unknown altering type must leave WebP delivery disabled.'
+			'An unknown altering type must leave WebP delivery disabled.'
 		);
 	}
 
 	// -------------------------------------------------------------------
-	// Plan 1.10 — empty key save clears spio_key + welcome redirect flag
+	// Empty key save clears spio_key + welcome redirect flag
 	// -------------------------------------------------------------------
 
 	/**
@@ -240,7 +239,7 @@ class SettingsAjaxSaveTest extends SPIO_AjaxTestCase {
 	 * redirectedSettings flag back to 0 so the plugin shows the welcome / no-key
 	 * screen on the next page load.
 	 *
-	 * Plan row: 1.10 — empty key save resets to welcome screen state.
+	 * Empty key save resets to welcome screen state.
 	 *
 	 * @see class/Controller/View/SettingsViewController.php processSave()
 	 */
@@ -299,7 +298,7 @@ class SettingsAjaxSaveTest extends SPIO_AjaxTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// Plan 1.3 — ToS-missing key request is rejected
+	// ToS-missing key request is rejected
 	// -------------------------------------------------------------------
 
 	/**
@@ -309,7 +308,7 @@ class SettingsAjaxSaveTest extends SPIO_AjaxTestCase {
 	 * the action must not forward any key and the pipeline must stay in the
 	 * no-key state.
 	 *
-	 * Plan row: 1.3 — ToS-missing key request rejected.
+	 * ToS-missing key request rejected.
 	 *
 	 * NOTE: The mock intercepts all *.shortpixel.com traffic.  The free-sign-up-plugin
 	 * endpoint goes to shortpixel.com (not api.shortpixel.com), which the mock
@@ -359,7 +358,7 @@ class SettingsAjaxSaveTest extends SPIO_AjaxTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// Plan 1.4.1 — quota is re-read after API key swap
+	// Quota is re-read after API key swap
 	// -------------------------------------------------------------------
 
 	/**
@@ -368,7 +367,7 @@ class SettingsAjaxSaveTest extends SPIO_AjaxTestCase {
 	 * call.  This ensures that swapping the API key immediately reflects the new
 	 * account's quota rather than showing stale numbers.
 	 *
-	 * Plan row: 1.4.1 — quota re-read after API key swap.
+	 * Quota re-read after API key swap.
 	 *
 	 * @see class/Controller/View/SettingsViewController.php processSave() → loadQuotaData(true)
 	 * @see class/Controller/QuotaController.php forceCheckRemoteQuota()
@@ -397,14 +396,14 @@ class SettingsAjaxSaveTest extends SPIO_AjaxTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// Plan 1.18 — wp-config defined key takes precedence over settings:
+	// wp-config defined key takes precedence over settings:
 	// lives in test-ConstantsAndFilters.php (isolated process) because it
 	// define()s SHORTPIXEL_API_KEY, which would poison every later test
 	// in this shared-process suite.
 	// -------------------------------------------------------------------
 
 	// -------------------------------------------------------------------
-	// Plans 1.5 / 1.6 / 1.7 — key validation under adverse network conditions
+	// Key validation under adverse network conditions
 	// -------------------------------------------------------------------
 
 	/**
@@ -412,16 +411,12 @@ class SettingsAjaxSaveTest extends SPIO_AjaxTestCase {
 	 * localhost/firewalled/http-only sites that cannot reach api.shortpixel.com),
 	 * the key must NOT be verified and an error notice must be queued.
 	 *
-	 * Plans 1.5, 1.6, 1.7 all exercise the same code path: the QuotaController
-	 * remote call fails at the transport layer → remoteValidateKey() returns a
-	 * negative/empty result → checkKey() marks the key unverified.
-	 *
-	 * All three plan rows are merged here because the code path is identical
-	 * (the distinction is network topology, not plugin logic).
-	 *
-	 * Plan rows: 1.5 — localhost key validation graceful failure;
-	 *            1.6 — HTTP-only site URL key validation;
-	 *            1.7 — firewalled site key validation.
+	 * Localhost, HTTP-only and firewalled sites all exercise the same code
+	 * path: the QuotaController remote call fails at the transport layer →
+	 * remoteValidateKey() returns a negative/empty result → checkKey() marks
+	 * the key unverified. The three scenarios are merged here because the
+	 * code path is identical (the distinction is network topology, not
+	 * plugin logic).
 	 *
 	 * @see class/Model/ApiKeyModel.php validateKey() / checkKey()
 	 * @see class/Controller/QuotaController.php remoteValidateKey()
@@ -459,7 +454,7 @@ class SettingsAjaxSaveTest extends SPIO_AjaxTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// Plan 4.1 — bulk page with empty media library completes cleanly
+	// Bulk page with empty media library completes cleanly
 	// -------------------------------------------------------------------
 
 	/**
@@ -467,7 +462,7 @@ class SettingsAjaxSaveTest extends SPIO_AjaxTestCase {
 	 * error out — it must return a well-formed JSON response with zero-item
 	 * stats and status = true.
 	 *
-	 * Plan row: 4.1 — bulk optimization page with an empty Media Library.
+	 * Bulk optimization page with an empty Media Library.
 	 *
 	 * @see class/Controller/AjaxController.php createBulk()
 	 * @see class/Controller/BulkController.php createNewBulk()

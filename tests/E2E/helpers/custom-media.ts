@@ -2,7 +2,7 @@
  * Page object for SPIO's Custom / Other Media screen
  * (wp-admin/upload.php?page=wp-short-pixel-custom, tabs via ?part=).
  *
- * Facts (Wave 3 exploration):
+ * Facts (verified against the live UI):
  *   - the screen exists only when the `showCustomMedia` setting is on (the
  *     E2E seed forces it OFF → set it per test);
  *   - Folders tab: "Select" opens `.modal-folder-picker`, a tree rooted at

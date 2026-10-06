@@ -232,7 +232,7 @@ class MediaLibraryQueueTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * By design (confirmed by Bas, 2026-07-17): the caller's raw 'filters'
+	 * By design: the caller's raw 'filters'
 	 * value is consumed by addFilters() — which resolves date strings into
 	 * bounding item IDs stored in $this->options['filters'] — and is unset
 	 * from $args so the raw input can never override the processed values

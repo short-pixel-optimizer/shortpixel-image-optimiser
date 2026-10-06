@@ -1,19 +1,18 @@
 <?php
 /**
- * Integration tests: queue options filters reach ShortQ (regression for bug #35).
+ * Integration tests: queue options filters reach ShortQ (regression).
  *
- * Bug #35 (fixed in aea6e783): MediaLibraryQueue::__construct applied the
- * 'shortpixel/medialibraryqueue/options' filter into $this->options but then
- * passed the UNFILTERED $options array to $this->q->setOptions(). The filter
- * therefore never reached the inner ShortQ for the non-bulk (mediaSingle /
- * auto-upload) queues — numitems / process_timeout stayed at their defaults
- * no matter what a site owner hooked in (the documented way to throttle
- * optimization request bursts, e.g. behind a Cloudflare rate limiter).
- * CustomQueue always passed the filtered array; it is covered here as well
- * so both filters stay wired.
+ * MediaLibraryQueue::__construct must pass the FILTERED
+ * 'shortpixel/medialibraryqueue/options' array to $this->q->setOptions().
+ * Passing the unfiltered $options would mean the filter never reaches the
+ * inner ShortQ for the non-bulk (mediaSingle / auto-upload) queues —
+ * numitems / process_timeout would stay at their defaults no matter what a
+ * site owner hooked in (the documented way to throttle optimization
+ * request bursts, e.g. behind a Cloudflare rate limiter). CustomQueue is
+ * covered here as well so both filters stay wired.
  *
- * Sentinel: with the bug present, the inner ShortQ reports the default
- * numitems (5) instead of the filtered value and the assertSame fails.
+ * Sentinel: if the filter is not wired, the inner ShortQ reports the
+ * default numitems (5) instead of the filtered value and the assertSame fails.
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -44,8 +43,6 @@ class QueueOptionsFilterTest extends SPIO_IntegrationTestCase {
 	 * The 'shortpixel/medialibraryqueue/options' filter must reach the inner
 	 * ShortQ instance on construction — for EVERY MediaLibraryQueue, not just
 	 * bulk queues (which additionally persist options via createNewBulk).
-	 *
-	 * Regression for bug #35.
 	 */
 	public function test_medialibraryqueue_options_filter_reaches_shortq() {
 		$callback = function ( $options ) {
@@ -63,12 +60,12 @@ class QueueOptionsFilterTest extends SPIO_IntegrationTestCase {
 		$this->assertSame(
 			2,
 			$q->getOption( 'numitems' ),
-			'Filtered numitems must reach the inner ShortQ (bug #35: unfiltered $options was passed to setOptions).'
+			'Filtered numitems must reach the inner ShortQ (the filtered $options must be passed to setOptions).'
 		);
 		$this->assertSame(
 			44444,
 			$q->getOption( 'process_timeout' ),
-			'Filtered process_timeout must reach the inner ShortQ (bug #35).'
+			'Filtered process_timeout must reach the inner ShortQ.'
 		);
 	}
 

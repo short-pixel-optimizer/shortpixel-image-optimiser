@@ -34,7 +34,7 @@ class GravityFormsTest extends WP_UnitTestCase {
 		// Sentinel: `has_filter($hook, $callback)` returns priority
 		// (int) or false. A regression that uncomments the intended
 		// `add_filter('gform_save_field_value', [$this, 'shortPixelGravityForms'])`
-		// would flip this to an integer. If Bas ever DOES re-enable
+		// would flip this to an integer. If the hook is ever re-enabled
 		// the hook (after fixing the fatal-error path), this test
 		// needs to be updated first — that's the intended tripwire.
 		$this->assertFalse(

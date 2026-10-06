@@ -2,7 +2,7 @@
  * Page object for the SPIO settings page
  * (wp-admin/options-general.php?page=wp-shortpixel-settings).
  *
- * Selector facts (verified in the Wave 1 exploration, see the plan file):
+ * Selector facts (verified against the live UI):
  *   - root:        `.wrap.is-shortpixel-settings-page` + view-mode class
  *                  (`simple` | `advanced` | `onboarding` | `page-quick-tour`)
  *   - sections:    `section.setting-tab[data-part="<part>"]`, `.active` = shown
@@ -78,7 +78,7 @@ export class SettingsPage {
 	 * synchronously but persists the mode with a fire-and-forget AJAX call
 	 * (settings/changemode via the Web Worker) — so besides the class we wait
 	 * for the processor's response event, otherwise a reload right after the
-	 * toggle can race the user-option write (flaky on CI, 2026-09-15).
+	 * toggle can race the user-option write (flaky on CI).
 	 */
 	async setViewMode(mode: 'simple' | 'advanced'): Promise<void> {
 		const toggle = this.page.locator('#viewmode-toggles input[type="checkbox"]');

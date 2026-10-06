@@ -3,14 +3,12 @@
  * Replacer2 replaceContent() — URL replacement across data shapes and the
  * object-injection hardening.
  *
- * Security model (97f2c1f4): replaceContent() unserializes with
+ * Security model: replaceContent() unserializes with
  * `allowed_classes => false` UNCONDITIONALLY — for post_content
  * ($strict_check=true) AND metadata ($strict_check=false). Serialized
  * objects therefore become __PHP_Incomplete_Class and the ORIGINAL
  * serialized string is returned untouched: no object is ever instantiated
  * from database-supplied data (no __wakeup/__destruct gadget can fire).
- * This replaced the earlier containsMagicMethods() reflection scan, which
- * instantiated objects first and only then inspected them.
  *
  * Verified side effect of the hardening: URLs inside serialized OBJECT
  * values (e.g. widget/option payloads storing stdClass) are NO LONGER
@@ -64,7 +62,7 @@ class ReplacerTest extends WP_UnitTestCase {
 	 * Serialized objects must be bailed on wholesale: allowed_classes=false
 	 * turns them into __PHP_Incomplete_Class and the original serialized
 	 * string comes back byte-identical — even in the non-strict (metadata)
-	 * path, which before 97f2c1f4 instantiated the object.
+	 * path.
 	 */
 	public function test_serialized_object_is_returned_unchanged_in_both_check_modes() {
 		$payload = new stdClass();

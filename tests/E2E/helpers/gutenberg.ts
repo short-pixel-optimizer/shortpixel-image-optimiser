@@ -1,7 +1,7 @@
 /**
  * Block-editor helpers for the SPIO E2E suite.
  *
- * Facts (Wave 2 exploration):
+ * Facts (verified against the live UI):
  *   - the canvas is iframed (`iframe[name="editor-canvas"]`) on the block
  *     theme the E2E install uses; the inspector, the wp.media modal and
  *     everything SPIO renders live in the TOP document;

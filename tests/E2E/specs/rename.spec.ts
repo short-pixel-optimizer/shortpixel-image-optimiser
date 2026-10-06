@@ -1,11 +1,10 @@
 /**
  * Manual "Change Filename" on the attachment edit screen (#submitdiv).
  *
- * #77 (fixed in 8b625159 + 11aa2065, 2026-09-25): the rename used to reload
- * the page unconditionally, so a failed rename looked like a success. The
- * response now carries the result in media.results[0] and the
+ * The response carries the result in media.results[0] and the
  * 'ShortPixelMedia.reloadWindow' listener (screen-media.js) reloads only when
- * is_error is false; otherwise it appends the message under the field.
+ * is_error is false; otherwise it appends the message under the field, so a
+ * failed rename never looks like a success.
  *
  * Failure is forced without any mock: renaming image A to image B's existing
  * name trips replaceFiles()'s target-conflict guard ("Files were not
@@ -82,7 +81,7 @@ test.describe('Change Filename (edit-media)', () => {
 		await expect(area.locator('input[name="filename_replace"]')).not.toHaveAttribute('title', /.+/);
 	});
 
-	test('regression #77: a failed rename shows the error and does NOT reload', async ({ page, spio }) => {
+	test('a failed rename shows the error and does NOT reload', async ({ page, spio }) => {
 		const a = await spio.uploadFixture('fixture-small.jpg');
 		const b = await spio.uploadFixture('fixture-small.jpg');
 		const aBefore = await spio.attachment(a.id);
@@ -100,7 +99,7 @@ test.describe('Change Filename (edit-media)', () => {
 		// Red left border, and only one result message at a time.
 		await expect(page.locator(ERROR)).toHaveClass(/shortpixel-rename-result/);
 		await expect(page.locator(ERROR)).toHaveCSS('border-left-color', 'rgb(255, 0, 0)');
-		expect(await documentWasKept(page), 'REGRESSION #77: a failed rename must not reload the page').toBe(true);
+		expect(await documentWasKept(page), 'REGRESSION: a failed rename must not reload the page').toBe(true);
 		expect((await spio.attachment(a.id)).attached_file, 'Nothing may be renamed on a conflict').toBe(aBefore.attached_file);
 	});
 
@@ -128,13 +127,12 @@ test.describe('Change Filename (edit-media)', () => {
 });
 
 /**
- * PIN (unnumbered, found 2026-09-25) — a too-short name throws instead of
- * showing the rejection.
+ * PIN — a too-short name throws instead of showing the rejection.
  *
  * AjaxController::replaceFileName() still answers its input-validation
  * rejections (missing / empty / < 3 characters after sanitising) with the
  * OLD flat object ({error, is_error, message}); the callback is echoed, so
- * the #77 'ShortPixelMedia.reloadWindow' listener runs and reads
+ * the 'ShortPixelMedia.reloadWindow' listener runs and reads
  * `event.detail.media.results[0]` — `media` does not exist on that shape, so
  * it throws (screen-media.js, AttachAiInterface). The user sees nothing: no
  * message, no reload, and the field keeps the rejected name.
@@ -166,7 +164,7 @@ test.describe('Change Filename — too-short name pin', () => {
 		await page.locator(BUTTON).click();
 		const response = await answered;
 
-		// SENTINEL: the server really rejected it (REGRESSION #50 contract),
+		// SENTINEL: the server really rejected it (min-length contract),
 		// in the old flat shape.
 		const body = await response.json();
 		expect(body.is_error, 'Sentinel: the server must reject a 2-character name').toBe(true);
@@ -198,7 +196,7 @@ async function renameAndReload(page: Page, value: string): Promise<void> {
 }
 
 /**
- * "-scaled" in filenames (Pedro, 2026-09-28).
+ * "-scaled" in filenames.
  *
  * Two WordPress core rules shape these names:
  *   - wp_unique_filename() ALWAYS appends "-1" to an upload whose name ends
@@ -239,11 +237,11 @@ test.describe('Change Filename — "-scaled" names', () => {
 	}
 
 	/**
-	 * CONTRACT — Pedro's observation: on a BIG image the "-scaled" of the
+	 * CONTRACT — on a BIG image the "-scaled" of the
 	 * served file cannot be removed. The field already shows the original name
 	 * without it, so "removing -scaled" means submitting the current name, and
 	 * the only answer is the generic "Files were not replaced" (the same
-	 * message as a real failure — worth a clearer text, see the UI copy review).
+	 * message as a real failure — worth a clearer text).
 	 * Typing "<name>-scaled" is refused too: it would collide with the file
 	 * WordPress serves.
 	 */
@@ -268,21 +266,22 @@ test.describe('Change Filename — "-scaled" names', () => {
 	});
 });
 
-test.describe('Change Filename — "-scaled" regression81', () => {
+test.describe('Change Filename — stripping a typed "-scaled"', () => {
 	test.beforeEach(async ({ spio }) => {
 		await spio.reset();
 	});
 
 	/**
-	 * REGRESSION #81 (found in 3fd40001, fixed in dfa346be) — the UI side of
-	 * test_regression81_stripping_a_dimension_suffix_… (test-ChangeFilename.php).
+	 * REGRESSION — the UI side of the dimension-suffix stripping test in
+	 * tests/Integration/test-ChangeFilename.php.
 	 * A name ENDING in "-scaled" can only come from an earlier rename (a typed
 	 * name skips wp_unique_filename) or a pre-WP-5.3 upload. Stripping the
-	 * suffix again used to report success while WordPress kept pointing at the
-	 * old name, whose file was moved away (the image 404'd). No console errors
-	 * are allowed: the reloaded edit screen must not request a missing image.
+	 * suffix again must move WordPress to the stripped name; otherwise it
+	 * keeps pointing at the old name, whose file was moved away (a 404). No
+	 * console errors are allowed: the reloaded edit screen must not request a
+	 * missing image.
 	 */
-	test('regression81: stripping a typed "-scaled" moves WordPress to the stripped name', async ({ page, spio }) => {
+	test('stripping a typed "-scaled" moves WordPress to the stripped name', async ({ page, spio }) => {
 		const stem = 'e2e-' + Date.now().toString(36) + '-typed';
 		const up = await spio.uploadFixture('fixture-small.jpg', `${stem}.jpg`);
 
@@ -294,8 +293,8 @@ test.describe('Change Filename — "-scaled" regression81', () => {
 		await renameAndReload(page, stem);
 
 		const after = await spio.attachment(up.id);
-		expect(baseOf(after.attached_file), 'REGRESSION #81: the attachment follows the rename').toBe(stem);
+		expect(baseOf(after.attached_file), 'REGRESSION: the attachment follows the rename').toBe(stem);
 		const served = await page.request.get(`/wp-content/uploads/${after.attached_file}`);
-		expect(served.status(), 'REGRESSION #81: the image WordPress points at exists').toBe(200);
+		expect(served.status(), 'REGRESSION: the image WordPress points at exists').toBe(200);
 	});
 });

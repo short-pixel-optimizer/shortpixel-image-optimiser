@@ -150,10 +150,9 @@ class CronSchedulingTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * Bug #13 FIXED (b25fe1c7): onDeactivate() now also calls
-	 * tools_scheduler(true), so the daily 'spio-remove-backups' event is
-	 * cleared on plugin deactivation instead of surviving and firing into a
-	 * missing action. Flipped from the pinned survives-deactivation assertion.
+	 * onDeactivate() also calls tools_scheduler(true), so the daily
+	 * 'spio-remove-backups' event is cleared on plugin deactivation instead
+	 * of surviving and firing into a missing action.
 	 */
 	public function test_deactivation_clears_remove_backups_cron() {
 		\wpSPIO()->settings()->autoRemoveBackups = 1;
@@ -165,7 +164,7 @@ class CronSchedulingTest extends SPIO_IntegrationTestCase {
 
 		$this->assertFalse(
 			wp_next_scheduled( 'spio-remove-backups' ),
-			'Since b25fe1c7 (bug #13 fix) deactivation must clear the spio-remove-backups cron.'
+			'Deactivation must clear the spio-remove-backups cron.'
 		);
 	}
 }

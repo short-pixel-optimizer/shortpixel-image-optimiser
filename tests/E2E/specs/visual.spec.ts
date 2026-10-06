@@ -1,5 +1,5 @@
 /**
- * Wave 4 — visual regression baselines (Playwright toHaveScreenshot).
+ * visual regression baselines (Playwright toHaveScreenshot).
  *
  * The functional specs prove SPIO's admin screens WORK; these prove they
  * still LOOK right. SPIO's settings UI is built from custom elements
@@ -104,8 +104,8 @@ test.describe('Visual — settings page', () => {
 	});
 
 	test('overview tab at 780px, menu closed and opened', async ({ page }) => {
-		// 780px sits inside the 768/782/786 breakpoint band flagged in the
-		// Wave 1 exploration — the width most likely to show a layout seam.
+		// 780px sits inside the 768/782/786 breakpoint band
+		// — the width most likely to show a layout seam.
 		// VIEWPORT captures here, not element ones: on mobile SPIO's header
 		// is position:fixed, and an element capture taller than the viewport
 		// scrolls the page and paints that fixed header over the cards — a

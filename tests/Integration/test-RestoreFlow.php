@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests: backup creation + restore flows (Wave 1).
+ * Integration tests: backup creation + restore flows.
  *
  * Covers both backup modes (both live in LocalBackupController /
  * LocalBackupModel — the mode split happens inside the model):
@@ -163,17 +163,16 @@ class RestoreFlowTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * Regression for bug #4 (fixed in 1ee7e37e): LocalBackupModel caches its
-	 * backup-directory listing in $backup_files, and BackupController hands
-	 * out ONE static BackupModel per attachment id. Before the fix, restore()
-	 * (and delete()) moved the backup file away WITHOUT resetting that cache,
-	 * so hasBackup() kept returning stale true for the rest of the request —
-	 * even through "fresh" image-model loads, because the static per-id
-	 * BackupModel survives them.
+	 * Regression: LocalBackupModel caches its backup-directory listing in
+	 * $backup_files, and BackupController hands out ONE static BackupModel
+	 * per attachment id. restore() (and delete()) must reset that cache when
+	 * moving the backup file away, or hasBackup() keeps returning stale true
+	 * for the rest of the request — even through "fresh" image-model loads,
+	 * because the static per-id BackupModel survives them.
 	 *
 	 * Sentinel: hasBackup() is called BEFORE the restore to populate the
-	 * cache on the exact instance the restore pipeline reuses; with the bug
-	 * present the post-restore call returns true and the test fails.
+	 * cache on the exact instance the restore pipeline reuses; with a stale
+	 * cache the post-restore call returns true and the test fails.
 	 */
 	public function test_restore_invalidates_backup_cache_in_same_request() {
 		$id = $this->uploadFixture( 'fixture-small.jpg' );
@@ -191,7 +190,7 @@ class RestoreFlowTest extends SPIO_IntegrationTestCase {
 		clearstatcache();
 		$this->assertFalse(
 			$backup->hasBackup( $this->freshImageModel( $id ) ),
-			'hasBackup() on the same-request cached BackupModel must be false after restore (bug #4: stale $backup_files cache, fixed 1ee7e37e).'
+			'hasBackup() on the same-request cached BackupModel must be false after restore (no stale $backup_files cache).'
 		);
 	}
 
@@ -351,14 +350,13 @@ class RestoreFlowTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// Wave-3 additions (rows 7.3, 7.5, 7.6, 8.3)
+	// Backup location, backup toggles and bulk restore
 	// -------------------------------------------------------------------
 
 	/**
 	 * Optimizing a custom-media image stores the backup under
 	 * SHORTPIXEL_BACKUP_FOLDER mirroring the custom folder's path relative
 	 * to the WordPress root.
-	 * Manual plan row 7.3.
 	 */
 	public function test_custom_media_backup_path_mirrors_source_structure() {
 		\wpSPIO()->settings()->backupImages = 1;
@@ -397,16 +395,16 @@ class RestoreFlowTest extends SPIO_IntegrationTestCase {
 			// The backup must live under SHORTPIXEL_BACKUP_FOLDER with a path
 			// that mirrors the custom folder's location relative to the WP root.
 			$backup = \ShortPixel\Controller\Backup\BackupController::getBackupModel( $optimized );
-			$this->assertTrue( $backup->hasBackup( $optimized ), 'A backup must exist for the optimized custom image (row 7.3).' );
+			$this->assertTrue( $backup->hasBackup( $optimized ), 'A backup must exist for the optimized custom image.' );
 
 			$backupFile = $backup->getBackupFile( $optimized );
-			$this->assertNotFalse( $backupFile, 'getBackupFile() must return a FileModel (row 7.3).' );
+			$this->assertNotFalse( $backupFile, 'getBackupFile() must return a FileModel.' );
 
 			$backupPath = $backupFile->getFullPath();
 			$this->assertStringContainsString(
 				SHORTPIXEL_BACKUP_FOLDER,
 				$backupPath,
-				'The backup must live under SHORTPIXEL_BACKUP_FOLDER (row 7.3).'
+				'The backup must live under SHORTPIXEL_BACKUP_FOLDER.'
 			);
 
 			// The path segment after the backup root must mirror the custom folder
@@ -414,11 +412,11 @@ class RestoreFlowTest extends SPIO_IntegrationTestCase {
 			$fs          = \wpSPIO()->filesystem();
 			$fileDir     = $fs->getDirectory( $customDir );
 			$relativePart = $fileDir->getRelativePath();
-			$this->assertNotFalse( $relativePart, 'getRelativePath() must resolve for the custom dir (row 7.3).' );
+			$this->assertNotFalse( $relativePart, 'getRelativePath() must resolve for the custom dir.' );
 			$this->assertStringContainsString(
 				trim( $relativePart, '/' ),
 				$backupPath,
-				'The backup path must mirror the custom folder path under SHORTPIXEL_BACKUP_FOLDER (row 7.3).'
+				'The backup path must mirror the custom folder path under SHORTPIXEL_BACKUP_FOLDER.'
 			);
 		} finally {
 			@unlink( $customDir . 'backup-test.jpg' );
@@ -429,7 +427,6 @@ class RestoreFlowTest extends SPIO_IntegrationTestCase {
 	/**
 	 * Disabling backups (backupImages=0) after a first optimization run stops
 	 * new backup files being created, but backups from the previous run survive.
-	 * Manual plan row 7.5.
 	 */
 	public function test_disabling_backups_preserves_previously_created_backups() {
 		// --- First run with backups ON. ---
@@ -438,7 +435,7 @@ class RestoreFlowTest extends SPIO_IntegrationTestCase {
 		$this->optimizeAttachment( $id1 );
 
 		$backupsAfterFirstRun = $this->backupFilesOnDisk();
-		$this->assertNotEmpty( $backupsAfterFirstRun, 'Precondition: backup files must exist after first optimization (row 7.5).' );
+		$this->assertNotEmpty( $backupsAfterFirstRun, 'Precondition: backup files must exist after first optimization.' );
 
 		// --- Second run with backups OFF. ---
 		// Reset FIRST: resetPluginSingletons() reloads SettingsModel from the
@@ -455,7 +452,7 @@ class RestoreFlowTest extends SPIO_IntegrationTestCase {
 			$this->assertContains(
 				$expected,
 				$backupsAfterSecondRun,
-				"Backup file $expected from the first run must survive after disabling backups (row 7.5)."
+				"Backup file $expected from the first run must survive after disabling backups."
 			);
 		}
 
@@ -463,14 +460,13 @@ class RestoreFlowTest extends SPIO_IntegrationTestCase {
 		$newBackups = array_diff( $backupsAfterSecondRun, $backupsAfterFirstRun );
 		$this->assertEmpty(
 			$newBackups,
-			'No new backup files must be created when backupImages=0 (row 7.5). New files: ' . implode( ', ', $newBackups )
+			'No new backup files must be created when backupImages=0. New files: ' . implode( ', ', $newBackups )
 		);
 	}
 
 	/**
 	 * When the backup folder exists but is not writable, the optimizer produces
 	 * an error or warning and does NOT mark the image as optimized.
-	 * Manual plan row 7.6.
 	 *
 	 * Note: skipped when running as root (root ignores chmod).
 	 */
@@ -497,7 +493,7 @@ class RestoreFlowTest extends SPIO_IntegrationTestCase {
 			$reloaded = $this->freshImageModel( $id );
 			$this->assertFalse(
 				$reloaded->isOptimized(),
-				'With a non-writable backup folder the image must NOT be marked as optimized (row 7.6).'
+				'With a non-writable backup folder the image must NOT be marked as optimized.'
 			);
 		} finally {
 			// Restore permissions so tear_down() can remove the backup folder.
@@ -508,7 +504,6 @@ class RestoreFlowTest extends SPIO_IntegrationTestCase {
 	/**
 	 * Bulk-restore via BulkController::createNewBulk('media', ['customOp' => 'bulk-restore'])
 	 * followed by a bulk run reverts all optimized images and empties the backup folder.
-	 * Manual plan row 8.3.
 	 */
 	public function test_bulk_restore_reverts_all_images_and_empties_backups() {
 		\wpSPIO()->settings()->backupImages = 1;
@@ -559,18 +554,18 @@ class RestoreFlowTest extends SPIO_IntegrationTestCase {
 		clearstatcache();
 		$this->assertFalse(
 			$this->freshImageModel( $id1 )->isOptimized(),
-			'Attachment 1 must be reverted to unoptimized after bulk-restore (row 8.3).'
+			'Attachment 1 must be reverted to unoptimized after bulk-restore.'
 		);
 		$this->assertFalse(
 			$this->freshImageModel( $id2 )->isOptimized(),
-			'Attachment 2 must be reverted to unoptimized after bulk-restore (row 8.3).'
+			'Attachment 2 must be reverted to unoptimized after bulk-restore.'
 		);
 
 		// All backup files should be gone (moved back to their live locations).
 		$remaining = $this->backupFilesOnDisk();
 		$this->assertEmpty(
 			$remaining,
-			'After bulk-restore all backup files must have been moved back; none should remain (row 8.3). Remaining: ' . implode( ', ', $remaining )
+			'After bulk-restore all backup files must have been moved back; none should remain. Remaining: ' . implode( ', ', $remaining )
 		);
 	}
 
@@ -602,7 +597,6 @@ class RestoreFlowTest extends SPIO_IntegrationTestCase {
 	 *
 	 * @covers ShortPixel\ImageGalleries::envira_suffixes
 	 * @covers ShortPixel\Model\Image\MediaLibraryModel::addUnlisted
-	 * Covers manual plan rows 19.3 (Envira) and 20.3 (Soliloquy).
 	 */
 	public function test_unlisted_thumbnail_with_envira_suffix_is_optimized_and_restored() {
 		\wpSPIO()->settings()->backupImages = 1;
@@ -657,7 +651,7 @@ class RestoreFlowTest extends SPIO_IntegrationTestCase {
 			$this->assertLessThan(
 				$originalCSize,
 				filesize( $cPath ),
-				'Sanity (rows 19.3/20.3): mock optimizer must have shrunk the _c companion; if unchanged, addUnlisted() did not detect it — check suffix filter and file-name pattern.'
+				'Sanity: mock optimizer must have shrunk the _c companion; if unchanged, addUnlisted() did not detect it — check suffix filter and file-name pattern.'
 			);
 
 			// The companion must have its own backup file.
@@ -669,7 +663,7 @@ class RestoreFlowTest extends SPIO_IntegrationTestCase {
 			$this->assertArrayHasKey(
 				$cFileName,
 				$thumbs,
-				'After optimize the freshly loaded model must include the _c companion in its thumbnails (rows 19.3/20.3).'
+				'After optimize the freshly loaded model must include the _c companion in its thumbnails.'
 			);
 
 			$cThumb  = $thumbs[ $cFileName ];
@@ -677,23 +671,23 @@ class RestoreFlowTest extends SPIO_IntegrationTestCase {
 
 			$this->assertTrue(
 				$backup->hasBackup( $cThumb ),
-				'A backup must exist for the _c companion after optimization (rows 19.3/20.3).'
+				'A backup must exist for the _c companion after optimization.'
 			);
 
 			// Capture the backup-file path now — asserting on the raw filesystem
 			// path after restore is the established pattern in this suite.
-			// (LocalBackupModel's $backup_files cache is reset on restore/delete
-			// since 1ee7e37e — bug #4 fix — but path assertions stay robust.)
+			// (LocalBackupModel's $backup_files cache is reset on restore/delete,
+			// but path assertions stay robust.)
 			$cBackupFileObj = $backup->getBackupFile( $cThumb );
 			$this->assertNotFalse(
 				$cBackupFileObj,
-				'getBackupFile() must return a FileModel for the _c companion (rows 19.3/20.3).'
+				'getBackupFile() must return a FileModel for the _c companion.'
 			);
 			$cBackupPath = $cBackupFileObj->getFullPath();
 			clearstatcache();
 			$this->assertFileExists(
 				$cBackupPath,
-				'The _c companion backup must physically exist on disk (rows 19.3/20.3).'
+				'The _c companion backup must physically exist on disk.'
 			);
 
 			// --- Restore ---
@@ -710,14 +704,14 @@ class RestoreFlowTest extends SPIO_IntegrationTestCase {
 			$this->assertSame(
 				$originalCSize,
 				filesize( $cPath ),
-				'Restore must revert the _c companion to its original byte count (rows 19.3/20.3).'
+				'Restore must revert the _c companion to its original byte count.'
 			);
 
 			// The backup file must be gone (moved back over the optimized copy).
 			clearstatcache();
 			$this->assertFileDoesNotExist(
 				$cBackupPath,
-				'The _c companion backup must be gone after restore (rows 19.3/20.3).'
+				'The _c companion backup must be gone after restore.'
 			);
 
 		} finally {
@@ -732,8 +726,6 @@ class RestoreFlowTest extends SPIO_IntegrationTestCase {
 	 * Lightweight variation: verifies the same end-to-end flow for the `_tl`
 	 * (top-left crop) suffix, confirming that all five Envira/Soliloquy
 	 * position suffixes work, not just `_c`.
-	 *
-	 * Covers manual plan rows 19.3 (Envira) and 20.3 (Soliloquy).
 	 */
 	public function test_unlisted_thumbnail_tl_suffix_is_restored_correctly() {
 		\wpSPIO()->settings()->backupImages = 1;
@@ -768,7 +760,7 @@ class RestoreFlowTest extends SPIO_IntegrationTestCase {
 			$this->assertLessThan(
 				$originalTlSize,
 				filesize( $tlPath ),
-				'Sanity (rows 19.3/20.3 _tl variant): optimizer must shrink the _tl companion.'
+				'Sanity (_tl variant): optimizer must shrink the _tl companion.'
 			);
 
 			\wpSPIO()->filesystem()->flushImageCache();
@@ -792,13 +784,13 @@ class RestoreFlowTest extends SPIO_IntegrationTestCase {
 			$this->assertSame(
 				$originalTlSize,
 				filesize( $tlPath ),
-				'Restore must revert the _tl companion to its original byte count (rows 19.3/20.3).'
+				'Restore must revert the _tl companion to its original byte count.'
 			);
 
 			clearstatcache();
 			$this->assertFileDoesNotExist(
 				$tlBackupPath,
-				'The _tl companion backup must be gone after restore (rows 19.3/20.3).'
+				'The _tl companion backup must be gone after restore.'
 			);
 
 		} finally {
@@ -839,7 +831,7 @@ class RestoreFlowTest extends SPIO_IntegrationTestCase {
 		$this->assertDirectoryDoesNotExist( $emptyYearDir, 'Empty year directories before the cutoff are removed.' );
 		$this->assertFileExists( $recentFile, 'Backups from the current month must survive the prune.' );
 
-		// Since 89050ab8 (bug #2 fix) old year dirs are removed with
+		// Old year dirs are removed with
 		// recursiveDelete(), so populated pre-cutoff trees go away entirely.
 		$this->assertFileDoesNotExist(
 			$ancientFile,

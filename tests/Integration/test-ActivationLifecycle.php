@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests: plugin activation lifecycle (Wave 1, fresh install only).
+ * Integration tests: plugin activation lifecycle (fresh install only).
  *
  * Covers the table lifecycle across the plugin's install states:
  *   - activation creates the four custom tables
@@ -15,7 +15,8 @@
  * transaction rollback — tear_down() re-runs checkTables() to leave a
  * healthy install for whatever test runs next.
  *
- * Out of scope (Wave 3): upgrade migrations from older plugin versions.
+ * Out of scope: upgrade migrations from older plugin versions
+ * (see test-VersionUpgrade.php).
  *
  * @package Shortpixel_Image_Optimiser
  */

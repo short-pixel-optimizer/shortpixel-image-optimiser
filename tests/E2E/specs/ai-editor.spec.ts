@@ -1,13 +1,13 @@
 /**
- * Wave 2 — AI image editor modal (background removal / upscale).
+ * AI image editor modal (background removal / upscale).
  *
- * The runtime-CSS-injected modal is the flakiest layout code in the plugin
- * (exploration, 2026-09-15). These tests exercise the edit-media opener end
+ * The runtime-CSS-injected modal is the flakiest layout code in the plugin.
+ * These tests exercise the edit-media opener end
  * to end against the mock API: launch buttons (incl. the width-based disable
  * and the jpg/png gate), open → styled → auto-preview, option wiring,
  * Preview + Save creating a NEW attachment and redirecting to it, error
  * display when the API rejects, and close/cleanup — plus two PINS for
- * defects the exploration surfaced.
+ * known defects.
  *
  * Note: the mock answers background-removal/upscale with the unchanged
  * bytes (it does not process pixels), so assertions are about the FLOW
@@ -20,7 +20,7 @@ import { adminUrls, ApiCode } from '../helpers/spio';
 // ENGINE LIMITATION, not a SPIO bug: Playwright's WebKit build (1.55.0 image,
 // webkit-2203, Linux) hangs in LAYOUT on WordPress core's attachment edit
 // screen (post.php?action=edit for an attachment) — reproduced with SPIO
-// deactivated and with all SPIO assets blocked (2026-09-16). Every test here
+// deactivated and with all SPIO assets blocked. Every test here
 // starts on that screen, so none can run on WebKit. The WebKit-only sentinel
 // in specs/engine-limits.spec.ts goes red when the hang disappears: then
 // delete this skip.
@@ -160,7 +160,7 @@ test.describe('AI editor modal — edit-media opener', () => {
 
 		// Let the preview land BEFORE closing. Opening fires a preview
 		// request, and closing while it is still in flight makes the
-		// response handler throw (see pin75 below) — an unrelated defect
+		// response handler throw (pinned below) — an unrelated defect
 		// that failed this test intermittently on Firefox in CI, where the
 		// slower run let the response arrive after the close. This test is
 		// about modal/shade removal and the stylesheet, so it waits.
@@ -184,7 +184,7 @@ test.describe('AI editor modal — pinned defects', () => {
 	});
 
 	/**
-	 * PIN (unnumbered — E2E seed finding): media-popup.php renders the Save
+	 * PIN: media-popup.php renders the Save
 	 * button with `type='button button-primary'` (an invalid type value), so
 	 * the modal's block-buttons toggle — `querySelectorAll('button[type="button"]')`
 	 * — never matches it. Save stays clickable while a preview/save request
@@ -216,7 +216,7 @@ test.describe('AI editor modal — pinned defects', () => {
 });
 
 /**
- * PIN #75 — closing the AI editor while a preview request is in flight
+ * PIN — closing the AI editor while a preview request is in flight
  * throws an uncaught TypeError when the response lands.
  *
  * screen-media.js MediaEditorPreviewEvent() (:376-377) resolves the preview
@@ -231,11 +231,10 @@ test.describe('AI editor modal — pinned defects', () => {
  * The listener is registered `{ once: true }` in MediaEditorDoAction() and
  * is never removed when the modal closes, so the handler always runs.
  *
- * This is what failed CI on Firefox (ai-editor.spec.ts "closing removes the
- * modal and shade"): nothing Firefox-specific, it simply lost the race on a
- * slower runner. Reproduced deterministically on BOTH firefox and chromium
- * by holding the response with waitingRounds — that test now waits for the
- * preview before closing, and the defect itself is pinned here.
+ * Nothing engine-specific: a slower runner simply loses the race. It
+ * reproduces deterministically on BOTH firefox and chromium by holding the
+ * response with waitingRounds — "closing removes the modal and shade" waits
+ * for the preview before closing, and the defect itself is pinned here.
  *
  * Suggested fix: scope the lookup to the modal and guard it, matching the
  * rest of the function —
@@ -247,14 +246,14 @@ test.describe('AI editor modal — pinned defects', () => {
  * FLIP-when-fixed: drop `allowConsoleErrors`, assert no page errors, and
  * let the tripwire guard it.
  */
-test.describe('AI editor modal — pin75 (preview response after close)', () => {
+test.describe('AI editor modal — preview response after close (pinned)', () => {
 	test.use({ allowConsoleErrors: true });
 
 	test.beforeEach(async ({ spio }) => {
 		await spio.reset();
 	});
 
-	test('pin75: preview response after modal close throws (pinned_for_deferred_fix)', async ({ page, spio }) => {
+	test('pin: preview response after modal close throws (pinned_for_deferred_fix)', async ({ page, spio }) => {
 		const id = (await spio.uploadFixture('fixture-small.jpg')).id;
 		// Hold the response so it cannot land before we close.
 		await spio.setMock({ waitingRounds: 3 });
@@ -274,7 +273,7 @@ test.describe('AI editor modal — pin75 (preview response after close)', () => 
 		await expect
 			.poll(() => pageErrors.length, {
 				timeout: 30_000,
-				message: 'PIN #75: fixed? No uncaught error after a post-close preview response — flip this pin.',
+				message: 'PIN: fixed? No uncaught error after a post-close preview response — flip this pin.',
 			})
 			.toBeGreaterThan(0);
 

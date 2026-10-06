@@ -24,7 +24,7 @@
  *    stay `.jpg`.
  *
  *    This test file PINS that current behavior. Restore-to-JPG for
- *    HEIC / TIFF / BMP is BY DESIGN (confirmed by Pedro, 2026-09-09) —
+ *    HEIC / TIFF / BMP is BY DESIGN —
  *    tests stay `..._documents_current_behavior` permanently.
  *
  * @package Shortpixel_Image_Optimiser
@@ -238,7 +238,7 @@ class ConversionRestoreTest extends SPIO_IntegrationTestCase {
 		clearstatcache();
 		$restored_path = get_attached_file( $id );
 
-		// PIN #1: attached_file still ends in .jpg — ApiConverter::restore
+		// PIN 1: attached_file still ends in .jpg — ApiConverter::restore
 		// is a no-op so updateMetaData never swaps the extension back.
 		$this->assertSame(
 			'jpg',
@@ -247,7 +247,7 @@ class ConversionRestoreTest extends SPIO_IntegrationTestCase {
 		);
 		$this->assertFileExists( $restored_path, 'The .jpg attached_file must still exist on disk.' );
 
-		// PIN #2: MediaLibraryModel::restore's parent::restore()
+		// PIN 2: MediaLibraryModel::restore's parent::restore()
 		// (ImageModel::restore → BackupModel::restore) DOES resurrect the
 		// original .heic file on disk from the backup taken during
 		// conversionPrepare. It's just orphaned by the attached_file
@@ -257,7 +257,7 @@ class ConversionRestoreTest extends SPIO_IntegrationTestCase {
 			'CURRENT BEHAVIOR: the original .heic file IS recreated on disk by ImageModel::restore, even though attached_file stays .jpg.'
 		);
 
-		// PIN #3: the restored .heic file is a real HEIC on disk (not a
+		// PIN 3: the restored .heic file is a real HEIC on disk (not a
 		// zero-byte stub). We can't compare against the original fixture
 		// bytes because WP's ISO-media wrangling can trim/re-mux HEIF at
 		// upload time; but the file must be non-empty and byte-identical
@@ -268,7 +268,7 @@ class ConversionRestoreTest extends SPIO_IntegrationTestCase {
 			'CURRENT BEHAVIOR: the restored .heic file is non-empty.'
 		);
 
-		// PIN #4: the still-attached .jpg is a real JPEG image (not
+		// PIN 4: the still-attached .jpg is a real JPEG image (not
 		// truncated / not a stale placeholder).
 		$info = getimagesize( $restored_path );
 		$this->assertSame(
@@ -277,7 +277,7 @@ class ConversionRestoreTest extends SPIO_IntegrationTestCase {
 			'CURRENT BEHAVIOR: the .jpg attached_file still contains valid JPEG bytes after restore.'
 		);
 
-		// PIN #5: the resurrected .heic is a truly ORPHANED file. The
+		// PIN 5: the resurrected .heic is a truly ORPHANED file. The
 		// attachment metadata's `original_image` entry does NOT point to
 		// it — it points to the UNSCALED .jpg (WP core's -scaled mechanism
 		// applied to the converted JPG during wp_generate_attachment_metadata
@@ -316,8 +316,7 @@ class ConversionRestoreTest extends SPIO_IntegrationTestCase {
 	 * TIFF and BMP: same ApiConverter path as HEIC, therefore same
 	 * restore semantics (JPG stays on disk, original bytes lost).
 	 *
-	 * Restore-to-JPG pinned as current behavior — ruled BY DESIGN
-	 * (Pedro, 2026-09-09), same as HEIC.
+	 * Restore-to-JPG pinned as current behavior — BY DESIGN, same as HEIC.
 	 *
 	 * @dataProvider tiffBmpFixtures
 	 */

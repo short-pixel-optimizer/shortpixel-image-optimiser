@@ -1,5 +1,5 @@
 /**
- * Wave 1 — Bulk page (Tier 1).
+ * Bulk page.
  *
  * Covers the happy path dashboard → selection → summary → process → finished
  * → dashboard for a small Media Library, pause/resume and stop during
@@ -118,7 +118,7 @@ test.describe('Bulk page — API error path', () => {
 	});
 
 	/**
-	 * PIN (bulk error rows, unnumbered — E2E seed finding 2026-09-15):
+	 * PIN (bulk error rows):
 	 * screen-bulk.js HandleItemError() (~:727) expects the failed item wrapped
 	 * as `result.result`, but the processor hands it the item object itself
 	 * (`{item_id, message, is_error, is_done, …}`), so EVERY API error takes

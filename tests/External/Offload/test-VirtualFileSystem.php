@@ -13,8 +13,7 @@
  *   - listen     → pure hook registration; asserting hooks were added
  *                  would duplicate WordPress's own registry
  *
- * Two tests guard against regression of a fixed bug (see
- * project_deferred_root_bugs.md):
+ * Two tests guard against regression of a fixed bug:
  *
  *   - `checkIfOffloaded` previously used `=` (assignment) instead of
  *     `==` in the first branch:
@@ -110,8 +109,7 @@ class VirtualFileSystemTest extends WP_UnitTestCase {
 	 * actual identity, routing all detection down the s3-uploads-human
 	 * branch. Fix: `==` (or `===`).
 	 *
-	 * Sentinel principle #4 from feedback_pinned_test_sentinels.md:
-	 * make ID-like fields distinct so the wrong branch has a visible
+	 * Sentinel principle: make ID-like fields distinct so the wrong branch has a visible
 	 * consequence. Here we seed `stack` (any non-target value) and check
 	 * it's unchanged after the call.
 	 */

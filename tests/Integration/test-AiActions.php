@@ -30,8 +30,6 @@
  * the test can be upgraded to assert pixel dimensions. The needed mock change
  * is described in the test summary comment at the end of the class.
  *
- * Manual-plan rows: 34.09 / 34.10
- *
  * @package Shortpixel_Image_Optimiser
  */
 
@@ -50,11 +48,9 @@ class AiActionsTest extends SPIO_IntegrationTestCase {
 	 * The result carries new_attach_id > 0 and the new attachment is
 	 * retrievable via get_post().
 	 *
-	 * Covering both 34.09 (JPEG) and 34.10 (PNG is handled by the same code
-	 * path — the same lossless-reducer + sideload sequence — so one test
-	 * covering the shared code path is sufficient here).
-	 *
-	 * Manual-plan rows: 34.09 / 34.10
+	 * Covers JPEG; PNG is handled by the same code path — the same
+	 * lossless-reducer + sideload sequence — so one test covering the shared
+	 * code path is sufficient here.
 	 */
 	public function test_upscale_creates_new_attachment_with_correct_dimensions() {
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );

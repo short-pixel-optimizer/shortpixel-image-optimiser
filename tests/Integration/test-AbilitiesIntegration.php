@@ -7,14 +7,12 @@
  * image/DB state — against the REAL queue + optimizer pipeline and the
  * MockShortPixelApi HTTP interceptor.
  *
- * Bugs from the mcp branch (Calin's list) are now all FIXED and covered by
- * regression tests here:
- *  - #C1 (fixed in 2254cd59): get-queue-status used to (int)-cast the
- *    locale-formatted stats from getStartupData(), truncating counts >= 1000
- *    ("1,201" → 1); the ability now reads raw stats via getStartupData(false).
- *  - #C2 (fixed in c412011d): bulk-generate-ai-seo (and bulk-optimize with
- *    do_ai=true) used to permanently persist autoAIBulk=true; the AI pickup
- *    is now scoped to the bulk via the allowAiWithoutBulkSetting queue option.
+ * Regression coverage includes:
+ *  - get-queue-status reads raw stats via getStartupData(false), so counts
+ *    >= 1000 are not truncated by the locale formatting ("1,201" → 1).
+ *  - bulk-generate-ai-seo (and bulk-optimize with do_ai=true) does not
+ *    persist autoAIBulk=true; the AI pickup is scoped to the bulk via the
+ *    allowAiWithoutBulkSetting queue option.
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -51,11 +49,10 @@ class AbilitiesIntegrationTest extends SPIO_IntegrationTestCase {
 
 		$this->purgeAiData();
 
-		// Since c91cd01c every single-image ability calls ItemAccessGuard.
-		// The suite ran under user 0 originally, which now fails the guard —
-		// an admin session is what a REST/MCP caller with the site's
-		// application password would look like, and lets the pre-existing
-		// end-to-end assertions exercise the pipeline they were written for.
+		// Every single-image ability calls ItemAccessGuard, which user 0
+		// fails — an admin session is what a REST/MCP caller with the site's
+		// application password would look like, and lets the end-to-end
+		// assertions exercise the pipeline.
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
 	}
 
@@ -237,17 +234,16 @@ class AbilitiesIntegrationTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * Regression for Calin bug #1 (FIXED in 2254cd59): getStartupData() used
-	 * to always pipe stats through numberFormatStats(), so an in_queue counter
-	 * of 1201 arrived at the ability as the STRING "1,201" and the (int) cast
-	 * truncated it to 1. GetQueueStatusAbility now calls
-	 * getStartupData(false) to read the raw integer stats (the bulk UI /
+	 * Regression: getStartupData() formats stats through numberFormatStats()
+	 * by default, so an in_queue counter of 1201 would arrive as the STRING
+	 * "1,201" and an (int) cast would truncate it to 1. GetQueueStatusAbility
+	 * calls getStartupData(false) to read the raw integer stats (the bulk UI /
 	 * WP-CLI callers keep the formatting default).
 	 *
 	 * Stats read the persisted ShortQ 'items' STATUS COUNTER, not a live
-	 * COUNT(*) on the queue table (the original pin seeded rows via direct
-	 * inserts, which never reach the counter), so the counter itself is set
-	 * to the >=1000 value that triggers the locale separator.
+	 * COUNT(*) on the queue table (rows seeded via direct inserts never reach
+	 * the counter), so the counter itself is set to the >=1000 value that
+	 * triggers the locale separator.
 	 */
 	public function test_get_queue_status_reports_raw_counts_above_1000() {
 		$attachment_id = $this->freshAttachment();
@@ -265,7 +261,7 @@ class AbilitiesIntegrationTest extends SPIO_IntegrationTestCase {
 		$this->assertSame(
 			1201,
 			$status['queues']['media']['in_queue'],
-			'Regression #C1: get-queue-status must report the raw waiting count (getStartupData(false) since 2254cd59), not an (int)-truncated locale-formatted string.'
+			'get-queue-status must report the raw waiting count (getStartupData(false)), not an (int)-truncated locale-formatted string.'
 		);
 	}
 
@@ -397,11 +393,10 @@ class AbilitiesIntegrationTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * Regression for Calin bug #2 (FIXED in c412011d): bulk-generate-ai-seo
-	 * used to flip the autoAIBulk SETTING to true (persisted on shutdown) so
-	 * Queue::prepare() would pick up AI items, and never restored it — a
-	 * one-shot MCP call permanently changed site behaviour. The fix scopes
-	 * the override to the bulk itself: the ability passes the
+	 * Regression: bulk-generate-ai-seo must not flip the autoAIBulk SETTING
+	 * (persisted on shutdown) to make Queue::prepare() pick up AI items — a
+	 * one-shot MCP call would permanently change site behaviour. The
+	 * override is scoped to the bulk itself: the ability passes the
 	 * 'allowAiWithoutBulkSetting' queue option (persisted in the queue's
 	 * custom_data, so it survives cross-request prepare ticks) and
 	 * Queue::prepare() accepts it as an alternative to the setting.
@@ -418,7 +413,7 @@ class AbilitiesIntegrationTest extends SPIO_IntegrationTestCase {
 
 		$this->assertFalse( $result['error'] );
 		$this->assertFalse( $result['auto_ai_bulk_previous'], 'The ability itself records that the setting was off before' );
-		$this->assertFalse( $result['auto_ai_bulk_set'], 'Since c412011d the ability must not set the autoAIBulk setting' );
+		$this->assertFalse( $result['auto_ai_bulk_set'], 'The ability must not set the autoAIBulk setting' );
 
 		$run = $this->runQueueViaAbility( true );
 		$this->assertSame( 'queues_empty', $run['processing']['stopped_reason'], 'The AI bulk must run to completion: ' . print_r( $run, true ) );
@@ -426,12 +421,12 @@ class AbilitiesIntegrationTest extends SPIO_IntegrationTestCase {
 		$this->assertSame(
 			'A mock ai alt text.',
 			get_post_meta( $attachment_id, '_wp_attachment_image_alt', true ),
-			'Regression #C2: the AI fan-out must still fire via the allowAiWithoutBulkSetting queue option, without the global setting.'
+			'The AI fan-out must still fire via the allowAiWithoutBulkSetting queue option, without the global setting.'
 		);
 
 		$this->assertEmpty(
 			\wpSPIO()->settings()->autoAIBulk,
-			'Regression #C2: a one-shot bulk-generate-ai-seo call must leave the persisted autoAIBulk setting untouched (c412011d).'
+			'A one-shot bulk-generate-ai-seo call must leave the persisted autoAIBulk setting untouched.'
 		);
 	}
 
@@ -479,17 +474,16 @@ class AbilitiesIntegrationTest extends SPIO_IntegrationTestCase {
 	}
 
 	// ------------------------------------------------------------------
-	// Regression: bulk abilities must not wipe unrelated queues (c82c9817)
+	// Regression: bulk abilities must not wipe unrelated queues
 	// ------------------------------------------------------------------
 
 	/**
-	 * Regression for c82c9817: BulkOptimizeAbility and BulkGenerateAiSeoAbility
-	 * used to call QueueController::resetQueues() before creating their own
-	 * bulk. resetQueues() wipes ALL FOUR queues (media, mediaSingle, custom,
+	 * Regression: BulkOptimizeAbility and BulkGenerateAiSeoAbility must not
+	 * call QueueController::resetQueues() before creating their own bulk.
+	 * resetQueues() wipes ALL FOUR queues (media, mediaSingle, custom,
 	 * customSingle), so any pending single-image optimize enqueued by the
-	 * classic AJAX flow was silently discarded the moment an MCP agent
-	 * kicked off a bulk. The fix removes those calls — bulk creation now
-	 * only touches its own bulk queue.
+	 * classic AJAX flow would be silently discarded the moment an MCP agent
+	 * kicked off a bulk. Bulk creation only touches its own bulk queue.
 	 *
 	 * Test shape: seed the mediaSingle queue via OptimizeMediaAbility with
 	 * process=false, then start bulk-optimize with process=false, then assert
@@ -521,15 +515,14 @@ class AbilitiesIntegrationTest extends SPIO_IntegrationTestCase {
 		$this->assertGreaterThanOrEqual(
 			$statusBefore['queues']['media']['in_queue'],
 			$statusAfter['queues']['media']['in_queue'],
-			'Regression #C1-fix (c82c9817): bulk-optimize must not wipe the single-item queue that an admin AJAX call enqueued'
+			'Bulk-optimize must not wipe the single-item queue that an admin AJAX call enqueued'
 		);
 	}
 
 	/**
-	 * Same regression as above, for bulk-generate-ai-seo. The AI SEO bulk
-	 * was hitting resetQueues() too — a media-only AI bulk from the MCP
-	 * agent was dropping pending single-image optimize items in mediaSingle
-	 * AND pending items in the custom queues. Fixed in c82c9817.
+	 * Same regression as above, for bulk-generate-ai-seo: a media-only AI
+	 * bulk from the MCP agent must not drop pending single-image optimize
+	 * items in mediaSingle nor pending items in the custom queues.
 	 */
 	public function test_bulk_generate_ai_seo_does_not_wipe_the_media_single_queue() {
 		$single_id = $this->freshAttachment();
@@ -546,17 +539,16 @@ class AbilitiesIntegrationTest extends SPIO_IntegrationTestCase {
 		$this->assertGreaterThanOrEqual(
 			$statusBefore['queues']['media']['in_queue'],
 			$statusAfter['queues']['media']['in_queue'],
-			'Regression (c82c9817): bulk-generate-ai-seo must not wipe the mediaSingle queue'
+			'bulk-generate-ai-seo must not wipe the mediaSingle queue'
 		);
 	}
 
 	// ------------------------------------------------------------------
 	// Regression: single-image abilities honour per-image edit permission
-	// (c91cd01c)
 	// ------------------------------------------------------------------
 
 	/**
-	 * End-to-end pin for c91cd01c: a subscriber (no edit_others_posts, no
+	 * End-to-end check: a subscriber (no edit_others_posts, no
 	 * ownership over the admin's attachment) hitting optimize-media must
 	 * bounce with access_denied BEFORE the queue receives an item. The
 	 * ability's role-level permission_callback wouldn't help here — MCP

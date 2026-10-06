@@ -1,7 +1,7 @@
 /**
  * Front-end delivery helpers (what site VISITORS get).
  *
- * Facts (Wave 3 exploration):
+ * Facts (verified against the live UI):
  *   - SPIO ships no visitor JS; delivery is server-side output rewriting.
  *   - Mode selection (FrontController:32-43): `useCDN` wins outright; else
  *     `deliverWebp` 1 = <picture> via whole-page output buffer, 2 = via WP

@@ -12,8 +12,8 @@
  * checkActionAccess($action, 'is_admin_user') → settingsFormSubmit →
  * MultiSiteViewController → wp_send_json).
  *
- * ROUTING NOTE (e4d1d0a8, 2026-08-28): settingsFormSubmit() no longer
- * routes based on $screen_action; it routes based on the client-posted
+ * ROUTING NOTE: settingsFormSubmit() does not route based on
+ * $screen_action; it routes based on the client-posted
  * 'is_network_admin' field (added by shortpixel-settings.js when the
  * hidden input in view-settings.php is present). Tests that intend the
  * network save path MUST include is_network_admin=true in POST — without
@@ -21,10 +21,10 @@
  * the raw exit('ajaxcontroller - formsubmit') left in AjaxController::619,
  * killing the whole PHPUnit run with a false-green.
  *
- * Also regression-tests bug #41 (FIXED in 8520324e): settingsFormSubmit()
- * now runs checkActionAccess($action, 'is_super_admin') before entering
- * the MultiSiteViewController branch, so a client-posted is_network_admin
- * flag alone no longer lets a regular subsite administrator (who lacks
+ * Also regression-tests the access check: settingsFormSubmit() runs
+ * checkActionAccess($action, 'is_super_admin') before entering the
+ * MultiSiteViewController branch, so a client-posted is_network_admin
+ * flag alone does not let a regular subsite administrator (who lacks
  * manage_network) write network-wide settings — the request is refused
  * with NO_ACCESS before any save runs.
  *
@@ -53,8 +53,7 @@ class MultisiteNetworkSaveTest extends SPIO_AjaxTestCase {
 	 * Nonces are created AFTER the caller sets the current user (they are
 	 * user-bound).
 	 *
-	 * Includes the client-supplied 'is_network_admin' routing flag introduced
-	 * by e4d1d0a8 — without it settingsFormSubmit() would instantiate
+	 * Includes the client-supplied 'is_network_admin' routing flag — without it settingsFormSubmit() would instantiate
 	 * SettingsViewController (whose form_action is 'save-settings') and the
 	 * sp-nonce 'save-multi-settings' would fail verification, dropping the
 	 * request into load() and then into the debug exit at AjaxController:619.
@@ -96,14 +95,12 @@ class MultisiteNetworkSaveTest extends SPIO_AjaxTestCase {
 	}
 
 	/**
-	 * Regression for bug #41 (FIXED in 8520324e): a regular subsite
-	 * administrator who is NOT a super admin must be refused the network
-	 * save. settingsFormSubmit() now calls checkActionAccess($action,
-	 * 'is_super_admin') — 'manage_network' on multisite — before
-	 * instantiating MultiSiteViewController, exactly the fix this pin's
-	 * flip instructions asked for.
+	 * Regression test: a regular subsite administrator who is NOT a super
+	 * admin must be refused the network save. settingsFormSubmit() calls
+	 * checkActionAccess($action, 'is_super_admin') — 'manage_network' on
+	 * multisite — before instantiating MultiSiteViewController.
 	 */
-	public function test_pin41_flipped_regular_admin_is_refused_network_save_regression_41() {
+	public function test_regular_admin_is_refused_network_save() {
 		$user_id = self::factory()->user->create( array( 'role' => 'administrator' ) );
 		wp_set_current_user( $user_id );
 
@@ -118,32 +115,32 @@ class MultisiteNetworkSaveTest extends SPIO_AjaxTestCase {
 		$this->assertObjectHasProperty(
 			'error',
 			$response,
-			'Regression #41: the network save must be refused for non-super admins since 8520324e.'
+			'The network save must be refused for non-super admins.'
 		);
 		$this->assertSame(
 			AjaxController::NO_ACCESS,
 			$response->error,
-			'Regression #41: refusal must be the NO_ACCESS error from checkActionAccess.'
+			'Refusal must be the NO_ACCESS error from checkActionAccess.'
 		);
 
 		// Sentinel: the refused request must not have written anything
 		// network-wide.
 		$this->assertFalse(
 			get_site_option( 'spio_wpmu', false ),
-			'Regression #41: the spio_wpmu network option must remain untouched after a refused save.'
+			'The spio_wpmu network option must remain untouched after a refused save.'
 		);
 	}
 
 	/**
-	 * Regression for bug #41's WIDENED VECTOR (FIXED in 8520324e): the
-	 * routing flag $_POST['is_network_admin'] is still client-supplied, but
-	 * posting it no longer selects an unguarded MultiSiteViewController —
+	 * Regression test for the WIDENED VECTOR: the routing flag
+	 * $_POST['is_network_admin'] is client-supplied, but posting it does not
+	 * select an unguarded MultiSiteViewController —
 	 * the is_super_admin capability check runs first, so the flag alone
 	 * (from any context the user can produce a valid nonce for) yields
 	 * NO_ACCESS for non-super admins. Kept separate from the main
 	 * regression test to keep guarding the specific forged-flag POST shape.
 	 */
-	public function test_pin41_flipped_client_flag_alone_no_longer_reaches_network_save_regression_41() {
+	public function test_client_flag_alone_does_not_reach_network_save() {
 		$user_id = self::factory()->user->create( array( 'role' => 'administrator' ) );
 		wp_set_current_user( $user_id );
 
@@ -159,12 +156,12 @@ class MultisiteNetworkSaveTest extends SPIO_AjaxTestCase {
 		$this->assertObjectHasProperty(
 			'error',
 			$response,
-			'Regression #41 (widened vector): a forged is_network_admin flag must be refused since 8520324e.'
+			'Widened vector: a forged is_network_admin flag must be refused.'
 		);
 		$this->assertSame( AjaxController::NO_ACCESS, $response->error );
 		$this->assertFalse(
 			get_site_option( 'spio_wpmu', false ),
-			'Regression #41 (widened vector): no network-wide option may be written on a refused save.'
+			'Widened vector: no network-wide option may be written on a refused save.'
 		);
 	}
 }

@@ -84,9 +84,9 @@ class FrontImageTest extends WP_UnitTestCase {
 	}
 
 	public function test_loadImageDom_preserves_empty_attribute_values() {
-		// FLIPPED 2026-09-03: efbd5ac9 fixed the lossy behavior where empty /
-		// value-less attributes (boolean flags like data-no-lazy, nopin) were
-		// dropped during parse+rebuild. Empty values are now stored as ''.
+		// Empty / value-less attributes (boolean flags like data-no-lazy,
+		// nopin) must not be dropped during parse+rebuild. Empty values are
+		// stored as ''.
 		$url = $this->sampleUrl();
 		$fi  = new FrontImage( '<img src="' . $url . '" alt="" class="" />' );
 
@@ -351,13 +351,13 @@ class FrontImageTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Regression for efbd5ac9: boolean / value-less attributes (data-no-lazy,
-	 * nopin, etc.) must survive a parse+rebuild as BARE attributes — the old
-	 * behavior dropped them entirely, breaking Pinterest / lazy-loading opt-outs.
-	 * The FrontImage rebuild loop must emit the name without an ="" value, EXCEPT
-	 * for `alt` which stays `alt=""` (ff2305e4, see separate test below).
+	 * Boolean / value-less attributes (data-no-lazy, nopin, etc.) must survive
+	 * a parse+rebuild as BARE attributes — dropping them breaks Pinterest /
+	 * lazy-loading opt-outs. The FrontImage rebuild loop must emit the name
+	 * without an ="" value, EXCEPT for `alt` which stays `alt=""` (see
+	 * separate test below).
 	 */
-	public function test_buildImage_preserves_bare_boolean_attributes_regression_bug3() {
+	public function test_buildImage_preserves_bare_boolean_attributes() {
 		$url = $this->sampleUrl();
 		$fi  = new FrontImage(
 			'<img src="' . $url . '" data-no-lazy nopin />'
@@ -380,7 +380,7 @@ class FrontImageTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Regression for efbd5ac9: buildImage() now iterates the ORIGINAL
+	 * buildImage() iterates the ORIGINAL
 	 * $attributes map in insertion order rather than emitting a fixed list
 	 * of standard attributes first. Any custom order the source markup used
 	 * must be preserved so post-content byte comparisons after AI runs
@@ -408,12 +408,11 @@ class FrontImageTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Regression for efbd5ac9: src values with entity-encoded ampersands
-	 * (`&amp;`) must survive rebuild — the src is run through esc_attr which
-	 * re-escapes `&` back to `&amp;`. The old algorithm would frequently
-	 * corrupt entities in URLs with query strings.
+	 * src values with entity-encoded ampersands (`&amp;`) must survive
+	 * rebuild — the src is run through esc_attr which re-escapes `&` back to
+	 * `&amp;`, so entities in URLs with query strings are not corrupted.
 	 */
-	public function test_buildImage_escapes_ampersand_in_src_back_to_amp_entity_regression_bug3() {
+	public function test_buildImage_escapes_ampersand_in_src_back_to_amp_entity() {
 		$url = $this->sampleUrl( 'sample.jpg?w=100&amp;h=50' );
 		$fi  = new FrontImage( '<img src="' . $url . '" />' );
 
@@ -427,10 +426,9 @@ class FrontImageTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Regression for efbd5ac9: buildImage() output must end with a bare `>`
-	 * (no `' > '` with trailing space) — the old algorithm concatenated the
-	 * closing chevron with surrounding whitespace and produced invalid-ish
-	 * `<img ... >` markup that some parsers rendered oddly.
+	 * buildImage() output must end with a bare `>` (no `' > '` with
+	 * surrounding whitespace) — `<img ... >` markup is rendered oddly by
+	 * some parsers.
 	 */
 	public function test_buildImage_ends_with_bare_gt_no_trailing_space() {
 		$fi = new FrontImage( '<img src="' . $this->sampleUrl() . '" alt="ok" />' );
@@ -442,12 +440,12 @@ class FrontImageTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Regression for ff2305e4 ("Fix for Alt"): an alt attribute with an empty
+	 * An alt attribute with an empty
 	 * value must be emitted as `alt=""` (screen-reader-valid), NOT as a bare
 	 * `alt`. Every other value-less attribute (data-no-lazy, nopin) does emit
 	 * bare; alt is the specific exception at FrontImage.php:513.
 	 */
-	public function test_buildImage_emits_alt_as_empty_string_form_even_when_value_is_empty_regression_ff2305e4() {
+	public function test_buildImage_emits_alt_as_empty_string_form_even_when_value_is_empty() {
 		$url = $this->sampleUrl();
 		$fi  = new FrontImage( '<img src="' . $url . '" alt="" />' );
 
@@ -462,7 +460,7 @@ class FrontImageTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Regression: the $caption protected property added in efbd5ac9 is a
+	 * Regression: the $caption protected property is a
 	 * PLACEHOLDER only. It is not an HTML attribute; buildImage() must
 	 * never leak `caption="..."` into the emitted <img>. If this test fails,
 	 * the rebuild loop has started iterating declared properties rather than

@@ -686,8 +686,8 @@ class ConversionReplacementTest extends SPIO_IntegrationTestCase {
 	/**
 	 * DOCUMENTS CURRENT BEHAVIOR: the SmartSlider module is intentionally
 	 * switched off — its constructor returns before registering anything
-	 * (build/shortpixel/replacer2/src/Modules/SmartSlider.php:34, commit
-	 * 416c9e10 "Smartslider integration off until fix is found for the
+	 * (build/shortpixel/replacer2/src/Modules/SmartSlider.php:34:
+	 * "Smartslider integration off until fix is found for the
 	 * slide / base64 encoding on images"). Even with the plugin's
 	 * NEXTEND_SMARTSLIDER_3 constant defined, no replace_urls action may
 	 * be registered — conversions and renames leave SmartSlider tables
@@ -715,11 +715,9 @@ class ConversionReplacementTest extends SPIO_IntegrationTestCase {
 	// YoastSeo or Breakdance modules. Both require the real partner-plugin
 	// runtimes (WPSEO_VERSION defined + wp_yoast_indexable table,
 	// \Breakdance\Data\* functions) and are exercised in the compat suite
-	// (tests/Compat/, bin/test.sh --compat) instead. Placeholder skip
-	// methods used to live here but interacted badly with PHPUnit 9's
-	// data-provider handling in this class (a subtle serialization
-	// interaction between markTestSkipped and neighbouring
-	// @dataProvider tests caused a hard "Serialization of 'Closure' is
-	// not allowed" fatal that aborted the whole integration run — see
-	// the git log for the reproduction).
+	// (tests/Compat/, bin/test.sh --compat) instead. Do not add
+	// placeholder skip methods here: under PHPUnit 9, markTestSkipped
+	// next to this class's @dataProvider tests triggers a hard
+	// "Serialization of 'Closure' is not allowed" fatal that aborts the
+	// whole integration run.
 }

@@ -164,16 +164,14 @@ class QueueItemResultTest extends WP_UnitTestCase {
 	}
 
 	/*
-	 * replaced_content channel (456bb470)
+	 * replaced_content channel
 	 */
 
 	/**
-	 * replaced_content defaults to [] (not null). Until ffde74bf that meant
-	 * EVERY payload shipped a replaced_content member; since ffde74bf
-	 * forReturn() also drops empty arrays (UtilHelper::arrayFilterEmptyArrays),
-	 * so the member is ABSENT until something was replaced. The JS consumer
-	 * (screen-media.js UpdateGutenBerg) guards `resultItem.replaced_content`
-	 * on both reads since the same commit.
+	 * replaced_content defaults to [] (not null). forReturn() drops empty
+	 * arrays (UtilHelper::arrayFilterEmptyArrays), so the member is ABSENT
+	 * until something was replaced. The JS consumer (screen-media.js
+	 * UpdateGutenBerg) guards `resultItem.replaced_content` on both reads.
 	 */
 	public function test_replaced_content_defaults_to_empty_array_and_is_left_out_while_empty() {
 		$r = new QueueItemResult( 7 );
@@ -181,7 +179,7 @@ class QueueItemResultTest extends WP_UnitTestCase {
 		$this->assertSame( array(), $r->replaced_content );
 
 		$obj = $r->forReturn();
-		$this->assertObjectNotHasProperty( 'replaced_content', $obj, 'An empty replaced_content is left out of the payload (ffde74bf).' );
+		$this->assertObjectNotHasProperty( 'replaced_content', $obj, 'An empty replaced_content is left out of the payload.' );
 
 		// Only EMPTY ARRAYS are dropped: falsy scalars survive.
 		$r->is_error = false;

@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests: Regenerate Thumbnails Advanced (RTA) hook touchpoints (plan 13).
+ * Integration tests: Regenerate Thumbnails Advanced (RTA) hook touchpoints.
  *
  * This is a hook-level suite. The Regenerate Thumbnails Advanced plugin does
  * NOT need to be installed. Tests fire the hooks that RTA fires directly.
@@ -69,7 +69,7 @@ class RTAIntegrationTest extends SPIO_IntegrationTestCase {
 	 * with one regenerated size must mark THAT thumbnail as UNPROCESSED while
 	 * the main file remains in its optimized state.
 	 *
-	 * Manual-plan row: 13.1 / 13.2 — regenerated thumbs lose optimized state;
+	 * Regenerated thumbs lose optimized state;
 	 * main file and other thumbs are untouched.
 	 *
 	 * @return void
@@ -117,7 +117,7 @@ class RTAIntegrationTest extends SPIO_IntegrationTestCase {
 	 * attachment must be added back to the optimize queue so the regenerated
 	 * thumbnails are re-optimized automatically.
 	 *
-	 * Manual-plan row: 13.1 — thumbnails_changed re-queues when autoprocess is on.
+	 * thumbnails_changed re-queues when autoprocess is on.
 	 *
 	 * @return void
 	 */
@@ -158,7 +158,7 @@ class RTAIntegrationTest extends SPIO_IntegrationTestCase {
 	 * file on disk or its modification time — the hook only resets thumbnail
 	 * metadata, it must not touch the main file.
 	 *
-	 * Manual-plan row: 13.2 — main file timestamp and state unchanged by
+	 * Main file timestamp and state unchanged by
 	 * thumbnail regeneration.
 	 *
 	 * @return void
@@ -199,8 +199,6 @@ class RTAIntegrationTest extends SPIO_IntegrationTestCase {
 	 * must delegate to thumbnailsChangedHook() and produce the same result as
 	 * the modern `rta/image/thumbnails_regenerated` hook — i.e. the specified
 	 * thumbnail loses its optimized status.
-	 *
-	 * Manual-plan row: 13.1 (legacy hook name compatibility).
 	 *
 	 * @return void
 	 */

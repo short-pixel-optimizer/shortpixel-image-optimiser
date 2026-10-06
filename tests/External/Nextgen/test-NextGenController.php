@@ -11,7 +11,7 @@
  *     vs no-match, plus the sticky `$is_ngg_screen` flag side-effect
  *   - checkAddFiles — three-branch NextGen-folder + optimize-setting gate
  *   - Regression sentinel — onDeleteImage's array_merge($paths, string)
- *     TypeError trap (see project_deferred_root_bugs.md)
+ *     TypeError trap
  *
  * Skipped at the unit level (integration territory — need real NextGen
  * classes, the shortpixel_folders DB table, or OtherMediaController state):
@@ -279,7 +279,6 @@ class NextGenControllerTest extends WP_UnitTestCase {
 	 * `array_merge($paths, $this->getImageAbspath($image, $size))` —
 	 * but getImageAbspath returns a string, and PHP 8's array_merge
 	 * requires arrays. Fix: `$paths[] = ...` (append instead of merge).
-	 * See project_deferred_root_bugs.md.
 	 */
 	public function test_onDeleteImage_does_not_fatal_when_size_is_a_specific_string() {
 		$c = $this->makeTestableController();
@@ -337,8 +336,8 @@ class NextGenControllerTest extends WP_UnitTestCase {
 				return (object) array( 'id' => $nggId );
 			}
 
-			// Bas added a `: string` return type to the parent method in 399b29e2
-			// (P1 fix for onDeleteImage array_merge TypeError). The override
+			// The parent method has a `: string` return type
+			// (onDeleteImage array_merge TypeError guard). The override
 			// signature must stay compatible or PHP fatals with
 			// "Declaration ... must be compatible with ..." at load time.
 			protected function getImageAbspath( $image, $size = 'full' ): string {

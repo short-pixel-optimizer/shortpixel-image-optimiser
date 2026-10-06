@@ -1,6 +1,6 @@
 <?php
 /**
- * Cross-plugin compatibility: NextGen Gallery (Wave 3).
+ * Cross-plugin compatibility: NextGen Gallery.
  *
  * Runs with the REAL NextGen Gallery plugin active (bin/test.sh --compat
  * downloads + activates it; the activation hook creates ngg_gallery).
@@ -173,7 +173,7 @@ class CompatNextGenTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// 14.6 — ngg_delete_image removes backup and WebP/AVIF companions
+	// ngg_delete_image removes backup and WebP/AVIF companions
 	// -------------------------------------------------------------------
 
 	/**
@@ -184,8 +184,6 @@ class CompatNextGenTest extends SPIO_IntegrationTestCase {
 	 * The hook is wired unconditionally (presence hook, not gated on
 	 * includeNextGen) in NextGenController.  The NGG image lives in the
 	 * custom-media pipeline; its "attachment id" is a shortpixel_meta id.
-	 *
-	 * Manual plan row 14.6.
 	 *
 	 * @return void
 	 */
@@ -242,15 +240,13 @@ class CompatNextGenTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// 14.8 — re-adding the same gallery does not create duplicate folder rows
+	// Re-adding the same gallery does not create duplicate folder rows
 	// -------------------------------------------------------------------
 
 	/**
 	 * Calling addNextGenGalleriesToCustom() twice for the same gallery path
 	 * must result in exactly one folder row in shortpixel_folders — the
 	 * deduplication guard in OtherMediaController must prevent a second insert.
-	 *
-	 * Manual plan row 14.8.
 	 *
 	 * @return void
 	 */

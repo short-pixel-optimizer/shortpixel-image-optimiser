@@ -1,5 +1,5 @@
 /**
- * Wave 2 — Onboarding / API-key activation + quick tour (Tier 2).
+ * Onboarding / API-key activation + quick tour.
  *
  * The no-key state is the first thing every new user sees. Covers: the
  * first-run redirect to the settings page, the existing-key panel (valid →
@@ -154,8 +154,8 @@ test.describe('Quick tour', () => {
 	});
 
 	test('walks all five steps, switching tabs, and finishing persists the flag', async ({ page, spio }) => {
-		// Runs on every engine again since #72 was fixed (0db02498) — it used
-		// to skip WebKit, where the tour reloaded the page on Next.
+		// Runs on every engine, WebKit included: the tour must advance in
+		// place on Next instead of reloading the page.
 		const settings = new SettingsPage(page);
 		await settings.goto();
 		await expect(settings.root).toHaveClass(/\bpage-quick-tour\b/);
@@ -190,17 +190,16 @@ test.describe('Quick tour', () => {
 	});
 
 	/**
-	 * REGRESSION #72 (flipped from the WebKit-only pin, 2026-09-18; fixed in
-	 * 0db02498): QuickTourSwitchToItem() used to switch the settings tab by
-	 * dispatching a NON-cancelable `new CustomEvent('click')` on the menu's
-	 * `<a href="…&part=<tab>">`. WebKit (Safari) runs a link's activation for
-	 * such an event, so "Start Tour" reloaded the page and the tour restarted
-	 * at step 0 forever. It now dispatches
-	 * `new MouseEvent('click', { bubbles: true, cancelable: true })`, whose
-	 * preventDefault() in SwitchMenuTabEvent is honoured by every engine.
-	 * Runs on all engines: the page must stay the SAME document and advance.
+	 * REGRESSION: QuickTourSwitchToItem() switches the settings tab by
+	 * dispatching `new MouseEvent('click', { bubbles: true, cancelable: true })`
+	 * on the menu's `<a href="…&part=<tab>">`, whose preventDefault() in
+	 * SwitchMenuTabEvent is honoured by every engine. A NON-cancelable
+	 * `new CustomEvent('click')` would run the link's activation in WebKit
+	 * (Safari): "Start Tour" would reload the page and restart at step 0
+	 * forever. Runs on all engines: the page must stay the SAME document and
+	 * advance.
 	 */
-	test('regression72: Next advances the tour in place, without reloading the page', async ({ page }) => {
+	test('regression: Next advances the tour in place, without reloading the page', async ({ page }) => {
 		const settings = new SettingsPage(page);
 		await settings.goto();
 		const tour = page.locator('div.quick-tour');
@@ -217,7 +216,7 @@ test.describe('Quick tour', () => {
 		// ...in the same document: the marker survived, so nothing reloaded.
 		expect(
 			await page.evaluate(() => (window as any).__spioSameDocument),
-			'REGRESSION #72: the page must not reload when the tour switches tabs',
+			'REGRESSION: the page must not reload when the tour switches tabs',
 		).toBe(true);
 	});
 });

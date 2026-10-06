@@ -68,9 +68,8 @@ class ApiConverterTest extends WP_UnitTestCase {
 	 * in FileSystemController::pathToUrl (which type-hints a real
 	 * FileModel that our lightweight imageModel stub can't satisfy).
 	 *
-	 * Bas removed the `debug_active` gate around prepareQueue on
-	 * 2026-07-11 (see project_deferred_image_folder_bugs.md), so
-	 * filterQueue now always calls prepareQueue — the tests below use
+	 * filterQueue always calls prepareQueue (no `debug_active` gate) —
+	 * the tests below use
 	 * this stub to isolate the mutation behaviour they actually care
 	 * about. prepareQueue's own coverage is integration territory and
 	 * lives outside this unit-test file.

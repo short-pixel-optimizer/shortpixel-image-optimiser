@@ -340,8 +340,8 @@ class AjaxHandlersTest extends SPIO_AjaxTestCase {
 
 	public function test_remove_backup_requires_the_secondary_tools_nonce() {
 		$this->_setRole( 'administrator' );
-		// #44 FIXED (8520324e): on single-site 'is_super_admin' now maps to
-		// delete_users, which administrators hold — no cap grant needed.
+		// On single-site 'is_super_admin' maps to delete_users, which
+		// administrators hold — no cap grant needed.
 
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->purgeQueueTable();
@@ -383,15 +383,15 @@ class AjaxHandlersTest extends SPIO_AjaxTestCase {
 	}
 
 	/**
-	 * Regression for bug #44 (FIXED in 8520324e): on single-site,
-	 * AccessModel::setDefaultPermissions() now remaps 'is_super_admin' to
-	 * 'delete_users' (manage_network is a multisite-only cap that single-site
-	 * administrators never hold), so a plain administrator can use the
-	 * Remove backups / Remove all data tools again. On multisite the mapping
+	 * Regression: on single-site, AccessModel::setDefaultPermissions()
+	 * remaps 'is_super_admin' to 'delete_users' (manage_network is a
+	 * multisite-only cap that single-site administrators never hold), so a
+	 * plain administrator can use the Remove backups / Remove all data
+	 * tools. On multisite the mapping
 	 * stays manage_network (super admins only) — see
 	 * tests/Multisite/test-Multisite.php.
 	 */
-	public function test_single_site_administrator_can_remove_backups_regression_44() {
+	public function test_single_site_administrator_can_remove_backups() {
 		$this->_setRole( 'administrator' );
 
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
@@ -411,14 +411,14 @@ class AjaxHandlersTest extends SPIO_AjaxTestCase {
 		$this->assertObjectNotHasProperty(
 			'error',
 			$response,
-			'Regression #44: a single-site administrator (delete_users) must pass the is_super_admin gate since 8520324e.'
+			'A single-site administrator (delete_users) must pass the is_super_admin gate.'
 		);
 		$this->assertStringContainsString( 'removed', $response->settings->results );
 		$this->assertFalse( is_dir( SHORTPIXEL_BACKUP_FOLDER ), 'The backup folder must be gone' );
 	}
 
 	// -------------------------------------------------------------------
-	// Plan 2.16 / 2.43 — non-image attachment optimize returns not-optimizable message
+	// Non-image attachment optimize returns not-optimizable message
 	// -------------------------------------------------------------------
 
 	/**
@@ -427,7 +427,7 @@ class AjaxHandlersTest extends SPIO_AjaxTestCase {
 	 * must return a response (is_optimizable = false) or a NO_ACCESS error
 	 * (if the image model fails to load), not a PHP fatal.
 	 *
-	 * Plan rows: 2.16 / 2.43 — non-image attachment optimize returns not-optimizable.
+	 * Non-image attachment optimize returns not-optimizable.
 	 *
 	 * NOTE: The PDF fixture produces a valid attachment but wp_generate_attachment_metadata()
 	 * does not create image sizes for it, so MediaLibraryModel::isProcessable() returns
@@ -482,7 +482,7 @@ class AjaxHandlersTest extends SPIO_AjaxTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// Plan 2.20 / 2.47 — restore on non-image attachment degrades gracefully
+	// Restore on non-image attachment degrades gracefully
 	// -------------------------------------------------------------------
 
 	/**
@@ -491,7 +491,7 @@ class AjaxHandlersTest extends SPIO_AjaxTestCase {
 	 * the handler should return a JSON response (possibly NO_ACCESS or
 	 * a queue result with no work done) without a fatal error.
 	 *
-	 * Plan rows: 2.20 / 2.47 — restore on non-image attachment degrades gracefully.
+	 * Restore on non-image attachment degrades gracefully.
 	 *
 	 * @see class/Controller/AjaxController.php restoreItem()
 	 */
@@ -537,7 +537,7 @@ class AjaxHandlersTest extends SPIO_AjaxTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// Plan 2.15.1 — bulk glossy reoptimize covers mixed optimized and unoptimized
+	// Bulk glossy reoptimize covers mixed optimized and unoptimized
 	// -------------------------------------------------------------------
 
 	/**
@@ -545,7 +545,7 @@ class AjaxHandlersTest extends SPIO_AjaxTestCase {
 	 * optimized and previously-unoptimized images through the pipeline.  After
 	 * both finish the queue must be empty and both items must be marked optimized.
 	 *
-	 * Plan row: 2.15.1 — bulk glossy reoptimize over mixed optimized/unoptimized.
+	 * Bulk glossy reoptimize over mixed optimized/unoptimized.
 	 *
 	 * @see class/Controller/AjaxController.php reOptimizeItem()
 	 */
@@ -606,7 +606,7 @@ class AjaxHandlersTest extends SPIO_AjaxTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// Plan 10.1.2 — editor can reprocess any image
+	// Editor can reprocess any image
 	// -------------------------------------------------------------------
 
 	/**
@@ -616,7 +616,7 @@ class AjaxHandlersTest extends SPIO_AjaxTestCase {
 	 * to all posts).  reOptimizeItem must therefore succeed for an editor acting
 	 * on any attachment.
 	 *
-	 * Plan row: 10.1.2 — editor can reprocess any image.
+	 * Editor can reprocess any image.
 	 *
 	 * @see class/Model/AccessModel.php imageIsEditable()
 	 * @see class/Controller/AjaxController.php reOptimizeItem()
@@ -659,21 +659,18 @@ class AjaxHandlersTest extends SPIO_AjaxTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// ai/redoAiReplacement — regression for bug #46
+	// ai/redoAiReplacement
 	// -------------------------------------------------------------------
 
 	/**
-	 * REGRESSION bug #46 (introduced in 90d1a316 "Bulk redo AI
-	 * replacement"): AjaxController::redoAiReplacement() used to call
-	 * `$api->redoAiReplacement($queueItem)` — an undefined method (the real
-	 * name is redoAIReplace(), "...Replace" not "...Replacement", so PHP's
-	 * method-name case-insensitivity could not save it) — making every
-	 * single-item `ai/redoAiReplacement` AJAX request fatal. Fixed by
-	 * renaming the call to redoAIReplace().
+	 * Regression: AjaxController::redoAiReplacement() must call the
+	 * existing redoAIReplace() ("...Replace", not "...Replacement" — PHP's
+	 * method-name case-insensitivity does not cover that), otherwise every
+	 * single-item `ai/redoAiReplacement` AJAX request is fatal.
 	 *
 	 * End-to-end check of the recovery scenario: AI data is GENERATED but
-	 * the embedding post still has alt="" (the pre-97f2c1f4 replacer2
-	 * singleton stuck state). The single-item redo must not fatal, must
+	 * the embedding post still has alt="" (the stuck state a shared
+	 * replacer2 singleton can leave). The single-item redo must not fatal, must
 	 * return status=true, and must re-apply the stored alt to the post
 	 * content synchronously — no new API calls, no queue round-trip.
 	 */
@@ -731,24 +728,23 @@ class AjaxHandlersTest extends SPIO_AjaxTestCase {
 
 		$this->assertIsObject(
 			$response,
-			'Regression #46: ai/redoAiReplacement must return JSON, not fatal; raw: ' . $this->lastRawResponse()
+			'ai/redoAiReplacement must return JSON, not fatal; raw: ' . $this->lastRawResponse()
 		);
 		$this->assertTrue(
 			$response->status,
-			'Regression #46: the single-item redo handler must report success.'
+			'The single-item redo handler must report success.'
 		);
 
 		clean_post_cache( $post_id );
 		$this->assertStringContainsString(
 			'alt="A mock ai alt text."',
 			get_post( $post_id )->post_content,
-			'Regression #46: the single-item redo must re-apply the stored AI alt to the embedding post content.'
+			'The single-item redo must re-apply the stored AI alt to the embedding post content.'
 		);
 	}
 
 	// -------------------------------------------------------------------
 	// applyBulkSelection — ai_content_replace three-state persistence
-	// (efbd5ac9)
 	// -------------------------------------------------------------------
 
 	/**
@@ -768,7 +764,7 @@ class AjaxHandlersTest extends SPIO_AjaxTestCase {
 	}
 
 	/**
-	 * A valid ai_content_replace POST value (efbd5ac9): applyBulkSelection
+	 * A valid ai_content_replace POST value: applyBulkSelection
 	 * must persist it to \wpSPIO()->settings()->ai_content_replace.
 	 */
 	public function test_apply_bulk_selection_persists_valid_ai_content_replace() {

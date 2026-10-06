@@ -2,8 +2,7 @@
  * Hostile snippet: "window.URL overwritten by a third-party script".
  *
  * Reproduces what the EMC – Embed Calendly Scheduling plugin's bundled
- * widget.js does on every admin page (bug #62 root cause, customer report
- * 2026-09-08): it replaces the global URL constructor with a minified
+ * widget.js does on every admin page: it replaces the global URL constructor with a minified
  * wrapper that only carries createObjectURL/revokeObjectURL statics —
  * URL.parse() (and any other static) is gone.
  *

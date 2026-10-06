@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests: upload → optimize → verify (Wave 1).
+ * Integration tests: upload → optimize → verify.
  *
  * Drives the REAL optimization pipeline — QueueController, ShortQ queue,
  * OptimizeController, ApiController request building, response parsing,
@@ -198,15 +198,13 @@ class OptimizePipelineTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// Extended tests (Wave 3)
+	// Extended tests
 	// -------------------------------------------------------------------
 
 	/**
 	 * An image whose filename matches an excludePatterns entry must not be
 	 * optimized when manually triggered; the queue item must report it is
 	 * not processable rather than succeeding.
-	 *
-	 * Manual plan 2.25 / 2.52.
 	 */
 	public function test_excluded_image_is_not_optimized() {
 		// Set the pattern BEFORE uploading: with autoMediaLibrary=1 the upload
@@ -230,7 +228,7 @@ class OptimizePipelineTest extends SPIO_IntegrationTestCase {
 		$image = $this->freshImageModel( $id );
 		$this->assertFalse(
 			$image->isOptimized(),
-			'An image matching an exclusion pattern must not be optimized (plan 2.25/2.52).'
+			'An image matching an exclusion pattern must not be optimized.'
 		);
 	}
 
@@ -241,8 +239,6 @@ class OptimizePipelineTest extends SPIO_IntegrationTestCase {
 	 * The wp_generate_attachment_metadata hook is wired in shortpixel-plugin.php
 	 * only when env()->is_autoprocess is true. We manipulate that flag and the
 	 * filter registration directly to test the off-state.
-	 *
-	 * Manual plan 3.4.
 	 */
 	public function test_autoMediaLibrary_off_upload_not_queued() {
 		// Turn auto-process off and remove the upload hook.
@@ -263,15 +259,13 @@ class OptimizePipelineTest extends SPIO_IntegrationTestCase {
 
 		$this->assertFalse(
 			$hasWork,
-			'With autoMediaLibrary=0, uploading an image must NOT enqueue it for optimization (plan 3.4).'
+			'With autoMediaLibrary=0, uploading an image must NOT enqueue it for optimization.'
 		);
 	}
 
 	/**
 	 * When useSmartcrop=true, the per-URL paramlist entry for each image sent to
 	 * the reducer must include resize=4 (the smartcrop code).
-	 *
-	 * Manual plan 2.10 / 2.37.
 	 */
 	public function test_smartcrop_parameter_sent_in_reducer_request() {
 		\wpSPIO()->settings()->useSmartcrop = 1;
@@ -308,14 +302,12 @@ class OptimizePipelineTest extends SPIO_IntegrationTestCase {
 
 		$this->assertTrue(
 			$found,
-			'With useSmartcrop=1, at least one reducer request entry must carry resize=4 (the smartcrop code). Plan 2.10/2.37.'
+			'With useSmartcrop=1, at least one reducer request entry must carry resize=4 (the smartcrop code).'
 		);
 	}
 
 	/**
 	 * When useSmartcrop=false, no reducer request entry must carry resize=4.
-	 *
-	 * Manual plan 2.11 / 2.38.
 	 */
 	public function test_no_smartcrop_parameter_when_smartcrop_disabled() {
 		\wpSPIO()->settings()->useSmartcrop = 0;
@@ -340,13 +332,13 @@ class OptimizePipelineTest extends SPIO_IntegrationTestCase {
 				$this->assertNotSame(
 					4,
 					isset( $entry['resize'] ) ? (int) $entry['resize'] : null,
-					'With useSmartcrop=0 no paramlist entry must carry resize=4 (plan 2.11/2.38).'
+					'With useSmartcrop=0 no paramlist entry must carry resize=4.'
 				);
 			}
 			$this->assertNotSame(
 				4,
 				isset( $req['resize'] ) ? (int) $req['resize'] : null,
-				'With useSmartcrop=0 the top-level resize field must not be 4 (plan 2.11/2.38).'
+				'With useSmartcrop=0 the top-level resize field must not be 4.'
 			);
 		}
 	}
@@ -355,10 +347,8 @@ class OptimizePipelineTest extends SPIO_IntegrationTestCase {
 	 * With optimizePdfs=false, uploading a PDF must NOT add it to any queue.
 	 *
 	 * This test covers only the "PDF setting OFF → not queued" part of the PDF
-	 * flow. The actual download bug for PDFs (DownloadHelper rejects .tmp files)
-	 * is already covered by the pinned test in test-BulkOptimization.php.
-	 *
-	 * Manual plan 8.8.
+	 * flow. The PDF download path (DownloadHelper extension whitelist) is
+	 * covered in test-BulkOptimization.php.
 	 */
 	public function test_pdf_not_optimized_when_pdf_setting_disabled() {
 		\wpSPIO()->settings()->optimizePdfs = 0;
@@ -369,7 +359,7 @@ class OptimizePipelineTest extends SPIO_IntegrationTestCase {
 
 		$this->assertFalse(
 			$hasWork,
-			'With optimizePdfs=0 a newly uploaded PDF must not be enqueued for optimization (plan 8.8).'
+			'With optimizePdfs=0 a newly uploaded PDF must not be enqueued for optimization.'
 		);
 
 		// Also confirm that directly trying to optimize it via addItemToQueue
@@ -378,7 +368,7 @@ class OptimizePipelineTest extends SPIO_IntegrationTestCase {
 		$this->assertNotFalse( $imageModel, 'PDF image model must be retrievable.' );
 		$this->assertFalse(
 			$imageModel->isProcessable(),
-			'isProcessable() must return false for a PDF when optimizePdfs=0 (plan 8.8).'
+			'isProcessable() must return false for a PDF when optimizePdfs=0.'
 		);
 	}
 
@@ -386,8 +376,6 @@ class OptimizePipelineTest extends SPIO_IntegrationTestCase {
 	 * For an already-optimized image that was originally processed with SmartCrop,
 	 * requesting WebP companion generation must produce a WebP file with resize=4
 	 * in the reducer request (so the SmartCropped version is used as the source).
-	 *
-	 * Manual plan 24.6.
 	 */
 	public function test_smartcrop_webp_companions_generated_for_already_optimized_image() {
 		\wpSPIO()->settings()->useSmartcrop = 1;
@@ -434,7 +422,7 @@ class OptimizePipelineTest extends SPIO_IntegrationTestCase {
 			$this->assertStringContainsString(
 				'webp',
 				implode( '|', $converts ),
-				'WebP-companion request must request webp conversion (plan 24.6).'
+				'WebP-companion request must request webp conversion.'
 			);
 			$paramlist = isset( $req['paramlist'] ) ? array_values( (array) $req['paramlist'] ) : array();
 			foreach ( $paramlist as $entry ) {
@@ -447,20 +435,18 @@ class OptimizePipelineTest extends SPIO_IntegrationTestCase {
 
 		$this->assertTrue(
 			$found,
-			'WebP companion request for a SmartCrop-optimized image must still carry resize=4 in paramlist (plan 24.6).'
+			'WebP companion request for a SmartCrop-optimized image must still carry resize=4 in paramlist.'
 		);
 
 		$freshImage = \wpSPIO()->filesystem()->getImage( $id, 'media', false );
 		$webp       = $freshImage->getWebp();
-		$this->assertNotFalse( $webp, 'Image must expose a WebP companion (plan 24.6).' );
-		$this->assertTrue( $webp->exists(), 'WebP companion file must exist on disk (plan 24.6).' );
+		$this->assertNotFalse( $webp, 'Image must expose a WebP companion.' );
+		$this->assertTrue( $webp->exists(), 'WebP companion file must exist on disk.' );
 	}
 
 	/**
 	 * For an already-optimized SmartCrop image, requesting AVIF companion
 	 * generation must produce an AVIF file.
-	 *
-	 * Manual plan 24.7.
 	 */
 	public function test_smartcrop_avif_companions_generated_for_already_optimized_image() {
 		\wpSPIO()->settings()->useSmartcrop = 1;
@@ -489,7 +475,7 @@ class OptimizePipelineTest extends SPIO_IntegrationTestCase {
 				return false !== strpos( $r['url'], 'reducer' );
 			}
 		);
-		$this->assertNotEmpty( $reducerCalls, 'AVIF companion run must call the reducer (plan 24.7).' );
+		$this->assertNotEmpty( $reducerCalls, 'AVIF companion run must call the reducer.' );
 
 		foreach ( $reducerCalls as $call ) {
 			$req      = $call['request'];
@@ -505,14 +491,14 @@ class OptimizePipelineTest extends SPIO_IntegrationTestCase {
 			$this->assertStringContainsString(
 				'avif',
 				implode( '|', $converts ),
-				'AVIF companion request must request avif conversion (plan 24.7).'
+				'AVIF companion request must request avif conversion.'
 			);
 		}
 
 		$freshImage = \wpSPIO()->filesystem()->getImage( $id, 'media', false );
 		$avif       = $freshImage->getAvif();
-		$this->assertNotFalse( $avif, 'Image must expose an AVIF companion after the AVIF companion run (plan 24.7).' );
-		$this->assertTrue( $avif->exists(), 'AVIF companion file must exist on disk (plan 24.7).' );
+		$this->assertNotFalse( $avif, 'Image must expose an AVIF companion after the AVIF companion run.' );
+		$this->assertTrue( $avif->exists(), 'AVIF companion file must exist on disk.' );
 	}
 
 	/**
@@ -528,8 +514,6 @@ class OptimizePipelineTest extends SPIO_IntegrationTestCase {
 	 * never be recreated and every later upload in the run would fail. A
 	 * filtered, never-seen path goes through wp_mkdir_p() exactly like a real
 	 * month rollover does.
-	 *
-	 * Manual plan 2.21.
 	 */
 	public function test_first_image_of_month_creates_folders_and_optimizes() {
 		$uploads  = wp_upload_dir();
@@ -571,14 +555,14 @@ class OptimizePipelineTest extends SPIO_IntegrationTestCase {
 
 		$this->assertDirectoryExists(
 			$monthDir,
-			'The uploads year/month directory must be (re)created when the first image of the month is uploaded (plan 2.21).'
+			'The uploads year/month directory must be (re)created when the first image of the month is uploaded.'
 		);
 
 		// Confirm the uploaded file itself is on disk.
 		$uploadedPath = get_attached_file( $id );
 		$this->assertFileExists(
 			$uploadedPath,
-			'The uploaded file must exist on disk after upload (plan 2.21).'
+			'The uploaded file must exist on disk after upload.'
 		);
 
 		// Optimize.
@@ -587,7 +571,7 @@ class OptimizePipelineTest extends SPIO_IntegrationTestCase {
 		$image = \wpSPIO()->filesystem()->getImage( $id, 'media', false );
 		$this->assertTrue(
 			$image->isOptimized(),
-			'The first image of the month must be optimized successfully (plan 2.21).'
+			'The first image of the month must be optimized successfully.'
 		);
 
 		// The ShortPixel backup directory for this image must have been created
@@ -597,21 +581,21 @@ class OptimizePipelineTest extends SPIO_IntegrationTestCase {
 		$backup = BackupController::getBackupModel( $image );
 		$this->assertNotFalse(
 			$backup,
-			'BackupController must return a backup model for the optimized attachment (plan 2.21).'
+			'BackupController must return a backup model for the optimized attachment.'
 		);
 		$this->assertTrue(
 			$backup->hasBackup( $image ),
-			'The backup model must report that a backup exists after the first optimization of the month (plan 2.21).'
+			'The backup model must report that a backup exists after the first optimization of the month.'
 		);
 
 		$backupFile = $backup->getBackupFile( $image );
 		$this->assertNotFalse(
 			$backupFile,
-			'A backup file must be retrievable via the backup model (plan 2.21).'
+			'A backup file must be retrievable via the backup model.'
 		);
 		$this->assertTrue(
 			$backupFile->exists(),
-			'The backup file must physically exist on disk after first-of-month optimization (plan 2.21). Path: ' . ( $backupFile ? $backupFile->getFullPath() : 'unknown' )
+			'The backup file must physically exist on disk after first-of-month optimization. Path: ' . ( $backupFile ? $backupFile->getFullPath() : 'unknown' )
 		);
 	}
 
@@ -628,8 +612,6 @@ class OptimizePipelineTest extends SPIO_IntegrationTestCase {
 	 * the end-optimized state; checking the clearance of a smartcrop-specific meta
 	 * field would require knowing the field name (not yet located). This is a PINNED
 	 * test for that meta aspect — flip when the imageName/smartcrop meta is exposed.
-	 *
-	 * Manual plan 24.8.
 	 */
 	public function test_reoptimize_without_smartcrop_clears_smartcrop_meta() {
 		\wpSPIO()->settings()->useSmartcrop = 1;
@@ -659,7 +641,7 @@ class OptimizePipelineTest extends SPIO_IntegrationTestCase {
 				return false !== strpos( $r['url'], 'reducer' );
 			}
 		) );
-		$this->assertNotEmpty( $reducerCalls, 'Re-optimize-without-smartcrop must call the reducer (plan 24.8).' );
+		$this->assertNotEmpty( $reducerCalls, 'Re-optimize-without-smartcrop must call the reducer.' );
 
 		// Verify resize=4 is absent from every paramlist entry.
 		foreach ( $reducerCalls as $call ) {
@@ -670,7 +652,7 @@ class OptimizePipelineTest extends SPIO_IntegrationTestCase {
 				$this->assertNotSame(
 					4,
 					isset( $entry['resize'] ) ? (int) $entry['resize'] : null,
-					'Re-optimize without SmartCrop must NOT send resize=4 in paramlist (plan 24.8).'
+					'Re-optimize without SmartCrop must NOT send resize=4 in paramlist.'
 				);
 			}
 		}
@@ -684,16 +666,16 @@ class OptimizePipelineTest extends SPIO_IntegrationTestCase {
 		$freshImage = $this->freshImageModel( $id );
 		$this->assertTrue(
 			$freshImage->isOptimized(),
-			'Image must still be optimized after re-optimizing without SmartCrop (plan 24.8). Pinned: smartcrop meta clearance not verified — field not located.'
+			'Image must still be optimized after re-optimizing without SmartCrop. Pinned: smartcrop meta clearance not verified — field not located.'
 		);
 	}
 
 	// -------------------------------------------------------------------
-	// Meta persistence: lastSave timestamp (aecd4279)
+	// Meta persistence: lastSave timestamp
 	// -------------------------------------------------------------------
 
 	/**
-	 * Since aecd4279, MediaLibraryModel::createRecord() stamps every saved
+	 * MediaLibraryModel::createRecord() stamps every saved
 	 * shortpixel_postmeta row with a 'lastSave' datetime inside the
 	 * extra_info JSON (for debugging / support). Optimizing an attachment
 	 * must leave a parseable, recent lastSave on the main-file row.
@@ -713,7 +695,7 @@ class OptimizePipelineTest extends SPIO_IntegrationTestCase {
 
 		$decoded = json_decode( $extra_info, true );
 		$this->assertIsArray( $decoded, 'extra_info must be valid JSON.' );
-		$this->assertArrayHasKey( 'lastSave', $decoded, 'extra_info must contain the lastSave timestamp (aecd4279).' );
+		$this->assertArrayHasKey( 'lastSave', $decoded, 'extra_info must contain the lastSave timestamp.' );
 
 		$this->assertMatchesRegularExpression(
 			'/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/',

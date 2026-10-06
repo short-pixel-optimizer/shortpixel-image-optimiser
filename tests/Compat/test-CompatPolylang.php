@@ -1,6 +1,6 @@
 <?php
 /**
- * Cross-plugin compatibility: Polylang (Wave 3) — hook/data-level suite.
+ * Cross-plugin compatibility: Polylang — hook/data-level suite.
  *
  * This suite does NOT require the Polylang plugin to be installed and active.
  * Polylang's media-translation model creates duplicate attachment posts that
@@ -19,20 +19,17 @@
  * (already an int), so no numeric-string normalisation is required (unlike
  * the WPML branch where element_id comes back as a string from wpdb).
  *
- * SINCE 2026-09: the REAL free Polylang plugin is also downloaded +
+ * The REAL free Polylang plugin is also downloaded +
  * activated by bin/test.sh --compat (wp.org loop) — the real-plugin tests
  * below verify SPIO's hooks survive an actual Polylang boot and self-skip
- * when POLYLANG_VERSION is absent. The original faked-active tests above
+ * when POLYLANG_VERSION is absent. The faked-active tests
  * keep working unchanged (the appended filter entry is simply redundant
  * when the bootstrap already lists polylang).
  *
- * RENAME DESYNC — guid-duplicate translations — BUG #69, FIXED for
- * Polylang (202c6e3c + faa1e4cc; regression-covered below):
+ * RENAME — guid-duplicate translations (regression-covered below):
  * OptimizeAiController::replaceFiles() loops getWPMLDuplicates() and runs
- * replaceMetaData() for every sibling. 202c6e3c updated only the sibling's
- * _wp_attachment_metadata (is_duplicate=true skipped update_attached_file());
- * faa1e4cc removed that skip, so the sibling's _wp_attached_file follows the
- * rename too. #69 stays OPEN for WPML (see test-CompatWPML.php).
+ * replaceMetaData() for every sibling, updating both its
+ * _wp_attachment_metadata and its _wp_attached_file.
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -124,8 +121,6 @@ class CompatPolylangTest extends SPIO_IntegrationTestCase {
 	 * SPIO must start up cleanly when Polylang is listed as active — no
 	 * fatal errors, and the environment must confirm Polylang is detected.
 	 *
-	 * Manual plan rows 22.x precondition.
-	 *
 	 * @return void
 	 */
 	public function test_spio_loads_alongside_polylang_style_duplicated_media() {
@@ -141,14 +136,12 @@ class CompatPolylangTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// 22.1 — guid-duplicate detection
+	// Guid-duplicate detection
 	// -------------------------------------------------------------------
 
 	/**
 	 * getWPMLDuplicates() must return the id of an attachment that shares
 	 * the same guid, representing a Polylang media translation.
-	 *
-	 * Manual plan row 22.1.
 	 *
 	 * @return void
 	 */
@@ -171,7 +164,7 @@ class CompatPolylangTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// 22.1 (extended) / 22.x — optimizing propagates to Polylang duplicate
+	// Optimizing propagates to Polylang duplicate
 	// -------------------------------------------------------------------
 
 	/**
@@ -179,8 +172,6 @@ class CompatPolylangTest extends SPIO_IntegrationTestCase {
 	 * optimized state to every Polylang guid-duplicate — sharing meta
 	 * means the translation is also marked optimized without an extra
 	 * API call.
-	 *
-	 * Manual plan row 22.1 (propagation side).
 	 *
 	 * @return void
 	 */
@@ -222,15 +213,13 @@ class CompatPolylangTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// 22.2 — second translation after optimize must not re-optimize
+	// Second translation after optimize must not re-optimize
 	// -------------------------------------------------------------------
 
 	/**
 	 * Adding a second Polylang translation AFTER the image is already
 	 * optimized must not trigger a new API request.  The duplicate is
 	 * handled by metadata propagation only.
-	 *
-	 * Manual plan row 22.2.
 	 *
 	 * @return void
 	 */
@@ -271,7 +260,7 @@ class CompatPolylangTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// 22.4 — deleting a translation preserves backup until last copy gone
+	// Deleting a translation preserves backup until last copy gone
 	// -------------------------------------------------------------------
 
 	/**
@@ -279,8 +268,6 @@ class CompatPolylangTest extends SPIO_IntegrationTestCase {
 	 * backup while the original (or any other language copy) still
 	 * references the same physical file.  The backup must only be removed
 	 * when the last attachment sharing the file is deleted.
-	 *
-	 * Manual plan row 22.4.
 	 *
 	 * @return void
 	 */
@@ -330,13 +317,13 @@ class CompatPolylangTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// REAL Polylang plugin (wp.org download, active since 2026-09)
+	// REAL Polylang plugin (wp.org download)
 	// -------------------------------------------------------------------
 
 	/**
 	 * With the real plugin loaded, SPIO must detect it WITHOUT the faked
 	 * filter and the whole upload → model pipeline must stay functional —
-	 * this is the "hooks still work, no surprises" guard Pedro asked for.
+	 * the "hooks still work, no surprises" guard.
 	 */
 	public function test_real_polylang_loads_alongside_spio() {
 		if ( ! defined( 'POLYLANG_VERSION' ) ) {
@@ -373,7 +360,7 @@ class CompatPolylangTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// PIN — file rename never reaches the guid-duplicate translations
+	// File rename reaches the guid-duplicate translations
 	// -------------------------------------------------------------------
 
 	/** Run the shared rename engine exactly like AjaxController::replaceFileName does (:1409-1413). */
@@ -386,18 +373,16 @@ class CompatPolylangTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * REGRESSION #69 — Polylang (flipped 2026-09-24, fully fixed in faa1e4cc).
+	 * REGRESSION — Polylang duplicates follow a rename.
 	 *
-	 * 202c6e3c made replaceFiles() loop getWPMLDuplicates() and call
-	 * replaceMetaData() for every sibling, so the duplicate's
-	 * _wp_attachment_metadata['file'] tracked the rename — but it passed
-	 * is_duplicate=true, which SKIPPED update_attached_file(), leaving the
-	 * duplicate's _wp_attached_file on the old, deleted file. faa1e4cc removed
-	 * that skip, so both now follow the rename. (Polylang siblings are found
-	 * by guid, which the rename never changes, so the duplicates lookup is not
-	 * affected by the WPML ordering bug that keeps #69 open for WPML.)
+	 * replaceFiles() loops getWPMLDuplicates() and calls replaceMetaData()
+	 * for every sibling, so both the duplicate's
+	 * _wp_attachment_metadata['file'] and its _wp_attached_file follow the
+	 * rename (if update_attached_file() were skipped for duplicates, the
+	 * _wp_attached_file would stay on the old, deleted file). Polylang
+	 * siblings are found by guid, which the rename never changes.
 	 */
-	public function test_regression69_polylang_duplicate_tracks_the_rename() {
+	public function test_polylang_duplicate_tracks_the_rename() {
 		$id     = $this->uploadFixture( 'fixture-small.jpg' );
 		$dup_id = $this->createPolylangDuplicate( $id );
 		$this->purgeQueueTable();
@@ -413,32 +398,32 @@ class CompatPolylangTest extends SPIO_IntegrationTestCase {
 		$this->assertStringContainsString( $new_base, get_attached_file( $id ), 'Sanity: original _wp_attached_file must carry the new base.' );
 		$this->assertFileDoesNotExist( $old_file, 'Sanity: the shared physical file was moved to the new name.' );
 
-		// REGRESSION (202c6e3c): the duplicate's metadata['file'] now
-		// tracks the rename via the getWPMLDuplicates() loop.
+		// The duplicate's metadata['file'] tracks the rename via the
+		// getWPMLDuplicates() loop.
 		clean_post_cache( $dup_id );
 		$dup_meta = wp_get_attachment_metadata( $dup_id );
 		$this->assertStringContainsString(
 			$new_base,
 			(string) ( $dup_meta['file'] ?? '' ),
-			'REGRESSION #69: the duplicate metadata[file] must carry the new base (getWPMLDuplicates loop in replaceFiles).'
+			'REGRESSION: the duplicate metadata[file] must carry the new base (getWPMLDuplicates loop in replaceFiles).'
 		);
 		$this->assertStringNotContainsString(
 			$old_base,
 			(string) ( $dup_meta['file'] ?? '' ),
-			'REGRESSION #69: the duplicate metadata[file] must no longer reference the old filename.'
+			'REGRESSION: the duplicate metadata[file] must no longer reference the old filename.'
 		);
 
-		// REGRESSION (faa1e4cc): the duplicate's _wp_attached_file follows too,
-		// so the translation points at the file that actually exists.
+		// The duplicate's _wp_attached_file follows too, so the translation
+		// points at the file that actually exists.
 		$dup_attached = get_attached_file( $dup_id );
 		$this->assertStringContainsString(
 			$new_base,
 			$dup_attached,
-			'REGRESSION #69: the duplicate _wp_attached_file must carry the new base.'
+			'REGRESSION: the duplicate _wp_attached_file must carry the new base.'
 		);
 		$this->assertFileExists(
 			$dup_attached,
-			'REGRESSION #69: the duplicate must reference a file that exists after the rename.'
+			'REGRESSION: the duplicate must reference a file that exists after the rename.'
 		);
 	}
 }

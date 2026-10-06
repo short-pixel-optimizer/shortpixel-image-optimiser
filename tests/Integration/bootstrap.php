@@ -93,11 +93,10 @@ if ( '1' === getenv( 'SPIO_PARTNER_PLUGINS' ) ) {
  * ConversionManual, ConversionRestore) model the common host WITHOUT that
  * support, where the HEIC stays a .heic and SPIO's API conversion does the
  * job. GitHub's runners get PHP (and php-imagick) refreshed from the PPA by
- * setup-php on every run; from 2026-09-28 the Imagick build there reads
- * HEIC, WordPress pre-converted the fixture to fixture-large-scaled.jpg, and
- * those 3 tests failed on WP latest (not on 5.9, which predates the HEIC
- * conversion) — the same commit that passed hours earlier failed on a
- * re-run. The local harness has no Imagick at all, so it never saw it.
+ * setup-php on every run, and that Imagick build reads HEIC: WordPress then
+ * pre-converts the fixture to fixture-large-scaled.jpg and those 3 tests fail
+ * on WP latest (not on 5.9, which predates the HEIC conversion). The local
+ * harness has no Imagick at all, so it never shows the problem.
  *
  * Registered before the first test, so WP_UnitTestCase's hook backup keeps
  * it for every test.

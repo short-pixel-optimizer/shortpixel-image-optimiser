@@ -162,11 +162,11 @@ class WpCliTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * Bug #18 FIXED (a2d45fa1): QueueController::addItemToQueue() now attaches
-	 * the default "Item %s added to Queue" message when the enqueue result has
-	 * no message of its own (the old `&&`/`||` precedence bug made the guard
-	 * unreachable for the normal message===null case, so every CLI add printed
-	 * a blank Success line). Flipped from the pinned empty-message assertion.
+	 * QueueController::addItemToQueue() attaches the default "Item %s added
+	 * to Queue" message when the enqueue result has no message of its own
+	 * (mind the `&&`/`||` precedence in that guard: it must be reachable for
+	 * the normal message===null case, or every CLI add prints a blank
+	 * Success line).
 	 */
 	public function test_add_success_message_is_populated() {
 		$id  = $this->freshAttachment();
@@ -179,7 +179,7 @@ class WpCliTest extends SPIO_IntegrationTestCase {
 		$this->assertStringContainsString(
 			'added to',
 			$successes[0],
-			'Since a2d45fa1 (bug #18 fix) the enqueue success message must carry the default "added to Queue" text.'
+			'The enqueue success message must carry the default "added to Queue" text.'
 		);
 	}
 
@@ -204,10 +204,10 @@ class WpCliTest extends SPIO_IntegrationTestCase {
 		$cli->run( array(), array( 'queue' => 'media', 'ticks' => 1, 'wait' => 0 ) );
 		$this->assertStringContainsString( 'All Queues report processing has finished', WP_CLI::allText() );
 
-		// Bug #32 FIXED (af5794d8): displayResult() fetches the magic property
-		// into a local var before empty() — QueueItemResult has __get/__set
-		// but no __isset, so empty() directly on $result->improvements was
-		// always true. The per-size improvements table renders again.
+		// displayResult() fetches the magic property into a local var before
+		// empty() — QueueItemResult has __get/__set but no __isset, so empty()
+		// directly on $result->improvements would always be true and the
+		// per-size improvements table would never render.
 		$improvementTables = array_filter(
 			WP_CLI::$tables,
 			function ( $table ) {
@@ -216,7 +216,7 @@ class WpCliTest extends SPIO_IntegrationTestCase {
 		);
 		$this->assertNotEmpty(
 			$improvementTables,
-			'Since af5794d8 (bug #32 fix) a successful optimization must render the per-size improvements table.'
+			'A successful optimization must render the per-size improvements table.'
 		);
 	}
 
@@ -313,12 +313,11 @@ class WpCliTest extends SPIO_IntegrationTestCase {
 			"The CLI-enqueued AI request must produce the mock alt text after run.\n" . WP_CLI::allText()
 		);
 
-		// Bug #19 FIXED (e19a0236): displayResult() now guards the improvements
-		// table with `false === empty($result->improvements)` instead of
-		// property_exists() (which was always true — the property is declared,
-		// null on AI results). AI successes no longer render a bogus table with
-		// a bare '%' Total row, and the "array offset on null" warnings at :497
-		// are gone. Flipped from the pinned bogus-table assertions.
+		// displayResult() guards the improvements table with
+		// `false === empty($result->improvements)` rather than
+		// property_exists() (always true — the property is declared, null on
+		// AI results), so AI successes do not render a bogus table with a
+		// bare '%' Total row or raise "array offset on null" warnings.
 		$bogusTables = array_filter(
 			WP_CLI::$tables,
 			function ( $table ) {
@@ -327,7 +326,7 @@ class WpCliTest extends SPIO_IntegrationTestCase {
 		);
 		$this->assertEmpty(
 			$bogusTables,
-			'Since e19a0236 (bug #19 fix) an AI success must not render an improvements table.'
+			'An AI success must not render an improvements table.'
 		);
 	}
 
@@ -370,7 +369,6 @@ class WpCliTest extends SPIO_IntegrationTestCase {
 	 * Restore a custom-media image via `wp spio restore ID --type=custom`.
 	 * The command resolves the image via filesystem()->getImage($id, 'custom'),
 	 * runs the restore action synchronously through the queue, and reports success.
-	 * Manual plan row 11.2.5 (custom-type variant).
 	 */
 	public function test_restore_via_cli_with_type_custom() {
 		\wpSPIO()->settings()->backupImages = 1;
@@ -425,14 +423,14 @@ class WpCliTest extends SPIO_IntegrationTestCase {
 			$this->assertStringContainsString(
 				'Item restored',
 				$successes[0],
-				"The success message must contain 'Item restored' (row 11.2.5).\n" . WP_CLI::allText()
+				"The success message must contain 'Item restored'.\n" . WP_CLI::allText()
 			);
 
 			// The image must now be back to unoptimized state.
 			$restored = \wpSPIO()->filesystem()->getImage( $customId, 'custom', false );
 			$this->assertFalse(
 				$restored->isOptimized(),
-				'Custom image must be marked as unoptimized after CLI restore with --type=custom (row 11.2.5).'
+				'Custom image must be marked as unoptimized after CLI restore with --type=custom.'
 			);
 
 			// The disk file must be back to the original byte size.
@@ -441,7 +439,7 @@ class WpCliTest extends SPIO_IntegrationTestCase {
 			$this->assertSame(
 				$originalSize,
 				filesize( $customDir . 'cli-restore.jpg' ),
-				'The restored custom file on disk must match the original fixture byte size (row 11.2.5).'
+				'The restored custom file on disk must match the original fixture byte size.'
 			);
 		} finally {
 			@unlink( $customDir . 'cli-restore.jpg' );

@@ -21,9 +21,8 @@
  * InfiniteUploads detection test therefore runs FIRST in this file and
  * self-skips defensively if the S3 alias already exists.
  *
- * RENAME ON VIRTUAL FILESYSTEMS — BUG #70 (FIXED by refusal in 0db02498,
- * regression-covered below): renaming is only supported for WP Offload
- * Media. OptimizeAiController::isVirtualSupported() answers true only when
+ * RENAME ON VIRTUAL FILESYSTEMS (regression-covered below): renaming is
+ * only supported for WP Offload Media. OptimizeAiController::isVirtualSupported() answers true only when
  * no offloader or `wp-offload` is active, so for S3-Uploads,
  * InfiniteUploads and Bitpoke Stack:
  *   - replaceFiles() returns false up front for a virtual image ("Offloaded
@@ -31,8 +30,8 @@
  *     or content is rewritten;
  *   - the "Change Filename" field is not rendered on the edit screen
  *     (part-aitext.php only renders it when `is_renameable` is true).
- * Previously every copy() failed silently on a stateless install while the
- * DB rewrite still ran and true was returned.
+ * Otherwise every copy() would fail silently on a stateless install while
+ * the DB rewrite still ran and true was returned.
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -167,8 +166,8 @@ class VirtualFilesystemRenameTest extends SPIO_IntegrationTestCase {
 			// never an internal class: class_alias() only accepts internal
 			// classes such as \stdClass from PHP 8.3. PHP 7.4 refuses with a
 			// warning and returns false (the class never exists, so the
-			// dispatcher fell through to InfiniteUploads — CI PHP 7.4 failure,
-			// 2026-09-16), and PHP 8.0-8.2 throw a fatal ValueError.
+			// dispatcher falls through to InfiniteUploads), and PHP 8.0-8.2
+			// throw a fatal ValueError.
 			class_alias( SPIO_Test_S3_Uploads_Plugin_Stub::class, 'S3_Uploads\Plugin' );
 		}
 		return $this->rebootOffloader();
@@ -208,18 +207,17 @@ class VirtualFilesystemRenameTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// PIN — rename on a stateless install rewrites the DB while nothing
-	// moves, and no virtual adapter is ever informed
+	// Rename on a stateless install is refused (nothing moves, so the DB
+	// must not be rewritten)
 	// -------------------------------------------------------------------
 
 	/**
-	 * REGRESSION #70 (flipped from pin70, 2026-09-18; fixed by refusal in
-	 * 0db02498): on the normal S3-Uploads state ("no local files") the
-	 * rename is now refused — replaceFiles() returns false and leaves the
+	 * Regression: on the normal S3-Uploads state ("no local files") the
+	 * rename is refused — replaceFiles() returns false and leaves the
 	 * database untouched, instead of rewriting _wp_attached_file to a
 	 * filename that exists nowhere and reporting success.
 	 */
-	public function test_regression70_stateless_rename_is_refused_and_leaves_the_db_untouched() {
+	public function test_stateless_rename_is_refused_and_leaves_the_db_untouched() {
 		$id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->purgeQueueTable();
 
@@ -246,21 +244,21 @@ class VirtualFilesystemRenameTest extends SPIO_IntegrationTestCase {
 
 		$this->assertFalse(
 			$result,
-			'REGRESSION #70: a rename on an unsupported virtual filesystem must be refused.'
+			'A rename on an unsupported virtual filesystem must be refused.'
 		);
 		$this->assertSame(
 			$raw_attached_before,
 			(string) get_post_meta( $id, '_wp_attached_file', true ),
-			'REGRESSION #70: _wp_attached_file must be left untouched by a refused rename.'
+			'_wp_attached_file must be left untouched by a refused rename.'
 		);
 		$this->assertStringNotContainsString(
 			$new_base,
 			(string) ( wp_get_attachment_metadata( $id )['file'] ?? '' ),
-			'REGRESSION #70: the attachment metadata must not carry the new base.'
+			'The attachment metadata must not carry the new base.'
 		);
 		$this->assertFileDoesNotExist(
 			$dir . $new_base . '.jpg',
-			'REGRESSION #70: no file may appear under the new name.'
+			'No file may appear under the new name.'
 		);
 	}
 }

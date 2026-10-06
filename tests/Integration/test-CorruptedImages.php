@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests: corrupted / broken image handling (Wave 3).
+ * Integration tests: corrupted / broken image handling.
  *
  * Two corruption flavors, generated at runtime (not committed fixtures):
  *   - garbage bytes with a .jpg extension (never a valid image);

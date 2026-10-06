@@ -2,8 +2,8 @@
 /**
  * ItemAccessGuard unit tests.
  *
- * Covers the shared per-image access check that Calin wired in front of every
- * single-image MCP ability (c91cd01c). The guard mirrors
+ * Covers the shared per-image access check that runs in front of every
+ * single-image MCP ability. The guard mirrors
  * AjaxController::checkImageAccess() so REST/MCP callers honour the same
  * per-attachment permission map (image_all / image_user / custom_all) as the
  * classic AJAX handlers.

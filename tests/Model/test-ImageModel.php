@@ -31,7 +31,7 @@
  *
  * SESSION 5 (done) — tail methods:
  *   - getImprovement (percentage + byte-savings math, negative clamp)
- *   - getCountOptimizeData (via _testOptimizeData injection — Finding D
+ *   - getCountOptimizeData (via _testOptimizeData injection — a
  *     workaround because getOptimizeData isn't declared abstract)
  *   - getImageType (webp/avif companion resolution via meta + convention)
  *   - getBackupModel (cache branch)
@@ -263,8 +263,8 @@ class ImageModelTest extends WP_UnitTestCase {
 			public $sizeDefinition = false;
 
 			/**
-			 * Test-only injection point for getOptimizeData. See Finding D
-			 * in the deferred-bugs list: getCountOptimizeData calls
+			 * Test-only injection point for getOptimizeData.
+			 * getCountOptimizeData calls
 			 * $this->getOptimizeData() but the method isn't declared
 			 * abstract at the top of ImageModel — it's an implicit
 			 * contract. Session 5 tests exercise getCountOptimizeData via
@@ -2455,9 +2455,8 @@ class ImageModelTest extends WP_UnitTestCase {
 
 	/*
 	 * cancelUserExclusions — resets processable_status when it currently
-	 * holds a user-exclusion code. Bas's fix in 399b29e2 changed the
-	 * reset value from `0` (which collided with P_PROCESSABLE) to `null`,
-	 * so `isProcessable()` re-runs its evaluation after the reset instead
+	 * holds a user-exclusion code. The reset value is `null`, not `0`
+	 * (which collides with P_PROCESSABLE), so `isProcessable()` re-runs its evaluation after the reset instead
 	 * of returning a stale "processable" verdict.
 	 */
 

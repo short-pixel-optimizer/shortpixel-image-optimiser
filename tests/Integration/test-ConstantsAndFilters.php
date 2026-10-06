@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests: wp-config.php constants take effect (manual plan 9.2).
+ * Integration tests: wp-config.php constants take effect.
  *
  * Each test method covers one documented wp-config constant and asserts its
  * documented effect through the plugin's real code path.  Only constants that
@@ -91,7 +91,7 @@ class ConstantsAndFiltersTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------------
-	// 9.2a — SHORTPIXEL_SILENT_MODE
+	// SHORTPIXEL_SILENT_MODE
 	// -------------------------------------------------------------------------
 
 	/**
@@ -101,8 +101,6 @@ class ConstantsAndFiltersTest extends SPIO_IntegrationTestCase {
 	 *
 	 * We bypass the singleton and construct a fresh instance so the constant
 	 * can be observed without resetting shared singleton state.
-	 *
-	 * Manual plan row: 9.2 (SHORTPIXEL_SILENT_MODE)
 	 */
 	public function test_silent_mode_constant_sets_notice_controller_flag() {
 		if ( defined( 'SHORTPIXEL_SILENT_MODE' ) ) {
@@ -126,12 +124,12 @@ class ConstantsAndFiltersTest extends SPIO_IntegrationTestCase {
 
 		$this->assertTrue(
 			$ctrl->isSilentMode(),
-			'When SHORTPIXEL_SILENT_MODE is true, AdminNoticesController::isSilentMode() must return true. (plan 9.2)'
+			'When SHORTPIXEL_SILENT_MODE is true, AdminNoticesController::isSilentMode() must return true.'
 		);
 	}
 
 	// -------------------------------------------------------------------------
-	// 9.2b — SHORTPIXEL_TRUSTED_MODE
+	// SHORTPIXEL_TRUSTED_MODE
 	// -------------------------------------------------------------------------
 
 	/**
@@ -141,8 +139,6 @@ class ConstantsAndFiltersTest extends SPIO_IntegrationTestCase {
 	 * useTrustedMode() reads the constant at call-time (not in the constructor),
 	 * so the existing singleton instance is safe to use once the constant is
 	 * defined.
-	 *
-	 * Manual plan row: 9.2 (SHORTPIXEL_TRUSTED_MODE)
 	 */
 	public function test_trusted_mode_constant_enables_environment_trusted_mode() {
 		if ( defined( 'SHORTPIXEL_TRUSTED_MODE' ) ) {
@@ -153,12 +149,12 @@ class ConstantsAndFiltersTest extends SPIO_IntegrationTestCase {
 
 		$this->assertTrue(
 			EnvironmentModel::getInstance()->useTrustedMode(),
-			'When SHORTPIXEL_TRUSTED_MODE is true, EnvironmentModel::useTrustedMode() must return true. (plan 9.2)'
+			'When SHORTPIXEL_TRUSTED_MODE is true, EnvironmentModel::useTrustedMode() must return true.'
 		);
 	}
 
 	// -------------------------------------------------------------------------
-	// 9.2c — SHORTPIXEL_BACKUP_FOLDER (pre-defined by the harness)
+	// SHORTPIXEL_BACKUP_FOLDER (pre-defined by the harness)
 	// -------------------------------------------------------------------------
 
 	/**
@@ -166,13 +162,11 @@ class ConstantsAndFiltersTest extends SPIO_IntegrationTestCase {
 	 * uploads base directory at plugin load time. Asserts that the constant is
 	 * present, is a non-empty string, and contains the uploads base path — i.e.
 	 * that the bootstrap code that computes and define()s it actually ran.
-	 *
-	 * Manual plan row: 9.2 (SHORTPIXEL_BACKUP_FOLDER)
 	 */
 	public function test_backup_folder_constant_is_defined_and_path_based_on_uploads() {
 		$this->assertTrue(
 			defined( 'SHORTPIXEL_BACKUP_FOLDER' ),
-			'SHORTPIXEL_BACKUP_FOLDER must be defined by the plugin bootstrap. (plan 9.2)'
+			'SHORTPIXEL_BACKUP_FOLDER must be defined by the plugin bootstrap.'
 		);
 
 		$folder = SHORTPIXEL_BACKUP_FOLDER;
@@ -193,7 +187,7 @@ class ConstantsAndFiltersTest extends SPIO_IntegrationTestCase {
 		$this->assertStringContainsString(
 			basename( $uploads_base ),
 			$folder,
-			'SHORTPIXEL_BACKUP_FOLDER must contain the uploads base directory name. (plan 9.2)'
+			'SHORTPIXEL_BACKUP_FOLDER must contain the uploads base directory name.'
 		);
 	}
 
@@ -208,8 +202,6 @@ class ConstantsAndFiltersTest extends SPIO_IntegrationTestCase {
 	 *
 	 * Moved here from test-SettingsAjaxSave.php: this test define()s
 	 * SHORTPIXEL_API_KEY, so it may only run in this isolated-process suite.
-	 *
-	 * Manual plan rows: 9.2 (SHORTPIXEL_API_KEY) + 1.18 (wp-config key precedence)
 	 */
 	public function test_wp_config_defined_key_takes_precedence_over_settings() {
 		if ( defined( 'SHORTPIXEL_API_KEY' ) ) {
@@ -239,11 +231,11 @@ class ConstantsAndFiltersTest extends SPIO_IntegrationTestCase {
 		$keyModel2 = new ApiKeyModel();
 		$keyModel2->loadKey();
 
-		$this->assertTrue( $keyModel2->is_constant(), 'With SHORTPIXEL_API_KEY defined, is_constant must be true. (plan 9.2/1.18)' );
+		$this->assertTrue( $keyModel2->is_constant(), 'With SHORTPIXEL_API_KEY defined, is_constant must be true.' );
 		$this->assertSame(
 			str_repeat( 'c', 20 ),
 			$keyModel2->getKey(),
-			'Constant key must override DB key (plan 1.18)'
+			'Constant key must override DB key'
 		);
 
 		// The DB key must have been blanked (ApiKeyModel::loadKey() clears it when a constant is present).
@@ -262,8 +254,6 @@ class ConstantsAndFiltersTest extends SPIO_IntegrationTestCase {
 	 * Guards with markTestSkipped when the constant is already defined (e.g.
 	 * when SHORTPIXEL_API_KEY was defined above in the same process run,
 	 * which does not define this constant, but environment may).
-	 *
-	 * Manual plan row: 9.2 (SHORTPIXEL_HIDE_API_KEY)
 	 */
 	public function test_hide_api_key_constant_sets_is_hidden_flag_on_model() {
 		if ( defined( 'SHORTPIXEL_HIDE_API_KEY' ) ) {
@@ -277,7 +267,7 @@ class ConstantsAndFiltersTest extends SPIO_IntegrationTestCase {
 
 		$this->assertTrue(
 			$model->is_hidden(),
-			'When SHORTPIXEL_HIDE_API_KEY is true, ApiKeyModel::is_hidden() must return true. (plan 9.2)'
+			'When SHORTPIXEL_HIDE_API_KEY is true, ApiKeyModel::is_hidden() must return true.'
 		);
 	}
 }

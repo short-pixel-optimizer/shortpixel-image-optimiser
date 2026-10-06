@@ -18,10 +18,9 @@
  *  - Bulk semantics (optimize + chained requestAlt on one item) rename too.
  *  - ai_gen_filename enabled AFTER an aipostmeta row exists is a NO-OP:
  *    AiDataModel::isProcessable() returns false (P_ALREADYDONE) — there is
- *    no field-level regeneration or filename-only bulk. FEATURE REQUEST in
- *    the dev backlog (Pedro, 2026-09-10) — NOT a numbered bug; this test
- *    documents the current no-op and will need updating when the feature
- *    lands.
+ *    no field-level regeneration or filename-only bulk (a feature request,
+ *    not a bug); this test documents the current no-op and will need
+ *    updating when the feature lands.
  *  - Rename gate: short (<=5 chars) filebase ignored; identical filebase
  *    ignored; ai_filename_prefix/postfix are baked into the final name.
  *  - Backups follow the rename (LocalBackupModel::renameBackup) and a
@@ -217,7 +216,7 @@ class AiFilenameRenameTest extends SPIO_IntegrationTestCase {
 	// -------------------------------------------------------------------
 
 	/**
-	 * FEATURE GAP (dev backlog, unnumbered — Pedro 2026-09-10): once an
+	 * FEATURE GAP: once an
 	 * aipostmeta row exists, AiDataModel::isProcessable() short-circuits
 	 * to P_ALREADYDONE, so enabling ai_gen_filename afterwards and
 	 * re-running AI (single or bulk) does NOT generate a filename — no

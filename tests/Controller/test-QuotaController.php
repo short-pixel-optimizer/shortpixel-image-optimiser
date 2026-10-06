@@ -13,25 +13,23 @@
  *   - forceCheckRemoteQuota() — deletes the transient and resets the
  *     in-memory quotaData property so the next call goes remote.
  *
- * Also covered (added 2026-09-21):
+ * Also covered:
  *   - AIUnlimited shaping in getQuota() and its PlanType derivation in
  *     getRemoteQuota() — the flag class/view/bulk/part-summary.php keys its
- *     "Unlimited AI plan" message on since dfa7e086.
+ *     "Unlimited AI plan" message on.
  *   - getRemoteQuota() response handling, made hermetic with a
  *     `pre_http_request` short-circuit (see interceptRemoteQuota()): no socket
  *     is ever opened, so the numeric normalisation, the non-200 path and the
- *     API-failure path are all testable offline. This supersedes the former
- *     "network, therefore skipped" note below.
- *   - The legacy non-numeric provision in getQuota(), which used to discard
- *     its own refresh (a `$quotData` typo, fixed 2026-09-21) and fatal in
- *     number_format(); it now self-heals from the API.
+ *     API-failure path are all testable offline.
+ *   - The legacy non-numeric provision in getQuota(), which self-heals from
+ *     the API instead of fataling in number_format().
  *
  * Out of scope (and why):
  *   - getRemoteQuota()'s transport fallbacks (https→http retry, wp_remote_get
  *     second fallback): reachable only by simulating WP_Error responses, which
  *     the intercept above deliberately does not do.
- *     Bug #17 FIXED (1facd056): guard is now `! is_object($data) || ! property_exists($data,'Status') || empty($data)`
- *     so a body of '{}' (empty object) or non-object JSON no longer reaches $data->Status->Code.
+ *     The guard `! is_object($data) || ! property_exists($data,'Status') || empty($data)`
+ *     keeps a body of '{}' (empty object) or non-object JSON from reaching $data->Status->Code.
  *   - remoteValidateKey() — also makes live remote calls; skipped.
  *   - setQuotaExceeded() / resetQuotaExceeded() — call AdminNoticesController
  *     which requires full admin-notices infrastructure; skipped.
@@ -431,10 +429,10 @@ class QuotaControllerTest extends WP_UnitTestCase {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * dfa7e086 added an `else` branch to class/view/bulk/part-summary.php that
+	 * class/view/bulk/part-summary.php has an `else` branch that
 	 * renders "This site is currently on the ShortPixel Unlimited AI plan…"
-	 * whenever `false === $quotaData->AIUnlimited` is not met. That property had
-	 * no coverage at all, so the tests below pin both the shaping in getQuota()
+	 * whenever `false === $quotaData->AIUnlimited` is not met. The tests below
+	 * pin both the shaping in getQuota()
 	 * and the PlanType derivation in getRemoteQuota() that feeds it.
 	 */
 	public function test_getQuota_aiunlimited_is_true_when_the_account_has_an_unlimited_ai_plan() {
@@ -598,12 +596,10 @@ class QuotaControllerTest extends WP_UnitTestCase {
 	}
 
 	// -------------------------------------------------------------------------
-	// REGRESSION — the legacy non-numeric provision actually self-heals
+	// The legacy non-numeric provision actually self-heals
 	// -------------------------------------------------------------------------
 
 	/**
-	 * REGRESSION (typo caught and fixed 2026-09-21).
-	 *
 	 * QuotaController::getQuota() guards against quota data cached before the
 	 * numeric normalisation landed:
 	 *
@@ -612,17 +608,12 @@ class QuotaControllerTest extends WP_UnitTestCase {
 	 *         $quotaData = $this->getQuotaData();
 	 *     }
 	 *
-	 * The refreshed array used to be assigned to a misspelled `$quotData` and
-	 * thrown away, so execution continued with the stale NON-NUMERIC value and
-	 * hit `number_format($quotaData['APICallsQuota'])` two lines later →
-	 * TypeError on PHP 8. The provision paid for the remote round-trip and
-	 * still crashed on exactly the case it was written to prevent.
-	 *
-	 * Introduced 2026-06-25 in 9480f182, reformatted (not fixed) by f504e178,
-	 * corrected 2026-09-21. Before the fix this test failed with
-	 * "number_format(): Argument #1 ($num) must be of type int|float, string
-	 * given"; the sentinel below keeps proving the guard still fires, so the
-	 * test cannot silently pass by never entering the branch.
+	 * If the refreshed array is not assigned back to $quotaData (e.g. a
+	 * misspelled variable), execution continues with the stale NON-NUMERIC
+	 * value and hits `number_format($quotaData['APICallsQuota'])` → TypeError
+	 * on PHP 8 ("number_format(): Argument #1 ($num) must be of type
+	 * int|float, string given"). The sentinel below proves the guard still
+	 * fires, so the test cannot silently pass by never entering the branch.
 	 */
 	public function test_getQuota_refreshes_legacy_non_numeric_quota_from_the_api() {
 		$state = $this->interceptRemoteQuota( array( 'APICallsQuota' => 7777 ) );
@@ -645,11 +636,11 @@ class QuotaControllerTest extends WP_UnitTestCase {
 		$this->assertSame(
 			7777,
 			$quota->monthly->total,
-			'REGRESSION: the refreshed remote value must replace the stale non-numeric one (it used to be discarded by the $quotData typo).'
+			'The refreshed remote value must replace the stale non-numeric one.'
 		);
 		$this->assertIsInt(
 			$quota->monthly->total,
-			'REGRESSION: the value reaching number_format() must be numeric, or getQuota() fatals on PHP 8.'
+			'The value reaching number_format() must be numeric, or getQuota() fatals on PHP 8.'
 		);
 	}
 

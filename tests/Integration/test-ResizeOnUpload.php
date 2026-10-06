@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests: resize-on-upload (Wave 2).
+ * Integration tests: resize-on-upload.
  *
  * With resizeImages enabled, the reducer request carries resize
  * (1 = outer/cover, 3 = inner/contain — verified against the real API in
@@ -79,7 +79,7 @@ class ResizeOnUploadTest extends SPIO_IntegrationTestCase {
 		$this->assertSame( 1067, (int) $image->getMeta( 'resizeWidth' ) );
 		$this->assertSame( 800, (int) $image->getMeta( 'resizeHeight' ) );
 
-		// Since 3a2a299d (bug #5 fix) loadMeta() runs verifyImage() on the
+		// loadMeta() runs verifyImage() on the
 		// fresh-image branch too, so the true pre-resize dimensions are
 		// recorded before the API result is applied.
 		$this->assertSame( 1200, (int) $image->getMeta( 'originalWidth' ), 'originalWidth must record the true pre-resize width.' );
@@ -111,8 +111,8 @@ class ResizeOnUploadTest extends SPIO_IntegrationTestCase {
 		$this->assertSame( 1200, $size[0], 'An image already within the resize box must keep its dimensions.' );
 		$this->assertSame( 900, $size[1] );
 
-		// Since 3a2a299d (bug #5 fix) the originals are known on a first-time
-		// optimize, so an unresized image is no longer falsely flagged.
+		// The originals are known on a first-time optimize, so an unresized
+		// image is not falsely flagged.
 		$this->assertFalse( (bool) $image->getMeta( 'resize' ), 'The resize flag must stay false for an unresized first-time optimize.' );
 		$this->assertEmpty( $image->getMeta( 'resizeWidth' ), 'resizeWidth must stay unset when the API did not resize.' );
 	}

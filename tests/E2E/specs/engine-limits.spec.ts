@@ -1,5 +1,5 @@
 /**
- * Wave 4 — browser-engine limitations that force a skip elsewhere.
+ * browser-engine limitations that force a skip elsewhere.
  *
  * Every skip of a whole engine must be backed by a SENTINEL here that proves
  * the limitation still exists. When a Playwright image bump or a WordPress
@@ -27,7 +27,7 @@ test.describe('Engine limits — WebKit', () => {
 	 * main thread forever. In a standalone probe a plain DOM query still
 	 * answered right after load; inside the test runner (video + trace
 	 * screencast painting) the thread is often frozen before even that, so
-	 * this sentinel proves "the page arrived" from the network response. Bisected 2026-09-16: still
+	 * this sentinel proves "the page arrived" from the network response. Bisected: still
 	 * hangs with every SPIO script and stylesheet blocked, and with SPIO
 	 * deactivated entirely → core page + engine, not SPIO. Chromium and
 	 * Firefox are unaffected. Not reproducible against real Safari from this
@@ -44,7 +44,7 @@ test.describe('Engine limits — WebKit', () => {
 		// verdict below can't be a missing or broken page. Checked on the
 		// NETWORK response on purpose: inside the runner the page's main
 		// thread can already be frozen by the time a DOM query would run
-		// (a plain getElementById evaluate hung here on 2026-09-16), while
+		// (a plain getElementById evaluate has hung here), while
 		// reading the response body never touches that thread.
 		expect(response?.status(), 'the attachment edit screen must be served').toBe(200);
 		expect(await response!.text(), 'the edit screen markup must contain the image header').toContain(`media-head-${id}`);

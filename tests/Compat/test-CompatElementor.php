@@ -1,6 +1,6 @@
 <?php
 /**
- * Cross-plugin compatibility: Elementor (Wave 4).
+ * Cross-plugin compatibility: Elementor.
  *
  * Runs with the REAL Elementor plugin active (bin/test.sh --compat
  * downloads + activates it). Covers

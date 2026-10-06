@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests: version-upgrade migration (the deferred Wave-3 item).
+ * Integration tests: version-upgrade migration.
  *
  * A plugin UPDATE never fires the activation hook — SPIO instead detects
  * version drift on every admin_init: check_plugin_version()

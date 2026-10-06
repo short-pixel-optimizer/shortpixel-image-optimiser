@@ -13,12 +13,11 @@
  *     option (MultiSettingsModel);
  *   - the full optimization pipeline on a subsite, whose uploads live in
  *     uploads/sites/N/ — the path/URL shape most likely to regress;
- *   - the network settings feature (merged in 9eed2de9): the un-stubbed
- *     network admin menu entry, the network_settings_override_enabled read
- *     path on the per-site SettingsModel (network defaults win by design —
- *     ex-#36, closed as intended), the fixed #37 super-admin AJAX access
- *     (4acf1395), and the fixed #39 (is_super_admin now maps to
- *     manage_network since 1fc98025 — regression-tested).
+ *   - the network settings feature: the network admin menu entry, the
+ *     network_settings_override_enabled read path on the per-site
+ *     SettingsModel (network defaults win by design), super-admin AJAX
+ *     access to the site-wide tools, and is_super_admin mapping to
+ *     manage_network (regression-tested).
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -165,11 +164,10 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * Bug #11 FIXED (4a6edf6e): SettingsModel's $settings/$option_name are
-	 * now protected and MultiSettingsModel no longer redeclares them, so the
-	 * private-property shadowing is gone — values set through the model reach
-	 * the spio_wpmu network option. Flipped from the pinned write-is-lost
-	 * assertion.
+	 * SettingsModel's $settings/$option_name are protected and
+	 * MultiSettingsModel does not redeclare them (a private redeclaration
+	 * would shadow them), so values set through the model reach the
+	 * spio_wpmu network option.
 	 */
 	public function test_multisettings_model_write_persists() {
 		delete_site_option( 'spio_wpmu' );
@@ -185,7 +183,7 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 		$this->assertArrayHasKey(
 			'disable_site_settings_page',
 			$stored,
-			'Since 4a6edf6e (bug #11 fix) a value set through MultiSettingsModel must persist to spio_wpmu.'
+			'A value set through MultiSettingsModel must persist to spio_wpmu.'
 		);
 		$this->assertTrue( (bool) $stored['disable_site_settings_page'] );
 	}
@@ -242,15 +240,13 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// Network settings feature (merged 9eed2de9)
+	// Network settings feature
 	// -------------------------------------------------------------------
 
 	/**
-	 * The network admin menu entry was un-stubbed in the multisite branch:
-	 * admin_network_pages() used to bail out with an unconditional `return;`
-	 * (@todo). It must now register the ShortPixel submenu under network
-	 * Settings and record the page hook (with WPMU's `-network` screen-id
-	 * suffix) in $admin_pages so assets load on that screen.
+	 * admin_network_pages() must register the ShortPixel submenu under
+	 * network Settings and record the page hook (with WPMU's `-network`
+	 * screen-id suffix) in $admin_pages so assets load on that screen.
 	 */
 	public function test_admin_network_pages_registers_network_settings_submenu() {
 		global $submenu;
@@ -270,7 +266,7 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 		$this->assertContains(
 			'shortpixel-network-settings',
 			$slugs,
-			'admin_network_pages() must register the network settings submenu (was a return; stub before the multisite branch).'
+			'admin_network_pages() must register the network settings submenu.'
 		);
 
 		$ref = new ReflectionProperty( \ShortPixel\ShortPixelPlugin::class, 'admin_pages' );
@@ -336,7 +332,7 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * INTENDED behavior (was reported as bug #36, closed as by-design 2026-08-17):
+	 * INTENDED behavior (by design):
 	 * with the network override enabled, the network level is authoritative for
 	 * ALL settings — getNetworkSettingValue() gates on the model SCHEMA, so
 	 * settings the network admin never configured resolve to the network model
@@ -359,17 +355,17 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 		$this->assertEquals(
 			1,
 			\wpSPIO()->settings()->compressionType,
-			'With the override enabled the network level is authoritative: unstored settings resolve to the network default (1), not the site-stored value (2). Intended behavior (ex-#36, closed by design).'
+			'With the override enabled the network level is authoritative: unstored settings resolve to the network default (1), not the site-stored value (2). Intended behavior.'
 		);
 	}
 
 	/**
-	 * Bug #37 FIXED (4acf1395): the is_network_admin request-context gate was
-	 * removed from checkActionAccess(); `toolsRemoveAll` / `toolsRemoveBackup`
-	 * now pass the 'is_super_admin' access level to AccessModel instead. Since
-	 * is_network_admin() is always false during admin-ajax.php, the old gate
-	 * denied even super admins — this regression test reproduces the AJAX
-	 * reality (super admin, no network screen) and asserts access is granted.
+	 * checkActionAccess() has no is_network_admin request-context gate;
+	 * `toolsRemoveAll` / `toolsRemoveBackup` pass the 'is_super_admin' access
+	 * level to AccessModel instead. is_network_admin() is always false during
+	 * admin-ajax.php, so such a gate would deny even super admins — this
+	 * regression test reproduces the AJAX reality (super admin, no network
+	 * screen) and asserts access is granted.
 	 */
 	public function test_super_admin_is_allowed_sitewide_tools_in_ajax_context() {
 		$admin_id = self::factory()->user->create( array( 'role' => 'administrator' ) );
@@ -385,23 +381,20 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 
 		$this->assertTrue(
 			$allowed,
-			'Bug #37 fixed (4acf1395) — a super admin must be allowed to run toolsRemoveAll from the AJAX context. A denial here means the is_network_admin request-context gate (or similar) is back.'
+			'A super admin must be allowed to run toolsRemoveAll from the AJAX context. A denial here means the is_network_admin request-context gate (or similar) is back.'
 		);
 		$this->assertSame( '', $output, 'No JSON error must be emitted on the allowed path.' );
 	}
 
 	/**
-	 * Regression for bug #39 (FIXED in 1fc98025): 'is_super_admin' used to be
-	 * missing from the AccessModel caps map, so getCap() fell back to
-	 * 'manage_options' and a plain subsite admin could run the site-wide
-	 * destructive tools (Remove All Data / Remove Backups). 1fc98025 mapped
-	 * 'is_super_admin' => 'manage_network', which only super admins hold on
-	 * multisite, so the invocation must now be denied.
+	 * Regression test: the AccessModel caps map has 'is_super_admin' =>
+	 * 'manage_network', which only super admins hold on multisite (without
+	 * the entry getCap() falls back to 'manage_options' and a plain subsite
+	 * admin could run the site-wide destructive tools — Remove All Data /
+	 * Remove Backups). The invocation must be denied.
 	 *
-	 * Note: the same mapping introduced bug #44 on SINGLE-site installs
-	 * (administrators never hold manage_network there) — see
-	 * test_pin44_single_site_administrator_cannot_remove_backups in
-	 * tests/Integration/test-AjaxHandlers.php.
+	 * Note: on SINGLE-site installs administrators never hold manage_network,
+	 * so the mapping differs there — see tests/Integration/test-AjaxHandlers.php.
 	 */
 	public function test_regular_site_admin_is_denied_sitewide_tools() {
 		$admin_id = self::factory()->user->create( array( 'role' => 'administrator' ) );
@@ -415,7 +408,7 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 
 		$this->assertFalse(
 			$allowed,
-			'Regression #39: a regular subsite admin must be DENIED the site-wide destructive tools (is_super_admin => manage_network since 1fc98025).'
+			'A regular subsite admin must be DENIED the site-wide destructive tools (is_super_admin => manage_network).'
 		);
 		$json = json_decode( $output );
 		$this->assertSame(
@@ -467,15 +460,13 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// Plan 1.13 — per-subsite API key is isolated from main site
+	// Per-subsite API key is isolated from main site
 	// -------------------------------------------------------------------
 
 	/**
 	 * Each subsite must store its own spio_key option independently.
 	 * Writing a different key on the subsite must not alter the main site's key,
 	 * and reading the main site's key on the subsite must not be visible.
-	 *
-	 * Plan row: 1.13 — per-subsite API key is isolated from main site.
 	 *
 	 * NOTE: The multisite harness note applies — SettingsModel defers save to
 	 * shutdown; call onShutdown() to force the write before switching blogs.
@@ -624,11 +615,11 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * Regression test for bug #47 (fixed 2026-08-31): during e4d1d0a8 the
-	 * self-redirect literal in MultiSiteViewController::processSave was broken
-	 * across two physical lines, truncating the page slug to 'shortpixel-' +
-	 * newline + indentation. The redirect URL must carry the full
-	 * 'shortpixel-network-settings' slug with no embedded whitespace.
+	 * Regression test: the self-redirect URL built in
+	 * MultiSiteViewController::processSave must carry the full
+	 * 'shortpixel-network-settings' slug with no embedded whitespace (a
+	 * string literal broken across two physical lines would truncate it to
+	 * 'shortpixel-' + newline + indentation).
 	 *
 	 * We can only observe the URL by intercepting handleAjaxSave() — the
 	 * production caller passes redirect='self' so the URL never lands in the
@@ -677,7 +668,7 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 		$this->assertMatchesRegularExpression(
 			"/settings\\.php\\?page=shortpixel-network-settings(?:&|&amp;)part=\\w+\$/",
 			(string) $capturing->capturedUrl,
-			'Regression #47: the redirect must carry the full shortpixel-network-settings slug with no embedded whitespace. '
+			'The redirect must carry the full shortpixel-network-settings slug with no embedded whitespace. '
 			. 'Actual URL: ' . (string) $capturing->capturedUrl
 		);
 	}
@@ -819,14 +810,13 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// Network settings page rendering (#38 regression surface)
+	// Network settings page rendering
 	// -------------------------------------------------------------------
 
 	/**
 	 * Render the network settings page and assert the Network Control tab is
 	 * functional: the override toggle input exists (part-network-override.php
-	 * present — the file whose absence was bug #38) and the form posts the
-	 * 'save-multi-settings' screen action.
+	 * present) and the form posts the 'save-multi-settings' screen action.
 	 */
 	public function test_network_settings_page_renders_override_toggle_and_form_action() {
 		$admin_id = self::factory()->user->create( array( 'role' => 'administrator' ) );
@@ -840,7 +830,7 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 		$controller->load();
 		$html = ob_get_clean();
 
-		$this->assertStringContainsString( 'id="tab-network"', $html, 'The Network Control tab must render (bug #38 fixed — part-network-override.php present).' );
+		$this->assertStringContainsString( 'id="tab-network"', $html, 'The Network Control tab must render (part-network-override.php present).' );
 		$this->assertStringContainsString( 'name="network_settings_override_enabled"', $html, 'The override toggle input must be present.' );
 		$this->assertStringContainsString( 'value="save-multi-settings"', $html, 'The form_action field must post the network save action.' );
 	}
@@ -871,7 +861,7 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// Bug #49 regression — network URL rewrite must be idempotent
+	// Network URL rewrite must be idempotent
 	// -------------------------------------------------------------------
 
 	/**
@@ -890,23 +880,21 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * Regression test for bug #49 (fixed 2026-09-01 by ccde551a):
-	 * MultiSiteViewController::setControllerURL used to blindly
-	 * str_replace('/wp-admin/', '/wp-admin/network/', $url) on every call.
-	 * Since e4d1d0a8 the AJAX save flow reads request_url from
+	 * Regression test: the AJAX save flow reads request_url from
 	 * $_POST['request_url'], which is populated from window.location on the
 	 * client — and on a network-admin page window.location already contains
-	 * '/wp-admin/network/'. The unguarded str_replace therefore rewrote
-	 * '…/wp-admin/network/…' to '…/wp-admin/network/network/…', producing a
-	 * broken redirect after saving network settings with an API key change.
+	 * '/wp-admin/network/'. An unguarded
+	 * str_replace('/wp-admin/', '/wp-admin/network/', $url) would rewrite it
+	 * to '…/wp-admin/network/network/…', breaking the redirect after saving
+	 * network settings with an API key change.
 	 *
-	 * Fix ccde551a wraps the rewrite in
+	 * MultiSiteViewController::setControllerURL wraps the rewrite in
 	 * `if (false === strpos($url, '/wp-admin/network/'))`, making the method
 	 * idempotent for callers that already pass a network-admin URL while
-	 * preserving the original rewrite for callers that don't (single-site
+	 * preserving the rewrite for callers that don't (single-site
 	 * routes that reach the network controller via routing flags).
 	 *
-	 * Sentinel guards (per feedback_pinned_test_sentinels.md):
+	 * Sentinel guards:
 	 *   - Two independent call paths (already-network vs plain-admin) are
 	 *     exercised on the SAME instance in sequence, so any state-order bug
 	 *     surfaces.
@@ -917,24 +905,24 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 	 *   - The already-network case asserts assertSame (strict identity, no
 	 *     coercion) so a stray trim or trailing-slash mutation is caught.
 	 */
-	public function test_setControllerURL_is_idempotent_for_network_admin_urls_regression_49() {
+	public function test_setControllerURL_is_idempotent_for_network_admin_urls() {
 		$controller = new \ShortPixel\Controller\View\MultiSiteViewController();
 
 		// Case (i): a plain /wp-admin/ URL (single-site route) must be
 		// rewritten to /wp-admin/network/ so the AJAX redirect targets the
-		// network settings screen. This is the original bug-fix scenario.
+		// network settings screen.
 		$plain = '/wp-admin/settings.php?page=shortpixel-network-settings&part=network';
 		$controller->setControllerURL( $plain );
 		$this->assertSame(
 			'/wp-admin/network/settings.php?page=shortpixel-network-settings&part=network',
 			$this->readControllerUrl( $controller ),
-			'Regression #49: a plain /wp-admin/ URL must still be rewritten to /wp-admin/network/ — dropping the rewrite entirely would break single-site → network routing.'
+			'A plain /wp-admin/ URL must still be rewritten to /wp-admin/network/ — dropping the rewrite entirely would break single-site → network routing.'
 		);
 
 		// Case (ii): a URL already carrying /wp-admin/network/ (the shape
-		// AJAX save receives since e4d1d0a8, because window.location on a
+		// AJAX save receives, because window.location on a
 		// network-admin page already contains /network/) must pass through
-		// UNCHANGED — the unguarded str_replace used to double it to
+		// UNCHANGED — an unguarded str_replace would double it to
 		// /wp-admin/network/network/, breaking the redirect after save.
 		$already = '/wp-admin/network/settings.php?page=shortpixel-network-settings&part=network';
 		$controller->setControllerURL( $already );
@@ -942,12 +930,12 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 		$this->assertSame(
 			$already,
 			$stored,
-			'Regression #49: a URL that already contains /wp-admin/network/ must pass through unchanged. Prior to ccde551a, str_replace produced /wp-admin/network/network/, breaking the network-settings redirect.'
+			'A URL that already contains /wp-admin/network/ must pass through unchanged (an unguarded str_replace produces /wp-admin/network/network/, breaking the network-settings redirect).'
 		);
 		$this->assertStringNotContainsString(
 			'/wp-admin/network/network/',
 			(string) $stored,
-			'Regression #49 sentinel: the doubled /wp-admin/network/network/ shape must never appear.'
+			'Sentinel: the doubled /wp-admin/network/network/ shape must never appear.'
 		);
 	}
 }

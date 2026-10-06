@@ -157,7 +157,7 @@ class SettingsModelTest extends WP_UnitTestCase {
 	}
 
 	/*
-	 * NPS survey fields (2aac87c6) — declared, typed, capped, not exported
+	 * NPS survey fields — declared, typed, capped, not exported
 	 */
 
 	public function test_survey_fields_are_declared_with_expected_types_and_defaults() {
@@ -332,9 +332,8 @@ class SettingsModelTest extends WP_UnitTestCase {
 		$this->assertArrayNotHasKey( 'keepExif', $out );
 		// …and the value is transposed onto the exif setting via $this->set().
 		$this->assertSame( 1, $s->exif );
-		// Bug #8 FIXED (867b3573): the migrated value is also present in the
-		// RETURNED array (previously only $this->set() was called but $settings['exif']
-		// was never written, so the caller's copy did not carry the new key).
+		// The migrated value is also present in the RETURNED array (not only
+		// via $this->set()), so the caller's copy carries the new key.
 		$this->assertArrayHasKey( 'exif', $out );
 		$this->assertSame( 1, $out['exif'] );
 	}

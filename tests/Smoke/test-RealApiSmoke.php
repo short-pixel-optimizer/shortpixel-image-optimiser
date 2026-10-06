@@ -1,6 +1,6 @@
 <?php
 /**
- * Real-API smoke tests (Wave 3) — talk to the LIVE ShortPixel API.
+ * Real-API smoke tests — talk to the LIVE ShortPixel API.
  *
  * Everything else in the integration suite mocks the HTTP layer; this
  * suite removes the mock and runs the pipeline against the real reducer
@@ -217,7 +217,7 @@ class RealApiSmokeTest extends SPIO_IntegrationTestCase {
 
 	/**
 	 * fixture-small.jpg is 1200x900; a 800x800 outer (COVER — result >= box,
-	 * confirmed live 2026-07-18) box must come back from the real API as
+	 * confirmed live) box must come back from the real API as
 	 * 1067x800. Resize happens server-side — this proves the
 	 * resize/resize_width/resize_height request params still work.
 	 */

@@ -450,7 +450,7 @@ different database, volumes and images, so the two never collide):
 - `spio-e2e-support.php` — REST endpoint `spio-e2e/v1` the tests call to
   reset state, seed the healthy-install baseline, upload fixtures, backdate
   the queue, steer the mock and inject "hostile" third-party scripts
-  (`hostile-snippets/`, e.g. the `window.URL` overwrite behind bug #62).
+  (`hostile-snippets/`, e.g. a third-party `window.URL` overwrite).
 
 **Layout** (`tests/E2E/`): `playwright.config.ts` (serial, one worker — every
 spec shares one install), `fixtures.ts` (the console-error tripwire, hermetic
@@ -518,7 +518,7 @@ waits), `specs/` (one file per flow; `auth.setup.ts` logs in once).
 - **Never `waitForURL` for a page that reloads the SAME url.** It resolves
   immediately when the pattern already matches the current URL, so the wait
   returns before the reload starts and everything after it races the
-  navigation (this produced both CI failures on 2026-09-16: a panel
+  navigation (this has failed CI in two ways: a panel
   assertion straddling the reload, and a `page.goto` refused with
   "interrupted by another navigation"). Wait for the document instead:
   `withSelfReload(page, action)` from `helpers/spio.ts` arms
@@ -606,8 +606,8 @@ to do with SPIO, and every such skip needs a sentinel in
   dispatching a synthetic `new CustomEvent('click')` on an `<a href>` runs
   the link's navigation in WebKit only (Chromium/Firefox just run the
   listeners). The event is not cancelable, so a listener's
-  `preventDefault()` cannot stop it. The quick tour does exactly that and
-  reloads the settings page in WebKit — pinned in `onboarding.spec.ts`.
+  `preventDefault()` cannot stop it. The quick tour therefore dispatches a
+  cancelable `MouseEvent` — regression-tested in `onboarding.spec.ts`.
 - `bin/test-e2e.sh` passes arguments straight to Playwright, whose
   `--project` takes several values: put a spec path BEFORE `--project`
   (`bin/test-e2e.sh specs/x.spec.ts --project webkit`), or it is read as a
@@ -694,7 +694,7 @@ bin/test.sh
 ```
 
 **Some tests are labeled `pinned_for_deferred_fix` — should I care?**
-Those tests are supposed to fail. They pin real bugs that are being tracked for the maintainer to review. See the sidecar memo `project_deferred_root_bugs.md` (not in the repo — internal doc) for the full list. Don't "fix" a pinned test by changing its assertion; that defeats the sentinel.
+Those tests pin known, not-yet-fixed defects: they assert the current (wrong) behaviour and go red once the defect is fixed. Each docblock describes the defect and where it lives. Don't "fix" a pinned test by changing its assertion; that defeats the sentinel.
 
 **PHPUnit prints a few dots + F then abruptly ends with no summary (exit code 0)**
 Something in the code-under-test called `exit()` mid-test, which kills PHPUnit before it can emit its summary. The tell: no `Tests: X, Assertions: Y` line, no `OK`/`FAILURES!` block. Common culprits inside SPIO: `ApiKeyModel::checkRedirect()` (`wp_safe_redirect() + exit()` when no verified key), `wp_die()` in AJAX paths, `wp_send_json*()`. The fix is per-test: seed whatever state short-circuits the exit — e.g. `\wpSPIO()->settings()->redirectedSettings = 1` for the redirect guard (pattern: `tests/Helper/test-UiHelper.php::set_up`). Running with `--debug` shows exactly which test the process died in.

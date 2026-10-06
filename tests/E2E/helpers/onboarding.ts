@@ -2,7 +2,7 @@
  * Page object for the no-key onboarding view of the settings page
  * (class/view/settings/part-nokey.php + res/js/shortpixel-onboarding.js).
  *
- * Facts (Wave 2 exploration):
+ * Facts (verified against the live UI):
  *   - shown when spio_key.verifiedKey is false: root gets class `onboarding`,
  *     `#tab-nokey` is the active section, the tab menu is hidden;
  *   - two panels are BOTH visible; `now-active` (toggled by clicking a panel)

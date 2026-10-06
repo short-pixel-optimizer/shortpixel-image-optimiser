@@ -1,7 +1,7 @@
 /**
  * Page object for the SPIO bulk page (wp-admin/upload.php?page=wp-short-pixel-bulk).
  *
- * Selector facts (Wave 1 exploration):
+ * Selector facts (verified against the live UI):
  *   - panels:   `section.panel[data-panel]` (dashboard | selection | summary |
  *               process | finished | bulk-* specials); `.active` + inline
  *               display:block = shown; a 500ms opacity transition follows.
@@ -47,7 +47,7 @@ export class BulkPage {
 	 * Deliberately not two assertions: the screen can switch panels while a
 	 * second assertion is still polling, which produced a baffling CI
 	 * failure ("class active" passed, then the element was reported hidden
-	 * with the class already gone, 2026-09-16). One predicate reports the
+	 * with the class already gone). One predicate reports the
 	 * real state and never straddles a switch.
 	 */
 	async expectPanel(name: BulkPanel, timeoutMs = 30_000): Promise<void> {
@@ -55,7 +55,7 @@ export class BulkPage {
 		// description of what IS on screen. Returning the name (rather than
 		// a boolean) means a CI failure reports which panel actually won —
 		// without that, a timeout said only "dashboard must be active" and
-		// gave nothing to reason about (2026-09-22).
+		// gave nothing to reason about.
 		await expect
 			.poll(
 				() =>
@@ -156,7 +156,7 @@ export class BulkPage {
 	 * panel from the startup data of that request, so a reload served while
 	 * finishBulk is still clearing the queues lands on process/summary/
 	 * finished and switches away from the server-rendered dashboard (CI
-	 * flake in Chromium and WebKit, 2026-09-16). So: wait for the SERVER to
+	 * flake in Chromium and WebKit). So: wait for the SERVER to
 	 * report the queues clear — which is what this test is really about —
 	 * and only then assert the panel on a fresh load.
 	 *
@@ -165,8 +165,8 @@ export class BulkPage {
 	 * "finished" whenever `is_finished && done > 0`, and only falls through
 	 * to "dashboard" when nothing was completed. Whether any item finishes
 	 * before the stop click lands is a race: locally nothing does, on a
-	 * slower CI runner one does — which is what failed Firefox in CI on
-	 * 2026-09-21 ("dashboard must be the active, visible panel"). Showing
+	 * slower CI runner one does — which has failed Firefox in CI
+	 * ("dashboard must be the active, visible panel"). Showing
 	 * the finished summary after a partially-completed run is correct
 	 * product behaviour, so this asserts the panel the server state
 	 * entails, and returns it so the caller can continue deterministically.

@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests: Enable Media Replace (EMR) hook touchpoints (plan 12).
+ * Integration tests: Enable Media Replace (EMR) hook touchpoints.
  *
  * This is a hook-level suite. The Enable Media Replace plugin does NOT need
  * to be installed. Tests fire the hooks that EMR fires directly:
@@ -74,7 +74,7 @@ class EMRIntegrationTest extends SPIO_IntegrationTestCase {
 	 * its optimization meta (via onDelete), leaving the image in an unoptimized
 	 * state ready for the next run.
 	 *
-	 * Manual-plan row: 12.1 — handleReplaceHook clears meta via onDelete.
+	 * handleReplaceHook clears meta via onDelete.
 	 *
 	 * @return void
 	 */
@@ -103,7 +103,7 @@ class EMRIntegrationTest extends SPIO_IntegrationTestCase {
 	 * add the replaced attachment back to the optimize queue AND the queue must
 	 * successfully optimize it (full end-to-end round-trip).
 	 *
-	 * Manual-plan row: 12.2 — handleReplaceEnqueue re-queues via handleImageUploadHook.
+	 * handleReplaceEnqueue re-queues via handleImageUploadHook.
 	 *
 	 * @return void
 	 */
@@ -148,7 +148,7 @@ class EMRIntegrationTest extends SPIO_IntegrationTestCase {
 	 * NOT add the attachment to the queue. The hook is not even registered in
 	 * that state (gated in initHooks() line 364-370).
 	 *
-	 * Manual-plan row: 12.4 — auto-process OFF: meta wiped but no re-queue.
+	 * Auto-process OFF: meta wiped but no re-queue.
 	 *
 	 * @return void
 	 */
@@ -190,7 +190,7 @@ class EMRIntegrationTest extends SPIO_IntegrationTestCase {
 	 * handleImageUploadHook → isProcessable() returns false and no queue item
 	 * is created.
 	 *
-	 * Manual-plan row: 12.7 — SVG replace: no backup, no queue entry.
+	 * SVG replace: no backup, no queue entry.
 	 *
 	 * @return void
 	 */
@@ -240,7 +240,7 @@ class EMRIntegrationTest extends SPIO_IntegrationTestCase {
 	 *  1. Convert the PNG to JPG (png2jpg path inside handleImageUploadHook).
 	 *  2. Store the backup as the ORIGINAL PNG bytes (not the JPG).
 	 *
-	 * Manual-plan row: 12.8 — png2jpg + EMR: backup holds the original PNG;
+	 * png2jpg + EMR: backup holds the original PNG;
 	 * restore returns the PNG.
 	 *
 	 * @return void

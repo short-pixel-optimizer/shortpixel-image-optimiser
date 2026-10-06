@@ -1,6 +1,6 @@
 <?php
 /**
- * Cross-plugin compatibility: Breakdance (Wave 4).
+ * Cross-plugin compatibility: Breakdance.
  *
  * Runs with the REAL Breakdance plugin active. Breakdance is commercial,
  * so bin/test.sh --compat extracts it from a zip dropped into
@@ -22,8 +22,8 @@
  *     a decoded tree via \Breakdance\Data\get_tree — we seed a real
  *     Breakdance-shaped postmeta row and verify the module returns the
  *     expected tree structure (with URLs in it).
- *   - End-to-end conversion: PINNED AS BROKEN (production bug #65,
- *     ledgered 2026-09-09). Breakdance stores `_breakdance_data` DOUBLE
+ *   - End-to-end conversion: PINNED AS BROKEN (known production defect).
+ *     Breakdance stores `_breakdance_data` DOUBLE
  *     JSON-encoded (set_meta → encode_before_writing_to_wp json_encodes
  *     the outer array whose `tree_json_string` value is ITSELF a JSON
  *     string), so every `/` in a URL lands in the DB as `\\\/` (three
@@ -255,7 +255,7 @@ class CompatBreakdanceTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// End-to-end (PINNED BUG #65): PNG→JPG
+	// End-to-end (pinned known defect): PNG→JPG
 	// conversion runs the FULL Replacer against a real Breakdance-shaped
 	// `_breakdance_data` postmeta row and the row survives UNCHANGED.
 	//
@@ -273,7 +273,7 @@ class CompatBreakdanceTest extends SPIO_IntegrationTestCase {
 	// would go through \Breakdance\Data\save_document → set_meta).
 	// -------------------------------------------------------------------
 
-	public function test_pin65_png_conversion_leaves_breakdance_meta_unchanged_pinned_for_deferred_fix() {
+	public function test_png_conversion_leaves_breakdance_meta_unchanged_pinned_for_deferred_fix() {
 		$id  = $this->uploadPngForQueuePath( 'fixture-small.png' );
 		$url = wp_get_attachment_url( $id );
 		$this->assertStringEndsWith( '.png', $url );
@@ -311,17 +311,17 @@ class CompatBreakdanceTest extends SPIO_IntegrationTestCase {
 		$this->assertStringContainsString(
 			'.png',
 			$raw_after,
-			'PINNED BUG #65: Breakdance meta stays .png — the module\'s single-escaped LIKE pattern cannot match Breakdance\'s double-JSON-encoded storage (Modules/Breakdance.php:74-82 addSlash). FLIP to a positive-rewrite assertion when fixed.'
+			'Breakdance meta stays .png — the module\'s single-escaped LIKE pattern cannot match Breakdance\'s double-JSON-encoded storage (Modules/Breakdance.php:74-82 addSlash). FLIP to a positive-rewrite assertion when fixed.'
 		);
 		$this->assertStringNotContainsString(
 			'.jpg',
 			$raw_after,
-			'PINNED BUG #65: Breakdance meta never gained a .jpg reference — the breakdance replace-query never matches any row.'
+			'Breakdance meta never gained a .jpg reference — the breakdance replace-query never matches any row.'
 		);
 	}
 
 	// -------------------------------------------------------------------
-	// PIN #65 companion: the manual/AI file RENAME shares the same
+	// Pin companion: the manual/AI file RENAME shares the same
 	// Replacer pass, so Breakdance documents are equally never rewritten
 	// on rename — the renamed file's old URL stays in _breakdance_data
 	// (dead reference). Same root cause, same flip condition as above.
@@ -336,7 +336,7 @@ class CompatBreakdanceTest extends SPIO_IntegrationTestCase {
 		return $queueItem->getApiController( 'requestAlt' )->ajax_replaceFile( $queueItem, $new_base );
 	}
 
-	public function test_pin65_manual_rename_leaves_breakdance_meta_unchanged_pinned_for_deferred_fix() {
+	public function test_manual_rename_leaves_breakdance_meta_unchanged_pinned_for_deferred_fix() {
 		$id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->purgeQueueTable();
 
@@ -359,12 +359,12 @@ class CompatBreakdanceTest extends SPIO_IntegrationTestCase {
 		$this->assertStringContainsString(
 			$old_base,
 			$raw_after,
-			'PINNED BUG #65 (rename flavor): _breakdance_data still references the OLD filename after a rename — the single-escaped LIKE pattern never matches the double-JSON-encoded storage. FLIP to a positive-rewrite assertion when addSlash is fixed.'
+			'Rename flavor: _breakdance_data still references the OLD filename after a rename — the single-escaped LIKE pattern never matches the double-JSON-encoded storage. FLIP to a positive-rewrite assertion when addSlash is fixed.'
 		);
 		$this->assertStringNotContainsString(
 			$new_base,
 			$raw_after,
-			'PINNED BUG #65 (rename flavor): the new base never reaches the Breakdance document.'
+			'Rename flavor: the new base never reaches the Breakdance document.'
 		);
 	}
 }

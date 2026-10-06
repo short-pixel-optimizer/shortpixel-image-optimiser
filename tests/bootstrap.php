@@ -57,7 +57,7 @@ if ( '1' === getenv( 'SPIO_PARTNER_PLUGINS' ) ) {
 		'woocommerce/woocommerce.php',
 		'nextgen-gallery/nggallery.php',
 		'amazon-s3-and-cloudfront/wordpress-s3.php',
-		// Wave 4 — replacer2 module coverage. All four load their
+		// replacer2 module coverage. All four load their
 		// own detection constant / action, which the corresponding
 		// SPIO Replacer module keys off (Elementor.php, YoastSeo.php,
 		// WpBakery.php, Breakdance.php).
@@ -219,7 +219,7 @@ add_filter(
  * Silence ONLY PHP 8.5 deprecations that cannot be fixed while retaining
  * PHP 7.4 back-compat (per the plugin header). Everything else — real
  * warnings, deprecations tied to production bugs, test-fixture races —
- * stays visible so Bas can see the symptoms disappear when the
+ * stays visible so the symptoms visibly disappear when the
  * corresponding fix lands.
  *
  * Installed AFTER the WP test bootstrap so we sit on top of any handler

@@ -1,6 +1,6 @@
 <?php
 /**
- * End-to-end coverage for the NPS survey AJAX endpoint (2aac87c6):
+ * End-to-end coverage for the NPS survey AJAX endpoint:
  * AjaxController::ajax_submitSurvey() behind the real
  * wp_ajax_shortpixel_survey_submit dispatch.
  *

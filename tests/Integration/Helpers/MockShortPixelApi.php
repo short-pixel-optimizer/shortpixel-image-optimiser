@@ -7,7 +7,7 @@
  * response parsing, file download, meta writing) runs unmodified while no
  * traffic leaves the test machine.
  *
- * Response shapes match REAL captured API traffic (2026-07-16), not the
+ * Response shapes match REAL captured API traffic, not the
  * public docs. Gotchas reproduced on purpose:
  *   - HTTP status is always 200; the result lives in Status->Code.
  *   - Both `LosslessSize` AND the misspelled `LoselessSize` are sent.
@@ -17,7 +17,7 @@
  *
  * Optimized bytes served for downloads:
  *   - main files: `tests/fixtures/optimized/<basename>` when present
- *     (real ShortPixel output committed by Pedro), else GD re-compression
+ *     (real ShortPixel output), else GD re-compression
  *     of the source at low quality;
  *   - WebP/AVIF variants: `optimized/<basename>.webp|.avif` when present,
  *     else GD-generated fallback bytes.
@@ -167,7 +167,7 @@ class MockShortPixelApi {
 		// NB: QuotaController::getRemoteQuota() must NOT land here — its
 		// `empty(json_decode('{}'))` guard passes stdClass through and the
 		// unguarded $data->Status->Code read then sprays notices into ajax
-		// output (seen on the WP 5.9 run, 2026-07-19).
+		// output (seen on WP 5.9).
 		return $this->httpResponse( '{}', $args );
 	}
 
@@ -549,7 +549,7 @@ class MockShortPixelApi {
 		$width  = imagesx( $img );
 		$height = imagesy( $img );
 		$ratios = array( $resize['w'] / $width, $resize['h'] / $height );
-		// Verified against the real API (smoke run 2026-07-18):
+		// Verified against the real API:
 		// outer (1) = COVER: result >= box on both sides;
 		// inner (3) = CONTAIN: result fits inside the box.
 		$scale = ( 1 === $resize['mode'] ) ? max( $ratios ) : min( $ratios );

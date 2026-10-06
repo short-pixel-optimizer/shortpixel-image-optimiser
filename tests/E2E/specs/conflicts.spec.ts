@@ -1,5 +1,5 @@
 /**
- * Wave 3 — third-party JS conflict registry.
+ * third-party JS conflict registry.
  *
  * Each "hostile snippet" in tests/E2E/mu-plugins/hostile-snippets/ mimics a
  * class of third-party admin script that has broken WordPress plugins in
@@ -13,14 +13,14 @@
  *
  * The console-error tripwire does most of the detecting; the functional
  * assertions make sure a flow that "quietly" stops working (no error, no
- * effect — the #62 pattern) is caught as well.
+ * effect) is caught as well.
  *
  * Every snippet × flow combination is expected to PASS: SPIO must be robust
  * against these environments. A failing combination is a real finding —
- * convert it into a pin (see pin62 in settings.spec.ts for the pattern)
- * rather than skipping it.
+ * convert it into a pin (see the jquery-noconflict block below for the
+ * pattern) rather than skipping it.
  *
- * `window-url-overwrite` is excluded here: it is already pinned (#62).
+ * `window-url-overwrite` is excluded here: settings.spec.ts covers it.
  */
 import { test, expect } from '../fixtures';
 import { BulkPage } from '../helpers/bulk-page';
@@ -88,7 +88,7 @@ for (const snippet of SNIPPETS) {
 }
 
 /**
- * PIN (unnumbered — E2E seed finding 2026-09-15): jQuery.noConflict(true)
+ * PIN: jQuery.noConflict(true)
  * released by another script kills SPIO's admin JS.
  *
  * res/js/shortpixel.js is jQuery-only and reads the `jQuery` global
@@ -101,7 +101,7 @@ for (const snippet of SNIPPETS) {
  *   - `console.error('ShortPixel: Delayed Init…')` from the 10s fallback;
  *   - and the QUIET failure that matters: the processor never becomes the
  *     active runner on the media list, so per-item optimize and the bulk
- *     page do nothing — no error is shown to the user (#62 pattern).
+ *     page do nothing — no error is shown to the user.
  * SPIO's own dependency declarations don't protect it: `shortpixel-onboarding`
  * does not even declare jQuery, and nothing captures a local reference
  * (`var $ = jQuery` at load time) that would survive a later release.

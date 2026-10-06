@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests: re-optimization flow (Wave 2).
+ * Integration tests: re-optimization flow.
  *
  * The 'reoptimize' action (QueueController::addItemToQueue →
  * ActionController::enqueueItem) is a two-step flow: the item is first
@@ -29,7 +29,7 @@ class ReoptimizationTest extends SPIO_IntegrationTestCase {
 		// The DONE optimize item still sits in the ShortQ table; with it
 		// present, addItemToQueue() only appends 'reoptimize' as a
 		// next_action on that finished item and nothing runs (same gotcha
-		// as the Wave-1 restore tests). Purge the queue first.
+		// as in the restore tests). Purge the queue first.
 		$this->purgeQueueTable();
 
 		$imageModel = $this->freshImageModel( $attachment_id );

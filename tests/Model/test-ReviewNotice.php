@@ -1,6 +1,6 @@
 <?php
 /**
- * Tests for ShortPixel\Model\AdminNotices\ReviewNotice — since 2aac87c6 an
+ * Tests for ShortPixel\Model\AdminNotices\ReviewNotice — an
  * NPS-style survey widget (1-10 rating, feedback textarea, review CTA) gated
  * on the surveyStatus setting instead of a plain review link.
  *
@@ -89,7 +89,7 @@ class ReviewNoticeTest extends WP_UnitTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// NPS survey (2aac87c6): status gating + widget contents
+	// NPS survey: status gating + widget contents
 	// -------------------------------------------------------------------
 
 	public function test_checkTrigger_false_once_the_survey_was_answered() {

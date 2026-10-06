@@ -28,19 +28,17 @@
  *     pathinfo(basename(), PATHINFO_FILENAME) at :786.
  *   - Access control: author on someone else's attachment → NO_ACCESS.
  *   - Missing newFileName key → error response, no rename.
- *   - Regression #50 (fixed 202c6e3c): empty/short newFileName rejected
- *     by the strlen<3 guard, no rename, no extension-only dotfiles.
- *   - Regression #51 (fixed 202c6e3c): base_url built basename-anchored,
- *     no mangling when the file base appears in the directory path.
- *   - Pin #53 (MEDIUM, AI-auto path): recent_upload=false guard matches
- *     the attachment's OWN _wp_attached_file rows.
- *   - #66 contract: a successful rename records replaced_content
- *     ['replaced_url'] for the Gutenberg editor (moved here from the
- *     flipped #52 unit test).
- *   - Pin #73 (HIGH, 0db02498): the "copied nothing" bail-out also fires
- *     when an offloader handled the rename via the
- *     `shortpixel/image/replace_files` filter (no metadata / content
- *     rewrite at all) and on every dry-run.
+ *   - Empty/short newFileName rejected by the strlen<3 guard, no rename,
+ *     no extension-only dotfiles.
+ *   - base_url built basename-anchored, no mangling when the file base
+ *     appears in the directory path.
+ *   - The recent_upload=false usage check ignores the attachment's OWN
+ *     postmeta rows.
+ *   - Editor contract: a successful rename records replaced_content
+ *     ['replaced_url'] for the Gutenberg editor.
+ *   - Offloader-handled renames (`shortpixel/image/replace_files` filter)
+ *     complete for local+remote and remote-only images; dry-run returns
+ *     false.
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -67,8 +65,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	/**
 	 * The rename result inside a media/replaceFileName response.
 	 *
-	 * Since 8b625159 (the #77 fix) a rename that reached the engine answers
-	 * like the queue does: `media.results[0]` carries is_done / is_error /
+	 * A rename that reached the engine answers like the queue does: `media.results[0]` carries is_done / is_error /
 	 * message / item_id / apiName='ai', and `media.qstatus` is
 	 * STATUS_SUCCESS. The JS 'ShortPixelMedia.reloadWindow' listener reads
 	 * results[0] and only reloads when is_error is false; on an error it
@@ -298,7 +295,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 
 		$this->assertIsObject( $response, 'Raw: ' . $this->lastRawResponse() );
 		$this->assertTrue( $this->renameResult( $response )->is_done, 'is_done is always true — this is the current wire contract' );
-		$this->assertTrue( $this->renameResult( $response )->is_error, 'Conflict must set is_error=true (#77: the JS shows the message instead of reloading)' );
+		$this->assertTrue( $this->renameResult( $response )->is_error, 'Conflict must set is_error=true (the JS shows the message instead of reloading)' );
 		$this->assertStringContainsString( 'not replaced', $this->renameResult( $response )->message );
 
 		// No physical move happened.
@@ -724,7 +721,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	 * replaceFileName() short-circuits with a "This image could not be
 	 * loaded" error and no rename takes place. Note this is DIFFERENT
 	 * from newFileName='' — that is rejected by the strlen<3 guard
-	 * (regression #50 below).
+	 * (tested below).
 	 */
 	public function test_missing_newFileName_key_returns_error_without_rename() {
 		$this->_setRole( 'administrator' );
@@ -743,19 +740,18 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// REGRESSION #50 (fixed 202c6e3c): empty/short newFileName is rejected
+	// Empty/short newFileName is rejected
 	// -------------------------------------------------------------------
 
 	/**
-	 * REGRESSION TEST for BUG #50 (fixed in 202c6e3c): an empty
-	 * newFileName used to pass the `false === $newFileName` check (because
-	 * sanitize_file_name('') returns '', not false), reach
-	 * OptimizeAiController::ajax_replaceFile() with an empty file base and
-	 * rename every file to an extension-only dotfile ('.jpg') while the
-	 * Replacer2 pass rewrote content URLs accordingly.
+	 * Regression: an empty newFileName passes the `false === $newFileName`
+	 * check (sanitize_file_name('') returns '', not false); unguarded it
+	 * would reach OptimizeAiController::ajax_replaceFile() with an empty
+	 * file base and rename every file to an extension-only dotfile ('.jpg')
+	 * while the Replacer2 pass rewrote content URLs accordingly.
 	 *
-	 * The fix adds a `strlen($newFileName) < 3` guard in
-	 * AjaxController::replaceFileName() that fires AFTER sanitisation, so
+	 * A `strlen($newFileName) < 3` guard in
+	 * AjaxController::replaceFileName() fires AFTER sanitisation, so
 	 * both an empty string and a value that sanitises to fewer than 3
 	 * characters are rejected with an error response before any rename.
 	 * (WP's sanitize_file_name also trims leading dots, so a '.jpg'-style
@@ -765,7 +761,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	 * The rejection response shape differs from the success path: it has
 	 * `error` + `is_error` + `message` and NO `is_done`/`redirect`.
 	 */
-	public function test_regression50_empty_new_filename_rejected_without_rename() {
+	public function test_empty_new_filename_rejected_without_rename() {
 		$this->_setRole( 'administrator' );
 
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
@@ -789,22 +785,22 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$response = $this->doReplaceFileName( $attachment_id, '' );
 
 		$this->assertIsObject( $response, 'Raw: ' . $this->lastRawResponse() );
-		$this->assertTrue( (bool) ( $response->is_error ?? false ), 'REGRESSION #50: empty newFileName must be rejected with is_error' );
-		$this->assertObjectNotHasProperty( 'is_done', $response, 'REGRESSION #50: the rejection path must not report is_done' );
-		$this->assertNotEmpty( $response->error ?? '', 'REGRESSION #50: the rejection carries an error text' );
+		$this->assertTrue( (bool) ( $response->is_error ?? false ), 'Empty newFileName must be rejected with is_error' );
+		$this->assertObjectNotHasProperty( 'is_done', $response, 'The rejection path must not report is_done' );
+		$this->assertNotEmpty( $response->error ?? '', 'The rejection carries an error text' );
 
 		// No rename happened: original intact, no extension-only dotfile.
-		$this->assertFileExists( $original_file, 'REGRESSION #50: the original main file must be untouched' );
-		$this->assertFileDoesNotExist( $dotfile, 'REGRESSION #50: no extension-only ".jpg" dotfile may be created' );
+		$this->assertFileExists( $original_file, 'The original main file must be untouched' );
+		$this->assertFileDoesNotExist( $dotfile, 'No extension-only ".jpg" dotfile may be created' );
 	}
 
 	/**
-	 * REGRESSION TEST for BUG #50 (companion): a 1-2 character name is
+	 * Companion: a 1-2 character name is
 	 * rejected by the same `strlen($newFileName) < 3` guard, and a value
 	 * that SANITISES below 3 characters (guard runs post-sanitisation) is
 	 * rejected too.
 	 */
-	public function test_regression50_short_new_filename_rejected_without_rename() {
+	public function test_short_new_filename_rejected_without_rename() {
 		$this->_setRole( 'administrator' );
 
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
@@ -816,7 +812,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$response = $this->doReplaceFileName( $attachment_id, 'ab' );
 
 		$this->assertIsObject( $response, 'Raw: ' . $this->lastRawResponse() );
-		$this->assertTrue( (bool) ( $response->is_error ?? false ), 'REGRESSION #50: 2-char newFileName must be rejected' );
+		$this->assertTrue( (bool) ( $response->is_error ?? false ), '2-char newFileName must be rejected' );
 		$this->assertFileExists( $original_file );
 
 		// Sanitises to below 3: '???a' → 'a' after sanitize_file_name().
@@ -825,36 +821,32 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$response = $this->doReplaceFileName( $attachment_id, '???a' );
 
 		$this->assertIsObject( $response, 'Raw: ' . $this->lastRawResponse() );
-		$this->assertTrue( (bool) ( $response->is_error ?? false ), 'REGRESSION #50: sanitised-below-minimum newFileName must be rejected' );
-		$this->assertFileExists( $original_file, 'REGRESSION #50: no rename may occur on rejection' );
+		$this->assertTrue( (bool) ( $response->is_error ?? false ), 'Sanitised-below-minimum newFileName must be rejected' );
+		$this->assertFileExists( $original_file, 'No rename may occur on rejection' );
 	}
 
 	// -------------------------------------------------------------------
-	// REGRESSION #51 (fixed 202c6e3c): base_url no longer mangled when
-	// the file base appears inside the directory path.
+	// base_url is not mangled when the file base appears inside the
+	// directory path.
 	// -------------------------------------------------------------------
 
 	/**
-	 * REGRESSION TEST for BUG #51 (fixed in 202c6e3c — URL building is
-	 * now basename-anchored): replaceFiles() used to build the TARGET URL at
-	 * class/Controller/Optimizer/OptimizeAiController.php:679 as
+	 * Regression: replaceFiles() builds the TARGET URL basename-anchored.
+	 * An unanchored
 	 *
 	 *     $target_url = str_replace($base_filename, $newFileBase, $source_url);
 	 *
-	 * str_replace() replaces EVERY occurrence, so when the file base
-	 * also appears as a DIRECTORY segment in the URL (e.g. attachment
+	 * replaces EVERY occurrence, so when the file base also appears as a
+	 * DIRECTORY segment in the URL (e.g. attachment
 	 * `.../uploads/photo/photo.jpg` with base "photo"), the target URL
-	 * receives the new base in BOTH places: `.../uploads/<newbase>/<newbase>.jpg`.
+	 * would receive the new base in BOTH places: `.../uploads/<newbase>/<newbase>.jpg`.
 	 *
 	 * The physical move only renames the FILE — not the directory — so
 	 * the file lives at `.../uploads/photo/<newbase>.jpg`, while
-	 * post_content / postmeta are rewritten to
+	 * post_content / postmeta would be rewritten to
 	 * `.../uploads/<newbase>/<newbase>.jpg`, i.e. a URL whose DIRECTORY
-	 * does not exist on disk → dead link.
-	 *
-	 * (Same root cause as the directory-mangling in the base_url
-	 * computation at :675-677; both stem from unanchored str_replace on
-	 * paths where the file base is a substring of the directory.)
+	 * does not exist on disk → dead link. (The base_url computation has
+	 * the same hazard.)
 	 *
 	 * We reproduce the shape by filtering `upload_dir` to force uploads
 	 * into a subdir named exactly like the fixture's file base.
@@ -869,13 +861,13 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	 * The assertions below verify that only the final path segment is
 	 * rewritten, leaving the containing directory unchanged.
 	 */
-	public function test_regression51_base_url_not_mangled_when_dir_contains_file_base() {
+	public function test_base_url_not_mangled_when_dir_contains_file_base() {
 		$this->_setRole( 'administrator' );
 
 		// Force uploads under a subdir named "photo" so the fixture ends
 		// up at `.../uploads/photo/photo.jpg` — file base "photo" is now a
 		// substring of the directory path.
-		$subdir = 'spio-pin51-photo';
+		$subdir = 'spio-dirbase-photo';
 		$filter = function ( $u ) use ( $subdir ) {
 			$u['subdir'] = '/' . $subdir;
 			$u['path']   = $u['basedir'] . '/' . $subdir;
@@ -902,18 +894,18 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$original_dir  = basename( dirname( $original_file ) );
 
 		// Sentinels: the base must literally equal the enclosing dir name —
-		// that is the shape that triggers #51.
+		// that is the shape that triggers the mangling.
 		$this->assertSame( $subdir, $original_base, 'Sentinel: base must equal the enclosing dir name' );
 		$this->assertSame( $subdir, $original_dir, 'Sentinel: enclosing dir must equal the enclosing dir name' );
 		$this->assertStringContainsString(
 			'/' . $subdir . '/' . $subdir . '.',
 			$original_file,
-			'Sentinel: file path must contain "/<base>/<base>." — the shape that triggers #51'
+			'Sentinel: file path must contain "/<base>/<base>." — the shape that triggers the mangling'
 		);
 
 		// Embed the CORRECT original URL in a post.
 		$post_id = self::factory()->post->create(
-			array( 'post_content' => '<img src="' . esc_url( $original_url ) . '" alt="pin51" />' )
+			array( 'post_content' => '<img src="' . esc_url( $original_url ) . '" alt="dirbase" />' )
 		);
 		$this->assertStringContainsString(
 			$original_url,
@@ -923,7 +915,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 
 		$this->purgeQueueTable();
 
-		$new_base = 'pin51new' . wp_generate_password( 4, false ); // 12-char, no dashes
+		$new_base = 'basenew1' . wp_generate_password( 4, false ); // 12-char, no dashes
 		$response = $this->doReplaceFileName( $attachment_id, $new_base );
 
 		remove_filter( 'upload_dir', $filter );
@@ -932,11 +924,11 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$this->assertTrue( $this->renameResult( $response )->is_done );
 
 		// The physical file moved to <orig-dir>/<newbase>.jpg — the dir
-		// itself was NOT renamed (that's the whole point of the bug).
+		// itself was NOT renamed (that's the whole point of the test).
 		$expected_new_file = dirname( $original_file ) . '/' . $new_base . '.jpg';
 		$this->assertFileExists(
 			$expected_new_file,
-			'Sanity: the buggy path still physically moves the main file inside the ORIGINAL directory'
+			'Sanity: the rename physically moves the main file inside the ORIGINAL directory'
 		);
 		$this->assertFileDoesNotExist(
 			$original_file,
@@ -947,7 +939,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$after_content = get_post( $post_id )->post_content;
 
 		// The correct rewritten URL should be `.../<orig-dir>/<newbase>.jpg` —
-		// same directory as the file on disk. Under the bug the URL is
+		// same directory as the file on disk. A mangled URL would be
 		// `.../<newbase>/<newbase>.jpg` (directory ALSO replaced), which
 		// points to a directory that does not exist on disk → dead link.
 		$correct_url = str_replace( $subdir . '.jpg', $new_base . '.jpg', $original_url );
@@ -956,7 +948,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$this->assertNotSame(
 			$correct_url,
 			$mangled_url,
-			'Sentinel: mangled and correct URLs must differ — otherwise the fixture does not trip #51'
+			'Sentinel: mangled and correct URLs must differ — otherwise the fixture does not trip the mangling'
 		);
 
 		$this->assertStringContainsString(
@@ -972,23 +964,22 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// REGRESSION #53 (fixed in 80ac531b): the usage check ignores the
-	// attachment's OWN postmeta rows.
+	// The usage check ignores the attachment's OWN postmeta rows.
 	// -------------------------------------------------------------------
 
 	/**
-	 * REGRESSION #53 (self-match) — replaceFiles() skips the rename of an
+	 * Regression (self-match) — replaceFiles() skips the rename of an
 	 * image that published content already uses (recent_upload !== true). It
 	 * probes post_content and postmeta with a LIKE on the extension-stripped
 	 * URL path. Postmeta of ATTACHMENTS (post_status 'inherit') is included, so
 	 * on sites where a plugin stores the FULL URL in the attachment's own
-	 * postmeta the image matched ITSELF and every AI rename was blocked.
-	 * WP core itself stores relative paths, so a stock install never
-	 * self-matched — this test plants the full URL to reproduce the shape.
-	 * 80ac531b excludes the item (and its WPML/Polylang siblings) from the
+	 * postmeta the image would match ITSELF and every AI rename would be
+	 * blocked. WP core itself stores relative paths, so a stock install never
+	 * self-matches — this test plants the full URL to reproduce the shape.
+	 * The item (and its WPML/Polylang siblings) is excluded from the
 	 * postmeta probe (Finder::postmeta 'exclude_post_ids').
 	 */
-	public function test_regression53_usage_check_ignores_the_attachments_own_postmeta() {
+	public function test_usage_check_ignores_the_attachments_own_postmeta() {
 		$this->_setRole( 'administrator' );
 
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
@@ -1023,7 +1014,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$result = $m->invoke(
 			$ctrl,
 			$qItem,
-			'regression53-' . strtolower( wp_generate_password( 4, false, false ) ),
+			'own-meta-' . strtolower( wp_generate_password( 4, false, false ) ),
 			array(
 				'dry_run'        => false,
 				'recent_upload'  => false, // run the usage check
@@ -1032,22 +1023,21 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 			)
 		);
 
-		$this->assertTrue( $result, 'REGRESSION #53: the attachment\'s own postmeta must not count as a use — the rename goes ahead.' );
-		$this->assertFileDoesNotExist( $original_file, 'REGRESSION #53: the file was really renamed.' );
+		$this->assertTrue( $result, 'The attachment\'s own postmeta must not count as a use — the rename goes ahead.' );
+		$this->assertFileDoesNotExist( $original_file, 'The file was really renamed.' );
 	}
 
 	// -------------------------------------------------------------------
-	// #66 editor contract — moved here from the (flipped) #52 unit test
+	// Editor contract
 	// -------------------------------------------------------------------
 
 	/**
-	 * CONTRACT (a5ad9805, part of the #66 Gutenberg fix): after a real,
-	 * successful, non-dry-run rename, replaceFiles() stores the new file URL
-	 * on the queue result as replaced_content['replaced_url'], which
-	 * screen-media.js UpdateGutenBerg() uses to refresh the image block's url
-	 * in an open editor. Previously asserted inside the #52 pin on a
-	 * copy-failure path; since 0db02498 that path bails out before recording
-	 * anything, so the contract is verified here on a real rename.
+	 * CONTRACT: after a real, successful, non-dry-run rename, replaceFiles()
+	 * stores the new file URL on the queue result as
+	 * replaced_content['replaced_url'], which screen-media.js
+	 * UpdateGutenBerg() uses to refresh the image block's url in an open
+	 * editor. A copy-failure path bails out before recording anything, so
+	 * the contract is verified here on a real rename.
 	 */
 	public function test_successful_rename_records_replaced_url_for_the_editor() {
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
@@ -1066,7 +1056,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// BUG #73 — offloader-handled renames (WP Offload Media)
+	// Offloader-handled renames (WP Offload Media)
 	// -------------------------------------------------------------------
 
 	/**
@@ -1109,21 +1099,19 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	}
 
 	/**
-	 * REGRESSION #73(a) — local + remote copy (flipped from the pin,
-	 * 2026-09-24, fixed in e165198f).
+	 * Regression — local + remote copy.
 	 *
-	 * 0db02498 bailed out whenever $copySource was empty, and an offloader
-	 * that reported "applied" skipped the local copy loop, so every
-	 * offloader-handled rename stopped before replaceMetaData() and told the
-	 * user it failed. e165198f now also runs the local copy loop when the
-	 * image is NOT virtual (`false === $applied || false === is_virtual()`),
-	 * i.e. when the files exist on disk as well as in the bucket, and deletes
-	 * the local sources afterwards whether or not the offloader applied.
+	 * An offloader that reports "applied" must not make the rename stop
+	 * before replaceMetaData(). replaceFiles() also runs the local copy loop
+	 * when the image is NOT virtual (`false === $applied || false ===
+	 * is_virtual()`), i.e. when the files exist on disk as well as in the
+	 * bucket, and deletes the local sources afterwards whether or not the
+	 * offloader applied.
 	 *
 	 * Simulated with a filter reporting "applied" exactly like
 	 * wpOffload::replaceFiles() does (no S3 bucket needed).
 	 */
-	public function test_regression73_offloader_handled_rename_with_local_copy_completes() {
+	public function test_offloader_handled_rename_with_local_copy_completes() {
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->purgeQueueTable();
 		$old_file = get_attached_file( $attachment_id );
@@ -1136,7 +1124,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		};
 		add_filter( 'shortpixel/image/replace_files', $offloader, 10, 2 );
 
-		$new_base = 'reg73-' . wp_generate_password( 6, false );
+		$new_base = 'offload-local-' . wp_generate_password( 6, false );
 		list( $result ) = $this->renameViaEngine( $attachment_id, $new_base );
 		remove_filter( 'shortpixel/image/replace_files', $offloader, 10 );
 
@@ -1144,15 +1132,15 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$this->assertCount( 1, $seen, 'Sentinel: the replace_files filter must have been consulted exactly once.' );
 		$this->assertGreaterThan( 0, $seen[0], 'Sentinel: the filter must have received the source files.' );
 
-		$this->assertTrue( $result, 'REGRESSION #73: an offloader-handled rename of a local+remote image must complete and report success.' );
-		$this->assertStringContainsString( $new_base, get_attached_file( $attachment_id ), 'REGRESSION #73: _wp_attached_file must carry the new name.' );
+		$this->assertTrue( $result, 'An offloader-handled rename of a local+remote image must complete and report success.' );
+		$this->assertStringContainsString( $new_base, get_attached_file( $attachment_id ), '_wp_attached_file must carry the new name.' );
 		$this->assertStringContainsString(
 			$new_base,
 			(string) ( wp_get_attachment_metadata( $attachment_id )['file'] ?? '' ),
-			'REGRESSION #73: the attachment metadata must carry the new name.'
+			'The attachment metadata must carry the new name.'
 		);
-		$this->assertFileExists( $dir . $new_base . '.jpg', 'REGRESSION #73: the local copy must now exist under the new name.' );
-		$this->assertFileDoesNotExist( $old_file, 'REGRESSION #73: the local source must be removed after the rename.' );
+		$this->assertFileExists( $dir . $new_base . '.jpg', 'The local copy must now exist under the new name.' );
+		$this->assertFileDoesNotExist( $old_file, 'The local source must be removed after the rename.' );
 	}
 
 	/** Rename a remote-only image while an offloader reports it renamed the bucket. */
@@ -1169,53 +1157,46 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	}
 
 	/**
-	 * REGRESSION #73(a) — remote-only images (flipped 2026-09-24, fixed in
-	 * 88b2bcfe; the defect was confirmed by Pedro on a real WP Offload Media
-	 * site: "Copy failed to copy anything" in the log, bucket renamed,
-	 * attachment slug unchanged).
+	 * Regression — remote-only images.
 	 *
 	 * With "Remove files from server" the image is virtual, so no local copy
-	 * is made and $copySource stays empty. The bail-out used to fire anyway and
-	 * return false BEFORE replaceMetaData(). 88b2bcfe only bails when the
-	 * offloader did NOT apply (`... && false === $applied`), so the rename now
-	 * carries on to the metadata / slug / backup / content steps.
+	 * is made and $copySource stays empty. The "copied nothing" bail-out only
+	 * fires when the offloader did NOT apply (`... && false === $applied`),
+	 * so the rename carries on to the metadata / slug / backup / content steps.
 	 *
 	 * The virtual state is simulated with an https:// URL; real WP Offload
 	 * Media hands back a stream-wrapper path (s3://…). Both contain "://", so
 	 * pathIsUrl() treats both as virtual.
 	 */
-	public function test_regression73_remote_only_offloader_handled_rename_completes() {
+	public function test_remote_only_offloader_handled_rename_completes() {
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->purgeQueueTable();
 		$this->makeRemoteOnly( $attachment_id );
 		// SENTINEL: the image really is virtual.
 		$this->assertTrue( $this->freshImageModel( $attachment_id )->is_virtual(), 'Sentinel: the attachment must resolve as a virtual (remote-only) image.' );
 
-		$new_base = 'reg73-remote-' . wp_generate_password( 6, false );
+		$new_base = 'offload-remote-' . wp_generate_password( 6, false );
 		list( $result, $seen ) = $this->renameRemoteOnlyWithOffloaderApplied( $attachment_id, $new_base );
 
 		$this->assertSame( 1, $seen, 'Sentinel: the replace_files filter must have been consulted exactly once.' );
-		$this->assertTrue( $result, 'REGRESSION #73(a): a remote-only rename the offloader applied must complete.' );
+		$this->assertTrue( $result, 'A remote-only rename the offloader applied must complete.' );
 		$this->assertStringContainsString(
 			$new_base,
 			(string) ( wp_get_attachment_metadata( $attachment_id )['file'] ?? '' ),
-			'REGRESSION #73(a): the attachment metadata must carry the new name.'
+			'The attachment metadata must carry the new name.'
 		);
 	}
 
 	/**
-	 * REGRESSION (fixed in 80eecd0f, 2026-09-25; confirmed by Pedro on a real
-	 * WP Offload Media site before the fix) — a remote-only rename must keep
-	 * _wp_attached_file RELATIVE.
+	 * Regression — a remote-only rename must keep _wp_attached_file RELATIVE.
 	 *
-	 * The bug: replaceMetaData() read `get_attached_file($item_id)` — the
-	 * FILTERED value. For a file missing locally WP Offload Media returns the
-	 * remote location there (a stream-wrapper path s3://…, or the provider
-	 * URL), so update_attached_file() stored that absolute location instead
-	 * of "YYYY/MM/name.jpg". 80eecd0f reads it unfiltered
-	 * (`get_attached_file($item_id, true)`).
+	 * replaceMetaData() reads `get_attached_file($item_id, true)` (unfiltered).
+	 * The FILTERED value, for a file missing locally, is the remote location
+	 * WP Offload Media returns (a stream-wrapper path s3://…, or the provider
+	 * URL), and update_attached_file() would store that absolute location
+	 * instead of "YYYY/MM/name.jpg".
 	 */
-	public function test_regression_remote_only_rename_keeps_attached_file_relative() {
+	public function test_remote_only_rename_keeps_attached_file_relative() {
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->purgeQueueTable();
 		$raw_before = (string) get_post_meta( $attachment_id, '_wp_attached_file', true );
@@ -1223,32 +1204,30 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$this->assertStringNotContainsString( '://', $raw_before, 'Sentinel: _wp_attached_file starts relative.' );
 
 		$this->makeRemoteOnly( $attachment_id );
-		$new_base = 'pin-attached-' . wp_generate_password( 6, false );
+		$new_base = 'remote-attached-' . wp_generate_password( 6, false );
 		list( $result ) = $this->renameRemoteOnlyWithOffloaderApplied( $attachment_id, $new_base );
-		$this->assertTrue( $result, 'Sanity: the remote-only rename completes (#73(a) fixed).' );
+		$this->assertTrue( $result, 'Sanity: the remote-only rename completes.' );
 
 		$raw_after = (string) get_post_meta( $attachment_id, '_wp_attached_file', true );
 		$this->assertStringContainsString( $new_base, $raw_after, 'Sanity: _wp_attached_file was rewritten.' );
 		$this->assertStringNotContainsString(
 			'://',
 			$raw_after,
-			'REGRESSION: _wp_attached_file must stay relative after a remote-only rename (no s3:// or URL).'
+			'_wp_attached_file must stay relative after a remote-only rename (no s3:// or URL).'
 		);
-		$this->assertStringStartsWith( dirname( $raw_before ) . '/', $raw_after, 'REGRESSION: same YYYY/MM directory, relative.' );
+		$this->assertStringStartsWith( dirname( $raw_before ) . '/', $raw_after, 'Same YYYY/MM directory, relative.' );
 	}
 
 	/**
-	 * CONTRACT — dry-run returns false (by design since e165198f) — when NO
-	 * offloader applied the rename. Since 88b2bcfe the bail-out only fires
-	 * when `false === $applied`, so a dry-run on an offloaded image the
-	 * offloader "applied" (wpOffload skips its provider calls on dry_run but
-	 * still returns true) carries on and reports true.
+	 * CONTRACT — dry-run returns false (by design) when NO offloader applied
+	 * the rename. The bail-out only fires when `false === $applied`, so a
+	 * dry-run on an offloaded image the offloader "applied" (wpOffload skips
+	 * its provider calls on dry_run but still returns true) carries on and
+	 * reports true.
 	 *
-	 * Formerly pinned as a #73 facet: dry-run never copies, so the
-	 * `count($copySource) === 0` bail-out made it return false. e165198f made
-	 * that explicit (`|| true === $args['dry_run']`) and now also passes
-	 * dry_run to the offloader filter so wpOffload skips the provider calls.
-	 * No user-facing caller exists (the only production dry_run call sits in
+	 * The bail-out is explicit for dry-run (`|| true === $args['dry_run']`),
+	 * and dry_run is passed to the offloader filter so wpOffload skips the
+	 * provider calls. No user-facing caller exists (the only production dry_run call sits in
 	 * a commented-out debug block in EditMediaViewController). Note the
 	 * bail-out still logs "Copy failed to copy anything" for a dry-run,
 	 * which is misleading in a debug log.
@@ -1263,19 +1242,18 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 
 		$this->assertFileExists( $old_file, 'Dry-run must not touch the file.' );
 		$this->assertSame( $old_file, get_attached_file( $attachment_id ), 'Dry-run must not touch _wp_attached_file.' );
-		$this->assertFalse( $result, 'Dry-run returns false by design (e165198f).' );
+		$this->assertFalse( $result, 'Dry-run returns false by design.' );
 	}
 
 	// -------------------------------------------------------------------
-	// Renaming keeps the attachment title (fixed in 88b2bcfe)
+	// Renaming keeps the attachment title
 	// -------------------------------------------------------------------
 
 	/**
-	 * REGRESSION (flipped 2026-09-24): e165198f made replaceMetaData() set
-	 * post_title to the new file base on every rename, so a title the user
-	 * wrote was lost (and WPML/Polylang translations would all have got the
-	 * same untranslated filename). 88b2bcfe stopped touching post_title. The
-	 * slug (post_name) still follows the new file base — that is intended.
+	 * Regression: replaceMetaData() must not set post_title to the new file
+	 * base, or a title the user wrote is lost (and WPML/Polylang translations
+	 * would all get the same untranslated filename). The slug (post_name)
+	 * follows the new file base — that is intended.
 	 */
 	public function test_rename_keeps_a_custom_attachment_title_and_updates_the_slug() {
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
@@ -1287,29 +1265,27 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		// SENTINEL: the attachment really carries a human-written title.
 		$this->assertSame( $custom_title, get_post( $attachment_id )->post_title, 'Sentinel: the custom title must be stored before the rename.' );
 
-		$new_base = 'reg-title-' . strtolower( wp_generate_password( 6, false ) );
+		$new_base = 'title-keep-' . strtolower( wp_generate_password( 6, false ) );
 		list( $result ) = $this->renameViaEngine( $attachment_id, $new_base );
 		$this->assertTrue( $result, 'Sanity: the rename itself must succeed.' );
 
 		clean_post_cache( $attachment_id );
 		$post = get_post( $attachment_id );
-		$this->assertSame( $custom_title, $post->post_title, 'REGRESSION: the custom title must survive the rename.' );
+		$this->assertSame( $custom_title, $post->post_title, 'The custom title must survive the rename.' );
 		$this->assertSame( sanitize_title( $new_base ), $post->post_name, 'The attachment slug follows the new file base.' );
 	}
 
 	/**
-	 * REGRESSION #81 (found 2026-09-28 in 3fd40001, fixed in dfa346be) —
-	 * stripping a dimension or "-scaled" suffix from a filename must keep the
-	 * main image intact.
+	 * Regression — stripping a dimension or "-scaled" suffix from a filename
+	 * must keep the main image intact.
 	 *
-	 * 3fd40001 added a skip to replaceFileBaseInPath() for any path whose name
-	 * already matched `^<new>(-scaled)?(-\d+x\d+)?$` (to stop WPML-synced
-	 * translations being renamed twice). The CURRENT name of the image being
+	 * replaceFileBaseInPath() must not skip paths whose name already matches
+	 * `^<new>(-scaled)?(-\d+x\d+)?$`: the CURRENT name of the image being
 	 * renamed matches that too when the new name is the old one minus such a
-	 * suffix ("banner-1920x600" → "banner"), so the files moved on disk but
-	 * _wp_attached_file and metadata['file'] kept the deleted name, and the
-	 * rename reported success. dfa346be removed the skip: since 8153f606 the
-	 * WPML siblings get the item's new values directly, so it guarded nothing.
+	 * suffix ("banner-1920x600" → "banner"), so the files would move on disk
+	 * while _wp_attached_file and metadata['file'] kept the deleted name. The
+	 * WPML siblings get the item's new values directly, so no such skip is
+	 * needed.
 	 *
 	 * Reach: a fresh upload cannot carry such a name — wp_unique_filename()
 	 * always appends "-1" to names ending in -scaled / -rotated / -WxH
@@ -1317,7 +1293,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	 * (a typed name does not go through wp_unique_filename — this test uses
 	 * that route), or an import that bypasses it.
 	 */
-	public function test_regression81_stripping_a_dimension_suffix_keeps_the_main_file_intact() {
+	public function test_stripping_a_dimension_suffix_keeps_the_main_file_intact() {
 		$this->_setRole( 'administrator' );
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->purgeQueueTable();
@@ -1341,19 +1317,19 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$raw  = (string) get_post_meta( $attachment_id, '_wp_attached_file', true );
 		$meta = wp_get_attachment_metadata( $attachment_id );
 
-		// REGRESSION #81: WordPress follows the rename and points at a file that exists.
+		// WordPress follows the rename and points at a file that exists.
 		$this->assertSame(
 			$base . '.jpg',
 			basename( $raw ),
-			'REGRESSION #81: _wp_attached_file must follow the rename.'
+			'_wp_attached_file must follow the rename.'
 		);
-		$this->assertSame( $base . '.jpg', basename( (string) ( $meta['file'] ?? '' ) ), 'REGRESSION #81: metadata[file] must follow the rename.' );
-		$this->assertFileExists( $dir . '/' . basename( $raw ), 'REGRESSION #81: the referenced main file exists.' );
+		$this->assertSame( $base . '.jpg', basename( (string) ( $meta['file'] ?? '' ) ), 'metadata[file] must follow the rename.' );
+		$this->assertFileExists( $dir . '/' . basename( $raw ), 'The referenced main file exists.' );
 	}
 
 	/**
-	 * PIN (beta report #6, "an AI filename change breaks the image when the
-	 * name has .jpg in the middle") — Replacer2 derives the base URL with
+	 * Pins a known defect ("an AI filename change breaks the image when the
+	 * name has .jpg in the middle"): Replacer2 derives the base URL with
 	 *     str_replace('.' . pathinfo($url, PATHINFO_EXTENSION), '', $url)
 	 * (build/shortpixel/replacer2/src/Replacer.php:145 and
 	 * src/Classes/Url.php:21), which removes EVERY ".jpg" in the URL, not only
@@ -1362,10 +1338,10 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	 * renamed, but the posts keep the old URLs — the image is broken in the
 	 * post and in the editor. Normal names ("pic.jpg") are unaffected.
 	 *
-	 * Suggested fix (in the replacer2 MODULE source, then rebuild — build/ is
+	 * @todo Suggested fix (in the replacer2 MODULE source, then rebuild — build/ is
 	 * generated): strip only the trailing extension, e.g.
 	 *     $base_url = preg_replace('/\.' . preg_quote($ext, '/') . '$/', '', $base_url);
-	 * FLIP-when-fixed: the post content points at the renamed files.
+	 * When fixed, this test fails; flip it: the post content points at the renamed files.
 	 */
 	public function test_pin_rename_leaves_post_urls_when_the_name_contains_the_extension_pinned_for_deferred_fix() {
 		$this->_setRole( 'administrator' );
@@ -1395,22 +1371,20 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		// THE PIN: the post still points at the old, now-missing files.
 		clean_post_cache( $post_id );
 		$content = get_post( $post_id )->post_content;
-		$this->assertStringContainsString( basename( $old_main ), $content, 'PIN (beta #6): fixed? The post now points at the renamed main file — flip this pin.' );
-		$this->assertStringNotContainsString( $new_base, $content, 'PIN (beta #6): no URL in the post was rewritten.' );
+		$this->assertStringContainsString( basename( $old_main ), $content, 'Pinned: fixed? The post now points at the renamed main file — flip this pin.' );
+		$this->assertStringNotContainsString( $new_base, $content, 'Pinned: no URL in the post was rewritten.' );
 	}
 
 	/**
-	 * REGRESSION #79 (fixed in 9c3dab50) — after a rename ShortPixel's own
-	 * image meta must carry the NEW WebP/AVIF filenames, for the main image
-	 * and every thumbnail.
+	 * Regression — after a rename ShortPixel's own image meta must carry the
+	 * NEW WebP/AVIF filenames, for the main image and every thumbnail.
 	 *
-	 * replaceFiles() renamed the .webp/.avif companions on disk but left
-	 * image_meta 'webp' / 'avif' on the old names. getImageType() returns the
-	 * stored name without checking it exists, so delete, restore and the
-	 * WebP/AVIF cleanup tools targeted missing files and the renamed
-	 * companions were orphaned.
+	 * getImageType() returns the stored name without checking it exists, so
+	 * if image_meta 'webp' / 'avif' kept the old names, delete, restore and
+	 * the WebP/AVIF cleanup tools would target missing files and the renamed
+	 * companions would be orphaned.
 	 */
-	public function test_regression79_rename_updates_the_webp_avif_names_in_shortpixel_meta() {
+	public function test_rename_updates_the_webp_avif_names_in_shortpixel_meta() {
 		$this->_setRole( 'administrator' );
 		\wpSPIO()->settings()->createWebp = 1;
 		\wpSPIO()->settings()->createAvif = 1;
@@ -1432,7 +1406,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$this->assertNotSame( '', $old_webp_name, 'Sentinel: the webp filename is stored in the meta.' );
 		$dir = dirname( get_attached_file( $attachment_id ) );
 
-		$new_base = 'pin79-' . strtolower( wp_generate_password( 6, false, false ) );
+		$new_base = 'companions-' . strtolower( wp_generate_password( 6, false, false ) );
 		list( $result ) = $this->renameViaEngine( $attachment_id, $new_base );
 		$this->assertTrue( $result, 'Sanity: the rename succeeds.' );
 
@@ -1441,13 +1415,13 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$this->assertNotEmpty( $renamed, 'Sentinel: renamed .webp/.avif files exist on disk.' );
 		$this->assertFileDoesNotExist( $old_webp_path, 'Sentinel: the old .webp is gone.' );
 
-		// REGRESSION #79: the meta names the renamed companions, for the main image…
+		// The meta names the renamed companions, for the main image…
 		$after = $this->freshImageModel( $attachment_id );
-		$this->assertNotSame( $old_webp_name, $after->getMeta( 'webp' ), 'REGRESSION #79: the webp meta changed.' );
-		$this->assertStringStartsWith( $new_base, (string) $after->getMeta( 'webp' ), 'REGRESSION #79: the webp meta carries the new name.' );
-		$this->assertStringStartsWith( $new_base, (string) $after->getMeta( 'avif' ), 'REGRESSION #79: the avif meta carries the new name.' );
-		$this->assertTrue( $after->getWebp()->exists(), 'REGRESSION #79: getWebp() points at an existing file.' );
-		$this->assertTrue( $after->getAvif()->exists(), 'REGRESSION #79: getAvif() points at an existing file.' );
+		$this->assertNotSame( $old_webp_name, $after->getMeta( 'webp' ), 'The webp meta changed.' );
+		$this->assertStringStartsWith( $new_base, (string) $after->getMeta( 'webp' ), 'The webp meta carries the new name.' );
+		$this->assertStringStartsWith( $new_base, (string) $after->getMeta( 'avif' ), 'The avif meta carries the new name.' );
+		$this->assertTrue( $after->getWebp()->exists(), 'getWebp() points at an existing file.' );
+		$this->assertTrue( $after->getAvif()->exists(), 'getAvif() points at an existing file.' );
 
 		// …and for every thumbnail that has companions.
 		$checked = 0;
@@ -1458,33 +1432,32 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 					continue;
 				}
 				$checked++;
-				$this->assertStringStartsWith( $new_base, (string) $stored, "REGRESSION #79: thumbnail $name $type meta carries the new name." );
-				$this->assertFileExists( $dir . '/' . $stored, "REGRESSION #79: thumbnail $name $type file exists." );
+				$this->assertStringStartsWith( $new_base, (string) $stored, "Thumbnail $name $type meta carries the new name." );
+				$this->assertFileExists( $dir . '/' . $stored, "Thumbnail $name $type file exists." );
 			}
 		}
 		$this->assertGreaterThan( 0, $checked, 'Sentinel: thumbnails with webp/avif companions were checked.' );
 
 		// Deleting the attachment now removes the renamed companions.
 		wp_delete_attachment( $attachment_id, true );
-		$this->assertEmpty( glob( $dir . '/' . $new_base . '*.{webp,avif}', GLOB_BRACE ), 'REGRESSION #79: no renamed .webp/.avif is orphaned after delete.' );
+		$this->assertEmpty( glob( $dir . '/' . $new_base . '*.{webp,avif}', GLOB_BRACE ), 'No renamed .webp/.avif is orphaned after delete.' );
 		foreach ( glob( $dir . '/' . $new_base . '*' ) as $leftover ) {
 			unlink( $leftover ); // keep the shared uploads dir clean for later runs
 		}
 	}
 
 	/**
-	 * REGRESSION (found 2026-10-01 on Pedro's test site with a persistent
-	 * object cache, fixed in ba79abb5) — after a rename, the URL rewrite in
-	 * post content must invalidate the post cache.
+	 * Regression — after a rename, the URL rewrite in post content must
+	 * invalidate the post cache.
 	 *
 	 * Replacer::doReplaceQuery() updates post_content with direct SQL; without
-	 * clean_post_cache() get_post() kept serving the OLD content from the
+	 * clean_post_cache() get_post() would keep serving the OLD content from the
 	 * object cache — on Redis / Memcached for every later request, so the
-	 * block editor opened old URLs (files already moved) and the next save or
-	 * autosave wrote them back. The WP test framework's in-memory cache shows
+	 * block editor would open old URLs (files already moved) and the next save
+	 * or autosave would write them back. The WP test framework's in-memory cache shows
 	 * the same staleness inside one request, so no Redis is needed here.
 	 */
-	public function test_regression_rename_refreshes_the_post_cache_with_the_new_url() {
+	public function test_rename_refreshes_the_post_cache_with_the_new_url() {
 		$this->_setRole( 'administrator' );
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->purgeQueueTable();
@@ -1499,7 +1472,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		// Prime the object cache the way any page view / editor load does.
 		$this->assertStringContainsString( $old_name, get_post( $post_id )->post_content, 'Sentinel: the post shows the image.' );
 
-		$new_base = 'cache-pin-' . strtolower( wp_generate_password( 4, false, false ) );
+		$new_base = 'post-cache-' . strtolower( wp_generate_password( 4, false, false ) );
 		list( $result ) = $this->renameViaEngine( $attachment_id, $new_base );
 		$this->assertTrue( $result, 'Sentinel: the rename succeeded.' );
 
@@ -1508,21 +1481,20 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		// SENTINEL: the database really was rewritten.
 		$this->assertStringContainsString( $new_base, $db_content, 'Sentinel: the database holds the new URL.' );
 
-		// REGRESSION: the cached post follows the database, no manual flush.
+		// The cached post follows the database, no manual flush.
 		$content = get_post( $post_id )->post_content;
-		$this->assertStringContainsString( $new_base, $content, 'REGRESSION: get_post() returns the renamed URL.' );
-		$this->assertStringNotContainsString( $old_name, $content, 'REGRESSION: no stale old URL.' );
+		$this->assertStringContainsString( $new_base, $content, 'get_post() returns the renamed URL.' );
+		$this->assertStringNotContainsString( $old_name, $content, 'No stale old URL.' );
 	}
 
 	/**
-	 * PIN (found 2026-10-01 reviewing 9c3dab50, LOW: no user-facing caller
-	 * uses dry_run today) — a dry-run writes the NEW webp/avif names into
-	 * ShortPixel's meta although no file moves. 9c3dab50 calls setMeta() while
-	 * building the rename plan and saveMeta() after the copy loop, neither
-	 * guarded by dry_run; afterwards getWebp()/getAvif() point at files that
-	 * do not exist.
-	 * Fix: only setMeta()/saveMeta() when false === $args['dry_run'].
-	 * FLIP-when-fixed: the stored names stay the same and still exist.
+	 * Pins a known defect (no user-facing caller uses dry_run today): a
+	 * dry-run writes the NEW webp/avif names into ShortPixel's meta although
+	 * no file moves — setMeta() runs while building the rename plan and
+	 * saveMeta() after the copy loop; afterwards getWebp()/getAvif() point at
+	 * files that do not exist.
+	 * @todo Only setMeta()/saveMeta() when false === $args['dry_run'].
+	 * When fixed, this test fails; flip it: the stored names stay the same and still exist.
 	 */
 	public function test_pin_dry_run_writes_the_new_webp_avif_names_into_the_meta_pinned_for_deferred_fix() {
 		\wpSPIO()->settings()->createWebp = 1;
@@ -1536,7 +1508,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$avif   = (string) $before->getMeta( 'avif' );
 		$this->assertNotSame( '', $webp, 'Sentinel: the webp name is stored.' );
 
-		$this->replaceFilesWithArgs( $attachment_id, 'dry79-' . wp_generate_password( 6, false ), array( 'dry_run' => true, 'recent_upload' => true ) );
+		$this->replaceFilesWithArgs( $attachment_id, 'dry-meta-' . wp_generate_password( 6, false ), array( 'dry_run' => true, 'recent_upload' => true ) );
 
 		$after = $this->freshImageModel( $attachment_id );
 		// SENTINEL: the dry-run really left the files alone.
@@ -1547,19 +1519,19 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	}
 
 	/**
-	 * PIN #82 (found 2026-10-01 reviewing ba79abb5, deferred to 6.6.x) — after a rename, the URL
-	 * rewrite in POSTMETA (page builders: Elementor, Breakdance… keep image
-	 * URLs there) and in OPTIONS (widgets, theme mods) leaves the object cache
-	 * stale. ba79abb5 added clean_post_cache() to the post_content pass only;
-	 * Replacer::handleMetaData() still updates with direct SQL. On Redis /
-	 * Memcached a page builder then loads the old URLs and saves them back.
-	 * VERIFIED fix (temp-applied 2026-10-01): after each meta UPDATE,
-	 * wp_cache_delete(<object id>, 'post_meta'|'comment_meta'|'term_meta'|
-	 * 'user_meta'); for options wp_cache_delete('alloptions'/'notoptions',
-	 * 'options') + the option's own key.
-	 * FLIP-when-fixed: both cached reads return the new URL.
+	 * Pins a known defect: after a rename, the URL rewrite in POSTMETA (page
+	 * builders: Elementor, Breakdance… keep image URLs there) and in OPTIONS
+	 * (widgets, theme mods) leaves the object cache stale. Only the
+	 * post_content pass calls clean_post_cache(); Replacer::handleMetaData()
+	 * updates with direct SQL. On Redis / Memcached a page builder then
+	 * loads the old URLs and saves them back.
+	 * @todo After each meta UPDATE, wp_cache_delete(<object id>,
+	 *       'post_meta'|'comment_meta'|'term_meta'|'user_meta'); for options
+	 *       wp_cache_delete('alloptions'/'notoptions', 'options') + the
+	 *       option's own key.
+	 * When fixed, this test fails; flip it: both cached reads return the new URL.
 	 */
-	public function test_pin82_rename_leaves_cached_postmeta_and_options_with_the_old_url_pinned_for_deferred_fix() {
+	public function test_rename_leaves_cached_postmeta_and_options_with_the_old_url_pinned_for_deferred_fix() {
 		$this->_setRole( 'administrator' );
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->purgeQueueTable();
@@ -1583,7 +1555,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$this->assertStringContainsString( $new_base, (string) $wpdb->get_var( "SELECT option_value FROM {$wpdb->options} WHERE option_name = 'spio_test_widget_image'" ), 'Sentinel: option rewritten in the database.' );
 
 		// THE PIN: the cached reads still return the old URL.
-		$this->assertStringContainsString( $old_name, get_post_meta( $page_id, '_spio_test_builder_data', true ), 'PIN #82: fixed? Cached postmeta now follows the rename — flip this pin.' );
-		$this->assertStringContainsString( $old_name, get_option( 'spio_test_widget_image' ), 'PIN #82: fixed? The cached option now follows the rename — flip this pin.' );
+		$this->assertStringContainsString( $old_name, get_post_meta( $page_id, '_spio_test_builder_data', true ), 'Pinned: fixed? Cached postmeta now follows the rename — flip this pin.' );
+		$this->assertStringContainsString( $old_name, get_option( 'spio_test_widget_image' ), 'Pinned: fixed? The cached option now follows the rename — flip this pin.' );
 	}
 }

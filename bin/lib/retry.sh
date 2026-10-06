@@ -4,8 +4,8 @@
 # isolation (see the self-test at the bottom, `bash bin/lib/retry.sh --self-test`).
 #
 # Why: registry pulls from GitHub Actions runners occasionally die with
-# "connection reset by peer" while fetching the Docker Hub auth token
-# (seen 2026-09-14 on the first e2e.yml run). A pull is idempotent and
+# "connection reset by peer" while fetching the Docker Hub auth token.
+# A pull is idempotent and
 # resumable, so retrying with backoff turns that into a non-event.
 
 # spio_retry <attempts> <initial-delay-seconds> <command> [args...]

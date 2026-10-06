@@ -45,10 +45,9 @@
  *   - __debugInfo (shape sentinel)
  *
  * SESSION 6 (done) — handleOptimized thumbnail key mismatch:
- *   - pinThumbKey: results keyed by file name (the addUnlisted shape) are
+ *   - pinned: results keyed by file name (the addUnlisted shape) are
  *     discarded instead of matched, which re-queues the item forever.
- *     Reported from simplyhappenings.com on 6.5.6; reproduces unchanged on
- *     this branch. Paired with a size-name control test.
+ *     Paired with a size-name control test.
  *
  * STILL DEFERRED (integration territory — will need a full-fixture pass):
  *   - handleOptimized full flow (200 LOC + BackupModel + WPML) — only the
@@ -61,11 +60,11 @@
  *   - loadThumbnailsFromWP / addUnlisted / loadLooseItems (WP attachment fixture)
  *   - conversionPrepare / Failed / Success (need BackupModel)
  *   - migrate / checkLegacy / checkLegacyFileTypeFileName (massive; migration flow)
- *     Bug #9 FIXED (9b18a8e8): checkLegacy() no longer writes dynamic props
- *     image_meta->improvement or ->has_backup; originalSize back-calc now uses
- *     the local $improvement variable (is_numeric && > 0) instead of re-reading
+ *     checkLegacy() does not write dynamic props image_meta->improvement or
+ *     ->has_backup; the originalSize back-calc uses the local $improvement
+ *     variable (is_numeric && > 0) instead of re-reading
  *     $metadata['ShortPixelImprovement'].
- *   - loadMeta (after checkLegacy()) Bug #27 FULLY FIXED (c0bc8c17 + af5794d8):
+ *   - loadMeta (after checkLegacy()):
  *     loadMeta() calls $this->getDBMeta() instead of returning an empty stdClass
  *     after a successful checkLegacy() migration, and checkLegacy() populates
  *     $this->thumbnails via loadThumbnailsFromWP() when still empty so the
@@ -1784,22 +1783,19 @@ class MediaLibraryModelTest extends WP_UnitTestCase {
 	}
 
 	/*
-	 * handleOptimized — thumbnail result key mismatch (customer loop).
+	 * handleOptimized — thumbnail result key mismatch (re-queue loop).
 	 *
-	 * Field report, simplyhappenings.com on 6.5.6 / 2026-09-25: 24 of 36
-	 * attachments were re-sent to the API on every bulk run, forever. The
-	 * request's returnParams ("returndatalist.sizes") was keyed by FILE NAME
-	 * for those items — the shape addUnlisted() produces — while the model
-	 * handling the response had the same physical files keyed by registered
-	 * WP SIZE NAME. handleOptimized() matches the echoed-back key with a
-	 * plain isset($thumbObjs[$sizeName]), so all 603 already-paid-for
-	 * thumbnail results were dropped with
+	 * When the request's returnParams ("returndatalist.sizes") is keyed by
+	 * FILE NAME — the shape addUnlisted() produces — while the model
+	 * handling the response has the same physical files keyed by registered
+	 * WP SIZE NAME, a plain isset($thumbObjs[$sizeName]) match drops every
+	 * already-paid-for thumbnail result with
 	 *   "Thumbnail with size name: X is not registered in this image."
-	 * Nothing was marked optimized, the item stayed processable, and
-	 * OptimizeController re-queued it — so the next run repeated the whole
-	 * cycle and re-billed it.
+	 * Nothing is marked optimized, the item stays processable, and
+	 * OptimizeController re-queues it — so every bulk run repeats the whole
+	 * cycle and re-bills it.
 	 *
-	 * pinThumbKey below asserts the CURRENT (broken) outcome, so it flips red
+	 * The pinned test below asserts the broken outcome, so it flips red
 	 * when the mismatch is handled — e.g. by falling back to the file name,
 	 * which handleOptimized already has as the VALUE of $data['sizes'].
 	 * The control test next to it sends the identical payload keyed by size
@@ -1861,7 +1857,7 @@ class MediaLibraryModelTest extends WP_UnitTestCase {
 	 * download. Both tests use the same payload shape; only the KEY differs.
 	 *
 	 * @param array<string, \ShortPixel\Model\Image\MediaLibraryThumbnailModel> $thumbs Size-name-keyed thumbnails.
-	 * @param bool $keyByFileName true reproduces the unlisted/customer shape.
+	 * @param bool $keyByFileName true reproduces the unlisted shape.
 	 * @return array{files: array, data: array}
 	 */
 	private function makeThumbResultPayload( array $thumbs, bool $keyByFileName ): array {
@@ -1895,7 +1891,7 @@ class MediaLibraryModelTest extends WP_UnitTestCase {
 		);
 	}
 
-	public function test_handleOptimized_discards_thumbnail_results_keyed_by_filename_pinThumbKey() {
+	public function test_handleOptimized_discards_thumbnail_results_keyed_by_filename_pinned_for_deferred_fix() {
 		$settings                = \wpSPIO()->settings();
 		$savedBackup             = $settings->backupImages;
 		$settings->backupImages  = false; // keep the apply path off the filesystem

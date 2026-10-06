@@ -8,9 +8,8 @@
  *
  * Skipped: addConstants() (`plugin_active` check requires the real
  * plugin loaded — but at least the slugs it checks against are now
- * correctly spelled after the 2026-07-14 typo fix; the previous
- * `'soliquy'` misspelling would have silently broken Soliloquy-only
- * installs).
+ * correctly spelled; a `'soliquy'` misspelling would silently break
+ * Soliloquy-only installs).
  *
  * @package Shortpixel_Image_Optimiser
  */

@@ -274,13 +274,11 @@ class ConversionManualTest extends SPIO_IntegrationTestCase {
 	 *   4. The main file becomes a real .jpg on disk, but the pre-
 	 *      existing .heic URL in post_content is NEVER rewritten.
 	 *
-	 * This test pins that behavior — filed as bug #63 (2026-09-09).
-	 * When Bas fixes the target-url wiring in ApiConverter::
-	 * handleConverted (or moves the runReplacer=true call somewhere
-	 * that has both source and target set), the
-	 * `assertStringNotContainsString('.heic', …)` assertions below will
-	 * start firing loudly and this test must flip into a proper
-	 * "content is rewritten" assertion.
+	 * This test pins that known defect.
+	 * @todo Wire the target URL in ApiConverter::handleConverted (or move
+	 *       the runReplacer=true call somewhere that has both source and
+	 *       target set). When fixed, the assertions below fail; flip them
+	 *       into a proper "content is rewritten" assertion.
 	 */
 	public function test_heic_manual_optimize_converts_file_but_leaves_heic_urls_in_content_pinned_for_deferred_fix() {
 		$this->disableAutoProcessing();

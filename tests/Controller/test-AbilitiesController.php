@@ -162,8 +162,8 @@ class AbilitiesControllerTest extends WP_UnitTestCase {
 	// ------------------------------------------------------------------
 
 	public function test_settings_and_destructive_bulk_abilities_gate_on_manage_options_all_others_on_edit_others_posts() {
-		// bulk-restore + bulk-undo-ai-seo were tightened from userCanOptimize to
-		// userCanManage in c83f344d after review: both are site-wide destructive
+		// bulk-restore + bulk-undo-ai-seo gate on userCanManage rather than
+		// userCanOptimize: both are site-wide destructive
 		// operations (backup restoration, AI metadata wipe) that go well beyond
 		// what "edit others' posts" implies. bulk-optimize and bulk-generate-ai-seo
 		// stay on userCanOptimize because they only spend credits, they don't
@@ -187,9 +187,9 @@ class AbilitiesControllerTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Regression pin for c83f344d: bulk-restore + bulk-undo-ai-seo require
-	 * manage_options (admin), not edit_others_posts (editor). A weaker cap on
-	 * a destructive site-wide operation was the original bug.
+	 * bulk-restore + bulk-undo-ai-seo require manage_options (admin), not
+	 * edit_others_posts (editor): a weaker cap is too permissive for a
+	 * destructive site-wide operation.
 	 */
 	public function test_destructive_bulk_abilities_deny_execution_to_editors() {
 		if ( ! function_exists( 'wp_register_ability' ) ) {
@@ -207,7 +207,7 @@ class AbilitiesControllerTest extends WP_UnitTestCase {
 			$result = $ability->check_permissions();
 			$this->assertTrue(
 				false === $result || is_wp_error( $result ),
-				"$name must reject editors after c83f344d (was accepting them before)"
+				"$name must reject editors"
 			);
 		}
 

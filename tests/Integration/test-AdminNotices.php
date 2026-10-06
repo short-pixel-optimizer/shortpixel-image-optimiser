@@ -437,7 +437,7 @@ class AdminNoticesTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// Plan 5.2 — 6-hour repeat API notice
+	// 6-hour repeat API notice
 	// -------------------------------------------------------------------
 
 	/**
@@ -447,7 +447,7 @@ class AdminNoticesTest extends SPIO_IntegrationTestCase {
 	 *   - the original notice has been dismissed, and
 	 *   - at least 6 hours have passed since activation.
 	 *
-	 * Plan row: 5.2 — repeat API notice after 6 hours.
+	 * Repeat API notice after 6 hours.
 	 *
 	 * @see class/Model/AdminNotices/ApiNoticeRepeat.php checkTrigger()
 	 */
@@ -476,7 +476,7 @@ class AdminNoticesTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// Plan 5.3 — 3-day long-repeat API notice
+	// 3-day long-repeat API notice
 	// -------------------------------------------------------------------
 
 	/**
@@ -486,7 +486,7 @@ class AdminNoticesTest extends SPIO_IntegrationTestCase {
 	 *   - BOTH the original and the first repeat notices have been dismissed, and
 	 *   - at least 3 days have passed since activation.
 	 *
-	 * Plan row: 5.3 — long repeat API notice after 3 days.
+	 * Long repeat API notice after 3 days.
 	 *
 	 * @see class/Model/AdminNotices/ApiNoticeRepeatLong.php checkTrigger()
 	 */
@@ -516,7 +516,7 @@ class AdminNoticesTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// Plan 5.9 — AVIF content-type mismatch queues AVIF error notice
+	// AVIF content-type mismatch queues AVIF error notice
 	// -------------------------------------------------------------------
 
 	/**
@@ -525,7 +525,7 @@ class AdminNoticesTest extends SPIO_IntegrationTestCase {
 	 * or does not contain 'avif', addManual() is called, which must result in a
 	 * persistent MSG_AVIF_ERROR notice.
 	 *
-	 * Plan row: 5.9 — AVIF server content-type mismatch queues avif error notice.
+	 * AVIF server content-type mismatch queues avif error notice.
 	 *
 	 * Approach: use the shortpixel/avifcheck/override filter to bypass the real
 	 * HTTP request entirely, then call check() directly.  We then remove the filter
@@ -557,7 +557,7 @@ class AdminNoticesTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// Plan 5.13 — unlisted thumbnails notice queued during bulk preparation
+	// Unlisted thumbnails notice queued during bulk preparation
 	// -------------------------------------------------------------------
 
 	/**
@@ -568,7 +568,7 @@ class AdminNoticesTest extends SPIO_IntegrationTestCase {
 	 * (same path as the media model) since reproducing the exact disk scan
 	 * requires a fully populated upload tree.
 	 *
-	 * Plan row: 5.13 — unlisted thumbnails notice queued during bulk preparation.
+	 * Unlisted thumbnails notice queued during bulk preparation.
 	 *
 	 * @see class/Model/AdminNotices/UnlistedNotice.php addManual()
 	 * @see class/Model/Image/MediaLibraryModel.php checkUnlistedForNotice()
@@ -603,7 +603,7 @@ class AdminNoticesTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// Plan 10.1.3 — editor sees bulk quota message, not admin notice
+	// Editor sees bulk quota message, not admin notice
 	// -------------------------------------------------------------------
 
 	/**
@@ -612,7 +612,7 @@ class AdminNoticesTest extends SPIO_IntegrationTestCase {
 	 * see admin notices — quota warnings shown to editors belong to the bulk-page
 	 * UI layer, not the AdminNoticesController display path.
 	 *
-	 * Plan row: 10.1.3 — editor sees bulk quota message but not the quota admin notice.
+	 * Editor sees bulk quota message but not the quota admin notice.
 	 *
 	 * @see class/Model/AccessModel.php noticeIsAllowed()
 	 * @see class/Controller/AdminNoticesController.php displayNotices()
@@ -642,7 +642,7 @@ class AdminNoticesTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// Plan 10.2.3 — author never sees quota admin notices
+	// Author never sees quota admin notices
 	// -------------------------------------------------------------------
 
 	/**
@@ -650,7 +650,7 @@ class AdminNoticesTest extends SPIO_IntegrationTestCase {
 	 * gates admin notices.  No quota notice must be rendered for an author
 	 * regardless of quotaExceeded state.
 	 *
-	 * Plan row: 10.2.3 — author never sees quota admin notices.
+	 * Author never sees quota admin notices.
 	 *
 	 * @see class/Model/AccessModel.php noticeIsAllowed()
 	 */

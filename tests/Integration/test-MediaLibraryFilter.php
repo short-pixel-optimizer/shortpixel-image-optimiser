@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests: media-library ShortPixel status filter (manual plan 2.22, 2.22.1).
+ * Integration tests: media-library ShortPixel status filter.
  *
  * Exercises AdminController::filter_listener() + filter_add_where() against a real
  * WP install with a seeded mix of optimized, unoptimized, and prevented attachments.
@@ -14,17 +14,17 @@
  *   3. Seed K prevented attachments (upload + set _shortpixel_prevent_optimize meta
  *      directly via update_post_meta — matching what MediaLibraryModel::preventNextTry
  *      persists).
- *   4. For 2.22.1, seed one attachment that is optimized AND has the prevent meta set
+ *   4. Seed one attachment that is optimized AND has the prevent meta set
  *      afterwards (simulating a post-optimize exclusion / crashed-then-retried item).
  *   5. Run a WP_Query per filter value (registering the SPIO hooks manually since
  *      is_admin() was false at the time init ran in the test process) and compare the
  *      returned ID sets to the known seed groups.
  *
  * Key findings:
- *   - Bug #26 FIXED (ea3cd51a): the 'prevented' branch of filter_add_where()
- *     now APPENDS with `$where .=` (it used to assign, replacing WP's standard
- *     attachment conditions). test_prevented_filter_returns_prevented_attachments()
- *     asserts a strict result set since the fix.
+ *   - The 'prevented' branch of filter_add_where() APPENDS with `$where .=`
+ *     (assigning would replace WP's standard attachment conditions).
+ *     test_prevented_filter_returns_prevented_attachments() asserts a strict
+ *     result set.
  *   - The 'optimized' and 'unoptimized' filter branches also use `$where .=`
  *     (appending) and work as expected.
  *   - An attachment that is optimized AND has _shortpixel_prevent_optimize set
@@ -47,7 +47,7 @@ class MediaLibraryFilterTest extends SPIO_IntegrationTestCase {
 	/** @var int[] IDs of attachments that have _shortpixel_prevent_optimize set and are NOT optimized. */
 	private $preventedIds = array();
 
-	/** @var int Attachment that is optimized AND has the prevent meta set after the fact (plan 2.22.1). */
+	/** @var int Attachment that is optimized AND has the prevent meta set after the fact. */
 	private $optimizedThenPreventedId = 0;
 
 	/** @var string The original $pagenow value so we can restore it in tear_down. */
@@ -109,7 +109,7 @@ class MediaLibraryFilterTest extends SPIO_IntegrationTestCase {
 		}
 		$this->purgeQueueTable();
 
-		// 1 optimized-then-prevented (plan 2.22.1): optimize first, then mark prevent.
+		// 1 optimized-then-prevented: optimize first, then mark prevent.
 		$id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->purgeQueueTable(); // clear auto-enqueue
 		$this->optimizeAttachment( $id );
@@ -208,13 +208,11 @@ class MediaLibraryFilterTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// Tests — plan 2.22
+	// Tests — status filters
 	// -------------------------------------------------------------------
 
 	/**
 	 * 'all' filter must return all seeded attachments (no filtering applied).
-	 *
-	 * Manual plan 2.22.
 	 */
 	public function test_all_filter_returns_all_attachments() {
 		$allSeeded = array_merge(
@@ -230,7 +228,7 @@ class MediaLibraryFilterTest extends SPIO_IntegrationTestCase {
 			$this->assertContains(
 				$id,
 				$returned,
-				"'all' filter must include every seeded attachment (id=$id). Plan 2.22."
+				"'all' filter must include every seeded attachment (id=$id)."
 			);
 		}
 	}
@@ -238,8 +236,6 @@ class MediaLibraryFilterTest extends SPIO_IntegrationTestCase {
 	/**
 	 * 'optimized' filter must return only attachments that have a
 	 * FILE_STATUS_SUCCESS record in the ShortPixel postmeta table.
-	 *
-	 * Manual plan 2.22.
 	 */
 	public function test_optimized_filter_returns_optimized_attachments() {
 		$returned = $this->queryWithFilter( 'optimized' );
@@ -249,16 +245,16 @@ class MediaLibraryFilterTest extends SPIO_IntegrationTestCase {
 			$this->assertContains(
 				$id,
 				$returned,
-				"'optimized' filter must include attachment $id (was optimized). Plan 2.22."
+				"'optimized' filter must include attachment $id (was optimized)."
 			);
 		}
 
 		// The optimized-then-prevented attachment still has status=SUCCESS, so
-		// it must also appear under 'optimized' (plan 2.22.1 — covered fully below).
+		// it must also appear under 'optimized' (covered fully below).
 		$this->assertContains(
 			$this->optimizedThenPreventedId,
 			$returned,
-			"'optimized' filter must include the optimized-then-prevented attachment (plan 2.22 / 2.22.1)."
+			"'optimized' filter must include the optimized-then-prevented attachment."
 		);
 
 		// Unoptimized (no postmeta rows) and never-optimized prevented attachments
@@ -267,7 +263,7 @@ class MediaLibraryFilterTest extends SPIO_IntegrationTestCase {
 			$this->assertNotContains(
 				$id,
 				$returned,
-				"'optimized' filter must NOT include unoptimized attachment $id. Plan 2.22."
+				"'optimized' filter must NOT include unoptimized attachment $id."
 			);
 		}
 
@@ -275,7 +271,7 @@ class MediaLibraryFilterTest extends SPIO_IntegrationTestCase {
 			$this->assertNotContains(
 				$id,
 				$returned,
-				"'optimized' filter must NOT include never-optimized prevented attachment $id. Plan 2.22."
+				"'optimized' filter must NOT include never-optimized prevented attachment $id."
 			);
 		}
 	}
@@ -283,8 +279,6 @@ class MediaLibraryFilterTest extends SPIO_IntegrationTestCase {
 	/**
 	 * 'unoptimized' filter must return only attachments that have no
 	 * FILE_STATUS_SUCCESS row in the ShortPixel postmeta table.
-	 *
-	 * Manual plan 2.22.
 	 */
 	public function test_unoptimized_filter_returns_unoptimized_attachments() {
 		$returned = $this->queryWithFilter( 'unoptimized' );
@@ -294,7 +288,7 @@ class MediaLibraryFilterTest extends SPIO_IntegrationTestCase {
 			$this->assertContains(
 				$id,
 				$returned,
-				"'unoptimized' filter must include unoptimized attachment $id. Plan 2.22."
+				"'unoptimized' filter must include unoptimized attachment $id."
 			);
 		}
 
@@ -303,7 +297,7 @@ class MediaLibraryFilterTest extends SPIO_IntegrationTestCase {
 			$this->assertNotContains(
 				$id,
 				$returned,
-				"'unoptimized' filter must NOT include fully optimized attachment $id. Plan 2.22."
+				"'unoptimized' filter must NOT include fully optimized attachment $id."
 			);
 		}
 
@@ -311,7 +305,7 @@ class MediaLibraryFilterTest extends SPIO_IntegrationTestCase {
 		$this->assertNotContains(
 			$this->optimizedThenPreventedId,
 			$returned,
-			"'unoptimized' filter must NOT include the optimized-then-prevented attachment. Plan 2.22."
+			"'unoptimized' filter must NOT include the optimized-then-prevented attachment."
 		);
 	}
 
@@ -319,13 +313,10 @@ class MediaLibraryFilterTest extends SPIO_IntegrationTestCase {
 	 * 'prevented' filter must return only attachments that have the
 	 * _shortpixel_prevent_optimize post-meta key set.
 	 *
-	 * Bug #26 FIXED (ea3cd51a): filter_add_where()'s 'prevented' branch now
-	 * APPENDS (`$where .=`) instead of assigning, so WP's standard attachment
-	 * conditions (post_status='inherit', post_type='attachment') are kept and
-	 * the result set is exactly the prevented attachments — strict set
-	 * comparison, flipped from the pinned subset assertions.
-	 *
-	 * Manual plan 2.22.
+	 * filter_add_where()'s 'prevented' branch APPENDS (`$where .=`) rather
+	 * than assigning, so WP's standard attachment conditions
+	 * (post_status='inherit', post_type='attachment') are kept and the result
+	 * set is exactly the prevented attachments — strict set comparison.
 	 */
 	public function test_prevented_filter_returns_prevented_attachments() {
 		$returned = $this->queryWithFilter( 'prevented' );
@@ -338,12 +329,12 @@ class MediaLibraryFilterTest extends SPIO_IntegrationTestCase {
 		$this->assertSame(
 			$expected,
 			$returned,
-			"Since ea3cd51a (bug #26 fix) the 'prevented' filter must return exactly the attachments carrying _shortpixel_prevent_optimize. Plan 2.22."
+			"The 'prevented' filter must return exactly the attachments carrying _shortpixel_prevent_optimize."
 		);
 	}
 
 	// -------------------------------------------------------------------
-	// Tests — plan 2.22.1
+	// Tests — optimized-then-prevented attachment
 	// -------------------------------------------------------------------
 
 	/**
@@ -354,8 +345,6 @@ class MediaLibraryFilterTest extends SPIO_IntegrationTestCase {
 	 *
 	 * This verifies that the 'optimized' filter is purely status-based and does
 	 * not intersect with the 'prevented' meta key.
-	 *
-	 * Manual plan 2.22.1.
 	 */
 	public function test_optimized_then_prevented_appears_under_optimized_filter() {
 		$returned = $this->queryWithFilter( 'optimized' );
@@ -363,7 +352,7 @@ class MediaLibraryFilterTest extends SPIO_IntegrationTestCase {
 		$this->assertContains(
 			$this->optimizedThenPreventedId,
 			$returned,
-			'An attachment that was optimized and then had _shortpixel_prevent_optimize set must still appear under the "optimized" filter (its SUCCESS record is unchanged). Plan 2.22.1.'
+			'An attachment that was optimized and then had _shortpixel_prevent_optimize set must still appear under the "optimized" filter (its SUCCESS record is unchanged).'
 		);
 	}
 
@@ -375,8 +364,6 @@ class MediaLibraryFilterTest extends SPIO_IntegrationTestCase {
 	 * status = FILE_STATUS_MARKED_DONE (-11). The optimized-then-prevented
 	 * attachment has status = FILE_STATUS_SUCCESS (2) in the shortpixel_postmeta
 	 * table (main file row), so it is NOT excluded by that clause and should appear.
-	 *
-	 * Manual plan 2.22.1.
 	 */
 	public function test_optimized_then_prevented_appears_under_prevented_filter() {
 		$returned = $this->queryWithFilter( 'prevented' );
@@ -384,15 +371,13 @@ class MediaLibraryFilterTest extends SPIO_IntegrationTestCase {
 		$this->assertContains(
 			$this->optimizedThenPreventedId,
 			array_map( 'intval', $returned ),
-			'An optimized-then-prevented attachment must appear under the "prevented" filter (it has the prevent meta key). Plan 2.22.1.'
+			'An optimized-then-prevented attachment must appear under the "prevented" filter (it has the prevent meta key).'
 		);
 	}
 
 	/**
 	 * An image that was optimized and THEN had _shortpixel_prevent_optimize set
 	 * must NOT appear under the 'unoptimized' filter — it has a SUCCESS record.
-	 *
-	 * Manual plan 2.22.1.
 	 */
 	public function test_optimized_then_prevented_does_not_appear_under_unoptimized_filter() {
 		$returned = $this->queryWithFilter( 'unoptimized' );
@@ -400,7 +385,7 @@ class MediaLibraryFilterTest extends SPIO_IntegrationTestCase {
 		$this->assertNotContains(
 			$this->optimizedThenPreventedId,
 			$returned,
-			'An optimized-then-prevented attachment must NOT appear under the "unoptimized" filter — its SUCCESS record is not removed by adding the prevent meta. Plan 2.22.1.'
+			'An optimized-then-prevented attachment must NOT appear under the "unoptimized" filter — its SUCCESS record is not removed by adding the prevent meta.'
 		);
 	}
 }

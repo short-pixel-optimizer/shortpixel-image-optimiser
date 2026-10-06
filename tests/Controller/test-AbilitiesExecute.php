@@ -37,10 +37,9 @@ class AbilitiesExecuteTest extends WP_UnitTestCase {
 		parent::set_up();
 		$this->settingsBackup = array();
 
-		// Since c91cd01c every single-image ability calls ItemAccessGuard, so
-		// the execute callbacks now need a WP user with edit-others-posts
-		// capability to get past the guard. Test files that predate the guard
-		// implicitly ran with user 0; we log an admin in so the ORIGINAL
+		// Every single-image ability calls ItemAccessGuard, so the execute
+		// callbacks need a WP user with edit-others-posts capability to get
+		// past the guard. We log an admin in so the
 		// behaviour under test (validation, error paths, settings writes) is
 		// what we actually exercise. Access-denied paths get their own
 		// dedicated test below.
@@ -354,7 +353,7 @@ class AbilitiesExecuteTest extends WP_UnitTestCase {
 
 	// ------------------------------------------------------------------
 	// ItemAccessGuard integration with the 6 single-image abilities
-	// (regression coverage for c91cd01c)
+	// (regression coverage)
 	// ------------------------------------------------------------------
 
 	/**

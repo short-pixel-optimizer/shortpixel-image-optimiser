@@ -1,6 +1,6 @@
 <?php
 /**
- * Cross-plugin compatibility: WPML (Wave 3).
+ * Cross-plugin compatibility: WPML.
  *
  * Runs with the REAL WPML (sitepress-multilingual-cms) plugin active.
  * WPML is commercial, so bin/test.sh --compat extracts it from a zip
@@ -13,20 +13,18 @@
  *     filters are only wired when plugin_active('wpml') is true, and
  *     checkParamList() injects the attachment's WPML locale into the
  *     outgoing AI request params.
- *   - OptimizeAiController::WPMLCheckReplace() (f232c607) — the replace-time
- *     language guard for AI text replacement, incl. the #40 regression
- *     (fixed in af2414cc: compares 'language_code' instead of the
- *     non-existent 'code' key) at both the guard level and end-to-end
- *     through handleReplace().
+ *   - OptimizeAiController::WPMLCheckReplace() — the replace-time
+ *     language guard for AI text replacement (it compares 'language_code',
+ *     never the non-existent 'code' key) at both the guard level and
+ *     end-to-end through handleReplace().
  *   - MediaLibraryModel::getWPMLDuplicates() — translation duplicates
  *     found via the real icl_translations table (same-trid siblings),
  *     restricted to attachments sharing the same physical file; on
  *     optimize, handleOptimized() propagates meta to every duplicate.
- *   - QueueController::addWpmlAiItemsToQueue() (f232c607) — the requestAlt
- *     per-language fan-out, incl. the #42 regression (fixed in d55dbeca:
- *     requestAlt is exempt from the duplicate-active check, so the ORIGINAL
- *     attachment is queued alongside its fan-out variants), and the
- *     isDuplicateActive() skip for same-file translations.
+ *   - QueueController::addWpmlAiItemsToQueue() — the requestAlt
+ *     per-language fan-out (requestAlt is exempt from the duplicate-active
+ *     check, so the ORIGINAL attachment is queued alongside its fan-out
+ *     variants), and the isDuplicateActive() skip for same-file translations.
  *
  * Own-file translations (WPML Media Translation add-on) are covered in
  * test-CompatWPMLMedia.php.
@@ -224,7 +222,7 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// AI replace-time language guard (WPMLCheckReplace, f232c607)
+	// AI replace-time language guard (WPMLCheckReplace)
 	// -------------------------------------------------------------------
 
 	/** Reflection access to the protected OptimizeAiController::WPMLCheckReplace(). */
@@ -237,8 +235,7 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 
 	/**
 	 * When WPML cannot resolve a language for either side, the guard must
-	 * refuse the replacement (fail closed). This path correctly reads the
-	 * `language_code` key, so it behaves the same before and after bug #40.
+	 * refuse the replacement (fail closed).
 	 */
 	public function test_wpml_replace_guard_fails_closed_without_language_details() {
 		remove_all_filters( 'wpml_post_language_details' );
@@ -251,13 +248,11 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * Regression test for bug #40 (FIXED in af2414cc, flipped from pin40):
-	 * WPMLCheckReplace() used to compare `$language['code']` vs
-	 * `$language_queue['code']` — a key WPML never provides — so both sides
-	 * were undefined and different-language pages were replaced anyway
-	 * (plus "Undefined array key" warnings on PHP 8). The fix compares the
-	 * real `language_code` keys: a post in a different language than the
-	 * queued item must now be refused, with no warning raised.
+	 * Regression test: WPMLCheckReplace() compares the real `language_code`
+	 * keys (WPML never provides a `code` key; comparing that would make both
+	 * sides undefined, let different-language pages through and raise
+	 * "Undefined array key" warnings on PHP 8). A post in a different
+	 * language than the queued item must be refused, with no warning raised.
 	 */
 	public function test_wpml_replace_guard_blocks_other_languages() {
 		$post_id  = 12345;
@@ -278,7 +273,7 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 
 		$this->assertFalse(
 			$this->invokeWpmlCheckReplace( $post_id, $queue_id ),
-			'Regression #40: a post in a different WPML language must be refused by the replace guard (the old code compared undefined \'code\' keys and let it through).'
+			'A post in a different WPML language must be refused by the replace guard (comparing undefined \'code\' keys would let it through).'
 		);
 	}
 
@@ -325,15 +320,15 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// 16.2 — later translation does not re-optimize
+	// Later translation does not re-optimize
 	// -------------------------------------------------------------------
 
 	/**
 	 * Adding a third WPML translation AFTER the image is already optimized
 	 * must not enqueue a new API request.
 	 *
-	 * Manual plan row 16.2: optimize, then add another language row; the
-	 * queue tick must produce no new API call.
+	 * Optimize, then add another language row; the queue tick must produce
+	 * no new API call.
 	 *
 	 * @return void
 	 */
@@ -367,15 +362,15 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// 16.3 — bulk deduplicates WPML translations in API call count
+	// Bulk deduplicates WPML translations in API call count
 	// -------------------------------------------------------------------
 
 	/**
 	 * When running bulk optimization with WPML translations present, each
 	 * physical file must only be sent to the API once — not once per language.
 	 *
-	 * Manual plan row 16.3: seed two images each with one translation, run
-	 * bulk, assert API call count equals the number of unique source files.
+	 * Seed two images each with one translation, run bulk, assert API call
+	 * count equals the number of unique source files.
 	 *
 	 * @return void
 	 */
@@ -429,7 +424,7 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// 16.4 — deleting a translation preserves backup until last copy gone
+	// Deleting a translation preserves backup until last copy gone
 	// -------------------------------------------------------------------
 
 	/**
@@ -438,7 +433,7 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 	 * backup may only be deleted when the last remaining attachment sharing
 	 * the file is deleted.
 	 *
-	 * Manual plan row 16.4: optimize original + duplicate, delete translation
+	 * Optimize original + duplicate, delete translation
 	 * attachment via onDelete(), assert backup still present; then delete the
 	 * original, assert backup gone.
 	 *
@@ -493,7 +488,7 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// AI requestAlt fan-out (addWpmlAiItemsToQueue, f232c607)
+	// AI requestAlt fan-out (addWpmlAiItemsToQueue)
 	// -------------------------------------------------------------------
 
 	/** All item_ids currently persisted in the ShortQ queue table. */
@@ -508,12 +503,11 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 	 * language variants: each duplicate is a separate attachment record and
 	 * needs its own AI request (QueueController::addWpmlAiItemsToQueue).
 	 *
-	 * Regression test for bug #42 (FIXED in d55dbeca, flipped from pin42):
-	 * addItemToQueue() ran addWpmlAiItemsToQueue() before the
-	 * isDuplicateActive() check, so the just-queued language variants made
-	 * the original count as "duplicate already active in queue" and it was
-	 * skipped — its own alt text was never generated. The fix exempts
-	 * requestAlt actions from the duplicate-active check.
+	 * Regression test: addItemToQueue() runs addWpmlAiItemsToQueue() before
+	 * the isDuplicateActive() check, so requestAlt actions are exempt from
+	 * the duplicate-active check — otherwise the just-queued language
+	 * variants make the original count as "duplicate already active in
+	 * queue" and its own alt text is never generated.
 	 */
 	public function test_requestalt_fanout_queues_translation_and_original() {
 		$id     = $this->uploadFixture( 'fixture-small.jpg' );
@@ -536,7 +530,7 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 		$this->assertContains(
 			$id,
 			$queued,
-			'Regression #42: the original must be queued too — it used to be skipped as "duplicate active" right after its own fan-out.'
+			'The original must be queued too — not skipped as "duplicate active" right after its own fan-out.'
 		);
 	}
 
@@ -573,19 +567,16 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// handleReplace end-to-end — regression for bug #40
+	// handleReplace end-to-end — WPML language guard
 	// -------------------------------------------------------------------
 
 	/**
-	 * Regression test for bug #40, end-to-end leg (FIXED in af2414cc,
-	 * flipped from pin40): handleReplace() runs every result through
-	 * WPMLCheckReplace(). The guard used to compare the non-existent
-	 * 'code' key on both sides, so posts in a DIFFERENT language were
-	 * replaced anyway. With the `language_code` comparison the
+	 * Regression test, end-to-end leg: handleReplace() runs every result
+	 * through WPMLCheckReplace(). With the `language_code` comparison the
 	 * same-language post gets the AI alt while the other-language post is
 	 * left untouched.
 	 *
-	 * The in-content alt starts EMPTY: since dc65f17e the default 'missing'
+	 * The in-content alt starts EMPTY: the default 'missing'
 	 * mode only fills empty alts, so an empty alt is the shape that gets
 	 * written — the WPML language discrimination stays the point under test.
 	 */
@@ -618,8 +609,8 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 		$args    = array(
 			'aiData'     => array( 'alt' => 'AI pinned alt', 'caption' => 0 ),
 			'qItem'      => $qItem,
-			// Since ba9fc3ef handleReplace() reads args['prevAiData'] (undo
-			// exact-match support); production callers always pass it.
+			// handleReplace() reads args['prevAiData'] (undo exact-match
+			// support); production callers always pass it.
 			'prevAiData' => array(),
 		);
 
@@ -638,7 +629,7 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 		$this->assertStringNotContainsString(
 			'AI pinned alt',
 			get_post( $post_other )->post_content,
-			'Regression #40: the different-language post must NOT be replaced (the old guard compared undefined \'code\' keys and replaced it anyway).'
+			'The different-language post must NOT be replaced (comparing undefined \'code\' keys would replace it anyway).'
 		);
 	}
 
@@ -647,16 +638,14 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 	// -------------------------------------------------------------------
 
 	/**
-	 * REGRESSION #69 (WPML part fixed in 11aa2065) + 3fd40001 (no double
-	 * rename).
+	 * REGRESSION — same-file translations follow a rename, exactly once.
 	 *
-	 * #69: replaceFiles() used to enumerate the WPML siblings only AFTER the
-	 * renamed item's _wp_attached_file was rewritten, so the same-file check
-	 * in getWPMLDuplicates() never matched and translations stayed on the
-	 * old, deleted file. 11aa2065 collects the list before anything is
-	 * touched.
+	 * replaceFiles() collects the WPML siblings before anything is touched:
+	 * once the renamed item's _wp_attached_file is rewritten, the same-file
+	 * check in getWPMLDuplicates() no longer matches and translations would
+	 * stay on the old, deleted file.
 	 *
-	 * 3fd40001: on a real site WPML's own sync hook may already have copied
+	 * On a real site WPML's own sync hook may already have copied
 	 * the new _wp_attached_file to the translations while the original was
 	 * updated, before replaceFiles() reaches its duplicate pass; a plain
 	 * str_replace() would then rename a second time whenever the new base
@@ -697,28 +686,27 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 		$this->assertSame(
 			$expected_filename,
 			basename( (string) ( $dup_meta['file'] ?? '' ) ),
-			'REGRESSION #69 / 3fd40001: the WPML translation metadata[file] must carry the new basename exactly once.'
+			'REGRESSION: the WPML translation metadata[file] must carry the new basename exactly once.'
 		);
 		$dup_attached = get_attached_file( $dup_id );
 		$this->assertSame(
 			$expected_filename,
 			basename( $dup_attached ),
-			'REGRESSION #69 / 3fd40001: the WPML translation _wp_attached_file must carry the new basename exactly once.'
+			'REGRESSION: the WPML translation _wp_attached_file must carry the new basename exactly once.'
 		);
 		$this->assertSame(
 			get_attached_file( $id ),
 			$dup_attached,
-			'REGRESSION #69: the WPML translation _wp_attached_file must point at the renamed file, same as the original.'
+			'REGRESSION: the WPML translation _wp_attached_file must point at the renamed file, same as the original.'
 		);
-		$this->assertFileExists( $dup_attached, 'REGRESSION #69: the translation references a file that exists.' );
+		$this->assertFileExists( $dup_attached, 'REGRESSION: the translation references a file that exists.' );
 	}
 
 	/**
-	 * REGRESSION #69 — the real-site repro: rename started FROM THE
-	 * TRANSLATION (Pedro reproduced the de-sync this way on 2026-09-25,
-	 * before 11aa2065). The original must follow, one file backs both.
+	 * REGRESSION — the real-site scenario: rename started FROM THE
+	 * TRANSLATION. The original must follow, one file backs both.
 	 */
-	public function test_regression69_rename_from_the_translation_updates_the_original() {
+	public function test_rename_from_the_translation_updates_the_original() {
 		$id     = $this->uploadFixture( 'fixture-small.jpg' );
 		$dup_id = $this->createDuplicateAttachment( $id );
 		$this->insertTranslationRow( $id, 9104, 'en' );
@@ -744,19 +732,19 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 		$this->assertStringContainsString(
 			$new_base,
 			(string) ( $orig_meta['file'] ?? '' ),
-			'REGRESSION #69: renaming from the translation must update the ORIGINAL metadata[file] too.'
+			'REGRESSION: renaming from the translation must update the ORIGINAL metadata[file] too.'
 		);
 		$this->assertStringNotContainsString( $old_base, (string) ( $orig_meta['file'] ?? '' ) );
 		$this->assertSame(
 			get_attached_file( $dup_id ),
 			get_attached_file( $id ),
-			'REGRESSION #69: renaming from the translation must update the ORIGINAL _wp_attached_file too.'
+			'REGRESSION: renaming from the translation must update the ORIGINAL _wp_attached_file too.'
 		);
 		$this->assertFileExists( get_attached_file( $id ) );
 	}
 
 	// -------------------------------------------------------------------
-	// PIN — per-language AI renames duplicate the image on disk
+	// Per-language AI renames — one file on disk per image
 	// -------------------------------------------------------------------
 
 	/**
@@ -765,8 +753,8 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 	 *
 	 * It is NOT registered in this test install (WPML's attachment action is
 	 * only booted on a configured site, and has_filter('wp_delete_file') is
-	 * false here), so the #74 residual test installs it explicitly — without it the bug
-	 * cannot be observed at all. Note get_file_name() strips any -WxH size
+	 * false here), so the one-file-for-all-languages test installs it
+	 * explicitly — without it the defect cannot be observed at all. Note get_file_name() strips any -WxH size
 	 * suffix before looking the file up, so ONE sibling still holding the
 	 * full-size name protects every thumbnail of that image too.
 	 */
@@ -794,22 +782,21 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * REGRESSION #74 (main part fixed in faa1e4cc, 2026-09-24) — the AI rename
-	 * now runs for the MAIN language only.
+	 * REGRESSION — the AI rename runs for the MAIN language only.
 	 *
-	 * #74: QueueController queues the AI job once per WPML language, each
-	 * answer carried its own translated filebase, and HandleSuccess() renamed
-	 * the ONE shared file once per language — N languages, N copies on disk
-	 * (WPML's delete guard kept each old set alive). faa1e4cc gates the AI
-	 * rename in HandleSuccess() on getWPMLDuplicates(true): when the image has
-	 * WPML translation rows, only the item whose row has no
-	 * source_language_code (the main language) renames; translations log
+	 * QueueController queues the AI job once per WPML language and each
+	 * answer carries its own translated filebase; renaming the ONE shared
+	 * file once per language would leave N copies on disk (WPML's delete
+	 * guard keeps each old set alive). HandleSuccess() therefore gates the AI
+	 * rename on getWPMLDuplicates(true): when the image has WPML translation
+	 * rows, only the item whose row has no source_language_code (the main
+	 * language) renames; translations log
 	 * "Replace files cancelled due to duplicate situation".
 	 *
 	 * This covers the data that gate reads. The HandleSuccess() branch itself
 	 * needs a full AI result and is not driven here.
 	 */
-	public function test_regression74_getWPMLDuplicates_alldata_marks_the_main_language() {
+	public function test_getWPMLDuplicates_alldata_marks_the_main_language() {
 		$id     = $this->uploadFixture( 'fixture-small.jpg' );
 		$dup_id = $this->createDuplicateAttachment( $id );
 		$this->insertTranslationRow( $id, 9103, 'en' );
@@ -822,8 +809,8 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 			$this->assertArrayHasKey( $id, $all, 'The main-language item must be listed (asked for ' . $asked . ').' );
 			$this->assertArrayHasKey( $dup_id, $all, 'The translation must be listed (asked for ' . $asked . ').' );
 			// ...and flags which one may rename.
-			$this->assertTrue( $all[ $id ]['is_main_language'], 'REGRESSION #74: the source-language item is the main language.' );
-			$this->assertFalse( $all[ $dup_id ]['is_main_language'], 'REGRESSION #74: the translation is not — its AI rename is skipped.' );
+			$this->assertTrue( $all[ $id ]['is_main_language'], 'REGRESSION: the source-language item is the main language.' );
+			$this->assertFalse( $all[ $dup_id ]['is_main_language'], 'REGRESSION: the translation is not — its AI rename is skipped.' );
 			$this->assertSame( 'de', $all[ $dup_id ]['language_code'] );
 		}
 
@@ -833,9 +820,9 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 
 	/**
 	 * CONTRACT — "main language" means the ORIGINAL of the image's
-	 * translation group, not the site's default language (Bas, 2026-09-28:
-	 * an image uploaded while the admin works in Romanian becomes the main
-	 * entry for THAT image).
+	 * translation group, not the site's default language (an image uploaded
+	 * while the admin works in Romanian becomes the main entry for THAT
+	 * image).
 	 *
 	 * WPML rows for such an image: the Romanian attachment has no
 	 * source_language_code (it is the original), the English one has
@@ -861,17 +848,16 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * REGRESSION #74 residual (fixed with #69 WPML in 11aa2065, 2026-09-25) —
-	 * after the (single) main-language rename, ONE file backs every language.
+	 * REGRESSION — after the (single) main-language rename, ONE file backs
+	 * every language.
 	 *
-	 * The bug was a pure symptom of #69 on WPML: the translations were never
-	 * updated, still referenced the old filename, and WPML's
-	 * delete_file_filter (class-wpml-attachment-action.php:114-128, replicated
-	 * in addWpmlDeleteFileGuard()) refused to delete it — two copies on disk,
-	 * translations showing the OLD file. Now the translations follow the
-	 * rename, the guard lets the old file go.
+	 * The translations follow the rename, so WPML's delete_file_filter
+	 * (class-wpml-attachment-action.php:114-128, replicated in
+	 * addWpmlDeleteFileGuard()) lets the old file go. If they still
+	 * referenced the old filename, the guard would refuse to delete it — two
+	 * copies on disk, translations showing the OLD file.
 	 */
-	public function test_regression74_residual_main_language_rename_leaves_one_file_for_all_languages() {
+	public function test_main_language_rename_leaves_one_file_for_all_languages() {
 		$id     = $this->uploadFixture( 'fixture-small.jpg' );
 		$dup_id = $this->createDuplicateAttachment( $id );
 		$this->insertTranslationRow( $id, 9102, 'en' );
@@ -892,7 +878,7 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 		);
 
 		// The main language renames the shared file (the only rename the AI
-		// performs since faa1e4cc).
+		// performs).
 		$this->assertTrue( $this->renameAttachment( $id, $en_base ), 'Sanity: the main-language rename must report success.' );
 
 		$ext = pathinfo( $old_file, PATHINFO_EXTENSION );
@@ -900,22 +886,22 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 
 		$this->assertFileDoesNotExist(
 			$old_file,
-			'REGRESSION #74 residual: the original file must be gone after the main-language rename — one copy per image.'
+			'REGRESSION: the original file must be gone after the main-language rename — one copy per image.'
 		);
 		$this->assertSame(
 			get_attached_file( $id ),
 			get_attached_file( $dup_id ),
-			'REGRESSION #74 residual: the translation must reference the renamed file.'
+			'REGRESSION: the translation must reference the renamed file.'
 		);
 	}
 
 	/**
-	 * REGRESSION — Pedro's real-site case (2026-09-28): a BIG image whose
+	 * REGRESSION — a real-site case: a BIG image whose
 	 * upload name ends in "-scaled", uploaded in a secondary language
 	 * (Romanian = its original), renamed from ANOTHER secondary language
 	 * (Spanish) by prefixing "rename-".
 	 *
-	 * Two WordPress core behaviours explain the names he saw; neither is a
+	 * Two WordPress core behaviours explain the resulting names; neither is a
 	 * SPIO bug:
 	 *   1. wp_unique_filename() ALWAYS appends "-1" to a name ending in
 	 *      -scaled / -rotated / -WxH (reserved for generated sub-sizes), even
@@ -1215,13 +1201,13 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// Pedro's manual case (2026-10-01): image uploaded into a RO draft,
+	// Real-site case: image uploaded into a RO draft,
 	// EN + ES translations of the draft reuse it, AI run from the EN
 	// Media Library (bulk action "Generate image SEO data").
 	// -------------------------------------------------------------------
 
 	/**
-	 * Build the manual-test site: RO is the image's ORIGINAL (uploaded into
+	 * Build the site: RO is the image's ORIGINAL (uploaded into
 	 * the RO draft), EN and ES are WPML media copies of the same file. Each
 	 * language has a DRAFT post showing the image with an alt the user typed.
 	 * wpml_post_language_details answers from this map (the test install's
@@ -1368,8 +1354,8 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 	/**
 	 * When the ORIGINAL-language item is not processed (only EN and ES got AI
 	 * data), nothing renames the file: the translations never rename the
-	 * shared file themselves. This is the shape of the 2026-10-01 manual test
-	 * (RO got no AI data → all three kept the old name).
+	 * shared file themselves (RO gets no AI data → all three keep the old
+	 * name).
 	 */
 	public function test_without_the_original_language_item_the_translations_never_rename_the_file() {
 		$site = $this->buildRoOriginalWithEnEsDrafts();
@@ -1397,7 +1383,7 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * Pedro's follow-up (2026-10-01): a BIG camera image ("IMG_1234.jpg",
+	 * A BIG camera image ("IMG_1234.jpg",
 	 * above the 2560px threshold, so WordPress serves "IMG_1234-scaled.jpg"),
 	 * uploaded into a RO draft; EN and ES drafts reuse it. Image blocks show
 	 * the "large" size (the block editor default) and the full "-scaled" file.
@@ -1452,7 +1438,7 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * #79 with WPML (fix 9c3dab50, checked 2026-10-01) — WPML copies carry
+	 * Rename + webp/avif meta with WPML — WPML copies carry
 	 * their OWN ShortPixel meta (optimize propagates it to every same-file
 	 * translation). After the main language renames the shared file, the
 	 * translation's webp/avif names must follow too.
@@ -1470,12 +1456,12 @@ class CompatWPMLTest extends SPIO_IntegrationTestCase {
 		$dup_before = $this->freshImageModel( $dup_id );
 		$this->assertNotEmpty( $dup_before->getMeta( 'webp' ), 'Sentinel: the translation has its own webp meta.' );
 
-		$new_base = 'wpml79-' . strtolower( wp_generate_password( 5, false, false ) );
+		$new_base = 'wpml-webp-' . strtolower( wp_generate_password( 5, false, false ) );
 		$this->assertTrue( $this->renameAttachment( $id, $new_base ), 'Sentinel: the main-language rename succeeded.' );
 
 		$main = $this->freshImageModel( $id );
 		$dup  = $this->freshImageModel( $dup_id );
-		$this->assertStringStartsWith( $new_base, (string) $main->getMeta( 'webp' ), 'Sentinel: the main item\'s webp meta follows (#79 fix).' );
+		$this->assertStringStartsWith( $new_base, (string) $main->getMeta( 'webp' ), 'Sentinel: the main item\'s webp meta follows.' );
 		$this->assertStringStartsWith( $new_base, (string) $dup->getMeta( 'webp' ), 'The translation\'s webp meta follows the rename.' );
 		$this->assertStringStartsWith( $new_base, (string) $dup->getMeta( 'avif' ), 'The translation\'s avif meta follows the rename.' );
 		$this->assertTrue( $dup->getWebp()->exists(), 'The translation\'s webp points at an existing file.' );

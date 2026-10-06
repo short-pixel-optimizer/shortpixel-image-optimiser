@@ -1,5 +1,5 @@
 /**
- * Wave 3 — Custom / Other Media + the comparer popup.
+ * Custom / Other Media + the comparer popup.
  *
  * Custom media is the second image pipeline (CustomImageModel / the
  * 'custom' queues). Covers: the screen is gated by the showCustomMedia
@@ -181,7 +181,7 @@ test.describe('Custom Media — pinned', () => {
 	});
 
 	/**
-	 * PIN (unnumbered — E2E seed finding): screen-custom.js UpdateFolderViewEvent
+	 * PIN: screen-custom.js UpdateFolderViewEvent
 	 * (~:479-488) contains the identical `if (data.display_notices) {
 	 * this.AppendNotices(…) }` block twice, so every REJECTED "Add folder"
 	 * renders its admin notice(s) twice inside the picker modal.

@@ -304,10 +304,9 @@ class PNGConverterTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Regression sentinel for a7a0f8f9 — the `$fileSize >= $resultSize`
-	 * accept-check used to run BEFORE the resultSize==0 reject-check, so
-	 * (1000, 0) wrongly returned true and a zero-byte JPG (write failure)
-	 * would have replaced the PNG. The zero-result check now runs first.
+	 * Regression sentinel — the resultSize==0 reject-check must run BEFORE
+	 * the `$fileSize >= $resultSize` accept-check; otherwise (1000, 0)
+	 * returns true and a zero-byte JPG (write failure) replaces the PNG.
 	 */
 	public function test_checkFileSizeMargin_false_when_result_size_is_zero_indicating_write_failure() {
 		$c = new PNGConverter( $this->makeImageStub() );

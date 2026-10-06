@@ -54,7 +54,7 @@ E2E_DIR="tests/E2E"
 
 # Pull every image of the stack up front, with retries. Registry pulls from
 # CI runners sporadically fail mid-handshake ("connection reset by peer"
-# fetching the Docker Hub auth token — first e2e.yml run, 2026-09-14);
+# fetching the Docker Hub auth token);
 # `compose up` would abort on that, while a retried `pull` shrugs it off.
 # 5 attempts × doubling delay from 10s = up to ~2.5 min of patience.
 pull_images() {

@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests: API conversion formats (Wave 2) — heic / tiff / bmp.
+ * Integration tests: API conversion formats — heic / tiff / bmp.
  *
  * These formats can't be optimized natively; ApiConverter reroutes the
  * queue item ('optimize' → 'convert_api' with 'optimize' as next_action),

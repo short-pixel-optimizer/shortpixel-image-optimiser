@@ -323,8 +323,8 @@ class QueueItemTest extends WP_UnitTestCase {
 
 	/*
 	 * retrieveAltAction — remote_id capture + defensive isset guard
-	 * (Bas's fix in b8d29c4: `$args['remote_id']` is now optional; missing
-	 * keys default to null instead of raising an undefined-index notice.)
+	 * (`$args['remote_id']` is optional; missing keys default to null
+	 * instead of raising an undefined-index notice.)
 	 */
 
 	public function test_retrieveAltAction_captures_remote_id_when_provided() {
@@ -469,8 +469,8 @@ class QueueItemTest extends WP_UnitTestCase {
 
 	public function test_getAPIController_routes_ai_family_to_OptimizeAiController() {
 		$q = new QueueItem();
-		// fc86de1a (fix #61) renamed the undo case 'undoAI' → 'undoAltData'
-		// to match what Queue::prepareItems()/undoAltDataAction() enqueue.
+		// The undo case is 'undoAltData' to match what
+		// Queue::prepareItems()/undoAltDataAction() enqueue.
 		foreach ( array( 'requestAlt', 'retrieveAlt', 'getAltData', 'undoAltData', 'redoAI', 'redoAiReplacement' ) as $action ) {
 			$this->assertInstanceOf(
 				\ShortPixel\Controller\Optimizer\OptimizeAiController::class,

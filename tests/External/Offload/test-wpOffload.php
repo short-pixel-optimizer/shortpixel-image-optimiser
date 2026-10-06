@@ -9,7 +9,7 @@
  *   - sourceCache (private) — three shapes (uncached read, write, cached read)
  *     plus scheme normalisation
  *   - checkScaledUrl — the `-scaled` stripper, plus a regression
- *     sentinel for the folder-name false-positive (fixed in a7a0f8f9)
+ *     sentinel for the folder-name false-positive
  *
  * Skipped at the unit level (integration territory — need an as3cf
  * instance, WordPress attachments, or the SPIO filesystem):
@@ -26,16 +26,16 @@
  *   - fixWebpRemotePath                    → SPIO filesystem + as3cf
  *   - returnOriginalFile                   → get_attached_file with a real attachment
  *
- * BUG #73 pins (replaceFiles, the provider-side rename added in
- * 1d61b243/0db02498), exercised with stubbed item + provider client:
- *   - claims "handled" (true) when no provider object matched;
- *   - provider-client exceptions escape uncaught;
- *   - every copy request forces 'ACL' => 'public-read'.
+ * replaceFiles (the provider-side rename), exercised with stubbed item +
+ * provider client:
+ *   - pinned: claims "handled" (true) when no provider object matched;
+ *   - pinned: provider-client exceptions escape uncaught;
+ *   - copy requests follow WP Offload Media's own ACL rule.
  *
- * Regression sentinel: `checkScaledUrl` used to strip `-scaled` from
- * anywhere in the path (a folder named `my-scaled-folder` lost its
- * segment). Fixed in a7a0f8f9 by anchoring the strip to `-scaled.<ext>`
- * at the end of the path — the folder-name test below pins the fix.
+ * Regression sentinel: `checkScaledUrl` must not strip `-scaled` from
+ * anywhere in the path (a folder named `my-scaled-folder` would lose its
+ * segment); the strip is anchored to `-scaled.<ext>` at the end of the
+ * path — the folder-name test below guards it.
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -241,11 +241,10 @@ class wpOffloadTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Regression sentinel for a7a0f8f9 — `checkScaledUrl` used to do a
-	 * blind `str_replace('-scaled', ...)` that matched the substring
-	 * **anywhere** in the path, so a folder named `my-scaled-folder`
-	 * lost its `-scaled` segment. The strip is now a `preg_replace`
-	 * anchored on `-scaled.<ext>` at the end of the path.
+	 * Regression sentinel — a blind `str_replace('-scaled', ...)` matches
+	 * the substring **anywhere** in the path, so a folder named
+	 * `my-scaled-folder` would lose its `-scaled` segment. The strip is a
+	 * `preg_replace` anchored on `-scaled.<ext>` at the end of the path.
 	 */
 	public function test_checkScaledUrl_does_not_strip_scaled_from_folder_names() {
 		$o = $this->freshOffload();
@@ -260,7 +259,7 @@ class wpOffloadTest extends WP_UnitTestCase {
 	}
 
 	/*
-	 * replaceFiles() — provider-side rename (1d61b243 / 0db02498), BUG #73.
+	 * replaceFiles() — provider-side rename.
 	 *
 	 * Exercised with stubs for the as3cf item and the provider client, so
 	 * the method's own logic is tested deterministically without a bucket.
@@ -357,7 +356,7 @@ class wpOffloadTest extends WP_UnitTestCase {
 	 * throws $throw or reports no failures.
 	 *
 	 * Also answers the ACL API WP Offload Media's own upload handler uses
-	 * (classes/items/upload-handler.php), so a fix that adopts it (#76) runs
+	 * (classes/items/upload-handler.php), so replaceFiles() runs
 	 * against these stubs instead of dying on an undefined method:
 	 * get_storage_provider()->get_default_acl() / get_private_acl(), and
 	 * use_acl_for_intermediate_size() — $useAcl false models a bucket that
@@ -438,7 +437,7 @@ class wpOffloadTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * PIN #73 — "handled" claimed when no provider object matched.
+	 * Pins a known defect: "handled" claimed when no provider object matched.
 	 * When none of the item's objects corresponds to a source file,
 	 * $keyRenames stays empty and replaceFiles() returns true ("no rename
 	 * needed"). OptimizeAiController::replaceFiles() treats true as "the
@@ -447,7 +446,7 @@ class wpOffloadTest extends WP_UnitTestCase {
 	 * Flip when: an unmatched item answers false, so SPIO keeps handling the
 	 * local files itself.
 	 */
-	public function test_pin73_replaceFiles_claims_handled_when_no_provider_object_matches_pinned_for_deferred_fix() {
+	public function test_replaceFiles_claims_handled_when_no_provider_object_matches_pinned_for_deferred_fix() {
 		$requests = array();
 		$calls    = 0;
 		$o        = $this->offloadWithStubs(
@@ -463,25 +462,21 @@ class wpOffloadTest extends WP_UnitTestCase {
 
 		$this->assertTrue(
 			$result,
-			'PIN #73: fixed? replaceFiles() no longer claims to have handled a rename it could not match — flip this pin.'
+			'Fixed? replaceFiles() no longer claims to have handled a rename it could not match — flip this pin.'
 		);
 	}
 
 	/**
-	 * PIN #73(c) — provider exceptions escape.
+	 * Pins a known defect: provider exceptions escape.
 	 * With matching objects, replaceFiles() builds one copy request per
 	 * object and calls copy_objects(). Nothing catches an exception from the
 	 * client (the unconfigured Null_Provider throws "Failed to instantiate
 	 * the provider client"; a real client with bad credentials can too), so
 	 * the rename request crashes.
 	 *
-	 * (Until 2026-09-24 this test also pinned the forced 'public-read' ACL;
-	 * that is now BUG #76 with its own pins below, so the two can flip
-	 * independently.)
-	 *
 	 * Flip when: the exception is caught (rename refused cleanly).
 	 */
-	public function test_pin73_replaceFiles_lets_provider_exceptions_escape_pinned_for_deferred_fix() {
+	public function test_replaceFiles_lets_provider_exceptions_escape_pinned_for_deferred_fix() {
 		$requests = array();
 		$calls    = 0;
 		$failure  = new \Exception( 'Failed to instantiate the provider client.' );
@@ -513,36 +508,34 @@ class wpOffloadTest extends WP_UnitTestCase {
 		$this->assertSame(
 			$failure,
 			$thrown,
-			'PIN #73(c): fixed? A provider failure no longer escapes replaceFiles() — flip this pin.'
+			'Fixed? A provider failure no longer escapes replaceFiles() — flip this pin.'
 		);
 	}
 
 	/*
-	 * BUG #76 — every rename copy is forced to 'ACL' => 'public-read'.
+	 * ACL of rename copies.
 	 *
 	 * S3 CopyObject does NOT carry the source object's ACL over (the copy gets
 	 * the bucket default, i.e. private on an ACL-enabled bucket), and
 	 * 'MetadataDirective' => 'COPY' preserves metadata, not permissions. So
 	 * SOME ACL must be sent, or renamed public images return 403 on classic
-	 * public-ACL setups — that is what the hardcoded value solves. But
-	 * hardcoding it ignores the rule WP Offload Media applies to its own
-	 * uploads (classes/items/upload-handler.php, 3.4.2):
+	 * public-ACL setups. A hardcoded 'public-read' would ignore the rule WP
+	 * Offload Media applies to its own uploads
+	 * (classes/items/upload-handler.php, 3.4.2):
 	 *
 	 *     $acl = $item->is_private($key) ? $provider->get_private_acl()
 	 *                                    : $provider->get_default_acl();
 	 *     only if $as3cf->use_acl_for_intermediate_size($id, $key, $bucket, $item)
 	 *
-	 * Two consequences, one test each. FIXED in 7a354daa (the copy requests
-	 * now follow that rule); both former pins are regression tests.
+	 * The copy requests follow that rule; one test per consequence.
 	 */
 
 	/**
-	 * REGRESSION #76 (fixed in 7a354daa) — a PRIVATE object must keep the
-	 * private ACL when it is copied to its new name; a public one gets the
-	 * provider's default ACL. Before the fix every copy was forced to
-	 * public-read, so private media became readable by everyone.
+	 * A PRIVATE object must keep the private ACL when it is copied to its
+	 * new name; a public one gets the provider's default ACL. Forcing
+	 * public-read would make private media readable by everyone.
 	 */
-	public function test_regression76_private_object_keeps_the_private_acl_on_rename() {
+	public function test_private_object_keeps_the_private_acl_on_rename() {
 		$requests = array();
 		$calls    = 0;
 		$item     = $this->stubItem(
@@ -568,7 +561,7 @@ class wpOffloadTest extends WP_UnitTestCase {
 		$this->assertSame(
 			'private',
 			$byKey['wp-content/uploads/2026/09/renamed-photo-300x225.jpg'] ?? null,
-			'REGRESSION #76: the PRIVATE object must be copied with the private ACL, not public-read.'
+			'The PRIVATE object must be copied with the private ACL, not public-read.'
 		);
 		$this->assertSame(
 			'public-read',
@@ -578,13 +571,13 @@ class wpOffloadTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * REGRESSION #76 (fixed in 7a354daa) — no ACL may be sent when the bucket
-	 * does not accept ACLs (Object Ownership "bucket owner enforced", the AWS
-	 * default for new buckets, or Block Public Access): S3 rejects such a copy,
-	 * so every rename on those buckets failed remotely (→ #73(f)).
+	 * No ACL may be sent when the bucket does not accept ACLs (Object
+	 * Ownership "bucket owner enforced", the AWS default for new buckets, or
+	 * Block Public Access): S3 rejects such a copy, so every rename on those
+	 * buckets would fail remotely.
 	 * use_acl_for_intermediate_size() is how WP Offload Media knows this.
 	 */
-	public function test_regression76_no_acl_is_sent_to_a_bucket_that_disallows_acls() {
+	public function test_no_acl_is_sent_to_a_bucket_that_disallows_acls() {
 		$requests = array();
 		$calls    = 0;
 		$as3cf    = $this->stubAs3cf( null, $requests, $calls, false );
@@ -611,7 +604,7 @@ class wpOffloadTest extends WP_UnitTestCase {
 			$this->assertArrayNotHasKey(
 				'ACL',
 				$request,
-				'REGRESSION #76: no ACL may be sent to a bucket that does not accept ACLs.'
+				'No ACL may be sent to a bucket that does not accept ACLs.'
 			);
 		}
 	}

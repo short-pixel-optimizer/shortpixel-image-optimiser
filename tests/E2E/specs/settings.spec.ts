@@ -1,14 +1,13 @@
 /**
- * Wave 1 — Settings page (Tier 1: a failure here bricks the whole page).
+ * Settings page.
  *
  * Covers: every tab renders and switches client-side (desktop + 780px mobile
  * band) with the stylesheet applied and no horizontal overflow; the
  * simple/advanced mode toggle persists; each tab's AJAX save persists a
  * representative setting (DOM after reload + server-side option); API-key
  * activation states through the mock (wrong length, -401 invalid, -403 quota,
- * valid); the exclusions editor happy path; and REGRESSION #62 (a
- * third-party `window.URL` overwrite used to kill every settings save —
- * fixed in 0db02498).
+ * valid); the exclusions editor happy path; and a regression test for a
+ * third-party `window.URL` overwrite, which must not kill settings saves.
  *
  * Every test starts from the healthy-install seed (spio.reset()), which also
  * sets redirectedSettings=3 so the quick tour never intercepts clicks.
@@ -201,7 +200,7 @@ test.describe('Settings page', () => {
 	 * Key validation is an IN-PLACE AJAX form post (multipart POST to
 	 * admin-ajax.php carrying `display_part`), answered in ~100 ms; the
 	 * notices are rendered into the same document and the page never
-	 * navigates (probed 2026-09-16: window marker survives, no `load` event
+	 * navigates (probed: window marker survives, no `load` event
 	 * in 30 s). An earlier version waited with `waitForURL(settings page)`,
 	 * which only "worked" because the URL already matched — it waited for
 	 * nothing. Wait on the actual response instead.
@@ -287,24 +286,23 @@ test.describe('Settings page', () => {
 });
 
 // -----------------------------------------------------------------------
-// REGRESSION #62 — third-party window.URL overwrite no longer kills saves
+// REGRESSION — third-party window.URL overwrite must not kill saves
 // -----------------------------------------------------------------------
 
 /**
- * Flipped from pin62 on 2026-09-18 (fixed in 0db02498): FormSendEvent used
- * `URL.parse(form.action)`, a static that third-party scripts such as the
- * EMC – Embed Calendly widget remove when they replace window.URL — every
- * settings save threw after preventDefault() and silently did nothing. It
- * now uses `new URL(form.action)` inside try/catch with a null guard. The
- * console-error tripwire is armed again: any error during the save fails
- * the test.
+ * FormSendEvent uses `new URL(form.action)` inside try/catch with a null
+ * guard, never the static `URL.parse()`: third-party scripts such as the
+ * EMC – Embed Calendly widget remove that static when they replace
+ * window.URL, and every settings save would then throw after
+ * preventDefault() and silently do nothing. The console-error tripwire is
+ * armed: any error during the save fails the test.
  */
-test.describe('Regression #62 — window.URL overwritten by a third-party script', () => {
+test.describe('Regression — window.URL overwritten by a third-party script', () => {
 	test.beforeEach(async ({ spio }) => {
 		await spio.reset();
 	});
 
-	test('regression62: settings save still works when a third-party script removed URL.parse', async ({
+	test('settings save still works when a third-party script removed URL.parse', async ({
 		page,
 		spio,
 		consoleErrors,
@@ -328,15 +326,15 @@ test.describe('Regression #62 — window.URL overwritten by a third-party script
 		await settings.saveButton('optimisation').click();
 
 		// The AJAX save completes: success banner, value persisted server-side.
-		await expect(settings.saveBanner, 'REGRESSION #62: the save banner must appear').toHaveClass(/\bshow\b/, {
+		await expect(settings.saveBanner, 'REGRESSION: the save banner must appear').toHaveClass(/\bshow\b/, {
 			timeout: 15_000,
 		});
 		await expect
 			.poll(async () => Number((await spio.getSettings()).compressionType), {
-				message: 'REGRESSION #62: the new compressionType must be saved',
+				message: 'REGRESSION: the new compressionType must be saved',
 			})
 			.toBe(2);
-		expect(consoleErrors.join('\n'), 'REGRESSION #62: no URL.parse error any more').not.toMatch(/URL\.parse/);
+		expect(consoleErrors.join('\n'), 'REGRESSION: no URL.parse error').not.toMatch(/URL\.parse/);
 	});
 });
 

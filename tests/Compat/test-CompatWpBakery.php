@@ -1,6 +1,6 @@
 <?php
 /**
- * Cross-plugin compatibility: WPBakery Page Builder (Wave 4).
+ * Cross-plugin compatibility: WPBakery Page Builder.
  *
  * Runs with the REAL WPBakery (js_composer) plugin active. WPBakery is
  * commercial, so bin/test.sh --compat extracts it from a zip dropped into

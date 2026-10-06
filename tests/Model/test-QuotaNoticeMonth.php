@@ -45,10 +45,9 @@ class QuotaNoticeMonthTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * REGRESSION (UI copy review, 2026-09-30): getMonthAverage() divided only
-	 * month 4 by the active-month count (operator precedence), so with 4
-	 * active months of 100 images each the "average per month" in the upgrade
-	 * notice was 325 instead of 100.
+	 * getMonthAverage() must divide the SUM by the active-month count; with
+	 * wrong operator precedence only month 4 is divided, so 4 active months
+	 * of 100 images each show an "average per month" of 325 instead of 100.
 	 */
 	public function test_getMonthAverage_divides_the_sum_of_all_active_months() {
 		\wpSPIO()->settings()->currentStats = array(

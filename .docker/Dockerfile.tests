@@ -29,7 +29,7 @@ FROM php:${PHP_VERSION}-cli
 # ARCHIVED BASE (PHP 7.4): php:7.4-cli is built on Debian 11 "bullseye",
 # whose long-term support has ended. deb.debian.org still lists
 # bullseye-security package versions but returns 404 for the files
-# (2026-09-16: ca-certificates, curl), so `apt-get install` fails and the
+# (e.g. ca-certificates, curl), so `apt-get install` fails and the
 # PHP 7.4 image cannot be built. For bullseye only, apt is pointed at
 # archive.debian.org, which carries `bullseye` + `bullseye-updates` (it has
 # NO bullseye-security yet — listing it would make `apt-get update` fail).

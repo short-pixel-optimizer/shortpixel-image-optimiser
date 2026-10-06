@@ -10,18 +10,18 @@
  * (ucfirst + trailing period) → AiDataModel::handleNewData() (aipostmeta
  * row + _wp_attachment_image_alt + post excerpt/content/title).
  *
- * Credit-combination matrix (Pedro, 2026-07-18): AI credits and
+ * Credit-combination matrix: AI credits and
  * optimization credits are SEPARATE accounts. Verified here:
  *  - AI over-quota (add-url status 3) fails only the AI item; the global
  *    quotaExceeded flag stays off and optimization still runs.
  *  - Optimization over-quota (quotaExceeded=1) blocks the WHOLE
- *    processQueue() tick — INCLUDING pending AI work (pinned; design
- *    question for Bas: hasQuota() is one boolean with no AI split).
+ *    processQueue() tick — INCLUDING pending AI work (pinned; open design
+ *    question: hasQuota() is one boolean with no AI split).
  *  - optimize→AI and AI→optimize on the same item chain via next_action
  *    (QueueController::isItemInQueue IN_QUEUE_ACTION_ADDED) and both land
  *    — in single-pass AND multi-pass (thumbnails) optimizations, including
  *    when enqueue + processing share one PHP request (Queue::itemDone()
- *    invalidates the $isInQueue cache since 806c658a, bug #14 fix).
+ *    invalidates the $isInQueue cache).
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -136,14 +136,14 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$payload = $addRequests[0]['request'];
 		$this->assertSame( $original_url, $payload['url'] );
 
-		// Bug #31 FIXED (af5794d8): 'filebase' was removed from $textItems in
-		// formatResultData(), so the original_filebase fallback is no longer
-		// sentence-formatted (ucfirst + trailing dot) and replaceFiles() no
-		// longer renames the real file when the API returns no filebase.
+		// 'filebase' is not in $textItems in formatResultData(), so the
+		// original_filebase fallback is not sentence-formatted (ucfirst +
+		// trailing dot) and replaceFiles() does not rename the real file when
+		// the API returns no filebase.
 		$this->assertSame(
 			$original_url,
 			wp_get_attachment_url( $attachment_id ),
-			'Since af5794d8 (bug #31 fix) an AI run without an API-generated filebase must leave the attachment URL untouched.'
+			'An AI run without an API-generated filebase must leave the attachment URL untouched.'
 		);
 		$this->assertSame( '1', $payload['retry'] );
 		$this->assertSame( 'v_2', $payload['version'] );
@@ -159,10 +159,9 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * Regression for 2e3b43c0: `prefer_keep_filename_if_relevant` must be sent
-	 * INSIDE the `file` object of the AI payload — the API expects it there.
-	 * Before the fix it sat at the payload root (and only when ai_gen_filename
-	 * was on, where the API ignored it).
+	 * Regression: `prefer_keep_filename_if_relevant` must be sent INSIDE the
+	 * `file` object of the AI payload — the API expects it there and ignores
+	 * it at the payload root.
 	 */
 	public function test_filename_preference_flag_is_sent_inside_the_file_object() {
 		$settings                             = \wpSPIO()->settings();
@@ -184,7 +183,7 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$this->assertArrayHasKey(
 			'prefer_keep_filename_if_relevant',
 			(array) $payload['file'],
-			'The flag must live inside the file object (2e3b43c0), where the API reads it.'
+			'The flag must live inside the file object, where the API reads it.'
 		);
 		$this->assertTrue( (bool) ( (array) $payload['file'] )['prefer_keep_filename_if_relevant'] );
 		$this->assertArrayNotHasKey(
@@ -235,14 +234,15 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 	/**
 	 * MATRIX: missing optimization credits + available AI credits.
 	 *
-	 * PINNED (design question for Bas, found 2026-07-19): hasQuota() is a
+	 * PINNED (open design question): hasQuota() is a
 	 * single boolean (settings->quotaExceeded) with no AI/optimization
 	 * split, and processQueue() gates the WHOLE tick on it. So when
 	 * optimization credits run out, queued AI work — paid from a separate
-	 * credit account — is blocked too and answers NOQUOTA. If AI is meant
-	 * to keep working (Pedro: "all of this should work flawlessly"), the
-	 * gate needs an AI-aware split. This pins the CURRENT behaviour; when
-	 * the split lands, flip the expectations.
+	 * credit account — is blocked too and answers NOQUOTA.
+	 *
+	 * @todo If AI is meant to keep working without optimization credits, the
+	 *       quota gate needs an AI-aware split. This pins the CURRENT
+	 *       behaviour; when the split lands, flip the expectations.
 	 */
 	public function test_optimization_over_quota_blocks_ai_processing_pinned() {
 		$attachment_id = $this->freshAttachment();
@@ -349,13 +349,12 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * Bug #14 FIXED (806c658a): Queue::itemDone() now invalidates the static
-	 * Queue::$isInQueue cache entry (mirroring dropItem), so when enqueue,
-	 * append and processing all happen inside ONE request (ajax "process now",
-	 * WP-CLI, tests) the chained re-enqueue no longer reads a stale WAITING
-	 * status and the chained action survives. Flipped from the pinned
-	 * lost-chain assertion; the flushQueueStatusCache() workarounds were
-	 * dropped from the chaining tests above.
+	 * Queue::itemDone() invalidates the static Queue::$isInQueue cache entry
+	 * (mirroring dropItem), so when enqueue, append and processing all happen
+	 * inside ONE request (ajax "process now", WP-CLI, tests) the chained
+	 * re-enqueue does not read a stale WAITING status and the chained action
+	 * survives. The chaining tests above therefore need no
+	 * flushQueueStatusCache() workaround.
 	 */
 	public function test_same_request_chain_survives_queue_cache() {
 		\wpSPIO()->settings()->processThumbnails = 0;
@@ -372,7 +371,7 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$this->assertSame(
 			'A mock ai alt text.',
 			(string) get_post_meta( $attachment_id, '_wp_attachment_image_alt', true ),
-			'Since 806c658a (bug #14 fix) the chained AI action must complete within the same request.'
+			'The chained AI action must complete within the same request.'
 		);
 	}
 
@@ -398,8 +397,6 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 	 *
 	 * Verified behaviour: AiDataModel::currentIsDifferent() returns true when
 	 * the live _wp_attachment_image_alt deviates from the stored generated alt.
-	 *
-	 * Manual-plan row: 32.5
 	 */
 	public function test_updating_alt_text_after_ai_generation_resets_ai_status() {
 		$attachment_id = $this->freshAttachment();
@@ -440,8 +437,6 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 	 * Verified behaviour: AiDataModel::revert() writes original data back to
 	 * WP, deletes the DB row, and flushes the model cache so isProcessable()
 	 * returns true for a fresh model.
-	 *
-	 * Manual-plan rows: 32.6 / 33.06
 	 */
 	public function test_undo_ai_data_restores_previous_alt_text() {
 		$attachment_id = $this->freshAttachment();
@@ -493,8 +488,6 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 	 * Verified behaviour: QueueController::processQueue() gates the whole tick
 	 * on ApiKeyController::keyIsVerified(); with a missing/unverified key it
 	 * returns AjaxController::APIKEY_FAILED without sending any HTTP request.
-	 *
-	 * Manual-plan row: 32.10
 	 */
 	public function test_ai_request_with_no_api_key_fails_with_no_key_error() {
 		$attachment_id = $this->freshAttachment();
@@ -547,8 +540,6 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 	 * fields from the API paramlist when aiPreserve is on, and the API result
 	 * for excluded fields carries the F_STATUS_PREVENTOVERRIDE integer status
 	 * rather than a text string.
-	 *
-	 * Manual-plan row: 33.04
 	 */
 	public function test_preserve_existing_ai_data_setting_prevents_overwrite() {
 		$attachment_id = $this->freshAttachment();
@@ -595,8 +586,6 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 	 * Verified behaviour: when aiPreserve is false, no fields are excluded
 	 * from the API paramlist and AiDataModel::handleNewData() writes every
 	 * generated value to WordPress.
-	 *
-	 * Manual-plan row: 33.05
 	 */
 	public function test_without_preserve_flag_ai_overwrites_existing_alt_text() {
 		$attachment_id = $this->freshAttachment();
@@ -623,8 +612,6 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 	 *
 	 * Verified behaviour: revert() deletes the aipostmeta row, isProcessable()
 	 * returns true, and a subsequent enqueue + queue run re-generates the data.
-	 *
-	 * Manual-plan row: 32.17
 	 */
 	public function test_undo_then_bulk_regenerates_ai_data() {
 		$attachment_id = $this->freshAttachment();
@@ -669,20 +656,19 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * Regression test for the customer-reported bulk AI SEO bug (fixed in
-	 * 97f2c1f4): when SEVERAL images are AI-processed in the same PHP
+	 * Regression test: when SEVERAL images are AI-processed in the same PHP
 	 * request, every image's in-content <img alt> must be updated in the
 	 * post that embeds it — not just the first image's post.
 	 *
-	 * Root cause of the bug: replacer2's Setup::getInstance() was a
-	 * request-lifetime singleton whose Url data accumulated via addData(),
-	 * while Url::getBaseURL() always returned data[0]. Every AI item after
-	 * the first therefore searched post_content for the FIRST item's URL;
-	 * handleReplace()'s filename filter then silently discarded the found
-	 * posts, so images 2..n kept alt="" in content forever (the aipostmeta
-	 * row made isProcessable() false on re-runs). The fix makes
-	 * Setup::getInstance() return a FRESH instance per call, so each
-	 * replaceImageAttributes() run searches with its own image's base URL.
+	 * If replacer2's Setup::getInstance() were a request-lifetime singleton,
+	 * its Url data would accumulate via addData() while Url::getBaseURL()
+	 * always returns data[0]: every AI item after the first would search
+	 * post_content for the FIRST item's URL, handleReplace()'s filename
+	 * filter would silently discard the found posts, and images 2..n would
+	 * keep alt="" in content forever (the aipostmeta row makes
+	 * isProcessable() false on re-runs). Setup::getInstance() returns a
+	 * FRESH instance per call, so each replaceImageAttributes() run searches
+	 * with its own image's base URL.
 	 *
 	 * FLIP-alert: if this fails with only the first post updated, the
 	 * Setup singleton (or equivalent shared Url state) has been
@@ -716,7 +702,7 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 			$this->assertSame(
 				'A mock ai alt text.',
 				get_post_meta( $id, '_wp_attachment_image_alt', true ),
-				"Attachment $id must get its WP alt meta (sanity — this part worked even with the bug)"
+				"Attachment $id must get its WP alt meta (sanity — this part is independent of the in-content replacement)"
 			);
 
 			// Replacer's Updater writes post_content via direct SQL.
@@ -731,7 +717,7 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * aiPreserve=true (af2414cc, default false): the in-content replacement
+	 * aiPreserve=true (default false): the in-content replacement
 	 * (handleReplace) must only FILL empty alt attributes and leave
 	 * human-written alts alone.
 	 */
@@ -755,7 +741,7 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$args    = array(
 			'aiData' => array( 'alt' => 'A mock ai alt text.', 'caption' => 0 ),
 			'qItem'  => $qItem,
-			// Since ba9fc3ef handleReplace() reads args['prevAiData'].
+			// handleReplace() reads args['prevAiData'].
 			'prevAiData' => array(),
 		);
 
@@ -778,7 +764,7 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * ai_content_replace='none' (efbd5ac9): replaceImageAttributes() must
+	 * ai_content_replace='none': replaceImageAttributes() must
 	 * early-return, so a post whose content embeds the image goes BYTE-FOR-BYTE
 	 * unchanged through the AI run. The Media Library alt meta must still be
 	 * written (that path is independent of the content-replace toggle).
@@ -814,7 +800,7 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * ai_content_replace='overwrite' (efbd5ac9): existing in-content alt IS
+	 * ai_content_replace='overwrite': existing in-content alt IS
 	 * replaced regardless of aiPreserve. This is the DOCUMENTED behavior of
 	 * the overwrite mode — mirror of aiPreserve=off but explicit-opt-in.
 	 */
@@ -835,7 +821,7 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$args  = array(
 			'aiData' => array( 'alt' => 'A mock ai alt text.', 'caption' => 0 ),
 			'qItem'  => $qItem,
-			// Since ba9fc3ef handleReplace() reads args['prevAiData'].
+			// handleReplace() reads args['prevAiData'].
 			'prevAiData' => array(),
 		);
 
@@ -853,16 +839,16 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * BUG-5 regression (efbd5ac9): the in-content filter now anchors against
-	 * the URL basename with a regex like `^photo(-\d+x\d+|-scaled)?\.jpg$`.
-	 * Before the fix, a plain substring test on the URL confused `photo.jpg`
-	 * with `my-photo.jpg` — running AI on `photo.jpg` would rewrite BOTH tags.
+	 * Regression: the in-content filter anchors against the URL basename
+	 * with a regex like `^photo(-\d+x\d+|-scaled)?\.jpg$`. A plain
+	 * substring test on the URL would confuse `photo.jpg` with `my-photo.jpg`
+	 * — running AI on `photo.jpg` would rewrite BOTH tags.
 	 *
 	 * Sets up a post embedding both filenames and asserts that only the
 	 * photo.jpg <img> receives the AI alt; the my-photo.jpg <img> keeps its
 	 * original alt.
 	 */
-	public function test_in_content_replace_does_not_leak_across_substring_filenames_regression_bug5() {
+	public function test_in_content_replace_does_not_leak_across_substring_filenames() {
 		// Upload the "real" AI image as photo.jpg (or whatever wp_unique_filename gives us).
 		$id_photo    = $this->uploadFixture( 'fixture-small.jpg' );
 		$src_photo   = wp_get_attachment_url( $id_photo );
@@ -901,12 +887,12 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$this->assertStringContainsString(
 			'alt="original intruder alt"',
 			$content,
-			'BUG-5 regression: my-' . $base_photo . '.jpg must NOT be swept up by the base-name filter.'
+			'my-' . $base_photo . '.jpg must NOT be swept up by the base-name filter.'
 		);
 	}
 
 	/**
-	 * BUG-3 regression (efbd5ac9): FrontImage's rebuild loop now preserves
+	 * Regression: FrontImage's rebuild loop preserves
 	 * value-less attributes as bare booleans and passes src through esc_attr
 	 * so `&amp;` in a URL survives. End-to-end check via the real replacement
 	 * pipeline: after an AI run, the tag must carry both custom flags AND the
@@ -914,11 +900,10 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 	 *
 	 * Only data-* attributes are used here because WP's default kses img
 	 * allowed-attrs list strips vendor tags like `nopin` on post insert (the
-	 * bug in FrontImage was upstream of kses; the customer bug was reported
-	 * on themes/plugins that bypass kses, but the FrontImage fix is verified
-	 * one-attribute-family-per-test).
+	 * FrontImage rebuild runs upstream of kses and matters on themes/plugins
+	 * that bypass kses; here it is verified one-attribute-family-per-test).
 	 */
-	public function test_in_content_replace_preserves_bare_attrs_and_amp_entity_regression_bug3() {
+	public function test_in_content_replace_preserves_bare_attrs_and_amp_entity() {
 		$id  = $this->freshAttachment();
 		$src = wp_get_attachment_url( $id );
 
@@ -957,22 +942,22 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$this->assertStringContainsString(
 			'&amp;h=50',
 			$content,
-			'BUG-3 regression: &amp; entity in src must survive the rebuild'
+			'&amp; entity in src must survive the rebuild'
 		);
 		$this->assertMatchesRegularExpression(
 			'/<img[^>]*\sdata-no-lazy(?![=\w-])/',
 			$content,
-			'BUG-3 regression: bare boolean attr data-no-lazy must survive rebuild'
+			'Bare boolean attr data-no-lazy must survive rebuild'
 		);
 		$this->assertMatchesRegularExpression(
 			'/<img[^>]*\sdata-nopin(?![=\w-])/',
 			$content,
-			'BUG-3 regression: bare boolean attr data-nopin must survive rebuild'
+			'Bare boolean attr data-nopin must survive rebuild'
 		);
 	}
 
 	/**
-	 * BUG-6 regression (16149a3c): when AI returns an INT status code for alt
+	 * Regression: when AI returns an INT status code for alt
 	 * (e.g. F_STATUS_PREVENTOVERRIDE = a numeric int) and a text caption,
 	 * handleReplace() must NOT trigger a tag rebuild for the post — the
 	 * caption is not written into <img>, so a caption-only replacement would
@@ -980,7 +965,7 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 	 * user-visible payload. Guard: caption branch runs only when $do_replace
 	 * is already true (alt was replaced).
 	 */
-	public function test_caption_only_ai_data_does_not_rebuild_post_content_regression_bug6() {
+	public function test_caption_only_ai_data_does_not_rebuild_post_content() {
 		$id         = $this->freshAttachment();
 		$imageModel = $this->freshImageModel( $id );
 		$src        = esc_url( wp_get_attachment_url( $id ) );
@@ -1005,7 +990,7 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 			// alt is an int (status), caption is a string.
 			'aiData' => array( 'alt' => \ShortPixel\Model\AiDataModel::F_STATUS_PREVENTOVERRIDE, 'caption' => 'a caption' ),
 			'qItem'  => $qItem,
-			// Since ba9fc3ef handleReplace() reads args['prevAiData'].
+			// handleReplace() reads args['prevAiData'].
 			'prevAiData' => array(),
 		);
 
@@ -1018,8 +1003,8 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$this->assertSame(
 			$baseline,
 			get_post( $post_id )->post_content,
-			'Caption-only AI data must NOT trigger a rebuild that alters post_content bytes. ' .
-			'Before 16149a3c the caption branch could invoke buildImage() and rewrite the tag.'
+			'Caption-only AI data must NOT trigger a rebuild that alters post_content bytes ' .
+			'(the caption branch must not invoke buildImage() and rewrite the tag).'
 		);
 		// Sentinel: prove our marker attribute is still there — if the tag
 		// were dropped entirely (e.g. handleReplace bailed on the whole post)
@@ -1032,15 +1017,15 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * BUG-4 regression (efbd5ac9 Updater.php rework): Updater::updatePost()
-	 * now uses wp_update_post() so hooks fire and revisions are created,
+	 * Regression: Updater::updatePost()
+	 * uses wp_update_post() so hooks fire and revisions are created,
 	 * then restores original post_modified via direct SQL + clean_post_cache.
 	 * Assertions:
 	 *   (a) a revision row exists for the post
 	 *   (b) post_modified is UNCHANGED from before the AI run
 	 *   (c) the save_post hook fired
 	 */
-	public function test_updater_fires_hooks_creates_revision_and_preserves_post_modified_regression_bug4() {
+	public function test_updater_fires_hooks_creates_revision_and_preserves_post_modified() {
 		$id  = $this->freshAttachment();
 		$src = esc_url( wp_get_attachment_url( $id ) );
 
@@ -1103,24 +1088,23 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$this->assertGreaterThan(
 			count( $revisions_before ),
 			count( $revisions_after ),
-			'wp_update_post() through Updater must produce a revision row (BUG-4 regression)'
+			'wp_update_post() through Updater must produce a revision row'
 		);
 
 		// (c) save_post must have fired at least once for our post.
 		$this->assertGreaterThanOrEqual(
 			1,
 			$save_post_fires,
-			'save_post hook must fire when Updater uses wp_update_post (BUG-4 regression)'
+			'save_post hook must fire when Updater uses wp_update_post'
 		);
 	}
 
 	/**
-	 * Regression for BUG #56 (fixed in dc65f17e): with defaults —
-	 * ai_content_replace='missing' and aiPreserve=false — an editor-written
-	 * in-content alt was OVERWRITTEN because the 'missing' branch kept
-	 * `false === $aiPreserve` as an OR leg in its guard. The fix dropped
-	 * the aiPreserve leg, so 'missing' now always respects a non-empty alt,
-	 * matching the UI label "Fill only where alt is missing (safe default)".
+	 * Regression: with defaults — ai_content_replace='missing' and
+	 * aiPreserve=false — an editor-written in-content alt must not be
+	 * overwritten. The 'missing' guard has no aiPreserve leg, so it always
+	 * respects a non-empty alt, matching the UI label "Fill only where alt
+	 * is missing (safe default)".
 	 */
 	public function test_missing_mode_preserves_existing_in_content_alt() {
 		$id         = $this->freshAttachment();
@@ -1139,7 +1123,7 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$args  = array(
 			'aiData' => array( 'alt' => 'A mock ai alt text.', 'caption' => 0 ),
 			'qItem'  => $qItem,
-			// Since ba9fc3ef handleReplace() reads args['prevAiData'].
+			// handleReplace() reads args['prevAiData'].
 			'prevAiData' => array(),
 		);
 
@@ -1154,27 +1138,25 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$this->assertStringContainsString(
 			'alt="editor wrote this"',
 			$content,
-			'#56 regression: missing-mode must preserve an existing editor-written in-content alt'
+			'Missing-mode must preserve an existing editor-written in-content alt'
 		);
 		$this->assertStringNotContainsString(
 			'alt="A mock ai alt text."',
 			$content,
-			'#56 regression: the AI alt must NOT be written over a non-empty in-content alt in missing mode'
+			'The AI alt must NOT be written over a non-empty in-content alt in missing mode'
 		);
 	}
 
 	/**
-	 * Contract for the replaced_content feedback channel (456bb470):
+	 * Contract for the replaced_content feedback channel:
 	 * handleReplace() must record what it actually wrote into each post as
 	 * $qItem->result()->replaced_content[$post_id] = ['alt' => string|false,
 	 * 'caption' => string|false] — and must NOT record posts it preserved.
 	 *
 	 * NOTE the map is keyed by the CONTAINING POST's ID, not the attachment
-	 * ID. The JS consumer (screen-media.js UpdateGutenBerg since 8520324e)
-	 * indexes the map by resultItem.item_id (the ATTACHMENT) and misspells
-	 * the property on top (replaced__content) — reported to Bas. If the
-	 * server-side keying ever changes to fix that mismatch, this test
-	 * documents the current contract and must be updated deliberately.
+	 * ID; the JS consumer (screen-media.js UpdateGutenBerg) indexes it by
+	 * post id. If the server-side keying ever changes, this test documents
+	 * the current contract and must be updated deliberately.
 	 */
 	public function test_handleReplace_records_replaced_content_per_rewritten_post_only() {
 		$id         = $this->freshAttachment();
@@ -1195,7 +1177,7 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$args  = array(
 			'aiData' => array( 'alt' => 'A mock ai alt text.', 'caption' => 0 ),
 			'qItem'  => $qItem,
-			// Since ba9fc3ef handleReplace() reads args['prevAiData'].
+			// handleReplace() reads args['prevAiData'].
 			'prevAiData' => array(),
 		);
 
@@ -1226,17 +1208,16 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$this->assertArrayNotHasKey(
 			$id,
 			$map,
-			'The map is keyed by post id, never by the attachment id (documents the JS-side mismatch)'
+			'The map is keyed by post id, never by the attachment id'
 		);
 	}
 
 	/**
-	 * Regression for BUG #57 (fixed in dc65f17e): Updater::updatePost()
-	 * used to pass UNSLASHED $content to wp_update_post(), which unslashes
-	 * again — stripping the backslashes that serialize_block_attributes()
+	 * Regression: Updater::updatePost() wraps the content with wp_slash()
+	 * before wp_update_post(), which unslashes again — passing UNSLASHED
+	 * content would strip the backslashes that serialize_block_attributes()
 	 * stores in Gutenberg block-attribute JSON (\u0022, \u002d\u002d etc.)
-	 * and corrupting every image-block post on AI replacement. The fix
-	 * wraps the content with wp_slash() before wp_update_post().
+	 * and corrupt every image-block post on AI replacement.
 	 */
 	public function test_updatePost_preserves_backslashes_in_content() {
 		$id  = $this->freshAttachment();
@@ -1279,18 +1260,18 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$this->assertStringContainsString(
 			'alt="A mock ai alt text."',
 			$after,
-			'#57 sentinel: the AI pipeline must have rewritten the <img> tag'
+			'Sentinel: the AI pipeline must have rewritten the <img> tag'
 		);
 
 		$this->assertStringContainsString(
 			$backslash_marker,
 			$after,
-			'#57 regression: block-attribute backslash escapes must survive Updater::updatePost (wp_slash fix)'
+			'Block-attribute backslash escapes must survive Updater::updatePost (wp_slash fix)'
 		);
 	}
 
 	/**
-	 * PIN #58 (MEDIUM, pinned_for_deferred_fix): replaceImageAttributes()
+	 * Pins a known defect: replaceImageAttributes()
 	 * early-returns when ai_content_replace='none', and undoAltData()
 	 * routes through the SAME replaceImageAttributes() call — so a user who
 	 * switches to 'none' AFTER generating AI data finds Undo silently no
@@ -1301,15 +1282,15 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 	 * "assertStringContainsString('A mock ai alt text.')" to
 	 * "assertStringNotContainsString(...)" and update the docstring.
 	 */
-	public function test_pin58_none_mode_silently_disables_undo_content_revert_pinned_for_deferred_fix() {
+	public function test_none_mode_silently_disables_undo_content_revert_pinned_for_deferred_fix() {
 		$id  = $this->freshAttachment();
 		$src = esc_url( wp_get_attachment_url( $id ) );
 
 		// AiDataModel captures "original" from _wp_attachment_image_alt post
 		// meta on first AI run — pre-populate it so revert() has something to
 		// restore. The in-content alt starts EMPTY so default 'missing' mode
-		// fills it (since dc65f17e missing-mode no longer overwrites non-empty
-		// alts — see the #56 regression test above).
+		// fills it (missing-mode never overwrites non-empty alts — see
+		// test_missing_mode_preserves_existing_in_content_alt above).
 		update_post_meta( $id, '_wp_attachment_image_alt', 'original human alt' );
 
 		$post_id = self::factory()->post->create(
@@ -1331,7 +1312,7 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		\wpSPIO()->settings()->ai_content_replace = 'none';
 
 		// Step 3: trigger the undo path the same way AjaxController::undoAltData
-		// does — since ba9fc3ef it marks the slot with undoAltDataAction()
+		// does — it marks the slot with undoAltDataAction()
 		// (action 'undoAltData') before calling the controller.
 		$imageModel = $this->freshImageModel( $id );
 		// freshImageModel() resets SettingsModel — re-apply after.
@@ -1344,7 +1325,7 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$this->assertSame(
 			'original human alt',
 			get_post_meta( $id, '_wp_attachment_image_alt', true ),
-			'PIN #58 sentinel: Media Library alt IS still reverted under none-mode undo'
+			'Sentinel: Media Library alt IS still reverted under none-mode undo'
 		);
 
 		clean_post_cache( $post_id );
@@ -1354,26 +1335,22 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$this->assertStringContainsString(
 			'A mock ai alt text.',
 			$content,
-			'PIN #58: switching to none-mode silently disables the undo content revert (bug). ' .
+			'Pinned: switching to none-mode silently disables the undo content revert (bug). ' .
 			'Flip to assertStringNotContainsString when undo is scoped away from the none early-return.'
 		);
 	}
 
 	/**
-	 * BUG #60 regression test (fixed by ba9fc3ef for the single-item path):
-	 * handleReplace() now has a dedicated undo branch — when the queue item
-	 * action is 'undoAltData', 'missing' mode restores the original alt where
-	 * the current in-content alt EXACTLY matches the previously generated AI
-	 * text (prevAiData), i.e. Pedro's exact-match proposal: a manually edited
-	 * alt counts as reviewed and is left alone. 'overwrite' mode restores
+	 * Regression: handleReplace() has a dedicated undo branch — when the
+	 * queue item action is 'undoAltData', 'missing' mode restores the
+	 * original alt where the current in-content alt EXACTLY matches the
+	 * previously generated AI text (prevAiData): a manually edited alt
+	 * counts as reviewed and is left alone. 'overwrite' mode restores
 	 * unconditionally.
 	 *
-	 * NB: the BULK undo path reaches this branch too since fc86de1a fixed the
-	 * #61 action-name dispatch mismatch (regression test in
-	 * test-BulkOptimization.php). 'none' mode still blocks undo entirely (PIN #58).
-	 *
-	 * Formerly
-	 * test_pin60_undo_under_default_settings_no_longer_restores_in_content_alt_pinned_for_deferred_fix.
+	 * NB: the BULK undo path reaches this branch too (covered in
+	 * test-BulkOptimization.php). 'none' mode still blocks undo entirely
+	 * (pinned above).
 	 */
 	public function test_undo_under_default_settings_restores_in_content_alt() {
 		$id  = $this->freshAttachment();
@@ -1400,7 +1377,7 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 
 		$imageModel = $this->freshImageModel( $id );
 		// Default settings: ai_content_replace stays at 'missing'.
-		// Mirror AjaxController::undoAltData — since ba9fc3ef it marks the
+		// Mirror AjaxController::undoAltData — it marks the
 		// slot with undoAltDataAction() (action 'undoAltData') first.
 		$qItem = \ShortPixel\Controller\Queue\QueueItems::getImageItem( $imageModel );
 		$qItem->undoAltDataAction();
@@ -1411,7 +1388,7 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$this->assertSame(
 			'original human alt',
 			get_post_meta( $id, '_wp_attachment_image_alt', true ),
-			'Fix #60 sentinel: Media Library alt must revert under default-settings undo'
+			'Sentinel: Media Library alt must revert under default-settings undo'
 		);
 
 		clean_post_cache( $post_id );
@@ -1419,17 +1396,17 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$this->assertStringNotContainsString(
 			'alt="A mock ai alt text."',
 			$content,
-			'Fix #60: default-mode undo must remove the AI alt from post content'
+			'Default-mode undo must remove the AI alt from post content'
 		);
 		$this->assertStringContainsString(
 			'alt="original human alt"',
 			$content,
-			'Fix #60: default-mode undo restores the original in-content alt (exact-match rule)'
+			'Default-mode undo restores the original in-content alt (exact-match rule)'
 		);
 	}
 
 	/**
-	 * BUG #60 companion — the exact-match rule: if the user manually edited
+	 * Companion — the exact-match rule: if the user manually edited
 	 * the in-content alt AFTER generation, 'missing'-mode undo must NOT touch
 	 * it (a changed alt counts as reviewed). Only alts still exactly equal to
 	 * the generated AI text are restored.
@@ -1483,28 +1460,21 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * BUG #59 regression test (largely fixed by ba9fc3ef): handleReplace() now
-	 * calls wp_check_post_lock($post_id) per CONTAINING POST inside the
-	 * results loop (ba9fc3ef moved the guard from replaceImageAttributes(),
-	 * where 3f86b55b had it checking the ATTACHMENT id), so a post under an
-	 * active Gutenberg edit lock is skipped and not rewritten behind the
-	 * editor's back. Customer report EBUG-3b
-	 * (tests/partner-plugins/bug-editor-ai-corruption.md).
+	 * Regression: handleReplace() calls wp_check_post_lock($post_id) per
+	 * CONTAINING POST (not the attachment id) inside the results loop, so a
+	 * post under an active Gutenberg edit lock is skipped and not rewritten
+	 * behind the editor's back.
 	 *
-	 * Residual #59 caveats (reported to Bas, not covered here):
-	 *   - wp_check_post_lock() returns false for the CURRENT user's own lock,
-	 *     so the single-admin repro scenario is still rewritten under lock;
-	 *   - wp_check_post_lock() is admin-only (wp-admin/includes/post.php) —
-	 *     undefined in WP-CLI/cron queue runs unless loaded.
-	 *
-	 * Formerly
-	 * test_pin59_replace_rewrites_post_content_despite_active_edit_lock_pinned_for_deferred_fix.
+	 * @todo wp_check_post_lock() returns false for the CURRENT user's own
+	 *       lock, so a single admin with the editor open is still rewritten
+	 *       under lock (not covered here). Suggested fix: check _edit_lock
+	 *       freshness regardless of owner.
 	 */
 	public function test_replace_skips_posts_with_active_edit_lock() {
 		$id  = $this->freshAttachment();
 		$src = esc_url( wp_get_attachment_url( $id ) );
 
-		// In-content alt starts EMPTY: since dc65f17e default 'missing' mode
+		// In-content alt starts EMPTY: default 'missing' mode
 		// only fills empty alts, so without the lock this shape WOULD be
 		// written — only the lock skip can keep it out.
 		$post_id = self::factory()->post->create(
@@ -1535,33 +1505,32 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$content = get_post( $post_id )->post_content;
 
 		// SENTINEL: the pipeline really ran and generated — the Media Library
-		// alt meta write is not lock-gated. Without this, the flipped
+		// alt meta write is not lock-gated. Without this, the
 		// assertion below could false-pass on a silently no-oping pipeline.
 		$this->assertSame(
 			'A mock ai alt text.',
 			get_post_meta( $id, '_wp_attachment_image_alt', true ),
-			'Fix #59 sentinel: the AI pipeline must have run and written the Media Library alt meta.'
+			'Sentinel: the AI pipeline must have run and written the Media Library alt meta.'
 		);
 
-		// Fix #59: the AI alt must NOT land in post_content while another
+		// The AI alt must NOT land in post_content while another
 		// user's fresh edit lock is live — handleReplace skips locked posts.
 		$this->assertStringNotContainsString(
 			'alt="A mock ai alt text."',
 			$content,
-			'Fix #59: post_content must not be rewritten by AI while the post has an active _edit_lock (EBUG-3b).'
+			'post_content must not be rewritten by AI while the post has an active _edit_lock.'
 		);
 
 		// Sentinel companion: the lock was still live throughout the run, so
 		// the skip (not lock expiry) is what protected the post.
 		$this->assertNotFalse(
 			wp_check_post_lock( $post_id ),
-			'Fix #59 sentinel: the edit lock must still be live after the AI run.'
+			'Sentinel: the edit lock must still be live after the AI run.'
 		);
 	}
 
 	/**
-	 * EBUG-1 (customer report tests/partner-plugins/bug-editor-ai-corruption.md):
-	 * when a generated field is disabled in settings, the stored AiDataModel
+	 * When a generated field is disabled in settings, the stored AiDataModel
 	 * generated payload holds an integer status for that field (F_STATUS_EXCLUDESETTING
 	 * = -3). That integer is what OptimizeAiController::formatGenerated() then
 	 * normalises and hands to the ajax response — see the payload-contract
@@ -1591,13 +1560,12 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$this->assertIsInt(
 			$generated['caption'],
 			'gen_caption=off must leave caption as an integer status (F_STATUS_EXCLUDESETTING) in the generated payload — '
-			. 'the client-side allowlist in screen-media.js UpdateGutenBerg (ea764111) is the corruption guard.'
+			. 'the client-side allowlist in screen-media.js UpdateGutenBerg is the corruption guard.'
 		);
 	}
 
 	/**
-	 * Contrast case, updated for dc65f17e (#56 fix): aiPreserve no longer
-	 * has any effect on the alt branch — in 'missing' mode an existing
+	 * Contrast case: aiPreserve has no effect on the alt branch — in 'missing' mode an existing
 	 * in-content alt is preserved even with aiPreserve OFF. (aiPreserve
 	 * still gates the caption-overwrite branch only.)
 	 */
@@ -1614,7 +1582,7 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$args  = array(
 			'aiData' => array( 'alt' => 'A mock ai alt text.', 'caption' => 0 ),
 			'qItem'  => $qItem,
-			// Since ba9fc3ef handleReplace() reads args['prevAiData'].
+			// handleReplace() reads args['prevAiData'].
 			'prevAiData' => array(),
 		);
 
@@ -1627,28 +1595,28 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$this->assertStringContainsString(
 			'alt="human written alt"',
 			get_post( $post_human )->post_content,
-			'#56 regression: missing mode must preserve the existing in-content alt even with aiPreserve off.'
+			'Missing mode must preserve the existing in-content alt even with aiPreserve off.'
 		);
 	}
 
 	// -------------------------------------------------------------------
-	// Beta-tester reports (6.6.0 beta, 2026-09-29)
+	// Known content-replace / undo defects (pinned)
 	// -------------------------------------------------------------------
 
 	/**
-	 * PIN (beta report #3, "tall photos at Large size never get alt") —
+	 * Pins a known defect ("tall photos at Large size never get alt"):
 	 * handleReplace() only matches in-content images whose basename fits
 	 * `^<base>(-\d+x\d+|-scaled)?\.<ext>$`. When a size file name is taken,
 	 * WordPress de-duplicates it with a trailing counter
-	 * ("photo-768x1024-1.jpg" — the tester sees this for 3:4 portraits, whose
+	 * ("photo-768x1024-1.jpg" — typical for 3:4 portraits, whose
 	 * Large and medium_large copies share 768x1024), so that <img> is skipped:
 	 * it keeps an empty alt while the other sizes in the same post are filled.
 	 * Affects Redo AI Replacement and the normal on-upload run alike.
 	 *
-	 * Suggested fix: allow the counter in the pattern —
+	 * @todo Suggested fix: allow the counter in the pattern —
 	 * `(-\d+x\d+(?:-\d+)?|-scaled)?`, or better, match against the file names
 	 * actually listed in the attachment metadata.
-	 * FLIP-when-fixed: the de-duplicated size gets the AI alt too.
+	 * When fixed, this test fails; flip it: the de-duplicated size gets the AI alt too.
 	 */
 	public function test_pin_size_with_wp_dedupe_counter_is_skipped_by_content_replace_pinned_for_deferred_fix() {
 		\wpSPIO()->settings()->ai_gen_caption     = 0;
@@ -1684,22 +1652,22 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$this->assertMatchesRegularExpression(
 			'#<img src="' . preg_quote( esc_url( $dedup_url ), '#' ) . '" alt="" ?/?>#',
 			$content,
-			'PIN (beta #3): fixed? The "-WxH-1" size now gets the AI alt — flip this pin.'
+			'Pinned: fixed? The "-WxH-1" size now gets the AI alt — flip this pin.'
 		);
 	}
 
 	/**
-	 * PIN (beta report #5, "Undo can't bring back my own alt after
-	 * Overwrite") — in 'overwrite' mode the AI replaces an alt the user wrote
+	 * Pins a known defect ("Undo can't bring back my own alt after
+	 * Overwrite"): in 'overwrite' mode the AI replaces an alt the user wrote
 	 * in the post, but that in-post text is never stored anywhere: undo only
 	 * knows the Media Library's ORIGINAL alt (empty here), and 'overwrite'
 	 * undo writes that back unconditionally, so the user's text becomes "".
 	 * No warning is shown before choosing Overwrite.
 	 *
-	 * Suggested fix: store the replaced in-post alt per post (e.g. next to
+	 * @todo Suggested fix: store the replaced in-post alt per post (e.g. next to
 	 * replaced_content) and restore THAT on undo; at minimum, warn in the
 	 * Overwrite option that post alts cannot be restored.
-	 * FLIP-when-fixed: the user's own alt comes back after undo.
+	 * When fixed, this test fails; flip it: the user's own alt comes back after undo.
 	 */
 	public function test_pin_undo_after_overwrite_loses_the_users_own_in_post_alt_pinned_for_deferred_fix() {
 		\wpSPIO()->settings()->ai_content_replace = 'overwrite';
@@ -1728,22 +1696,22 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$this->assertStringNotContainsString( 'A mock ai alt text.', $content, 'Sentinel: undo removed the AI alt from the post.' );
 
 		// THE PIN: the user's own text is not restored — the alt is empty.
-		$this->assertStringNotContainsString( 'my own alt', $content, 'PIN (beta #5): fixed? The user\'s own alt is restored — flip this pin.' );
-		$this->assertMatchesRegularExpression( '#alt=""#', $content, 'PIN (beta #5): the alt was emptied.' );
+		$this->assertStringNotContainsString( 'my own alt', $content, 'Pinned: fixed? The user\'s own alt is restored — flip this pin.' );
+		$this->assertMatchesRegularExpression( '#alt=""#', $content, 'Pinned: the alt was emptied.' );
 	}
 
 	/**
-	 * PIN (beta report #7 / BUG-6, "AI caption shows in the editor but not in
-	 * the saved post") — handleReplace() records the generated caption in
+	 * Pins a known defect ("AI caption shows in the editor but not in
+	 * the saved post"): handleReplace() records the generated caption in
 	 * replaced_content (so the open Gutenberg editor shows it via
 	 * UpdateGutenBerg), but FrontImage::$caption is only a placeholder:
 	 * buildImage() never writes a caption into post_content. The saved post
 	 * therefore has no caption until the user saves from the editor.
 	 *
-	 * Suggested fix: pick one behaviour — either stop reporting the caption
+	 * @todo Suggested fix: pick one behaviour — either stop reporting the caption
 	 * in replaced_content (editor and post both without it), or really write
 	 * it (Gutenberg: the image block's <figcaption>).
-	 * FLIP-when-fixed: replaced_content caption and post_content agree.
+	 * When fixed, this test fails; flip it: replaced_content caption and post_content agree.
 	 */
 	public function test_pin_caption_reported_to_editor_but_never_written_to_post_pinned_for_deferred_fix() {
 		\wpSPIO()->settings()->ai_content_replace = 'missing';
@@ -1775,25 +1743,23 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		$this->assertSame( 'A mock ai caption.', $map[ $post_id ]['caption'] ?? null, 'Sentinel: replaced_content reports the caption to the editor.' );
 
 		// THE PIN: the saved post has no caption.
-		$this->assertStringNotContainsString( 'A mock ai caption.', $content, 'PIN (beta #7): fixed? The caption is now in the saved post (or no longer reported) — flip this pin.' );
+		$this->assertStringNotContainsString( 'A mock ai caption.', $content, 'Pinned: fixed? The caption is now in the saved post (or no longer reported) — flip this pin.' );
 	}
 
 	/**
-	 * REGRESSION #53 (fixed in 80ac531b + bed0113a) — the "is this image
-	 * already used?" check must run on AI renames that are not fresh uploads.
+	 * Regression: the "is this image already used?" check must run on AI
+	 * renames that are not fresh uploads.
 	 *
 	 * replaceFiles() skips the rename of an image that published content
-	 * already uses unless recent_upload is true. The flag used to reach
-	 * HandleSuccess() as null (requestAltAction() only recorded the NAME for
-	 * keep-data, retrieveAltAction() never read it) and the guard only fired
-	 * on an exact false — so bulk / Media Library AI runs renamed images used
-	 * in published posts. Now a missing flag means "check" (`true !==`), and
-	 * the flag is carried through requestAlt → retrieveAlt.
+	 * already uses unless recent_upload is true. A missing flag means
+	 * "check" (`true !==`), and the flag is carried through requestAlt →
+	 * retrieveAlt, so bulk / Media Library AI runs do not rename images used
+	 * in published posts.
 	 */
-	public function test_regression53_ai_rename_keeps_the_name_of_an_image_used_in_a_published_post() {
+	public function test_ai_rename_keeps_the_name_of_an_image_used_in_a_published_post() {
 		\wpSPIO()->settings()->ai_gen_filename    = 1;
 		\wpSPIO()->settings()->ai_content_replace = 'missing';
-		$this->api->aiFields['generated_file_name'] = 'reg53-ai-name-' . strtolower( wp_generate_password( 4, false, false ) );
+		$this->api->aiFields['generated_file_name'] = 'used-ai-name-' . strtolower( wp_generate_password( 4, false, false ) );
 
 		$id       = $this->freshAttachment();
 		$old_file = get_attached_file( $id );
@@ -1816,12 +1782,12 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 		// SENTINEL: the AI run itself completed (the alt was generated).
 		$this->assertNotEmpty( get_post_meta( $id, '_wp_attachment_image_alt', true ), 'Sentinel: the AI run completed and wrote the alt.' );
 
-		$this->assertSame( basename( $old_file ), basename( $new_file ), 'REGRESSION #53: an image used in a published post keeps its name.' );
-		$this->assertFileExists( $old_file, 'REGRESSION #53: the file was not moved.' );
+		$this->assertSame( basename( $old_file ), basename( $new_file ), 'An image used in a published post keeps its name.' );
+		$this->assertFileExists( $old_file, 'The file was not moved.' );
 	}
 
 	/**
-	 * #53 counterpart — the fix must not block renames in general: an image
+	 * Counterpart — the usage check must not block renames in general: an image
 	 * that no published content uses is still renamed by a non-upload AI run.
 	 */
 	public function test_ai_rename_still_renames_an_unused_image() {
@@ -1840,12 +1806,10 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * #53 counterpart — a fresh upload (recent_upload=true) skips the usage
+	 * Counterpart — a fresh upload (recent_upload=true) skips the usage
 	 * check: the flag must survive requestAlt → retrieveAlt, so an image that
 	 * is already used in a published post is still renamed when it was just
-	 * uploaded. Before the fix the flag was dropped on the way (the check was
-	 * skipped for everything, so this passed for the wrong reason); with the
-	 * `true !==` guard a lost flag would now block this rename.
+	 * uploaded. With the `true !==` guard a lost flag would block this rename.
 	 */
 	public function test_recent_upload_flag_survives_the_ai_queue_and_skips_the_usage_check() {
 		\wpSPIO()->settings()->ai_gen_filename    = 1;
@@ -1895,9 +1859,9 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 	/**
 	 * With "optimize on upload" OFF but "AI on upload" ON, the plugin must
 	 * still register the add_attachment hook: it is what marks an attachment
-	 * as a recent upload. It used to be registered only inside the
-	 * auto-optimize branch, so AI-only sites never flagged their uploads and
-	 * every AI rename of a new upload went through the usage check.
+	 * as a recent upload. Registered only inside the auto-optimize branch,
+	 * AI-only sites would never flag their uploads and every AI rename of a
+	 * new upload would go through the usage check.
 	 */
 	public function test_ai_only_upload_setup_registers_the_add_attachment_hook() {
 		$settings                   = \wpSPIO()->settings();

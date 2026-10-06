@@ -1,8 +1,8 @@
 <?php
 /**
- * Integration tests: real cron-driven queue dispatch (Wave 3).
+ * Integration tests: real cron-driven queue dispatch.
  *
- * Earlier suites loop-tick the queue directly (Wave-1 decision). This suite
+ * Most suites loop-tick the queue directly. This suite
  * covers the production background path instead: CronController registering
  * schedules + events, enqueueing scheduling a `spio-single-cron` event, and
  * that event — dispatched the way WP cron dispatches it, via

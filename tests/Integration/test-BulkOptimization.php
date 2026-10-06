@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests: bulk optimization (Wave 1, high-level end-to-end).
+ * Integration tests: bulk optimization (high-level end-to-end).
  *
  * Drives the REAL bulk machinery: BulkController::createNewBulk() (prepare
  * phase scans the media library in batches), startBulk(), then loop-driven
@@ -9,15 +9,13 @@
  * Scope: natively processable raster formats (jpg / png / gif / webp)
  * plus the ApiConverter formats (heic / tiff / bmp) — those ride the same
  * reducer endpoint as a forced-lossless 'convert_api' round-trip, which
- * the mock supports since Wave 2 (real lossless bytes when lossy=0).
+ * the mock supports (real lossless bytes when lossy=0).
  *
- * pdf rides the happy path since bugs #1/#29 were FIXED (af5794d8):
- * downloadURLMethod() renames the wp_tempnam() `.tmp` file to carry the
- * URL extension and now returns the RENAMED path ($tmpFilePath), so the
- * DownloadHelper 'pdf' extension whitelist matches and the download is
- * accepted. (History: broken since 9cd33e9c; fix attempts 5c63ce9e,
- * c66431c7 and 033998ae each missed — the last returned the stale
- * pre-rename path, breaking ALL extension-bearing downloads.)
+ * pdf rides the happy path: downloadURLMethod() renames the wp_tempnam()
+ * `.tmp` file to carry the URL extension and returns the RENAMED path
+ * ($tmpFilePath), so the DownloadHelper 'pdf' extension whitelist matches
+ * and the download is accepted. (Returning the stale pre-rename path would
+ * break ALL extension-bearing downloads.)
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -158,14 +156,12 @@ class BulkOptimizationTest extends SPIO_IntegrationTestCase {
 	}
 
 	// -------------------------------------------------------------------
-	// Extended tests (Wave 3)
+	// Extended tests
 	// -------------------------------------------------------------------
 
 	/**
 	 * With processThumbnails=0, a bulk run must send only the main image to the
 	 * API — no thumbnail URLs must appear in any reducer request.
-	 *
-	 * Manual plan 4.4.
 	 */
 	public function test_bulk_without_thumbnails_skips_thumbnail_sizes() {
 		\wpSPIO()->settings()->processThumbnails = 0;
@@ -212,8 +208,6 @@ class BulkOptimizationTest extends SPIO_IntegrationTestCase {
 	/**
 	 * When images are already optimized, a bulk run with createWebp=1 must send
 	 * only WebP-companion requests — not re-send the main image for re-optimization.
-	 *
-	 * Manual plan 4.7.
 	 */
 	public function test_bulk_generates_only_webp_companions_when_already_optimized() {
 		\wpSPIO()->settings()->createWebp = 0;
@@ -284,8 +278,6 @@ class BulkOptimizationTest extends SPIO_IntegrationTestCase {
 	/**
 	 * With excludeSizes containing a registered thumbnail name, a bulk run must
 	 * not send that size to the API.
-	 *
-	 * Manual plan 4.10.
 	 */
 	public function test_bulk_excluded_thumbnail_sizes_are_not_sent_to_api() {
 		// Exclude BEFORE uploading: the upload-time auto-enqueue builds and
@@ -330,8 +322,6 @@ class BulkOptimizationTest extends SPIO_IntegrationTestCase {
 	/**
 	 * With an exclusion pattern matching a fixture filename, a bulk run must not
 	 * include that image in any reducer request.
-	 *
-	 * Manual plan 4.11 / 2.25 / 2.52.
 	 */
 	public function test_bulk_exclusion_patterns_exclude_matching_images() {
 		$excludedId = $this->uploadFixture( 'fixture-small.png' );
@@ -385,8 +375,6 @@ class BulkOptimizationTest extends SPIO_IntegrationTestCase {
 	/**
 	 * When the mock API returns CODE_UNREACHABLE (-106) for every URL, a bulk run
 	 * must record errors in the queue stats rather than silently succeeding.
-	 *
-	 * Manual plan 4.12.
 	 */
 	public function test_bulk_records_errors_for_inaccessible_images() {
 		$id = $this->uploadFixture( 'fixture-small.jpg' );
@@ -427,10 +415,7 @@ class BulkOptimizationTest extends SPIO_IntegrationTestCase {
 	 * NOTE: an earlier version asserted $stats->done > 0, which only passed in
 	 * full-suite runs because ShortQ status counters live in the shortqwp_SPIO
 	 * option and leak between tests (purgeQueueTable() only clears the table).
-	 * In isolation done is honestly 0. Verified identical on pre-fix 63a6fcfc,
-	 * so this is long-standing behavior, not a side-effect of Bas's IT#5 fix.
-	 *
-	 * Manual plan 4.14.
+	 * In isolation done is honestly 0; this is long-standing behavior.
 	 */
 	public function test_bulk_missing_thumbnail_skips_missing_and_records_found() {
 		$id       = $this->uploadFixture( 'fixture-small.jpg' );
@@ -479,8 +464,6 @@ class BulkOptimizationTest extends SPIO_IntegrationTestCase {
 	 * Changing the compression type setting mid-run must clear the queue (via
 	 * QueueController::resetQueues()), stopping the bulk before it finishes.
 	 * After resetQueues() the queue must report finished=true (empty = done).
-	 *
-	 * Manual plan 4.16.
 	 */
 	public function test_bulk_stops_when_compression_type_changes_mid_run() {
 		// Upload several images so the queue has multiple items to process.
@@ -514,11 +497,11 @@ class BulkOptimizationTest extends SPIO_IntegrationTestCase {
 		$this->assertSame(
 			0,
 			(int) $stats->awaiting,
-			'After a compression-type change resetQueues() must empty the bulk queue (plan 4.16). If this fails, the queue was not cleared.'
+			'After a compression-type change resetQueues() must empty the bulk queue. If this fails, the queue was not cleared.'
 		);
 		$this->assertFalse(
 			(bool) $stats->bulk_running,
-			'A reset queue must no longer report an active bulk run (plan 4.16).'
+			'A reset queue must no longer report an active bulk run.'
 		);
 
 		$bulk->finishBulk( 'media' );
@@ -535,8 +518,6 @@ class BulkOptimizationTest extends SPIO_IntegrationTestCase {
 	 * arriving in the response body does set quotaExceeded via
 	 * ApiController::handleOptimizeResponse(). If the pipeline does NOT propagate
 	 * -403 through to the quota flag, this test will be pinned to current behaviour.
-	 *
-	 * Manual plan 4.19.
 	 */
 	public function test_bulk_stops_when_quota_exhausted_after_n_images() {
 		$id = $this->uploadFixture( 'fixture-small.jpg' );
@@ -566,7 +547,7 @@ class BulkOptimizationTest extends SPIO_IntegrationTestCase {
 		$image = \wpSPIO()->filesystem()->getImage( $id, 'media', false );
 		$this->assertFalse(
 			$image->isOptimized(),
-			'An image must not be marked optimized when the API returns CODE_QUOTA_EXCEEDED (-403) for every request (plan 4.19).'
+			'An image must not be marked optimized when the API returns CODE_QUOTA_EXCEEDED (-403) for every request.'
 		);
 
 		$bulk->finishBulk( 'media' );
@@ -575,8 +556,6 @@ class BulkOptimizationTest extends SPIO_IntegrationTestCase {
 	/**
 	 * An upload that arrives while a bulk run is in the PREPARING phase must be
 	 * enqueued in the mediaSingle queue and processed before the bulk finishes.
-	 *
-	 * Manual plan 2.23 / 2.50.
 	 */
 	public function test_new_upload_processed_before_bulk_finishes() {
 		// Seed initial images and clear the auto-enqueue residue.
@@ -608,7 +587,7 @@ class BulkOptimizationTest extends SPIO_IntegrationTestCase {
 		$newImage = \wpSPIO()->filesystem()->getImage( $newId, 'media', false );
 		$this->assertTrue(
 			$newImage->isOptimized(),
-			'A new upload that arrived during bulk preparation must be optimized via the mediaSingle queue (plan 2.23/2.50).'
+			'A new upload that arrived during bulk preparation must be optimized via the mediaSingle queue.'
 		);
 
 		$bulk->finishBulk( 'media' );
@@ -617,8 +596,6 @@ class BulkOptimizationTest extends SPIO_IntegrationTestCase {
 	/**
 	 * A bulk run with doAi=true and enable_ai=1 must generate AI alt data for
 	 * every image in the media library that did not already have AI data.
-	 *
-	 * Manual plan 32.16.
 	 */
 	public function test_bulk_with_ai_enabled_generates_ai_data_for_all_items() {
 		$settings                 = \wpSPIO()->settings();
@@ -660,7 +637,7 @@ class BulkOptimizationTest extends SPIO_IntegrationTestCase {
 			$alt = get_post_meta( $id, '_wp_attachment_image_alt', true );
 			$this->assertNotEmpty(
 				$alt,
-				"Attachment $id must have AI-generated alt text after a bulk run with doAi=true (plan 32.16)."
+				"Attachment $id must have AI-generated alt text after a bulk run with doAi=true."
 			);
 		}
 
@@ -668,33 +645,27 @@ class BulkOptimizationTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * BUG #61 + BUG #71 regression test: bulk Undo AI works end-to-end again
-	 * (manual plan 32.15).
+	 * Regression test: bulk Undo AI works end-to-end.
 	 *
-	 * #61 (fixed fc86de1a): both dispatch switches recognise the
+	 * Both dispatch switches recognise the
 	 * 'undoAltData' action that Queue::prepareItems() (bulk-undoAI branch)
 	 * enqueues via QueueItem::undoAltDataAction() — sendToProcessing() routes
 	 * it locally to undoAltData(), getApiController() maps it to
 	 * OptimizeAiController.
 	 *
-	 * #71 (fixed 4a1b7a91): handleAPIResult() now early-returns for
-	 * 'undoAltData' items (undoAltData() already adds its own result and
-	 * finishes the item), so the undo result no longer falls through to
-	 * HandleSuccess(). That fall-through used to (1) resurrect the
-	 * just-deleted aipostmeta row via handleNewData(), (2) warn on the
-	 * missing 'original_filebase' key, and (3) WORST: double-extension
-	 * rename every undone file (photo.jpg → photo.jpg.jpg) because
-	 * getCurrentData()'s extension-bearing 'filebase' never equals
-	 * getFileBase(). All three asserted gone below.
-	 *
-	 * History: green pre-ba9fc3ef → pin61 (bulk undo dead, dispatch
-	 * mismatch) → regression61 + pin71 (dispatch fixed, HandleSuccess
-	 * fall-through found) → fully flipped after 4a1b7a91.
+	 * handleAPIResult() early-returns for 'undoAltData' items (undoAltData()
+	 * already adds its own result and finishes the item), so the undo result
+	 * does not fall through to HandleSuccess(). That fall-through would
+	 * (1) resurrect the just-deleted aipostmeta row via handleNewData(),
+	 * (2) warn on the missing 'original_filebase' key, and (3) WORST:
+	 * double-extension rename every undone file (photo.jpg → photo.jpg.jpg)
+	 * because getCurrentData()'s extension-bearing 'filebase' never equals
+	 * getFileBase(). All three are asserted absent below.
 	 *
 	 * SENTINEL: the generation pre-condition proves the pipeline runs — the
 	 * revert assertions cannot false-pass on a no-op bulk.
 	 */
-	public function test_regression61_71_bulk_undo_ai_reverts_generated_data() {
+	public function test_bulk_undo_ai_reverts_generated_data() {
 		$settings                  = \wpSPIO()->settings();
 		$settings->enable_ai       = 1;
 		$settings->ai_gen_alt      = 1;
@@ -750,40 +721,40 @@ class BulkOptimizationTest extends SPIO_IntegrationTestCase {
 		$this->assertNotSame(
 			$generatedAlt,
 			$restoredAlt,
-			'Regression #61: after the undoAI bulk the alt text must revert away from the AI-generated value (plan 32.15).'
+			'After the undoAI bulk the alt text must revert away from the AI-generated value.'
 		);
 
-		// Regression #71 (symptom 1): the aipostmeta row stays GONE — the
-		// undo result no longer falls into HandleSuccess()/handleNewData().
+		// Symptom 1: the aipostmeta row stays GONE — the
+		// undo result does not fall into HandleSuccess()/handleNewData().
 		$prop->setValue( null, array() );
 		$aiModel = \ShortPixel\Model\AiDataModel::getModelByAttachment( $id, 'media' );
 		$this->assertSame(
 			\ShortPixel\Model\AiDataModel::AI_STATUS_NOTHING,
 			$aiModel->getStatus(),
-			'Regression #71: AI status must be AI_STATUS_NOTHING after undoAI reverts the record (plan 32.15).'
+			'AI status must be AI_STATUS_NOTHING after undoAI reverts the record.'
 		);
 
-		// Regression #71 (symptom 3): no double-extension rename — the
+		// Symptom 3: no double-extension rename — the
 		// attached file keeps its single .jpg extension and exists on disk.
 		$attached = get_attached_file( $id );
 		$this->assertStringNotContainsString(
 			'.jpg.jpg',
 			basename( $attached ),
-			'Regression #71: the undo bulk must not double-extension-rename the file (HandleSuccess fall-through).'
+			'The undo bulk must not double-extension-rename the file (HandleSuccess fall-through).'
 		);
 		$this->assertFileExists( $attached, 'Undo bulk must leave the attached file on disk.' );
 	}
 
 	/**
-	 * The Tools-menu "Redo Ai Replacement" bulk (90d1a316, beta): a bulk with
+	 * The Tools-menu "Redo Ai Replacement" bulk: a bulk with
 	 * customOp=redoAiReplacement must select every attachment with GENERATED
 	 * aipostmeta data (MediaLibraryQueue::queryAiItems), enqueue a
 	 * redoAiReplacement action per item, and re-run the in-content
 	 * replacement (OptimizeAiController::redoAIReplace →
 	 * replaceImageAttributes) from the STORED AI data — no new API calls.
 	 *
-	 * This is the recovery path for the customer-reported replacer2
-	 * singleton bug: images whose posts were skipped in an earlier bulk
+	 * This is the recovery path for the replacer2 shared-singleton
+	 * stuck state: images whose posts were skipped in an earlier bulk
 	 * (alt="" left in content, aipostmeta present so re-runs refuse them)
 	 * get their in-content alt filled by this bulk.
 	 */
@@ -823,8 +794,8 @@ class BulkOptimizationTest extends SPIO_IntegrationTestCase {
 			'Precondition: the initial generation must fill the in-content alt.'
 		);
 
-		// Simulate the stuck state customers hit with the replacer2 singleton
-		// bug: aipostmeta says GENERATED but the embedding post still has an
+		// Simulate the stuck state a shared replacer2 singleton can leave:
+		// aipostmeta says GENERATED but the embedding post still has an
 		// empty alt (a plain re-run would refuse the item as already done).
 		wp_update_post( array( 'ID' => $post_id, 'post_content' => $img_tag ) );
 		clean_post_cache( $post_id );

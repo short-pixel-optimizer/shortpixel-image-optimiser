@@ -115,7 +115,7 @@ class LocalBackupModelTest extends WP_UnitTestCase {
 	/*
 	 * backupIsMain — LocalBackupModel writes one backup file per source
 	 * file (main + every thumbnail get their own), so this is always
-	 * false. The deferred-bug empty body has been fixed.
+	 * false.
 	 */
 
 	public function test_backupIsMain_returns_false() {

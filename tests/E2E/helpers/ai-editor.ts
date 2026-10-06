@@ -2,7 +2,7 @@
  * Page object for SPIO's AI image editor modal (background removal /
  * upscale), driven by res/js/screens/screen-media.js.
  *
- * Verified facts (Wave 2 exploration):
+ * Verified facts (verified against the live UI):
  *   - launch buttons are built by InitEditorActions(): `#shortpixel_removebackground_button`
  *     ("AI Background Removal") and `#shortpixel_scale_button` ("AI Image
  *     Upscale"), only for jpg/jpeg/png; the scale button is `disabled` (title

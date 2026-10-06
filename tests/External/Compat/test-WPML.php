@@ -61,9 +61,9 @@ class WPMLTest extends WP_UnitTestCase {
 	}
 
 	/*
-	 * Filter-name subscription sentinel — pinned for the fix on
-	 * 2026-07-14 where the subscriber name was typo'd as
-	 * `shortpixel/ai/succes` (single s) while the publisher fires
+	 * Filter-name subscription sentinel — guards against the subscriber
+	 * name being typo'd as `shortpixel/ai/succes` (single s) while the
+	 * publisher fires
 	 * `shortpixel/ai/success` (double s). A regression that re-typos
 	 * either side would silently break WPML's AI success handler.
 	 */
@@ -93,7 +93,7 @@ class WPMLTest extends WP_UnitTestCase {
 		// Sentinel-pair with the successHandle test above — pins BOTH
 		// filter registrations, so a regression in EITHER surface is
 		// caught before it silently breaks WPML integration. Also
-		// pinned for casing regression: after the 2026-07-14 fix, the
+		// pinned for casing regression: the
 		// filter subscription uses `checkParamList` (uppercase L)
 		// matching the method definition. WordPress's callback hash
 		// uses the method-name string as-is, so a re-lowercase would

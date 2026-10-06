@@ -24,8 +24,8 @@
  *
  * Out of scope (and why):
  *   - displayNotices() — requires an active WP_Screen and admin_notices hook
- *     environment. Bug #20 FIXED (7bd596c4): strpos guard now also checks
- *     is_string($notice->getID()) to avoid PHP 8 Deprecation when getID() returns null.
+ *     environment. The strpos guard also checks is_string($notice->getID())
+ *     to avoid a PHP 8 Deprecation when getID() returns null.
  *   - check_admin_notices() — hooks into admin_notices; screen-dependent.
  *   - proposeUpgradePopup() — renders a view template; UI territory.
  *   - proposeUpgradeRemote() — makes a live wp_remote_post to shortpixel.com

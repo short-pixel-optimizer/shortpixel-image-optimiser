@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests: PNG-to-JPG conversion (Wave 2).
+ * Integration tests: PNG-to-JPG conversion.
  *
  * png2jpg is a LOCAL (GD/Imagick) conversion. For FRESH uploads it runs
  * inside the wp_generate_attachment_metadata hook (AdminController::
@@ -168,10 +168,10 @@ class Png2JpgConversionTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * Regression for bug #6 (fixed in 1dbdf638): PNGConverter::convertFile()
-	 * hardcoded `return true` even when Image::convertPNG() (the actual
-	 * GD/Imagick conversion) returned false — a silent false-success that
-	 * left updateMetaData() bailing later with "NewFile not properly set".
+	 * Regression: PNGConverter::convertFile() must not return true when
+	 * Image::convertPNG() (the actual GD/Imagick conversion) returns false —
+	 * a silent false-success would leave updateMetaData() bailing later with
+	 * "NewFile not properly set".
 	 *
 	 * The failing-library branch cannot be provoked through a real upload
 	 * (GD is present in the test container and PNG fixtures convert fine),
@@ -179,8 +179,8 @@ class Png2JpgConversionTest extends SPIO_IntegrationTestCase {
 	 * $current_image cache slot with a stub whose convertPNG() fails —
 	 * exercising the exact `$bool = $image->convertPNG()` path.
 	 *
-	 * Sentinel: with the bug present convertFile() returns true and the
-	 * assertFalse fails.
+	 * Sentinel: with a hardcoded `return true` convertFile() returns true and
+	 * the assertFalse fails.
 	 */
 	public function test_convertfile_returns_false_when_library_conversion_fails() {
 		\wpSPIO()->settings()->png2jpg = 0; // keep the upload hook from converting
@@ -213,7 +213,7 @@ class Png2JpgConversionTest extends SPIO_IntegrationTestCase {
 
 		$this->assertFalse(
 			$m->invoke( $converter ),
-			'convertFile() must return false when convertPNG() fails (bug #6: hardcoded `return true`, fixed 1dbdf638).'
+			'convertFile() must return false when convertPNG() fails (no hardcoded `return true`).'
 		);
 	}
 }

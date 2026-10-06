@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests: WP/LR Sync (Photo Engine) hook touchpoints (plan 18).
+ * Integration tests: WP/LR Sync (Photo Engine) hook touchpoints.
  *
  * This is a hook-level suite. The WP/LR Sync plugin by Meow Apps does NOT
  * need to be installed. Tests fire the sync hook directly.
@@ -64,7 +64,7 @@ class PhotoEngineTest extends SPIO_IntegrationTestCase {
 	 *  1. Clear the optimization meta (onDelete path in onWpLrUpdateMedia).
 	 *  2. Add the image back to the optimize queue.
 	 *
-	 * Manual-plan row: 18.1 — wplr_sync_media clears meta and re-queues.
+	 * wplr_sync_media clears meta and re-queues.
 	 *
 	 * @return void
 	 */
@@ -102,7 +102,7 @@ class PhotoEngineTest extends SPIO_IntegrationTestCase {
 	 * must successfully re-optimize the image (full end-to-end round-trip
 	 * with a fresh API call).
 	 *
-	 * Manual-plan row: 18.2 — re-optimization after Lightroom resync.
+	 * Re-optimization after Lightroom resync.
 	 *
 	 * @return void
 	 */

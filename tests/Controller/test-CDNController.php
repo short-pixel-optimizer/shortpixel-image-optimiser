@@ -364,7 +364,7 @@ class CDNControllerTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * CDN args are joined with '+' (fix #55) and appear between the CDN domain and the URL.
+	 * CDN args are joined with '+' and appear between the CDN domain and the URL.
 	 */
 	public function test_createReplacements_inlines_args_as_plus_separated_segment() {
 		$ctrl  = $this->freshController( 'https://cdn.example.com/spio/' );
@@ -702,7 +702,7 @@ class CDNControllerTest extends WP_UnitTestCase {
 	}
 
 	// -------------------------------------------------------------------------
-	// plan 29.3 — CDN delivery rewrites <img> URLs in page output
+	// CDN delivery rewrites <img> URLs in page output
 	// -------------------------------------------------------------------------
 
 	/**
@@ -712,8 +712,6 @@ class CDNControllerTest extends WP_UnitTestCase {
 	 * Simulates the tail end of processFront(): createReplacements() has already
 	 * computed replace_url for each block; pregReplaceByString performs the
 	 * actual string substitution in the buffered HTML.
-	 *
-	 * Manual plan row: 29.3
 	 */
 	public function test_cdn_delivery_rewrites_img_urls_in_page_output() {
 		$ctrl = $this->freshController( 'https://cdn.example.com/spio/' );
@@ -744,12 +742,12 @@ class CDNControllerTest extends WP_UnitTestCase {
 		$this->assertStringContainsString(
 			$cdn_url_1,
 			$result,
-			'First image src must be rewritten to the CDN URL. (plan 29.3)'
+			'First image src must be rewritten to the CDN URL.'
 		);
 		$this->assertStringContainsString(
 			$cdn_url_2,
 			$result,
-			'Second image src must be rewritten to the CDN URL. (plan 29.3)'
+			'Second image src must be rewritten to the CDN URL.'
 		);
 
 		// Original URLs must no longer appear as standalone values.
@@ -768,7 +766,7 @@ class CDNControllerTest extends WP_UnitTestCase {
 	}
 
 	// -------------------------------------------------------------------------
-	// plan 29.4 — CDN CSS option rewrites stylesheet URLs; wp-admin/wp-includes
+	// CDN CSS option rewrites stylesheet URLs; wp-admin/wp-includes
 	//             paths are excluded by filterRegexExclusions.
 	// -------------------------------------------------------------------------
 
@@ -787,8 +785,6 @@ class CDNControllerTest extends WP_UnitTestCase {
 	 * excluded. File: class/Controller/Front/CDNController.php:106-118, method
 	 * init(). One-line fix: convert each glob entry with
 	 * '#' . str_replace('*', '.*', preg_quote($entry, '#')) . '#i'.
-	 *
-	 * Manual plan row: 29.4
 	 */
 	public function test_cdn_css_option_rewrites_stylesheet_urls_and_excludes_core_paths() {
 		$ctrl = $this->freshController( 'https://cdn.example.com/spio/', 'https://example.com', 'example.com' );
@@ -830,7 +826,7 @@ class CDNControllerTest extends WP_UnitTestCase {
 		$this->assertCount(
 			1,
 			$result,
-			'wp-admin/css and wp-includes/css blocks must be filtered out; only the upload stylesheet survives. (plan 29.4)'
+			'wp-admin/css and wp-includes/css blocks must be filtered out; only the upload stylesheet survives.'
 		);
 		$this->assertSame(
 			'https://example.com/wp-content/uploads/fonts/style.css',
@@ -840,7 +836,7 @@ class CDNControllerTest extends WP_UnitTestCase {
 	}
 
 	// -------------------------------------------------------------------------
-	// plan 29.5 — CDN JS option rewrites script URLs; wp-admin/wp-includes
+	// CDN JS option rewrites script URLs; wp-admin/wp-includes
 	//             paths are excluded by filterRegexExclusions.
 	// -------------------------------------------------------------------------
 
@@ -848,9 +844,7 @@ class CDNControllerTest extends WP_UnitTestCase {
 	 * filterRegexExclusions removes blocks whose raw_url matches a wp-admin or
 	 * wp-includes JS path pattern, leaving theme/plugin script blocks intact.
 	 *
-	 * Same PCRE-vs-glob caveat as plan 29.4 above.
-	 *
-	 * Manual plan row: 29.5
+	 * Same PCRE-vs-glob caveat as the CSS test above.
 	 */
 	public function test_cdn_js_option_rewrites_script_urls_and_excludes_core_paths() {
 		$ctrl = $this->freshController( 'https://cdn.example.com/spio/', 'https://example.com', 'example.com' );
@@ -892,7 +886,7 @@ class CDNControllerTest extends WP_UnitTestCase {
 		$this->assertCount(
 			1,
 			$result,
-			'wp-admin/js and wp-includes/js blocks must be filtered out; only the theme script survives. (plan 29.5)'
+			'wp-admin/js and wp-includes/js blocks must be filtered out; only the theme script survives.'
 		);
 		$this->assertSame(
 			'https://example.com/wp-content/themes/mytheme/js/main.js',
@@ -902,15 +896,13 @@ class CDNControllerTest extends WP_UnitTestCase {
 	}
 
 	// -------------------------------------------------------------------------
-	// plan 29.6 — Custom CDN domain replaces default in all output
+	// Custom CDN domain replaces default in all output
 	// -------------------------------------------------------------------------
 
 	/**
 	 * When a custom CDN domain is configured, createReplacements() prefixes
 	 * all replace_url values with that domain rather than the default, and
 	 * loadCDNDomain() normalises the custom value correctly.
-	 *
-	 * Manual plan row: 29.6
 	 */
 	public function test_custom_cdn_domain_replaces_default_in_all_output() {
 		$custom_cdn = 'https://mycdn.example.net/spio/';
@@ -920,7 +912,7 @@ class CDNControllerTest extends WP_UnitTestCase {
 		$validated = $ctrl->validateCDNDomain( $custom_cdn );
 		$this->assertTrue(
 			$validated,
-			'A custom CDN domain that already includes /spio/ must validate as true. (plan 29.6)'
+			'A custom CDN domain that already includes /spio/ must validate as true.'
 		);
 
 		// Verify createReplacements() uses the custom domain as the URL prefix.
@@ -933,7 +925,7 @@ class CDNControllerTest extends WP_UnitTestCase {
 		$this->assertStringStartsWith(
 			$custom_cdn,
 			$results[0]->replace_url,
-			'replace_url must start with the custom CDN domain, not any default. (plan 29.6)'
+			'replace_url must start with the custom CDN domain, not any default.'
 		);
 
 		// The default CDN domain must not appear anywhere.
@@ -952,47 +944,38 @@ class CDNControllerTest extends WP_UnitTestCase {
 	}
 
 	// -------------------------------------------------------------------------
-	// BUG #55 — FIXED (2026-09-03, Pedro): createReplacements() now joins the
-	// CDN argument tokens with '+' instead of a raw ',' — implode('+', ...) —
-	// producing URLs like
+	// createReplacements() joins the CDN argument tokens with '+' instead of a
+	// raw ',' — implode('+', ...) — producing URLs like
 	//   https://cdn.example.com/spio/ret_img+q_cdnize+to_webp+s_webp/host/img.jpg
 	//
-	// History: the previous raw-comma delimiter was harmless in browsers
-	// (WHATWG srcset parsers only split on trailing commas) but naive
-	// comma-splitting srcset parsers (SEO crawlers, indexers, link checkers)
-	// shattered each URL into garbage relative fragments such as
-	// `s_webp/example.com/uploads/img.jpg 1031w`, resolved against the page
-	// URL → 404s (one customer logged 62,000 of them).
+	// A raw-comma delimiter is harmless in browsers (WHATWG srcset parsers
+	// only split on trailing commas) but naive comma-splitting srcset parsers
+	// (SEO crawlers, indexers, link checkers) shatter each URL into garbage
+	// relative fragments such as `s_webp/example.com/uploads/img.jpg 1031w`,
+	// resolved against the page URL → 404s.
 	//
-	// '+' was verified against the live spcdn.shortpixel.ai CDN (2026-09-03):
-	// `ret_img+q_cdnize+to_webp+s_webp` returns a byte-identical 200 response
-	// to the comma form, including correct WebP content negotiation. '+' is a
-	// legal URL path character (RFC 3986 sub-delims) and is NOT decoded to
-	// space in URL paths (only in query strings).
+	// On the spcdn.shortpixel.ai CDN, `ret_img+q_cdnize+to_webp+s_webp`
+	// returns a byte-identical 200 response to the comma form, including
+	// correct WebP content negotiation. '+' is a legal URL path character
+	// (RFC 3986 sub-delims) and is NOT decoded to space in URL paths (only in
+	// query strings).
 	//
-	// The two former pins below are now regression tests asserting the fixed
-	// behaviour; the third test (parser-class safety proof) was always
-	// production-code-free and unchanged.
+	// The third test below (parser-class safety proof) is production-code-free.
 	// -------------------------------------------------------------------------
 
 	/**
-	 * BUG #55 regression test (fixed 2026-09-03) — Rewritten srcset attribute
-	 * values must NOT contain raw commas inside each CDN URL; the argument
-	 * tokens are now joined with a srcset-safe delimiter ('+').
+	 * Rewritten srcset attribute values must NOT contain raw commas inside
+	 * each CDN URL; the argument tokens are joined with a srcset-safe
+	 * delimiter ('+').
 	 *
 	 * This test exercises the tail of processFront() by:
 	 *   1. Building a two-candidate srcset markup with absolute upload URLs.
-	 *   2. Running each srcset URL through createReplacements() (the fixed
-	 *      code path — implode('+', $replaceBlock->args)).
+	 *   2. Running each srcset URL through createReplacements()
+	 *      (implode('+', $replaceBlock->args)).
 	 *   3. Running pregReplaceByString() on the full <img> tag to obtain the
 	 *      final rewritten HTML the browser would receive.
 	 *   4. Extracting the rewritten srcset attribute value and asserting the
 	 *      delimiter is srcset-safe.
-	 *
-	 * Formerly test_pin55_srcset_urls_contain_raw_commas_pinned_for_deferred_fix
-	 * (asserted the raw-comma bug); flipped when Pedro shipped the '+' fix.
-	 *
-	 * Manual plan row: BUG #55
 	 *
 	 * @return void
 	 */
@@ -1007,7 +990,7 @@ class CDNControllerTest extends WP_UnitTestCase {
 			. 'sizes="(max-width: 800px) 100vw, 1600px" alt="Photo">';
 
 		// Build blocks the way extractImageMatches() would, then run through
-		// the exact same createReplacements() the bug lives in.
+		// the exact same createReplacements() that builds the CDN URL.
 		$args_stub = array(
 			'return'      => 'ret_img',
 			'compression' => 'q_cdnize',
@@ -1022,16 +1005,16 @@ class CDNControllerTest extends WP_UnitTestCase {
 
 		$blocks = $this->invokePrivate( $ctrl, 'createReplacements', array( array( $block_1, $block_2 ) ) );
 
-		// Both replace_urls must carry the '+' delimiter — the #55 fix.
+		// Both replace_urls must carry the '+' delimiter.
 		$this->assertStringContainsString(
 			'ret_img+q_cdnize',
 			$blocks[0]->replace_url,
-			'Fix #55: CDN URL joins argument tokens with + (candidate 1).'
+			'CDN URL joins argument tokens with + (candidate 1).'
 		);
 		$this->assertStringContainsString(
 			'ret_img+q_cdnize',
 			$blocks[1]->replace_url,
-			'Fix #55: CDN URL joins argument tokens with + (candidate 2).'
+			'CDN URL joins argument tokens with + (candidate 2).'
 		);
 
 		// Now perform the same replacement processFront() would do to produce
@@ -1048,7 +1031,7 @@ class CDNControllerTest extends WP_UnitTestCase {
 		$this->assertStringNotContainsString(
 			'ret_img,q_cdnize',
 			$srcset_value,
-			'After fix #55 the CDN argument delimiter inside srcset URLs '
+			'The CDN argument delimiter inside srcset URLs '
 			. 'must not be a raw comma.'
 		);
 		// The four argument tokens must still be present in order,
@@ -1064,25 +1047,19 @@ class CDNControllerTest extends WP_UnitTestCase {
 		$this->assertSame(
 			1,
 			substr_count( $srcset_value, ',' ),
-			'Fix #55: srcset must contain exactly 1 comma — the candidate separator.'
+			'srcset must contain exactly 1 comma — the candidate separator.'
 		);
 	}
 
 	/**
-	 * BUG #55 companion regression test (fixed 2026-09-03) — Naive
-	 * comma-splitting of the emitted srcset value must yield exactly the two
-	 * candidate URLs, each an absolute URL.
+	 * Naive comma-splitting of the emitted srcset value must yield exactly
+	 * the two candidate URLs, each an absolute URL.
 	 *
-	 * Before the fix, a naive parser (the way an unaware crawler splits on
-	 * every comma) shattered each CDN URL into garbage relative fragments
-	 * like `s_webp/example.com/wp-content/uploads/...` — the exact requests
-	 * in customer 404 logs. With the '+' delimiter, both conformant and
-	 * naive parsers agree on the candidate boundaries.
-	 *
-	 * Formerly
-	 * test_pin55_naive_comma_split_of_srcset_yields_broken_url_fragments_pinned_for_deferred_fix.
-	 *
-	 * Manual plan row: BUG #55
+	 * With a comma delimiter, a naive parser (the way an unaware crawler
+	 * splits on every comma) shatters each CDN URL into garbage relative
+	 * fragments like `s_webp/example.com/wp-content/uploads/...` that 404.
+	 * With the '+' delimiter, both conformant and naive parsers agree on the
+	 * candidate boundaries.
 	 *
 	 * @return void
 	 */
@@ -1122,14 +1099,14 @@ class CDNControllerTest extends WP_UnitTestCase {
 		$this->assertCount(
 			2,
 			$fragments,
-			'Post-fix: naive comma-split must yield exactly 2 candidates. '
+			'Naive comma-split must yield exactly 2 candidates. '
 			. 'Fragments observed: ' . implode( ' || ', $fragments )
 		);
 		foreach ( $fragments as $fragment ) {
 			$this->assertMatchesRegularExpression(
 				'#^https?://#',
 				trim( $fragment ),
-				'Post-fix: each naive-split fragment must start with an absolute URL.'
+				'Each naive-split fragment must start with an absolute URL.'
 			);
 		}
 	}
@@ -1137,11 +1114,11 @@ class CDNControllerTest extends WP_UnitTestCase {
 	/**
 	 * Safety proof for the '+' delimiter fix — a plus-joined CDN URL survives
 	 * BOTH a WHATWG-conformant srcset parser AND a naive comma-splitting
-	 * parser, unlike the former comma-joined form (bug #55, fixed 2026-09-03).
+	 * parser, unlike a comma-joined form.
 	 *
 	 * This test is production-code-free: it builds two candidate URLs
-	 * manually, once with '+' between arg tokens and once with ',' (the
-	 * pre-fix form), then runs each through:
+	 * manually, once with '+' between arg tokens and once with ',',
+	 * then runs each through:
 	 *
 	 *   (i)  a minimal WHATWG srcset parser implemented inline per spec
 	 *        (https://html.spec.whatwg.org/multipage/images.html#parsing-a-srcset-attribute)
@@ -1213,7 +1190,7 @@ class CDNControllerTest extends WP_UnitTestCase {
 		$this->assertCount(
 			2,
 			$whatwg_comma,
-			'Contrast: WHATWG parser also handles the current comma form correctly '
+			'Contrast: WHATWG parser also handles the comma form correctly '
 			. '(this is why browsers still render CDN images).'
 		);
 
@@ -1221,8 +1198,8 @@ class CDNControllerTest extends WP_UnitTestCase {
 		$this->assertGreaterThan(
 			2,
 			count( $naive_comma ),
-			'Contrast: naive comma-split of the CURRENT comma-delimited srcset '
-			. 'produces >2 fragments — this is BUG #55 and the source of customer 404 floods.'
+			'Contrast: naive comma-split of a comma-delimited srcset '
+			. 'produces >2 fragments — the source of crawler 404s.'
 		);
 	}
 

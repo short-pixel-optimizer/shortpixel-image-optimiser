@@ -1,5 +1,5 @@
 /**
- * Wave 1 — Media Library list view, SPIO column (Tier 1).
+ * Media Library list view, SPIO column.
  *
  * Covers the per-item actions a user reaches from the list (optimize,
  * restore, re-optimize with another compression, mark/unmark completed,

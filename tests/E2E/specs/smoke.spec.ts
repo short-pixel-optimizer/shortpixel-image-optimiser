@@ -1,5 +1,5 @@
 /**
- * Wave 0 gate — proves the harness end to end:
+ * Smoke gate — proves the harness end to end:
  *   1. the provisioned install is reachable and the admin session works;
  *   2. the SPIO settings page renders with ZERO JS errors and sane layout;
  *   3. a Media Library optimize round-trips through the REAL plugin
@@ -13,7 +13,7 @@
 import { test, expect } from '../fixtures';
 import { adminUrls, expectNoHorizontalOverflow, expectSettingsStylesheetApplied } from '../helpers/spio';
 
-test.describe('Wave 0 smoke', () => {
+test.describe('Smoke', () => {
 	test.beforeEach(async ({ spio }) => {
 		await spio.reset();
 	});
@@ -89,7 +89,7 @@ async function injectUncaughtError(page: import('@playwright/test').Page): Promi
 	});
 }
 
-test.describe('Wave 0 smoke — tripwire proof of life', () => {
+test.describe('Smoke — tripwire proof of life', () => {
 	test.describe('capture', () => {
 		// Opt out of teardown enforcement so this test can PASS while asserting
 		// that the fixture actually CAPTURED the injected error. If the tripwire

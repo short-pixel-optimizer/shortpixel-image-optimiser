@@ -49,12 +49,11 @@ define( 'SPIO_E2E_HOSTILE_OPTION', 'spio_e2e_hostile_snippets' );
  * Hermetic update state: report "no core, plugin or theme updates", always.
  *
  * WordPress otherwise asks api.wordpress.org, and the answer changes with
- * every upstream release. On 2026-09-24 the site ran 7.1.1 while 7.1.2 had
- * shipped, so every admin page grew the core `.update-nag` notice. The visual
- * specs mask third-party notices, but a mask only hides an element's
- * content — it still paints where the element now EXISTS, and the notice
- * pushed the panels down. Result: all four admin-page baselines failed
- * (settings overview ×3, bulk dashboard) with no SPIO change at all.
+ * every upstream release. When a newer core has shipped, every admin page
+ * grows the core `.update-nag` notice. The visual specs mask third-party
+ * notices, but a mask only hides an element's content — it still paints
+ * where the element now EXISTS, and the notice pushes the panels down, so
+ * the admin-page baselines fail with no SPIO change at all.
  *
  * Returning a fresh, empty transient also means WordPress never makes the
  * update request, so the run stops depending on the internet for it.
@@ -106,7 +105,7 @@ function spio_e2e_apply_seed() {
 
 		// Values the settings specs mutate — pinned back to their defaults so
 		// a save in one test can never masquerade as a save in the next
-		// (bit us on pin62: compressionType=2 survived from an earlier test).
+		// (e.g. a compressionType=2 surviving from an earlier test).
 		$settings->compressionType   = 1;
 		$settings->createWebp        = 0;
 		$settings->createAvif        = 0;
@@ -117,16 +116,14 @@ function spio_e2e_apply_seed() {
 		// Remove EXIF: a FRESH install turns it on at activation (exif = 0),
 		// an older site keeps the model default (1). Pinned to the fresh-install
 		// value so a long-lived local stack renders the Image Optimization tab
-		// like CI's freshly provisioned one (baseline mismatch 2026-10-01).
+		// like CI's freshly provisioned one (otherwise the baseline mismatches).
 		$settings->exif              = 0;
 
 		// AI generation switches, pinned to their SettingsModel defaults.
 		// Specs switch some of these off (e.g. the Gutenberg "switched-off
-		// field" guard) and nothing put them back, so the AI settings tab
-		// rendered whatever the previous spec left behind: its visual
-		// baseline was recorded with fields collapsed, and on a freshly
-		// provisioned site (defaults, fields expanded) the tab came out 304px
-		// taller (2026-09-24).
+		// field" guard); without this reset the AI settings tab renders
+		// whatever the previous spec left behind (fields collapsed vs
+		// expanded) and its visual baseline differs in height.
 		$settings->ai_gen_alt                = 1;
 		$settings->ai_gen_caption            = 1;
 		$settings->ai_gen_description        = 1;
@@ -196,7 +193,7 @@ add_action( 'rest_api_init', 'spio_e2e_register_routes' );
  * dashboard. A test that wants "the bulk is really over" must wait on this,
  * not on a page load: the reload after Stop can be served before finishBulk
  * has cleared the queues, and the screen then switches away from the
- * server-rendered dashboard (CI flake, both engines, 2026-09-16).
+ * server-rendered dashboard (a CI flake seen in both engines).
  *
  * `formatNumbers = false` keeps the counters raw instead of localized
  * strings ("1,000"), so they can be compared numerically.
@@ -231,14 +228,14 @@ function spio_e2e_route_reset( WP_REST_Request $request ) {
 	// Bulk/queue STATUS lives outside the queue table (ShortQ status options
 	// + SPIO's per-queue cache: preparing/running/finished/bulk_running).
 	// Truncating the rows alone leaves a half-finished bulk "preparing", and
-	// the next bulk page load then skips the dashboard (Wave 3 conflict
-	// tests failed on `#start-optimize` because of exactly that). Reset the
+	// the next bulk page load then skips the dashboard (tests then fail on
+	// `#start-optimize`). Reset the
 	// queues through SPIO's own controller first.
 	if ( class_exists( '\ShortPixel\Controller\QueueController' ) ) {
 		\ShortPixel\Controller\QueueController::resetQueues();
 	}
 
-	// SPIO tables: queue, per-attachment meta, AI meta, and (Wave 3) the
+	// SPIO tables: queue, per-attachment meta, AI meta, and the
 	// custom-media folders + file meta, so a folder added by one test never
 	// leaks into the next ("subfolder of an existing folder" refusals).
 	foreach ( array( 'shortpixel_queue', 'shortpixel_postmeta', 'shortpixel_aipostmeta', 'shortpixel_folders', 'shortpixel_meta' ) as $table ) {
@@ -278,7 +275,7 @@ function spio_e2e_route_reset( WP_REST_Request $request ) {
 	// previous test (or run), CheckActive() in shortpixel-processor.js sees a
 	// server key that doesn't match the new page's localStorage key, parks the
 	// processor and only re-checks after 3 minutes — the queue silently stalls
-	// (first flaky run, 2026-09-14). Every test starts lock-free; the auth
+	// Every test starts lock-free; the auth
 	// setup clears the localStorage half. InstallHelper does the same delete.
 	delete_transient( 'bulk-secret' );
 	// Bulk history (BulkController::$logName). The settings overview prints
@@ -290,7 +287,7 @@ function spio_e2e_route_reset( WP_REST_Request $request ) {
 	// images and thumbnails" line) and StatsController caches the "Average
 	// Optimization" dial for an hour in the `average_compression` transient.
 	// Left alone, a bulk run in one test changes the overview layout of every
-	// later test (caught by the visual determinism check, 2026-09-16).
+	// later test.
 	if ( class_exists( '\ShortPixel\Controller\StatsController' ) ) {
 		\ShortPixel\Controller\StatsController::getInstance()->reset();
 	}

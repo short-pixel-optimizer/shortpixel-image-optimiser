@@ -7,7 +7,7 @@
  * during the test harness bootstrap). Each test cleans up after itself.
  *
  * Constructor note: `type='custom'` is intentionally not supported yet
- * (per Bas's `// only this supported for now` inline comment). The
+ * (per the `// only this supported for now` inline comment). The
  * `test_constructor_leaves_type_null_for_unsupported_type_string` test
  * documents that shape so a future refactor won't accidentally start
  * mapping 'custom' without the paired changes to fetchRecord.
@@ -292,7 +292,7 @@ class AiDataModelTest extends WP_UnitTestCase {
 
 	/*
 	 * isExifProcessable (private) — always true; API-side change made this
-	 * method unconditionally permissive (see the Asana link in the source).
+	 * method unconditionally permissive.
 	 */
 
 	public function test_isExifProcessable_returns_true_unconditionally() {
@@ -600,8 +600,7 @@ class AiDataModelTest extends WP_UnitTestCase {
 	/*
 	 * migrate — isset guards on legacy data keys. Under phpunit's
 	 * convertNoticesToExceptions=true, an unguarded array read on a
-	 * missing key would throw — these tests would have failed before
-	 * the 2026-07-08 medium-priority sweep added the isset() guards.
+	 * missing key would throw — these tests guard the isset() checks.
 	 */
 
 	public function test_migrate_does_not_fatal_when_original_alt_is_missing() {

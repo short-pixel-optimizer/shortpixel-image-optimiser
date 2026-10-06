@@ -5,8 +5,7 @@
  * Scope: status constants, returnFailure / returnRetry / returnOK / returnSuccess
  * result-array shapes, parseResponse() with valid JSON, parseResponse() with
  * JSON embedded in surrounding noise (getJsonStrings() path), and a regression
- * test that the undefined-offset warning no longer fires when the body has no JSON
- * (Bug #7 FIXED a81b64d0 + 4b3b4d9f).
+ * test that no undefined-offset warning fires when the body has no JSON.
  *
  * Out of scope / why:
  * - doRequest(): calls wp_remote_post() and therefore hits the network; excluded
@@ -250,17 +249,14 @@ class RequestManagerTest extends WP_UnitTestCase {
 	}
 
 	// -----------------------------------------------------------------------
-	// parseResponse — pinned regression: HTML body triggers undefined-offset
+	// parseResponse — HTML body must not trigger undefined-offset
 	// -----------------------------------------------------------------------
 
 	/**
-	 * Bug FIXED (a81b64d0 + 4b3b4d9f): parseResponse() now guards against
-	 * getJsonStrings() returning an empty array.  When no JSON object is found in
-	 * the body, $data[0] is no longer accessed; instead the method returns an
-	 * explicit error array: ['status' => STATUS_ERROR, 'error' => json_last_error_msg()].
-	 *
-	 * The old "Undefined offset: 0" notice no longer fires, and the return value
-	 * is now the sentinel error array rather than an empty array.
+	 * parseResponse() guards against getJsonStrings() returning an empty array.
+	 * When no JSON object is found in the body, $data[0] is not accessed;
+	 * instead the method returns an explicit error array:
+	 * ['status' => STATUS_ERROR, 'error' => json_last_error_msg()].
 	 */
 	public function test_parseResponse_plain_html_body_returns_error_sentinel_array() {
 		$html     = '<html><body><h1>502 Bad Gateway</h1></body></html>';
@@ -278,9 +274,9 @@ class RequestManagerTest extends WP_UnitTestCase {
 
 		restore_error_handler();
 
-		// Bug #7 FIXED (a81b64d0 + 4b3b4d9f): no offset notice/warning is raised.
-		$this->assertFalse( $warningFired, 'No undefined-offset notice/warning should be raised after the fix.' );
-		// The fixed code returns a status=STATUS_ERROR sentinel.
+		// No offset notice/warning is raised.
+		$this->assertFalse( $warningFired, 'No undefined-offset notice/warning should be raised.' );
+		// The method returns a status=STATUS_ERROR sentinel.
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'status', $result );
 		$this->assertSame( RequestManager::STATUS_ERROR, $result['status'] );

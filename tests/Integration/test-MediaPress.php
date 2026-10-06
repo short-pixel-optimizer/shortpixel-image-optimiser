@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests: MediaPress hook touchpoints (plan 17).
+ * Integration tests: MediaPress hook touchpoints.
  *
  * This is a hook-level suite. The MediaPress plugin does NOT need to be
  * installed. Tests fire the MediaPress upload hook directly.
@@ -51,7 +51,7 @@ class MediaPressTest extends SPIO_IntegrationTestCase {
 	 * MediaPress does after generating gallery image metadata) must cause SPIO
 	 * to add the image to the optimize queue when autoprocess is ON.
 	 *
-	 * Manual-plan row: 17.1 — mpp_generate_metadata enqueues gallery image.
+	 * mpp_generate_metadata enqueues gallery image.
 	 *
 	 * @return void
 	 */
@@ -89,7 +89,7 @@ class MediaPressTest extends SPIO_IntegrationTestCase {
 	 * be fully optimized end-to-end: the queue runs, the API is called, and
 	 * the image model reports isOptimized() === true after the queue drains.
 	 *
-	 * Manual-plan row: 17.2 — MediaPress image optimizes end-to-end.
+	 * MediaPress image optimizes end-to-end.
 	 *
 	 * @return void
 	 */

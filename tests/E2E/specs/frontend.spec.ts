@@ -1,5 +1,5 @@
 /**
- * Wave 3 — front-end delivery (what site visitors get).
+ * front-end delivery (what site visitors get).
  *
  * SPIO ships no visitor JS; everything here is server-side output
  * rewriting, so the E2E value is precisely what PHPUnit cannot check: the

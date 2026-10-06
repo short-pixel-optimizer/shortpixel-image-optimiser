@@ -1,11 +1,11 @@
 /**
- * Wave 2 — Gutenberg AI alt/caption flow (Tier 2, where #66 lived).
+ * Gutenberg AI alt/caption flow.
  *
  * Covers, in a REAL open block editor:
- *   - regression #66 (a5ad9805): an AI generation started for the image
- *     while the post is open updates the core/image block's alt in place,
- *     keyed by the editor's post id;
- *   - block-corruption guard (ea764111): integer status codes (a field
+ *   - an AI generation started for the image while the post is open
+ *     updates the core/image block's alt in place, keyed by the editor's
+ *     post id;
+ *   - block-corruption guard: integer status codes (a field
  *     switched off in settings) never reach the block — serialization stays
  *     a real <figure>, never the bare void comment (`… /-->`);
  *   - the in-content replacement is also persisted in post_content;
@@ -31,7 +31,7 @@ test.describe('Gutenberg AI alt/caption', () => {
 		await spio.setSettings({ enable_ai: 1, ai_gen_alt: 1, ai_gen_caption: 1, ai_gen_description: 0, ai_gen_post_title: 0, ai_gen_filename: 0 });
 	});
 
-	test('regression #66: AI alt generated while the post is open updates the image block in place', async ({ page, spio }) => {
+	test('AI alt generated while the post is open updates the image block in place', async ({ page, spio }) => {
 		const image = await spio.uploadFixture('fixture-small.jpg');
 		const post = await spio.createPost({ image_id: image.id, alt: '' });
 
@@ -60,8 +60,8 @@ test.describe('Gutenberg AI alt/caption', () => {
 
 	test('corruption guard: an integer status for a switched-off field never reaches the block', async ({ page, spio }) => {
 		// Caption generation OFF → the API payload carries an int status for
-		// caption (-3 EXCLUDESETTING). Pre-ea764111 this reached
-		// updateBlockAttributes and the block save() threw → void comment.
+		// caption (-3 EXCLUDESETTING). If it reached updateBlockAttributes,
+		// the block save() would throw → void comment.
 		await spio.setSettings({ ai_gen_caption: 0 });
 		const image = await spio.uploadFixture('fixture-small.jpg');
 		const post = await spio.createPost({ image_id: image.id, alt: '' });
@@ -135,13 +135,12 @@ test.describe('Gutenberg AI — pinned', () => {
 	});
 
 	/**
-	 * PIN (unnumbered — E2E seed finding): screen-item-base.js UndoAlt() has
+	 * PIN: screen-item-base.js UndoAlt() has
 	 * its UpdateGutenBerg() call commented out and re-broadcasts a
 	 * `handleImage` whose payload carries apiName 'ai' but NO fileStatus, so
 	 * HandleImage's FILE_DONE gate never fires. After an undo the server
 	 * content is restored but the block in an open editor keeps the AI alt;
-	 * the next editor save re-writes the AI text. Symmetric to #66's original
-	 * failure, but on the undo side.
+	 * the next editor save re-writes the AI text.
 	 * FLIP-when-fixed: expect the block alt to return to '' after the undo.
 	 */
 	test('pin: undo does not revert the image block in an open editor (pinned_for_deferred_fix)', async ({ page, spio }) => {
@@ -168,17 +167,15 @@ test.describe('Gutenberg AI — pinned', () => {
 	});
 
 	/**
-	 * REGRESSION (found 2026-09-25 in ffde74bf, fixed in ceab8910 the same day)
-	 * — an AI rename that writes NO alt into the open post must still move the
-	 * block to the new URL.
+	 * REGRESSION — an AI rename that writes NO alt into the open post must
+	 * still move the block to the new URL.
 	 *
-	 * ffde74bf's early return in UpdateGutenBerg (screen-media.js) tested
-	 * `typeof replaceUrl` — an undeclared name, always 'undefined' — instead of
-	 * `replacedUrl`, so every rename-only result (post alt already filled in
-	 * 'missing' mode, 'none' mode, alt off…) returned before the url refresh:
-	 * the server renamed the file and rewrote post_content, the editor kept the
-	 * old URL and the next save wrote it back (broken image). Lives in the
-	 * "pinned" describe because it shares its setup; it is a regression test.
+	 * UpdateGutenBerg (screen-media.js) must not return early on a
+	 * rename-only result (post alt already filled in 'missing' mode, 'none'
+	 * mode, alt off…): otherwise the server renames the file and rewrites
+	 * post_content, the editor keeps the old URL and the next save writes it
+	 * back (broken image). Lives in the "pinned" describe because it shares
+	 * its setup; it is a regression test.
 	 */
 	test('regression: an AI rename without an alt write moves the block to the new URL', async ({ page, spio }) => {
 		await spio.setSettings({ enable_ai: 1, ai_gen_alt: 1, ai_gen_caption: 0, ai_gen_filename: 1, ai_content_replace: 'missing' });
@@ -187,8 +184,8 @@ test.describe('Gutenberg AI — pinned', () => {
 
 		const image = await spio.uploadFixture('fixture-small.jpg');
 		// An alt already in the post → 'missing' mode writes no alt → rename-only result.
-		// A DRAFT: a published post would count as "image in use", and since
-		// 80ac531b the AI rename (not a fresh upload) then keeps the old name.
+		// A DRAFT: a published post would count as "image in use", and the AI
+		// rename (not a fresh upload) then keeps the old name.
 		const post = await spio.createPost({ image_id: image.id, alt: 'Existing alt', status: 'draft' });
 
 		const editor = new BlockEditor(page);
@@ -222,25 +219,23 @@ test.describe('Gutenberg AI — pinned', () => {
 });
 
 /**
- * Beta-tester reports (6.6.0 beta, 2026-09-29), fixed in a90bcd1f — both live
- * in UpdateGutenBerg() (res/js/screens/screen-media.js), which pushes the AI
- * result into the open editor.
+ * Regressions in UpdateGutenBerg() (res/js/screens/screen-media.js), which
+ * pushes the AI result into the open editor.
  */
-test.describe('Gutenberg AI — beta reports (regressions)', () => {
+test.describe('Gutenberg AI — nested blocks and unsaved posts (regressions)', () => {
 	test.beforeEach(async ({ spio }) => {
 		await spio.reset();
 		await spio.setSettings({ enable_ai: 1, ai_gen_alt: 1, ai_gen_caption: 0, ai_gen_description: 0, ai_gen_post_title: 0, ai_gen_filename: 0, ai_content_replace: 'missing' });
 	});
 
 	/**
-	 * REGRESSION (beta report #1, "saving a post erases the alt for images
-	 * inside a Group or Columns block", fixed in a90bcd1f) — UpdateGutenBerg()
-	 * used to walk only the TOP-LEVEL blocks, so an image nested in a
-	 * Group/Columns block was never updated in the editor and the next Save
-	 * wrote its empty alt back over the AI alt the server had stored. It now
-	 * walks getClientIdsWithDescendants().
+	 * REGRESSION ("saving a post erases the alt for images inside a Group or
+	 * Columns block") — UpdateGutenBerg() walks getClientIdsWithDescendants(),
+	 * not only the TOP-LEVEL blocks; otherwise an image nested in a
+	 * Group/Columns block is never updated in the editor and the next Save
+	 * writes its empty alt back over the AI alt the server stored.
 	 */
-	test('regression beta #1: an image inside a Group block gets the AI alt in the editor and keeps it on save', async ({ page, spio }) => {
+	test('an image inside a Group block gets the AI alt in the editor and keeps it on save', async ({ page, spio }) => {
 		const image = await spio.uploadFixture('fixture-small.jpg');
 		const content =
 			'<!-- wp:group {"layout":{"type":"constrained"}} -->\n<div class="wp-block-group">' +
@@ -262,24 +257,24 @@ test.describe('Gutenberg AI — beta reports (regressions)', () => {
 
 		// The nested block in the open editor gets the AI alt…
 		await expect
-			.poll(async () => (await editor.imageBlockDeep(image.id)).alt, { timeout: 30_000, message: 'REGRESSION beta #1: the nested image block shows the AI alt' })
+			.poll(async () => (await editor.imageBlockDeep(image.id)).alt, { timeout: 30_000, message: 'REGRESSION: the nested image block shows the AI alt' })
 			.toBe('A mock ai alt text.');
 
 		// …and saving from the editor keeps it.
 		await editor.savePost();
 		await expect
-			.poll(async () => (await spio.getPost(post.id)).content, { timeout: 30_000, message: 'REGRESSION beta #1: Save keeps the AI alt' })
+			.poll(async () => (await spio.getPost(post.id)).content, { timeout: 30_000, message: 'REGRESSION: Save keeps the AI alt' })
 			.toContain('alt="A mock ai alt text."');
 	});
 
 	/**
-	 * REGRESSION (beta report #2, EBUG-1 follow-up, "no alt text for an image
-	 * added to a post that hasn't been saved yet", fixed in a90bcd1f) — an
-	 * unsaved (auto-draft) post has no stored content for the server to write
-	 * into, so replaced_content has no entry for it; UpdateGutenBerg() now falls
-	 * back to the generated aiData and fills empty alt/caption in the block.
+	 * REGRESSION ("no alt text for an image added to a post that hasn't been
+	 * saved yet") — an unsaved (auto-draft) post has no stored content for the
+	 * server to write into, so replaced_content has no entry for it;
+	 * UpdateGutenBerg() falls back to the generated aiData and fills empty
+	 * alt/caption in the block.
 	 */
-	test('regression beta #2: an image in a never-saved post gets the AI alt', async ({ page, spio }) => {
+	test('an image in a never-saved post gets the AI alt', async ({ page, spio }) => {
 		const image = await spio.uploadFixture('fixture-small.jpg');
 
 		await page.goto('/wp-admin/post-new.php');
@@ -305,7 +300,7 @@ test.describe('Gutenberg AI — beta reports (regressions)', () => {
 		await expect.poll(async () => (await spio.attachment(image.id)).alt, { timeout: 90_000 }).toBe('A mock ai alt text.');
 
 		await expect
-			.poll(async () => (await editor.imageBlockDeep(image.id)).alt, { timeout: 30_000, message: 'REGRESSION beta #2: the unsaved post\'s block gets the AI alt' })
+			.poll(async () => (await editor.imageBlockDeep(image.id)).alt, { timeout: 30_000, message: 'REGRESSION: the unsaved post\'s block gets the AI alt' })
 			.toBe('A mock ai alt text.');
 	});
 });

@@ -1,6 +1,6 @@
 <?php
 /**
- * Cross-plugin compatibility: Yoast SEO (Wave 4).
+ * Cross-plugin compatibility: Yoast SEO.
  *
  * Runs with the REAL wordpress-seo plugin active (bin/test.sh --compat
  * downloads + activates it). Covers

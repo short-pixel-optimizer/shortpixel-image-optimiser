@@ -8,8 +8,8 @@
  * (installed by InstallHelper::activatePlugin during the test harness
  * bootstrap; also insured via `InstallHelper::checkTables()` at set_up).
  *
- * Note on `save()`'s return contract: per Bas's a7a0f8f9 docblock
- * clarification, save() intentionally returns rows-affected (or false on
+ * Note on `save()`'s return contract: per its docblock,
+ * save() intentionally returns rows-affected (or false on
  * DB error) — NOT the inserted PK. The instance's `$id` is refreshed to
  * the actual PK by the follow-up `loadFolderByPath()`. The save() INSERT
  * test below asserts that documented contract.
@@ -495,7 +495,7 @@ class DirectoryOtherMediaModelTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * `save()`'s documented contract (per a7a0f8f9): the INSERT branch
+	 * `save()`'s documented contract: the INSERT branch
 	 * returns rows-affected (1), NOT the inserted PK — and the instance's
 	 * `id` is self-healed to the actual PK by the follow-up
 	 * `loadFolderByPath()`. A sentinel row is seeded first so PKs are

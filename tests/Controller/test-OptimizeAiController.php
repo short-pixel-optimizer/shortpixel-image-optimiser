@@ -16,19 +16,15 @@
  *   - formatGenerated(): label collection, -3 substitution for status codes.
  *   - formatResultData(): prefix/postfix application, numeric-1 → empty-string
  *     replacement, original_filebase preservation. NOTE: $textItems is
- *     ['alt','caption','description'] since Bug #31 FIXED (af5794d8) — 'filebase'
- *     was removed so file base names are never sentence-formatted (12603b56 had
- *     added it, mangling the original_filebase fallback with ucfirst + period).
+ *     ['alt','caption','description'] — 'filebase' is excluded so file base
+ *     names are never sentence-formatted (ucfirst + period would mangle the
+ *     original_filebase fallback).
  *     Prefix/postfix for filebase still applies via the ai_filename_* settings.
- *   - replaceFiles() — returns false on conflict-abort; the old pinned bug
- *     (success path also returned false) was FIXED in 1fc98025 (`return true`
- *     at ~line 765). Conflict path covered in
- *     test_replaceFiles_returns_false_on_conflict.
- *   - ajax_replaceFile() — bug #45 (c44f0369 dropped `return $result;`)
- *     FIXED in 370fb5db; regression-tested in
+ *   - replaceFiles() — returns false on conflict-abort, true on success.
+ *     Conflict path covered in test_replaceFiles_returns_false_on_conflict.
+ *   - ajax_replaceFile() — passes the replaceFiles() result through; covered in
  *     test_ajax_replaceFile_returns_the_replaceFiles_result.
- *   - sendToProcessing() dispatch: 'undoAltData' (renamed from 'undoAI' in
- *     fc86de1a, fix #61) is routed locally; other actions
+ *   - sendToProcessing() dispatch: 'undoAltData' is routed locally; other actions
  *     reach api->processMediaItem() (routing verified via spy).
  *
  * Out of scope / why:
@@ -41,7 +37,7 @@
  *     loaded; also calls AiDataModel::getModelByAttachment() which reads from DB.
  *   - undoAltData(): calls AiDataModel + replaceImageAttributes() — integration.
  *   - replaceImageAttributes() / replaceMetaData(): touch Replacer2 + WP metadata — integration.
- *   - WPMLCheckReplace() (replaced getWpmlLanguagePostIds in f232c607): requires
+ *   - WPMLCheckReplace(): requires
  *     WPML active — covered in tests/Compat/test-CompatWPML.php.
  *
  * @package Shortpixel_Image_Optimiser
@@ -427,7 +423,6 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * EBUG-4 (customer report tests/partner-plugins/bug-editor-ai-corruption.md):
 	 * formatGenerated() normalises F_STATUS_PREVENTOVERRIDE (-4, aiPreserve-skipped)
 	 * to -3 in the returned generated array — the SAME int the browser payload
 	 * shows for F_STATUS_EXCLUDESETTING (-3, field disabled in settings). After
@@ -454,7 +449,7 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 		[ , $out ] = $ctrl->formatGenerated( $generated, [], [] );
 
 		// The -4 becomes -3 — indistinguishable from EXCLUDESETTING for the browser.
-		$this->assertSame( -3, $out['caption'], 'F_STATUS_PREVENTOVERRIDE (-4) must be normalised to -3 in the returned generated array (EBUG-4).' );
+		$this->assertSame( -3, $out['caption'], 'F_STATUS_PREVENTOVERRIDE (-4) must be normalised to -3 in the returned generated array.' );
 		$this->assertIsInt( $out['caption'], 'Normalised value is still an int (any is_int() filter downstream must still catch it).' );
 
 		// Sanity: the alt string was left untouched.
@@ -491,13 +486,12 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * PAYLOAD CONTRACT (EBUG-1, tests/partner-plugins/bug-editor-ai-corruption.md):
-	 * integers CAN appear in the generated data that OptimizeAiController hands
+	 * PAYLOAD CONTRACT: integers CAN appear in the generated data that OptimizeAiController hands
 	 * to the browser via the ajax result. formatGenerated() does NOT strip them
-	 * out — it only normalises -4 to -3. The Gutenberg image-block corruption
-	 * described in the customer report is guarded ONLY by the CLIENT-SIDE
-	 * string-only allowlist in res/js/screens/screen-media.js UpdateGutenBerg
-	 * (commit ea764111). If a future defense-in-depth fix ever strips int
+	 * out — it only normalises -4 to -3. Gutenberg image-block corruption by
+	 * int statuses is guarded ONLY by the CLIENT-SIDE
+	 * string-only allowlist in res/js/screens/screen-media.js UpdateGutenBerg.
+	 * If a future defense-in-depth fix ever strips int
 	 * statuses on the server (in AiController::handleSuccess() or here in
 	 * formatGenerated()), this test WILL and MUST fail — flip the assertion
 	 * from assertIsInt to assertArrayNotHasKey (or equivalent) so it locks in
@@ -521,7 +515,7 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 		$this->assertIsInt(
 			$out['alt'],
 			'Server-side leak of int status into the aiData payload is the current contract; ' .
-			'client-side screen-media.js UpdateGutenBerg (ea764111) is the ONLY guard. ' .
+			'client-side screen-media.js UpdateGutenBerg is the ONLY guard. ' .
 			'FLIP this test when the server side ever strips ints (defense-in-depth fix).'
 		);
 		$this->assertSame( -3, $out['alt'] );
@@ -530,9 +524,8 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 	/*
 	 * formatResultData — numeric-1 → empty string, prefix/postfix, original_filebase
 	 *
-	 * Bug #31 FIXED (af5794d8): 'filebase' was removed from $textItems (12603b56
-	 * had put it there, replacing the dead 'filename' key from bug #16, but that
-	 * sentence-formatted real file names). $textItems is ['alt','caption','description'];
+	 * 'filebase' is not in $textItems (that would sentence-format real file
+	 * names). $textItems is ['alt','caption','description'];
 	 * filebase keeps its prefix/postfix handling via the ai_filename_* settings.
 	 */
 
@@ -646,20 +639,20 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 		$aiData = [ 'alt' => '', 'caption' => '', 'description' => '' ];
 		$result = $ctrl->formatResultData( $aiData, $qItem );
 
-		// Bug #31 FIXED (af5794d8): 'filebase' is no longer in $textItems, so
-		// the original_filebase fallback passes through untouched — no more
-		// ucfirst + trailing period mangling ('Original-base.').
+		// 'filebase' is not in $textItems, so the original_filebase fallback
+		// passes through untouched — no ucfirst + trailing period mangling
+		// ('Original-base.').
 		$this->assertSame(
 			'original-base',
 			$result['filebase'],
-			'Since af5794d8 (bug #31 fix) the original_filebase fallback must be preserved verbatim.'
+			'The original_filebase fallback must be preserved verbatim.'
 		);
 	}
 
 	/*
 	 * sendToProcessing dispatch — the 'undoAltData' action is handled locally.
-	 * fc86de1a (fix #61) renamed the case from 'undoAI' to match the action
-	 * name that Queue::prepareItems()/undoAltDataAction() actually enqueue.
+	 * The case name matches the action name that
+	 * Queue::prepareItems()/undoAltDataAction() actually enqueue.
 	 */
 
 	public function test_sendToProcessing_routes_undoAltData_to_undoAltData() {
@@ -677,14 +670,10 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 	 * replaceFiles() conflict-abort contract: returns false when the target
 	 * filename already exists on disk.
 	 *
-	 * History: this used to pin a bug where the SUCCESS path also returned
-	 * false (copy-paste of the conflict guard). FIXED in 1fc98025 — the
-	 * success path now ends with `return true;` (~line 765) and HandleSuccess
-	 * (~line 435) consumes it for the reload redirect. The conflict path
-	 * correctly stayed false, so this test's assertions were already the
-	 * post-fix contract; only the docs changed. The success path still can't
-	 * be exercised in a clean unit test (see below) — it is covered
-	 * indirectly by the integration AI pipeline.
+	 * The success path ends with `return true;` and HandleSuccess consumes
+	 * it for the reload redirect. The success path can't be exercised in a
+	 * clean unit test (see below) — it is covered indirectly by the
+	 * integration AI pipeline.
 	 *
 	 * How we construct the conflict fixture without touching production code:
 	 *   1. Build a QueueItem whose imageModel is mocked via an anonymous class that
@@ -734,7 +723,7 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 		// Production replaceFiles() calls getURL(), getFileBase(), getFilename()/getFileName(),
 		// and getFileDir() on entries in $files['files'].  FileModel has everything except
 		// getURL() (that lives on MediaLibraryThumbnailModel).  Wrap the real FileModel in a
-		// thin anonymous stub that adds getURL() so the method reaches the buggy return path
+		// thin anonymous stub that adds getURL() so the method reaches the conflict return path
 		// rather than fataling at class/Controller/Optimizer/OptimizeAiController.php:624.
 		$srcFileStub = new class( $src_path, $base_url . $src_filename ) extends \ShortPixel\Model\File\FileModel {
 			// NB: parent FileModel declares `protected $filename`; use a spy-prefixed name
@@ -806,13 +795,11 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 	}
 
 	/*
-	 * Regression test for bug #45 (FIXED in 370fb5db, flipped from pin45):
-	 * c44f0369 "Fixes - Reload when renaming" had removed `return $result;`
-	 * from ajax_replaceFile(), so it always returned null and its caller,
-	 * AjaxController::replaceFileName(), showed "Files were not replaced"
-	 * even on success. The fix restored the return; this test stubs the
-	 * replaceFiles() chain to return true and asserts the value is passed
-	 * through by ajax_replaceFile.
+	 * ajax_replaceFile() must return its result: without the
+	 * `return $result;` it returns null and its caller,
+	 * AjaxController::replaceFileName(), shows "Files were not replaced"
+	 * even on success. This test stubs the replaceFiles() chain to return
+	 * true and asserts the value is passed through by ajax_replaceFile.
 	 */
 	public function test_ajax_replaceFile_returns_the_replaceFiles_result() {
 		$ctrl = new class() extends OptimizeAiController {
@@ -833,31 +820,28 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 			public function isOptimizePrevented() { return false; }
 			public function resetPrevent() {}
 			public function isScaled() { return false; }
-			public function getUrl() { return 'http://example.org/wp-content/uploads/spio-pin45.jpg'; }
+			public function getUrl() { return 'http://example.org/wp-content/uploads/spio-rename-src.jpg'; }
 		};
 
 		$qItem  = new QueueItem( [ 'imageModel' => $model ] );
-		$result = $ctrl->ajax_replaceFile( $qItem, 'spio-pin45-new.jpg' );
+		$result = $ctrl->ajax_replaceFile( $qItem, 'spio-rename-src-new.jpg' );
 
 		$this->assertTrue(
 			$result,
-			'Regression #45: ajax_replaceFile() must return the replaceFiles() result — it used to drop it (always null), making every rename report "Files were not replaced".'
+			'ajax_replaceFile() must return the replaceFiles() result — dropping it (always null) makes every rename report "Files were not replaced".'
 		);
 	}
 
 	/**
-	 * REGRESSION #52 — all-copies-fail (flipped from pin52, 2026-09-18).
-	 *
-	 * Fixed by 0db02498: replaceFiles() now bails out with `return false`
+	 * All-copies-fail: replaceFiles() bails out with `return false`
 	 * when $copySource is empty after the copy loop ("Copy failed to copy
 	 * anything"), BEFORE replaceMetaData(), the duplicates loop, the backup
 	 * rename and the Replacer run — so a rename where every physical copy
-	 * failed no longer reports "Files were replaced" and rewrites nothing.
+	 * failed does not report "Files were replaced" and rewrites nothing.
 	 *
-	 * RESIDUAL (still open, part of #52, deferred to 6.6.x): PARTIAL
-	 * failure — some copies succeed, some fail — still returns true and
-	 * rewrites the DB for every pair; renameBackup() and Replacer::replace()
-	 * results are still discarded; no rollback exists.
+	 * @todo PARTIAL failure — some copies succeed, some fail — still returns
+	 *       true and rewrites the DB for every pair; renameBackup() and
+	 *       Replacer::replace() results are discarded; no rollback exists.
 	 *
 	 * The fixture: a real attachment wrapped in a spy ImageModel whose only
 	 * file is a spy FileModel with copy() stubbed to false (no disk I/O).
@@ -869,20 +853,19 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 	 *    still on disk — the false comes from the copy check, not from an
 	 *    earlier guard (conflict, usage count, virtual offloader).
 	 *
-	 * The #66 `replaced_url` contract (a5ad9805) used to be asserted here
-	 * on the (buggy) success path; it now lives in
-	 * tests/Integration/test-ChangeFilename.php on a real successful rename.
+	 * The `replaced_url` contract on a real successful rename is covered in
+	 * tests/Integration/test-ChangeFilename.php.
 	 * On this failure path nothing may be recorded.
 	 */
-	public function test_regression52_replaceFiles_returns_false_when_every_copy_fails() {
+	public function test_replaceFiles_returns_false_when_every_copy_fails() {
 		// Create a real attachment (so BackupController + replaceMetaData
 		// don't blow up on a naked ImageModel stub), then wrap the loaded
 		// ImageModel in a spy that returns a spy FileModel whose move()
 		// ALWAYS returns false and touches no disk. The conflict guard
 		// passes because we do NOT pre-create the target file.
-		$fixture_dir = ABSPATH . 'wp-content/uploads/pin52-fixtures';
+		$fixture_dir = ABSPATH . 'wp-content/uploads/copy-fail-fixtures';
 		wp_mkdir_p( $fixture_dir );
-		$src_path = $fixture_dir . '/pin52-src-' . uniqid() . '.jpg';
+		$src_path = $fixture_dir . '/copy-fail-src-' . uniqid() . '.jpg';
 		// A tiny valid JPEG so wp_generate_attachment_metadata() has something to read.
 		if ( function_exists( 'imagecreatetruecolor' ) ) {
 			$im = imagecreatetruecolor( 4, 4 );
@@ -894,13 +877,13 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 			}
 		} else {
 			// GD unavailable — the test relies on it; skip cleanly.
-			$this->markTestSkipped( 'GD not available; cannot build pin52 fixture without it.' );
+			$this->markTestSkipped( 'GD not available; cannot build copy-fail fixture without it.' );
 		}
 
 		$attach_id = wp_insert_attachment(
 			[
 				'post_mime_type' => 'image/jpeg',
-				'post_title'     => 'pin52',
+				'post_title'     => 'copy-fail',
 				'post_content'   => '',
 				'post_status'    => 'inherit',
 			],
@@ -916,7 +899,7 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 		$src_filename = basename( $src_path );
 		$src_base     = pathinfo( $src_filename, PATHINFO_FILENAME );
 		$upload_dir   = wp_upload_dir();
-		$base_url_dir = trailingslashit( $upload_dir['baseurl'] ) . 'pin52-fixtures/';
+		$base_url_dir = trailingslashit( $upload_dir['baseurl'] ) . 'copy-fail-fixtures/';
 
 		// Spy FileModel:
 		//  - returns a controllable URL,
@@ -959,9 +942,9 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 			public function get( $name ) { return $this->inner->get( $name ); }
 			public function getMeta( $name = false ) { return $this->inner->getMeta( $name ); }
 			public function getOptimizeUrls() { return []; }
-			// Public like the real MediaLibraryModel / CustomImageModel: since
-			// 9c3dab50 replaceFiles() calls $imageModel->saveMeta() after the
-			// copy loop. Counted so the call on the all-copies-failed path shows.
+			// Public like the real MediaLibraryModel / CustomImageModel:
+			// replaceFiles() calls $imageModel->saveMeta() after the copy loop.
+			// Counted so a call on the all-copies-failed path shows.
 			public $saveMetaCalls = 0;
 			public function saveMeta() { $this->saveMetaCalls++; }
 			protected function loadMeta() {}
@@ -980,19 +963,19 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 
 		$qItem = new QueueItem( [ 'imageModel' => $model ] );
 
-		// Suppress the replaceMetaData step so the pin does not spuriously
+		// Suppress the replaceMetaData step so the test does not spuriously
 		// mutate WP core metadata — replaceMetaData() would rewrite
 		// _wp_attached_file with the new base even though no copy happened.
 		$ctrl = new class() extends OptimizeAiController {
 			protected function replaceMetaData( $item_id, $old_file, $new_file, $args = [] ) {
-				// intentional no-op — out of scope for pin #52 (return-value blindness).
+				// intentional no-op — out of scope for this test (return-value blindness).
 			}
 		};
 
 		// Inject a stub BackupModel into BackupController::$models cache so
 		// getBackupController()->getModel($imageModel) does not try to build
 		// a LocalBackupModel around our wrapper (which would trip on the
-		// spy FileModel not being an ImageModel). This keeps the pin
+		// spy FileModel not being an ImageModel). This keeps the test
 		// focused strictly on the move()-return-value blindness.
 		$bcSingleton = \ShortPixel\Controller\Backup\BackupController::getBackupController();
 		$stubBackup  = new class( $bcSingleton, $realImage ) extends \ShortPixel\Model\Backup\LocalBackupModel {
@@ -1011,7 +994,7 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 		$m   = $ref->getMethod( 'replaceFiles' );
 		$m->setAccessible( true );
 
-		$tgt_base = 'pin52-tgt-' . uniqid();
+		$tgt_base = 'copy-fail-tgt-' . uniqid();
 		$result   = $m->invoke(
 			$ctrl,
 			$qItem,
@@ -1024,7 +1007,7 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 		$this->assertGreaterThanOrEqual(
 			1,
 			$srcFileStub->copyCalls,
-			'Sentinel: replaceFiles() must have invoked copy() at least once for #52 to apply.'
+			'Sentinel: replaceFiles() must have invoked copy() at least once for the all-copies-fail path to apply.'
 		);
 		// A failed copy must never land in the deferred-delete list.
 		$this->assertSame(
@@ -1043,27 +1026,26 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 		$this->assertIsBool( $result );
 		$this->assertFalse(
 			$result,
-			'REGRESSION #52: replaceFiles() must return false when copy() failed on every source (0db02498 "Copy failed to copy anything").'
+			'replaceFiles() must return false when copy() failed on every source ("Copy failed to copy anything").'
 		);
 
 		// The bail-out happens before the backup rename and the Replacer.
 		$this->assertSame(
 			0,
 			$stubBackup->renameBackupCalls,
-			'REGRESSION #52: the backup must not be renamed when no file was copied.'
+			'The backup must not be renamed when no file was copied.'
 		);
 		$replaced = $qItem->result()->replaced_content;
 		$this->assertFalse(
 			is_array( $replaced ) && array_key_exists( 'replaced_url', $replaced ),
-			'REGRESSION #52: a failed rename must not record a replaced_url for the editor.'
+			'A failed rename must not record a replaced_url for the editor.'
 		);
 
-		// PIN (found 2026-10-01 reviewing 9c3dab50, the #79 fix): saveMeta() runs
-		// right after the copy loop, BEFORE the "copy failed to copy anything"
-		// bail-out — so when every copy fails, ShortPixel's meta is still saved
-		// with the NEW webp/avif names set while building the plan (files that
-		// were never created). Fix: save the meta after that bail-out.
-		// FLIP-when-fixed: expect 0 calls.
+		// Pins a known defect: saveMeta() runs right after the copy loop,
+		// BEFORE the "copy failed to copy anything" bail-out — so when every
+		// copy fails, ShortPixel's meta is still saved with the NEW webp/avif
+		// names set while building the plan (files that were never created).
+		// Fix: save the meta after that bail-out. When fixed, expect 0 calls.
 		$this->assertSame(
 			1,
 			$model->saveMetaCalls,

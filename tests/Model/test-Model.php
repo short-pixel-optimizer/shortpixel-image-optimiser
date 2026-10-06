@@ -160,9 +160,9 @@ class ModelTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Regression sentinel for a7a0f8f9 — the `is_numeric` branch used to
-	 * run before `is_float`, so real PHP floats were truncated through
-	 * intval() (1.5 → 1). The float check now runs first.
+	 * Regression sentinel — the `is_float` check must run before the
+	 * `is_numeric` branch, otherwise real PHP floats are truncated through
+	 * intval() (1.5 → 1).
 	 */
 	public function test_sanitizeArray_preserves_float_values_without_truncation() {
 		$out = $this->subject()->sanitizeArray( array( 'ratio' => 1.5, 'neg' => -0.25 ) );
@@ -321,8 +321,8 @@ class ModelTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Regression sentinel for a7a0f8f9 — getData() used to read
-	 * `$this->model[$item]['s']` without an isset guard, emitting an
+	 * Regression sentinel — getData() must guard its read of
+	 * `$this->model[$item]['s']` with isset, otherwise it emits an
 	 * "Undefined array key 's'" warning for fields declared without a
 	 * type (like the `no_type` fixture field). The temporary error
 	 * handler turns any such warning back into a test failure.

@@ -8,8 +8,8 @@
  *   - settingLink() — HTML output, active-class injection, URL shape.
  *   - getMaxIntermediateImageSize() — floor-clamp, returns width+height array.
  *   - processWebP() — delivery-type collapsing logic (via reflection with
- *     mocked $is_nginx = false to avoid htaccess writes). Includes pinned
- *     regression for the assignment-as-comparison bug on line ~1325.
+ *     mocked $is_nginx = false to avoid htaccess writes). Includes a
+ *     regression test for the altering-type comparison.
  *   - processExcludeFolders() — no exclusions key → empty array;
  *     valid JSON array → accepted; invalid regex → error-flagged entry.
  *   - processPostData() — exif inversion, png2jpg checkbox collapsing,
@@ -26,10 +26,8 @@
  *   - loadQuotaData() / loadAPiKeyData() / loadDashBoardInfo() — require live
  *     QuotaController / ApiKeyController with a real or stub API key.
  *
- * BUG FIXED (b8d8f38d):
- *   processWebP() line ~1325: `elseif ($altering = 'deliverWebpAlteredGlobal')`
- *   ASSIGNMENT bug replaced with Yoda comparison `'deliverWebpAlteredGlobal' == $altering`.
- *   Unknown altering types now leave $deliverwebp = 0. Test updated accordingly.
+ * processWebP() compares with `'deliverWebpAlteredGlobal' == $altering` (Yoda
+ *   comparison, not an assignment), so unknown altering types leave $deliverwebp = 0.
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -350,14 +348,11 @@ class SettingsViewControllerTest extends WP_UnitTestCase {
 
 	public function test_processWebP_unknown_altering_type_gives_0() {
 		/**
-		 * Bug #12 FIXED (b8d8f38d): the elseif assignment bug
-		 *   `elseif ($altering = 'deliverWebpAlteredGlobal')`
-		 * has been replaced with a Yoda comparison
+		 * The elseif uses a Yoda comparison
 		 *   `elseif ('deliverWebpAlteredGlobal' == $altering)`.
-		 *
-		 * Previously, an empty (or unknown) altering type caused the assignment to
-		 * evaluate as truthy, always setting $deliverwebp = 1 (global htaccess).
-		 * After the fix, an empty altering type correctly leaves $deliverwebp = 0
+		 * An assignment there would evaluate as truthy for an empty (or unknown)
+		 * altering type, always setting $deliverwebp = 1 (global htaccess).
+		 * An empty altering type must leave $deliverwebp = 0
 		 * (no valid sub-type selected).
 		 */
 		$c = $this->freshController();
@@ -374,7 +369,7 @@ class SettingsViewControllerTest extends WP_UnitTestCase {
 
 		$result = $this->invokeProtected( $c, 'processWebP', array( $post ) );
 
-		// Bug #12 FIXED (b8d8f38d): now correctly 0 when no sub-type is selected.
+		// 0 when no sub-type is selected.
 		$this->assertSame( 0, $result['deliverWebp'],
 			'With an empty altering type, deliverWebp must be 0 (no valid sub-type)'
 		);

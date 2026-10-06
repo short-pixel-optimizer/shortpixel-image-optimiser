@@ -70,8 +70,6 @@ class AiSettingsTest extends SPIO_IntegrationTestCase {
 	 * Verified behaviour: AdminController::handleAiImageUploadHook() calls
 	 * QueueController::addItemToQueue() with action='requestAlt'. Confirmed
 	 * by running the queue and checking the resulting alt meta.
-	 *
-	 * Manual-plan row: 33.02
 	 */
 	public function test_auto_ai_on_upload_generates_alt_when_setting_enabled() {
 		// Reset FIRST: resetPluginSingletons() reloads SettingsModel from the
@@ -131,8 +129,6 @@ class AiSettingsTest extends SPIO_IntegrationTestCase {
 	 * Verified behaviour: SettingsModel::__set() sanitises and marks dirty;
 	 * the shutdown-time write (or explicit save()) persists to the option row;
 	 * a fresh getInstance() re-reads all fields from the DB.
-	 *
-	 * Manual-plan row: 33.07
 	 */
 	public function test_ai_settings_fields_persist_after_save_and_plugin_reload() {
 		$settings = \wpSPIO()->settings();
@@ -174,8 +170,6 @@ class AiSettingsTest extends SPIO_IntegrationTestCase {
 	 * Verified behaviour: \wpSPIO()->settings()->autoAIBulk is a normal
 	 * SettingsModel field; setting it and saving must update the persisted
 	 * option so a reloaded singleton reads the new value.
-	 *
-	 * Manual-plan row: 33.03
 	 */
 	public function test_ai_bulk_switch_state_is_reflected_in_settings_after_toggle() {
 		// Start with autoAIBulk off.

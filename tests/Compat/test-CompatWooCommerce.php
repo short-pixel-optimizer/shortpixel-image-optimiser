@@ -1,6 +1,6 @@
 <?php
 /**
- * Cross-plugin compatibility: WooCommerce (Wave 3).
+ * Cross-plugin compatibility: WooCommerce.
  *
  * Runs with the REAL WooCommerce plugin active (bin/test.sh --compat
  * downloads + activates it). Covers class/external/Woocommerce.php:

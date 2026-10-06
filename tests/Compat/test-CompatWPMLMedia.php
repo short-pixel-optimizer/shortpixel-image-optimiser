@@ -203,7 +203,7 @@ class CompatWPMLMediaTest extends SPIO_IntegrationTestCase {
 	 * The WPML AI fan-out (addWpmlAiItemsToQueue) is keyed off
 	 * getWPMLDuplicates(); an own-file translation is not a duplicate, so
 	 * requestAlt on the original must queue ONLY the original (requestAlt
-	 * is exempt from the duplicate-active check since d55dbeca / #42).
+	 * is exempt from the duplicate-active check).
 	 */
 	public function test_requestalt_does_not_fan_out_to_own_file_translation() {
 		$id            = $this->uploadFixture( 'fixture-small.jpg' );

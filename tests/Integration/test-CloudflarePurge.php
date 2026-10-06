@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests: Cloudflare edge-cache purge (cross-plugin Wave 3).
+ * Integration tests: Cloudflare edge-cache purge (cross-plugin).
  *
  * class/external/cloudflare.php listens on `shortpixel/image/optimised`
  * and `shortpixel/image/before_restore` and POSTs a purge_cache request
@@ -216,7 +216,7 @@ PHP;
 	}
 
 	// -------------------------------------------------------------------
-	// Custom media helpers (shared between 15.2a and 15.2b)
+	// Custom media helpers (shared by the optimize and restore purge tests)
 	// -------------------------------------------------------------------
 
 	/**
@@ -266,7 +266,7 @@ PHP;
 	}
 
 	// -------------------------------------------------------------------
-	// 15.2a — custom-media optimize fires Cloudflare purge
+	// Custom-media optimize fires Cloudflare purge
 	// -------------------------------------------------------------------
 
 	/**
@@ -279,8 +279,6 @@ PHP;
 	 * instance so the purge hits the local server rather than the real
 	 * api.cloudflare.com.  The plugin's own (unconfigured) instance stays
 	 * a no-op throughout.
-	 *
-	 * Manual plan row 15.2a.
 	 *
 	 * @return void
 	 */
@@ -325,15 +323,13 @@ PHP;
 	}
 
 	// -------------------------------------------------------------------
-	// 15.2b — custom-media restore fires Cloudflare purge
+	// Custom-media restore fires Cloudflare purge
 	// -------------------------------------------------------------------
 
 	/**
 	 * Restoring a Custom Media image must fire a Cloudflare cache-purge
 	 * request via the shortpixel/image/before_restore hook before the
 	 * file reverts — the same hook fired for Media Library restores.
-	 *
-	 * Manual plan row 15.2b.
 	 *
 	 * @return void
 	 */

@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests: API failure scenarios (Wave 3).
+ * Integration tests: API failure scenarios.
  *
  * The real API signals errors via Status->Code inside an HTTP-200 JSON body
  * (ApiController::handleResponse). Transport failures surface as WP_Error

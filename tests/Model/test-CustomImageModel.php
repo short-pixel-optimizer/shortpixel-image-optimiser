@@ -135,8 +135,8 @@ class CustomImageModelTest extends WP_UnitTestCase {
 	 * filesystem-dependent methods (getURL etc.) have coherent state.
 	 *
 	 * Seeds tsAdded/tsOptimized to fixed integers. Production's saveMeta()
-	 * now null-coalesces both timestamps to `time()` (a7a0f8f9), so a null
-	 * no longer fatals under the class's `strict_types=1` — but seeding
+	 * null-coalesces both timestamps to `time()`, so a null
+	 * does not fatal under the class's `strict_types=1` — but seeding
 	 * keeps the stub deterministic instead of silently picking up "now".
 	 */
 	private function makeStubModel( ?string $path = null ): CustomImageModel {
@@ -494,7 +494,7 @@ class CustomImageModelTest extends WP_UnitTestCase {
 		$model = $this->makeStubModel();
 		$model->setMeta( 'customImprovement', 42 );
 
-		// Since 06fa42f7 (int-return fix): getImprovement() now has return type :int and
+		// getImprovement() has return type :int and
 		// applies intval() when the meta is numeric. A float like 42.5 is truncated
 		// to 42; use an integer value in the fixture to avoid ambiguity.
 		$this->assertIsInt( $model->getImprovement() );
@@ -509,7 +509,7 @@ class CustomImageModelTest extends WP_UnitTestCase {
 		// signature compatibility but ignored. A regression that started
 		// honoring $int (e.g. by returning byte savings) would return
 		// something other than 30 here.
-		// Since 06fa42f7 (int-return fix): return type is now int.
+		// Return type is int.
 		$this->assertSame( 30, $model->getImprovement( true ) );
 		$this->assertSame( 30, $model->getImprovement( false ) );
 	}
@@ -518,9 +518,8 @@ class CustomImageModelTest extends WP_UnitTestCase {
 		$model = $this->makeStubModel();
 		// customImprovement is null on a fresh ImageMeta.
 
-		// Since 06fa42f7 (int-return fix): getImprovement() now returns 0 (int) instead of
-		// null when customImprovement is not numeric.  The old assertNull assertion
-		// pinned the broken behaviour where null was returned and callers had to guard.
+		// getImprovement() returns 0 (int), not null, when customImprovement
+		// is not numeric, so callers need no null guard.
 		$this->assertSame( 0, $model->getImprovement() );
 	}
 
@@ -538,8 +537,8 @@ class CustomImageModelTest extends WP_UnitTestCase {
 		// Shape sentinel: keys must be `main` (tuple) + `totalpercentage`.
 		$this->assertArrayHasKey( 'main', $result );
 		$this->assertArrayHasKey( 'totalpercentage', $result );
-		// main[0] is the improvement value via getImprovement() — Since 06fa42f7 (int-return fix):
-		// now typed :int and intval(25)=25; main[1] is always 0 for custom images.
+		// main[0] is the improvement value via getImprovement() —
+		// typed :int and intval(25)=25; main[1] is always 0 for custom images.
 		$this->assertSame( array( 25, 0 ), $result['main'] );
 		// totalpercentage runs through round() which returns FLOAT in PHP,
 		// so the strict assertion needs 25.0 not 25.
@@ -552,9 +551,9 @@ class CustomImageModelTest extends WP_UnitTestCase {
 
 		$result = $model->getImprovements();
 
-		// Since 06fa42f7 (int-return fix): getImprovement() now returns 0 (int) directly
-		// when customImprovement is not numeric, so the old null-guard in getImprovements()
-		// was removed. The payload still correctly contains 0 in both cases.
+		// getImprovement() returns 0 (int) directly when customImprovement is
+		// not numeric, so getImprovements() needs no null-guard. The payload
+		// contains 0 in both cases.
 		$this->assertSame( array( 0, 0 ), $result['main'] );
 		// round(0) returns float 0.0.
 		$this->assertSame( 0.0, $result['totalpercentage'] );

@@ -26,7 +26,7 @@ export default defineConfig({
 	// No retries anywhere. A test that fails once and passes on retry is
 	// exactly the intermittent JS/timing problem this suite exists to catch,
 	// and Playwright counts such a "flaky" test as a PASS for the exit code —
-	// which let a real race hide behind a green CI run (2026-09-15). Failures
+	// which once let a real race hide behind a green CI run. Failures
 	// must go red the first time; fix the race, don't retry past it.
 	retries: 0,
 	forbidOnly: isCI,
@@ -44,8 +44,8 @@ export default defineConfig({
 			// image is pixel-stable run to run, so this only absorbs stray
 			// anti-aliasing. A ratio was too lax: 1% of a tall settings tab
 			// is ~24,000 pixels — enough to let a whole panel change (help
-			// text ↔ "30 %" dial) or a leftover banner strip pass unnoticed
-			// (2026-09-16). Per-pixel colour tolerance stays at the default.
+			// text ↔ "30 %" dial) or a leftover banner strip pass unnoticed.
+			// Per-pixel colour tolerance stays at the default.
 			maxDiffPixels: 100,
 			// Screenshot-only CSS: hides WP admin chrome and SPIO's parked
 			// off-screen save banner (see the file for why).
@@ -66,8 +66,8 @@ export default defineConfig({
 		// Recording every test and throwing the file away on success costs
 		// memory and CPU for the whole run. On a 2-core / 7 GB CI runner that
 		// overhead is a plausible trigger for WebKit's web process dying
-		// mid-navigation ("WebKit encountered an internal error", CI
-		// 2026-09-16) — unproven, but traces already carry the post-mortem
+		// mid-navigation ("WebKit encountered an internal error" on CI)
+		// — unproven, but traces already carry the post-mortem
 		// material, so the video is not worth the pressure there.
 		video: isCI ? 'off' : 'retain-on-failure',
 		actionTimeout: 15_000,

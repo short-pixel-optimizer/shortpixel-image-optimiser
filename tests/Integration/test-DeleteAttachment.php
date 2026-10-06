@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration tests: attachment deletion cleanup (Wave 2).
+ * Integration tests: attachment deletion cleanup.
  *
  * wp_delete_attachment() fires 'delete_attachment', which SPIO hooks at
  * priority 5 (AdminController::onDeleteAttachment). That routes into
