@@ -277,14 +277,9 @@ class QuotaController
     if ($validate) {
 
       $statsController = StatsController::getInstance();
-      $imageCount = $statsController->find('media', 'itemsTotal');
-      $thumbsCount = $statsController->find('media', 'thumbsTotal');
+      $args['body'] = array_merge($args['body'], $statsController->getDomainStats());
 
-      $args['body']['DomainCheck'] = get_site_url();
-      $args['body']['Info'] = get_bloginfo('version') . '|' . phpversion();
-      $args['body']['ImagesCount'] = $imageCount;
-      $args['body']['ThumbsCount'] = $thumbsCount;
-      $argsStr .= "&DomainCheck={$args['body']['DomainCheck']}&Info={$args['body']['Info']}&ImagesCount=$imageCount&ThumbsCount=$thumbsCount";
+      $argsStr .= "&DomainCheck={$args['body']['DomainCheck']}&Info={$args['body']['Info']}&ImagesCount={$args['body']['ImagesCount']}&ThumbsCount={$args['body']['ThumbsCount']}";
     }
 
     $args['body']['host'] = parse_url(get_site_url(), PHP_URL_HOST);

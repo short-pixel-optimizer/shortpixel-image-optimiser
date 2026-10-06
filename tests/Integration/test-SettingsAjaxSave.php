@@ -357,6 +357,66 @@ class SettingsAjaxSaveTest extends SPIO_AjaxTestCase {
 		}
 	}
 
+	/**
+	 * The "request a new key" sign-up sends the same site details as the API
+	 * key validation (StatsController::getDomainStats(), PR #198): site URL,
+	 * WordPress|PHP version and the Media Library image / thumbnail counts,
+	 * next to the e-mail and IP it always sent.
+	 */
+	public function test_key_request_sends_the_domain_stats_to_the_sign_up_endpoint() {
+		$this->_setRole( 'administrator' );
+		update_option( 'spio_key', array( 'apiKey' => '', 'verifiedKey' => false, 'apiKeyTried' => '' ) );
+		$this->resetPluginSingletons();
+		\wpSPIO()->settings()->redirectedSettings = 1;
+
+		$_POST    = array(
+			'nonce'         => wp_create_nonce( 'settings_request' ),
+			'sp-nonce'      => wp_create_nonce( 'save-settings' ),
+			'screen_action' => 'action_request_new_key',
+			'request_url'   => admin_url( 'options-general.php?page=wp-shortpixel-settings' ),
+			'pluginemail'   => 'signup-test@example.com',
+		);
+		$_REQUEST = $_POST;
+
+		$this->doAjax( 'shortpixel_settingsRequest' );
+
+		$signup = array_values( array_filter( $this->api->requests, function ( $r ) {
+			return false !== strpos( $r['url'], 'free-sign-up-plugin' );
+		} ) );
+		// SENTINEL: the sign-up request was really sent.
+		$this->assertCount( 1, $signup, 'Sentinel: exactly one sign-up request.' );
+		$body = $signup[0]['args']['body'];
+
+		$this->assertSame( 'signup-test@example.com', $body['email'] ?? null, 'The e-mail is sent.' );
+		$this->assertSame( get_site_url(), $body['DomainCheck'] ?? null, 'The site URL is sent.' );
+		$this->assertSame( get_bloginfo( 'version' ) . '|' . phpversion(), $body['Info'] ?? null, 'WordPress|PHP version is sent.' );
+		$this->assertArrayHasKey( 'ImagesCount', $body, 'The Media Library image count is sent.' );
+		$this->assertArrayHasKey( 'ThumbsCount', $body, 'The thumbnail count is sent.' );
+	}
+
+	/**
+	 * Refactor guard for PR #198: key validation (getRemoteQuota with
+	 * validate=true) still sends DomainCheck / Info / ImagesCount /
+	 * ThumbsCount in the POST body, with the values getDomainStats() returns.
+	 * (The same fields also go into a query string, used only by the GET
+	 * fallback when both POST attempts fail.)
+	 */
+	public function test_key_validation_still_sends_the_domain_stats() {
+		$quota = \ShortPixel\Controller\QuotaController::getInstance();
+		$quota->remoteValidateKey( str_repeat( 'b', 20 ) );
+
+		$status = array_values( array_filter( $this->api->requests, function ( $r ) {
+			return false !== strpos( $r['url'], 'api-status' );
+		} ) );
+		$this->assertNotEmpty( $status, 'Sentinel: the validation request was sent.' );
+		$req   = $status[0];
+		$stats = \ShortPixel\Controller\StatsController::getInstance()->getDomainStats();
+
+		foreach ( array( 'DomainCheck', 'Info', 'ImagesCount', 'ThumbsCount' ) as $field ) {
+			$this->assertEquals( $stats[ $field ], $req['args']['body'][ $field ] ?? null, "$field is in the body." );
+		}
+	}
+
 	// -------------------------------------------------------------------
 	// Quota is re-read after API key swap
 	// -------------------------------------------------------------------
