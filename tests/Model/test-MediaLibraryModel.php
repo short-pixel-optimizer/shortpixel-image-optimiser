@@ -1783,24 +1783,22 @@ class MediaLibraryModelTest extends WP_UnitTestCase {
 	}
 
 	/*
-	 * handleOptimized — thumbnail result key mismatch (re-queue loop).
+	 * handleOptimized — thumbnail results keyed by FILE NAME.
 	 *
 	 * When the request's returnParams ("returndatalist.sizes") is keyed by
-	 * FILE NAME — the shape addUnlisted() produces — while the model
+	 * file name — the shape addUnlisted() produces — while the model
 	 * handling the response has the same physical files keyed by registered
-	 * WP SIZE NAME, a plain isset($thumbObjs[$sizeName]) match drops every
-	 * already-paid-for thumbnail result with
-	 *   "Thumbnail with size name: X is not registered in this image."
-	 * Nothing is marked optimized, the item stays processable, and
-	 * OptimizeController re-queues it — so every bulk run repeats the whole
-	 * cycle and re-bills it.
+	 * WP SIZE NAME, a plain isset($thumbObjs[$sizeName]) match would drop
+	 * every already-paid-for thumbnail result ("Thumbnail with size name: X
+	 * is not registered in this image"), leave the item processable and let
+	 * OptimizeController re-queue and re-bill it on every bulk run.
+	 * handleOptimized therefore falls back to matching the thumbnail by file
+	 * name, which it already has as the VALUE of $data['sizes'].
 	 *
-	 * The pinned test below asserts the broken outcome, so it flips red
-	 * when the mismatch is handled — e.g. by falling back to the file name,
-	 * which handleOptimized already has as the VALUE of $data['sizes'].
-	 * The control test next to it sends the identical payload keyed by size
-	 * name and proves the fixture applies cleanly that way, so the pin
-	 * cannot pass for an unrelated reason.
+	 * The regression test below sends the file-name-keyed payload and
+	 * expects it applied; the control test next to it sends the identical
+	 * payload keyed by size name, so the two cannot pass for an unrelated
+	 * reason.
 	 */
 
 	/**
@@ -1891,7 +1889,7 @@ class MediaLibraryModelTest extends WP_UnitTestCase {
 		);
 	}
 
-	public function test_handleOptimized_discards_thumbnail_results_keyed_by_filename_pinned_for_deferred_fix() {
+	public function test_handleOptimized_applies_thumbnail_results_keyed_by_filename() {
 		$settings                = \wpSPIO()->settings();
 		$savedBackup             = $settings->backupImages;
 		$settings->backupImages  = false; // keep the apply path off the filesystem
@@ -1900,20 +1898,20 @@ class MediaLibraryModelTest extends WP_UnitTestCase {
 			list( $model, $thumbs ) = $this->makeModelWithRegisteredThumbs();
 			$payload                = $this->makeThumbResultPayload( $thumbs, true );
 
-			// Sentinel 1 (principle 5): the model really is keyed by size name,
-			// and really does NOT carry the file-name keys. If a future loader
-			// change added both spellings the mismatch would not occur and this
-			// test would silently stop testing anything.
+			// Sentinel 1: the model really is keyed by size name, and really does
+			// NOT carry the file-name keys. If a future loader change added both
+			// spellings the fallback would never be exercised and this test would
+			// silently stop testing anything.
 			$objKeys = array_keys( $this->invokeProtected( $model, 'getThumbObjects' ) );
 			$this->assertSame( array( 'thumbnail', 'medium' ), $objKeys );
 			foreach ( array_keys( $payload['data']['sizes'] ) as $sentKey ) {
 				$this->assertNotContains( $sentKey, $objKeys, 'Payload key must not already be a thumbnail key' );
 			}
 
-			// Sentinel 2 (principle 1 / 4): the keys must be distinct from the
-			// size names AND present in $files, otherwise the earlier
-			// `! isset($files[$sizeName])` continue would skip the loop body and
-			// the pin would pass without ever reaching the mismatch branch.
+			// Sentinel 2: the keys must be distinct from the size names AND
+			// present in $files, otherwise the earlier `! isset($files[$sizeName])`
+			// continue would skip the loop body and the test would never reach
+			// the fallback branch.
 			foreach ( $payload['data']['sizes'] as $sentKey => $fileName ) {
 				$this->assertArrayHasKey( $sentKey, $payload['files'] );
 				$this->assertStringEndsWith( '.png', $sentKey );
@@ -1928,14 +1926,13 @@ class MediaLibraryModelTest extends WP_UnitTestCase {
 
 			$model->handleOptimized( $payload );
 
-			// PIN: every result is dropped. When the mismatch is handled these
-			// assertions flip red — that is the signal to retire the pin.
+			// Every result is applied through the file-name fallback.
 			foreach ( $thumbs as $sizeName => $thumb ) {
-				$this->assertFalse(
+				$this->assertTrue(
 					$thumb->isOptimized(),
-					"Thumbnail $sizeName stayed unoptimized (bug); flip this pin when the key mismatch is handled"
+					"Thumbnail $sizeName must be optimized: the file-name-keyed result has to be matched by file name"
 				);
-				$this->assertNotSame( ImageModel::FILE_STATUS_SUCCESS, $thumb->getMeta( 'status' ) );
+				$this->assertSame( ImageModel::FILE_STATUS_SUCCESS, $thumb->getMeta( 'status' ) );
 			}
 		} finally {
 			$settings->backupImages = $savedBackup;
@@ -1956,8 +1953,8 @@ class MediaLibraryModelTest extends WP_UnitTestCase {
 
 			$model->handleOptimized( $payload );
 
-			// Control: proves the discard in the pin above is caused by the key
-			// spelling, not by the fixture, the settings or an early return.
+			// Control: the size-name-keyed payload applies without the fallback,
+			// so the test above cannot pass for a fixture or settings reason.
 			foreach ( $thumbs as $sizeName => $thumb ) {
 				$this->assertSame(
 					ImageModel::FILE_STATUS_SUCCESS,

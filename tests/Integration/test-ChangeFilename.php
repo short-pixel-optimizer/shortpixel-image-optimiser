@@ -1488,15 +1488,12 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	}
 
 	/**
-	 * Pins a known defect (no user-facing caller uses dry_run today): a
-	 * dry-run writes the NEW webp/avif names into ShortPixel's meta although
-	 * no file moves — setMeta() runs while building the rename plan and
-	 * saveMeta() after the copy loop; afterwards getWebp()/getAvif() point at
-	 * files that do not exist.
-	 * @todo Only setMeta()/saveMeta() when false === $args['dry_run'].
-	 * When fixed, this test fails; flip it: the stored names stay the same and still exist.
+	 * A dry-run leaves ShortPixel's meta alone: the NEW webp/avif names are
+	 * set while building the rename plan, but saveMeta() only runs when
+	 * files were really copied (never on a dry-run), so a fresh model still
+	 * names the existing files afterwards.
 	 */
-	public function test_pin_dry_run_writes_the_new_webp_avif_names_into_the_meta_pinned_for_deferred_fix() {
+	public function test_dry_run_keeps_the_stored_webp_avif_names() {
 		\wpSPIO()->settings()->createWebp = 1;
 		\wpSPIO()->settings()->createAvif = 1;
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
@@ -1513,9 +1510,10 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$after = $this->freshImageModel( $attachment_id );
 		// SENTINEL: the dry-run really left the files alone.
 		$this->assertFileExists( dirname( get_attached_file( $attachment_id ) ) . '/' . $webp, 'Sentinel: the original .webp is still on disk.' );
-		// THE PIN: the meta now names files that were never created.
-		$this->assertNotSame( $webp, (string) $after->getMeta( 'webp' ), 'PIN: fixed? A dry-run no longer changes the stored webp name — flip this pin (assertSame).' );
-		$this->assertFalse( $after->getWebp()->exists(), 'PIN: the stored webp name points at a missing file.' );
+		// The stored names are unchanged and still point at existing files.
+		$this->assertSame( $webp, (string) $after->getMeta( 'webp' ), 'A dry-run must not change the stored webp name.' );
+		$this->assertSame( $avif, (string) $after->getMeta( 'avif' ), 'A dry-run must not change the stored avif name.' );
+		$this->assertTrue( $after->getWebp()->exists(), 'The stored webp name points at a file that exists.' );
 	}
 
 	/**

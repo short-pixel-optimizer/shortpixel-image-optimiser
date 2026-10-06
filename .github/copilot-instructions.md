@@ -14,3 +14,6 @@ The three things most often got wrong here:
    check the test count in the output.
 3. Never edit `build/shortpixel/` — it is bundled/generated from the sibling
    `../modules/*` repos.
+4. No bug numbers in code, tests or docs — bug tracking is internal. Document
+   an open defect as a `@todo` (and a pinned test as
+   `test_<description>_pinned_for_deferred_fix`); do not mention fixed bugs.

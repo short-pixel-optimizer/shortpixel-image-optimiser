@@ -197,7 +197,9 @@ test.describe('Custom Media — pinned', () => {
 		await custom.confirmAdd();
 		await expect(custom.pickerModal.locator('.folder-message')).toBeVisible();
 
-		const notices = page.locator('.shortpixel-notice');
+		// Count inside the picker only: page-level notices (e.g. the review
+		// survey, once the install qualifies for it) must not skew the parity.
+		const notices = custom.pickerModal.locator('.shortpixel-notice');
 		const count = await notices.count();
 		// SENTINEL: at least one notice was rendered at all.
 		expect(count, 'sentinel: the rejection produced a notice').toBeGreaterThan(0);

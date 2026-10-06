@@ -66,3 +66,9 @@ vendor-tests/bin/phpcs --standard=phpcs-security.xml <file>
 - Test files are `tests/**/test-<ClassName>.php`; test classes are `<Name>Test`.
 - Controllers and models are singletons — use `getInstance()`.
 - The plugin version lives in `wp-shortpixel.php`; do not copy it elsewhere.
+- **No bug numbers in the repo.** Bug tracking is internal; never write
+  `BUG #42`, `pin42`, commit hashes as history, dates or names into code,
+  tests or docs. A known open defect is a `@todo` in the nearest docblock
+  (what, where, suggested fix); a test pinning it is named
+  `test_<description>_pinned_for_deferred_fix`. A fixed bug is not mentioned
+  at all. See the "Known bugs and @todo" section of `CLAUDE.md`.

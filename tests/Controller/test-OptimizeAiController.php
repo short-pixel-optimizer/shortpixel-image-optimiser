@@ -763,6 +763,7 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 			public function getFileBase() { return $this->fileBase; }
 			public function getImageKey( $key ) { return 'main'; }
 			public function isScaled() { return false; }
+			public function getURL() { return $this->spyBaseUrl . $this->spyFilename; }
 			public function getAllFiles() {
 				return [ 'files' => [ 'main' => $this->fileObj ], 'webp' => [], 'avif' => [] ];
 			}
@@ -956,6 +957,7 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 			public function getFileBase() { return $this->fileBase; }
 			public function getImageKey( $key ) { return 'main'; }
 			public function isScaled() { return false; }
+			public function getURL() { return $this->inner->getURL(); }
 			public function getAllFiles() {
 				return [ 'files' => [ 'main' => $this->fileObj ], 'webp' => [], 'avif' => [] ];
 			}
@@ -1041,15 +1043,13 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 			'A failed rename must not record a replaced_url for the editor.'
 		);
 
-		// Pins a known defect: saveMeta() runs right after the copy loop,
-		// BEFORE the "copy failed to copy anything" bail-out — so when every
-		// copy fails, ShortPixel's meta is still saved with the NEW webp/avif
-		// names set while building the plan (files that were never created).
-		// Fix: save the meta after that bail-out. When fixed, expect 0 calls.
+		// The meta is only saved when at least one copy succeeded, so the NEW
+		// webp/avif names set while building the plan (files that were never
+		// created) do not reach ShortPixel's meta.
 		$this->assertSame(
-			1,
+			0,
 			$model->saveMetaCalls,
-			'PIN: fixed? saveMeta() is no longer called when every copy failed — flip this to assertSame( 0, … ).'
+			'saveMeta() must not run when every copy failed.'
 		);
 
 		// Clean up.

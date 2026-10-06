@@ -136,3 +136,19 @@ build/shortpixel/     - Bundled vendor modules (do not edit directly)
 - **Queue system:** Image optimization runs through `shortq` queue library (in `build/shortpixel/shortq/`), orchestrated by `QueueController` and `MediaLibraryQueue`/`CustomQueue`
 - **Two image pipelines:** Media Library images (`MediaLibraryModel`) and Custom/other images (`CustomImageModel`) have separate models but share `ImageModel` base logic
 - **Frontend delivery:** `FrontController` → `PictureController`/`PageConverter` handles real-time WebP/AVIF `<picture>` tag injection and CDN URL replacement
+
+## Known bugs and @todo (no bug numbers in the repo)
+
+Bug tracking is internal (Asana), and its numbering must never appear in the
+code, tests or docs — no `BUG #42`, `pin42`, `regression42`, commit hashes as
+history, review dates or people's names. This holds until bug tracking moves
+to GitHub issues; only then may a public issue reference be used.
+
+- A known, not-yet-fixed defect is documented with a `@todo` in the nearest
+  docblock (`// @todo` inline, `# @todo` in shell/YAML): what is wrong, where,
+  and the suggested fix if known. Present tense, no number, no date.
+- A test that pins such a defect is named `test_<description>_pinned_for_deferred_fix`
+  and its docblock describes the defect and how to recognise the fix.
+- A fixed bug needs no mention at all. Keep only the reason the code is the way
+  it is, in the present tense (e.g. "the guard runs on the sanitised value so
+  that…"), never the history ("fixed in abc1234", "used to…").

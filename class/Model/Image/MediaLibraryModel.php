@@ -963,6 +963,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			$resultData = $files[$sizeName];
 			$thumbnail = (isset($thumbObjs[$sizeName])) ? $thumbObjs[$sizeName] : false;
 
+			// Results keyed by FILE NAME (the shape addUnlisted() requests) instead
+			// of size name: match the thumbnail by its file name, otherwise every
+			// paid-for result would be dropped and the item re-queued.
 			if (! is_object($thumbnail)) {
 				foreach ($thumbObjs as $candidateObj) {
 					if ($candidateObj->getFileName() === $fileName) { $thumbnail = $candidateObj; break; }

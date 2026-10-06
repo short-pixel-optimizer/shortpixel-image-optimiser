@@ -8,3 +8,5 @@ Key rules:
   exits 0 — always check the test count.
 - --filter takes a CLASS name, not a file path.
 - Never edit build/shortpixel/ (bundled/generated from ../modules/*).
+- No bug numbers in code, tests or docs (bug tracking is internal): open
+  defects are @todo notes; pinned tests end in _pinned_for_deferred_fix.

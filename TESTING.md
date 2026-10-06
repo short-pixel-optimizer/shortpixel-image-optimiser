@@ -666,7 +666,8 @@ uploaded per engine.
 - Use the existing test-file headers as templates. Each declares a focus-areas section, a skipped-at-unit-level section (integration territory), and reflection helpers where private members need inspection.
 - For SPIO's own database tables (`shortpixel_meta`, `shortpixel_folders`, `shortpixel_postmeta`), call `InstallHelper::checkTables()` in `set_up()` — plugin activation hooks don't fire in the WP test harness. See `tests/Model/test-DirectoryOtherMediaModel.php` for the canonical pattern.
 - Settings mutation: snapshot in `set_up()`, restore in `tear_down()`. See `tests/Model/test-PNGConverter.php` for the pattern.
-- Pinned regression tests: suffix the method name with `_pinned_for_deferred_fix` and include a docblock referencing the bug's file:line so it's grep-able.
+- Pinned regression tests: suffix the method name with `_pinned_for_deferred_fix` and include a docblock that describes the defect, where it lives (file and function) and how to recognise the fix, so it's grep-able.
+- No bug numbers, ever: bug tracking is internal and its numbering stays out of the repo (no `BUG #42`, `pin42`, `regression42`, commit hashes as history, dates or names in test names, docblocks or assertion messages). A known open defect is described in words and, in production code, as a `@todo`; a fixed bug is not mentioned at all. See the "Known bugs and @todo" section of `CLAUDE.md`.
 
 ## Troubleshooting
 
