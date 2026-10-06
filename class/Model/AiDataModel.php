@@ -647,7 +647,7 @@ class AiDataModel
      */
     private function isExifProcessable()
     {
-        // Change: Exif processing changed on API, allowing this - https://app.asana.com/1/18694759100379/project/1200110778640816/task/1213564895578597
+        // Change: Exif processing changed on API, allowing this.
         return true;
     }
 

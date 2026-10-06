@@ -218,8 +218,7 @@ class cacheRemover
      * WP Super Cache flush — currently DEAD CODE. The caller branch
      * in `flushCache()` is commented out (with a note "Verified
      * working without.") so this method is never reached. Left in
-     * place in case supercache changes behaviour upstream. Flagged in
-     * the deferred-root-bugs memo.
+     * place in case supercache changes behaviour upstream.
      *
      * @return void
      */

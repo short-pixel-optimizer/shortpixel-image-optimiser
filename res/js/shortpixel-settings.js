@@ -674,7 +674,7 @@ class ShortPixelSettings {
 		event.preventDefault();
 		var chatBot = document.getElementById('chatbase-bubble-button');
 		// Cancelable MouseEvent rather than CustomEvent('click'), same as the
-		// quick tour (bug #72): a non-cancelable synthetic click can trigger
+		// quick tour: a non-cancelable synthetic click can trigger
 		// default activation in WebKit.
 		var event = new MouseEvent('click', { bubbles: true, cancelable: true });
 		chatBot.dispatchEvent(event);

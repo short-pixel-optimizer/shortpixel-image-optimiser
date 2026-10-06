@@ -26,13 +26,13 @@ use ShortPixel\Notices\NoticeController as Notice;
  * Wired up by AdminController on the `network_admin_menu` hook when the site
  * is part of a multisite network.
  *
- * TEMPLATE NOTE (e4d1d0a8, 2026-08-28): view-network-settings.php was removed
- * and the shared view-settings.php is used instead — the network-specific
+ * TEMPLATE NOTE: there is no separate network template; the shared
+ * view-settings.php is used — the network-specific
  * bits (Network Control tab, hidden routing input) are conditional on
  * $this->is_network_page = true.
  *
  * ROUTING NOTE: AjaxController::settingsFormSubmit() selects this controller
- * when the client posts is_network_admin=true. See the bug #41 pins in
+ * when the client posts is_network_admin=true. See
  * tests/Multisite/test-MultisiteNetworkSave.php for the security limits of
  * that mechanism.
  *
@@ -46,7 +46,7 @@ class MultiSiteViewController extends SettingsViewController
       /** @var string Nonce action name for the network settings form. */
       protected $form_action = 'save-multi-settings';
       /*
-       * Since e4d1d0a8 (2026-08-28) $all_display_parts is INHERITED from
+       * $all_display_parts is INHERITED from
        * SettingsViewController (overview/optimisation/exclusions/processing/
        * webp/ai/integrations/debug/tools/help) and only the 'network' entry
        * is appended in the constructor. The previous redeclaration lived
@@ -294,15 +294,13 @@ class MultiSiteViewController extends SettingsViewController
        * `$_POST['request_url']` when this controller has been selected via the
        * `is_network_admin` routing flag.
        *
-       * Idempotency guard (bug #49, fixed 2026-09-01 by ccde551a): since
-       * e4d1d0a8 request_url is captured from window.location on the client,
-       * which on a network-admin page ALREADY contains '/wp-admin/network/'.
-       * The rewrite therefore runs only when the incoming URL does NOT
-       * already carry '/wp-admin/network/' — without that guard the
-       * unconditional str_replace produced '/wp-admin/network/network/…',
-       * breaking the redirect after saving network settings. Regression test:
-       * tests/Multisite/test-Multisite.php::
-       * test_setControllerURL_is_idempotent_for_network_admin_urls_regression_49.
+       * Idempotency guard: request_url is captured from window.location on
+       * the client, which on a network-admin page ALREADY contains
+       * '/wp-admin/network/'. The rewrite therefore runs only when the
+       * incoming URL does NOT already carry '/wp-admin/network/' — without
+       * that guard the str_replace would produce '/wp-admin/network/network/…',
+       * breaking the redirect after saving network settings. Covered by
+       * tests/Multisite/test-Multisite.php.
        *
        * @param string $url The URL captured from the request; typically an /wp-admin/ URL.
        * @return void

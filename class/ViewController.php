@@ -103,7 +103,7 @@ class ViewController extends Controller
    * and store the submitted fields. Returns false and terminates execution on a
    * hard nonce failure; returns true silently when no POST data is present.
    *
-   * PRIVACY NOTE (added e4d1d0a8): on success and on failure this method
+   * PRIVACY NOTE: on success and on failure this method
    * dumps the FULL $_POST array into the debug log via Log::addInfo. Settings
    * form submissions include the API key input on the site settings screen,
    * so the shortpixel debug log can end up containing that key value in

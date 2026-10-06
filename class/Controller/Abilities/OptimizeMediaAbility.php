@@ -19,7 +19,7 @@ use ShortPixel\Model\Image\ImageModel;
  * the response reports progress and the agent can call
  * shortpixel/run-queue to continue processing.
  *
- * Access model: ItemAccessGuard::denyIfNotEditable() (since c91cd01c) runs
+ * Access model: ItemAccessGuard::denyIfNotEditable() runs
  * before the queue is touched, so an unauthorised MCP call never spends
  * quota or enqueues work
  *

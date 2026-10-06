@@ -16,10 +16,10 @@ use ShortPixel\Controller\QueueController;
  * Destructive and non-reversible. Does not consume optimization credits.
  * Processing is asynchronous — call shortpixel/run-queue until queues empty.
  *
- * Permission: gated on userCanManage (manage_options) since c83f344d —
- * this used to accept editors (userCanOptimize), which was too weak for a
- * site-wide destructive action. Editors can still bulk-optimize; only
- * bulk-restore and bulk-undo-ai-seo were tightened
+ * Permission: gated on userCanManage (manage_options) — editors
+ * (userCanOptimize) is too weak for a site-wide destructive action.
+ * Editors can still bulk-optimize; only bulk-restore and bulk-undo-ai-seo
+ * are admin-only
  *
  * @package ShortPixel\Controller\Abilities
  */

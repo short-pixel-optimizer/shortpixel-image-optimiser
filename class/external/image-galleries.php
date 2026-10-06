@@ -30,7 +30,9 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
  * The commented-out `SHORTPIXEL_CUSTOM_THUMB_SUFFIXES` block in
  * `addConstants()` is legacy scaffolding from the pre-filter days
  * when suffixes were configured via a constant. Kept in place as a
- * migration marker; safe to delete when Bas confirms.
+ * migration marker.
+ *
+ * @todo Remove `addConstants()` once nothing relies on the constant.
  *
  * Self-boots at file-load time (no singleton wrapper).
  */

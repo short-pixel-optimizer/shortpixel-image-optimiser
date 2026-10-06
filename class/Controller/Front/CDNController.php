@@ -43,8 +43,7 @@ use ShortPixel\Replacer\Replacer as Replacer;
  *
  * CDN argument format: '+'-separated tokens assembled by createArguments(),
  * e.g. "ret_img+q_cdnize+to_webp+s_webp" prefixed to the host-stripped URL
- * (delimiter switched from ',' to '+' for bug #55 — raw commas broke naive
- * srcset parsers).
+ * ('+' rather than ',' because raw commas break naive srcset parsers).
  */
 class CDNController extends \ShortPixel\Controller\Front\PageConverter
 {
@@ -846,18 +845,17 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 	 * are moved to the end of the returned array so the shorter, absolute-URL
 	 * variants are replaced first.
 	 *
-	 * BUG #55 (FIXED 2026-09-03): CDN arguments were previously joined with a
-	 * raw ',' — harmless in WHATWG-conformant browser srcset parsers (URL token
-	 * = run of non-whitespace; commas mid-token do not split), but naive
-	 * comma-splitting crawlers (SEO tools, indexers, link checkers) shattered
+	 * CDN arguments are joined with '+', not ','. A raw ',' is harmless in
+	 * WHATWG-conformant browser srcset parsers (URL token = run of
+	 * non-whitespace; commas mid-token do not split), but naive
+	 * comma-splitting crawlers (SEO tools, indexers, link checkers) shatter
 	 * each srcset URL into fragments like `s_webp/host/img.jpg 1031w`, which
-	 * resolve to broken relative URLs and generate 404 floods (one customer
-	 * report: 62k logged 404s). The delimiter is now '+': verified against the
-	 * live spcdn.shortpixel.ai CDN (2026-09-03) as byte-identical to the comma
-	 * form including correct WebP content negotiation; legal in URL paths per
-	 * RFC 3986 and NOT decoded to space there (only in query strings). See
+	 * resolve to broken relative URLs and generate 404 floods. The CDN treats
+	 * '+' as equivalent to the comma form (including WebP content
+	 * negotiation); '+' is legal in URL paths per RFC 3986 and NOT decoded to
+	 * space there (only in query strings). See
 	 * tests/Controller/test-CDNController.php for a WHATWG srcset-parser
-	 * demonstration and regression tests.
+	 * demonstration.
 	 *
 	 * @param \stdClass[] $replaceBlocks Replace-block objects with url, parsed, and args set.
 	 * @return \stdClass[] Same blocks with replace_url populated; relative-URL blocks appended last.

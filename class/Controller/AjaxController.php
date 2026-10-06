@@ -534,13 +534,11 @@ class AjaxController
 	 * form), `action_addkey`, `action_debug_*`, `action_request_new_key`,
 	 * `action_end_quick_tour`.  Any other value logs an error and exits with '0'.
 	 *
-	 * Since e4d1d0a8 the network-vs-site view controller is selected by
+	 * The network-vs-site view controller is selected by
 	 * `$_POST['is_network_admin']` inside `settingsFormSubmit()`; the
 	 * `$screen_action` here is only the action-method name and the
 	 * `checkActionAccess` gate. The `$isM = is_multisite();` local below is
-	 * currently DEAD (never read); it was left in place by the routing rework
-	 * pending Bas's follow-up on bug #41 (per-branch multisite capability
-	 * gate).
+	 * currently DEAD (never read).
 	 *
 	 * @return void
 	 */
@@ -587,7 +585,7 @@ class AjaxController
 	/**
 	 * Delegate a settings form action to the settings view controller.
 	 *
-	 * ROUTING (updated e4d1d0a8, 2026-08-28): the controller class is chosen
+	 * ROUTING: the controller class is chosen
 	 * from the client-supplied `$_POST['is_network_admin']` flag rather than
 	 * from `$action`. The flag is set by shortpixel-settings.js when the
 	 * hidden `<input name="is_network_admin" value="1">` in view-settings.php
@@ -595,15 +593,11 @@ class AjaxController
 	 * When present -> `MultiSiteViewController`; when absent ->
 	 * `SettingsViewController`.
 	 *
-	 * SECURITY (bug #41, FIXED in 8520324e): the routing flag is still
-	 * CLIENT input, but the network branch now runs
+	 * SECURITY: the routing flag is CLIENT input, so the network branch runs
 	 * checkActionAccess($action, 'is_super_admin') — 'manage_network' on
-	 * multisite — before instantiating MultiSiteViewController, so posting
-	 * the flag without super-admin rights yields NO_ACCESS and exits. See
-	 * the paired regression tests in
-	 * tests/Multisite/test-MultisiteNetworkSave.php
-	 * (test_pin41_flipped_regular_admin_is_refused_network_save_regression_41
-	 * and test_pin41_flipped_client_flag_alone_no_longer_reaches_network_save_regression_41).
+	 * multisite — before instantiating MultiSiteViewController; posting
+	 * the flag without super-admin rights yields NO_ACCESS and exits.
+	 * Covered by tests/Multisite/test-MultisiteNetworkSave.php.
 	 *
 	 * The view controller is marked as processing an AJAX save, its redirect
 	 * URL is set from `$_POST['request_url']`, and the named `$action` method
@@ -617,7 +611,7 @@ class AjaxController
 	 * request does fall through — e.g. an invalid `$action` on a controller
 	 * that also has no matching save side-effect — this raw exit dumps the
 	 * literal string into the ajax response body and would kill the PHPUnit
-	 * runner mid-suite (see 2026-08-31 ms false-green investigation).
+	 * runner mid-suite.
 	 *
 	 * @param string $action The action method name to invoke on the view controller.
 	 * @return void  Always exits.
@@ -1366,24 +1360,23 @@ class AjaxController
 	 * not revert filename changes), but also works standalone on attachments with
 	 * no AI data. Reads `$_POST['newFileName']`, loads the image model with an
 	 * access check, and delegates to OptimizeAiController::ajax_replaceFile().
-	 * Since 8b625159 (the #77 fix) it answers like the queue: the result
+	 * It answers like the queue: the result
 	 * (is_done, is_error, message, item_id, apiName='ai') is in
 	 * $json->media->results[0] and the request's 'callback'
 	 * ('ShortPixelMedia.reloadWindow') is echoed, so the JS listener reloads
 	 * only when is_error is false and otherwise shows the message under the
-	 * filename field. Conflict and real failures still share "Files were not
-	 * replaced". The input-validation rejections below still send the old
-	 * flat object WITHOUT the callback, so the listener never fires and the
-	 * user gets no feedback on an empty or too-short name (OPEN, unnumbered,
-	 * 2026-09-25).
+	 * filename field. Conflict and real failures share "Files were not
+	 * replaced".
 	 *
-	 * BUG #50 fixed (202c6e3c): the strlen<3 guard below runs on the
-	 * SANITISED value, so empty and sanitised-to-empty/short names are
-	 * rejected before any rename (previously they produced extension-only
-	 * '.jpg' dotfiles). Regression-tested in
-	 * tests/Integration/test-ChangeFilename.php (test_regression50_*).
+	 * The strlen<3 guard below runs on the SANITISED value, so empty and
+	 * sanitised-to-empty/short names are rejected before any rename
+	 * (otherwise they would produce extension-only '.jpg' dotfiles).
 	 * Note: the rejection reuses the generic "This image could not be
 	 * loaded" message alongside the specific 'error' text.
+	 *
+	 * @todo The input-validation rejections below send a flat object WITHOUT
+	 *       the callback, so the JS listener never fires and the user gets no
+	 *       feedback on an empty or too-short name.
 	 *
 	 * @param object $json Base JSON response (carries the echoed callback).
 	 * @param array  $data Dispatch data: 'id' (attachment id) and 'type' ('media').
@@ -1549,12 +1542,11 @@ class AjaxController
 	 * - `type` string 'media' or 'custom'.
 	 *
 	 * Marks the queue slot with undoAltDataAction() ('undoAltData' action —
-	 * required so handleReplace() applies the exact-match undo branch, see
-	 * ba9fc3ef) and calls OptimizeAiController::undoAltData() directly.
+	 * required so handleReplace() applies the exact-match undo branch) and
+	 * calls OptimizeAiController::undoAltData() directly.
 	 *
 	 * Returns (for 'undo'):
-	 * - `$json->$type`  mixed  The QueueItem result object (since ba9fc3ef;
-	 *                          previously the raw alt-data array).
+	 * - `$json->$type`  mixed  The QueueItem result object.
 	 * - `$json->status` bool   true.
 	 *
 	 * @param \stdClass $json JSON accumulator object.

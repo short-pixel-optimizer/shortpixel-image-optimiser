@@ -18,14 +18,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * heavy operations (thumbnail generation, unlisted-file scans, retina
  * detection) don't try to touch a local disk that doesn't exist.
  *
- * BUG #70 (open, HIGH; same family as #68): this adapter has NO handling
- * for SPIO's file rename (OptimizeAiController::replaceFiles() — AI
- * filename + manual "Change Filename"), and no hook exists it could
- * answer. On a stateless install every FileModel::move() fails silently
- * yet the DB/metadata rewrite still runs and success is reported — the
- * attachment ends up referencing a filename that exists neither locally
- * nor on the remote bucket. Pinned in
- * tests/Integration/test-VirtualFilesystemRename.php (test_pin70_*).
+ * This adapter has NO handling for SPIO's file rename
+ * (OptimizeAiController::replaceFiles() — AI filename + manual "Change
+ * Filename"), so replaceFiles() refuses to rename virtual images on these
+ * offloaders (see OptimizeAiController::isVirtualSupported()).
  *
  * @package ShortPixel\External\Offload
  */
@@ -70,9 +66,7 @@ class VirtualFileSystem
 		 *
 		 * Only fires the VIRTUAL_STATELESS return for the `s3-uploads-human`
 		 * offloader. Any other offloader falls through to the file_exists
-		 * probe below. (Prior to 399b29e2 the first `if` used `=` instead
-		 * of `===`, silently rewriting `$this->offloadName` on every call
-		 * and returning VIRTUAL_STATELESS unconditionally.)
+		 * probe below.
 		 *
 		 * @param bool   $bool    Existing filter value from prior handlers.
 		 * @param string $url     URL being checked.

@@ -131,8 +131,8 @@ class FrontImage
 	 *      `<source>` for cases where the fragment came from a `<picture>`
 	 *      block. Bails out on truly malformed inputs.
 	 *   4. Iterates the element's attributes, PRESERVING empty/value-less
-	 *      attributes as the empty string '' (efbd5ac9 — the old algorithm
-	 *      dropped them, losing boolean flags like data-no-lazy / nopin).
+	 *      attributes as the empty string '' (so boolean flags like
+	 *      data-no-lazy / nopin survive).
 	 *      Assigns to the declared property when one exists; always stores
 	 *      on `$attributes` for later reconstruction. Iteration order is the
 	 *      DOM insertion order, which buildImage() then reuses.
@@ -168,7 +168,7 @@ class FrontImage
 		// $attributes = array();
 
 		/* This can happen with mismatches, or extremely malformed HTML.
-        In customer case, a javascript that did  for (i<imgDefer) --- </script> */
+        E.g. inline javascript that did  for (i<imgDefer) --- </script> */
 		if (! is_object($image)) {
 			$source = $dom->getElementsByTagName('source')->item(0);
 			if (null == $source) {
@@ -471,8 +471,8 @@ class FrontImage
 	/**
 	 * Rebuild the original `<img>` element preserving DOM insertion order.
 	 *
-	 * Rewritten in efbd5ac9 to iterate the original $attributes map rather
-	 * than a fixed list of standard attributes. Rules:
+	 * Iterates the original $attributes map rather than a fixed list of
+	 * standard attributes. Rules:
 	 *   - Iterate $attributes in the order populated by loadImageDom() (DOM
 	 *     insertion order — so the emitted tag keeps the source ordering,
 	 *     load-bearing for post_content byte-stability checks after AI runs).
@@ -485,20 +485,16 @@ class FrontImage
 	 *   - Empty / value-less attributes are emitted as BARE booleans (no
 	 *     ="") — this preserves data-no-lazy, nopin, etc. through a
 	 *     parse+rebuild cycle. EXCEPTION: `alt` is always emitted with the
-	 *     `="..."` form even when empty (`alt=""`), per ff2305e4 — bare
+	 *     `="..."` form even when empty (`alt=""`) — bare
 	 *     `alt` is invalid HTML and breaks screen-reader compatibility.
 	 *   - If the original had no `alt`, one is appended as `alt=""` before
 	 *     the tag closes.
-	 *   - The tag ends with a bare `>` — no trailing ` >` (that produced
-	 *     visible whitespace in some renderers before this rewrite).
+	 *   - The tag ends with a bare `>` — no trailing ` >` (that produces
+	 *     visible whitespace in some renderers).
 	 *
 	 * Also invoked by the frontend WebP/AVIF delivery pipeline via
 	 * parseReplacement() (picture fallback img) — regressions here affect
 	 * every <picture>-wrapped image on the frontend as well.
-	 *
-	 * BUG? The Log::addTemp() call inside the loop is a debug leftover that
-	 * fires on every rebuilt <img> attribute on the frontend delivery hot
-	 * path — reported to Bas separately for removal.
 	 *
 	 * @return string The `<img ...>` markup, ending in a bare `>`.
 	 */
@@ -572,9 +568,9 @@ class FrontImage
 	 * `sizes`, plus the standard-attribute set (id, alt, height, width,
 	 * srcset, sizes, class).
 	 *
-	 * Since efbd5ac9, buildImage() emits ALL attributes (including the
+	 * buildImage() emits ALL attributes (including the
 	 * deny-listed ones) via its insertion-order loop over $attributes —
-	 * getImageAttributes()'s deny-list is now redundant for buildImage()'s
+	 * getImageAttributes()'s deny-list is redundant for buildImage()'s
 	 * primary loop. It remains in use for the trailing "leftover" pass that
 	 * appends attributes NOT seen in the original DOM (edge case where a
 	 * property was set post-parse on an attribute that never existed).

@@ -78,12 +78,12 @@ class QueueItemResult implements JsonSerializable
     * Per-post map of the AI content actually written into post_content by
     * replaceImageAttributes(): [post_id => ['alt' => string|false, 'caption' => string|false]].
     * Lets editor UIs (Gutenberg) apply exactly what was replaced instead of
-    * the raw aiData. It defaults to [] (not null); since ffde74bf
+    * the raw aiData. It defaults to [] (not null);
     * forReturn() drops empty arrays, so the key is ABSENT from the JSON
     * payload until something was replaced — JS consumers must guard
     * `resultItem.replaced_content` before reading from it.
     *
-    * Since a5ad9805 the SAME map also carries one string key, 'replaced_url'
+    * The SAME map also carries one string key, 'replaced_url'
     * (the new file URL), set by OptimizeAiController::replaceFiles() after an
     * AI filename rename — consumers iterating the map must skip non-numeric
     * keys. The Gutenberg consumer reads both by the editor's current post id
@@ -183,8 +183,8 @@ class QueueItemResult implements JsonSerializable
     * Produce the compact response object: every declared field whose value is
     * non-null and not an empty array, cast to an object.
     *
-    * Uses UtilHelper::arrayFilterNullValues to strip unset keys, and (since
-    * ffde74bf) UtilHelper::arrayFilterEmptyArrays to strip empty arrays, so
+    * Uses UtilHelper::arrayFilterNullValues to strip unset keys, and
+    * UtilHelper::arrayFilterEmptyArrays to strip empty arrays, so
     * the JS client only sees fields the pipeline actually populated. Note a
     * field that was explicitly set to [] (files, aiData, data,
     * replaced_content) is therefore absent rather than empty.

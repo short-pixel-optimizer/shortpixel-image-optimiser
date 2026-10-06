@@ -47,14 +47,10 @@ use ShortPixel\Controller\ResponseController as ResponseController;
  *     rewriting files and doesn't want as3cf to react to intermediate
  *     states.
  *
- * BUG #68 (open, HIGH): this class has NO handling for SPIO's file
- * renaming (OptimizeAiController::replaceFiles() — AI filename + manual
- * "Change Filename"). A rename moves local files and rewrites all DB
- * URLs but the as3cf item keeps the old remote key, so offloaded
- * attachments 404 after a rename (remote-only installs end up with a
- * name that exists nowhere). The only healing path is a restore
- * (`image_restore` re-syncs the bucket). Pinned in
- * tests/Compat/test-CompatOffloadMedia.php (test_pin68_*).
+ * SPIO's file renaming (OptimizeAiController::replaceFiles() — AI
+ * filename + manual "Change Filename") renames the provider objects
+ * through replaceFiles() below, so the as3cf item keeps matching the
+ * renamed local files and DB URLs.
  *
  * The class is a singleton bound to the as3cf instance; only
  * `Offloader::initS3Offload()` is expected to call `getInstance()`.
@@ -86,13 +82,13 @@ class wpOffload
 	/** @var bool When true, `preventInitialUploadHandler` blocks as3cf from uploading; cleared during SPIO's own upload flow. */
 	protected $shouldPrevent = true; // if offload should be prevented. This is turned off when SPIO want to tell S3 to offload. Better than removing filter.
 
-	/** @var mixed Reserved / unused — declared but never assigned; flagged in the deferred-root-bugs memo. */
+	/** @var mixed Reserved / unused — declared but never assigned. */
 	protected $settings;
 
-	/** @var bool Reserved / unused — declared but never assigned; flagged in the deferred-root-bugs memo. */
+	/** @var bool Reserved / unused — declared but never assigned. */
 	protected $is_cname = false;
 
-	/** @var mixed Reserved / unused — declared but never assigned; flagged in the deferred-root-bugs memo. */
+	/** @var mixed Reserved / unused — declared but never assigned. */
 	protected $cname;
 
 	/** @var array<string, int|false> Cache for URL → source_id lookup (`sourceCache`); avoids duplicate DB queries during a request. */
@@ -101,7 +97,7 @@ class wpOffload
 	/** @var array<int, array<string, string>> Per-source_id cache of size-slug → path mappings (`add_webp_paths` / `getLocalPathByURL`). */
 	private static $paths = [];
 
-	/** @var array Reserved / unused — declared but never assigned; flagged in the deferred-root-bugs memo. */
+	/** @var array Reserved / unused — declared but never assigned. */
 	private static $itemCache = [];
 
 	/** @var array<int, true> Set of attachment ids for which offload is currently prevented (via `preventOffload`). */
@@ -450,7 +446,7 @@ class wpOffload
 	/**
 	 * Rename the provider objects belonging to an attachment.
 	 *
-	 * Hooked on `shortpixel/image/replace_files` (1d61b243), which
+	 * Hooked on `shortpixel/image/replace_files`, which
 	 * OptimizeAiController::replaceFiles() applies before its local copy
 	 * loop. The optimizer already has the complete source file list,
 	 * including thumbnails and WebP/AVIF companions. Accept that list
@@ -464,58 +460,29 @@ class wpOffload
 	 * the old keys (delete_objects), and saves the item with the renamed
 	 * objects and path.
 	 *
-	 * NOTES (review 2026-09-18) — BUG #73 (open, HIGH), pinned in
-	 * tests/External/Offload/test-wpOffload.php and
-	 * tests/Integration/test-ChangeFilename.php:
-	 *   - #73(e) FIXED in 31c93f71 (2026-09-28): $renames used each file's
-	 *     OWN base, so every thumbnail's recorded source_file became the MAIN
-	 *     new name. It now replaces the original's base ($fileBaseName), and
-	 *     the item's path / original_path are looked up per file in $renames
-	 *     (the scaled file and the original keep their own names). Regression:
-	 *     test_successful_rename_preserves_thumbnail_source_filename_suffix.
-	 *   - WPML (31c93f71): the as3cf items of getWPMLDuplicates() siblings are
-	 *     resolved BEFORE the primary item changes and saved with the same
-	 *     renamed objects/paths (the bucket objects are shared, copied once).
-	 *     Test: test_wpml_duplicate_offload_item_metadata_tracks_shared_rename;
-	 *   - #73(a) FIXED: when this returns true, replaceFiles() now carries on
-	 *     to the WordPress metadata / backup / content steps for local+remote
-	 *     images (e165198f) and remote-only images (88b2bcfe) alike.
-	 *   - #73(b) STILL OPEN: it also returns true when NO provider object
-	 *     matched (`empty($keyRenames)`), e.g. an item without objects. Since
-	 *     the (a) fix, replaceFiles() trusts that "handled" in both layouts:
-	 *     local+remote → local files and _wp_attached_file move while the item
-	 *     keeps its OLD key (the original BUG #68 desync); remote-only →
-	 *     success is reported and WordPress is rewritten to a filename that
-	 *     exists nowhere. Both pinned in tests/Compat/test-CompatOffloadMedia.php.
-	 *     Fix: return false here;
-	 *   - get_provider_client() / copy_objects() exceptions are not caught
-	 *     (the unconfigured Null_Provider throws; so can a real client with
-	 *     bad credentials) — the rename request crashes;
-	 *   - BUG #76 (split out of #73 on 2026-09-24): the copy requests set
-	 *     'ACL' => 'public-read' for every object. SOME ACL is needed — S3
-	 *     CopyObject does not carry the source ACL over and MetadataDirective
-	 *     COPY preserves metadata, not permissions, so without one the copies
-	 *     turn private and renamed images 403 on public-ACL buckets. But a
-	 *     fixed value ignores the rule WP Offload Media applies to its own
-	 *     uploads (classes/items/upload-handler.php): private ACL for private
-	 *     objects, get_default_acl() otherwise, and NO ACL at all unless
-	 *     $this->as3cf->use_acl_for_intermediate_size() says the bucket accepts
-	 *     one. Result: private media becomes public after a rename, and buckets
-	 *     with ACLs disabled / Block Public Access (AWS defaults for new
-	 *     buckets) reject the copy. Pinned in tests/External/Offload/test-wpOffload.php
-	 *     (test_pin76_*); the fix was verified against those stubs.
-	 *     3bc80619 (2026-09-28) added the right rule but in the wrong place:
-	 *     it runs AFTER copy_objects()/delete_objects(), writes the ACL into
-	 *     a local $request that is never sent, and reads $objectKey left over
-	 *     from the last loop iteration. The copies still go out with the fixed
-	 *     'public-read', so both pins stay green. The rule has to be applied
-	 *     per object when $copyRequests is built (per objectKey: set 'ACL' to
-	 *     the private/default ACL only when use_acl_for_intermediate_size()
-	 *     allows one, otherwise omit the key).
+	 * Notes:
+	 *   - $renames replaces the original's base ($fileBaseName) in every
+	 *     file name, and the item's path / original_path are looked up per
+	 *     file in $renames (the scaled file and the original keep their own
+	 *     names, thumbnails keep their size suffix).
+	 *   - WPML: the as3cf items of getWPMLDuplicates() siblings are resolved
+	 *     BEFORE the primary item changes and saved with the same renamed
+	 *     objects/paths (the bucket objects are shared, copied once).
+	 *   - S3 CopyObject does not carry the source ACL over, so each copy
+	 *     request gets the private/default ACL, applying WP Offload Media's
+	 *     own use_acl_for_intermediate_size() rule.
 	 *   - Local files are not renamed here; replaceFiles() renames the local
-	 *     copies itself when the image is not virtual (since e165198f).
+	 *     copies itself when the image is not virtual.
 	 *
-	 * Dry run (e165198f): with $dry_run true the copy/delete requests are
+	 * @todo It also returns true when NO provider object matched
+	 *       (`empty($keyRenames)`), which replaceFiles() treats as "handled":
+	 *       the item keeps its old key (local+remote) or WordPress is pointed
+	 *       at a filename that exists nowhere (remote-only). Return false there.
+	 * @todo get_provider_client() / copy_objects() exceptions are not caught
+	 *       (the unconfigured Null_Provider throws; so can a real client with
+	 *       bad credentials) — the rename request crashes.
+	 *
+	 * Dry run: with $dry_run true the copy/delete requests are
 	 * only logged and the item is not saved, but the method still returns
 	 * true — replaceFiles() then returns false for every dry-run anyway.
 	 *

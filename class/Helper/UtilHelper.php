@@ -174,7 +174,7 @@ class UtilHelper
   /**
    * array_filter callback: keeps every value except an empty array.
    *
-   * Used by QueueItemResult::forReturn() (ffde74bf) so empty array fields
+   * Used by QueueItemResult::forReturn() so empty array fields
    * are left out of the JSON response. Non-array values, including empty
    * strings, 0 and false, are kept.
    *

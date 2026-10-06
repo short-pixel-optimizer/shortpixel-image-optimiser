@@ -2277,11 +2277,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	 *
 	 * The legacy `_icl_lang_duplicate_of` fallback has been removed.
 	 *
-	 * $returnalldata (faa1e4cc): instead of sibling ids, return a map
+	 * $returnalldata: instead of sibling ids, return a map
 	 * `element_id => ['language_code' => …, 'is_main_language' => bool]`
 	 * that INCLUDES this item itself; is_main_language is true for the row
 	 * without a source_language_code. HandleSuccess() uses it to run the AI
-	 * rename for the main language only (the #74 fix). Only the WPML branch
+	 * rename for the main language only. Only the WPML branch
 	 * fills the map — Polylang siblings are never included, so for Polylang
 	 * every language still triggers its own AI rename of the shared file
 	 * (no duplicate files, since Polylang has no delete guard: the last
@@ -2291,8 +2291,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	 *
 	 * The same-file check compares against this item's CURRENT attached file,
 	 * so it must be called BEFORE this item's _wp_attached_file is rewritten;
-	 * OptimizeAiController::replaceFiles() does so since 11aa2065 (the BUG #69
-	 * WPML fix — called afterwards it found no WPML siblings).
+	 * OptimizeAiController::replaceFiles() does so (called afterwards it
+	 * finds no WPML siblings).
 	 *
 	 * @param bool $returnalldata Return the per-language map (self included) instead of sibling ids.
 	 * @return int[]|array Deduplicated sibling ids (never contains $this->id), or the map described above.
@@ -3732,7 +3732,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	 *     scans each attachment once.
 	 *   - Virtual attachments skip the scan unless heavy virtual functions
 	 *     are enabled — scandir() on an offloaded directory is expensive.
-	 *   - Trusted mode skips the scan entirely (d45e95ca): the method is
+	 *   - Trusted mode skips the scan entirely: the method is
 	 *     heavy on file operations, which trusted mode exists to avoid.
 	 *
 	 * The matched files are filtered against $currentFiles (main + all

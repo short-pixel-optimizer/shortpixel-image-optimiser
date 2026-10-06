@@ -16,7 +16,7 @@ use ShortPixel\Controller\QueueController;
  * (customOp=bulk-undoAI). Does not consume credits. Filename renames are
  * not reversed. Custom Media is not supported.
  *
- * Permission: gated on userCanManage (manage_options) since c83f344d —
+ * Permission: gated on userCanManage (manage_options) —
  * wiping AI SEO metadata site-wide is destructive and must not be
  * available to editors (userCanOptimize)
  *

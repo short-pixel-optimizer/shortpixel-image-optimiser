@@ -18,11 +18,11 @@ use ShortPixel\Controller\QuotaController;
  * AI is selected. Consumes AI credits. Asynchronous: call run-queue until
  * queues empty. Custom Media is not supported.
  *
- * Queue-scope note (c82c9817): does NOT call
+ * Queue-scope note: does NOT call
  * QueueController::resetQueues(). Same rationale as BulkOptimizeAbility —
  * the AI bulk owns only the media (bulk) queue, and wiping the three
  * unrelated queues (mediaSingle, custom, customSingle) as a "safety
- * reset" was silently dropping other work in flight
+ * reset" would silently drop other work in flight
  *
  * @package ShortPixel\Controller\Abilities
  */

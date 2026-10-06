@@ -315,10 +315,9 @@ class BulkViewController extends \ShortPixel\ViewController
    *
    * Each text cell ($date, $message, $filename) is esc_html'd at build time
    * so the caller-side echo in view/bulk/part-finished.php and
-   * part-process.php (which was intentionally un-escaped in 50719048 to let
+   * part-process.php (which is intentionally un-escaped to let
    * the kbinfo <span>/<a> markup render) stays XSS-safe. The kbinfo markup
-   * built below is left raw by design. (Regression test:
-   * test_loadCurrentLog_escapes_filename_and_message_cells; fix 042cb64a.)
+   * built below is left raw by design.
    *
    * @param string $type 'media' or 'custom'. Default 'media'.
    * @return string|false Formatted HTML log output, or false when no log is present.

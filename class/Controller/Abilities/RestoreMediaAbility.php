@@ -15,7 +15,7 @@ use ShortPixel\Controller\Queue\QueueItems;
  * ShortPixel backup. Mirrors the WP-CLI `wp spio restore` command.
  * Restore operations do not consume optimization credits.
  *
- * Access model: ItemAccessGuard::denyIfNotEditable() (since c91cd01c) runs
+ * Access model: ItemAccessGuard::denyIfNotEditable() runs
  * before isOptimized() / hasBackup() checks — that ordering is important:
  * it stops information disclosure ("this attachment exists AND has a
  * backup") to callers who cannot edit the attachment

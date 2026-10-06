@@ -40,10 +40,8 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
  * handler logs a warning and skips the purge — the rest of the plugin
  * continues normally.
  *
- * NOTE: leftover scaffolding remains in `start_cloudflare_cache_purge_process`
- * (unused `$prepare_request_info` / `$dispatch_purge_info` — flagged in
- * the deferred-bugs memo). The dead legacy `use_token = false` /
- * email+authkey branch in `addAuth()` was removed in 399b29e2.
+ * @todo Remove the leftover scaffolding in `start_cloudflare_cache_purge_process`
+ *       (unused `$prepare_request_info` / `$dispatch_purge_info`).
  *
  * @package ShortPixel
  */
@@ -152,8 +150,8 @@ class CloudFlareAPI {
      * Custom-media items (`type === 'custom'`) skip step 3 entirely
      * — CustomImageModel doesn't have originals/thumbnails.
      *
-     * Legacy scaffolding still in this method (called out in the
-     * class docblock's `@todo` and the deferred-bugs memo):
+     * Legacy scaffolding still in this method (see the class
+     * docblock's `@todo`):
      *   - `$prepare_request_info` — declared array, never populated,
      *     never sent.
      *   - `$dispatch_purge_info`  — encoded once from an empty
@@ -245,9 +243,7 @@ class CloudFlareAPI {
      * Attach Cloudflare Bearer auth header to an outgoing request.
      *
      * Adds `Authorization: Bearer <token>` — the only supported auth
-     * mode. The legacy v1 email + auth-key branch was removed in
-     * 399b29e2 (it referenced undeclared `$this->email` / `$this->authkey`
-     * properties and was structurally unreachable anyway).
+     * mode.
      *
      * @param array $headers Existing header map (`slug => "Header: value"` shape).
      * @return array Header map with the auth entry added.

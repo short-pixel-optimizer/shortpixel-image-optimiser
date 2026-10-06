@@ -156,7 +156,7 @@ class SpioCommandBase
 	 * ---
 	 *
 	 * [--action=<action>]
-	 * : Queue action to run for the item (e165198f). Common values: optimize,
+	 * : Queue action to run for the item. Common values: optimize,
 	 * reoptimize, restore, requestAlt (generate AI Image SEO data),
 	 * undoAltData (undo AI Image SEO). Passed to
 	 * QueueController::addItemToQueue() after sanitize_text_field() only —
@@ -749,10 +749,10 @@ class SpioCommandBase
 	 *
 	 * Called from three places (`run` at the end, `SpioBulk::create`
 	 * at the end, `SpioSingle::restore` mid-way). Every one of those
-	 * calls silently does nothing. The `@todo` in-line acknowledges
-	 * it's deferred. Flagged in the deferred-root-bugs memo — either
-	 * wire the ResponseController path (uncomment the body) or remove
-	 * the calls and this method together.
+	 * calls silently does nothing.
+	 *
+	 * @todo Either wire the ResponseController path (uncomment the body)
+	 *       or remove the calls and this method together.
 	 *
 	 * @return false Always false.
 	 */

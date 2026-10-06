@@ -17,7 +17,7 @@ use ShortPixel\Controller\QuotaController;
  * ShortPixel credits. Processing is asynchronous — call
  * shortpixel/run-queue until queues empty.
  *
- * Queue-scope note (c82c9817): does NOT call
+ * Queue-scope note: does NOT call
  * QueueController::resetQueues() before creating the bulk. resetQueues()
  * wipes all four queue instances (media, mediaSingle, custom,
  * customSingle), which would silently discard any single-image

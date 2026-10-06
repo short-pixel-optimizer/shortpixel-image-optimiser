@@ -88,12 +88,8 @@ class QuotaController
    *                        `ai` — AI credits are a separate pool.
    *
    * The legacy-data provision below calls forceCheckRemoteQuota() and
-   * re-fetches. A typo (fixed 2026-09-21) used to assign the result to
-   * `$quotData` instead of `$quotaData`, so the refresh was discarded and the
-   * stale non-numeric value reached number_format() → TypeError on PHP 8,
-   * i.e. it crashed on exactly the case it exists to prevent. Regression
-   * test: test_getQuota_refreshes_legacy_non_numeric_quota_from_the_api
-   * (tests/Controller/test-QuotaController.php).
+   * re-fetches into `$quotaData`, so a stale non-numeric value never reaches
+   * number_format() (a TypeError on PHP 8).
    *
    * @return object quotadata SPIO format
    */
@@ -217,10 +213,9 @@ class QuotaController
    *
    * POSTs to /v2/api-status.php over the protocol from
    * EnvironmentModel::getRequestProtocol() — the `shortpixel/env/httpProto`
-   * filter, 'https' by default (30359b9e; the old hidden httpProto /
-   * downloadProto settings are gone). Two fallbacks on transport failure:
+   * filter, 'https' by default. Two fallbacks on transport failure:
    * the protocol is flipped (https↔http) for a retry — for this request
-   * only, nothing is persisted any more — then a final wp_remote_get with
+   * only, nothing is persisted — then a final wp_remote_get with
    * the arguments moved into the query string.
    *
    * Every failure mode — WP_Error, non-200, unparseable body, or a Status

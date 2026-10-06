@@ -296,7 +296,6 @@ class SpioBulk extends SpioCommandBase
 	 * (`wp spio bulk restore <start-id> <end-id> [--type=<type>]`)
 	 * but the method body is a stub. Kept commented rather than
 	 * deleted so re-implementation has the option surface handy.
-	 * Flagged in the deferred-root-bugs memo.
 	 */
 	/**
 	 * ## OPTIONS

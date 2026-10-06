@@ -22,9 +22,8 @@ use ShortPixel\Notices\NoticeController as Notice;
  * returns true — but since nothing hooks and nothing responds, the
  * integration is effectively a no-op.
  *
- * Either the InfiniteUploads support is unfinished / deferred, or the
- * whole class should be removed together with its dispatch line in
- * `Offloader`. Flagged for triage in the deferred-root-bugs memo.
+ * @todo Either finish the InfiniteUploads support, or remove the whole
+ *       class together with its dispatch line in `Offloader`.
  *
  * @package ShortPixel\External\Offload
  */

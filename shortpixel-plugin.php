@@ -182,16 +182,14 @@ class ShortPixelPlugin {
 	 * see the conflict-deactivator link and the feedback prompt.
 	 *
 	 * The feedback-popup gate loads only for admin users whose key is
-	 * unverified OR who have fewer than 4000 credits — the "true ||"
-	 * debug shortcut that was making it load unconditionally was
-	 * removed in 399b29e2.
+	 * unverified OR who have fewer than 4000 credits.
 	 *
-	 * LOGGER INIT (moved here in a31087a1, 2026-08-28): ShortPixelLogger is
+	 * LOGGER INIT: ShortPixelLogger is
 	 * spun up on `init` instead of at plugin-file load time. The multisite
 	 * user-level debug check in ShortPixelLogger::debugIsActive() reads
 	 * user meta, which is not safe to touch before the WP user layer is
-	 * ready — the previous ordering caused a fatal on multisite. The
-	 * matching block in wp-shortpixel.php is now commented out.
+	 * ready — loading it earlier causes a fatal on multisite. The
+	 * matching block in wp-shortpixel.php is commented out.
 	 *
 	 * @return void
 	 */

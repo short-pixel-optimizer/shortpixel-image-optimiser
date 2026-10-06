@@ -320,7 +320,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 		} else {
 			// We can't trust higher lever function, or any WP functions.  I.e. Woocommerce messes with the URL's if they like so.
 			// So get it from intermediate and if that doesn't work, default to pathToUrl - better than nothing.
-			// https://app.asana.com/0/1200110778640816/1202589533659780
 			$size_array = image_get_intermediate_size($this->id, $this->size);
 
 			if ($size_array === false || ! isset($size_array['url'])) {

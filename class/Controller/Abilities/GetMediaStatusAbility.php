@@ -13,7 +13,7 @@ use ShortPixel\Model\Image\ImageModel;
  * Returns the optimization status of a single image by ID.
  * Supports both media library and custom media types.
  *
- * Access model: ItemAccessGuard::denyIfNotEditable() (since c91cd01c) runs
+ * Access model: ItemAccessGuard::denyIfNotEditable() runs
  * after the image model is loaded — even a read of another user's image is
  * gated by the same edit_post/edit_others_posts capability check as the
  * classic AjaxController status handlers, so listing status doesn't

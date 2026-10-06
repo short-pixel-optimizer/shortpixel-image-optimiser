@@ -17,7 +17,7 @@ use ShortPixel\Model\Queue\QueueItem;
  * Filename renames performed by AI are not reversed. Custom Media is not
  * supported.
  *
- * Access model: ItemAccessGuard::denyIfNotEditable() (since c91cd01c) runs
+ * Access model: ItemAccessGuard::denyIfNotEditable() runs
  * before AiDataModel::undoAltData(), so an unauthorised caller cannot
  * revert another author's AI metadata by guessing an id
  *

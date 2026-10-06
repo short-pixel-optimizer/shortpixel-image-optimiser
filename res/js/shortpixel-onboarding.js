@@ -331,8 +331,8 @@ class ShortPixelOnboarding
            // Must be a CANCELABLE MouseEvent, never `new CustomEvent('click')`:
            // the target is a real <a href="…&part=<tab>">, and WebKit (Safari)
            // runs a link's activation for a non-cancelable synthetic click —
-           // the page reloaded and the tour restarted at step 0 forever
-           // (bug #72, fixed 0db02498). SwitchMenuTabEvent's preventDefault()
+           // the page reloads and the tour restarts at step 0 forever.
+           // SwitchMenuTabEvent's preventDefault()
            // only takes effect on a cancelable event.
            var ev = new MouseEvent('click', { bubbles: true, cancelable: true });
 

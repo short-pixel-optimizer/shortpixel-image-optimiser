@@ -280,20 +280,17 @@ class QueueItem
 
 
    /**
-    * Schedule this slot to undo (revert) AI-generated alt data (ba9fc3ef).
+    * Schedule this slot to undo (revert) AI-generated alt data.
     *
     * The 'undoAltData' action gates handleReplace()'s exact-match restore
     * branch. item_count is 0 — no credits are consumed.
     *
-    * BUG #61 FIXED (fc86de1a): getApiController() below and
-    * OptimizeAiController::sendToProcessing() now both dispatch on
-    * 'undoAltData' (renamed from 'undoAI'), so bulk undo items revert again.
-    * Single-item AJAX undo bypasses the dispatch: AjaxController calls
+    * getApiController() below and OptimizeAiController::sendToProcessing()
+    * both dispatch on 'undoAltData' (bulk undo). Single-item AJAX undo
+    * bypasses the dispatch: AjaxController calls
     * OptimizeAiController::undoAltData() directly after this setter.
-    * BUG #71 FIXED (4a1b7a91): the bulk undo result no longer flows into
-    * HandleSuccess() (handleAPIResult early-returns for 'undoAltData'), so
-    * the record resurrection + double-extension renames are gone; the bulk
-    * path works end-to-end (regression test in test-BulkOptimization.php).
+    * The bulk undo result does not flow into HandleSuccess()
+    * (handleAPIResult early-returns for 'undoAltData').
     *
     * @return void
     */

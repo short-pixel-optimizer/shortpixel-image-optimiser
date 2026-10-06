@@ -558,8 +558,8 @@ class AbilitiesController
 	 * Used by: shortpixel/get-settings, shortpixel/update-settings,
 	 * shortpixel/bulk-restore, shortpixel/bulk-undo-ai-seo.
 	 *
-	 * Bulk restore + bulk undo-ai-seo were tightened from userCanOptimize to
-	 * userCanManage in c83f344d: an editor should be able to optimize
+	 * Bulk restore + bulk undo-ai-seo use userCanManage rather than
+	 * userCanOptimize: an editor should be able to optimize
 	 * everyone's images (that mirrors the SPIO bulk page), but purging
 	 * backups site-wide or wiping AI SEO metadata site-wide are admin-only
 	 * destructive actions

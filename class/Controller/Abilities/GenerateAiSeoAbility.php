@@ -20,7 +20,7 @@ use ShortPixel\Model\AiDataModel;
  * retrieveAlt): if it does not finish in one call, use run-queue.
  * Consumes AI credits. Custom Media is not supported.
  *
- * Access model: ItemAccessGuard::denyIfNotEditable() (since c91cd01c) runs
+ * Access model: ItemAccessGuard::denyIfNotEditable() runs
  * after the image model loads and before AiDataModel is touched — no
  * AI credits are spent on attachments the caller cannot edit
  *
