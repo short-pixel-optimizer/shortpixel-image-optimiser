@@ -277,7 +277,7 @@ if (this.ShouldLog()) {
     },
     LoadWorker: function()
     {
-        if (window.Worker)
+        if (window.Worker && false === this.isUnloading)
         {
             var ajaxURL = ShortPixel.AJAX_URL;
             var nonce = '';
@@ -304,6 +304,19 @@ if (this.ShouldLog()) {
     MarkUnloading: function()
     {
         this.isUnloading = true;
+        // Nothing may start a request from here on: a poll timer firing
+        // mid-navigation would recreate the worker that ShutDownWorker()
+        // just discarded, which WebKit refuses ("access control checks").
+        if (this.timer)
+        {
+            window.clearTimeout(this.timer);
+            this.timer = null;
+        }
+        if (this.timer_recheckactive)
+        {
+            window.clearTimeout(this.timer_recheckactive);
+            this.timer_recheckactive = null;
+        }
     },
     ShutDownWorker: function()
     {
@@ -324,6 +337,10 @@ if (this.ShouldLog()) {
 				{
            this.LoadWorker(); // JIT worker loading
 				}
+        if (this.worker === null) // page is unloading (or no Worker support)
+        {
+           return;
+        }
 
         this.worker.postMessage({action: 'process', 'nonce' : this.nonce['process']});
     },
@@ -759,6 +776,10 @@ if (this.ShouldLog()) {
       {
          this.LoadWorker(); // JIT worker loading
       }
+      if (this.worker === null) // page is unloading (or no Worker support)
+      {
+         return;
+      }
 
        var localWorker = false;
        this.worker.postMessage({action: 'ajaxRequest', 'nonce' : this.nonce['ajaxRequest'], 'data': data });
@@ -768,6 +789,10 @@ if (this.ShouldLog()) {
 			if (this.worker === null)
 			{
 				 this.LoadWorker(); // JIT worker loading
+			}
+			if (this.worker === null) // page is unloading (or no Worker support)
+			{
+				 return;
 			}
 
 			 var localWorker = false;
