@@ -644,6 +644,13 @@ to do with SPIO, and every such skip needs a sentinel in
   swap and a leftover banner strip pass on a tall tab.
 - `--update-snapshots` only rewrites a PNG that fails the comparison. To be
   sure a baseline reflects the current page, delete the PNG and regenerate.
+- Baselines must match a FRESH install of the latest WordPress, which is what
+  CI provisions. The official image copies core into the `e2e-wp-core` volume
+  only when it is empty, so `bin/test-e2e.sh` compares the core version in the
+  volume with the pulled image before every run and re-provisions the site
+  (DB + core, node_modules kept) when they differ. A different WordPress
+  version changes the admin CSS enough to fail every baseline by a pixel; if
+  visual fails locally but CI is green, that is the first thing to check.
 - A failing comparison uploads expected / actual / diff PNGs in the HTML
   report. If the change was intended, refresh with
   `bin/test-e2e.sh --project visual --update-snapshots` and review the PNG

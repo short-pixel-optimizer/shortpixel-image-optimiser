@@ -135,6 +135,24 @@ fi
 # --- Images ---------------------------------------------------------------
 pull_images
 
+# --- Keep the WordPress core volume in step with the image ------------------
+# The official image copies WordPress into the wp-core volume only when that
+# volume is EMPTY, so a pulled core update never reaches an existing local
+# stack: it keeps serving the old core while CI provisions the new one, and
+# the admin CSS of the two versions lays text out differently, failing every
+# visual baseline (seen with a 7.1.1 volume against CI's 7.1.2). Compare the
+# two and start the site over when they differ (node_modules are kept).
+image_wp=$(docker run --rm --entrypoint sh "wordpress:$E2E_WP_TAG" -c "grep -o \"wp_version = '[^']*'\" /usr/src/wordpress/wp-includes/version.php" 2>/dev/null | cut -d"'" -f2)
+volume_wp=""
+if docker volume inspect spio-e2e_e2e-wp-core >/dev/null 2>&1; then
+    volume_wp=$(docker run --rm -v spio-e2e_e2e-wp-core:/wp:ro --entrypoint sh "wordpress:$E2E_WP_TAG" -c "grep -o \"wp_version = '[^']*'\" /wp/wp-includes/version.php" 2>/dev/null | cut -d"'" -f2)
+fi
+if [ -n "$image_wp" ] && [ -n "$volume_wp" ] && [ "$image_wp" != "$volume_wp" ]; then
+    echo "==> WordPress $volume_wp in the local volume, $image_wp in the image: re-provisioning the site (DB + core) so it matches CI..."
+    "${COMPOSE[@]}" down --remove-orphans
+    docker volume rm spio-e2e_e2e-wp-core spio-e2e_e2e-mysql
+fi
+
 # --- Bring the site up -------------------------------------------------
 echo "==> Starting MySQL + WordPress ($E2E_WP_TAG)..."
 "${COMPOSE[@]}" up -d --wait wordpress
