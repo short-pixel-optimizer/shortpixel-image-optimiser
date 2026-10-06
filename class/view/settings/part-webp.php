@@ -33,6 +33,24 @@ if( $this->is_nginx ){
         }
     } elseif (isset($_SERVER['HTTP_USER_AGENT']) && strpos( wp_unslash($_SERVER['HTTP_USER_AGENT']), 'Chrome') !== false) {
         // Show a message about the risks and caveats of serving WEBP images via .htaccess
+        //
+        // @todo This capability check only proves that a swap happens: the
+        // browser loads res/img/test.jpg and the served variant renders either
+        // "can" or "can not". It reads no response header, so a server that
+        // switches format without sending Vary: Accept - which lets a shared
+        // cache hand one visitor's format to everyone - passes the check. The
+        // outcome is shown to the admin rather than stored or acted on, and it
+        // renders for Chrome user agents only.
+        // Suggested fix: from the settings page, fetch a test image twice -
+        // once with an Accept header allowing AVIF and WebP, once with
+        // "Accept: image/jpeg" - and read Content-Type and Vary from both.
+        // That records three facts: the swap works, Vary carries Accept, and a
+        // client asking for JPEG still gets JPEG. Running each pair with and
+        // without a cache-busting query separates a wrong rule from a stale
+        // copy held by a CDN. Store the verdict, warn when delivery runs
+        // without Vary, and probe a file in the uploads folder, which has its
+        // own .htaccess, rather than a plugin asset. The asset set also needs
+        // a test.jpg.avif to cover the appended-extension layout.
         $deliverWebpUnalteredLabel = '<span style="color: initial;">'. esc_html__('Based on testing your particular hosting configuration, we determined that your server','shortpixel-image-optimiser').
             '&nbsp;<img alt="can or can not" src="'. esc_url(plugins_url( 'res/img/test.jpg' , SHORTPIXEL_PLUGIN_FILE)) .'">&nbsp;'.
             esc_html__('serve the WebP or AVIF versions of the JPEG files seamlessly, via .htaccess.','shortpixel-image-optimiser').' <a href="https://shortpixel.com/knowledge-base/article/delivering-webp-images-via-htaccess/?utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings" target="_blank" data-beacon-article="5c1d050e04286304a71d9ce4">' . esc_html__('Open article to read more about this.', 'shortpixel-image-optimiser') . '</a></span>';

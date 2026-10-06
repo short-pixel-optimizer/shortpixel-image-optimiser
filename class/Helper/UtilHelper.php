@@ -454,11 +454,15 @@ class UtilHelper
    * "shortpixel/install/write_deep_htaccess" filter) also to the uploads and
    * wp-content .htaccess files with an inherited-rules preamble. The rules
    * serve pre-generated .avif or .webp files to browsers that advertise
-   * support, and set appropriate Vary and Cache-Control headers.
+   * support, set Cache-Control on the variants, and append Vary: Accept to
+   * every image response so shared caches key on the negotiated format.
    *
    * Both flags are passed together (rather than one-at-a-time) because previous
    * versions of the plugin may have generated files of either format, so both
    * rule sets are always written when any next-gen delivery is enabled.
+   *
+   * The finished block passes through the "shortpixel/install/htaccess_rules"
+   * filter, so a site can adapt it to its server or CDN.
    *
    * @param bool $webp Whether WebP delivery is enabled. Default false.
    * @param bool $avif Whether AVIF delivery is enabled. Default false.
@@ -497,6 +501,8 @@ class UtilHelper
            # Does the browser support avif?
            RewriteCond %{HTTP_ACCEPT} image/avif
            # AND is the request a JPG, PNG, or WebP? (no GIFs because the animation is sometimes lost in AVIF);
+		   # WebP is included on purpose: an .avif only exists when it came out smaller, so
+		   # serving it also pays off for WebP files uploaded straight to the media library.
 		   # (also grab the basepath %1 to match in the next rule)
            RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png|webp)$
            # AND does a .avif image exist?
@@ -516,10 +522,7 @@ class UtilHelper
 
            </IfModule>
            <IfModule mod_headers.c>
-           # If REDIRECT_avif env var exists, append Accept to the Vary header
-           Header append Vary Accept env=REDIRECT_avif
-
-           <FilesMatch ".(webp)$">
+           <FilesMatch "\.(avif)$">
                Header set Cache-Control "max-age=31536000, public"
            </FilesMatch>
            </IfModule>
@@ -532,14 +535,10 @@ class UtilHelper
            <IfModule mod_rewrite.c>
              RewriteEngine On
              ##### TRY FIRST the file appended with .webp (ex. test.jpg.webp) #####
-             # Is the browser Chrome?
-             RewriteCond %{HTTP_USER_AGENT} Chrome [OR]
-             # OR Is this request from Page Speed
-             RewriteCond %{HTTP_USER_AGENT} "Google Page Speed Insights" [OR]
-             # OR does this browser explicitly support webp
+             # Does the browser support webp? Only the Accept header decides: a
+             # user-agent match would also hand webp to a client that asked for
+             # "Accept: image/jpeg", and no Vary value can describe that.
              RewriteCond %{HTTP_ACCEPT} image/webp
-             # AND NOT MS EDGE 42/17 - doesnt work.
-             RewriteCond %{HTTP_USER_AGENT} !Edge/17
              # AND is the request a jpg, png, or gif?
              RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png|gif)$
              # AND does a .ext.webp image exist?
@@ -547,10 +546,7 @@ class UtilHelper
              # THEN send the webp image and set the env var webp
              RewriteRule ^(.+)$ $1.webp [NC,T=image/webp,E=webp,L]
              ##### IF NOT, try the file with replaced extension (test.webp) #####
-             RewriteCond %{HTTP_USER_AGENT} Chrome [OR]
-             RewriteCond %{HTTP_USER_AGENT} "Google Page Speed Insights" [OR]
              RewriteCond %{HTTP_ACCEPT} image/webp
-             RewriteCond %{HTTP_USER_AGENT} !Edge/17
              # AND is the request a jpg, png, or gif? (also grab the basepath %1 to match in the next rule)
              RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png|gif)$
              # AND does a .webp image exist?
@@ -559,9 +555,7 @@ class UtilHelper
              RewriteRule (.+)\.(?:jpe?g|png|gif)$ $1.webp [NC,T=image/webp,E=webp,L]
            </IfModule>
            <IfModule mod_headers.c>
-             # If REDIRECT_webp env var exists, append Accept to the Vary header
-             Header append Vary Accept env=REDIRECT_webp
-             <FilesMatch ".(avif)$">
+             <FilesMatch "\.(webp)$">
                Header set Cache-Control "max-age=31536000, public"
              </FilesMatch>
            </IfModule>
@@ -570,11 +564,47 @@ class UtilHelper
            </IfModule>
            ';
 
+      // Vary is emitted once for the whole mechanism, not per format: two
+      // appends would produce "Vary: Accept, Accept". It is unconditional
+      // because the rules above pick a format from the Accept header, so
+      // every response they can affect varies on it - including the
+      // untouched JPEG, which a shared cache must not reuse for a client
+      // that would have received AVIF or WebP. Gating this on the env var
+      // set by the RewriteRule only works on Apache, which renames it to
+      // REDIRECT_*; other servers reading these rules never send the header.
+      $vary_rules = '
+           <IfModule mod_headers.c>
+             <FilesMatch "\.(jpe?g|png|gif|webp|avif)$">
+               Header append Vary Accept
+             </FilesMatch>
+           </IfModule>
+           ';
+
       $rules = '';
       //    if ($avif)
       $rules .= $avif_rules;
       //  if ($webp)
       $rules .= $webp_rules;
+      $rules .= $vary_rules;
+
+      /**
+       * Filters the complete rule block before it is written to any .htaccess.
+       *
+       * Lets a site adapt the rules to its server or CDN - for example to drop
+       * the Vary header on a CDN that treats varying image responses as
+       * uncacheable, or to add directives of its own. Returning a non-string
+       * leaves the generated rules untouched.
+       *
+       * @param string $rules The generated rule block.
+       * @param array  $args  'webp' and 'avif' as passed to this method.
+       */
+      $filtered_rules = apply_filters('shortpixel/install/htaccess_rules', $rules, array('webp' => $webp, 'avif' => $avif));
+
+      if (is_string($filtered_rules)) {
+        $rules = $filtered_rules;
+      } else {
+        Log::addWarn('htaccess_rules filter returned a non-string value, using the generated rules', $filtered_rules);
+      }
 
       insert_with_markers(get_home_path() . '.htaccess', 'ShortPixelWebp', $rules);
 
