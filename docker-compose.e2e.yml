@@ -119,7 +119,7 @@ services:
   playwright:
     # Pinned: browsers inside the image MUST match the @playwright/test
     # version in tests/E2E/package.json. Bump both together.
-    image: mcr.microsoft.com/playwright:v1.55.0-noble
+    image: mcr.microsoft.com/playwright:v1.63.0-noble
     # Share the wordpress container's network namespace so
     # http://localhost:8030 resolves to the site here as well.
     network_mode: "service:wordpress"

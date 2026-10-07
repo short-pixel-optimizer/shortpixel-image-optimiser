@@ -17,15 +17,6 @@ import { test, expect } from '../fixtures';
 import { AiEditorModal } from '../helpers/ai-editor';
 import { adminUrls, ApiCode } from '../helpers/spio';
 
-// ENGINE LIMITATION, not a SPIO bug: Playwright's WebKit build (1.55.0 image,
-// webkit-2203, Linux) hangs in LAYOUT on WordPress core's attachment edit
-// screen (post.php?action=edit for an attachment) — reproduced with SPIO
-// deactivated and with all SPIO assets blocked. Every test here
-// starts on that screen, so none can run on WebKit. The WebKit-only sentinel
-// in specs/engine-limits.spec.ts goes red when the hang disappears: then
-// delete this skip.
-test.skip(({ browserName }) => browserName === 'webkit', 'WebKit layout hang on the WP attachment edit screen (see engine-limits.spec.ts)');
-
 async function openEditScreen(page: import('@playwright/test').Page, id: number): Promise<void> {
 	await page.goto(adminUrls.editAttachment(id));
 	await expect(page.locator(`#media-head-${id}`)).toBeVisible();
@@ -277,7 +268,7 @@ test.describe('AI editor modal — preview response after close (pinned)', () =>
 			})
 			.toBeGreaterThan(0);
 
-		// Engine wording differs (Firefox names the variable, Chromium does not).
-		expect(pageErrors.join('\n')).toMatch(/previewImage is null|Cannot read properties of null \(reading 'style'\)/);
+		// Engine wording differs (Firefox and WebKit name the variable, Chromium does not).
+		expect(pageErrors.join('\n')).toMatch(/previewImage is null|Cannot read properties of null \(reading 'style'\)|null is not an object \(evaluating 'previewImage\.style'\)/);
 	});
 });
