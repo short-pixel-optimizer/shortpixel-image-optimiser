@@ -579,7 +579,9 @@ viewport. A test must pass on all three; an engine difference is either a
 real SPIO cross-browser bug (pin it) or a test assumption to fix. Skipping
 an engine is allowed only for a proven ENGINE limitation that has nothing
 to do with SPIO, and every such skip needs a sentinel in
-`specs/engine-limits.spec.ts` that goes red once the limitation is gone.
+`specs/engine-limits.spec.ts` (create it when the first one is needed) that
+goes red once the limitation is gone; then delete the skip and the sentinel
+together.
 
 - **Playwright's Linux WebKit gets flaky when the machine is starved.**
   Observed faults, all engine-level and none reproducible on an
@@ -594,11 +596,6 @@ to do with SPIO, and every such skip needs a sentinel in
   is `continue-on-error`: it reports but does not gate, while Chromium and
   Firefox do. A WebKit failure still shows red in the run and is still
   worth reading — treat a repeatable one as a real finding.
-- Known engine limitation: Playwright's Linux WebKit hangs in layout on
-  WordPress core's attachment edit screen (`post.php?action=edit` for an
-  attachment). It reproduces with SPIO deactivated, so `ai-editor.spec.ts`
-  skips WebKit and the sentinel watches for a Playwright/WordPress update
-  that fixes it.
 - Wait on a class or event the JS itself sets once its listeners are
   attached (e.g. the quick tour's `active-step-0`), never on
   server-rendered markup that is there before any JS ran.

@@ -14,10 +14,6 @@ import { test, expect } from '../fixtures';
 import type { Page } from '@playwright/test';
 import { adminUrls } from '../helpers/spio';
 
-// Same WebKit engine limitation as ai-editor.spec.ts: WebKit hangs in layout
-// on the WP attachment edit screen (sentinel in engine-limits.spec.ts).
-test.skip(({ browserName }) => browserName === 'webkit', 'WebKit layout hang on the WP attachment edit screen (see engine-limits.spec.ts)');
-
 const FIELD = '#submitdiv .misc-pub-filename.shortpixel-replace-if input[name="filename_replace"]';
 const BUTTON = '#submitdiv .misc-pub-filename.shortpixel-replace-if button[name="filename_replace_submit"]';
 const ERROR = '#submitdiv .misc-pub-filename p.error';
@@ -178,8 +174,8 @@ test.describe('Change Filename — too-short name pin', () => {
 				message: 'PIN: fixed? No uncaught error on a too-short name — flip this pin.',
 			})
 			.toBeGreaterThan(0);
-		// Engine wording differs (Firefox names the property, Chromium does not).
-		expect(pageErrors.join('\n')).toMatch(/data\.media is undefined|Cannot read properties of undefined \(reading 'results'\)/);
+		// Engine wording differs (Firefox and WebKit name the property, Chromium does not).
+		expect(pageErrors.join('\n')).toMatch(/data\.media is undefined|Cannot read properties of undefined \(reading 'results'\)|undefined is not an object \(evaluating 'data\.media\.results'\)/);
 		await expect(page.locator(ERROR), 'PIN: no message is shown to the user').toHaveCount(0);
 		expect(await documentWasKept(page)).toBe(true);
 	});
