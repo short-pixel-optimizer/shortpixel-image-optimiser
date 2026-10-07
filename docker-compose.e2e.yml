@@ -117,9 +117,12 @@ services:
         condition: service_healthy
 
   playwright:
-    # Pinned: browsers inside the image MUST match the @playwright/test
-    # version in tests/E2E/package.json. Bump both together.
-    image: mcr.microsoft.com/playwright:v1.63.0-noble
+    # Browsers inside the image MUST match the @playwright/test version, so
+    # bin/test-e2e.sh exports the exact version pinned in
+    # tests/E2E/package.json. Run the suite through that script; a bare
+    # `docker compose` (logs, down) never needs this image, and the
+    # placeholder tag makes a direct pull fail by name.
+    image: mcr.microsoft.com/playwright:v${SPIO_PLAYWRIGHT_VERSION:-set-by-bin-test-e2e}-noble
     # Share the wordpress container's network namespace so
     # http://localhost:8030 resolves to the site here as well.
     network_mode: "service:wordpress"

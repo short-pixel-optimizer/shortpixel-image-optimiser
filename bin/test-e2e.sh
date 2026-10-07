@@ -69,6 +69,17 @@ PROVISION_SCRIPT="wp-content/plugins/shortpixel-image-optimiser/tests/E2E/provis
 # must not share the e2e-wp-core volume, so this implies --clean first.
 export E2E_WP_TAG="${E2E_WP_TAG:-php8.3-apache}"
 
+# The Playwright runner image must carry the browsers of the exact
+# @playwright/test version the suite installs, so its tag is read from
+# tests/E2E/package.json instead of being pinned in two places: a version
+# bump (by hand or by Dependabot) is a single edit.
+SPIO_PLAYWRIGHT_VERSION=$(grep -o '"@playwright/test": *"[^"]*"' "$E2E_DIR/package.json" | cut -d'"' -f4)
+if ! printf '%s' "$SPIO_PLAYWRIGHT_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+    echo "!!! $E2E_DIR/package.json must pin @playwright/test to an exact version (found \"$SPIO_PLAYWRIGHT_VERSION\"): the Playwright image tag is derived from it."
+    exit 1
+fi
+export SPIO_PLAYWRIGHT_VERSION
+
 MODE="run"
 PW_ARGS=()
 while [ $# -gt 0 ]; do
@@ -178,10 +189,13 @@ case "$MODE" in
             exit 1
         fi
         cd "$E2E_DIR"
-        if [ ! -d node_modules/@playwright/test ]; then
-            echo "==> Installing Playwright on the host (first native run)..."
-            npm install --no-audit --no-fund
+        # Same lockfile check as the Docker run below; a reinstall also
+        # fetches the browsers that match the new @playwright/test.
+        if [ ! -d node_modules/@playwright/test ] || ! cmp -s package-lock.json node_modules/.spio-installed-lock.json; then
+            echo "==> Installing Playwright on the host (first native run, or package-lock.json changed)..."
+            npm ci --no-audit --no-fund
             npx playwright install chromium firefox webkit
+            cp package-lock.json node_modules/.spio-installed-lock.json
         fi
         # Screenshot assertions are no-ops here (E2E_IN_DOCKER unset): host
         # fonts/rendering differ from the Linux image the baselines come from.
@@ -197,9 +211,13 @@ echo "==> Running Playwright in Docker..."
 STATUS=0
 "${COMPOSE[@]}" run --rm playwright sh -c '
     set -e
-    if [ ! -d node_modules/@playwright/test ]; then
-        echo "==> Installing npm dependencies into the e2e-node-modules volume..."
-        if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm install --no-audit --no-fund; fi
+    # Reinstall whenever package-lock.json differs from the copy saved at the
+    # last install: the volume outlives version bumps, and an old
+    # @playwright/test inside a newer image looks for browsers it lacks.
+    if [ ! -d node_modules/@playwright/test ] || ! cmp -s package-lock.json node_modules/.spio-installed-lock.json; then
+        echo "==> Installing npm dependencies into the e2e-node-modules volume (first run, or package-lock.json changed)..."
+        npm ci --no-audit --no-fund
+        cp package-lock.json node_modules/.spio-installed-lock.json
     fi
     npx playwright test "$@"
 ' sh ${PW_ARGS[@]+"${PW_ARGS[@]}"} || STATUS=$?

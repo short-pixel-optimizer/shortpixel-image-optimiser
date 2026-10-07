@@ -439,7 +439,7 @@ different database, volumes and images, so the two never collide):
 | `mysql-e2e` | MySQL 8.0, database `wordpress_e2e` |
 | `wordpress` | official `wordpress:php8.3-apache` image; the repo is bind-mounted as `wp-content/plugins/shortpixel-image-optimiser`; served on **http://localhost:8030** (admin / password) |
 | `wpcli` | one-shot provisioning (`tests/E2E/provision/provision.sh`): core install, theme, plugin activation, seed |
-| `playwright` | `mcr.microsoft.com/playwright` (pinned to the `@playwright/test` version in `tests/E2E/package.json`), shares the wordpress container's network so the same URL works everywhere |
+| `playwright` | `mcr.microsoft.com/playwright`, its tag derived by `bin/test-e2e.sh` from the exact `@playwright/test` version in `tests/E2E/package.json` (bumping that one line is the whole upgrade; the script reinstalls `node_modules` whenever `package-lock.json` changes), shares the wordpress container's network so the same URL works everywhere |
 
 **Test-support mu-plugins** (`tests/E2E/mu-plugins/`, only active when
 `SPIO_E2E` is defined — never in production):
