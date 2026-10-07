@@ -538,12 +538,26 @@ waits), `specs/` (one file per flow; `auth.setup.ts` logs in once).
   visible" as ONE predicate. Two separate assertions can straddle a panel
   switch and report a nonsensical state (class present, then hidden with
   the class gone).
-- Front-end delivery specs create their own unauthenticated
-  `browser.newContext()` to view a post as a visitor, and must switch
-  `deliverWebp`/`useCDN` back off in `afterEach` (the seed does not touch
-  them). Enable CDN only through the support route: the settings form
-  path makes real outbound calls to `no-cdn.shortpixel.ai`, which the mock
-  does not intercept.
+- Front-end delivery specs view a post as a visitor in their own
+  unauthenticated context, made with `newVisitorContext(browser)` from
+  `fixtures.ts` (never `browser.newContext()`, which skips the hermetic
+  routing), and arm `attachTripwire(page, errors)` on it themselves. They
+  must switch `deliverWebp`/`useCDN` back off in `afterEach` (the seed does
+  not touch them). Enable CDN only through the support route: the settings
+  form path makes real outbound calls to `no-cdn.shortpixel.ai`, which the
+  mock does not intercept.
+- **The suite never needs the internet.** Browser side, `BLOCKED_HOSTS` in
+  `fixtures.ts` aborts the third-party hosts WordPress and SPIO pages load
+  (ShortPixel widgets, gravatar, the `s.w.org` emoji images); server side,
+  `spio-e2e-support.php` answers WordPress's api.wordpress.org lookups with
+  fixed data (update checks, the language list behind the AI "Language"
+  dropdown). An outside request otherwise fails the tripwire whenever DNS
+  hiccups, or changes a baseline whenever the remote data changes. To find
+  a new one, run the suite with the stack offline: add `dns: [127.0.0.1]` to
+  the `wordpress` service in `docker-compose.e2e.yml` (the Playwright
+  container shares its network; service names still resolve), run
+  `bin/test-e2e.sh`, and revert the line — every remaining outside
+  dependency then fails loudly.
 - Custom Media specs add `wp-content/uploads/e2e-custom/` (seeded by the
   `custom-folder` support route) — the only safe target: the numeric year
   folders are refused as Media Library, and the bind-mounted plugin tree

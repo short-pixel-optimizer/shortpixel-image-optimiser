@@ -74,6 +74,38 @@ add_filter( 'pre_site_transient_update_plugins', 'spio_e2e_no_updates' );
 add_filter( 'pre_site_transient_update_themes', 'spio_e2e_no_updates' );
 
 /**
+ * A fixed list for wp_get_available_translations(), which the settings page
+ * calls to fill the AI "Language" dropdown.
+ *
+ * WordPress otherwise downloads the full list from api.wordpress.org. The
+ * longest language name sets the dropdown's width, so the AI-tab baseline
+ * changed whenever wordpress.org changed its list, and offline the dropdown
+ * held English alone. A short, fixed list keeps the dropdown realistic
+ * ("Installed" + "Available" groups) and the request never happens.
+ */
+function spio_e2e_available_translations() {
+	$translations = array();
+	foreach ( array(
+		'de_DE' => array( 'German', 'Deutsch', 'de', 'deu' ),
+		'es_ES' => array( 'Spanish (Spain)', 'Español', 'es', 'spa' ),
+		'fr_FR' => array( 'French (France)', 'Français', 'fr', 'fra' ),
+	) as $locale => $names ) {
+		$translations[ $locale ] = array(
+			'language'     => $locale,
+			'version'      => get_bloginfo( 'version' ),
+			'updated'      => '2026-01-01 00:00:00',
+			'english_name' => $names[0],
+			'native_name'  => $names[1],
+			'package'      => '',
+			'iso'          => array( 1 => $names[2], 2 => $names[3] ),
+			'strings'      => array( 'continue' => '' ),
+		);
+	}
+	return $translations;
+}
+add_filter( 'pre_site_transient_available_translations', 'spio_e2e_available_translations' );
+
+/**
  * The "healthy paying install" baseline — a port of
  * SPIO_IntegrationHelpers::spioSetUpBaseline(). Also called by WP-CLI during
  * provisioning (tests/E2E/provision/seed.php).
