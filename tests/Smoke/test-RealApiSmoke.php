@@ -14,7 +14,8 @@
  *     compression-level comparison which uses 3; the wrong-key test uses 0).
  *   - The API fetches images by URL and cannot reach the local test
  *     install, so the `shortpixel_image_urls` filter remaps the urllist
- *     to the committed fixtures' public raw.githubusercontent.com URLs.
+ *     to the committed fixtures' public raw.githubusercontent.com URLs on
+ *     the `master` branch (see FIXTURE_RAW_BASE).
  *     Thumbnail processing is disabled — only the main file has a public
  *     counterpart.
  *
@@ -28,8 +29,12 @@ use ShortPixel\Controller\QueueController;
 
 class RealApiSmokeTest extends SPIO_IntegrationTestCase {
 
-	/** Public URL of the committed fixtures on the integration-tests branch. */
-	private const FIXTURE_RAW_BASE = 'https://raw.githubusercontent.com/short-pixel-optimizer/shortpixel-image-optimiser/integration-tests/tests/fixtures/';
+	/**
+	 * Public URL of the committed fixtures on `master`. It must be a
+	 * long-lived public branch: a feature branch that is later deleted turns
+	 * this into a 404 and every test fails on the API's download error.
+	 */
+	private const FIXTURE_RAW_BASE = 'https://raw.githubusercontent.com/short-pixel-optimizer/shortpixel-image-optimiser/master/tests/fixtures/';
 
 	/** @var array Recorded live HTTP exchanges with the ShortPixel API, for failure diagnostics. */
 	private $apiExchanges = array();

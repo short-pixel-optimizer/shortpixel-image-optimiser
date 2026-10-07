@@ -130,21 +130,38 @@ bin/test.sh --matrix --integration
 
 The smoke suite (`tests/Smoke/`) removes the HTTP mock and runs the
 pipeline against the **live** ShortPixel API — catching contract drift a
-mock can't see. It needs a valid API key and consumes real quota credits
-(about one per test), so it is never part of `--integration`, `--all`,
-or the push/PR CI runs; without the key every test skips. A dedicated
-CI workflow (`.github/workflows/smoke.yml`) runs the suite once a month
-(plus manual dispatch) using the `SHORTPIXEL_SMOKE_KEY` repository
-secret.
+mock can't see. It needs a valid API key and consumes real credits, so it
+is never part of `--integration`, `--all`, or the push/PR CI runs;
+without the key every test skips. A dedicated CI workflow
+(`.github/workflows/smoke.yml`) runs the suite once a month (plus manual
+dispatch) using the `SHORTPIXEL_SMOKE_KEY` repository secret.
 
 ```bash
 SHORTPIXEL_SMOKE_KEY=<your 20-char key> bin/test.sh --smoke
 ```
 
+| File | Covers | Credits per run |
+|------|--------|-----------------|
+| `test-RealApiSmoke.php` | optimisation (reducer): end-to-end, WebP/AVIF companions, resize, the three compression levels, restore, EXIF kept/stripped, wrong key | 10 image credits |
+| `test-RealAiApiSmoke.php` | AI (add-url/get-url): alt end-to-end, wrong key, the api-status quota contract, an unreachable image (get-url error contract), every generator incl. the AI file rename, the `languages` field, context/limits/affixes, a second request authenticated with the cached JWT (`Bearer`) | 6 AI credits |
+
+The wrong-key, api-status and unreachable-image tests cost nothing. A
+test that needs AI credits skips (not fails) when the account is out of
+them (add-url status 3).
+
+The AI tests record both halves of every exchange — the request body and
+headers as well as the response (`lastResponse()`, `exchangesFor()`) — so
+they fail when the plugin stops sending a field, not only when the
+backend stops returning one.
+
 Because the live API fetches images by URL and can't reach the local
 test install, the suite remaps the request URL list to the committed
-fixtures' public `raw.githubusercontent.com` URLs (same bytes) and
-disables thumbnail processing — only main files have public counterparts.
+fixtures' public `raw.githubusercontent.com` URLs (same bytes) on the
+`master` branch and disables thumbnail processing — only main files have
+public counterparts. Keep that base on a long-lived public branch: a
+feature branch that is deleted later turns every request into a 404 (the
+API answers "Failed to download and save image") and the monthly run goes
+red.
 
 ### Cross-plugin compatibility tests
 
