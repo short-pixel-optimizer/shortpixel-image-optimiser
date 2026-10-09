@@ -64,7 +64,7 @@ jobs:
             projects: --project webkit
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       # Optional: authenticated Docker Hub pulls get a much higher rate
       # limit than the anonymous pool GitHub runners share. Add the two
