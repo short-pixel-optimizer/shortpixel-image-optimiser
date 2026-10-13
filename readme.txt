@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compress images
 Requires at least: 5.9.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 6.6.0
+Stable tag: 6.6.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -458,6 +458,18 @@ Disable the feedback survey when the plugin is deactivated:
 14. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+= 6.6.1 =
+
+🔔 The Notifications Fix
+
+Release Date: October 14, 2026
+
+🛠️ Fixes
+
+* Review Request Notice: The notice asking how likely you are to recommend ShortPixel is now shown only on the plugin's Settings page. On update, any copy already shown elsewhere is cleared automatically.
+
+Update now to keep your WordPress admin free of unwanted notices! 🚀
+
 = 6.6.0 =
 
 🏷️ The Smart Filenames & Multisite Update
