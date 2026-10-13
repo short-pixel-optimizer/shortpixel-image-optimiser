@@ -240,6 +240,17 @@ class AdminNoticesControllerTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * MSG_REVIEW_REMINDER is still in use; it is cleared on upgrade so that a
+	 * stored copy without the settings-screen limit is re-created with it.
+	 */
+	public function test_resetOldNotices_removes_MSG_REVIEW_REMINDER() {
+		$this->addPersistentNotice( 'MSG_REVIEW_REMINDER' );
+		AdminNoticesController::resetOldNotices();
+		$n = NoticeController::getInstance()->getNoticeByID( 'MSG_REVIEW_REMINDER' );
+		$this->assertFalse( $n );
+	}
+
+	/**
 	 * Pinned current-behavior: resetOldNotices() calls removeNoticeByID('MSG_AVIF_ERROR')
 	 * twice (duplicate call at lines 115 and 118 in the production source).
 	 * This is redundant but not harmful; the test pins that MSG_AVIF_ERROR IS removed.
