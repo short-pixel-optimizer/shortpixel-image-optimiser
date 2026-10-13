@@ -114,8 +114,10 @@ class AdminNoticesController extends \ShortPixel\Controller
 			Notices::removeNoticeByID('MSG_FEATURE_HEIC');
 			Notices::removeNoticeByID('MSG_AVIF_ERROR');
 
-      // This one is not old,
-      Notices::removeNoticeByID('MSG_AVIF_ERROR');
+          // This one is not old,
+          Notices::removeNoticeByID('MSG_AVIF_ERROR');
+          Notices::removeNoticeByID('MSG_REVIEW_REMINDER');
+
 		}
 
     /** Triggered when plugin is activated */
