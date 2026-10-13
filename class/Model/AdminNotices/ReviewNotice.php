@@ -40,6 +40,17 @@ class ReviewNotice extends \ShortPixel\Model\AdminNoticeModel
     /** @var string WP AJAX action name used for nonce creation/verification. */
     const AJAX_ACTION = 'shortpixel_survey_submit';
 
+
+    	/**
+	 * Registers the notice to appear only on the settings screen.
+	 */
+	public function __construct()
+	{
+		 $this->include_screens[] = 'settings_page_wp-shortpixel-settings';
+		 parent::__construct();
+	}
+
+
     /**
      * Ensure activation date is available for the review timer.
      *

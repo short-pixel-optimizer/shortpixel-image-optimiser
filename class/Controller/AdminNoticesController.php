@@ -235,7 +235,6 @@ class AdminNoticesController extends \ShortPixel\Controller
 
                 foreach($notices as $notice)
                 {
-                    
                     if ($notice->checkScreen($screen_id) === false)
                     {
                         continue;
