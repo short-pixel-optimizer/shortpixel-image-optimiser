@@ -101,10 +101,22 @@ class AdminNoticesController extends \ShortPixel\Controller
     }
 
 		/**
-		 * Remove notices that were used in older plugin versions but are no longer relevant.
+		 * Remove persistent notices that must not survive a plugin upgrade.
 		 *
-		 * Cleans up `MSG_FEATURE_SMARTCROP`, `MSG_FEATURE_HEIC`, and `MSG_AVIF_ERROR`
-		 * so stale notices do not linger after an upgrade.
+		 * Runs from InstallHelper::activatePlugin(), i.e. on activation and on
+		 * every version change. Two groups are cleared:
+		 *
+		 * - Notices used in older plugin versions that are no longer relevant
+		 *   (`MSG_FEATURE_SMARTCROP`, `MSG_FEATURE_HEIC`, `MSG_AVIF_ERROR`), so
+		 *   stale notices do not linger after an upgrade.
+		 * - Notices that are still in use but whose stored copy may predate a
+		 *   change in their definition (`MSG_REVIEW_REMINDER`). A persistent
+		 *   notice is serialised together with its screen limits, and
+		 *   AdminNoticeModel::load() reuses the stored copy without re-adding it,
+		 *   so a copy stored before ReviewNotice was limited to the settings
+		 *   screen would keep showing on every admin page. Removing it here lets
+		 *   checkTrigger() re-create it with the current limits; the survey state
+		 *   itself lives in SettingsModel and is not affected.
 		 *
 		 * @return void
 		 */
@@ -114,8 +126,10 @@ class AdminNoticesController extends \ShortPixel\Controller
 			Notices::removeNoticeByID('MSG_FEATURE_HEIC');
 			Notices::removeNoticeByID('MSG_AVIF_ERROR');
 
-      // This one is not old,
-      Notices::removeNoticeByID('MSG_AVIF_ERROR');
+			// Not old, but re-created on upgrade so the stored copy picks up the
+			// current definition (see the docblock).
+			Notices::removeNoticeByID('MSG_AVIF_ERROR');
+			Notices::removeNoticeByID('MSG_REVIEW_REMINDER');
 		}
 
     /** Triggered when plugin is activated */
@@ -235,7 +249,6 @@ class AdminNoticesController extends \ShortPixel\Controller
 
                 foreach($notices as $notice)
                 {
-                    
                     if ($notice->checkScreen($screen_id) === false)
                     {
                         continue;

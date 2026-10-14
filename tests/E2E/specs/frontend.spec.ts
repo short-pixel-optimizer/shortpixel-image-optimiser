@@ -14,7 +14,7 @@
  * real pipeline (the mock produces real webp/avif bytes) → set deliverWebp
  * → view the post as a visitor (a fresh, unauthenticated context).
  */
-import { test, expect } from '../fixtures';
+import { test, expect, attachTripwire, newVisitorContext } from '../fixtures';
 import { MediaList } from '../helpers/media-list';
 import { SettingsPage } from '../helpers/settings-page';
 import { DeliverWebp, collectImageUrls, currentSrc, expectAllImagesLoad, expectImageLoaded } from '../helpers/frontend';
@@ -54,11 +54,10 @@ test.describe('Front-end delivery', () => {
 			await spio.setSettings({ deliverWebp: mode });
 
 			// A real visitor: fresh unauthenticated context.
-			const visitor = await browser.newContext();
+			const visitor = await newVisitorContext(browser);
 			const front = await visitor.newPage();
 			const errors: string[] = [];
-			front.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
-			front.on('console', (m) => m.type() === 'error' && errors.push(`console.error: ${m.text()}`));
+			attachTripwire(front, errors);
 			await front.goto(post.url);
 
 			const figure = front.locator('figure.wp-block-image');
@@ -104,7 +103,7 @@ test.describe('Front-end delivery', () => {
 		await optimizeViaMediaList(page, image.id);
 		// deliverWebp stays OFF.
 
-		const visitor = await browser.newContext();
+		const visitor = await newVisitorContext(browser);
 		const front = await visitor.newPage();
 		await front.goto(post.url);
 		const figure = front.locator('figure.wp-block-image');
@@ -124,7 +123,7 @@ test.describe('Front-end delivery', () => {
 		const post = await spio.createPost({ image_id: image.id, alt: '' });
 		await spio.setSettings({ deliverWebp: DeliverWebp.PICTURE_GLOBAL });
 
-		const visitor = await browser.newContext();
+		const visitor = await newVisitorContext(browser);
 		const front = await visitor.newPage();
 		await front.goto(post.url);
 		const figure = front.locator('figure.wp-block-image');
@@ -141,7 +140,7 @@ test.describe('Front-end delivery', () => {
 		await optimizeViaMediaList(page, image.id);
 
 		const measure = async () => {
-			const visitor = await browser.newContext({ viewport: { width: 1366, height: 768 } });
+			const visitor = await newVisitorContext(browser, { viewport: { width: 1366, height: 768 } });
 			const front = await visitor.newPage();
 			await front.goto(post.url);
 			const img = front.locator('figure.wp-block-image img');
@@ -176,7 +175,7 @@ test.describe('Front-end delivery', () => {
 		await settingsPage.save('webp');
 		expect(Number((await spio.getSettings()).deliverWebp)).toBe(DeliverWebp.UNALTERED_HTACCESS);
 
-		const visitor = await browser.newContext();
+		const visitor = await newVisitorContext(browser);
 		const front = await visitor.newPage();
 		await front.goto(post.url);
 		const figure = front.locator('figure.wp-block-image');

@@ -130,21 +130,38 @@ bin/test.sh --matrix --integration
 
 The smoke suite (`tests/Smoke/`) removes the HTTP mock and runs the
 pipeline against the **live** ShortPixel API — catching contract drift a
-mock can't see. It needs a valid API key and consumes real quota credits
-(about one per test), so it is never part of `--integration`, `--all`,
-or the push/PR CI runs; without the key every test skips. A dedicated
-CI workflow (`.github/workflows/smoke.yml`) runs the suite once a month
-(plus manual dispatch) using the `SHORTPIXEL_SMOKE_KEY` repository
-secret.
+mock can't see. It needs a valid API key and consumes real credits, so it
+is never part of `--integration`, `--all`, or the push/PR CI runs;
+without the key every test skips. A dedicated CI workflow
+(`.github/workflows/smoke.yml`) runs the suite once a month (plus manual
+dispatch) using the `SHORTPIXEL_SMOKE_KEY` repository secret.
 
 ```bash
 SHORTPIXEL_SMOKE_KEY=<your 20-char key> bin/test.sh --smoke
 ```
 
+| File | Covers | Credits per run |
+|------|--------|-----------------|
+| `test-RealApiSmoke.php` | optimisation (reducer): end-to-end, WebP/AVIF companions, resize, the three compression levels, restore, EXIF kept/stripped, wrong key | 10 image credits |
+| `test-RealAiApiSmoke.php` | AI (add-url/get-url): alt end-to-end, wrong key, the api-status quota contract, an unreachable image (get-url error contract), every generator incl. the AI file rename, the `languages` field, context/limits/affixes, a second request authenticated with the cached JWT (`Bearer`) | 6 AI credits |
+
+The wrong-key, api-status and unreachable-image tests cost nothing. A
+test that needs AI credits skips (not fails) when the account is out of
+them (add-url status 3).
+
+The AI tests record both halves of every exchange — the request body and
+headers as well as the response (`lastResponse()`, `exchangesFor()`) — so
+they fail when the plugin stops sending a field, not only when the
+backend stops returning one.
+
 Because the live API fetches images by URL and can't reach the local
 test install, the suite remaps the request URL list to the committed
-fixtures' public `raw.githubusercontent.com` URLs (same bytes) and
-disables thumbnail processing — only main files have public counterparts.
+fixtures' public `raw.githubusercontent.com` URLs (same bytes) on the
+`master` branch and disables thumbnail processing — only main files have
+public counterparts. Keep that base on a long-lived public branch: a
+feature branch that is deleted later turns every request into a 404 (the
+API answers "Failed to download and save image") and the monthly run goes
+red.
 
 ### Cross-plugin compatibility tests
 
@@ -439,7 +456,7 @@ different database, volumes and images, so the two never collide):
 | `mysql-e2e` | MySQL 8.0, database `wordpress_e2e` |
 | `wordpress` | official `wordpress:php8.3-apache` image; the repo is bind-mounted as `wp-content/plugins/shortpixel-image-optimiser`; served on **http://localhost:8030** (admin / password) |
 | `wpcli` | one-shot provisioning (`tests/E2E/provision/provision.sh`): core install, theme, plugin activation, seed |
-| `playwright` | `mcr.microsoft.com/playwright` (pinned to the `@playwright/test` version in `tests/E2E/package.json`), shares the wordpress container's network so the same URL works everywhere |
+| `playwright` | `mcr.microsoft.com/playwright`, its tag derived by `bin/test-e2e.sh` from the exact `@playwright/test` version in `tests/E2E/package.json` (bumping that one line is the whole upgrade; the script reinstalls `node_modules` whenever `package-lock.json` changes), shares the wordpress container's network so the same URL works everywhere |
 
 **Test-support mu-plugins** (`tests/E2E/mu-plugins/`, only active when
 `SPIO_E2E` is defined — never in production):
@@ -538,12 +555,26 @@ waits), `specs/` (one file per flow; `auth.setup.ts` logs in once).
   visible" as ONE predicate. Two separate assertions can straddle a panel
   switch and report a nonsensical state (class present, then hidden with
   the class gone).
-- Front-end delivery specs create their own unauthenticated
-  `browser.newContext()` to view a post as a visitor, and must switch
-  `deliverWebp`/`useCDN` back off in `afterEach` (the seed does not touch
-  them). Enable CDN only through the support route: the settings form
-  path makes real outbound calls to `no-cdn.shortpixel.ai`, which the mock
-  does not intercept.
+- Front-end delivery specs view a post as a visitor in their own
+  unauthenticated context, made with `newVisitorContext(browser)` from
+  `fixtures.ts` (never `browser.newContext()`, which skips the hermetic
+  routing), and arm `attachTripwire(page, errors)` on it themselves. They
+  must switch `deliverWebp`/`useCDN` back off in `afterEach` (the seed does
+  not touch them). Enable CDN only through the support route: the settings
+  form path makes real outbound calls to `no-cdn.shortpixel.ai`, which the
+  mock does not intercept.
+- **The suite never needs the internet.** Browser side, `BLOCKED_HOSTS` in
+  `fixtures.ts` aborts the third-party hosts WordPress and SPIO pages load
+  (ShortPixel widgets, gravatar, the `s.w.org` emoji images); server side,
+  `spio-e2e-support.php` answers WordPress's api.wordpress.org lookups with
+  fixed data (update checks, the language list behind the AI "Language"
+  dropdown). An outside request otherwise fails the tripwire whenever DNS
+  hiccups, or changes a baseline whenever the remote data changes. To find
+  a new one, run the suite with the stack offline: add `dns: [127.0.0.1]` to
+  the `wordpress` service in `docker-compose.e2e.yml` (the Playwright
+  container shares its network; service names still resolve), run
+  `bin/test-e2e.sh`, and revert the line — every remaining outside
+  dependency then fails loudly.
 - Custom Media specs add `wp-content/uploads/e2e-custom/` (seeded by the
   `custom-folder` support route) — the only safe target: the numeric year
   folders are refused as Media Library, and the bind-mounted plugin tree
@@ -579,7 +610,9 @@ viewport. A test must pass on all three; an engine difference is either a
 real SPIO cross-browser bug (pin it) or a test assumption to fix. Skipping
 an engine is allowed only for a proven ENGINE limitation that has nothing
 to do with SPIO, and every such skip needs a sentinel in
-`specs/engine-limits.spec.ts` that goes red once the limitation is gone.
+`specs/engine-limits.spec.ts` (create it when the first one is needed) that
+goes red once the limitation is gone; then delete the skip and the sentinel
+together.
 
 - **Playwright's Linux WebKit gets flaky when the machine is starved.**
   Observed faults, all engine-level and none reproducible on an
@@ -594,11 +627,6 @@ to do with SPIO, and every such skip needs a sentinel in
   is `continue-on-error`: it reports but does not gate, while Chromium and
   Firefox do. A WebKit failure still shows red in the run and is still
   worth reading — treat a repeatable one as a real finding.
-- Known engine limitation: Playwright's Linux WebKit hangs in layout on
-  WordPress core's attachment edit screen (`post.php?action=edit` for an
-  attachment). It reproduces with SPIO deactivated, so `ai-editor.spec.ts`
-  skips WebKit and the sentinel watches for a Playwright/WordPress update
-  that fixes it.
 - Wait on a class or event the JS itself sets once its listeners are
   attached (e.g. the quick tour's `active-step-0`), never on
   server-rendered markup that is there before any JS ran.

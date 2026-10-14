@@ -26,11 +26,16 @@ class VersionUpgradeTest extends SPIO_IntegrationTestCase {
 
 	private const STALE_VERSION = '6.0.0';
 
-	/** Feature notices that activatePlugin() must clear via resetOldNotices(). */
+	/**
+	 * Notices that activatePlugin() must clear via resetOldNotices(): the
+	 * retired feature notices plus the review survey, which is re-created
+	 * afterwards with its current screen limit.
+	 */
 	private const STALE_FEATURE_NOTICES = array(
 		'MSG_FEATURE_SMARTCROP',
 		'MSG_FEATURE_HEIC',
 		'MSG_AVIF_ERROR',
+		'MSG_REVIEW_REMINDER',
 	);
 
 	public function set_up() {

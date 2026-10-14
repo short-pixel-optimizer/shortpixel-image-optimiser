@@ -12,15 +12,19 @@
  *      asserts on `consoleErrors` explicitly.
  *
  *   2. The run is HERMETIC: requests to spcdn.shortpixel.ai (the async
- *      chatbot widget) and shortpixel.com (inline-help iframes) are aborted
- *      at the browser — uncontrolled third-party layout/console noise. API
+ *      chatbot widget), shortpixel.com (inline-help iframes), gravatar.com
+ *      (avatars: the admin bar, the theme) and s.w.org (WordPress's emoji
+ *      images, fetched by engines without an emoji font — Linux WebKit) are
+ *      aborted at the browser — uncontrolled third-party layout/console
+ *      noise, and a DNS hiccup on any of them would otherwise trip the
+ *      console-error tripwire in whichever test happens to be running. API
  *      traffic never reaches the browser at all (it is mocked server-side
  *      by the spio-e2e-mock-api mu-plugin).
  *
  *   3. `spio` gives specs the test-support REST client (reset/seed/fixtures/
  *      mock knobs/hostile snippets) — see helpers/spio.ts.
  */
-import { test as base, expect, type Page } from '@playwright/test';
+import { test as base, expect, type Browser, type BrowserContext, type BrowserContextOptions, type Page } from '@playwright/test';
 import { SpioSupport } from './helpers/spio';
 
 type Fixtures = {
@@ -33,7 +37,7 @@ type Fixtures = {
 };
 
 /** Hosts whose requests are aborted in the browser to keep runs hermetic. */
-const BLOCKED_HOSTS = /(^|\.)spcdn\.shortpixel\.ai$|(^|\.)shortpixel\.com$/i;
+const BLOCKED_HOSTS = /(^|\.)spcdn\.shortpixel\.ai$|(^|\.)shortpixel\.com$|(^|\.)gravatar\.com$|^s\.w\.org$/i;
 
 /**
  * Console errors that are noise, not signal. Keep this list SHORT and
@@ -46,7 +50,33 @@ const CONSOLE_ALLOWLIST: RegExp[] = [
 	/favicon\.ico/,
 ];
 
-function attachTripwire(page: Page, sink: string[]): void {
+/** Aborts every request to BLOCKED_HOSTS made by any page of `context`. */
+async function blockThirdPartyHosts(context: BrowserContext): Promise<void> {
+	await context.route(
+		(url) => BLOCKED_HOSTS.test(url.hostname),
+		(route) => route.abort('blockedbyclient'),
+	);
+}
+
+/**
+ * A fresh, unauthenticated context (a site visitor) with the same hermetic
+ * routing as the fixture's own context. Use it instead of
+ * browser.newContext(): a context created that way bypasses the routing, so
+ * the theme's third-party requests (e.g. gravatar) reach the internet.
+ */
+export async function newVisitorContext(browser: Browser, options: BrowserContextOptions = {}): Promise<BrowserContext> {
+	const context = await browser.newContext(options);
+	await blockThirdPartyHosts(context);
+	return context;
+}
+
+/**
+ * Collects `pageerror` and console.error entries of `page` into `sink`,
+ * minus the expected noise (blocked hosts, CONSOLE_ALLOWLIST). The fixture
+ * arms it on every page of its context; a spec that opens a page in another
+ * context (newVisitorContext) arms it itself and asserts on its own sink.
+ */
+export function attachTripwire(page: Page, sink: string[]): void {
 	page.on('pageerror', (error) => {
 		// A page that throws a non-Error (`throw {…}`) gives us an error whose
 		// message is the useless "[object Object]" — that is exactly what a
@@ -94,10 +124,7 @@ export const test = base.extend<Fixtures>({
 			const errors: string[] = [];
 
 			// Hermetic routing for every page in this context.
-			await context.route(
-				(url) => BLOCKED_HOSTS.test(url.hostname),
-				(route) => route.abort('blockedbyclient'),
-			);
+			await blockThirdPartyHosts(context);
 
 			// Tripwire on pages that already exist and on every page opened later.
 			context.pages().forEach((page) => attachTripwire(page, errors));

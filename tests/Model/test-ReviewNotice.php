@@ -59,6 +59,13 @@ class ReviewNoticeTest extends WP_UnitTestCase {
 		$this->assertSame( 'MSG_REVIEW_REMINDER', ( new ReviewNotice() )->getKey() );
 	}
 
+	public function test_constructor_limits_notice_to_the_settings_screen() {
+		$this->assertSame(
+			array( 'settings_page_wp-shortpixel-settings' ),
+			$this->getInherited( new ReviewNotice(), 'include_screens' )
+		);
+	}
+
 	public function test_suppress_delay_is_minus_one_so_the_notice_persists_until_dismissed() {
 		$this->assertSame( -1, $this->getInherited( new ReviewNotice(), 'suppress_delay' ) );
 	}

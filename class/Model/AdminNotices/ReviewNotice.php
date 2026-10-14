@@ -17,6 +17,8 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
  *   describe what is missing/broken, without being pushed towards a public review.
  * - The standard WP notice-dismiss "X" (top-right, same as every other
  *   notice in the plugin) closes the survey permanently.
+ * - The survey is shown only on the plugin settings screen, not on every
+ *   wp-admin page.
  *
  * State (answered/dismissed/score/feedback) is persisted in SettingsModel
  * (surveyStatus, surveyScore, surveyFeedback, surveyAnsweredAt) rather than
@@ -39,6 +41,19 @@ class ReviewNotice extends \ShortPixel\Model\AdminNoticeModel
 
     /** @var string WP AJAX action name used for nonce creation/verification. */
     const AJAX_ACTION = 'shortpixel_survey_submit';
+
+    /**
+     * Limit the notice to the plugin settings screen.
+     *
+     * The screen list is attached to the notice when it is added, so it also
+     * ends up in the persisted copy; copies stored before this limit existed
+     * are cleared on upgrade by AdminNoticesController::resetOldNotices().
+     */
+    public function __construct()
+    {
+        $this->include_screens[] = 'settings_page_wp-shortpixel-settings';
+        parent::__construct();
+    }
 
     /**
      * Ensure activation date is available for the review timer.
