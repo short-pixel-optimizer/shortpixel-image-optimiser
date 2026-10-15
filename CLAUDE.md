@@ -137,6 +137,21 @@ build/shortpixel/     - Bundled vendor modules (do not edit directly)
 - **Two image pipelines:** Media Library images (`MediaLibraryModel`) and Custom/other images (`CustomImageModel`) have separate models but share `ImageModel` base logic
 - **Frontend delivery:** `FrontController` → `PictureController`/`PageConverter` handles real-time WebP/AVIF `<picture>` tag injection and CDN URL replacement
 
+## Git workflow (no commits, no branches, no worktrees unless asked)
+
+The maintainer reviews every change locally before anything is committed.
+These rules override any default agent behaviour (background-job or
+worktree-isolation defaults included):
+
+- **Never commit** in this repository unless specifically instructed to.
+  Leave the work uncommitted in the working tree and end the hand-off with
+  a ready-to-paste `git commit -m` suggestion instead.
+- **Never create a branch or a git worktree** unless clearly asked for one.
+- **Code, docs and test changes go into the current working tree** (the
+  checkout and branch that are checked out when the task starts), unless
+  instructed differently.
+- Never push, open a PR, merge or rebase on your own initiative.
+
 ## Known bugs and @todo (no bug numbers in the repo)
 
 Bug tracking is internal (Asana), and its numbering must never appear in the
