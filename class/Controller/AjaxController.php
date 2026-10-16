@@ -504,6 +504,7 @@ class AjaxController
 				$this->setSettingsAiImage($data);
 			break; 
 			case 'settings/getNewAiImagePreview': 
+				$this->checkActionAccess($action, 'is_admin_user');
 				$this->getNewAiImagePreview($data);
 			break;
 			case 'media/getEditorPopup': 
