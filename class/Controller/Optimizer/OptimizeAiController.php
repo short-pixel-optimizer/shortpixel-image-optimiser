@@ -410,6 +410,7 @@ class OptimizeAiController extends OptimizerBase
     protected function HandleSuccess(QueueItem $qItem)
     {
         $action = $qItem->data()->action;
+        $settings = \wpSPIO()->settings(); 
     
         $aiData = $qItem->result()->aiData;
         $aiData = apply_filters('shortpixel/ai/success', $aiData, $qItem);
@@ -442,7 +443,7 @@ class OptimizeAiController extends OptimizerBase
         // If the file was just uploaded, assume it's not already widely linked and doesn't need replacing / symlinking 
         // ( Maybe just replacing? )
         // Generic number of strlen here. Disallow filename not to be very short, because because. 
-        if (isset($aiData['filebase']) && is_string($aiData['filebase']) && strlen($aiData['filebase']) > 5) // ?? 
+        if (true === $settings->ai_gen_filename && isset($aiData['filebase']) && is_string($aiData['filebase']) && strlen($aiData['filebase']) > 5) // ?? 
         {
             // @todo This and the ReplaceAtttributes is similar code. (Replacer2's Setup::getInstance() returns a fresh instance per call, so URL data does not leak between items.)
             $currentFileBase = ($imageModel->isScaled()) ? $imageModel->getOriginalFile()->getFileBase() : $imageModel->getFileBase();
@@ -461,6 +462,8 @@ class OptimizeAiController extends OptimizerBase
             }
 
             if ($currentFileBase !== $aiData['filebase']) {
+                Log::addTemp('Running Replace Files on basis of ' . $currentFileBase, $aiData);
+
                 $args = [
                     'dry_run' => false,
                     'recent_upload' => is_bool($qItem->data()->recent_upload) ? $qItem->data()->recent_upload : false,
