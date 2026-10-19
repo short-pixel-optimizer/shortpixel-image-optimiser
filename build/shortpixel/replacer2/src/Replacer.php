@@ -231,6 +231,11 @@ class Replacer
 		do_action('shortpixel/replacer/replace_urls', $search_urls, $replace_urls, $base_url);
 		$updated = 0;
 
+		if (0 === count($search_urls)) 
+		{
+			 Log::addDebug('Search URLS array empty, nothing to replace this go '); 
+			 return $updated; 
+		}
 		$updated += $this->doReplaceQuery($base_url, $search_urls, $replace_urls);
 
 		$replaceRuns = apply_filters('shortpixel/replacer/custom_replace_query', array(), $base_url, $search_urls, $replace_urls);
@@ -303,7 +308,7 @@ class Replacer
 	{
 		global $wpdb;
 
-		$meta_options = apply_filters('shortpixel/replacer/metadata_tables', array('post', 'comment', 'term', 'user', 'options'));
+//		$meta_options = apply_filters('shortpixel/replacer/metadata_tables', array('post', 'comment', 'term', 'user', 'options'));
 		$number_of_updates = 0;
 
 		$meta_default = [
@@ -335,7 +340,7 @@ class Replacer
 
 			switch ($table) {
 				case "postmeta": // special case.
-					$sql = 'SELECT * FROM ' . $wpdb->postmeta . '
+					$sql = "SELECT $id_field, $value_field FROM " . $wpdb->postmeta . '
 	                WHERE post_id in (SELECT ID from ' . $wpdb->posts . ' where post_status in ("publish", "future", "draft", "pending", "private") ) AND meta_value like %s';
 					$type = 'post';
 
@@ -379,7 +384,17 @@ class Replacer
 						// Check if usual save should be prevented. This is for integrations.
 						if (true === $this->replace_settings['replacer_do_save']) {
 							$prepared_sql = $wpdb->prepare($update_sql, $content, $id);
-							$result = $wpdb->query($prepared_sql);
+							$wpdb->query($prepared_sql);
+							
+							if ('options' === $table)
+							{
+								wp_cache_delete( 'alloptions', 'options' );         // Clear all options array
+								wp_cache_delete( 'notoptions', 'options' );         // Reset non-existent list
+							} 
+							else 
+							{
+								wp_cache_delete($id, $table);
+							}
 						}
 					}
 				} // Loop
