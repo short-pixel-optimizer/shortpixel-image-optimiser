@@ -32,9 +32,10 @@ class ShortPixelScreenBase
 //	var message = {status: false, http_status: response.status, http_text: text, status_text: response.statusText };
 	HandleError(data)
 	{
-		if (this.processor.debugIsActive == 'false')
+		if (true !== this.processor.debugIsActive )
+		{
 			return; // stay silent when debug is not active.
-
+		}
 		var text = String(data.http_text);
 		var title = this.strings.fatalError;
 		var notice = this.GetErrorNotice(title, text);
@@ -85,7 +86,7 @@ class ShortPixelScreenBase
 
 	HandleErrorStop()
 	{
-		if (this.processor.debugIsActive == 'false')
+		if (true !== this.processor.debugIsActive)
 			return; // stay silent when debug is not active.
 
 		  var title = this.strings.fatalErrorStop;

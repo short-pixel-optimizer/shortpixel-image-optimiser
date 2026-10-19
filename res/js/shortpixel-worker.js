@@ -148,7 +148,6 @@ var SpWorker = {
    ShutDown: function()
    {
        this.stopped = true;
-//       this.Fetch();
    },
 	 UpdateLocalSecret: function(key)
 	 {

@@ -93,7 +93,7 @@ window.ShortPixelProcessor =
         this.localSecret = localStorage.getItem('bulkSecret');
 
         this.remoteSecret = ShortPixelProcessorData.bulkSecret;
-          this.debugIsActive = (ShortPixelProcessorData.debugIsActive == 'true') ? true : false;
+        this.debugIsActive = (ShortPixelProcessorData.debugIsActive == 'true') ? true : false;
         this.showConsoleLog = (ShortPixelProcessorData.showConsoleLog == 'true') ? true : false; 
         this.is_disabled = Boolean(ShortPixelProcessorData.disable_processor); 
 
