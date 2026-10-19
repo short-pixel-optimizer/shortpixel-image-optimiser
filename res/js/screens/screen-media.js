@@ -423,14 +423,12 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			var newTitle = aiData.post_title;
 			var newFileBase = aiData.filebase; 
 		}
-		
-		if (typeof newAltText !== 'undefined')
+
+		// Don't include numbers because it overwrites current data in the textblock
+		if (typeof newAltText !== 'undefined' && typeof newAltText !== 'number')
 		{
 			var inputs = this.altInputNames;
 
-			if (typeof newAltText == 'number') {
-				newAltText = '';
-			}
 
 			for (var i = 0; i < inputs.length; i++) {
 				var altInput = document.getElementById(inputs[i]);
