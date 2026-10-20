@@ -17,13 +17,14 @@
  *   - getMediaClass                         → depends on as3cf handler API
  *   - getItemById                           → as3cf item lookup
  *   - checkIfOffloaded / getSourceIDByURL  → as3cf `get_item_source_by_remote_url`
+ *                                            (front-end use: test-wpOffloadNextGenDelivery.php)
  *   - getLocalPathByURL                    → as3cf item + WP upload base
  *   - image_upload / image_restore / image_converted / remove_remote
  *                                          → WP attachment metadata + as3cf
  *   - preventInitialUploadHandler          → QuotaController + settings + as3cf
  *   - updateOriginalPath                   → as3cf item mutation
  *   - getWebpPaths / add_webp_paths        → filesystem probes
- *   - fixWebpRemotePath                    → SPIO filesystem + as3cf
+ *   - fixWebpRemotePath                    → covered in test-wpOffloadNextGenDelivery.php
  *   - returnOriginalFile                   → get_attached_file with a real attachment
  *
  * replaceFiles (the provider-side rename), exercised with stubbed item +

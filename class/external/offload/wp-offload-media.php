@@ -835,6 +835,17 @@ class wpOffload
 	 *
 	 * @param string $url URL to resolve.
 	 * @return int|false as3cf source_id when found, `false` when not offloaded.
+	 * @todo Step 3 resolves a WebP/AVIF companion the item never recorded:
+	 *       `name-120x68.avif` strips to `name.avif`, which is in the warmed
+	 *       cache whenever the full-size AVIF exists, so a missing thumbnail
+	 *       AVIF counts as offloaded and the front end lists a 403/404 bucket
+	 *       URL in the AVIF srcset. Fix: when a URL resolves only through the
+	 *       stripped form, require basename($raw_url) among the item's
+	 *       extra_info() objects (`source_file`), else cache it as false.
+	 * @todo Step 4 never resolves anything: `substr($url, 0, strpos($url, '.'))`
+	 *       cuts at the first dot of the hostname, and the lookup queries
+	 *       `$url` instead of `$checkurl`. Build the retry URL from the path
+	 *       and query it, or drop the step.
 	 */
 	protected function getSourceIDByURL($url)
 	{
@@ -1417,6 +1428,10 @@ class wpOffload
 	 * @param string $url           URL of the main file (e.g. the `.jpg`).
 	 * @param object $imagebaseDir  SPIO DirectoryModel of the remote path (unused).
 	 * @return object|false The `$fileObj` when the main file resolves to an offloaded source, false otherwise.
+	 * @todo For a companion given as a local path, the companion is returned as
+	 *       soon as the main URL is offloaded, without checking that it is one
+	 *       of the item's recorded objects. Check `$fileObj->getFileName()`
+	 *       against the item's extra_info() objects before returning it.
 	 */
 	public function fixWebpRemotePath($bool, $fileObj, $url, $imagebaseDir)
 	{
