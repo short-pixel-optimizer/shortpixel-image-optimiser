@@ -398,8 +398,19 @@ class OptimizeAiController extends OptimizerBase
      * Then:
      *   - Replaces in-post image attributes (alt, caption) via replaceImageAttributes().
      *   - Renames physical files and updates WordPress metadata via replaceFiles() when
-     *     the AI returned a new filebase that differs from the current one, and only when
-     *     the image is not already widely linked in published content.
+     *     the ai_gen_filename setting is on, the AI returned a filebase longer than 5
+     *     characters that differs from the current one, and the image is not already
+     *     widely linked in published content.
+     *
+     * @todo The rename gate reads the SAVED ai_gen_filename setting only, but the
+     *       request side honours a per-item override: GenerateAiSeoAbility passes
+     *       `ai_gen_filename` as a queue arg, and AiDataModel::getOptimizeData()
+     *       merges it over the settings (UtilHelper::getAiSettings($params)). An MCP
+     *       generate-ai-seo call with gen_filename=true while the setting is off asks
+     *       (and pays) for a filename, then drops the rename here. Suggested fix: gate
+     *       on what THIS item requested, e.g. the returndatalist entry for 'filename'
+     *       not being F_STATUS_EXCLUDESETTING, or carry the override in keep_data
+     *       like recent_upload.
      *   - Appends improvements, preview URLs, and the final aiData/aiDataLabels to the
      *     queue item result for bulk UI consumption.
      * The item is blocked during processing and unblocked before finishItemProcess() is called.

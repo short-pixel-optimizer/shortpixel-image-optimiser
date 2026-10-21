@@ -162,6 +162,55 @@ class AjaxEndpointTest extends WP_Ajax_UnitTestCase {
 		$this->assertSame( AjaxController::NO_ACTION, $response->error );
 	}
 
+	/**
+	 * settings/getNewAiImagePreview spends AI credits on any attachment ID,
+	 * returns its AI text and overwrites the settings-page example
+	 * transients, so it is administrators-only on top of ajaxRequest()'s
+	 * is_author baseline. Authors and editors pass the baseline and must be
+	 * stopped by the action's own is_admin_user gate.
+	 *
+	 * @dataProvider non_admin_roles
+	 */
+	public function test_ai_image_preview_is_refused_to_authors_and_editors( string $role ) {
+		$this->_setRole( $role );
+
+		$_POST['nonce']         = wp_create_nonce( 'ajax_request' );
+		$_POST['screen_action'] = 'settings/getNewAiImagePreview';
+		$_POST['id']            = 999999;
+
+		$response = $this->doAjax( 'shortpixel_ajaxRequest' );
+
+		$this->assertIsObject( $response );
+		$this->assertSame( AjaxController::NO_ACCESS, $response->error ?? null, "$role must be refused the AI image preview" );
+		$this->assertSame( 'settings/getNewAiImagePreview', $response->action ?? null, 'The refusal must come from the action\'s own gate' );
+	}
+
+	public function non_admin_roles(): array {
+		return array(
+			'author' => array( 'author' ),
+			'editor' => array( 'editor' ),
+		);
+	}
+
+	/**
+	 * Sentinel for the test above: an administrator passes the gate and
+	 * reaches the handler, which answers for the missing attachment with its
+	 * own "could not be loaded" message (no AI request is made).
+	 */
+	public function test_ai_image_preview_lets_an_administrator_reach_the_handler() {
+		$this->_setRole( 'administrator' );
+
+		$_POST['nonce']         = wp_create_nonce( 'ajax_request' );
+		$_POST['screen_action'] = 'settings/getNewAiImagePreview';
+		$_POST['id']            = 999999;
+
+		$response = $this->doAjax( 'shortpixel_ajaxRequest' );
+
+		$this->assertIsObject( $response );
+		$this->assertNotSame( AjaxController::NO_ACCESS, $response->error ?? null, 'An administrator must pass the gate' );
+		$this->assertSame( __( 'This image could not be loaded', 'shortpixel-image-optimiser' ), $response->message ?? null );
+	}
+
 	public function test_admin_with_valid_nonce_can_run_the_queue_endpoint() {
 		$this->_setRole( 'administrator' );
 

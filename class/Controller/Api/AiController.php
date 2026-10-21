@@ -152,7 +152,10 @@ class AiController extends RequestManager
      *    (processing) and returns STATUS_WAITING, unless $is_error is truthy for '0'.
      *    Status '2' and the default branch delegate to handleSuccess(). The 'aiData' array
      *    includes: filebase (generated_file_name), alt, caption, relevance,
-     *    description (image_description), and post_title (title).
+     *    description (image_description), and post_title (title). The filebase goes
+     *    through sanitize_file_name(), not sanitize_text_field(): it ends up in
+     *    filesystem paths (OptimizeAiController::replaceFiles()), so '/' and '..'
+     *    from the API answer must never survive. The text fields use sanitize_text_field().
      *
      * @param QueueItem $qItem    The queue item being processed.
      * @param array     $response Raw wp_remote_post() response array (body not yet decoded).

@@ -2028,6 +2028,12 @@ class AjaxController
 	 *
 	 * Sends and exits on the first of: done, error, or safeguard limit.
 	 *
+	 * Administrators only: ajaxRequest() gates this action with
+	 * checkActionAccess('is_admin_user'), like the other settings/*Ai* actions.
+	 * The ajaxRequest() baseline (is_author) is not enough here, because the
+	 * preview spends AI credits on any attachment ID, returns its AI text and
+	 * overwrites the settings-page example transients.
+	 *
 	 * @param array $data Dispatch data array; `$data['id']` is the attachment ID.
 	 * @return void  Calls send() and exits.
 	 */

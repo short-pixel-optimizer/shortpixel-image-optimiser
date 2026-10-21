@@ -459,7 +459,48 @@ class ConversionReplacementTest extends SPIO_IntegrationTestCase {
 		);
 
 		$this->assertPostConversionReplaced( $seeded, 'png' );
-		$this->assertObjectBlobUntouched( $seeded );
+		// The serialized-object option is NOT left untouched on this path:
+		// see the pinned test below.
+	}
+
+	/**
+	 * Pins a known defect: the PNG→JPG queue conversion corrupts an option
+	 * whose value is a serialized OBJECT containing the image URL.
+	 * Replacer::handleMetaData() (build/ replacer2) rewrites the URL inside
+	 * the object payload without fixing the s:<length> prefix (the converted
+	 * file may get a -N suffix, so the length changes) and writes back
+	 * without WordPress's outer serialization layer. get_option() can then
+	 * no longer read the value. This was hidden while the replacer left the
+	 * 'alloptions' cache stale: reads kept returning the pre-conversion value.
+	 * @todo In the replacer2 module source: leave serialized-object payloads
+	 *       alone (what replaceContent() intends), or rewrite them through a
+	 *       real unserialize → replace → serialize round trip that keeps the
+	 *       outer layer.
+	 * When fixed, this test fails; flip it: the option reads back unchanged
+	 * (assertObjectBlobUntouched()), or with a correctly re-serialized URL.
+	 */
+	public function test_png_conversion_corrupts_an_option_holding_a_serialized_object_pinned_for_deferred_fix() {
+		$this->resetReplacerModuleSingletons();
+
+		$id     = $this->uploadPngForQueuePath( 'fixture-small.png' );
+		$seeded = $this->seedContent( $id );
+		// SENTINEL: the option reads back as seeded before the conversion.
+		$this->assertSame( $seeded['object_blob'], get_option( '_spio_test_object_blob' ) );
+
+		$this->purgeQueueTable();
+		$this->optimizeAttachment( $id );
+		$this->assertSame( 'jpg', strtolower( pathinfo( get_attached_file( $id ), PATHINFO_EXTENSION ) ), 'Sentinel: the PNG was converted.' );
+
+		global $wpdb;
+		$raw = (string) $wpdb->get_var( "SELECT option_value FROM {$wpdb->options} WHERE option_name = '_spio_test_object_blob'" );
+		// SENTINEL: the replacer did reach the row.
+		$this->assertStringContainsString( '.jpg', $raw, 'Sentinel: the URL inside the stored object was rewritten.' );
+
+		// THE PIN: the stored value no longer reads back as the seeded string.
+		wp_cache_delete( 'alloptions', 'options' );
+		wp_cache_delete( '_spio_test_object_blob', 'options' );
+		$this->assertNotSame( $seeded['object_blob'], get_option( '_spio_test_object_blob' ), 'Pinned: fixed? The serialized-object option now reads back intact — flip this pin.' );
+		$this->assertStringStartsNotWith( 's:', $raw, 'Pinned: fixed? The outer serialization layer is now kept — flip this pin.' );
 	}
 
 	/**

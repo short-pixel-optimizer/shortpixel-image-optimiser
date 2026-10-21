@@ -393,6 +393,42 @@ class AbilitiesIntegrationTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
+	 * Pins a known defect: gen_filename=true asks the API for a filename
+	 * (the override reaches the payload like gen_caption above), but
+	 * OptimizeAiController::HandleSuccess() gates the rename on the SAVED
+	 * ai_gen_filename setting only, which is off here. The filename is
+	 * requested and paid for, then silently dropped.
+	 * @todo See OptimizeAiController::HandleSuccess(): gate on what the item
+	 *       requested, not on the saved setting.
+	 * When fixed, this test fails; flip it: the file carries the generated name.
+	 */
+	public function test_generate_ai_seo_gen_filename_override_is_requested_but_never_applied_pinned_for_deferred_fix() {
+		$this->api->aiFields = array( 'generated_file_name' => 'mcp-seo-filebase' );
+		$attachment_id       = $this->freshAttachment();
+		$old_file            = get_attached_file( $attachment_id );
+
+		$result = GenerateAiSeoAbility::execute( array(
+			'id'           => $attachment_id,
+			'gen_filename' => true,
+			'process'      => false,
+		) );
+		$this->assertFalse( $result['error'] );
+		$this->runQueueViaAbility();
+
+		$addRequests = array_values( array_filter( $this->api->requests, function ( $r ) {
+			return false !== strpos( $r['url'], 'add-url.php' );
+		} ) );
+		// SENTINELS: the filename job was requested and the AI result landed.
+		$this->assertCount( 1, $addRequests );
+		$this->assertArrayHasKey( 'file', $addRequests[0]['request'], 'Sentinel: gen_filename=true puts the filename job in the payload.' );
+		$this->assertSame( 'A mock ai alt text.', get_post_meta( $attachment_id, '_wp_attachment_image_alt', true ) );
+
+		// THE PIN: the generated name is never applied.
+		$this->assertFileExists( $old_file, 'Pinned: fixed? The gen_filename override now renames — flip this pin.' );
+		$this->assertFileDoesNotExist( trailingslashit( dirname( $old_file ) ) . 'mcp-seo-filebase.jpg', 'Pinned: fixed? The file now carries the generated name — flip this pin.' );
+	}
+
+	/**
 	 * Regression: bulk-generate-ai-seo must not flip the autoAIBulk SETTING
 	 * (persisted on shutdown) to make Queue::prepare() pick up AI items — a
 	 * one-shot MCP call would permanently change site behaviour. The

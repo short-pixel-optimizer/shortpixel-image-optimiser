@@ -9,14 +9,14 @@
  * screen.HandleError(), which builds a red "ShortPixel encountered a fatal
  * error when optimizing images…" notice from `data.http_text`.
  *
- * Two things are meant to hold there and currently do not:
+ * Two things are meant to hold there:
  *
- *   1. The notice is developer-facing and must only show when SPIO debug
- *      mode is on. HandleError() / HandleErrorStop() guard with
- *      `debugIsActive == 'false'`, but the processor stores a BOOLEAN, so the
- *      string comparison is never true and the notice shows to everyone.
- *   2. The relayed error has no `http_text`, so the notice body is
- *      String(undefined) — the word "undefined" and nothing else.
+ *   1. The notice is developer-facing and only shows when SPIO debug mode
+ *      is on: HandleError() / HandleErrorStop() return early unless the
+ *      processor's BOOLEAN debugIsActive is exactly true.
+ *   2. Known defect, still open: the relayed error has no `http_text`, so
+ *      with debug mode on the notice body is String(undefined) — the word
+ *      "undefined" and nothing else.
  *
  * The failure is forced at the browser: the processing POST to
  * admin-ajax.php is aborted by a route, so fetch() rejects exactly as it
@@ -70,11 +70,10 @@ test.describe('Processor — network failure of the processing request', () => {
 	});
 
 	/**
-	 * FLIP-when-fixed (guard compares the boolean: `debugIsActive !== true`):
-	 * the notice count stays 0 and the test passes as a regression test —
-	 * drop the suffix.
+	 * Regression: with debug mode off the developer-facing notice stays
+	 * hidden, whatever the worker reports.
 	 */
-	test('with debug mode off, a failed processing request shows no fatal-error notice (pinned_for_deferred_fix)', async ({
+	test('with debug mode off, a failed processing request shows no fatal-error notice', async ({
 		page,
 		spio,
 		consoleErrors,
@@ -107,9 +106,11 @@ test.describe('Processor — network failure of the processing request', () => {
 	});
 
 	/**
-	 * FLIP-when-fixed (worker falls back to error.message / status text when
-	 * there is no HTTP response): the body names the error, never "undefined".
-	 * Drop the suffix.
+	 * @todo res/js/shortpixel-worker.js: the fetch().catch() relay has no
+	 *       http_text; fall back to error.message / the status text when
+	 *       there is no HTTP response.
+	 * FLIP-when-fixed: the body names the error, never "undefined". Drop the
+	 * suffix.
 	 */
 	test('with debug mode on, the fatal-error notice names the error instead of "undefined" (pinned_for_deferred_fix)', async ({
 		page,

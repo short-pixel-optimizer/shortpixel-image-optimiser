@@ -5,10 +5,10 @@
  * Complements tests/Integration/test-ChangeFilename.php (manual rename
  * flavor) with the AI flavor: the API returns `generated_file_name`,
  * AiController::handleResponse() maps it to aiData['filebase']
- * (sanitize_text_field), and OptimizeAiController::HandleSuccess() calls
- * replaceFiles() when the (formatted) filebase is a string, longer than
- * 5 chars and different from the current file base
- * (OptimizeAiController.php rename gate).
+ * (sanitize_file_name), and OptimizeAiController::HandleSuccess() calls
+ * replaceFiles() when the ai_gen_filename setting is on and the (formatted)
+ * filebase is a string, longer than 5 chars and different from the current
+ * file base (OptimizeAiController.php rename gate).
  *
  * Coverage:
  *  - autoAI ON (upload-hook semantics: recent_upload=true) E2E rename —
@@ -21,8 +21,9 @@
  *    no field-level regeneration or filename-only bulk (a feature request,
  *    not a bug); this test documents the current no-op and will need
  *    updating when the feature lands.
- *  - Rename gate: short (<=5 chars) filebase ignored; identical filebase
- *    ignored; ai_filename_prefix/postfix are baked into the final name.
+ *  - Rename gate: ai_gen_filename off ignores a returned filebase; short
+ *    (<=5 chars) filebase ignored; identical filebase ignored;
+ *    ai_filename_prefix/postfix are baked into the final name.
  *  - Backups follow the rename (LocalBackupModel::renameBackup) and a
  *    subsequent restore returns the ORIGINAL bytes under the NEW name
  *    (the old filename is gone for good — by design, nothing reverts it).
@@ -289,6 +290,28 @@ class AiFilenameRenameTest extends SPIO_IntegrationTestCase {
 		$this->assertSame( 'A mock ai alt text.', get_post_meta( $attachment_id, '_wp_attachment_image_alt', true ) );
 	}
 
+	/**
+	 * With ai_gen_filename OFF the file is never renamed, even when the API
+	 * answer still carries a generated_file_name (the mock always sends what
+	 * it is given, like a backend that ignores the missing `file` job).
+	 */
+	public function test_returned_filebase_is_ignored_when_filename_generation_is_off() {
+		\wpSPIO()->settings()->ai_gen_filename = 0;
+		$this->api->aiFields                   = array( 'generated_file_name' => 'unrequested-seo-filebase' );
+
+		$attachment_id = $this->freshAttachment();
+		$old_file      = get_attached_file( $attachment_id );
+
+		$this->enqueueAi( $attachment_id, true );
+		$this->runQueueUntilEmpty();
+
+		// SENTINEL: the AI result itself landed, so HandleSuccess() ran.
+		$this->assertSame( 'A mock ai alt text.', get_post_meta( $attachment_id, '_wp_attachment_image_alt', true ) );
+		$this->assertFileExists( $old_file, 'ai_gen_filename=0 must leave the file name alone.' );
+		$this->assertFileDoesNotExist( trailingslashit( dirname( $old_file ) ) . 'unrequested-seo-filebase.jpg' );
+		$this->assertSame( $old_file, get_attached_file( $attachment_id ) );
+	}
+
 	/** A generated filebase identical to the current base must not rename. */
 	public function test_identical_generated_filebase_does_not_rename() {
 		$attachment_id = $this->freshAttachment();
@@ -352,6 +375,13 @@ class AiFilenameRenameTest extends SPIO_IntegrationTestCase {
 			preg_grep( '/^' . preg_quote( $old_base, '/' ) . '\./', $backupsBefore ),
 			'Precondition: a backup under the old base exists.'
 		);
+
+		// freshImageModel() reloads the settings from the database, which
+		// drops set_up()'s in-memory switches; the rename gate reads them.
+		$settings                  = \wpSPIO()->settings();
+		$settings->enable_ai       = 1;
+		$settings->ai_gen_alt      = 1;
+		$settings->ai_gen_filename = 1;
 
 		$this->purgeQueueTable();
 		$this->enqueueAi( $attachment_id, true );
