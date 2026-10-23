@@ -107,75 +107,41 @@ class wpOffloadNextGenDeliveryTest extends WP_UnitTestCase {
 	 * Companion existence after offload
 	 */
 
-	/**
-	 * Pins a known defect: an AVIF the item never recorded is reported as
-	 * offloaded. checkIfOffloaded() → getSourceIDByURL() strips the `-WxH`
-	 * suffix, so `name-120x68.avif` becomes `name.avif`; that URL is in the
-	 * source cache (warmed from the item's recorded objects), so the
-	 * thumbnail companion resolves to the item and the virtual file reports
-	 * exists() === true. Any size works, including one that was never
-	 * generated.
-	 *
-	 * Flip when: a companion resolved only through the stripped URL is
-	 * checked against the item's recorded objects, and exists() is false.
-	 */
-	public function test_unrecorded_thumbnail_avif_is_reported_as_existing_pinned_for_deferred_fix() {
+	/** Unrecorded AVIF sizes are not treated as offloaded just because the full-size AVIF exists. */
+	public function test_unrecorded_thumbnail_avif_is_not_reported_as_existing() {
 		$this->offload();
 		$fs = \wpSPIO()->filesystem();
 
 		$main = $fs->getFile( self::BASE . 'name-120x68.jpg' );
-		$main->getExtension(); // resolves the main image, warming the source cache like convertImage() does.
+		$main->getExtension(); // Resolves the item and warms the cache from its recorded objects.
 
-		// SENTINELS: the item really lacks the thumbnail AVIF, while it has the full-size AVIF the strip lands on.
+		// The item lacks the thumbnail AVIF, while it has the full-size AVIF.
 		$recorded = array_column( SPIO_Test_As3cf_NextGen_Item_Stub::$objects, 'source_file' );
-		$this->assertNotContains( 'name-120x68.avif', $recorded, 'Sentinel: the thumbnail AVIF is not recorded.' );
-		$this->assertContains( 'name.avif', $recorded, 'Sentinel: the full-size AVIF is recorded.' );
-		$this->assertTrue( $main->exists(), 'Sentinel: the offloaded main thumbnail resolves.' );
-		$this->assertFalse( $fs->getFile( self::BASE . 'name-120x68.jpg.avif' )->exists(), 'Sentinel: an unrelated, unrecorded name does not resolve.' );
-
-		$this->assertTrue(
-			$fs->getFile( self::BASE . 'name-120x68.avif' )->exists(),
-			'Fixed? An unrecorded thumbnail AVIF no longer counts as offloaded — flip this pin.'
-		);
-		$this->assertTrue(
-			$fs->getFile( self::BASE . 'name-999x999.avif' )->exists(),
-			'Fixed? A never-generated size no longer counts as offloaded — flip this pin.'
-		);
+		$this->assertNotContains( 'name-120x68.avif', $recorded );
+		$this->assertContains( 'name.avif', $recorded );
+		$this->assertTrue( $main->exists() );
+		$this->assertFalse( $fs->getFile( self::BASE . 'name-120x68.jpg.avif' )->exists() );
+		$this->assertFalse( $fs->getFile( self::BASE . 'name-120x68.avif' )->exists() );
+		$this->assertFalse( $fs->getFile( self::BASE . 'name-999x999.avif' )->exists() );
 	}
 
-	/**
-	 * Pins a known defect, as visitors see it: after offload, the AVIF
-	 * srcset lists bucket URLs for sizes that have no AVIF (they return
-	 * 403/404, a broken image wherever that size is picked). Before
-	 * offload the same sizes fall back to their WebP URL.
-	 *
-	 * Flip when: the AVIF srcset uses name-120x68.webp / name-256x144.webp
-	 * for those two sizes (or omits them).
-	 */
-	public function test_offloaded_avif_srcset_lists_avifs_that_do_not_exist_pinned_for_deferred_fix() {
+	/** The AVIF srcset excludes sizes without an AVIF and falls back to the recorded WebP. */
+	public function test_offloaded_avif_srcset_uses_webp_for_sizes_without_avif() {
 		$this->offload();
 
 		$out  = $this->convert( $this->offloadedImgTag() );
 		$avif = $this->sourceSrcset( $out, 'avif' );
 		$webp = $this->sourceSrcset( $out, 'webp' );
 
-		// SENTINELS: a <picture> was built, the sizes that do have an AVIF are listed, and every WebP is there.
 		$this->assertNotNull( $avif, 'Sentinel: an AVIF <source> is emitted (two sizes really have one).' );
 		$this->assertNotNull( $webp, 'Sentinel: a WebP <source> is emitted.' );
 		$this->assertStringContainsString( self::BASE . 'name-400x225.avif 400w', $avif, 'Sentinel: the recorded 400x225 AVIF is listed.' );
 		$this->assertStringContainsString( self::BASE . 'name.avif 1200w', $avif, 'Sentinel: the recorded full-size AVIF is listed.' );
 		$this->assertStringContainsString( self::BASE . 'name-120x68.webp 120w', $webp, 'Sentinel: the thumbnail WebP is listed.' );
-
-		$this->assertStringContainsString(
-			self::BASE . 'name-120x68.avif 120w',
-			$avif,
-			'Fixed? The AVIF srcset no longer lists the missing 120x68 AVIF — flip this pin (expect name-120x68.webp there).'
-		);
-		$this->assertStringContainsString(
-			self::BASE . 'name-256x144.avif 256w',
-			$avif,
-			'Fixed? The AVIF srcset no longer lists the missing 256x144 AVIF — flip this pin (expect name-256x144.webp there).'
-		);
+		$this->assertStringNotContainsString( self::BASE . 'name-120x68.avif 120w', $avif );
+		$this->assertStringNotContainsString( self::BASE . 'name-256x144.avif 256w', $avif );
+		$this->assertStringContainsString( self::BASE . 'name-120x68.webp 120w', $avif );
+		$this->assertStringContainsString( self::BASE . 'name-256x144.webp 256w', $avif );
 	}
 
 	/**
@@ -233,38 +199,33 @@ class wpOffloadNextGenDeliveryTest extends WP_UnitTestCase {
 		);
 	}
 
-	/*
-	 * getSourceIDByURL() — double-extension fallback
-	 */
-
-	/**
-	 * Pins a known defect: the double-extension fallback can never resolve
-	 * anything. It builds its retry URL with
-	 * `substr($url, 0, strpos($url, '.'))`, which cuts at the first dot of
-	 * the HOSTNAME (`https://storage.avif`), and then queries as3cf with
-	 * the original `$url` instead of that retry URL. So a `.jpg.webp` URL
-	 * is looked up three times, unchanged.
-	 *
-	 * Flip when: the fallback queries the single-extension URL (or is
-	 * removed, leaving two lookups).
-	 */
-	public function test_double_extension_fallback_only_requeries_the_original_url_pinned_for_deferred_fix() {
+	/** Unknown double-extension URLs are queried once without fallback probes. */
+	public function test_double_extension_url_is_looked_up_once() {
 		$o   = $this->offload();
 		$url = self::BASE . 'other.jpg.webp';
 
 		$get = new ReflectionMethod( wpOffload::class, 'getSourceIDByURL' );
 		$get->setAccessible( true );
 
-		// SENTINEL: nothing about this URL is cached or recorded, so every step reaches as3cf.
 		$this->assertSame( array(), SPIO_Test_As3cf_NextGen_Item_Stub::$lookups, 'Sentinel: no lookups before the call.' );
 
-		$this->assertFalse( $get->invoke( $o, $url ), 'Sentinel: an unknown URL is not offloaded.' );
+		$this->assertFalse( $get->invoke( $o, $url ) );
+		$this->assertSame( array( $url ), SPIO_Test_As3cf_NextGen_Item_Stub::$lookups );
+	}
 
-		$this->assertSame(
-			array( $url, $url, $url ),
-			SPIO_Test_As3cf_NextGen_Item_Stub::$lookups,
-			'Fixed? The double-extension fallback no longer re-queries the unchanged URL — flip this pin.'
-		);
+	/** One source lookup loads the item and caches all URLs listed by as3cf. */
+	public function test_source_lookup_caches_all_recorded_objects() {
+		$o   = $this->offload();
+		$url = self::BASE . 'name-120x68.jpg';
+
+		$get = new ReflectionMethod( wpOffload::class, 'getSourceIDByURL' );
+		$get->setAccessible( true );
+		$this->assertSame( 77, $get->invoke( $o, $url ) );
+
+		foreach ( SPIO_Test_As3cf_NextGen_Item_Stub::$objects as $object ) {
+			$this->assertSame( 77, $get->invoke( $o, self::BASE . $object['source_file'] ) );
+		}
+		$this->assertSame( array( $url ), SPIO_Test_As3cf_NextGen_Item_Stub::$lookups );
 	}
 }
 

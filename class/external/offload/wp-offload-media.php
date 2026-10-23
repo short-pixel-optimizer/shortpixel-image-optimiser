@@ -784,7 +784,7 @@ class wpOffload
 		$orig_url = $url;
 
 		if (is_null($source_id)) {
-			$extension = substr($url, strrpos($url, '.') + 1);
+			/* $extension = substr($url, strrpos($url, '.') + 1);
 			// Check the file extension without loading anything of the fileObj ( virtual )
 			$file_extension = substr($rawpath, strrpos($rawpath, '.') + 1);
 
@@ -793,7 +793,7 @@ class wpOffload
 				if ($extension == 'webp' || $extension == 'avif') {
 					return false;
 				}
-			}
+			} */
 
 			$source_id = $this->getSourceIDByURL($url);
 		}
@@ -807,150 +807,48 @@ class wpOffload
 	}
 
 	/**
-	 * Resolve a URL to its as3cf source_id, trying several lookup shapes
-	 * because as3cf's `get_item_source_by_remote_url` is picky about
-	 * exact URL form.
-	 *
-	 * Lookup order (first hit wins; each writes back to the source cache
-	 * for future calls):
-	 *
-	 *   1. **Raw URL** — direct hit on the source cache.
-	 *   2. **Scheme-normalised URL** — some as3cf configurations store
-	 *      URLs without a scheme; we retry with `https://` prepended.
-	 *   3. **Thumbnail-stripped URL** — a `/(.*)-\d+[xX]\d+(\.\w+)/`
-	 *      regex removes WordPress's `-<W>x<H>` thumbnail suffix so we
-	 *      hit the main image entry, which is what as3cf indexes.
-	 *   4. **Double-extension URL** — when a URL has `.jpg.webp` style
-	 *      double extensions (SPIO's double-webp delivery), retry with
-	 *      only the last extension so the base `.jpg` entry can match.
-	 *
-	 * On a hit, an extra pass fetches the as3cf item's `extra_info()`
-	 * and warms the cache with every thumbnail/variant URL it lists —
-	 * so subsequent per-thumbnail lookups short-circuit at step 1.
-	 *
-	 * The `$cacheHit` flag tracks whether the current answer came from
-	 * an intermediate cache hit; when true we skip both the final cache
-	 * write and the extra_info() warming pass (both were done at the
-	 * earlier write time).
+	 * Resolve a URL to its as3cf source_id. On the first hit, load the
+	 * item once and cache the URLs for every file recorded on it.
 	 *
 	 * @param string $url URL to resolve.
 	 * @return int|false as3cf source_id when found, `false` when not offloaded.
-	 * @todo Step 3 resolves a WebP/AVIF companion the item never recorded:
-	 *       `name-120x68.avif` strips to `name.avif`, which is in the warmed
-	 *       cache whenever the full-size AVIF exists, so a missing thumbnail
-	 *       AVIF counts as offloaded and the front end lists a 403/404 bucket
-	 *       URL in the AVIF srcset. Fix: when a URL resolves only through the
-	 *       stripped form, require basename($raw_url) among the item's
-	 *       extra_info() objects (`source_file`), else cache it as false.
-	 * @todo Step 4 never resolves anything: `substr($url, 0, strpos($url, '.'))`
-	 *       cuts at the first dot of the hostname, and the lookup queries
-	 *       `$url` instead of `$checkurl`. Build the retry URL from the path
-	 *       and query it, or drop the step.
 	 */
 	protected function getSourceIDByURL($url)
 	{
 		$source_id = $this->sourceCache($url); // check cache first.
-		$cacheHit = false; // prevent a cache hit to be cached again.
-		$raw_url = $url; // keep raw. If resolved, add the raw url to the cache.
+		$raw_url   = $url;
 
-		// If in cache, we are done.
 		if (! is_null($source_id)) {
 			return $source_id;
 		}
 
-		if (is_null($source_id)) // check on the raw url.
-		{
-			$class = $this->getMediaClass();
-
-			$parsedUrl = parse_url($url);
-
-			if (
-				(! isset($parsedUrl['scheme'])
-					|| ! in_array($parsedUrl['scheme'], array('http', 'https')))
-
-			) {
-				if (substr($url, 0, 2) === '//')
-					$url = 'https:' . $url;
-				else
-					$url = 'https://' . $url;
-			}
-
-			$source_id = $this->sourceCache($url);
-
-			if (is_null($source_id)) {
-				$source = $class::get_item_source_by_remote_url($url);
-
-				$source_id = isset($source['id']) ? intval($source['id']) : null;
-			} else {
-				$cacheHit = true; // hit the cache. Yeah.
-				$this->sourceCache($raw_url, $source_id);
-			}
+		$parsedUrl = parse_url($url);
+		if (! isset($parsedUrl['scheme']) || ! in_array($parsedUrl['scheme'], array('http', 'https'), true)) {
+			$url = (substr($url, 0, 2) === '//') ? 'https:' . $url : 'https://' . $url;
 		}
 
-		if (is_null($source_id)) // check now via the thumbnail hocus.
-		{
-			$pattern = '/(.*)-\d+[xX]\d+(\.\w+)/m';
-			$url = preg_replace($pattern, '$1$2', $url);
+		// A direct lookup is sufficient: as3cf indexes each recorded file.
+		// Thumbnail stripping and double-extension probes can incorrectly
+		// resolve a file that is not part of this item's recorded objects.
+		$class  = $this->getMediaClass();
+		$source = $class::get_item_source_by_remote_url($url);
+		$source_id = isset($source['id']) ? intval($source['id']) : false;
+		$this->sourceCache($url, $source_id);
+		$this->sourceCache($raw_url, $source_id);
 
-			$source_id = $this->sourceCache($url); // check cache first.
-
-			if (is_null($source_id)) {
-				$source = $class::get_item_source_by_remote_url($url);
-				$source_id = isset($source['id']) ? intval($source['id']) : null;
-			} else {
-				$cacheHit = true;
-				$this->sourceCache($raw_url, $source_id);
-			}
+		if (false === $source_id) {
+			return false;
 		}
 
-		// Check issue with double extensions. If say double webp/avif is on, the double extension causes the URL not to be found (ie .jpg)
-		if (is_null($source_id)) {
-			if (substr_count($parsedUrl['path'], '.') > 1) {
-				// Get extension
-				$ext = substr(strrchr($url, '.'), 1);
+		$item = $this->getItemById($source_id);
+		if (is_object($item) && method_exists($item, 'extra_info')) {
+			$base_url   = str_replace(basename($url), '', $url);
+			$extra_info = $item->extra_info();
 
-				// Remove all extensions from the URL
-				$checkurl = substr($url, 0, strpos($url, '.'));
-
-				// Add back the last one.
-				$checkurl .= '.' . $ext;
-
-				// Retry
-				$source_id = $this->sourceCache($checkurl); // check cache first.
-
-				if (is_null($source_id)) {
-					$source = $class::get_item_source_by_remote_url($url);
-					$source_id = isset($source['id']) ? intval($source['id']) : null;
-				} else {
-					$cacheHit = true;
-					$this->sourceCache($raw_url, $source_id);
-				}
-			}
-		}
-
-		if (is_null($source_id)) {
-			$source_id = false;
-		}
-
-		if (false === $cacheHit) {
-			$this->sourceCache($url, $source_id);  // cache it.
-		}
-
-		if ($source_id !== false && false === $cacheHit) {
-
-			// get item
-			$item = $this->getItemById($source_id);
-			if (is_object($item) && method_exists($item, 'extra_info')) {
-				$baseUrl = str_replace(basename($url), '', $url);
-				//$rawBaseUrl =
-				$extra_info = $item->extra_info();
-
-				if (isset($extra_info['objects'])) {
-					foreach ($extra_info['objects'] as $extraItem) {
-						if (is_array($extraItem) && isset($extraItem['source_file'])) {
-							// Add source stuff into cache.
-							$this->sourceCache($baseUrl . $extraItem['source_file'], $source_id);
-						}
+			if (isset($extra_info['objects']) && is_array($extra_info['objects'])) {
+				foreach ($extra_info['objects'] as $extra_item) {
+					if (is_array($extra_item) && isset($extra_item['source_file'])) {
+						$this->sourceCache($base_url . basename($extra_item['source_file']), $source_id);
 					}
 				}
 			}

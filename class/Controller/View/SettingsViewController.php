@@ -1244,7 +1244,7 @@ class SettingsViewController extends \ShortPixel\ViewController
           $post_CDNDomain = isset($post['CDNDomain']) ? sanitize_text_field($post['CDNDomain']) : ''; 
 
           $setting_useCDN = $this->model->useCDN; 
-          $setting_CDNDomain = $this->model->CDNDomain; 
+          //$setting_CDNDomain = $this->model->CDNDomain; 
 
           $CDNcontroller = new \ShortPixel\Controller\Front\CDNController();
 
