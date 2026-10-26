@@ -1953,7 +1953,6 @@ class AjaxController
 		$bulkControl = BulkController::getInstance();
 		QueueController::resetQueues(); // prevent any weirdness
 
-
 		$stats = $bulkControl->createNewBulk('media', ['customOp' => 'removeLegacy']);
 		$json->media->stats = $stats;
 

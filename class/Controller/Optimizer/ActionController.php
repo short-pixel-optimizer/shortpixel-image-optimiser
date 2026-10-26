@@ -61,6 +61,9 @@ class ActionController extends OptimizerBase
          case 'migrate':
             return $this->migrate($item);
          break;
+         case 'removeLegacy': 
+            return $this->removeLegacy($item);
+         break;   
          /*case 'remove_background':
             return $this->removeBackground($item);
          break;  */
@@ -258,7 +261,7 @@ class ActionController extends OptimizerBase
    * @return bool True if the restore succeeded and reoptimization was scheduled; false otherwise.
    */
  // @todo This should probably be contained in the newAction in QueueItem ( comrpressiontype / args )
-  protected function reoptimizeItem(QueueItem $queueItem)
+  protected function reoptimizeItem(QueueItem $queueItem) : bool
   {
 
     $bool = $this->restoreItem($queueItem);
@@ -313,6 +316,22 @@ class ActionController extends OptimizerBase
        return $result;
   }
 
+  protected function removeLegacy(QueueItem $queueItem)
+  {
+
+    $imageModel = $queueItem->imageModel;
+    $imageModel->removeLegacyShortPixel();
+
+    $queueItem->addResult([
+        'is_done' => true,
+        'is_error' => false,
+        'message' => __('Legacy data removed / checked ', 'shortpixel-image-optimiser'),
+        'apiStatus' => ApiController::STATUS_NOT_API,
+    ]);
+
+    return true;
+   }
+
   /**
    * Restores an image to its pre-optimisation backup.
    *
@@ -324,7 +343,7 @@ class ActionController extends OptimizerBase
    * @param QueueItem $queueItem The queue item referencing the image to restore.
    * @return bool True if the image was restored successfully; false otherwise.
    */
-  protected function restoreItem(QueueItem $queueItem)
+  protected function restoreItem(QueueItem $queueItem) : bool
   {
       $fs = \wpSPIO()->filesystem();
 
@@ -372,13 +391,9 @@ class ActionController extends OptimizerBase
          //$api = $this->getAPI('restore'); // @todo This should also be changed.
          $imageModel = $fs->getImage($item_id, $imageModel->get('type'), false);
 
-         //$item = new \stdClass;
-         //$item->urls = $mediaItem->getOptimizeUrls();
-         //$qItem = QueueItems::getImageItem($imageModel);
-
          $queueItem->newDumpAction();
 
-         $api = ApiController::getInstance(); //$queueItem->getAPIController();
+         $api = ApiController::getInstance();
          $api->dumpMediaItem($queueItem);
       }
 
