@@ -603,7 +603,7 @@ class CDNControllerTest extends WP_UnitTestCase {
 		// the raw URL extraction regex works by calling it directly on the
 		// preg_match_all inside the method.
 		$content = '<div style="background: url(https://example.com/bg.jpg)"></div>';
-		$number  = preg_match_all( '/url(\(((?:[^()]+|(?1))+)\))/m', $content, $matches );
+		$number  = preg_match_all( '/url(\(((?:\s*(?:"[^"<>]*+"|\'[^\'<>]*+\')\s*|(?:[^()\'"<>]++|(?1))++)\)))/m', $content, $matches );
 		$this->assertSame( 1, $number );
 		$this->assertSame( 'https://example.com/bg.jpg', $matches[2][0] );
 	}
@@ -613,7 +613,7 @@ class CDNControllerTest extends WP_UnitTestCase {
 	 */
 	public function test_fetchInlineBackground_regex_captures_single_quoted_url() {
 		$content = "background: url('https://example.com/hero.jpg');";
-		$number  = preg_match_all( '/url(\(((?:[^()]+|(?1))+)\))/m', $content, $matches );
+		$number  = preg_match_all( '/url(\(((?:\s*(?:"[^"<>]*+"|\'[^\'<>]*+\')\s*|(?:[^()\'"<>]++|(?1))++)\)))/m', $content, $matches );
 		$this->assertSame( 1, $number );
 		$this->assertStringContainsString( 'hero.jpg', $matches[2][0] );
 	}
@@ -623,8 +623,21 @@ class CDNControllerTest extends WP_UnitTestCase {
 	 */
 	public function test_fetchInlineBackground_regex_captures_multiple_urls() {
 		$content = 'background: url(a.jpg); border-image: url(b.png);';
-		$number  = preg_match_all( '/url(\(((?:[^()]+|(?1))+)\))/m', $content, $matches );
+		$number  = preg_match_all( '/url(\(((?:\s*(?:"[^"<>]*+"|\'[^\'<>]*+\')\s*|(?:[^()\'"<>]++|(?1))++)\)))/m', $content, $matches );
 		$this->assertSame( 2, $number );
+	}
+
+	/**
+	 * An unquoted URL in an HTML attribute cannot consume later markup up to a
+	 * closing parenthesis elsewhere in the document.
+	 */
+	public function test_fetchInlineBackground_does_not_cross_attribute_boundary() {
+		$ctrl = $this->freshController();
+		$html = '<a href="http://attacker.example/url(/x/contenteditable/autofocus/onfocus=document.title=/XSS/.source//a.jpg" contenteditable autofocus onfocus=document.title=/XSS/.source//a.jpg>Dana</a><div>later )</div>';
+
+		$result = $this->invokePrivate( $ctrl, 'fetchInlineBackground', array( $html ) );
+
+		$this->assertSame( array(), $result );
 	}
 
 	// -------------------------------------------------------------------------
