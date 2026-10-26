@@ -194,9 +194,6 @@ if (! defined('ABSPATH')) {
       <!-- Nextgen setting -->
       <?php if ($this->has_nextgen) : ?>
         <setting>
-          <name>
-            <?php esc_html_e('NextGen', 'shortpixel-image-optimiser'); ?>
-          </name>
           <content>
             <?php $this->printSwitchButton(
               [
@@ -210,6 +207,13 @@ if (! defined('ABSPATH')) {
             <name>
               <?php esc_html_e('Enable this option to automatically optimize your NextGEN Gallery images.', 'shortpixel-image-optimiser'); ?>
             </name>
+            <info>
+           <?php 
+              printf(esc_html__('To update missing galleries after enabling, do a %s full scan of all folders %s', 'shortpixel-image-optimiser'),
+                '<a href="' . esc_url(admin_url('upload.php?page=wp-short-pixel-custom&part=scan')) . '">', '</a>'
+              ); 
+            ?>
+           </info>
           </content>
         </setting>
       <?php endif; ?>

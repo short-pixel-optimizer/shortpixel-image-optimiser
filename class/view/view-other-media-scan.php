@@ -1,9 +1,5 @@
 <?php
-
 namespace ShortPixel;
-use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-
-use ShortPixel\Helper\UiHelper as UiHelper;
 
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 
@@ -22,6 +18,9 @@ if ( isset($_GET['noheader']) ) {
 	 $folder_url = esc_url(add_query_arg('part', 'folders', $this->url));
 
 	 $otherMediaController = OtherMediaController::getInstance();
+	 
+
+
 ?>
 
 <div class='scan-area'>
@@ -45,6 +44,12 @@ if ( isset($_GET['noheader']) ) {
 			</button>
 			<label>
 				<?php _e('Fully scan all folders and check all files again.', 'shortpixel-image-optimiser'); ?>
+				<?php if (true === $view->nextgen_active)
+				{
+					echo '<br />';
+					_e('Also checks for nextgen galleries'); 
+				}
+				?>
 			</label>
 
 		</div>

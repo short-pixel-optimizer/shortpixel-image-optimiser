@@ -328,7 +328,7 @@ class OtherMediaController extends \ShortPixel\Controller
      * @param DirectoryOtherMediaModel $directory The root directory to check.
      * @return bool True if all directories in the tree are allowed, false otherwise.
      */
-		public function checkDirectoryRecursive($directory)
+		protected function checkDirectoryRecursive($directory)
 		{
 				 if ($directory->checkDirectory() === false)
 				 {

@@ -122,7 +122,23 @@ class UtilHelper
   public static function spNormalizePath($path)
   {
     $path = preg_replace('|(?<=.)/+|', '/', $path);
-    return $path;
+
+    // Additional for normalizing 26/10/2026 - removing illegal parts of path. 
+    		// Split into parts and filter
+		$parts = explode('/', $path);
+		$resolved = [];
+		
+		foreach ($parts as $part) {
+			if ($part === '' || $part === '.' || $part === '..') {
+				continue;
+			}
+			$resolved[] = $part;
+		}
+		
+		// Preserve leading slash for absolute paths
+		$prefix = ($path[0] === '/') ? '/' : '';
+		
+		return $prefix . implode('/', $resolved);
   }
 
   /**

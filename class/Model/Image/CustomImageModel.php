@@ -28,8 +28,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
     /** @var int|null ID of the custom folder this image belongs to. */
     protected $folder_id;
-    /** @var string|null MD5 hash of the image's full filesystem path (legacy field). */
-    protected $path_md5;
+
 
     /** @var string Queue/type identifier used when interacting with QueueController. */
     protected $type = 'custom';
@@ -551,7 +550,6 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
       $this->fullpath = $imagerow->path;
       $this->folder_id = $imagerow->folder_id;
-      $this->path_md5 = $imagerow->path_md5;
 
       $status = intval($imagerow->status);
       $metaObj->status = $status;
@@ -638,7 +636,6 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     public function setStub($path, $load = true)
     {
        $this->fullpath = $path;
-       $this->path_md5 = md5($this->fullpath);
 
        global $wpdb;
 
@@ -922,7 +919,6 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
             'ts_optimized' => UtilHelper::timestampToDB($metaObj->tsOptimized),
             'path' => $this->getFullPath(),
 						'name' => $this->getFileName(),
-            'path_md5' => md5($this->getFullPath()), // this is legacy
 						'extra_info' => $extra_info,
        );
        // The keys are just for readability.
@@ -943,7 +939,6 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
             'ts_optimized' => '%s' ,
             'path' => '%s',
 						'name' => '%s',
-            'path_md5' => '%s' , // this is legacy
 						'extra_info' => '%s',
        );
 

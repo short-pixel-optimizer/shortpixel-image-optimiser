@@ -66,6 +66,8 @@ class OtherMediaScanViewController extends \ShortPixel\ViewController
 
 			$this->view->totalFolders = count($this->controller->getActiveDirectoryIDS());
 
+      $this->view->nextgen_active = \wpSPIO()->settings()->includeNextGen;
+
       $this->loadView();
   }
 } // class
