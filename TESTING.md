@@ -196,6 +196,17 @@ has no replacer module of its own, so `test-CompatBeaverBuilder.php`
 covers how its serialized layout data (`_fl_builder_data` /
 `_fl_builder_draft`) goes through the generic replacer.
 
+Commercial partner THEMES go in `tests/partner-themes/` (gitignored), the
+same way: `--compat` extracts each zip into the themes dir (re-extracting
+when the zip is newer) and `tests/bootstrap.php` makes Bricks the active
+theme when it is there. Only one theme can be active per WordPress load,
+so it is active for the whole compat run; without the zip WordPress keeps
+its default theme and `test-CompatBricks.php` self-skips. Bricks has no
+replacer module: its element trees (`_bricks_page_content_2` postmeta,
+`bricks_components` option) go through the generic replacer. Bricks only
+lets users with builder access write its page content, so the tests seed
+it as an administrator.
+
 ```bash
 bin/test.sh --compat
 bin/test.sh --compat --filter CompatWooCommerce
