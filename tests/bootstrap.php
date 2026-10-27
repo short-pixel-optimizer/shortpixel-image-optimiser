@@ -67,6 +67,9 @@ if ( '1' === getenv( 'SPIO_PARTNER_PLUGINS' ) ) {
 		// faked-active tests in test-CompatPolylang.php coexist:
 		// this option override lists it, and the real plugin loads.
 		'polylang/polylang.php',
+		// Real Beaver Builder Lite (free, wp.org). It has no replacer2
+		// module: its layouts go through the generic serialized-meta path.
+		'beaver-builder-lite-version/fl-builder.php',
 		// Commercial — extracted from tests/partner-plugins/ when
 		// present; silently skipped (like the rest) when not.
 		'sitepress-multilingual-cms/sitepress.php',

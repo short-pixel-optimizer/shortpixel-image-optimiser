@@ -191,6 +191,11 @@ filter and reproduces its shared-guid media translations directly in the
 DB, so no Polylang zip or code is needed — the guid-duplicate detection
 in `MediaLibraryModel::getWPMLDuplicates()` is exercised for real.
 
+Beaver Builder Lite is downloaded from wordpress.org with the others. It
+has no replacer module of its own, so `test-CompatBeaverBuilder.php`
+covers how its serialized layout data (`_fl_builder_data` /
+`_fl_builder_draft`) goes through the generic replacer.
+
 ```bash
 bin/test.sh --compat
 bin/test.sh --compat --filter CompatWooCommerce

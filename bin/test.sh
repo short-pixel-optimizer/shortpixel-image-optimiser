@@ -428,7 +428,7 @@ if [ "$COMPAT" = "1" ]; then
         ZIP_CACHE=/tmp/partner-plugin-zips
         PLUGIN_DIR="$WP_CORE_DIR/wp-content/plugins"
         mkdir -p "$ZIP_CACHE" "$PLUGIN_DIR"
-        for SLUG in woocommerce nextgen-gallery amazon-s3-and-cloudfront elementor wordpress-seo polylang; do
+        for SLUG in woocommerce nextgen-gallery amazon-s3-and-cloudfront elementor wordpress-seo polylang beaver-builder-lite-version; do
             if [ ! -d "$PLUGIN_DIR/$SLUG" ]; then
                 if [ ! -f "$ZIP_CACHE/$SLUG.zip" ]; then
                     echo "==> Downloading $SLUG (latest stable) from wordpress.org"
