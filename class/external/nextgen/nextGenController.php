@@ -501,7 +501,11 @@ The screen IDS seem to be have changed, trying a more definitive solution
 
     foreach($result as $row)
     {
-      $directory = $fs->getDirectory($homepath->getPath() . $row->path);
+      $path = $row->path;
+      if (isset($path[0]) && '/' === $path[0])
+        $path = substr($path, 1);
+
+      $directory = $fs->getDirectory($homepath->getPath() . $path);
       if ($directory->exists())
         $galleries[] = $directory;
     }
@@ -565,7 +569,8 @@ The screen IDS seem to be have changed, trying a more definitive solution
 						{
 							continue;
 						}
-          	$directory = $otherMedia->addDirectory($gallery->getPath());
+            // Don't refresh here, but this should be done in the scan directories feature
+          	$directory = $otherMedia->addDirectory($gallery->getPath(), false);
 						if (! $directory)
 						{
 							Log::addWarn('Could not add this directory' . $gallery->getPath() );

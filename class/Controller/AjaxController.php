@@ -27,6 +27,7 @@ use ShortPixel\Controller\Queue\QueueItems as QueueItems;
 use ShortPixel\Controller\View\MultiSiteViewController;
 use ShortPixel\Model\AiDataModel;
 use ShortPixel\Model\Queue\QueueItem;
+use ShortPixel\NextGenController;
 use ShortPixel\ViewController;
 
 /**
@@ -2567,6 +2568,15 @@ class AjaxController
 	protected function resetScanFolderChecked($json, $data)
 	{
 		$otherMediaController = OtherMediaController::getInstance();
+
+		$settings = \wpSPIO()->settings(); 
+
+		// Check and see if there is something to nextgen
+		if (true === $settings->includeNextGen)
+		{
+              $nextgen = NextGenController::getInstance();
+			  $nextgen->addNextGenGalleriesToCustom(true); 
+		}
 
 		$otherMediaController->resetCheckedTimestamps();
 		return $json;

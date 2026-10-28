@@ -268,7 +268,7 @@ class OtherMediaController extends \ShortPixel\Controller
      * @param string $path Full filesystem path to the directory to add.
      * @return DirectoryOtherMediaModel|false The saved directory model, or false on failure.
      */
-	   public function addDirectory($path)
+	   public function addDirectory($path, $refresh = true)
     {
        $fs = \wpSPIO()->filesystem();
        $directory = new DirectoryOtherMediaModel($path);
@@ -285,8 +285,11 @@ class OtherMediaController extends \ShortPixel\Controller
          if ($directory->save())
          {
 					$this->folderIDCache = null;
-          $directory->refreshFolder(true);
-          $directory->updateFileContentChange();
+          if (true === $refresh)
+          {
+            $directory->refreshFolder(true);
+            $directory->updateFileContentChange();
+          }
          }
        }
        else // if directory is already added, fail silently, but still refresh it.
@@ -295,11 +298,19 @@ class OtherMediaController extends \ShortPixel\Controller
          {
 					 	$this->folderIDCache = null;
             $directory->set('status', DirectoryOtherMediaModel::DIRECTORY_STATUS_NORMAL);
-						$directory->refreshFolder(true);
-            $directory->updateFileContentChange(); // does a save. Dunno if that's wise.
+            if (true === $refresh)
+            {
+						  $directory->refreshFolder(true);
+              $directory->updateFileContentChange(); // does a save. Dunno if that's wise.
+            }
          }
          else
-          $directory->refreshFolder(false);
+          {
+            if (true === $refresh)
+            {
+              $directory->refreshFolder(false);
+            }
+          }
        }
 
       if ($directory->exists() && $directory->get('id') > 0)
@@ -317,7 +328,7 @@ class OtherMediaController extends \ShortPixel\Controller
      * @param DirectoryOtherMediaModel $directory The root directory to check.
      * @return bool True if all directories in the tree are allowed, false otherwise.
      */
-		public function checkDirectoryRecursive($directory)
+		protected function checkDirectoryRecursive($directory)
 		{
 				 if ($directory->checkDirectory() === false)
 				 {

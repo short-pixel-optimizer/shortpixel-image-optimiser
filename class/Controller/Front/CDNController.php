@@ -752,7 +752,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		$matches = $matches[2];
 		
 		$replaceBlocks = []; 
-		Log::addTemp("MATCHES INLINE BG", $matches);
 		foreach($matches as $url)
 		{
 			$block = $this->getReplaceBlock($url);

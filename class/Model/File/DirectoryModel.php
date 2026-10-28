@@ -64,6 +64,10 @@ class DirectoryModel extends \ShortPixel\Model
         $this->is_readable = true; // assume
         $this->exists = true;
       }
+      else 
+      { 
+        
+      }
 
 			// When in trusted mode prevent filesystem checks as much as possible.
 			if (true === self::$TRUSTED_MODE)
@@ -74,7 +78,7 @@ class DirectoryModel extends \ShortPixel\Model
 			}
 
 			// On virtual situation this would remove the slashes on :// , causing issues with offload et al.
-			if (false === $this->is_virtual)
+			if (true !== $this->is_virtual)
 			 	$path = UtilHelper::spNormalizePath($path);
 
       if (! $this->is_virtual() && ! is_dir($path) ) // path is wrong, *or* simply doesn't exist.

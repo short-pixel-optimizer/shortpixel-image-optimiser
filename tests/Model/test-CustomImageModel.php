@@ -814,15 +814,6 @@ class CustomImageModelTest extends WP_UnitTestCase {
 		$this->assertLessThanOrEqual( $after, $meta->tsAdded );
 	}
 
-	public function test_setStub_sets_path_md5_from_the_given_path() {
-		$path  = $this->makeImageFile();
-		$model = $this->makeStubModel();
-
-		$model->setStub( $path, false );
-
-		$this->assertSame( md5( $path ), $this->getProtected( $model, 'path_md5' ) );
-	}
-
 	public function test_setStub_loads_meta_when_existing_row_and_load_flag_true() {
 		global $wpdb;
 		$table = $wpdb->prefix . 'shortpixel_meta';
@@ -848,7 +839,6 @@ class CustomImageModelTest extends WP_UnitTestCase {
 				'ts_optimized'    => gmdate( 'Y-m-d H:i:s' ),
 				'path'            => $path,
 				'name'            => basename( $path ),
-				'path_md5'        => md5( $path ),
 			)
 		);
 		$insertedId = $wpdb->insert_id;

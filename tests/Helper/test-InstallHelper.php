@@ -199,9 +199,10 @@ class InstallHelperTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'CREATE TABLE',                                    $sql );
 		$this->assertStringContainsString( $wpdb->prefix . 'shortpixel_folders',              $sql );
 		$this->assertStringContainsString( 'PRIMARY KEY',                                     $sql );
-		foreach ( array( 'path', 'name', 'path_md5', 'file_count', 'status', 'parent' ) as $col ) {
+		foreach ( array( 'path', 'name', 'file_count', 'status', 'parent' ) as $col ) {
 			$this->assertStringContainsString( $col, $sql, "folders SQL missing column {$col}" );
 		}
+		$this->assertStringNotContainsString( 'path_md5', $sql, 'The legacy path_md5 column is no longer created.' );
 	}
 
 	public function test_getMetaTableSQL_defines_meta_schema() {
@@ -214,6 +215,7 @@ class InstallHelperTest extends WP_UnitTestCase {
 		foreach ( array( 'folder_id', 'compressed_size', 'compression_type', 'keep_exif', 'cmyk2rgb', 'extra_info' ) as $col ) {
 			$this->assertStringContainsString( $col, $sql, "meta SQL missing column {$col}" );
 		}
+		$this->assertStringNotContainsString( 'path_md5', $sql, 'The legacy path_md5 column is no longer created.' );
 	}
 
 	public function test_getPostMetaSQL_defines_postmeta_schema() {
@@ -257,7 +259,7 @@ class InstallHelperTest extends WP_UnitTestCase {
 		// CREATE TABLE ran (rather than some legacy schema left over from a
 		// previous run).
 		$columnChecks = array(
-			'shortpixel_folders'    => 'path_md5',
+			'shortpixel_folders'    => 'file_count',
 			'shortpixel_meta'       => 'compressed_size',
 			'shortpixel_postmeta'   => 'attach_id',
 			'shortpixel_aipostmeta' => 'generated_data',

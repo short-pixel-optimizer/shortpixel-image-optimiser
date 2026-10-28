@@ -120,4 +120,71 @@ class ReplacerTest extends WP_UnitTestCase {
 			'The nested serialized-object blob must survive untouched (side effect of the hardening: its URL is NOT replaced)'
 		);
 	}
+
+	/**
+	 * Bricks-shaped page data: a serialized array of elements, where the
+	 * nested slider keeps its custom options as a JSON string next to an
+	 * image element that holds the URL being replaced.
+	 */
+	private function bricksPageContent( string $options_json ): array {
+		return array(
+			array(
+				'id'       => 'slider1',
+				'name'     => 'slider-nested',
+				'settings' => array(
+					'optionsType' => 'custom',
+					'options'     => $options_json,
+				),
+			),
+			array(
+				'id'       => 'image1',
+				'name'     => 'image',
+				'settings' => array( 'image' => array( 'url' => self::OLD_URL ) ),
+			),
+		);
+	}
+
+	/**
+	 * Pins a known defect: a JSON string nested inside serialized data
+	 * comes back as a stdClass object. replaceContent() json_decode()s every
+	 * JSON-looking string it meets but only re-encodes the top level
+	 * ($in_deep === false). Bricks reads its nested slider options with
+	 * stripslashes(), which then fatals ("stdClass given") on every page
+	 * showing the element — even though the options never held the URL.
+	 * @todo In the replacer2 module source, Replacer::replaceContent():
+	 *       re-encode a nested JSON string back to a string after replacing
+	 *       inside it, and leave a JSON string that contains none of the
+	 *       search URLs untouched.
+	 * When fixed, this test fails; flip it: `options` is still the same
+	 * JSON string.
+	 */
+	public function test_json_string_nested_in_serialized_data_comes_back_as_an_object_pinned_for_deferred_fix() {
+		$options = '{"type":"loop","perPage":3,"gap":"1em"}';
+		$content = serialize( $this->bricksPageContent( $options ) );
+
+		$result = unserialize( $this->replaceContent( $content, false ) );
+
+		// SENTINEL: the URL beside it was replaced.
+		$this->assertSame( self::NEW_URL, $result[1]['settings']['image']['url'], 'Sentinel: the image URL was replaced.' );
+
+		// THE PIN: the untouched JSON string is now an object.
+		$this->assertInstanceOf( stdClass::class, $result[0]['settings']['options'], 'Pinned: fixed? The nested JSON string stays a string — flip this pin.' );
+	}
+
+	/**
+	 * Pins the same defect for a JSON string that does carry the URL: the
+	 * URL is replaced, but the value is stored back as an object.
+	 * @todo See test_json_string_nested_in_serialized_data_comes_back_as_an_object_pinned_for_deferred_fix.
+	 * When fixed, this test fails; flip it: `options` is a JSON string with
+	 * the new URL.
+	 */
+	public function test_json_string_with_the_url_nested_in_serialized_data_comes_back_as_an_object_pinned_for_deferred_fix() {
+		$options = wp_json_encode( array( 'cover' => self::OLD_URL ), JSON_UNESCAPED_SLASHES );
+		$content = serialize( $this->bricksPageContent( $options ) );
+
+		$result = unserialize( $this->replaceContent( $content, false ) );
+
+		$this->assertInstanceOf( stdClass::class, $result[0]['settings']['options'], 'Pinned: fixed? The nested JSON string stays a string — flip this pin.' );
+		$this->assertSame( self::NEW_URL, $result[0]['settings']['options']->cover, 'The URL inside it was replaced.' );
+	}
 }
