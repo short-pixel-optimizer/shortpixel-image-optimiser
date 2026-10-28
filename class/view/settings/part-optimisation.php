@@ -199,17 +199,17 @@ if (! defined('ABSPATH')) {
               [
                 'name' => 'includeNextGen',
                 'checked' => $view->data->includeNextGen,
-                'label' => esc_html__('Optimize NextGen galleries', 'shortpixel-image-optimiser')
+                'label' => esc_html__('Optimize Imagely/NextGEN galleries', 'shortpixel-image-optimiser')
               ]
             );
             ?>
             <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/how-to-optimize-your-nextgen-galleries-with-shortpixel-image-optimizer/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings"></i>
             <name>
-              <?php esc_html_e('Enable this option to automatically optimize your NextGEN Gallery images.', 'shortpixel-image-optimiser'); ?>
+              <?php esc_html_e('Enable this option to automatically optimize your Imagely/NextGEN Gallery images.', 'shortpixel-image-optimiser'); ?>
             </name>
             <info>
            <?php 
-              printf(esc_html__('To update missing galleries after enabling, do a %s full scan of all folders %s', 'shortpixel-image-optimiser'),
+              printf(esc_html__('To update or add missing galleries after enabling the integration, please do a %s full scan of all folders %s', 'shortpixel-image-optimiser'),
                 '<a href="' . esc_url(admin_url('upload.php?page=wp-short-pixel-custom&part=scan')) . '">', '</a>'
               ); 
             ?>
