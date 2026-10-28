@@ -109,15 +109,30 @@ class UtilHelper
 
 
   /**
-   * Collapses runs of forward slashes in a path to a single slash.
+   * Normalises a filesystem path and strips path-traversal segments.
    *
-   * Preserves a leading "//" (used by UNC-style network paths) by only matching
-   * duplicated slashes preceded by another character. Used as a lightweight
+   * Collapses runs of forward slashes, then drops every empty, "." and ".."
+   * segment, so a path can never climb out of the directory it names (custom
+   * media folders are checked against the allowed root with this result).
+   * A leading "/" is kept; a trailing "/" is not (DirectoryModel adds it back
+   * with trailingslashit()). Used by FileModel::processPath() for every file
+   * and by DirectoryModel for every non-virtual directory. A lightweight
    * alternative to wp_normalize_path(), which behaves inconsistently on some
    * Windows installations.
    *
+   * @todo ".." segments are dropped, not resolved: "/site/wp/../uploads/a.jpg"
+   *       becomes "/site/wp/uploads/a.jpg". WordPress does not resolve ".." in
+   *       wp_upload_dir(), so a site whose uploads path contains one (WordPress
+   *       in a subfolder with upload_path or UPLOADS set to "../…") gets every
+   *       attachment path rewritten to a folder that does not exist, and SPIO
+   *       treats the images as missing. A leading "//" (Windows UNC network
+   *       path) is collapsed to "/", and an empty path reads $path[0] and
+   *       raises a PHP warning. Suggested fix: resolve ".." by removing the
+   *       previous segment (and reject a path that climbs above its root),
+   *       keep a leading "//", and return '' early for an empty path.
+   *
    * @param string $path Filesystem path to normalise.
-   * @return string Normalised path with collapsed internal slashes.
+   * @return string Normalised path without empty, "." or ".." segments.
    */
   public static function spNormalizePath($path)
   {

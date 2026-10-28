@@ -22,19 +22,23 @@
  *     a decoded tree via \Breakdance\Data\get_tree — we seed a real
  *     Breakdance-shaped postmeta row and verify the module returns the
  *     expected tree structure (with URLs in it).
- *   - End-to-end conversion: PINNED AS BROKEN (known production defect).
- *     Breakdance stores `_breakdance_data` DOUBLE
- *     JSON-encoded (set_meta → encode_before_writing_to_wp json_encodes
- *     the outer array whose `tree_json_string` value is ITSELF a JSON
- *     string), so every `/` in a URL lands in the DB as `\\\/` (three
- *     chars: \ \ /). The module's addSlash() builds a SINGLE-escaped
- *     LIKE pattern (`\/`, as for Elementor's single-encoded storage) —
- *     which can never be a contiguous substring of `\\\/`. The postmeta
- *     SELECT in Replacer::handleMetaData therefore never matches a real
- *     Breakdance row and loadContent/saveContent never run. Verified by
- *     direct string simulation: single-escaped pattern = no match,
- *     double-escaped pattern (`\\\/`) = match. Fix: addSlash for the
- *     breakdance component must escape twice (or LIKE on both forms).
+ *   - End-to-end PNG→JPG conversion and file rename. `_breakdance_data`
+ *     is an outer JSON object whose `tree_json_string` value is itself a
+ *     JSON string. Every Breakdance writer stores that inner string as the
+ *     editor produced it (JSON.stringify, `/` unescaped) or copies it
+ *     verbatim, so the stored URLs are single-escaped (`\/`) and the
+ *     module's LIKE pattern matches them. Breakdance alone: the Replacer
+ *     hands the row to the module with its post_id, loadContent() loads the
+ *     tree and saveContent() writes the new URL through save_document().
+ *     Pinned defects on this path:
+ *       - Breakdance + Elementor: the Elementor module's run uses the same
+ *         LIKE pattern and runs first. It rewrites the row with the generic
+ *         replacer, which saves `tree_json_string` back as an object
+ *         instead of a string — get_tree() then throws a TypeError and the
+ *         document no longer loads.
+ *       - Breakdance 2.x only: saveContent() passes `false` as
+ *         futureLayerMeta to save_document(), which overwrites
+ *         `_breakdance_futurelayer_meta`. Breakdance 3.0 skips a false value.
  *
  * Neither the Integration suite nor a plain manual-override filter can
  * exercise this module — it hard-checks the real Breakdance functions and
@@ -106,21 +110,38 @@ class CompatBreakdanceTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * Seed a post with a Breakdance-shaped `_breakdance_data` meta value
-	 * that references the given URL somewhere in its tree. Uses the same
-	 * encoding pipeline the real Breakdance uses (wp_json_encode + wp_slash
-	 * via \Breakdance\Data\encode_before_writing_to_wp) — the SPIO module
-	 * relies on that exact shape being decodable by \Breakdance\Data\get_tree.
+	 * Seed `_breakdance_data` the way the Breakdance editor saves it. The
+	 * builder serialises the tree with JSON.stringify, which leaves `/`
+	 * unescaped, and save_document() hands that string to set_meta() as
+	 * `tree_json_string` — so URLs land in the database single-escaped
+	 * (`http:\/\/…`).
 	 */
 	private function seedBreakdanceDocument( int $post_id, string $url ): void {
-		$tree = array(
+		$outer = array(
+			'tree_json_string' => wp_json_encode( $this->breakdanceTree( $url ), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
+		);
+
+		\Breakdance\Data\set_meta( $post_id, '_breakdance_data', $outer );
+	}
+
+	/**
+	 * A minimal valid Breakdance tree with one image element pointing at
+	 * $url. The nodes carry a type because save_document() renders the
+	 * post's CSS cache, which reads it.
+	 */
+	private function breakdanceTree( string $url ): array {
+		return array(
 			'root' => array(
 				'id'       => 'root-node',
-				'data'     => array(),
+				'data'     => array(
+					'type'       => 'root',
+					'properties' => array(),
+				),
 				'children' => array(
 					array(
 						'id'   => 'image-node-1',
 						'data' => array(
+							'type'       => 'EssentialElements\\Image',
 							'properties' => array(
 								'image' => array( 'url' => $url ),
 							),
@@ -129,15 +150,49 @@ class CompatBreakdanceTest extends SPIO_IntegrationTestCase {
 				),
 			),
 		);
+	}
 
-		// Breakdance stores the tree JSON-encoded inside a `tree_json_string`
-		// field of the outer meta payload — see plugin/data/tree.php: get_tree
-		// pulls the string via get_meta($post_id, '…data', 'tree_json_string').
-		$outer = array(
-			'tree_json_string' => wp_json_encode( $tree ),
-		);
+	/** The meta_id of the post's `_breakdance_data` row. */
+	private function breakdanceMetaId( int $post_id ): int {
+		global $wpdb;
+		return (int) $wpdb->get_var( $wpdb->prepare( "SELECT meta_id FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key = '_breakdance_data'", $post_id ) );
+	}
 
-		\Breakdance\Data\set_meta( $post_id, '_breakdance_data', $outer );
+	/**
+	 * Record every row the Replacer hands to load_meta_value for the
+	 * breakdance component. Runs before the module's own loadContent
+	 * (priority 10), so it sees the row even when the module aborts it.
+	 */
+	private function captureBreakdanceRows( array &$rows ): callable {
+		$capture = function ( $content, $row, $component ) use ( &$rows ) {
+			if ( 'breakdance' === $component ) {
+				$rows[ (int) $row['meta_id'] ] = $row;
+			}
+			return $content;
+		};
+		add_filter( 'shortpixel/replacer/load_meta_value', $capture, 5, 3 );
+		return $capture;
+	}
+
+	/**
+	 * Run the next replacement as on a site without Elementor: the compat
+	 * harness activates Elementor too, and its replacer module would
+	 * otherwise process the Breakdance row first.
+	 */
+	private function withoutElementorModule(): void {
+		add_filter( 'shortpixel/externals/elementor_is_active', '__return_false' );
+		$this->resetReplacerModuleSingletons();
+	}
+
+	/**
+	 * Decode `_breakdance_data` straight from the database. Returns the
+	 * outer payload; its `tree_json_string` must be a string for
+	 * Breakdance to load the document.
+	 */
+	private function storedBreakdanceData( int $post_id ): array {
+		global $wpdb;
+		$raw = (string) $wpdb->get_var( $wpdb->prepare( "SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key = '_breakdance_data'", $post_id ) );
+		return (array) json_decode( $raw, true );
 	}
 
 	// -------------------------------------------------------------------
@@ -254,79 +309,6 @@ class CompatBreakdanceTest extends SPIO_IntegrationTestCase {
 		$this->assertSame( $raw, $result, 'loadContent must be a no-op for the elementor component too.' );
 	}
 
-	// -------------------------------------------------------------------
-	// End-to-end (pinned known defect): PNG→JPG
-	// conversion runs the FULL Replacer against a real Breakdance-shaped
-	// `_breakdance_data` postmeta row and the row survives UNCHANGED.
-	//
-	// ROOT CAUSE (verified): Breakdance double-JSON-encodes its meta —
-	// URLs are stored with `\\\/` between path segments. The module's
-	// addSlash() (build/shortpixel/replacer2/src/Modules/Breakdance.php:74-82)
-	// produces a SINGLE-escaped LIKE pattern (`\/`), which can never match
-	// the double-escaped storage, so the postmeta SELECT in
-	// Replacer::handleMetaData (Replacer.php:335-336,350) finds no rows and
-	// loadContent/saveContent never execute. Breakdance documents are
-	// therefore NEVER URL-rewritten — in production too, not just in this
-	// harness. When the addSlash escaping is fixed for the breakdance
-	// component, this test flips: promote it to a positive-rewrite
-	// assertion (the loadContent test above proves decode works; save
-	// would go through \Breakdance\Data\save_document → set_meta).
-	// -------------------------------------------------------------------
-
-	public function test_png_conversion_leaves_breakdance_meta_unchanged_pinned_for_deferred_fix() {
-		$id  = $this->uploadPngForQueuePath( 'fixture-small.png' );
-		$url = wp_get_attachment_url( $id );
-		$this->assertStringEndsWith( '.png', $url );
-
-		$post_id = self::factory()->post->create( array( 'post_status' => 'publish', 'post_title' => 'BD sentinel' ) );
-		$this->seedBreakdanceDocument( $post_id, $url );
-
-		$raw_before = get_post_meta( $post_id, '_breakdance_data', true );
-		$this->assertStringContainsString( '.png', $raw_before, 'Sentinel: _breakdance_data must reference .png before conversion.' );
-
-		$this->purgeQueueTable();
-
-		try {
-			$this->optimizeAttachment( $id );
-		} catch ( \Throwable $e ) {
-			$this->markTestSkipped(
-				'Breakdance save_document threw inside WP_UnitTestCase (' . get_class( $e ) . ': ' . $e->getMessage() . ') — heavy side effects (generateCacheForPost, filesystem writes) that need a full request context. Module autoregister + loadContent assertions above cover the SPIO side.'
-			);
-		}
-
-		$this->assertSame(
-			'jpg',
-			strtolower( pathinfo( get_attached_file( $id ), PATHINFO_EXTENSION ) ),
-			'PNG must be converted to JPG (SPIO side of the pipeline still works).'
-		);
-
-		wp_cache_delete( $post_id, 'post_meta' );
-		$raw_after = get_post_meta( $post_id, '_breakdance_data', true );
-
-		// PIN: the meta value remains UNCHANGED — the module's single-
-		// escaped LIKE pattern never matches Breakdance's double-escaped
-		// storage, so the breakdance replace run finds no rows (see the
-		// root-cause block above). Flips when the addSlash escaping is
-		// fixed — then promote to a positive-rewrite assertion.
-		$this->assertStringContainsString(
-			'.png',
-			$raw_after,
-			'Breakdance meta stays .png — the module\'s single-escaped LIKE pattern cannot match Breakdance\'s double-JSON-encoded storage (Modules/Breakdance.php:74-82 addSlash). FLIP to a positive-rewrite assertion when fixed.'
-		);
-		$this->assertStringNotContainsString(
-			'.jpg',
-			$raw_after,
-			'Breakdance meta never gained a .jpg reference — the breakdance replace-query never matches any row.'
-		);
-	}
-
-	// -------------------------------------------------------------------
-	// Pin companion: the manual/AI file RENAME shares the same
-	// Replacer pass, so Breakdance documents are equally never rewritten
-	// on rename — the renamed file's old URL stays in _breakdance_data
-	// (dead reference). Same root cause, same flip condition as above.
-	// -------------------------------------------------------------------
-
 	/** Run the shared rename engine exactly like AjaxController::replaceFileName does (:1409-1413). */
 	private function renameAttachment( int $attachment_id, string $new_base ): bool {
 		$this->resetPluginSingletons();
@@ -336,35 +318,280 @@ class CompatBreakdanceTest extends SPIO_IntegrationTestCase {
 		return $queueItem->getApiController( 'requestAlt' )->ajax_replaceFile( $queueItem, $new_base );
 	}
 
-	public function test_manual_rename_leaves_breakdance_meta_unchanged_pinned_for_deferred_fix() {
+	// -------------------------------------------------------------------
+	// End-to-end. Documents saved from the Breakdance editor carry
+	// single-escaped URLs, which the module's LIKE pattern matches. What
+	// happens next depends on whether Elementor is active:
+	//
+	// - Breakdance alone: the Breakdance run reaches the row with its
+	//   post_id, loads the tree through get_tree(), rewrites the URL and
+	//   saves the document through save_document().
+	// - Breakdance + Elementor: the Elementor module's run builds the same
+	//   LIKE pattern, runs before the Breakdance run and handles the row
+	//   with the generic replacer. That decodes the nested
+	//   `tree_json_string`, rewrites the URL and saves it back as a JSON
+	//   object instead of a string; the Breakdance run then finds nothing
+	//   left to match. get_tree() throws a TypeError on the stored object,
+	//   so the document no longer loads.
+	// -------------------------------------------------------------------
+
+	/**
+	 * Shape sentinel for the tests below: an editor-saved document stores
+	 * its URLs single-escaped and decodes back to the plain URL.
+	 */
+	public function test_editor_saved_document_stores_urls_single_escaped() {
+		$post_id = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+		$url     = 'http://example.com/wp-content/uploads/2026/10/editor-image.png';
+		$this->seedBreakdanceDocument( $post_id, $url );
+
+		$raw = get_post_meta( $post_id, '_breakdance_data', true );
+		$this->assertStringContainsString( str_replace( '/', '\\/', $url ), $raw, 'Editor-saved URLs are stored single-escaped.' );
+		$this->assertStringNotContainsString( '\\\\\\/', $raw, 'Editor-saved URLs are not escaped twice.' );
+
+		$tree = \Breakdance\Data\get_tree( $post_id );
+		$this->assertSame( $url, $tree['root']['children'][0]['data']['properties']['image']['url'] ?? null, 'get_tree() decodes the plain URL.' );
+	}
+
+	/**
+	 * On a site without Elementor, converting a PNG to JPG rewrites an
+	 * editor-saved Breakdance document to the .jpg: the row reaches the
+	 * module with its post_id, so loadContent() can load the tree.
+	 */
+	public function test_png_conversion_rewrites_editor_saved_breakdance_document() {
+		$this->withoutElementorModule();
+		$id  = $this->uploadPngForQueuePath( 'fixture-small.png' );
+		$url = wp_get_attachment_url( $id );
+		$this->assertStringEndsWith( '.png', $url );
+
+		$post_id = self::factory()->post->create( array( 'post_status' => 'publish', 'post_title' => 'BD editor sentinel' ) );
+		$this->seedBreakdanceDocument( $post_id, $url );
+		$meta_id = $this->breakdanceMetaId( $post_id );
+
+		$this->purgeQueueTable();
+
+		$rows    = array();
+		$capture = $this->captureBreakdanceRows( $rows );
+		$this->optimizeAttachment( $id );
+		remove_filter( 'shortpixel/replacer/load_meta_value', $capture, 5 );
+
+		// SENTINELS: the conversion ran and the Breakdance query matched the row.
+		$this->assertSame( 'jpg', strtolower( pathinfo( get_attached_file( $id ), PATHINFO_EXTENSION ) ), 'Sentinel: the PNG was converted to JPG.' );
+		$this->assertArrayHasKey( $meta_id, $rows, 'Sentinel: the editor-saved row reached the breakdance component — the LIKE pattern matches single-escaped URLs.' );
+
+		$this->assertSame( $post_id, (int) ( $rows[ $meta_id ]['post_id'] ?? 0 ), 'The row reaches the module with its post_id.' );
+		wp_cache_delete( $post_id, 'post_meta' );
+		$raw_after = get_post_meta( $post_id, '_breakdance_data', true );
+		$this->assertStringNotContainsString( '.png', $raw_after, 'The Breakdance document no longer references the .png.' );
+		$this->assertStringContainsString( '.jpg', $raw_after, 'The Breakdance document references the .jpg.' );
+		$tree = \Breakdance\Data\get_tree( $post_id );
+		$this->assertStringEndsWith( '.jpg', (string) ( $tree['root']['children'][0]['data']['properties']['image']['url'] ?? '' ), 'get_tree() loads the document with the .jpg URL.' );
+	}
+
+	/**
+	 * On a site without Elementor, renaming a file (manually or with AI)
+	 * rewrites an editor-saved Breakdance document to the new filename.
+	 */
+	public function test_manual_rename_rewrites_editor_saved_breakdance_document() {
+		$this->withoutElementorModule();
 		$id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->purgeQueueTable();
 
 		$url      = wp_get_attachment_url( $id );
 		$old_base = pathinfo( get_attached_file( $id ), PATHINFO_FILENAME );
 
-		$post_id = self::factory()->post->create( array( 'post_status' => 'publish', 'post_title' => 'BD rename sentinel' ) );
+		$post_id = self::factory()->post->create( array( 'post_status' => 'publish', 'post_title' => 'BD editor rename sentinel' ) );
 		$this->seedBreakdanceDocument( $post_id, $url );
+		$meta_id = $this->breakdanceMetaId( $post_id );
 
-		$raw_before = get_post_meta( $post_id, '_breakdance_data', true );
-		$this->assertStringContainsString( $old_base, $raw_before, 'Sentinel: _breakdance_data must reference the old base before the rename.' );
+		$rows     = array();
+		$capture  = $this->captureBreakdanceRows( $rows );
+		$new_base = 'bd-editor-rename-' . strtolower( wp_generate_password( 6, false ) );
+		$renamed  = $this->renameAttachment( $id, $new_base );
+		remove_filter( 'shortpixel/replacer/load_meta_value', $capture, 5 );
 
-		$new_base = 'bd-rename-' . wp_generate_password( 6, false );
-		$this->assertTrue( $this->renameAttachment( $id, $new_base ), 'Sanity: the rename itself must succeed (SPIO side works).' );
-		$this->assertStringContainsString( $new_base, get_attached_file( $id ), 'Sanity: _wp_attached_file must carry the new base.' );
+		// SENTINELS: the rename ran and the Breakdance query matched the row.
+		$this->assertTrue( $renamed, 'Sentinel: the rename succeeded.' );
+		$this->assertStringContainsString( $new_base, get_attached_file( $id ), 'Sentinel: _wp_attached_file carries the new base.' );
+		$this->assertArrayHasKey( $meta_id, $rows, 'Sentinel: the editor-saved row reached the breakdance component — the LIKE pattern matches single-escaped URLs.' );
 
+		$this->assertSame( $post_id, (int) ( $rows[ $meta_id ]['post_id'] ?? 0 ), 'The row reaches the module with its post_id.' );
 		wp_cache_delete( $post_id, 'post_meta' );
 		$raw_after = get_post_meta( $post_id, '_breakdance_data', true );
+		$this->assertStringNotContainsString( $old_base . '.', $raw_after, 'The Breakdance document no longer references the old name.' );
+		$this->assertStringContainsString( $new_base, $raw_after, 'The Breakdance document references the new name.' );
+		$tree = \Breakdance\Data\get_tree( $post_id );
+		$this->assertStringContainsString( $new_base, (string) ( $tree['root']['children'][0]['data']['properties']['image']['url'] ?? '' ), 'get_tree() loads the document with the new URL.' );
+	}
 
-		$this->assertStringContainsString(
-			$old_base,
-			$raw_after,
-			'Rename flavor: _breakdance_data still references the OLD filename after a rename — the single-escaped LIKE pattern never matches the double-JSON-encoded storage. FLIP to a positive-rewrite assertion when addSlash is fixed.'
-		);
-		$this->assertStringNotContainsString(
-			$new_base,
-			$raw_after,
-			'Rename flavor: the new base never reaches the Breakdance document.'
-		);
+	/**
+	 * Pins a known defect: with Elementor also active, converting a PNG to
+	 * JPG corrupts an editor-saved Breakdance document. The Elementor run
+	 * rewrites the row with the generic replacer and stores
+	 * `tree_json_string` as an object, so get_tree() throws.
+	 * @todo In the replacer2 module source: keep `_breakdance_data` rows out
+	 *       of every run but the breakdance one (e.g. select meta_key in
+	 *       Replacer::handleMetaData() and have the Breakdance module return
+	 *       null from load_meta_value for that key on other components), and
+	 *       have Replacer::replaceContent() re-encode a nested JSON string
+	 *       as a string.
+	 * When fixed, this test fails; flip it: `tree_json_string` stays a
+	 * string and get_tree() returns the tree with the .jpg URL.
+	 */
+	public function test_png_conversion_with_elementor_active_corrupts_editor_saved_breakdance_document_pinned_for_deferred_fix() {
+		if ( ! defined( 'ELEMENTOR_VERSION' ) ) {
+			$this->markTestSkipped( 'Needs Elementor active alongside Breakdance (bin/test.sh --compat).' );
+		}
+
+		$id  = $this->uploadPngForQueuePath( 'fixture-small.png' );
+		$url = wp_get_attachment_url( $id );
+
+		$post_id = self::factory()->post->create( array( 'post_status' => 'publish', 'post_title' => 'BD+Elementor sentinel' ) );
+		$this->seedBreakdanceDocument( $post_id, $url );
+		$this->assertIsString( $this->storedBreakdanceData( $post_id )['tree_json_string'] ?? null, 'Sentinel: tree_json_string is a string before the conversion.' );
+
+		$this->purgeQueueTable();
+		$this->optimizeAttachment( $id );
+
+		// SENTINEL: the conversion ran.
+		$this->assertSame( 'jpg', strtolower( pathinfo( get_attached_file( $id ), PATHINFO_EXTENSION ) ), 'Sentinel: the PNG was converted to JPG.' );
+
+		// THE PIN: tree_json_string was saved back as an object …
+		$stored = $this->storedBreakdanceData( $post_id );
+		$this->assertIsArray( $stored['tree_json_string'] ?? null, 'Pinned: fixed? tree_json_string is no longer turned into an object — flip this pin.' );
+
+		// … so Breakdance can no longer load the document.
+		wp_cache_delete( $post_id, 'post_meta' );
+		$thrown = null;
+		try {
+			\Breakdance\Data\get_tree( $post_id );
+		} catch ( \TypeError $e ) {
+			$thrown = $e;
+		}
+		$this->assertInstanceOf( \TypeError::class, $thrown, 'Pinned: fixed? get_tree() loads the document again — flip this pin.' );
+	}
+
+	/**
+	 * Pins a known defect: with Elementor also active, renaming a file
+	 * corrupts an editor-saved Breakdance document. Same cause as the
+	 * PNG→JPG pin above.
+	 * @todo See the PNG→JPG pin above.
+	 * When fixed, this test fails; flip it: `tree_json_string` stays a
+	 * string and get_tree() returns the tree with the new name.
+	 */
+	public function test_manual_rename_with_elementor_active_corrupts_editor_saved_breakdance_document_pinned_for_deferred_fix() {
+		if ( ! defined( 'ELEMENTOR_VERSION' ) ) {
+			$this->markTestSkipped( 'Needs Elementor active alongside Breakdance (bin/test.sh --compat).' );
+		}
+
+		$id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+		$url = wp_get_attachment_url( $id );
+
+		$post_id = self::factory()->post->create( array( 'post_status' => 'publish', 'post_title' => 'BD+Elementor rename sentinel' ) );
+		$this->seedBreakdanceDocument( $post_id, $url );
+		$this->assertIsString( $this->storedBreakdanceData( $post_id )['tree_json_string'] ?? null, 'Sentinel: tree_json_string is a string before the rename.' );
+
+		$new_base = 'bd-elementor-rename-' . strtolower( wp_generate_password( 6, false ) );
+		$this->assertTrue( $this->renameAttachment( $id, $new_base ), 'Sentinel: the rename succeeded.' );
+
+		// THE PIN: tree_json_string was saved back as an object …
+		$stored = $this->storedBreakdanceData( $post_id );
+		$this->assertIsArray( $stored['tree_json_string'] ?? null, 'Pinned: fixed? tree_json_string is no longer turned into an object — flip this pin.' );
+
+		// … so Breakdance can no longer load the document.
+		wp_cache_delete( $post_id, 'post_meta' );
+		$thrown = null;
+		try {
+			\Breakdance\Data\get_tree( $post_id );
+		} catch ( \TypeError $e ) {
+			$thrown = $e;
+		}
+		$this->assertInstanceOf( \TypeError::class, $thrown, 'Pinned: fixed? get_tree() loads the document again — flip this pin.' );
+	}
+
+	// -------------------------------------------------------------------
+	// saveContent() against the real save_document(). The end-to-end runs
+	// above never reach it today, so these call it directly with a row
+	// that carries post_id, as the Replacer will once it selects it.
+	// -------------------------------------------------------------------
+
+	/**
+	 * The write half of the module works: a rewritten tree goes back
+	 * through Breakdance's save_document() and loads with the new URL.
+	 */
+	public function test_save_content_writes_the_rewritten_tree_through_breakdance() {
+		$post_id = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+		$old_url = 'http://example.org/wp-content/uploads/2026/10/bd-save-old.png';
+		$new_url = 'http://example.org/wp-content/uploads/2026/10/bd-save-new.jpg';
+		$this->seedBreakdanceDocument( $post_id, $old_url );
+
+		$module = \ShortPixel\Replacer\Modules\Breakdance::getInstance();
+		$row    = array( 'meta_id' => $this->breakdanceMetaId( $post_id ), 'post_id' => $post_id );
+		$tree   = $module->loadContent( '', $row, 'breakdance' );
+		$this->assertIsArray( $tree, 'Sentinel: loadContent() returns the tree when the row carries post_id.' );
+
+		$tree['root']['children'][0]['data']['properties']['image']['url'] = $new_url;
+		$module->saveContent( $tree, $row, 'breakdance' );
+
+		wp_cache_delete( $post_id, 'post_meta' );
+		$this->assertIsString( $this->storedBreakdanceData( $post_id )['tree_json_string'] ?? null, 'tree_json_string stays a string.' );
+		$loaded = \Breakdance\Data\get_tree( $post_id );
+		$this->assertSame( $new_url, $loaded['root']['children'][0]['data']['properties']['image']['url'] ?? null, 'The saved document loads with the new URL.' );
+	}
+
+	/**
+	 * Calls saveContent() on a seeded document with a future-layer meta and
+	 * returns that meta as stored afterwards.
+	 *
+	 * @return mixed The decoded meta value, or false when it is gone.
+	 */
+	private function futureLayerMetaAfterSaveContent() {
+		$post_id = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+		$this->seedBreakdanceDocument( $post_id, 'http://example.org/wp-content/uploads/2026/10/bd-future-layer.png' );
+		\Breakdance\Data\set_meta( $post_id, '_breakdance_futurelayer_meta', '{"sentinel":"keep-me"}' );
+
+		$reflection = new \ReflectionFunction( 'Breakdance\Data\save_document' );
+		$this->assertSame( 10, $reflection->getNumberOfParameters(), 'Sentinel: this Breakdance version takes the ten-argument save_document() the module calls with false.' );
+
+		$module = \ShortPixel\Replacer\Modules\Breakdance::getInstance();
+		$row    = array( 'meta_id' => $this->breakdanceMetaId( $post_id ), 'post_id' => $post_id );
+		$module->saveContent( $module->loadContent( '', $row, 'breakdance' ), $row, 'breakdance' );
+
+		wp_cache_delete( $post_id, 'post_meta' );
+		return \Breakdance\Data\get_meta( $post_id, '_breakdance_futurelayer_meta' );
+	}
+
+	/**
+	 * Breakdance 3.0+ only writes `_breakdance_futurelayer_meta` in
+	 * save_document() when a value is passed, so saveContent() passing
+	 * `false` leaves the document's future-layer meta in place.
+	 */
+	public function test_save_content_keeps_future_layer_meta_on_breakdance_3() {
+		if ( version_compare( __BREAKDANCE_VERSION, '3.0.0', '<' ) ) {
+			$this->markTestSkipped( 'Breakdance ' . __BREAKDANCE_VERSION . ' still overwrites the meta — covered by the pinned test below.' );
+		}
+
+		$this->assertSame( '{"sentinel":"keep-me"}', $this->futureLayerMetaAfterSaveContent(), 'The future-layer meta survives the save.' );
+	}
+
+	/**
+	 * Pins a known defect on Breakdance 2.x: saveContent() passes `false` as
+	 * futureLayerMeta to save_document(), which before 3.0 stores it
+	 * unconditionally, so every replacement wipes the document's
+	 * `_breakdance_futurelayer_meta`. Every PNG→JPG conversion or rename that
+	 * rewrites a Breakdance document goes through saveContent() (see the two
+	 * end-to-end tests above). Runs only when the Breakdance zip in
+	 * tests/partner-plugins/ is a 2.x release.
+	 * @todo In the replacer2 Breakdance module: pass the stored value,
+	 *       \Breakdance\Data\get_meta($post_id, '_breakdance_futurelayer_meta'),
+	 *       instead of false.
+	 * When fixed, this test fails; flip it: the future-layer meta survives.
+	 */
+	public function test_save_content_overwrites_future_layer_meta_on_breakdance_2_pinned_for_deferred_fix() {
+		if ( version_compare( __BREAKDANCE_VERSION, '3.0.0', '>=' ) ) {
+			$this->markTestSkipped( 'Breakdance ' . __BREAKDANCE_VERSION . ' keeps the meta itself — covered by the test above.' );
+		}
+
+		$this->assertFalse( $this->futureLayerMetaAfterSaveContent(), 'Pinned: fixed? The future-layer meta survives the save — flip this pin.' );
 	}
 }
