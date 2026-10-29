@@ -52,6 +52,21 @@ async function cutProcessorRequests(page: Page): Promise<void> {
 	);
 }
 
+/**
+ * True for the console.error entries the cut request produces by design:
+ * the worker's own catch() report, and the processor's Debug() relay of the
+ * worker message (shortpixel-processor.js), which logs the raw Error OBJECT.
+ * Chromium renders that object as its message ("TypeError: Failed to
+ * fetch"); Firefox renders it as the placeholder "JSHandle@object", so the
+ * relay is recognised by its origin as well as by its wording.
+ */
+function isWorkerErrorReport(entry: string): boolean {
+	if (/Worker\.js reporting issue on catch|Failed to fetch|Load failed|NetworkError|ERR_CONNECTION/i.test(entry)) {
+		return true;
+	}
+	return /^console\.error: Error: {1,2}JSHandle@\w+ @ .*\/shortpixel-processor\.js/.test(entry);
+}
+
 /** Waits until the processor has registered at least one worker failure. */
 async function expectWorkerError(page: Page): Promise<void> {
 	await expect
@@ -97,7 +112,7 @@ test.describe('Processor — network failure of the processing request', () => {
 		// The worker reports the cut request; nothing else may blow up.
 		expect(consoleErrors.length, 'the worker reports the aborted request on the console').toBeGreaterThan(0);
 		expect(
-			consoleErrors.filter((e) => !/Worker\.js reporting issue on catch|Failed to fetch|Load failed|NetworkError|ERR_CONNECTION/i.test(e)),
+			consoleErrors.filter((e) => !isWorkerErrorReport(e)),
 			'only the worker\'s own report of the cut request is expected',
 		).toEqual([]);
 
