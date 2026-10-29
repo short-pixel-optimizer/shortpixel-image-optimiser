@@ -745,6 +745,11 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 	 * @param string $content HTML content to search (may include inline <style> blocks or style= attributes).
 	 * @param array  $args    Reserved for future use; currently unused.
 	 * @return \stdClass[] Array of replace-block stdClass objects, one per url() match.
+	 *
+	 * @todo The closing `\)` of the url() value sits inside capture group 2, so
+	 *       every extracted URL ends in ")" and no inline background is
+	 *       CDN-rewritten. Suggested fix: close group 2 before the `\)`, i.e.
+	 *       `…|(?1))++))\))/m`.
 	 */
 	protected function fetchInlineBackground($content, $args = [])
 	{
