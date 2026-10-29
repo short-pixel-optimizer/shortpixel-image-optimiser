@@ -47,7 +47,7 @@ if ( isset($_GET['noheader']) ) {
 				<?php if (true === $view->nextgen_active)
 				{
 					echo '<br />';
-					_e('Also checks for nextgen galleries'); 
+					_e('Also checks for Imagely/NextGEN galleries.');
 				}
 				?>
 			</label>

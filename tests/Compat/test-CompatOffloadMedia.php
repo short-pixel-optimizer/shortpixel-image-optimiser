@@ -272,4 +272,58 @@ class CompatOffloadMediaTest extends SPIO_IntegrationTestCase {
 		$this->assertNotFalse( $item, 'Sentinel: the as3cf item row must still exist.' );
 		$this->assertStringContainsString( $old_base, $item->path(), 'PIN: the offload item keeps the OLD key — nothing was renamed in the bucket.' );
 	}
+
+	// -------------------------------------------------------------------
+	// Frontend <picture> delivery vs the offload item
+	// -------------------------------------------------------------------
+
+	/**
+	 * Pins a known defect in wpOffload::fixWebpRemotePath() (the
+	 * `shortpixel/front/webp_notfound` filter): for a companion given as a
+	 * LOCAL path, the filter answers "exists" as soon as the main image URL
+	 * resolves to an as3cf item; it never checks that the companion is one
+	 * of the item's recorded objects. Real WP Offload Media resolves a local
+	 * main-image URL (legacy path LIKE lookup), so every page that carries
+	 * the local URL of an offloaded image whose AVIF/WebP was never created
+	 * gets a <picture> advertising AVIF and WebP companions that exist
+	 * nowhere: the browser requests one, gets a 404 and shows a broken image. Reached with
+	 * "Deliver Offloaded Media" off (offload as backup), or wherever the
+	 * as3cf content filter misses a local URL (theme templates, builders).
+	 * Without the offload item the same HTML is left untouched (sentinel).
+	 *
+	 * Flip when: the HTML of the offloaded image comes back unchanged — no
+	 * <picture>, no companion that is not on disk.
+	 */
+	public function test_local_url_of_offloaded_image_advertises_a_missing_avif_companion_pinned_for_deferred_fix() {
+		$id   = $this->uploadFixture( 'fixture-small.jpg' );
+		$rel  = get_post_meta( $id, '_wp_attached_file', true );
+		$file = trailingslashit( wp_upload_dir()['basedir'] ) . $rel;
+		$url  = trailingslashit( wp_upload_dir()['baseurl'] ) . $rel;
+		$html = '<img src="' . $url . '" width="100">';
+
+		// SENTINELS: local URL, main file on disk, no companions at all.
+		$this->assertSame( wp_parse_url( home_url(), PHP_URL_HOST ), wp_parse_url( $url, PHP_URL_HOST ), 'Sentinel: the page carries the LOCAL URL.' );
+		$this->assertFileExists( $file );
+		$base = preg_replace( '/\.jpe?g$/i', '', $file );
+		$this->assertFileDoesNotExist( $base . '.avif', 'Sentinel: no AVIF companion on disk.' );
+		$this->assertFileDoesNotExist( $base . '.webp', 'Sentinel: no WebP companion on disk.' );
+
+		// SENTINEL on a second, NOT offloaded upload: the same HTML stays
+		// untouched. (A separate attachment because wpOffload caches each
+		// URL's lookup result statically for the request.)
+		$controller = new \ShortPixel\Controller\Front\PictureController();
+		$plain_id   = $this->uploadFixture( 'fixture-small.jpg' );
+		$plain_html = '<img src="' . trailingslashit( wp_upload_dir()['baseurl'] ) . get_post_meta( $plain_id, '_wp_attached_file', true ) . '" width="100">';
+		$this->assertSame( $plain_html, $controller->convertImgToPictureAddWebp( $plain_html ), 'Sentinel: without an offload item nothing is rewritten.' );
+
+		$this->makeOffloadItem( $id );
+
+		$output = $controller->convertImgToPictureAddWebp( $html );
+
+		$this->assertStringContainsString( '<picture>', $output, 'Fixed? The local URL of an offloaded image is no longer wrapped — flip this pin.' );
+		$this->assertStringContainsString( wp_basename( $base ) . '.avif', $output, 'The AVIF <source> names a file that does not exist.' );
+		$this->assertStringContainsString( wp_basename( $base ) . '.webp', $output, 'The WebP <source> names a file that does not exist.' );
+		$this->assertFileDoesNotExist( $base . '.avif', 'The advertised AVIF still does not exist.' );
+		$this->assertFileDoesNotExist( $base . '.webp', 'The advertised WebP still does not exist.' );
+	}
 }

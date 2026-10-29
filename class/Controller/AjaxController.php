@@ -1471,6 +1471,7 @@ class AjaxController
 
 		$preview_only = isset($_POST['preview_only']) ? true : false; 
 		$imageModel = $this->getMediaItem($id, $type);
+		$this->checkImageAccess($imageModel);
 
 		$queueController = new QueueController();
 
