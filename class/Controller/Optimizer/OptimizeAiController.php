@@ -341,7 +341,7 @@ class OptimizeAiController extends OptimizerBase
         ];
 
         foreach ($prefixPostfixMap as $field => $affixes) {
-            if (isset($aiData[$field]) && !empty($aiData[$field]) && $aiData[$field] !== -3) {
+            if (isset($aiData[$field]) && !empty($aiData[$field]) && false === is_numeric($aiData[$field])) {
 
                 $prefix = $settings->{$affixes['prefix']};
                 $postfix = $settings->{$affixes['postfix']};
