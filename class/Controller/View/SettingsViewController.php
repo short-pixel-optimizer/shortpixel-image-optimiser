@@ -350,7 +350,7 @@ class SettingsViewController extends \ShortPixel\ViewController
       {
 
         $this->loadEnv();
-        $bool = $this->checkPost(false);
+        $bool = $this->checkPost(false, true);
 
         if (false === $bool)
         {
@@ -404,7 +404,7 @@ class SettingsViewController extends \ShortPixel\ViewController
        */
 			public function action_debug_redirectBulk()
 			{
-				$check = $this->checkPost(false);
+				$check = $this->checkRequest('action_debug_redirectBulk');
         if (false === $check)
         {
           return false; 
@@ -440,7 +440,7 @@ class SettingsViewController extends \ShortPixel\ViewController
       public function action_debug_resetStats()
       {
           $this->loadEnv();
-					$check = $this->checkPost(false);
+					$check = $this->checkRequest('action_debug_resetStats');
           
           if (false === $check)
           {  
@@ -461,13 +461,12 @@ class SettingsViewController extends \ShortPixel\ViewController
       {
 
           $this->loadEnv();
-					$check = $this->checkPost(false);
+					$check = $this->checkRequest('action_debug_resetquota');
 
           if (false === $check)
           { 
             return false; 
           }
-
 
           $quotaController = QuotaController::getInstance();
           $quotaController->forceCheckRemoteQuota();
@@ -482,7 +481,7 @@ class SettingsViewController extends \ShortPixel\ViewController
       public function action_debug_resetNotices()
       {
           $this->loadEnv();
-					$check = $this->checkPost(false);
+					$check = $this->checkRequest('action_debug_resetNotices');
 
           if (false === $check)
           { 
@@ -506,12 +505,11 @@ class SettingsViewController extends \ShortPixel\ViewController
        */
 			public function action_debug_triggerNotice()
 			{
-				$check = $this->checkPost(false);
+				$check = $this->checkPost(false, true);
         if (false === $check)
         { 
           return false; 
         }
-
 
 				$key = isset($_REQUEST['notice_constant']) ? sanitize_text_field($_REQUEST['notice_constant']) : false;
 
@@ -549,11 +547,19 @@ class SettingsViewController extends \ShortPixel\ViewController
        */
 			public function action_debug_resetQueue()
 			{
+        // @todo Problem here. Both used via Tools (link) and debug (form) 
 				 $queue = isset($_REQUEST['queue']) ? sanitize_text_field($_REQUEST['queue']) : null;
 
 				 $this->loadEnv();
-				 $check = $this->checkPost(false);
-
+         if (isset($_POST['sp-nonce']))
+         {
+           $check = $this->checkPost(false, true); 
+         }
+         else 
+         {
+            $check = $this->checkRequest('action_debug_resetQueue');
+         }
+			 
          if (false === $check)
          {
             return false; 
@@ -620,7 +626,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 			public function action_debug_removePrevented()
 			{
 				$this->loadEnv();
-				$check = $this->checkPost(false);
+				$check = $this->checkRequest('action_debug_removePrevented');
 
         if (false === $check)
         { 
@@ -651,7 +657,8 @@ class SettingsViewController extends \ShortPixel\ViewController
        */
 			public function action_debug_removeProcessorKey()
 			{
-				$check = $this->checkPost(false);
+        
+				$check = $this->checkRequest('action_debug_removeProcessorKey');
 
         if (false === $check)
         { 

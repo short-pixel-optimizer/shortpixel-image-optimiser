@@ -7,15 +7,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
-$url = esc_url_raw(remove_query_arg('part'));
-
 $bulk = BulkController::getInstance();
 $queueRunning = $bulk->isAnyBulkRunning();
 
 ?>
 
 <section id="tab-tools" class="<?php echo ($this->display_part == 'tools') ? 'active setting-tab' :'setting-tab'; ?>" data-part="tools">
-
 
     <settinglist>
       <h2><?php _e('Tools', 'shortpixel-image-optimiser'); ?></h2>
@@ -34,7 +31,8 @@ $queueRunning = $bulk->isAnyBulkRunning();
         <setting>
 
             <content>
-              <a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'migrate', 'noheader' => true), $url)); ?>" class="button">
+              <a href="<?php 
+                    echo $this->getActionLink('action_debug_redirectBulk', ['bulk' => 'migrate']);  ?>" class="button">
                   <?php esc_html_e('Search and Migrate All', 'shortpixel-image-optimiser'); ?>
               </a>
 
@@ -54,7 +52,8 @@ $queueRunning = $bulk->isAnyBulkRunning();
               <?php esc_html_e('Clear Queue','shortpixel-image-optimiser'); ?>
             </name> -->
             <content>
-        				<a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_resetQueue', 'queue' => 'all', 'part' => 'tools', 'noheader' => true), $url)); ?>" class="button"><?php esc_html_e('Clear the Queue','shortpixel-image-optimiser'); ?></a>
+        				<a href="<?php echo $this->getActionLink('action_debug_resetQueue', ['queue' => 'all', 'part' => 'tools']);
+                 ?>" class="button"><?php esc_html_e('Clear the Queue','shortpixel-image-optimiser'); ?></a>
 
                 <info>
                   <?php esc_html_e('Removes all items currently waiting or being processed from all queues. This stops all optimization processes in the entire installation.', 'shortpixel-image-optimiser'); ?>
@@ -67,7 +66,9 @@ $queueRunning = $bulk->isAnyBulkRunning();
               <?php esc_html_e('Clear Optimization Errors','shortpixel-image-optimiser'); ?>
             </name> -->
             <content>
-        				<a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_removePrevented', 'queue' => 'all', 'part' => 'tools', 'noheader' => true), $url)); ?>" class="button"><?php esc_html_e('Clear Optimization Errors','shortpixel-image-optimiser'); ?></a>
+        				<a href="<?php 
+                echo $this->getActionLink('action_debug_removePrevented', ['queue' => 'all', 'part' => 'tools']);
+                ?>" class="button"><?php esc_html_e('Clear Optimization Errors','shortpixel-image-optimiser'); ?></a>
 
                 <info>
                   <?php printf(esc_html__('Removes the blocks from the items where the optimization failed for some reason. This usually happens when the plugin is not able to save the backups. %s %sImportant!%s The cause of the error should be fixed, otherwise data corruption may occur.','shortpixel-image-optimiser') , '<br>', '<b>','</b>'); ?>
@@ -80,7 +81,8 @@ $queueRunning = $bulk->isAnyBulkRunning();
               <?php esc_html_e('Reapply Generated AI DATA','shortpixel-image-optimiser'); ?>
             </name> -->
             <content>
-        				<a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'redoAiReplacement', 'part' => 'tools', 'noheader' => true), $url)); ?>" class="button"><?php esc_html_e('Redo AI Replacement','shortpixel-image-optimiser'); ?></a>
+        				<a href="<?php 
+                echo $this->getActionLink('action_debug_redirectBulk', ['bulk' => 'redoAiReplacement', 'part' => 'tools']);  ?>" class="button"><?php esc_html_e('Redo AI Replacement','shortpixel-image-optimiser'); ?></a>
 
                 <info>
                   <?php printf(esc_html__('Writes the AI alt text you already have into posts and pages, following the "Alt text in existing posts and pages" setting.','shortpixel-image-optimiser') , '<br>', '<b>','</b>'); ?>
@@ -171,7 +173,8 @@ $queueRunning = $bulk->isAnyBulkRunning();
               <?php esc_html_e('Undo optimization: Restore all images to original state','shortpixel-image-optimiser'); ?>
          </name>
          <content>
-           <a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'restore', 'noheader' => true), $url)) ?>" class="button danger"><?php _e('Bulk Restore', 'shortpixel-image-optimiser'); ?></a>
+           <a href="<?php 
+            echo $this->getActionLink('action_debug_redirectBulk', ['bulk' => 'restore']);  ?>" class="button danger"><?php _e('Bulk Restore', 'shortpixel-image-optimiser'); ?></a>
 
              <i class='documentation down dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/can-i-restore-my-images-what-happens-with-the-originals/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings"></i>
            <info>
@@ -186,7 +189,9 @@ $queueRunning = $bulk->isAnyBulkRunning();
               <?php esc_html_e('Undo AI generation: restore the image text from before AI','shortpixel-image-optimiser'); ?>
          </name>
          <content>
-           <a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'restoreAI', 'noheader' => true), $url)) ?>" class="button danger"><?php _e('Bulk Undo AI', 'shortpixel-image-optimiser'); ?></a>
+           <a href="<?php 
+            echo $this->getActionLink('action_debug_redirectBulk', ['bulk' => 'restoreAI']); 
+             ?>" class="button danger"><?php _e('Bulk Undo AI', 'shortpixel-image-optimiser'); ?></a>
 
            <info>
              <?php printf(esc_html__('%sRestores%s the alt text, captions, descriptions and titles that existed before AI. Alt text that AI wrote into posts is reverted too, unless posts are set to "Don\'t change posts and pages". Files renamed by AI keep their new names.', 'shortpixel-image-optimiser'), '<b>','</b>'); ?>
@@ -200,7 +205,9 @@ $queueRunning = $bulk->isAnyBulkRunning();
             &nbsp;
         </name> -->
         <content>
-						<a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'removeLegacy', 'noheader' => true), $url)); ?>" class="button danger"><?php esc_html_e('Remove Legacy Data', 'shortpixel-image-optimiser'); ?></a>
+						<a href="<?php
+              echo $this->getActionLink('action_debug_redirectBulk', ['bulk' => 'removeLegacy'] );
+             ?>" class="button danger"><?php esc_html_e('Remove Legacy Data', 'shortpixel-image-optimiser'); ?></a>
 
           <info>
             <?php printf(esc_html__('%sRemoves Legacy Data%s (the old format for storing image optimization information in the database, which was used before version 5). This may result in data loss. It is not recommended to do this manually.', 'shortpixel-image-optimiser'), '<b>','</b>'); ?>

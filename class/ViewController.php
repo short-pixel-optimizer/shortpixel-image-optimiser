@@ -111,12 +111,13 @@ class ViewController extends Controller
    * shipping a debug log to an external channel.
    *
    * @param bool $processPostData Whether to call processPostData() on valid submission. Default true.
+   * @param bool $forcePost  Don't allow empty post ( hardening for actions )
    * @return bool True when no POST or POST is valid; false on nonce mismatch with ajaxSave present.
    */
-  protected function checkPost($processPostData = true)
+  protected function checkPost($processPostData = true, $forcePost = false)
   {
 
-		if(count($_POST) === 0) // no post, nothing to check, return silent.
+		if(count($_POST) === 0 && false === $forcePost) // no post, nothing to check, return silent.
 		{
 			return true;
 		}
@@ -154,6 +155,44 @@ class ViewController extends Controller
     }
 		return true;
 	}
+
+  /** Function to check the Request nonce, links etc */
+  protected function checkRequest($action = 'sp-action')
+  {
+      $result = check_admin_referer($action, 'sp-nonce');
+
+      // extra check
+      if (false === $result)
+      {
+          wp_die('Nonce Failed');
+          return false; // because never know
+      }
+      
+      return true; 
+  }
+  
+  protected function getActionLink($action,  $params = [], $nonce_name = 'sp-nonce', $noheader = true)
+  {
+
+    if (is_null($this->url))
+    {
+      Log::addError("Action $action - proper URL not provided which is a risk, aborting"); 
+      return false; 
+    }
+    
+    $args = [
+        'sp-action' => $action, 
+        'noheader' => $noheader, 
+    ]; 
+
+    $args = array_merge($args, $params); 
+    
+    $link = add_query_arg($args, $this->url);
+    $link = wp_nonce_url($link, $action, $nonce_name); 
+    $link = esc_url($link);
+    return $link; 
+
+  }
 
 	/**
 	 * Returns the singleton AccessModel instance for permission checks.
