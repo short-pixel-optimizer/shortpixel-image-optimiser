@@ -624,6 +624,50 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 		$settings->ai_alt_postfix = $prev_postfix;
 	}
 
+	/**
+	 * Status codes (-3 setting-disabled, -4 prevent-override, also when they
+	 * arrive as strings) are not text: no prefix/postfix is glued to them,
+	 * otherwise the field would store "MyPrefix -4" instead of the status.
+	 */
+	public function test_formatResultData_leaves_numeric_status_codes_without_prefix_or_postfix() {
+		$ctrl  = new OptimizeAiController();
+		$qItem = $this->makeQueueItem( 1, 'photo' );
+		$qItem->setData( 'returndatalist', [] );
+
+		$settings = \wpSPIO()->settings();
+		$keys     = [ 'ai_alt_prefix', 'ai_alt_postfix', 'ai_caption_prefix', 'ai_caption_postfix',
+					  'ai_description_prefix', 'ai_description_postfix', 'ai_post_title_prefix', 'ai_post_title_postfix' ];
+		$previous = [];
+		foreach ( $keys as $key ) {
+			$previous[ $key ] = $settings->$key ?? '';
+			$settings->$key   = ( false !== strpos( $key, 'prefix' ) ) ? 'Pre' : 'Post';
+		}
+
+		try {
+			$aiData = [
+				'alt'         => AiDataModel::F_STATUS_EXCLUDESETTING,    // -3
+				'caption'     => AiDataModel::F_STATUS_PREVENTOVERRIDE,   // -4
+				'description' => '-3',
+				'post_title'  => '-4',
+				'filebase'    => '',
+			];
+			$result = $ctrl->formatResultData( $aiData, $qItem );
+
+			$this->assertSame( -3, $result['alt'] );
+			$this->assertSame( -4, $result['caption'] );
+			$this->assertSame( '-3', $result['description'] );
+			$this->assertSame( '-4', $result['post_title'] );
+
+			// Sentinel: real text in the same run still gets both affixes.
+			$text = $ctrl->formatResultData( [ 'alt' => 'A dog.', 'caption' => '', 'description' => '', 'filebase' => '' ], $qItem );
+			$this->assertSame( 'Pre A dog. Post', $text['alt'] );
+		} finally {
+			foreach ( $previous as $key => $value ) {
+				$settings->$key = $value;
+			}
+		}
+	}
+
 	public function test_formatResultData_preserves_filebase_when_not_in_aiData() {
 		$ctrl  = new OptimizeAiController();
 		$qItem = $this->makeQueueItem( 1, 'original-base' );

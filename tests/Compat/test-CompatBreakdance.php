@@ -30,12 +30,11 @@
  *     module's LIKE pattern matches them. Breakdance alone: the Replacer
  *     hands the row to the module with its post_id, loadContent() loads the
  *     tree and saveContent() writes the new URL through save_document().
- *     Pinned defects on this path:
- *       - Breakdance + Elementor: the Elementor module's run uses the same
- *         LIKE pattern and runs first. It rewrites the row with the generic
- *         replacer, which saves `tree_json_string` back as an object
- *         instead of a string — get_tree() then throws a TypeError and the
- *         document no longer loads.
+ *     Breakdance + Elementor: the Elementor module's run uses the same LIKE
+ *     pattern and runs first. It rewrites the row with the generic replacer,
+ *     which keeps `tree_json_string` a JSON string (nested JSON is re-encoded
+ *     at every depth), so get_tree() still loads the document.
+ *     Pinned defect on this path:
  *       - Breakdance 2.x only: saveContent() passes `false` as
  *         futureLayerMeta to save_document(), which overwrites
  *         `_breakdance_futurelayer_meta`. Breakdance 3.0 skips a false value.
@@ -424,20 +423,12 @@ class CompatBreakdanceTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * Pins a known defect: with Elementor also active, converting a PNG to
-	 * JPG corrupts an editor-saved Breakdance document. The Elementor run
-	 * rewrites the row with the generic replacer and stores
-	 * `tree_json_string` as an object, so get_tree() throws.
-	 * @todo In the replacer2 module source: keep `_breakdance_data` rows out
-	 *       of every run but the breakdance one (e.g. select meta_key in
-	 *       Replacer::handleMetaData() and have the Breakdance module return
-	 *       null from load_meta_value for that key on other components), and
-	 *       have Replacer::replaceContent() re-encode a nested JSON string
-	 *       as a string.
-	 * When fixed, this test fails; flip it: `tree_json_string` stays a
-	 * string and get_tree() returns the tree with the .jpg URL.
+	 * With Elementor also active, converting a PNG to JPG keeps an
+	 * editor-saved Breakdance document loadable. The Elementor run rewrites
+	 * the row with the generic replacer before the breakdance run sees it;
+	 * `tree_json_string` must come back as a string.
 	 */
-	public function test_png_conversion_with_elementor_active_corrupts_editor_saved_breakdance_document_pinned_for_deferred_fix() {
+	public function test_png_conversion_with_elementor_active_keeps_editor_saved_breakdance_document_loadable() {
 		if ( ! defined( 'ELEMENTOR_VERSION' ) ) {
 			$this->markTestSkipped( 'Needs Elementor active alongside Breakdance (bin/test.sh --compat).' );
 		}
@@ -455,37 +446,27 @@ class CompatBreakdanceTest extends SPIO_IntegrationTestCase {
 		// SENTINEL: the conversion ran.
 		$this->assertSame( 'jpg', strtolower( pathinfo( get_attached_file( $id ), PATHINFO_EXTENSION ) ), 'Sentinel: the PNG was converted to JPG.' );
 
-		// THE PIN: tree_json_string was saved back as an object …
 		$stored = $this->storedBreakdanceData( $post_id );
-		$this->assertIsArray( $stored['tree_json_string'] ?? null, 'Pinned: fixed? tree_json_string is no longer turned into an object — flip this pin.' );
+		$this->assertIsString( $stored['tree_json_string'] ?? null, 'tree_json_string stays a JSON string.' );
 
-		// … so Breakdance can no longer load the document.
 		wp_cache_delete( $post_id, 'post_meta' );
-		$thrown = null;
-		try {
-			\Breakdance\Data\get_tree( $post_id );
-		} catch ( \TypeError $e ) {
-			$thrown = $e;
-		}
-		$this->assertInstanceOf( \TypeError::class, $thrown, 'Pinned: fixed? get_tree() loads the document again — flip this pin.' );
+		$tree = \Breakdance\Data\get_tree( $post_id );
+		$this->assertStringEndsWith( '.jpg', (string) ( $tree['root']['children'][0]['data']['properties']['image']['url'] ?? '' ), 'get_tree() loads the document with the .jpg URL.' );
 	}
 
 	/**
-	 * Pins a known defect: with Elementor also active, renaming a file
-	 * corrupts an editor-saved Breakdance document. Same cause as the
-	 * PNG→JPG pin above.
-	 * @todo See the PNG→JPG pin above.
-	 * When fixed, this test fails; flip it: `tree_json_string` stays a
-	 * string and get_tree() returns the tree with the new name.
+	 * With Elementor also active, renaming a file keeps an editor-saved
+	 * Breakdance document loadable. Same path as the PNG→JPG test above.
 	 */
-	public function test_manual_rename_with_elementor_active_corrupts_editor_saved_breakdance_document_pinned_for_deferred_fix() {
+	public function test_manual_rename_with_elementor_active_keeps_editor_saved_breakdance_document_loadable() {
 		if ( ! defined( 'ELEMENTOR_VERSION' ) ) {
 			$this->markTestSkipped( 'Needs Elementor active alongside Breakdance (bin/test.sh --compat).' );
 		}
 
 		$id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->purgeQueueTable();
-		$url = wp_get_attachment_url( $id );
+		$url      = wp_get_attachment_url( $id );
+		$old_base = pathinfo( get_attached_file( $id ), PATHINFO_FILENAME );
 
 		$post_id = self::factory()->post->create( array( 'post_status' => 'publish', 'post_title' => 'BD+Elementor rename sentinel' ) );
 		$this->seedBreakdanceDocument( $post_id, $url );
@@ -494,19 +475,14 @@ class CompatBreakdanceTest extends SPIO_IntegrationTestCase {
 		$new_base = 'bd-elementor-rename-' . strtolower( wp_generate_password( 6, false ) );
 		$this->assertTrue( $this->renameAttachment( $id, $new_base ), 'Sentinel: the rename succeeded.' );
 
-		// THE PIN: tree_json_string was saved back as an object …
 		$stored = $this->storedBreakdanceData( $post_id );
-		$this->assertIsArray( $stored['tree_json_string'] ?? null, 'Pinned: fixed? tree_json_string is no longer turned into an object — flip this pin.' );
+		$this->assertIsString( $stored['tree_json_string'] ?? null, 'tree_json_string stays a JSON string.' );
 
-		// … so Breakdance can no longer load the document.
 		wp_cache_delete( $post_id, 'post_meta' );
-		$thrown = null;
-		try {
-			\Breakdance\Data\get_tree( $post_id );
-		} catch ( \TypeError $e ) {
-			$thrown = $e;
-		}
-		$this->assertInstanceOf( \TypeError::class, $thrown, 'Pinned: fixed? get_tree() loads the document again — flip this pin.' );
+		$tree     = \Breakdance\Data\get_tree( $post_id );
+		$tree_url = (string) ( $tree['root']['children'][0]['data']['properties']['image']['url'] ?? '' );
+		$this->assertStringContainsString( $new_base, $tree_url, 'get_tree() loads the document with the new name.' );
+		$this->assertStringNotContainsString( $old_base . '.', $tree_url, 'The old name is gone from the document.' );
 	}
 
 	// -------------------------------------------------------------------

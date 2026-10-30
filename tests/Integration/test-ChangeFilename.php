@@ -1682,23 +1682,17 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	}
 
 	/**
-	 * Pins a known defect: a rename turns JSON strings nested in builder
-	 * data into objects, both in postmeta and in options. The data mimics
-	 * Bricks: a page's `_bricks_page_content_2` and a global option holding
-	 * shared components, each an array of elements in which a nested
-	 * slider keeps its custom options as a JSON string. Bricks passes that
-	 * value to stripslashes() and fatals ("stdClass given") on every page
-	 * that renders the element — for a shared component, on every page
-	 * that uses it, whether or not it shows the renamed image. Unit-level
-	 * cause: the nested-JSON pins in Model/test-Replacer.php.
-	 * @todo In the replacer2 module source, Replacer::replaceContent():
-	 *       re-encode a nested JSON string back to a string after replacing
-	 *       inside it, and leave a JSON string that contains none of the
-	 *       search URLs untouched.
-	 * When fixed, this test fails; flip it: both `options` values are still
-	 * the original JSON string.
+	 * A rename keeps JSON strings nested in builder data as strings, both in
+	 * postmeta and in options. The data mimics Bricks: a page's
+	 * `_bricks_page_content_2` and a global option holding shared components,
+	 * each an array of elements in which a nested slider keeps its custom
+	 * options as a JSON string. Bricks passes that value to stripslashes(),
+	 * which fatals ("stdClass given") on every page that renders the element
+	 * if the value comes back as an object — for a shared component, on every
+	 * page that uses it, whether or not it shows the renamed image. Unit-level
+	 * counterpart: the nested-JSON tests in Model/test-Replacer.php.
 	 */
-	public function test_rename_turns_json_strings_in_builder_data_into_objects_pinned_for_deferred_fix() {
+	public function test_rename_keeps_json_strings_in_builder_data_as_strings() {
 		$this->_setRole( 'administrator' );
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->purgeQueueTable();
@@ -1738,8 +1732,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$this->assertStringContainsString( $new_base, $page[1]['settings']['image']['url'], 'Sentinel: the page image URL follows the rename.' );
 		$this->assertStringContainsString( $new_base, $components[0]['elements'][1]['settings']['image']['url'], 'Sentinel: the component image URL follows the rename.' );
 
-		// THE PIN: the untouched slider options are objects now.
-		$this->assertInstanceOf( stdClass::class, $page[0]['settings']['options'], 'Pinned: fixed? The page slider options stay a JSON string — flip this pin.' );
-		$this->assertInstanceOf( stdClass::class, $components[0]['elements'][0]['settings']['options'], 'Pinned: fixed? The component slider options stay a JSON string — flip this pin.' );
+		$this->assertSame( $options, $page[0]['settings']['options'], 'The page slider options stay the same JSON string.' );
+		$this->assertSame( $options, $components[0]['elements'][0]['settings']['options'], 'The component slider options stay the same JSON string.' );
 	}
 }

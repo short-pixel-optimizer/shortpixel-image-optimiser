@@ -343,6 +343,8 @@ class SettingsViewController extends \ShortPixel\ViewController
        * deleteOption(); otherwise the new value is assigned directly to the model.
        * No model-level validation is applied; the field must already exist in the
        * model (checked via exists()). Redirects back to settings after the change.
+       * Must arrive as the Debug form POST: checkPost(false, true) dies on a
+       * plain GET (no form nonce) instead of treating it as "nothing to check".
        *
        * @return void Exits via doRedirect().
        */
@@ -399,6 +401,8 @@ class SettingsViewController extends \ShortPixel\ViewController
        * Reads $_REQUEST['bulk'] to determine the target panel. Recognised values:
        * 'migrate', 'restore', 'restoreAI', 'removeLegacy'. All queues are cleared
        * via QueueController::resetQueues() before the redirect.
+       * Reached from a nonce link built with getActionLink(); checkRequest() dies
+       * when the link's nonce for this action is missing or invalid.
        *
        * @return void Exits via doRedirect().
        */
@@ -436,7 +440,14 @@ class SettingsViewController extends \ShortPixel\ViewController
           exit('action not found');
 			}
 
-      /** Button in part-debug, routed via custom Action */
+      /**
+       * Debug action: resets the cached statistics and reloads the settings page.
+       *
+       * Reached from a nonce link built with getActionLink(); checkRequest() dies
+       * when the link's nonce for this action is missing or invalid.
+       *
+       * @return void Exits via doRedirect('reload').
+       */
       public function action_debug_resetStats()
       {
           $this->loadEnv();
@@ -454,6 +465,9 @@ class SettingsViewController extends \ShortPixel\ViewController
 
       /**
        * Debug action: forces a fresh remote quota check and reloads the settings page.
+       *
+       * Reached from a nonce link built with getActionLink(); checkRequest() dies
+       * when the link's nonce for this action is missing or invalid.
        *
        * @return void Exits via doRedirect('reload').
        */
@@ -475,6 +489,9 @@ class SettingsViewController extends \ShortPixel\ViewController
 
       /**
        * Debug action: clears all stored admin notices and reloads the settings page.
+       *
+       * Reached from a nonce link built with getActionLink(); checkRequest() dies
+       * when the link's nonce for this action is missing or invalid.
        *
        * @return void Exits via doRedirect('reload').
        */
@@ -500,6 +517,8 @@ class SettingsViewController extends \ShortPixel\ViewController
        * Reads $_REQUEST['notice_constant']. When the value is 'trigger-all', every
        * registered notice is triggered via addManual(). Otherwise the matching
        * notice is retrieved by key and triggered individually.
+       * Must arrive as the Debug form POST: checkPost(false, true) dies on a
+       * plain GET (no form nonce) instead of treating it as "nothing to check".
        *
        * @return void Exits via doRedirect().
        */
@@ -542,6 +561,11 @@ class SettingsViewController extends \ShortPixel\ViewController
        * 'customBulk', 'all'). When $_REQUEST['use_uninstall'] is present, calls
        * QueueController::uninstallPlugin() instead and exits without a reload notice.
        * On normal reset, adds a success notice and reloads the settings page.
+       *
+       * Reached two ways, each with its own nonce: the Debug form POSTs the
+       * shared form nonce (checkPost(false, true)); the Tools "Clear the Queue"
+       * link carries a nonce for this action (checkRequest()). A request
+       * without either dies before anything is reset.
        *
        * @return void Exits via doRedirect('reload').
        */
@@ -620,6 +644,8 @@ class SettingsViewController extends \ShortPixel\ViewController
        *
        * Issues a raw DELETE query against wp_postmeta. Adds a success notice and
        * redirects back to the settings page.
+       * Reached from a nonce link built with getActionLink(); checkRequest() dies
+       * when the link's nonce for this action is missing or invalid.
        *
        * @return void Exits via doRedirect().
        */
@@ -652,6 +678,8 @@ class SettingsViewController extends \ShortPixel\ViewController
        * Deletes the 'bulk-secret' cache item via CacheController and terminates
        * with a plain-text message. A new key is generated automatically when
        * the settings page is next loaded.
+       * Reached from a nonce link built with getActionLink(); checkRequest() dies
+       * when the link's nonce for this action is missing or invalid.
        *
        * @return void Exits with a plain-text message (does not redirect).
        */
