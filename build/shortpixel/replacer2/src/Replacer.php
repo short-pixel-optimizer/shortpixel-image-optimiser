@@ -356,12 +356,12 @@ class Replacer
 			// These must be always defined.
 			$id_field = esc_sql($data['id']);
 			$value_field = esc_sql($data['value']);
-			$main_field = isset($data['main_id']) ? esc_sql($data['main_id']) : 'NULL as main_id'; 
+			$main_id = isset($data['main_id']) ? esc_sql($data['main_id']) : 'NULL as main_id'; 
 			
 
 			switch ($table) {
 				case "postmeta": // special case.
-					$sql = "SELECT $id_field, $value_field, $main_field FROM " . $wpdb->postmeta . '
+					$sql = "SELECT $id_field, $value_field, $main_id FROM " . $wpdb->postmeta . '
 	                WHERE post_id in (SELECT ID from ' . $wpdb->posts . ' where post_status in ("publish", "future", "draft", "pending", "private") ) AND meta_value like %s';
 					$type = 'post';
 
@@ -370,7 +370,7 @@ class Replacer
 				default:
 					$wp_table = $wpdb->{$table};  // termmeta, commentmeta etc
 
-					$sql = "SELECT $id_field, $value_field, $main_field FROM $wp_table WHERE $value_field like %s";
+					$sql = "SELECT $id_field, $value_field, $main_id FROM $wp_table WHERE $value_field like %s";
 
 					$update_sql = " UPDATE $wp_table set $value_field = %s WHERE $id_field  = %d ";
 					break;
@@ -416,7 +416,7 @@ class Replacer
 							{
 								if (isset($data['cache_group']))
 								{
-									$main_id = $row[$main_field];
+									$main_id = $row[$main_id];
 									wp_cache_delete($main_id, $data['cache_group']);
 								}
 							}
@@ -507,15 +507,16 @@ class Replacer
 			}
 		}
 
-		if ($isJson && $in_deep === false) // convert back to JSON, if this was JSON. Different than serialize which does WP automatically.
-		{
-
-			// wp-slash -> WP does stripslashes_deep which destroys JSON
-			$json_flags = $this->replace_settings['json_flags'];
-			Log::addDebug('Value was found to be JSON, encoding with flag: ' . $json_flags);
-			$content = json_encode($content, $json_flags);
-			Log::addDebug('Content returning (array ours) ', array($content));
-		} elseif (
+		// Fix removed is_deep check here to encode each time json was found.  It can happen in serialized array where subdata is in json format
+	    if ($isJson) // convert back to JSON, if this was JSON. Different than serialize which does WP automatically.
+	    {
+	      // wp-slash -> WP does stripslashes_deep which destroys JSON
+				$json_flags = $this->replace_settings['json_flags'];
+		  //	Log::addDebug('Value was found to be JSON, encoding with flag: ' . $json_flags);
+				$content = json_encode($content, $json_flags);
+	     // Log::addDebug('Content returning (array ours) ', array($content));
+	    }
+		 elseif (
 			$this->replace_settings['replace_no_serialize'] === false &&
 			$in_deep === false && (is_array($content) || is_object($content))
 		) {
