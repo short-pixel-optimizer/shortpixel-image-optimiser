@@ -126,10 +126,15 @@ class CompatOffloadMediaTest extends SPIO_IntegrationTestCase {
 	 * tests/Integration/bootstrap.php (re-checked in set_up()) — before the
 	 * test transaction.
 	 */
-	private function makeOffloadItem( int $attachment_id ): Media_Library_Item {
+	private function makeOffloadItem( int $attachment_id, bool $versioned = false ): Media_Library_Item {
 
 		$source_path = get_post_meta( $attachment_id, '_wp_attached_file', true );
-		$remote_key  = 'wp-content/uploads/' . $source_path;
+		// With "Add Object Versioning" (Offload Media's default) the remote key
+		// carries a timestamp folder before the file name, so it never ends in
+		// the local relative path.
+		$remote_key = $versioned
+			? 'wp-content/uploads/' . dirname( $source_path ) . '/' . gmdate( 'dHis' ) . '/' . wp_basename( $source_path )
+			: 'wp-content/uploads/' . $source_path;
 
 		$item = new Media_Library_Item(
 			'aws',
@@ -286,10 +291,16 @@ class CompatOffloadMediaTest extends SPIO_IntegrationTestCase {
 	 * main-image URL (legacy path LIKE lookup), so every page that carries
 	 * the local URL of an offloaded image whose AVIF/WebP was never created
 	 * gets a <picture> advertising AVIF and WebP companions that exist
-	 * nowhere: the browser requests one, gets a 404 and shows a broken image. Reached with
-	 * "Deliver Offloaded Media" off (offload as backup), or wherever the
-	 * as3cf content filter misses a local URL (theme templates, builders).
-	 * Without the offload item the same HTML is left untouched (sentinel).
+	 * nowhere: the browser requests one, gets a 404 and shows a broken image.
+	 *
+	 * Reached only when BOTH hold: the page carries the local URL ("Deliver
+	 * Offloaded Media" off, or a local URL the as3cf content filter misses),
+	 * AND the item's remote key ends in the local relative path, i.e. "Add
+	 * Object Versioning" is OFF (Offload Media turns it on by default; a
+	 * versioned key has a timestamp folder before the file name, so neither
+	 * as3cf lookup resolves the local URL and no <picture> is emitted — see
+	 * the versioned sentinel test below). Without the offload item the same
+	 * HTML is left untouched (sentinel).
 	 *
 	 * Flip when: the HTML of the offloaded image comes back unchanged — no
 	 * <picture>, no companion that is not on disk.
@@ -325,5 +336,49 @@ class CompatOffloadMediaTest extends SPIO_IntegrationTestCase {
 		$this->assertStringContainsString( wp_basename( $base ) . '.webp', $output, 'The WebP <source> names a file that does not exist.' );
 		$this->assertFileDoesNotExist( $base . '.avif', 'The advertised AVIF still does not exist.' );
 		$this->assertFileDoesNotExist( $base . '.webp', 'The advertised WebP still does not exist.' );
+	}
+
+	/**
+	 * Sentinel for the pin above: with Offload Media's default "Add Object
+	 * Versioning", the item's remote key holds a timestamp folder, so the
+	 * local URL resolves to no item (as3cf matches the files table on the
+	 * exact path and falls back to `path LIKE '%<relative path>'`, and a
+	 * versioned key ends in `<timestamp>/<file>`). wpOffload then reports no
+	 * companion and the HTML stays untouched — the correct outcome, and the
+	 * reason the defect does not show on a default Offload Media setup.
+	 */
+	public function test_local_url_of_a_versioned_offloaded_image_without_companions_is_left_untouched() {
+		$id   = $this->uploadFixture( 'fixture-small.jpg' );
+		$rel  = get_post_meta( $id, '_wp_attached_file', true );
+		$file = trailingslashit( wp_upload_dir()['basedir'] ) . $rel;
+		$url  = trailingslashit( wp_upload_dir()['baseurl'] ) . $rel;
+		$html = '<img src="' . $url . '" width="100">';
+
+		$base = preg_replace( '/\.jpe?g$/i', '', $file );
+		$this->assertFileExists( $file );
+		$this->assertFileDoesNotExist( $base . '.avif', 'Sentinel: no AVIF companion on disk.' );
+		$this->assertFileDoesNotExist( $base . '.webp', 'Sentinel: no WebP companion on disk.' );
+
+		$item = $this->makeOffloadItem( $id, true );
+		$this->assertStringNotContainsString( '/' . $rel, $item->path(), 'Pre-condition: the versioned remote key does not end in the local relative path.' );
+		$this->assertStringEndsWith( '/' . wp_basename( $rel ), $item->path(), 'Pre-condition: the versioned key still ends in the file name.' );
+
+		// wpOffload caches each URL's lookup result in a static array for the
+		// request. WordPress deletes test uploads at teardown, so this test's
+		// file name is the one the previous test used, and its cached (and
+		// now unrelated) source id would answer first. Start clean.
+		$this->resetOffloadSourceCache();
+
+		$controller = new \ShortPixel\Controller\Front\PictureController();
+		$output     = $controller->convertImgToPictureAddWebp( $html );
+
+		$this->assertSame( $html, $output, 'A versioned offload item must not make the local URL advertise companions that do not exist.' );
+	}
+
+	/** Empty wpOffload's static per-request URL → source id cache. */
+	private function resetOffloadSourceCache(): void {
+		$prop = new \ReflectionProperty( \ShortPixel\External\Offload\wpOffload::class, 'sources' );
+		$prop->setAccessible( true );
+		$prop->setValue( null, array() );
 	}
 }

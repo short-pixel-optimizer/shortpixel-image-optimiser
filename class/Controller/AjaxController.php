@@ -1449,6 +1449,11 @@ class AjaxController
 	 * `$_POST['preview_only']` (presence-only check, default false) to determine
 	 * whether the result should be previewed without committing.
 	 *
+	 * Image-scoped: the loaded item goes through `checkImageAccess()` before
+	 * anything is queued, so a user who may not edit this attachment (or an id
+	 * that does not load) is answered with `error = NO_ACCESS` and never spends
+	 * AI credits on it.
+	 *
 	 * `$data` keys consumed:
 	 * - `id`   int    Image ID.
 	 * - `type` string 'media' or 'custom'.

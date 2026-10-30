@@ -211,6 +211,80 @@ class AjaxEndpointTest extends WP_Ajax_UnitTestCase {
 		$this->assertSame( __( 'This image could not be loaded', 'shortpixel-image-optimiser' ), $response->message ?? null );
 	}
 
+	/**
+	 * ai/requestalt spends AI credits on the given attachment, so on top of
+	 * ajaxRequest()'s is_author baseline it is image-scoped: requestAlt() runs
+	 * the loaded item through checkImageAccess(). An author passes the
+	 * baseline but may only edit their own attachments (image_user =
+	 * edit_post; image_all = edit_others_posts), so a request for someone
+	 * else's attachment is refused before anything is queued.
+	 */
+	public function test_ai_request_alt_is_refused_for_an_attachment_the_author_may_not_edit() {
+		// The attachment belongs to an administrator…
+		$this->_setRole( 'administrator' );
+		$attachment_id = self::factory()->attachment->create_upload_object( dirname( __DIR__ ) . '/fixtures/fixture-small.jpg', 0 );
+		$this->assertGreaterThan( 0, $attachment_id, 'Pre-condition: the fixture uploaded as an attachment.' );
+
+		// …and an author asks for its AI text.
+		$this->_setRole( 'author' );
+		$this->assertFalse( current_user_can( 'edit_post', $attachment_id ), 'Pre-condition: the author may not edit this attachment.' );
+
+		$_POST['nonce']         = wp_create_nonce( 'ajax_request' );
+		$_POST['screen_action'] = 'ai/requestalt';
+		$_POST['id']            = $attachment_id;
+		$_POST['type']          = 'media';
+
+		$response = $this->doAjax( 'shortpixel_ajaxRequest' );
+
+		$this->assertIsObject( $response );
+		$this->assertSame( AjaxController::NO_ACCESS, $response->error ?? null, 'An author must be refused AI text for an attachment they may not edit' );
+		$this->assertSame( __( 'This user is not allowed to edit this image', 'shortpixel-image-optimiser' ), $response->message ?? null, 'The refusal must come from the per-image check, not from the role gate' );
+		$this->assertSame( $attachment_id, (int) ( $response->id ?? 0 ), 'The refusal names the attachment' );
+	}
+
+	/**
+	 * Sentinel for the test above: the same author is NOT refused for an
+	 * attachment of their own, so the refusal is per image and not per role.
+	 * The request is queued (no API call is made at enqueue time) and the
+	 * handler answers with the queue result.
+	 */
+	public function test_ai_request_alt_lets_an_author_queue_their_own_attachment() {
+		$this->_setRole( 'author' );
+		$attachment_id = self::factory()->attachment->create_upload_object( dirname( __DIR__ ) . '/fixtures/fixture-small.jpg', 0 );
+		$this->assertTrue( current_user_can( 'edit_post', $attachment_id ), 'Pre-condition: the author may edit their own attachment.' );
+
+		$_POST['nonce']         = wp_create_nonce( 'ajax_request' );
+		$_POST['screen_action'] = 'ai/requestalt';
+		$_POST['id']            = $attachment_id;
+		$_POST['type']          = 'media';
+
+		$response = $this->doAjax( 'shortpixel_ajaxRequest' );
+
+		$this->assertIsObject( $response );
+		$this->assertNotSame( AjaxController::NO_ACCESS, $response->error ?? null, 'The author must pass the per-image check for their own attachment' );
+		$this->assertTrue( $response->status ?? false, 'The request is queued and answered' );
+	}
+
+	/**
+	 * A missing attachment id is answered by the same per-image check with
+	 * its "could not be loaded" message, for an administrator too — the gate
+	 * runs before the item is queued.
+	 */
+	public function test_ai_request_alt_refuses_an_attachment_that_does_not_load() {
+		$this->_setRole( 'administrator' );
+
+		$_POST['nonce']         = wp_create_nonce( 'ajax_request' );
+		$_POST['screen_action'] = 'ai/requestalt';
+		$_POST['id']            = 999999;
+		$_POST['type']          = 'media';
+
+		$response = $this->doAjax( 'shortpixel_ajaxRequest' );
+
+		$this->assertIsObject( $response );
+		$this->assertSame( AjaxController::NO_ACCESS, $response->error ?? null );
+		$this->assertSame( __( 'Image does not exist or could not be loaded', 'shortpixel-image-optimiser' ), $response->message ?? null );
+	}
+
 	public function test_admin_with_valid_nonce_can_run_the_queue_endpoint() {
 		$this->_setRole( 'administrator' );
 
