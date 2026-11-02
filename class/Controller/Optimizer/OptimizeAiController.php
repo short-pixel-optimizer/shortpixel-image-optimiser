@@ -299,7 +299,9 @@ class OptimizeAiController extends OptimizerBase
      * Applies processTextResult() (capitalisation, period) to text fields (alt, caption,
      * description — never filebase). Any field that comes back as numeric 1 from the API is
      * treated as "not generated" and replaced with an empty string. Applies configured
-     * prefix/postfix settings for each field. Always stores the original file base in
+     * prefix/postfix settings for each field, except numeric values (status codes such as
+     * AiDataModel::F_STATUS_EXCLUDESETTING -3 / F_STATUS_PREVENTOVERRIDE -4, as int or
+     * string), which are not text and stay as they are. Always stores the original file base in
      * 'original_filebase' for later use in replaceFiles().
      *
      * @param array     $aiData Associative array of AI-generated field values.

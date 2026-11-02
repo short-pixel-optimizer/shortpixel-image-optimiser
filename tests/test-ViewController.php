@@ -13,9 +13,11 @@
  *   - addData — merge semantics
  *   - setControllerURL — trivial setter
  *   - printInlineHelp — URL escaping in output
+ *   - checkPost — empty POST passes, unless $forcePost is set
+ *   - checkRequest / getActionLink — per-action nonce on the GET action links
+ *     (wp_die() throws WPDieException under the WP test suite)
  *
  * NOT covered here (integration territory):
- *   - checkPost with nonce mismatch — hits `wp_die` mid-flow, kills the test.
  *   - processPostData with a real connected model — needs a full model fixture.
  *   - printSwitchButton — 12-line sprintf-and-echo helper, low value for
  *     assertion given the HTML is mostly boilerplate.
@@ -359,5 +361,134 @@ class ViewControllerTest extends WP_UnitTestCase {
 		} finally {
 			$_POST = $savedPost;
 		}
+	}
+
+	/*
+	 * checkPost($processPostData, $forcePost = true) — the debug forms that
+	 * must arrive as a POST. An empty POST no longer counts as "nothing to
+	 * check": a crafted GET link reaching the action through the router
+	 * (sp-action in the request) dies on the missing nonce.
+	 */
+
+	public function test_checkPost_with_forcePost_dies_on_an_empty_POST_reached_through_the_router() {
+		$c = new ViewController();
+		$savedPost    = $_POST;
+		$savedRequest = $_REQUEST;
+		$_POST        = array();
+		$_REQUEST     = array( 'sp-action' => 'action_debug_editSetting' );
+
+		try {
+			$this->invokeProtected( $c, 'checkPost', array( false, true ) );
+			$this->fail( 'An empty POST with $forcePost must not pass checkPost().' );
+		} catch ( WPDieException $e ) {
+			$this->assertSame( 'Nonce Failed', $e->getMessage() );
+			$this->assertFalse( $this->getProtected( $c, 'is_form_submit' ) );
+		} finally {
+			$_POST    = $savedPost;
+			$_REQUEST = $savedRequest;
+		}
+	}
+
+	public function test_checkPost_with_forcePost_returns_false_on_an_empty_POST_outside_the_router() {
+		$c = new ViewController();
+		$savedPost    = $_POST;
+		$savedRequest = $_REQUEST;
+		$_POST        = array();
+		$_REQUEST     = array();
+
+		try {
+			// No sp-action / ajaxSave / action: the lenient branch for foreign
+			// POST data answers false instead of dying.
+			$this->assertFalse( $this->invokeProtected( $c, 'checkPost', array( false, true ) ) );
+		} finally {
+			$_POST    = $savedPost;
+			$_REQUEST = $savedRequest;
+		}
+	}
+
+	/*
+	 * checkRequest — per-action nonce in the request ('sp-nonce'), used by
+	 * the GET links built with getActionLink().
+	 */
+
+	public function test_checkRequest_accepts_the_nonce_of_its_own_action() {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		$c = new ViewController();
+		$savedRequest = $_REQUEST;
+		$_REQUEST     = array( 'sp-nonce' => wp_create_nonce( 'action_debug_resetStats' ) );
+
+		try {
+			$this->assertTrue( $this->invokeProtected( $c, 'checkRequest', array( 'action_debug_resetStats' ) ) );
+		} finally {
+			$_REQUEST = $savedRequest;
+		}
+	}
+
+	public function test_checkRequest_dies_without_a_nonce() {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		$c = new ViewController();
+		$savedRequest = $_REQUEST;
+		$_REQUEST     = array( 'sp-action' => 'action_debug_resetStats' );
+
+		try {
+			$this->expectException( WPDieException::class );
+			$this->invokeProtected( $c, 'checkRequest', array( 'action_debug_resetStats' ) );
+		} finally {
+			$_REQUEST = $savedRequest;
+		}
+	}
+
+	public function test_checkRequest_dies_on_the_nonce_of_another_action() {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		$c = new ViewController();
+		$savedRequest = $_REQUEST;
+		// A valid nonce, but minted for the harmless reset-stats link.
+		$_REQUEST = array( 'sp-nonce' => wp_create_nonce( 'action_debug_resetStats' ) );
+
+		try {
+			$this->expectException( WPDieException::class );
+			$this->invokeProtected( $c, 'checkRequest', array( 'action_debug_removePrevented' ) );
+		} finally {
+			$_REQUEST = $savedRequest;
+		}
+	}
+
+	/*
+	 * getActionLink — nonce-carrying action link for the Tools / Debug tabs.
+	 */
+
+	public function test_getActionLink_returns_false_without_a_controller_url() {
+		$c = new ViewController();
+		$this->assertNull( $this->getProtected( $c, 'url' ) );
+
+		$this->assertFalse( $this->invokeProtected( $c, 'getActionLink', array( 'action_debug_resetStats' ) ) );
+	}
+
+	public function test_getActionLink_builds_an_escaped_link_with_a_nonce_for_the_action() {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		$c = new ViewController();
+		$c->setControllerURL( 'https://example.test/wp-admin/options-general.php?page=wp-shortpixel-settings' );
+
+		$link = $this->invokeProtected(
+			$c,
+			'getActionLink',
+			array( 'action_debug_resetQueue', array( 'queue' => 'all', 'part' => 'tools' ) )
+		);
+
+		// The link is printed straight into href="", so it arrives HTML-escaped.
+		$this->assertStringNotContainsString( '&queue', $link );
+		$this->assertStringContainsString( '&#038;', $link );
+
+		$args = array();
+		wp_parse_str( (string) wp_parse_url( html_entity_decode( $link ), PHP_URL_QUERY ), $args );
+
+		$this->assertSame( 'wp-shortpixel-settings', $args['page'] );
+		$this->assertSame( 'action_debug_resetQueue', $args['sp-action'] );
+		$this->assertSame( '1', $args['noheader'] );
+		$this->assertSame( 'all', $args['queue'] );
+		$this->assertSame( 'tools', $args['part'] );
+		$this->assertSame( 1, wp_verify_nonce( $args['sp-nonce'], 'action_debug_resetQueue' ) );
+		// Sentinel: the nonce is bound to this action, not to the shared form action.
+		$this->assertFalse( wp_verify_nonce( $args['sp-nonce'], 'sp-action' ) );
 	}
 }

@@ -110,9 +110,16 @@ class ViewController extends Controller
    * cleartext. Fine for developer debugging; something to be aware of before
    * shipping a debug log to an external channel.
    *
+   * With $forcePost the empty-POST shortcut is skipped: actions that must
+   * arrive as a form submit (the Debug forms) then go through the nonce check
+   * even when the request is a plain GET, so a crafted link reaching them
+   * through the router (sp-action in the request) dies.
+   *
    * @param bool $processPostData Whether to call processPostData() on valid submission. Default true.
    * @param bool $forcePost  Don't allow empty post ( hardening for actions )
-   * @return bool True when no POST or POST is valid; false on nonce mismatch with ajaxSave present.
+   * @return bool True when the POST is valid, or empty without $forcePost; false when
+   *              the nonce is missing/invalid and the request carries none of ajaxSave,
+   *              action or sp-action (foreign POST data). Otherwise dies via wp_die().
    */
   protected function checkPost($processPostData = true, $forcePost = false)
   {
@@ -156,7 +163,17 @@ class ViewController extends Controller
 		return true;
 	}
 
-  /** Function to check the Request nonce, links etc */
+  /**
+   * Verifies the per-action nonce of a GET action link (see getActionLink()).
+   *
+   * Reads the nonce from $_REQUEST['sp-nonce'] via check_admin_referer(). The
+   * nonce is bound to $action, so a nonce minted for one link does not unlock
+   * another action. On a missing or invalid nonce check_admin_referer() itself
+   * dies (wp_nonce_ays()); the wp_die() below is a second guard.
+   *
+   * @param string $action Nonce action, by convention the sp-action method name. Default 'sp-action'.
+   * @return bool Always true; never returns on failure.
+   */
   protected function checkRequest($action = 'sp-action')
   {
       $result = check_admin_referer($action, 'sp-nonce');
@@ -171,6 +188,20 @@ class ViewController extends Controller
       return true; 
   }
   
+  /**
+   * Builds a nonce-protected GET link that runs a routed sp-action.
+   *
+   * The link points at $this->url (the controller's admin page) with
+   * sp-action=$action, noheader and $params, plus a nonce for $action in
+   * $nonce_name, which checkRequest($action) verifies on arrival. The result
+   * is HTML-escaped (`&#038;`), ready to print inside href="".
+   *
+   * @param string $action     sp-action method name; also the nonce action.
+   * @param array  $params     Extra query args (e.g. 'queue', 'bulk', 'part').
+   * @param string $nonce_name Query arg that carries the nonce. Default 'sp-nonce'.
+   * @param bool   $noheader   Adds noheader so the action can redirect before admin output. Default true.
+   * @return string|false Escaped URL, or false (logged) when no controller URL is set.
+   */
   protected function getActionLink($action,  $params = [], $nonce_name = 'sp-nonce', $noheader = true)
   {
 
