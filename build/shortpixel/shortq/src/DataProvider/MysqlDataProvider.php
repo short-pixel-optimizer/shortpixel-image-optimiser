@@ -1,21 +1,88 @@
 <?php
+/**
+ * MySQL storage backend of the ShortQ module.
+ *
+ * @package ShortPixel\ShortQ
+ */
 namespace ShortPixel\ShortQ\DataProvider;
 use ShortPixel\ShortQ\Item as Item;
 use ShortPixel\ShortQ\ShortQ as ShortQ;
 
 
+/**
+ * Stores queue items in the `{$wpdb->prefix}shortpixel_queue` table.
+ *
+ * Created by ShortQ::QLoader(), one object per queue object. All plugins
+ * and all queues share the single table; every query is scoped by the
+ * `plugin_slug` and `queue_name` columns (both VARCHAR(30)) and the pair
+ * (plugin_slug, queue_name, item_id) is unique, which is what makes
+ * INSERT IGNORE in enqueue() skip items that are already queued.
+ *
+ * Table columns: `id` (primary key), `queue_name`, `plugin_slug`, `status`
+ * (ShortQ::QSTATUS_*), `list_order` (dequeue order, ascending), `item_id`
+ * (consumer ID), `item_count`, `value` (longtext payload), `tries`,
+ * `created` and `updated` (timestamps). Rows are hydrated into Item
+ * objects by column name.
+ *
+ * Self-healing: after a failed query, handleError() runs install(), which
+ * uses dbDelta() and therefore both creates a missing table and adds
+ * missing columns. Errors are not logged.
+ *
+ * Timestamps are written with date(), i.e. in PHP's default time zone,
+ * and read back by Item::__set() with the same assumption.
+ *
+ * Fires and listens to no hooks.
+ *
+ * @todo dequeue() accepts an array of statuses and joins them with commas,
+ *       but queryItems() binds the status with `%d`, so only the first
+ *       status is used. Suggested fix: build a `status IN (...)` clause.
+ * @todo updateRecords() reads the $operators map into a variable but
+ *       always emits `=`, so alterQueue()'s third argument has no effect.
+ *       Suggested fix: use $operator in the clause.
+ * @todo uninstall() returns check(), which is true when the table still
+ *       exists, so a successful drop returns false, the same as "table has
+ *       rows" and "no table". Suggested fix: return `! $this->check()`
+ *       after the drop.
+ */
 /* WP Mysql DataProvider
 *
 */
 class MysqlDataProvider implements DataProvider
 {
+   /**
+    * Queue name; the column is VARCHAR(30).
+    *
+    * @var string
+    */
    protected $qName; // Limit is 30 chars!
+
+   /**
+    * Plugin slug; the column is VARCHAR(30).
+    *
+    * @var string
+    */
    protected $slug;  // Limit is 30 chars!
 
+   /**
+    * Prefixed table name.
+    *
+    * @var string
+    */
    protected $table;
 
+   /**
+    * Intended cap on query length in characters. Not enforced anywhere.
+    *
+    * @var int
+    */
    protected $query_size_limit = 10000;  // in strlen characters.
 
+   /**
+    * @global \wpdb $wpdb
+    *
+    * @param string $slug  Plugin slug.
+    * @param string $qName Queue name.
+    */
    /* Constructor */
    public function __construct($slug, $qName)
    {
@@ -26,6 +93,21 @@ class MysqlDataProvider implements DataProvider
       $this->table = $wpdb->prefix . 'shortpixel_queue';
    }
 
+   /**
+    * Inserts items with one multi-row INSERT IGNORE.
+    *
+    * Items without an explicit list_order are numbered from 10 + the
+    * current number of waiting items, leaving 0-9 for priority items. The
+    * raw (JSON-encoded) value is stored. Rows that violate the unique key
+    * are skipped by MySQL and not counted. On a database error the table
+    * is repaired through handleError() and false is returned.
+    *
+    * @global \wpdb $wpdb
+    *
+    * @param Item[] $items Items to insert.
+    * @return int|false Number of rows inserted, false on invalid input or
+    *                   database error.
+    */
    public function enqueue($items)
    {
       global $wpdb;
@@ -61,6 +143,15 @@ class MysqlDataProvider implements DataProvider
       return $result;
    }
 
+   /**
+    * Unused draft of an input check for enqueue(); computes a list of IDs
+    * and returns nothing.
+    *
+    * @global \wpdb $wpdb
+    *
+    * @param array $items Item arrays.
+    * @return void
+    */
    /* Check item consistency and check if items are not already in this queue. Must be unique */
    protected function prepareItems($items)
    {
@@ -76,6 +167,28 @@ class MysqlDataProvider implements DataProvider
       }
    }
 
+   /**
+    * Selects items and moves them to a new status in one step.
+    *
+    * The selected rows get `newstatus` and `updated` = now, unless the
+    * new status equals the selected one. When `newstatus` is
+    * ShortQ::QSTATUS_DELETE the rows are deleted right after. The returned
+    * Items already carry the new status.
+    *
+    * @param array $args {
+    *     @type int        $numitems  Rows to take, -1 for all. Default 1.
+    *     @type int|array  $status    Status to select. Default WAITING.
+    *                                 Arrays are not applied correctly, see
+    *                                 the class @todo.
+    *     @type int        $newstatus Status to set. Default DONE.
+    *     @type string     $orderby   Column to order by. Default list_order.
+    *     @type string     $order     'ASC' or 'DESC'. Default 'ASC'.
+    *     @type array|int|false $priority list_order condition, either a
+    *                                 number or `['operator' => '<',
+    *                                 'value' => 10]`. Default false.
+    * }
+    * @return Item[] Sequential list of the items taken.
+    */
    /* Dequeue an item (return it) via specific parameters. Sets a new status after grabbing these records.
    *
    * @param $args Array
@@ -133,6 +246,14 @@ class MysqlDataProvider implements DataProvider
       return array_values($items); // array values resets the id index returns by queryItems
    }
 
+   /**
+    * Formats a Unix timestamp as a MySQL datetime; 0 means now. A
+    * non-numeric input is assumed to be a datetime already and returned
+    * unchanged.
+    *
+    * @param int|string $timestamp Unix timestamp or datetime string.
+    * @return string `Y-m-d H:i:s`.
+    */
    private function timestampToSQL($timestamp = 0)
    {
       if (! is_numeric($timestamp))
@@ -146,6 +267,28 @@ class MysqlDataProvider implements DataProvider
       return $date;
    }
 
+   /**
+    * Builds and runs the SELECT behind dequeue(), getItem() and getItems().
+    *
+    * Always scoped to this plugin slug and queue name. `orderby` is
+    * interpolated without escaping and must come from code, not input.
+    *
+    * @global \wpdb $wpdb
+    *
+    * @param array $args {
+    *     @type int              $status   Status, or QSTATUS_ALL for any.
+    *     @type string           $orderby  Column. Default list_order.
+    *     @type string           $order    'ASC' or 'DESC'.
+    *     @type int              $numitems Limit; <= 0 for no limit.
+    *     @type int|false        $item_id  Restrict to one item_id.
+    *     @type int|array|false  $updated  Unix timestamp, or
+    *                                      `['operator' => '<=', 'value' => ts]`,
+    *                                      compared with `updated`.
+    *     @type int|array|false  $priority Number or operator/value array,
+    *                                      compared with `list_order`.
+    * }
+    * @return array<int, Item> Items keyed by row id.
+    */
    /*
    * @return Array
    */
@@ -253,6 +396,15 @@ class MysqlDataProvider implements DataProvider
      return $items;
    }
 
+   /**
+    * Mass update of rows without loading them.
+    *
+    * @param array $data      Column => new value.
+    * @param array $fields    Column => value (or list of values) to match.
+    * @param array $operators Column => operator. Currently ignored, see the
+    *                         class @todo.
+    * @return int|false Rows changed, or false on error.
+    */
    /** Updates a set of items from queue without pulling or returning those records.
    *
    *  @return int Number of Records Updated
@@ -262,6 +414,16 @@ class MysqlDataProvider implements DataProvider
     return $this->updateRecords($data, $fields, $operators);
    }
 
+   /**
+    * Updates the row of one item, matched by item_id.
+    *
+    * Returns true only when exactly one row changed, so writing values
+    * identical to the stored ones yields false although nothing failed.
+    *
+    * @param Item  $item   Item to update.
+    * @param array $fields Column => new value.
+    * @return bool
+    */
    /** Updates one queued item, for instance in case of failing, or status update
    *
    * @param $item_id int The Uniq Id of the item to update
@@ -276,6 +438,12 @@ class MysqlDataProvider implements DataProvider
         return false;
    }
 
+   /**
+    * Loads one item by item_id.
+    *
+    * @param int $item_id Consumer item ID.
+    * @return Item|false False when not found.
+    */
    public function getItem($item_id)
    {
        $items = $this->queryItems(array('item_id' => $item_id));
@@ -286,11 +454,28 @@ class MysqlDataProvider implements DataProvider
          return array_shift($items);
    }
 
+   /**
+    * Loads items by arbitrary queryItems() arguments.
+    *
+    * @param array $args See queryItems().
+    * @return array<int, Item> Items keyed by row id.
+    */
    public function getItems($args)
    {
       return $this->queryItems($args);
    }
 
+   /**
+    * Counts the rows of this queue.
+    *
+    * @global \wpdb $wpdb
+    *
+    * @param int|string $status A ShortQ::QSTATUS_* constant for one
+    *                           status, ShortQ::QSTATUS_ALL for all rows,
+    *                           or 'countbystatus' for an array keyed by
+    *                           status (values are numeric strings).
+    * @return int|array 0 after a database error (which triggers a repair).
+    */
    /* Counts Items in Database Queue
    * @param Status Mixed When supplied with ShortQ Status Constant it will count this status, will count all with ShortQ:QSTATUS_ALL.
    * When given 'countbystatus' it will return an array with  ShortQ Status as key and the count as value
@@ -331,6 +516,17 @@ class MysqlDataProvider implements DataProvider
       return $count;
    }
 
+   /**
+    * Sums `item_count` over the rows of this queue. Same selection rules
+    * as itemCount().
+    *
+    * @global \wpdb $wpdb
+    *
+    * @param int|string $status Status constant, QSTATUS_ALL or
+    *                           'countbystatus'.
+    * @return int|array<int, int> 0 (or an empty array for 'countbystatus')
+    *                             after a database error.
+    */
    /* Counts Sum of Items in the Database Queue
    * @param Status Mixed When supplied with ShortQ Status Constant it will count this status, will count all with ShortQ:QSTATUS_ALL.
    * When given 'countbystatus' it will return an array with  ShortQ Status as key and the count as value
@@ -375,6 +571,22 @@ class MysqlDataProvider implements DataProvider
    }
 
 
+   /**
+    * Runs an UPDATE scoped to this queue.
+    *
+    * `updated` is always written (the given value or now). `created` is
+    * pinned to itself unless given, because some MySQL servers define the
+    * first timestamp column as ON UPDATE CURRENT_TIMESTAMP. Array values
+    * in $where become IN (...) clauses, scalars an equality.
+    *
+    * @global \wpdb $wpdb
+    *
+    * @param array $data      Column => new value.
+    * @param array $where     Column => value or list of values.
+    * @param array $operators Column => operator. Read but not applied, see
+    *                         the class @todo.
+    * @return int|false Rows changed, or false on error.
+    */
    /** Update records
    *
    * @param $Data Array. Data array to change, to WP standards
@@ -430,6 +642,28 @@ class MysqlDataProvider implements DataProvider
       return $result;
    }
 
+   /**
+    * Deletes rows of this queue by one selector.
+    *
+    * Exactly one of `status`, `item_id`, `items` or `all` is applied, in
+    * that order of precedence. `all` must be passed explicitly as true to
+    * wipe the queue; without any selector nothing is deleted. With
+    * `check_safe` the table's existence is verified first, for the
+    * uninstall path where the table may already be gone.
+    *
+    * @global \wpdb $wpdb
+    *
+    * @param array $args {
+    *     @type int|null  $status     Delete rows with this status.
+    *     @type int|null  $item_id    Delete the row with this item_id.
+    *     @type int[]|null $items     Delete rows with these item_ids.
+    *     @type bool      $all        True to delete every row of the queue.
+    *     @type bool      $check_safe True to return false when the table
+    *                                 does not exist.
+    * }
+    * @return int|false Rows deleted, or false without selector, missing
+    *                   table (check_safe) or query error.
+    */
    /** @todo Accept array or ItemIDS to remove
    * @param $args Array . Array of options:
    *  'Status' : remove items with selected ShortQ QSTATUS
@@ -491,6 +725,13 @@ class MysqlDataProvider implements DataProvider
      return $result;
    }
 
+   /**
+    * Tells whether the table exists (SHOW TABLES LIKE).
+    *
+    * @global \wpdb $wpdb
+    *
+    * @return bool
+    */
    /** Checks if database table properly exists
    * https://wordpress.stackexchange.com/questions/220275/wordpress-unit-testing-cannot-create-tables
    * @return Boolean Yes or no
@@ -512,6 +753,19 @@ class MysqlDataProvider implements DataProvider
       // if something something, install.
    }
 
+   /**
+    * Creates or upgrades the table with dbDelta() and adds the unique key
+    * `uq_{prefix}` on (plugin_slug, queue_name, item_id) when missing.
+    *
+    * dbDelta() is idempotent and adds columns that are missing from an
+    * older table, which is why handleError() calls this on any failed
+    * query.
+    *
+    * @global \wpdb $wpdb
+    *
+    * @param bool $nocheck False to skip the work when the table exists.
+    * @return bool True when the table exists afterwards.
+    */
    public function install($nocheck = false)
    {
      if ($nocheck === false && true === $this->check())
@@ -556,6 +810,16 @@ class MysqlDataProvider implements DataProvider
       return $this->check();
    }
 
+   /**
+    * Drops the table, but only when it holds no rows at all, across every
+    * plugin and queue that shares it. Called from WPQ::unInstall() after
+    * the queue's own rows were deleted.
+    *
+    * @global \wpdb $wpdb
+    *
+    * @return bool See the class @todo: false in every case except a failed
+    *              drop.
+    */
    public function uninstall()
    {
      global $wpdb;
@@ -580,6 +844,15 @@ class MysqlDataProvider implements DataProvider
      return $this->check();
    }
 
+   /**
+    * Tells whether the last query succeeded; on failure runs the repair in
+    * handleError().
+    *
+    * @global \wpdb $wpdb
+    *
+    * @param bool $override_check Passed to handleError().
+    * @return bool
+    */
    private function checkQueryOK($override_check = false)
    {
       global $wpdb;
@@ -593,6 +866,23 @@ class MysqlDataProvider implements DataProvider
       return true;
    }
 
+   /**
+    * Repairs the table after a failed query.
+    *
+    * Installs the table when it is missing (unless $override_check),
+    * forces a dbDelta() run when the error mentions something "unknown"
+    * (typically a missing column), then runs install() once more. The
+    * failed query itself is not retried and the error is not logged.
+    *
+    * @global \wpdb $wpdb
+    *
+    * @param string $error          wpdb error text.
+    * @param bool   $override_check True to skip the table-existence check.
+    * @return void
+    *
+    * @todo Errors are swallowed; nothing reaches the plugin log. Suggested
+    *       fix: pass the error to the logger of the consuming plugin.
+    */
    private function handleError($error, $override_check = false)
    {
      global $wpdb;

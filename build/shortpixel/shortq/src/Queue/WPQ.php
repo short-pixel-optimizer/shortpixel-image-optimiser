@@ -1,31 +1,171 @@
 <?php
+/**
+ * WordPress queue implementation of the ShortQ module.
+ *
+ * @package ShortPixel\ShortQ
+ */
 namespace ShortPixel\ShortQ\Queue;
 use ShortPixel\ShortQ\Item as Item;
 use ShortPixel\ShortQ\Status as Status;
 use \ShortPixel\ShortQ\ShortQ as ShortQ;
 
+/**
+ * Queue that keeps its status in a WordPress option and its items in a
+ * DataProvider.
+ *
+ * Created by ShortQ::getQueue(), one object per call. The constructor loads
+ * the queue's Status from the `shortqwp_{slug}` option (shared by all
+ * queues of the plugin, keyed by queue name) and creates it, together with
+ * the storage table, when it is missing. Items are buffered in memory by
+ * addItems() / withOrder() until enqueue() writes them to the provider in
+ * chunks of `enqueue_limit`.
+ *
+ * Processing modes (`mode` option):
+ * - `direct` (default): dequeue() marks items DONE immediately. Suitable
+ *   when the caller finishes the work synchronously and only reports
+ *   failures with itemFailed().
+ * - `wait`: dequeue() marks items INPROCESS and the caller must report
+ *   each one with itemDone() or itemFailed(). Items left INPROCESS longer
+ *   than `process_timeout` milliseconds are put back to WAITING by
+ *   inProcessTimeout() (called at the start of every dequeue()) with
+ *   `tries` incremented, and fail fatally once `tries` exceeds
+ *   `retry_limit`. This is the mode for work that goes through a remote
+ *   API and completes in a later request.
+ *
+ * Errors: itemFailed() without `$fatal` sets ERROR. When the queue runs out
+ * of waiting items, checkQueue() moves ERROR items back to WAITING while
+ * their `tries` are below `retry_limit`, otherwise to FATAL, so retries
+ * happen after the first pass over the queue. A queue finishes (`finished`
+ * = true, `running` = false) when nothing is waiting or in process and
+ * the `preparing` flag is off; consumers that add items in batches set
+ * `preparing` (addItems() does so) and clear it when they are done.
+ *
+ * Counters: the Status counters are adjusted in memory on every operation
+ * and written with each saveStatus(). They are resynced from the provider
+ * (resetInternalCounts()) when a counter would go negative, every
+ * `timeout_recount` seconds, when the cached count says the queue is empty
+ * and in checkQueue(). hasItems() and itemCount() read the cached counter,
+ * not the database.
+ *
+ * Options (setOptions() / setOption()):
+ * - `numitems` (1): items returned per dequeue().
+ * - `mode` ('direct'): 'direct' or 'wait', see above.
+ * - `enqueue_limit` (1000): items per INSERT when flushing.
+ * - `process_timeout` (10000): ms before an INPROCESS item is retried.
+ * - `retry_limit` (5): maximum `tries` before an item is fatal.
+ * - `timeout_recount` (180): seconds between forced recounts.
+ * - `is_debug` (false): stored, not read by the module.
+ *
+ * Item cache: getItem() caches Items in a static array for the request;
+ * every status or value change through this class clears the entry.
+ *
+ * Hooks fired by this class:
+ * - action `shortpixel/modules/wpq/item/timeout` (inProcessTimeout()),
+ *   with the Item, right before it is failed fatally for exceeding
+ *   `retry_limit`.
+ *
+ * Bundling: the build tool rewrites the namespace and the hook prefix per
+ * consuming plugin; the option name prefix `shortqwp_` and the storage
+ * table are not rewritten, see ShortQ.
+ *
+ * @todo $itemCache is keyed by item_id only, while item IDs are unique per
+ *       plugin slug and queue name. Two queues of the same plugin that hold
+ *       the same item_id in one request (for example a bulk and a single
+ *       queue for the same attachment) return each other's Item from
+ *       getItem(). Suggested fix: key the cache by slug, queue name and
+ *       item_id.
+ * @todo The constructor returns early on an empty slug or queue name,
+ *       leaving $options and $currentStatus unset; the first setOption()
+ *       or dequeue() then fails. Suggested fix: throw an exception.
+ * @todo inProcessTimeout() guards with `! $this->options->mode == 'wait'`,
+ *       which negates the string first and is always false, so the method
+ *       also runs in `direct` mode (where no items are INPROCESS and the
+ *       query is wasted). Suggested fix: `'wait' !== $this->options->mode`.
+ */
 class WPQ implements Queue
 {
+  /**
+   * Option name holding the Status objects of all queues of the plugin.
+   * Starts as the prefix and becomes `shortqwp_{slug}` in the constructor.
+   *
+   * @var string
+   */
   private $statusName = 'shortqwp_';
 
+  /**
+   * Queue name, at most 30 characters.
+   *
+   * @var string
+   */
   protected $qName; // queue Name
+
+  /**
+   * Plugin slug, at most 30 characters.
+   *
+   * @var string
+   */
   protected $pSlug; // plugin slug
+
+  /**
+   * Storage backend.
+   *
+   * @var \ShortPixel\ShortQ\DataProvider\DataProvider
+   */
   protected $DataProvider;
 
+  /**
+   * Full content of the status option: `['queues' => [name => Status]]`,
+   * as loaded at construction. Only read in loadStatus()/createQueue().
+   *
+   * @var array|null
+   */
   protected $status; // the status, the whole status and nothing but.
+
+  /**
+   * Status of this queue. False after unInstall(), meaning "remove on save".
+   *
+   * @var Status|false|null
+   */
 	protected $currentStatus; // working status, current queue name.
+
+  /**
+   * Items buffered by addItems() and not yet flushed by enqueue().
+   *
+   * @var Item[]
+   */
   protected $items = array();
 
+  /**
+   * Option values, see the class description.
+   *
+   * @var \stdClass
+   */
   protected $options;
 
   // statistics and status
+
+  /**
+   * Items dequeued by this object during the request. Only used by the
+   * unused calcAverageAsk().
+   *
+   * @var int
+   */
   protected $current_ask = 0;
 
+  /**
+   * Request-wide cache of Items loaded by getItem(), keyed by item_id.
+   *
+   * @var array<int, Item>
+   */
   protected static $itemCache = []; // cache items to prevent multiple database calls
 
-  /*
-  * @param qName - Name of the Queue requested by parent
-  */
+  /**
+   * Loads or creates the queue status and sets the default options.
+   *
+   * @param string                                        $slug         Plugin slug.
+   * @param string                                        $qName        Queue name.
+   * @param \ShortPixel\ShortQ\DataProvider\DataProvider $DataProvider Storage backend.
+   */
   public function __construct($slug, $qName, $DataProvider)
   {
     if ($slug == '' || $qName == '' )
@@ -54,6 +194,12 @@ class WPQ implements Queue
 
   }
 
+  /**
+   * Sets several options; unknown names are ignored.
+   *
+   * @param array<string, mixed> $options Option name => value.
+   * @return void
+   */
   public function setOptions($options)
   {
       foreach($options as $option => $value)
@@ -62,25 +208,45 @@ class WPQ implements Queue
       }
   }
 
+  /**
+   * Sets one option; unknown names are ignored.
+   *
+   * @param string $name  Option name.
+   * @param mixed  $value New value.
+   * @return void
+   */
   public function setOption($name, $value)
   {
       if (property_exists($this->options, $name))
         $this->options->$name = $value;
   }
 
+  /**
+   * Returns one option.
+   *
+   * @param string $name Option name.
+   * @return mixed The value, or null for an unknown name.
+   */
   public function getOption($name)
   {
      if (property_exists($this->options, $name))
         return $this->options->$name;
   }
 
-  /** Prepare items for enqueue, if you want to deliver items in batch, but not flush to storage directly
-  *    Every Item needs to have an (item)_id and (item)_value. That's the only thing remote app should be aware of.
-  *    @param Array Item Array with fields: id, value [order]
-	* 	 @param bool If status should be updated due to adding items.
-  *
-  *
-  */
+  /**
+   * Buffers items in memory for a later enqueue().
+   *
+   * Each item is an array with `id` (the consumer's item ID, required;
+   * items without it are skipped), `value` (any payload, default ''),
+   * optionally `item_count` and `order` (list order). When items were
+   * added and $updateStatus is true, the queue is flagged `preparing` and
+   * `finished` is cleared, in memory only; enqueue() saves.
+   *
+   * @param array $items        List of item arrays.
+   * @param bool  $updateStatus False to leave the preparing/finished flags
+   *                            alone.
+   * @return void
+   */
   public function addItems($items, $updateStatus = true)
   {
       foreach($items as $item)
@@ -110,11 +276,20 @@ class WPQ implements Queue
       }
   }
 
-  /** Simple Enqueue.
-  * @param $items Array List of Items to add, see @AddItems
-  * @return int $numItems Number of Items in this Queue [Total]
-  * Note that each addition does a save of option retaining the last_item_id. Ideally add as many items that can fit in memory / time limit  constraints
-  */
+  /**
+   * Writes the buffered items (plus $items, if given) to the provider.
+   *
+   * Items go out in chunks of `enqueue_limit`. The provider inserts with
+   * INSERT IGNORE, so an item_id already present in this queue is skipped
+   * silently and not counted. After every chunk `last_item_id` is saved
+   * to the option so a consumer can resume preparing when the script is
+   * terminated. The buffer is emptied afterwards. Call with as many items
+   * as fit in memory and the time limit: every chunk costs an option
+   * write.
+   *
+   * @param array $items Optional items as accepted by addItems().
+   * @return int Number of items waiting in the queue after the insert.
+   */
   public function enqueue($items = array() )
   {
       if (count($items) > 0)
@@ -139,12 +314,17 @@ class WPQ implements Queue
       return $numitems;
   }
 
-  /** Accepts array of items with a certain priority
-  * Usage: $queue->withOrder($items, $order)->enqueue();  will add items with a specific list order number
-  * @param $items Items Array, see AddItems
-  * @param $order Int List Order number to insert.
-  * @return $Queue This Queue Object
-  */
+  /**
+   * Buffers items with a fixed list order. Chainable:
+   * `$queue->withOrder($items, $order)->enqueue()`.
+   *
+   * Orders below 10 are treated as priority items by dequeue(); regular
+   * items get 10 + their position from the provider.
+   *
+   * @param array $items Items as accepted by addItems().
+   * @param int   $order List order to give every item.
+   * @return $this
+   */
   public function withOrder($items, $order)
   {
       foreach($items as $index => $item)
@@ -156,10 +336,19 @@ class WPQ implements Queue
       return $this;
   }
 
-    /* Remove from Queue possible duplicates
-  *  Chained function. Removed items from queue
-  *  *Note* This should be used with small selections of items, not by default. Only when changes to item are needed, or to status.
-  */
+  /**
+   * Deletes stored items that have the same item_id as the buffered items,
+   * so that the following enqueue() replaces them instead of being ignored.
+   * Chainable: `$queue->withRemoveDuplicates()->enqueue()`.
+   *
+   * Use for small selections only (for example re-queueing one image with
+   * a changed value or status): it costs a DELETE per call. Decrements the
+   * waiting counter by the rows deleted, and recounts from the provider
+   * when the counter reaches zero, because the deleted rows may have been
+   * in another status than waiting.
+   *
+   * @return $this
+   */
   public function withRemoveDuplicates()
   {
 
@@ -184,7 +373,13 @@ class WPQ implements Queue
      return $this;
   }
 
-	// Remove Items directly from queue. Expand this function when required (but use dequeue if possible). For now only support for item_id.
+  /**
+   * Deletes stored items directly, bypassing the counters. Prefer
+   * dequeue() where possible. Only `item_id` is supported.
+   *
+   * @param array $args `['item_id' => int]`.
+   * @return void
+   */
 	public function removeItems($args)
 	{
 			 if (isset($args['item_id']))
@@ -193,6 +388,31 @@ class WPQ implements Queue
 			 }
 	}
 
+  /**
+   * Takes the next batch of waiting items.
+   *
+   * Steps: run inProcessTimeout(); when the cached waiting counter is zero,
+   * checkQueue() recounts, retries errors and may finish the queue, and an
+   * empty array is returned if nothing is left. Otherwise the provider
+   * moves up to `numitems` items (lowest list_order first) to DONE in
+   * `direct` mode or INPROCESS in `wait` mode. When that yields nothing
+   * although the counter said otherwise, the counters are recounted and
+   * the query is repeated once, which prevents stalling on a stale count.
+   * Counters, `last_run` and `running` are updated and saved; when the
+   * waiting counter hits zero, checkQueue() runs to possibly finish the
+   * queue.
+   *
+   * @param array $args {
+   *     Optional overrides.
+   *
+   *     @type int  $numitems     Items to take. Default option `numitems`.
+   *     @type int  $newstatus    Status to give the items. Default by mode.
+   *     @type bool $onlypriority True to take only items with list_order
+   *                              below 10. Default false. Such a call does
+   *                              not set the `running` flag.
+   * }
+   * @return Item[] Items taken, possibly empty.
+   */
   // Dequeue a record, put it on done in queue.
   public function dequeue($args = array())
   {
@@ -265,12 +485,21 @@ class WPQ implements Queue
 
 
 
-  /* Handles in processTimeOuts
-    if TimeOut is reached:
-    - Reset the status back to waiting
-    - Increment Retries by 1
-    -
-  */
+  /**
+   * Returns timed-out INPROCESS items to the waiting state.
+   *
+   * Items updated more than `process_timeout` milliseconds ago get `tries`
+   * incremented and go back to WAITING; once `tries` exceeds
+   * `retry_limit` the item is failed fatally instead, after firing
+   * `shortpixel/modules/wpq/item/timeout`. The in-process and waiting
+   * counters are moved accordingly (the latter with a save).
+   *
+   * Intended for `wait` mode only but runs in every mode, see the class
+   * @todo.
+   *
+   * @return int|void Number of items returned to waiting; nothing when the
+   *                  (ineffective) mode guard returns early.
+   */
   public function inProcessTimeout()
   {
      // Not waiting for anything.
@@ -311,6 +540,13 @@ class WPQ implements Queue
 
   }
 
+  /**
+   * Marks an item DONE and moves the counters (waiting in `direct` mode,
+   * in-process in `wait` mode, plus done). Saves the status.
+   *
+   * @param Item $item Item to finish.
+   * @return void
+   */
   public function itemDone(Item $item)
   {
       if ($this->options->mode == 'direct')
@@ -330,6 +566,19 @@ class WPQ implements Queue
       $this->clearItemCache($item); 
   }
 
+  /**
+   * Marks an item as failed.
+   *
+   * Non-fatal: status ERROR, `errors` counter incremented; checkQueue()
+   * retries the item later while its `tries` stay below `retry_limit`.
+   * Fatal: status FATAL, `fatal_errors` incremented and the item removed
+   * from the waiting (direct) or in-process (wait) counter. In both cases
+   * `tries` is incremented and the status saved.
+   *
+   * @param Item $item  Item that failed.
+   * @param bool $fatal True to give up on the item.
+   * @return void
+   */
   public function itemFailed(Item $item, $fatal = false)
   {
     $status = ShortQ::QSTATUS_ERROR;
@@ -356,6 +605,15 @@ class WPQ implements Queue
 		$this->saveStatus();
   }
 
+  /**
+   * Persists a changed `value` of an item, leaving its status alone.
+   *
+   * Used by consumers that keep progress data in the item payload. The
+   * property_exists() guard is always true for an Item.
+   *
+   * @param Item $item Item whose value was changed.
+   * @return bool True when exactly one row changed.
+   */
   public function updateItemValue(Item $item)
   {
       if (!property_exists($item, 'value'))
@@ -367,6 +625,12 @@ class WPQ implements Queue
       return $this->DataProvider->itemUpdate($item, array('value' => $item->getRaw('value') ));
   }
 
+  /**
+   * Loads an item by item_id, through the request-wide cache.
+   *
+   * @param int $item_id Consumer item ID.
+   * @return Item|false False when the item is not in this queue.
+   */
   public function getItem($item_id)
   {
      if (isset(self::$itemCache[$item_id]))
@@ -385,11 +649,12 @@ class WPQ implements Queue
 
   }
 
-  /** Clear Item from cache (if possible)
-   * 
-   * This clears the item from the cache which should be done when the status of the item changes. 
-   * @param object|int $item
-   * @return void 
+  /**
+   * Removes an item from the request cache; called whenever its status or
+   * value changes. A numeric string ID is ignored (only int is accepted).
+   *
+   * @param Item|int $item Item or item_id.
+   * @return void
    */
   protected function clearItemCache($item)
   {
@@ -412,6 +677,11 @@ class WPQ implements Queue
      }
   }
 
+  /**
+   * Tells whether the cached waiting counter is positive. No database call.
+   *
+   * @return bool
+   */
   public function hasItems()
   {
     //$status = $this->getQueueStatus();
@@ -423,6 +693,12 @@ class WPQ implements Queue
 
   }
 
+  /**
+   * Returns the cached waiting counter. No database call; the counter is
+   * refreshed by dequeue() and the recount rules in the class description.
+   *
+   * @return int
+   */
   public function itemCount()
   {
     //  $queue = $this->getQueueStatus();
@@ -436,6 +712,16 @@ class WPQ implements Queue
       return (int) $num;
   }
 
+  /**
+   * Sums `item_count` over the stored items, from the provider.
+   *
+   * With 'countbystatus' the result is an array keyed by status; statuses
+   * without rows are filled in with 0 so consumers can index it directly.
+   *
+   * @param int|string $status Status constant, ShortQ::QSTATUS_ALL, or
+   *                           'countbystatus'.
+   * @return int|array<int, int>
+   */
   public function itemSum($status = ShortQ::QSTATUS_ALL)
   {
       $row = $this->DataProvider->itemSum($status);
@@ -455,9 +741,15 @@ class WPQ implements Queue
       return $row;
   }
 
-  /** Function to call when ending a queue process. The purpose is to purge all records and statistics.
-  * Those need to be collected before calling this function. Also the reason this is not done automatically.
-  */
+  /**
+   * Ends a queue run: deletes every stored item of this queue and replaces
+   * the Status with a fresh one.
+   *
+   * Statistics are lost, so collect them before calling; that is why this
+   * is never done automatically.
+   *
+   * @return void
+   */
   public function resetQueue()
   {
      $this->DataProvider->removeRecords(array('all' => true));
@@ -465,6 +757,12 @@ class WPQ implements Queue
      $this->saveStatus();
   }
 
+  /**
+   * Deletes the DONE and FATAL items of this queue and recounts. Keeps the
+   * queue usable, unlike resetQueue().
+   *
+   * @return void
+   */
   public function cleanQueue()
   {
 
@@ -473,6 +771,19 @@ class WPQ implements Queue
      $this->resetInternalCounts();
   }
 
+  /**
+   * Sets a Status value and stamps `last_update`.
+   *
+   * Consumers use it for the `preparing`, `running`, `bulk_running` and
+   * `custom_data` fields. Counters can be set too, but prefer
+   * setStatusCount() for relative changes.
+   *
+   * @param string $name    Status property.
+   * @param mixed  $value   New value.
+   * @param bool   $savenow False to postpone the option write to a later
+   *                        saveStatus().
+   * @return bool False when the property does not exist.
+   */
   /** @todo Users must be able to control preparing / running status controls for resume / play the queue, but possibly not the counts.  */
   public function setStatus($name, $value, $savenow = true)
   {
@@ -490,7 +801,20 @@ class WPQ implements Queue
     return $bool;
   }
 
-  /** Addition of substraction for the counters */
+  /**
+   * Adds a (possibly negative) amount to a counter.
+   *
+   * When the result would be negative, or `timeout_recount` seconds have
+   * passed since the last recount, the counters are first resynced from
+   * the provider and the change is applied to the fresh value. This keeps
+   * the cached counters from drifting when several requests work on the
+   * same queue.
+   *
+   * @param string $name    Counter name; non-counters are refused.
+   * @param int    $change  Amount to add.
+   * @param bool   $savenow False to postpone the option write.
+   * @return bool False for a non-counter or unknown property.
+   */
   public function setStatusCount($name, $change, $savenow = true)
   {
       if (! $this->currentStatus->isCounter($name))
@@ -513,6 +837,12 @@ class WPQ implements Queue
       return $this->setStatus($name, $count + $change, $savenow);
   }
 
+  /**
+   * Starts a new Status for this queue and saves it. When the option did
+   * not exist at all, the provider's storage is (re)installed too.
+   *
+   * @return void
+   */
   private function createQueue()
   {
 			if (is_null($this->status))
@@ -528,6 +858,12 @@ class WPQ implements Queue
   }
 
 
+  /**
+   * Loads this queue's Status from the option, creating it when the option
+   * or the queue entry is missing or malformed.
+   *
+   * @return void
+   */
   private function loadStatus()
   {
     $this->status = get_option($this->statusName, null);
@@ -546,6 +882,12 @@ class WPQ implements Queue
 		}
   }
 
+  /**
+   * Returns the Status object or one of its values.
+   *
+   * @param string|false $item Property name, or false for the whole object.
+   * @return Status|mixed|false False when no status is loaded.
+   */
   public function getStatus($item = false)
   {
 			if (is_null($this->currentStatus))
@@ -559,6 +901,17 @@ class WPQ implements Queue
 			}
   }
 
+  /**
+   * Writes this queue's Status into the shared option.
+   *
+   * Re-reads the option first so that the entries of other queues written
+   * by concurrent requests are kept. When $currentStatus is false (after
+   * unInstall()) the entry is removed, and the option is deleted once no
+   * queue is left. Bypasses the object cache afterwards so the next read
+   * in this request sees the stored value.
+   *
+   * @return void
+   */
   protected function saveStatus()
   {
      $status = get_option($this->statusName);  // two different Q's can run simulanously.
@@ -590,9 +943,19 @@ class WPQ implements Queue
      wp_cache_delete($this->statusName, 'options');
   }
 
-  /** Check Queue. This function intends to keep internal counts consistent with dataprovider without doing queries every run .
-  * Should also be able to spot the moment when there is nothing waiting, but perhaps some tasks as in process with a timeout. (stale)
-  */
+  /**
+   * Reconciles the queue with the provider when the cached count says it
+   * is empty.
+   *
+   * Recounts all counters, then retries ERROR items: those with `tries`
+   * below `retry_limit` go back to WAITING, the others to FATAL, followed
+   * by another recount. Finishes the queue when nothing is waiting or in
+   * process and the queue is not `preparing`.
+   *
+   * @return bool|null True when items remain (waiting or in process),
+   *                   false when the queue was finished, null when it is
+   *                   empty but still preparing.
+   */
   private function checkQueue()
   {
     $this->resetInternalCounts(); // retrieve accurate count from dataSource.
@@ -655,6 +1018,12 @@ class WPQ implements Queue
     return null;
   }
 
+  /**
+   * Replaces the cached counters with a per-status count from the provider
+   * and saves. Stamps `last_count_time`.
+   *
+   * @return void
+   */
   private function resetInternalCounts()
   {
     $dataQ = $this->DataProvider->itemCount('countbystatus');
@@ -697,12 +1066,24 @@ class WPQ implements Queue
 
   }
 
+  /**
+   * Unused draft of an average batch size calculation.
+   *
+   * @param int|float $avg Previous average.
+   * @return float
+   */
   private function calcAverageAsk($avg)
   {
     // @todo this is nonsense. Need a counter for X times run.
     return ($avg / $this->current_ask);
   }
 
+  /**
+   * Marks the queue finished: `running` off, `finished` on, `last_run`
+   * now, `times_ran` incremented. Saves.
+   *
+   * @return void
+   */
   private function finishQueue()
   {
      $this->setStatus('running', false, false);
@@ -713,13 +1094,25 @@ class WPQ implements Queue
 
   }
 
+  /**
+   * (Re)creates the provider's storage table. Safe to call on every
+   * activation; the provider uses dbDelta.
+   *
+   * @return void
+   */
   public function install()
   {
 			$this->DataProvider->install(true);
   }
 
-  /** Function to call when uninstalling the plugin. This will remove only this current queue
-  */
+  /**
+   * Removes this queue on plugin uninstall: deletes its stored items,
+   * drops its entry from the status option (and the option when it was
+   * the last queue) and asks the provider to drop the table, which only
+   * happens when no rows of any plugin or queue remain.
+   *
+   * @return void
+   */
   public function unInstall()
   {
       // Remove the Queued Items
