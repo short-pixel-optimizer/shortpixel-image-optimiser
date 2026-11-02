@@ -2565,9 +2565,16 @@ class AjaxController
 	}
 
 	/**
-	 * Reset all custom-folder scan timestamps so every folder is rescanned next tick.
+	 * Starts a full folder scan: registers NextGEN galleries, then resets all
+	 * custom-folder scan timestamps so every folder is rescanned next tick.
 	 *
-	 * Delegates to `OtherMediaController::resetCheckedTimestamps()`.
+	 * When the Imagely/NextGEN integration is on (`includeNextGen`), every
+	 * gallery is first added as a Custom Media folder with NextGen status
+	 * via `NextGenController::addNextGenGalleriesToCustom()`. Folders are
+	 * added without an immediate refresh; the scan that follows reads their
+	 * files. This is how existing galleries reach Custom Media after the
+	 * integration is turned on; saving the setting does not add them.
+	 * Then delegates to `OtherMediaController::resetCheckedTimestamps()`.
 	 *
 	 * @param \stdClass $json JSON accumulator object (returned unchanged).
 	 * @param array     $data Dispatch data array (unused).

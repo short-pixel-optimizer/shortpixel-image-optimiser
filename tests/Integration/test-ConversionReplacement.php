@@ -262,10 +262,10 @@ class ConversionReplacementTest extends SPIO_IntegrationTestCase {
 			) )
 		);
 
-		// Serialized-OBJECT postmeta (security regression guard: URLs
-		// inside object blobs are intentionally NOT replaced, and NO
-		// object of an unknown class may be instantiated. Use a stdClass
-		// so we can round-trip round the assertion.
+		// A serialized-OBJECT string stored as an option value, so WordPress
+		// serializes it a second time (a plugin calling serialize() itself
+		// before update_option()). The replacer only sees a serialized
+		// STRING at the top level; see the pinned corruption test below.
 		$obj      = new stdClass();
 		$obj->url = $url;
 		$obj->tag = 'sentinel';
@@ -384,11 +384,9 @@ class ConversionReplacementTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * Assert (security regression + no-op guard) that the serialized-OBJECT
-	 * option we stored during seedContent is BYTE-IDENTICAL after the
-	 * conversion run — Replacer::replaceContent explicitly avoids
-	 * instantiating unknown classes (allowed_classes=false unserialize)
-	 * and does not walk into them.
+	 * Assert that the serialized-OBJECT option stored during seedContent is
+	 * BYTE-IDENTICAL after the conversion run. Today the conversion corrupts
+	 * it (see the pinned test below); this helper is what that pin flips to.
 	 */
 	private function assertObjectBlobUntouched( array $seeded ): void {
 		wp_cache_delete( '_spio_test_object_blob', 'options' );

@@ -4,16 +4,13 @@
  * object-injection hardening.
  *
  * Security model: replaceContent() unserializes with
- * `allowed_classes => false` UNCONDITIONALLY — for post_content
- * ($strict_check=true) AND metadata ($strict_check=false). Serialized
- * objects therefore become __PHP_Incomplete_Class and the ORIGINAL
- * serialized string is returned untouched: no object is ever instantiated
- * from database-supplied data (no __wakeup/__destruct gadget can fire).
- *
- * Verified side effect of the hardening: URLs inside serialized OBJECT
- * values (e.g. widget/option payloads storing stdClass) are NO LONGER
- * replaced — the whole serialized blob is returned as-is. Serialized
- * ARRAYS are unaffected and still get their URLs replaced.
+ * `allowed_classes => array( 'stdClass' )` — for post_content
+ * ($strict_check=true) AND metadata ($strict_check=false). stdClass has no
+ * magic methods, so plain data objects (Beaver Builder nodes, settings
+ * payloads) are unserialized and their URLs replaced. Every other class
+ * becomes __PHP_Incomplete_Class and the ORIGINAL serialized string is
+ * returned untouched: no object of a real class is ever instantiated from
+ * database-supplied data (no __wakeup/__destruct gadget can fire).
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -59,26 +56,19 @@ class ReplacerTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Serialized objects must be bailed on wholesale: allowed_classes=false
-	 * turns them into __PHP_Incomplete_Class and the original serialized
-	 * string comes back byte-identical — even in the non-strict (metadata)
-	 * path.
+	 * A serialized stdClass is unserialized, its URL replaced and the value
+	 * serialized again, with correct string lengths, in both check modes.
 	 */
-	public function test_serialized_object_is_returned_unchanged_in_both_check_modes() {
-		$payload = new stdClass();
+	public function test_serialized_stdclass_url_is_replaced_in_both_check_modes() {
+		$payload      = new stdClass();
 		$payload->url = self::OLD_URL;
 		$serialized   = serialize( $payload );
 
-		$this->assertSame(
-			$serialized,
-			$this->replaceContent( $serialized, true ),
-			'strict path: serialized objects must be returned untouched (no unserialize-to-object)'
-		);
-		$this->assertSame(
-			$serialized,
-			$this->replaceContent( $serialized, false ),
-			'metadata path: serialized objects must be returned untouched too — allowed_classes is false unconditionally'
-		);
+		$expected      = new stdClass();
+		$expected->url = self::NEW_URL;
+
+		$this->assertSame( serialize( $expected ), $this->replaceContent( $serialized, true ), 'strict path: the stdClass URL is replaced.' );
+		$this->assertSame( serialize( $expected ), $this->replaceContent( $serialized, false ), 'metadata path: the stdClass URL is replaced.' );
 	}
 
 	/**
@@ -99,7 +89,42 @@ class ReplacerTest extends WP_UnitTestCase {
 		);
 	}
 
-	public function test_array_wrapping_a_serialized_object_keeps_the_object_blob_intact() {
+	/**
+	 * A serialized object of a class other than stdClass, nested as a string
+	 * inside an array, survives byte-identical: the class is not allowed, the
+	 * nested value becomes an incomplete object and is left alone.
+	 */
+	public function test_array_wrapping_a_serialized_custom_object_keeps_the_object_blob_intact() {
+		$blob    = 'O:24:"SPIO_Test_Wakeup_Canary_":1:{s:3:"url";s:' . strlen( self::OLD_URL ) . ':"' . self::OLD_URL . '";}';
+		$content = serialize(
+			array(
+				'plain'  => self::OLD_URL,
+				'object' => $blob,
+			)
+		);
+
+		$unserialized = unserialize( $this->replaceContent( $content, false ) );
+
+		$this->assertSame( self::NEW_URL, $unserialized['plain'], 'Sibling scalar values must still be replaced' );
+		$this->assertSame( $blob, $unserialized['object'], 'The nested custom-object blob must survive untouched.' );
+	}
+
+	/**
+	 * Pins a known defect: a serialized stdClass nested AS A STRING inside
+	 * serialized data (a plugin that calls serialize() itself before saving)
+	 * comes back as a live stdClass object instead of a serialized string.
+	 * replaceContent() unserializes every nested serialized string but never
+	 * serializes it again below the top level. The stored shape changes from
+	 * string to object, so the owning plugin's own unserialize() gets an
+	 * object. Same cause as the nested-array variant of the serialized-option
+	 * corruption pinned in Integration/test-ConversionReplacement.php.
+	 * @todo In the replacer2 module source, Replacer::replaceContent():
+	 *       serialize a nested value again when this call unserialized it,
+	 *       independent of $in_deep (as is already done for nested JSON).
+	 * When fixed, this test fails; flip it: `object` is still a string, now
+	 * holding the serialized stdClass with the new URL.
+	 */
+	public function test_array_wrapping_a_serialized_stdclass_returns_it_as_an_object_pinned_for_deferred_fix() {
 		$payload      = new stdClass();
 		$payload->url = self::OLD_URL;
 
@@ -110,15 +135,14 @@ class ReplacerTest extends WP_UnitTestCase {
 			)
 		);
 
-		$result       = $this->replaceContent( $content, false );
-		$unserialized = unserialize( $result );
+		$unserialized = unserialize( $this->replaceContent( $content, false ) );
 
-		$this->assertSame( self::NEW_URL, $unserialized['plain'], 'Sibling scalar values must still be replaced' );
-		$this->assertSame(
-			serialize( $payload ),
-			$unserialized['object'],
-			'The nested serialized-object blob must survive untouched (side effect of the hardening: its URL is NOT replaced)'
-		);
+		// SENTINEL: the row was processed.
+		$this->assertSame( self::NEW_URL, $unserialized['plain'], 'Sentinel: sibling scalar values are replaced.' );
+
+		// THE PIN: the nested serialized string is now an object.
+		$this->assertInstanceOf( stdClass::class, $unserialized['object'], 'Pinned: fixed? The nested serialized stdClass stays a string — flip this pin.' );
+		$this->assertSame( self::NEW_URL, $unserialized['object']->url, 'Sentinel: its URL was replaced.' );
 	}
 
 	/**
@@ -206,5 +230,66 @@ class ReplacerTest extends WP_UnitTestCase {
 
 		// THE PIN: same data, different bytes.
 		$this->assertSame( '{"label":"Caf\\u00e9"}', $result[0]['settings']['options'], 'Pinned: fixed? The untouched JSON string keeps its bytes — flip this pin.' );
+	}
+
+	/**
+	 * replace() pairs every source size with the target URL of the SAME size,
+	 * also when a size missing in the target is filled in by findNearestSize().
+	 * str_replace() pairs the search and replace arrays by position, not by
+	 * key, and a nearest-size URL is appended at the end of the replace array;
+	 * replace() therefore rebuilds the replace array in the order of the
+	 * search array. Without that, the source "medium" URL would be rewritten
+	 * to the target "large" file and the source "large" URL to the nearest
+	 * file picked for "medium".
+	 */
+	public function test_replace_pairs_a_nearest_size_fallback_with_its_own_source_size() {
+		$base = 'http://example.org/wp-content/uploads/2026/11/';
+
+		$source_meta = array(
+			'file'   => '2026/11/src.jpg',
+			'width'  => 2000,
+			'height' => 1333,
+			'sizes'  => array(
+				'thumbnail' => array( 'file' => 'src-150x150.jpg', 'width' => 150, 'height' => 150 ),
+				'medium'    => array( 'file' => 'src-300x200.jpg', 'width' => 300, 'height' => 200 ),
+				'large'     => array( 'file' => 'src-1024x683.jpg', 'width' => 1024, 'height' => 683 ),
+			),
+		);
+		// The target has no "medium": its closest width to 300 is the 400px "custom" size.
+		$target_meta = array(
+			'file'   => '2026/11/tgt.jpg',
+			'width'  => 2000,
+			'height' => 1333,
+			'sizes'  => array(
+				'thumbnail' => array( 'file' => 'tgt-150x150.jpg', 'width' => 150, 'height' => 150 ),
+				'custom'    => array( 'file' => 'tgt-400x267.jpg', 'width' => 400, 'height' => 267 ),
+				'large'     => array( 'file' => 'tgt-1024x683.jpg', 'width' => 1024, 'height' => 683 ),
+			),
+		);
+
+		$post_id = self::factory()->post->create(
+			array(
+				'post_status'  => 'publish',
+				'post_content' => '<img src="' . $base . 'src-300x200.jpg"><img src="' . $base . 'src-1024x683.jpg">',
+			)
+		);
+
+		$replacer = Replacer::getInstance();
+		$replacer->setSource( $base . 'src.jpg' );
+		$replacer->setTarget( $base . 'tgt.jpg' );
+		$replacer->setSourceMeta( $source_meta );
+		$replacer->setTargetMeta( $target_meta );
+		$updated = $replacer->replace();
+
+		$this->assertIsInt( $updated, 'Sentinel: replace() ran instead of returning errors.' );
+		clean_post_cache( $post_id );
+		$content = get_post_field( 'post_content', $post_id );
+
+		// Misaligned pairs would swap the two files: medium → large, large → 400px.
+		$this->assertSame(
+			'<img src="' . $base . 'tgt-400x267.jpg"><img src="' . $base . 'tgt-1024x683.jpg">',
+			$content,
+			'The source medium URL gets the nearest target size, the source large URL the target large size.'
+		);
 	}
 }
