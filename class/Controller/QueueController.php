@@ -583,9 +583,18 @@ class QueueController
             $apiController->handleAPIResult($qItem);  
           }
           
-          if (true === $qItem->result()->is_error &&  true === $this->args['is_bulk'] )
+          if (true === $qItem->result()->is_error)
           {
-             $this->LogBulk($qItem);
+             Log::addTemp('Test - QItem came back as error', $qItem->result());
+          }
+          if (true === $qItem->result()->is_error && true === $this->args['is_bulk'] )
+          {
+             // Only log error items that are related to file issues. 
+             // @todo If this work, permanent solution would be to probably add and is_item_error result to qItemResult and set that in the ApiController
+             if ($qItem->result()->apiStatus <= -100 && $qItem->result()->apiStatus >= -300)
+             {
+                $this->LogBulk($qItem);
+             }
           }
 
           $result->items[$mainIndex] = $qItem->result(); // replace processed item, should have result now.

@@ -180,7 +180,8 @@ class OptimizeController extends OptimizerBase
 
     $qItem->addResult(['apiName' => $this->apiName]);
 
-    if (true === $qItem->block()) {
+    // Change - added check on is_error here, because unchanged should not be if error was encountered and block somehow not removed
+    if (true === $qItem->block() && false === $qItem->result()->is_error) {
 
       $qItem->addResult([
         'apiStatus' => RequestManager::STATUS_UNCHANGED,
@@ -217,7 +218,7 @@ class OptimizeController extends OptimizerBase
         $error_code = AjaxController::APIKEY_FAILED;
       } elseif ($apistatus == RequestManager::STATUS_QUEUE_FULL || $apistatus == RequestManager::STATUS_MAINTENANCE) // Full Queue / Maintenance mode
       {
-        $error_code = AjaxController::SERVER_ERROR;
+        $error_code = AjaxController::QUEUE_FULL;
       }
 
       if (isset($error_code)) {
@@ -238,7 +239,7 @@ class OptimizeController extends OptimizerBase
       }
     }
 
-    // easier to reads than a elseif structure. 
+    // easier to read than a elseif structure. 
     if (false === $qItem->result()->is_error) {
 
       if ('optimize' === $action || 'convert_api' === $action)

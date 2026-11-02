@@ -199,28 +199,6 @@ class ResponseController
 
 
 		/**
-		 * Return a formatted human-readable message for an item.
-		 *
-		 * @deprecated Use formatQItem() for queue-based items.
-		 *
-		 * @param int $item_id The queue item ID.
-		 * @return string Formatted message string.
-		 */
-		public static function formatItem($item_id)
-		{
-				 $item = self::getResponseItem($item_id); // ResponseMOdel
-				 $text = $item->message;
-
-				 if ($item->is_error)
-				 	  $text = self::formatErrorItem($item, $text);
-				 else {
-					 	$text = self::formatRegularItem($item, $text);
-				 }
-
-				 return $text;
-		}
-
-		/**
 		 * Merge a QueueItem's result into its ResponseModel and return a formatted message.
 		 *
 		 * Copies non-null result properties from the QueueItem onto the ResponseModel,
@@ -233,17 +211,12 @@ class ResponseController
 		public static function formatQItem(QueueItem $queueItem)
 		{
 			$result = $queueItem->result();
-			$data = $queueItem->data(); 
 			$imageModel = $queueItem->imageModel; 
 
 			$item_id = $queueItem->item_id; 
 
 			$responseModel = self::getResponseItem($item_id); 
-
-			//if (is_null($responseModel->item_type))
-			//{
-				 $responseModel->item_type = $imageModel->get('type'); 
-			//}
+			$responseModel->item_type = $imageModel->get('type'); 
 
 			foreach($result as $resultName => $resultValue)
 			{
@@ -255,8 +228,14 @@ class ResponseController
 
 			self::updateResponseItem($responseModel);
 
-			return self::formatItem($item_id); 
+			
+			 if ($responseModel->is_error)
+				 	  $text = self::formatErrorItem($responseModel, $responseModel->message);
+				 else {
+					 	$text = self::formatRegularItem($responseModel, $responseModel->message);
+				 }
 
+			return $text;
 		}
 
 		/**
@@ -271,8 +250,9 @@ class ResponseController
 		 * @return string The augmented message text.
 		 */
 		private static function formatErrorItem($item, $text)
-		{
-			switch($item->issue_type)
+		{ 
+			// It seems this is wholly unused - nobody is setting issue type
+			switch($item->issue_type) 
 			{
 				 case self::ISSUE_BACKUP_CREATE:
 				 		if (self::$screenOutput < self::OUTPUT_CLI) // all but cli .

@@ -69,7 +69,9 @@ window.ShortPixelProcessor =
         '-3': 'NO_STATUS',
         '-4': 'APIKEY_FAILED',
         '-5': 'NOQUOTA',
-        '-10': 'SERVER FAILURE',
+        '-6': 'SERVER FAILURE',
+        '-7': 'NO_ACCESS', 
+        '-8': 'QUEUE_FULL',
 				'-903': 'TIMEOUT', // SPIO shortQ retry limit reached.
      },
 
@@ -498,8 +500,16 @@ if (this.ShouldLog()) {
 							 handledError = true;
 							 console.error('No API Key set for this site. See settings');
 						 }
+             else if (error == 'QUEUE_FULL')
+             {
+                this.timesEmpty = 10; // Bigger number, to defer for a bit
+                this.StopProcess({ defer: true })
+                handleError = true; 
+                console.log('Remote API responded queue is full. Wait for some time.');
+             }
              else if (response.error < 0) // something happened.
              {
+               
                this.StopProcess();
 							 handledError = true;
 							 console.error('Some unknown error occured!', response.error, response);

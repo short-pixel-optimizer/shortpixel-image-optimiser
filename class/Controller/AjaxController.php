@@ -91,6 +91,8 @@ class AjaxController
 	const SERVER_ERROR = -6;
 	/** Sent when capability or image-ownership check fails. */
 	const NO_ACCESS = -7;
+	/** Signal to delay processing  */
+	const QUEUE_FULL = -8; 
 
 	private static $instance;
 
