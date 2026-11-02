@@ -90,7 +90,7 @@ class ShortPixelScreenBase
 			return; // stay silent when debug is not active.
 
 		  var title = this.strings.fatalErrorStop;
-			var text = this.strings.fatalErrorStopText;
+		  var text = this.strings.fatalErrorStopText;
 
 			var notice = this.GetErrorNotice(title, text);
 			var el = this.GetErrorPosition();

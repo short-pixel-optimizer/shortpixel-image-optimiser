@@ -145,20 +145,14 @@ class ReplacerTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Pins a known defect: a JSON string nested inside serialized data
-	 * comes back as a stdClass object. replaceContent() json_decode()s every
-	 * JSON-looking string it meets but only re-encodes the top level
-	 * ($in_deep === false). Bricks reads its nested slider options with
-	 * stripslashes(), which then fatals ("stdClass given") on every page
-	 * showing the element — even though the options never held the URL.
-	 * @todo In the replacer2 module source, Replacer::replaceContent():
-	 *       re-encode a nested JSON string back to a string after replacing
-	 *       inside it, and leave a JSON string that contains none of the
-	 *       search URLs untouched.
-	 * When fixed, this test fails; flip it: `options` is still the same
-	 * JSON string.
+	 * A JSON string nested inside serialized data stays a string.
+	 * replaceContent() json_decode()s every JSON-looking string it meets and
+	 * re-encodes it at every depth, not only at the top level. Were it left
+	 * decoded, the value would be stored back as a stdClass object and Bricks,
+	 * which reads its nested slider options with stripslashes(), would fatal
+	 * ("stdClass given") on every page showing the element.
 	 */
-	public function test_json_string_nested_in_serialized_data_comes_back_as_an_object_pinned_for_deferred_fix() {
+	public function test_json_string_nested_in_serialized_data_stays_a_json_string() {
 		$options = '{"type":"loop","perPage":3,"gap":"1em"}';
 		$content = serialize( $this->bricksPageContent( $options ) );
 
@@ -167,24 +161,50 @@ class ReplacerTest extends WP_UnitTestCase {
 		// SENTINEL: the URL beside it was replaced.
 		$this->assertSame( self::NEW_URL, $result[1]['settings']['image']['url'], 'Sentinel: the image URL was replaced.' );
 
-		// THE PIN: the untouched JSON string is now an object.
-		$this->assertInstanceOf( stdClass::class, $result[0]['settings']['options'], 'Pinned: fixed? The nested JSON string stays a string — flip this pin.' );
+		$this->assertSame( $options, $result[0]['settings']['options'], 'The nested JSON string must come back as the same string.' );
 	}
 
 	/**
-	 * Pins the same defect for a JSON string that does carry the URL: the
-	 * URL is replaced, but the value is stored back as an object.
-	 * @todo See test_json_string_nested_in_serialized_data_comes_back_as_an_object_pinned_for_deferred_fix.
-	 * When fixed, this test fails; flip it: `options` is a JSON string with
-	 * the new URL.
+	 * A nested JSON string that carries the URL is replaced inside and
+	 * stored back as a JSON string.
 	 */
-	public function test_json_string_with_the_url_nested_in_serialized_data_comes_back_as_an_object_pinned_for_deferred_fix() {
+	public function test_json_string_with_the_url_nested_in_serialized_data_is_replaced_and_stays_a_json_string() {
 		$options = wp_json_encode( array( 'cover' => self::OLD_URL ), JSON_UNESCAPED_SLASHES );
 		$content = serialize( $this->bricksPageContent( $options ) );
 
 		$result = unserialize( $this->replaceContent( $content, false ) );
 
-		$this->assertInstanceOf( stdClass::class, $result[0]['settings']['options'], 'Pinned: fixed? The nested JSON string stays a string — flip this pin.' );
-		$this->assertSame( self::NEW_URL, $result[0]['settings']['options']->cover, 'The URL inside it was replaced.' );
+		$this->assertIsString( $result[0]['settings']['options'] );
+		$this->assertSame(
+			wp_json_encode( array( 'cover' => self::NEW_URL ), JSON_UNESCAPED_SLASHES ),
+			$result[0]['settings']['options'],
+			'The URL inside the nested JSON string was replaced.'
+		);
+	}
+
+	/**
+	 * Pins a known defect: a nested JSON string that holds none of the search
+	 * URLs is still decoded and re-encoded with the replacer's json_flags
+	 * (JSON_UNESCAPED_SLASHES only), so it does not come back byte-identical:
+	 * non-ASCII text turns into \uXXXX escapes. Bricks reads its slider
+	 * options with stripslashes() before json_decode(), so "Café" stored as
+	 * "Caf\u00e9" is shown as "Cafu00e9". Only rows the replacer matched (the
+	 * row holds the replaced URL somewhere else) are affected.
+	 * @todo In the replacer2 module source, Replacer::replaceContent(): return
+	 *       a nested JSON string unchanged when nothing inside it was replaced.
+	 * When fixed, this test fails; flip it: `options` is byte-identical.
+	 */
+	public function test_nested_json_string_without_the_url_is_re_encoded_with_unicode_escapes_pinned_for_deferred_fix() {
+		$options = '{"label":"Café"}';
+		$content = serialize( $this->bricksPageContent( $options ) );
+
+		$result = unserialize( $this->replaceContent( $content, false ) );
+
+		// SENTINEL: the row was processed (URL beside it replaced) and the value is still a string.
+		$this->assertSame( self::NEW_URL, $result[1]['settings']['image']['url'], 'Sentinel: the image URL was replaced.' );
+		$this->assertIsString( $result[0]['settings']['options'], 'Sentinel: the nested JSON stays a string.' );
+
+		// THE PIN: same data, different bytes.
+		$this->assertSame( '{"label":"Caf\\u00e9"}', $result[0]['settings']['options'], 'Pinned: fixed? The untouched JSON string keeps its bytes — flip this pin.' );
 	}
 }

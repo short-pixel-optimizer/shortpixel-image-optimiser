@@ -4,19 +4,20 @@
  * firewall, CORS / mixed-content from a site-URL mismatch, ad blocker).
  *
  * Mechanism under test (res/js/shortpixel-worker.js + screens/screen-base.js):
- * the worker's fetch().catch() relays the raw JavaScript error as the
- * message; the processor counts it as a worker error and hands it to
- * screen.HandleError(), which builds a red "ShortPixel encountered a fatal
+ * the worker's fetch().catch() wraps the JavaScript error in a response-shaped
+ * message (`http_status` 0, `http_text` = the error's message, `status_text`
+ * "network error"); the processor counts it as a worker error and hands it
+ * to screen.HandleError(), which builds a red "ShortPixel encountered a fatal
  * error when optimizing images…" notice from `data.http_text`.
  *
- * Two things are meant to hold there:
+ * Two things hold there:
  *
  *   1. The notice is developer-facing and only shows when SPIO debug mode
  *      is on: HandleError() / HandleErrorStop() return early unless the
  *      processor's BOOLEAN debugIsActive is exactly true.
- *   2. Known defect, still open: the relayed error has no `http_text`, so
- *      with debug mode on the notice body is String(undefined) — the word
- *      "undefined" and nothing else.
+ *   2. With debug mode on, the notice body names the browser's network
+ *      error ("Failed to fetch", "NetworkError when attempting to fetch
+ *      resource.", "Load failed"), never String(undefined).
  *
  * The failure is forced at the browser: the processing POST to
  * admin-ajax.php is aborted by a route, so fetch() rejects exactly as it
@@ -50,6 +51,21 @@ async function cutProcessorRequests(page: Page): Promise<void> {
 			await route.continue();
 		},
 	);
+}
+
+/**
+ * True for the console.error entries the cut request produces by design:
+ * the worker's own catch() report, and the processor's Debug() relay of the
+ * worker message (shortpixel-processor.js), which logs the raw Error OBJECT.
+ * Chromium renders that object as its message ("TypeError: Failed to
+ * fetch"); Firefox renders it as the placeholder "JSHandle@object", so the
+ * relay is recognised by its origin as well as by its wording.
+ */
+function isWorkerErrorReport(entry: string): boolean {
+	if (/Worker\.js reporting issue on catch|Failed to fetch|Load failed|NetworkError|ERR_CONNECTION/i.test(entry)) {
+		return true;
+	}
+	return /^console\.error: Error: {1,2}JSHandle@\w+ @ .*\/shortpixel-processor\.js/.test(entry);
 }
 
 /** Waits until the processor has registered at least one worker failure. */
@@ -97,7 +113,7 @@ test.describe('Processor — network failure of the processing request', () => {
 		// The worker reports the cut request; nothing else may blow up.
 		expect(consoleErrors.length, 'the worker reports the aborted request on the console').toBeGreaterThan(0);
 		expect(
-			consoleErrors.filter((e) => !/Worker\.js reporting issue on catch|Failed to fetch|Load failed|NetworkError|ERR_CONNECTION/i.test(e)),
+			consoleErrors.filter((e) => !isWorkerErrorReport(e)),
 			'only the worker\'s own report of the cut request is expected',
 		).toEqual([]);
 
@@ -106,13 +122,11 @@ test.describe('Processor — network failure of the processing request', () => {
 	});
 
 	/**
-	 * @todo res/js/shortpixel-worker.js: the fetch().catch() relay has no
-	 *       http_text; fall back to error.message / the status text when
-	 *       there is no HTTP response.
-	 * FLIP-when-fixed: the body names the error, never "undefined". Drop the
-	 * suffix.
+	 * Regression: with debug mode on, the notice body is the `http_text` the
+	 * worker builds from the error's message, so it names the network error
+	 * instead of printing String(undefined).
 	 */
-	test('with debug mode on, the fatal-error notice names the error instead of "undefined" (pinned_for_deferred_fix)', async ({
+	test('with debug mode on, the fatal-error notice body names the network error', async ({
 		page,
 		spio,
 	}) => {
@@ -131,12 +145,14 @@ test.describe('Processor — network failure of the processing request', () => {
 		await list.cell(id).locator('a.optimize').click();
 		await expectWorkerError(page);
 
-		// With debug on the notice is legitimate; it must carry a usable message.
+		// SENTINEL: with debug on the notice is legitimate and shows up.
 		const notice = page.locator(FATAL_NOTICE).first();
 		await expect(notice).toBeVisible({ timeout: 15_000 });
 		await expect(notice).toContainText(FATAL_TITLE);
+
+		// The body is the browser's own wording of the failed fetch.
 		const details = (await notice.locator('.error-details').innerText()).trim();
-		expect(details, 'notice body is the literal String(undefined)').not.toMatch(/^undefined$/i);
-		expect(details.length, 'notice body must say what failed').toBeGreaterThan(0);
+		expect(details, 'the notice body must not be String(undefined)').not.toMatch(/^undefined$/i);
+		expect(details, 'the notice body names the network error').toMatch(/Failed to fetch|NetworkError|Load failed/i);
 	});
 });

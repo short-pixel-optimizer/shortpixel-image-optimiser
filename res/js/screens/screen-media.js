@@ -412,9 +412,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			return;
 		}
 
-
 		var wp_screen_id = this.settings.wp_screen_id;
-
 
 		if (typeof aiData !== 'undefined') {
 			var newAltText = aiData.alt;
@@ -428,7 +426,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		if (typeof newAltText !== 'undefined' && typeof newAltText !== 'number')
 		{
 			var inputs = this.altInputNames;
-
 
 			for (var i = 0; i < inputs.length; i++) {
 				var altInput = document.getElementById(inputs[i]);

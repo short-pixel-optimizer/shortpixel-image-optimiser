@@ -9,7 +9,8 @@
  * what the user has, and the next Update saves the blank.
  *
  *   - alt: numbers are skipped (regression test);
- *   - caption / description: still blanked (pinned).
+ *   - caption / description: still blanked (pinned: the test asserts the
+ *     blanking and goes red once the fields are left alone).
  *
  * The AI request is started with `ShortPixelProcessor.screen.RequestAlt(id)`,
  * the call the "AI Image SEO" button makes. FetchAltView is wrapped so the
@@ -86,18 +87,28 @@ test.describe('Edit media — AI result and fields that were not generated', () 
 	});
 
 	/**
-	 * @todo res/js/screens/screen-media.js FetchAltView(): skip a numeric
-	 *       caption / description the way the alt branch does, instead of
-	 *       turning it into ''.
-	 * FLIP-when-fixed: both fields keep the user's text. Drop the suffix.
+	 * PIN: res/js/screens/screen-media.js FetchAltView() writes a numeric
+	 * caption / description status into the form as '' (the alt branch skips
+	 * numbers, its siblings do not), so the user's text is blanked and the
+	 * next Update saves the blank.
+	 * @todo FetchAltView(): skip a numeric caption / description the way the
+	 *       alt branch does, instead of turning it into ''.
+	 * FLIP-when-fixed: both fields keep USER_CAPTION / USER_DESCRIPTION. Drop
+	 * the suffix.
 	 */
-	test('a caption and description that were not generated keep the user\'s text (pinned_for_deferred_fix)', async ({ page, spio }) => {
+	test('pin: a caption and description that were not generated are blanked (pinned_for_deferred_fix)', async ({ page, spio }) => {
 		const { id } = await spio.uploadFixture('fixture-small.jpg');
 		const aiData = await runAiWithFilledForm(page, id);
 
+		// SENTINELS: the statuses really arrived as integers, and the alt
+		// branch (fixed) left its field alone — so the blanking below is the
+		// caption/description branches, not a page reload or a reset form.
 		expect(typeof aiData.caption, 'pre-condition: the caption arrives as an integer status').toBe('number');
 		expect(typeof aiData.description, 'pre-condition: the description arrives as an integer status').toBe('number');
-		expect(await fieldValue(page, 'attachment_caption'), 'caption field blanked by an integer status').toBe(USER_CAPTION);
-		expect(await fieldValue(page, 'attachment_content'), 'description field blanked by an integer status').toBe(USER_DESCRIPTION);
+		expect(await fieldValue(page, 'attachment_alt'), 'sentinel: the alt field keeps the user\'s text').toBe(USER_ALT);
+
+		// PINNED: both fields are blanked by the integer status.
+		expect(await fieldValue(page, 'attachment_caption'), 'PIN: fixed? the caption keeps the user\'s text — flip this pin').toBe('');
+		expect(await fieldValue(page, 'attachment_content'), 'PIN: fixed? the description keeps the user\'s text — flip this pin').toBe('');
 	});
 });

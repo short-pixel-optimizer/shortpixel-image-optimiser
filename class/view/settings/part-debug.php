@@ -110,10 +110,11 @@ if (Log::isManualDebug())
     <?php $settings = (array) $this->view->data;
      ksort($settings);
     ?>
-    <h4>Settings</h4>
+    <h4><?php _e('Settings', 'shortpixel-image-optimiser'); ?></h4>
     <pre><?php var_export($settings); ?></pre>
 
-  	<form method="POST" action="<?php echo esc_url(add_query_arg(['sp-action' => 'action_debug_editSetting'],$debugUrl)) ?>">
+  	<form method="POST" action="<?php 
+    echo esc_url(add_query_arg(['sp-action' => 'action_debug_editSetting'],$debugUrl)) ?>">
 
       <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
 
@@ -138,10 +139,10 @@ if (Log::isManualDebug())
 
 
   <div class='debug-quota'>
-    <form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_resetquota'), $debugUrl)) ?>">
-			<?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
-      <button class='button' type='submit'>Clear Quota Data</button>
-      </form>
+    <a href="<?php echo $this->getActionLink('action_debug_resetquota', ['part' => 'debug']);  ?>" class='button'>
+        <?php _e('Clear Quota Data');  ?>
+    </a>
+
   </div>
   <div class="stats env">
       <h3><?php esc_html_e('Stats', 'shortpixel-image-optimiser'); ?></h3>
@@ -178,11 +179,11 @@ if (Log::isManualDebug())
 	</div> <!-- stats -->
 
   <div class='debug-stats'>
-    <form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_resetStats'), $debugUrl)) ?>"
-      >
-			<?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
-      <button class='button' type='submit'>Clear statistics cache</button>
-      </form>
+    <a href="
+    <?php echo $this->getActionLink('action_debug_resetStats', ['part' => 'debug']); ?>" class="button">
+    <?php _e('Clear Statistics'); ?>
+  </a>
+
   </div>
 
   <?php
@@ -262,11 +263,10 @@ if (Log::isManualDebug())
   <?php endforeach; ?>
 
   <div class='debug-notices'>
-    <form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_resetNotices'), $debugUrl)) ?>"
-      >
-			<?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
-      <button class='button' type='submit'>Reset Notices</button>
-      </form>
+    <a href="<?php echo $this->getActionLink('action_debug_resetNotices', ['part' => 'debug']); ?>" class="button">
+      <?php _e('Reset Notices'); ?>
+    </a>
+
   </div>
 
 	<div class='trigger-notices'>
@@ -394,14 +394,10 @@ if (Log::isManualDebug())
 
 <p></p>
 
-
-
 <div class='debug-key'>
-	<form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_removeProcessorKey'),$debugUrl)) ?>"
-		>
-		<?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
-		<button class='button' type='submit'>Reset Processor Key</button>
-		</form>
+  <a href="<?php echo $this->getActionLink('action_debug_removeProcessorKey', ['part' => 'debug']); ?>" 
+  class='button'><?php _e('Reset Processor Key', 'shortpixel-image-optimiser'); ?></a>
+
 </div>
 
 </section>

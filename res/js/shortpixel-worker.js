@@ -79,14 +79,18 @@ var SpWorker = {
           body: params.toString(),
 
       }).catch (function (error){
+
+
+               var message = {status: false, http_status: 0, http_text: error.message || String(error), status_text: 'network error' };
+
 					 if (this && ! this.stopped) // if page is switched during init , this might not be set.
 					 {
-					 		postMessage({'status' : false, message: error});
+					 		postMessage({'status' : false, message: message});
 					 		console.error('Worker.js reporting issue on catch', error);
 					 }
 					 else {
             // This could be a network error ( or user moving away ). Still send response in case of temporary network issues.
-            postMessage({'status' : false, message: error});
+            postMessage({'status' : false, message: message});
 
 					 }
 					return false;

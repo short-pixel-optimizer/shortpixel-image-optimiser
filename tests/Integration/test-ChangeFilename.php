@@ -1608,22 +1608,16 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	}
 
 	/**
-	 * Pins a known defect: when a rename rewrites the postmeta of more than
-	 * one post, only the FIRST post's 'post_meta' cache entry is dropped.
-	 * Replacer::handleMetaData() (build/ replacer2) stores the row's object id
-	 * in $main_id, the variable that holds the column name, so from the
-	 * second row on it reads $row[<first id>] = null and calls
-	 * wp_cache_delete(null, 'post_meta'). WordPress (6.1+) reports that as
-	 * incorrect usage, and the later posts keep serving the old URL from a
-	 * persistent object cache. The same happens in the other meta tables.
-	 * @todo In the replacer2 module source: read the row's object id into a
-	 *       separate variable, e.g. $object_id = $row[$main_id].
-	 * When fixed, this test fails (the expected incorrect-usage notice is
-	 * missing); flip it: drop the expectation, both cached reads return the
-	 * new URL.
+	 * When a rename rewrites the postmeta of more than one post, EVERY
+	 * post's 'post_meta' cache entry is dropped, not only the first one.
+	 * Replacer::handleMetaData() (build/ replacer2) keeps the owning-object
+	 * column name in its own variable and reads each row's object id from it,
+	 * so every row clears its own cache key (and never calls
+	 * wp_cache_delete(null, …), which WordPress reports as incorrect usage).
+	 * The second post is the one that would go stale if only the first row
+	 * were handled.
 	 */
-	public function test_rename_refreshes_the_postmeta_cache_of_only_the_first_post_pinned_for_deferred_fix() {
-		$this->setExpectedIncorrectUsage( 'WP_Object_Cache::delete' );
+	public function test_rename_refreshes_the_postmeta_cache_of_every_post() {
 		$this->_setRole( 'administrator' );
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->purgeQueueTable();
@@ -1643,12 +1637,13 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$this->assertTrue( $result, 'Sentinel: the rename succeeded.' );
 
 		global $wpdb;
-		// SENTINELS: both rows were rewritten in the database, and the first post's cache follows.
+		// SENTINEL: both rows were rewritten in the database.
 		$this->assertStringContainsString( $new_base, (string) $wpdb->get_var( $wpdb->prepare( "SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key = '_spio_test_builder_data'", $second ) ), 'Sentinel: the second post\'s postmeta is rewritten in the database.' );
-		$this->assertStringContainsString( $new_base, get_post_meta( $first, '_spio_test_builder_data', true ), 'Sentinel: the first post\'s cached postmeta follows the rename.' );
 
-		// THE PIN: the second post's cached read still returns the old URL.
-		$this->assertStringContainsString( $old_name, get_post_meta( $second, '_spio_test_builder_data', true ), 'Pinned: fixed? The second post\'s cached postmeta now follows the rename — flip this pin.' );
+		// Both cached reads follow the rename.
+		$this->assertStringContainsString( $new_base, get_post_meta( $first, '_spio_test_builder_data', true ), 'The first post\'s cached postmeta follows the rename.' );
+		$this->assertStringContainsString( $new_base, get_post_meta( $second, '_spio_test_builder_data', true ), 'The second post\'s cached postmeta follows the rename.' );
+		$this->assertStringNotContainsString( $old_name, get_post_meta( $second, '_spio_test_builder_data', true ), 'The second post no longer serves the old URL from the cache.' );
 	}
 
 	/**
@@ -1687,23 +1682,17 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	}
 
 	/**
-	 * Pins a known defect: a rename turns JSON strings nested in builder
-	 * data into objects, both in postmeta and in options. The data mimics
-	 * Bricks: a page's `_bricks_page_content_2` and a global option holding
-	 * shared components, each an array of elements in which a nested
-	 * slider keeps its custom options as a JSON string. Bricks passes that
-	 * value to stripslashes() and fatals ("stdClass given") on every page
-	 * that renders the element — for a shared component, on every page
-	 * that uses it, whether or not it shows the renamed image. Unit-level
-	 * cause: the nested-JSON pins in Model/test-Replacer.php.
-	 * @todo In the replacer2 module source, Replacer::replaceContent():
-	 *       re-encode a nested JSON string back to a string after replacing
-	 *       inside it, and leave a JSON string that contains none of the
-	 *       search URLs untouched.
-	 * When fixed, this test fails; flip it: both `options` values are still
-	 * the original JSON string.
+	 * A rename keeps JSON strings nested in builder data as strings, both in
+	 * postmeta and in options. The data mimics Bricks: a page's
+	 * `_bricks_page_content_2` and a global option holding shared components,
+	 * each an array of elements in which a nested slider keeps its custom
+	 * options as a JSON string. Bricks passes that value to stripslashes(),
+	 * which fatals ("stdClass given") on every page that renders the element
+	 * if the value comes back as an object — for a shared component, on every
+	 * page that uses it, whether or not it shows the renamed image. Unit-level
+	 * counterpart: the nested-JSON tests in Model/test-Replacer.php.
 	 */
-	public function test_rename_turns_json_strings_in_builder_data_into_objects_pinned_for_deferred_fix() {
+	public function test_rename_keeps_json_strings_in_builder_data_as_strings() {
 		$this->_setRole( 'administrator' );
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->purgeQueueTable();
@@ -1743,8 +1732,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$this->assertStringContainsString( $new_base, $page[1]['settings']['image']['url'], 'Sentinel: the page image URL follows the rename.' );
 		$this->assertStringContainsString( $new_base, $components[0]['elements'][1]['settings']['image']['url'], 'Sentinel: the component image URL follows the rename.' );
 
-		// THE PIN: the untouched slider options are objects now.
-		$this->assertInstanceOf( stdClass::class, $page[0]['settings']['options'], 'Pinned: fixed? The page slider options stay a JSON string — flip this pin.' );
-		$this->assertInstanceOf( stdClass::class, $components[0]['elements'][0]['settings']['options'], 'Pinned: fixed? The component slider options stay a JSON string — flip this pin.' );
+		$this->assertSame( $options, $page[0]['settings']['options'], 'The page slider options stay the same JSON string.' );
+		$this->assertSame( $options, $components[0]['elements'][0]['settings']['options'], 'The component slider options stay the same JSON string.' );
 	}
 }

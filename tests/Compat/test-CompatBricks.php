@@ -17,12 +17,12 @@
  * replacer2 has no Bricks module: these rows go through the generic path,
  * Replacer::replaceContent(). When a row contains a renamed or converted
  * image URL, the replacer json_decode()s every JSON-looking string it meets
- * while recursing, but re-encodes only at the top level, so the slider's
- * options come back as a stdClass — even though they hold no URL. Bricks
- * then fatals ("stripslashes(): Argument #1 ($string) must be of type
+ * while recursing and re-encodes it at every depth, so the slider's options
+ * come back as a JSON string. Were they left decoded (a stdClass), Bricks
+ * would fatal ("stripslashes(): Argument #1 ($string) must be of type
  * string, stdClass given") on every page that renders the slider; for a
- * component, on every page that uses it. Pinned below; the unit-level cause
- * is pinned in Model/test-Replacer.php.
+ * component, on every page that uses it. The unit-level counterpart is in
+ * Model/test-Replacer.php.
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -143,12 +143,10 @@ class CompatBricksTest extends SPIO_IntegrationTestCase {
 		}
 	}
 
-	/** Asserts that $result is the stripslashes() TypeError Bricks raises on a stdClass. */
-	private function assertStripslashesFatal( $result, string $message ): void {
-		$this->assertInstanceOf( \TypeError::class, $result, $message );
-		$this->assertStringContainsString( 'stripslashes()', $result->getMessage() );
-		$this->assertStringContainsString( 'stdClass given', $result->getMessage() );
-		$this->assertStringContainsString( 'slider-nested.php', $result->getFile() );
+	/** Asserts that $result is rendered HTML containing the Nested Slider, not a Throwable. */
+	private function assertSliderRenders( $result, string $message ): void {
+		$this->assertIsString( $result, $message . ( $result instanceof \Throwable ? ' Got: ' . $result->getMessage() : '' ) );
+		$this->assertStringContainsString( 'splide', $result, 'The Nested Slider rendered.' );
 	}
 
 	public function test_bricks_is_the_active_theme() {
@@ -158,7 +156,7 @@ class CompatBricksTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * Sentinel for the pins below: an untouched Nested Slider with custom
+	 * Baseline for the tests below: an untouched Nested Slider with custom
 	 * options, stored the way Bricks stores it, loads back with the options
 	 * as a JSON string and renders without error.
 	 */
@@ -175,17 +173,10 @@ class CompatBricksTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * Pins a known defect: renaming a file (manually or with AI) used on a
-	 * Bricks page turns the page's Nested Slider options into an object, and
-	 * the page then fatals in Bricks.
-	 * @todo In the replacer2 module source, Replacer::replaceContent():
-	 *       re-encode a nested JSON string back to a string after replacing
-	 *       inside it, and leave a JSON string that contains none of the
-	 *       search URLs untouched.
-	 * When fixed, this test fails; flip it: the options stay the JSON string
-	 * and the page renders.
+	 * Renaming a file (manually or with AI) used on a Bricks page keeps the
+	 * page's Nested Slider options a JSON string, and the page still renders.
 	 */
-	public function test_manual_rename_breaks_the_nested_slider_on_a_bricks_page_pinned_for_deferred_fix() {
+	public function test_manual_rename_keeps_the_nested_slider_on_a_bricks_page_working() {
 		$id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->purgeQueueTable();
 		$post_id = $this->createBricksPage( $this->elements( $id, wp_get_attachment_url( $id ) ) );
@@ -197,19 +188,15 @@ class CompatBricksTest extends SPIO_IntegrationTestCase {
 		$elements = $this->pageElements( $post_id );
 		$this->assertStringContainsString( $new_base, $elements[1]['settings']['image']['url'], 'Sentinel: the Image element carries the new name.' );
 
-		// THE PIN: the slider options are an object now, and Bricks fatals on them.
-		$this->assertInstanceOf( stdClass::class, $elements[0]['settings']['options'], 'Pinned: fixed? The slider options stay a JSON string — flip this pin.' );
-		$this->assertStripslashesFatal( $this->render( $elements ), 'Pinned: fixed? The page renders again — flip this pin.' );
+		$this->assertSame( self::SLIDER_OPTIONS, $elements[0]['settings']['options'], 'The slider options stay the JSON string.' );
+		$this->assertSliderRenders( $this->render( $elements ), 'The page renders after the rename.' );
 	}
 
 	/**
-	 * Pins a known defect: converting a PNG used on a Bricks page to JPG
-	 * breaks the page's Nested Slider the same way.
-	 * @todo See test_manual_rename_breaks_the_nested_slider_on_a_bricks_page_pinned_for_deferred_fix.
-	 * When fixed, this test fails; flip it: the options stay the JSON string
-	 * and the page renders.
+	 * Converting a PNG used on a Bricks page to JPG keeps the page's Nested
+	 * Slider working the same way.
 	 */
-	public function test_png_conversion_breaks_the_nested_slider_on_a_bricks_page_pinned_for_deferred_fix() {
+	public function test_png_conversion_keeps_the_nested_slider_on_a_bricks_page_working() {
 		$id      = $this->uploadPngForQueuePath( 'fixture-small.png' );
 		$url     = wp_get_attachment_url( $id );
 		$post_id = $this->createBricksPage( $this->elements( $id, $url ) );
@@ -222,21 +209,17 @@ class CompatBricksTest extends SPIO_IntegrationTestCase {
 		$elements = $this->pageElements( $post_id );
 		$this->assertStringEndsWith( '.jpg', $elements[1]['settings']['image']['url'], 'Sentinel: the Image element references the .jpg.' );
 
-		// THE PIN: the slider options are an object now, and Bricks fatals on them.
-		$this->assertInstanceOf( stdClass::class, $elements[0]['settings']['options'], 'Pinned: fixed? The slider options stay a JSON string — flip this pin.' );
-		$this->assertStripslashesFatal( $this->render( $elements ), 'Pinned: fixed? The page renders again — flip this pin.' );
+		$this->assertSame( self::SLIDER_OPTIONS, $elements[0]['settings']['options'], 'The slider options stay the JSON string.' );
+		$this->assertSliderRenders( $this->render( $elements ), 'The page renders after the conversion.' );
 	}
 
 	/**
-	 * Pins a known defect: when a shared Bricks component contains the
-	 * renamed image, its Nested Slider options in the `bricks_components`
-	 * option become an object, so every page that uses the component fatals —
-	 * whether or not the page shows the renamed image.
-	 * @todo See test_manual_rename_breaks_the_nested_slider_on_a_bricks_page_pinned_for_deferred_fix.
-	 * When fixed, this test fails; flip it: the component's options stay the
-	 * JSON string and its elements render.
+	 * When a shared Bricks component contains the renamed image, its Nested
+	 * Slider options in the `bricks_components` option stay a JSON string, so
+	 * the pages that use the component keep rendering — whether or not they
+	 * show the renamed image.
 	 */
-	public function test_manual_rename_breaks_the_nested_slider_in_a_shared_component_pinned_for_deferred_fix() {
+	public function test_manual_rename_keeps_the_nested_slider_in_a_shared_component_working() {
 		$id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->purgeQueueTable();
 		update_option(
@@ -260,8 +243,42 @@ class CompatBricksTest extends SPIO_IntegrationTestCase {
 		// SENTINEL: the replacer rewrote the option — the component's Image element follows the rename.
 		$this->assertStringContainsString( $new_base, $elements[1]['settings']['image']['url'] ?? '', 'Sentinel: the component Image element carries the new name.' );
 
-		// THE PIN: the component's slider options are an object now, and Bricks fatals on them.
-		$this->assertInstanceOf( stdClass::class, $elements[0]['settings']['options'], 'Pinned: fixed? The component slider options stay a JSON string — flip this pin.' );
-		$this->assertStripslashesFatal( $this->render( $elements ), 'Pinned: fixed? The component renders again — flip this pin.' );
+		$this->assertSame( self::SLIDER_OPTIONS, $elements[0]['settings']['options'], 'The component slider options stay the JSON string.' );
+		$this->assertSliderRenders( $this->render( $elements ), 'The component renders after the rename.' );
+	}
+
+	/**
+	 * Pins a known defect: slider options with non-ASCII text come back from
+	 * a rename re-encoded with \uXXXX escapes, although they hold no URL.
+	 * Bricks runs stripslashes() on the options before using them, which
+	 * turns "é" into "u00e9": the page renders "Cafu00e9" instead of
+	 * "Café". Unit-level pin in Model/test-Replacer.php.
+	 * @todo In the replacer2 module source, Replacer::replaceContent(): return
+	 *       a nested JSON string unchanged when nothing inside it was replaced.
+	 * When fixed, this test fails; flip it: the options keep their bytes and
+	 * the page shows "Café".
+	 */
+	public function test_manual_rename_mangles_non_ascii_slider_options_pinned_for_deferred_fix() {
+		$id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+		$options  = '{"type":"loop","perPage":3,"gap":"1em","i18n":{"next":"Café"}}';
+		$elements = $this->elements( $id, wp_get_attachment_url( $id ) );
+		$elements[0]['settings']['options'] = $options;
+		$post_id  = $this->createBricksPage( $elements );
+
+		// SENTINEL: untouched, the page shows the text as written.
+		$this->assertStringContainsString( 'Café', (string) $this->render( $this->pageElements( $post_id ) ), 'Sentinel: before the rename the slider carries "Café".' );
+
+		$new_base = 'bricks-unicode-' . strtolower( wp_generate_password( 6, false ) );
+		$this->assertTrue( $this->renameAttachment( $id, $new_base ), 'Sentinel: the rename succeeded.' );
+
+		$elements = $this->pageElements( $post_id );
+		$this->assertStringContainsString( $new_base, $elements[1]['settings']['image']['url'], 'Sentinel: the Image element carries the new name.' );
+		$html = $this->render( $elements );
+		$this->assertSliderRenders( $html, 'Sentinel: the page still renders.' );
+
+		// THE PIN: the options were re-encoded and Bricks strips the escape's backslash.
+		$this->assertNotSame( $options, $elements[0]['settings']['options'], 'Pinned: fixed? The options keep their bytes — flip this pin.' );
+		$this->assertStringContainsString( 'Cafu00e9', $html, 'Pinned: fixed? The page shows "Café" again — flip this pin.' );
 	}
 }
