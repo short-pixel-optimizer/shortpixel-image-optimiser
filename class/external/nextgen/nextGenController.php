@@ -58,10 +58,9 @@ class NextGenController
 //  protected $view;
 
   /**
-   * Temporary flag set by `enableNextGen()` when the user toggles the
-   * NextGen setting on. NextGen may not yet report itself as active
-   * (plugin still activating), but we still want to refresh folders —
-   * `optimizeNextGen()` treats this flag as an early yes.
+   * Temporary flag set by `enableNextGen()`; `optimizeNextGen()` treats it
+   * as an early yes. Nothing calls `enableNextGen()`, so the flag stays
+   * false and the setting alone decides.
    *
    * @var bool
    */
@@ -202,8 +201,7 @@ class NextGenController
    * Whether SPIO should treat NextGen galleries as optimize targets.
    *
    * True when either:
-   *   - `$enableOverride` is set (temporary transition state during
-   *     `enableNextGen()`), or
+   *   - `$enableOverride` is set (only by the unused `enableNextGen()`), or
    *   - the user has ticked the NextGen integration in Settings
    *     (`settings()->includeNextGen == 1`).
    *
@@ -241,14 +239,16 @@ class NextGenController
   }
 
   /**
-   * Enable the NextGen integration in-flight (called from the settings
-   * controller when the user just ticked the include-NextGen option).
+   * Enable the NextGen integration in-flight.
    *
-   * Sets `$enableOverride = true` so `optimizeNextGen()` starts
-   * returning true immediately (before the setting round-trips
-   * through the DB), then re-runs `addNextGenGalleriesToCustom()`
-   * so all existing galleries appear in Custom Media on the same
-   * request.
+   * Sets `$enableOverride = true` so `optimizeNextGen()` returns true
+   * before the setting round-trips through the DB, then runs
+   * `addNextGenGalleriesToCustom()`.
+   *
+   * Not called anywhere: saving the setting does not add galleries.
+   * Existing galleries are registered by the full folder scan instead
+   * (`AjaxController::resetScanFolderChecked()`), which the settings
+   * page and the scan screen point the user to.
    *
    * @param bool $silent Forwarded to `addNextGenGalleriesToCustom()` — when true, suppresses admin notices during the bulk add.
    * @return void

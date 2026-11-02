@@ -584,47 +584,49 @@ class CDNControllerTest extends WP_UnitTestCase {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Pins a known defect: the url() pattern in fetchInlineBackground() puts
-	 * the closing `\)` INSIDE capture group 2, so the extracted URL carries a
-	 * trailing ")" and no inline CSS background is ever CDN-rewritten (the
-	 * replace block's URL matches nothing on the CDN side).
-	 * @todo In CDNController::fetchInlineBackground(): move the closing `\)`
-	 *       out of group 2, i.e. `…|(?1))++))\))/m` instead of `…|(?1))++)\)))/m`.
-	 * When fixed, this test fails at the "Pinned" assertion; flip it: the
-	 * block's raw_url is the bare URL.
+	 * The extracted url() value is the bare URL: the closing parenthesis of
+	 * url( … ) is outside capture group 2, so the replace block matches the
+	 * URL as written in the page and the inline background gets CDN-rewritten.
 	 */
-	public function test_fetchInlineBackground_keeps_the_closing_parenthesis_in_the_url_pinned_for_deferred_fix() {
+	public function test_fetchInlineBackground_extracts_the_url_without_the_closing_parenthesis() {
 		$ctrl    = $this->freshController();
 		$content = '<div style="background: url(https://example.com/bg.jpg)"></div>';
 
 		$result = $this->invokePrivate( $ctrl, 'fetchInlineBackground', array( $content ) );
 
-		// SENTINEL: the url() value is found and one replace block is built.
 		$this->assertIsArray( $result );
-		$this->assertCount( 1, $result, 'Sentinel: one url() value produces one replace block.' );
-		$this->assertStringStartsWith( 'https://example.com/bg.jpg', $result[0]->raw_url, 'Sentinel: the block holds the url() value.' );
-
-		// THE PIN: the closing parenthesis is part of the extracted URL.
-		$this->assertSame( 'https://example.com/bg.jpg)', $result[0]->raw_url, 'Pinned: fixed? The extracted URL no longer ends in ")" — flip this pin.' );
+		$this->assertCount( 1, $result, 'One url() value produces one replace block.' );
+		$this->assertSame( 'https://example.com/bg.jpg', $result[0]->raw_url, 'The extracted URL must not end in ")".' );
 	}
 
 	/**
-	 * A quoted url() value (single quotes) is also captured.
+	 * A quoted url() value (single quotes) is also captured, without the
+	 * closing parenthesis. Runs the production method, not a copy of the
+	 * pattern, so a change to the regex is always under test.
 	 */
 	public function test_fetchInlineBackground_regex_captures_single_quoted_url() {
-		$content = "background: url('https://example.com/hero.jpg');";
-		$number  = preg_match_all( '/url(\(((?:\s*(?:"[^"<>]*+"|\'[^\'<>]*+\')\s*|(?:[^()\'"<>]++|(?1))++)\)))/m', $content, $matches );
-		$this->assertSame( 1, $number );
-		$this->assertStringContainsString( 'hero.jpg', $matches[2][0] );
+		$ctrl    = $this->freshController();
+		$content = "<div style=\"background: url('https://example.com/hero.jpg');\"></div>";
+
+		$result = $this->invokePrivate( $ctrl, 'fetchInlineBackground', array( $content ) );
+
+		$this->assertCount( 1, $result );
+		$this->assertStringContainsString( 'hero.jpg', $result[0]->raw_url );
+		$this->assertStringEndsNotWith( ')', $result[0]->raw_url );
 	}
 
 	/**
 	 * Multiple url() values in the same content are all captured.
 	 */
 	public function test_fetchInlineBackground_regex_captures_multiple_urls() {
-		$content = 'background: url(a.jpg); border-image: url(b.png);';
-		$number  = preg_match_all( '/url(\(((?:\s*(?:"[^"<>]*+"|\'[^\'<>]*+\')\s*|(?:[^()\'"<>]++|(?1))++)\)))/m', $content, $matches );
-		$this->assertSame( 2, $number );
+		$ctrl    = $this->freshController();
+		$content = '<div style="background: url(https://example.com/a.jpg); border-image: url(https://example.com/b.png);"></div>';
+
+		$result = $this->invokePrivate( $ctrl, 'fetchInlineBackground', array( $content ) );
+
+		$this->assertCount( 2, $result );
+		$this->assertSame( 'https://example.com/a.jpg', $result[0]->raw_url );
+		$this->assertSame( 'https://example.com/b.png', $result[1]->raw_url );
 	}
 
 	/**

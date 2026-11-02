@@ -111,6 +111,9 @@ class MediaLibraryModelTest extends WP_UnitTestCase {
 	/** @var int[] Attachment posts created during tests. */
 	private $fixtureAttachments = array();
 
+	/** @var string[] Fixture directories, removed after their files. */
+	private $fixtureDirs = array();
+
 	/** @var mixed Snapshot of the optimizeUnlisted setting. */
 	private $savedOptimizeUnlisted;
 	/** @var mixed Snapshot of the unlistedCounter setting. */
@@ -160,6 +163,13 @@ class MediaLibraryModelTest extends WP_UnitTestCase {
 			}
 		}
 		$this->fixtureFiles = array();
+
+		foreach ( $this->fixtureDirs as $dir ) {
+			if ( is_dir( $dir ) ) {
+				@rmdir( $dir );
+			}
+		}
+		$this->fixtureDirs = array();
 
 		foreach ( $this->fixtureAttachments as $attachId ) {
 			wp_delete_post( $attachId, true );
@@ -1965,5 +1975,132 @@ class MediaLibraryModelTest extends WP_UnitTestCase {
 		} finally {
 			$settings->backupImages = $savedBackup;
 		}
+	}
+
+	/*
+	 * addUnlisted — the per-request `$unlistedChecked` memo.
+	 *
+	 * addUnlisted() records the attachment ID in a static list and returns
+	 * early for that ID for the rest of the request. The list is keyed by ID,
+	 * not by model instance, and only flushImageCache() / flushImage() reset
+	 * it. FileSystemController::getMediaImage($id, false) builds a FRESH
+	 * instance without resetting it, so that instance never scans the disk
+	 * and comes out without the unlisted thumbnails the first instance has.
+	 *
+	 * Two instances of one attachment with different thumbnail lists is the
+	 * precondition for the result-key mismatch that handleOptimized()'s
+	 * file-name fallback works around: a request built by one instance and a
+	 * result handled by the other. The fixture is the field case: WordPress
+	 * metadata without a `sizes` array, so every thumbnail on disk is found
+	 * only as an unlisted file.
+	 */
+
+	/**
+	 * A real attachment whose WordPress metadata has no `sizes` array, with
+	 * a main file and two WxH thumbnail files next to it in their own folder
+	 * (addUnlisted() scans the whole directory, so it must not be shared).
+	 *
+	 * @return array{0: int, 1: string[]} Attachment ID and the thumbnail file names.
+	 */
+	private function makeAttachmentWithOnlyUnlistedThumbs(): array {
+		$dir = sys_get_temp_dir() . '/spio-unlisted-' . uniqid();
+		mkdir( $dir );
+		$this->fixtureDirs[] = $dir;
+
+		$png  = base64_decode( 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==' );
+		$main = $dir . '/scarf.png';
+		file_put_contents( $main, $png );
+		$this->fixtureFiles[] = $main;
+
+		$thumbNames = array( 'scarf-150x150.png', 'scarf-300x300.png' );
+		foreach ( $thumbNames as $name ) {
+			file_put_contents( $dir . '/' . $name, $png );
+			$this->fixtureFiles[] = $dir . '/' . $name;
+		}
+
+		$attachId = $this->factory->post->create( array(
+			'post_type'      => 'attachment',
+			'post_mime_type' => 'image/png',
+		) );
+		$this->fixtureAttachments[] = $attachId;
+
+		update_attached_file( $attachId, $main );
+		wp_update_attachment_metadata( $attachId, array(
+			'width'  => 1,
+			'height' => 1,
+			'file'   => $main,
+		) );
+
+		return array( $attachId, $thumbNames );
+	}
+
+	/**
+	 * Thumbnail keys of a loaded model, sorted for comparison.
+	 *
+	 * @return string[]
+	 */
+	private function thumbnailKeys( MediaLibraryModel $model ): array {
+		$keys = array_keys( $this->getProtected( $model, 'thumbnails' ) );
+		sort( $keys );
+		return $keys;
+	}
+
+	/**
+	 * A fresh instance of an attachment loaded in the same request comes out
+	 * without its unlisted thumbnails, because addUnlisted() is memoised per
+	 * attachment ID while getMediaImage($id, false) does not reset the memo.
+	 * The first instance has both thumbnails (keyed by file name, the
+	 * addUnlisted shape); the second has none.
+	 *
+	 * The fix is recognised when the second instance carries the same keys as
+	 * the first — e.g. the memo moved onto the instance, or getMediaImage()
+	 * resetting it when it bypasses the cache. This test then fails and
+	 * should be turned into a regression test asserting equal key lists.
+	 */
+	public function test_fresh_instance_in_same_request_misses_unlisted_thumbnails_pinned_for_deferred_fix() {
+		list( $attachId, $thumbNames ) = $this->makeAttachmentWithOnlyUnlistedThumbs();
+		$fs = \wpSPIO()->filesystem();
+		$fs->flushImageCache(); // start from an empty memo, as a new request does
+
+		$first = $fs->getMediaImage( $attachId );
+
+		// Sentinel 1: the fixture really is the field case — WordPress lists
+		// no sizes, so nothing can come from loadThumbnailsFromWP().
+		$this->assertArrayNotHasKey( 'sizes', $first->getWPMetaData() );
+
+		// Sentinel 2: the first instance found both files on disk as unlisted,
+		// keyed by file name. Without this the assertion below would pass for
+		// a fixture reason (no scan at all, setting off, wrong folder).
+		$this->assertSame( $thumbNames, $this->thumbnailKeys( $first ) );
+
+		$second = $fs->getMediaImage( $attachId, false );
+
+		// Sentinel 3: it really is a different instance, not the cached one.
+		$this->assertNotSame( $first, $second );
+
+		$this->assertSame(
+			array(),
+			$this->thumbnailKeys( $second ),
+			'A fresh instance in the same request skips addUnlisted() (memo hit) and has no thumbnails'
+		);
+	}
+
+	/**
+	 * Control: the same two loads with flushImageCache() between them give
+	 * both instances the same unlisted thumbnails, so the pinned test above
+	 * fails only because of the memo, not because of the fixture.
+	 */
+	public function test_fresh_instance_after_cache_flush_finds_the_same_unlisted_thumbnails() {
+		list( $attachId, $thumbNames ) = $this->makeAttachmentWithOnlyUnlistedThumbs();
+		$fs = \wpSPIO()->filesystem();
+		$fs->flushImageCache();
+
+		$first = $fs->getMediaImage( $attachId );
+		$fs->flushImageCache();
+		$second = $fs->getMediaImage( $attachId, false );
+
+		$this->assertNotSame( $first, $second );
+		$this->assertSame( $thumbNames, $this->thumbnailKeys( $first ) );
+		$this->assertSame( $thumbNames, $this->thumbnailKeys( $second ) );
 	}
 }

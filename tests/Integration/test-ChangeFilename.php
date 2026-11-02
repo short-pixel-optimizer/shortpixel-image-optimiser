@@ -1574,17 +1574,23 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	}
 
 	/**
-	 * Pins a known defect: after a rename, the URL rewrite in a
-	 * NON-autoloaded option leaves the object cache stale. For options,
-	 * Replacer::handleMetaData() (build/ replacer2) only drops the
-	 * 'alloptions' and 'notoptions' entries, while a non-autoloaded option
-	 * is cached under its own name.
-	 * @todo In the replacer2 module source: for options also call
-	 *       wp_cache_delete(<option_name>, 'options') (select option_name
-	 *       with the row).
-	 * When fixed, this test fails; flip it: the cached read returns the new URL.
+	 * After a rename, a NON-autoloaded option that held the old URL is read
+	 * back with the new one. Such an option is cached under its own name in
+	 * the 'options' group, not in 'alloptions', so
+	 * Replacer::handleMetaData() (build/ replacer2) selects option_name with
+	 * each row and drops that key as well.
+	 *
+	 * @todo Replacer::handleMetaData() (build/ replacer2) reads the key as
+	 *       `$row[$main_field]`, but `$main_field` is never assigned in the
+	 *       build copy (the column name lives in `$main_id`). The key is
+	 *       null, wp_cache_delete(null, 'options') raises a WordPress
+	 *       incorrect-usage notice (plus PHP's undefined-variable warning) on
+	 *       every replace that touches an option, and the option stays stale.
+	 *       Suggested fix, verified against this file:
+	 *       `wp_cache_delete($row[$data['main_id']], 'options');`. This test
+	 *       stays red until then.
 	 */
-	public function test_rename_leaves_the_cached_non_autoloaded_option_with_the_old_url_pinned_for_deferred_fix() {
+	public function test_rename_refreshes_the_cached_non_autoloaded_option_with_the_new_url() {
 		$this->_setRole( 'administrator' );
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->purgeQueueTable();
@@ -1603,8 +1609,8 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		// SENTINEL: the database itself was rewritten.
 		$this->assertStringContainsString( $new_base, (string) $wpdb->get_var( "SELECT option_value FROM {$wpdb->options} WHERE option_name = 'spio_test_lazy_widget_image'" ), 'Sentinel: option rewritten in the database.' );
 
-		// THE PIN: the cached read still returns the old URL.
-		$this->assertStringContainsString( $old_name, get_option( 'spio_test_lazy_widget_image' ), 'Pinned: fixed? The cached non-autoloaded option now follows the rename — flip this pin.' );
+		$this->assertStringContainsString( $new_base, get_option( 'spio_test_lazy_widget_image' ), 'The cached non-autoloaded option must follow the rename.' );
+		$this->assertStringNotContainsString( $old_name, get_option( 'spio_test_lazy_widget_image' ), 'The old URL is no longer served from the cache.' );
 	}
 
 	/**
@@ -1616,6 +1622,14 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	 * wp_cache_delete(null, …), which WordPress reports as incorrect usage).
 	 * The second post is the one that would go stale if only the first row
 	 * were handled.
+	 *
+	 * @todo Replacer::handleMetaData() (build/ replacer2) still does
+	 *       `$main_id = $row[$main_id];` in the row loop, overwriting the
+	 *       column name with the first row's id, so from the second row on
+	 *       the key is null (incorrect-usage notice) and that post's meta
+	 *       cache stays stale. Suggested fix, verified against this file:
+	 *       `wp_cache_delete($row[$data['main_id']], $data['cache_group']);`.
+	 *       This test stays red until then.
 	 */
 	public function test_rename_refreshes_the_postmeta_cache_of_every_post() {
 		$this->_setRole( 'administrator' );

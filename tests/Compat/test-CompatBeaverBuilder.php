@@ -12,10 +12,10 @@
  *
  * replacer2 has no Beaver Builder module: these rows go through the
  * generic postmeta path, Replacer::replaceContent(). That unserializes
- * meta values with `allowed_classes => false` (object-injection hardening),
- * which turns every node into a __PHP_Incomplete_Class. The replacer
- * leaves incomplete objects untouched, so the URLs inside the nodes are
- * never rewritten — pinned below. The layout itself stays intact.
+ * meta values with `allowed_classes => array( 'stdClass' )`: the nodes are
+ * plain stdClass objects (no magic methods, so no object-injection risk),
+ * their URLs are rewritten and the layout is serialized again with the
+ * same node structure.
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -134,19 +134,11 @@ class CompatBeaverBuilderTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * Pins a known defect at its cause: the generic replacer returns a
-	 * Beaver Builder layout byte-identical, because it unserializes meta
-	 * values with `allowed_classes => false` and leaves the resulting
-	 * incomplete node objects untouched.
-	 * @todo In the replacer2 module source, Replacer::replaceContent():
-	 *       unserialize with `allowed_classes => array( 'stdClass' )` —
-	 *       stdClass has no magic methods, so it adds no object-injection
-	 *       risk, and plain data objects (Beaver Builder nodes, other
-	 *       plugins' settings) become replaceable again.
-	 * When fixed, this test fails; flip it: the returned layout carries the
-	 * new URL and still unserializes to the same node structure.
+	 * The generic replacer rewrites the Photo URL inside a Beaver Builder
+	 * layout and keeps the node structure: the result unserializes to the
+	 * same nodes, with only photo_src changed.
 	 */
-	public function test_replacer_returns_beaver_builder_layout_unchanged_pinned_for_deferred_fix() {
+	public function test_replacer_rewrites_the_url_inside_a_beaver_builder_layout() {
 		$id      = $this->uploadFixture( 'fixture-small.jpg' );
 		$old_url = wp_get_attachment_url( $id );
 		$new_url = str_replace( '.jpg', '-renamed.jpg', $old_url );
@@ -155,18 +147,19 @@ class CompatBeaverBuilderTest extends SPIO_IntegrationTestCase {
 
 		$replaced = \ShortPixel\Replacer\Replacer::getInstance()->replaceContent( $raw, array( $old_url ), array( $new_url ), false, false );
 
-		$this->assertSame( $raw, $replaced, 'Pinned: fixed? The replacer now rewrites Beaver Builder layouts — flip this pin.' );
+		$this->assertIsString( $replaced, 'The layout is returned serialized.' );
+		$this->assertSame( str_replace( 's:' . strlen( $old_url ) . ':"' . $old_url . '"', 's:' . strlen( $new_url ) . ':"' . $new_url . '"', $raw ), $replaced, 'Only photo_src changes, with a correct string length.' );
+
+		$layout = unserialize( $replaced, array( 'allowed_classes' => array( 'stdClass' ) ) );
+		$this->assertSame( array( 'row1', 'group1', 'col1', 'photo1' ), array_keys( $layout ), 'The node structure is kept.' );
+		$this->assertSame( $new_url, $layout['photo1']->settings->photo_src );
 	}
 
 	/**
-	 * Pins a known defect: converting a PNG to JPG leaves the Beaver
-	 * Builder Photo module (published layout and editor draft) pointing at
-	 * the .png, which is no longer in the uploads folder. Same cause as
-	 * the replacer pin above.
-	 * @todo See test_replacer_returns_beaver_builder_layout_unchanged_pinned_for_deferred_fix.
-	 * When fixed, this test fails; flip it: both layouts reference the .jpg.
+	 * Converting a PNG to JPG points the Beaver Builder Photo module
+	 * (published layout and editor draft) at the .jpg.
 	 */
-	public function test_png_conversion_leaves_beaver_builder_layout_unchanged_pinned_for_deferred_fix() {
+	public function test_png_conversion_rewrites_the_beaver_builder_layout() {
 		$id      = $this->uploadPngForQueuePath( 'fixture-small.png' );
 		$url     = wp_get_attachment_url( $id );
 		$post_id = $this->createBeaverBuilderPage( $id, $url );
@@ -174,25 +167,20 @@ class CompatBeaverBuilderTest extends SPIO_IntegrationTestCase {
 		$this->purgeQueueTable();
 		$this->optimizeAttachment( $id );
 
-		// SENTINELS: the conversion ran and the replacer rewrote post_content.
+		// SENTINEL: the conversion ran.
 		$this->assertSame( 'jpg', strtolower( pathinfo( get_attached_file( $id ), PATHINFO_EXTENSION ) ), 'Sentinel: the PNG was converted to JPG.' );
-		clean_post_cache( $post_id );
-		$this->assertStringNotContainsString( $url, get_post_field( 'post_content', $post_id ), 'Sentinel: the replacer ran — post_content no longer references the .png.' );
+		$new_url = wp_get_attachment_url( $id );
 
-		// THE PIN: the layout still points at the .png (and still loads).
 		foreach ( array( '_fl_builder_data', '_fl_builder_draft' ) as $key ) {
-			$this->assertSame( $url, $this->photoSrc( $post_id, $key ), "Pinned: fixed? $key no longer references the .png — flip this pin." );
+			$this->assertSame( $new_url, $this->photoSrc( $post_id, $key ), "$key references the converted .jpg." );
 		}
 	}
 
 	/**
-	 * Pins a known defect: renaming a file (manually or with AI) leaves the
-	 * Beaver Builder Photo module pointing at the old filename. Same cause
-	 * as the replacer pin above.
-	 * @todo See test_replacer_returns_beaver_builder_layout_unchanged_pinned_for_deferred_fix.
-	 * When fixed, this test fails; flip it: both layouts reference the new name.
+	 * Renaming a file (manually or with AI) points the Beaver Builder Photo
+	 * module (published layout and editor draft) at the new filename.
 	 */
-	public function test_manual_rename_leaves_beaver_builder_layout_unchanged_pinned_for_deferred_fix() {
+	public function test_manual_rename_rewrites_the_beaver_builder_layout() {
 		$id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->purgeQueueTable();
 		$url     = wp_get_attachment_url( $id );
@@ -200,14 +188,11 @@ class CompatBeaverBuilderTest extends SPIO_IntegrationTestCase {
 
 		$new_base = 'bb-rename-' . strtolower( wp_generate_password( 6, false ) );
 		$this->assertTrue( $this->renameAttachment( $id, $new_base ), 'Sentinel: the rename succeeded.' );
+		$new_url = wp_get_attachment_url( $id );
+		$this->assertStringContainsString( $new_base, $new_url, 'Sentinel: the attachment carries the new name.' );
 
-		// SENTINEL: the replacer rewrote post_content.
-		clean_post_cache( $post_id );
-		$this->assertStringContainsString( $new_base, get_post_field( 'post_content', $post_id ), 'Sentinel: the replacer ran — post_content carries the new name.' );
-
-		// THE PIN: the layout still points at the old name (and still loads).
 		foreach ( array( '_fl_builder_data', '_fl_builder_draft' ) as $key ) {
-			$this->assertSame( $url, $this->photoSrc( $post_id, $key ), "Pinned: fixed? $key no longer references the old name — flip this pin." );
+			$this->assertSame( $new_url, $this->photoSrc( $post_id, $key ), "$key references the new name." );
 		}
 	}
 }

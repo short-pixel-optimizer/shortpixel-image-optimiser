@@ -276,4 +276,64 @@ class CompatNextGenTest extends SPIO_IntegrationTestCase {
 			'Re-adding the same NextGen gallery path must not create a second folder row in shortpixel_folders.'
 		);
 	}
+
+	// -------------------------------------------------------------------
+	// Full folder scan (Custom Media → Scan) picks up galleries
+	// -------------------------------------------------------------------
+
+	/** Run the resetScanFolderChecked AJAX action body, as the "full scan" button does. */
+	private function runFullScanReset(): void {
+		$ajax   = \ShortPixel\Controller\AjaxController::getInstance();
+		$method = new ReflectionMethod( $ajax, 'resetScanFolderChecked' );
+		$method->setAccessible( true );
+		$method->invoke( $ajax, new stdClass(), array() );
+	}
+
+	/**
+	 * With the integration on, starting a full folder scan registers every
+	 * NextGEN gallery as a Custom Media folder with NextGen status. Saving
+	 * the setting no longer does this itself; the settings page and the
+	 * scan screen point the user to the full scan instead.
+	 */
+	public function test_full_scan_registers_galleries_when_the_integration_is_on() {
+		\wpSPIO()->settings()->includeNextGen = 1;
+		$this->assertTrue( \wpSPIO()->settings()->includeNextGen, 'Sentinel: the setting reads back as boolean true (the scan action checks it strictly).' );
+		$this->insertGalleryRow();
+
+		$this->runFullScanReset();
+
+		$folder = OtherMediaController::getInstance()->getFolderByPath( $this->galleryDir );
+		$this->assertTrue( $folder->get( 'in_db' ), 'The full scan must register the NGG gallery as a Custom Media folder.' );
+		$this->assertSame( DirectoryOtherMediaModel::DIRECTORY_STATUS_NEXTGEN, (int) $folder->get( 'status' ), 'The registered folder must carry NextGen status.' );
+	}
+
+	/**
+	 * With the integration off, the full scan leaves NextGEN galleries alone.
+	 */
+	public function test_full_scan_ignores_galleries_when_the_integration_is_off() {
+		\wpSPIO()->settings()->includeNextGen = 0;
+		$this->insertGalleryRow();
+
+		$this->runFullScanReset();
+
+		$folder = OtherMediaController::getInstance()->getFolderByPath( $this->galleryDir );
+		$this->assertFalse( (bool) $folder->get( 'in_db' ), 'No Custom Media folder may be added while the integration is off.' );
+	}
+
+	/**
+	 * A gallery whose ngg_gallery path starts with a slash ("/wp-content/…",
+	 * as some NextGEN versions store it) is still found on disk and
+	 * registered.
+	 */
+	public function test_full_scan_registers_a_gallery_stored_with_a_leading_slash() {
+		global $wpdb;
+		\wpSPIO()->settings()->includeNextGen = 1;
+		$gallery_id = $this->insertGalleryRow();
+		$wpdb->update( $wpdb->prefix . 'ngg_gallery', array( 'path' => '/' . self::GALLERY_REL ), array( 'gid' => $gallery_id ) );
+
+		$this->runFullScanReset();
+
+		$folder = OtherMediaController::getInstance()->getFolderByPath( $this->galleryDir );
+		$this->assertTrue( $folder->get( 'in_db' ), 'A gallery path with a leading slash must still be registered.' );
+	}
 }
