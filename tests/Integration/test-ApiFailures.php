@@ -152,4 +152,62 @@ class ApiFailuresTest extends SPIO_IntegrationTestCase {
 
 		$this->assertTrue( $this->freshImageModel( $id )->isOptimized(), 'The queued item must recover and optimize once the connection works again.' );
 	}
+
+	// -------------------------------------------------------------------
+	// Bulk log (current_bulk_media.log): which failures are written
+	// -------------------------------------------------------------------
+
+	/** Run a bulk queue for one attachment for a fixed number of ticks; returns the bulk log text ('' when none). */
+	private function bulkRunAndReadLog( int $attachment_id ): string {
+		$log = SHORTPIXEL_BACKUP_FOLDER . '/current_bulk_media.log';
+		@unlink( $log );
+
+		$imageModel = \wpSPIO()->filesystem()->getImage( $attachment_id, 'media' );
+		( new QueueController( array( 'is_bulk' => true ) ) )->addItemToQueue( $imageModel );
+		for ( $tick = 0; $tick < 8; $tick++ ) {
+			( new QueueController( array( 'is_bulk' => true ) ) )->processQueue( array( 'media' ) );
+			$this->backdateQueueItems();
+		}
+
+		clearstatcache();
+		$text = file_exists( $log ) ? (string) file_get_contents( $log ) : '';
+		@unlink( $log );
+		return $text;
+	}
+
+	/**
+	 * During a bulk run, an image the API reports with an UNRECOGNISED error
+	 * code is written to the bulk log with its file name.
+	 */
+	public function test_bulk_log_lists_an_image_failed_with_an_unrecognised_api_code() {
+		$this->api->forceStatusCode = -204;
+
+		$id  = $this->uploadFixture( 'fixture-small.jpg' );
+		$log = $this->bulkRunAndReadLog( $id );
+
+		$this->assertFalse( $this->freshImageModel( $id )->isOptimized() );
+		$this->assertStringContainsString( wp_basename( get_attached_file( $id ) ), $log, 'The failed image is listed in the bulk log.' );
+	}
+
+	/**
+	 * Pins a known defect: during a bulk run, images that fail with a KNOWN
+	 * file error (-102 invalid URL, -106 URL inaccessible, …) are no longer
+	 * written to the bulk log. QueueController::runTick() only logs results
+	 * whose apiStatus lies between -100 and -300, but ApiController maps
+	 * every known file-error code to STATUS_ERROR (-1) first.
+	 * @todo See the QueueController::runTick() docblock.
+	 * When fixed, this test fails; flip it: the image is listed in the log.
+	 */
+	public function test_bulk_log_omits_an_image_failed_with_a_known_file_error_pinned_for_deferred_fix() {
+		$this->api->forceStatusCode = MockShortPixelApi::CODE_UNREACHABLE;
+
+		$id  = $this->uploadFixture( 'fixture-small.jpg' );
+		$log = $this->bulkRunAndReadLog( $id );
+
+		// SENTINEL: the item failed (the API answered for it).
+		$this->assertFalse( $this->freshImageModel( $id )->isOptimized(), 'Sentinel: the image was not optimized.' );
+		$this->assertNotEmpty( $this->api->requests, 'Sentinel: the API was asked.' );
+
+		$this->assertStringNotContainsString( wp_basename( get_attached_file( $id ) ), $log, 'Pinned: fixed? The image is now listed in the bulk log — flip this pin.' );
+	}
 }

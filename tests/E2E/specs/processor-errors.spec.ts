@@ -10,7 +10,7 @@
  * to screen.HandleError(), which builds a red "ShortPixel encountered a fatal
  * error when optimizing images…" notice from `data.http_text`.
  *
- * Two things hold there:
+ * Three things hold there:
  *
  *   1. The notice is developer-facing and only shows when SPIO debug mode
  *      is on: HandleError() / HandleErrorStop() return early unless the
@@ -18,6 +18,8 @@
  *   2. With debug mode on, the notice body names the browser's network
  *      error ("Failed to fetch", "NetworkError when attempting to fetch
  *      resource.", "Load failed"), never String(undefined).
+ *   3. One failed request is counted as ONE worker error: the worker reports
+ *      it once and returns (the processor shuts down at three).
  *
  * The failure is forced at the browser: the processing POST to
  * admin-ajax.php is aborted by a route, so fetch() rejects exactly as it
@@ -154,5 +156,68 @@ test.describe('Processor — network failure of the processing request', () => {
 		const details = (await notice.locator('.error-details').innerText()).trim();
 		expect(details, 'the notice body must not be String(undefined)').not.toMatch(/^undefined$/i);
 		expect(details, 'the notice body names the network error').toMatch(/Failed to fetch|NetworkError|Load failed/i);
+	});
+
+	/**
+	 * Regression: one failed processing request counts as ONE worker error.
+	 * The worker reports the failure once, from its fetch().catch(), and then
+	 * returns; it does not post a second "response is false" message for the
+	 * same request. The processor shuts down at three worker errors, so a
+	 * double count would stop processing after the second network blip.
+	 *
+	 * Only the FIRST processing request is cut; later ones go through and a
+	 * successful answer resets the counter. The highest value the counter
+	 * ever takes is recorded on the page.
+	 */
+	test('one failed processing request counts as a single worker error', async ({ page, spio }) => {
+		const { id } = await spio.uploadFixture('fixture-small.jpg');
+		const list = new MediaList(page);
+		await list.goto();
+
+		// Record the highest value workerErrors ever takes.
+		await page.evaluate(() => {
+			const processor = (window as any).ShortPixelProcessor;
+			let value = processor.workerErrors;
+			(window as any).__spioMaxWorkerErrors = value;
+			Object.defineProperty(processor, 'workerErrors', {
+				configurable: true,
+				get: () => value,
+				set: (next: number) => {
+					value = next;
+					(window as any).__spioMaxWorkerErrors = Math.max((window as any).__spioMaxWorkerErrors, next);
+				},
+			});
+		});
+
+		let cut = 0;
+		await page.context().route(
+			(url) => /\/wp-admin\/admin-ajax\.php$/.test(url.pathname),
+			async (route) => {
+				const body = route.request().postData() || '';
+				if (cut === 0 && route.request().method() === 'POST' && /(^|&)action=shortpixel_/.test(body)) {
+					cut++;
+					await route.abort('connectionfailed');
+					return;
+				}
+				await route.continue();
+			},
+		);
+
+		await list.cell(id).locator('a.optimize').click();
+
+		await expect
+			.poll(() => page.evaluate(() => (window as any).__spioMaxWorkerErrors), {
+				message: 'the cut request must reach the processor as a worker error',
+				timeout: 30_000,
+			})
+			.toBeGreaterThanOrEqual(1);
+		expect(cut, 'SENTINEL: exactly one processing request was cut').toBe(1);
+
+		// A second report of the same failure would arrive right after the first.
+		await page.waitForTimeout(3_000);
+		expect(
+			await page.evaluate(() => (window as any).__spioMaxWorkerErrors),
+			'a single network failure must be counted once',
+		).toBe(1);
 	});
 });
