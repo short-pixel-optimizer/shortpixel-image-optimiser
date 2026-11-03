@@ -36,7 +36,7 @@ class ShortPixelScreenBase
 		{
 			return; // stay silent when debug is not active.
 		}
-		var text = String(data.http_text);
+		var text = (typeof data.http_text !== 'undefined') ? String(data.http_text) : String(data);
 		var title = this.strings.fatalError;
 		var notice = this.GetErrorNotice(title, text);
 
