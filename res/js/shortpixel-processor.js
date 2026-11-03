@@ -504,7 +504,7 @@ if (this.ShouldLog()) {
              {
                 this.timesEmpty = 10; // Bigger number, to defer for a bit
                 this.StopProcess({ defer: true })
-                handleError = true; 
+                handledError = true;
                 console.log('Remote API responded queue is full. Wait for some time.');
              }
              else if (response.error < 0) // something happened.
