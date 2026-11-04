@@ -455,11 +455,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			postTitleFields.push('title');
 		}
 
-		if (typeof newCaption !== 'undefined') {
-			if (typeof newCaption === 'number') {
-				newCaption = '';
-			}
-
+		if (typeof newCaption !== 'undefined' && typeof newCaption !== 'number') {
 			for (var i = 0; i < captionFields.length; i++) {
 				let captionField = document.getElementById(captionFields[i]);
 				if (null !== captionField) {
@@ -468,10 +464,8 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			}
 		}
 
-		if (typeof newDescription !== 'undefined') {
-			if (typeof (newDescription) === 'number') {
-				newDescription = '';
-			}
+		if (typeof newDescription !== 'undefined' && typeof newDescription !== 'number') {
+
 			for (var i = 0; i < descriptionFields.length; i++) {
 				let descriptionField = document.getElementById(descriptionFields[i]);
 				if (null !== descriptionField) {
@@ -873,7 +867,10 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		var data = event.detail.media;
 		var item_id = data.item_id;
 		if (typeof data === 'undefined') {
-			if (window.ShortPixelProcessor && window.ShortPixelProcessor.ShouldLog()) console.log('Error on ai interface!', data);
+			if (window.ShortPixelProcessor && window.ShortPixelProcessor.ShouldLog()) 
+			{
+				console.log('Error on ai interface!', data);
+			}
 			return false;
 		}
 		var element = this.GetPageAttachmentAlt();

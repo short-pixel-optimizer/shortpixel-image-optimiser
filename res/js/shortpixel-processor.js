@@ -500,13 +500,6 @@ if (this.ShouldLog()) {
 							 handledError = true;
 							 console.error('No API Key set for this site. See settings');
 						 }
-             else if (error == 'QUEUE_FULL')
-             {
-                this.timesEmpty = 10; // Bigger number, to defer for a bit
-                this.StopProcess({ defer: true })
-                handledError = true;
-                console.log('Remote API responded queue is full. Wait for some time.');
-             }
              else if (response.error < 0) // something happened.
              {
                
