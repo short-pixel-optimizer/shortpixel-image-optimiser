@@ -203,17 +203,21 @@ class AdminController extends \ShortPixel\Controller
 					 return $meta;
 				}
 
-        $converter = Converter::getConverter($mediaItem, true);
+        // Check processable to catch exclusions and other issues here for conversion. 
+        if ($mediaItem->isProcessable())
+        {
+          $converter = Converter::getConverter($mediaItem, true);
 
-        // Convert only done by PNG atm, the rest is done via ImageModelToQueue.
-        if (is_object($converter) && $converter->isConvertable())
-				{
-							$args = array('runReplacer' => false);
+          // Convert only done by PNG atm, the rest is done via ImageModelToQueue.
+          if (is_object($converter) && $converter->isConvertable())
+          {
+                $args = array('runReplacer' => false);
 
-						 	$res = $converter->convert($args);
-							$mediaItem = $fs->getImage($id, 'media', false);
+                $res = $converter->convert($args);
+                $mediaItem = $fs->getImage($id, 'media', false);
 
-							$meta = $converter->getUpdatedMeta();
+                $meta = $converter->getUpdatedMeta();
+          }
         }
 
         $queueController = new QueueController();
