@@ -138,7 +138,7 @@ class Replacer
 	 */
 	private $default_replace_settings = array(
 		'component' => 'unset',
-		'json_flags' => JSON_UNESCAPED_SLASHES,
+		'json_flags' => JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE,
 		'replacer_do_save' => true,
 		'replace_no_serialize' => false,
 	);
@@ -875,13 +875,17 @@ class Replacer
 	public function replaceContent($content, $search, $replace, $in_deep = false, $strict_check = true)
 	{
 
+		// 1) used to return content back if incomplete classes are found, prevent destroying the original information
+		// 2) used to return same content if json. 
+		// 3) Ideally would return this if no changes made, but there is also the check in replace. 
+	 	$raw_content = $content; 
+
 		// Since ReplaceContent can now be called directly, this might not be set, set defaults if so
 		if (is_null($this->replace_settings)) {
 			$this->setReplaceSettings([]);
 		}
 
 		if (true === is_serialized($content)) {
-			$serialized_content = $content; // use to return content back if incomplete classes are found, prevent destroying the original information
 
 			// Only allow stdClass which can't have magic methods. 
 			//$args = array('allowed_classes' => false);
@@ -890,7 +894,7 @@ class Replacer
 			$content = Unserialize::unserialize($content, $args);
 			// bail directly on incomplete classes. In < PHP 7.2 is_object is false on incomplete objects!
 			if (true === $this->checkIncomplete($content)) {
-				return $serialized_content;
+				return $raw_content;
 			}
 		}
 
@@ -898,6 +902,7 @@ class Replacer
 
 		if ($isJson) {
 			$content = json_decode($content);
+			$decoded_previous_content = $content;
 		}
 
 		if (is_string($content))  // let's check the normal one first.
@@ -924,12 +929,7 @@ class Replacer
 			// bail directly on incomplete classes.
 			if (true === $this->checkIncomplete($content)) {
 				// if it was serialized, return the original as not to corrupt data.
-				if (isset($serialized_content)) {
-					return $serialized_content;
-				} else { // else just return the content.
-					return $content;
-				}
-
+				return $raw_content;
 			}
 			foreach ($content as $key => $value) {
 				$content->{$key} = $this->replaceContent($value, $search, $replace, true, $strict_check);
@@ -942,8 +942,17 @@ class Replacer
 	      // wp-slash -> WP does stripslashes_deep which destroys JSON
 				$json_flags = $this->replace_settings['json_flags'];
 		  //	Log::addDebug('Value was found to be JSON, encoding with flag: ' . $json_flags);
-				$content = json_encode($content, $json_flags);
-	     // Log::addDebug('Content returning (array ours) ', array($content));
+
+		  		// Might work badly, but might help to limit to amount of re-encodes since there is always a risk of data loss
+		  		if ($content !== $decoded_previous_content)
+				{
+					$content = json_encode($content, $json_flags);
+				}
+				else 
+				{
+					$content = $raw_content;
+				}
+				
 	    }
 		 elseif (
 			$this->replace_settings['replace_no_serialize'] === false &&
