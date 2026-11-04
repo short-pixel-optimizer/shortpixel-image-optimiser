@@ -54,20 +54,20 @@ abstract class RequestManager
   const STATUS_SUCCESS = 2;
   const STATUS_WAITING = 1;
   const STATUS_UNCHANGED = 0;
-  const STATUS_ERROR = -1;
-  const STATUS_FAIL = -2;
-  const STATUS_QUOTA_EXCEEDED = -3;
-  const STATUS_SKIP = -4;
+  const STATUS_ERROR = -1; // Error on the item level 
+  const STATUS_FAIL = -2;  // Something failed on system level 
+  const STATUS_QUOTA_EXCEEDED = -3; // Issues with quota or exceeded
+  const STATUS_SKIP = -4; 
   const STATUS_NOT_FOUND = -5;
-  const STATUS_NO_KEY = -6;
+  const STATUS_NO_KEY = -6; // Issues with API key 
  // const STATUS_RETRY = -7;
  // const STATUS_SEARCHING = -8; // when the Queue is looping over images, but in batch none were   found.
  const STATUS_OPTIMIZED_BIGGER = -9;
  const STATUS_CONVERTED = -10;
  const STATUS_NOT_COMPATIBLE = -11;
 
-  const STATUS_QUEUE_FULL = -404;
-  const STATUS_MAINTENANCE = -500;
+  const STATUS_QUEUE_FULL = -404; // Issue with remote API being overloaded
+  const STATUS_MAINTENANCE = -500; // Issue with remote API not online / maintenance 
 	const STATUS_CONNECTION_ERROR = -503; // Not official, error connection in WP.
   const STATUS_NOT_API = -1000; // Not an API process, i.e restore / migrate. Don't handle as optimized
 
@@ -156,7 +156,7 @@ abstract class RequestManager
     Log::addDebug('ShortPixel API Request sent to ' . $this->apiEndPoint , $requestParameters['body']);
 
 		//only if $Blocking is true analyze the response
-        if ( $requestParameters['blocking'] )
+    if ( $requestParameters['blocking'] )
 		{
 				if ( is_object($response) && get_class($response) == 'WP_Error' )
 				{
@@ -252,6 +252,8 @@ abstract class RequestManager
             'is_done' => true,
         ];
 
+
+
         return $result;  // fatal.
   }
 
@@ -273,6 +275,7 @@ abstract class RequestManager
       'is_error' => true,
       'is_done' => false,
   ];
+
 
     return $result;
   }

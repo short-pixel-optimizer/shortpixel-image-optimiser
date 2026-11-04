@@ -276,7 +276,7 @@ class OtherMediaController extends \ShortPixel\Controller
 			 // Check if this directory is allowed.
 			 if ($this->checkDirectoryRecursive($directory) === false)
 			 {
-         Log::addDebug('Check Recursive Directory not allowed');
+         Log::addDebug('Check Recursive Directory - not allowed');
 				 return false;
 			 }
 

@@ -148,7 +148,7 @@ abstract class OptimizerBase
      * @param QueueItem $qItem 
      * @return bool 
      */
-    protected function checkImageModel(QueueItem $qItem)
+    protected function checkImageModel(QueueItem $qItem) : bool
     {
 
       if (false === $qItem->checkImageModelExists())  // something wrong

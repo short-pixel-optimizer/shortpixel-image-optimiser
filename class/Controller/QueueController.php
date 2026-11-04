@@ -390,7 +390,7 @@ class QueueController
       }
 
       $quotaControl = QuotaController::getInstance();
-      if ($quotaControl->hasQuota() === false)
+      if (false === $quotaControl->hasQuota())
       {
         // If we are doing something special (restore, migrate etc), it should runs without credits, so we shouldn't be using any.
         $isCustomOperation = false;
@@ -429,6 +429,7 @@ class QueueController
         $results->media = $this->runTick($mediaQ); // run once on mediaQ
 
         $overlimit = (Queue::RESULT_PREPARING_OVERLIMIT === $results->media->qstatus) ? true : false;
+        
 
       }
       if (false === $overlimit && in_array('custom', $queueTypes))
@@ -591,7 +592,9 @@ class QueueController
           {
              // Only log error items that are related to file issues. 
              // @todo If this work, permanent solution would be to probably add and is_item_error result to qItemResult and set that in the ApiController
-             if ($qItem->result()->apiStatus <= -100 && $qItem->result()->apiStatus >= -300)
+           $fileStatus = $qItem->result()->fileStatus; 
+               
+            if (true === $qItem->result()->is_done && $fileStatus === ImageModel::FILE_STATUS_ERROR )
              {
                 $this->LogBulk($qItem);
              }

@@ -749,13 +749,20 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 	 * Group 2 closes before the final `\)`, so the extracted value never carries
 	 * the closing parenthesis of url( … ) and matches the URL as written.
 	 */
-	protected function fetchInlineBackground($content, $args = [])
+	protected function fetchInlineBackground($content, $args = []) : array
 	{
 		
 		$number = preg_match_all('/url(\(((?:\s*(?:"[^"<>]*+"|\'[^\'<>]*+\')\s*|(?:[^()\'"<>]++|(?1))++))\))/m', $content, $matches);
 		$matches = $matches[2];
 		
+
 		$replaceBlocks = []; 
+
+		if (0 === count($matches))
+		{
+			 return []; 
+		}
+
 		foreach($matches as $url)
 		{
 			$block = $this->getReplaceBlock($url);

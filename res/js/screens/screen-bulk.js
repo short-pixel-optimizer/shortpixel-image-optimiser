@@ -773,6 +773,13 @@ class ShortPixelScreen extends ShortPixelScreenBase
 						 this.ToggleOverQuotaNotice(true);
 			 }
 
+       if ('QUEUE_FULL' == error)
+       {
+         		this.processor.timesEmpty = 10; // Bigger number, to defer for a bit
+		        this.processor.StopProcess({ defer: true })
+		        console.log('Remote API responded queue is full. Wait for some time.');
+       }
+
 		}
 		else // unknown.
 		{

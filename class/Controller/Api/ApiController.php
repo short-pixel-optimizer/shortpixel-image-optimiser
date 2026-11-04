@@ -292,7 +292,6 @@ class ApiController extends RequestManager
 					// legacy
 					@delete_option('bulkProcessingStatus');
 					QuotaController::getInstance()->setQuotaExceeded();
-
 					return $this->returnRetry(self::STATUS_QUOTA_EXCEEDED, __('Quota exceeded.', 'shortpixel-image-optimiser'));
 				break;
 			    case -302: 
@@ -306,11 +305,9 @@ class ApiController extends RequestManager
 					return $this->returnFailure(self::STATUS_NO_KEY, $status->Message);
 				break;
 				case -404: // Maximum number in optimization queue (remote)
-					//return array("Status" => self::STATUS_QUEUE_FULL, "Message" => $APIresponse['Status']->Message);
 					return $this->returnRetry(self::STATUS_QUEUE_FULL, $status->Message);
 				break;
 				case -500: // API in maintenance.
-					//return array("Status" => self::STATUS_MAINTENANCE, "Message" => $APIresponse['Status']->Message);
 					return $this->returnRetry(self::STATUS_MAINTENANCE, $status->Message);
 
 				break;
