@@ -19,8 +19,7 @@ use ShortPixel\Model\Queue\QueueItem;
  *
  * All methods are static; the class acts as a request-scoped registry keyed by
  * queue type and item ID. Callers populate ResponseModel objects through
- * `addData()` / `formatQItem()` and retrieve human-readable text via
- * `formatItem()`.
+ * `addData()` and retrieve human-readable text via `formatQItem()`.
  *
  * Must be primed with `setQ()` before use so that the correct queue context
  * (name, type, max tries) is known. Output verbosity is controlled by
@@ -201,9 +200,20 @@ class ResponseController
 		/**
 		 * Merge a QueueItem's result into its ResponseModel and return a formatted message.
 		 *
-		 * Copies non-null result properties from the QueueItem onto the ResponseModel,
-		 * sets the item type from the attached ImageModel, persists via
-		 * `updateResponseItem()`, then delegates to `formatItem()` for the final string.
+		 * Sets the item type from the attached ImageModel, persists the
+		 * ResponseModel via `updateResponseItem()` and formats its message with
+		 * `formatErrorItem()` (error items) or `formatRegularItem()`.
+		 *
+		 * @todo The loop meant to copy the QueueItem's result onto the
+		 *       ResponseModel never runs: every QueueItemResult property is
+		 *       protected and the class is not iterable, so foreach sees
+		 *       nothing from here (and it would only overwrite response fields
+		 *       that are already non-null). The text comes only from values set
+		 *       earlier with addData(). Iterating the result's jsonSerialize()
+		 *       array is not enough on its own: the result's defaults
+		 *       (is_done / is_error false) would then override what addData()
+		 *       set. Low impact today, because callers copy the message with
+		 *       addData() themselves.
 		 *
 		 * @param QueueItem $queueItem The completed queue item.
 		 * @return string Formatted human-readable message.
