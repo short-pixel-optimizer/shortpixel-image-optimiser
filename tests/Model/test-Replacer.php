@@ -191,6 +191,18 @@ class ReplacerTest extends WP_UnitTestCase {
 	/**
 	 * A nested JSON string that carries the URL is replaced inside and
 	 * stored back as a JSON string.
+	 *
+	 * @todo Replacer::replaceContent() (build/ replacer2) decides whether a
+	 *       decoded JSON value changed with `$content !== $decoded_previous_content`,
+	 *       but both hold the SAME object: the loop below rewrites the decoded
+	 *       objects in place, so the check sees no change and the original
+	 *       JSON string is returned. Every URL inside a JSON object (Elementor,
+	 *       Bricks, Breakdance data) is therefore no longer replaced.
+	 *       Suggested fix, verified against this file and the Elementor /
+	 *       Bricks / Breakdance compat tests:
+	 *       `$decoded_previous_content = json_decode($raw_content);` (an
+	 *       independent copy) and compare with `!=`. This test stays red
+	 *       until then.
 	 */
 	public function test_json_string_with_the_url_nested_in_serialized_data_is_replaced_and_stays_a_json_string() {
 		$options = wp_json_encode( array( 'cover' => self::OLD_URL ), JSON_UNESCAPED_SLASHES );
@@ -207,29 +219,43 @@ class ReplacerTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Pins a known defect: a nested JSON string that holds none of the search
-	 * URLs is still decoded and re-encoded with the replacer's json_flags
-	 * (JSON_UNESCAPED_SLASHES only), so it does not come back byte-identical:
-	 * non-ASCII text turns into \uXXXX escapes. Bricks reads its slider
-	 * options with stripslashes() before json_decode(), so "Café" stored as
-	 * "Caf\u00e9" is shown as "Cafu00e9". Only rows the replacer matched (the
-	 * row holds the replaced URL somewhere else) are affected.
-	 * @todo In the replacer2 module source, Replacer::replaceContent(): return
-	 *       a nested JSON string unchanged when nothing inside it was replaced.
-	 * When fixed, this test fails; flip it: `options` is byte-identical.
+	 * A nested JSON string that holds none of the search URLs comes back
+	 * byte-identical: replaceContent() returns the original string when
+	 * nothing inside it changed. Bricks reads its slider options with
+	 * stripslashes() before json_decode(), so a re-encoded "Caf\u00e9" would
+	 * be shown as "Cafu00e9".
 	 */
-	public function test_nested_json_string_without_the_url_is_re_encoded_with_unicode_escapes_pinned_for_deferred_fix() {
+	public function test_nested_json_string_without_the_url_keeps_its_bytes() {
 		$options = '{"label":"Café"}';
 		$content = serialize( $this->bricksPageContent( $options ) );
 
 		$result = unserialize( $this->replaceContent( $content, false ) );
 
-		// SENTINEL: the row was processed (URL beside it replaced) and the value is still a string.
+		// SENTINEL: the row was processed (URL beside it replaced).
 		$this->assertSame( self::NEW_URL, $result[1]['settings']['image']['url'], 'Sentinel: the image URL was replaced.' );
-		$this->assertIsString( $result[0]['settings']['options'], 'Sentinel: the nested JSON stays a string.' );
 
-		// THE PIN: same data, different bytes.
-		$this->assertSame( '{"label":"Caf\\u00e9"}', $result[0]['settings']['options'], 'Pinned: fixed? The untouched JSON string keeps its bytes — flip this pin.' );
+		$this->assertSame( $options, $result[0]['settings']['options'], 'The untouched JSON string keeps its bytes.' );
+	}
+
+	/**
+	 * A JSON string whose URL is replaced is re-encoded with the replacer's
+	 * json_flags, which keep non-ASCII text as it is (JSON_UNESCAPED_UNICODE)
+	 * instead of turning it into \uXXXX escapes.
+	 *
+	 * @todo Red until replaceContent() detects changes inside JSON objects
+	 *       again; see the @todo on
+	 *       test_json_string_with_the_url_nested_in_serialized_data_is_replaced_and_stays_a_json_string.
+	 */
+	public function test_replaced_json_string_keeps_non_ascii_text_unescaped() {
+		$options = wp_json_encode( array( 'label' => 'Café', 'cover' => self::OLD_URL ), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+		$content = serialize( $this->bricksPageContent( $options ) );
+
+		$result = unserialize( $this->replaceContent( $content, false ) );
+
+		$this->assertSame(
+			wp_json_encode( array( 'label' => 'Café', 'cover' => self::NEW_URL ), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
+			$result[0]['settings']['options']
+		);
 	}
 
 	/**

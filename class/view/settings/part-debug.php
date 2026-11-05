@@ -140,7 +140,7 @@ if (Log::isManualDebug())
 
   <div class='debug-quota'>
     <a href="<?php echo $this->getActionLink('action_debug_resetquota', ['part' => 'debug']);  ?>" class='button'>
-        <?php _e('Clear Quota Data');  ?>
+        <?php _e('Clear Quota Data', 'shortpixel-image-optimiser');  ?>
     </a>
 
   </div>
@@ -181,7 +181,7 @@ if (Log::isManualDebug())
   <div class='debug-stats'>
     <a href="
     <?php echo $this->getActionLink('action_debug_resetStats', ['part' => 'debug']); ?>" class="button">
-    <?php _e('Clear Statistics'); ?>
+    <?php _e('Clear Statistics', 'shortpixel-image-optimiser'); ?>
   </a>
 
   </div>
@@ -264,7 +264,7 @@ if (Log::isManualDebug())
 
   <div class='debug-notices'>
     <a href="<?php echo $this->getActionLink('action_debug_resetNotices', ['part' => 'debug']); ?>" class="button">
-      <?php _e('Reset Notices'); ?>
+      <?php _e('Reset Notices', 'shortpixel-image-optimiser'); ?>
     </a>
 
   </div>

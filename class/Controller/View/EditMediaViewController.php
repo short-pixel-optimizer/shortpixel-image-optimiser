@@ -313,7 +313,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
           $debugInfo = [];
           $debugInfo[] = array(__('URL (get attachment URL)', 'shortpixel_image_optiser'), wp_get_attachment_url($this->post_id));
-          $debugInfo[] = array(__('File (get attached)'), get_attached_file($this->post_id));
+          $debugInfo[] = array(__('File (get attached)', 'shortpixel-image-optimiser'), get_attached_file($this->post_id));
 
 					if ($imageObj->is_virtual())
 					{
@@ -325,17 +325,17 @@ class EditMediaViewController extends \ShortPixel\ViewController
             else
               $vtext = 'Not set';
 
-						$debugInfo[] = array(__('Is Virtual: ') . $vtext, $imageObj->getFullPath() );
+						$debugInfo[] = array(__('Is Virtual: ', 'shortpixel-image-optimiser') . $vtext, $imageObj->getFullPath() );
 					}
 
-          $debugInfo[] = array(__('Size and Mime (ImageObj)'), $imageObj->get('width') . 'x' . $imageObj->get('height'). ' (' . $imageObj->get('mime') . ')');
-          $debugInfo[] = array(__('Status (ShortPixel)'), $imageObj->getMeta('status') . ' '   );
+          $debugInfo[] = array(__('Size and Mime (ImageObj)', 'shortpixel-image-optimiser'), $imageObj->get('width') . 'x' . $imageObj->get('height'). ' (' . $imageObj->get('mime') . ')');
+          $debugInfo[] = array(__('Status (ShortPixel)', 'shortpixel-image-optimiser'), $imageObj->getMeta('status') . ' '   );
 
-					$debugInfo[] = array(__('Processable'), $processable);
-          $debugInfo[] = array(__('Optimized'), $optimized);
-					$debugInfo[] = array(__('Avif/Webp needed'), $anyFileType);
-					$debugInfo[] = array(__('Restorable'), $restorable);
-					$debugInfo[] = array(__('Record'), $hasrecord);
+					$debugInfo[] = array(__('Processable', 'shortpixel-image-optimiser'), $processable);
+          $debugInfo[] = array(__('Optimized', 'shortpixel-image-optimiser'), $optimized);
+					$debugInfo[] = array(__('Avif/Webp needed', 'shortpixel-image-optimiser'), $anyFileType);
+					$debugInfo[] = array(__('Restorable', 'shortpixel-image-optimiser'), $restorable);
+					$debugInfo[] = array(__('Record', 'shortpixel-image-optimiser'), $hasrecord);
 
           $lastSave = $imageObj->getMeta('lastSave'); 
           if (null !== $lastSave)
@@ -345,21 +345,21 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
 					if ($imageObj->getMeta()->convertMeta()->didTry())
 					{
-						 $debugInfo[] = array(__('Converted'), ($imageObj->getMeta()->convertMeta()->isConverted() ?'<span class="green">Yes</span>' : '<span class="red">No</span> '));
-						 $debugInfo[] = array(__('Checksum'), $imageObj->getMeta()->convertMeta()->didTry());
-						 $debugInfo[] = array(__('Error'), $imageObj->getMeta()->convertMeta()->getError());
+						 $debugInfo[] = array(__('Converted', 'shortpixel-image-optimiser'), ($imageObj->getMeta()->convertMeta()->isConverted() ?'<span class="green">Yes</span>' : '<span class="red">No</span> '));
+						 $debugInfo[] = array(__('Checksum', 'shortpixel-image-optimiser'), $imageObj->getMeta()->convertMeta()->didTry());
+						 $debugInfo[] = array(__('Error', 'shortpixel-image-optimiser'), $imageObj->getMeta()->convertMeta()->getError());
 					}
 
-          $debugInfo[] = array(__('WPML Duplicates'), json_encode($imageObj->getWPMLDuplicates()) );
+          $debugInfo[] = array(__('WPML Duplicates', 'shortpixel-image-optimiser'), json_encode($imageObj->getWPMLDuplicates()) );
 
 					if ($imageObj->getParent() !== false)
 					{
-						 $debugInfo[] = array(__('WPML duplicate - Parent: '), $imageObj->getParent());
+						 $debugInfo[] = array(__('WPML duplicate - Parent: ', 'shortpixel-image-optimiser'), $imageObj->getParent());
 					}
 
 					if (isset($urls))
 					{
-						 $debugInfo[] = array(__('To Optimize URLS'),  $urls);
+						 $debugInfo[] = array(__('To Optimize URLS', 'shortpixel-image-optimiser'),  $urls);
 					}
 
           $item = QueueItems::getImageItem($imageObj);
@@ -373,8 +373,8 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
 						 $returnEnqueue = $item->returnEnqueue();
 
-						 $debugInfo[] = array(__('Image to Queue'), $returnEnqueue );
-             $debugInfo[] = [__('Counts'), $counts];
+						 $debugInfo[] = array(__('Image to Queue', 'shortpixel-image-optimiser'), $returnEnqueue );
+             $debugInfo[] = [__('Counts', 'shortpixel-image-optimiser'), $counts];
 
 					}
 
@@ -414,10 +414,10 @@ class EditMediaViewController extends \ShortPixel\ViewController
           $debugInfo['backupData'] = ['BackupData', $backupData]; 
 
 
-          $debugInfo['imagemetadata'] = array(__('ImageModel Metadata (ShortPixel)'), $imageObj);
+          $debugInfo['imagemetadata'] = array(__('ImageModel Metadata (ShortPixel)', 'shortpixel-image-optimiser'), $imageObj);
 					$debugInfo[] = array('', '<hr>');
 
-          $debugInfo['wpmetadata'] = array(__('WordPress Get Attachment Metadata'), $meta );
+          $debugInfo['wpmetadata'] = array(__('WordPress Get Attachment Metadata', 'shortpixel-image-optimiser'), $meta );
 					$debugInfo[] = array('', '<hr>');
 
 
@@ -433,20 +433,20 @@ class EditMediaViewController extends \ShortPixel\ViewController
 							 $backupFile = $fs->getFile($fs->getBackupDirectory($imageObj) . $backupModel->getBackupFileName($imageObj));
 						}
 
-            $debugInfo[] = array(__('Backup Folder'), (string) $backupFile->getFileDir() );
+            $debugInfo[] = array(__('Backup Folder', 'shortpixel-image-optimiser'), (string) $backupFile->getFileDir() );
 						if ($backupModel->hasBackup($imageObj))
             {
-							$backupText = __('Backup File:');
+							$backupText = __('Backup File:', 'shortpixel-image-optimiser');
               $debugInfo[] = array( $backupText, (string) $backupFile . '(' . UiHelper::formatBytes($backupFile->getFileSize()) . ')' );
 
               $debugInfo[] = ['Main Backup:', (string) $backupModel->getMainBackupFile()];
             }
               else {
-							$backupText = __('Target Backup File after optimization (no backup) ');
+							$backupText = __('Target Backup File after optimization (no backup) ', 'shortpixel-image-optimiser');
               $debugInfo[] = [$backupText, (string) $backupFile];
 						}
 
-            $debugInfo[] =  array(__("No Main File Backup Available"), '');
+            $debugInfo[] =  array(__("No Main File Backup Available", 'shortpixel-image-optimiser'), '');
 
 					if ($imageObj->getMeta()->convertMeta()->isConverted())
 					{
@@ -461,7 +461,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
           if (true === $imageObj->hasOriginal())
           {
              $original = $imageObj->getOriginalFile();
-             $debugInfo[] = array(__('Has Original File: '), $original->getFullPath()  . '(' . UiHelper::formatBytes($original->getFileSize()) . ')');
+             $debugInfo[] = array(__('Has Original File: ', 'shortpixel-image-optimiser'), $original->getFullPath()  . '(' . UiHelper::formatBytes($original->getFileSize()) . ')');
              $orbackup = $backupModel->getBackupFile($original);
 
              $processable = ($original->isProcessable()) ? '<span class="green">Yes</span>' : '<span class="red">No</span> (' . $original->getReason('processable') . ')';
@@ -473,7 +473,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
 
           if ($orbackup)
-              $debugInfo[] = array(__('Has Backup Original Image'), $orbackup->getFullPath() . '(' . UiHelper::formatBytes($orbackup->getFileSize()) . ')');
+              $debugInfo[] = array(__('Has Backup Original Image', 'shortpixel-image-optimiser'), $orbackup->getFullPath() . '(' . UiHelper::formatBytes($orbackup->getFileSize()) . ')');
 						$debugInfo[] = array('', '<hr>');
           }
 
@@ -505,12 +505,12 @@ class EditMediaViewController extends \ShortPixel\ViewController
 							if ($backupModel->hasBackup($thumbObj) && is_object($backupFile))
 							{
 								$backup = $backupFile->getFullPath();
-								$backupText = __('Backup File:');
+								$backupText = __('Backup File:', 'shortpixel-image-optimiser');
 							}
 							else {
 								$backupFile = $fs->getFile($fs->getBackupDirectory($thumbObj) . $backupModel->getBackupFileName($thumbObj));
 								$backup = $backupFile->getFullPath();
-								$backupText = __('Target Backup File after optimization (no backup) ');
+								$backupText = __('Target Backup File after optimization (no backup) ', 'shortpixel-image-optimiser');
 							}
 
               $width = $thumbObj->get('width');

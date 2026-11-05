@@ -137,6 +137,11 @@ class CompatElementorTest extends SPIO_IntegrationTestCase {
 	 * After PNG→JPG conversion the URL inside the JSON must be rewritten
 	 * to the .jpg equivalent, and the result must still round-trip as
 	 * valid JSON (module's addSlash escaping must not corrupt structure).
+	 *
+	 * @todo Red until Replacer::replaceContent() detects changes inside JSON
+	 *       objects again; see the @todo on
+	 *       test_json_string_with_the_url_nested_in_serialized_data_is_replaced_and_stays_a_json_string
+	 *       in Model/test-Replacer.php.
 	 */
 	public function test_png_conversion_rewrites_elementor_data_json_postmeta() {
 		$id  = $this->uploadPngForQueuePath( 'fixture-small.png' );
@@ -198,6 +203,11 @@ class CompatElementorTest extends SPIO_IntegrationTestCase {
 	 * new Replacer), so renaming a file referenced from a real Elementor
 	 * `_elementor_data` row must rewrite the JSON to the new base and the
 	 * value must still round-trip as valid JSON.
+	 *
+	 * @todo Red until Replacer::replaceContent() detects changes inside JSON
+	 *       objects again; see the @todo on
+	 *       test_json_string_with_the_url_nested_in_serialized_data_is_replaced_and_stays_a_json_string
+	 *       in Model/test-Replacer.php.
 	 */
 	public function test_manual_rename_rewrites_elementor_data_json_postmeta() {
 		$id = $this->uploadFixture( 'fixture-small.jpg' );

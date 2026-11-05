@@ -44,8 +44,8 @@ use ShortPixel\NextGenViewController as NextGenViewController;
  *   `getNGImageByID` / `getImageAbspath` / `getImageSizes` helpers
  *   then route through the appropriate API.
  *
- * Setting gate: unless `settings()->includeNextGen == 1` (or a caller
- * has set `$enableOverride`), the optimize-specific hooks stay off —
+ * Setting gate: unless the `includeNextGen` setting is on, the
+ * optimize-specific hooks stay off —
  * NextGen users who don't want SPIO touching their galleries can leave
  * the plugin installed without side-effects.
  *
@@ -191,14 +191,11 @@ class NextGenController
   /**
    * Whether SPIO should treat NextGen galleries as optimize targets.
    *
-   * True when either:
-   *   - `$enableOverride` is set (only by the unused `enableNextGen()`), or
-   *   - the user has ticked the NextGen integration in Settings
-   *     (`settings()->includeNextGen == 1`).
+   * Returns the `includeNextGen` setting (the NextGen integration ticked in
+   * Settings), which the settings model always hands out as a bool.
    *
    * Used by `hooks()` to decide whether to wire the upload / gallery
-   * lifecycle hooks, and by `checkAddFiles()` to reject files if the
-   * setting is off.
+   * lifecycle hooks.
    *
    * @return bool
    */
@@ -226,10 +223,7 @@ class NextGenController
   }
 
   /**
-   * Enable the NextGen integration in-flight.
-   *
-   * Sets `$enableOverride = true` so `optimizeNextGen()` returns true
-   * before the setting round-trips through the DB, then runs
+   * Registers every NextGen gallery as a Custom Media folder, through
    * `addNextGenGalleriesToCustom()`.
    *
    * Not called anywhere: saving the setting does not add galleries.

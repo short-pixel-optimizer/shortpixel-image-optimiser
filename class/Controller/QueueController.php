@@ -486,18 +486,12 @@ class QueueController
    *   3. Skips blocked items or items whose ImageModel failed to load.
    *   4. Delegates to ApiController::sendToProcessing() then handleAPIResult().
    *   5. Logs failed items to the per-type bulk log when running in bulk mode,
-   *      but only when the result's apiStatus lies between -100 and -300.
-   *
-   * @todo The bulk-log filter checks the result's apiStatus for the API's own
-   *       file-error codes (-100 to -300), but ApiController maps every known
-   *       code (-102, -105, -106, -108, -111, -113, -201, -202, -203, -207)
-   *       to STATUS_ERROR (-1) before it reaches the result, and local
-   *       failures (save, backup, retry limit -903) carry their own codes. So
-   *       the known file errors are no longer written to the bulk log; only
-   *       unrecognised API codes still are. Suggested fix: decide on the
-   *       final, non-transient failure instead, e.g. skip only the retryable
-   *       statuses (quota, queue full, maintenance, connection error), or set
-   *       an item-error flag in ApiController as the inline note proposes.
+   *      but only final file errors: the result is done and its fileStatus is
+   *      ImageModel::FILE_STATUS_ERROR (the API's file-error codes, mapped to
+   *      STATUS_ERROR, and failures while saving the optimized files).
+   *      Retried, quota, key, queue-full, maintenance and connection failures
+   *      stay out of the log, and so does an item that only reaches the retry
+   *      limit (its result carries no fileStatus).
    *
    * The final queue stats and converted JSON are returned; a cleanQueue() is
    * triggered automatically when the single-item queue empties.

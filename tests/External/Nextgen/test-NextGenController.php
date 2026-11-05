@@ -5,11 +5,10 @@
  * Focus areas:
  *   - Singleton contract (getInstance)
  *   - has_nextgen — reflects the NGG_PLUGIN constant state
- *   - optimizeNextGen — dual gate (override flag OR includeNextGen setting)
+ *   - optimizeNextGen — returns the includeNextGen setting as a bool
  *   - isNextGenScreen — passthrough getter
  *   - add_screen_loads — precise match (`ngg` property) vs substring matches
  *     vs no-match, plus the sticky `$is_ngg_screen` flag side-effect
- *   - checkAddFiles — three-branch NextGen-folder + optimize-setting gate
  *   - Regression sentinel — onDeleteImage's array_merge($paths, string)
  *     TypeError trap
  *
@@ -102,31 +101,20 @@ class NextGenControllerTest extends WP_UnitTestCase {
 	}
 
 	/*
-	 * optimizeNextGen — override flag OR settings.includeNextGen
+	 * optimizeNextGen — the includeNextGen setting, as a bool
 	 */
 
-	public function test_optimizeNextGen_returns_false_when_neither_override_nor_setting_is_on() {
-		$c = $this->freshController();
-		$this->setPrivate( $c, 'enableOverride', false );
+	public function test_optimizeNextGen_returns_false_when_the_setting_is_off() {
 		\wpSPIO()->settings()->includeNextGen = 0;
 
-		$this->assertFalse( $c->optimizeNextGen() );
-	}
-
-	public function test_optimizeNextGen_returns_true_when_enableOverride_is_true() {
-		$c = $this->freshController();
-		$this->setPrivate( $c, 'enableOverride', true );
-		\wpSPIO()->settings()->includeNextGen = 0;
-
-		$this->assertTrue( $c->optimizeNextGen() );
+		$this->assertFalse( $this->freshController()->optimizeNextGen() );
 	}
 
 	public function test_optimizeNextGen_returns_true_when_the_setting_is_on() {
-		$c = $this->freshController();
-		$this->setPrivate( $c, 'enableOverride', false );
 		\wpSPIO()->settings()->includeNextGen = 1;
 
-		$this->assertTrue( $c->optimizeNextGen() );
+		// assertTrue is strict: the bool return type (strict_types) must hold.
+		$this->assertTrue( $this->freshController()->optimizeNextGen() );
 	}
 
 	/*
@@ -207,63 +195,6 @@ class NextGenControllerTest extends WP_UnitTestCase {
 		// Sentinel: no match ⇒ flag must stay false. Otherwise the
 		// downstream isNextGenScreen() consumer would go wrong.
 		$this->assertFalse( $this->getPrivate( $c, 'is_ngg_screen' ) );
-	}
-
-	/*
-	 * checkAddFiles — three branches: non-NG folder / NG folder with
-	 * setting off / NG folder with setting on
-	 */
-
-	public function test_checkAddFiles_returns_the_incoming_bool_untouched_for_non_nextgen_folders() {
-		$c = $this->freshController();
-
-		$dirObj = $this->makeDirStub( false ); // is_nextgen=false
-
-		// Assert BOTH bool variants — sentinel against a regression that
-		// forces one specific return regardless of input.
-		$this->assertTrue( $c->checkAddFiles( true, array(), $dirObj ) );
-		$this->assertFalse( $c->checkAddFiles( false, array(), $dirObj ) );
-	}
-
-	public function test_checkAddFiles_returns_false_for_nextgen_folders_when_optimize_setting_is_off() {
-		$c = $this->freshController();
-		$this->setPrivate( $c, 'enableOverride', false );
-		\wpSPIO()->settings()->includeNextGen = 0;
-
-		$dirObj = $this->makeDirStub( true );
-
-		// Even when the caller passes true, an NG folder with the setting
-		// off must return false.
-		$this->assertFalse( $c->checkAddFiles( true, array(), $dirObj ) );
-	}
-
-	public function test_checkAddFiles_returns_the_incoming_bool_for_nextgen_folders_when_optimize_setting_is_on() {
-		$c = $this->freshController();
-		$this->setPrivate( $c, 'enableOverride', false );
-		\wpSPIO()->settings()->includeNextGen = 1;
-
-		$dirObj = $this->makeDirStub( true );
-
-		$this->assertTrue( $c->checkAddFiles( true, array(), $dirObj ) );
-		$this->assertFalse( $c->checkAddFiles( false, array(), $dirObj ) );
-	}
-
-	/**
-	 * Build a directory-object stub with a `get()` method that returns
-	 * whatever was scripted for the given field name. Only `is_nextgen`
-	 * is actually read by checkAddFiles.
-	 */
-	private function makeDirStub( bool $is_nextgen ) {
-		return new class( $is_nextgen ) {
-			private $is_nextgen;
-			public function __construct( $is_nextgen ) {
-				$this->is_nextgen = $is_nextgen;
-			}
-			public function get( $name ) {
-				if ( $name === 'is_nextgen' ) return $this->is_nextgen;
-				return null;
-			}
-		};
 	}
 
 	/*

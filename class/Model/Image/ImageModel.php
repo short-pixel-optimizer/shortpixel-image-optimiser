@@ -1092,7 +1092,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 								ResponseController::addData($this->get('id'), $response);
 
-								$this->preventNextTry(__('Could not create backup'));
+								$this->preventNextTry(__('Could not create backup', 'shortpixel-image-optimiser'));
                 return false;
               }
           }
