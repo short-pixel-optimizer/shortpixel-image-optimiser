@@ -176,4 +176,54 @@ test.describe('Bulk page — API error path', () => {
 
 		await bulk.finish();
 	});
+
+	/**
+	 * PIN (queue full): when the API answers -404 (its optimization queue is
+	 * full) or -500 (maintenance), OptimizeController sets QUEUE_FULL (-8) on
+	 * the item result, and screen-bulk.js HandleItemError() is meant to defer
+	 * the bulk (`timesEmpty = 10` + StopProcess({ defer: true })). That check
+	 * sits inside the `result.result` branch, which the processor never fills
+	 * (same cause as the pin above), so the -8 takes the "unknown" branch:
+	 * "Error without item" is logged and nothing is deferred.
+	 * @todo In screen-bulk.js HandleItemError(): read the error from `result`
+	 *       itself when `result.result` is absent (or check QUEUE_FULL outside
+	 *       that branch).
+	 * FLIP-when-fixed: expect the "queue is full" log and timesEmpty >= 10,
+	 * no "Error without item"; drop the suffix.
+	 */
+	test('pin: a queue-full answer does not defer the bulk (pinned_for_deferred_fix)', async ({ page, spio, consoleErrors }) => {
+		await spio.uploadFixture('fixture-small.jpg');
+		await spio.setMock({ forceStatusCode: -404 });
+		const logs: string[] = [];
+		page.on('console', (m) => logs.push(m.text()));
+
+		const bulk = new BulkPage(page);
+		await bulk.goto();
+		// Record what the bulk screen's item-error handler receives.
+		await page.evaluate(() => {
+			const screen = (window as any).ShortPixelProcessor.screen;
+			const original = screen.HandleItemError.bind(screen);
+			(window as any).__spioItemErrors = [];
+			screen.HandleItemError = (result: any, type: string) => {
+				(window as any).__spioItemErrors.push({ wrapped: typeof result.result !== 'undefined', error: result.error });
+				return original(result, type);
+			};
+		});
+		await bulk.startSelection();
+		await bulk.calculate();
+		await bulk.startBulk();
+
+		// SENTINEL: the QUEUE_FULL code really reaches the bulk screen.
+		await expect
+			.poll(() => page.evaluate(() => (window as any).__spioItemErrors.length), { timeout: 60_000, message: 'the queue-full answer must reach HandleItemError' })
+			.toBeGreaterThan(0);
+		const first = await page.evaluate(() => (window as any).__spioItemErrors[0]);
+		expect(first.error, 'sentinel: the item carries QUEUE_FULL (-8)').toBe(-8);
+
+		// PINNED: unwrapped → "unknown" branch → no defer.
+		expect(first.wrapped, 'PIN: the item reaches HandleItemError unwrapped').toBe(false);
+		expect(consoleErrors.some((e) => /Error without item/.test(e)), 'PIN: the -8 lands in the "unknown" branch').toBe(true);
+		expect(logs.some((l) => /queue is full/i.test(l)), 'PIN: fixed? the bulk now defers on a full queue — flip this pin').toBe(false);
+		expect(await page.evaluate(() => (window as any).ShortPixelProcessor.timesEmpty), 'PIN: no defer was set').toBeLessThan(10);
+	});
 });

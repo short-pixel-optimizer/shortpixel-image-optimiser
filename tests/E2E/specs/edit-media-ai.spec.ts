@@ -87,28 +87,20 @@ test.describe('Edit media — AI result and fields that were not generated', () 
 	});
 
 	/**
-	 * PIN: res/js/screens/screen-media.js FetchAltView() writes a numeric
-	 * caption / description status into the form as '' (the alt branch skips
-	 * numbers, its siblings do not), so the user's text is blanked and the
-	 * next Update saves the blank.
-	 * @todo FetchAltView(): skip a numeric caption / description the way the
-	 *       alt branch does, instead of turning it into ''.
-	 * FLIP-when-fixed: both fields keep USER_CAPTION / USER_DESCRIPTION. Drop
-	 * the suffix.
+	 * Regression: res/js/screens/screen-media.js FetchAltView() skips a
+	 * numeric caption / description status the way it skips a numeric alt,
+	 * so the user's text stays in the form and the next Update keeps it.
 	 */
-	test('pin: a caption and description that were not generated are blanked (pinned_for_deferred_fix)', async ({ page, spio }) => {
+	test('a caption and description that were not generated leave their fields alone', async ({ page, spio }) => {
 		const { id } = await spio.uploadFixture('fixture-small.jpg');
 		const aiData = await runAiWithFilledForm(page, id);
 
-		// SENTINELS: the statuses really arrived as integers, and the alt
-		// branch (fixed) left its field alone — so the blanking below is the
-		// caption/description branches, not a page reload or a reset form.
+		// SENTINELS: the statuses really arrived as integers.
 		expect(typeof aiData.caption, 'pre-condition: the caption arrives as an integer status').toBe('number');
 		expect(typeof aiData.description, 'pre-condition: the description arrives as an integer status').toBe('number');
-		expect(await fieldValue(page, 'attachment_alt'), 'sentinel: the alt field keeps the user\'s text').toBe(USER_ALT);
+		expect(await fieldValue(page, 'attachment_alt'), 'the alt field keeps the user\'s text').toBe(USER_ALT);
 
-		// PINNED: both fields are blanked by the integer status.
-		expect(await fieldValue(page, 'attachment_caption'), 'PIN: fixed? the caption keeps the user\'s text — flip this pin').toBe('');
-		expect(await fieldValue(page, 'attachment_content'), 'PIN: fixed? the description keeps the user\'s text — flip this pin').toBe('');
+		expect(await fieldValue(page, 'attachment_caption'), 'the caption keeps the user\'s text').toBe(USER_CAPTION);
+		expect(await fieldValue(page, 'attachment_content'), 'the description keeps the user\'s text').toBe(USER_DESCRIPTION);
 	});
 });

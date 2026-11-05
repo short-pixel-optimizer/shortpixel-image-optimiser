@@ -176,29 +176,13 @@ class ApiFailuresTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * During a bulk run, an image the API reports with an UNRECOGNISED error
-	 * code is written to the bulk log with its file name.
+	 * During a bulk run, an image that fails with a known FILE error (-102
+	 * invalid URL, -106 URL inaccessible, …) is written to the bulk log with
+	 * its file name. QueueController::runTick() logs a failed item once it is
+	 * done and its fileStatus is ImageModel::FILE_STATUS_ERROR, which
+	 * OptimizeController sets for every STATUS_ERROR result.
 	 */
-	public function test_bulk_log_lists_an_image_failed_with_an_unrecognised_api_code() {
-		$this->api->forceStatusCode = -204;
-
-		$id  = $this->uploadFixture( 'fixture-small.jpg' );
-		$log = $this->bulkRunAndReadLog( $id );
-
-		$this->assertFalse( $this->freshImageModel( $id )->isOptimized() );
-		$this->assertStringContainsString( wp_basename( get_attached_file( $id ) ), $log, 'The failed image is listed in the bulk log.' );
-	}
-
-	/**
-	 * Pins a known defect: during a bulk run, images that fail with a KNOWN
-	 * file error (-102 invalid URL, -106 URL inaccessible, …) are no longer
-	 * written to the bulk log. QueueController::runTick() only logs results
-	 * whose apiStatus lies between -100 and -300, but ApiController maps
-	 * every known file-error code to STATUS_ERROR (-1) first.
-	 * @todo See the QueueController::runTick() docblock.
-	 * When fixed, this test fails; flip it: the image is listed in the log.
-	 */
-	public function test_bulk_log_omits_an_image_failed_with_a_known_file_error_pinned_for_deferred_fix() {
+	public function test_bulk_log_lists_an_image_failed_with_a_known_file_error() {
 		$this->api->forceStatusCode = MockShortPixelApi::CODE_UNREACHABLE;
 
 		$id  = $this->uploadFixture( 'fixture-small.jpg' );
@@ -208,6 +192,24 @@ class ApiFailuresTest extends SPIO_IntegrationTestCase {
 		$this->assertFalse( $this->freshImageModel( $id )->isOptimized(), 'Sentinel: the image was not optimized.' );
 		$this->assertNotEmpty( $this->api->requests, 'Sentinel: the API was asked.' );
 
-		$this->assertStringNotContainsString( wp_basename( get_attached_file( $id ) ), $log, 'Pinned: fixed? The image is now listed in the bulk log — flip this pin.' );
+		$this->assertStringContainsString( wp_basename( get_attached_file( $id ) ), $log, 'The failed image is listed in the bulk log.' );
+	}
+
+	/**
+	 * An image the API answers with an UNRECOGNISED error code is retried
+	 * (returnRetry with the raw code) and never gets FILE_STATUS_ERROR, so it
+	 * stays out of the bulk log. The log only lists final file errors; it
+	 * leaves out temporary and system-level failures by design.
+	 */
+	public function test_bulk_log_leaves_out_an_image_retried_for_an_unrecognised_api_code() {
+		$this->api->forceStatusCode = -204;
+
+		$id  = $this->uploadFixture( 'fixture-small.jpg' );
+		$log = $this->bulkRunAndReadLog( $id );
+
+		// SENTINEL: the item was not optimized.
+		$this->assertFalse( $this->freshImageModel( $id )->isOptimized(), 'Sentinel: the image was not optimized.' );
+
+		$this->assertStringNotContainsString( wp_basename( get_attached_file( $id ) ), $log, 'A retried, non-file error is not listed in the bulk log.' );
 	}
 }

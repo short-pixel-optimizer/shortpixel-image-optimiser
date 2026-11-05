@@ -248,17 +248,13 @@ class CompatBricksTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * Pins a known defect: slider options with non-ASCII text come back from
-	 * a rename re-encoded with \uXXXX escapes, although they hold no URL.
-	 * Bricks runs stripslashes() on the options before using them, which
-	 * turns "é" into "u00e9": the page renders "Cafu00e9" instead of
-	 * "Café". Unit-level pin in Model/test-Replacer.php.
-	 * @todo In the replacer2 module source, Replacer::replaceContent(): return
-	 *       a nested JSON string unchanged when nothing inside it was replaced.
-	 * When fixed, this test fails; flip it: the options keep their bytes and
-	 * the page shows "Café".
+	 * Slider options with non-ASCII text keep their bytes through a rename
+	 * when they hold no URL, so the page still shows "Café". Bricks runs
+	 * stripslashes() on the options before using them; a re-encoded
+	 * "Caf\u00e9" would render as "Cafu00e9". Unit-level test in
+	 * Model/test-Replacer.php.
 	 */
-	public function test_manual_rename_mangles_non_ascii_slider_options_pinned_for_deferred_fix() {
+	public function test_manual_rename_keeps_non_ascii_slider_options_intact() {
 		$id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->purgeQueueTable();
 		$options  = '{"type":"loop","perPage":3,"gap":"1em","i18n":{"next":"Café"}}';
@@ -277,8 +273,8 @@ class CompatBricksTest extends SPIO_IntegrationTestCase {
 		$html = $this->render( $elements );
 		$this->assertSliderRenders( $html, 'Sentinel: the page still renders.' );
 
-		// THE PIN: the options were re-encoded and Bricks strips the escape's backslash.
-		$this->assertNotSame( $options, $elements[0]['settings']['options'], 'Pinned: fixed? The options keep their bytes — flip this pin.' );
-		$this->assertStringContainsString( 'Cafu00e9', $html, 'Pinned: fixed? The page shows "Café" again — flip this pin.' );
+		$this->assertSame( $options, $elements[0]['settings']['options'], 'The slider options keep their bytes.' );
+		$this->assertStringContainsString( 'Café', $html, 'The page shows "Café".' );
+		$this->assertStringNotContainsString( 'Cafu00e9', $html, 'No mangled escape reaches the page.' );
 	}
 }
