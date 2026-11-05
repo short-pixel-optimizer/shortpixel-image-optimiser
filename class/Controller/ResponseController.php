@@ -273,14 +273,14 @@ class ResponseController
 			switch($item->fileStatus)
 			{
 				  case ImageModel::FILE_STATUS_ERROR:
-							$text .= sprintf(__('( %s %d ) ', 'shortpixel-image-optimiser'), (strtolower($item->item_type) == 'media') ?  __('Attachment ID ') : __('Custom # '), $item->item_id);
+							$text .= sprintf(__('( %s %d ) ', 'shortpixel-image-optimiser'), (strtolower($item->item_type) == 'media') ?  __('Attachment ID ', 'shortpixel-image-optimiser') : __('Custom # ', 'shortpixel-image-optimiser'), $item->item_id);
 					break;
 			}
 
 			switch($item->apiStatus)
 			{
 				  case RequestManager::STATUS_FAIL:
-							$text .= sprintf(__('( %s %d ) ', 'shortpixel-image-optimiser'), (strtolower($item->item_type) == 'media') ?  __('Attachment ID ') : __('Custom # '), $item->item_id);
+							$text .= sprintf(__('( %s %d ) ', 'shortpixel-image-optimiser'), (strtolower($item->item_type) == 'media') ?  __('Attachment ID ', 'shortpixel-image-optimiser') : __('Custom # ', 'shortpixel-image-optimiser'), $item->item_id);
 					break;
 			}
 
