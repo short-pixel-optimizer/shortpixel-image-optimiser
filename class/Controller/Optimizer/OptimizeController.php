@@ -74,10 +74,10 @@ class OptimizeController extends OptimizerBase
 
   /** Item check before the enqueueing happens 
    * 
-   * @param QueueItem  
-   * @return boolean 
-   */
-  public function checkItem(QueueItem $qItem)
+   * @param QueueItem  $qItem 
+   * @return bool
+  **/
+  public function checkItem(QueueItem $qItem) : bool
   {
     /*  $defaults = array(
           'forceExclusion' => false,
@@ -133,7 +133,7 @@ class OptimizeController extends OptimizerBase
    * @param QueueItem $qItem The item to send for processing.
    * @return void
    */
-  public function sendToProcessing(QueueItem $qItem)
+  public function sendToProcessing(QueueItem $qItem): void
   {
     $action = $qItem->data()->action;
 
@@ -494,10 +494,11 @@ class OptimizeController extends OptimizerBase
            $fileArray['size'] = $tmpFile->getFileSize(); 
 
            $new_attach_id = media_handle_sideload($fileArray, $attached_post_id, $newPostTitle); 
-
-         //  $new_attach_id = media_sideload_image($url, $attached_post_id, '', 'id'); // Add to WP, return attach_id
            
            $qItem->addResult(['new_attach_id' => $new_attach_id] );
+
+           // Finish the process then.
+           $this->finishItemProcess($qItem);
            $tmpFile->delete();
         }
     }

@@ -13,6 +13,7 @@ use ShortPixel\Helper\UiHelper;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Model\Queue\QueueItemResult;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+use stdClass;
 
 /**
  * Abstract base class for all optimizer and action controllers in the image pipeline.
@@ -130,7 +131,7 @@ abstract class OptimizerBase
     * 
     * @return stdClass  Json base structure
     */
-    protected function getJsonResponse()
+    protected function getJsonResponse(): stdClass
     {
 
       $json = new \stdClass;

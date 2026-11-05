@@ -521,7 +521,7 @@ class ApiController extends RequestManager
 	 * @param array     $response The decoded API response array; $response[0] is the image object.
 	 * @return array|null Result array, or null when the status code is unrecognised.
 	 */
-	protected function handleActionResponse(QueueItem $qItem, $response)
+	protected function handleActionResponse(QueueItem $qItem, $response): array
 	{
 		$item = $response[0]; // First File Response of API.
 		$status_code = intval($item->Status->Code);
@@ -539,6 +539,9 @@ class ApiController extends RequestManager
 			];
 			return $this->returnSuccess($imageData);
 		}
+
+		Log::addError('HandleActionResponse - Uncaught issue / response', $response);
+		return $this->returnFailure(self::STATUS_FAIL, __('Error in handling action response - Unknown error', 'shortpixel-image-optimiser'));
 
 	}
 

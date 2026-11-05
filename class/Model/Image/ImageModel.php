@@ -214,7 +214,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
      *
      * @return array<string, mixed>|false
      */
-    abstract protected function getImprovements();
+    abstract public function getImprovements();
 
     /**
      * Return the exclude patterns (path, name, size, date, filesize) that

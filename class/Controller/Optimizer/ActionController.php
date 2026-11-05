@@ -131,7 +131,7 @@ class ActionController extends OptimizerBase
    *
    * @param QueueItem $qItem The queue item to enqueue and process.
    * @param array     $args  Action arguments; must include 'action' key with the action name.
-   * @return void
+   * @return \stdClass
    */
   public function enqueueItem(QueueItem $qItem, $args = []) : \stdClass
   {
