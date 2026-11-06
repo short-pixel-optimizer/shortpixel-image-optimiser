@@ -32,6 +32,8 @@ if ( ! defined( 'ABSPATH' ) ) {
   </div>
 </header>
 
+<?php \wpSPIO()->renderPromoBanner(); ?>
+
   <input type='checkbox' name='heavy_features' value='1' <?php echo ($this->disable_heavy_features) ? 'checked' : '' ?> class='shortpixel-hide' />
 
 <article class='shortpixel-settings'>

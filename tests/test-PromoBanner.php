@@ -143,6 +143,62 @@ class PromoBannerTest extends WP_UnitTestCase {
 }
 
 /**
+ * SPIO's own wiring of the banner (shortpixel-plugin.php): SPIO prints it
+ * itself, through renderPromoBanner(), in its page views.
+ */
+class PromoBannerSpioWiringTest extends WP_UnitTestCase {
+
+	/** @var mixed */
+	private $saved;
+
+	public function set_up() {
+		parent::set_up();
+		$this->saved = $this->bannerProperty()->getValue( \wpSPIO() );
+	}
+
+	public function tear_down() {
+		$this->bannerProperty()->setValue( \wpSPIO(), $this->saved );
+		PromoBanner::uninstall( 'spiotest' );
+		parent::tear_down();
+	}
+
+	private function bannerProperty(): ReflectionProperty {
+		$p = new ReflectionProperty( \ShortPixel\ShortPixelPlugin::class, 'promoBanner' );
+		$p->setAccessible( true );
+		return $p;
+	}
+
+	public function test_renderPromoBanner_prints_nothing_before_the_banner_is_set_up() {
+		$this->bannerProperty()->setValue( \wpSPIO(), null );
+
+		ob_start();
+		\wpSPIO()->renderPromoBanner();
+		$this->assertSame( '', ob_get_clean() );
+	}
+
+	public function test_renderPromoBanner_prints_the_banner_when_it_should_show() {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		$banner = new PromoBanner(
+			array(
+				'id'        => 'wiring-campaign',
+				'start'     => time() - HOUR_IN_SECONDS,
+				'end'       => time() + HOUR_IN_SECONDS,
+				'prefix'    => 'spiotest',
+				'condition' => '__return_true',
+				'hook'      => false,
+			)
+		);
+		$this->bannerProperty()->setValue( \wpSPIO(), $banner );
+
+		ob_start();
+		\wpSPIO()->renderPromoBanner();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString( 'class="shortpixel-bf"', $html, 'Printed without the notice class: SPIO places it, WordPress does not move it.' );
+	}
+}
+
+/**
  * The dismiss endpoint through the real admin-ajax dispatch.
  */
 class PromoBannerAjaxTest extends WP_Ajax_UnitTestCase {
