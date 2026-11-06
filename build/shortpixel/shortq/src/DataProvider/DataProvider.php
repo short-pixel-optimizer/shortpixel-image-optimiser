@@ -6,7 +6,7 @@
  */
 namespace ShortPixel\ShortQ\DataProvider;
 use ShortPixel\ShortQ\Item as Item;
-
+use ShortPixel\ShortQ\ShortQ;
 
 /**
  * Contract of a storage backend for queue items.
@@ -112,6 +112,10 @@ interface DataProvider
    */
   // Sum of a arbitrary number of items set by user.
   function itemSum($status = ShortQ::QSTATUS_ALL);
+
+  
+  function removeRecords($args);
+
 
   /**
    * Creates the storage.
