@@ -914,7 +914,7 @@ class Replacer
 
 		if ($isJson) {
 			$content = json_decode($content);
-			$decoded_previous_content = $content;
+			$decoded_previous_content = json_decode($raw_content);
 		}
 
 		if (is_string($content))  // let's check the normal one first.
@@ -956,7 +956,7 @@ class Replacer
 		  //	Log::addDebug('Value was found to be JSON, encoding with flag: ' . $json_flags);
 
 		  		// Might work badly, but might help to limit to amount of re-encodes since there is always a risk of data loss
-		  		if ($content !== $decoded_previous_content)
+		  		if ($content != $decoded_previous_content)
 				{
 					$content = json_encode($content, $json_flags);
 				}

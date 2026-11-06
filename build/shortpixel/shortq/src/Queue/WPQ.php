@@ -459,7 +459,6 @@ class WPQ implements Queue
     }
 
     $items = $this->DataProvider->dequeue($args);
-
     $itemcount = count($items);
 
     // @todo Ask dprovder for dequeue
