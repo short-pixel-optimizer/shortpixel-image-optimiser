@@ -7,9 +7,9 @@
  * handleNewSuccess() image/webp/avif result shaping (lossy vs lossless, NC/NA
  * sentinels, file-size margin), checkFileSizeMargin() logic, and returnFailure /
  * returnRetry / returnSuccess shapes inherited from RequestManager.
- * Two pinned regressions: the undefined $APIresponse variable in the fallback
- * branch of handleOptimizeResponse(), and the implicit-null return from
- * handleActionResponse() on an unrecognised status.
+ * One pinned defect: the undefined $APIresponse variable in the fallback
+ * branch of handleOptimizeResponse(). handleActionResponse() returns a
+ * failure result for an unrecognised status.
  *
  * Out of scope / why:
  * - processMediaItem() / processActionItem(): require a fully wired ImageModel
@@ -250,30 +250,24 @@ class ApiControllerTest extends WP_UnitTestCase {
 	}
 
 	// -----------------------------------------------------------------------
-	// handleActionResponse — pinned: implicit null on unknown status
+	// handleActionResponse — unknown status
 	// -----------------------------------------------------------------------
 
 	/**
-	 * Pinned regression: ApiController::handleActionResponse() has no default /
-	 * else branch for status codes other than UNCHANGED, WAITING, or SUCCESS.
-	 *
-	 * EXPECTED (after fix): A defined return value (e.g. returnFailure) for any
-	 * unrecognised status code.
-	 *
-	 * ACTUAL (current): The method falls through without an explicit return,
-	 * yielding null — the caller (handleResponse) passes null to
-	 * QueueItem::addResult(), which iterates over null causing a foreach warning.
-	 *
-	 * This test MUST FAIL once a default return is added.
+	 * An unrecognised status code comes back as a final STATUS_FAIL failure
+	 * result, never null: the caller passes the result straight to
+	 * QueueItem::addResult().
 	 */
-	public function test_handleActionResponse_unknown_status_returns_null_pinned_for_deferred_fix() {
+	public function test_handleActionResponse_unknown_status_returns_a_failure_result() {
 		$qItem    = $this->makeQueueItem( 'remove_background' );
 		$response = $this->makeActionResponse( -999 ); // completely unknown code
 
 		$result = $this->invokeProtected( 'handleActionResponse', [ $qItem, $response ] );
 
-		// Current (buggy) behaviour: null is returned.
-		$this->assertNull( $result, 'Expected null (current buggy behaviour); fix must return a proper array.' );
+		$this->assertIsArray( $result );
+		$this->assertSame( RequestManager::STATUS_FAIL, $result['apiStatus'] );
+		$this->assertTrue( $result['is_error'] );
+		$this->assertTrue( $result['is_done'], 'A failure is final, not retried.' );
 	}
 
 	// -----------------------------------------------------------------------
