@@ -18,8 +18,6 @@ use ShortPixel\Controller\Optimizer\OptimizeAiController;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 use ShortPixel\NextGenController as NextGenController;
 
-use ShortPixel\Controller\Queue\MediaLibraryQueue as MediaLibraryQueue;
-use ShortPixel\Controller\Queue\CustomQueue as CustomQueue;
 use ShortPixel\Controller\View\OtherMediaViewController;
 use ShortPixel\Helper\InstallHelper as InstallHelper;
 use ShortPixel\Helper\UiHelper as UiHelper;
@@ -258,6 +256,25 @@ class ShortPixelPlugin {
 			$notices             = Notices::getInstance(); // This hooks the ajax listener
 			$quotaController = QuotaController::getInstance();
 			$quotaController->getQuota();
+
+		  //$screens = ['settings_page_wp-shortpixel-settings', 'media_page_wp-short-pixel-bulk']; 
+		  $our_screen = function () { return \wpSPIO()->env()->is_our_screen;  }; 
+
+		   $banner = new \ShortPixel\PromoBanner\PromoBanner(array(
+          'id'         => 'black-friday-2026',
+          'start'      => strtotime('2026-11-06 00:00:00 UTC'),
+          'end'        => strtotime('2026-12-01 07:59:59 UTC'), // 23:59:59 US Pacific on the 30th
+          'ends_on'    => '2026-11-30',                         // the day the banner prints
+          'url'        => 'https://shortpixel.com/pricing',
+          'prefix'     => 'spio',                                // the plugin's identity: option, AJAX action, asset handle
+          'assets_url' => plugins_url('build/shortpixel/promo-banner/assets/', SHORTPIXEL_PLUGIN_FILE),
+		  'version'    => '1.0',
+		  'screens'    => [], //$screens,
+		  'condition'  => $our_screen,
+		  'capability' => 'manage_options',
+		  'hook'       => 'admin_notices',			
+		));
+			$banner->register();
 	}
 
 	/**
