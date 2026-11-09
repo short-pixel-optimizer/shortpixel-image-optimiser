@@ -783,8 +783,19 @@ class ShortPixelScreen extends ShortPixelScreenBase
 		}
 		else // unknown.
 		{
-    	var message = result.message + '(' + result.item_id + ')';
+       // Queue full mostly passed by the non-result (higher level) error, which might just be result.error not an item
+      if (result.error && 'QUEUE_FULL' == this.processor.aStatusError[result.error] )
+      {
+         		this.processor.timesEmpty = 10; // Bigger number, to defer for a bit
+		        this.processor.StopProcess({ defer: true })
+		        console.log('Remote API responded queue is full. Wait for some time.');
+      }
+      else
+      {
+              var message = result.message + '(' + result.item_id + ')';
 			console.error('Error without item - ' + message);
+
+      }
 
 		}
 
