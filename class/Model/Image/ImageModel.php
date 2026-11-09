@@ -490,7 +490,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     {
        if ($this->isUserExcluded())
        {
-          $this->processable_status = null;
+          $this->processable_status = self::P_PROCESSABLE;
        }
     }
 
