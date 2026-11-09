@@ -114,6 +114,10 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page.onboarding .shortpixel-settings section.wrapper {
   margin: 0 auto;
 }
+.wrap.is-shortpixel-settings-page .shortpixel-bf {
+  width: 95%;
+  margin: 16px auto 20px;
+}
 .wrap.is-shortpixel-settings-page .shortpixel-settings {
   width: 95%;
   display: flex;
@@ -331,6 +335,9 @@ div.spio-modal-title {
   width: 100%;
 }
 @media (max-width: 1200px) {
+  .wrap.is-shortpixel-settings-page .shortpixel-bf {
+    width: 100%;
+  }
   .wrap.is-shortpixel-settings-page .shortpixel-settings {
     width: 100%;
   }
@@ -368,6 +375,9 @@ div.spio-modal-title {
     display: none;
   }
   .wrap.is-shortpixel-settings-page .wp-header-end {
+    margin-top: 65px;
+  }
+  .wrap.is-shortpixel-settings-page .shortpixel-bf {
     margin-top: 65px;
   }
   .wrap.is-shortpixel-settings-page .shortpixel-settings {

@@ -24,6 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
   </div>
 -->
 </header>
+<?php \wpSPIO()->renderPromoBanner(); ?>
 <div class="shortpixel-bulk-wrapper">
 
   <div id="processPaused" class="processor-paused" data-action="ResumeBulk"><span class='dashicons dashicons-controls-pause' data-action="ResumeBulk"></span>

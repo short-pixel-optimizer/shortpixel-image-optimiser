@@ -85,7 +85,7 @@ elseif (false === $has_data):
 
 	<a class='button button-secondary' title="<?php _e('Report incorrect image SEO data for this image to us by e-mail.', 'shortpixel-image-optimiser') ?>" href="<?php echo esc_attr($mailtolink); ?>"><?php _e('Report', 'shortpixel-image-optimiser'); ?></a>
 
-	<a class='button button-secondary' title="<?php _e('Send us feedback about this feature, suggest other features, or vote on existing feature requests.', 'shortpixel-image-optimiser'); ?>" target="_blank" href="https://ideas.shortpixel.com/"><?php _e('Feedback', 'shortpixel-image-optimiser'); ?></a>
+	<a class='button button-secondary' title="<?php _e('Send us feedback about this feature, suggest other features, or vote on existing feature requests.', 'shortpixel-image-optimiser'); ?>" target="_blank" href="https://ideas.shortpixel.com/?utm_source=plugin&utm_medium=spio&utm_campaign=aidata_button_feedback"><?php _e('Feedback', 'shortpixel-image-optimiser'); ?></a>
 
 	<?php if (true === $isDifferent)
 	{

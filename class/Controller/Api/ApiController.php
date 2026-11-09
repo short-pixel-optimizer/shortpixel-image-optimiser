@@ -514,12 +514,13 @@ class ApiController extends RequestManager
 	 * 'optimized' set to LosslessURL and 'original' set to OriginalURL from the response
 	 * object — LosslessURL is used unconditionally regardless of compression type.
 	 *
-	 * If the status code matches neither waiting nor success the method falls through
-	 * without an explicit return (implicit null), which the caller does not handle.
+	 * Any other status code is logged and returned as a STATUS_FAIL failure
+	 * ("Error in handling action response - Unknown error"), so the caller always
+	 * gets a result array.
 	 *
 	 * @param QueueItem $qItem    The queue item being processed.
 	 * @param array     $response The decoded API response array; $response[0] is the image object.
-	 * @return array|null Result array, or null when the status code is unrecognised.
+	 * @return array Result array.
 	 */
 	protected function handleActionResponse(QueueItem $qItem, $response): array
 	{

@@ -300,7 +300,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 	        }
 					elseif($body->Status == 'existing')
 					{
-						 Notice::addWarning( sprintf(__('This email address is already in use. Please use your API-key in the "Already have an API key" field. You can obtain your license key via %s your account %s ', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/login/">', '</a>') );
+						 Notice::addWarning( sprintf(__('This email address is already in use. Please use your API-key in the "Already have an API key" field. You can obtain your license key via %s your account %s ', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/login/?utm_source=plugin&utm_medium=spio&utm_campaign=signup_notice_account">', '</a>') );
 					}
 					else
 					{

@@ -91,6 +91,12 @@ class ShortPixelPlugin {
 	/** @var array<int, string> WP admin-page hook suffixes returned by add_options_page / add_media_page. */
 	protected $admin_pages = [];  // admin page hooks.
 
+	/** Prefix of SPIO's promo banner: names its dismissals option (`spio-promo-banner`), AJAX action and asset handle. */
+	const PROMO_BANNER_PREFIX = 'spio';
+
+	/** @var \ShortPixel\PromoBanner\PromoBanner|null The current campaign banner, set up in admin_init(); printed by renderPromoBanner(). */
+	protected $promoBanner = null;
+
 	/**
 	 * Register the `lowInit` bootstrap at `plugins_loaded` priority 5.
 	 *
@@ -257,24 +263,43 @@ class ShortPixelPlugin {
 			$quotaController = QuotaController::getInstance();
 			$quotaController->getQuota();
 
-		  //$screens = ['settings_page_wp-shortpixel-settings', 'media_page_wp-short-pixel-bulk']; 
-		  $our_screen = function () { return \wpSPIO()->env()->is_our_screen;  }; 
+		  $our_screen = function () { return \wpSPIO()->env()->is_our_screen;  };
 
-		   $banner = new \ShortPixel\PromoBanner\PromoBanner(array(
+		  // 'hook' false: SPIO prints the banner itself, right under its header
+		  // and above the page content (renderPromoBanner() in the page views),
+		  // so it never slides under the header that is fixed on narrow screens.
+		  $this->promoBanner = new \ShortPixel\PromoBanner\PromoBanner(array(
           'id'         => 'black-friday-2026',
-          'start'      => strtotime('2026-11-06 00:00:00 UTC'),
+          'start'      => strtotime('2026-11-23 00:00:00 UTC'),
           'end'        => strtotime('2026-12-01 07:59:59 UTC'), // 23:59:59 US Pacific on the 30th
           'ends_on'    => '2026-11-30',                         // the day the banner prints
-          'url'        => 'https://shortpixel.com/pricing',
-          'prefix'     => 'spio',                                // the plugin's identity: option, AJAX action, asset handle
+          'url'        => 'https://shortpixel.com/pricing?utm_source=plugin&utm_medium=spio&utm_campaign=top_banner_bf2026',
+          'prefix'     => self::PROMO_BANNER_PREFIX,             // the plugin's identity: option, AJAX action, asset handle
           'assets_url' => plugins_url('build/shortpixel/promo-banner/assets/', SHORTPIXEL_PLUGIN_FILE),
 		  'version'    => '1.0',
-		  'screens'    => [], //$screens,
+		  'screens'    => [],
 		  'condition'  => $our_screen,
 		  'capability' => 'manage_options',
-		  'hook'       => 'admin_notices',			
+		  'hook'       => false,
 		));
-			$banner->register();
+		  $this->promoBanner->register();
+	}
+
+	/**
+	 * Print the promo banner when it should show.
+	 *
+	 * Called by SPIO's page views right under their header (settings, bulk)
+	 * or title (Custom Media), so the banner sits above the page content and
+	 * takes its width. Prints nothing outside the campaign window, for users
+	 * without the capability, after a dismissal, or before admin_init() set
+	 * the banner up.
+	 *
+	 * @return void
+	 */
+	public function renderPromoBanner() {
+		if ( is_object( $this->promoBanner ) ) {
+			$this->promoBanner->render();
+		}
 	}
 
 	/**

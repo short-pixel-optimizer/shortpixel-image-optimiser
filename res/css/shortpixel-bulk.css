@@ -461,6 +461,10 @@
 .wrap.is-shortpixel-bulk-page section.panel.dashboard .dashboard-modal .content a {
   color: #1ABDCA;
 }
+.wrap.is-shortpixel-bulk-page .shortpixel-bf {
+  width: 95%;
+  margin: 16px auto 20px;
+}
 .wrap.is-shortpixel-bulk-page h3.heading {
   width: 90%;
   margin: 0 auto;

@@ -13,6 +13,13 @@
 
   @import 'bulk/dashboard';
 
+  // Promo banner (build/shortpixel/promo-banner), printed under the header:
+  // same width and centring as the active panel below it.
+  .shortpixel-bf {
+    width: 95%;
+    margin: 16px auto 20px;
+  }
+
   /** GENERAL STYLES **/
   /*  h1 {
       font-size: 23px;
