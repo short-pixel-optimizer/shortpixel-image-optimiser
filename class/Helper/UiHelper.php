@@ -152,7 +152,7 @@ class UiHelper
     }
 
     $improvements = $imageObj->getImprovements();
-    $thumbTotal = $thumbsDone = 0;
+    $thumbTotal = $thumbsDone = $excludedThumbs = 0;
     if ($imageObj->get('thumbnails'))
     {
       $thumbsTotal = count($imageObj->get('thumbnails'));  //
@@ -771,7 +771,7 @@ class UiHelper
       case 'forceOptimize':
         $action['function'] = 'window.ShortPixelProcessor.screen.Optimize(' . $id . ', true)';
         $action['type']  = 'js';
-        $action['text'] = __('Override exclusions and optimize now', 'shortpixel-image-optimiser');
+        $action['text'] = __('Ignore exclusion and optimize', 'shortpixel-image-optimiser');
         $action['display'] = 'button';
         $action['is-optimizable'] = true;
       break;
@@ -1114,14 +1114,19 @@ class UiHelper
 	 */
 	protected static function convertImageTypeName($name, $type)
 	{
+    $is_double = false; 
 		if ($type == 'webp')
 		{
 			$is_double = \wpSPIO()->env()->useDoubleWebpExtension();
 		}
-		if ($type == 'avif')
+		elseif ($type == 'avif')
 		{
 			$is_double = \wpSPIO()->env()->useDoubleAvifExtension();
 		}
+    else 
+    {
+       return $name; 
+    }
 
 		if ($is_double)
 		{

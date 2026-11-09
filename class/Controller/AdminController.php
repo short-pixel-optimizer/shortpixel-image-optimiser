@@ -153,7 +153,7 @@ class AdminController extends \ShortPixel\Controller
 					{
 							$args = array('runReplacer' => false);
 
-						 	$res = $converter->convert($args);
+						 	$converter->convert($args);
 							$mediaItem = $fs->getImage($id, 'media', false);
 
 							$meta = $converter->getUpdatedMeta();
@@ -166,7 +166,7 @@ class AdminController extends \ShortPixel\Controller
           ];
           
           
-        	$result = $queueController->addItemToQueue($mediaItem, $args);
+        	$queueController->addItemToQueue($mediaItem, $args);
 				}
 				else {
 					Log::addWarn('Passed mediaItem is not processable', $id);
@@ -879,7 +879,9 @@ class AdminController extends \ShortPixel\Controller
         $successLink = $link = admin_url(current_user_can( 'edit_others_posts')? 'upload.php?page=wp-short-pixel-bulk' : 'upload.php');
         $blank = "";
 
-        if($quotaController->hasQuota() === false)
+        $hasQuota = $quotaController->hasQuota(); 
+
+        if(false === $hasQuota)
 				{
             $extraClasses = " shortpixel-alert shortpixel-quota-exceeded";
             /*translators: toolbar icon tooltip*/
@@ -909,12 +911,11 @@ class AdminController extends \ShortPixel\Controller
                             </div>'
 
                          .'<div class="cssload-container"><div class="cssload-speeding-wheel"></div></div></div>',
-    //            'href'  => 'javascript:void(0)', // $link,
                 'meta'  => array('target'=> $blank, 'class' => 'shortpixel-toolbar-processing' . $extraClasses)
         );
         $wp_admin_bar->add_node( $args );
 
-        if($quotaController->hasQuota() === false)
+        if(false === $hasQuota)
 				{
             $wp_admin_bar->add_node( array(
                 'id'    => 'shortpixel_processing-title',
