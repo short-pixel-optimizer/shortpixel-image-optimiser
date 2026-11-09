@@ -330,7 +330,7 @@ class QuotaController
 
     $defaultData = [
       "APIKeyValid" => false,
-      "Message" => __('API Key could not be validated due to a connectivity error.<BR>Your firewall may be blocking us. Please contact your hosting provider and ask them to allow connections from your site to api.shortpixel.com (IP 176.9.21.94).<BR> If you still cannot validate your API Key after this, please <a href="https://shortpixel.com/contact" target="_blank">contact us</a> and we will try to help. ', 'shortpixel-image-optimiser'),
+      "Message" => sprintf(__('API Key could not be validated due to a connectivity error.<BR>Your firewall may be blocking us. Please contact your hosting provider and ask them to allow connections from your site to api.shortpixel.com (IP 176.9.21.94).<BR> If you still cannot validate your API Key after this, please %scontact us%s and we will try to help. ', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/contact?utm_source=plugin&utm_medium=spio&utm_campaign=connectivity_notice_contact" target="_blank">', '</a>'),
       "DomainCheck" => 'NOT Accessible',
       "GetSuccess" => false,
     ];

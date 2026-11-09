@@ -48,4 +48,18 @@ class ApiNoticeRepeatLongTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'API key', $html );
 		$this->assertStringContainsString( 'shortpixel.com', $html );
 	}
+
+	/**
+	 * The "get your API key" link goes to the sign-up page with the plugin's
+	 * UTM parameters, and wraps exactly the link text (the URL is passed in
+	 * with %s, so it is not part of the translated sentence).
+	 */
+	public function test_getMessage_links_the_tagged_signup_page() {
+		$html = $this->invokeProtected( new ApiNoticeRepeatLong(), 'getMessage' );
+
+		$this->assertStringContainsString(
+			"<a href='https://shortpixel.com/wp-apikey?utm_source=plugin&utm_medium=spio&utm_campaign=nokey_notice_3d_signup' target='_blank'>get your API key</a>",
+			$html
+		);
+	}
 }

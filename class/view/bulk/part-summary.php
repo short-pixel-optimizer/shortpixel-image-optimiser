@@ -171,7 +171,7 @@ if ( ! defined( 'ABSPATH' ) ) {
       </p>
         <p>				
         <span>
-          <a href="<?php echo esc_url($this->view->buyMoreHref) ?>" target="_new" class='button button-primary unlimited'>
+          <a href="<?php echo esc_url($this->view->buyMoreAiHref) ?>" target="_new" class='button button-primary unlimited'>
           <span><?php echo UIHelper::getIcon('res/images/icon/shortpixel.svg', ); ?></span>
           <?php esc_html_e('Buy Unlimited AI credits','shortpixel-image-optimiser'); ?>
           </a>
@@ -190,7 +190,7 @@ if ( ! defined( 'ABSPATH' ) ) {
       <span><img src="<?php echo esc_url(wpSPIO()->plugin_url('res/img/bulk/over-quota.svg')) ?>" /></span>
             <p><?php printf(esc_html__('In your ShortPixel account you %shave only %s credits available%s, but you have chosen %s images to be optimized in this bulk process. You can either go back and select fewer images, or you can upgrade to a higher plan or buy one-time credits.','shortpixel-image-optimiser'), '<span class="red">', esc_html($this->formatNumber($quotaData->total->remaining, 0)), '</span>', '<b data-stats-total="images-images">0</b>'); ?>
 
-                 <p><a href="https://shortpixel.com/ms/af/KZYK08Q28044" target="_blank" class="button button-primary" >
+                 <p><a href="https://shortpixel.com/pricing?utm_source=plugin&utm_medium=spio&utm_campaign=bulk_overquota_upgrade" target="_blank" class="button button-primary" >
                   <!--<i class="shortpixel-icon cart"></i> -->
                       <?php _e('Buy credits or upgrade to Unlimited', 'shortpixel-image-optimiser'); ?>
                   </a> </p>

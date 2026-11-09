@@ -66,13 +66,6 @@ $disabled = ($view->key->is_editable) ? '' : 'disabled';
               <input name="pluginemail" type="text" id="pluginemail" value="<?php echo esc_attr( sanitize_email($adminEmail) );?>" class="regular-text" <?php echo $disabled ?> />
 
               <span class="spinner" id="pluginemail_spinner" style="float:none;"></span>
-<!--
-              <button type="submit" id="request_key" class="button button-primary" title="<?php esc_html_e('Request a new API key','shortpixel-image-optimiser');?>"
-                 href="https://shortpixel.com/free-sign-up?pluginemail=<?php echo esc_attr( esc_url($adminEmail) );?>"
-								 <?php echo $disabled ?>  >
-                 <?php esc_html_e('Request Key','shortpixel-image-optimiser');?>
-              </button>
--->
               <info>
                 <p class="settings-info shortpixel-settings-error" style='display:none;' id='pluginemail-error'>
                     <b><?php esc_html_e('Please provide a valid e-mail address.', 'shortpixel-image-optimiser');?></b>
@@ -96,7 +89,7 @@ $disabled = ($view->key->is_editable) ? '' : 'disabled';
                              src="<?php echo esc_url(wpSPIO()->plugin_url('res/img/point.png' ));?>" style="position: absolute;left: -39px;bottom: -9px;display:none;">
 
                     </span>
-                    <?php printf(esc_html__('I have read and I agree to the %s Terms of Service %s and the %s Privacy Policy %s (%s GDPR compliant %s).','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/tos" target="_blank">', '</a>', '<a href="https://shortpixel.com/privacy" target="_blank">', '</a>', '<a href="https://shortpixel.com/privacy#gdpr" target="_blank">', '</a>');
+                    <?php printf(esc_html__('I have read and I agree to the %s Terms of Service %s and the %s Privacy Policy %s (%s GDPR compliant %s).','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/tos?utm_source=plugin&utm_medium=spio&utm_campaign=signup_link_tos" target="_blank">', '</a>', '<a href="https://shortpixel.com/privacy?utm_source=plugin&utm_medium=spio&utm_campaign=signup_link_privacy" target="_blank">', '</a>', '<a href="https://shortpixel.com/privacy?utm_source=plugin&utm_medium=spio&utm_campaign=signup_link_gdpr#gdpr" target="_blank">', '</a>');
                     ?></label> </p>
               </info>
       </content>

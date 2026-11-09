@@ -881,7 +881,9 @@ class UiHelper
       $action['ai-action'] = true;
       break;
      case 'extendquota':
-        $action['function'] = 'https://shortpixel.com/login/'. $keyControl->getKeyForDisplay();
+        $displayKey = $keyControl->getKeyForDisplay();
+        // With a displayable key this logs the user in (no UTMs on that link).
+        $action['function'] = $displayKey ? 'https://shortpixel.com/login/' . $displayKey : 'https://shortpixel.com/login/?utm_source=plugin&utm_medium=spio&utm_campaign=list_button_extend_quota';
         $action['type'] = 'button';
         $action['text'] = __('Extend Quota','shortpixel-image-optimiser');
         $action['display'] = 'button';

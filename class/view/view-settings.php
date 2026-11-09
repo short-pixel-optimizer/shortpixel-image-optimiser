@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
     <?php if ( !$view->key->hide_api_key ) { ?>
       <a class='header-button' href="https://shortpixel.com/<?php
-        echo esc_attr(($view->key->apiKey ? "login/". $view->key->apiKey . "/dashboard" : "login"));
+        echo esc_attr(($view->key->apiKey ? "login/". $view->key->apiKey . "/dashboard" : "login?utm_source=plugin&utm_medium=spio&utm_campaign=header_button_account"));
         ?>" target="_blank">
           <i class='shortpixel-icon user'></i><name><?php _e('ShortPixel Account','shortpixel-image-optimiser'); ?></name>
       </a>

@@ -24,7 +24,7 @@ $queueRunning = $bulk->isAnyBulkRunning();
 
 		<p><?php printf(esc_html__('By starting the %s bulk restore %s process, the plugin will try to restore %s all images %s to the original state. All images will become unoptimized.', 'shortpixel-image-optimiser'), '<b>', '</b>', '<b>', '</b>'); ?></p>
 
-		<p><?php printf(esc_html__('We recommend users to %s contact us %s before restoring the images - many times the restoring is not necessary and we can help. But if you choose to continue then we strongly recommend to create a full backup before starting the process.', 'shortpixel-image-optimiser'), '<b><a href="https://shortpixel.com/contact" target="_blank">', '</a></b>'); ?>
+		<p><?php printf(esc_html__('We recommend users to %s contact us %s before restoring the images - many times the restoring is not necessary and we can help. But if you choose to continue then we strongly recommend to create a full backup before starting the process.', 'shortpixel-image-optimiser'), '<b><a href="https://shortpixel.com/contact?utm_source=plugin&utm_medium=spio&utm_campaign=bulk_restore_contact" target="_blank">', '</a></b>'); ?>
 		</p>
 		<p class='warning'><?php esc_html_e('It is strongly advised to create a full backup before starting this process.', 'shortpixel-image-optimiser'); ?></p>
 

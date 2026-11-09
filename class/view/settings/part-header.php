@@ -12,14 +12,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 		<?php if (false === $view->is_unlimited): ?>
     <a href="https://shortpixel.com/<?php
-        echo esc_attr(($view->key->apiKey ? "login/". $view->key->apiKey . '/spio-unlimited': "pricing"));
+        echo esc_attr(($view->key->apiKey ? "login/". $view->key->apiKey . '/spio-unlimited': "pricing?utm_source=plugin&utm_medium=spio&utm_campaign=header_menu_credits"));
     ?>" target="_blank"><?php esc_html_e( 'Buy credits', 'shortpixel-image-optimiser' );?></a> |
 	  <?php endif; ?>
 
     <a href="https://shortpixel.com/knowledge-base/?utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings" target="_blank"><?php esc_html_e('Knowledge Base','shortpixel-image-optimiser');?></a> |
-    <a href="https://shortpixel.com/contact" target="_blank"><?php esc_html_e('Contact Support','shortpixel-image-optimiser');?></a> |
+    <a href="https://shortpixel.com/contact?utm_source=plugin&utm_medium=spio&utm_campaign=header_menu_contact" target="_blank"><?php esc_html_e('Contact Support','shortpixel-image-optimiser');?></a> |
     <a href="https://shortpixel.com/<?php
-        echo esc_attr(($view->key->apiKey ? "login/". $view->key->apiKey . "/dashboard" : "login"));
+        echo esc_attr(($view->key->apiKey ? "login/". $view->key->apiKey . "/dashboard" : "login?utm_source=plugin&utm_medium=spio&utm_campaign=header_menu_account"));
     ?>" target="_blank">
         <?php esc_html_e('ShortPixel account','shortpixel-image-optimiser');?>
     </a>

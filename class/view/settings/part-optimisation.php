@@ -73,7 +73,7 @@ if (! defined('ABSPATH')) {
                         This type of compression may be necessary in rare cases, such as with certain technical drawings or images from vector graphics.', 'shortpixel-image-optimiser'), '<b>', '</b>', '<br><br>'); ?>
             </p>
 
-            <?php printf(esc_html__('%s Run a few tests%s to help you decide.', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/online-image-compression" target="_blank">', '</a>'); ?>
+            <?php printf(esc_html__('%s Run a few tests%s to help you decide.', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/online-image-compression?utm_source=plugin&utm_medium=spio&utm_campaign=optimization_link_compression_test" target="_blank">', '</a>'); ?>
           </info>
         </content>
         <content class='smart-compression-explainer'>
