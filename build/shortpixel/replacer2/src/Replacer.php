@@ -809,8 +809,9 @@ class Replacer
 	 * - `component` (string, default `unset`): name of the run, passed to the
 	 *   `load_meta_value` and `save_meta_value` filters so integrations can
 	 *   act only on their own run. replace() uses `emr` for the main run.
-	 * - `json_flags` (int, default JSON_UNESCAPED_SLASHES): flags for
-	 *   json_encode() when replaceContent() re-encodes JSON.
+	 * - `json_flags` (int, default JSON_UNESCAPED_SLASHES |
+	 *   JSON_UNESCAPED_UNICODE): flags for json_encode() when
+	 *   replaceContent() re-encodes JSON.
 	 * - `replacer_do_save` (bool, default true): whether handleMetaData()
 	 *   writes the replaced meta value itself.
 	 * - `replace_no_serialize` (bool, default false): when true,
@@ -841,7 +842,11 @@ class Replacer
 	 *   under its original class name with its original properties.
 	 * - JSON string (see isJSON()): decoded with json_decode() into objects
 	 *   and arrays, processed as such and encoded back at the same level
-	 *   (top level or nested), with the `json_flags` setting.
+	 *   (top level or nested), with the `json_flags` setting. The string is
+	 *   only re-encoded when the processed value differs from a second
+	 *   decode of the input (compared by value, with `!=`); otherwise the
+	 *   original string is returned byte for byte, so JSON without a match
+	 *   keeps its escaping.
 	 * - String: passed through the `shortpixel/replacer/content` filter, then
 	 *   str_replace($search, $replace).
 	 * - WP_Error: returned untouched.

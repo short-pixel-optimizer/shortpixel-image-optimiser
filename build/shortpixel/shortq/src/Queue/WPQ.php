@@ -56,10 +56,12 @@ use \ShortPixel\ShortQ\ShortQ as ShortQ;
  * - `timeout_recount` (180): seconds between forced recounts.
  * - `is_debug` (false): stored, not read by the module.
  *
- * Item cache: getItem() caches Items in a static array for the request.
- * itemDone(), itemFailed(), updateItemValue(), inProcessTimeout() and the
- * error retries of checkQueue() clear the entry of the item they change;
- * dequeue() and the deleting methods do not, see their @todo notes.
+ * Item cache: getItem() caches Items in a static array for the request,
+ * keyed by plugin slug, queue name and item_id, so two queues that hold
+ * the same item_id never see each other's Items. itemDone(), itemFailed(),
+ * updateItemValue(), inProcessTimeout() and the error retries of
+ * checkQueue() clear the entry of the item they change; dequeue() and the
+ * deleting methods do not, see their @todo notes.
  *
  * Hooks fired by this class:
  * - action `shortpixel/modules/wpq/item/timeout` (inProcessTimeout()),
@@ -70,12 +72,12 @@ use \ShortPixel\ShortQ\ShortQ as ShortQ;
  * consuming plugin; the option name prefix `shortqwp_` and the storage
  * table are not rewritten, see ShortQ.
  *
- * @todo $itemCache is keyed by item_id only, while item IDs are unique per
- *       plugin slug and queue name. Two queues of the same plugin that hold
- *       the same item_id in one request (for example a bulk and a single
- *       queue for the same attachment) return each other's Item from
- *       getItem(). Suggested fix: key the cache by slug, queue name and
- *       item_id.
+ * @todo The constructor resets the $itemCache entry of the whole plugin
+ *       slug before adding its own queue name, so building a second queue
+ *       of the same plugin (for example a bulk and a single queue) drops
+ *       every Item the first queue had cached in the request. Suggested
+ *       fix: initialise the slug and queue name entries only when they are
+ *       not set yet.
  * @todo The constructor returns early on an empty slug or queue name,
  *       leaving $options and $currentStatus unset; the first setOption()
  *       or dequeue() then fails. Suggested fix: throw an exception.
@@ -155,9 +157,10 @@ class WPQ implements Queue
   protected $current_ask = 0;
 
   /**
-   * Request-wide cache of Items loaded by getItem(), keyed by slug, queueName, item_id.
+   * Request-wide cache of Items loaded by getItem(), keyed by plugin slug,
+   * queue name and item_id.
    *
-   * 
+   * @var array<string, array<string, array<int, Item>>>
    */
   protected static $itemCache = []; // cache items to prevent multiple database calls
 
@@ -183,9 +186,7 @@ class WPQ implements Queue
     $this->pSlug = $slug;
     $this->DataProvider = $DataProvider;
 
-    // Array init
-    self::$itemCache[$slug] = []; 
-    self::$itemCache[$slug][$qName] = [];  
+    $this->emptyItemCache(); 
 
     $this->loadStatus();
 
@@ -390,6 +391,11 @@ class WPQ implements Queue
 	{
 			 if (isset($args['item_id']))
 			 {
+            // remove cache if any
+            if (false !== $this->getItemCache($args['item_id']))
+            {
+                $this->clearItemCache($this->getItemCache($args['item_id']));
+            }
 						$this->DataProvider->removeRecords(array('item_id' => $args['item_id'] ));
 			 }
 	}
@@ -455,7 +461,6 @@ class WPQ implements Queue
     if ($args['onlypriority'])
     {
        $args['priority'] = array('operator' => '<', 'value' => 10);
-      // unset($args['onlypriority']);
     }
 
     $items = $this->DataProvider->dequeue($args);
@@ -475,11 +480,16 @@ class WPQ implements Queue
      $this->setStatus('items', $items_left , false);
 
      if ($newstatus == ShortQ::QSTATUS_DONE)
-        $this->setStatusCount('done', $itemcount, false);
+        $this->setStatusCount('done', $itemcount, false, false);
      elseif($newstatus == ShortQ::QSTATUS_INPROCESS)
-        $this->setStatusCount('in_process', $itemcount, false);
+        $this->setStatusCount('in_process', $itemcount, false, false );
 
      $this->current_ask += $itemcount;
+
+     foreach($items as $item)
+     {
+       $this->clearItemCache($item);
+     }
 
      //$queue['average_ask'] = $this->calcAverageAsk($queue['average_ask']);
      //$this->updateQueue($queue);
@@ -519,8 +529,10 @@ class WPQ implements Queue
   public function inProcessTimeout()
   {
      // Not waiting for anything.
-     if (! $this->options->mode == 'wait')
+     if ($this->options->mode !== 'wait')
+     {
       return;
+     }
 
     $args = array('status' => ShortQ::QSTATUS_INPROCESS, 'updated' => array('value' => time() - ($this->options->process_timeout/1000), 'operator' => '<='));
 
@@ -546,10 +558,10 @@ class WPQ implements Queue
 		{
 			if ($this->options->mode == 'wait')
 			{
-				$this->setStatusCount('in_process',- $updated, false);
+				$this->setStatusCount('in_process',- $updated, false, false);
 			}
 
-			$this->setStatusCount('items', $updated, true);
+			$this->setStatusCount('items', $updated, true, false);
 		}
 
     return $updated;
@@ -604,7 +616,8 @@ class WPQ implements Queue
         $this->setStatusCount('fatal_errors', 1, false );
 				if ($this->options->mode == 'direct')
 				{
-					$this->setStatusCount('items', -1, false);
+          // Don't update, because deQueue already counted this.
+					//$this->setStatusCount('items', -1, false);
 				}
 				elseif ($this->options->mode == 'wait')
 				{
@@ -668,13 +681,18 @@ class WPQ implements Queue
 
   /**
    * Removes an item from the request cache; called whenever its status or
-   * value changes. A numeric string ID is ignored (only int is accepted).
+   * value changes.
    *
-   * @param Item|int $item Item or item_id.
+   * @param Item $item Item whose entry is dropped.
    * @return void
    */
   protected function clearItemCache($item)
   {
+     if (false === is_object($item))
+     {
+       return; 
+
+     }
      $item_id = $item->item_id; 
  
      if (isset(self::$itemCache[$this->pSlug][$this->qName][$item_id]))
@@ -683,6 +701,19 @@ class WPQ implements Queue
      }
   }
 
+  protected function emptyItemCache()
+  {
+        // Array init
+    self::$itemCache[$this->pSlug] = []; 
+    self::$itemCache[$this->pSlug][$this->qName] = [];  
+  }
+
+  /**
+   * Reads an item of this queue from the request cache.
+   *
+   * @param int $item_id Consumer item ID.
+   * @return Item|false False when the item is not cached.
+   */
   protected function getItemCache(int $item_id)
   {
       if (isset(self::$itemCache[$this->pSlug][$this->qName][$item_id]))
@@ -693,6 +724,12 @@ class WPQ implements Queue
       return false; 
   }
 
+  /**
+   * Stores an item of this queue in the request cache.
+   *
+   * @param Item $item Item to cache, under its item_id.
+   * @return void
+   */
   protected function setItemCache($item)
   {
          $item_id = $item->item_id; 
@@ -786,6 +823,7 @@ class WPQ implements Queue
   {
      $this->DataProvider->removeRecords(array('all' => true));
      $this->currentStatus = new Status();
+     $this->emptyItemCache(); 
      $this->saveStatus();
   }
 
@@ -863,7 +901,7 @@ class WPQ implements Queue
    *       update instead of setStatusCount(), or give setStatusCount() a
    *       flag telling it the rows already changed.
    */
-  public function setStatusCount($name, $change, $savenow = true)
+  public function setStatusCount($name, $change, $savenow = true, $update_on_recount = true)
   {
       if (! $this->currentStatus->isCounter($name))
       {
@@ -874,15 +912,20 @@ class WPQ implements Queue
       // Check for regular timeout on refreshing the counts.
       $last_count = time() - $this->getStatus('last_count_time');
       $timeout = ($last_count > $this->options->timeout_recount) ? true : false;
+      $recounted = false; 
 
       if ($count + $change < 0 || true === $timeout)
       {
        // Weird problem that would trigger sometimes with background active.
        $this->resetInternalCounts();
        $count = $this->getStatus($name);
+       $recounted = true; 
       }
-
-      return $this->setStatus($name, $count + $change, $savenow);
+      
+      if (true === $recounted && true === $update_on_recount)
+      {
+        $this->setStatus($name, $count + $change, $savenow);
+      }
   }
 
   /**
