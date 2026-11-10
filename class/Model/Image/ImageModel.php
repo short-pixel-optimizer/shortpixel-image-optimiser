@@ -479,10 +479,16 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     }
 
     /**
-     * Reset the processable-status cache when the current status is a
-     * user-configured exclusion, so the next isProcessable() call re-runs.
+     * Mark the image processable when its current status is a
+     * user-configured exclusion (path, name, extension, size, file size).
      *
-     * Used by the "process anyway" flow.
+     * Used by the "Ignore exclusion and optimize" flow (forceExclusion): the
+     * cached P_PROCESSABLE makes the next isProcessable() calls return true
+     * without re-running the checks, so the exclusion is not applied again on
+     * the way to the API. isProcessable() only reaches the exclusion checks
+     * after the image proved not optimized, existing and writable, so those
+     * are not skipped; the checks that run after the exclusions (the prevent
+     * flag, the file-size limit) are. Any other status is left untouched.
      *
      * @return void
      */

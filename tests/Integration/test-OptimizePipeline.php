@@ -233,6 +233,32 @@ class OptimizePipelineTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
+	 * "Ignore exclusion and optimize" (forceExclusion) optimizes an image
+	 * that matches an exclusion pattern. cancelUserExclusions() marks the
+	 * image processable, so the exclusion is not applied again on the way to
+	 * the API.
+	 */
+	public function test_excluded_image_is_optimized_when_the_exclusion_is_overridden() {
+		\wpSPIO()->settings()->excludePatterns = array(
+			array(
+				'type'  => 'name',
+				'value' => 'fixture-small',
+				'apply' => 'all',
+			),
+		);
+
+		$id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+
+		// SENTINEL: the image is excluded by the pattern.
+		$this->assertFalse( $this->freshImageModel( $id )->isProcessable(), 'Sentinel: the pattern excludes the image.' );
+
+		$this->optimizeAttachment( $id, array( 'forceExclusion' => true ) );
+
+		$this->assertTrue( $this->freshImageModel( $id )->isOptimized(), 'Overriding the exclusion must optimize the image.' );
+	}
+
+	/**
 	 * With autoMediaLibrary=0 (is_autoprocess=false), uploading an attachment
 	 * must NOT enqueue it for optimization.
 	 *

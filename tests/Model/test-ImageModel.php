@@ -1426,43 +1426,27 @@ class ImageModelTest extends WP_UnitTestCase {
 	}
 
 	/*
-	 * isProcessable regression sentinel — cancelUserExclusions cache reset.
+	 * isProcessable after cancelUserExclusions — the forced-optimize override.
 	 */
 
 	/**
-	 * Regression sentinel: after cancelUserExclusions() the next
-	 * isProcessable() call must re-evaluate from scratch, not return
-	 * cached true.
-	 *
-	 * Before the fix, cancelUserExclusions() set `processable_status = 0`
-	 * intending to force a fresh evaluation — but P_PROCESSABLE === 0,
-	 * so the cache short-circuit at lines 339-348 read `0 === P_PROCESSABLE`
-	 * and returned true immediately, skipping every validity check. Fix:
-	 * cancelUserExclusions now sets `processable_status = null;` so the
-	 * cache miss triggers a full re-check.
+	 * After cancelUserExclusions() the model is processable without the
+	 * checks running again: "Ignore exclusion and optimize" must not have the
+	 * exclusion re-applied. The pattern still matches, yet isProcessable()
+	 * now returns true.
 	 */
-	public function test_isProcessable_reevaluates_after_cancelUserExclusions() {
+	public function test_isProcessable_is_true_after_cancelUserExclusions_without_rechecking() {
 		$model = $this->makeModel();
 		// Seed a user-excluded state by pattern.
 		$model->_testPatterns = array(
 			array( 'type' => 'path', 'value' => dirname( $model->getFullPath() ) ),
 		);
-		$this->assertFalse( $model->isProcessable() );
+		$this->assertFalse( $model->isProcessable(), 'Sentinel: the path pattern excludes the image.' );
+		$this->assertTrue( $model->isUserExcluded(), 'Sentinel: the status is a user exclusion.' );
 
-		// Now cancel the user exclusion. This SHOULD force re-evaluation.
 		$model->cancelUserExclusions();
 
-		// Between cancel and the next isProcessable call, delete the file.
-		// A correctly-implemented re-evaluation would notice the file
-		// is gone and return false with P_FILE_NOT_EXIST.
-		@unlink( $model->getFullPath() );
-
-		$result = $model->isProcessable();
-
-		$this->assertFalse(
-			$result,
-			'isProcessable returned true for a deleted file after cancelUserExclusions — regression of the status=0 vs P_PROCESSABLE (=0) collision that let the cache short-circuit skip all re-checks.'
-		);
+		$this->assertTrue( $model->isProcessable(), 'The override makes the image processable although the pattern still matches.' );
 	}
 
 	/*
@@ -2460,15 +2444,15 @@ class ImageModelTest extends WP_UnitTestCase {
 	 * of returning a stale "processable" verdict.
 	 */
 
-	public function test_cancelUserExclusions_resets_processable_status_to_null_when_user_excluded() {
+	public function test_cancelUserExclusions_sets_processable_status_to_processable_when_user_excluded() {
 		$model = $this->makeModel();
 		$this->setProtected( $model, 'processable_status', ImageModel::P_EXCLUDE_PATH );
 
 		$model->cancelUserExclusions();
 
-		// Sentinel: null (not 0). A regression that reintroduced `= 0`
-		// would collide with P_PROCESSABLE and short-circuit isProcessable().
-		$this->assertNull( $this->getProtected( $model, 'processable_status' ) );
+		// The cached P_PROCESSABLE short-circuits isProcessable() on purpose:
+		// re-running the checks would apply the exclusion again.
+		$this->assertSame( ImageModel::P_PROCESSABLE, $this->getProtected( $model, 'processable_status' ) );
 	}
 
 	public function test_cancelUserExclusions_leaves_status_untouched_when_not_user_excluded() {

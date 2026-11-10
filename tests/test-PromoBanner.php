@@ -219,6 +219,15 @@ class PromoBannerAjaxTest extends WP_Ajax_UnitTestCase {
 				'condition' => '__return_true',
 			)
 		);
+		// Only this test's banner answers the action: a handler left by another
+		// test would print a second JSON answer into the same response.
+		remove_all_actions( 'wp_ajax_' . $this->banner->getAjaxAction() );
+		// _handleAjax() fires admin_init, where WordPress core checks
+		// wordpress.org for updates; when that request fails its PHP warning is
+		// printed in front of the JSON answer. Keep the dispatch offline.
+		foreach ( array( '_maybe_update_core', '_maybe_update_plugins', '_maybe_update_themes', 'wp_maybe_auto_update' ) as $core_check ) {
+			remove_action( 'admin_init', $core_check );
+		}
 		$this->banner->register();
 	}
 
@@ -229,7 +238,8 @@ class PromoBannerAjaxTest extends WP_Ajax_UnitTestCase {
 
 	/** Dispatch the dismiss action; returns the decoded JSON answer. */
 	private function dismiss( $nonce ) {
-		$_POST['nonce'] = $nonce;
+		$_POST['nonce']       = $nonce;
+		$this->_last_response = ''; // the test case appends to it on every dispatch
 		try {
 			$this->_handleAjax( $this->banner->getAjaxAction() );
 		} catch ( WPAjaxDieContinueException $e ) {
@@ -243,7 +253,7 @@ class PromoBannerAjaxTest extends WP_Ajax_UnitTestCase {
 
 		$answer = $this->dismiss( wp_create_nonce( $this->banner->getAjaxAction() ) );
 
-		$this->assertTrue( $answer['success'] );
+		$this->assertTrue( $answer['success'] ?? null, 'Raw response: ' . $this->_last_response );
 		$stored = get_option( $this->banner->getOptionName() );
 		$this->assertSame( array( 'ajax-campaign' ), array_keys( $stored ), 'Only the current campaign is stored.' );
 		$this->assertTrue( $this->banner->isDismissed() );
@@ -254,7 +264,7 @@ class PromoBannerAjaxTest extends WP_Ajax_UnitTestCase {
 
 		$answer = $this->dismiss( 'not-a-nonce' );
 
-		$this->assertFalse( $answer['success'] );
+		$this->assertFalse( $answer['success'] ?? null, 'Raw response: ' . $this->_last_response );
 		$this->assertFalse( get_option( $this->banner->getOptionName() ), 'Nothing is stored.' );
 	}
 
@@ -263,7 +273,7 @@ class PromoBannerAjaxTest extends WP_Ajax_UnitTestCase {
 
 		$answer = $this->dismiss( wp_create_nonce( $this->banner->getAjaxAction() ) );
 
-		$this->assertFalse( $answer['success'] );
+		$this->assertFalse( $answer['success'] ?? null, 'Raw response: ' . $this->_last_response );
 		$this->assertFalse( get_option( $this->banner->getOptionName() ), 'Nothing is stored.' );
 	}
 }

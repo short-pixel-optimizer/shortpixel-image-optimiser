@@ -180,18 +180,20 @@ test.describe('Bulk page — API error path', () => {
 	/**
 	 * PIN (queue full): when the API answers -404 (its optimization queue is
 	 * full) or -500 (maintenance), OptimizeController sets QUEUE_FULL (-8) on
-	 * the item result, and screen-bulk.js HandleItemError() is meant to defer
-	 * the bulk (`timesEmpty = 10` + StopProcess({ defer: true })). That check
-	 * sits inside the `result.result` branch, which the processor never fills
-	 * (same cause as the pin above), so the -8 takes the "unknown" branch:
-	 * "Error without item" is logged and nothing is deferred.
-	 * @todo In screen-bulk.js HandleItemError(): read the error from `result`
-	 *       itself when `result.result` is absent (or check QUEUE_FULL outside
-	 *       that branch).
-	 * FLIP-when-fixed: expect the "queue is full" log and timesEmpty >= 10,
-	 * no "Error without item"; drop the suffix.
+	 * the item result. screen-bulk.js HandleItemError() now recognises it on
+	 * the unwrapped item and calls StopProcess({ defer: true }) with
+	 * `timesEmpty = 10`, which schedules the next run after a long wait.
+	 * But the same response then reaches shortpixel-processor.js
+	 * HandleQueueStatus(): the queue still has items (QUEUE_ITEMS), so it
+	 * resets `timesEmpty` to 0, restores the default interval and calls
+	 * RunProcess(), which replaces the long timer with a short one. The bulk
+	 * logs "queue is full" and asks the API again a few seconds later.
+	 * @todo In shortpixel-processor.js HandleQueueStatus(): do not restart
+	 *       the run while a queue-full defer is pending (e.g. a flag set by
+	 *       the QUEUE_FULL branch and cleared by the deferred run).
+	 * FLIP-when-fixed: within the window only one queue-full answer arrives.
 	 */
-	test('pin: a queue-full answer does not defer the bulk (pinned_for_deferred_fix)', async ({ page, spio, consoleErrors }) => {
+	test('pin: a queue-full defer is undone by the queue status (pinned_for_deferred_fix)', async ({ page, spio, consoleErrors }) => {
 		await spio.uploadFixture('fixture-small.jpg');
 		await spio.setMock({ forceStatusCode: -404 });
 		const logs: string[] = [];
@@ -199,13 +201,13 @@ test.describe('Bulk page — API error path', () => {
 
 		const bulk = new BulkPage(page);
 		await bulk.goto();
-		// Record what the bulk screen's item-error handler receives.
+		// Record every item error the bulk screen receives, with its time.
 		await page.evaluate(() => {
 			const screen = (window as any).ShortPixelProcessor.screen;
 			const original = screen.HandleItemError.bind(screen);
 			(window as any).__spioItemErrors = [];
 			screen.HandleItemError = (result: any, type: string) => {
-				(window as any).__spioItemErrors.push({ wrapped: typeof result.result !== 'undefined', error: result.error });
+				(window as any).__spioItemErrors.push({ wrapped: typeof result.result !== 'undefined', error: result.error, at: Date.now() });
 				return original(result, type);
 			};
 		});
@@ -213,17 +215,23 @@ test.describe('Bulk page — API error path', () => {
 		await bulk.calculate();
 		await bulk.startBulk();
 
-		// SENTINEL: the QUEUE_FULL code really reaches the bulk screen.
+		// SENTINEL: the QUEUE_FULL code reaches the bulk screen, unwrapped.
 		await expect
 			.poll(() => page.evaluate(() => (window as any).__spioItemErrors.length), { timeout: 60_000, message: 'the queue-full answer must reach HandleItemError' })
 			.toBeGreaterThan(0);
 		const first = await page.evaluate(() => (window as any).__spioItemErrors[0]);
 		expect(first.error, 'sentinel: the item carries QUEUE_FULL (-8)').toBe(-8);
+		expect(first.wrapped, 'sentinel: the item reaches HandleItemError unwrapped').toBe(false);
+		// SENTINELS (fixed part): the queue-full branch runs instead of the "unknown" one.
+		expect(logs.some((l) => /queue is full/i.test(l)), 'sentinel: the bulk logs that it waits for the full queue').toBe(true);
+		expect(consoleErrors.some((e) => /Error without item/.test(e)), 'sentinel: no "Error without item" for a full queue').toBe(false);
 
-		// PINNED: unwrapped → "unknown" branch → no defer.
-		expect(first.wrapped, 'PIN: the item reaches HandleItemError unwrapped').toBe(false);
-		expect(consoleErrors.some((e) => /Error without item/.test(e)), 'PIN: the -8 lands in the "unknown" branch').toBe(true);
-		expect(logs.some((l) => /queue is full/i.test(l)), 'PIN: fixed? the bulk now defers on a full queue — flip this pin').toBe(false);
-		expect(await page.evaluate(() => (window as any).ShortPixelProcessor.timesEmpty), 'PIN: no defer was set').toBeLessThan(10);
+		// THE PIN: the defer is undone, so the API is asked again within seconds.
+		await expect
+			.poll(() => page.evaluate(() => (window as any).__spioItemErrors.length), {
+				timeout: 40_000,
+				message: 'PIN: fixed? No second queue-full answer within 40s — the bulk now really waits; flip this pin.',
+			})
+			.toBeGreaterThan(1);
 	});
 });
