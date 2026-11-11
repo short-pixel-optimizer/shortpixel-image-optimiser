@@ -174,16 +174,26 @@ class wpOffloadNextGenDeliveryTest extends WP_UnitTestCase {
 	 */
 
 	/**
-	 * Pins a known defect: for a companion given as a local path, the
-	 * filter returns the companion as soon as the MAIN URL resolves to an
-	 * offloaded item; it never checks that this companion is one of the
-	 * item's recorded objects. Reached when the page delivers local URLs
-	 * for an offloaded item whose local companion is missing (e.g. "Remove
-	 * Local Media" on).
+	 * Documents a known, accepted limitation (not scheduled for a fix): for
+	 * a companion given as a local path, the filter returns the companion
+	 * as soon as the URL of the image resolves to an offloaded item; it does
+	 * not check that this companion is one of the item's recorded objects.
 	 *
-	 * Flip when: an unrecorded companion makes the filter return false.
+	 * This test calls the filter directly. On a real site the branch is
+	 * reached only when ALL THREE hold: (1) the page carries the LOCAL URL
+	 * of an offloaded image ("Deliver Offloaded Media" off, or a hardcoded
+	 * local URL); (2) as3cf resolves that local URL to the item, which
+	 * needs "Add Object Versioning" off when the image was offloaded (on by
+	 * default); (3) the companion is not on the local disk. A page that
+	 * delivers bucket URLs never reaches it — the companion is then a URL
+	 * and is looked up by itself (see the srcset tests above, and the
+	 * end-to-end versions against the real plugin in
+	 * tests/Compat/test-CompatOffloadMedia.php).
+	 *
+	 * If the filter starts checking the companion, this test fails: assert
+	 * false instead.
 	 */
-	public function test_fixWebpRemotePath_returns_an_unrecorded_local_companion_pinned_for_deferred_fix() {
+	public function test_fixWebpRemotePath_returns_a_local_companion_without_checking_the_item() {
 		$o         = $this->offload();
 		$companion = new FileModel( '/tmp/spio-offload-nextgen/name-120x68.avif' );
 
@@ -195,7 +205,7 @@ class wpOffloadNextGenDeliveryTest extends WP_UnitTestCase {
 		$this->assertSame(
 			$companion,
 			$o->fixWebpRemotePath( false, $companion, self::BASE . 'name-120x68.jpg', '/tmp/spio-offload-nextgen/' ),
-			'Fixed? fixWebpRemotePath() no longer returns an unrecorded companion — flip this pin.'
+			'A local-path companion of an offloaded image is returned without a check against the item (accepted limitation).'
 		);
 	}
 
