@@ -256,13 +256,16 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 
 	// HandleItemError is handling from results / result, not ResponseController. Check if it has negative effects it's kinda off now.
 	HandleItemError(result) {
+		console.log('Item error', result);
 		if (result.message && result.item_id) {
 			this.UpdateMessage(result, result.message, true);
 		}
-
-		if (typeof result.item_id !== 'undefined' && result.apiName !== 'ai') {
+ 
+		if (typeof result.item_id !== 'undefined' && result.apiName !== 'ai' && false == this.processor.isManualPaused ) {
 			this.processor.LoadItemView({ id: result.item_id, type: 'media' });
-		}
+		} 
+
+
 	}
 
 	RestoreItem(id) {

@@ -21,7 +21,8 @@ window.ShortPixelProcessor =
     isActive: false, // Is the processor active in this window - at all - . Transient
     defaultInterval: 3000, // @todo customize this from backend var, hook filter.  default is onload interval
     interval: 3000, // is current interval. When nothing to be done increases
-    deferInterval: 15000, // how long to wait between interval to check for new items.
+    deferInterval: 60000, // how long to wait between interval to check for new items.
+    queueDeferNow: false, // Flag to tell handleQueueStatus the defer is already set ( by error handler or otherwise ) and don't check queue status this time
     screen: null, // UI Object
     tooltip: null, // Tooltip object to show in WP admin bar
     isBulkPage: false, //  Bypass secret check when bulking, because customer explicitly requests it.
@@ -412,10 +413,11 @@ if (this.ShouldLog()) {
            if (typeof args.defer !== 'undefined' && args.defer)
            {
                 this.timesEmpty++;
+                var calculatedDefer = this.deferInterval * this.timesEmpty;
                 if (this.ShouldLog()) {
-                  console.log('Stop, defer wait :' + (this.deferInterval * this.timesEmpty), this.timesEmpty);
+                  console.log('Stop, defer wait :' + calculatedDefer, this.timesEmpty, this.deferInterval);
                 }
-                this.SetInterval( (this.deferInterval * this.timesEmpty) ); //set a long interval
+                this.SetInterval( calculatedDefer ); //set a long interval
                 this.RunProcess(); // queue a run once
                 this.SetInterval(-1); // restore interval
            }
@@ -689,11 +691,19 @@ if (this.ShouldLog()) {
         anyQueueStatus = true;
         customStatus = data.custom.qstatus;
       }
+      
+      if (true === this.queueDeferNow)
+      {
+         this.queueDeferNow = false; 
+         return false; 
+      }
 
       if (false === anyQueueStatus)
       {
          return false; // no further checks.
       }
+
+
 
         // The lowest queue status (for now) equals earlier in process. Don't halt until both are done.
         if (mediaStatus <= customStatus)
@@ -754,6 +764,13 @@ if (this.ShouldLog()) {
         if (error == 'NOQUOTA' )
         {
           this.PauseProcess();
+        }
+	      else if ('QUEUE_FULL' == error)
+        {
+				    this.queueDeferNow = true;
+				    this.timesEmpty = 2; // Sending two, will become 3 on the stopProcess, about 3 mins. 
+		        this.StopProcess({ defer: true })
+		        console.log('Remote API responded queue is full. Wait for some time.');
         }
 
         this.screen.HandleItemError(result, type);

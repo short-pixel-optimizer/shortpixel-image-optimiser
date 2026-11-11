@@ -1323,21 +1323,17 @@ class wpOffload
 	 *
 	 * @param bool   $bool          Incoming filter value.
 	 * @param object $fileObj       SPIO FileModel of the WebP/AVIF companion being probed.
-	 * @param string $url           URL of the main file (e.g. the `.jpg`).
+	 * @param string $url           URL of the image (e.g. the `.jpg`).
 	 * @param object $imagebaseDir  SPIO DirectoryModel of the remote path (unused).
 	 * @return object|false The `$fileObj` when the main file resolves to an offloaded source, false otherwise.
-	 * @todo For a companion given as a local path, the companion is returned as
-	 *       soon as the main URL is offloaded, without checking that it is one
-	 *       of the item's recorded objects. Check `$fileObj->getFileName()`
-	 *       against the item's extra_info() objects before returning it.
 	 */
 	public function fixWebpRemotePath($bool, $fileObj, $url, $imagebaseDir)
 	{
-		$extension = $fileObj->getExtension();
+		//$extension = $fileObj->getExtension();
 		$fs = \wpSPIO()->filesystem();
 
 		$webpUrl = $fileObj->getFullPath();
-		$main_is_loaded = $this->sourceCache($url); // main image, check if loaded.
+		$main_is_loaded = $this->sourceCache($url); 
 		if ($fs->pathIsURL($webpUrl)) {
 			$url = $webpUrl;
 			$res = $this->sourceCache($url);

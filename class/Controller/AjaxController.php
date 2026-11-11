@@ -2919,9 +2919,11 @@ class AjaxController
 			$json = (object) $json; 
 		}
 
+
 		$callback = isset($_POST['callback']) ? sanitize_text_field($_POST['callback']) : false;
 		if ($callback)
 			$json->callback = $callback; // which type of request we just fullfilled ( response processing )
+
 
 		$pKey = $this->getProcessorKey();
 		if ($pKey !== false)
