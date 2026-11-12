@@ -475,7 +475,6 @@ class OptimizeAiController extends OptimizerBase
             }
 
             if ($currentFileBase !== $aiData['filebase']) {
-                Log::addTemp('Running Replace Files on basis of ' . $currentFileBase, $aiData);
 
                 $args = [
                     'dry_run' => false,

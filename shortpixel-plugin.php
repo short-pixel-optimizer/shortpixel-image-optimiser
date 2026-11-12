@@ -431,7 +431,8 @@ class ShortPixelPlugin {
 			if ( apply_filters( 'shortpixel/init/automedialibrary', true ) ) {
 
       			add_action( 'shortpixel-thumbnails-before-regenerate', array( $admin, 'preventImageHook' ), 10, 1 );
-
+      			add_action( 'shortpixel-thumbnails-after-regenerate', array( $admin, 'unPreventImageHook' ), 10, 1 );
+				
 				add_action( 'enable-media-replace-upload-done', array( $admin, 'handleReplaceEnqueue' ), 10, 3 );
 
 				add_filter( 'wp_generate_attachment_metadata', array( $admin, 'handleImageUploadHook' ), 5, 2 );

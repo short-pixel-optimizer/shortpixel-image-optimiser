@@ -3106,6 +3106,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		do_action('shortpixel-thumbnails-before-regenerate', $item_id);
 		$metadata = wp_generate_attachment_metadata($item_id, $fullPath);
 
+		do_action('shortpixel-thumbnails-after-regenerate', $item_id);
 		do_action('shortpixel/converter/prevent-offload-off', $item_id);
 
 		return $metadata;

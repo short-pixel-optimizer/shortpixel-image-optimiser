@@ -1110,6 +1110,50 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			return false; 
 		}
 
+		let replaceImageUrl = null;
+		if (replacedUrl != null) {
+			let targetFilename = replaceFileName || new URL(replacedUrl).pathname.split('/').pop();
+			let targetParts = targetFilename.match(/^(.*)(\.[^.]+)$/);
+			replaceImageUrl = (currentUrl) => {
+				if (!currentUrl || !targetParts) {
+					return null;
+				}
+
+				let currentUrlObject = new URL(currentUrl, window.location.href);
+				let currentFilename = currentUrlObject.pathname.split('/').pop();
+				let thumbnailMatch = currentFilename.match(/(-\d+x\d+)(\.[^.]+)$/);
+				let thumbnailSuffix = thumbnailMatch ? thumbnailMatch[1] : '';
+
+				currentUrlObject.pathname = currentUrlObject.pathname.replace(
+					/[^/]+$/,
+					targetParts[1] + thumbnailSuffix + targetParts[2]
+				);
+				return currentUrlObject.toString();
+			};
+
+			if (wp.media) {
+				let attachment = wp.media.attachment(attach_id);
+				let attachmentUrl = attachment.get('url');
+				let attachmentAttributes = {
+					url: replaceImageUrl(attachmentUrl) || replacedUrl,
+				};
+				let sizes = attachment.get('sizes');
+
+				if (sizes && typeof sizes === 'object') {
+					attachmentAttributes.sizes = {};
+					Object.keys(sizes).forEach((sizeName) => {
+						let size = sizes[sizeName];
+						attachmentAttributes.sizes[sizeName] = size && typeof size === 'object'
+							? Object.assign({}, size, { url: replaceImageUrl(size.url) || size.url })
+							: size;
+					});
+				}
+
+				console.log('setting attach attributes', attachmentAttributes);
+				attachment.set(attachmentAttributes);
+			}
+		}
+
 		// Fields disabled in settings, or skipped by 'preserve existing', come back as
 		// integer status codes instead of text. Only apply real core/image attributes
 		// holding a string: an integer caption makes the block's save() throw, after
@@ -1137,31 +1181,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				let clientId = block.clientId;
 
 				if (replacedUrl != null) {
-					let currentUrl = block.attributes.url;
-					let targetFilename = replaceFileName || new URL(replacedUrl).pathname.split('/').pop();
-					let targetParts = targetFilename.match(/^(.*)(\.[^.]+)$/);
-					let thumbnailSuffix = '';
-
-
-					if (currentUrl && targetParts) {
-						let currentUrlObject = new URL(currentUrl, window.location.href);
-						let currentFilename = currentUrlObject.pathname.split('/').pop();
-						let thumbnailMatch = currentFilename.match(/(-\d+x\d+)(\.[^.]+)$/);
-
-						if (thumbnailMatch) {
-							thumbnailSuffix = thumbnailMatch[1];
-						}
-
-						// Glue back. TargetParts[1] - Base image name + thumbNail + targetParts[2] = extension
-						currentUrlObject.pathname = currentUrlObject.pathname.replace(
-							/[^/]+$/,
-							targetParts[1] + thumbnailSuffix + targetParts[2]
-						);
-						attributes.url = currentUrlObject.toString();
-					}
-					else {
-						attributes.url = replacedUrl;
-					}
+					attributes.url = replaceImageUrl(block.attributes.url) || replacedUrl;
 				}
 
 				if (false == overwriteMode && attributes.alt && block.attributes.alt && block.attributes.alt.length > 0)

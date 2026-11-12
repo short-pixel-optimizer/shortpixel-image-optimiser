@@ -245,6 +245,11 @@ class AdminController extends \ShortPixel\Controller
 			  self::$preventUploadHook[] = $id;
 		}
 
+    public function unPreventImageHook($id)
+    {
+        self::$preventUploadHook = array_diff(self::$preventUploadHook, [$id]); 
+    }
+
 		/**
 		 * Returns a placeholder URL (with a .jpg extension) for convertable image formats such as HEIC.
 		 *

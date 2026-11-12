@@ -325,8 +325,6 @@ class QueueController
       $q = $this->getQueue($type);
       $bool = $q->isItemInQueue($mediaItem->get('id'));
 
-      $status = 0; 
-
       if (true === $bool)
       { 
         // @todo This queueItem should maybe not to stuffed with 'addresult'm since it's a different object. 
@@ -592,7 +590,7 @@ class QueueController
           
           if (true === $qItem->result()->is_error)
           {
-             Log::addTemp('Test - QItem came back as error', $qItem->result());
+
           }
           if (true === $qItem->result()->is_error && true === $this->args['is_bulk'] )
           {
