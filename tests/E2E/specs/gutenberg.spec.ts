@@ -216,6 +216,103 @@ test.describe('Gutenberg AI — pinned', () => {
 			.toContain(newBase);
 		expect(String((await editor.imageBlock(image.id)).url)).not.toBe(oldUrl);
 	});
+
+	/**
+	 * An AI rename also updates the attachment the editor's media library
+	 * holds in memory (wp.media.attachment): its url and every size url move
+	 * to the new file name, each size keeping its "-WxH" suffix. Without this
+	 * the upload / media modal keeps offering the old, now missing, URLs
+	 * until the page is reloaded.
+	 */
+	test('an AI rename updates the attachment URLs of the editor media library', async ({ page, spio }) => {
+		await spio.setSettings({ enable_ai: 1, ai_gen_alt: 1, ai_gen_caption: 0, ai_gen_filename: 1, ai_content_replace: 'missing' });
+		const newBase = 'gb-modal-' + Date.now();
+		await spio.setMock({ aiFields: { generated_file_name: newBase } });
+
+		const image = await spio.uploadFixture('fixture-small.jpg');
+		const post = await spio.createPost({ image_id: image.id, alt: 'Existing alt', status: 'draft' });
+
+		const editor = new BlockEditor(page);
+		await editor.open(post.id);
+		await expectProcessorActive(page);
+
+		// Load the attachment into the media library's model, as opening the modal does.
+		const before = await page.evaluate(async (id) => {
+			const attachment = (window as any).wp.media.attachment(id);
+			await attachment.fetch();
+			const sizes = attachment.get('sizes') || {};
+			return { url: String(attachment.get('url')), sizes: Object.fromEntries(Object.keys(sizes).map((k) => [k, String(sizes[k].url)])) };
+		}, image.id);
+		// SENTINELS: the model is loaded, on the old name, with at least one thumbnail size.
+		expect(before.url, 'sentinel: the model starts on the old file').not.toContain(newBase);
+		const thumbSizes = Object.keys(before.sizes).filter((k) => /-\d+x\d+\.[a-z]+$/i.test(before.sizes[k]));
+		expect(thumbSizes.length, 'sentinel: the model holds thumbnail sizes').toBeGreaterThan(0);
+
+		const delivered = page.waitForResponse(
+			async (r) => r.url().includes('admin-ajax.php') && (await r.text().catch(() => '')).includes('replaced_url'),
+			{ timeout: 90_000 }
+		);
+		await editor.selectImageBlock(image.id);
+		await editor.requestAlt(image.id);
+		await delivered;
+		await expect.poll(async () => (await spio.attachment(image.id)).attached_file, { timeout: 30_000 }).toContain(newBase);
+
+		const readModel = () =>
+			page.evaluate((id) => {
+				const attachment = (window as any).wp.media.attachment(id);
+				const sizes = attachment.get('sizes') || {};
+				return { url: String(attachment.get('url')), sizes: Object.fromEntries(Object.keys(sizes).map((k) => [k, String(sizes[k].url)])) };
+			}, image.id);
+		await expect.poll(async () => (await readModel()).url, { timeout: 30_000, message: 'the model url must follow the rename' }).toContain(newBase);
+
+		const after = await readModel();
+		for (const name of thumbSizes) {
+			const suffix = before.sizes[name].match(/(-\d+x\d+)\.[a-z]+$/i)![1];
+			expect(after.sizes[name], `size "${name}" moves to the new name`).toContain(newBase + suffix);
+		}
+	});
+
+	/**
+	 * PIN — for a big image (WordPress serves "name-scaled.jpg") the rename
+	 * moves the media library's url and "full" size to "newname.jpg", without
+	 * "-scaled": UpdateGutenBerg() (screen-media.js) only keeps a "-WxH"
+	 * suffix. That URL exists, but it is the unscaled original upload, so
+	 * inserting the image at full size before a reload embeds the original.
+	 * @todo In screen-media.js UpdateGutenBerg(): keep "-scaled" as well, e.g.
+	 *       `/(-\d+x\d+|-scaled)(\.[^.]+)$/` for the suffix match.
+	 * FLIP-when-fixed: the url ends in newBase + "-scaled.jpg".
+	 */
+	test('pin: an AI rename of a big image drops "-scaled" from the media library url (pinned_for_deferred_fix)', async ({ page, spio }) => {
+		await spio.setSettings({ enable_ai: 1, ai_gen_alt: 1, ai_gen_caption: 0, ai_gen_filename: 1, ai_content_replace: 'missing' });
+		const newBase = 'gb-big-' + Date.now();
+		await spio.setMock({ aiFields: { generated_file_name: newBase } });
+
+		const image = await spio.uploadFixture('fixture-large.jpg');
+		const post = await spio.createPost({ image_id: image.id, alt: 'Existing alt', status: 'draft' });
+
+		const editor = new BlockEditor(page);
+		await editor.open(post.id);
+		await expectProcessorActive(page);
+
+		const modelUrl = () => page.evaluate((id) => String((window as any).wp.media.attachment(id).get('url')), image.id);
+		await page.evaluate(async (id) => { await (window as any).wp.media.attachment(id).fetch(); }, image.id);
+		// SENTINEL: WordPress serves the scaled copy of this upload.
+		expect(await modelUrl(), 'sentinel: the model starts on the -scaled file').toMatch(/-scaled\.jpg$/);
+
+		const delivered = page.waitForResponse(
+			async (r) => r.url().includes('admin-ajax.php') && (await r.text().catch(() => '')).includes('replaced_url'),
+			{ timeout: 120_000 }
+		);
+		await editor.selectImageBlock(image.id);
+		await editor.requestAlt(image.id);
+		await delivered;
+
+		// SENTINELS: the file on disk keeps "-scaled", and the model followed the rename.
+		await expect.poll(async () => (await spio.attachment(image.id)).attached_file, { timeout: 60_000 }).toContain(newBase + '-scaled.jpg');
+		await expect.poll(modelUrl, { timeout: 30_000 }).toContain(newBase);
+
+		expect(await modelUrl(), 'PIN: fixed? the model url keeps "-scaled" — flip this pin').toMatch(new RegExp(newBase + '\\.jpg$'));
+	});
 });
 
 /**

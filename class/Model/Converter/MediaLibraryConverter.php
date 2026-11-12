@@ -91,6 +91,16 @@ abstract class MediaLibraryConverter extends Converter
 	 * Handles: updating the attached file path, post MIME type and GUID, regenerating
 	 * (or patching) attachment metadata, and propagating changes to WPML duplicates.
 	 *
+	 * Fires `shortpixel-thumbnails-before-regenerate` first, which blocks the
+	 * upload hooks for this attachment while its metadata is regenerated, and
+	 * `shortpixel-thumbnails-after-regenerate` when done (before the metadata is
+	 * saved on a conversion, after it on a restore), which releases the block.
+	 *
+	 * @todo The early `return false` paths (attached file or post update
+	 *       failing) leave without firing the after-regenerate action, so the
+	 *       attachment stays blocked for the upload hooks until the request
+	 *       ends. Suggested fix: fire it before those returns as well.
+	 *
 	 * @param array $params {
 	 *     Conversion parameters.
 	 *     @type bool $success           True when the conversion succeeded.
