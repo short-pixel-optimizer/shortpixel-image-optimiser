@@ -91,6 +91,123 @@ test.describe('Media Library list view', () => {
 		await list.expectOptimized(id);
 	});
 
+	/**
+	 * Queue full: the API answers -404, OptimizeController puts QUEUE_FULL on
+	 * the item result and shortpixel-processor.js HandleItemError() schedules
+	 * the next run three minutes away (`timesEmpty` 3 × `deferInterval`). The
+	 * queue status of the same response is skipped once (`queueDeferNow`), so
+	 * the run is not restarted on the default 3s interval. The item shows the
+	 * API's message and its view is reloaded: it stays queued and can be
+	 * cancelled.
+	 */
+	test('a full API queue shows the message on the item and makes the processor wait', async ({ page, spio }) => {
+		const { id } = await spio.uploadFixture('fixture-small.jpg');
+		await spio.setMock({ forceStatusCode: -404 });
+		const processingRequests: number[] = [];
+		page.context().on('request', (request) => {
+			if (request.method() === 'POST' && /action=shortpixel_image_processing/.test(request.postData() || '')) {
+				processingRequests.push(Date.now());
+			}
+		});
+		const list = new MediaList(page);
+		await list.goto();
+
+		await list.cell(id).locator('a.optimize').click();
+		await expect(list.message(id)).toHaveClass(/\berror\b/, { timeout: 60_000 });
+		await expect(list.cell(id)).toContainText(/waiting to be processed/i, { timeout: 15_000 });
+		// SENTINEL: the processor did poll before the queue-full answer arrived.
+		expect(processingRequests.length, 'sentinel: processing requests are recorded').toBeGreaterThan(0);
+
+		const state = await page.evaluate(() => {
+			const p = (window as any).ShortPixelProcessor;
+			return { wait: p.timesEmpty * p.deferInterval, queueDeferNow: p.queueDeferNow, paused: p.isManualPaused, timer: p.timer !== null };
+		});
+		expect(state.wait, 'the next run is three minutes away').toBe(180_000);
+		expect(state.queueDeferNow, 'the flag is consumed by the queue status of the same response').toBe(false);
+		expect(state.paused, 'a full queue is a wait, not a pause').toBe(false);
+		expect(state.timer, 'a deferred run is scheduled').toBe(true);
+
+		// On the default interval the next processing request came 3s later.
+		const before = processingRequests.length;
+		await page.waitForTimeout(12_000);
+		expect(processingRequests.length, 'no processing request while the queue-full wait is pending').toBe(before);
+		expect((await spio.attachment(id)).optimized).toBe(false);
+	});
+
+	/**
+	 * Over quota: the API answers -403, the item result carries NOQUOTA and
+	 * shortpixel-processor.js HandleItemError() pauses the processor. The
+	 * item shows "Quota exceeded." and, because the processor is paused,
+	 * screen-item-base.js HandleItemError() does not ask for the item view
+	 * again (no getItemView request).
+	 */
+	test('over quota pauses the processor and shows the message on the item', async ({ page, spio }) => {
+		const { id } = await spio.uploadFixture('fixture-small.jpg');
+		await spio.setMock({ forceStatusCode: ApiCode.QUOTA_EXCEEDED });
+		const itemViewRequests: string[] = [];
+		const processingRequests: number[] = [];
+		page.context().on('request', (request) => {
+			const body = request.method() === 'POST' ? request.postData() || '' : '';
+			if (/getItemView/.test(body)) {
+				itemViewRequests.push(body);
+			}
+			if (/action=shortpixel_image_processing/.test(body)) {
+				processingRequests.push(Date.now());
+			}
+		});
+		const list = new MediaList(page);
+		await list.goto();
+
+		await list.cell(id).locator('a.optimize').click();
+		await expect(list.message(id)).toHaveClass(/\berror\b/, { timeout: 60_000 });
+		await expect(list.message(id)).toContainText(/Quota exceeded/i);
+
+		const state = await page.evaluate(() => {
+			const p = (window as any).ShortPixelProcessor;
+			return { paused: p.isManualPaused, timer: p.timer !== null };
+		});
+		expect(state.paused, 'the processor is paused').toBe(true);
+		expect(state.timer, 'no run is scheduled while paused').toBe(false);
+
+		const before = processingRequests.length;
+		expect(before, 'sentinel: processing requests are recorded').toBeGreaterThan(0);
+		await page.waitForTimeout(8_000);
+		expect(processingRequests.length, 'no processing request while paused').toBe(before);
+		expect(itemViewRequests, 'the item view is not requested while the processor is paused').toEqual([]);
+		expect((await spio.attachment(id)).optimized).toBe(false);
+	});
+
+	/**
+	 * PIN (over quota leaves the item without actions): clicking Optimize
+	 * empties the item's cell while it is processed. On an over-quota answer
+	 * screen-item-base.js HandleItemError() skips LoadItemView() because the
+	 * processor is paused, so the cell is never rendered again: it stays
+	 * empty (no "waiting to be processed", no Cancel link, no menu) under the
+	 * "Quota exceeded." message until the page is reloaded.
+	 * @todo In screen-item-base.js HandleItemError(): render the item's view
+	 *       on an over-quota error as well (e.g. keep the LoadItemView() call
+	 *       for it), or restore the cell's previous content.
+	 * FLIP-when-fixed: the cell offers an action again after the error.
+	 */
+	test('pin: over quota leaves the item cell empty (pinned_for_deferred_fix)', async ({ page, spio }) => {
+		const { id } = await spio.uploadFixture('fixture-small.jpg');
+		await spio.setMock({ forceStatusCode: ApiCode.QUOTA_EXCEEDED });
+		const list = new MediaList(page);
+		await list.goto();
+		// SENTINEL: before the click the cell offers the Optimize action.
+		await expect(list.cell(id).locator('a.optimize')).toBeVisible();
+
+		await list.cell(id).locator('a.optimize').click();
+		await expect(list.message(id)).toContainText(/Quota exceeded/i, { timeout: 60_000 });
+		await page.waitForTimeout(5_000);
+
+		expect(
+			((await list.cell(id).textContent()) || '').trim(),
+			'PIN: fixed? The cell is rendered again after an over-quota error — flip this pin.',
+		).toBe('');
+		expect(await list.cell(id).locator('a').count(), 'PIN: the cell offers no action').toBe(0);
+	});
+
 	test('the injected bulk action optimizes every selected item (top bar only)', async ({ page, spio }) => {
 		const a = (await spio.uploadFixture('fixture-small.jpg')).id;
 		const b = (await spio.uploadFixture('fixture-small.png')).id;

@@ -759,19 +759,14 @@ class wpOffload
 	 * `shortpixel/image/urltopath` filter — decide whether a given URL
 	 * points at an as3cf-offloaded file.
 	 *
-	 * Fast paths, in order:
+	 * In order:
 	 *
 	 *   1. If the URL is already in the source cache, use the cached
 	 *      answer (including `false` for "confirmed not offloaded").
-	 *   2. When the *URL's* extension is webp/avif but the *rawpath's*
-	 *      extension isn't, skip the lookup entirely — SPIO's own
-	 *      generated webp/avif companions aren't tracked in as3cf's
-	 *      path DB and the `get_item_source_by_remote_url` query would
-	 *      just return nothing. `fixWebpRemotePath()` handles the "does
-	 *      the sibling exist offloaded" question via a different path.
-	 *   3. Otherwise, delegate to `getSourceIDByURL()` for the full
-	 *      lookup (parse_url normalisation, thumbnail-suffix strip,
-	 *      double-extension probing).
+	 *   2. Otherwise, delegate to `getSourceIDByURL()`, which looks the
+	 *      URL up exactly as given. WebP/AVIF companions go through the
+	 *      same lookup: as3cf records each offloaded file, so a companion
+	 *      resolves only when it was really offloaded.
 	 *
 	 * @param bool   $bool    Existing filter value from prior handlers (ignored here).
 	 * @param string $url     URL being resolved.
@@ -1311,21 +1306,50 @@ class wpOffload
 	 * `shortpixel/front/webp_notfound` filter — decide whether a WebP/AVIF
 	 * companion exists remotely when the local file wasn't found.
 	 *
-	 * The frontend PictureController uses this to emit `<picture>` tags
-	 * with a WebP source only when the WebP actually exists. as3cf's
-	 * `get_item_source_by_remote_url` can't find thumbnails directly
-	 * (it only indexes the main image), so we probe the main URL's
-	 * source_id first and, if found, treat the WebP as present.
+	 * The frontend PictureController calls this for every WebP/AVIF
+	 * candidate that `exists()` reported missing, and lists the candidate
+	 * in the `<picture>` sources only when this filter returns it.
 	 *
-	 * Fast-path: when the webp URL isn't cached but the main URL IS,
-	 * return false — the caller already knows the family is offloaded
-	 * but the specific companion isn't tracked, so don't advertise it.
+	 * The candidate is built from the directory of the image as the page
+	 * delivers it, so there are two cases:
+	 *
+	 *   - **The page delivers the bucket URL** (the normal offloaded page):
+	 *     the candidate is a bucket URL too. It is looked up by its own
+	 *     URL. as3cf records every offloaded file, companions included, so
+	 *     a companion that was never offloaded (e.g. a thumbnail whose
+	 *     AVIF was not kept) resolves to nothing and is not advertised.
+	 *     Fast-path: when the candidate URL is not cached but the image URL
+	 *     is, the item is known and does not list the candidate — return
+	 *     false without a lookup.
+	 *   - **The page delivers the local URL**: the candidate is a local
+	 *     path. The lookup then runs on the URL of the image, not on the
+	 *     candidate: the candidate is returned as soon as the URL of the
+	 *     image resolves to an as3cf item, without checking the candidate
+	 *     itself.
+	 *
+	 * Known limitation of the local-URL case, accepted as it is: the page
+	 * can advertise a WebP/AVIF on the local server that exists nowhere
+	 * (404, broken image). It needs ALL THREE of:
+	 *
+	 *   1. The page carries the LOCAL URL of an offloaded image ("Deliver
+	 *      Offloaded Media" off, or a hardcoded local URL that as3cf's
+	 *      content filter does not rewrite).
+	 *   2. as3cf resolves that local URL to the item, which it only does
+	 *      when the remote key ends in the local relative path, i.e. the
+	 *      image was offloaded with "Add Object Versioning" OFF (it is on
+	 *      by default).
+	 *   3. The WebP/AVIF is not on the local disk.
+	 *
+	 * Pages that deliver bucket URLs are not affected. Should it need
+	 * handling: for a local-path candidate, check
+	 * `$fileObj->getFileName()` against the item's recorded objects before
+	 * returning it.
 	 *
 	 * @param bool   $bool          Incoming filter value.
 	 * @param object $fileObj       SPIO FileModel of the WebP/AVIF companion being probed.
 	 * @param string $url           URL of the image (e.g. the `.jpg`).
 	 * @param object $imagebaseDir  SPIO DirectoryModel of the remote path (unused).
-	 * @return object|false The `$fileObj` when the main file resolves to an offloaded source, false otherwise.
+	 * @return object|false The `$fileObj` when the lookup resolves to an offloaded source, false otherwise.
 	 */
 	public function fixWebpRemotePath($bool, $fileObj, $url, $imagebaseDir)
 	{
