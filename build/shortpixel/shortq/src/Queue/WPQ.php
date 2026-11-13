@@ -901,11 +901,11 @@ class WPQ implements Queue
    *       update instead of setStatusCount(), or give setStatusCount() a
    *       flag telling it the rows already changed.
    */
-  public function setStatusCount($name, $change, $savenow = true, $update_on_recount = true)
+  protected function setStatusCount($name, $change, $savenow = true, $update_on_recount = true): void
   {
       if (! $this->currentStatus->isCounter($name))
       {
-        return false;
+        return;
       }
 
       $count = $this->getStatus($name);
@@ -922,10 +922,13 @@ class WPQ implements Queue
        $recounted = true; 
       }
       
-      if (true === $recounted && true === $update_on_recount)
+      if (true === $recounted && false === $update_on_recount)
       {
-        $this->setStatus($name, $count + $change, $savenow);
+          return;
       }
+
+      $this->setStatus($name, $count + $change, $savenow);
+
   }
 
   /**

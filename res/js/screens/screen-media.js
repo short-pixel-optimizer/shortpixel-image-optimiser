@@ -1121,7 +1121,9 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 				let currentUrlObject = new URL(currentUrl, window.location.href);
 				let currentFilename = currentUrlObject.pathname.split('/').pop();
-				let thumbnailMatch = currentFilename.match(/(-\d+x\d+)(\.[^.]+)$/);
+				//let thumbnailMatch = currentFilename.match(/(-\d+x\d+)(\.[^.]+)$/);
+				// Fix:: allow for -scaled images as well. 
+				let thumbnailMatch = currentFilename.match(/(-\d+x\d+|-scaled)(\.[^.]+)$/);
 				let thumbnailSuffix = thumbnailMatch ? thumbnailMatch[1] : '';
 
 				currentUrlObject.pathname = currentUrlObject.pathname.replace(
@@ -1149,7 +1151,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 					});
 				}
 
-				console.log('setting attach attributes', attachmentAttributes);
 				attachment.set(attachmentAttributes);
 			}
 		}
