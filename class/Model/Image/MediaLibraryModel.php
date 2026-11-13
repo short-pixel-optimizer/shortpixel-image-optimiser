@@ -3082,7 +3082,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	 * Wraps the generation in the
 	 * `shortpixel/converter/prevent-offload` / `-off` action pair so the
 	 * offload integration doesn't ship the freshly regenerated files off
-	 * before the restore/convert flow is done with them.
+	 * before the restore/convert flow is done with them, and in the
+	 * `shortpixel-thumbnails-before-regenerate` / `-after-regenerate` pair so
+	 * the upload hooks skip this attachment only while it is regenerated.
 	 *
 	 * @return array<string, mixed>|\WP_Error Result of wp_generate_attachment_metadata().
 	 */

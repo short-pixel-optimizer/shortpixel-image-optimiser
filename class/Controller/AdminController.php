@@ -245,6 +245,18 @@ class AdminController extends \ShortPixel\Controller
 			  self::$preventUploadHook[] = $id;
 		}
 
+    /**
+     * Releases an attachment from the upload-hook block set by preventImageHook().
+     *
+     * Hooked on `shortpixel-thumbnails-after-regenerate`, which the converter
+     * and the thumbnail regeneration fire once they are done. From then on the
+     * upload hooks handle the attachment again in the same request: after a
+     * PNG to JPG conversion on upload the converted image is still queued for
+     * optimization. Removes every occurrence of the ID; other IDs stay blocked.
+     *
+     * @param int $id Attachment post ID.
+     * @return void
+     */
     public function unPreventImageHook($id)
     {
         self::$preventUploadHook = array_diff(self::$preventUploadHook, [$id]); 
