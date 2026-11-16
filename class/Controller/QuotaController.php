@@ -12,6 +12,9 @@ class QuotaController
 {
   protected static $instance;
   const CACHE_NAME = 'quotaData';
+  // check if this request the quota data loaded or not. 
+  protected $did_quota_load = false; 
+
 
   protected $quotaData;
 
@@ -29,11 +32,19 @@ class QuotaController
 
   /**
    * Return if account has any quota left
+   * @todo The did_quota_load mechanism needs a more elegant solution to on-demand loading of possible remote checks. Possibly but not relying on settings, but on quotaData returned. 
    * @return boolean Has quota left
    */
   public function hasQuota()
   {
     $settings = \wpSPIO()->settings();
+
+    if (false === $this->did_quota_load && is_null($this->quotaData) )
+    {
+       $this->did_quota_load = true;  // this is preventing a loop, be aware!
+       $this->getQuotaData(); 
+    }
+
 
     if ($settings->quotaExceeded) {
       return false;
@@ -48,7 +59,10 @@ class QuotaController
   private function getQuotaData()
   {
     if (! is_null($this->quotaData))
+    {
+      $this->did_quota_load = true; 
       return $this->quotaData;
+    }
 
     $cache = new CacheController();
     $cacheData = $cache->getItem(self::CACHE_NAME);
@@ -56,7 +70,7 @@ class QuotaController
     if (! $cacheData->exists()) {
       $quotaData = $this->getRemoteQuota();
       if (false === $this->hasQuota() || false === $quotaData['GetSuccess'])
-        $timeout = MINUTE_IN_SECONDS;
+        $timeout = 5 * MINUTE_IN_SECONDS;
       else {
         $timeout = HOUR_IN_SECONDS;
       }
@@ -65,6 +79,8 @@ class QuotaController
       $quotaData = $cacheData->getValue();
     }
 
+    
+    $this->did_quota_load = true;
     return $quotaData;
   }
 
@@ -264,7 +280,7 @@ class QuotaController
     $requestURL = $httpProto . '://' . SHORTPIXEL_API . '/v2/api-status.php';
 
     $args = array(
-      'timeout' => 15, // wait for 15 secs.
+      'timeout' => 10, // wait for 15 secs.
       'body' => array('key' => $apiKey)
     );
     $argsStr = "?key=" . $apiKey;
@@ -343,12 +359,9 @@ class QuotaController
 
     if (is_object($response) && get_class($response) == 'WP_Error') {
 
-      $urlElements = parse_url($requestURL);
-      $portConnect = @fsockopen($urlElements['host'], 8, $errno, $errstr, 15);
-      if (!$portConnect) {
+        $errstr = $response->get_error_message();
         $defaultData['Message'] .= "<BR>Debug info: <i>$errstr</i>";
-      }
-      return $defaultData;
+        return $defaultData;
     }
 
     if ($response['response']['code'] != 200) {

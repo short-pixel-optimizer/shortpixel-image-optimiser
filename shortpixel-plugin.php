@@ -260,8 +260,8 @@ class ShortPixelPlugin {
 			$this->check_plugin_version();
 
 			$notices             = Notices::getInstance(); // This hooks the ajax listener
-			$quotaController = QuotaController::getInstance();
-			$quotaController->getQuota();
+			/*$quotaController = QuotaController::getInstance();
+			$quotaController->getQuota(); */
 
 		  $our_screen = function () { return \wpSPIO()->env()->is_our_screen;  };
 
