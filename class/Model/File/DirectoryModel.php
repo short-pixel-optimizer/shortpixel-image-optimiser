@@ -394,7 +394,11 @@ class DirectoryModel extends \ShortPixel\Model
 	public function getPermissionRecursive()
 	{
 		 $parent = $this->getParent();
-		  if (! $parent->exists())
+      if (false === $parent)
+      {
+          return false; 
+      }
+		  elseif (! $parent->exists())
 			{
 				 return $parent->getPermissionRecursive();
 			}
