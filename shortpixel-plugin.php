@@ -195,6 +195,14 @@ class ShortPixelPlugin {
 	 * ready — loading it earlier causes a fatal on multisite. The
 	 * matching block in wp-shortpixel.php is commented out.
 	 *
+	 * @todo The "Logfile" link of the logger's debug box (shown with
+	 *       `SHORTPIXEL_DEBUG` in the URL) is empty: its href is the bare
+	 *       `view-source:` prefix. ShortPixelLogger::initView() builds the
+	 *       link on `init` from a log path that is still unset at that
+	 *       point; the path is set below. Suggested fix: let the logger
+	 *       build the link in loadView() (`admin_footer`), when the path is
+	 *       known, instead of in initView().
+	 *
 	 * @return void
 	 */
 	public function init() : void
@@ -241,7 +249,7 @@ class ShortPixelPlugin {
 
 
 	/**
-	 * WordPress `admin_init` hook — version check, notice hookup, quota fetch.
+	 * WordPress `admin_init` hook — version check, notice hookup, promo banner.
 	 *
 	 * Order matters:
 	 *
@@ -250,8 +258,11 @@ class ShortPixelPlugin {
 	 *      `InstallHelper::activatePlugin()` (table upgrades, option
 	 *      migrations, etc.). Runs first so the rest can trust the schema.
 	 *   2. `NoticeController::getInstance()` — attaches its ajax listener.
-	 *   3. `QuotaController::getInstance()->getQuota()` — refreshes cached
-	 *      quota data from the API when stale.
+	 *
+	 * The quota is not loaded here: `admin_init` also fires for
+	 * admin-ajax.php requests of visitors who are not logged in, and on a
+	 * cold cache a quota load is a call to the ShortPixel API. QuotaController
+	 * loads it on demand, on the first getQuota() or hasQuota() of a request.
 	 *
 	 * @return void
 	 */
