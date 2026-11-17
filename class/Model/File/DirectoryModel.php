@@ -393,7 +393,7 @@ class DirectoryModel extends \ShortPixel\Model
 	 */
 	public function getPermissionRecursive()
 	{
-		 $parent = $this->getParent();
+		  $parent = $this->getParent();
       if (false === $parent)
       {
           return false; 
@@ -639,6 +639,13 @@ class DirectoryModel extends \ShortPixel\Model
   {
       $path = $this->getPath();
       $parentPath = dirname($path);
+
+
+      // At the end of the destination.
+      if ($path === $parentPath)
+      {
+         return false; 
+      }
 
       $parentDir = new DirectoryModel($parentPath);
 

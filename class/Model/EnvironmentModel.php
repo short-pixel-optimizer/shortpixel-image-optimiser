@@ -473,7 +473,11 @@ class EnvironmentModel extends \ShortPixel\Model
 
       $plugins_dir = $fs->getDirectory($dir)->getParent();
 
-      $slug = str_replace($plugins_dir->getPath(), '', $file);
+      $slug = ''; 
+      if ($plugins_dir !== false)
+      {
+        $slug = str_replace($plugins_dir->getPath(), '', $file);
+      }
 
       return $slug;
   }

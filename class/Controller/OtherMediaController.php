@@ -557,8 +557,9 @@ class OtherMediaController extends \ShortPixel\Controller
 			}
       elseif ($directory->isSubFolderOf($uploadDir)) // upload subdirs come in variation of year or month, both numeric. Exclude the WP-based years
       {
-					// Only check if direct subdir of /uploads/ is a number-based directory name. Don't bother with deeply nested dirs with accidental year.
-					if ($directory->getParent()->getPath() !== $uploadDir->getPath())
+					// Only check if direct subdir of /uploads/ is  number-based directory name. Don't bother with deeply nested dirs with accidental year.
+          $parent = $directory->getParent(); 
+					if ($parent === false || $parent->getPath() !== $uploadDir->getPath())
 					{
 							return false;
 					}
