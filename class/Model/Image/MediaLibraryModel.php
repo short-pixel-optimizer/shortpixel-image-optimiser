@@ -3280,11 +3280,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			}
 		}
 
-		$quotaController = QuotaController::getInstance();
-		if ($quotaController->hasQuota() === true) {
-			$adminNotices = AdminNoticesController::getInstance();
-			$adminNotices->invokeLegacyNotice();
-		}
+		$adminNotices = AdminNoticesController::getInstance();
+		$adminNotices->invokeLegacyNotice();
+		
 
 		Log::addDebug("Conversion of legacy: " . $this->get('id'), array($metadata));
 

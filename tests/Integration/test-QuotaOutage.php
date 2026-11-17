@@ -114,6 +114,32 @@ class QuotaOutageTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
+	 * `admin_scripts` runs on `admin_enqueue_scripts` of every admin page.
+	 * Off the screens SPIO works on, HAS_QUOTA comes from the stored
+	 * quotaExceeded flag and the quota is not loaded; on SPIO's screens it
+	 * is (the sentinel), so a cold cache there does reach the API.
+	 */
+	public function test_admin_scripts_loads_the_quota_only_on_spio_screens() {
+		$env      = \wpSPIO()->env();
+		$original = $env->is_screen_to_use;
+
+		try {
+			$env->is_screen_to_use = false;
+			\wpSPIO()->admin_scripts( 'profile.php' );
+			$this->assertCount( 0, $this->requests, 'An admin page SPIO does not work on makes no request to the API.' );
+			$this->assertFalse( get_transient( QuotaController::CACHE_NAME ), 'and caches nothing.' );
+
+			// SENTINEL: on a SPIO screen the same call does load the quota.
+			$this->newRequest();
+			$env->is_screen_to_use = true;
+			\wpSPIO()->admin_scripts( 'upload.php' );
+			$this->assertGreaterThan( 0, count( $this->requests ), 'Sentinel: on a SPIO screen the quota is loaded.' );
+		} finally {
+			$env->is_screen_to_use = $original;
+		}
+	}
+
+	/**
 	 * A check that starts with hasQuota() makes one round against an
 	 * unreachable API: three attempts (POST, POST over the other protocol,
 	 * GET), each allowed to wait 10 seconds. The message of the failed

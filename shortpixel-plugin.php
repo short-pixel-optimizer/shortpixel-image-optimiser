@@ -854,6 +854,11 @@ class ShortPixelPlugin {
 
 		wp_register_script( 'shortpixel', plugins_url( '/res/js/shortpixel.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'jquery.knob.min.js' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
+		// admin_scripts runs on every admin page. Only the screens SPIO works
+		// on load the quota (on a cold cache a call to the API); elsewhere the
+		// stored quotaExceeded flag, which hasQuota() also answers from, is enough.
+		$hasQuota = ( true === $env->is_screen_to_use ) ? $quotaController->hasQuota() : ( ! $settings->quotaExceeded );
+
 		// Using an Array within another Array to protect the primitive values from being cast to strings
 		$ShortPixelConstants = array(
 			array(
@@ -863,7 +868,7 @@ class ShortPixelPlugin {
 				'AJAX_URL'          => admin_url( 'admin-ajax.php' ),
 				'BULK_SECRET'       => $secretKey,
 				'nonce_ajaxrequest' => wp_create_nonce( 'ajax_request' ),
-				'HAS_QUOTA'         => ( $quotaController->hasQuota() ) ? 1 : 0,
+				'HAS_QUOTA'         => ( $hasQuota ) ? 1 : 0,
 
 			),
 		);

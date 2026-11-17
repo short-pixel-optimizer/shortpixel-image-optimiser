@@ -1068,15 +1068,7 @@ class wpOffload
 	public function preventInitialUploadHandler($bool, $as3cf_item, $options)
 	{
 
-		$fs = \wpSPIO()->filesystem();
-		$settings = \WPSPIO()->settings();
-
 		$post_id = $as3cf_item->source_id();
-
-		$quotaController = quotaController::getInstance();
-		if ($quotaController->hasQuota() === false) {
-			return false;
-		}
 
 		if (! $this->offloading) {
 			return false;
@@ -1097,6 +1089,10 @@ class wpOffload
 			Log::addDebug('Offload Prevented via bool for ' . $post_id);
 		}
 
+		$quotaController = quotaController::getInstance();
+		if ($quotaController->hasQuota() === false) {
+			return false;
+		}
 
 		return $bool;
 	}
