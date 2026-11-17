@@ -273,16 +273,14 @@ test.describe('Gutenberg AI — pinned', () => {
 	});
 
 	/**
-	 * PIN — for a big image (WordPress serves "name-scaled.jpg") the rename
-	 * moves the media library's url and "full" size to "newname.jpg", without
-	 * "-scaled": UpdateGutenBerg() (screen-media.js) only keeps a "-WxH"
-	 * suffix. That URL exists, but it is the unscaled original upload, so
-	 * inserting the image at full size before a reload embeds the original.
-	 * @todo In screen-media.js UpdateGutenBerg(): keep "-scaled" as well, e.g.
-	 *       `/(-\d+x\d+|-scaled)(\.[^.]+)$/` for the suffix match.
-	 * FLIP-when-fixed: the url ends in newBase + "-scaled.jpg".
+	 * REGRESSION — for a big image WordPress serves "name-scaled.jpg", and
+	 * the renamed file on disk is "newname-scaled.jpg". UpdateGutenBerg()
+	 * (screen-media.js) keeps the "-scaled" suffix, like a "-WxH" one, when
+	 * it moves the media library's url: "newname.jpg" exists too, but it is
+	 * the unscaled original upload, so inserting the image at full size
+	 * before a reload would embed the original.
 	 */
-	test('pin: an AI rename of a big image drops "-scaled" from the media library url (pinned_for_deferred_fix)', async ({ page, spio }) => {
+	test('an AI rename of a big image keeps "-scaled" in the media library url', async ({ page, spio }) => {
 		await spio.setSettings({ enable_ai: 1, ai_gen_alt: 1, ai_gen_caption: 0, ai_gen_filename: 1, ai_content_replace: 'missing' });
 		const newBase = 'gb-big-' + Date.now();
 		await spio.setMock({ aiFields: { generated_file_name: newBase } });
@@ -311,7 +309,7 @@ test.describe('Gutenberg AI — pinned', () => {
 		await expect.poll(async () => (await spio.attachment(image.id)).attached_file, { timeout: 60_000 }).toContain(newBase + '-scaled.jpg');
 		await expect.poll(modelUrl, { timeout: 30_000 }).toContain(newBase);
 
-		expect(await modelUrl(), 'PIN: fixed? the model url keeps "-scaled" — flip this pin').toMatch(new RegExp(newBase + '\\.jpg$'));
+		expect(await modelUrl(), 'REGRESSION: the model url keeps "-scaled"').toMatch(new RegExp(newBase + '-scaled\\.jpg$'));
 	});
 });
 

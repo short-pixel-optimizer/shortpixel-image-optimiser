@@ -38,17 +38,9 @@ class QueueCountersTest extends SPIO_IntegrationTestCase {
 
 	/**
 	 * Marking a dequeued item done moves it from in_process to done at once,
-	 * without waiting for the next recount.
-	 *
-	 * @todo WPQ::setStatusCount() (build/shortpixel/shortq, module update
-	 *       cd5201c0) only writes the counter when a recount happened, so
-	 *       outside a recount every change is dropped: done stays 0 and
-	 *       in_process stays 1 here, and the single cron event is never
-	 *       unscheduled (CronDispatchTest). Suggested fix, verified against
-	 *       this file and the cron / bulk / API-failure integration tests:
-	 *       `if ($recounted && false === $update_on_recount) return true;`
-	 *       followed by `return $this->setStatus($name, $count + $change, $savenow);`.
-	 *       This test stays red until then.
+	 * without waiting for the next recount. The cron and bulk "queue is
+	 * empty" checks read these counters, so a change that only lands at the
+	 * next recount keeps the single cron event scheduled for minutes.
 	 */
 	public function test_item_done_moves_the_item_from_in_process_to_done_right_away() {
 		$this->q->enqueue( array( array( 'id' => 1 ), array( 'id' => 2 ) ) );
@@ -75,5 +67,58 @@ class QueueCountersTest extends SPIO_IntegrationTestCase {
 		$this->q->itemFailed( $items[0], true );
 
 		$this->assertSame( 1, (int) $this->q->getStatus( 'fatal_errors' ), 'The fatal_errors counter follows itemFailed() right away.' );
+	}
+
+	/**
+	 * A timed-out item goes back to waiting in the counters at once: both
+	 * counters are moved by inProcessTimeout() without a recount.
+	 */
+	public function test_timed_out_item_returns_to_waiting_in_the_counters_right_away() {
+		$this->q->enqueue( array( array( 'id' => 1 ), array( 'id' => 2 ) ) );
+		$items = $this->q->dequeue();
+		$this->assertCount( 1, $items, 'Sentinel: dequeue() hands out one item.' );
+		$this->assertSame( 1, (int) $this->q->getStatus( 'items' ), 'Sentinel: one item is left waiting.' );
+
+		// Every in-process item counts as timed out.
+		$this->q->setOption( 'process_timeout', 0 );
+		$updated = $this->q->inProcessTimeout();
+
+		$this->assertSame( 1, (int) $updated, 'Sentinel: one item was requeued.' );
+		$this->assertSame( 0, (int) $this->q->getStatus( 'in_process' ), 'The requeued item left in_process.' );
+		$this->assertSame( 2, (int) $this->q->getStatus( 'items' ), 'The requeued item is waiting again.' );
+	}
+
+	/**
+	 * PIN — when the timeout pass falls on a recount, the waiting counter is
+	 * overstated by the number of requeued items until the next recount.
+	 *
+	 * @todo WPQ::inProcessTimeout() (build/shortpixel/shortq) moves the rows
+	 *       first and then calls setStatusCount() twice with
+	 *       `$update_on_recount` false. That flag only protects the call
+	 *       that recounts: the in_process call recounts (the fresh count
+	 *       already has the requeued item waiting), the items call no longer
+	 *       sees a recount timeout and adds the requeued items on top.
+	 *       Suggested fix: call resetInternalCounts() once after the row
+	 *       updates instead of the two setStatusCount() calls.
+	 *       Fixed when `items` equals the 2 rows waiting in the table.
+	 */
+	public function test_timeout_pass_on_a_recount_overstates_the_waiting_counter_pinned_for_deferred_fix() {
+		$this->q->enqueue( array( array( 'id' => 1 ), array( 'id' => 2 ) ) );
+		$items = $this->q->dequeue();
+		$this->assertCount( 1, $items, 'Sentinel: dequeue() hands out one item.' );
+
+		$this->q->setOption( 'process_timeout', 0 );
+		// The last recount is long ago, so the next counter change recounts.
+		$this->q->setStatus( 'last_count_time', 0 );
+		$updated = $this->q->inProcessTimeout();
+
+		// SENTINELS: one item was requeued, the table holds 2 waiting rows and the recount ran.
+		$this->assertSame( 1, (int) $updated, 'Sentinel: one item was requeued.' );
+		$by_status = $this->q->itemSum( 'countbystatus' );
+		$this->assertSame( 2, (int) $by_status[ ShortQ::QSTATUS_WAITING ], 'Sentinel: two rows are waiting in the table.' );
+		$this->assertGreaterThan( 0, (int) $this->q->getStatus( 'last_count_time' ), 'Sentinel: the counters were recounted.' );
+		$this->assertSame( 0, (int) $this->q->getStatus( 'in_process' ), 'Sentinel: in_process is right.' );
+
+		$this->assertSame( 3, (int) $this->q->getStatus( 'items' ), 'PIN: fixed? items equals the 2 waiting rows — flip this pin.' );
 	}
 }

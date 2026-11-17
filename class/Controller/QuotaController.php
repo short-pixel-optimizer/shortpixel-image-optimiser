@@ -12,7 +12,13 @@ class QuotaController
 {
   protected static $instance;
   const CACHE_NAME = 'quotaData';
-  // check if this request the quota data loaded or not. 
+  /**
+   * Whether the quota was loaded in this request, from the cache or from
+   * the API. hasQuota() loads it once, on its first call, and then answers
+   * from the settings flag.
+   *
+   * @var bool
+   */
   protected $did_quota_load = false; 
 
 
@@ -32,6 +38,12 @@ class QuotaController
 
   /**
    * Return if account has any quota left
+   *
+   * Answers from the `quotaExceeded` setting, which getRemoteQuota() keeps
+   * current. The first call of a request loads the quota first (from the
+   * cache, or from the API when the cache is cold), so the flag is not
+   * older than the cache; this can therefore be a remote call.
+   *
    * @todo The did_quota_load mechanism needs a more elegant solution to on-demand loading of possible remote checks. Possibly but not relying on settings, but on quotaData returned. 
    * @return boolean Has quota left
    */
@@ -54,6 +66,25 @@ class QuotaController
 
   /**
    * Retrieves QuotaData object from cache or from remote source
+   *
+   * A successful answer is cached for an hour; a failed one, or one for an
+   * account without quota, for five minutes.
+   *
+   * @todo On a cold cache a load that does not start in hasQuota() runs
+   *       the remote check twice: hasQuota() is called below to pick the
+   *       cache lifetime, has not seen a load in this request yet and
+   *       calls this method again, before the first result is cached. So
+   *       the first getQuota() or getAvailableQuota() of a request makes
+   *       two calls to a healthy API and six attempts to an unreachable
+   *       one. Suggested fix: set `$this->did_quota_load = true;` at the
+   *       top of this method, before the cache lookup.
+   * @todo Nothing marks a remote check as running: the cache is written
+   *       only after getRemoteQuota() returns, so every request that
+   *       arrives while one is waiting for the API starts a check of its
+   *       own. Suggested fix: take a short lock (a transient, or
+   *       wp_cache_add()) before the remote call and let the other
+   *       requests use the previous or default data.
+   *
    * @return array The quotadata array (remote format)
    */
   private function getQuotaData()
@@ -238,7 +269,8 @@ class QuotaController
    * Code other than 2 — returns $defaultData: APIKeyValid/GetSuccess false
    * with all numeric fields zeroed, so a connectivity blip can never render
    * as stale credits. An API-supplied Status message replaces the generic
-   * connectivity text when there is one.
+   * connectivity text when there is one; after a transport failure the
+   * message of the last WP_Error is appended to it as debug info.
    *
    * Response normalisation: each field in $numericResults is coerced with
    * `(int) max($value, 0)` (missing → 0), APICallsRemaining is recomputed
@@ -249,6 +281,14 @@ class QuotaController
    *
    * Callers reach this only through getQuotaData()'s cache miss; it is never
    * called directly on a warm cache.
+   *
+   * @todo Against an API that does not answer, one call makes the three
+   *       attempts in a row with a 10 second timeout each: up to half a
+   *       minute for one request. Suggested fix: a timeout of a few
+   *       seconds, or a single attempt.
+   * @todo The fallback attempts send the API key over plain http when the
+   *       https attempt fails, the last one in the query string. Suggested
+   *       fix: keep the fallbacks on https.
    *
    * @param  string $apiKey                 User account key
    * @param  boolean $validate               Api should also validate key or not
@@ -280,7 +320,7 @@ class QuotaController
     $requestURL = $httpProto . '://' . SHORTPIXEL_API . '/v2/api-status.php';
 
     $args = array(
-      'timeout' => 10, // wait for 15 secs.
+      'timeout' => 10, // wait for 10 secs.
       'body' => array('key' => $apiKey)
     );
     $argsStr = "?key=" . $apiKey;
