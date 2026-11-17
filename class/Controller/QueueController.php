@@ -595,10 +595,6 @@ class QueueController
             $apiController->handleAPIResult($qItem);  
           }
           
-          if (true === $qItem->result()->is_error)
-          {
-
-          }
           if (true === $qItem->result()->is_error && true === $this->args['is_bulk'] )
           {
              // Only log error items that are related to file issues. 
