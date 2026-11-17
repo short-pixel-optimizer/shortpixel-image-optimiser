@@ -265,7 +265,7 @@ class ConversionReplacementTest extends SPIO_IntegrationTestCase {
 		// A serialized-OBJECT string stored as an option value, so WordPress
 		// serializes it a second time (a plugin calling serialize() itself
 		// before update_option()). The replacer only sees a serialized
-		// STRING at the top level; see the pinned corruption test below.
+		// STRING at the top level; see the serialized-stdClass test below.
 		$obj      = new stdClass();
 		$obj->url = $url;
 		$obj->tag = 'sentinel';
@@ -457,27 +457,19 @@ class ConversionReplacementTest extends SPIO_IntegrationTestCase {
 		);
 
 		$this->assertPostConversionReplaced( $seeded, 'png' );
-		// The serialized-object option is NOT left untouched on this path:
-		// see the pinned test below.
+		// The serialized-object option has its own test below.
 	}
 
 	/**
-	 * Pins a known defect: the PNG→JPG queue conversion corrupts an option
-	 * whose value is a serialized OBJECT containing the image URL.
-	 * Replacer::handleMetaData() (build/ replacer2) rewrites the URL inside
-	 * the object payload without fixing the s:<length> prefix (the converted
-	 * file may get a -N suffix, so the length changes) and writes back
-	 * without WordPress's outer serialization layer. get_option() can then
-	 * no longer read the value. This was hidden while the replacer left the
-	 * 'alloptions' cache stale: reads kept returning the pre-conversion value.
-	 * @todo In the replacer2 module source: leave serialized-object payloads
-	 *       alone (what replaceContent() intends), or rewrite them through a
-	 *       real unserialize → replace → serialize round trip that keeps the
-	 *       outer layer.
-	 * When fixed, this test fails; flip it: the option reads back unchanged
-	 * (assertObjectBlobUntouched()), or with a correctly re-serialized URL.
+	 * The PNG→JPG queue conversion rewrites an option whose value is a
+	 * serialized stdClass OBJECT stored as a string (a plugin calling
+	 * serialize() itself, so WordPress adds a second layer) and keeps it
+	 * readable: Replacer::handleMetaData() (build/ replacer2) walks the
+	 * inner layer, so its s:<length> prefixes follow the new URL (the
+	 * converted file may get a -N suffix), and writes the value back with
+	 * WordPress's outer layer. get_option() still returns a string.
 	 */
-	public function test_png_conversion_corrupts_an_option_holding_a_serialized_object_pinned_for_deferred_fix() {
+	public function test_png_conversion_rewrites_an_option_holding_a_serialized_stdclass_and_keeps_it_a_string() {
 		$this->resetReplacerModuleSingletons();
 
 		$id     = $this->uploadPngForQueuePath( 'fixture-small.png' );
@@ -491,14 +483,17 @@ class ConversionReplacementTest extends SPIO_IntegrationTestCase {
 
 		global $wpdb;
 		$raw = (string) $wpdb->get_var( "SELECT option_value FROM {$wpdb->options} WHERE option_name = '_spio_test_object_blob'" );
-		// SENTINEL: the replacer did reach the row.
-		$this->assertStringContainsString( '.jpg', $raw, 'Sentinel: the URL inside the stored object was rewritten.' );
+		$this->assertStringStartsWith( 's:', $raw, 'The outer serialization layer is kept in the database.' );
 
-		// THE PIN: the stored value no longer reads back as the seeded string.
 		wp_cache_delete( 'alloptions', 'options' );
 		wp_cache_delete( '_spio_test_object_blob', 'options' );
-		$this->assertNotSame( $seeded['object_blob'], get_option( '_spio_test_object_blob' ), 'Pinned: fixed? The serialized-object option now reads back intact — flip this pin.' );
-		$this->assertStringStartsNotWith( 's:', $raw, 'Pinned: fixed? The outer serialization layer is now kept — flip this pin.' );
+		$after = get_option( '_spio_test_object_blob' );
+		$this->assertIsString( $after, 'The option still reads back as a string, not as an object.' );
+
+		$inner = unserialize( $after, array( 'allowed_classes' => array( 'stdClass' ) ) );
+		$this->assertInstanceOf( stdClass::class, $inner, 'The stored string still unserializes: its lengths are valid.' );
+		$this->assertSame( wp_get_attachment_url( $id ), $inner->url, 'The URL inside points at the converted JPG.' );
+		$this->assertSame( 'sentinel', $inner->tag, 'The other property is unchanged.' );
 	}
 
 	/**
