@@ -242,11 +242,15 @@ class ApiController extends RequestManager
 	 *
 	 *  - -102/-105/-106/-108/-111/-113/-201/-202/-203/-207 : permanent file/URL errors → STATUS_ERROR (no retry)
 	 *  - -301/-403 : quota exceeded → STATUS_QUOTA_EXCEEDED (retry after quota refill)
-	 *  - -302 : file no longer available remotely → STATUS_FAIL
-	 *  - -306 : mixed-domain URLs in one request → STATUS_FAIL
+	 *  - -302 : file no longer available remotely → STATUS_ERROR (no retry, plugin's own message)
+	 *  - -306 : mixed-domain URLs in one request → STATUS_ERROR (no retry, plugin's own message)
 	 *  - -401/-402 : invalid/wrong API key → STATUS_NO_KEY
 	 *  - -404 : remote optimisation queue full → STATUS_QUEUE_FULL (retry)
 	 *  - -500 : API maintenance → STATUS_MAINTENANCE (retry)
+	 *
+	 * STATUS_ERROR marks an error of the item itself. OptimizeController turns it into
+	 * ImageModel::FILE_STATUS_ERROR, which is what puts the item in the bulk log
+	 * (QueueController::runTick()). STATUS_FAIL is a system-level failure and stays out of it.
 	 *
 	 * When the response contains image data (array with index 0), delegates to
 	 * handleOptimizeResponse() for 'optimize'/'convert_api' actions, or

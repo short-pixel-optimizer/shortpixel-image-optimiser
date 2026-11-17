@@ -634,7 +634,15 @@ class DirectoryModel extends \ShortPixel\Model
         return $size;
   }
 
-  /** Get this paths parent */
+  /**
+   * Returns the parent directory of this path.
+   *
+   * The filesystem root and an empty path have no parent: dirname() returns
+   * the path itself for them, and the method answers false. Callers that walk
+   * up the tree (getPermissionRecursive()) rely on that to stop.
+   *
+   * @return DirectoryModel|false The parent directory, or false when there is none.
+   */
   public function getParent()
   {
       $path = $this->getPath();

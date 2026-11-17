@@ -186,6 +186,46 @@ class DirectoryModelTest extends WP_UnitTestCase {
 		$this->assertSame( trailingslashit( $this->sandbox ), $parent->getPath() );
 	}
 
+	/** The filesystem root has no parent: getParent() answers false, not the root again. */
+	public function test_getParent_returns_false_for_the_filesystem_root() {
+		$dir = new DirectoryModel( '/' );
+
+		// SENTINEL: the model really holds the root.
+		$this->assertSame( '/', $dir->getPath(), 'Sentinel: the model holds the filesystem root.' );
+
+		$this->assertFalse( $dir->getParent() );
+	}
+
+	/** An empty path (the constructor bails out on empty input) has no parent either. */
+	public function test_getParent_returns_false_for_an_empty_path() {
+		$dir = new DirectoryModel( '' );
+
+		$this->assertFalse( $dir->getParent() );
+	}
+
+	/**
+	 * getPermissionRecursive() walks up through getParent(). With an empty
+	 * path there is no existing ancestor, so the walk has to stop and answer
+	 * false. Without the stop in getParent() the method calls itself on the
+	 * same empty path until PHP runs out of stack or memory.
+	 */
+	public function test_getPermissionRecursive_returns_false_for_an_empty_path() {
+		$dir = new DirectoryModel( '' );
+
+		// SENTINEL: the empty path does not exist, so the method has to walk up.
+		$this->assertFalse( $dir->exists(), 'Sentinel: an empty path does not exist.' );
+
+		$this->assertFalse( $dir->getPermissionRecursive() );
+	}
+
+	/** The parent of the root's direct child is the root, which exists: the walk ends there. */
+	public function test_getPermissionRecursive_stops_at_the_filesystem_root() {
+		$dir = new DirectoryModel( '/spio-no-such-dir-' . uniqid() );
+
+		$this->assertFalse( $dir->exists(), 'Sentinel: the directory does not exist.' );
+		$this->assertIsInt( $dir->getPermissionRecursive(), 'The root exists, so its permission bits are returned.' );
+	}
+
 	public function test_isSubFolderOf_true_when_path_starts_with_parent_path() {
 		$sub = $this->makeDir( 'child/grand' );
 
