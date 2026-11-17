@@ -295,10 +295,10 @@ class ApiController extends RequestManager
 					return $this->returnRetry(self::STATUS_QUOTA_EXCEEDED, __('Quota exceeded.', 'shortpixel-image-optimiser'));
 				break;
 			    case -302: 
-					return $this->returnFailure(self::STATUS_FAIL, __('File no longer available on remote system', 'shortpixel-image-optimiser'));
+					return $this->returnFailure(self::STATUS_ERROR, __('File no longer available on remote system', 'shortpixel-image-optimiser'));
 				break; 
 				case -306:
-					return $this->returnFailure(self::STATUS_FAIL, __('Files need to be from a single domain per request.', 'shortpixel-image-optimiser'));
+					return $this->returnFailure(self::STATUS_ERROR, __('Files need to be from a single domain per request.', 'shortpixel-image-optimiser'));
 				break;
 				case -401: // Invalid Api Key
 				case -402: // Wrong API key
