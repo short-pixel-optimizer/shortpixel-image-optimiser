@@ -486,17 +486,10 @@ class QueueController
    *   5. Logs failed items to the per-type bulk log when running in bulk mode,
    *      but only final file errors: the result is done and its fileStatus is
    *      ImageModel::FILE_STATUS_ERROR (the API's file-error codes, mapped to
-   *      STATUS_ERROR, and failures while saving the optimized files).
+   *      STATUS_ERROR, failures while saving the optimized files, and an item
+   *      given up at the retry limit).
    *      Retried, quota, key, queue-full, maintenance and connection failures
-   *      stay out of the log, and so does an item that only reaches the retry
-   *      limit (its fileStatus is still ImageModel::FILE_STATUS_PENDING).
-   *
-   * @todo An item given up at the retry limit ("Retry Limit reached…",
-   *       ApiController::ERR_TIMEOUT) is final for the bulk run but never
-   *       reaches the bulk log, because OptimizeController::handleOptimizeAction()
-   *       leaves its fileStatus at FILE_STATUS_PENDING. Suggested fix: set
-   *       'fileStatus' => ImageModel::FILE_STATUS_ERROR in the retry-limit result
-   *       there.
+   *      stay out of the log.
    *
    * The final queue stats and converted JSON are returned; a cleanQueue() is
    * triggered automatically when the single-item queue empties.

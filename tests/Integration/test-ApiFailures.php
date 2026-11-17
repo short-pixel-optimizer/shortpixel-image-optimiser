@@ -240,15 +240,12 @@ class ApiFailuresTest extends SPIO_IntegrationTestCase {
 
 	/**
 	 * An image the API keeps answering "still working" for is given up once
-	 * the queue's retry limit is reached ("Retry Limit reached…", apiStatus
-	 * ApiController::ERR_TIMEOUT). Its fileStatus is still
-	 * FILE_STATUS_PENDING at that point, so QueueController::runTick() leaves
-	 * it out of the bulk log and the user finds no trace of the image there.
-	 *
-	 * Fixed when: the image name and the retry-limit message are in the log.
-	 * Then turn the last assertion around and drop the suffix from the name.
+	 * the queue's retry limit is reached (apiStatus ApiController::ERR_TIMEOUT).
+	 * That is final for the bulk run, so the result carries
+	 * FILE_STATUS_ERROR and the image is listed in the bulk log with the
+	 * retry-limit message.
 	 */
-	public function test_bulk_log_leaves_out_an_image_that_reached_the_retry_limit_pinned_for_deferred_fix() {
+	public function test_bulk_log_lists_an_image_that_reached_the_retry_limit() {
 		$this->api->waitingRounds = 1000;
 
 		$id    = $this->uploadFixture( 'fixture-small.jpg' );
@@ -259,7 +256,9 @@ class ApiFailuresTest extends SPIO_IntegrationTestCase {
 		$this->assertFalse( $this->freshImageModel( $id )->isOptimized(), 'Sentinel: the image was not optimized.' );
 		$this->assertContains( \ShortPixel\Controller\Api\ApiController::ERR_TIMEOUT, $this->bulkApiStatuses, 'Sentinel: a tick reported the retry-limit error for the item.' );
 
-		$this->assertStringNotContainsString( wp_basename( get_attached_file( $id ) ), $log, 'Fixed? The image given up at the retry limit is now in the bulk log.' );
+		$this->assertStringContainsString( wp_basename( get_attached_file( $id ) ), $log, 'The image given up at the retry limit is listed in the bulk log.' );
+		$this->assertStringContainsString( 'Retry Limit reached', $log, 'The log line carries the retry-limit message.' );
+		$this->assertSame( 1, substr_count( $log, wp_basename( get_attached_file( $id ) ) ), 'The image is listed once.' );
 	}
 
 	/**

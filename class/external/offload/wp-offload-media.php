@@ -1047,18 +1047,23 @@ class wpOffload
 	 *
 	 * Decision cascade:
 	 *
-	 *   1. **No quota** → return false (don't prevent). SPIO can't
-	 *      optimize without quota, so let as3cf upload the raw file
-	 *      rather than losing it entirely.
-	 *   2. **`copy-to-s3` off** → return false (don't prevent). If the
+	 *   1. **`copy-to-s3` off** → return false (don't prevent). If the
 	 *      site owner turned offload off entirely, respect that.
-	 *   3. **`shouldPrevent` false** → return false (don't prevent).
+	 *   2. **`shouldPrevent` false** → return false (don't prevent).
 	 *      This is the guard SPIO's own `image_upload` uses when it
 	 *      *wants* the upload to go through.
-	 *   4. **On the prevent-offload list** → return a `WP_Error`
+	 *   3. **On the prevent-offload list** → return a `WP_Error`
 	 *      (`upload-prevented`) which as3cf treats as "abort this
 	 *      upload". Used by the converter around its rewrite window.
+	 *      It applies with or without quota: the conversion is local.
+	 *   4. **No quota** → return false (don't prevent). SPIO can't
+	 *      optimize without quota, so let as3cf upload the raw file
+	 *      rather than losing it entirely.
 	 *   5. **Fallback** → pass through the incoming `$bool`.
+	 *
+	 * The quota is asked last on purpose: hasQuota() loads the quota on
+	 * its first call of a request (on a cold cache a call to the API), and
+	 * the three checks before it settle most uploads without it.
 	 *
 	 * @param mixed  $bool         Incoming filter value from previous handlers.
 	 * @param object $as3cf_item   as3cf Media_Library_Item instance being uploaded.

@@ -180,6 +180,37 @@ class LegacyMigrationTest extends SPIO_IntegrationTestCase {
 		$this->assertIsNumeric( get_post_meta( $id, '_shortpixel_was_converted', true ), 'Migration must stamp the _shortpixel_was_converted guard.' );
 	}
 
+	/**
+	 * Migrating a legacy attachment queues the "Migrate optimization data"
+	 * notice also when the account is out of quota: the migration needs no
+	 * credits, and the quota is not asked for while an image loads.
+	 */
+	public function test_legacy_migration_queues_the_legacy_notice_without_quota() {
+		// Out of quota, with the quota marked as loaded for this request, so
+		// hasQuota() answers false from the stored flag and does not refresh it.
+		$quota  = \ShortPixel\Controller\QuotaController::getInstance();
+		$loaded = ( new ReflectionClass( $quota ) )->getProperty( 'did_quota_load' );
+		$loaded->setAccessible( true );
+		$loaded->setValue( $quota, true );
+		\wpSPIO()->settings()->quotaExceeded = 1;
+
+		// The notice system is shared by the tests of this run: start without the notice.
+		\ShortPixel\Notices\NoticeController::removeNoticeByID( 'MSG_CONVERT_LEGACY' );
+		$noticeControl = \ShortPixel\Notices\NoticeController::getInstance();
+		// SENTINEL: no legacy notice before the migration.
+		$this->assertFalse( is_object( $noticeControl->getNoticeByID( 'MSG_CONVERT_LEGACY' ) ), 'Sentinel: no legacy notice is queued yet.' );
+
+		$id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->seedLegacyBlock( $id, array( 'type' => 'lossy', 'date' => '2021-05-04 10:00:00' ), '25' );
+
+		$image = \wpSPIO()->filesystem()->getImage( $id, 'media', false );
+
+		// SENTINEL: the legacy data was migrated.
+		$this->assertTrue( (bool) $image->getMeta( 'wasConverted' ), 'Sentinel: the legacy block was migrated.' );
+		$this->assertFalse( $quota->hasQuota(), 'Sentinel: the account is still out of quota.' );
+		$this->assertIsObject( $noticeControl->getNoticeByID( 'MSG_CONVERT_LEGACY' ), 'The legacy notice is queued although the quota is exceeded.' );
+	}
+
 	public function test_waiting_only_legacy_block_is_not_migrated() {
 		$id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->seedLegacyBlock( $id, array( 'WaitingProcessing' => true ) );

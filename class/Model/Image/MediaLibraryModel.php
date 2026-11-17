@@ -3234,6 +3234,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	 *     prefixed sizes are tagged as unlisted by setting `meta.file`.
 	 *   - The unscaled original and every retina get the same treatment
 	 *     when the row is not already present in the DB.
+	 *   - Queues the legacy-migration admin notice
+	 *     (AdminNoticesController::invokeLegacyNotice()), with or without
+	 *     quota left: the migration itself needs no credits, and asking for
+	 *     the quota here could mean a call to the API while loading an image.
 	 *   - Finally stamps `_shortpixel_was_converted = time()` (guard so
 	 *     restore doesn't re-migrate), clears `_shortpixel_status`, and
 	 *     sets `$justConverted` to block a second migration this request.
