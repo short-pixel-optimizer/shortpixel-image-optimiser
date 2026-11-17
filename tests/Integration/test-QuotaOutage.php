@@ -134,40 +134,34 @@ class QuotaOutageTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * PIN — a check that starts with getQuota() (or getAvailableQuota())
-	 * on a cold cache runs the whole remote check twice: against an
-	 * unreachable API six attempts instead of three, up to a minute.
-	 *
-	 * getQuotaData() calls hasQuota() after the remote call to pick the
-	 * cache lifetime; hasQuota() has not seen a load in this request yet
-	 * and calls getQuotaData() again, before the first result is cached.
-	 * @todo See the @todo in QuotaController::getQuotaData().
-	 * Fixed when this makes the same three attempts as hasQuota().
+	 * A check that starts with getQuota() (or getAvailableQuota()) on a cold
+	 * cache makes the same single round as hasQuota(). getQuotaData() asks
+	 * hasQuota() for the cache lifetime after the remote call; it must answer
+	 * from the result just loaded, not start a second check.
 	 */
-	public function test_a_check_started_by_getQuota_runs_the_remote_check_twice_pinned_for_deferred_fix() {
+	public function test_a_check_started_by_getQuota_makes_one_round_of_three_attempts() {
 		QuotaController::getInstance()->getQuota();
 
-		$this->assertSame( array( 'POST', 'POST', 'GET', 'POST', 'POST', 'GET' ), wp_list_pluck( $this->requests, 'method' ), 'PIN: fixed? three attempts — flip this pin.' );
+		$this->assertSame( array( 'POST', 'POST', 'GET' ), wp_list_pluck( $this->requests, 'method' ) );
 	}
 
 	/**
-	 * PIN — the same double check with a healthy API: two calls instead of
-	 * one each time the cached quota has expired.
-	 * @todo See the @todo in QuotaController::getQuotaData().
+	 * With a healthy API the first getQuota() on a cold cache makes one
+	 * request, and a request with a warm cache makes none.
 	 */
-	public function test_getQuota_asks_a_healthy_api_twice_on_a_cold_cache_pinned_for_deferred_fix() {
+	public function test_getQuota_asks_a_healthy_api_once_on_a_cold_cache() {
 		$this->unreachable = false;
 
 		$quota = QuotaController::getInstance()->getQuota();
 
 		// SENTINEL: the mock API answered as a paying account.
 		$this->assertGreaterThan( 0, $quota->monthly->total, 'Sentinel: the quota was read from the API.' );
-		$this->assertCount( 2, $this->requests, 'PIN: fixed? one request — flip this pin.' );
+		$this->assertCount( 1, $this->requests );
 
 		// A warm cache needs no request at all.
 		$this->newRequest();
 		QuotaController::getInstance()->getQuota();
-		$this->assertCount( 2, $this->requests );
+		$this->assertCount( 1, $this->requests );
 	}
 
 	/**

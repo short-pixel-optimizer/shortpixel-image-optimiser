@@ -1,5 +1,4 @@
 <?php
-
 namespace ShortPixel\Controller;
 
 if (! defined('ABSPATH')) {
@@ -22,7 +21,67 @@ class QuotaController
   protected $did_quota_load = false; 
 
 
+  /**
+   * The quota data (remote format) of this request, once loaded. Null
+   * until then, and again after forceCheckRemoteQuota().
+   *
+   * @var array|null
+   */
   protected $quotaData;
+
+  /**
+   * Fields getQuota() does arithmetic on. A cached quota counts as complete
+   * only when all of them are present and numeric.
+   *
+   * @var string[]
+   */
+  const REQUIRED_FIELDS = [
+    'APICallsQuota',
+    'APICallsMade',
+    'APICallsQuotaOneTime',
+    'APICallsMadeOneTime',
+    'CaptionsCallsQuota',
+    'CaptionsCallsMade',
+    'CaptionsCallsRemaining',
+  ];
+
+  /**
+   * Takes the quota from the cache when it holds a complete set, so the
+   * request needs no further lookups. Never calls the API: a cold cache,
+   * or an incomplete or legacy cached value, leaves `quotaData` null and
+   * the load to getQuotaData() on first use.
+   */
+  public function __construct()
+  {
+    $cache = new CacheController();
+    $cacheData = $cache->getItem(self::CACHE_NAME);
+
+    if ($cacheData->exists() && $this->isCompleteQuotaData($cacheData->getValue())) {
+      $this->quotaData = $cacheData->getValue();
+      $this->did_quota_load = true;
+    }
+  }
+
+  /**
+   * Whether the quota data holds every field getQuota() needs, as numbers.
+   *
+   * @param  mixed $quotaData Quota data (remote format).
+   * @return boolean
+   */
+  private function isCompleteQuotaData($quotaData): bool
+  {
+    if (! is_array($quotaData)) {
+      return false;
+    }
+
+    foreach (self::REQUIRED_FIELDS as $field) {
+      if (! isset($quotaData[$field]) || ! is_numeric($quotaData[$field])) {
+        return false;
+      }
+    }
+
+    return true;
+  }
 
   /** Singleton instance
    * @return Object QuotaController object
@@ -65,19 +124,15 @@ class QuotaController
   }
 
   /**
-   * Retrieves QuotaData object from cache or from remote source
+   * Retrieves QuotaData object from memory, cache or remote source
    *
+   * The result is kept in `quotaData` for the rest of the request.
    * A successful answer is cached for an hour; a failed one, or one for an
    * account without quota, for five minutes.
    *
-   * @todo On a cold cache a load that does not start in hasQuota() runs
-   *       the remote check twice: hasQuota() is called below to pick the
-   *       cache lifetime, has not seen a load in this request yet and
-   *       calls this method again, before the first result is cached. So
-   *       the first getQuota() or getAvailableQuota() of a request makes
-   *       two calls to a healthy API and six attempts to an unreachable
-   *       one. Suggested fix: set `$this->did_quota_load = true;` at the
-   *       top of this method, before the cache lookup.
+   * The remote result is kept in `quotaData` before hasQuota() is asked
+   * for the cache lifetime, so hasQuota() answers from the flag that
+   * getRemoteQuota() just set instead of starting a second remote check.
    * @todo Nothing marks a remote check as running: the cache is written
    *       only after getRemoteQuota() returns, so every request that
    *       arrives while one is waiting for the API starts a check of its
@@ -100,6 +155,9 @@ class QuotaController
 
     if (! $cacheData->exists()) {
       $quotaData = $this->getRemoteQuota();
+      $this->quotaData = $quotaData;
+      $this->did_quota_load = true;
+      
       if (false === $this->hasQuota() || false === $quotaData['GetSuccess'])
         $timeout = 5 * MINUTE_IN_SECONDS;
       else {
@@ -110,7 +168,7 @@ class QuotaController
       $quotaData = $cacheData->getValue();
     }
 
-    
+    $this->quotaData = $quotaData;
     $this->did_quota_load = true;
     return $quotaData;
   }
