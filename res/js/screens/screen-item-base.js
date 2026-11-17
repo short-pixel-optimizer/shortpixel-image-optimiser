@@ -259,10 +259,12 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase {
 		if (result.message && result.item_id) {
 			this.UpdateMessage(result, result.message, true);
 		}
-
-		if (typeof result.item_id !== 'undefined' && result.apiName !== 'ai') {
+ 
+		if (typeof result.item_id !== 'undefined' && result.apiName !== 'ai' && false == this.processor.isManualPaused ) {
 			this.processor.LoadItemView({ id: result.item_id, type: 'media' });
-		}
+		} 
+
+
 	}
 
 	RestoreItem(id) {

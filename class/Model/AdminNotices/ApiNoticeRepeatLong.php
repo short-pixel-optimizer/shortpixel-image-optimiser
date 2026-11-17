@@ -80,7 +80,7 @@ class ApiNoticeRepeatLong extends \ShortPixel\Model\AdminNoticeModel
 	 */
 	protected function getMessage()
 	{
-		$message = __("Your image gallery is not optimized. It takes 2 minutes to <a href='https://shortpixel.com/wp-apikey' target='_blank'>get your API key</a> and activate your ShortPixel plugin.",'shortpixel-image-optimiser') . "<BR><BR>";
+		$message = sprintf(__('Your image gallery is not optimized. It takes 2 minutes to %sget your API key%s and activate your ShortPixel plugin.', 'shortpixel-image-optimiser'), "<a href='https://shortpixel.com/wp-apikey?utm_source=plugin&utm_medium=spio&utm_campaign=nokey_notice_3d_signup' target='_blank'>", '</a>') . "<BR><BR>";
 
 		return $message;
 	}

@@ -48,13 +48,13 @@ class ActionControllerSpy extends ActionController {
 
 	public $lastCalledAction = null;
 
-	protected function restoreItem( QueueItem $qItem ) {
+	protected function restoreItem( QueueItem $qItem ): bool {
 		$this->lastCalledAction = 'restore';
 		$qItem->addResult( [ 'is_done' => true, 'is_error' => false ] );
 		return true;
 	}
 
-	protected function reoptimizeItem( QueueItem $qItem ) {
+	protected function reoptimizeItem( QueueItem $qItem ): bool {
 		$this->lastCalledAction = 'reoptimize';
 		// Set is_error=true so handleAPIResult() takes the itemFailed branch and
 		// does NOT call finishItemProcess(). finishItemProcess() reads next_actions
@@ -120,7 +120,7 @@ class ActionControllerTest extends WP_UnitTestCase {
 			public function getOptimizeUrls() { return []; }
 			protected function saveMeta() {}
 			protected function loadMeta() {}
-			protected function getImprovements() { return false; }
+			public function getImprovements() { return false; }
 			protected function getExcludePatterns() { return []; }
 			protected function preventNextTry( $reason = '' ) {}
 			public function isOptimizePrevented() { return false; }

@@ -584,47 +584,62 @@ class CDNControllerTest extends WP_UnitTestCase {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * A CSS url() value is extracted and a replace block is produced.
+	 * The extracted url() value is the bare URL: the closing parenthesis of
+	 * url( … ) is outside capture group 2, so the replace block matches the
+	 * URL as written in the page and the inline background gets CDN-rewritten.
 	 */
-	public function test_fetchInlineBackground_extracts_url_from_style_attribute() {
+	public function test_fetchInlineBackground_extracts_the_url_without_the_closing_parenthesis() {
 		$ctrl    = $this->freshController();
-		// Need createArguments to work — seed minimal settings stubs via filter.
-		// The easiest path: stub the filter to return a known args array so we
-		// can assert on the block structure without settings.
-		add_filter(
-			'shortpixel/front/cdn/url',
-			function ( $url ) {
-				return $url;
-			}
-		);
-
-		// We call fetchInlineBackground which internally calls createArguments()
-		// which needs wpSPIO()->settings().  Use a simpler approach: test that
-		// the raw URL extraction regex works by calling it directly on the
-		// preg_match_all inside the method.
 		$content = '<div style="background: url(https://example.com/bg.jpg)"></div>';
-		$number  = preg_match_all( '/url(\(((?:[^()]+|(?1))+)\))/m', $content, $matches );
-		$this->assertSame( 1, $number );
-		$this->assertSame( 'https://example.com/bg.jpg', $matches[2][0] );
+
+		$result = $this->invokePrivate( $ctrl, 'fetchInlineBackground', array( $content ) );
+
+		$this->assertIsArray( $result );
+		$this->assertCount( 1, $result, 'One url() value produces one replace block.' );
+		$this->assertSame( 'https://example.com/bg.jpg', $result[0]->raw_url, 'The extracted URL must not end in ")".' );
 	}
 
 	/**
-	 * A quoted url() value (single quotes) is also captured.
+	 * A quoted url() value (single quotes) is also captured, without the
+	 * closing parenthesis. Runs the production method, not a copy of the
+	 * pattern, so a change to the regex is always under test.
 	 */
 	public function test_fetchInlineBackground_regex_captures_single_quoted_url() {
-		$content = "background: url('https://example.com/hero.jpg');";
-		$number  = preg_match_all( '/url(\(((?:[^()]+|(?1))+)\))/m', $content, $matches );
-		$this->assertSame( 1, $number );
-		$this->assertStringContainsString( 'hero.jpg', $matches[2][0] );
+		$ctrl    = $this->freshController();
+		$content = "<div style=\"background: url('https://example.com/hero.jpg');\"></div>";
+
+		$result = $this->invokePrivate( $ctrl, 'fetchInlineBackground', array( $content ) );
+
+		$this->assertCount( 1, $result );
+		$this->assertStringContainsString( 'hero.jpg', $result[0]->raw_url );
+		$this->assertStringEndsNotWith( ')', $result[0]->raw_url );
 	}
 
 	/**
 	 * Multiple url() values in the same content are all captured.
 	 */
 	public function test_fetchInlineBackground_regex_captures_multiple_urls() {
-		$content = 'background: url(a.jpg); border-image: url(b.png);';
-		$number  = preg_match_all( '/url(\(((?:[^()]+|(?1))+)\))/m', $content, $matches );
-		$this->assertSame( 2, $number );
+		$ctrl    = $this->freshController();
+		$content = '<div style="background: url(https://example.com/a.jpg); border-image: url(https://example.com/b.png);"></div>';
+
+		$result = $this->invokePrivate( $ctrl, 'fetchInlineBackground', array( $content ) );
+
+		$this->assertCount( 2, $result );
+		$this->assertSame( 'https://example.com/a.jpg', $result[0]->raw_url );
+		$this->assertSame( 'https://example.com/b.png', $result[1]->raw_url );
+	}
+
+	/**
+	 * An unquoted URL in an HTML attribute cannot consume later markup up to a
+	 * closing parenthesis elsewhere in the document.
+	 */
+	public function test_fetchInlineBackground_does_not_cross_attribute_boundary() {
+		$ctrl = $this->freshController();
+		$html = '<a href="http://attacker.example/url(/x/contenteditable/autofocus/onfocus=document.title=/XSS/.source//a.jpg" contenteditable autofocus onfocus=document.title=/XSS/.source//a.jpg>Dana</a><div>later )</div>';
+
+		$result = $this->invokePrivate( $ctrl, 'fetchInlineBackground', array( $html ) );
+
+		$this->assertSame( array(), $result );
 	}
 
 	// -------------------------------------------------------------------------

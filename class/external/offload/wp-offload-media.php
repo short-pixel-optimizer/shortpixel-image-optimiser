@@ -759,19 +759,14 @@ class wpOffload
 	 * `shortpixel/image/urltopath` filter — decide whether a given URL
 	 * points at an as3cf-offloaded file.
 	 *
-	 * Fast paths, in order:
+	 * In order:
 	 *
 	 *   1. If the URL is already in the source cache, use the cached
 	 *      answer (including `false` for "confirmed not offloaded").
-	 *   2. When the *URL's* extension is webp/avif but the *rawpath's*
-	 *      extension isn't, skip the lookup entirely — SPIO's own
-	 *      generated webp/avif companions aren't tracked in as3cf's
-	 *      path DB and the `get_item_source_by_remote_url` query would
-	 *      just return nothing. `fixWebpRemotePath()` handles the "does
-	 *      the sibling exist offloaded" question via a different path.
-	 *   3. Otherwise, delegate to `getSourceIDByURL()` for the full
-	 *      lookup (parse_url normalisation, thumbnail-suffix strip,
-	 *      double-extension probing).
+	 *   2. Otherwise, delegate to `getSourceIDByURL()`, which looks the
+	 *      URL up exactly as given. WebP/AVIF companions go through the
+	 *      same lookup: as3cf records each offloaded file, so a companion
+	 *      resolves only when it was really offloaded.
 	 *
 	 * @param bool   $bool    Existing filter value from prior handlers (ignored here).
 	 * @param string $url     URL being resolved.
@@ -784,7 +779,7 @@ class wpOffload
 		$orig_url = $url;
 
 		if (is_null($source_id)) {
-			$extension = substr($url, strrpos($url, '.') + 1);
+			/* $extension = substr($url, strrpos($url, '.') + 1);
 			// Check the file extension without loading anything of the fileObj ( virtual )
 			$file_extension = substr($rawpath, strrpos($rawpath, '.') + 1);
 
@@ -793,7 +788,7 @@ class wpOffload
 				if ($extension == 'webp' || $extension == 'avif') {
 					return false;
 				}
-			}
+			} */
 
 			$source_id = $this->getSourceIDByURL($url);
 		}
@@ -807,31 +802,8 @@ class wpOffload
 	}
 
 	/**
-	 * Resolve a URL to its as3cf source_id, trying several lookup shapes
-	 * because as3cf's `get_item_source_by_remote_url` is picky about
-	 * exact URL form.
-	 *
-	 * Lookup order (first hit wins; each writes back to the source cache
-	 * for future calls):
-	 *
-	 *   1. **Raw URL** — direct hit on the source cache.
-	 *   2. **Scheme-normalised URL** — some as3cf configurations store
-	 *      URLs without a scheme; we retry with `https://` prepended.
-	 *   3. **Thumbnail-stripped URL** — a `/(.*)-\d+[xX]\d+(\.\w+)/`
-	 *      regex removes WordPress's `-<W>x<H>` thumbnail suffix so we
-	 *      hit the main image entry, which is what as3cf indexes.
-	 *   4. **Double-extension URL** — when a URL has `.jpg.webp` style
-	 *      double extensions (SPIO's double-webp delivery), retry with
-	 *      only the last extension so the base `.jpg` entry can match.
-	 *
-	 * On a hit, an extra pass fetches the as3cf item's `extra_info()`
-	 * and warms the cache with every thumbnail/variant URL it lists —
-	 * so subsequent per-thumbnail lookups short-circuit at step 1.
-	 *
-	 * The `$cacheHit` flag tracks whether the current answer came from
-	 * an intermediate cache hit; when true we skip both the final cache
-	 * write and the extra_info() warming pass (both were done at the
-	 * earlier write time).
+	 * Resolve a URL to its as3cf source_id. On the first hit, load the
+	 * item once and cache the URLs for every file recorded on it.
 	 *
 	 * @param string $url URL to resolve.
 	 * @return int|false as3cf source_id when found, `false` when not offloaded.
@@ -839,107 +811,39 @@ class wpOffload
 	protected function getSourceIDByURL($url)
 	{
 		$source_id = $this->sourceCache($url); // check cache first.
-		$cacheHit = false; // prevent a cache hit to be cached again.
-		$raw_url = $url; // keep raw. If resolved, add the raw url to the cache.
+		$raw_url   = $url;
 
-		// If in cache, we are done.
 		if (! is_null($source_id)) {
 			return $source_id;
 		}
 
-		if (is_null($source_id)) // check on the raw url.
-		{
-			$class = $this->getMediaClass();
-
-			$parsedUrl = parse_url($url);
-
-			if (
-				(! isset($parsedUrl['scheme'])
-					|| ! in_array($parsedUrl['scheme'], array('http', 'https')))
-
-			) {
-				if (substr($url, 0, 2) === '//')
-					$url = 'https:' . $url;
-				else
-					$url = 'https://' . $url;
-			}
-
-			$source_id = $this->sourceCache($url);
-
-			if (is_null($source_id)) {
-				$source = $class::get_item_source_by_remote_url($url);
-
-				$source_id = isset($source['id']) ? intval($source['id']) : null;
-			} else {
-				$cacheHit = true; // hit the cache. Yeah.
-				$this->sourceCache($raw_url, $source_id);
-			}
+		$parsedUrl = parse_url($url);
+		if (! isset($parsedUrl['scheme']) || ! in_array($parsedUrl['scheme'], array('http', 'https'), true)) {
+			$url = (substr($url, 0, 2) === '//') ? 'https:' . $url : 'https://' . $url;
 		}
 
-		if (is_null($source_id)) // check now via the thumbnail hocus.
-		{
-			$pattern = '/(.*)-\d+[xX]\d+(\.\w+)/m';
-			$url = preg_replace($pattern, '$1$2', $url);
+		// A direct lookup is sufficient: as3cf indexes each recorded file.
+		// Thumbnail stripping and double-extension probes can incorrectly
+		// resolve a file that is not part of this item's recorded objects.
+		$class  = $this->getMediaClass();
+		$source = $class::get_item_source_by_remote_url($url);
+		$source_id = isset($source['id']) ? intval($source['id']) : false;
+		$this->sourceCache($url, $source_id);
+		$this->sourceCache($raw_url, $source_id);
 
-			$source_id = $this->sourceCache($url); // check cache first.
-
-			if (is_null($source_id)) {
-				$source = $class::get_item_source_by_remote_url($url);
-				$source_id = isset($source['id']) ? intval($source['id']) : null;
-			} else {
-				$cacheHit = true;
-				$this->sourceCache($raw_url, $source_id);
-			}
+		if (false === $source_id) {
+			return false;
 		}
 
-		// Check issue with double extensions. If say double webp/avif is on, the double extension causes the URL not to be found (ie .jpg)
-		if (is_null($source_id)) {
-			if (substr_count($parsedUrl['path'], '.') > 1) {
-				// Get extension
-				$ext = substr(strrchr($url, '.'), 1);
+		$item = $this->getItemById($source_id);
+		if (is_object($item) && method_exists($item, 'extra_info')) {
+			$base_url   = str_replace(basename($url), '', $url);
+			$extra_info = $item->extra_info();
 
-				// Remove all extensions from the URL
-				$checkurl = substr($url, 0, strpos($url, '.'));
-
-				// Add back the last one.
-				$checkurl .= '.' . $ext;
-
-				// Retry
-				$source_id = $this->sourceCache($checkurl); // check cache first.
-
-				if (is_null($source_id)) {
-					$source = $class::get_item_source_by_remote_url($url);
-					$source_id = isset($source['id']) ? intval($source['id']) : null;
-				} else {
-					$cacheHit = true;
-					$this->sourceCache($raw_url, $source_id);
-				}
-			}
-		}
-
-		if (is_null($source_id)) {
-			$source_id = false;
-		}
-
-		if (false === $cacheHit) {
-			$this->sourceCache($url, $source_id);  // cache it.
-		}
-
-		if ($source_id !== false && false === $cacheHit) {
-
-			// get item
-			$item = $this->getItemById($source_id);
-			if (is_object($item) && method_exists($item, 'extra_info')) {
-				$baseUrl = str_replace(basename($url), '', $url);
-				//$rawBaseUrl =
-				$extra_info = $item->extra_info();
-
-				if (isset($extra_info['objects'])) {
-					foreach ($extra_info['objects'] as $extraItem) {
-						if (is_array($extraItem) && isset($extraItem['source_file'])) {
-							// Add source stuff into cache.
-							$this->sourceCache($baseUrl . $extraItem['source_file'], $source_id);
-						}
+			if (isset($extra_info['objects']) && is_array($extra_info['objects'])) {
+				foreach ($extra_info['objects'] as $extra_item) {
+					if (is_array($extra_item) && isset($extra_item['source_file'])) {
+						$this->sourceCache($base_url . basename($extra_item['source_file']), $source_id);
 					}
 				}
 			}
@@ -1143,18 +1047,23 @@ class wpOffload
 	 *
 	 * Decision cascade:
 	 *
-	 *   1. **No quota** → return false (don't prevent). SPIO can't
-	 *      optimize without quota, so let as3cf upload the raw file
-	 *      rather than losing it entirely.
-	 *   2. **`copy-to-s3` off** → return false (don't prevent). If the
+	 *   1. **`copy-to-s3` off** → return false (don't prevent). If the
 	 *      site owner turned offload off entirely, respect that.
-	 *   3. **`shouldPrevent` false** → return false (don't prevent).
+	 *   2. **`shouldPrevent` false** → return false (don't prevent).
 	 *      This is the guard SPIO's own `image_upload` uses when it
 	 *      *wants* the upload to go through.
-	 *   4. **On the prevent-offload list** → return a `WP_Error`
+	 *   3. **On the prevent-offload list** → return a `WP_Error`
 	 *      (`upload-prevented`) which as3cf treats as "abort this
 	 *      upload". Used by the converter around its rewrite window.
+	 *      It applies with or without quota: the conversion is local.
+	 *   4. **No quota** → return false (don't prevent). SPIO can't
+	 *      optimize without quota, so let as3cf upload the raw file
+	 *      rather than losing it entirely.
 	 *   5. **Fallback** → pass through the incoming `$bool`.
+	 *
+	 * The quota is asked last on purpose: hasQuota() loads the quota on
+	 * its first call of a request (on a cold cache a call to the API), and
+	 * the three checks before it settle most uploads without it.
 	 *
 	 * @param mixed  $bool         Incoming filter value from previous handlers.
 	 * @param object $as3cf_item   as3cf Media_Library_Item instance being uploaded.
@@ -1164,15 +1073,7 @@ class wpOffload
 	public function preventInitialUploadHandler($bool, $as3cf_item, $options)
 	{
 
-		$fs = \wpSPIO()->filesystem();
-		$settings = \WPSPIO()->settings();
-
 		$post_id = $as3cf_item->source_id();
-
-		$quotaController = quotaController::getInstance();
-		if ($quotaController->hasQuota() === false) {
-			return false;
-		}
 
 		if (! $this->offloading) {
 			return false;
@@ -1193,6 +1094,10 @@ class wpOffload
 			Log::addDebug('Offload Prevented via bool for ' . $post_id);
 		}
 
+		$quotaController = quotaController::getInstance();
+		if ($quotaController->hasQuota() === false) {
+			return false;
+		}
 
 		return $bool;
 	}
@@ -1402,29 +1307,58 @@ class wpOffload
 	 * `shortpixel/front/webp_notfound` filter — decide whether a WebP/AVIF
 	 * companion exists remotely when the local file wasn't found.
 	 *
-	 * The frontend PictureController uses this to emit `<picture>` tags
-	 * with a WebP source only when the WebP actually exists. as3cf's
-	 * `get_item_source_by_remote_url` can't find thumbnails directly
-	 * (it only indexes the main image), so we probe the main URL's
-	 * source_id first and, if found, treat the WebP as present.
+	 * The frontend PictureController calls this for every WebP/AVIF
+	 * candidate that `exists()` reported missing, and lists the candidate
+	 * in the `<picture>` sources only when this filter returns it.
 	 *
-	 * Fast-path: when the webp URL isn't cached but the main URL IS,
-	 * return false — the caller already knows the family is offloaded
-	 * but the specific companion isn't tracked, so don't advertise it.
+	 * The candidate is built from the directory of the image as the page
+	 * delivers it, so there are two cases:
+	 *
+	 *   - **The page delivers the bucket URL** (the normal offloaded page):
+	 *     the candidate is a bucket URL too. It is looked up by its own
+	 *     URL. as3cf records every offloaded file, companions included, so
+	 *     a companion that was never offloaded (e.g. a thumbnail whose
+	 *     AVIF was not kept) resolves to nothing and is not advertised.
+	 *     Fast-path: when the candidate URL is not cached but the image URL
+	 *     is, the item is known and does not list the candidate — return
+	 *     false without a lookup.
+	 *   - **The page delivers the local URL**: the candidate is a local
+	 *     path. The lookup then runs on the URL of the image, not on the
+	 *     candidate: the candidate is returned as soon as the URL of the
+	 *     image resolves to an as3cf item, without checking the candidate
+	 *     itself.
+	 *
+	 * Known limitation of the local-URL case, accepted as it is: the page
+	 * can advertise a WebP/AVIF on the local server that exists nowhere
+	 * (404, broken image). It needs ALL THREE of:
+	 *
+	 *   1. The page carries the LOCAL URL of an offloaded image ("Deliver
+	 *      Offloaded Media" off, or a hardcoded local URL that as3cf's
+	 *      content filter does not rewrite).
+	 *   2. as3cf resolves that local URL to the item, which it only does
+	 *      when the remote key ends in the local relative path, i.e. the
+	 *      image was offloaded with "Add Object Versioning" OFF (it is on
+	 *      by default).
+	 *   3. The WebP/AVIF is not on the local disk.
+	 *
+	 * Pages that deliver bucket URLs are not affected. Should it need
+	 * handling: for a local-path candidate, check
+	 * `$fileObj->getFileName()` against the item's recorded objects before
+	 * returning it.
 	 *
 	 * @param bool   $bool          Incoming filter value.
 	 * @param object $fileObj       SPIO FileModel of the WebP/AVIF companion being probed.
-	 * @param string $url           URL of the main file (e.g. the `.jpg`).
+	 * @param string $url           URL of the image (e.g. the `.jpg`).
 	 * @param object $imagebaseDir  SPIO DirectoryModel of the remote path (unused).
-	 * @return object|false The `$fileObj` when the main file resolves to an offloaded source, false otherwise.
+	 * @return object|false The `$fileObj` when the lookup resolves to an offloaded source, false otherwise.
 	 */
 	public function fixWebpRemotePath($bool, $fileObj, $url, $imagebaseDir)
 	{
-		$extension = $fileObj->getExtension();
+		//$extension = $fileObj->getExtension();
 		$fs = \wpSPIO()->filesystem();
 
 		$webpUrl = $fileObj->getFullPath();
-		$main_is_loaded = $this->sourceCache($url); // main image, check if loaded.
+		$main_is_loaded = $this->sourceCache($url); 
 		if ($fs->pathIsURL($webpUrl)) {
 			$url = $webpUrl;
 			$res = $this->sourceCache($url);

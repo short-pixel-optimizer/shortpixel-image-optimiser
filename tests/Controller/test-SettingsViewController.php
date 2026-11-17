@@ -16,6 +16,9 @@
  *     excludeSizes normalisation, ignore-fields stripping.
  *   - doRedirect() URL-building in ajax-save mode only (avoids the
  *     wp_redirect()+exit() end path).
+ *   - action_debug_* — nonce gate: a link without nonce (or with the nonce
+ *     of another action) dies before the side effect; the Tools link with
+ *     its own nonce and the Debug form with the form nonce pass.
  *
  * NOT covered here (hit wp_redirect / wp_send_json / exit on every path):
  *   - load() / load_settings() — renders the settings template; too many
@@ -118,8 +121,9 @@ class SettingsViewControllerTest extends WP_UnitTestCase {
 
 	public function tear_down() {
 		wp_set_current_user( 0 );
-		$_GET  = array();
-		$_POST = array();
+		$_GET     = array();
+		$_POST    = array();
+		$_REQUEST = array();
 
 		$ref = new ReflectionClass( SettingsViewController::class );
 		if ( $ref->hasProperty( 'instance' ) ) {
@@ -674,5 +678,184 @@ class SettingsViewControllerTest extends WP_UnitTestCase {
 		// production only adds the 'redirect' JSON key when $redirect !== 'self',
 		// so mangling this marker would reintroduce an unwanted page redirect.
 		$this->assertSame( 'self', $c->spyRedirect );
+	}
+
+	// -----------------------------------------------------------------
+	// Debug / Tools actions — nonce gate in front of every action
+	// -----------------------------------------------------------------
+
+	/**
+	 * Spy for the routed action_debug_* methods: loadEnv() is a no-op and
+	 * doRedirect() records its target and throws instead of redirecting +
+	 * exiting, so a test can tell "gate passed" (RuntimeException) from
+	 * "gate refused" (WPDieException).
+	 */
+	private function actionSpy(): SettingsViewController {
+		$c = new class extends SettingsViewController {
+			public $spyRedirect = null;
+			public function __construct() { /* no hooks, no model loading */ }
+			protected function loadEnv() {}
+			protected function doRedirect( $redirect = 'self' ) {
+				$this->spyRedirect = $redirect;
+				throw new \RuntimeException( 'redirect-intercepted' );
+			}
+		};
+		$this->setProtected( $c, 'url', 'https://example.test/wp-admin/options-general.php?page=wp-shortpixel-settings' );
+		return $c;
+	}
+
+	/**
+	 * Simulates the router reaching $action from a link: GET request, empty
+	 * POST, sp-action in the request.
+	 */
+	private function routeGet( string $action, array $extra = array() ): void {
+		$_POST    = array();
+		$_GET     = array_merge( array( 'sp-action' => $action, 'noheader' => '1' ), $extra );
+		$_REQUEST = $_GET;
+	}
+
+	public function actionsBehindTheNonceGate(): array {
+		return array(
+			'redirectBulk'       => array( 'action_debug_redirectBulk', array( 'bulk' => 'restore' ) ),
+			'resetStats'         => array( 'action_debug_resetStats', array() ),
+			'resetquota'         => array( 'action_debug_resetquota', array() ),
+			'resetNotices'       => array( 'action_debug_resetNotices', array() ),
+			'resetQueue'         => array( 'action_debug_resetQueue', array( 'queue' => 'all', 'use_uninstall' => '1' ) ),
+			'removePrevented'    => array( 'action_debug_removePrevented', array() ),
+			'removeProcessorKey' => array( 'action_debug_removeProcessorKey', array() ),
+			'editSetting'        => array( 'action_debug_editSetting', array() ),
+			'triggerNotice'      => array( 'action_debug_triggerNotice', array( 'notice_constant' => 'trigger-all' ) ),
+		);
+	}
+
+	/**
+	 * A crafted link (no nonce) sent to a logged-in admin must not run any
+	 * Tools / Debug action: every one of them dies before its side effect.
+	 *
+	 * @dataProvider actionsBehindTheNonceGate
+	 */
+	public function test_debug_action_reached_by_a_link_without_nonce_dies( string $action, array $extra ) {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		$c = $this->actionSpy();
+		$this->routeGet( $action, $extra );
+
+		try {
+			$c->$action();
+			$this->fail( "$action ran without a nonce." );
+		} catch ( WPDieException $e ) {
+			// Sentinel: refused before reaching the redirect at the end of the action.
+			$this->assertNull( $c->spyRedirect );
+		}
+	}
+
+	public function test_removePrevented_link_without_nonce_keeps_the_optimization_blocks() {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		$attachment_id = self::factory()->post->create( array( 'post_type' => 'attachment' ) );
+		update_post_meta( $attachment_id, '_shortpixel_prevent_optimize', 'Backup failed' );
+
+		$c = $this->actionSpy();
+		$this->routeGet( 'action_debug_removePrevented' );
+
+		try {
+			$c->action_debug_removePrevented();
+			$this->fail( 'removePrevented ran without a nonce.' );
+		} catch ( WPDieException $e ) {
+			// expected
+		}
+
+		$this->assertSame( 'Backup failed', get_post_meta( $attachment_id, '_shortpixel_prevent_optimize', true ) );
+	}
+
+	public function test_removePrevented_link_with_its_nonce_removes_the_optimization_blocks() {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		$attachment_id = self::factory()->post->create( array( 'post_type' => 'attachment' ) );
+		update_post_meta( $attachment_id, '_shortpixel_prevent_optimize', 'Backup failed' );
+
+		$c = $this->actionSpy();
+		$this->routeGet( 'action_debug_removePrevented', array( 'sp-nonce' => wp_create_nonce( 'action_debug_removePrevented' ) ) );
+
+		try {
+			$c->action_debug_removePrevented();
+			$this->fail( 'Expected the action to end in doRedirect().' );
+		} catch ( \RuntimeException $e ) {
+			$this->assertSame( 'redirect-intercepted', $e->getMessage() );
+		}
+
+		$this->assertSame( '', get_post_meta( $attachment_id, '_shortpixel_prevent_optimize', true ) );
+	}
+
+	public function test_removePrevented_link_refuses_the_nonce_of_another_action() {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		$attachment_id = self::factory()->post->create( array( 'post_type' => 'attachment' ) );
+		update_post_meta( $attachment_id, '_shortpixel_prevent_optimize', 'Backup failed' );
+
+		$c = $this->actionSpy();
+		// The nonce of the harmless reset-stats link must not unlock a destructive action.
+		$this->routeGet( 'action_debug_removePrevented', array( 'sp-nonce' => wp_create_nonce( 'action_debug_resetStats' ) ) );
+
+		try {
+			$c->action_debug_removePrevented();
+			$this->fail( 'removePrevented accepted the nonce of another action.' );
+		} catch ( WPDieException $e ) {
+			// expected
+		}
+
+		$this->assertSame( 'Backup failed', get_post_meta( $attachment_id, '_shortpixel_prevent_optimize', true ) );
+	}
+
+	public function test_redirectBulk_link_with_its_nonce_opens_the_requested_bulk_panel() {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		$c = $this->actionSpy();
+		$this->routeGet(
+			'action_debug_redirectBulk',
+			array( 'bulk' => 'restoreAI', 'sp-nonce' => wp_create_nonce( 'action_debug_redirectBulk' ) )
+		);
+
+		try {
+			$c->action_debug_redirectBulk();
+			$this->fail( 'Expected the action to end in doRedirect().' );
+		} catch ( \RuntimeException $e ) {
+			$this->assertSame( 'redirect-intercepted', $e->getMessage() );
+		}
+
+		$this->assertSame( 'bulk-restoreAI', $c->spyRedirect );
+	}
+
+	/**
+	 * resetQueue is reached two ways: the Tools link (per-action nonce in the
+	 * URL) and the Debug form (shared form nonce in the POST). Both pass.
+	 */
+	public function test_resetQueue_tools_link_with_its_nonce_passes_the_gate() {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		$c = $this->actionSpy();
+		// No 'queue' → nothing is reset, the action goes straight to the reload.
+		$this->routeGet( 'action_debug_resetQueue', array( 'sp-nonce' => wp_create_nonce( 'action_debug_resetQueue' ) ) );
+
+		try {
+			$c->action_debug_resetQueue();
+			$this->fail( 'Expected the action to end in doRedirect().' );
+		} catch ( \RuntimeException $e ) {
+			$this->assertSame( 'redirect-intercepted', $e->getMessage() );
+		}
+
+		$this->assertSame( 'reload', $c->spyRedirect );
+	}
+
+	public function test_resetQueue_debug_form_with_the_form_nonce_passes_the_gate() {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		$c = $this->actionSpy();
+		$_GET     = array( 'sp-action' => 'action_debug_resetQueue' );
+		// The Debug forms print wp_nonce_field( $this->form_action ) = 'save-settings'.
+		$_POST    = array( 'sp-nonce' => wp_create_nonce( 'save-settings' ) );
+		$_REQUEST = array_merge( $_GET, $_POST );
+
+		try {
+			$c->action_debug_resetQueue();
+			$this->fail( 'Expected the action to end in doRedirect().' );
+		} catch ( \RuntimeException $e ) {
+			$this->assertSame( 'redirect-intercepted', $e->getMessage() );
+		}
+
+		$this->assertSame( 'reload', $c->spyRedirect );
 	}
 }

@@ -18,8 +18,6 @@ use ShortPixel\Controller\Optimizer\OptimizeAiController;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 use ShortPixel\NextGenController as NextGenController;
 
-use ShortPixel\Controller\Queue\MediaLibraryQueue as MediaLibraryQueue;
-use ShortPixel\Controller\Queue\CustomQueue as CustomQueue;
 use ShortPixel\Controller\View\OtherMediaViewController;
 use ShortPixel\Helper\InstallHelper as InstallHelper;
 use ShortPixel\Helper\UiHelper as UiHelper;
@@ -92,6 +90,12 @@ class ShortPixelPlugin {
 
 	/** @var array<int, string> WP admin-page hook suffixes returned by add_options_page / add_media_page. */
 	protected $admin_pages = [];  // admin page hooks.
+
+	/** Prefix of SPIO's promo banner: names its dismissals option (`spio-promo-banner`), AJAX action and asset handle. */
+	const PROMO_BANNER_PREFIX = 'spio';
+
+	/** @var \ShortPixel\PromoBanner\PromoBanner|null The current campaign banner, set up in admin_init(); printed by renderPromoBanner(). */
+	protected $promoBanner = null;
 
 	/**
 	 * Register the `lowInit` bootstrap at `plugins_loaded` priority 5.
@@ -191,6 +195,21 @@ class ShortPixelPlugin {
 	 * ready — loading it earlier causes a fatal on multisite. The
 	 * matching block in wp-shortpixel.php is commented out.
 	 *
+	 * The log path is set here, on `init`. The logger builds the "Logfile"
+	 * link of its debug box (shown with `SHORTPIXEL_DEBUG` in the URL) later,
+	 * on `admin_footer`, so the link points at this path.
+	 *
+	 * @todo On multisite the path is not set for a debug request: the
+	 *       logger decides on `wp_loaded` (after `init`) whether the
+	 *       `SHORTPIXEL_DEBUG` request parameter counts, so debugIsActive()
+	 *       is still false here and setLogPath() is skipped. The logger then
+	 *       writes to its fallback file in the uploads directory of the
+	 *       current site (`ShortPixel.log`) instead of
+	 *       `ShortpixelBackups/shortpixel_log`, and the debug box links to
+	 *       that file. Suggested fix: call setLogPath() without the
+	 *       debugIsActive() check; an inactive logger only remembers the
+	 *       path and creates no file.
+	 *
 	 * @return void
 	 */
 	public function init() : void
@@ -237,7 +256,7 @@ class ShortPixelPlugin {
 
 
 	/**
-	 * WordPress `admin_init` hook — version check, notice hookup, quota fetch.
+	 * WordPress `admin_init` hook — version check, notice hookup, promo banner.
 	 *
 	 * Order matters:
 	 *
@@ -246,8 +265,11 @@ class ShortPixelPlugin {
 	 *      `InstallHelper::activatePlugin()` (table upgrades, option
 	 *      migrations, etc.). Runs first so the rest can trust the schema.
 	 *   2. `NoticeController::getInstance()` — attaches its ajax listener.
-	 *   3. `QuotaController::getInstance()->getQuota()` — refreshes cached
-	 *      quota data from the API when stale.
+	 *
+	 * The quota is not loaded here: `admin_init` also fires for
+	 * admin-ajax.php requests of visitors who are not logged in, and on a
+	 * cold cache a quota load is a call to the ShortPixel API. QuotaController
+	 * loads it on demand, on the first getQuota() or hasQuota() of a request.
 	 *
 	 * @return void
 	 */
@@ -256,8 +278,46 @@ class ShortPixelPlugin {
 			$this->check_plugin_version();
 
 			$notices             = Notices::getInstance(); // This hooks the ajax listener
-			$quotaController = QuotaController::getInstance();
-			$quotaController->getQuota();
+			/*$quotaController = QuotaController::getInstance();
+			$quotaController->getQuota(); */
+
+		  $our_screen = function () { return \wpSPIO()->env()->is_our_screen;  };
+
+		  // 'hook' false: SPIO prints the banner itself, right under its header
+		  // and above the page content (renderPromoBanner() in the page views),
+		  // so it never slides under the header that is fixed on narrow screens.
+		  $this->promoBanner = new \ShortPixel\PromoBanner\PromoBanner(array(
+          'id'         => 'black-friday-2026',
+          'start'      => strtotime('2026-11-23 00:00:00 UTC'),
+          'end'        => strtotime('2026-12-01 07:59:59 UTC'), // 23:59:59 US Pacific on the 30th
+          'ends_on'    => '2026-11-30',                         // the day the banner prints
+          'url'        => 'https://shortpixel.com/pricing?utm_source=plugin&utm_medium=spio&utm_campaign=top_banner_bf2026',
+          'prefix'     => self::PROMO_BANNER_PREFIX,             // the plugin's identity: option, AJAX action, asset handle
+          'assets_url' => plugins_url('build/shortpixel/promo-banner/assets/', SHORTPIXEL_PLUGIN_FILE),
+		  'version'    => '1.0',
+		  'screens'    => [],
+		  'condition'  => $our_screen,
+		  'capability' => 'manage_options',
+		  'hook'       => false,
+		));
+		  $this->promoBanner->register();
+	}
+
+	/**
+	 * Print the promo banner when it should show.
+	 *
+	 * Called by SPIO's page views right under their header (settings, bulk)
+	 * or title (Custom Media), so the banner sits above the page content and
+	 * takes its width. Prints nothing outside the campaign window, for users
+	 * without the capability, after a dismissal, or before admin_init() set
+	 * the banner up.
+	 *
+	 * @return void
+	 */
+	public function renderPromoBanner() {
+		if ( is_object( $this->promoBanner ) ) {
+			$this->promoBanner->render();
+		}
 	}
 
 	/**
@@ -389,7 +449,8 @@ class ShortPixelPlugin {
 			if ( apply_filters( 'shortpixel/init/automedialibrary', true ) ) {
 
       			add_action( 'shortpixel-thumbnails-before-regenerate', array( $admin, 'preventImageHook' ), 10, 1 );
-
+      			add_action( 'shortpixel-thumbnails-after-regenerate', array( $admin, 'unPreventImageHook' ), 10, 1 );
+				
 				add_action( 'enable-media-replace-upload-done', array( $admin, 'handleReplaceEnqueue' ), 10, 3 );
 
 				add_filter( 'wp_generate_attachment_metadata', array( $admin, 'handleImageUploadHook' ), 5, 2 );
@@ -800,6 +861,11 @@ class ShortPixelPlugin {
 
 		wp_register_script( 'shortpixel', plugins_url( '/res/js/shortpixel.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'jquery.knob.min.js' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
+		// admin_scripts runs on every admin page. Only the screens SPIO works
+		// on load the quota (on a cold cache a call to the API); elsewhere the
+		// stored quotaExceeded flag, which hasQuota() also answers from, is enough.
+		$hasQuota = ( true === $env->is_screen_to_use ) ? $quotaController->hasQuota() : ( ! $settings->quotaExceeded );
+
 		// Using an Array within another Array to protect the primitive values from being cast to strings
 		$ShortPixelConstants = array(
 			array(
@@ -809,7 +875,7 @@ class ShortPixelPlugin {
 				'AJAX_URL'          => admin_url( 'admin-ajax.php' ),
 				'BULK_SECRET'       => $secretKey,
 				'nonce_ajaxrequest' => wp_create_nonce( 'ajax_request' ),
-				'HAS_QUOTA'         => ( $quotaController->hasQuota() ) ? 1 : 0,
+				'HAS_QUOTA'         => ( $hasQuota ) ? 1 : 0,
 
 			),
 		);

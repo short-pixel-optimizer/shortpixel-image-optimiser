@@ -299,7 +299,9 @@ class OptimizeAiController extends OptimizerBase
      * Applies processTextResult() (capitalisation, period) to text fields (alt, caption,
      * description — never filebase). Any field that comes back as numeric 1 from the API is
      * treated as "not generated" and replaced with an empty string. Applies configured
-     * prefix/postfix settings for each field. Always stores the original file base in
+     * prefix/postfix settings for each field, except numeric values (status codes such as
+     * AiDataModel::F_STATUS_EXCLUDESETTING -3 / F_STATUS_PREVENTOVERRIDE -4, as int or
+     * string), which are not text and stay as they are. Always stores the original file base in
      * 'original_filebase' for later use in replaceFiles().
      *
      * @param array     $aiData Associative array of AI-generated field values.
@@ -341,7 +343,7 @@ class OptimizeAiController extends OptimizerBase
         ];
 
         foreach ($prefixPostfixMap as $field => $affixes) {
-            if (isset($aiData[$field]) && !empty($aiData[$field]) && $aiData[$field] !== -3) {
+            if (isset($aiData[$field]) && !empty($aiData[$field]) && false === is_numeric($aiData[$field])) {
 
                 $prefix = $settings->{$affixes['prefix']};
                 $postfix = $settings->{$affixes['postfix']};
@@ -398,8 +400,19 @@ class OptimizeAiController extends OptimizerBase
      * Then:
      *   - Replaces in-post image attributes (alt, caption) via replaceImageAttributes().
      *   - Renames physical files and updates WordPress metadata via replaceFiles() when
-     *     the AI returned a new filebase that differs from the current one, and only when
-     *     the image is not already widely linked in published content.
+     *     the ai_gen_filename setting is on, the AI returned a filebase longer than 5
+     *     characters that differs from the current one, and the image is not already
+     *     widely linked in published content.
+     *
+     * @todo The rename gate reads the SAVED ai_gen_filename setting only, but the
+     *       request side honours a per-item override: GenerateAiSeoAbility passes
+     *       `ai_gen_filename` as a queue arg, and AiDataModel::getOptimizeData()
+     *       merges it over the settings (UtilHelper::getAiSettings($params)). An MCP
+     *       generate-ai-seo call with gen_filename=true while the setting is off asks
+     *       (and pays) for a filename, then drops the rename here. Suggested fix: gate
+     *       on what THIS item requested, e.g. the returndatalist entry for 'filename'
+     *       not being F_STATUS_EXCLUDESETTING, or carry the override in keep_data
+     *       like recent_upload.
      *   - Appends improvements, preview URLs, and the final aiData/aiDataLabels to the
      *     queue item result for bulk UI consumption.
      * The item is blocked during processing and unblocked before finishItemProcess() is called.
@@ -410,6 +423,7 @@ class OptimizeAiController extends OptimizerBase
     protected function HandleSuccess(QueueItem $qItem)
     {
         $action = $qItem->data()->action;
+        $settings = \wpSPIO()->settings(); 
     
         $aiData = $qItem->result()->aiData;
         $aiData = apply_filters('shortpixel/ai/success', $aiData, $qItem);
@@ -442,7 +456,7 @@ class OptimizeAiController extends OptimizerBase
         // If the file was just uploaded, assume it's not already widely linked and doesn't need replacing / symlinking 
         // ( Maybe just replacing? )
         // Generic number of strlen here. Disallow filename not to be very short, because because. 
-        if (isset($aiData['filebase']) && is_string($aiData['filebase']) && strlen($aiData['filebase']) > 5) // ?? 
+        if (true === $settings->ai_gen_filename && isset($aiData['filebase']) && is_string($aiData['filebase']) && strlen($aiData['filebase']) > 5) // ?? 
         {
             // @todo This and the ReplaceAtttributes is similar code. (Replacer2's Setup::getInstance() returns a fresh instance per call, so URL data does not leak between items.)
             $currentFileBase = ($imageModel->isScaled()) ? $imageModel->getOriginalFile()->getFileBase() : $imageModel->getFileBase();
@@ -461,6 +475,7 @@ class OptimizeAiController extends OptimizerBase
             }
 
             if ($currentFileBase !== $aiData['filebase']) {
+
                 $args = [
                     'dry_run' => false,
                     'recent_upload' => is_bool($qItem->data()->recent_upload) ? $qItem->data()->recent_upload : false,

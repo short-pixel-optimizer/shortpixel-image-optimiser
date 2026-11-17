@@ -731,8 +731,6 @@ class ShortPixelScreen extends ShortPixelScreenBase
 	/** HandleError is used for item errors. The latter have a result object embedded and more information */
   HandleItemError(result, type)
   {
-//    console.error(result);
-
 		var fatal = false;
 		var cssClass = '';
 		var message = '';
@@ -776,8 +774,10 @@ class ShortPixelScreen extends ShortPixelScreenBase
 		}
 		else // unknown.
 		{
-    	var message = result.message + '(' + result.item_id + ')';
+       // Queue full mostly passed by the non-result (higher level) error, which might just be result.error not an item
+      var message = result.message + '(' + result.item_id + ')';
 			console.error('Error without item - ' + message);
+      
 
 		}
 

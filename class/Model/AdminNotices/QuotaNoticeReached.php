@@ -70,12 +70,14 @@ class QuotaNoticeReached extends \ShortPixel\Model\AdminNoticeModel
 
 		//$keyModel->loadKey();
 
-		$login_url = 'https://shortpixel.com/login/';
-		$friend_url = $login_url;
+		// Without a displayable key the button goes to the plain login page,
+		// tagged; with one it logs the user in (no UTMs on that link).
+		$login_url = 'https://shortpixel.com/login/?utm_source=plugin&utm_medium=spio&utm_campaign=quota_notice_upgrade';
+		$friend_url = 'https://shortpixel.com/login/';
 
 		if ($keyControl->getKeyForDisplay())
 		{
-			$login_url .= $keyControl->getKeyForDisplay() . '/spio-unlimited';
+			$login_url = 'https://shortpixel.com/login/' . $keyControl->getKeyForDisplay() . '/spio-unlimited';
 			$friend_url = $login_url . 'tell-a-friend';
 		}
 
@@ -117,7 +119,7 @@ class QuotaNoticeReached extends \ShortPixel\Model\AdminNoticeModel
 				}
 
 			
-			$upgradeButton = sprintf('<a href="https://shortpixel.com/ms/af/KZYK08Q28044" target="_blank" class="button button-primary" style="margin-right:10px;" >
+			$upgradeButton = sprintf('<a href="https://shortpixel.com/pricing?utm_source=plugin&utm_medium=spio&utm_campaign=quota_notice_onetime" target="_blank" class="button button-primary" style="margin-right:10px;" >
 							%s </a> ',
 				   __('Buy one-time credits', 'shortpixel-image-optimiser'));
 

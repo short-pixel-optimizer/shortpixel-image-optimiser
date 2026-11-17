@@ -71,7 +71,7 @@ class QueueItemTest extends WP_UnitTestCase {
 			public function getOptimizeUrls() { return array(); }
 			protected function saveMeta() {}
 			protected function loadMeta() {}
-			protected function getImprovements() { return false; }
+			public function getImprovements() { return false; }
 			protected function getExcludePatterns() { return array(); }
 			protected function preventNextTry( $reason = '' ) {}
 			public function isOptimizePrevented() { return false; }

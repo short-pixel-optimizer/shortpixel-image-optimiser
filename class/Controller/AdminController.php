@@ -153,7 +153,7 @@ class AdminController extends \ShortPixel\Controller
 					{
 							$args = array('runReplacer' => false);
 
-						 	$res = $converter->convert($args);
+						 	$converter->convert($args);
 							$mediaItem = $fs->getImage($id, 'media', false);
 
 							$meta = $converter->getUpdatedMeta();
@@ -166,7 +166,7 @@ class AdminController extends \ShortPixel\Controller
           ];
           
           
-        	$result = $queueController->addItemToQueue($mediaItem, $args);
+        	$queueController->addItemToQueue($mediaItem, $args);
 				}
 				else {
 					Log::addWarn('Passed mediaItem is not processable', $id);
@@ -203,17 +203,21 @@ class AdminController extends \ShortPixel\Controller
 					 return $meta;
 				}
 
-        $converter = Converter::getConverter($mediaItem, true);
+        // Check processable to catch exclusions and other issues here for conversion. 
+        if ($mediaItem->isProcessable())
+        {
+          $converter = Converter::getConverter($mediaItem, true);
 
-        // Convert only done by PNG atm, the rest is done via ImageModelToQueue.
-        if (is_object($converter) && $converter->isConvertable())
-				{
-							$args = array('runReplacer' => false);
+          // Convert only done by PNG atm, the rest is done via ImageModelToQueue.
+          if (is_object($converter) && $converter->isConvertable())
+          {
+                $args = array('runReplacer' => false);
 
-						 	$res = $converter->convert($args);
-							$mediaItem = $fs->getImage($id, 'media', false);
+                $res = $converter->convert($args);
+                $mediaItem = $fs->getImage($id, 'media', false);
 
-							$meta = $converter->getUpdatedMeta();
+                $meta = $converter->getUpdatedMeta();
+          }
         }
 
         $queueController = new QueueController();
@@ -240,6 +244,23 @@ class AdminController extends \ShortPixel\Controller
 		{
 			  self::$preventUploadHook[] = $id;
 		}
+
+    /**
+     * Releases an attachment from the upload-hook block set by preventImageHook().
+     *
+     * Hooked on `shortpixel-thumbnails-after-regenerate`, which the converter
+     * and the thumbnail regeneration fire once they are done. From then on the
+     * upload hooks handle the attachment again in the same request: after a
+     * PNG to JPG conversion on upload the converted image is still queued for
+     * optimization. Removes every occurrence of the ID; other IDs stay blocked.
+     *
+     * @param int $id Attachment post ID.
+     * @return void
+     */
+    public function unPreventImageHook($id)
+    {
+        self::$preventUploadHook = array_diff(self::$preventUploadHook, [$id]); 
+    }
 
 		/**
 		 * Returns a placeholder URL (with a .jpg extension) for convertable image formats such as HEIC.
@@ -875,7 +896,9 @@ class AdminController extends \ShortPixel\Controller
         $successLink = $link = admin_url(current_user_can( 'edit_others_posts')? 'upload.php?page=wp-short-pixel-bulk' : 'upload.php');
         $blank = "";
 
-        if($quotaController->hasQuota() === false)
+        $hasQuota = $quotaController->hasQuota(); 
+
+        if(false === $hasQuota)
 				{
             $extraClasses = " shortpixel-alert shortpixel-quota-exceeded";
             /*translators: toolbar icon tooltip*/
@@ -905,12 +928,11 @@ class AdminController extends \ShortPixel\Controller
                             </div>'
 
                          .'<div class="cssload-container"><div class="cssload-speeding-wheel"></div></div></div>',
-    //            'href'  => 'javascript:void(0)', // $link,
                 'meta'  => array('target'=> $blank, 'class' => 'shortpixel-toolbar-processing' . $extraClasses)
         );
         $wp_admin_bar->add_node( $args );
 
-        if($quotaController->hasQuota() === false)
+        if(false === $hasQuota)
 				{
             $wp_admin_bar->add_node( array(
                 'id'    => 'shortpixel_processing-title',

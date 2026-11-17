@@ -442,4 +442,49 @@ class UiHelperTest extends WP_UnitTestCase {
 	public function test_convertImageTypeName_replaces_extension_for_avif() {
 		$this->assertSame( 'photo.avif', $this->invokeConvertImageTypeName( 'photo.png', 'avif' ) );
 	}
+
+	/** Reset the ApiKeyController singleton and store $key (or none) as a verified key. */
+	private function withStoredKey( ?string $key ): void {
+		$ref = new ReflectionClass( \ShortPixel\Controller\ApiKeyController::class );
+		$p   = $ref->getProperty( 'instance' );
+		$p->setAccessible( true );
+		$p->setValue( null, null );
+
+		if ( null === $key ) {
+			delete_option( 'spio_key' );
+		} else {
+			update_option( 'spio_key', array( 'apiKey' => $key, 'verifiedKey' => true, 'apiKeyTried' => $key ) );
+		}
+	}
+
+	/**
+	 * Without a displayable API key, "Extend Quota" goes to the plain login
+	 * page, tagged with the plugin's UTM parameters.
+	 */
+	public function test_getAction_extendquota_without_a_key_links_the_tagged_login_page() {
+		$this->withStoredKey( null );
+		try {
+			$extend = UiHelper::getAction( 'extendquota', 0 );
+		} finally {
+			$this->withStoredKey( null );
+		}
+
+		$this->assertSame( 'https://shortpixel.com/login/?utm_source=plugin&utm_medium=spio&utm_campaign=list_button_extend_quota', $extend['function'] );
+	}
+
+	/**
+	 * With an API key, "Extend Quota" logs the user in through
+	 * login/<key>, and that link carries no UTM parameters.
+	 */
+	public function test_getAction_extendquota_with_a_key_logs_in_without_utm_parameters() {
+		$this->withStoredKey( 'AAAABBBBCCCCDDDDEEEE' );
+		try {
+			$extend = UiHelper::getAction( 'extendquota', 0 );
+		} finally {
+			$this->withStoredKey( null );
+		}
+
+		$this->assertSame( 'https://shortpixel.com/login/AAAABBBBCCCCDDDDEEEE', $extend['function'] );
+		$this->assertStringNotContainsString( 'utm_', $extend['function'] );
+	}
 }

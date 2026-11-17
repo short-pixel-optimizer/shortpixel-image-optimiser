@@ -67,6 +67,9 @@ if ( '1' === getenv( 'SPIO_PARTNER_PLUGINS' ) ) {
 		// faked-active tests in test-CompatPolylang.php coexist:
 		// this option override lists it, and the real plugin loads.
 		'polylang/polylang.php',
+		// Real Beaver Builder Lite (free, wp.org). It has no replacer2
+		// module: its layouts go through the generic serialized-meta path.
+		'beaver-builder-lite-version/fl-builder.php',
 		// Commercial — extracted from tests/partner-plugins/ when
 		// present; silently skipped (like the rest) when not.
 		'sitepress-multilingual-cms/sitepress.php',
@@ -78,6 +81,22 @@ if ( '1' === getenv( 'SPIO_PARTNER_PLUGINS' ) ) {
 		// Commercial (Breakdance) — tests/partner-plugins/breakdance-*.zip.
 		'breakdance/plugin.php',
 	);
+
+	/**
+	 * The partner THEME (Bricks, commercial): bin/test.sh --compat extracts
+	 * tests/partner-themes/bricks*.zip into the themes dir. When it is there
+	 * it becomes the active theme for the whole compat run (one theme per
+	 * WordPress load), so test-CompatBricks.php runs against the real theme;
+	 * without the zip WordPress keeps its default theme and those tests
+	 * self-skip. WP_CONTENT_DIR is defined by the time WP core reads these
+	 * options.
+	 */
+	$spio_partner_theme = 'bricks';
+	$spio_partner_theme_filter = static function ( $value ) use ( $spio_partner_theme ) {
+		return file_exists( WP_CONTENT_DIR . '/themes/' . $spio_partner_theme . '/style.css' ) ? $spio_partner_theme : $value;
+	};
+	tests_add_filter( 'pre_option_template', $spio_partner_theme_filter );
+	tests_add_filter( 'pre_option_stylesheet', $spio_partner_theme_filter );
 
 	tests_add_filter(
 		'pre_option_active_plugins',
@@ -116,6 +135,7 @@ if ( '1' === getenv( 'SPIO_PARTNER_PLUGINS' ) ) {
 		$spio_partner_dirs[] = '/plugins/' . strtok( $spio_partner_plugin, '/' ) . '/';
 	}
 	unset( $spio_partner_plugin );
+	$spio_partner_dirs[] = '/themes/' . $spio_partner_theme . '/';
 
 	set_error_handler( // phpcs:ignore WordPress.PHP.DevelopmentFunctions.prevent_path_disclosure_set_error_handler
 		static function ( $errno, $errstr, $errfile = '' ) use ( $spio_partner_dirs ) {
@@ -167,6 +187,7 @@ if ( '1' === getenv( 'SPIO_PARTNER_PLUGINS' ) ) {
 					'elementor',
 					'js_composer',
 					'breakdance',
+					'bricks',
 					'polylang',
 					'amazon-s3-and-cloudfront',
 				);

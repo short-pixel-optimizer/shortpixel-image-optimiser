@@ -10,9 +10,10 @@
  * the queue rows between processor ticks so "sent to API" items are re-picked
  * immediately instead of after ShortQ's 10s process_timeout.
  */
+import type { Page } from '@playwright/test';
 import { test, expect } from '../fixtures';
 import { BulkPage } from '../helpers/bulk-page';
-import { ApiCode, expectNoHorizontalOverflow } from '../helpers/spio';
+import { ApiCode, expectNoHorizontalOverflow, SpioSupport } from '../helpers/spio';
 
 const FIXTURES = ['fixture-small.jpg', 'fixture-small.png', 'fixture-large.jpg'];
 
@@ -119,10 +120,10 @@ test.describe('Bulk page — API error path', () => {
 
 	/**
 	 * PIN (bulk error rows):
-	 * screen-bulk.js HandleItemError() (~:727) expects the failed item wrapped
+	 * screen-bulk.js HandleItemError() expects the failed item wrapped
 	 * as `result.result`, but the processor hands it the item object itself
 	 * (`{item_id, message, is_error, is_done, …}`), so EVERY API error takes
-	 * the "unknown" fallback branch (~:763-766): `fatal` is never set — the
+	 * the "unknown" fallback branch: `fatal` is never set — the
 	 * error rows are rendered without the `.fatal` class (no red styling,
 	 * `kblink` help icon never shown) — and a `console.error('Error without
 	 * item - …')` fires per failed image. The counters and the row text are
@@ -175,5 +176,100 @@ test.describe('Bulk page — API error path', () => {
 		expect(consoleErrors.filter((e) => !/Error without item/.test(e))).toEqual([]);
 
 		await bulk.finish();
+	});
+
+	/**
+	 * Start a bulk of one image against an API that answers -404 (its
+	 * optimization queue is full) and wait for the first queue-full answer.
+	 * OptimizeController sets QUEUE_FULL (-8) on the item result for -404 and
+	 * for -500 (maintenance). Every item error the bulk screen receives is
+	 * recorded in `window.__spioItemErrors`.
+	 */
+	async function startBulkAgainstFullQueue(page: Page, spio: SpioSupport): Promise<string[]> {
+		await spio.uploadFixture('fixture-small.jpg');
+		await spio.setMock({ forceStatusCode: -404 });
+		const logs: string[] = [];
+		page.on('console', (m) => logs.push(m.text()));
+
+		const bulk = new BulkPage(page);
+		await bulk.goto();
+		await page.evaluate(() => {
+			const screen = (window as any).ShortPixelProcessor.screen;
+			const original = screen.HandleItemError.bind(screen);
+			(window as any).__spioItemErrors = [];
+			screen.HandleItemError = (result: any, type: string) => {
+				(window as any).__spioItemErrors.push({ wrapped: typeof result.result !== 'undefined', error: result.error, at: Date.now() });
+				return original(result, type);
+			};
+		});
+		await bulk.startSelection();
+		await bulk.calculate();
+		await bulk.startBulk();
+
+		// SENTINEL: the QUEUE_FULL code reaches the bulk screen, unwrapped.
+		await expect
+			.poll(() => page.evaluate(() => (window as any).__spioItemErrors.length), { timeout: 60_000, message: 'the queue-full answer must reach HandleItemError' })
+			.toBeGreaterThan(0);
+		const first = await page.evaluate(() => (window as any).__spioItemErrors[0]);
+		expect(first.error, 'sentinel: the item carries QUEUE_FULL (-8)').toBe(-8);
+		expect(first.wrapped, 'sentinel: the item reaches HandleItemError unwrapped').toBe(false);
+
+		return logs;
+	}
+
+	/**
+	 * Queue full: shortpixel-processor.js HandleItemError() recognises
+	 * QUEUE_FULL, sets `timesEmpty = 2` and calls StopProcess({ defer: true }),
+	 * which schedules the next run after `deferInterval * 3` (three minutes).
+	 * The same response then reaches HandleQueueStatus() with the queue still
+	 * holding items (QUEUE_ITEMS); the `queueDeferNow` flag set by the
+	 * queue-full branch makes it skip that status once, so the long timer
+	 * stays in place and the API is not asked again a few seconds later.
+	 */
+	test('a full API queue makes the bulk wait instead of asking again', async ({ page, spio }) => {
+		const logs = await startBulkAgainstFullQueue(page, spio);
+
+		expect(logs.some((l) => /queue is full/i.test(l)), 'the processor logs that it waits for the full queue').toBe(true);
+		const state = await page.evaluate(() => {
+			const p = (window as any).ShortPixelProcessor;
+			return { timesEmpty: p.timesEmpty, queueDeferNow: p.queueDeferNow, deferInterval: p.deferInterval, timer: p.timer !== null };
+		});
+		expect(state.timesEmpty, 'the defer multiplier is 3').toBe(3);
+		expect(state.timesEmpty * state.deferInterval, 'the next run is three minutes away').toBe(180_000);
+		expect(state.queueDeferNow, 'the flag is consumed by the queue status of the same response').toBe(false);
+		expect(state.timer, 'a deferred run is scheduled').toBe(true);
+
+		// Without the flag the queue status restarted the run on the default
+		// 3s interval, so a second queue-full answer arrived within seconds.
+		await page.waitForTimeout(25_000);
+		expect(
+			await page.evaluate(() => (window as any).__spioItemErrors.length),
+			'the API must not be asked again while the queue-full defer is pending',
+		).toBe(1);
+	});
+
+	/**
+	 * PIN (queue full is reported as an unknown error): the queue-full item
+	 * reaches screen-bulk.js HandleItemError() unwrapped (no `result.result`),
+	 * so it takes the "unknown" branch: console.error("Error without item …")
+	 * and a row in the bulk error list, for a condition that is temporary and
+	 * that the processor already handles by waiting. Same cause as the
+	 * bulk-error-rows pin above (the item is read as `result.result`).
+	 * @todo In screen-bulk.js HandleItemError(): skip the "unknown" branch
+	 *       (no console.error, no error row) when
+	 *       `this.processor.aStatusError[result.error]` is QUEUE_FULL.
+	 * FLIP-when-fixed: no "Error without item" and no error row for a full queue.
+	 */
+	test('pin: a queue-full answer is listed as an error without item (pinned_for_deferred_fix)', async ({ page, spio, consoleErrors }) => {
+		await startBulkAgainstFullQueue(page, spio);
+
+		const unknownBranch = consoleErrors.filter((e) => /Error without item/.test(e));
+		expect(unknownBranch.length, 'PIN: fixed? No console.error("Error without item") for a full queue — flip this pin.').toBe(1);
+		expect(
+			await page.locator('section.panel.active .errorbox.media > div').count(),
+			'PIN: fixed? The full queue no longer adds a row to the bulk error list — flip this pin.',
+		).toBeGreaterThan(0);
+		// SENTINEL: nothing ELSE went wrong on the page.
+		expect(consoleErrors.filter((e) => !/Error without item/.test(e))).toEqual([]);
 	});
 });

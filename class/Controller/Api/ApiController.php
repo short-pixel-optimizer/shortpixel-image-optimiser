@@ -242,11 +242,15 @@ class ApiController extends RequestManager
 	 *
 	 *  - -102/-105/-106/-108/-111/-113/-201/-202/-203/-207 : permanent file/URL errors → STATUS_ERROR (no retry)
 	 *  - -301/-403 : quota exceeded → STATUS_QUOTA_EXCEEDED (retry after quota refill)
-	 *  - -302 : file no longer available remotely → STATUS_FAIL
-	 *  - -306 : mixed-domain URLs in one request → STATUS_FAIL
+	 *  - -302 : file no longer available remotely → STATUS_ERROR (no retry, plugin's own message)
+	 *  - -306 : mixed-domain URLs in one request → STATUS_ERROR (no retry, plugin's own message)
 	 *  - -401/-402 : invalid/wrong API key → STATUS_NO_KEY
 	 *  - -404 : remote optimisation queue full → STATUS_QUEUE_FULL (retry)
 	 *  - -500 : API maintenance → STATUS_MAINTENANCE (retry)
+	 *
+	 * STATUS_ERROR marks an error of the item itself. OptimizeController turns it into
+	 * ImageModel::FILE_STATUS_ERROR, which is what puts the item in the bulk log
+	 * (QueueController::runTick()). STATUS_FAIL is a system-level failure and stays out of it.
 	 *
 	 * When the response contains image data (array with index 0), delegates to
 	 * handleOptimizeResponse() for 'optimize'/'convert_api' actions, or
@@ -292,25 +296,22 @@ class ApiController extends RequestManager
 					// legacy
 					@delete_option('bulkProcessingStatus');
 					QuotaController::getInstance()->setQuotaExceeded();
-
 					return $this->returnRetry(self::STATUS_QUOTA_EXCEEDED, __('Quota exceeded.', 'shortpixel-image-optimiser'));
 				break;
 			    case -302: 
-					return $this->returnFailure(self::STATUS_FAIL, __('File no longer available on remote system', 'shortpixel-image-optimiser'));
+					return $this->returnFailure(self::STATUS_ERROR, __('File no longer available on remote system', 'shortpixel-image-optimiser'));
 				break; 
 				case -306:
-					return $this->returnFailure(self::STATUS_FAIL, __('Files need to be from a single domain per request.', 'shortpixel-image-optimiser'));
+					return $this->returnFailure(self::STATUS_ERROR, __('Files need to be from a single domain per request.', 'shortpixel-image-optimiser'));
 				break;
 				case -401: // Invalid Api Key
 				case -402: // Wrong API key
 					return $this->returnFailure(self::STATUS_NO_KEY, $status->Message);
 				break;
 				case -404: // Maximum number in optimization queue (remote)
-					//return array("Status" => self::STATUS_QUEUE_FULL, "Message" => $APIresponse['Status']->Message);
 					return $this->returnRetry(self::STATUS_QUEUE_FULL, $status->Message);
 				break;
 				case -500: // API in maintenance.
-					//return array("Status" => self::STATUS_MAINTENANCE, "Message" => $APIresponse['Status']->Message);
 					return $this->returnRetry(self::STATUS_MAINTENANCE, $status->Message);
 
 				break;
@@ -517,14 +518,15 @@ class ApiController extends RequestManager
 	 * 'optimized' set to LosslessURL and 'original' set to OriginalURL from the response
 	 * object — LosslessURL is used unconditionally regardless of compression type.
 	 *
-	 * If the status code matches neither waiting nor success the method falls through
-	 * without an explicit return (implicit null), which the caller does not handle.
+	 * Any other status code is logged and returned as a STATUS_FAIL failure
+	 * ("Error in handling action response - Unknown error"), so the caller always
+	 * gets a result array.
 	 *
 	 * @param QueueItem $qItem    The queue item being processed.
 	 * @param array     $response The decoded API response array; $response[0] is the image object.
-	 * @return array|null Result array, or null when the status code is unrecognised.
+	 * @return array Result array.
 	 */
-	protected function handleActionResponse(QueueItem $qItem, $response)
+	protected function handleActionResponse(QueueItem $qItem, $response): array
 	{
 		$item = $response[0]; // First File Response of API.
 		$status_code = intval($item->Status->Code);
@@ -542,6 +544,9 @@ class ApiController extends RequestManager
 			];
 			return $this->returnSuccess($imageData);
 		}
+
+		Log::addError('HandleActionResponse - Uncaught issue / response', $response);
+		return $this->returnFailure(self::STATUS_FAIL, __('Error in handling action response - Unknown error', 'shortpixel-image-optimiser'));
 
 	}
 

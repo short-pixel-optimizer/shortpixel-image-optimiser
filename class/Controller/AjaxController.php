@@ -27,6 +27,7 @@ use ShortPixel\Controller\Queue\QueueItems as QueueItems;
 use ShortPixel\Controller\View\MultiSiteViewController;
 use ShortPixel\Model\AiDataModel;
 use ShortPixel\Model\Queue\QueueItem;
+use ShortPixel\NextGenController;
 use ShortPixel\ViewController;
 
 /**
@@ -90,6 +91,8 @@ class AjaxController
 	const SERVER_ERROR = -6;
 	/** Sent when capability or image-ownership check fails. */
 	const NO_ACCESS = -7;
+	/** Signal to delay processing  */
+	const QUEUE_FULL = -8; 
 
 	private static $instance;
 
@@ -504,6 +507,7 @@ class AjaxController
 				$this->setSettingsAiImage($data);
 			break; 
 			case 'settings/getNewAiImagePreview': 
+				$this->checkActionAccess($action, 'is_admin_user');
 				$this->getNewAiImagePreview($data);
 			break;
 			case 'media/getEditorPopup': 
@@ -1447,6 +1451,11 @@ class AjaxController
 	 * `$_POST['preview_only']` (presence-only check, default false) to determine
 	 * whether the result should be previewed without committing.
 	 *
+	 * Image-scoped: the loaded item goes through `checkImageAccess()` before
+	 * anything is queued, so a user who may not edit this attachment (or an id
+	 * that does not load) is answered with `error = NO_ACCESS` and never spends
+	 * AI credits on it.
+	 *
 	 * `$data` keys consumed:
 	 * - `id`   int    Image ID.
 	 * - `type` string 'media' or 'custom'.
@@ -1469,6 +1478,7 @@ class AjaxController
 
 		$preview_only = isset($_POST['preview_only']) ? true : false; 
 		$imageModel = $this->getMediaItem($id, $type);
+		$this->checkImageAccess($imageModel);
 
 		$queueController = new QueueController();
 
@@ -1952,7 +1962,6 @@ class AjaxController
 		$bulkControl = BulkController::getInstance();
 		QueueController::resetQueues(); // prevent any weirdness
 
-
 		$stats = $bulkControl->createNewBulk('media', ['customOp' => 'removeLegacy']);
 		$json->media->stats = $stats;
 
@@ -2026,6 +2035,12 @@ class AjaxController
 	 * (`spio_settings_ai_example_id` and `spio_settings_ai_example`) and sends it.
 	 *
 	 * Sends and exits on the first of: done, error, or safeguard limit.
+	 *
+	 * Administrators only: ajaxRequest() gates this action with
+	 * checkActionAccess('is_admin_user'), like the other settings/*Ai* actions.
+	 * The ajaxRequest() baseline (is_author) is not enough here, because the
+	 * preview spends AI credits on any attachment ID, returns its AI text and
+	 * overwrites the settings-page example transients.
 	 *
 	 * @param array $data Dispatch data array; `$data['id']` is the attachment ID.
 	 * @return void  Calls send() and exits.
@@ -2550,9 +2565,16 @@ class AjaxController
 	}
 
 	/**
-	 * Reset all custom-folder scan timestamps so every folder is rescanned next tick.
+	 * Starts a full folder scan: registers NextGEN galleries, then resets all
+	 * custom-folder scan timestamps so every folder is rescanned next tick.
 	 *
-	 * Delegates to `OtherMediaController::resetCheckedTimestamps()`.
+	 * When the Imagely/NextGEN integration is on (`includeNextGen`), every
+	 * gallery is first added as a Custom Media folder with NextGen status
+	 * via `NextGenController::addNextGenGalleriesToCustom()`. Folders are
+	 * added without an immediate refresh; the scan that follows reads their
+	 * files. This is how existing galleries reach Custom Media after the
+	 * integration is turned on; saving the setting does not add them.
+	 * Then delegates to `OtherMediaController::resetCheckedTimestamps()`.
 	 *
 	 * @param \stdClass $json JSON accumulator object (returned unchanged).
 	 * @param array     $data Dispatch data array (unused).
@@ -2561,6 +2583,15 @@ class AjaxController
 	protected function resetScanFolderChecked($json, $data)
 	{
 		$otherMediaController = OtherMediaController::getInstance();
+
+		$settings = \wpSPIO()->settings(); 
+
+		// Check and see if there is something to nextgen
+		if (true === $settings->includeNextGen)
+		{
+              $nextgen = NextGenController::getInstance();
+			  $nextgen->addNextGenGalleriesToCustom(true); 
+		}
 
 		$otherMediaController->resetCheckedTimestamps();
 		return $json;
@@ -2888,9 +2919,11 @@ class AjaxController
 			$json = (object) $json; 
 		}
 
+
 		$callback = isset($_POST['callback']) ? sanitize_text_field($_POST['callback']) : false;
 		if ($callback)
 			$json->callback = $callback; // which type of request we just fullfilled ( response processing )
+
 
 		$pKey = $this->getProcessorKey();
 		if ($pKey !== false)

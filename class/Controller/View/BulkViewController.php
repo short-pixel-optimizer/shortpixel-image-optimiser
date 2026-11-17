@@ -53,7 +53,7 @@ class BulkViewController extends \ShortPixel\ViewController
    * Default action: populates view data and renders the bulk processing page.
    *
    * Loads quota status, queue startup data, approximate unoptimized image counts,
-   * past bulk-run logs, error/quota notices, buy-more link, custom operation labels
+   * past bulk-run logs, error/quota notices, buy-more links (image and AI credits), custom operation labels
    * (from the panel GET arg or an active bulk operation), a remote offer banner,
    * and the dashboard promo block. Renders the `view-bulk` template.
    *
@@ -97,7 +97,11 @@ class BulkViewController extends \ShortPixel\ViewController
 		$this->view->mediaErrorLog = $this->loadCurrentLog('media');
 		$this->view->customErrorLog = $this->loadCurrentLog('custom');
 
-		$this->view->buyMoreHref = 'https://shortpixel.com/' . ($keyControl->getKeyForDisplay() ? 'login/' . $keyControl->getKeyForDisplay() . '/spio-unlimited' : 'pricing');
+		// With a displayable key the buttons log the user in (no UTMs on those);
+		// without one they go to the pricing page, tagged per button.
+		$displayKey = $keyControl->getKeyForDisplay();
+		$this->view->buyMoreHref = $displayKey ? 'https://shortpixel.com/login/' . $displayKey . '/spio-unlimited' : 'https://shortpixel.com/pricing?utm_source=plugin&utm_medium=spio&utm_campaign=bulk_button_unlimited';
+		$this->view->buyMoreAiHref = $displayKey ? 'https://shortpixel.com/login/' . $displayKey . '/spio-unlimited' : 'https://shortpixel.com/pricing?utm_source=plugin&utm_medium=spio&utm_campaign=bulk_button_unlimited_ai';
 
 
     $custom_operation_media = $bulkController->getCustomOperation('media');

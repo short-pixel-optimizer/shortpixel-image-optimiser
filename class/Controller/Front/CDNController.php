@@ -113,9 +113,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 			'*/wp-includes/js*', 
 			'*/wp-includes/css*', 
 			'*admin-ajax.php*',
-			
-
-
 		]);
 
 		// string || preg
@@ -740,19 +737,32 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 	 *
 	 * Uses a recursive PCRE pattern to match balanced parentheses inside url(…),
 	 * capturing the inner content (group 2) which may contain quoted or unquoted
-	 * URLs.  For each match a replace block is created via getReplaceBlock() and
-	 * CDN arguments are attached via createArguments().
+	 * URLs. Quoted values are matched as a complete url() value, while unquoted
+	 * values cannot cross quote or tag boundaries. For each match a replace block
+	 * is created via getReplaceBlock() and CDN arguments are attached via
+	 * createArguments().
 	 *
 	 * @param string $content HTML content to search (may include inline <style> blocks or style= attributes).
 	 * @param array  $args    Reserved for future use; currently unused.
 	 * @return \stdClass[] Array of replace-block stdClass objects, one per url() match.
+	 *
+	 * Group 2 closes before the final `\)`, so the extracted value never carries
+	 * the closing parenthesis of url( … ) and matches the URL as written.
 	 */
-	protected function fetchInlineBackground($content, $args = [])
+	protected function fetchInlineBackground($content, $args = []) : array
 	{
-		$number = preg_match_all('/url(\(((?:[^()]+|(?1))+)\))/m', $content, $matches);
+		
+		$number = preg_match_all('/url(\(((?:\s*(?:"[^"<>]*+"|\'[^\'<>]*+\')\s*|(?:[^()\'"<>]++|(?1))++))\))/m', $content, $matches);
 		$matches = $matches[2];
 		
+
 		$replaceBlocks = []; 
+
+		if (0 === count($matches))
+		{
+			 return []; 
+		}
+
 		foreach($matches as $url)
 		{
 			$block = $this->getReplaceBlock($url);

@@ -106,6 +106,20 @@ function spio_e2e_available_translations() {
 add_filter( 'pre_site_transient_available_translations', 'spio_e2e_available_translations' );
 
 /**
+ * Hermetic promotions: no time-limited promo banner on SPIO's screens.
+ *
+ * A campaign banner (build/shortpixel/promo-banner) shows only inside its
+ * date window and prints its end date, so whether it is there depends on the
+ * day the suite runs. It sits above SPIO's header and pushes every panel
+ * down, which breaks the full-page visual baselines for as long as a
+ * campaign runs. The module's own last-word filter is used: SPIO's wider
+ * `shortpixel/settings/no_banner` switch would also hide SPIO's upsell box
+ * on the settings page, which the baselines include. The banner's behaviour
+ * is covered by tests/test-PromoBanner.php.
+ */
+add_filter( 'shortpixel/promo_banner/show', '__return_false' );
+
+/**
  * The "healthy paying install" baseline — a port of
  * SPIO_IntegrationHelpers::spioSetUpBaseline(). Also called by WP-CLI during
  * provisioning (tests/E2E/provision/seed.php).

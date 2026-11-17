@@ -38,6 +38,19 @@
  * the as3cf_files table up front (otherwise as3cf builds the item's
  * objects differently depending on test history).
  *
+ * FRONT-END <picture> DELIVERY:
+ * PictureController asks wpOffload whether each WebP/AVIF candidate of an
+ * offloaded image exists (`shortpixel/image/urltopath` and
+ * `shortpixel/front/webp_notfound`). The answers come from the real as3cf
+ * item lookup, so these tests are the reference for how it behaves:
+ *   - A page that delivers BUCKET URLs lists only the companions the item
+ *     records (regression test, with and without object versioning).
+ *   - A page that carries the LOCAL URL of an offloaded image advertises
+ *     companions that exist nowhere — a known, accepted limitation that
+ *     needs three conditions together (local URL on the page, object
+ *     versioning off, companion not on disk); the versioned test shows the
+ *     default setup is safe.
+ *
  * The provider path's other known defects are pinned deterministically
  * elsewhere:
  *   - tests/External/Offload/test-wpOffload.php (stubbed item + client):
@@ -126,10 +139,15 @@ class CompatOffloadMediaTest extends SPIO_IntegrationTestCase {
 	 * tests/Integration/bootstrap.php (re-checked in set_up()) — before the
 	 * test transaction.
 	 */
-	private function makeOffloadItem( int $attachment_id ): Media_Library_Item {
+	private function makeOffloadItem( int $attachment_id, bool $versioned = false ): Media_Library_Item {
 
 		$source_path = get_post_meta( $attachment_id, '_wp_attached_file', true );
-		$remote_key  = 'wp-content/uploads/' . $source_path;
+		// With "Add Object Versioning" (Offload Media's default) the remote key
+		// carries a timestamp folder before the file name, so it never ends in
+		// the local relative path.
+		$remote_key = $versioned
+			? 'wp-content/uploads/' . dirname( $source_path ) . '/' . gmdate( 'dHis' ) . '/' . wp_basename( $source_path )
+			: 'wp-content/uploads/' . $source_path;
 
 		$item = new Media_Library_Item(
 			'aws',
@@ -271,5 +289,209 @@ class CompatOffloadMediaTest extends SPIO_IntegrationTestCase {
 		$item = Media_Library_Item::get_by_source_id( $id );
 		$this->assertNotFalse( $item, 'Sentinel: the as3cf item row must still exist.' );
 		$this->assertStringContainsString( $old_base, $item->path(), 'PIN: the offload item keeps the OLD key — nothing was renamed in the bucket.' );
+	}
+
+	// -------------------------------------------------------------------
+	// Frontend <picture> delivery vs the offload item
+	// -------------------------------------------------------------------
+
+	/**
+	 * Documents a known, accepted limitation of wpOffload::fixWebpRemotePath()
+	 * (the `shortpixel/front/webp_notfound` filter), not scheduled for a fix
+	 * because of how narrow it is: for a companion given as a
+	 * LOCAL path, the filter answers "exists" as soon as the main image URL
+	 * resolves to an as3cf item; it never checks that the companion is one
+	 * of the item's recorded objects. Real WP Offload Media resolves a local
+	 * main-image URL (legacy path LIKE lookup), so every page that carries
+	 * the local URL of an offloaded image whose AVIF/WebP was never created
+	 * gets a <picture> advertising AVIF and WebP companions that exist
+	 * nowhere: the browser requests one, gets a 404 and shows a broken image.
+	 *
+	 * Reached only when ALL THREE hold:
+	 *   1. The page carries the LOCAL URL of the offloaded image ("Deliver
+	 *      Offloaded Media" off, or a local URL the as3cf content filter
+	 *      misses). A page that delivers bucket URLs is not affected — see
+	 *      test_bucket_urls_list_only_the_companions_the_item_records().
+	 *   2. The item's remote key ends in the local relative path, i.e. the
+	 *      image was offloaded with "Add Object Versioning" OFF (Offload
+	 *      Media turns it on by default; a versioned key has a timestamp
+	 *      folder before the file name, so neither as3cf lookup resolves the
+	 *      local URL and no <picture> is emitted — see the versioned sentinel
+	 *      test below).
+	 *   3. The AVIF/WebP is not on the local disk (never created, or removed).
+	 * Without the offload item the same HTML is left untouched (sentinel).
+	 *
+	 * If wpOffload starts checking the companion, this test fails: expect the
+	 * HTML of the offloaded image to come back unchanged instead (no
+	 * <picture>, no companion that is not on disk).
+	 */
+	public function test_local_url_of_unversioned_offloaded_image_advertises_companions_not_on_disk() {
+		$id   = $this->uploadFixture( 'fixture-small.jpg' );
+		$rel  = get_post_meta( $id, '_wp_attached_file', true );
+		$file = trailingslashit( wp_upload_dir()['basedir'] ) . $rel;
+		$url  = trailingslashit( wp_upload_dir()['baseurl'] ) . $rel;
+		$html = '<img src="' . $url . '" width="100">';
+
+		// SENTINELS: local URL, main file on disk, no companions at all.
+		$this->assertSame( wp_parse_url( home_url(), PHP_URL_HOST ), wp_parse_url( $url, PHP_URL_HOST ), 'Sentinel: the page carries the LOCAL URL.' );
+		$this->assertFileExists( $file );
+		$base = preg_replace( '/\.jpe?g$/i', '', $file );
+		$this->assertFileDoesNotExist( $base . '.avif', 'Sentinel: no AVIF companion on disk.' );
+		$this->assertFileDoesNotExist( $base . '.webp', 'Sentinel: no WebP companion on disk.' );
+
+		// SENTINEL on a second, NOT offloaded upload: the same HTML stays
+		// untouched. (A separate attachment because wpOffload caches each
+		// URL's lookup result statically for the request.)
+		$controller = new \ShortPixel\Controller\Front\PictureController();
+		$plain_id   = $this->uploadFixture( 'fixture-small.jpg' );
+		$plain_html = '<img src="' . trailingslashit( wp_upload_dir()['baseurl'] ) . get_post_meta( $plain_id, '_wp_attached_file', true ) . '" width="100">';
+		$this->assertSame( $plain_html, $controller->convertImgToPictureAddWebp( $plain_html ), 'Sentinel: without an offload item nothing is rewritten.' );
+
+		$this->makeOffloadItem( $id );
+
+		$output = $controller->convertImgToPictureAddWebp( $html );
+
+		$this->assertStringContainsString( '<picture>', $output, 'The local URL of an unversioned offloaded image is wrapped in a <picture> (accepted limitation).' );
+		$this->assertStringContainsString( wp_basename( $base ) . '.avif', $output, 'The AVIF <source> names a file that does not exist.' );
+		$this->assertStringContainsString( wp_basename( $base ) . '.webp', $output, 'The WebP <source> names a file that does not exist.' );
+		$this->assertFileDoesNotExist( $base . '.avif', 'The advertised AVIF still does not exist.' );
+		$this->assertFileDoesNotExist( $base . '.webp', 'The advertised WebP still does not exist.' );
+	}
+
+	/**
+	 * Counterpart of the test above: with Offload Media's default "Add Object
+	 * Versioning", the item's remote key holds a timestamp folder, so the
+	 * local URL resolves to no item (as3cf matches the files table on the
+	 * exact path and falls back to `path LIKE '%<relative path>'`, and a
+	 * versioned key ends in `<timestamp>/<file>`). wpOffload then reports no
+	 * companion and the HTML stays untouched — the correct outcome, and the
+	 * reason the limitation does not show on a default Offload Media setup.
+	 */
+	public function test_local_url_of_a_versioned_offloaded_image_without_companions_is_left_untouched() {
+		$id   = $this->uploadFixture( 'fixture-small.jpg' );
+		$rel  = get_post_meta( $id, '_wp_attached_file', true );
+		$file = trailingslashit( wp_upload_dir()['basedir'] ) . $rel;
+		$url  = trailingslashit( wp_upload_dir()['baseurl'] ) . $rel;
+		$html = '<img src="' . $url . '" width="100">';
+
+		$base = preg_replace( '/\.jpe?g$/i', '', $file );
+		$this->assertFileExists( $file );
+		$this->assertFileDoesNotExist( $base . '.avif', 'Sentinel: no AVIF companion on disk.' );
+		$this->assertFileDoesNotExist( $base . '.webp', 'Sentinel: no WebP companion on disk.' );
+
+		$item = $this->makeOffloadItem( $id, true );
+		$this->assertStringNotContainsString( '/' . $rel, $item->path(), 'Pre-condition: the versioned remote key does not end in the local relative path.' );
+		$this->assertStringEndsWith( '/' . wp_basename( $rel ), $item->path(), 'Pre-condition: the versioned key still ends in the file name.' );
+
+		// wpOffload caches each URL's lookup result in a static array for the
+		// request. WordPress deletes test uploads at teardown, so this test's
+		// file name is the one the previous test used, and its cached (and
+		// now unrelated) source id would answer first. Start clean.
+		$this->resetOffloadSourceCache();
+
+		$controller = new \ShortPixel\Controller\Front\PictureController();
+		$output     = $controller->convertImgToPictureAddWebp( $html );
+
+		$this->assertSame( $html, $output, 'A versioned offload item must not make the local URL advertise companions that do not exist.' );
+	}
+
+	/**
+	 * The normal offloaded page: it delivers BUCKET URLs. The item records a
+	 * WebP for every size but an AVIF for the full size only (ShortPixel
+	 * keeps no AVIF that is not smaller than the image, so small sizes often
+	 * have none). Each candidate is then a bucket URL, looked up by itself
+	 * in the real as3cf files index, so the AVIF srcset lists the one
+	 * recorded AVIF and falls back to the recorded WebP for every other
+	 * size — no URL that the bucket would answer with 403.
+	 *
+	 * Holds with and without "Add Object Versioning": the candidate sits in
+	 * the same (versioned) folder as the image.
+	 *
+	 * @dataProvider provideObjectVersioning
+	 */
+	public function test_bucket_urls_list_only_the_companions_the_item_records( bool $versioned ) {
+		$id    = $this->uploadFixture( 'fixture-small.jpg' );
+		$rel   = get_post_meta( $id, '_wp_attached_file', true );
+		$meta  = wp_get_attachment_metadata( $id );
+		$name  = wp_basename( $rel );
+		$base  = preg_replace( '/\.jpe?g$/i', '', $name );
+		$sizes = array();
+		foreach ( $meta['sizes'] as $size ) {
+			$sizes[ $size['file'] ] = (int) $size['width']; // De-duplicates sizes that share a file.
+		}
+		$this->assertGreaterThan( 1, count( $sizes ), 'Precondition: the fixture has several thumbnail sizes.' );
+
+		// The item: every JPG + its WebP, and the full-size AVIF only.
+		$objects = array(
+			'__as3cf_primary'       => array( 'source_file' => $name, 'is_private' => false ),
+			'__as3cf_primary_webp2' => array( 'source_file' => $base . '.webp', 'is_private' => false ),
+			'__as3cf_primary_avif2' => array( 'source_file' => $base . '.avif', 'is_private' => false ),
+		);
+		$index = 0;
+		foreach ( array_keys( $sizes ) as $file ) {
+			$objects[ 'size' . $index ]            = array( 'source_file' => $file, 'is_private' => false );
+			$objects[ 'size' . $index . '_webp2' ] = array( 'source_file' => preg_replace( '/\.jpe?g$/i', '.webp', $file ), 'is_private' => false );
+			++$index;
+		}
+
+		$prefix = 'wp-content/uploads/' . dirname( $rel ) . '/' . ( $versioned ? gmdate( 'dHis' ) . '/' : '' );
+		$item   = new Media_Library_Item(
+			'aws',
+			'us-east-1',
+			'spio-test-bucket',
+			$prefix . $name,
+			false,
+			$id,
+			$rel,
+			$name,
+			array( 'objects' => $objects, 'private_prefix' => '' )
+		);
+		$this->assertIsInt( $item->save(), 'Precondition: the as3cf item row must save cleanly.' );
+		$this->resetOffloadSourceCache();
+
+		$bucket = 'https://spio-test-bucket.s3.amazonaws.com/' . $prefix;
+		$srcset = array();
+		foreach ( $sizes as $file => $width ) {
+			$srcset[] = $bucket . $file . ' ' . $width . 'w';
+		}
+		$srcset[]   = $bucket . $name . ' ' . (int) $meta['width'] . 'w';
+		$first_size = array_key_first( $sizes );
+		$html       = '<img src="' . $bucket . $first_size . '" srcset="' . implode( ', ', $srcset ) . '" sizes="100vw">';
+
+		// SENTINELS: real as3cf resolves each recorded file by its bucket URL, and nothing else.
+		$thumb_avif = preg_replace( '/\.jpe?g$/i', '.avif', $first_size );
+		$this->assertIsArray( Media_Library_Item::get_item_source_by_remote_url( $bucket . $first_size ), 'Sentinel: a recorded thumbnail resolves.' );
+		$this->assertIsArray( Media_Library_Item::get_item_source_by_remote_url( $bucket . $base . '.avif' ), 'Sentinel: the recorded full-size AVIF resolves.' );
+		$this->assertFalse( Media_Library_Item::get_item_source_by_remote_url( $bucket . $thumb_avif ), 'Sentinel: a thumbnail AVIF that was never offloaded does not resolve.' );
+
+		$controller = new \ShortPixel\Controller\Front\PictureController();
+		$output     = $controller->convertImgToPictureAddWebp( $html );
+
+		$this->assertSame( 1, preg_match( '/<source srcset="([^"]*)"[^>]*type="image\/avif"/', $output, $avif ), 'Sentinel: an AVIF <source> is emitted (the full size has one).' );
+		$this->assertSame( 1, preg_match( '/<source srcset="([^"]*)"[^>]*type="image\/webp"/', $output, $webp ), 'Sentinel: a WebP <source> is emitted.' );
+
+		$this->assertStringContainsString( $bucket . $base . '.avif ' . (int) $meta['width'] . 'w', $avif[1], 'The recorded full-size AVIF is listed.' );
+		$this->assertSame( 1, substr_count( $avif[1], '.avif' ), 'No AVIF may be listed that the item does not record.' );
+		foreach ( $sizes as $file => $width ) {
+			$webp_entry = $bucket . preg_replace( '/\.jpe?g$/i', '.webp', $file ) . ' ' . $width . 'w';
+			$this->assertStringContainsString( $webp_entry, $avif[1], 'A size without an AVIF falls back to its recorded WebP in the AVIF srcset.' );
+			$this->assertStringContainsString( $webp_entry, $webp[1], 'Every size lists its recorded WebP.' );
+		}
+		$this->assertStringNotContainsString( '.jpg.webp', $output, 'The unrecorded double-extension WebP is never listed.' );
+	}
+
+	/** @return array<string, array{0: bool}> */
+	public function provideObjectVersioning(): array {
+		return array(
+			'object versioning on (default)' => array( true ),
+			'object versioning off'          => array( false ),
+		);
+	}
+
+	/** Empty wpOffload's static per-request URL → source id cache. */
+	private function resetOffloadSourceCache(): void {
+		$prop = new \ReflectionProperty( \ShortPixel\External\Offload\wpOffload::class, 'sources' );
+		$prop->setAccessible( true );
+		$prop->setValue( null, array() );
 	}
 }

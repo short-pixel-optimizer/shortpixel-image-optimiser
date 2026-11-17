@@ -644,4 +644,63 @@ class QuotaControllerTest extends WP_UnitTestCase {
 		);
 	}
 
+	// -------------------------------------------------------------------------
+	// Constructor: quota taken from the cache only
+	// -------------------------------------------------------------------------
+
+	public function test_constructor_takes_a_complete_cached_quota_into_memory() {
+		$state  = $this->interceptRemoteQuota();
+		$seeded = $this->seedQuotaTransient();
+
+		$ctrl = new QuotaController();
+
+		$this->assertSame( $seeded, $this->getProtected( $ctrl, 'quotaData' ) );
+		$this->assertTrue( $this->getProtected( $ctrl, 'did_quota_load' ) );
+		$this->assertSame( 0, $state->calls, 'The constructor never asks the API.' );
+	}
+
+	public function test_constructor_leaves_quota_unloaded_on_a_cold_cache_without_asking_the_api() {
+		$state = $this->interceptRemoteQuota();
+		// SENTINEL: the cache is cold.
+		$this->assertFalse( get_transient( self::CACHE_TRANSIENT ), 'Sentinel: the quota cache is cold.' );
+
+		$ctrl = new QuotaController();
+
+		$this->assertNull( $this->getProtected( $ctrl, 'quotaData' ) );
+		$this->assertFalse( $this->getProtected( $ctrl, 'did_quota_load' ) );
+		$this->assertSame( 0, $state->calls, 'The constructor never asks the API.' );
+	}
+
+	public function test_constructor_ignores_a_cached_quota_with_a_missing_field() {
+		$data = $this->seedQuotaTransient();
+		unset( $data['CaptionsCallsRemaining'] );
+		set_transient( self::CACHE_TRANSIENT, $data, HOUR_IN_SECONDS );
+
+		$ctrl = new QuotaController();
+
+		$this->assertNull( $this->getProtected( $ctrl, 'quotaData' ) );
+	}
+
+	/** A legacy non-numeric value stays out of memory, so getQuota() still refreshes it. */
+	public function test_constructor_ignores_a_cached_quota_with_a_non_numeric_field() {
+		$this->seedQuotaTransient( array( 'APICallsQuota' => '1,000' ) );
+
+		$ctrl = new QuotaController();
+
+		$this->assertNull( $this->getProtected( $ctrl, 'quotaData' ) );
+	}
+
+	public function test_getQuotaData_keeps_the_loaded_quota_in_memory() {
+		$seeded = $this->seedQuotaTransient();
+		$ctrl   = $this->freshController();
+
+		$ctrl->getQuota();
+		$this->assertSame( $seeded, $this->getProtected( $ctrl, 'quotaData' ) );
+
+		// Later calls answer from memory: a changed transient is not re-read.
+		set_transient( self::CACHE_TRANSIENT, $this->seedQuotaTransient( array( 'APICallsQuota' => 1 ) ), HOUR_IN_SECONDS );
+		$this->clearCacheRegistry();
+		$this->assertSame( 1000, $ctrl->getQuota()->monthly->total );
+	}
+
 } // class

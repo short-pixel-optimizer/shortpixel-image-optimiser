@@ -271,6 +271,29 @@ class AiControllerTest extends WP_UnitTestCase {
 		$this->assertSame( 'sunset-photo.jpg', $result['aiData']['filebase'] );
 	}
 
+	/**
+	 * The generated filename ends up in filesystem paths (replaceFiles()), so
+	 * it is sanitized as a file name: path separators and '..' segments from
+	 * the API answer never reach the rename.
+	 */
+	public function test_handleResponse_retrieveAlt_strips_path_parts_from_the_generated_filename() {
+		$qItem    = $this->makeAiQueueItem( 'retrieveAlt' );
+		$response = $this->makeRawResponse( [
+			'status'              => 2,
+			'alt'                 => 'Alt',
+			'generated_file_name' => '../../wp-content/plugins/evil name',
+		] );
+
+		$result   = $this->invokeProtected( 'handleResponse', [ $qItem, $response ] );
+		$filebase = $result['aiData']['filebase'];
+
+		$this->assertSame( RequestManager::STATUS_SUCCESS, $result['apiStatus'] );
+		$this->assertNotSame( '', $filebase, 'Sentinel: a filebase is still produced.' );
+		$this->assertStringNotContainsString( '/', $filebase );
+		$this->assertStringNotContainsString( '..', $filebase );
+		$this->assertStringNotContainsString( ' ', $filebase, 'Spaces become dashes, like an uploaded file name.' );
+	}
+
 	// -----------------------------------------------------------------------
 	// handleResponse — JWT transient caching
 	// -----------------------------------------------------------------------

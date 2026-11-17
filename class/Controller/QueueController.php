@@ -325,8 +325,6 @@ class QueueController
       $q = $this->getQueue($type);
       $bool = $q->isItemInQueue($mediaItem->get('id'));
 
-      $status = 0; 
-
       if (true === $bool)
       { 
         // @todo This queueItem should maybe not to stuffed with 'addresult'm since it's a different object. 
@@ -390,7 +388,7 @@ class QueueController
       }
 
       $quotaControl = QuotaController::getInstance();
-      if ($quotaControl->hasQuota() === false)
+      if (false === $quotaControl->hasQuota())
       {
         // If we are doing something special (restore, migrate etc), it should runs without credits, so we shouldn't be using any.
         $isCustomOperation = false;
@@ -429,6 +427,7 @@ class QueueController
         $results->media = $this->runTick($mediaQ); // run once on mediaQ
 
         $overlimit = (Queue::RESULT_PREPARING_OVERLIMIT === $results->media->qstatus) ? true : false;
+        
 
       }
       if (false === $overlimit && in_array('custom', $queueTypes))
@@ -484,7 +483,13 @@ class QueueController
    *   2. Loads the ImageModel if not already attached.
    *   3. Skips blocked items or items whose ImageModel failed to load.
    *   4. Delegates to ApiController::sendToProcessing() then handleAPIResult().
-   *   5. Logs failed items to the per-type bulk log when running in bulk mode.
+   *   5. Logs failed items to the per-type bulk log when running in bulk mode,
+   *      but only final file errors: the result is done and its fileStatus is
+   *      ImageModel::FILE_STATUS_ERROR (the API's file-error codes, mapped to
+   *      STATUS_ERROR, failures while saving the optimized files, and an item
+   *      given up at the retry limit).
+   *      Retried, quota, key, queue-full, maintenance and connection failures
+   *      stay out of the log.
    *
    * The final queue stats and converted JSON are returned; a cleanQueue() is
    * triggered automatically when the single-item queue empties.
@@ -583,9 +588,16 @@ class QueueController
             $apiController->handleAPIResult($qItem);  
           }
           
-          if (true === $qItem->result()->is_error &&  true === $this->args['is_bulk'] )
+          if (true === $qItem->result()->is_error && true === $this->args['is_bulk'] )
           {
-             $this->LogBulk($qItem);
+             // Only log error items that are related to file issues. 
+             // @todo If this work, permanent solution would be to probably add and is_item_error result to qItemResult and set that in the ApiController
+           $fileStatus = $qItem->result()->fileStatus; 
+               
+            if (true === $qItem->result()->is_done && $fileStatus === ImageModel::FILE_STATUS_ERROR )
+             {
+                $this->LogBulk($qItem);
+             }
           }
 
           $result->items[$mainIndex] = $qItem->result(); // replace processed item, should have result now.

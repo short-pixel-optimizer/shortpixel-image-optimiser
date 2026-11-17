@@ -268,7 +268,7 @@ class OtherMediaController extends \ShortPixel\Controller
      * @param string $path Full filesystem path to the directory to add.
      * @return DirectoryOtherMediaModel|false The saved directory model, or false on failure.
      */
-	   public function addDirectory($path)
+	   public function addDirectory($path, $refresh = true)
     {
        $fs = \wpSPIO()->filesystem();
        $directory = new DirectoryOtherMediaModel($path);
@@ -276,7 +276,7 @@ class OtherMediaController extends \ShortPixel\Controller
 			 // Check if this directory is allowed.
 			 if ($this->checkDirectoryRecursive($directory) === false)
 			 {
-         Log::addDebug('Check Recursive Directory not allowed');
+         Log::addDebug('Check Recursive Directory - not allowed');
 				 return false;
 			 }
 
@@ -285,8 +285,11 @@ class OtherMediaController extends \ShortPixel\Controller
          if ($directory->save())
          {
 					$this->folderIDCache = null;
-          $directory->refreshFolder(true);
-          $directory->updateFileContentChange();
+          if (true === $refresh)
+          {
+            $directory->refreshFolder(true);
+            $directory->updateFileContentChange();
+          }
          }
        }
        else // if directory is already added, fail silently, but still refresh it.
@@ -295,11 +298,19 @@ class OtherMediaController extends \ShortPixel\Controller
          {
 					 	$this->folderIDCache = null;
             $directory->set('status', DirectoryOtherMediaModel::DIRECTORY_STATUS_NORMAL);
-						$directory->refreshFolder(true);
-            $directory->updateFileContentChange(); // does a save. Dunno if that's wise.
+            if (true === $refresh)
+            {
+						  $directory->refreshFolder(true);
+              $directory->updateFileContentChange(); // does a save. Dunno if that's wise.
+            }
          }
          else
-          $directory->refreshFolder(false);
+          {
+            if (true === $refresh)
+            {
+              $directory->refreshFolder(false);
+            }
+          }
        }
 
       if ($directory->exists() && $directory->get('id') > 0)
@@ -317,7 +328,7 @@ class OtherMediaController extends \ShortPixel\Controller
      * @param DirectoryOtherMediaModel $directory The root directory to check.
      * @return bool True if all directories in the tree are allowed, false otherwise.
      */
-		public function checkDirectoryRecursive($directory)
+		protected function checkDirectoryRecursive($directory)
 		{
 				 if ($directory->checkDirectory() === false)
 				 {
@@ -546,8 +557,9 @@ class OtherMediaController extends \ShortPixel\Controller
 			}
       elseif ($directory->isSubFolderOf($uploadDir)) // upload subdirs come in variation of year or month, both numeric. Exclude the WP-based years
       {
-					// Only check if direct subdir of /uploads/ is a number-based directory name. Don't bother with deeply nested dirs with accidental year.
-					if ($directory->getParent()->getPath() !== $uploadDir->getPath())
+					// Only check if direct subdir of /uploads/ is  number-based directory name. Don't bother with deeply nested dirs with accidental year.
+          $parent = $directory->getParent(); 
+					if ($parent === false || $parent->getPath() !== $uploadDir->getPath())
 					{
 							return false;
 					}

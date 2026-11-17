@@ -371,7 +371,6 @@ class FileModel extends \ShortPixel\Model
         }
         elseif(is_null($this->mime)) {
           return true; // assume without check, that extension says what it is.
-          // @todo This should probably trigger a notice in adminNoticesController.
         }
 
         if (strpos($this->mime, 'image') !== false)
@@ -706,45 +705,7 @@ class FileModel extends \ShortPixel\Model
     return $this->mime;
   }
 
-  /*
-    @todo  This moved to BackupModel! 
-  */
 
-  /* Util function to get location of backup Directory.
-	* @param Create - If true will try to create directory if it doesn't exist.
-  * @return Boolean | DirectModel  Returns false if directory is not properly set, otherwhise with a new directoryModel
-  */
-  /*
-  protected function getBackupDirectory($create = false)
-  {
-
-    if (is_null($this->getFileDir()))
-    {
-        Log::addWarn('Could not establish FileDir ' . $this->fullpath);
-        return false;
-    }
-    $fs = \wpSPIO()->filesystem();
-
-    if (is_null($this->backupDirectory))
-    {
-      $directory = $fs->getBackupDirectory($this, $create);
-
-      if ($directory === false || ! $directory->exists()) // check if exists. FileModel should not attempt to create.
-      {
-        return false;
-      }
-      elseif ($directory !== false)
-      {
-        $this->backupDirectory = $directory;
-      }
-      else
-      {
-        return false;
-      }
-    }
-
-    return $this->backupDirectory;
-  } */
 
   /* Internal function to check if path is a real path
   *  - Test for URL's based on http / https

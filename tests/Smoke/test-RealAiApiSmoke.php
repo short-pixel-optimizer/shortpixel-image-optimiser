@@ -457,11 +457,11 @@ class RealAiApiSmokeTest extends SPIO_IntegrationTestCase {
 		}
 		$this->assertNotSame( '', (string) get_post( $id )->post_content, 'The description must land in the attachment post_content.' );
 
-		// SPIO keeps the generated name as sanitize_text_field() returns it
+		// SPIO keeps the generated name as sanitize_file_name() returns it
 		// (AiController) and renames to exactly that base (no affixes set).
 		$newBase = pathinfo( (string) get_post_meta( $id, '_wp_attached_file', true ), PATHINFO_FILENAME );
 		$this->assertStringStartsNotWith( 'fixture-small', $newBase, 'An unused image must be renamed to the AI file name.' . $this->explainAiState() );
-		$this->assertSame( sanitize_text_field( $get['generated_file_name'] ), $newBase, 'The new file base must be the generated_file_name the backend returned.' );
+		$this->assertSame( sanitize_file_name( $get['generated_file_name'] ), $newBase, 'The new file base must be the generated_file_name the backend returned.' );
 		$this->assertSame( (string) $generated['filebase'], $newBase, 'The stored filebase and the file on disk must agree.' );
 		$this->assertFileExists( get_attached_file( $id ), 'The renamed file must exist on disk.' );
 		$this->assertFileDoesNotExist( $oldFile, 'The old file must be moved, not copied.' );

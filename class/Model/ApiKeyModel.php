@@ -482,7 +482,7 @@ class ApiKeyModel extends \ShortPixel\Model
                . __('If this problem persists, please contact us at ','shortpixel-image-optimiser')
                . "<a href='mailto:help@shortpixel.com?Subject=API Key issues' target='_top'>help@shortpixel.com</a>"
                . __(' or ','shortpixel-image-optimiser')
-               . "<a href='https://shortpixel.com/contact' target='_blank'>" . __('here','shortpixel-image-optimiser') . "</a>.";
+               . "<a href='https://shortpixel.com/contact?utm_source=plugin&utm_medium=spio&utm_campaign=apikey_notice_contact' target='_blank'>" . __('here','shortpixel-image-optimiser') . "</a>.";
     self::$notified['apilength'] = true;
     Notice::addError($notice);
   }

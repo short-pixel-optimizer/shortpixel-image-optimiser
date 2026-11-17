@@ -1,4 +1,13 @@
 <?php
+/**
+ * Replacer module entry point.
+ *
+ * Holds the Replacer class, which rewrites every reference to one media file
+ * (main file and thumbnail sizes) into references to another file across the
+ * WordPress database.
+ *
+ * @package ShortPixel\Replacer
+ */
 
 namespace ShortPixel\Replacer;
 
@@ -18,34 +27,143 @@ use ShortPixel\Replacer\Libraries\Unserialize\Unserialize;
  * - Able to replace across database
  * - Only replace thumbnails feature dependent on media library
  * - Support for page builders / strange data
+ *
+ * Search-and-replace engine for media URLs. The caller sets a source URL and
+ * a target URL, optionally the attachment metadata of both (so thumbnail
+ * sizes are replaced as well) and optional extra URL pairs, then calls
+ * replace(). replace() builds balanced search/replace arrays of relative URL
+ * paths and rewrites them in `post_content`, in the post, comment, term and
+ * user meta tables and in the options table, followed by any additional runs
+ * that integrations register (page builders that store URLs escaped,
+ * urlencoded or through their own save API).
+ *
+ * replaceContent() is public and is also used directly by consumers and by
+ * the integration modules; it understands plain strings, serialized data,
+ * JSON, arrays and objects.
+ *
+ * Lifecycle: getInstance() returns a shared instance, but the constructor is
+ * public and consumers may also create their own instances. Every
+ * construction calls loadFormats(), which instantiates the integration
+ * modules; those are singletons, so their hooks are registered only once per
+ * request. Source, target, metadata, extra URL pairs and replace settings are
+ * instance state and are not reset after replace().
+ *
+ * Classes\Setup, Classes\Finder and Classes\Updater form a newer API that is
+ * reachable through Setup(), Finder() and Updater(); replace() does not use
+ * them.
+ *
+ * Bundling: this source is written with the ShortPixel namespace, the
+ * ShortPixel text domain and the `shortpixel/replacer/*`,
+ * `shortpixel/externals/*` and `shortpixel/file/*` hook prefixes. The build
+ * tool that bundles the module into a plugin rewrites the namespace, the text
+ * domain and these hook prefixes mechanically, so each consuming plugin (for
+ * example Enable Media Replace) sees its own namespace and its own hook
+ * prefix. Hook names in these docblocks are given in the source's terms.
+ *
+ * Hooks fired by this class:
+ * - action `shortpixel/replacer/replace_urls` (replace())
+ * - filter `shortpixel/replacer/custom_replace_query` (replace())
+ * - filter `shortpixel/replacer/replacement_tables` (handleMetaData())
+ * - filter `shortpixel/replacer/load_meta_value` (handleMetaData())
+ * - filter `shortpixel/replacer/save_meta_value` (handleMetaData())
+ * - filter `shortpixel/replacer/content` (replaceContent())
+ * - filter `shortpixel/file/basedir_check` (fileIsRestricted())
+ *
+ * @todo The extra URL pairs from addURLArray() accumulate in $search_urls and
+ *       $replace_urls and are never cleared, so on the shared instance from
+ *       getInstance() a second replace() in the same request reuses the pairs
+ *       of the first one. Suggested fix: clear both arrays at the end of
+ *       replace() or add a reset method.
  */
 
 class Replacer
 {
 
+	/**
+	 * Full URL of the file being replaced (the old file).
+	 *
+	 * @var string|null
+	 */
 	protected $source_url;
+
+	/**
+	 * Full URL of the replacement file (the new file).
+	 *
+	 * @var string|null
+	 */
 	protected $target_url;
+
+	/**
+	 * Attachment metadata of the source file, as stored in
+	 * `_wp_attachment_metadata` (keys used: `file`, `width`, `sizes`).
+	 *
+	 * @var array
+	 */
 	protected $source_metadata = [];
+
+	/**
+	 * Attachment metadata of the target file, same shape as $source_metadata.
+	 *
+	 * @var array
+	 */
 	protected $target_metadata = [];
-	protected $search_urls = []; 
-	protected $replace_urls = []; 
 
-	protected static $instance; 
+	/**
+	 * Extra search URLs added through addURLArray(), merged into the
+	 * generated search array by replace().
+	 *
+	 * @var array
+	 */
+	protected $search_urls = [];
 
+	/**
+	 * Extra replace URLs added through addURLArray(), merged into the
+	 * generated replace array by replace().
+	 *
+	 * @var array
+	 */
+	protected $replace_urls = [];
+
+	/**
+	 * Shared instance returned by getInstance().
+	 *
+	 * @var Replacer|null
+	 */
+	protected static $instance;
+
+	/**
+	 * Defaults for the replace settings, see setReplaceSettings().
+	 *
+	 * @var array
+	 */
 	private $default_replace_settings = array(
 		'component' => 'unset',
-		'json_flags' => JSON_UNESCAPED_SLASHES,
+		'json_flags' => JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE,
 		'replacer_do_save' => true,
 		'replace_no_serialize' => false,
 	);
 
+	/**
+	 * Settings of the current replace run, see setReplaceSettings(). Null
+	 * until the first run or the first replaceContent() call.
+	 *
+	 * @var array|null
+	 */
 	private $replace_settings;
 
+	/**
+	 * Creates a replacer and loads the integration modules.
+	 */
 	public function __construct()
 	{
 		$this->loadFormats();
 	}
 
+	/**
+	 * Returns the shared instance, creating it on first use.
+	 *
+	 * @return Replacer
+	 */
 	public static function getInstance()
 	{
 		 if (is_null(self::$instance))
@@ -57,6 +175,17 @@ class Replacer
 	}
 
 	// Load classes that handle alternative formats that can occur in the metadata / post data.
+	/**
+	 * Instantiates the five integration modules.
+	 *
+	 * Elementor, WpBakery, YoastSeo, Breakdance and SmartSlider are singletons;
+	 * each one checks in its constructor whether its plugin is active and only
+	 * then registers its hooks. SmartSlider receives this replacer instance
+	 * (only the first instance passed is kept, and the module is inert, see
+	 * Modules\SmartSlider).
+	 *
+	 * @return void
+	 */
 	protected function loadFormats()
 	{
 		Modules\Elementor::getInstance();
@@ -66,36 +195,87 @@ class Replacer
 		Modules\SmartSlider::getInstance($this);
 	}
 
+	/**
+	 * Sets the URL of the file being replaced.
+	 *
+	 * @param string $url Full URL of the source (old) file.
+	 * @return void
+	 */
 	public function setSource($url)
 	{
 		$this->source_url = $url;
 	}
 
+	/**
+	 * Returns the URL of the file being replaced.
+	 *
+	 * @return string|null Source URL, null when not set.
+	 */
 	public function getSource()
 	{
 		return $this->source_url;
 	}
 
+	/**
+	 * Sets the URL of the replacement file.
+	 *
+	 * @param string $url Full URL of the target (new) file.
+	 * @return void
+	 */
 	public function setTarget($url)
 	{
 		$this->target_url = $url;
 	}
 
+	/**
+	 * Returns the URL of the replacement file.
+	 *
+	 * @return string|null Target URL, null when not set.
+	 */
 	public function getTarget()
 	{
 		return $this->target_url;
 	}
 
+	/**
+	 * Sets the attachment metadata of the source file.
+	 *
+	 * Used to build the thumbnail URLs to search for and by findNearestSize().
+	 *
+	 * @param array $meta Attachment metadata (`file`, `width`, `sizes`).
+	 * @return void
+	 */
 	public function setSourceMeta($meta)
 	{
 		$this->source_metadata = $meta;
 	}
 
+	/**
+	 * Sets the attachment metadata of the target file.
+	 *
+	 * @param array $meta Attachment metadata (`file`, `width`, `sizes`).
+	 * @return void
+	 */
 	public function setTargetMeta($meta)
 	{
 		$this->target_metadata = $meta;
 	}
 
+	/**
+	 * Adds extra search/replace URL pairs to the next replace().
+	 *
+	 * Both arrays are merged into the stored ones with array_merge(): string
+	 * keys overwrite earlier entries with the same key, numeric keys are
+	 * appended. replace() merges them after the generated relative URLs, so
+	 * a string key equal to a size name (or `base`, `file`) overrides the
+	 * generated pair. The caller keeps both arrays the same length and in the
+	 * same order; the stored arrays are not cleared after replace().
+	 * Non-array arguments are ignored.
+	 *
+	 * @param array $search_urls  URLs or paths to search for.
+	 * @param array $replace_urls Replacements, index-matched to $search_urls.
+	 * @return void
+	 */
 	public function addURLArray($search_urls = [], $replace_urls = [])
 	{
 		if (true === is_array($search_urls))
@@ -108,22 +288,115 @@ class Replacer
 		}
 	}
 
+	/**
+	 * Returns a Setup object of the newer search/replace API.
+	 *
+	 * Setup::getInstance() creates a new object on every call, so each call
+	 * here starts with empty data.
+	 *
+	 * @return Setup
+	 */
 	public function Setup()
 	{
 		 return Setup::getInstance();
 	}
-	
+
+	/**
+	 * Returns a new Finder of the newer search/replace API.
+	 *
+	 * @param array $args Finder constructor arguments (`callback`, `base_url`,
+	 *                    `return_data`), see Classes\Finder::__construct().
+	 * @return Finder
+	 */
 	public function Finder($args = [])
 	{
-		 
+
 		 return new Finder($args);
 	}
 
+	/**
+	 * Returns a new Updater of the newer search/replace API.
+	 *
+	 * @return Updater
+	 */
 	public function Updater()
 	{
 		 return new Updater();
 	}
 
+	/**
+	 * Replaces every reference to the source file with the target file.
+	 *
+	 * Steps:
+	 * 1. Returns false when the source or target URL is not set.
+	 * 2. Resets the replace settings to the defaults with `component` set to
+	 *    `emr` (the same value in every consuming plugin).
+	 * 3. Derives $base_url: the path of the source URL with the extension
+	 *    removed by str_replace('.ext', ''). This is the LIKE pattern used to
+	 *    find candidate rows.
+	 * 4. Fail-safes: when fileIsRestricted() reports the path as allowed and
+	 *    is_dir($base_url) is true (the URL path, tested as an absolute
+	 *    filesystem path), or when $base_url is empty, returns an array with
+	 *    one translated error message.
+	 * 5. Builds relative URL arrays for source and target with
+	 *    getRelativeURLS(): key `base` for the main file, `file` for the
+	 *    metadata file, and one key per thumbnail size name.
+	 * 6. With `thumbnails_only`, drops `base` and `file` from both sides.
+	 * 7. Appends the pairs added with addURLArray().
+	 * 8. Drops target sizes that do not exist in the source.
+	 * 9. For source sizes missing in the target, fills in the target file
+	 *    whose width is closest (findNearestSize()), placed in the source
+	 *    size's directory and appended at the end of the target array.
+	 *    Sizes without a nearest match stay unpaired.
+	 * 10. Drops pairs whose search and replace values are identical (strict
+	 *     comparison) and rebuilds the target array in the key order of the
+	 *     source array. str_replace() pairs the two arrays by position, not
+	 *     by key, so a size filled in at step 9 would otherwise be paired
+	 *     with the wrong search entry. When a source size has no replacement
+	 *     the rebuilt array differs in length from the target array; it is
+	 *     then discarded, an error is logged and step 11 aborts.
+	 * 11. When the arrays still differ in length, returns an array with one
+	 *     translated error message, because str_replace() would otherwise
+	 *     replace the unpaired entries with an empty string.
+	 * 12. Fires `shortpixel/replacer/replace_urls`.
+	 * 13. Returns 0 when nothing is left to search for.
+	 * 14. Runs doReplaceQuery() for posts and meta tables.
+	 * 15. Applies `shortpixel/replacer/custom_replace_query` and runs
+	 *     doReplaceQuery() once per returned entry, with that entry's `args`
+	 *     as the replace settings (or the defaults when it has none). The
+	 *     settings of the last run stay on the instance.
+	 *
+	 * @hook action shortpixel/replacer/replace_urls Fired with
+	 *       ($search_urls, $replace_urls, $base_url) after the arrays are
+	 *       balanced and before any query runs.
+	 * @hook filter shortpixel/replacer/custom_replace_query Receives
+	 *       (array $runs, $base_url, $search_urls, $replace_urls). Each entry,
+	 *       keyed by a component name, is an array with `base_url`,
+	 *       `search_urls`, `replace_urls` and optional `args` (replace
+	 *       settings for that run, see setReplaceSettings()).
+	 *
+	 * @param array $args {
+	 *     @type bool $thumbnails_only Only replace thumbnail sizes, not the
+	 *                                 main file. Default false.
+	 * }
+	 * @return int|array|false Number of rows matched by all queries; an array
+	 *                         of error strings when a fail-safe aborts; false
+	 *                         when source or target is missing.
+	 *
+	 * @todo The extension is removed with str_replace(), which also removes
+	 *       an identical text earlier in the path (`/a.jpg-dir/b.jpg` becomes
+	 *       `/a-dir/b`), giving a LIKE pattern that matches nothing. Suggested
+	 *       fix: strip only the trailing extension, for example with
+	 *       substr() on the length of the extension.
+	 * @todo The return type mixes int (success), array (errors) and false
+	 *       (missing input), so callers must type-check the result. Suggested
+	 *       fix: return a result object, or always return the errors array
+	 *       and expose the update count separately.
+	 * @todo In step 9 the filled-in target file is placed in the source
+	 *       size's directory, which is wrong when the target file lives in a
+	 *       different directory. Suggested fix: build it from the directory
+	 *       of the target's `base` relative URL.
+	 */
 	public function replace($args = array())
 	{
 		if (is_null($this->source_url) || is_null($this->target_url)) {
@@ -206,16 +479,32 @@ class Replacer
 		}
 
 		/* If source and target are the same, remove them from replace. This happens when replacing a file with same name, and +/- same dimensions generated.
-
 	    After previous loops, for every search there should be a replace size.
+
+		Ordered_replace - When the system adds urls via findNearestSize, the size is put (index-wise) at the end of array, this makes search / replaces sizes not lined-up and replaces not with the best URL
 	    */
+		$ordered_replace = []; 
 		foreach ($search_urls as $size => $url) {
 			$replace_url = isset($replace_urls[$size]) ? $replace_urls[$size] : false;
-			if ($url == $replace_url) // if source and target as the same, no need for replacing.
+			if ($url === $replace_url) // if source and target as the same, no need for replacing.
 			{
 				unset($search_urls[$size]);
 				unset($replace_urls[$size]);
 			}
+			else  // Only add when the search is not removed. 
+			{
+				$ordered_replace[$size] = $replace_url; 	
+			}
+			
+		}
+
+		if (count($ordered_replace) > 0 && count($ordered_replace) === count($replace_urls)) 
+		{
+			 $replace_urls = $ordered_replace; 
+		}
+		elseif (count($ordered_replace) > 0) // Log if something went wrong here. 
+		{
+			 Log::addError('Ordered replace got zero or different amount of urls!', [$ordered_replace, $replace_urls]);
 		}
 
 		// If the two sides are disbalanced, the str_replace part will cause everything that has an empty replace counterpart to replace it with empty. Unwanted.
@@ -231,6 +520,11 @@ class Replacer
 		do_action('shortpixel/replacer/replace_urls', $search_urls, $replace_urls, $base_url);
 		$updated = 0;
 
+		if (0 === count($search_urls)) 
+		{
+			 Log::addDebug('Search URLS array empty, nothing to replace this go '); 
+			 return $updated; 
+		}
 		$updated += $this->doReplaceQuery($base_url, $search_urls, $replace_urls);
 
 		$replaceRuns = apply_filters('shortpixel/replacer/custom_replace_query', array(), $base_url, $search_urls, $replace_urls);
@@ -252,6 +546,26 @@ class Replacer
 		return $updated;
 	}
 
+	/**
+	 * Runs one search/replace pass over post content and the meta tables.
+	 *
+	 * Selects `ID, post_content` from the posts table for posts with status
+	 * publish, future, draft, pending or private whose content is LIKE
+	 * `%$base_url%` ($base_url is not passed through esc_like(), so `_` and
+	 * `%` in it act as wildcards). Each row goes through replaceContent()
+	 * (not deep, strict check); when the content changes it is written with
+	 * a direct `$wpdb` UPDATE (no post hooks, no revision, post_modified is
+	 * untouched) followed by clean_post_cache(). Then handleMetaData() runs
+	 * with the same arrays.
+	 *
+	 * @global \wpdb $wpdb
+	 *
+	 * @param string $base_url     LIKE fragment used to select candidate rows.
+	 * @param array  $search_urls  Values to search for.
+	 * @param array  $replace_urls Replacements, index-matched to $search_urls.
+	 * @return int Number of matched rows (posts plus meta rows), counted
+	 *             whether or not their content changed.
+	 */
 	private function doReplaceQuery($base_url, $search_urls, $replace_urls)
 	{
 		global $wpdb;
@@ -299,43 +613,124 @@ class Replacer
 		return $number_of_updates;
 	}
 
+	/**
+	 * Runs one search/replace pass over the meta tables and the options table.
+	 *
+	 * The tables come from an array keyed by the `$wpdb` table property name
+	 * (`postmeta`, `commentmeta`, `termmeta`, `usermeta`, `options`). Each
+	 * entry has:
+	 * - `id`: primary key column (required).
+	 * - `value`: column holding the content (required).
+	 * - `main_id`: column of the owning object id (optional), `option_name`
+	 *   for `options`. Selected with the row; without it the query selects
+	 *   `NULL as main_id`.
+	 * - `cache_group`: object cache group of the owning object (optional).
+	 *
+	 * For `postmeta` the rows are limited by a subquery to posts with status
+	 * publish, future, draft, pending or private. Every other table is
+	 * queried as `$wpdb->{$table}` with `value LIKE %$url%`.
+	 *
+	 * For each matched row the value passes the `load_meta_value` filter.
+	 * When the filter returns null the row is skipped. Otherwise the value goes
+	 * through replaceContent() (not deep, no strict check) and the
+	 * `save_meta_value` filter. When the `replacer_do_save` setting is true
+	 * the value is written with a direct UPDATE on the `id` column, and the
+	 * cache is cleared: for `options` the `alloptions` and `notoptions` keys
+	 * and the option's own name (the key of a non-autoloaded option) in the
+	 * `options` group, for other tables the row's `main_id` value in
+	 * `cache_group` when a cache group is set. When `replacer_do_save` is
+	 * false, saving is left to the `save_meta_value` callback.
+	 *
+	 * @global \wpdb $wpdb
+	 *
+	 * @hook filter shortpixel/replacer/replacement_tables Receives and returns
+	 *       the table array described above.
+	 * @hook filter shortpixel/replacer/load_meta_value Receives ($content,
+	 *       array $row, string $component). $row holds the selected id, value
+	 *       and main id columns; $component is the `component` replace
+	 *       setting. Return null to leave the row untouched.
+	 * @hook filter shortpixel/replacer/save_meta_value Receives the replaced
+	 *       ($content, array $row, string $component) and returns the value to
+	 *       save.
+	 *
+	 * @param string $url          LIKE fragment used to select candidate rows.
+	 * @param array  $search_urls  Values to search for.
+	 * @param array  $replace_urls Replacements, index-matched to $search_urls.
+	 * @return int Number of matched rows, counted whether or not they changed
+	 *             or were skipped.
+	 *
+	 * @todo The cache key is read as `$row[$main_field]`. For a table without
+	 *       `main_id` (one added through `replacement_tables`, or `options`
+	 *       with its `main_id` removed there) $main_field is the expression
+	 *       `NULL as main_id`, not a key of the row, so clearing the cache
+	 *       raises an undefined-index notice and deletes a null key.
+	 *       Suggested fix: read `$row['main_id']` when the table has no
+	 *       `main_id`, and skip the delete when it is null.
+	 * @todo The skip log message prints `$id_field` (the column name) instead
+	 *       of `$id` (the row id). Suggested fix: log `$id`.
+	 * @todo The postmeta subquery quotes the statuses with double quotes,
+	 *       which MySQL reads as identifiers under the ANSI_QUOTES SQL mode.
+	 *       Suggested fix: use single quotes as doReplaceQuery() does.
+	 */
 	private function handleMetaData($url, $search_urls, $replace_urls)
 	{
 		global $wpdb;
 
-		$meta_options = apply_filters('shortpixel/replacer/metadata_tables', array('post', 'comment', 'term', 'user', 'options'));
+//		$meta_options = apply_filters('shortpixel/replacer/metadata_tables', array('post', 'comment', 'term', 'user', 'options'));
 		$number_of_updates = 0;
 
+		/*
 		$meta_default = [
 			'id' => 'meta_id',
 			'value' => 'meta_value',
-		];
+		]; */
+
 
 		$table_options = [
-			'postmeta' => $meta_default,
-			'commentmeta' => $meta_default,
-			'termmeta' => $meta_default,
-			'usermeta' => $meta_default,
+			'postmeta' => [
+				'id' => 'meta_id', 
+				'value' => 'meta_value', 
+				'main_id' => 'post_id',
+				'cache_group' => 'post_meta'
+			],
+			'commentmeta' => [
+				'id' => 'meta_id', 
+				'value' => 'meta_value', 
+				'main_id' => 'comment_id',
+				'cache_group' => 'comment_meta'
+			],
+			'termmeta' => [
+				'id' => 'meta_id', 
+				'value' => 'meta_value', 
+				'main_id' => 'term_id',
+				'cache_group' => 'term_meta'
+			],
+			'usermeta' => [
+				'id' => 'umeta_id', 
+				'value' => 'meta_value', 
+				'main_id' => 'user_id',
+				'cache_group' => 'user_meta'
+			],
 			'options' => [
 				'id' => 'option_id',
-				'value' => 'option_value',
+				'main_id' => 'option_name',
+				'value' => 'option_value',		
 			]
 
 		];
 
 		$table_options = apply_filters('shortpixel/replacer/replacement_tables', $table_options);
 
-		// Exeception in user meta table.
-		$table_options['usermeta']['id'] = 'umeta_id';
-
 		foreach ($table_options as $table => $data) {
 			// These must be always defined.
 			$id_field = esc_sql($data['id']);
 			$value_field = esc_sql($data['value']);
+			$main_field = isset($data['main_id']) ? esc_sql($data['main_id']) : 'NULL as main_id'; 
+			
 
 			switch ($table) {
 				case "postmeta": // special case.
-					$sql = 'SELECT * FROM ' . $wpdb->postmeta . '
+					$sql = "SELECT $id_field, $value_field, $main_field FROM " . $wpdb->postmeta . '
 	                WHERE post_id in (SELECT ID from ' . $wpdb->posts . ' where post_status in ("publish", "future", "draft", "pending", "private") ) AND meta_value like %s';
 					$type = 'post';
 
@@ -344,7 +739,7 @@ class Replacer
 				default:
 					$wp_table = $wpdb->{$table};  // termmeta, commentmeta etc
 
-					$sql = "SELECT $id_field , $value_field FROM $wp_table WHERE $value_field like %s";
+					$sql = "SELECT $id_field, $value_field, $main_field FROM $wp_table WHERE $value_field like %s";
 
 					$update_sql = " UPDATE $wp_table set $value_field = %s WHERE $id_field  = %d ";
 					break;
@@ -379,7 +774,23 @@ class Replacer
 						// Check if usual save should be prevented. This is for integrations.
 						if (true === $this->replace_settings['replacer_do_save']) {
 							$prepared_sql = $wpdb->prepare($update_sql, $content, $id);
-							$result = $wpdb->query($prepared_sql);
+							$wpdb->query($prepared_sql);
+							
+							if ('options' === $table)
+							{
+								wp_cache_delete( 'alloptions', 'options' );         // Clear all options array
+								wp_cache_delete( 'notoptions', 'options' );         // Reset non-existent list
+								$main_id = $row[$main_field]; 
+								wp_cache_delete($main_id, 'options'); // Delete the option_name directly from cache as well.
+							} 
+							else 
+							{
+								if (isset($data['cache_group']))
+								{
+									$main_id = $row[$main_field];
+									wp_cache_delete($main_id, $data['cache_group']);
+								}
+							}
 						}
 					}
 				} // Loop
@@ -390,6 +801,27 @@ class Replacer
 	} // function
 
 
+	/**
+	 * Sets the settings of the current replace run.
+	 *
+	 * Missing keys take their default, so a call without arguments resets all
+	 * settings. Keys:
+	 * - `component` (string, default `unset`): name of the run, passed to the
+	 *   `load_meta_value` and `save_meta_value` filters so integrations can
+	 *   act only on their own run. replace() uses `emr` for the main run.
+	 * - `json_flags` (int, default JSON_UNESCAPED_SLASHES |
+	 *   JSON_UNESCAPED_UNICODE): flags for json_encode() when
+	 *   replaceContent() re-encodes JSON.
+	 * - `replacer_do_save` (bool, default true): whether handleMetaData()
+	 *   writes the replaced meta value itself.
+	 * - `replace_no_serialize` (bool, default false): when true,
+	 *   replaceContent() returns arrays and objects as they are instead of
+	 *   serializing them at the top level. A value replaceContent()
+	 *   unserialized itself is always serialized back.
+	 *
+	 * @param array $settings Settings to apply over the defaults.
+	 * @return void
+	 */
 	private function setReplaceSettings($settings = array())
 	{
 		$this->replace_settings = wp_parse_args($settings, $this->default_replace_settings);
@@ -397,31 +829,103 @@ class Replacer
 
 	/**
 	 * Replaces Content across several levels of possible data
-	 * @param $content String The Content to replace
-	 * @param $search Array Search string
-	 * @param $replace Array Replacement String
-	 * @param $in_deep Boolean.  This is use to prevent serialization of sublevels. Only pass back serialized from top.
-	 * @param $strict_check Boolean . If true, remove all classes from serialization check and fail. This should be done on post_content, not on metadata.
+	 *
+	 * Recursion contract:
+	 * - Serialized string: unserialized with `allowed_classes => ['stdClass']`
+	 *   through the Unserialize polyfill. The polyfill's own branch is only
+	 *   for PHP below 7; the consuming plugins require PHP 7.4, so the native
+	 *   unserialize() runs. stdClass has no magic methods, so it is
+	 *   instantiated and walked like any object; every other class becomes
+	 *   __PHP_Incomplete_Class and none of its methods can run. When the
+	 *   top-level result is an incomplete object the original serialized
+	 *   string is returned unchanged. An incomplete object nested in an
+	 *   array or stdClass is kept as it is, and serialize() writes it back
+	 *   under its original class name with its original properties.
+	 *   A string that looks serialized but does not unserialize (other than
+	 *   `b:0;`) is returned unchanged. Every value this call unserialized is
+	 *   serialized back with serialize(), whatever its type and at every
+	 *   level (unless it was JSON, see below), so a value WordPress stored
+	 *   with an extra serialization layer keeps that layer. When the
+	 *   unserialized value is itself a serialized string (a value serialized
+	 *   twice), that inner layer is processed recursively instead of with
+	 *   str_replace(), so its lengths stay valid; an inner object of a
+	 *   disallowed class comes back byte for byte.
+	 * - JSON string (see isJSON()): decoded with json_decode() into objects
+	 *   and arrays, processed as such and encoded back at the same level
+	 *   (top level or nested), with the `json_flags` setting. The string is
+	 *   only re-encoded when the processed value differs from a second
+	 *   decode of the input (compared by value, with `!=`); otherwise the
+	 *   original string is returned byte for byte, so JSON without a match
+	 *   keeps its escaping.
+	 * - String: passed through the `shortpixel/replacer/content` filter, then
+	 *   str_replace($search, $replace).
+	 * - WP_Error: returned untouched.
+	 * - Array: every value is processed recursively ($in_deep true). String
+	 *   keys are processed too, and a key that changes (a URL used as key)
+	 *   is renamed with change_key().
+	 * - Object: every public property is processed recursively. An
+	 *   incomplete object is returned as it is (or, at the top level of a
+	 *   serialized value, the original serialized string is returned).
+	 * - Other scalars and null: returned untouched.
+	 * - At the top level, arrays and objects that were neither JSON nor
+	 *   unserialized by this call are passed through maybe_serialize(),
+	 *   unless the `replace_no_serialize` setting is true.
+	 *
+	 * When no replace run has set the settings yet, the defaults are applied
+	 * first. Otherwise the settings of the latest run apply.
+	 *
+	 * @hook filter shortpixel/replacer/content Receives ($content, $search,
+	 *       $replace) for every string leaf (values and array keys) before
+	 *       str_replace() and returns the string to replace in.
+	 *
+	 * @param mixed $content      The content to replace in.
+	 * @param array $search       Values to search for.
+	 * @param array $replace      Replacements, index-matched to $search.
+	 * @param bool  $in_deep      True for nested levels; prevents the
+	 *                            maybe_serialize() of arrays and objects
+	 *                            below the top level. A value unserialized or
+	 *                            JSON-decoded at a nested level is still
+	 *                            encoded back there.
+	 * @param bool  $strict_check Passed down the recursion but not otherwise
+	 *                            read; every unserialize uses
+	 *                            `allowed_classes => ['stdClass']`
+	 *                            regardless.
+	 * @return mixed The replaced content, in the input's form at the top
+	 *               level (string for serialized, JSON or string input).
 	 */
 	public function replaceContent($content, $search, $replace, $in_deep = false, $strict_check = true)
 	{
+
+		// 1) used to return content back if incomplete classes are found, prevent destroying the original information
+		// 2) used to return same content if json. 
+		// 3) Ideally would return this if no changes made, but there is also the check in replace. 
+	 	$raw_content = $content; 
 
 		// Since ReplaceContent can now be called directly, this might not be set, set defaults if so
 		if (is_null($this->replace_settings)) {
 			$this->setReplaceSettings([]);
 		}
 
+		$was_unserialized = false; 
+
 		if (true === is_serialized($content)) {
-			$serialized_content = $content; // use to return content back if incomplete classes are found, prevent destroying the original information
 
-
-			$args = array('allowed_classes' => false);
-
+			// Only allow stdClass which can't have magic methods. 
+			//$args = array('allowed_classes' => false);
+			$args = array('allowed_classes' => array('stdClass'));
 
 			$content = Unserialize::unserialize($content, $args);
+			$was_unserialized = true;
+
+			// Looks serialized but does not unserialize (e.g. a broken length): leave it as it is, serializing false back would destroy it.
+			if (false === $content && 'b:0;' !== trim($raw_content)) {
+				Log::addWarn('Replacer: value looks serialized but does not unserialize, left unchanged');
+				return $raw_content;
+			}
+
 			// bail directly on incomplete classes. In < PHP 7.2 is_object is false on incomplete objects!
 			if (true === $this->checkIncomplete($content)) {
-				return $serialized_content;
+				return $raw_content;
 			}
 		}
 
@@ -429,9 +933,15 @@ class Replacer
 
 		if ($isJson) {
 			$content = json_decode($content);
+			$decoded_previous_content = json_decode($raw_content);
 		}
 
-		if (is_string($content))  // let's check the normal one first.
+		if (true === $was_unserialized && is_string($content) && true === is_serialized($content))
+		{
+			// A value serialized twice: walk the inner layer too, so its lengths stay valid. A disallowed class inside comes back unchanged.
+			$content = $this->replaceContent($content, $search, $replace, true, $strict_check);
+		}
+		elseif (is_string($content))  // regular string.
 		{
 			$content = apply_filters('shortpixel/replacer/content', $content, $search, $replace);
 			$content = str_replace($search, $replace, $content);
@@ -455,27 +965,36 @@ class Replacer
 			// bail directly on incomplete classes.
 			if (true === $this->checkIncomplete($content)) {
 				// if it was serialized, return the original as not to corrupt data.
-				if (isset($serialized_content)) {
-					return $serialized_content;
-				} else { // else just return the content.
-					return $content;
-				}
-
+				return $raw_content;
 			}
 			foreach ($content as $key => $value) {
 				$content->{$key} = $this->replaceContent($value, $search, $replace, true, $strict_check);
 			}
 		}
 
-		if ($isJson && $in_deep === false) // convert back to JSON, if this was JSON. Different than serialize which does WP automatically.
-		{
+		// Fix removed is_deep check here to encode each time json was found.  It can happen in serialized array where subdata is in json format
+	    if ($isJson) // convert back to JSON, if this was JSON. Different than serialize which does WP automatically.
+	    {
+	      // wp-slash -> WP does stripslashes_deep which destroys JSON
+				$json_flags = $this->replace_settings['json_flags'];
+		  //	Log::addDebug('Value was found to be JSON, encoding with flag: ' . $json_flags);
 
-			// wp-slash -> WP does stripslashes_deep which destroys JSON
-			$json_flags = $this->replace_settings['json_flags'];
-			Log::addDebug('Value was found to be JSON, encoding with flag: ' . $json_flags);
-			$content = json_encode($content, $json_flags);
-			Log::addDebug('Content returning (array ours) ', array($content));
-		} elseif (
+		  		// Might work badly, but might help to limit to amount of re-encodes since there is always a risk of data loss
+		  		if ($content != $decoded_previous_content)
+				{
+					$content = json_encode($content, $json_flags);
+				}
+				else 
+				{
+					$content = $raw_content;
+				}
+				
+	    }
+		elseif (true === $was_unserialized)
+		{
+			 $content = serialize($content);
+		}
+		 elseif (
 			$this->replace_settings['replace_no_serialize'] === false &&
 			$in_deep === false && (is_array($content) || is_object($content))
 		) {
@@ -487,7 +1006,18 @@ class Replacer
 
 
 	/** Check if path is allowed within openbasedir restrictions. This is an attempt to limit notices in file funtions if so.  Most likely the path will be relative in that case.
-	 * @param String Path as String
+	 *
+	 * Returns false when `open_basedir` is not set. Otherwise splits it on
+	 * `:` or `;` and returns false when any entry occurs anywhere in $path
+	 * (substring test, not a prefix test), true when none does. The result
+	 * passes a filter before it is returned.
+	 *
+	 * @hook filter shortpixel/file/basedir_check Receives the boolean
+	 *       "restricted" result and returns it, so server setups with
+	 *       symlinks can override a false positive.
+	 *
+	 * @param string $path Path to check.
+	 * @return bool True when the path is outside every open_basedir entry.
 	 */
 	private function fileIsRestricted($path)
 	{
@@ -514,6 +1044,19 @@ class Replacer
 		return $restricted;
 	}
 
+	/**
+	 * Renames array keys, keeping the order of the elements.
+	 *
+	 * Builds a new array in which every key found in $set is replaced by its
+	 * mapped value. Nested arrays are processed with the same map, so a
+	 * matching key is renamed at every depth. Non-array input is returned
+	 * unchanged.
+	 *
+	 * @param array $arr Array to rename keys in.
+	 * @param array $set Map of old key => new key.
+	 * @return array|mixed The array with renamed keys, or $arr unchanged when
+	 *                     either argument is not an array.
+	 */
 	private function change_key($arr, $set)
 	{
 		if (is_array($arr) && is_array($set)) {
@@ -527,6 +1070,21 @@ class Replacer
 		return $arr;
 	}
 
+	/**
+	 * Builds the relative URL arrays of the source and the target file.
+	 *
+	 * For each side the result holds `base`, the URL path of the main file,
+	 * and one entry per file from getFilesFromMetadata() (`file` and every
+	 * size name): the directory of the main file's URL path plus the
+	 * basename of that file. The directory is derived by removing the main
+	 * file's basename from the path with str_replace(), which also removes
+	 * the same text if it occurs earlier in the path.
+	 *
+	 * @return array {
+	 *     @type array $source Relative paths keyed `base`, `file`, size names.
+	 *     @type array $target Same shape for the target file.
+	 * }
+	 */
 	private function getRelativeURLS()
 	{
 		$dataArray = array(
@@ -553,6 +1111,14 @@ class Replacer
 	}
 
 
+	/**
+	 * Extracts the file names from attachment metadata.
+	 *
+	 * @param array $meta Attachment metadata.
+	 * @return array Map of `file` => metadata `file` value (may include the
+	 *               year/month path) and size name => size file name, for
+	 *               every entry that has a `file` key.
+	 */
 	private function getFilesFromMetadata($meta)
 	{
 		$fileArray = array();
@@ -571,6 +1137,22 @@ class Replacer
 
 	/** FindNearestsize
 	 * This works on the assumption that when the exact image size name is not available, find the nearest width with the smallest possible difference to impact the site the least.
+	 *
+	 * When the source has no metadata for $sizeName or the target metadata
+	 * has no `width` (non-image files such as PDF), returns the target URL's
+	 * basename if the target URL contains `.svg` anywhere (an SVG replaces
+	 * every thumbnail with the main file), else false.
+	 *
+	 * Otherwise starts with the target main file (basename of its metadata
+	 * `file`) and the difference between the source size width and the
+	 * target main width, then walks the target sizes and keeps the file of
+	 * each size with a strictly smaller width difference. A size whose `file`
+	 * is an array uses its first element. The loop variable reuses the name
+	 * $sizeName, and $found_metasize is set but never read.
+	 *
+	 * @param string $sizeName Size name present in the source metadata.
+	 * @return string|false File name (basename) of the closest target file,
+	 *                      or false when none is found.
 	 */
 	private function findNearestSize($sizeName)
 	{
@@ -613,6 +1195,20 @@ class Replacer
 	}
 
 	/* Check if given content is JSON format. */
+	/**
+	 * Checks whether a value is a JSON document.
+	 *
+	 * Arrays, objects and null are never JSON. Other values are passed to
+	 * json_decode(); the result is true when the decoded value is truthy and
+	 * loosely differs from the input. Numeric strings and `true` decode to a
+	 * value that loosely equals the input, so they return false; `0`,
+	 * `false` and `[]` decode to falsy values and also return false. A
+	 * quoted JSON string literal such as `"abc"` (with the quotes) returns
+	 * true.
+	 *
+	 * @param mixed $content Value to check.
+	 * @return bool True when the content is treated as JSON.
+	 */
 	private function isJSON($content)
 	{
 		if (is_array($content) || is_object($content) || is_null($content))
@@ -622,6 +1218,15 @@ class Replacer
 		return $json && $json != $content;
 	}
 
+	/**
+	 * Checks whether a value is an incomplete (unloadable class) object.
+	 *
+	 * With `allowed_classes => ['stdClass']` every unserialized object of
+	 * another class is one.
+	 *
+	 * @param mixed $var Value to check.
+	 * @return bool True for a __PHP_Incomplete_Class instance.
+	 */
 	private function checkIncomplete($var)
 	{
 		return ($var instanceof \__PHP_Incomplete_Class);

@@ -126,7 +126,8 @@ class InstallHelper
 	/**
 	 * Removes persistent plugin data during an uninstall.
 	 *
-	 * Delegates queue and API key removal to their respective controllers, then
+	 * Delegates queue and API key removal to their respective controllers,
+	 * deletes the promo banner's dismissals option (`spio-promo-banner`), then
 	 * deletes known transients stored by the plugin.
 	 *
 	 * @return void
@@ -135,6 +136,9 @@ class InstallHelper
 	{
 		QueueController::uninstallPlugin();
 		ApiKeyController::uninstallPlugin();
+		// The promo banner module keeps its dismissals in its own option; it
+		// cannot hook the uninstall itself, so the plugin removes it here.
+		\ShortPixel\PromoBanner\PromoBanner::uninstall(\ShortPixel\ShortPixelPlugin::PROMO_BANNER_PREFIX);
 
 		delete_transient('bulk-secret');
 		delete_transient('othermedia_refresh_folder_delay');
@@ -351,7 +355,6 @@ class InstallHelper
           id mediumint(9) NOT NULL AUTO_INCREMENT,
           path varchar(512),
           name varchar(150),
-          path_md5 char(32),
           file_count int,
           status SMALLINT NOT NULL DEFAULT 0,
           parent SMALLINT DEFAULT 0,
@@ -381,7 +384,6 @@ class InstallHelper
           ext_meta_id int(10),
           path varchar(512),
           name varchar(150),
-          path_md5 char(32),
           compressed_size int(10) NOT NULL DEFAULT 0,
           compression_type tinyint,
           keep_exif tinyint DEFAULT 0,

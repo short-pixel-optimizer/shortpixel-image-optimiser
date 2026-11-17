@@ -73,7 +73,7 @@ if (! defined('ABSPATH')) {
                         This type of compression may be necessary in rare cases, such as with certain technical drawings or images from vector graphics.', 'shortpixel-image-optimiser'), '<b>', '</b>', '<br><br>'); ?>
             </p>
 
-            <?php printf(esc_html__('%s Run a few tests%s to help you decide.', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/online-image-compression" target="_blank">', '</a>'); ?>
+            <?php printf(esc_html__('%s Run a few tests%s to help you decide.', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/online-image-compression?utm_source=plugin&utm_medium=spio&utm_campaign=optimization_link_compression_test" target="_blank">', '</a>'); ?>
           </info>
         </content>
         <content class='smart-compression-explainer'>
@@ -194,22 +194,26 @@ if (! defined('ABSPATH')) {
       <!-- Nextgen setting -->
       <?php if ($this->has_nextgen) : ?>
         <setting>
-          <name>
-            <?php esc_html_e('NextGen', 'shortpixel-image-optimiser'); ?>
-          </name>
           <content>
             <?php $this->printSwitchButton(
               [
                 'name' => 'includeNextGen',
                 'checked' => $view->data->includeNextGen,
-                'label' => esc_html__('Optimize NextGen galleries', 'shortpixel-image-optimiser')
+                'label' => esc_html__('Optimize Imagely/NextGEN galleries', 'shortpixel-image-optimiser')
               ]
             );
             ?>
             <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/how-to-optimize-your-nextgen-galleries-with-shortpixel-image-optimizer/?target=iframe&utm_source=plugin&utm_medium=spio&utm_campaign=plugin_settings"></i>
             <name>
-              <?php esc_html_e('Enable this option to automatically optimize your NextGEN Gallery images.', 'shortpixel-image-optimiser'); ?>
+              <?php esc_html_e('Enable this option to automatically optimize your Imagely/NextGEN Gallery images.', 'shortpixel-image-optimiser'); ?>
             </name>
+            <info>
+           <?php 
+              printf(esc_html__('To update or add missing galleries after enabling the integration, please do a %s full scan of all folders %s', 'shortpixel-image-optimiser'),
+                '<a href="' . esc_url(admin_url('upload.php?page=wp-short-pixel-custom&part=scan')) . '">', '</a>'
+              ); 
+            ?>
+           </info>
           </content>
         </setting>
       <?php endif; ?>

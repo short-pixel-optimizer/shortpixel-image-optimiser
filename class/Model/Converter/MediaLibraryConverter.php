@@ -91,6 +91,16 @@ abstract class MediaLibraryConverter extends Converter
 	 * Handles: updating the attached file path, post MIME type and GUID, regenerating
 	 * (or patching) attachment metadata, and propagating changes to WPML duplicates.
 	 *
+	 * Fires `shortpixel-thumbnails-before-regenerate` first, which blocks the
+	 * upload hooks for this attachment while its metadata is regenerated, and
+	 * `shortpixel-thumbnails-after-regenerate` when done (before the metadata is
+	 * saved on a conversion, after it on a restore), which releases the block.
+	 *
+	 * @todo The early `return false` paths (attached file or post update
+	 *       failing) leave without firing the after-regenerate action, so the
+	 *       attachment stays blocked for the upload hooks until the request
+	 *       ends. Suggested fix: fire it before those returns as well.
+	 *
 	 * @param array $params {
 	 *     Conversion parameters.
 	 *     @type bool $success           True when the conversion succeeded.
@@ -201,6 +211,8 @@ abstract class MediaLibraryConverter extends Converter
 
 		if (isset($params['success']) && true === $params['success']) {
 			do_action('shortpixel/converter/prevent-offload-off', $attach_id);
+			do_action('shortpixel-thumbnails-after-regenerate', $attach_id);
+
 		}
 
 		if (is_array($new_metadata) && count($new_metadata) > 0) {
@@ -210,6 +222,8 @@ abstract class MediaLibraryConverter extends Converter
 		// Restore -sigh- fires off a later signal, because on the succesHandler in MediaLIbraryModel it may copy back backups.
 		if (isset($params['restore']) && true === $params['restore']) {
 			do_action('shortpixel/converter/prevent-offload-off', $attach_id);
+			do_action('shortpixel-thumbnails-after-regenerate', $attach_id);
+
 		}
 
 		if (is_array($WPMLduplicates) && count($WPMLduplicates) > 0) {

@@ -223,6 +223,9 @@
   width: 200px;
   margin-right: 30px;
 }
+.shortpixel-other-media .scan-area .scan-actions label {
+  display: inline-block;
+}
 .shortpixel-other-media .scan-area .result {
   min-width: 500px;
   margin: 20px 0;

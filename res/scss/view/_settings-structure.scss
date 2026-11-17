@@ -18,6 +18,14 @@
 		 .shortpixel-settings section.wrapper { margin: 0 auto; } // center the wrapper.
 	}
 
+// Promo banner (build/shortpixel/promo-banner), printed between the header
+// and the article: same width and centring as the article below it.
+.shortpixel-bf
+{
+	width: 95%;
+	margin: 16px auto 20px;
+}
+
 .shortpixel-settings // main article wrapper. Items for settings minus header.
 {
 
@@ -241,6 +249,9 @@
 // Responsive
 @include breakpoint(0, 1200px)
 {
+		.shortpixel-bf {
+			 width: 100%;
+		}
 		.shortpixel-settings {
 			 width: 100%;
 			 menu
@@ -287,6 +298,10 @@
 		}
 		// make space for the header
 		.wp-header-end {
+			 margin-top: 65px;
+		}
+		// The header is fixed here: keep the banner clear of its 65px.
+		.shortpixel-bf {
 			 margin-top: 65px;
 		}
 		.shortpixel-settings

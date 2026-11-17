@@ -262,10 +262,10 @@ class ConversionReplacementTest extends SPIO_IntegrationTestCase {
 			) )
 		);
 
-		// Serialized-OBJECT postmeta (security regression guard: URLs
-		// inside object blobs are intentionally NOT replaced, and NO
-		// object of an unknown class may be instantiated. Use a stdClass
-		// so we can round-trip round the assertion.
+		// A serialized-OBJECT string stored as an option value, so WordPress
+		// serializes it a second time (a plugin calling serialize() itself
+		// before update_option()). The replacer only sees a serialized
+		// STRING at the top level; see the serialized-stdClass test below.
 		$obj      = new stdClass();
 		$obj->url = $url;
 		$obj->tag = 'sentinel';
@@ -384,11 +384,9 @@ class ConversionReplacementTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * Assert (security regression + no-op guard) that the serialized-OBJECT
-	 * option we stored during seedContent is BYTE-IDENTICAL after the
-	 * conversion run — Replacer::replaceContent explicitly avoids
-	 * instantiating unknown classes (allowed_classes=false unserialize)
-	 * and does not walk into them.
+	 * Assert that the serialized-OBJECT option stored during seedContent is
+	 * BYTE-IDENTICAL after the conversion run. Today the conversion corrupts
+	 * it (see the pinned test below); this helper is what that pin flips to.
 	 */
 	private function assertObjectBlobUntouched( array $seeded ): void {
 		wp_cache_delete( '_spio_test_object_blob', 'options' );
@@ -459,7 +457,43 @@ class ConversionReplacementTest extends SPIO_IntegrationTestCase {
 		);
 
 		$this->assertPostConversionReplaced( $seeded, 'png' );
-		$this->assertObjectBlobUntouched( $seeded );
+		// The serialized-object option has its own test below.
+	}
+
+	/**
+	 * The PNG→JPG queue conversion rewrites an option whose value is a
+	 * serialized stdClass OBJECT stored as a string (a plugin calling
+	 * serialize() itself, so WordPress adds a second layer) and keeps it
+	 * readable: Replacer::handleMetaData() (build/ replacer2) walks the
+	 * inner layer, so its s:<length> prefixes follow the new URL (the
+	 * converted file may get a -N suffix), and writes the value back with
+	 * WordPress's outer layer. get_option() still returns a string.
+	 */
+	public function test_png_conversion_rewrites_an_option_holding_a_serialized_stdclass_and_keeps_it_a_string() {
+		$this->resetReplacerModuleSingletons();
+
+		$id     = $this->uploadPngForQueuePath( 'fixture-small.png' );
+		$seeded = $this->seedContent( $id );
+		// SENTINEL: the option reads back as seeded before the conversion.
+		$this->assertSame( $seeded['object_blob'], get_option( '_spio_test_object_blob' ) );
+
+		$this->purgeQueueTable();
+		$this->optimizeAttachment( $id );
+		$this->assertSame( 'jpg', strtolower( pathinfo( get_attached_file( $id ), PATHINFO_EXTENSION ) ), 'Sentinel: the PNG was converted.' );
+
+		global $wpdb;
+		$raw = (string) $wpdb->get_var( "SELECT option_value FROM {$wpdb->options} WHERE option_name = '_spio_test_object_blob'" );
+		$this->assertStringStartsWith( 's:', $raw, 'The outer serialization layer is kept in the database.' );
+
+		wp_cache_delete( 'alloptions', 'options' );
+		wp_cache_delete( '_spio_test_object_blob', 'options' );
+		$after = get_option( '_spio_test_object_blob' );
+		$this->assertIsString( $after, 'The option still reads back as a string, not as an object.' );
+
+		$inner = unserialize( $after, array( 'allowed_classes' => array( 'stdClass' ) ) );
+		$this->assertInstanceOf( stdClass::class, $inner, 'The stored string still unserializes: its lengths are valid.' );
+		$this->assertSame( wp_get_attachment_url( $id ), $inner->url, 'The URL inside points at the converted JPG.' );
+		$this->assertSame( 'sentinel', $inner->tag, 'The other property is unchanged.' );
 	}
 
 	/**

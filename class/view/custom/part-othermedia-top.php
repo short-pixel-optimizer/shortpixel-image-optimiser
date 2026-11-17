@@ -10,6 +10,8 @@ if ( ! defined( 'ABSPATH' ) ) {
         <?php echo esc_html($view->title);?>
     </h2>
 
+    <?php \wpSPIO()->renderPromoBanner(); ?>
+
     <div class='toolbar'>
 
 			<hr class='wp-header-end' />

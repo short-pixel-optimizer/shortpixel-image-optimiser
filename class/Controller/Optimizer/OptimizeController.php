@@ -74,10 +74,10 @@ class OptimizeController extends OptimizerBase
 
   /** Item check before the enqueueing happens 
    * 
-   * @param QueueItem  
-   * @return boolean 
-   */
-  public function checkItem(QueueItem $qItem)
+   * @param QueueItem  $qItem 
+   * @return bool
+  **/
+  public function checkItem(QueueItem $qItem) : bool
   {
     /*  $defaults = array(
           'forceExclusion' => false,
@@ -133,7 +133,7 @@ class OptimizeController extends OptimizerBase
    * @param QueueItem $qItem The item to send for processing.
    * @return void
    */
-  public function sendToProcessing(QueueItem $qItem)
+  public function sendToProcessing(QueueItem $qItem): void
   {
     $action = $qItem->data()->action;
 
@@ -180,7 +180,8 @@ class OptimizeController extends OptimizerBase
 
     $qItem->addResult(['apiName' => $this->apiName]);
 
-    if (true === $qItem->block()) {
+    // Change - added check on is_error here, because unchanged should not be if error was encountered and block somehow not removed
+    if (true === $qItem->block() && false === $qItem->result()->is_error) {
 
       $qItem->addResult([
         'apiStatus' => RequestManager::STATUS_UNCHANGED,
@@ -217,7 +218,7 @@ class OptimizeController extends OptimizerBase
         $error_code = AjaxController::APIKEY_FAILED;
       } elseif ($apistatus == RequestManager::STATUS_QUEUE_FULL || $apistatus == RequestManager::STATUS_MAINTENANCE) // Full Queue / Maintenance mode
       {
-        $error_code = AjaxController::SERVER_ERROR;
+        $error_code = AjaxController::QUEUE_FULL;
       }
 
       if (isset($error_code)) {
@@ -238,7 +239,7 @@ class OptimizeController extends OptimizerBase
       }
     }
 
-    // easier to reads than a elseif structure. 
+    // easier to read than a elseif structure. 
     if (false === $qItem->result()->is_error) {
 
       if ('optimize' === $action || 'convert_api' === $action)
@@ -426,6 +427,7 @@ class OptimizeController extends OptimizerBase
 
           $qItem->addResult([
             'apiStatus' => ApiController::ERR_TIMEOUT,
+            'fileStatus' => ImageModel::FILE_STATUS_ERROR, 
             'message' => $message,
             'is_error' => true,
             'is_done' => true,
@@ -493,10 +495,11 @@ class OptimizeController extends OptimizerBase
            $fileArray['size'] = $tmpFile->getFileSize(); 
 
            $new_attach_id = media_handle_sideload($fileArray, $attached_post_id, $newPostTitle); 
-
-         //  $new_attach_id = media_sideload_image($url, $attached_post_id, '', 'id'); // Add to WP, return attach_id
            
            $qItem->addResult(['new_attach_id' => $new_attach_id] );
+
+           // Finish the process then.
+           $this->finishItemProcess($qItem);
            $tmpFile->delete();
         }
     }

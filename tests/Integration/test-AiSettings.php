@@ -209,4 +209,83 @@ class AiSettingsTest extends SPIO_IntegrationTestCase {
 			'autoAIBulk must persist as 0 after the bulk AI switch is toggled off'
 		);
 	}
+
+	/** Upload a PNG with PNG→JPG and AI-on-upload on; returns the attached file's extension. */
+	private function uploadPngWithAiUploadHook( array $excludePatterns ): string {
+		$this->resetPluginSingletons();
+		$settings                  = \wpSPIO()->settings();
+		$settings->enable_ai       = 1;
+		$settings->ai_gen_alt      = 1;
+		$settings->autoAI          = 1;
+		$settings->png2jpg         = 1;
+		$settings->excludePatterns = $excludePatterns;
+
+		$admin = \ShortPixel\Controller\AdminController::getInstance();
+		add_filter( 'wp_generate_attachment_metadata', array( $admin, 'handleAiImageUploadHook' ), 4, 2 );
+		try {
+			$id = $this->uploadFixture( 'fixture-small.png' );
+		} finally {
+			remove_filter( 'wp_generate_attachment_metadata', array( $admin, 'handleAiImageUploadHook' ), 4 );
+		}
+
+		return strtolower( pathinfo( get_attached_file( $id ), PATHINFO_EXTENSION ) );
+	}
+
+	/**
+	 * With AI-on-upload and PNG→JPG on, a PNG that matches an exclusion
+	 * pattern stays a PNG. handleAiImageUploadHook() runs before the regular
+	 * upload hook and converts only an image that isProcessable(), which
+	 * honours the exclusions.
+	 */
+	public function test_ai_upload_hook_leaves_an_excluded_png_unconverted() {
+		$ext = $this->uploadPngWithAiUploadHook(
+			array( array( 'type' => 'name', 'value' => 'fixture-small', 'apply' => 'all' ) )
+		);
+
+		$this->assertSame( 'png', $ext, 'An excluded PNG must not be converted on upload.' );
+	}
+
+	/**
+	 * Sentinel for the test above: without an exclusion, the same upload IS
+	 * converted to JPG, so "stays a PNG" is caused by the exclusion.
+	 */
+	public function test_ai_upload_hook_converts_a_png_that_is_not_excluded() {
+		$ext = $this->uploadPngWithAiUploadHook( array() );
+
+		$this->assertSame( 'jpg', $ext, 'A PNG that is not excluded is converted on upload.' );
+	}
+
+	/**
+	 * With AI-on-upload and PNG→JPG on, the AI upload hook (priority 4)
+	 * converts the PNG first. The regular upload hook (priority 5) must still
+	 * handle the converted image in the same upload, so it is queued for
+	 * optimization: the conversion releases its upload-hook block when done.
+	 */
+	public function test_png_converted_by_the_ai_upload_hook_is_still_queued_for_optimization() {
+		$this->resetPluginSingletons();
+		$settings                  = \wpSPIO()->settings();
+		$settings->enable_ai       = 1;
+		$settings->ai_gen_alt      = 1;
+		$settings->autoAI          = 1;
+		$settings->png2jpg         = 1;
+		$settings->excludePatterns = array();
+
+		$admin = \ShortPixel\Controller\AdminController::getInstance();
+		// SENTINEL: the regular upload hook is registered, after the AI one.
+		$this->assertSame( 5, has_filter( 'wp_generate_attachment_metadata', array( $admin, 'handleImageUploadHook' ) ), 'Sentinel: the regular upload hook runs at priority 5.' );
+		add_filter( 'wp_generate_attachment_metadata', array( $admin, 'handleAiImageUploadHook' ), 4, 2 );
+		try {
+			$id = $this->uploadFixture( 'fixture-small.png' );
+		} finally {
+			remove_filter( 'wp_generate_attachment_metadata', array( $admin, 'handleAiImageUploadHook' ), 4 );
+		}
+
+		// SENTINEL: the AI hook converted the PNG.
+		$this->assertSame( 'jpg', strtolower( pathinfo( get_attached_file( $id ), PATHINFO_EXTENSION ) ), 'Sentinel: the PNG was converted on upload.' );
+
+		$this->runQueueUntilEmpty();
+
+		$image = \wpSPIO()->filesystem()->getImage( $id, 'media', false );
+		$this->assertTrue( $image->isOptimized(), 'The converted image must be optimized by the upload, not left unoptimized.' );
+	}
 }

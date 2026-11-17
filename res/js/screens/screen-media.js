@@ -412,9 +412,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			return;
 		}
 
-
 		var wp_screen_id = this.settings.wp_screen_id;
-
 
 		if (typeof aiData !== 'undefined') {
 			var newAltText = aiData.alt;
@@ -423,14 +421,11 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			var newTitle = aiData.post_title;
 			var newFileBase = aiData.filebase; 
 		}
-		
-		if (typeof newAltText !== 'undefined')
+
+		// Don't include numbers because it overwrites current data in the textblock
+		if (typeof newAltText !== 'undefined' && typeof newAltText !== 'number')
 		{
 			var inputs = this.altInputNames;
-
-			if (typeof newAltText == 'number') {
-				newAltText = '';
-			}
 
 			for (var i = 0; i < inputs.length; i++) {
 				var altInput = document.getElementById(inputs[i]);
@@ -460,11 +455,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			postTitleFields.push('title');
 		}
 
-		if (typeof newCaption !== 'undefined') {
-			if (typeof newCaption === 'number') {
-				newCaption = '';
-			}
-
+		if (typeof newCaption !== 'undefined' && typeof newCaption !== 'number') {
 			for (var i = 0; i < captionFields.length; i++) {
 				let captionField = document.getElementById(captionFields[i]);
 				if (null !== captionField) {
@@ -473,10 +464,8 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			}
 		}
 
-		if (typeof newDescription !== 'undefined') {
-			if (typeof (newDescription) === 'number') {
-				newDescription = '';
-			}
+		if (typeof newDescription !== 'undefined' && typeof newDescription !== 'number') {
+
 			for (var i = 0; i < descriptionFields.length; i++) {
 				let descriptionField = document.getElementById(descriptionFields[i]);
 				if (null !== descriptionField) {
@@ -878,7 +867,10 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		var data = event.detail.media;
 		var item_id = data.item_id;
 		if (typeof data === 'undefined') {
-			if (window.ShortPixelProcessor && window.ShortPixelProcessor.ShouldLog()) console.log('Error on ai interface!', data);
+			if (window.ShortPixelProcessor && window.ShortPixelProcessor.ShouldLog()) 
+			{
+				console.log('Error on ai interface!', data);
+			}
 			return false;
 		}
 		var element = this.GetPageAttachmentAlt();
@@ -1118,6 +1110,51 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 			return false; 
 		}
 
+		let replaceImageUrl = null;
+		if (replacedUrl != null) {
+			let targetFilename = replaceFileName || new URL(replacedUrl).pathname.split('/').pop();
+			let targetParts = targetFilename.match(/^(.*)(\.[^.]+)$/);
+			replaceImageUrl = (currentUrl) => {
+				if (!currentUrl || !targetParts) {
+					return null;
+				}
+
+				let currentUrlObject = new URL(currentUrl, window.location.href);
+				let currentFilename = currentUrlObject.pathname.split('/').pop();
+				//let thumbnailMatch = currentFilename.match(/(-\d+x\d+)(\.[^.]+)$/);
+				// Fix:: allow for -scaled images as well. 
+				let thumbnailMatch = currentFilename.match(/(-\d+x\d+|-scaled)(\.[^.]+)$/);
+				let thumbnailSuffix = thumbnailMatch ? thumbnailMatch[1] : '';
+
+				currentUrlObject.pathname = currentUrlObject.pathname.replace(
+					/[^/]+$/,
+					targetParts[1] + thumbnailSuffix + targetParts[2]
+				);
+				return currentUrlObject.toString();
+			};
+
+			if (wp.media) {
+				let attachment = wp.media.attachment(attach_id);
+				let attachmentUrl = attachment.get('url');
+				let attachmentAttributes = {
+					url: replaceImageUrl(attachmentUrl) || replacedUrl,
+				};
+				let sizes = attachment.get('sizes');
+
+				if (sizes && typeof sizes === 'object') {
+					attachmentAttributes.sizes = {};
+					Object.keys(sizes).forEach((sizeName) => {
+						let size = sizes[sizeName];
+						attachmentAttributes.sizes[sizeName] = size && typeof size === 'object'
+							? Object.assign({}, size, { url: replaceImageUrl(size.url) || size.url })
+							: size;
+					});
+				}
+
+				attachment.set(attachmentAttributes);
+			}
+		}
+
 		// Fields disabled in settings, or skipped by 'preserve existing', come back as
 		// integer status codes instead of text. Only apply real core/image attributes
 		// holding a string: an integer caption makes the block's save() throw, after
@@ -1145,31 +1182,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				let clientId = block.clientId;
 
 				if (replacedUrl != null) {
-					let currentUrl = block.attributes.url;
-					let targetFilename = replaceFileName || new URL(replacedUrl).pathname.split('/').pop();
-					let targetParts = targetFilename.match(/^(.*)(\.[^.]+)$/);
-					let thumbnailSuffix = '';
-
-
-					if (currentUrl && targetParts) {
-						let currentUrlObject = new URL(currentUrl, window.location.href);
-						let currentFilename = currentUrlObject.pathname.split('/').pop();
-						let thumbnailMatch = currentFilename.match(/(-\d+x\d+)(\.[^.]+)$/);
-
-						if (thumbnailMatch) {
-							thumbnailSuffix = thumbnailMatch[1];
-						}
-
-						// Glue back. TargetParts[1] - Base image name + thumbNail + targetParts[2] = extension
-						currentUrlObject.pathname = currentUrlObject.pathname.replace(
-							/[^/]+$/,
-							targetParts[1] + thumbnailSuffix + targetParts[2]
-						);
-						attributes.url = currentUrlObject.toString();
-					}
-					else {
-						attributes.url = replacedUrl;
-					}
+					attributes.url = replaceImageUrl(block.attributes.url) || replacedUrl;
 				}
 
 				if (false == overwriteMode && attributes.alt && block.attributes.alt && block.attributes.alt.length > 0)

@@ -152,4 +152,130 @@ class ApiFailuresTest extends SPIO_IntegrationTestCase {
 
 		$this->assertTrue( $this->freshImageModel( $id )->isOptimized(), 'The queued item must recover and optimize once the connection works again.' );
 	}
+
+	// -------------------------------------------------------------------
+	// Bulk log (current_bulk_media.log): which failures are written
+	// -------------------------------------------------------------------
+
+	/** @var int[] apiStatus of every item result returned by the ticks of the last bulkRunAndReadLog() call. */
+	private $bulkApiStatuses = array();
+
+	/** Run a bulk queue for one attachment for a fixed number of ticks; returns the bulk log text ('' when none). */
+	private function bulkRunAndReadLog( int $attachment_id, int $ticks = 8 ): string {
+		$log = SHORTPIXEL_BACKUP_FOLDER . '/current_bulk_media.log';
+		@unlink( $log );
+		$this->bulkApiStatuses = array();
+
+		$imageModel = \wpSPIO()->filesystem()->getImage( $attachment_id, 'media' );
+		( new QueueController( array( 'is_bulk' => true ) ) )->addItemToQueue( $imageModel );
+		for ( $tick = 0; $tick < $ticks; $tick++ ) {
+			$result = ( new QueueController( array( 'is_bulk' => true ) ) )->processQueue( array( 'media' ) );
+			// Through JSON, the way the browser gets it: the item results are objects with guarded properties.
+			$result = json_decode( (string) wp_json_encode( $result ) );
+			if ( isset( $result->media->results ) && is_array( $result->media->results ) ) {
+				foreach ( $result->media->results as $itemResult ) {
+					if ( isset( $itemResult->apiStatus ) ) {
+						$this->bulkApiStatuses[] = (int) $itemResult->apiStatus;
+					}
+				}
+			}
+			$this->backdateQueueItems();
+		}
+
+		clearstatcache();
+		$text = file_exists( $log ) ? (string) file_get_contents( $log ) : '';
+		@unlink( $log );
+		return $text;
+	}
+
+	/**
+	 * During a bulk run, an image that fails with a known FILE error (-102
+	 * invalid URL, -106 URL inaccessible, …) is written to the bulk log with
+	 * its file name. QueueController::runTick() logs a failed item once it is
+	 * done and its fileStatus is ImageModel::FILE_STATUS_ERROR, which
+	 * OptimizeController sets for every STATUS_ERROR result.
+	 */
+	public function test_bulk_log_lists_an_image_failed_with_a_known_file_error() {
+		$this->api->forceStatusCode = MockShortPixelApi::CODE_UNREACHABLE;
+
+		$id  = $this->uploadFixture( 'fixture-small.jpg' );
+		$log = $this->bulkRunAndReadLog( $id );
+
+		// SENTINEL: the item failed (the API answered for it).
+		$this->assertFalse( $this->freshImageModel( $id )->isOptimized(), 'Sentinel: the image was not optimized.' );
+		$this->assertNotEmpty( $this->api->requests, 'Sentinel: the API was asked.' );
+
+		$this->assertStringContainsString( wp_basename( get_attached_file( $id ) ), $log, 'The failed image is listed in the bulk log.' );
+	}
+
+	/** @return array<string, array{int, string}> API code and the message the plugin shows for it. */
+	public function itemLevelApiCodes(): array {
+		return array(
+			'-302 file no longer available' => array( -302, 'File no longer available on remote system' ),
+			'-306 files from several domains' => array( -306, 'Files need to be from a single domain per request.' ),
+		);
+	}
+
+	/**
+	 * -302 and -306 are errors of the item itself: ApiController reports them
+	 * as STATUS_ERROR, the item gets FILE_STATUS_ERROR and a bulk run lists it
+	 * in the bulk log, with the plugin's own message for the code.
+	 *
+	 * @dataProvider itemLevelApiCodes
+	 */
+	public function test_bulk_log_lists_an_image_failed_with_an_item_level_api_code( int $code, string $message ) {
+		$this->api->forceStatusCode = $code;
+
+		$id  = $this->uploadFixture( 'fixture-small.jpg' );
+		$log = $this->bulkRunAndReadLog( $id );
+
+		// SENTINEL: the item failed (the API answered for it).
+		$this->assertFalse( $this->freshImageModel( $id )->isOptimized(), 'Sentinel: the image was not optimized.' );
+		$this->assertNotEmpty( $this->api->requests, 'Sentinel: the API was asked.' );
+
+		$this->assertStringContainsString( wp_basename( get_attached_file( $id ) ), $log, 'The failed image is listed in the bulk log.' );
+		$this->assertStringContainsString( $message, $log, 'The log line carries the message for this code.' );
+		$this->assertSame( 1, substr_count( $log, wp_basename( get_attached_file( $id ) ) ), 'The image is listed once: the item is not retried.' );
+	}
+
+	/**
+	 * An image the API keeps answering "still working" for is given up once
+	 * the queue's retry limit is reached (apiStatus ApiController::ERR_TIMEOUT).
+	 * That is final for the bulk run, so the result carries
+	 * FILE_STATUS_ERROR and the image is listed in the bulk log with the
+	 * retry-limit message.
+	 */
+	public function test_bulk_log_lists_an_image_that_reached_the_retry_limit() {
+		$this->api->waitingRounds = 1000;
+
+		$id    = $this->uploadFixture( 'fixture-small.jpg' );
+		$limit = (int) ( new QueueController( array( 'is_bulk' => true ) ) )->getQueue( 'media' )->getShortQ()->getOption( 'retry_limit' );
+		$log   = $this->bulkRunAndReadLog( $id, $limit + 5 );
+
+		// SENTINEL: the retry limit was reached and reported for the item.
+		$this->assertFalse( $this->freshImageModel( $id )->isOptimized(), 'Sentinel: the image was not optimized.' );
+		$this->assertContains( \ShortPixel\Controller\Api\ApiController::ERR_TIMEOUT, $this->bulkApiStatuses, 'Sentinel: a tick reported the retry-limit error for the item.' );
+
+		$this->assertStringContainsString( wp_basename( get_attached_file( $id ) ), $log, 'The image given up at the retry limit is listed in the bulk log.' );
+		$this->assertStringContainsString( 'Retry Limit reached', $log, 'The log line carries the retry-limit message.' );
+		$this->assertSame( 1, substr_count( $log, wp_basename( get_attached_file( $id ) ) ), 'The image is listed once.' );
+	}
+
+	/**
+	 * An image the API answers with an UNRECOGNISED error code is retried
+	 * (returnRetry with the raw code) and never gets FILE_STATUS_ERROR, so it
+	 * stays out of the bulk log. The log only lists final file errors; it
+	 * leaves out temporary and system-level failures by design.
+	 */
+	public function test_bulk_log_leaves_out_an_image_retried_for_an_unrecognised_api_code() {
+		$this->api->forceStatusCode = -204;
+
+		$id  = $this->uploadFixture( 'fixture-small.jpg' );
+		$log = $this->bulkRunAndReadLog( $id );
+
+		// SENTINEL: the item was not optimized.
+		$this->assertFalse( $this->freshImageModel( $id )->isOptimized(), 'Sentinel: the image was not optimized.' );
+
+		$this->assertStringNotContainsString( wp_basename( get_attached_file( $id ) ), $log, 'A retried, non-file error is not listed in the bulk log.' );
+	}
 }

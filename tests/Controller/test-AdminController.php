@@ -306,6 +306,41 @@ class AdminControllerTest extends WP_UnitTestCase {
 	}
 
 	// -------------------------------------------------------------------------
+	// unPreventImageHook — releases an ID from the static suppress list
+	// -------------------------------------------------------------------------
+
+	public function test_unPreventImageHook_releases_the_id_and_keeps_the_others() {
+		$ctrl = AdminController::getInstance();
+		$ctrl->preventImageHook( 10 );
+		$ctrl->preventImageHook( 20 );
+
+		$ctrl->unPreventImageHook( 10 );
+
+		$list = $this->getStaticProp( 'preventUploadHook' );
+		$this->assertNotContains( 10, $list );
+		$this->assertContains( 20, $list );
+	}
+
+	public function test_unPreventImageHook_releases_an_id_that_was_blocked_twice() {
+		$ctrl = AdminController::getInstance();
+		$ctrl->preventImageHook( 99 );
+		$ctrl->preventImageHook( 99 );
+
+		$ctrl->unPreventImageHook( 99 );
+
+		$this->assertNotContains( 99, $this->getStaticProp( 'preventUploadHook' ) );
+	}
+
+	public function test_unPreventImageHook_ignores_an_id_that_is_not_blocked() {
+		$ctrl = AdminController::getInstance();
+		$ctrl->preventImageHook( 5 );
+
+		$ctrl->unPreventImageHook( 6 );
+
+		$this->assertSame( array( 5 ), array_values( $this->getStaticProp( 'preventUploadHook' ) ) );
+	}
+
+	// -------------------------------------------------------------------------
 	// editAttachmentScreen — current implementation is a stub that returns void
 	// -------------------------------------------------------------------------
 

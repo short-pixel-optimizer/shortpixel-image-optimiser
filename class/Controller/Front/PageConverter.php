@@ -397,9 +397,12 @@ class PageConverter extends \ShortPixel\Controller
       $url = $this->stripSlashesUrl($url);
       $url = $this->removeCharactersUrl($url);
 
+	  		$block->validated = true; 
 			if (filter_var($url, FILTER_VALIDATE_URL) === false)
 			{
       //   Log::addInfo('Replacement String still not URL - ' . $url);
+	  			//Log::addTemp('URL NOT VALIDATED');
+				$block->validated = false; 
 			}
 
 			$block->url = $url;

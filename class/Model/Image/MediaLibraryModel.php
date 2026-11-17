@@ -3082,7 +3082,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	 * Wraps the generation in the
 	 * `shortpixel/converter/prevent-offload` / `-off` action pair so the
 	 * offload integration doesn't ship the freshly regenerated files off
-	 * before the restore/convert flow is done with them.
+	 * before the restore/convert flow is done with them, and in the
+	 * `shortpixel-thumbnails-before-regenerate` / `-after-regenerate` pair so
+	 * the upload hooks skip this attachment only while it is regenerated.
 	 *
 	 * @return array<string, mixed>|\WP_Error Result of wp_generate_attachment_metadata().
 	 */
@@ -3106,6 +3108,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		do_action('shortpixel-thumbnails-before-regenerate', $item_id);
 		$metadata = wp_generate_attachment_metadata($item_id, $fullPath);
 
+		do_action('shortpixel-thumbnails-after-regenerate', $item_id);
 		do_action('shortpixel/converter/prevent-offload-off', $item_id);
 
 		return $metadata;
@@ -3231,6 +3234,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	 *     prefixed sizes are tagged as unlisted by setting `meta.file`.
 	 *   - The unscaled original and every retina get the same treatment
 	 *     when the row is not already present in the DB.
+	 *   - Queues the legacy-migration admin notice
+	 *     (AdminNoticesController::invokeLegacyNotice()), with or without
+	 *     quota left: the migration itself needs no credits, and asking for
+	 *     the quota here could mean a call to the API while loading an image.
 	 *   - Finally stamps `_shortpixel_was_converted = time()` (guard so
 	 *     restore doesn't re-migrate), clears `_shortpixel_status`, and
 	 *     sets `$justConverted` to block a second migration this request.
@@ -3277,11 +3284,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			}
 		}
 
-		$quotaController = QuotaController::getInstance();
-		if ($quotaController->hasQuota() === true) {
-			$adminNotices = AdminNoticesController::getInstance();
-			$adminNotices->invokeLegacyNotice();
-		}
+		$adminNotices = AdminNoticesController::getInstance();
+		$adminNotices->invokeLegacyNotice();
+		
 
 		Log::addDebug("Conversion of legacy: " . $this->get('id'), array($metadata));
 

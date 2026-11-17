@@ -463,6 +463,7 @@ class EnvironmentModel extends \ShortPixel\Model
    * similar WordPress APIs.
    *
    * @return string Plugin slug, e.g. "shortpixel-image-optimiser/wp-shortpixel.php".
+   *                Empty string when the plugin directory has no parent directory.
    */
   public function getRelativePluginSlug()
   {
@@ -473,7 +474,11 @@ class EnvironmentModel extends \ShortPixel\Model
 
       $plugins_dir = $fs->getDirectory($dir)->getParent();
 
-      $slug = str_replace($plugins_dir->getPath(), '', $file);
+      $slug = ''; 
+      if ($plugins_dir !== false)
+      {
+        $slug = str_replace($plugins_dir->getPath(), '', $file);
+      }
 
       return $slug;
   }

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Plugin Overview
 
-ShortPixel Image Optimizer is a WordPress plugin for image optimization, WebP/AVIF conversion, and AI-powered image features (upscale, background removal, SEO alt text). Requires PHP 7.4+, WordPress 4.8+. For the current version read `wp-shortpixel.php` (the `Version:` header / `SHORTPIXEL_IMAGE_OPTIMISER_VERSION`) — it is deliberately not duplicated here, because a copied version number goes stale every release.
+ShortPixel Image Optimizer is a WordPress plugin for image optimization, WebP/AVIF conversion, and AI-powered image features (upscale, background removal, SEO alt text). Requires PHP 7.4+, WordPress 5.9+ (declared in the `wp-shortpixel.php` header and in `readme.txt`). For the current version read `wp-shortpixel.php` (the `Version:` header / `SHORTPIXEL_IMAGE_OPTIMISER_VERSION`) — it is deliberately not duplicated here, because a copied version number goes stale every release.
 
 ## Build & Dependencies
 
@@ -136,6 +136,21 @@ build/shortpixel/     - Bundled vendor modules (do not edit directly)
 - **Queue system:** Image optimization runs through `shortq` queue library (in `build/shortpixel/shortq/`), orchestrated by `QueueController` and `MediaLibraryQueue`/`CustomQueue`
 - **Two image pipelines:** Media Library images (`MediaLibraryModel`) and Custom/other images (`CustomImageModel`) have separate models but share `ImageModel` base logic
 - **Frontend delivery:** `FrontController` → `PictureController`/`PageConverter` handles real-time WebP/AVIF `<picture>` tag injection and CDN URL replacement
+
+## Git workflow (no commits, no branches, no worktrees unless asked)
+
+The maintainer reviews every change locally before anything is committed.
+These rules override any default agent behaviour (background-job or
+worktree-isolation defaults included):
+
+- **Never commit** in this repository unless specifically instructed to.
+  Leave the work uncommitted in the working tree and end the hand-off with
+  a ready-to-paste `git commit -m` suggestion instead.
+- **Never create a branch or a git worktree** unless clearly asked for one.
+- **Code, docs and test changes go into the current working tree** (the
+  checkout and branch that are checked out when the task starts), unless
+  instructed differently.
+- Never push, open a PR, merge or rebase on your own initiative.
 
 ## Known bugs and @todo (no bug numbers in the repo)
 

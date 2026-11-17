@@ -64,6 +64,10 @@ class DirectoryModel extends \ShortPixel\Model
         $this->is_readable = true; // assume
         $this->exists = true;
       }
+      else 
+      { 
+        
+      }
 
 			// When in trusted mode prevent filesystem checks as much as possible.
 			if (true === self::$TRUSTED_MODE)
@@ -74,7 +78,7 @@ class DirectoryModel extends \ShortPixel\Model
 			}
 
 			// On virtual situation this would remove the slashes on :// , causing issues with offload et al.
-			if (false === $this->is_virtual)
+			if (true !== $this->is_virtual)
 			 	$path = UtilHelper::spNormalizePath($path);
 
       if (! $this->is_virtual() && ! is_dir($path) ) // path is wrong, *or* simply doesn't exist.
@@ -389,8 +393,12 @@ class DirectoryModel extends \ShortPixel\Model
 	 */
 	public function getPermissionRecursive()
 	{
-		 $parent = $this->getParent();
-		  if (! $parent->exists())
+		  $parent = $this->getParent();
+      if (false === $parent)
+      {
+          return false; 
+      }
+		  elseif (! $parent->exists())
 			{
 				 return $parent->getPermissionRecursive();
 			}
@@ -626,11 +634,26 @@ class DirectoryModel extends \ShortPixel\Model
         return $size;
   }
 
-  /** Get this paths parent */
+  /**
+   * Returns the parent directory of this path.
+   *
+   * The filesystem root and an empty path have no parent: dirname() returns
+   * the path itself for them, and the method answers false. Callers that walk
+   * up the tree (getPermissionRecursive()) rely on that to stop.
+   *
+   * @return DirectoryModel|false The parent directory, or false when there is none.
+   */
   public function getParent()
   {
       $path = $this->getPath();
       $parentPath = dirname($path);
+
+
+      // At the end of the destination.
+      if ($path === $parentPath)
+      {
+         return false; 
+      }
 
       $parentDir = new DirectoryModel($parentPath);
 

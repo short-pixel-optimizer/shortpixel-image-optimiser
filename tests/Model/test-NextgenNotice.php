@@ -31,7 +31,7 @@ class NextgenNoticeTest extends WP_UnitTestCase {
 		$html = $this->invokeProtected( new NextgenNotice(), 'getMessage' );
 
 		$this->assertIsString( $html );
-		$this->assertStringContainsString( 'NextGen', $html );
+		$this->assertStringContainsString( 'Imagely/NextGEN', $html );
 		$this->assertStringContainsString( 'part=optimisation', $html );
 	}
 }

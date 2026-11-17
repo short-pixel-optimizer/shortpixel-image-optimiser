@@ -1,5 +1,4 @@
 <?php
-
 namespace ShortPixel\Controller;
 
 if (! defined('ABSPATH')) {
@@ -12,8 +11,77 @@ class QuotaController
 {
   protected static $instance;
   const CACHE_NAME = 'quotaData';
+  /**
+   * Whether the quota was loaded in this request, from the cache or from
+   * the API. hasQuota() loads it once, on its first call, and then answers
+   * from the settings flag.
+   *
+   * @var bool
+   */
+  protected $did_quota_load = false; 
 
+
+  /**
+   * The quota data (remote format) of this request, once loaded. Null
+   * until then, and again after forceCheckRemoteQuota().
+   *
+   * @var array|null
+   */
   protected $quotaData;
+
+  /**
+   * Fields getQuota() does arithmetic on. A cached quota counts as complete
+   * only when all of them are present and numeric.
+   *
+   * @var string[]
+   */
+  const REQUIRED_FIELDS = [
+    'APICallsQuota',
+    'APICallsMade',
+    'APICallsQuotaOneTime',
+    'APICallsMadeOneTime',
+    'CaptionsCallsQuota',
+    'CaptionsCallsMade',
+    'CaptionsCallsRemaining',
+  ];
+
+  /**
+   * Takes the quota from the cache when it holds a complete set, so the
+   * request needs no further lookups. Never calls the API: a cold cache,
+   * or an incomplete or legacy cached value, leaves `quotaData` null and
+   * the load to getQuotaData() on first use.
+   */
+  public function __construct()
+  {
+    $cache = new CacheController();
+    $cacheData = $cache->getItem(self::CACHE_NAME);
+
+    if ($cacheData->exists() && $this->isCompleteQuotaData($cacheData->getValue())) {
+      $this->quotaData = $cacheData->getValue();
+      $this->did_quota_load = true;
+    }
+  }
+
+  /**
+   * Whether the quota data holds every field getQuota() needs, as numbers.
+   *
+   * @param  mixed $quotaData Quota data (remote format).
+   * @return boolean
+   */
+  private function isCompleteQuotaData($quotaData): bool
+  {
+    if (! is_array($quotaData)) {
+      return false;
+    }
+
+    foreach (self::REQUIRED_FIELDS as $field) {
+      if (! isset($quotaData[$field]) || ! is_numeric($quotaData[$field])) {
+        return false;
+      }
+    }
+
+    return true;
+  }
 
   /** Singleton instance
    * @return Object QuotaController object
@@ -29,11 +97,25 @@ class QuotaController
 
   /**
    * Return if account has any quota left
+   *
+   * Answers from the `quotaExceeded` setting, which getRemoteQuota() keeps
+   * current. The first call of a request loads the quota first (from the
+   * cache, or from the API when the cache is cold), so the flag is not
+   * older than the cache; this can therefore be a remote call.
+   *
+   * @todo The did_quota_load mechanism needs a more elegant solution to on-demand loading of possible remote checks. Possibly but not relying on settings, but on quotaData returned. 
    * @return boolean Has quota left
    */
   public function hasQuota()
   {
     $settings = \wpSPIO()->settings();
+
+    if (false === $this->did_quota_load && is_null($this->quotaData) )
+    {
+       $this->did_quota_load = true;  // this is preventing a loop, be aware!
+       $this->getQuotaData(); 
+    }
+
 
     if ($settings->quotaExceeded) {
       return false;
@@ -42,21 +124,42 @@ class QuotaController
   }
 
   /**
-   * Retrieves QuotaData object from cache or from remote source
+   * Retrieves QuotaData object from memory, cache or remote source
+   *
+   * The result is kept in `quotaData` for the rest of the request.
+   * A successful answer is cached for an hour; a failed one, or one for an
+   * account without quota, for five minutes.
+   *
+   * The remote result is kept in `quotaData` before hasQuota() is asked
+   * for the cache lifetime, so hasQuota() answers from the flag that
+   * getRemoteQuota() just set instead of starting a second remote check.
+   * @todo Nothing marks a remote check as running: the cache is written
+   *       only after getRemoteQuota() returns, so every request that
+   *       arrives while one is waiting for the API starts a check of its
+   *       own. Suggested fix: take a short lock (a transient, or
+   *       wp_cache_add()) before the remote call and let the other
+   *       requests use the previous or default data.
+   *
    * @return array The quotadata array (remote format)
    */
   private function getQuotaData()
   {
     if (! is_null($this->quotaData))
+    {
+      $this->did_quota_load = true; 
       return $this->quotaData;
+    }
 
     $cache = new CacheController();
     $cacheData = $cache->getItem(self::CACHE_NAME);
 
     if (! $cacheData->exists()) {
       $quotaData = $this->getRemoteQuota();
+      $this->quotaData = $quotaData;
+      $this->did_quota_load = true;
+      
       if (false === $this->hasQuota() || false === $quotaData['GetSuccess'])
-        $timeout = MINUTE_IN_SECONDS;
+        $timeout = 5 * MINUTE_IN_SECONDS;
       else {
         $timeout = HOUR_IN_SECONDS;
       }
@@ -65,6 +168,8 @@ class QuotaController
       $quotaData = $cacheData->getValue();
     }
 
+    $this->quotaData = $quotaData;
+    $this->did_quota_load = true;
     return $quotaData;
   }
 
@@ -222,7 +327,8 @@ class QuotaController
    * Code other than 2 — returns $defaultData: APIKeyValid/GetSuccess false
    * with all numeric fields zeroed, so a connectivity blip can never render
    * as stale credits. An API-supplied Status message replaces the generic
-   * connectivity text when there is one.
+   * connectivity text when there is one; after a transport failure the
+   * message of the last WP_Error is appended to it as debug info.
    *
    * Response normalisation: each field in $numericResults is coerced with
    * `(int) max($value, 0)` (missing → 0), APICallsRemaining is recomputed
@@ -233,6 +339,14 @@ class QuotaController
    *
    * Callers reach this only through getQuotaData()'s cache miss; it is never
    * called directly on a warm cache.
+   *
+   * @todo Against an API that does not answer, one call makes the three
+   *       attempts in a row with a 10 second timeout each: up to half a
+   *       minute for one request. Suggested fix: a timeout of a few
+   *       seconds, or a single attempt.
+   * @todo The fallback attempts send the API key over plain http when the
+   *       https attempt fails, the last one in the query string. Suggested
+   *       fix: keep the fallbacks on https.
    *
    * @param  string $apiKey                 User account key
    * @param  boolean $validate               Api should also validate key or not
@@ -264,7 +378,7 @@ class QuotaController
     $requestURL = $httpProto . '://' . SHORTPIXEL_API . '/v2/api-status.php';
 
     $args = array(
-      'timeout' => 15, // wait for 15 secs.
+      'timeout' => 10, // wait for 10 secs.
       'body' => array('key' => $apiKey)
     );
     $argsStr = "?key=" . $apiKey;
@@ -330,7 +444,7 @@ class QuotaController
 
     $defaultData = [
       "APIKeyValid" => false,
-      "Message" => __('API Key could not be validated due to a connectivity error.<BR>Your firewall may be blocking us. Please contact your hosting provider and ask them to allow connections from your site to api.shortpixel.com (IP 176.9.21.94).<BR> If you still cannot validate your API Key after this, please <a href="https://shortpixel.com/contact" target="_blank">contact us</a> and we will try to help. ', 'shortpixel-image-optimiser'),
+      "Message" => sprintf(__('API Key could not be validated due to a connectivity error.<BR>Your firewall may be blocking us. Please contact your hosting provider and ask them to allow connections from your site to api.shortpixel.com (IP 176.9.21.94).<BR> If you still cannot validate your API Key after this, please %scontact us%s and we will try to help. ', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/contact?utm_source=plugin&utm_medium=spio&utm_campaign=connectivity_notice_contact" target="_blank">', '</a>'),
       "DomainCheck" => 'NOT Accessible',
       "GetSuccess" => false,
     ];
@@ -343,12 +457,9 @@ class QuotaController
 
     if (is_object($response) && get_class($response) == 'WP_Error') {
 
-      $urlElements = parse_url($requestURL);
-      $portConnect = @fsockopen($urlElements['host'], 8, $errno, $errstr, 15);
-      if (!$portConnect) {
+        $errstr = $response->get_error_message();
         $defaultData['Message'] .= "<BR>Debug info: <i>$errstr</i>";
-      }
-      return $defaultData;
+        return $defaultData;
     }
 
     if ($response['response']['code'] != 200) {

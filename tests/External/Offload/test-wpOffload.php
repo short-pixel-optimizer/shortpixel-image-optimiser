@@ -17,13 +17,13 @@
  *   - getMediaClass                         → depends on as3cf handler API
  *   - getItemById                           → as3cf item lookup
  *   - checkIfOffloaded / getSourceIDByURL  → as3cf `get_item_source_by_remote_url`
+ *                                            (front-end use: test-wpOffloadNextGenDelivery.php)
  *   - getLocalPathByURL                    → as3cf item + WP upload base
  *   - image_upload / image_restore / image_converted / remove_remote
  *                                          → WP attachment metadata + as3cf
- *   - preventInitialUploadHandler          → QuotaController + settings + as3cf
  *   - updateOriginalPath                   → as3cf item mutation
  *   - getWebpPaths / add_webp_paths        → filesystem probes
- *   - fixWebpRemotePath                    → SPIO filesystem + as3cf
+ *   - fixWebpRemotePath                    → covered in test-wpOffloadNextGenDelivery.php
  *   - returnOriginalFile                   → get_attached_file with a real attachment
  *
  * replaceFiles (the provider-side rename), exercised with stubbed item +
@@ -135,6 +135,95 @@ class wpOffloadTest extends WP_UnitTestCase {
 		$this->setPrivate( $o, 'offloading', false );
 
 		$this->assertFalse( $o->isActive() );
+	}
+
+	/*
+	 * preventInitialUploadHandler — decision cascade, quota asked last
+	 */
+
+	/** as3cf item stand-in: the handler only reads source_id(). */
+	private function uploadItem( int $source_id ) {
+		return new class( $source_id ) {
+			private $id;
+			public function __construct( $id ) {
+				$this->id = $id;
+			}
+			public function source_id() {
+				return $this->id;
+			}
+		};
+	}
+
+	/**
+	 * Set the stored quota state and mark the quota as loaded for this
+	 * request, so hasQuota() answers from the flag without a remote check.
+	 */
+	private function setQuotaExceeded( bool $exceeded ): void {
+		$quota = \ShortPixel\Controller\QuotaController::getInstance();
+		$p     = ( new ReflectionClass( $quota ) )->getProperty( 'did_quota_load' );
+		$p->setAccessible( true );
+		$p->setValue( $quota, true );
+
+		\wpSPIO()->settings()->quotaExceeded = $exceeded ? 1 : 0;
+	}
+
+	public function test_preventInitialUploadHandler_allows_the_upload_when_offloading_is_off() {
+		$this->setQuotaExceeded( false );
+		$o = $this->freshOffload();
+		$this->setPrivate( $o, 'offloading', false );
+		$this->setStatic( 'offloadPrevented', array( 42 => true ) );
+
+		$this->assertFalse( $o->preventInitialUploadHandler( true, $this->uploadItem( 42 ), array() ) );
+	}
+
+	public function test_preventInitialUploadHandler_allows_the_upload_when_shouldPrevent_is_off() {
+		$this->setQuotaExceeded( false );
+		$o = $this->freshOffload();
+		$this->setPrivate( $o, 'shouldPrevent', false );
+		$this->setStatic( 'offloadPrevented', array( 42 => true ) );
+
+		$this->assertFalse( $o->preventInitialUploadHandler( true, $this->uploadItem( 42 ), array() ) );
+	}
+
+	public function test_preventInitialUploadHandler_aborts_the_upload_of_an_item_on_the_prevent_list() {
+		$this->setQuotaExceeded( false );
+		$o = $this->freshOffload();
+		$this->setStatic( 'offloadPrevented', array( 42 => true ) );
+
+		$result = $o->preventInitialUploadHandler( false, $this->uploadItem( 42 ), array() );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'upload-prevented', $result->get_error_code() );
+	}
+
+	/**
+	 * The prevent list is checked before the quota: an item the converter
+	 * holds back stays held back when the account is out of quota.
+	 */
+	public function test_preventInitialUploadHandler_aborts_a_prevented_item_also_without_quota() {
+		$this->setQuotaExceeded( true );
+		$o = $this->freshOffload();
+		$this->setStatic( 'offloadPrevented', array( 42 => true ) );
+
+		$result = $o->preventInitialUploadHandler( false, $this->uploadItem( 42 ), array() );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+	}
+
+	/** Without quota SPIO cannot optimize, so an upload another handler wanted to cancel goes through. */
+	public function test_preventInitialUploadHandler_allows_the_upload_without_quota() {
+		$this->setQuotaExceeded( true );
+		$o = $this->freshOffload();
+
+		$this->assertFalse( $o->preventInitialUploadHandler( true, $this->uploadItem( 42 ), array() ) );
+	}
+
+	public function test_preventInitialUploadHandler_passes_the_incoming_value_through_with_quota() {
+		$this->setQuotaExceeded( false );
+		$o = $this->freshOffload();
+
+		$this->assertTrue( $o->preventInitialUploadHandler( true, $this->uploadItem( 42 ), array() ) );
+		$this->assertFalse( $o->preventInitialUploadHandler( false, $this->uploadItem( 42 ), array() ) );
 	}
 
 	/*

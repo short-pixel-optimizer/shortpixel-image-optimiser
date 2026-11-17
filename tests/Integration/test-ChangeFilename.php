@@ -1517,19 +1517,89 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	}
 
 	/**
-	 * Pins a known defect: after a rename, the URL rewrite in POSTMETA (page
-	 * builders: Elementor, Breakdance… keep image URLs there) and in OPTIONS
-	 * (widgets, theme mods) leaves the object cache stale. Only the
-	 * post_content pass calls clean_post_cache(); Replacer::handleMetaData()
-	 * updates with direct SQL. On Redis / Memcached a page builder then
-	 * loads the old URLs and saves them back.
-	 * @todo After each meta UPDATE, wp_cache_delete(<object id>,
-	 *       'post_meta'|'comment_meta'|'term_meta'|'user_meta'); for options
-	 *       wp_cache_delete('alloptions'/'notoptions', 'options') + the
-	 *       option's own key.
-	 * When fixed, this test fails; flip it: both cached reads return the new URL.
+	 * After a rename, Replacer::handleMetaData() rewrites URLs in OPTIONS
+	 * (widgets, theme mods) with direct SQL and then drops the 'alloptions'
+	 * and 'notoptions' cache entries, so an autoloaded option read through
+	 * the object cache (Redis / Memcached) returns the new URL.
 	 */
-	public function test_rename_leaves_cached_postmeta_and_options_with_the_old_url_pinned_for_deferred_fix() {
+	public function test_rename_refreshes_the_cached_autoloaded_option_with_the_new_url() {
+		$this->_setRole( 'administrator' );
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+		$url      = wp_get_attachment_url( $attachment_id );
+		$old_name = basename( $url );
+
+		update_option( 'spio_test_widget_image', 'image:' . $url, true );
+		// Prime the cache the way a page view does.
+		$this->assertStringContainsString( $old_name, get_option( 'spio_test_widget_image' ) );
+
+		$new_base = 'opt-cache-' . strtolower( wp_generate_password( 4, false, false ) );
+		list( $result ) = $this->renameViaEngine( $attachment_id, $new_base );
+		$this->assertTrue( $result, 'Sentinel: the rename succeeded.' );
+
+		global $wpdb;
+		// SENTINEL: the database itself was rewritten.
+		$this->assertStringContainsString( $new_base, (string) $wpdb->get_var( "SELECT option_value FROM {$wpdb->options} WHERE option_name = 'spio_test_widget_image'" ), 'Sentinel: option rewritten in the database.' );
+
+		$this->assertStringContainsString( $new_base, get_option( 'spio_test_widget_image' ), 'The cached option must follow the rename.' );
+	}
+
+	/**
+	 * After a rename, Replacer::handleMetaData() rewrites URLs in POSTMETA
+	 * (page builders: Elementor, Breakdance… keep image URLs there) with
+	 * direct SQL and then drops the post's cache entry in 'post_meta', so a
+	 * read through the object cache (Redis / Memcached) returns the new URL.
+	 */
+	/** @return array<string, array{string}> Which path the planted object names. */
+	public function plantedObjectPaths(): array {
+		return array(
+			'full image URL'              => array( 'url' ),
+			'image path without extension' => array( 'path' ),
+		);
+	}
+
+	/**
+	 * A user can save any text in their own profile description, also a
+	 * string that looks like a serialized object and names an image.
+	 * WordPress stores it with an extra serialization layer, so reading it
+	 * gives a string. Renaming that image must leave the row as it is: were
+	 * the layer dropped, the row would hold a raw serialized object and
+	 * WordPress core would instantiate it on the next read of that meta
+	 * (PHP object injection).
+	 *
+	 * @dataProvider plantedObjectPaths
+	 */
+	public function test_rename_keeps_a_serialized_object_string_in_user_meta_inert( string $form ) {
+		$this->_setRole( 'administrator' );
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+		$url  = wp_get_attachment_url( $attachment_id );
+		$path = 'url' === $form ? $url : preg_replace( '/\.jpg$/', '', (string) wp_parse_url( $url, PHP_URL_PATH ) );
+
+		$payload = 'O:14:"SPIO_POI_Probe":1:{s:4:"path";s:' . strlen( $path ) . ':"' . $path . '";}';
+		$user_id = self::factory()->user->create( array( 'role' => 'subscriber' ) );
+		update_user_meta( $user_id, 'description', $payload );
+
+		global $wpdb;
+		$sql    = $wpdb->prepare( "SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id = %d AND meta_key = 'description'", $user_id );
+		$before = (string) $wpdb->get_var( $sql );
+		// SENTINEL: WordPress stored the string wrapped, and the row names the image.
+		$this->assertStringStartsWith( 's:', $before, 'Sentinel: the description is stored with the extra serialization layer.' );
+		$this->assertStringContainsString( wp_basename( $path ), $before, 'Sentinel: the row names the image, so the replacer selects it.' );
+
+		$new_base = 'inert-' . strtolower( wp_generate_password( 4, false, false ) );
+		list( $result ) = $this->renameViaEngine( $attachment_id, $new_base );
+		$this->assertTrue( $result, 'Sentinel: the rename succeeded.' );
+
+		$this->assertSame( $before, (string) $wpdb->get_var( $sql ), 'The stored row is unchanged, outer layer included.' );
+
+		wp_cache_delete( $user_id, 'user_meta' );
+		$read = get_user_meta( $user_id, 'description', true );
+		$this->assertIsString( $read, 'Reading the description gives a string, not an object.' );
+		$this->assertSame( $payload, $read );
+	}
+
+	public function test_rename_refreshes_the_cached_postmeta_with_the_new_url() {
 		$this->_setRole( 'administrator' );
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
 		$this->purgeQueueTable();
@@ -1538,22 +1608,176 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 
 		$page_id = self::factory()->post->create( array( 'post_status' => 'draft', 'post_content' => '' ) );
 		update_post_meta( $page_id, '_spio_test_builder_data', 'image:' . $url );
-		update_option( 'spio_test_widget_image', 'image:' . $url );
-		// Prime the caches the way a page view does.
+		// Prime the cache the way a page view does.
 		$this->assertStringContainsString( $old_name, get_post_meta( $page_id, '_spio_test_builder_data', true ) );
-		$this->assertStringContainsString( $old_name, get_option( 'spio_test_widget_image' ) );
 
 		$new_base = 'meta-cache-' . strtolower( wp_generate_password( 4, false, false ) );
 		list( $result ) = $this->renameViaEngine( $attachment_id, $new_base );
 		$this->assertTrue( $result, 'Sentinel: the rename succeeded.' );
 
 		global $wpdb;
-		// SENTINELS: the database itself was rewritten.
+		// SENTINEL: the database itself was rewritten.
 		$this->assertStringContainsString( $new_base, (string) $wpdb->get_var( $wpdb->prepare( "SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key = '_spio_test_builder_data'", $page_id ) ), 'Sentinel: postmeta rewritten in the database.' );
-		$this->assertStringContainsString( $new_base, (string) $wpdb->get_var( "SELECT option_value FROM {$wpdb->options} WHERE option_name = 'spio_test_widget_image'" ), 'Sentinel: option rewritten in the database.' );
 
-		// THE PIN: the cached reads still return the old URL.
-		$this->assertStringContainsString( $old_name, get_post_meta( $page_id, '_spio_test_builder_data', true ), 'Pinned: fixed? Cached postmeta now follows the rename — flip this pin.' );
-		$this->assertStringContainsString( $old_name, get_option( 'spio_test_widget_image' ), 'Pinned: fixed? The cached option now follows the rename — flip this pin.' );
+		$this->assertStringContainsString( $new_base, get_post_meta( $page_id, '_spio_test_builder_data', true ), 'The cached postmeta must follow the rename.' );
+	}
+
+	/**
+	 * After a rename, a NON-autoloaded option that held the old URL is read
+	 * back with the new one. Such an option is cached under its own name in
+	 * the 'options' group, not in 'alloptions', so
+	 * Replacer::handleMetaData() (build/ replacer2) selects option_name with
+	 * each row and drops that key as well.
+	 */
+	public function test_rename_refreshes_the_cached_non_autoloaded_option_with_the_new_url() {
+		$this->_setRole( 'administrator' );
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+		$url      = wp_get_attachment_url( $attachment_id );
+		$old_name = basename( $url );
+
+		update_option( 'spio_test_lazy_widget_image', 'image:' . $url, false );
+		// Prime the cache the way a page view does.
+		$this->assertStringContainsString( $old_name, get_option( 'spio_test_lazy_widget_image' ) );
+
+		$new_base = 'opt-cache-' . strtolower( wp_generate_password( 4, false, false ) );
+		list( $result ) = $this->renameViaEngine( $attachment_id, $new_base );
+		$this->assertTrue( $result, 'Sentinel: the rename succeeded.' );
+
+		global $wpdb;
+		// SENTINEL: the database itself was rewritten.
+		$this->assertStringContainsString( $new_base, (string) $wpdb->get_var( "SELECT option_value FROM {$wpdb->options} WHERE option_name = 'spio_test_lazy_widget_image'" ), 'Sentinel: option rewritten in the database.' );
+
+		$this->assertStringContainsString( $new_base, get_option( 'spio_test_lazy_widget_image' ), 'The cached non-autoloaded option must follow the rename.' );
+		$this->assertStringNotContainsString( $old_name, get_option( 'spio_test_lazy_widget_image' ), 'The old URL is no longer served from the cache.' );
+	}
+
+	/**
+	 * When a rename rewrites the postmeta of more than one post, EVERY
+	 * post's 'post_meta' cache entry is dropped, not only the first one.
+	 * Replacer::handleMetaData() (build/ replacer2) keeps the owning-object
+	 * column name in its own variable and reads each row's object id from it,
+	 * so every row clears its own cache key (and never calls
+	 * wp_cache_delete(null, …), which WordPress reports as incorrect usage).
+	 * The second post is the one that would go stale if only the first row
+	 * were handled.
+	 */
+	public function test_rename_refreshes_the_postmeta_cache_of_every_post() {
+		$this->_setRole( 'administrator' );
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+		$url      = wp_get_attachment_url( $attachment_id );
+		$old_name = basename( $url );
+
+		$first  = self::factory()->post->create( array( 'post_status' => 'draft', 'post_content' => '' ) );
+		$second = self::factory()->post->create( array( 'post_status' => 'draft', 'post_content' => '' ) );
+		update_post_meta( $first, '_spio_test_builder_data', 'image:' . $url );
+		update_post_meta( $second, '_spio_test_builder_data', 'image:' . $url );
+		// Prime both caches the way page views do.
+		$this->assertStringContainsString( $old_name, get_post_meta( $first, '_spio_test_builder_data', true ) );
+		$this->assertStringContainsString( $old_name, get_post_meta( $second, '_spio_test_builder_data', true ) );
+
+		$new_base = 'two-posts-' . strtolower( wp_generate_password( 4, false, false ) );
+		list( $result ) = $this->renameViaEngine( $attachment_id, $new_base );
+		$this->assertTrue( $result, 'Sentinel: the rename succeeded.' );
+
+		global $wpdb;
+		// SENTINEL: both rows were rewritten in the database.
+		$this->assertStringContainsString( $new_base, (string) $wpdb->get_var( $wpdb->prepare( "SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key = '_spio_test_builder_data'", $second ) ), 'Sentinel: the second post\'s postmeta is rewritten in the database.' );
+
+		// Both cached reads follow the rename.
+		$this->assertStringContainsString( $new_base, get_post_meta( $first, '_spio_test_builder_data', true ), 'The first post\'s cached postmeta follows the rename.' );
+		$this->assertStringContainsString( $new_base, get_post_meta( $second, '_spio_test_builder_data', true ), 'The second post\'s cached postmeta follows the rename.' );
+		$this->assertStringNotContainsString( $old_name, get_post_meta( $second, '_spio_test_builder_data', true ), 'The second post no longer serves the old URL from the cache.' );
+	}
+
+	/**
+	 * Replacer::handleMetaData() hands each postmeta row to the
+	 * 'shortpixel/replacer/load_meta_value' and save_meta_value filters with
+	 * its post_id. The Breakdance module's loadContent() needs it to load the
+	 * document tree (end-to-end tests in Compat/test-CompatBreakdance.php).
+	 */
+	public function test_meta_rows_handed_to_the_replacer_filters_carry_the_post_id() {
+		$this->_setRole( 'administrator' );
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+		$url = wp_get_attachment_url( $attachment_id );
+
+		$page_id = self::factory()->post->create( array( 'post_status' => 'draft', 'post_content' => '' ) );
+		update_post_meta( $page_id, '_spio_test_builder_data', 'image:' . $url );
+
+		$rows    = array();
+		$capture = function ( $content, $row ) use ( &$rows ) {
+			if ( is_string( $content ) && false !== strpos( $content, 'image:' ) ) {
+				$rows[] = $row;
+			}
+			return $content;
+		};
+		add_filter( 'shortpixel/replacer/load_meta_value', $capture, 10, 2 );
+
+		list( $result ) = $this->renameViaEngine( $attachment_id, 'meta-row-' . strtolower( wp_generate_password( 4, false, false ) ) );
+		remove_filter( 'shortpixel/replacer/load_meta_value', $capture, 10 );
+
+		// SENTINELS: the rename ran and the filter saw our postmeta row.
+		$this->assertTrue( $result, 'Sentinel: the rename succeeded.' );
+		$this->assertNotEmpty( $rows, 'Sentinel: the postmeta row reached load_meta_value.' );
+		$this->assertArrayHasKey( 'meta_id', $rows[0], 'Sentinel: it is a postmeta row.' );
+
+		$this->assertSame( $page_id, (int) ( $rows[0]['post_id'] ?? 0 ), 'The postmeta row carries its post_id.' );
+	}
+
+	/**
+	 * A rename keeps JSON strings nested in builder data as strings, both in
+	 * postmeta and in options. The data mimics Bricks: a page's
+	 * `_bricks_page_content_2` and a global option holding shared components,
+	 * each an array of elements in which a nested slider keeps its custom
+	 * options as a JSON string. Bricks passes that value to stripslashes(),
+	 * which fatals ("stdClass given") on every page that renders the element
+	 * if the value comes back as an object — for a shared component, on every
+	 * page that uses it, whether or not it shows the renamed image. Unit-level
+	 * counterpart: the nested-JSON tests in Model/test-Replacer.php.
+	 */
+	public function test_rename_keeps_json_strings_in_builder_data_as_strings() {
+		$this->_setRole( 'administrator' );
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+		$url = wp_get_attachment_url( $attachment_id );
+
+		$options  = '{"type":"loop","perPage":3,"gap":"1em"}';
+		$elements = array(
+			array(
+				'id'       => 'slider1',
+				'name'     => 'slider-nested',
+				'settings' => array(
+					'optionsType' => 'custom',
+					'options'     => $options,
+				),
+			),
+			array(
+				'id'       => 'image1',
+				'name'     => 'image',
+				'settings' => array( 'image' => array( 'id' => $attachment_id, 'url' => $url ) ),
+			),
+		);
+
+		$page_id = self::factory()->post->create( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_content' => '' ) );
+		update_post_meta( $page_id, '_bricks_page_content_2', $elements );
+		update_option( 'spio_test_builder_components', array( array( 'id' => 'component1', 'elements' => $elements ) ), false );
+
+		$new_base = 'bricks-json-' . strtolower( wp_generate_password( 4, false, false ) );
+		list( $result ) = $this->renameViaEngine( $attachment_id, $new_base );
+		$this->assertTrue( $result, 'Sentinel: the rename succeeded.' );
+
+		wp_cache_delete( $page_id, 'post_meta' );
+		wp_cache_delete( 'spio_test_builder_components', 'options' );
+		$page       = get_post_meta( $page_id, '_bricks_page_content_2', true );
+		$components = get_option( 'spio_test_builder_components' );
+
+		// SENTINELS: both rows were rewritten — the image URL follows the rename.
+		$this->assertStringContainsString( $new_base, $page[1]['settings']['image']['url'], 'Sentinel: the page image URL follows the rename.' );
+		$this->assertStringContainsString( $new_base, $components[0]['elements'][1]['settings']['image']['url'], 'Sentinel: the component image URL follows the rename.' );
+
+		$this->assertSame( $options, $page[0]['settings']['options'], 'The page slider options stay the same JSON string.' );
+		$this->assertSame( $options, $components[0]['elements'][0]['settings']['options'], 'The component slider options stay the same JSON string.' );
 	}
 }

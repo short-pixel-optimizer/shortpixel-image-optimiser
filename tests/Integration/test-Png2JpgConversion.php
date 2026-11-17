@@ -216,4 +216,52 @@ class Png2JpgConversionTest extends SPIO_IntegrationTestCase {
 			'convertFile() must return false when convertPNG() fails (no hardcoded `return true`).'
 		);
 	}
+
+	/** IDs the upload hooks currently skip (AdminController's static block list). */
+	private function blockedUploadIds(): array {
+		$p = new ReflectionProperty( \ShortPixel\Controller\AdminController::class, 'preventUploadHook' );
+		$p->setAccessible( true );
+		return array_values( $p->getValue() );
+	}
+
+	/**
+	 * The conversion blocks the upload hooks for its attachment only while it
+	 * regenerates the thumbnails. Once it is done the block is released, so a
+	 * later thumbnail generation for the same attachment in the same request
+	 * (another plugin regenerating, a replace) is handled again.
+	 */
+	public function test_conversion_releases_the_upload_hook_block_when_it_is_done() {
+		\wpSPIO()->settings()->png2jpg = 1;
+
+		$source = $this->makeUniquePngCopy();
+		$id     = $this->uploadFile( $source );
+		unlink( $source );
+
+		// SENTINEL: the conversion ran.
+		$this->assertSame( 'jpg', strtolower( pathinfo( get_attached_file( $id ), PATHINFO_EXTENSION ) ), 'Sentinel: the PNG was converted at upload.' );
+
+		$this->assertNotContains( $id, $this->blockedUploadIds(), 'The converted attachment must not stay blocked for the upload hooks.' );
+	}
+
+	/**
+	 * Restoring a converted image regenerates the thumbnails as well, and
+	 * releases the block afterwards.
+	 */
+	public function test_restore_of_a_converted_png_releases_the_upload_hook_block() {
+		\wpSPIO()->settings()->png2jpg = 1;
+
+		$source = $this->makeUniquePngCopy();
+		$id     = $this->uploadFile( $source );
+		unlink( $source );
+		$this->optimizeAttachment( $id );
+
+		$image = $this->freshImageModel( $id );
+		$this->assertTrue( $image->isOptimized(), 'Sentinel: the converted image was optimized.' );
+		$image->restore();
+
+		// SENTINEL: the restore brought the PNG back.
+		$this->assertSame( 'png', strtolower( pathinfo( get_attached_file( $id ), PATHINFO_EXTENSION ) ), 'Sentinel: the restore brought the PNG back.' );
+
+		$this->assertNotContains( $id, $this->blockedUploadIds(), 'The restored attachment must not stay blocked for the upload hooks.' );
+	}
 }

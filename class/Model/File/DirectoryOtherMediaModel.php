@@ -66,9 +66,6 @@ class DirectoryOtherMediaModel extends DirectoryModel
   /** @var int Unix timestamp — when the folder's mtime tree was last checked for changes. */
   protected $checked = 0;
 
-  /** @var string|null MD5 hash of the folder path (legacy field). */
-  protected $path_md5;
-
   /** @var bool True when the folder came from the NextGen Gallery integration. */
   protected $is_nextgen = false;
 

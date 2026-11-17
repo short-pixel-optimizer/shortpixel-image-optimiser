@@ -187,6 +187,21 @@ class ActivationLifecycleTest extends SPIO_IntegrationTestCase {
 		);
 	}
 
+	/**
+	 * Uninstalling removes the promo banner's dismissals option
+	 * (`spio-promo-banner`): the banner module cannot hook the plugin's
+	 * uninstall itself, so InstallHelper::uninstallPlugin() deletes it.
+	 */
+	public function test_uninstallPlugin_removes_the_promo_banner_option() {
+		$option = \ShortPixel\PromoBanner\PromoBanner::optionNameFor( \ShortPixel\ShortPixelPlugin::PROMO_BANNER_PREFIX );
+		$this->assertSame( 'spio-promo-banner', $option, 'Sentinel: the option name SPIO uses.' );
+		update_option( $option, array( 'black-friday-2026' => time() ), false );
+
+		InstallHelper::uninstallPlugin();
+
+		$this->assertFalse( get_option( $option ), 'The dismissals option is gone after uninstall.' );
+	}
+
 	// -------------------------------------------------------------------
 	// Hard uninstall ("remove all data") — everything goes
 	// -------------------------------------------------------------------

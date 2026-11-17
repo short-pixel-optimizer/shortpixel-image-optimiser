@@ -3,14 +3,12 @@
  * Tests for ShortPixel\Controller\ResponseController.
  *
  * Scope: static registry management (setQ surrogate via addData, setOutput,
- * getResponseItem), addData property-setting logic, formatItem message
- * shaping for the non-error regular-item branches (OUTPUT_MEDIA and
- * OUTPUT_CLI), and the ISSUE_* / OUTPUT_* constant values that are part of
- * the public API contract.
+ * getResponseItem), addData property-setting logic, formatQItem message
+ * shaping (regular and error items, OUTPUT_MEDIA and OUTPUT_CLI), and the
+ * ISSUE_* / OUTPUT_* constant values that are part of the public API
+ * contract. formatQItem() runs on a QueueItem built from a real attachment.
  *
  * Out of scope / why:
- * - formatQItem() requires a fully hydrated QueueItem with a live imageModel
- *   and queue result set — an integration concern, not a unit boundary.
  * - setQ() requires a queue object implementing getType() / getQueueName() /
  *   getShortQ() with an options proxy; exercised indirectly through addData's
  *   item_type seed path instead.
@@ -165,62 +163,100 @@ class ResponseControllerTest extends WP_UnitTestCase {
 		$this->assertSame( 'second', $item->message );
 	}
 
-	/*
-	 * formatItem — OUTPUT_MEDIA (default)
-	 */
+	/** A QueueItem for a real Media Library attachment; returns [ QueueItem, attachment id ]. */
+	private function queueItemForAttachment(): array {
+		$attachment_id = self::factory()->attachment->create_upload_object(
+			dirname( __DIR__ ) . '/fixtures/fixture-small.jpg'
+		);
+		$imageModel = \wpSPIO()->filesystem()->getImage( $attachment_id, 'media' );
 
-	public function test_formatItem_returns_string() {
-		ResponseController::addData( 10, 'message', 'test msg' );
-		$text = ResponseController::formatItem( 10 );
-		$this->assertIsString( $text );
+		return array( new \ShortPixel\Model\Queue\QueueItem( array( 'imageModel' => $imageModel ) ), $attachment_id );
 	}
 
-	public function test_formatItem_includes_base_message_for_non_error_item() {
-		ResponseController::addData( 11, array(
+	/*
+	 * formatQItem — OUTPUT_MEDIA (default)
+	 */
+
+	public function test_formatQItem_returns_the_message_of_a_regular_item() {
+		list( $qItem, $id ) = $this->queueItemForAttachment();
+		ResponseController::addData( $id, array(
 			'message'  => 'Custom message here',
 			'is_error' => false,
 			'is_done'  => true,
 		) );
-		$text = ResponseController::formatItem( 11 );
-		// For a done non-error item with no specific apiStatus the base message is returned.
-		$this->assertIsString( $text );
+
+		$this->assertSame( 'Custom message here', ResponseController::formatQItem( $qItem ) );
+	}
+
+	public function test_formatQItem_sets_the_item_type_from_the_image_model() {
+		list( $qItem, $id ) = $this->queueItemForAttachment();
+		ResponseController::addData( $id, 'message', 'test msg' );
+
+		ResponseController::formatQItem( $qItem );
+
+		$this->assertSame( 'media', ResponseController::getResponseItem( $id )->item_type );
 	}
 
 	/*
-	 * formatItem — OUTPUT_CLI prefix
+	 * formatQItem — OUTPUT_CLI prefix
 	 */
 
-	public function test_formatItem_cli_mode_prefixes_queue_name_and_filename() {
+	public function test_formatQItem_cli_mode_prefixes_queue_name_and_filename() {
+		list( $qItem, $id ) = $this->queueItemForAttachment();
 		$this->setStaticProp( 'queueName', 'MediaLibrary' );
 		$this->setStaticProp( 'queueType', 'media' );
 		$this->setStaticProp( 'screenOutput', ResponseController::OUTPUT_CLI );
 
-		ResponseController::addData( 20, array(
-			'message'   => 'done',
-			'fileName'  => 'photo.jpg',
-			'is_error'  => false,
-			'is_done'   => true,
+		ResponseController::addData( $id, array(
+			'message'  => 'done',
+			'fileName' => 'photo.jpg',
+			'is_error' => false,
+			'is_done'  => true,
 		) );
 
-		$text = ResponseController::formatItem( 20 );
+		$text = ResponseController::formatQItem( $qItem );
 		$this->assertStringContainsString( 'MediaLibrary', $text );
 		$this->assertStringContainsString( 'photo.jpg', $text );
 	}
 
 	/*
-	 * formatItem — error item base path (no exit-path branches)
+	 * formatQItem — error item base path (no exit-path branches)
 	 */
 
-	public function test_formatItem_error_item_returns_string() {
-		ResponseController::addData( 30, array(
+	public function test_formatQItem_error_item_returns_the_base_message() {
+		list( $qItem, $id ) = $this->queueItemForAttachment();
+		ResponseController::addData( $id, array(
 			'message'  => 'Something broke',
 			'is_error' => true,
 		) );
-		$text = ResponseController::formatItem( 30 );
-		$this->assertIsString( $text );
-		// Base text must survive through formatErrorItem untouched when
-		// issue_type is null (no matching case) and fileStatus / apiStatus are null.
-		$this->assertSame( 'Something broke', $text );
+
+		// Base text survives formatErrorItem untouched when issue_type is null
+		// (no matching case) and fileStatus / apiStatus are null.
+		$this->assertSame( 'Something broke', ResponseController::formatQItem( $qItem ) );
+	}
+
+	/**
+	 * Pins a known defect: formatQItem() never copies the QueueItem's result
+	 * into the ResponseModel. It iterates the QueueItemResult with foreach,
+	 * but every property of QueueItemResult is protected and the class is not
+	 * iterable, so the loop runs zero times from outside the class. The text
+	 * therefore comes only from values set earlier with addData(). The loop
+	 * also only overwrites response fields that are already non-null.
+	 * @todo In ResponseController::formatQItem(): copy the values actually
+	 *       set on the result. Iterating jsonSerialize() alone also copies
+	 *       the result's defaults (is_done / is_error false) over what
+	 *       addData() set, which breaks the regular and error-item tests above.
+	 * When fixed, this test fails; flip it: the result's message is used.
+	 */
+	public function test_formatQItem_ignores_the_queue_item_result_pinned_for_deferred_fix() {
+		list( $qItem, $id ) = $this->queueItemForAttachment();
+		ResponseController::addData( $id, array( 'message' => 'from addData', 'is_done' => true ) );
+		$qItem->addResult( array( 'message' => 'from the result', 'is_done' => true ) );
+
+		// SENTINEL: the result does hold the other message.
+		$this->assertSame( 'from the result', $qItem->result()->message );
+
+		$this->assertSame( 'from addData', ResponseController::formatQItem( $qItem ), 'Pinned: fixed? formatQItem() now uses the result — flip this pin.' );
 	}
 
 	/*

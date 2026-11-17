@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace ShortPixel;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -43,8 +44,8 @@ use ShortPixel\NextGenViewController as NextGenViewController;
  *   `getNGImageByID` / `getImageAbspath` / `getImageSizes` helpers
  *   then route through the appropriate API.
  *
- * Setting gate: unless `settings()->includeNextGen == 1` (or a caller
- * has set `$enableOverride`), the optimize-specific hooks stay off —
+ * Setting gate: unless the `includeNextGen` setting is on, the
+ * optimize-specific hooks stay off —
  * NextGen users who don't want SPIO touching their galleries can leave
  * the plugin installed without side-effects.
  *
@@ -56,16 +57,6 @@ class NextGenController
   /** @var NextGenController|null Singleton instance held by getInstance(). */
   protected static $instance;
 //  protected $view;
-
-  /**
-   * Temporary flag set by `enableNextGen()` when the user toggles the
-   * NextGen setting on. NextGen may not yet report itself as active
-   * (plugin still activating), but we still want to refresh folders —
-   * `optimizeNextGen()` treats this flag as an early yes.
-   *
-   * @var bool
-   */
-	private $enableOverride = false; // when activating NG will not report active yet, but try to refresh folders. Do so.
 
   /**
    * Sticky flag set by `add_screen_loads()` when the current screen
@@ -143,8 +134,7 @@ class NextGenController
 			add_action('ngg_delete_image', array($this, 'OnDeleteImage'),10, 2); // this works only on single images!
 
       add_action('shortpixel/othermedia/folder/load', array($this, 'loadFolder'), 10, 2);
-      // Off because this causes bad UX ( refresh folder but no images added)
-			//add_action('shortpixel/othermedia/addfiles', array($this, 'checkAddFiles'), 10, 3);
+
 
       add_filter( 'ngg_manage_images_columns', array( $controller, 'nggColumns' ) );
       add_filter( 'ngg_manage_images_number_of_columns', array( $controller, 'nggCountColumns' ) );
@@ -201,26 +191,18 @@ class NextGenController
   /**
    * Whether SPIO should treat NextGen galleries as optimize targets.
    *
-   * True when either:
-   *   - `$enableOverride` is set (temporary transition state during
-   *     `enableNextGen()`), or
-   *   - the user has ticked the NextGen integration in Settings
-   *     (`settings()->includeNextGen == 1`).
+   * Returns the `includeNextGen` setting (the NextGen integration ticked in
+   * Settings), which the settings model always hands out as a bool.
    *
    * Used by `hooks()` to decide whether to wire the upload / gallery
-   * lifecycle hooks, and by `checkAddFiles()` to reject files if the
-   * setting is off.
+   * lifecycle hooks.
    *
    * @return bool
    */
-  public function optimizeNextGen()
+  public function optimizeNextGen() : bool
   {
-		 if (true === $this->enableOverride || \wpSPIO()->settings()->includeNextGen == 1)
-		 {
-		 	 return true;
-		 }
+    return \wpSPIO()->settings()->includeNextGen;
 
-     return false;
   }
 
   /**
@@ -241,14 +223,13 @@ class NextGenController
   }
 
   /**
-   * Enable the NextGen integration in-flight (called from the settings
-   * controller when the user just ticked the include-NextGen option).
+   * Registers every NextGen gallery as a Custom Media folder, through
+   * `addNextGenGalleriesToCustom()`.
    *
-   * Sets `$enableOverride = true` so `optimizeNextGen()` starts
-   * returning true immediately (before the setting round-trips
-   * through the DB), then re-runs `addNextGenGalleriesToCustom()`
-   * so all existing galleries appear in Custom Media on the same
-   * request.
+   * Not called anywhere: saving the setting does not add galleries.
+   * Existing galleries are registered by the full folder scan instead
+   * (`AjaxController::resetScanFolderChecked()`), which the settings
+   * page and the scan screen point the user to.
    *
    * @param bool $silent Forwarded to `addNextGenGalleriesToCustom()` — when true, suppresses admin notices during the bulk add.
    * @return void
@@ -256,7 +237,6 @@ class NextGenController
   /** called from settingController when enabling the nextGen settings */
   public function enableNextGen($silent)
   {
-		 $this->enableOverride = true;
      $this->addNextGenGalleriesToCustom($silent);
   }
 
@@ -435,37 +415,7 @@ The screen IDS seem to be have changed, trying a more definitive solution
 			}
   }
 
-  /**
-   * `shortpixel/othermedia/addfiles` filter — veto the file-adding
-   * step for NextGen folders when the include-NextGen setting is off.
-   *
-   * **Currently unhooked** (the `add_action` call in `hooks()` is
-   * commented out because it caused a confusing UX where refresh-
-   * folder would visibly run but no images actually got added).
-   * Kept in the class for reference — un-comment the hook and this
-   * method takes over rejecting files for NG folders on refresh.
-   *
-   * @param bool                       $bool   Existing filter value from prior handlers.
-   * @param array                      $files  Files that would be added.
-   * @param DirectoryOtherMediaModel   $dirObj Directory the files belong to.
-   * @return bool `$bool` for non-NG folders; false for NG folders when the setting is off; `$bool` otherwise.
-   */
-	public function checkAddFiles($bool, $files, $dirObj)
-	{
-			// Nothing nextgen.
-			if ($dirObj->get('is_nextgen') === false)
-		  {
-				 return $bool;
-			}
 
-			// If it's nextgen, but the setting is not on, reject those files.
-			if ($this->optimizeNextGen() === false)
-			{
-				 	return false;
-			}
-
-			return $bool;
-	}
 
   /**
    * Return every NextGen gallery as a list of `DirectoryModel`
@@ -501,7 +451,11 @@ The screen IDS seem to be have changed, trying a more definitive solution
 
     foreach($result as $row)
     {
-      $directory = $fs->getDirectory($homepath->getPath() . $row->path);
+      $path = $row->path;
+      if (isset($path[0]) && '/' === $path[0])
+        $path = substr($path, 1);
+
+      $directory = $fs->getDirectory($homepath->getPath() . $path);
       if ($directory->exists())
         $galleries[] = $directory;
     }
@@ -538,7 +492,7 @@ The screen IDS seem to be have changed, trying a more definitive solution
    */
    public function addNextGenGalleriesToCustom($silent = true) {
       $fs = \wpSPIO()->filesystem();
-      $homepath = $fs->getWPFileBase();
+      //$homepath = $fs->getWPFileBase();
 
       //add the NextGen galleries to custom folders
       $ngGalleries = $this->getGalleries(); // DirectoryModel return.
@@ -561,11 +515,12 @@ The screen IDS seem to be have changed, trying a more definitive solution
 					else
 					{
 						// Try to silently fail this if directory is not allowed.
-						if (false === $folder->checkDirectory(true))
+						if (false === $folder->checkDirectory($silent))
 						{
 							continue;
 						}
-          	$directory = $otherMedia->addDirectory($gallery->getPath());
+            // Don't refresh here, but this should be done in the scan directories feature
+          	$directory = $otherMedia->addDirectory($gallery->getPath(), false);
 						if (! $directory)
 						{
 							Log::addWarn('Could not add this directory' . $gallery->getPath() );

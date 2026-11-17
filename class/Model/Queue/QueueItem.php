@@ -870,7 +870,7 @@ class QueueItem
     * In future probably should not take data()->action since newActions wipes all of this ( double ? )
     * @return OptimizeBase  optimizer or higher.
     */
-   public function getAPIController($action = null) // @todo Move to QueueItem, or QUeueItems ?
+   public function getAPIController($action = null) 
    {
       $api = null;
       if (is_null($action))
@@ -886,7 +886,7 @@ class QueueItem
          case 'scale_image':
             $api = OptimizeController::getInstance();
          break;
-         case 'requestAlt': // @todo Check if this is correct action name,
+         case 'requestAlt': 
          case 'retrieveAlt':
          case 'getAltData': 
          case 'redoAI': 

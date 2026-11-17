@@ -300,7 +300,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 	        }
 					elseif($body->Status == 'existing')
 					{
-						 Notice::addWarning( sprintf(__('This email address is already in use. Please use your API-key in the "Already have an API key" field. You can obtain your license key via %s your account %s ', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/login/">', '</a>') );
+						 Notice::addWarning( sprintf(__('This email address is already in use. Please use your API-key in the "Already have an API key" field. You can obtain your license key via %s your account %s ', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/login/?utm_source=plugin&utm_medium=spio&utm_campaign=signup_notice_account">', '</a>') );
 					}
 					else
 					{
@@ -343,6 +343,8 @@ class SettingsViewController extends \ShortPixel\ViewController
        * deleteOption(); otherwise the new value is assigned directly to the model.
        * No model-level validation is applied; the field must already exist in the
        * model (checked via exists()). Redirects back to settings after the change.
+       * Must arrive as the Debug form POST: checkPost(false, true) dies on a
+       * plain GET (no form nonce) instead of treating it as "nothing to check".
        *
        * @return void Exits via doRedirect().
        */
@@ -350,7 +352,7 @@ class SettingsViewController extends \ShortPixel\ViewController
       {
 
         $this->loadEnv();
-        $bool = $this->checkPost(false);
+        $bool = $this->checkPost(false, true);
 
         if (false === $bool)
         {
@@ -399,12 +401,14 @@ class SettingsViewController extends \ShortPixel\ViewController
        * Reads $_REQUEST['bulk'] to determine the target panel. Recognised values:
        * 'migrate', 'restore', 'restoreAI', 'removeLegacy'. All queues are cleared
        * via QueueController::resetQueues() before the redirect.
+       * Reached from a nonce link built with getActionLink(); checkRequest() dies
+       * when the link's nonce for this action is missing or invalid.
        *
        * @return void Exits via doRedirect().
        */
 			public function action_debug_redirectBulk()
 			{
-				$check = $this->checkPost(false);
+				$check = $this->checkRequest('action_debug_redirectBulk');
         if (false === $check)
         {
           return false; 
@@ -436,11 +440,18 @@ class SettingsViewController extends \ShortPixel\ViewController
           exit('action not found');
 			}
 
-      /** Button in part-debug, routed via custom Action */
+      /**
+       * Debug action: resets the cached statistics and reloads the settings page.
+       *
+       * Reached from a nonce link built with getActionLink(); checkRequest() dies
+       * when the link's nonce for this action is missing or invalid.
+       *
+       * @return void Exits via doRedirect('reload').
+       */
       public function action_debug_resetStats()
       {
           $this->loadEnv();
-					$check = $this->checkPost(false);
+					$check = $this->checkRequest('action_debug_resetStats');
           
           if (false === $check)
           {  
@@ -455,19 +466,21 @@ class SettingsViewController extends \ShortPixel\ViewController
       /**
        * Debug action: forces a fresh remote quota check and reloads the settings page.
        *
+       * Reached from a nonce link built with getActionLink(); checkRequest() dies
+       * when the link's nonce for this action is missing or invalid.
+       *
        * @return void Exits via doRedirect('reload').
        */
       public function action_debug_resetquota()
       {
 
           $this->loadEnv();
-					$check = $this->checkPost(false);
+					$check = $this->checkRequest('action_debug_resetquota');
 
           if (false === $check)
           { 
             return false; 
           }
-
 
           $quotaController = QuotaController::getInstance();
           $quotaController->forceCheckRemoteQuota();
@@ -477,12 +490,15 @@ class SettingsViewController extends \ShortPixel\ViewController
       /**
        * Debug action: clears all stored admin notices and reloads the settings page.
        *
+       * Reached from a nonce link built with getActionLink(); checkRequest() dies
+       * when the link's nonce for this action is missing or invalid.
+       *
        * @return void Exits via doRedirect('reload').
        */
       public function action_debug_resetNotices()
       {
           $this->loadEnv();
-					$check = $this->checkPost(false);
+					$check = $this->checkRequest('action_debug_resetNotices');
 
           if (false === $check)
           { 
@@ -501,17 +517,18 @@ class SettingsViewController extends \ShortPixel\ViewController
        * Reads $_REQUEST['notice_constant']. When the value is 'trigger-all', every
        * registered notice is triggered via addManual(). Otherwise the matching
        * notice is retrieved by key and triggered individually.
+       * Must arrive as the Debug form POST: checkPost(false, true) dies on a
+       * plain GET (no form nonce) instead of treating it as "nothing to check".
        *
        * @return void Exits via doRedirect().
        */
 			public function action_debug_triggerNotice()
 			{
-				$check = $this->checkPost(false);
+				$check = $this->checkPost(false, true);
         if (false === $check)
         { 
           return false; 
         }
-
 
 				$key = isset($_REQUEST['notice_constant']) ? sanitize_text_field($_REQUEST['notice_constant']) : false;
 
@@ -545,15 +562,28 @@ class SettingsViewController extends \ShortPixel\ViewController
        * QueueController::uninstallPlugin() instead and exits without a reload notice.
        * On normal reset, adds a success notice and reloads the settings page.
        *
+       * Reached two ways, each with its own nonce: the Debug form POSTs the
+       * shared form nonce (checkPost(false, true)); the Tools "Clear the Queue"
+       * link carries a nonce for this action (checkRequest()). A request
+       * without either dies before anything is reset.
+       *
        * @return void Exits via doRedirect('reload').
        */
 			public function action_debug_resetQueue()
 			{
+        // @todo Problem here. Both used via Tools (link) and debug (form) 
 				 $queue = isset($_REQUEST['queue']) ? sanitize_text_field($_REQUEST['queue']) : null;
 
 				 $this->loadEnv();
-				 $check = $this->checkPost(false);
-
+         if (isset($_POST['sp-nonce']))
+         {
+           $check = $this->checkPost(false, true); 
+         }
+         else 
+         {
+            $check = $this->checkRequest('action_debug_resetQueue');
+         }
+			 
          if (false === $check)
          {
             return false; 
@@ -614,13 +644,15 @@ class SettingsViewController extends \ShortPixel\ViewController
        *
        * Issues a raw DELETE query against wp_postmeta. Adds a success notice and
        * redirects back to the settings page.
+       * Reached from a nonce link built with getActionLink(); checkRequest() dies
+       * when the link's nonce for this action is missing or invalid.
        *
        * @return void Exits via doRedirect().
        */
 			public function action_debug_removePrevented()
 			{
 				$this->loadEnv();
-				$check = $this->checkPost(false);
+				$check = $this->checkRequest('action_debug_removePrevented');
 
         if (false === $check)
         { 
@@ -646,12 +678,15 @@ class SettingsViewController extends \ShortPixel\ViewController
        * Deletes the 'bulk-secret' cache item via CacheController and terminates
        * with a plain-text message. A new key is generated automatically when
        * the settings page is next loaded.
+       * Reached from a nonce link built with getActionLink(); checkRequest() dies
+       * when the link's nonce for this action is missing or invalid.
        *
        * @return void Exits with a plain-text message (does not redirect).
        */
 			public function action_debug_removeProcessorKey()
 			{
-				$check = $this->checkPost(false);
+        
+				$check = $this->checkRequest('action_debug_removeProcessorKey');
 
         if (false === $check)
         { 
@@ -685,10 +720,6 @@ class SettingsViewController extends \ShortPixel\ViewController
           // Split this in the several screens. I.e. settings, advanced, Key Request IF etc.
           if (isset($this->postData['includeNextGen']) && $this->postData['includeNextGen'] == 1)
           {
-              $nextgen = NextGenController::getInstance();
-              $previous = $this->model->includeNextGen;
-          //    $nextgen->enableNextGen(true);
-
               // Reset any integration notices when updating settings.
               AdminNoticesController::resetIntegrationNotices();
           }
@@ -1245,7 +1276,7 @@ class SettingsViewController extends \ShortPixel\ViewController
           $post_CDNDomain = isset($post['CDNDomain']) ? sanitize_text_field($post['CDNDomain']) : ''; 
 
           $setting_useCDN = $this->model->useCDN; 
-          $setting_CDNDomain = $this->model->CDNDomain; 
+          //$setting_CDNDomain = $this->model->CDNDomain; 
 
           $CDNcontroller = new \ShortPixel\Controller\Front\CDNController();
 

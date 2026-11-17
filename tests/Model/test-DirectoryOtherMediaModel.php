@@ -338,10 +338,10 @@ class DirectoryOtherMediaModelTest extends WP_UnitTestCase {
 		$folder_b = 200;
 
 		// Seed two folder buckets. status 2 = optimized, 0 = waiting.
-		$wpdb->insert( $this->metaTable(), array( 'folder_id' => $folder_a, 'status' => 2, 'path' => '/a1', 'path_md5' => md5( '/a1' ), 'name' => 'a1' ), array( '%d', '%d', '%s', '%s', '%s' ) );
-		$wpdb->insert( $this->metaTable(), array( 'folder_id' => $folder_a, 'status' => 2, 'path' => '/a2', 'path_md5' => md5( '/a2' ), 'name' => 'a2' ), array( '%d', '%d', '%s', '%s', '%s' ) );
-		$wpdb->insert( $this->metaTable(), array( 'folder_id' => $folder_a, 'status' => 0, 'path' => '/a3', 'path_md5' => md5( '/a3' ), 'name' => 'a3' ), array( '%d', '%d', '%s', '%s', '%s' ) );
-		$wpdb->insert( $this->metaTable(), array( 'folder_id' => $folder_b, 'status' => 0, 'path' => '/b1', 'path_md5' => md5( '/b1' ), 'name' => 'b1' ), array( '%d', '%d', '%s', '%s', '%s' ) );
+		$wpdb->insert( $this->metaTable(), array( 'folder_id' => $folder_a, 'status' => 2, 'path' => '/a1', 'name' => 'a1' ), array( '%d', '%d', '%s', '%s' ) );
+		$wpdb->insert( $this->metaTable(), array( 'folder_id' => $folder_a, 'status' => 2, 'path' => '/a2', 'name' => 'a2' ), array( '%d', '%d', '%s', '%s' ) );
+		$wpdb->insert( $this->metaTable(), array( 'folder_id' => $folder_a, 'status' => 0, 'path' => '/a3', 'name' => 'a3' ), array( '%d', '%d', '%s', '%s' ) );
+		$wpdb->insert( $this->metaTable(), array( 'folder_id' => $folder_b, 'status' => 0, 'path' => '/b1', 'name' => 'b1' ), array( '%d', '%d', '%s', '%s' ) );
 
 		$stats = DirectoryOtherMediaModel::getAllStats();
 
@@ -402,8 +402,7 @@ class DirectoryOtherMediaModelTest extends WP_UnitTestCase {
 			'ts_created'  => '2024-01-01 00:00:00',
 			'ts_checked'  => '2024-02-02 02:02:02',
 			'path'        => $this->sandbox,
-			'path_md5'    => md5( $this->sandbox ),
-		), array( '%s', '%d', '%d', '%s', '%s', '%s', '%s', '%s' ) );
+		), array( '%s', '%d', '%d', '%s', '%s', '%s', '%s' ) );
 
 		$expected_id = (int) $wpdb->insert_id;
 
@@ -435,8 +434,7 @@ class DirectoryOtherMediaModelTest extends WP_UnitTestCase {
 			'ts_created' => '2024-01-01 00:00:00',
 			'ts_checked' => '2024-03-03 03:03:03',
 			'path'       => $this->sandbox,
-			'path_md5'   => md5( $this->sandbox ),
-		), array( '%s', '%d', '%d', '%s', '%s', '%s', '%s', '%s' ) );
+		), array( '%s', '%d', '%d', '%s', '%s', '%s', '%s' ) );
 		$row_id = (int) $wpdb->insert_id;
 
 		$m = $this->freshModel();
@@ -479,8 +477,7 @@ class DirectoryOtherMediaModelTest extends WP_UnitTestCase {
 			'ts_created' => '2024-01-01 00:00:00',
 			'ts_checked' => '2024-01-01 00:00:00',
 			'path'       => $this->sandbox,
-			'path_md5'   => md5( $this->sandbox ),
-		), array( '%s', '%d', '%d', '%s', '%s', '%s', '%s', '%s' ) );
+		), array( '%s', '%d', '%d', '%s', '%s', '%s', '%s' ) );
 
 		$m = new DirectoryOtherMediaModel( $this->sandbox );
 		$this->setPrivate( $m, 'name', 'Updated Name' );
@@ -515,8 +512,7 @@ class DirectoryOtherMediaModelTest extends WP_UnitTestCase {
 			'ts_created' => '2024-01-01 00:00:00',
 			'ts_checked' => '2024-01-01 00:00:00',
 			'path'       => $this->sandbox . '_sentinel',
-			'path_md5'   => md5( $this->sandbox . '_sentinel' ),
-		), array( '%s', '%d', '%d', '%s', '%s', '%s', '%s', '%s' ) );
+		), array( '%s', '%d', '%d', '%s', '%s', '%s', '%s' ) );
 
 		$m = new DirectoryOtherMediaModel( $this->sandbox );
 		$this->setPrivate( $m, 'name', 'RealInsert' );
@@ -546,8 +542,7 @@ class DirectoryOtherMediaModelTest extends WP_UnitTestCase {
 			'ts_created' => '2024-01-01 00:00:00',
 			'ts_checked' => '2024-01-01 00:00:00',
 			'path'       => $this->sandbox,
-			'path_md5'   => md5( $this->sandbox ),
-		), array( '%s', '%d', '%d', '%s', '%s', '%s', '%s', '%s' ) );
+		), array( '%s', '%d', '%d', '%s', '%s', '%s', '%s' ) );
 
 		$m = new DirectoryOtherMediaModel( $this->sandbox );
 
@@ -567,14 +562,13 @@ class DirectoryOtherMediaModelTest extends WP_UnitTestCase {
 			'ts_created' => '2024-01-01 00:00:00',
 			'ts_checked' => '2024-01-01 00:00:00',
 			'path'       => $this->sandbox,
-			'path_md5'   => md5( $this->sandbox ),
-		), array( '%s', '%d', '%d', '%s', '%s', '%s', '%s', '%s' ) );
+		), array( '%s', '%d', '%d', '%s', '%s', '%s', '%s' ) );
 
 		$folder_id = (int) $wpdb->insert_id;
 
 		// One optimized (status=2) survives; one waiting (status=0) is purged.
-		$wpdb->insert( $this->metaTable(), array( 'folder_id' => $folder_id, 'status' => 2, 'path' => '/opt', 'path_md5' => md5( '/opt' ), 'name' => 'opt' ), array( '%d', '%d', '%s', '%s', '%s' ) );
-		$wpdb->insert( $this->metaTable(), array( 'folder_id' => $folder_id, 'status' => 0, 'path' => '/wait', 'path_md5' => md5( '/wait' ), 'name' => 'wait' ), array( '%d', '%d', '%s', '%s', '%s' ) );
+		$wpdb->insert( $this->metaTable(), array( 'folder_id' => $folder_id, 'status' => 2, 'path' => '/opt', 'name' => 'opt' ), array( '%d', '%d', '%s', '%s' ) );
+		$wpdb->insert( $this->metaTable(), array( 'folder_id' => $folder_id, 'status' => 0, 'path' => '/wait', 'name' => 'wait' ), array( '%d', '%d', '%s', '%s' ) );
 
 		$m = new DirectoryOtherMediaModel( $this->sandbox );
 

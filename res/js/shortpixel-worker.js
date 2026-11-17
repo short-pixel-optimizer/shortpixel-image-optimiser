@@ -79,22 +79,26 @@ var SpWorker = {
           body: params.toString(),
 
       }).catch (function (error){
-					 if (this && ! this.stopped) // if page is switched during init , this might not be set.
-					 {
-					 		postMessage({'status' : false, message: error});
-					 		console.error('Worker.js reporting issue on catch', error);
-					 }
-					 else {
-            // This could be a network error ( or user moving away ). Still send response in case of temporary network issues.
-            postMessage({'status' : false, message: error});
 
-					 }
-					return false;
-				});
+
+         var message = {status: false, http_status: 0, http_text: error.message || String(error), status_text: 'network error' };
+
+               if (this && ! this.stopped) // if page is switched during init , this might not be set.
+               {
+                  postMessage({'status' : false, message: message});
+                  console.error('Worker.js reporting issue on catch', error);
+               }
+               else {
+         // This could be a network error ( or user moving away ). Still send response in case of temporary network issues.
+         postMessage({'status' : false, message: message});
+
+               }
+            return false;
+         });
 
 			if (false === response)
 			{
-				postMessage({'status' : false, response: 'Response is false / network error'});
+				//postMessage({'status' : false, response: 'Response is false / network error'});
 				return;
 			}
       if (response.ok)
@@ -148,7 +152,6 @@ var SpWorker = {
    ShutDown: function()
    {
        this.stopped = true;
-//       this.Fetch();
    },
 	 UpdateLocalSecret: function(key)
 	 {

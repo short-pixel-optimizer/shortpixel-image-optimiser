@@ -233,6 +233,32 @@ class OptimizePipelineTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
+	 * "Ignore exclusion and optimize" (forceExclusion) optimizes an image
+	 * that matches an exclusion pattern. cancelUserExclusions() marks the
+	 * image processable, so the exclusion is not applied again on the way to
+	 * the API.
+	 */
+	public function test_excluded_image_is_optimized_when_the_exclusion_is_overridden() {
+		\wpSPIO()->settings()->excludePatterns = array(
+			array(
+				'type'  => 'name',
+				'value' => 'fixture-small',
+				'apply' => 'all',
+			),
+		);
+
+		$id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+
+		// SENTINEL: the image is excluded by the pattern.
+		$this->assertFalse( $this->freshImageModel( $id )->isProcessable(), 'Sentinel: the pattern excludes the image.' );
+
+		$this->optimizeAttachment( $id, array( 'forceExclusion' => true ) );
+
+		$this->assertTrue( $this->freshImageModel( $id )->isOptimized(), 'Overriding the exclusion must optimize the image.' );
+	}
+
+	/**
 	 * With autoMediaLibrary=0 (is_autoprocess=false), uploading an attachment
 	 * must NOT enqueue it for optimization.
 	 *
@@ -706,5 +732,47 @@ class OptimizePipelineTest extends SPIO_IntegrationTestCase {
 		$saved = strtotime( $decoded['lastSave'] );
 		$this->assertGreaterThanOrEqual( $before - 1, $saved, 'lastSave must not predate the optimization run.' );
 		$this->assertLessThanOrEqual( time() + 1, $saved, 'lastSave must not lie in the future.' );
+	}
+
+	/**
+	 * Pins a known defect: an attachment stored under an uploads path that
+	 * contains ".." (WordPress in a subfolder, upload_path or UPLOADS set to
+	 * "../…") exists on disk, but SPIO treats it as missing and never
+	 * optimizes it. WordPress does not resolve ".." in wp_upload_dir();
+	 * UtilHelper::spNormalizePath() drops the ".." segment instead of
+	 * resolving it, so FileModel looks in a folder that does not exist.
+	 * @todo See UtilHelper::spNormalizePath().
+	 * When fixed, this test fails; flip it: the image exists and is processable.
+	 */
+	public function test_image_under_an_uploads_path_with_parent_segment_is_treated_as_missing_pinned_for_deferred_fix() {
+		$detour = dirname( wp_upload_dir()['basedir'] ) . '/spio-subfolder';
+		if ( ! is_dir( $detour ) ) {
+			mkdir( $detour, 0755, true );
+		}
+		$filter = function ( $dirs ) {
+			$dirs['basedir'] = dirname( $dirs['basedir'] ) . '/spio-subfolder/../' . basename( $dirs['basedir'] );
+			$dirs['path']    = $dirs['basedir'] . $dirs['subdir'];
+			return $dirs;
+		};
+		add_filter( 'upload_dir', $filter );
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$attached      = get_attached_file( $attachment_id );
+		$this->resetPluginSingletons();
+		$image = \wpSPIO()->filesystem()->getMediaImage( $attachment_id );
+		remove_filter( 'upload_dir', $filter );
+
+		try {
+			// SENTINELS: WordPress stored the ".." path and the file is really there.
+			$this->assertStringContainsString( '/spio-subfolder/../', $attached, 'Sentinel: the attached file path keeps the ".." segment.' );
+			$this->assertFileExists( $attached, 'Sentinel: the image exists on disk.' );
+			$this->assertIsObject( $image, 'Sentinel: the media image loads.' );
+
+			// THE PIN: SPIO looks in .../spio-subfolder/uploads/... and finds nothing.
+			$this->assertStringContainsString( '/spio-subfolder/uploads/', $image->getFullPath(), 'Pinned: fixed? The ".." is now resolved — flip this pin.' );
+			$this->assertFalse( $image->exists(), 'Pinned: fixed? SPIO now finds the image — flip this pin.' );
+			$this->assertFalse( $image->isProcessable(), 'Pinned: fixed? The image is now processable — flip this pin.' );
+		} finally {
+			rmdir( $detour );
+		}
 	}
 }

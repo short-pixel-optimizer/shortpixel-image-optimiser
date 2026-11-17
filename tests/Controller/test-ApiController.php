@@ -7,9 +7,9 @@
  * handleNewSuccess() image/webp/avif result shaping (lossy vs lossless, NC/NA
  * sentinels, file-size margin), checkFileSizeMargin() logic, and returnFailure /
  * returnRetry / returnSuccess shapes inherited from RequestManager.
- * Two pinned regressions: the undefined $APIresponse variable in the fallback
- * branch of handleOptimizeResponse(), and the implicit-null return from
- * handleActionResponse() on an unrecognised status.
+ * One pinned defect: the undefined $APIresponse variable in the fallback
+ * branch of handleOptimizeResponse(). handleActionResponse() returns a
+ * failure result for an unrecognised status.
  *
  * Out of scope / why:
  * - processMediaItem() / processActionItem(): require a fully wired ImageModel
@@ -143,19 +143,30 @@ class ApiControllerTest extends WP_UnitTestCase {
 		$this->assertSame( RequestManager::STATUS_QUOTA_EXCEEDED, $result['apiStatus'] );
 	}
 
-	public function test_handleResponse_file_no_longer_available_minus_302_returns_fail() {
+	/**
+	 * -302 is a final error of this one item, so it is reported as STATUS_ERROR
+	 * (item level) and not as STATUS_FAIL (system level): the item then gets
+	 * ImageModel::FILE_STATUS_ERROR and is listed in the bulk log.
+	 */
+	public function test_handleResponse_file_no_longer_available_minus_302_returns_status_error() {
 		$qItem    = $this->makeQueueItem();
 		$response = $this->makeRawResponse( $this->statusBody( -302, 'No longer available' ) );
 		$result   = $this->invokeProtected( 'handleResponse', [ $qItem, $response ] );
-		$this->assertSame( RequestManager::STATUS_FAIL, $result['apiStatus'] );
+		$this->assertSame( RequestManager::STATUS_ERROR, $result['apiStatus'] );
+		$this->assertTrue( $result['is_error'] );
 		$this->assertTrue( $result['is_done'] );
+		$this->assertSame( 'File no longer available on remote system', $result['message'], 'The plugin shows its own text, not the one the API sent.' );
 	}
 
-	public function test_handleResponse_mixed_domain_minus_306_returns_fail() {
+	/** -306 is an item-level error as well (see the -302 test above). */
+	public function test_handleResponse_mixed_domain_minus_306_returns_status_error() {
 		$qItem    = $this->makeQueueItem();
 		$response = $this->makeRawResponse( $this->statusBody( -306, 'Mixed domains' ) );
 		$result   = $this->invokeProtected( 'handleResponse', [ $qItem, $response ] );
-		$this->assertSame( RequestManager::STATUS_FAIL, $result['apiStatus'] );
+		$this->assertSame( RequestManager::STATUS_ERROR, $result['apiStatus'] );
+		$this->assertTrue( $result['is_error'] );
+		$this->assertTrue( $result['is_done'] );
+		$this->assertSame( 'Files need to be from a single domain per request.', $result['message'], 'The plugin shows its own text, not the one the API sent.' );
 	}
 
 	public function test_handleResponse_invalid_api_key_minus_401_returns_no_key() {
@@ -250,30 +261,24 @@ class ApiControllerTest extends WP_UnitTestCase {
 	}
 
 	// -----------------------------------------------------------------------
-	// handleActionResponse — pinned: implicit null on unknown status
+	// handleActionResponse — unknown status
 	// -----------------------------------------------------------------------
 
 	/**
-	 * Pinned regression: ApiController::handleActionResponse() has no default /
-	 * else branch for status codes other than UNCHANGED, WAITING, or SUCCESS.
-	 *
-	 * EXPECTED (after fix): A defined return value (e.g. returnFailure) for any
-	 * unrecognised status code.
-	 *
-	 * ACTUAL (current): The method falls through without an explicit return,
-	 * yielding null — the caller (handleResponse) passes null to
-	 * QueueItem::addResult(), which iterates over null causing a foreach warning.
-	 *
-	 * This test MUST FAIL once a default return is added.
+	 * An unrecognised status code comes back as a final STATUS_FAIL failure
+	 * result, never null: the caller passes the result straight to
+	 * QueueItem::addResult().
 	 */
-	public function test_handleActionResponse_unknown_status_returns_null_pinned_for_deferred_fix() {
+	public function test_handleActionResponse_unknown_status_returns_a_failure_result() {
 		$qItem    = $this->makeQueueItem( 'remove_background' );
 		$response = $this->makeActionResponse( -999 ); // completely unknown code
 
 		$result = $this->invokeProtected( 'handleActionResponse', [ $qItem, $response ] );
 
-		// Current (buggy) behaviour: null is returned.
-		$this->assertNull( $result, 'Expected null (current buggy behaviour); fix must return a proper array.' );
+		$this->assertIsArray( $result );
+		$this->assertSame( RequestManager::STATUS_FAIL, $result['apiStatus'] );
+		$this->assertTrue( $result['is_error'] );
+		$this->assertTrue( $result['is_done'], 'A failure is final, not retried.' );
 	}
 
 	// -----------------------------------------------------------------------
