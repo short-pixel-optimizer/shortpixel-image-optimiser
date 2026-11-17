@@ -143,19 +143,30 @@ class ApiControllerTest extends WP_UnitTestCase {
 		$this->assertSame( RequestManager::STATUS_QUOTA_EXCEEDED, $result['apiStatus'] );
 	}
 
-	public function test_handleResponse_file_no_longer_available_minus_302_returns_fail() {
+	/**
+	 * -302 is a final error of this one item, so it is reported as STATUS_ERROR
+	 * (item level) and not as STATUS_FAIL (system level): the item then gets
+	 * ImageModel::FILE_STATUS_ERROR and is listed in the bulk log.
+	 */
+	public function test_handleResponse_file_no_longer_available_minus_302_returns_status_error() {
 		$qItem    = $this->makeQueueItem();
 		$response = $this->makeRawResponse( $this->statusBody( -302, 'No longer available' ) );
 		$result   = $this->invokeProtected( 'handleResponse', [ $qItem, $response ] );
-		$this->assertSame( RequestManager::STATUS_FAIL, $result['apiStatus'] );
+		$this->assertSame( RequestManager::STATUS_ERROR, $result['apiStatus'] );
+		$this->assertTrue( $result['is_error'] );
 		$this->assertTrue( $result['is_done'] );
+		$this->assertSame( 'File no longer available on remote system', $result['message'], 'The plugin shows its own text, not the one the API sent.' );
 	}
 
-	public function test_handleResponse_mixed_domain_minus_306_returns_fail() {
+	/** -306 is an item-level error as well (see the -302 test above). */
+	public function test_handleResponse_mixed_domain_minus_306_returns_status_error() {
 		$qItem    = $this->makeQueueItem();
 		$response = $this->makeRawResponse( $this->statusBody( -306, 'Mixed domains' ) );
 		$result   = $this->invokeProtected( 'handleResponse', [ $qItem, $response ] );
-		$this->assertSame( RequestManager::STATUS_FAIL, $result['apiStatus'] );
+		$this->assertSame( RequestManager::STATUS_ERROR, $result['apiStatus'] );
+		$this->assertTrue( $result['is_error'] );
+		$this->assertTrue( $result['is_done'] );
+		$this->assertSame( 'Files need to be from a single domain per request.', $result['message'], 'The plugin shows its own text, not the one the API sent.' );
 	}
 
 	public function test_handleResponse_invalid_api_key_minus_401_returns_no_key() {
