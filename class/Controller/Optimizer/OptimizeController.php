@@ -427,6 +427,7 @@ class OptimizeController extends OptimizerBase
 
           $qItem->addResult([
             'apiStatus' => ApiController::ERR_TIMEOUT,
+            'fileStatus' => ImageModel::FILE_STATUS_ERROR, 
             'message' => $message,
             'is_error' => true,
             'is_done' => true,
