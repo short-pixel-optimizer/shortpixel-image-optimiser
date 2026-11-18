@@ -11,6 +11,9 @@
  * becomes __PHP_Incomplete_Class and the ORIGINAL serialized string is
  * returned untouched: no object of a real class is ever instantiated from
  * database-supplied data (no __wakeup/__destruct gadget can fire).
+ * Every value replaceContent() unserialized is serialized back, so a string
+ * WordPress stored with an extra serialization layer never comes back as a
+ * raw serialized object for core to instantiate.
  *
  * @package Shortpixel_Image_Optimiser
  */
@@ -110,21 +113,12 @@ class ReplacerTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Pins a known defect: a serialized stdClass nested AS A STRING inside
-	 * serialized data (a plugin that calls serialize() itself before saving)
-	 * comes back as a live stdClass object instead of a serialized string.
-	 * replaceContent() unserializes every nested serialized string but never
-	 * serializes it again below the top level. The stored shape changes from
-	 * string to object, so the owning plugin's own unserialize() gets an
-	 * object. Same cause as the nested-array variant of the serialized-option
-	 * corruption pinned in Integration/test-ConversionReplacement.php.
-	 * @todo In the replacer2 module source, Replacer::replaceContent():
-	 *       serialize a nested value again when this call unserialized it,
-	 *       independent of $in_deep (as is already done for nested JSON).
-	 * When fixed, this test fails; flip it: `object` is still a string, now
-	 * holding the serialized stdClass with the new URL.
+	 * A serialized stdClass nested AS A STRING inside serialized data (a
+	 * plugin that calls serialize() itself before saving) stays a serialized
+	 * string: replaceContent() serializes back every value it unserialized,
+	 * at every level, so the stored shape does not change.
 	 */
-	public function test_array_wrapping_a_serialized_stdclass_returns_it_as_an_object_pinned_for_deferred_fix() {
+	public function test_array_wrapping_a_serialized_stdclass_keeps_it_a_serialized_string() {
 		$payload      = new stdClass();
 		$payload->url = self::OLD_URL;
 
@@ -140,9 +134,90 @@ class ReplacerTest extends WP_UnitTestCase {
 		// SENTINEL: the row was processed.
 		$this->assertSame( self::NEW_URL, $unserialized['plain'], 'Sentinel: sibling scalar values are replaced.' );
 
-		// THE PIN: the nested serialized string is now an object.
-		$this->assertInstanceOf( stdClass::class, $unserialized['object'], 'Pinned: fixed? The nested serialized stdClass stays a string — flip this pin.' );
-		$this->assertSame( self::NEW_URL, $unserialized['object']->url, 'Sentinel: its URL was replaced.' );
+		$this->assertIsString( $unserialized['object'], 'The nested serialized stdClass is still a string.' );
+		$inner = unserialize( $unserialized['object'] );
+		$this->assertInstanceOf( stdClass::class, $inner, 'and still unserializes: its lengths were kept valid.' );
+		$this->assertSame( self::NEW_URL, $inner->url, 'with the URL replaced.' );
+	}
+
+	/**
+	 * WordPress stores a string that looks serialized with an extra
+	 * serialization layer (`s:N:"O:…";`), which keeps it an inert string on
+	 * read. replaceContent() must hand that layer back: without it the row
+	 * would hold a raw serialized object that WordPress core instantiates on
+	 * the next read (PHP object injection through any meta a user can write,
+	 * such as the profile description). The object of a class that is not
+	 * allowed comes back byte for byte, URL included.
+	 */
+	public function test_string_holding_a_serialized_custom_object_keeps_its_outer_layer() {
+		$blob    = 'O:14:"SPIO_POI_Probe":1:{s:4:"path";s:' . strlen( self::OLD_URL ) . ':"' . self::OLD_URL . '";}';
+		$stored  = serialize( $blob ); // What update_metadata() writes for such a string.
+
+		$result = $this->replaceContent( $stored, false );
+
+		$this->assertSame( $stored, $result, 'The stored value comes back byte for byte.' );
+		$this->assertIsString( unserialize( $result ), 'Reading it back gives a string, not an object.' );
+	}
+
+	/** The same holds for a payload whose path does not change on replace (the lengths stay valid, so nothing breaks the object). */
+	public function test_string_holding_a_serialized_custom_object_without_the_url_keeps_its_outer_layer() {
+		$blob   = 'O:14:"SPIO_POI_Probe":1:{s:4:"path";s:5:"/tmp/";}';
+		$stored = serialize( $blob );
+
+		$result = $this->replaceContent( $stored, false );
+
+		$this->assertSame( $stored, $result );
+		$this->assertStringStartsWith( 's:', $result, 'The outer serialization layer is kept.' );
+	}
+
+	/**
+	 * A value serialized twice (a plugin that serializes an array itself
+	 * before saving) keeps both layers, with valid lengths, and gets the new
+	 * URL.
+	 */
+	public function test_array_serialized_twice_keeps_both_layers_and_gets_the_new_url() {
+		$stored = serialize( serialize( array( 'url' => self::OLD_URL ) ) );
+
+		$result = $this->replaceContent( $stored, false );
+
+		$inner = unserialize( $result );
+		$this->assertIsString( $inner, 'The outer layer still wraps a string.' );
+		$this->assertSame( array( 'url' => self::NEW_URL ), unserialize( $inner ), 'The inner layer still unserializes and holds the new URL.' );
+	}
+
+	/** A string that looks serialized but does not unserialize (a wrong length) is returned as it is. */
+	public function test_broken_serialized_string_is_returned_unchanged() {
+		$broken = 's:999:"' . self::OLD_URL . '";';
+
+		$this->assertSame( $broken, $this->replaceContent( $broken, false ) );
+	}
+
+	/**
+	 * Pins a known defect: a JSON string that was stored serialized
+	 * (`s:N:"{…}";`, a plugin that calls serialize() on its JSON before
+	 * saving) comes back as the bare JSON string. replaceContent()
+	 * serializes back what it unserialized, except when the unserialized
+	 * value is JSON: that branch only re-encodes the JSON. No object can
+	 * result from it (the output is JSON text), but the stored value loses a
+	 * layer, so the owning plugin's own unserialize() fails.
+	 * @todo In the replacer2 module source, Replacer::replaceContent():
+	 *       after the JSON re-encode, also serialize() the result when this
+	 *       call unserialized the value.
+	 * When fixed, this test fails; flip it: the result is still serialized
+	 * and unserializes to the JSON string with the new URL.
+	 */
+	public function test_serialized_json_string_loses_its_serialization_layer_pinned_for_deferred_fix() {
+		$json   = '{"img":"' . self::OLD_URL . '","n":1}';
+		$stored = serialize( $json );
+
+		$result = $this->replaceContent( $stored, false );
+
+		// SENTINEL: the URL was replaced.
+		$this->assertStringContainsString( self::NEW_URL, $result, 'Sentinel: the URL inside the JSON was replaced.' );
+
+		// THE PIN: the serialization layer is gone.
+		$this->assertFalse( is_serialized( $result ), 'Pinned: fixed? The serialized JSON string keeps its layer — flip this pin.' );
+		$this->assertSame( '{"img":"' . self::NEW_URL . '","n":1}', $result );
 	}
 
 	/**

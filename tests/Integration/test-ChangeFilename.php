@@ -1550,6 +1550,55 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	 * direct SQL and then drops the post's cache entry in 'post_meta', so a
 	 * read through the object cache (Redis / Memcached) returns the new URL.
 	 */
+	/** @return array<string, array{string}> Which path the planted object names. */
+	public function plantedObjectPaths(): array {
+		return array(
+			'full image URL'              => array( 'url' ),
+			'image path without extension' => array( 'path' ),
+		);
+	}
+
+	/**
+	 * A user can save any text in their own profile description, also a
+	 * string that looks like a serialized object and names an image.
+	 * WordPress stores it with an extra serialization layer, so reading it
+	 * gives a string. Renaming that image must leave the row as it is: were
+	 * the layer dropped, the row would hold a raw serialized object and
+	 * WordPress core would instantiate it on the next read of that meta
+	 * (PHP object injection).
+	 *
+	 * @dataProvider plantedObjectPaths
+	 */
+	public function test_rename_keeps_a_serialized_object_string_in_user_meta_inert( string $form ) {
+		$this->_setRole( 'administrator' );
+		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );
+		$this->purgeQueueTable();
+		$url  = wp_get_attachment_url( $attachment_id );
+		$path = 'url' === $form ? $url : preg_replace( '/\.jpg$/', '', (string) wp_parse_url( $url, PHP_URL_PATH ) );
+
+		$payload = 'O:14:"SPIO_POI_Probe":1:{s:4:"path";s:' . strlen( $path ) . ':"' . $path . '";}';
+		$user_id = self::factory()->user->create( array( 'role' => 'subscriber' ) );
+		update_user_meta( $user_id, 'description', $payload );
+
+		global $wpdb;
+		$sql    = $wpdb->prepare( "SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id = %d AND meta_key = 'description'", $user_id );
+		$before = (string) $wpdb->get_var( $sql );
+		// SENTINEL: WordPress stored the string wrapped, and the row names the image.
+		$this->assertStringStartsWith( 's:', $before, 'Sentinel: the description is stored with the extra serialization layer.' );
+		$this->assertStringContainsString( wp_basename( $path ), $before, 'Sentinel: the row names the image, so the replacer selects it.' );
+
+		$new_base = 'inert-' . strtolower( wp_generate_password( 4, false, false ) );
+		list( $result ) = $this->renameViaEngine( $attachment_id, $new_base );
+		$this->assertTrue( $result, 'Sentinel: the rename succeeded.' );
+
+		$this->assertSame( $before, (string) $wpdb->get_var( $sql ), 'The stored row is unchanged, outer layer included.' );
+
+		wp_cache_delete( $user_id, 'user_meta' );
+		$read = get_user_meta( $user_id, 'description', true );
+		$this->assertIsString( $read, 'Reading the description gives a string, not an object.' );
+		$this->assertSame( $payload, $read );
+	}
+
 	public function test_rename_refreshes_the_cached_postmeta_with_the_new_url() {
 		$this->_setRole( 'administrator' );
 		$attachment_id = $this->uploadFixture( 'fixture-small.jpg' );

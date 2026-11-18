@@ -195,13 +195,20 @@ class ShortPixelPlugin {
 	 * ready — loading it earlier causes a fatal on multisite. The
 	 * matching block in wp-shortpixel.php is commented out.
 	 *
-	 * @todo The "Logfile" link of the logger's debug box (shown with
-	 *       `SHORTPIXEL_DEBUG` in the URL) is empty: its href is the bare
-	 *       `view-source:` prefix. ShortPixelLogger::initView() builds the
-	 *       link on `init` from a log path that is still unset at that
-	 *       point; the path is set below. Suggested fix: let the logger
-	 *       build the link in loadView() (`admin_footer`), when the path is
-	 *       known, instead of in initView().
+	 * The log path is set here, on `init`. The logger builds the "Logfile"
+	 * link of its debug box (shown with `SHORTPIXEL_DEBUG` in the URL) later,
+	 * on `admin_footer`, so the link points at this path.
+	 *
+	 * @todo On multisite the path is not set for a debug request: the
+	 *       logger decides on `wp_loaded` (after `init`) whether the
+	 *       `SHORTPIXEL_DEBUG` request parameter counts, so debugIsActive()
+	 *       is still false here and setLogPath() is skipped. The logger then
+	 *       writes to its fallback file in the uploads directory of the
+	 *       current site (`ShortPixel.log`) instead of
+	 *       `ShortpixelBackups/shortpixel_log`, and the debug box links to
+	 *       that file. Suggested fix: call setLogPath() without the
+	 *       debugIsActive() check; an inactive logger only remembers the
+	 *       path and creates no file.
 	 *
 	 * @return void
 	 */

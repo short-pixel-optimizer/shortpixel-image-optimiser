@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Plugin Overview
 
-ShortPixel Image Optimizer is a WordPress plugin for image optimization, WebP/AVIF conversion, and AI-powered image features (upscale, background removal, SEO alt text). Requires PHP 7.4+, WordPress 4.8+. For the current version read `wp-shortpixel.php` (the `Version:` header / `SHORTPIXEL_IMAGE_OPTIMISER_VERSION`) — it is deliberately not duplicated here, because a copied version number goes stale every release.
+ShortPixel Image Optimizer is a WordPress plugin for image optimization, WebP/AVIF conversion, and AI-powered image features (upscale, background removal, SEO alt text). Requires PHP 7.4+, WordPress 5.9+ (declared in the `wp-shortpixel.php` header and in `readme.txt`). For the current version read `wp-shortpixel.php` (the `Version:` header / `SHORTPIXEL_IMAGE_OPTIMISER_VERSION`) — it is deliberately not duplicated here, because a copied version number goes stale every release.
 
 ## Build & Dependencies
 
