@@ -752,11 +752,16 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 	protected function fetchInlineBackground($content, $args = []) : array
 	{
 		
-		$number = preg_match_all('/url(\(((?:\s*(?:"[^"<>]*+"|\'[^\'<>]*+\')\s*|(?:[^()\'"<>]++|(?1))++))\))/m', $content, $matches);
-		$matches = $matches[2];
-		
+		$number = preg_match_all(self::CSS_URL_PATTERN, $content, $matches);
 
-		$replaceBlocks = []; 
+		if (false === $number || 0 === $number)
+		{
+			 return [];
+		}
+
+		$matches = $matches[2];
+
+		$replaceBlocks = [];
 
 		if (0 === count($matches))
 		{

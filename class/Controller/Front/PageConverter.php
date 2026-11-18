@@ -33,6 +33,26 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 class PageConverter extends \ShortPixel\Controller
 {
 
+	/**
+	 * Pattern for one CSS url( … ) value, shared by every front-end rewriter.
+	 *
+	 * Group 1 is the parenthesised part `( … )`, group 2 the value inside it
+	 * without the closing parenthesis. A quoted value must be one complete
+	 * "…" or '…' string; an unquoted value may hold balanced nested
+	 * parentheses (recursion on group 1). Neither form can contain `<` or `>`,
+	 * and an unquoted value cannot contain a quote, so a match never crosses
+	 * an HTML attribute or tag boundary. The rewriters str_replace() the
+	 * matched text across the whole page, so a match that spans markup would
+	 * delete that markup.
+	 *
+	 * preg_match_all() returns false on this pattern when the JIT stack is
+	 * exhausted (tens of thousands of nested parentheses); callers leave the
+	 * page unchanged in that case.
+	 *
+	 * @var string
+	 */
+	const CSS_URL_PATTERN = '/url(\(((?:\s*(?:"[^"<>]*+"|\'[^\'<>]*+\')\s*|(?:[^()\'"<>]++|(?1))++))\))/m';
+
 	/** @var string Full home URL of the site (e.g. https://example.com). */
 	protected $site_url;
 

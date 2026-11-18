@@ -418,38 +418,62 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
   /**
    * Finds all CSS url() declarations in HTML content and delegates to convertInlineStyle().
    *
-   * Uses the pattern '/(url\(.*?\))(.*?)(?:;|\"|\')/' (dot-all) to match url()
-   * values plus any trailing background shorthand properties up to a ; or
-   * quote delimiter.  Group 1 is the full url(…) token; group 2 is any trailing
-   * image-data (position, repeat, etc.).  Results are passed as a structured
-   * array to convertInlineStyle() for file-system resolution and replacement.
+   * Matches with PageConverter::CSS_URL_PATTERN, which cannot cross a quote
+   * or tag boundary. convertInlineStyle() str_replace()s every matched
+   * url( … ) across the whole page, so a match that spanned markup would
+   * delete that markup and let text from e.g. a comment escape its
+   * attribute.
    *
-   * Returns $content unchanged when no url() matches are found.
+   * Each distinct match becomes one entry: 'item' is the full url( … ) text
+   * as written (the str_replace() needle), 'url' the value inside it with
+   * surrounding whitespace and one pair of wrapping quotes removed. A value
+   * that is empty or still contains whitespace, a quote, `<`, `>` or a
+   * backslash is skipped, independent of how the page was sanitised.
+   *
+   * Returns $content unchanged when no url() matches are found or the
+   * pattern fails (preg_match_all() returns false).
    *
    * @param string $content HTML content to scan.
    * @return string Content with inline CSS url() backgrounds replaced by WebP equivalents.
    */
   protected function testInlineStyle($content)
   {
-    //preg_match_all('/background.*[^:](url\(.*\))[;]/isU', $content, $matches);
-    // Pattern : Find the URL() from CSS, save any extra background information ( position, repeat etc ) in second group and terminate at ; or " (hopefully end of line)
-    // Old pattern - /url\(.*\)(.*)(?:;|\"|\')/isU
-    $pattern = '/(url\(.*?\))(.*?)(?:;|\"|\')/is';
-    preg_match_all($pattern, $content, $matches);
+    $number = preg_match_all(self::CSS_URL_PATTERN, $content, $matches);
 
-    if (count($matches) == 0 || count($matches[1]) == 0)
+    if (false === $number || 0 === $number)
     {
       return $content;
     }
 
-    $filtered = []; 
-    // Create a name array to make code clearer. First match (item) is url(xx).  Imagedata is shorthand properties that might follow but before end of background declararation.
-    for ($i = 0; $i < count($matches[1]); $i++)
+    $filtered = [];
+    foreach ($matches[0] as $i => $item)
     {
-      $filtered[] = ['item' => $matches[1][$i], 'imagedata' => $matches[2][$i]];
+      if (isset($filtered[$item]))
+      {
+        continue;
+      }
+
+      $url = trim($matches[2][$i]);
+      $len = strlen($url);
+      if ($len > 1 && ('"' === $url[0] || "'" === $url[0]) && $url[0] === $url[$len - 1])
+      {
+        $url = trim(substr($url, 1, -1));
+      }
+
+      if ('' === $url || 1 === preg_match('/[\s"\'<>\\\\]/', $url))
+      {
+        continue;
+      }
+
+      $filtered[$item] = ['item' => $item, 'url' => $url];
     }
 
-    $content = $this->convertInlineStyle($filtered, $content);
+    if (0 === count($filtered))
+    {
+      return $content;
+    }
+
+    $content = $this->convertInlineStyle(array_values($filtered), $content);
     return $content;
   }
 
@@ -457,9 +481,9 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
   /**
    * Replaces inline CSS url() declarations with WebP equivalents where available.
    *
-   * For each entry in $matches (with 'item' = the url(…) string and 'imagedata'
-   * = optional trailing shorthand), extracts the raw URL, resolves it to a
-   * filesystem path via the VFS, then looks for a .webp counterpart using both
+   * For each entry in $matches (with 'item' = the url(…) string as written
+   * and 'url' = the validated URL inside it, see testInlineStyle()), resolves
+   * the URL to a filesystem path via the VFS, then looks for a .webp counterpart using both
    * the base-name and full-name strategies.  Falls back through the
    * 'shortpixel/front/webp_notfound' filter when neither file exists on disk.
    *
@@ -468,10 +492,11 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
    * once in $content via str_replace(); the converted array guards against
    * double-replacement when the same image appears on multiple elements.
    *
-   * The replacement uses the base WebP name (no trailing image-data) as the
-   * inline value: url('<webp-url>').
+   * The replacement is url(<webp-url>), unquoted, with space, parentheses,
+   * quotes and angle brackets percent-encoded so the new value can neither
+   * end the CSS value nor the surrounding HTML attribute.
    *
-   * @param array  $matches Structured match array from testInlineStyle(); each entry has 'item' and 'imagedata'.
+   * @param array  $matches Structured match array from testInlineStyle(); each entry has 'item' and 'url'.
    * @param string $content HTML content in which replacements are made.
    * @return string Content with qualifying inline CSS backgrounds replaced.
    */
@@ -483,22 +508,8 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
 
     foreach($matches as $match)
     {
-       $item = $match['item'];
-       $image_data = ''; 
-       if (isset($match['imagedata']) && strlen(trim($match['imagedata'])) > 0)
-       {
-         $image_data = $match['imagedata'];
-       }
-
-      //preg_match('/url\(\'(.*)\'\)/imU', $item, $url_match);
-      // Fix: backgrounds might not have ' ' in URL area. 
-      preg_match('/url\((.*)\)/imU', $item, $url_match);
-      if (! isset($url_match[1]))
-      {
-        continue;
-      }
-      // Remove any removing " ' to get the pure URL. 
-      $url = str_replace(['\'', '"'],'', $url_match[1]);
+      $item = $match['item'];
+      $url = $match['url'];
       $filename = basename($url);
       $ext = pathinfo($url, PATHINFO_EXTENSION);
 
@@ -551,15 +562,15 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
           
           if (! isset($converted[$target_urldef])) // if the same image is on multiple elements, this replace might go double. prevent.
           {
-            $converted[] = $target_urldef;
+            $converted[$target_urldef] = true;
             // Fix: The originals are not being put anymore because this would lead to double images and that's not a good thing.
             //            $new_urldef = "url('" . $checkedFile . "') $image_data ;";
             // Fix2 :: The image_data should not be matched anymore via main match, perhaps it works in all cases to leave it alone? 
             // Fix3 :: Removed the ' ' around the newdef image since this can cause issues if the main image is wrapped in the same. 
             // Fix4 :: Recommended to str_replace the checkedFile URL for things that might break CSS. 
             $checkedFile = str_replace(
-                array(' ', '(', ')', "'", '"'),
-                array('%20', '%28', '%29', '%27', '%22'),
+                array(' ', '(', ')', "'", '"', '<', '>'),
+                array('%20', '%28', '%29', '%27', '%22', '%3C', '%3E'),
                 $checkedFile
             );            
             $new_urldef = "url(" . $checkedFile . ") ";

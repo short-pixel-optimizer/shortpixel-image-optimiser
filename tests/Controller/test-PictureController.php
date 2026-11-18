@@ -303,51 +303,123 @@ class PictureControllerTest extends WP_UnitTestCase {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * A single inline style url() produces one structured match entry.
+	 * Returns a PictureController whose convertInlineStyle() records the
+	 * entries testInlineStyle() hands it instead of touching the filesystem.
+	 *
+	 * @return PictureController Instance with a public $captured array (null until called).
+	 */
+	private function capturingController(): PictureController {
+		return new class() extends PictureController {
+			/** @var array|null Entries passed to convertInlineStyle(). */
+			public $captured = null;
+
+			public function __construct() {}
+
+			protected function convertInlineStyle( $matches, $content ) {
+				$this->captured = $matches;
+				return $content;
+			}
+		};
+	}
+
+	/**
+	 * A single inline style url() produces one entry with the full url( … )
+	 * text as 'item' and the bare URL as 'url'.
 	 */
 	public function test_testInlineStyle_detects_single_url() {
-		// Directly validate the regex used by testInlineStyle rather than calling
-		// the full method (which would call convertInlineStyle → filesystem).
-		$pattern = '/(url\(.*?\))(.*?)(?:;|\"|\')/is';
+		$ctrl    = $this->capturingController();
 		$content = '<div style="background: url(https://example.com/bg.jpg);"></div>';
 
-		preg_match_all( $pattern, $content, $matches );
+		$result = $this->invokePrivate( $ctrl, 'testInlineStyle', array( $content ) );
 
-		$this->assertCount( 1, $matches[1] );
-		$this->assertStringContainsString( 'url(', $matches[1][0] );
+		$this->assertSame( $content, $result );
+		$this->assertSame(
+			array( array( 'item' => 'url(https://example.com/bg.jpg)', 'url' => 'https://example.com/bg.jpg' ) ),
+			$ctrl->captured
+		);
 	}
 
 	/**
-	 * Multiple url() declarations produce multiple match entries.
+	 * Multiple url() declarations produce one entry each, duplicates once.
 	 */
 	public function test_testInlineStyle_detects_multiple_urls() {
-		$pattern = '/(url\(.*?\))(.*?)(?:;|\"|\')/is';
-		$content = '<style>.a { background: url(a.jpg); } .b { background: url(b.jpg); }</style>';
+		$ctrl    = $this->capturingController();
+		$content = '<style>.a { background: url(a.jpg); } .b { background: url(b.jpg); } .c { background: url(a.jpg); }</style>';
 
-		preg_match_all( $pattern, $content, $matches );
+		$this->invokePrivate( $ctrl, 'testInlineStyle', array( $content ) );
 
-		$this->assertGreaterThanOrEqual( 2, count( $matches[1] ) );
+		$this->assertSame( array( 'a.jpg', 'b.jpg' ), array_column( $ctrl->captured, 'url' ) );
 	}
 
 	/**
-	 * The pattern matches url() when the closing quote of a style="" attribute
-	 * serves as the terminator — this is by design (the pattern accepts " as a
-	 * terminator to handle inline style attributes).
-	 *
-	 * Note: the original test comment assumed no terminator existed, but the
-	 * attribute closing `"` in `style="...url(bg.jpg)"` IS the terminator the
-	 * pattern seeks.  The correct assertion is that ONE match is found.
+	 * One pair of wrapping quotes and surrounding whitespace are removed from
+	 * the URL; 'item' keeps the text as written so str_replace() finds it.
 	 */
-	public function test_testInlineStyle_matches_url_terminated_by_attribute_quote() {
-		$pattern = '/(url\(.*?\))(.*?)(?:;|\"|\')/is';
-		// The closing " of the style attribute acts as the terminator after url().
-		$content = '<div style="background-image: url(bg.jpg)">';
+	public function test_testInlineStyle_strips_wrapping_quotes_and_whitespace() {
+		$ctrl    = $this->capturingController();
+		$content = "<style>.a{background:url('a.jpg')} .b{background:url( \"b.png\" )} .c{background:url(\n c.gif\n)}</style>";
 
-		preg_match_all( $pattern, $content, $matches );
+		$this->invokePrivate( $ctrl, 'testInlineStyle', array( $content ) );
 
-		// One match: url(bg.jpg) terminated by the closing " of the attribute.
-		$this->assertCount( 1, $matches[1] );
-		$this->assertStringContainsString( 'url(bg.jpg)', $matches[1][0] );
+		$this->assertSame(
+			array(
+				array( 'item' => "url('a.jpg')", 'url' => 'a.jpg' ),
+				array( 'item' => 'url( "b.png" )', 'url' => 'b.png' ),
+				array( 'item' => "url(\n c.gif\n)", 'url' => 'c.gif' ),
+			),
+			$ctrl->captured
+		);
+	}
+
+	/**
+	 * A url( that is not closed before a quote or tag boundary is not
+	 * matched, and URLs that still contain whitespace, quotes, angle brackets
+	 * or a backslash are rejected, so convertInlineStyle() is never called.
+	 */
+	public function test_testInlineStyle_rejects_values_crossing_markup() {
+		$ctrl    = $this->capturingController();
+		$content = "<abbr title=\"url(\n\">x</abbr><code>url(a b.jpg) url('a\"b.jpg') url(a\\\\b.jpg)</code>";
+
+		$result = $this->invokePrivate( $ctrl, 'testInlineStyle', array( $content ) );
+
+		$this->assertSame( $content, $result );
+		$this->assertNull( $ctrl->captured );
+	}
+
+	/**
+	 * The url( value of the attribute with the payload from a comment does
+	 * not merge with a later url( value: the markup between them survives and
+	 * the attacker text stays inside <code>, while the real image url is
+	 * still converted to its .webp sibling.
+	 */
+	public function test_testInlineStyle_does_not_delete_markup_between_two_urls() {
+		$upload = wp_upload_dir();
+		$dir    = trailingslashit( $upload['path'] );
+		$base   = trailingslashit( $upload['url'] );
+		$name   = 'sp-inline-xss-' . wp_generate_password( 8, false );
+		$png    = $dir . $name . '.png';
+		$webp   = $dir . $name . '.webp';
+
+		wp_mkdir_p( $dir );
+		file_put_contents( $png, 'png' );
+		file_put_contents( $webp, 'webp' );
+
+		try {
+			$imgUrl  = $base . $name . '.png';
+			$payload = "<abbr title=\"url(\n\">x</abbr><code>url(" . $imgUrl . ')" style=display:block onfocus=alert(1) x=</code>';
+			$content = '<p>' . $payload . '</p><div style="background:url(' . $imgUrl . ')"></div>';
+
+			$ctrl   = $this->freshController();
+			$result = $this->invokePrivate( $ctrl, 'testInlineStyle', array( $content ) );
+
+			$this->assertStringContainsString( "<abbr title=\"url(\n\">x</abbr><code>", $result );
+			$this->assertStringContainsString( '" style=display:block onfocus=alert(1) x=</code>', $result );
+			$this->assertStringContainsString( 'url(' . $base . $name . '.webp) ', $result );
+			$this->assertStringNotContainsString( 'url(' . $imgUrl . ')', $result );
+		} finally {
+			@unlink( $png );
+			@unlink( $webp );
+		}
 	}
 
 	/**
