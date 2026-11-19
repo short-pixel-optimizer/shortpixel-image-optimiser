@@ -642,6 +642,39 @@ class CDNControllerTest extends WP_UnitTestCase {
 		$this->assertSame( array(), $result );
 	}
 
+	/**
+	 * The pattern is the one PictureController uses, so a hardening of one
+	 * rewriter cannot leave the other behind.
+	 */
+	public function test_fetchInlineBackground_uses_the_shared_css_url_pattern() {
+		$this->assertSame( \ShortPixel\Controller\Front\PageConverter::CSS_URL_PATTERN, CDNController::CSS_URL_PATTERN );
+		$this->assertSame( CDNController::CSS_URL_PATTERN, \ShortPixel\Controller\Front\PictureController::CSS_URL_PATTERN );
+
+		$this->assertSame( 0, preg_match( CDNController::CSS_URL_PATTERN, "<abbr title=\"url(\n\">x</abbr><code>url(" ), 'An open url( must not match up to a later one' );
+		$this->assertSame( 0, preg_match( CDNController::CSS_URL_PATTERN, 'url(a.jpg" onfocus=x)' ), 'An unquoted value must not contain a quote' );
+		$this->assertSame( 0, preg_match( CDNController::CSS_URL_PATTERN, 'url("a.jpg><b>")' ), 'A quoted value must not contain a tag' );
+		$this->assertSame( 1, preg_match( CDNController::CSS_URL_PATTERN, 'url(a(1).jpg)', $m ) );
+		$this->assertSame( 'a(1).jpg', $m[2] );
+	}
+
+	/**
+	 * When the pattern engine gives up on pathological input (very deeply
+	 * nested parentheses), the method returns an empty array instead of
+	 * failing, and the whole page comes out of processFront() unchanged.
+	 */
+	public function test_fetchInlineBackground_survives_deeply_nested_parentheses() {
+		$ctrl = $this->freshController();
+		$html = '<p>url(' . str_repeat( '(', 30000 ) . str_repeat( ')', 30001 ) . '</p>';
+
+		$result = $this->invokePrivate( $ctrl, 'fetchInlineBackground', array( $html ) );
+
+		$this->assertIsArray( $result );
+		if ( false === @preg_match_all( CDNController::CSS_URL_PATTERN, $html, $unused ) ) {
+			$this->assertSame( array(), $result, 'A failed pattern must give no replace blocks' );
+		}
+		$this->assertSame( $html, $this->invokePrivate( $ctrl, 'processFront', array( $html ) ) );
+	}
+
 	// -------------------------------------------------------------------------
 	// filterFonts
 	// -------------------------------------------------------------------------
