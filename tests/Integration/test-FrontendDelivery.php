@@ -214,171 +214,57 @@ class FrontendDeliveryTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
-	 * Regression: CSS breaks when url() contains literal space / paren /
-	 * quote characters, because the URL is emitted without wrapping quotes
-	 * ("url(" . $checkedFile . ") "). If the on-disk filename carries any of
-	 * those characters, the emitted declaration becomes invalid CSS
-	 * ("url(a b.webp)" is not a valid unquoted url() token) — or, worse,
-	 * injects extra url()/style tokens if the filename ends with ')'. The
-	 * converter pre-escapes space, (, ), ', " in the checkedFile URL to
-	 * %20 / %28 / %29 / %27 / %22 immediately before the str_replace that
-	 * inserts it back into $content.
+	 * A quoted inline background whose file name contains a space is
+	 * converted. The url( … ) keeps its quotes, so the space stays as it is
+	 * (valid CSS inside a quoted string).
 	 *
-	 * This test places a file with a literal space in its name in the
-	 * uploads dir (bypassing sanitize_file_name), drops a matching .webp
-	 * companion next to it, and feeds an inline style with the raw URL
-	 * through convertHtml. Assertions:
-	 *   - The emitted url() must carry the %20-encoded form (positive proof
-	 *     the escape ran).
-	 *   - The emitted url() must NOT contain a raw space (regression: the
-	 *     invalid CSS shape that broke background delivery).
-	 *
-	 * Companion file paths are tracked in $this->companionFiles for
-	 * tear_down cleanup; the source jpg is unlinked in the finally block
-	 * because it lives outside the attachment table.
-	 *
-	 * Coverage gap: the escape also maps ( → %28, ) → %29,
-	 * ' → %27, " → %22, but those branches are unreachable through the
-	 * current pipeline — the outer url() extractor at PictureController.php
-	 * :495 uses '/url\((.*)\)/imU' (ungreedy, no newline), truncating on the
-	 * first ')', and the URL sanitizer at :501 strips ' and " before the
-	 * filesystem lookup. Only the space branch has a reachable code path
-	 * end-to-end. Pinned below in
-	 * test_inline_css_background_with_parens_is_silently_skipped_pinned_for_deferred_fix.
+	 * The source jpg is placed in the uploads dir directly, bypassing
+	 * sanitize_file_name, so the space survives; it is unlinked in the
+	 * finally block because it has no attachment row.
 	 */
-	public function test_inline_css_background_escapes_space_in_webp_url() {
-		$fixture = $this->fixturePath( 'fixture-small.jpg' );
-		$uploads = wp_upload_dir();
-		$dir     = trailingslashit( $uploads['path'] );
-
-		// Place source jpg with a raw space in the filename — bypass
-		// sanitize_file_name / wp_unique_filename so the space survives.
-		$jpg_name  = 'escape space.jpg';
-		$webp_name = 'escape space.webp';
-		$jpg_path  = $dir . $jpg_name;
-		$webp_path = $dir . $webp_name;
-
-		if ( ! copy( $fixture, $jpg_path ) ) {
-			$this->markTestSkipped( 'Could not stage spaced-filename fixture at ' . $jpg_path );
-		}
-		copy( $fixture, $webp_path );
-		$this->companionFiles[] = $webp_path;
-
-		try {
-			// Build the raw URL directly from the uploads baseurl so we
-			// keep the literal space (wp_get_attachment_url would encode it
-			// — and there is no attachment row for this file anyway).
-			$raw_url = trailingslashit( $uploads['url'] ) . $jpg_name;
-			$html    = '<div style="background-image: url(\'' . $raw_url . '\');">content</div>';
-
-			$output = $this->convertHtml( $html );
-
-			// Sentinel: prove the conversion actually ran (a scope regression
-			// where testInlineStyle stopped matching the url() shape would
-			// otherwise let the "no raw space" assertion below false-pass on
-			// an unchanged input.
-			$this->assertStringContainsString(
-				'.webp',
-				$output,
-				'Sentinel: the converter must have swapped in the .webp companion — otherwise the escape assertions below have nothing to observe.'
-			);
-
-			// Positive proof the escaping str_replace ran on $checkedFile: the
-			// emitted url() carries the %20-encoded filename.
-			$this->assertStringContainsString(
-				'escape%20space.webp',
-				$output,
-				'The space in the webp filename must be emitted as %20 inside url(...) — without the pre-escape, url(escape space.webp) is invalid CSS.'
-			);
-
-			// Regression: the raw "space.webp" substring (with a literal
-			// space) must not survive inside a url(...) declaration.
-			$this->assertDoesNotMatchRegularExpression(
-				'/url\([^)]*escape space\.webp[^)]*\)/',
-				$output,
-				'No url(...) declaration may contain the raw " " space in the .webp filename. An emitted "url(escape space.webp)" is invalid CSS and breaks background delivery.'
-			);
-		} finally {
-			if ( file_exists( $jpg_path ) ) {
-				unlink( $jpg_path );
-			}
-			// $webp_path is handled by parent tear_down via $companionFiles.
-		}
+	public function test_inline_css_background_with_space_in_quoted_url_is_converted() {
+		$this->assertQuotedInlineBackgroundConverted( 'escape space' );
 	}
 
 	/**
-	 * Pins a known defect: inline CSS backgrounds whose
-	 * filename contains parentheses are SILENTLY SKIPPED by the WebP
-	 * converter — no conversion, no error, no log.
-	 *
-	 * Valid CSS like  background-image: url('photo (1).jpg')  is common in
-	 * the wild (browser download dedup produces "photo (1).jpg"; page
-	 * builders embed such files verbatim). The url() extractor at
-	 * class/Controller/Front/PictureController.php:495 uses the ungreedy
-	 * '/url\((.*)\)/imU', which truncates the capture at the FIRST ')' —
-	 * here yielding "'photo (1". After quote-stripping (:501) the string has
-	 * no extension, fails the $allowed_exts check (:505) and the entry is
-	 * skipped via continue. The %28/%29/%27/%22 escape branches
-	 * (:560-564) are therefore unreachable: no paren or quote ever survives
-	 * to them. Quote-in-filename inputs die similarly (:501 strips the
-	 * quote, the filesystem lookup misses, no conversion).
-	 *
-	 * Consequence: optimization silently not applied — nothing is
-	 * corrupted, the original background keeps working, but these files
-	 * never get WebP/AVIF delivery in inline styles.
-	 *
-	 * @todo Proposed fix (extractor-level, per CSS url-token grammar):
-	 *   preg_match('/url\(\s*(?:\'([^\']*)\'|"([^"]*)"|([^)\'"\s]+))\s*\)/i', ...)
-	 * taking whichever group matched, without blanket quote-stripping —
-	 * then the paren/quote escapes become reachable and load-bearing.
-	 *
-	 * FLIP INSTRUCTIONS: when the extractor handles quoted url() tokens,
-	 * this test will fail on the "must NOT contain .webp" assertion —
-	 * then flip it: assert the output DOES contain the %28/%29-encoded
-	 * .webp url() (mirror the space test above) and drop the
-	 * _pinned_for_deferred_fix suffix.
+	 * A quoted inline background whose file name contains parentheses (e.g.
+	 * the browser download name "photo (1).jpg") is converted; the quotes
+	 * are kept, so the parentheses stay as they are.
 	 */
-	public function test_inline_css_background_with_parens_is_silently_skipped_pinned_for_deferred_fix() {
-		$fixture = $this->fixturePath( 'fixture-small.jpg' );
-		$uploads = wp_upload_dir();
-		$dir     = trailingslashit( $uploads['path'] );
+	public function test_inline_css_background_with_parens_in_quoted_url_is_converted() {
+		$this->assertQuotedInlineBackgroundConverted( 'paren photo (1)' );
+	}
 
-		// Stage a paren-named jpg + webp companion, bypassing
-		// sanitize_file_name / wp_unique_filename so the parens survive
-		// (FTP uploads / browser download-dedup names).
-		$jpg_name  = 'paren photo (1).jpg';
-		$webp_name = 'paren photo (1).webp';
-		$jpg_path  = $dir . $jpg_name;
-		$webp_path = $dir . $webp_name;
+	/**
+	 * Stages "<$name>.jpg" with a .webp companion, runs an inline
+	 * url('…jpg') through convertHtml() and asserts the output is the same
+	 * markup with only the extension changed.
+	 *
+	 * @param string $name File name without extension.
+	 */
+	private function assertQuotedInlineBackgroundConverted( string $name ): void {
+		$fixture   = $this->fixturePath( 'fixture-small.jpg' );
+		$uploads   = wp_upload_dir();
+		$dir       = trailingslashit( $uploads['path'] );
+		$jpg_path  = $dir . $name . '.jpg';
+		$webp_path = $dir . $name . '.webp';
 
 		if ( ! copy( $fixture, $jpg_path ) ) {
-			$this->markTestSkipped( 'Could not stage paren-filename fixture at ' . $jpg_path );
+			$this->markTestSkipped( 'Could not stage fixture at ' . $jpg_path );
 		}
 		copy( $fixture, $webp_path );
 		$this->companionFiles[] = $webp_path;
 
 		try {
-			$raw_url = trailingslashit( $uploads['url'] ) . $jpg_name;
-			// Quoted url() — the VALID CSS shape browsers accept for names
-			// with spaces/parens, and the realistic page-builder output.
-			$html = '<div style="background-image: url(\'' . $raw_url . '\');">content</div>';
+			// Built from the uploads baseurl so the raw characters are kept
+			// (there is no attachment row for this file).
+			$base = trailingslashit( $uploads['url'] ) . $name;
+			$html = '<div style="background-image: url(\'' . $base . '.jpg\');">content</div>';
 
-			$output = $this->convertHtml( $html );
-
-			// Current (buggy) behavior: the converter must NOT have touched
-			// the declaration — no .webp anywhere in the output.
-			$this->assertStringNotContainsString(
-				'.webp',
-				$output,
-				'Pinned: a paren-named background must currently be SKIPPED (extractor truncates at the first ")"). If this fails, the url() extractor was fixed — flip this test to assert the %28/%29-encoded .webp url() is emitted and drop _pinned_for_deferred_fix.'
-			);
-
-			// And the original declaration survives byte-identical (silent
-			// skip, not corruption).
-			$this->assertStringContainsString(
-				'url(\'' . $raw_url . '\')',
-				$output,
-				'Pinned: the original quoted url() declaration must pass through unchanged — the failure mode is a silent skip, never a mangled declaration.'
+			$this->assertSame(
+				'<div style="background-image: url(\'' . $base . '.webp\');">content</div>',
+				$this->convertHtml( $html ),
+				'Only the URL inside the quoted url() may change, to the .webp companion.'
 			);
 		} finally {
 			if ( file_exists( $jpg_path ) ) {
@@ -387,7 +273,6 @@ class FrontendDeliveryTest extends SPIO_IntegrationTestCase {
 			// $webp_path is handled by parent tear_down via $companionFiles.
 		}
 	}
-
 
 	/**
 	 * A captured 404 status must suppress conversion so error pages are

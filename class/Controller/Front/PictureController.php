@@ -426,9 +426,11 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
    *
    * Each distinct match becomes one entry: 'item' is the full url( … ) text
    * as written (the str_replace() needle), 'url' the value inside it with
-   * surrounding whitespace and one pair of wrapping quotes removed. A value
-   * that is empty or still contains whitespace, a quote, `<`, `>` or a
-   * backslash is skipped, independent of how the page was sanitised.
+   * surrounding whitespace and one pair of wrapping quotes removed, and
+   * 'quoted' whether such a pair was present. A value that is empty or still
+   * contains a quote, `<`, `>`, a backslash or whitespace is skipped,
+   * independent of how the page was sanitised; only a quoted value may
+   * contain plain spaces (e.g. url('my photo.jpg')).
    *
    * Returns $content unchanged when no url() matches are found or the
    * pattern fails (preg_match_all() returns false).
@@ -455,17 +457,21 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
 
       $url = trim($matches[2][$i]);
       $len = strlen($url);
+      $quoted = false;
       if ($len > 1 && ('"' === $url[0] || "'" === $url[0]) && $url[0] === $url[$len - 1])
       {
         $url = trim(substr($url, 1, -1));
+        $quoted = true;
       }
 
-      if ('' === $url || 1 === preg_match('/[\s"\'<>\\\\]/', $url))
+      // A quoted value may contain plain spaces (valid CSS, e.g. 'my photo.jpg'); any other whitespace is still rejected.
+      $bad = $quoted ? '/[^\S ]|["\'<>\\\\]/' : '/[\s"\'<>\\\\]/';
+      if ('' === $url || 1 === preg_match($bad, $url))
       {
         continue;
       }
 
-      $filtered[$item] = ['item' => $item, 'url' => $url];
+      $filtered[$item] = ['item' => $item, 'url' => $url, 'quoted' => $quoted];
     }
 
     if (0 === count($filtered))
@@ -481,8 +487,9 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
   /**
    * Replaces inline CSS url() declarations with WebP equivalents where available.
    *
-   * For each entry in $matches (with 'item' = the url(…) string as written
-   * and 'url' = the validated URL inside it, see testInlineStyle()), resolves
+   * For each entry in $matches (with 'item' = the url(…) string as written,
+   * 'url' = the validated URL inside it and 'quoted' = whether it was
+   * wrapped in quotes, see testInlineStyle()), resolves
    * the URL to a filesystem path via the VFS, then looks for a .webp counterpart using both
    * the base-name and full-name strategies.  Falls back through the
    * 'shortpixel/front/webp_notfound' filter when neither file exists on disk.
@@ -492,11 +499,15 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
    * once in $content via str_replace(); the converted array guards against
    * double-replacement when the same image appears on multiple elements.
    *
-   * The replacement is url(<webp-url>), unquoted, with space, parentheses,
-   * quotes and angle brackets percent-encoded so the new value can neither
-   * end the CSS value nor the surrounding HTML attribute.
+   * Only the URL inside 'item' is replaced; every other byte, wrapping
+   * quotes and whitespace included, is kept, so url('a.jpg') becomes
+   * url('a.webp'). Those quotes may also be the delimiters of the
+   * surrounding HTML attribute, so removing them would move the end of
+   * that attribute. Quotes and angle brackets in the new URL are
+   * percent-encoded, and in an unquoted value also space and parentheses,
+   * so the new value can neither end the CSS value nor the attribute.
    *
-   * @param array  $matches Structured match array from testInlineStyle(); each entry has 'item' and 'url'.
+   * @param array  $matches Structured match array from testInlineStyle(); each entry has 'item', 'url' and 'quoted'.
    * @param string $content HTML content in which replacements are made.
    * @return string Content with qualifying inline CSS backgrounds replaced.
    */
@@ -563,17 +574,32 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
           if (! isset($converted[$target_urldef])) // if the same image is on multiple elements, this replace might go double. prevent.
           {
             $converted[$target_urldef] = true;
-            // Fix: The originals are not being put anymore because this would lead to double images and that's not a good thing.
-            //            $new_urldef = "url('" . $checkedFile . "') $image_data ;";
-            // Fix2 :: The image_data should not be matched anymore via main match, perhaps it works in all cases to leave it alone? 
-            // Fix3 :: Removed the ' ' around the newdef image since this can cause issues if the main image is wrapped in the same. 
-            // Fix4 :: Recommended to str_replace the checkedFile URL for things that might break CSS. 
+            // Only the URL inside the match is swapped; every other byte of the
+            // url( … ) text, wrapping quotes included, is kept. When those quotes
+            // double as HTML attribute delimiters, dropping them would move the
+            // end of the attribute. Characters that could end the CSS string or
+            // the attribute are percent-encoded; in an unquoted value space and
+            // parentheses would also end the token.
             $checkedFile = str_replace(
-                array(' ', '(', ')', "'", '"', '<', '>'),
-                array('%20', '%28', '%29', '%27', '%22', '%3C', '%3E'),
+                array("'", '"', '<', '>'),
+                array('%27', '%22', '%3C', '%3E'),
                 $checkedFile
-            );            
-            $new_urldef = "url(" . $checkedFile . ") ";
+            );
+            if (false === $match['quoted'])
+            {
+              $checkedFile = str_replace(
+                  array(' ', '(', ')'),
+                  array('%20', '%28', '%29'),
+                  $checkedFile
+              );
+            }
+
+            $pos = strpos($item, $url, 4); // 4 = strlen('url(')
+            if (false === $pos)
+            {
+              continue;
+            }
+            $new_urldef = substr($item, 0, $pos) . $checkedFile . substr($item, $pos + strlen($url));
             $content = str_replace($target_urldef, $new_urldef, $content);
           }
       }

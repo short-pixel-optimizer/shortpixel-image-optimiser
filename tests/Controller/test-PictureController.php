@@ -324,7 +324,7 @@ class PictureControllerTest extends WP_UnitTestCase {
 
 	/**
 	 * A single inline style url() produces one entry with the full url( … )
-	 * text as 'item' and the bare URL as 'url'.
+	 * text as 'item', the bare URL as 'url' and 'quoted' false.
 	 */
 	public function test_testInlineStyle_detects_single_url() {
 		$ctrl    = $this->capturingController();
@@ -334,7 +334,7 @@ class PictureControllerTest extends WP_UnitTestCase {
 
 		$this->assertSame( $content, $result );
 		$this->assertSame(
-			array( array( 'item' => 'url(https://example.com/bg.jpg)', 'url' => 'https://example.com/bg.jpg' ) ),
+			array( array( 'item' => 'url(https://example.com/bg.jpg)', 'url' => 'https://example.com/bg.jpg', 'quoted' => false ) ),
 			$ctrl->captured
 		);
 	}
@@ -353,7 +353,8 @@ class PictureControllerTest extends WP_UnitTestCase {
 
 	/**
 	 * One pair of wrapping quotes and surrounding whitespace are removed from
-	 * the URL; 'item' keeps the text as written so str_replace() finds it.
+	 * the URL; 'item' keeps the text as written so str_replace() finds it,
+	 * and 'quoted' records whether the quotes were there.
 	 */
 	public function test_testInlineStyle_strips_wrapping_quotes_and_whitespace() {
 		$ctrl    = $this->capturingController();
@@ -363,9 +364,9 @@ class PictureControllerTest extends WP_UnitTestCase {
 
 		$this->assertSame(
 			array(
-				array( 'item' => "url('a.jpg')", 'url' => 'a.jpg' ),
-				array( 'item' => 'url( "b.png" )', 'url' => 'b.png' ),
-				array( 'item' => "url(\n c.gif\n)", 'url' => 'c.gif' ),
+				array( 'item' => "url('a.jpg')", 'url' => 'a.jpg', 'quoted' => true ),
+				array( 'item' => 'url( "b.png" )', 'url' => 'b.png', 'quoted' => true ),
+				array( 'item' => "url(\n c.gif\n)", 'url' => 'c.gif', 'quoted' => false ),
 			),
 			$ctrl->captured
 		);
@@ -373,12 +374,14 @@ class PictureControllerTest extends WP_UnitTestCase {
 
 	/**
 	 * A url( that is not closed before a quote or tag boundary is not
-	 * matched, and URLs that still contain whitespace, quotes, angle brackets
-	 * or a backslash are rejected, so convertInlineStyle() is never called.
+	 * matched, and URLs that still contain whitespace (any whitespace when
+	 * unquoted, anything but a plain space when quoted), quotes, angle
+	 * brackets or a backslash are rejected, so convertInlineStyle() is never
+	 * called.
 	 */
 	public function test_testInlineStyle_rejects_values_crossing_markup() {
 		$ctrl    = $this->capturingController();
-		$content = "<abbr title=\"url(\n\">x</abbr><code>url(a b.jpg) url('a\"b.jpg') url(a\\\\b.jpg)</code>";
+		$content = "<abbr title=\"url(\n\">x</abbr><code>url(a b.jpg) url('a\"b.jpg') url(a\\\\b.jpg) url('a\tb.jpg') url(\"a\nb.jpg\")</code>";
 
 		$result = $this->invokePrivate( $ctrl, 'testInlineStyle', array( $content ) );
 
@@ -414,12 +417,139 @@ class PictureControllerTest extends WP_UnitTestCase {
 
 			$this->assertStringContainsString( "<abbr title=\"url(\n\">x</abbr><code>", $result );
 			$this->assertStringContainsString( '" style=display:block onfocus=alert(1) x=</code>', $result );
-			$this->assertStringContainsString( 'url(' . $base . $name . '.webp) ', $result );
+			$this->assertStringContainsString( 'url(' . $base . $name . '.webp)"', $result );
 			$this->assertStringNotContainsString( 'url(' . $imgUrl . ')', $result );
 		} finally {
 			@unlink( $png );
 			@unlink( $webp );
 		}
+	}
+
+	/**
+	 * A quoted value with a plain space in the file name is accepted.
+	 */
+	public function test_testInlineStyle_accepts_space_in_quoted_value() {
+		$ctrl    = $this->capturingController();
+		$content = "<div style=\"background:url('/uploads/my photo.jpg')\"></div>";
+
+		$this->invokePrivate( $ctrl, 'testInlineStyle', array( $content ) );
+
+		$this->assertSame(
+			array( array( 'item' => "url('/uploads/my photo.jpg')", 'url' => '/uploads/my photo.jpg', 'quoted' => true ) ),
+			$ctrl->captured
+		);
+	}
+
+	/**
+	 * Stages a .png with a .webp sibling in the uploads dir, runs $callback
+	 * with (base url, file name without extension) and removes both files.
+	 *
+	 * @param string   $name     File name without extension.
+	 * @param callable $callback Receives the uploads base url and $name.
+	 */
+	private function withWebpSibling( string $name, callable $callback ): void {
+		$upload = wp_upload_dir();
+		$dir    = trailingslashit( $upload['path'] );
+		$png    = $dir . $name . '.png';
+		$webp   = $dir . $name . '.webp';
+
+		wp_mkdir_p( $dir );
+		file_put_contents( $png, 'png' );
+		file_put_contents( $webp, 'webp' );
+
+		try {
+			$callback( trailingslashit( $upload['url'] ), $name );
+		} finally {
+			@unlink( $png );
+			@unlink( $webp );
+		}
+	}
+
+	/**
+	 * When the quotes of url( "…" ) are also the HTML attribute delimiters,
+	 * the conversion keeps them: only the URL changes, so the attribute still
+	 * ends where it did and the text after it does not become an attribute.
+	 * Holds for double and single quotes.
+	 */
+	public function test_convertInlineStyle_keeps_quotes_that_delimit_the_attribute() {
+		$this->withWebpSibling(
+			'sp-inline-quote-' . wp_generate_password( 8, false ),
+			function ( $base, $name ) {
+				$imgUrl = $base . $name . '.png';
+				$webp   = $base . $name . '.webp';
+				$ctrl   = $this->freshController();
+
+				$double = '<abbr title="url(" ' . $imgUrl . ' ")>TEXT" onfocus=alert(1) x=">x</abbr>';
+				$this->assertSame(
+					'<abbr title="url(" ' . $webp . ' ")>TEXT" onfocus=alert(1) x=">x</abbr>',
+					$this->invokePrivate( $ctrl, 'testInlineStyle', array( $double ) )
+				);
+
+				$single = "<abbr title='url(' " . $imgUrl . " ')>TEXT' onfocus=alert(1) x='>x</abbr>";
+				$this->assertSame(
+					"<abbr title='url(' " . $webp . " ')>TEXT' onfocus=alert(1) x='>x</abbr>",
+					$this->invokePrivate( $ctrl, 'testInlineStyle', array( $single ) )
+				);
+			}
+		);
+	}
+
+	/**
+	 * A quoted url() keeps its quotes and whitespace; only the URL becomes
+	 * the .webp one.
+	 */
+	public function test_convertInlineStyle_keeps_quoted_shape() {
+		$this->withWebpSibling(
+			'sp-inline-shape-' . wp_generate_password( 8, false ),
+			function ( $base, $name ) {
+				$ctrl    = $this->freshController();
+				$content = "<div style=\"background:url( '" . $base . $name . ".png' )\"></div>";
+
+				$this->assertSame(
+					"<div style=\"background:url( '" . $base . $name . ".webp' )\"></div>",
+					$this->invokePrivate( $ctrl, 'testInlineStyle', array( $content ) )
+				);
+			}
+		);
+	}
+
+	/**
+	 * A quoted file name with spaces and parentheses is converted; inside
+	 * quotes those characters stay as they are.
+	 */
+	public function test_convertInlineStyle_converts_quoted_name_with_space_and_parens() {
+		$this->withWebpSibling(
+			'sp inline (' . wp_generate_password( 8, false ) . ')',
+			function ( $base, $name ) {
+				$ctrl    = $this->freshController();
+				$content = '<div style="background:url(\'' . $base . $name . '.png\')"></div>';
+
+				$this->assertSame(
+					'<div style="background:url(\'' . $base . $name . '.webp\')"></div>',
+					$this->invokePrivate( $ctrl, 'testInlineStyle', array( $content ) )
+				);
+			}
+		);
+	}
+
+	/**
+	 * An unquoted file name with parentheses is converted with the
+	 * parentheses percent-encoded, so they cannot end the url( token.
+	 */
+	public function test_convertInlineStyle_encodes_parens_in_unquoted_value() {
+		$this->withWebpSibling(
+			'sp-inline-(' . wp_generate_password( 8, false ) . ')',
+			function ( $base, $name ) {
+				$ctrl    = $this->freshController();
+				$content = '<div style="background:url(' . $base . $name . '.png)"></div>';
+				$encoded = str_replace( array( '(', ')' ), array( '%28', '%29' ), $name );
+
+				$this->assertSame(
+					'<div style="background:url(' . $base . $encoded . '.webp)"></div>',
+					$this->invokePrivate( $ctrl, 'testInlineStyle', array( $content ) )
+				);
+			}
+		);
 	}
 
 	/**
