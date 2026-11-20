@@ -80,7 +80,6 @@ class CompatBreakdanceTest extends SPIO_IntegrationTestCase {
 
 	private function resetReplacerModuleSingletons(): void {
 		$classes = array(
-			\ShortPixel\Replacer\Replacer::class,
 			\ShortPixel\Replacer\Modules\Elementor::class,
 			\ShortPixel\Replacer\Modules\WpBakery::class,
 			\ShortPixel\Replacer\Modules\YoastSeo::class,
@@ -215,7 +214,7 @@ class CompatBreakdanceTest extends SPIO_IntegrationTestCase {
 		remove_all_filters( 'shortpixel/replacer/load_meta_value' );
 		remove_all_filters( 'shortpixel/replacer/save_meta_value' );
 
-		\ShortPixel\Replacer\Replacer::getInstance();
+		new \ShortPixel\Replacer\Replacer2( 'spio' );
 		$module = \ShortPixel\Replacer\Modules\Breakdance::getInstance();
 
 		$this->assertNotFalse(

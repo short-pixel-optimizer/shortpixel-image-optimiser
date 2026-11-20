@@ -332,7 +332,7 @@ class Replacer
 	 * 2. Resets the replace settings to the defaults with `component` set to
 	 *    `emr` (the same value in every consuming plugin).
 	 * 3. Derives $base_url: the path of the source URL with the extension
-	 *    removed by str_replace('.ext', ''). This is the LIKE pattern used to
+	 *    removed from the end of the path. This is the LIKE pattern used to
 	 *    find candidate rows.
 	 * 4. Fail-safes: when fileIsRestricted() reports the path as allowed and
 	 *    is_dir($base_url) is true (the URL path, tested as an absolute
@@ -383,11 +383,6 @@ class Replacer
 	 *                         of error strings when a fail-safe aborts; false
 	 *                         when source or target is missing.
 	 *
-	 * @todo The extension is removed with str_replace(), which also removes
-	 *       an identical text earlier in the path (`/a.jpg-dir/b.jpg` becomes
-	 *       `/a-dir/b`), giving a LIKE pattern that matches nothing. Suggested
-	 *       fix: strip only the trailing extension, for example with
-	 *       substr() on the length of the extension.
 	 * @todo The return type mixes int (success), array (errors) and false
 	 *       (missing input), so callers must type-check the result. Suggested
 	 *       fix: return a result object, or always return the errors array
@@ -415,7 +410,10 @@ class Replacer
 		// Search-and-replace filename in post database
 		// @todo Check this with scaled images.
 		$base_url = parse_url($this->source_url, PHP_URL_PATH);
-		$base_url = str_replace('.' . pathinfo($base_url, PATHINFO_EXTENSION), '', $base_url);
+		$extension = pathinfo($base_url, PATHINFO_EXTENSION);
+		if ('' !== $extension) {
+			$base_url = substr($base_url, 0, -strlen($extension) - 1);
+		}
 
 		/** Fail-safe if base_url is a whole directory, don't go search/replace */
 		if (false === $this->fileIsRestricted($base_url) && is_dir($base_url)) {
@@ -433,7 +431,6 @@ class Replacer
 		// get relurls of both source and target.
 		$urls = $this->getRelativeURLS();
 
-
 		if ($args['thumbnails_only']) {
 			foreach ($urls as $side => $data) {
 				if (isset($data['base'])) {
@@ -447,7 +444,6 @@ class Replacer
 
 		$search_urls = $urls['source'];
 		$replace_urls = $urls['target'];
-
 
 	 	$search_urls = array_merge($search_urls, $this->search_urls); 
 	 	$replace_urls = array_merge($replace_urls, $this->replace_urls); 
@@ -545,6 +541,8 @@ class Replacer
 		Log::addDebug("Updated Records : " . $updated);
 		return $updated;
 	}
+
+	
 
 	/**
 	 * Runs one search/replace pass over post content and the meta tables.
@@ -668,9 +666,6 @@ class Replacer
 	 *       `main_id`, and skip the delete when it is null.
 	 * @todo The skip log message prints `$id_field` (the column name) instead
 	 *       of `$id` (the row id). Suggested fix: log `$id`.
-	 * @todo The postmeta subquery quotes the statuses with double quotes,
-	 *       which MySQL reads as identifiers under the ANSI_QUOTES SQL mode.
-	 *       Suggested fix: use single quotes as doReplaceQuery() does.
 	 */
 	private function handleMetaData($url, $search_urls, $replace_urls)
 	{
@@ -684,7 +679,6 @@ class Replacer
 			'id' => 'meta_id',
 			'value' => 'meta_value',
 		]; */
-
 
 		$table_options = [
 			'postmeta' => [
@@ -730,8 +724,8 @@ class Replacer
 
 			switch ($table) {
 				case "postmeta": // special case.
-					$sql = "SELECT $id_field, $value_field, $main_field FROM " . $wpdb->postmeta . '
-	                WHERE post_id in (SELECT ID from ' . $wpdb->posts . ' where post_status in ("publish", "future", "draft", "pending", "private") ) AND meta_value like %s';
+					$sql = "SELECT $id_field, $value_field, $main_field FROM " . $wpdb->postmeta . "
+	                WHERE post_id in (SELECT ID from " . $wpdb->posts . " where post_status in ('publish', 'future', 'draft', 'pending', 'private') ) AND meta_value like %s";
 					$type = 'post';
 
 					$update_sql = ' UPDATE ' . $wpdb->postmeta . ' SET meta_value = %s WHERE meta_id = %d';
@@ -816,8 +810,7 @@ class Replacer
 	 *   writes the replaced meta value itself.
 	 * - `replace_no_serialize` (bool, default false): when true,
 	 *   replaceContent() returns arrays and objects as they are instead of
-	 *   serializing them at the top level. A value replaceContent()
-	 *   unserialized itself is always serialized back.
+	 *   serializing them at the top level.
 	 *
 	 * @param array $settings Settings to apply over the defaults.
 	 * @return void
@@ -841,15 +834,12 @@ class Replacer
 	 *   string is returned unchanged. An incomplete object nested in an
 	 *   array or stdClass is kept as it is, and serialize() writes it back
 	 *   under its original class name with its original properties.
-	 *   A string that looks serialized but does not unserialize (other than
-	 *   `b:0;`) is returned unchanged. Every value this call unserialized is
-	 *   serialized back with serialize(), whatever its type and at every
-	 *   level (unless it was JSON, see below), so a value WordPress stored
-	 *   with an extra serialization layer keeps that layer. When the
-	 *   unserialized value is itself a serialized string (a value serialized
-	 *   twice), that inner layer is processed recursively instead of with
-	 *   str_replace(), so its lengths stay valid; an inner object of a
-	 *   disallowed class comes back byte for byte.
+	 *   Whatever was unserialized is serialized back at the same level (top
+	 *   level or nested), so the stored value keeps its type. A value that
+	 *   unserializes to another serialized string (serialized twice) has its
+	 *   inner layer walked as well, so both layers keep valid lengths. A
+	 *   string that looks serialized but does not unserialize (a wrong
+	 *   length) is returned unchanged.
 	 * - JSON string (see isJSON()): decoded with json_decode() into objects
 	 *   and arrays, processed as such and encoded back at the same level
 	 *   (top level or nested), with the `json_flags` setting. The string is
@@ -867,9 +857,10 @@ class Replacer
 	 *   incomplete object is returned as it is (or, at the top level of a
 	 *   serialized value, the original serialized string is returned).
 	 * - Other scalars and null: returned untouched.
-	 * - At the top level, arrays and objects that were neither JSON nor
-	 *   unserialized by this call are passed through maybe_serialize(),
-	 *   unless the `replace_no_serialize` setting is true.
+	 * - At the top level, arrays and objects that were not JSON (including a
+	 *   walked serialized value) are passed
+	 *   through maybe_serialize(), unless the `replace_no_serialize` setting
+	 *   is true.
 	 *
 	 * When no replace run has set the settings yet, the defaults are applied
 	 * first. Otherwise the settings of the latest run apply.
@@ -881,11 +872,9 @@ class Replacer
 	 * @param mixed $content      The content to replace in.
 	 * @param array $search       Values to search for.
 	 * @param array $replace      Replacements, index-matched to $search.
-	 * @param bool  $in_deep      True for nested levels; prevents the
-	 *                            maybe_serialize() of arrays and objects
-	 *                            below the top level. A value unserialized or
-	 *                            JSON-decoded at a nested level is still
-	 *                            encoded back there.
+	 * @param bool  $in_deep      True for nested levels; prevents
+	 *                            re-serialising and JSON re-encoding below the
+	 *                            top level.
 	 * @param bool  $strict_check Passed down the recursion but not otherwise
 	 *                            read; every unserialize uses
 	 *                            `allowed_classes => ['stdClass']`
@@ -914,7 +903,8 @@ class Replacer
 			//$args = array('allowed_classes' => false);
 			$args = array('allowed_classes' => array('stdClass'));
 
-			$content = Unserialize::unserialize($content, $args);
+			// Suppressed: a broken value warns on PHP 8.3+ and is handled right below.
+			$content = @Unserialize::unserialize($content, $args);
 			$was_unserialized = true;
 
 			// Looks serialized but does not unserialize (e.g. a broken length): leave it as it is, serializing false back would destroy it.
@@ -1085,14 +1075,14 @@ class Replacer
 	 *     @type array $target Same shape for the target file.
 	 * }
 	 */
-	private function getRelativeURLS()
+	private function getRelativeURLS(): array
 	{
 		$dataArray = array(
 			'source' => array('url' => $this->source_url, 'metadata' => $this->getFilesFromMetadata($this->source_metadata)),
 			'target' => array('url' => $this->target_url, 'metadata' => $this->getFilesFromMetadata($this->target_metadata)),
 		);
 
-		$result = array();
+		$result = [];
 
 		foreach ($dataArray as $index => $item) {
 			$result[$index] = array();
@@ -1106,7 +1096,7 @@ class Replacer
 				$result[$index][$name] =  $baseurl . wp_basename($filename); // filename can have a path like 19/08 etc.
 			}
 		}
-		//    Log::addDebug('Relative URLS', $result);
+
 		return $result;
 	}
 
@@ -1119,7 +1109,7 @@ class Replacer
 	 *               year/month path) and size name => size file name, for
 	 *               every entry that has a `file` key.
 	 */
-	private function getFilesFromMetadata($meta)
+	private function getFilesFromMetadata($meta): array
 	{
 		$fileArray = array();
 		if (isset($meta['file']))
@@ -1174,7 +1164,7 @@ class Replacer
 		//  $closest_file = str_replace($this->relPath, '', $this->newMeta['file']);
 		$closest_file = wp_basename($this->target_metadata['file']); // mainfile as default
 
-		foreach ($this->target_metadata['sizes'] as $sizeName => $data) {
+		foreach ($this->target_metadata['sizes'] as $loopSize => $data) {
 			$thisdiff = abs($old_width - $data['width']);
 
 			if ($thisdiff  < $diff) {

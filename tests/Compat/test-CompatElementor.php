@@ -58,10 +58,9 @@ class CompatElementorTest extends SPIO_IntegrationTestCase {
 		parent::tear_down();
 	}
 
-	/** Null the private static $instance on Replacer + every Modules\* class. */
+	/** Null the private static $instance on every Modules\* class. */
 	private function resetReplacerModuleSingletons(): void {
 		$classes = array(
-			\ShortPixel\Replacer\Replacer::class,
 			\ShortPixel\Replacer\Modules\Elementor::class,
 			\ShortPixel\Replacer\Modules\WpBakery::class,
 			\ShortPixel\Replacer\Modules\YoastSeo::class,
@@ -116,7 +115,7 @@ class CompatElementorTest extends SPIO_IntegrationTestCase {
 		remove_all_filters( 'shortpixel/replacer/custom_replace_query' );
 
 		// Instantiate the Replacer, which calls loadFormats() → module ctors.
-		\ShortPixel\Replacer\Replacer::getInstance();
+		new \ShortPixel\Replacer\Replacer2( 'spio' );
 
 		$this->assertNotFalse(
 			has_filter(

@@ -18,7 +18,7 @@
  * @package Shortpixel_Image_Optimiser
  */
 
-use ShortPixel\Replacer\Replacer;
+use ShortPixel\Replacer\Replacer2;
 
 class ReplacerTest extends WP_UnitTestCase {
 
@@ -26,7 +26,7 @@ class ReplacerTest extends WP_UnitTestCase {
 	private const NEW_URL = 'http://example.org/wp-content/uploads/new-image.jpg';
 
 	private function replaceContent( $content, bool $strict_check = true ) {
-		return Replacer::getInstance()->replaceContent(
+		return ( new Replacer2( 'spio' ) )->replaceContent(
 			$content,
 			array( self::OLD_URL ),
 			array( self::NEW_URL ),
@@ -375,11 +375,11 @@ class ReplacerTest extends WP_UnitTestCase {
 			)
 		);
 
-		$replacer = Replacer::getInstance();
-		$replacer->setSource( $base . 'src.jpg' );
-		$replacer->setTarget( $base . 'tgt.jpg' );
-		$replacer->setSourceMeta( $source_meta );
-		$replacer->setTargetMeta( $target_meta );
+		$replacer = new Replacer2( 'spio' );
+		$replacer->Setup()->search()->setUrl( $base . 'src.jpg' );
+		$replacer->Setup()->search()->setMetaData( $source_meta );
+		$replacer->Setup()->replace()->setUrl( $base . 'tgt.jpg' );
+		$replacer->Setup()->replace()->setMetaData( $target_meta );
 		$updated = $replacer->replace();
 
 		$this->assertIsInt( $updated, 'Sentinel: replace() ran instead of returning errors.' );

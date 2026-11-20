@@ -7,7 +7,7 @@ if (! defined('ABSPATH')) {
 }
 
 use ShortPixel\Model\File\FileModel;
-use ShortPixel\Replacer\Replacer as Replacer;
+use ShortPixel\Replacer\Replacer2 as Replacer2;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 /* Abstract base to use for image converters. Handles media library related functions ( replacing )  */
@@ -15,7 +15,7 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 /**
  * Abstract converter base that handles WordPress Media Library integration.
  *
- * Manages URL replacement (via Replacer) and WordPress attachment metadata
+ * Manages URL replacement (via Replacer2) and WordPress attachment metadata
  * updates when a file is converted to a different format.
  *
  * @package ShortPixel\Model\Converter
@@ -25,8 +25,8 @@ abstract class MediaLibraryConverter extends Converter
 	/** @var string|null Source URL of the original image, used by the replacer. */
 	protected $source_url;
 
-	/** @var Replacer|null Replacer instance used to update URLs across the database. */
-	protected $replacer; // Replacer class Object.
+	/** @var Replacer2|null Replacer2 instance used to update URLs across the database. */
+	protected $replacer; // Replacer2 class Object.
 
 	/** @var FileModel|null The replacement file object produced by the conversion. */
 	protected $newFile; // The newFile Object.
@@ -44,14 +44,14 @@ abstract class MediaLibraryConverter extends Converter
 	}
 
 	/**
-	 * Initialises the Replacer instance with the source URL of the current image,
+	 * Initialises a fresh Replacer2 instance with the source URL of the current image,
 	 * accounting for scaled originals and attaching the existing WP metadata.
 	 *
 	 * @return void
 	 */
 	protected function setupReplacer()
 	{
-		$this->replacer = new Replacer();
+		$this->replacer = new Replacer2('spio');
 		$fs = \wpSPIO()->filesystem();
 
 		$url = $fs->pathToUrl($this->imageModel);
@@ -62,9 +62,9 @@ abstract class MediaLibraryConverter extends Converter
 		}
 
 		$this->source_url = $url;
-		$this->replacer->setSource($url);
+		$this->replacer->Setup()->search()->setUrl($url);
 
-		$this->replacer->setSourceMeta($this->imageModel->getWPMetaData());
+		$this->replacer->Setup()->search()->setMetaData($this->imageModel->getWPMetaData());
 	}
 
 	/**
@@ -82,7 +82,7 @@ abstract class MediaLibraryConverter extends Converter
 		$url = $fs->pathToUrl($this->imageModel);
 		$newUrl = str_replace($this->imageModel->getFileName(), $newFile->getFileName(), $url);
 
-		$this->replacer->setTarget($newUrl);
+		$this->replacer->Setup()->replace()->setUrl($newUrl);
 	}
 
 	/**
@@ -236,6 +236,6 @@ abstract class MediaLibraryConverter extends Converter
 			}
 		}
 
-		$this->replacer->setTargetMeta($new_metadata);
+		$this->replacer->Setup()->replace()->setMetaData($new_metadata);
 	}
 } // class

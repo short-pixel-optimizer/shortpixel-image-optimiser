@@ -14,7 +14,9 @@ use ShortPixel\Controller\Optimizer\OptimizeAiController as OptimizeAiController
 use ShortPixel\Controller\Optimizer\ActionController as ActionController;
 use ShortPixel\Helper\UiHelper;
 use ShortPixel\Model\AiDataModel;
-use stdClass;
+use ShortPixel\Model\Image\CustomImageModel;
+use ShortPixel\Model\Image\MediaLibraryModel;
+
 
 /**
  * One slot in the ShortPixel queue — binds an image (ImageModel) to a pending
@@ -37,7 +39,7 @@ use stdClass;
 class QueueItem
 {
 
-   /** @var ImageModel|null The image this queue slot is optimizing / acting on. */
+   /** @var MediaLibraryModel|CustomImageModel|null The image this queue slot is optimizing / acting on. */
    protected $imageModel;
    /** @var int|null Attachment or custom-image ID; also the queue slot's identity. */
    protected $item_id;

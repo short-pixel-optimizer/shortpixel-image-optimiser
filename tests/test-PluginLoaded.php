@@ -70,13 +70,30 @@ class PluginLoadedTest extends WP_UnitTestCase {
 		$this->assertSame( $threeParts( $this->readmeHeader( 'Requires PHP' ) ), $threeParts( $data['RequiresPHP'] ), 'Header and readme name the same minimum PHP version.' );
 	}
 
-	/** WordPress core's own check accepts the plugin on the versions the tests run on. */
+	/**
+	 * WordPress core's own version checks accept the plugin on the versions
+	 * the tests run on.
+	 *
+	 * Runs the two checks validate_plugin_requirements() is made of on the
+	 * plugin file's header. validate_plugin_requirements() itself cannot be
+	 * used here: it reads the file below WP_PLUGIN_DIR, and the plugin under
+	 * test lives outside it, so it would read no header and always pass.
+	 */
 	public function test_wordpress_accepts_the_declared_requirements_here() {
-		require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		$data = get_file_data(
+			SHORTPIXEL_PLUGIN_FILE,
+			array(
+				'RequiresWP'  => 'Requires at least',
+				'RequiresPHP' => 'Requires PHP',
+			)
+		);
 
-		$result = validate_plugin_requirements( plugin_basename( SHORTPIXEL_PLUGIN_FILE ) );
+		// SENTINEL: the header was read.
+		$this->assertNotSame( '', $data['RequiresWP'], 'Sentinel: the header declares a minimum WordPress version.' );
+		$this->assertNotSame( '', $data['RequiresPHP'], 'Sentinel: the header declares a minimum PHP version.' );
 
-		$this->assertTrue( $result, is_wp_error( $result ) ? $result->get_error_message() : '' );
+		$this->assertTrue( is_wp_version_compatible( $data['RequiresWP'] ), 'WordPress ' . get_bloginfo( 'version' ) . ' meets "Requires at least: ' . $data['RequiresWP'] . '".' );
+		$this->assertTrue( is_php_version_compatible( $data['RequiresPHP'] ), 'PHP ' . PHP_VERSION . ' meets "Requires PHP: ' . $data['RequiresPHP'] . '".' );
 	}
 
 	public function test_autoloader_resolves_namespaced_class() {

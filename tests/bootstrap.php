@@ -258,6 +258,15 @@ add_filter(
  *   - `SplObjectStorage::attach()` / `SplObjectStorage::contains()`
  *     (deprecated 8.5) — emitted from `vendor/sebastian/recursion-context/`,
  *     a PHPUnit transitive dependency. Vendor code; upstream must fix.
+ *
+ * Every other error goes to the previous handler first and, when that one
+ * does not handle it, to PHPUnit's own ErrorHandler. PHPUnit 9 only
+ * registers its handler when no handler is set yet
+ * (PHPUnit\Util\ErrorHandler::register()), so while this one is installed
+ * PHPUnit never registers its own. Without the explicit call, the
+ * convert*ToExceptions settings of the XML configs would have no effect:
+ * warnings and notices would only be printed and the test would still pass.
+ * PHPUnit's handler leaves errors suppressed with @ alone.
  */
 $_spio_previous_error_handler = null;
 $_spio_previous_error_handler = set_error_handler(
@@ -276,9 +285,15 @@ $_spio_previous_error_handler = set_error_handler(
 			}
 		}
 		if ( $_spio_previous_error_handler ) {
-			return ( $_spio_previous_error_handler )( $errno, $errstr, $errfile, $errline );
+			$handled = ( $_spio_previous_error_handler )( $errno, $errstr, $errfile, $errline );
+			if ( false !== $handled ) {
+				return $handled;
+			}
 		}
-		return false; // fall through to PHP's default handler.
+		// Not handled above: convert it the way PHPUnit's own handler would.
+		// The flags mirror phpunit.xml.dist and phpunit-integration.xml
+		// (errors, notices and warnings converted; deprecations not).
+		return ( new \PHPUnit\Util\ErrorHandler( false, true, true, true ) )( (int) $errno, (string) $errstr, (string) $errfile, (int) $errline );
 	}
 );
 

@@ -58,7 +58,6 @@ class CompatWpBakeryTest extends SPIO_IntegrationTestCase {
 
 	private function resetReplacerModuleSingletons(): void {
 		$classes = array(
-			\ShortPixel\Replacer\Replacer::class,
 			\ShortPixel\Replacer\Modules\Elementor::class,
 			\ShortPixel\Replacer\Modules\WpBakery::class,
 			\ShortPixel\Replacer\Modules\YoastSeo::class,
@@ -107,7 +106,7 @@ class CompatWpBakeryTest extends SPIO_IntegrationTestCase {
 	public function test_wpbakery_module_autodetects_real_plugin_and_registers_filter() {
 		remove_all_filters( 'shortpixel/replacer/custom_replace_query' );
 
-		\ShortPixel\Replacer\Replacer::getInstance();
+		new \ShortPixel\Replacer\Replacer2( 'spio' );
 
 		$this->assertNotFalse(
 			has_filter(

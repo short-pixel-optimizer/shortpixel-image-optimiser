@@ -145,7 +145,7 @@ class CompatBeaverBuilderTest extends SPIO_IntegrationTestCase {
 		$post_id = $this->createBeaverBuilderPage( $id, $old_url );
 		$raw     = $this->rawLayout( $post_id, '_fl_builder_data' );
 
-		$replaced = \ShortPixel\Replacer\Replacer::getInstance()->replaceContent( $raw, array( $old_url ), array( $new_url ), false, false );
+		$replaced = ( new \ShortPixel\Replacer\Replacer2( 'spio' ) )->replaceContent( $raw, array( $old_url ), array( $new_url ), false, false );
 
 		$this->assertIsString( $replaced, 'The layout is returned serialized.' );
 		$this->assertSame( str_replace( 's:' . strlen( $old_url ) . ':"' . $old_url . '"', 's:' . strlen( $new_url ) . ':"' . $new_url . '"', $raw ), $replaced, 'Only photo_src changes, with a correct string length.' );

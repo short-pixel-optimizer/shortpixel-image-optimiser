@@ -18,7 +18,7 @@ use ShortPixel\Controller\Backup\BackupController;
 use ShortPixel\External\Offload\Offloader;
 use ShortPixel\Model\AiDataModel;
 use ShortPixel\Model\Queue\QueueItemResult;
-use ShortPixel\Replacer\Replacer;
+use ShortPixel\Replacer\Replacer2;
 use ShortPixel\ViewController as ViewController;
 
 /**
@@ -451,14 +451,14 @@ class OptimizeAiController extends OptimizerBase
         $this->blockItem($qItem);
 
         $this->replaceImageAttributes($qItem, $aiData);
-        $imageModel = $qItem->imageModel;
+        $imageModel = $qItem->imageModel; // @type MediaLibraryModel||CustomImageModel 
 
         // If the file was just uploaded, assume it's not already widely linked and doesn't need replacing / symlinking 
         // ( Maybe just replacing? )
         // Generic number of strlen here. Disallow filename not to be very short, because because. 
         if (true === $settings->ai_gen_filename && isset($aiData['filebase']) && is_string($aiData['filebase']) && strlen($aiData['filebase']) > 5) // ?? 
         {
-            // @todo This and the ReplaceAtttributes is similar code. (Replacer2's Setup::getInstance() returns a fresh instance per call, so URL data does not leak between items.)
+            // @todo This and the ReplaceAtttributes is similar code. (Every call creates a new Replacer2, so URL data does not leak between items.)
             $currentFileBase = ($imageModel->isScaled()) ? $imageModel->getOriginalFile()->getFileBase() : $imageModel->getFileBase();
 
             $urls = $qItem->data()->urls;
@@ -603,12 +603,11 @@ class OptimizeAiController extends OptimizerBase
 
     /** Replace Image Attributes ( others? ) on images via BaseURL
      *
-     * Resolves this item's (original-file) URL, feeds it to a FRESH
-     * replacer2 Setup (Setup::getInstance() is intentionally NOT a
-     * singleton — a shared instance would accumulate URLs across items
-     * and getBaseURL() would then search with the first item's URL,
-     * leaving every later image's in-content alt untouched), and
-     * runs the Finder over post_content. Matching posts are passed to
+     * Resolves this item's (original-file) URL, sets it as the search side
+     * of a NEW Replacer2 (one per call, so the search base always belongs
+     * to this item), takes Setup::getSearchBase() as the LIKE fragment
+     * (bailing out when it fails, since an empty fragment would match every
+     * post) and runs the Finder over post_content. Matching posts are passed to
      * the handleReplace() callback, which does the actual attribute
      * replacement and save.
      *
@@ -641,7 +640,7 @@ class OptimizeAiController extends OptimizerBase
      * @param QueueItem $qItem
      * @param array $aiData Generated AI data (alt / caption are strings, or int status codes when not generated); for undo, the ORIGINAL data to restore.
      * @param array $prevAiData For undo only: the previously generated AI data used for the exact-match comparison.
-     * @return array|void Finder results; void when alt AND caption are int status codes, or when 'none' mode is active.
+     * @return array|void Finder results; void when alt AND caption are int status codes, when 'none' mode is active, or when no valid search base can be derived from the URL.
      */
     protected function replaceImageAttributes(QueueItem $qItem, $aiData, $prevAiData = [])
     {
@@ -670,11 +669,15 @@ class OptimizeAiController extends OptimizerBase
             $url = $urls[0];
         }
 
-        $replacer2 = \ShortPixel\Replacer\Replacer::getInstance();
+        $replacer2 = new Replacer2('spio');
         $setup = $replacer2->Setup();
-        $setup->forSearch()->URL()->addData($url);
+        $setup->search()->setUrl($url);
 
-        $base_url = $setup->forSearch()->URL()->getBaseURL();
+        $base_url = $setup->getSearchBase();
+        if (false === $base_url) {
+            Log::addWarn('Replace Image Attributes: no valid search base, not replacing ' . $qItem->item_id, $setup->getValidationErrors());
+            return;
+        }
 
         $finder = $replacer2->Finder(['base_url' => $base_url, 'callback' => [$this, 'handleReplace'], 'return_data' => [
             'aiData' => $aiData,
@@ -848,11 +851,15 @@ class OptimizeAiController extends OptimizerBase
         if (true !== $args['recent_upload']) {
             //$url = $args['url'];
 
-            $replacer2 = \ShortPixel\Replacer\Replacer::getInstance();
+            $replacer2 = new Replacer2('spio');
             $setup = $replacer2->Setup();
-            $setup->forSearch()->URL()->addData($url);
+            $setup->search()->setUrl($url);
 
-            $base_url = $setup->forSearch()->URL()->getBaseURL();
+            $base_url = $setup->getSearchBase();
+            if (false === $base_url) {
+                Log::addWarn('AI Replace File: no valid search base, not renaming ' . $qItem->item_id, $setup->getValidationErrors());
+                return false;
+            }
 
             $finder = $replacer2->Finder(['base_url' => $base_url]);
 
@@ -1042,10 +1049,11 @@ class OptimizeAiController extends OptimizerBase
             Log::addInfo('[Dry-run] Would have renamed backup files to: ' . $newFileBase);
         }
 
-        $replacer = new Replacer();
-        $replacer->setSource($source_url);
-        $replacer->setTarget($target_url);
-        $replacer->addURLArray($searchArray, $replaceArray);
+        $replacer = new Replacer2('spio');
+        $replacer->Setup()->search()->setUrl($source_url);
+        $replacer->Setup()->search()->addUrls($searchArray);
+        $replacer->Setup()->replace()->setUrl($target_url);
+        $replacer->Setup()->replace()->addUrls($replaceArray);
 
 
         if (false === $args['dry_run']) {
@@ -1382,7 +1390,7 @@ class OptimizeAiController extends OptimizerBase
     public function handleReplace($results, $args)
     {
 
-        $replacer2 = \ShortPixel\Replacer\Replacer::getInstance();
+        $replacer2 = new Replacer2('spio');
         $aiData = $args['aiData'];
         $qItem = $args['qItem'];
         $prevAiData = $args['prevAiData'];

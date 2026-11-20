@@ -42,6 +42,15 @@ class UtilHelperTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * An empty path, or null (a FileModel built without a path), returns ''
+	 * without reading a character of an empty string.
+	 */
+	public function test_spNormalizePath_returns_an_empty_string_for_an_empty_path() {
+		$this->assertSame( '', UtilHelper::spNormalizePath( '' ) );
+		$this->assertSame( '', UtilHelper::spNormalizePath( null ) );
+	}
+
+	/**
 	 * A path built from user input can never keep a ".." or "." segment, so
 	 * it cannot climb out of the directory it names.
 	 */
@@ -73,32 +82,6 @@ class UtilHelperTest extends WP_UnitTestCase {
 	 */
 	public function test_spNormalizePath_collapses_a_leading_double_slash_pinned_for_deferred_fix() {
 		$this->assertSame( '/server/share/file', UtilHelper::spNormalizePath( '//server//share/file' ), 'Pinned: fixed? The leading "//" is now kept — flip this pin.' );
-	}
-
-	/**
-	 * Pins a known defect: an empty path reads $path[0] and raises a PHP
-	 * "Uninitialized string offset" warning.
-	 * @todo See UtilHelper::spNormalizePath().
-	 * When fixed, this test fails; flip it: no warning, '' comes back.
-	 */
-	public function test_spNormalizePath_warns_on_an_empty_path_pinned_for_deferred_fix() {
-		$warnings = array();
-		set_error_handler(
-			function ( $errno, $errstr ) use ( &$warnings ) {
-				$warnings[] = $errstr;
-				return true;
-			},
-			E_WARNING | E_NOTICE
-		);
-		try {
-			$result = UtilHelper::spNormalizePath( '' );
-		} finally {
-			restore_error_handler();
-		}
-
-		$this->assertSame( '', $result, 'Sentinel: the result itself is an empty string.' );
-		$this->assertNotEmpty( $warnings, 'Pinned: fixed? An empty path no longer raises a warning — flip this pin.' );
-		$this->assertStringContainsString( 'offset', $warnings[0] );
 	}
 
 	public function test_spNormalizePath_no_change_when_already_normal() {

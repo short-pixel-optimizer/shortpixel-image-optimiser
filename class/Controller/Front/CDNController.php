@@ -11,7 +11,6 @@ use ShortPixel\Helper\UtilHelper;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Model\FrontImage as FrontImage;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
-use ShortPixel\Replacer\Replacer as Replacer;
 
 
 /**
@@ -57,7 +56,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 	/** @var array Reserved for future per-URL skip rules; currently unused. */
 	protected $skip_rules = [];
 
-	/** @var string Replacement strategy: 'preg' (default) or 'string' (via Replacer). */
+	/** @var string Replacement strategy: 'preg' (default) or 'string' (str_replace). */
 	protected $replace_method = 'preg';
 
 	/** @var bool True when the current response body is detected as JSON; triggers JSON-slash encoding of replaced URLs. */

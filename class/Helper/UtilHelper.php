@@ -126,16 +126,21 @@ class UtilHelper
    *       in a subfolder with upload_path or UPLOADS set to "../…") gets every
    *       attachment path rewritten to a folder that does not exist, and SPIO
    *       treats the images as missing. A leading "//" (Windows UNC network
-   *       path) is collapsed to "/", and an empty path reads $path[0] and
-   *       raises a PHP warning. Suggested fix: resolve ".." by removing the
-   *       previous segment (and reject a path that climbs above its root),
-   *       keep a leading "//", and return '' early for an empty path.
+   *       path) is collapsed to "/". Suggested fix: resolve ".." by removing
+   *       the previous segment (and reject a path that climbs above its
+   *       root), and keep a leading "//".
    *
-   * @param string $path Filesystem path to normalise.
+   * An empty path (or null, for a FileModel built without a path) returns ''.
+   *
+   * @param string|null $path Filesystem path to normalise.
    * @return string Normalised path without empty, "." or ".." segments.
    */
   public static function spNormalizePath($path)
   {
+    if (null === $path || '' === $path) {
+      return '';
+    }
+
     $path = preg_replace('|(?<=.)/+|', '/', $path);
 
     // Additional for normalizing 26/10/2026 - removing illegal parts of path. 

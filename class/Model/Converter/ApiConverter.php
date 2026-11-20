@@ -250,6 +250,12 @@ class ApiConverter extends MediaLibraryConverter
 	 *
 	 * @param array $optimizeData Data returned by the optimizer, containing 'files' and 'data' keys.
 	 * @return bool True on success, false on any failure.
+	 *
+	 * @todo With a placeholder, the search side is set to the placeholder .jpg
+	 *       URL, which equals the target URL, so the Replacer finds nothing to
+	 *       replace and content still pointing at the original (.heic / .tiff)
+	 *       URL is not rewritten. Suggested fix: keep the original file's URL
+	 *       as the search side.
 	 */
 	public function handleConverted($optimizeData)
 	{
@@ -272,7 +278,7 @@ class ApiConverter extends MediaLibraryConverter
 
 			// ReplacementFile as source should not point to the placeholder file
 			$this->source_url = $fs->pathToUrl($replacementFile);
-			$this->replacer->setSource($this->source_url);
+			$this->replacer->Setup()->search()->setUrl($this->source_url);
 
 			$replacementFile->delete();
 		}
@@ -302,7 +308,7 @@ class ApiConverter extends MediaLibraryConverter
 		$res = $tempFile->copy($replacementFile);
 
 		if (true === $res) {
-			$this->newFile = $replacementFile;
+			$this->setTarget($replacementFile); // Sets newFile and the replace side of the Replacer.
 			$tempFile->delete();
 
 			$generate_metadata = true;

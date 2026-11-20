@@ -74,10 +74,9 @@ class ConversionManualTest extends SPIO_IntegrationTestCase {
 		$this->tempFilters[] = array( $hook, $cb, $priority );
 	}
 
-	/** Null the private static $instance on Replacer + every Modules\* class. */
+	/** Null the private static $instance on every Modules\* class. */
 	private function resetReplacerModuleSingletons(): void {
 		$classes = array(
-			\ShortPixel\Replacer\Replacer::class,
 			\ShortPixel\Replacer\Modules\Elementor::class,
 			\ShortPixel\Replacer\Modules\WpBakery::class,
 			\ShortPixel\Replacer\Modules\YoastSeo::class,
@@ -267,18 +266,18 @@ class ConversionManualTest extends SPIO_IntegrationTestCase {
 	 *   3. handleConverted::setupReplacer() sets source_url from the
 	 *      current imageModel path; then inside the hasPlaceHolder
 	 *      branch OVERWRITES source_url to the placeholder .jpg URL
-	 *      (class/Model/Converter/ApiConverter.php:274). No
-	 *      setTarget() call is made on the fresh Replacer instance, so
-	 *      target_url stays null and Replacer::replace() short-circuits
-	 *      (see class/../replacer2/src/Replacer.php:129).
+	 *      (class/Model/Converter/ApiConverter.php). setTarget() then
+	 *      sets the replace side to the same .jpg URL, so Replacer2's
+	 *      Setup drops the equal pair and replace() has nothing to search
+	 *      for.
 	 *   4. The main file becomes a real .jpg on disk, but the pre-
 	 *      existing .heic URL in post_content is NEVER rewritten.
 	 *
 	 * This test pins that known defect.
-	 * @todo Wire the target URL in ApiConverter::handleConverted (or move
-	 *       the runReplacer=true call somewhere that has both source and
-	 *       target set). When fixed, the assertions below fail; flip them
-	 *       into a proper "content is rewritten" assertion.
+	 * @todo Use the original .heic URL as the search side in
+	 *       ApiConverter::handleConverted instead of the placeholder .jpg
+	 *       URL. When fixed, the assertions below fail; flip them into a
+	 *       proper "content is rewritten" assertion.
 	 */
 	public function test_heic_manual_optimize_converts_file_but_leaves_heic_urls_in_content_pinned_for_deferred_fix() {
 		$this->disableAutoProcessing();
@@ -314,15 +313,15 @@ class ConversionManualTest extends SPIO_IntegrationTestCase {
 		);
 
 		// PIN: the pre-existing .heic URL in content is NOT rewritten to
-		// .jpg — the ApiConverter Replacer instance never receives a
-		// target URL, so replace() short-circuits.
+		// .jpg — the ApiConverter searches for the placeholder .jpg URL,
+		// which equals the target, so replace() has nothing to search for.
 		foreach ( $seeded['posts'] as $label => $post_id ) {
 			clean_post_cache( $post_id );
 			$content = get_post( $post_id )->post_content;
 			$this->assertStringContainsString(
 				'.heic',
 				$content,
-				"CURRENT BEHAVIOR: manual HEIC optimize leaves .heic in $label post_content (ApiConverter Replacer target_url never set)."
+				"CURRENT BEHAVIOR: manual HEIC optimize leaves .heic in $label post_content (ApiConverter searches for the placeholder .jpg URL)."
 			);
 			$this->assertStringNotContainsString(
 				'.jpg',

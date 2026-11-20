@@ -89,7 +89,6 @@ class CompatYoastSeoTest extends SPIO_IntegrationTestCase {
 
 	private function resetReplacerModuleSingletons(): void {
 		$classes = array(
-			\ShortPixel\Replacer\Replacer::class,
 			\ShortPixel\Replacer\Modules\Elementor::class,
 			\ShortPixel\Replacer\Modules\WpBakery::class,
 			\ShortPixel\Replacer\Modules\YoastSeo::class,
@@ -155,7 +154,7 @@ class CompatYoastSeoTest extends SPIO_IntegrationTestCase {
 	public function test_yoast_module_autodetects_real_plugin_and_registers_action() {
 		remove_all_filters( 'shortpixel/replacer/replace_urls' );
 
-		\ShortPixel\Replacer\Replacer::getInstance();
+		new \ShortPixel\Replacer\Replacer2( 'spio' );
 
 		$this->assertNotFalse(
 			has_action(

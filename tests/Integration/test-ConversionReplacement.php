@@ -116,10 +116,9 @@ class ConversionReplacementTest extends SPIO_IntegrationTestCase {
 		$this->tempFilters[] = array( $hook, $cb, $priority );
 	}
 
-	/** Null the private static $instance on Replacer + every Modules\* class. */
+	/** Null the private static $instance on every Modules\* class. */
 	private function resetReplacerModuleSingletons(): void {
 		$classes = array(
-			\ShortPixel\Replacer\Replacer::class,
 			\ShortPixel\Replacer\Modules\Elementor::class,
 			\ShortPixel\Replacer\Modules\WpBakery::class,
 			\ShortPixel\Replacer\Modules\YoastSeo::class,
@@ -736,7 +735,7 @@ class ConversionReplacementTest extends SPIO_IntegrationTestCase {
 		$this->resetReplacerModuleSingletons();
 		remove_all_actions( 'shortpixel/replacer/replace_urls' );
 
-		$replacer = \ShortPixel\Replacer\Replacer::getInstance();
+		$replacer = new \ShortPixel\Replacer\Replacer2( 'spio' );
 		$module   = \ShortPixel\Replacer\Modules\SmartSlider::getInstance( $replacer );
 
 		$this->assertFalse(

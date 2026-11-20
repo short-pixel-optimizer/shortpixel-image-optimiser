@@ -1328,22 +1328,13 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	}
 
 	/**
-	 * Pins a known defect ("an AI filename change breaks the image when the
-	 * name has .jpg in the middle"): Replacer2 derives the base URL with
-	 *     str_replace('.' . pathinfo($url, PATHINFO_EXTENSION), '', $url)
-	 * (build/shortpixel/replacer2/src/Replacer.php:145 and
-	 * src/Classes/Url.php:21), which removes EVERY ".jpg" in the URL, not only
-	 * the extension: ".../pic.jpg-edit.jpg" becomes ".../pic-edit", which
-	 * matches nothing in post_content. The files and _wp_attached_file are
-	 * renamed, but the posts keep the old URLs — the image is broken in the
-	 * post and in the editor. Normal names ("pic.jpg") are unaffected.
-	 *
-	 * @todo Suggested fix (in the replacer2 MODULE source, then rebuild — build/ is
-	 * generated): strip only the trailing extension, e.g.
-	 *     $base_url = preg_replace('/\.' . preg_quote($ext, '/') . '$/', '', $base_url);
-	 * When fixed, this test fails; flip it: the post content points at the renamed files.
+	 * A rename rewrites the post URLs when the name has ".jpg" in the middle
+	 * (".../pic.jpg-edit.jpg"). The Finder's LIKE fragment comes from
+	 * Replacer2's Setup::getSearchBase(), which strips only the trailing
+	 * extension, so the fragment is ".../pic.jpg-edit" and still matches the
+	 * main file and its thumbnails in post_content.
 	 */
-	public function test_pin_rename_leaves_post_urls_when_the_name_contains_the_extension_pinned_for_deferred_fix() {
+	public function test_rename_rewrites_post_urls_when_the_name_contains_the_extension() {
 		$this->_setRole( 'administrator' );
 		$tmp = trailingslashit( get_temp_dir() ) . 'pic' . strtolower( wp_generate_password( 4, false, false ) ) . '.jpg-edit.jpg';
 		copy( $this->fixturePath( 'fixture-small.jpg' ), $tmp );
@@ -1368,11 +1359,13 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 		$this->assertSame( $new_base . '.jpg', basename( get_attached_file( $attachment_id ) ), 'Sentinel: _wp_attached_file carries the new name.' );
 		$this->assertFileExists( get_attached_file( $attachment_id ), 'Sentinel: the renamed file exists.' );
 
-		// THE PIN: the post still points at the old, now-missing files.
+		// The post points at the renamed files, main file and thumbnail.
 		clean_post_cache( $post_id );
 		$content = get_post( $post_id )->post_content;
-		$this->assertStringContainsString( basename( $old_main ), $content, 'Pinned: fixed? The post now points at the renamed main file — flip this pin.' );
-		$this->assertStringNotContainsString( $new_base, $content, 'Pinned: no URL in the post was rewritten.' );
+		$this->assertStringNotContainsString( basename( $old_main ), $content, 'The old main file URL is gone from the post.' );
+		$this->assertStringNotContainsString( basename( $old_thumb ), $content, 'The old thumbnail URL is gone from the post.' );
+		$this->assertStringContainsString( $new_base . '.jpg', $content, 'The post points at the renamed main file.' );
+		$this->assertStringContainsString( $new_base . '-' , $content, 'The post points at the renamed thumbnail.' );
 	}
 
 	/**
