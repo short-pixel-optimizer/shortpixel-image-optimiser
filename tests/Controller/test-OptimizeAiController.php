@@ -886,7 +886,7 @@ class OptimizeAiControllerTest extends WP_UnitTestCase {
 	 *
 	 * @todo PARTIAL failure — some copies succeed, some fail — still returns
 	 *       true and rewrites the DB for every pair; renameBackup() and
-	 *       Replacer::replace() results are discarded; no rollback exists.
+	 *       Replacer2::replace() results are discarded; no rollback exists.
 	 *
 	 * The fixture: a real attachment wrapped in a spy ImageModel whose only
 	 * file is a spy FileModel with copy() stubbed to false (no disk I/O).

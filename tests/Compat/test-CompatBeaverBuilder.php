@@ -11,7 +11,7 @@
  * directly, so that URL must follow a rename or a PNG→JPG conversion.
  *
  * replacer2 has no Beaver Builder module: these rows go through the
- * generic postmeta path, Replacer::replaceContent(). That unserializes
+ * generic postmeta path, Replacer2::replaceContent(). That unserializes
  * meta values with `allowed_classes => array( 'stdClass' )`: the nodes are
  * plain stdClass objects (no magic methods, so no object-injection risk),
  * their URLs are rewritten and the layout is serialized again with the

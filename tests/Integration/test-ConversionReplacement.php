@@ -43,12 +43,12 @@
  *   any content is authored — so real WP content always embeds .jpg
  *   URLs for these formats, and there is nothing for the post-convert
  *   Replacer to rewrite. Additionally, ApiConverter::handleConverted
- *   sets both source_url and target_url on the fresh Replacer to the
- *   same .jpg URL (source is overwritten at ApiConverter.php:274 when
- *   hasPlaceHolder is true; no explicit setTarget() call is made on
- *   the fresh Replacer instance, so target_url is null and
- *   Replacer::replace() short-circuits early — see class/../
- *   replacer2/src/Replacer.php:129).
+ *   sets both the search and the replace side of the fresh Replacer2
+ *   to the same .jpg URL (the search side is overwritten with the
+ *   placeholder URL when hasPlaceHolder is true, and setTarget() sets
+ *   the replace side to the converted .jpg), so Replacer2's Setup
+ *   drops the equal pair and Replacer2::replace() has nothing to
+ *   search for.
  *   Net effect: the pre-existing content URL is .jpg from upload
  *   time onwards, and remains .jpg. Test
  *   test_api_conversion_content_urls_survive_placeholder_and_final_swap
@@ -463,7 +463,7 @@ class ConversionReplacementTest extends SPIO_IntegrationTestCase {
 	 * The PNG→JPG queue conversion rewrites an option whose value is a
 	 * serialized stdClass OBJECT stored as a string (a plugin calling
 	 * serialize() itself, so WordPress adds a second layer) and keeps it
-	 * readable: Replacer::handleMetaData() (build/ replacer2) walks the
+	 * readable: Replacer2::replaceContent() (build/ replacer2) walks the
 	 * inner layer, so its s:<length> prefixes follow the new URL (the
 	 * converted file may get a -N suffix), and writes the value back with
 	 * WordPress's outer layer. get_option() still returns a string.

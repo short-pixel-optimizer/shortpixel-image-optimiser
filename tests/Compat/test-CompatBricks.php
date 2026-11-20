@@ -15,7 +15,7 @@
  * stripslashes().
  *
  * replacer2 has no Bricks module: these rows go through the generic path,
- * Replacer::replaceContent(). When a row contains a renamed or converted
+ * Replacer2::replaceContent(). When a row contains a renamed or converted
  * image URL, the replacer json_decode()s every JSON-looking string it meets
  * while recursing and re-encodes it at every depth, so the slider's options
  * come back as a JSON string. Were they left decoded (a stdClass), Bricks

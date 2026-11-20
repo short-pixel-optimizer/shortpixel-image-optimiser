@@ -1510,8 +1510,8 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	}
 
 	/**
-	 * After a rename, Replacer::handleMetaData() rewrites URLs in OPTIONS
-	 * (widgets, theme mods) with direct SQL and then drops the 'alloptions'
+	 * After a rename, Replacer2 rewrites URLs in OPTIONS (widgets, theme
+	 * mods) with direct SQL (Classes\Updater) and then drops the 'alloptions'
 	 * and 'notoptions' cache entries, so an autoloaded option read through
 	 * the object cache (Redis / Memcached) returns the new URL.
 	 */
@@ -1538,7 +1538,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	}
 
 	/**
-	 * After a rename, Replacer::handleMetaData() rewrites URLs in POSTMETA
+	 * After a rename, Replacer2 (Classes\Updater) rewrites URLs in POSTMETA
 	 * (page builders: Elementor, Breakdance… keep image URLs there) with
 	 * direct SQL and then drops the post's cache entry in 'post_meta', so a
 	 * read through the object cache (Redis / Memcached) returns the new URL.
@@ -1619,8 +1619,8 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	 * After a rename, a NON-autoloaded option that held the old URL is read
 	 * back with the new one. Such an option is cached under its own name in
 	 * the 'options' group, not in 'alloptions', so
-	 * Replacer::handleMetaData() (build/ replacer2) selects option_name with
-	 * each row and drops that key as well.
+	 * Replacer2's Finder (build/ replacer2) selects option_name with each
+	 * row, and the Updater drops that key as well.
 	 */
 	public function test_rename_refreshes_the_cached_non_autoloaded_option_with_the_new_url() {
 		$this->_setRole( 'administrator' );
@@ -1648,9 +1648,9 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	/**
 	 * When a rename rewrites the postmeta of more than one post, EVERY
 	 * post's 'post_meta' cache entry is dropped, not only the first one.
-	 * Replacer::handleMetaData() (build/ replacer2) keeps the owning-object
-	 * column name in its own variable and reads each row's object id from it,
-	 * so every row clears its own cache key (and never calls
+	 * Replacer2's Finder (build/ replacer2) selects the owning-object column
+	 * with each row and the Updater reads each row's object id from it, so
+	 * every row clears its own cache key (and never calls
 	 * wp_cache_delete(null, …), which WordPress reports as incorrect usage).
 	 * The second post is the one that would go stale if only the first row
 	 * were handled.
@@ -1685,7 +1685,7 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	}
 
 	/**
-	 * Replacer::handleMetaData() hands each postmeta row to the
+	 * Replacer2::replaceRecord() hands each postmeta row to the
 	 * 'shortpixel/replacer/load_meta_value' and save_meta_value filters with
 	 * its post_id. The Breakdance module's loadContent() needs it to load the
 	 * document tree (end-to-end tests in Compat/test-CompatBreakdance.php).

@@ -137,7 +137,7 @@ class CompatElementorTest extends SPIO_IntegrationTestCase {
 	 * to the .jpg equivalent, and the result must still round-trip as
 	 * valid JSON (module's addSlash escaping must not corrupt structure).
 	 *
-	 * @todo Red until Replacer::replaceContent() detects changes inside JSON
+	 * @todo Red until Replacer2::replaceContent() detects changes inside JSON
 	 *       objects again; see the @todo on
 	 *       test_json_string_with_the_url_nested_in_serialized_data_is_replaced_and_stays_a_json_string
 	 *       in Model/test-Replacer.php.
@@ -203,7 +203,7 @@ class CompatElementorTest extends SPIO_IntegrationTestCase {
 	 * `_elementor_data` row must rewrite the JSON to the new base and the
 	 * value must still round-trip as valid JSON.
 	 *
-	 * @todo Red until Replacer::replaceContent() detects changes inside JSON
+	 * @todo Red until Replacer2::replaceContent() detects changes inside JSON
 	 *       objects again; see the @todo on
 	 *       test_json_string_with_the_url_nested_in_serialized_data_is_replaced_and_stays_a_json_string
 	 *       in Model/test-Replacer.php.

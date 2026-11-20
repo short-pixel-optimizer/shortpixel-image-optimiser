@@ -200,7 +200,7 @@ class ReplacerTest extends WP_UnitTestCase {
 	 * value is JSON: that branch only re-encodes the JSON. No object can
 	 * result from it (the output is JSON text), but the stored value loses a
 	 * layer, so the owning plugin's own unserialize() fails.
-	 * @todo In the replacer2 module source, Replacer::replaceContent():
+	 * @todo In the replacer2 module source, Replacer2::replaceContent():
 	 *       after the JSON re-encode, also serialize() the result when this
 	 *       call unserialized the value.
 	 * When fixed, this test fails; flip it: the result is still serialized
@@ -267,7 +267,7 @@ class ReplacerTest extends WP_UnitTestCase {
 	 * A nested JSON string that carries the URL is replaced inside and
 	 * stored back as a JSON string.
 	 *
-	 * @todo Replacer::replaceContent() (build/ replacer2) decides whether a
+	 * @todo Replacer2::replaceContent() (build/ replacer2) decides whether a
 	 *       decoded JSON value changed with `$content !== $decoded_previous_content`,
 	 *       but both hold the SAME object: the loop below rewrites the decoded
 	 *       objects in place, so the check sees no change and the original
