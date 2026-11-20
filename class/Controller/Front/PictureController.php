@@ -32,8 +32,16 @@ use ShortPixel\ShortPixelImgToPictureWebp as ShortPixelImgToPictureWebp;
  *  1. testPictures(): finds <img> tags already inside <picture> elements and
  *     marks them with class="sp-no-webp" so they are skipped by convertImage().
  *  2. preg_replace_callback on /<img …>/: calls convertImage() for each tag.
- *  3. testInlineStyle(): finds CSS url() declarations and delegates to
- *     convertInlineStyle() which replaces them with WebP equivalents.
+ *  3. testInlineStyle(): finds CSS url() declarations with
+ *     PageConverter::CSS_URL_PATTERN, validates the URL inside each one and
+ *     delegates to convertInlineStyle(), which swaps that URL for its WebP
+ *     equivalent and leaves the rest of the declaration as written.
+ *
+ * Every step rewrites text found by a pattern on the whole page, which also
+ * holds text written by visitors (comments) and by authors without the
+ * unfiltered_html capability. A match must therefore never span a quote or
+ * tag boundary, and a replacement must never add or remove a quote or an
+ * angle bracket.
  *
  * File resolution: for each image, the controller looks for a .webp file at
  * the same path with either the base name (image.webp) or the full name

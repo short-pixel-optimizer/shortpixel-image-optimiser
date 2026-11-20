@@ -734,16 +734,19 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 	/**
 	 * Extracts CSS url() values from HTML content and builds replace blocks for each.
 	 *
-	 * Uses a recursive PCRE pattern to match balanced parentheses inside url(…),
-	 * capturing the inner content (group 2) which may contain quoted or unquoted
-	 * URLs. Quoted values are matched as a complete url() value, while unquoted
-	 * values cannot cross quote or tag boundaries. For each match a replace block
-	 * is created via getReplaceBlock() and CDN arguments are attached via
-	 * createArguments().
+	 * Matches with PageConverter::CSS_URL_PATTERN, the pattern shared with
+	 * PictureController: balanced parentheses inside url(…), the inner content
+	 * in group 2, quoted or unquoted. A quoted value is one complete string,
+	 * an unquoted value cannot cross a quote or tag boundary. For each match a
+	 * replace block is created via getReplaceBlock() and CDN arguments are
+	 * attached via createArguments().
+	 *
+	 * Returns an empty array when nothing matches or when the pattern fails
+	 * (preg_match_all() returns false), so the page is left as it is.
 	 *
 	 * @param string $content HTML content to search (may include inline <style> blocks or style= attributes).
 	 * @param array  $args    Reserved for future use; currently unused.
-	 * @return \stdClass[] Array of replace-block stdClass objects, one per url() match.
+	 * @return \stdClass[] Array of replace-block stdClass objects, one per url() match; empty when there is none.
 	 *
 	 * Group 2 closes before the final `\)`, so the extracted value never carries
 	 * the closing parenthesis of url( … ) and matches the URL as written.

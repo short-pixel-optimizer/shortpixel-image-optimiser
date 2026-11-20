@@ -26,6 +26,8 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
  *  - Filter helpers (filterRegexExclusions, filterOtherDomains,
  *    filterEmptyURLS, filterDoubles) that reduce a replace-block array to only
  *    the blocks that should actually be rewritten.
+ *  - CSS_URL_PATTERN, the one pattern both subclasses use to find CSS
+ *    url( … ) values, built so that a match cannot span HTML markup.
  *
  * Subclasses must not call ob_start() directly; use startOutputBuffer() so
  * the callback is correctly bound to the instance.
