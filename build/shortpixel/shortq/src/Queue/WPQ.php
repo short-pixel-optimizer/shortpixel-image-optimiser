@@ -64,8 +64,10 @@ use \ShortPixel\ShortQ\ShortQ as ShortQ;
  * the same item_id never see each other's Items. dequeue(), itemDone(),
  * itemFailed(), updateItemValue(), inProcessTimeout(), removeItems() and
  * the error retries of checkQueue() clear the entry of the item they
- * change; resetQueue() empties the cache (emptyItemCache()). cleanQueue()
- * does not, see its @todo.
+ * change; resetQueue() and cleanQueue() empty the entry of their own queue
+ * (emptyItemCache()), and so does the constructor, so a new object for a
+ * queue starts without cached Items. The entries of the plugin's other
+ * queues are never touched.
  *
  * Hooks fired by this class:
  * - action `shortpixel/modules/wpq/item/timeout` (inProcessTimeout()),
@@ -76,19 +78,11 @@ use \ShortPixel\ShortQ\ShortQ as ShortQ;
  * consuming plugin; the option name prefix `shortqwp_` and the storage
  * table are not rewritten, see ShortQ.
  *
- * @todo emptyItemCache() resets the $itemCache entry of the whole plugin
- *       slug before adding its own queue name. The constructor and
- *       resetQueue() call it, so building a second queue of the same
- *       plugin (for example a bulk and a single queue), or resetting one,
- *       drops every Item the other queues of the plugin had cached in the
- *       request. Suggested fix: in the constructor, initialise the slug
- *       and queue name entries only when they are not set yet; in
- *       resetQueue(), empty only this queue's entry.
  * @todo The constructor returns early on an empty slug or queue name,
  *       leaving $options and $currentStatus unset; the first setOption()
  *       or dequeue() then fails. Suggested fix: throw an exception.
- * @todo setStatusCount() applies the change only right after a recount,
- *       so most counter changes are lost, see its @todo.
+ * @todo inProcessTimeout() overstates the waiting counter when its
+ *       counter update falls on a recount, see its @todo.
  */
 class WPQ implements Queue
 {
@@ -527,12 +521,11 @@ class WPQ implements Queue
    * @todo `$update_on_recount` only protects the call that recounts. When
    *       the first setStatusCount() (in_process) recounts, the second
    *       (items) no longer sees a recount timeout and adds the requeued
-   *       items on top of the fresh count. The waiting counter is right
-   *       today only because setStatusCount() drops changes made without a
-   *       recount (see its @todo); once that is fixed, items is overstated
-   *       by the number requeued. Suggested fix: call
-   *       resetInternalCounts() once after the row updates instead of the
-   *       two setStatusCount() calls.
+   *       items on top of the fresh count, which already has them
+   *       waiting. `items` is then overstated by the number requeued until
+   *       the next recount (at the latest the dequeue() that finds no
+   *       waiting row). Suggested fix: call resetInternalCounts() once
+   *       after the row updates instead of the two setStatusCount() calls.
    */
   public function inProcessTimeout()
   {
@@ -724,9 +717,9 @@ class WPQ implements Queue
   }
 
   /**
-   * Resets the request cache of the plugin slug to an empty entry for this
-   * queue. Also drops the entries of the plugin's other queues, see the
-   * class @todo.
+   * Empties the request cache entry of this queue, creating the entry of
+   * the plugin slug when it is missing. The entries of the plugin's other
+   * queues are kept.
    *
    * @return void
    */
@@ -841,8 +834,7 @@ class WPQ implements Queue
    * is never done automatically.
    *
    * The fresh Status has `last_count_time` 0, so the next counter change
-   * recounts. The item cache is emptied, for the other queues of the
-   * plugin too, see the class @todo.
+   * recounts. The item cache of this queue is emptied.
    *
    * @return void
    */
@@ -858,12 +850,12 @@ class WPQ implements Queue
    * Deletes the DONE and FATAL items of this queue and recounts. Keeps the
    * queue usable, unlike resetQueue().
    *
-   * @return void
+   * The whole item cache of this queue is emptied, not only the entries
+   * of the deleted rows: the provider does not report which rows it
+   * removed, and looking them up would cost more than reloading the
+   * remaining Items on their next getItem().
    *
-   * @todo The $itemCache entries of the deleted rows are not cleared, so
-   *       getItem() keeps returning their Items until the request ends.
-   *       Suggested fix: drop the DONE and FATAL entries of this queue
-   *       from the cache.
+   * @return void
    */
   public function cleanQueue()
   {
@@ -905,9 +897,12 @@ class WPQ implements Queue
   }
 
   /**
-   * Adds a (possibly negative) amount to a counter.
+   * Adds a (possibly negative) amount to a counter. Internal: consumers
+   * move the counters through the queue operations, or set a value with
+   * setStatus().
    *
-   * When the result would be negative, or `timeout_recount` seconds have
+   * Without a recount the change is always applied, so the counters follow
+   * every operation at once. When the result would be negative, or `timeout_recount` seconds have
    * passed since the last recount, the counters are first resynced from
    * the provider. This keeps the cached counters from drifting when
    * several requests work on the same queue. After such a recount the
@@ -923,21 +918,7 @@ class WPQ implements Queue
    * @param bool   $update_on_recount False when the rows already reflect
    *                                  the change, so a recount must not
    *                                  apply it again.
-   * @return false|null False for a non-counter, null otherwise.
-   *
-   * @todo The change is applied only when a recount ran and
-   *       `$update_on_recount` is true; without a recount nothing is
-   *       written, whatever the flag. So itemDone(), itemFailed(),
-   *       withRemoveDuplicates(), finishQueue() (`times_ran`) and the done
-   *       or in-process counter of dequeue() only reach the counters when they
-   *       happen to trigger a recount (a negative result, or
-   *       `timeout_recount` seconds since the last one); in between, the
-   *       counters show the state of the last recount. The method also no
-   *       longer returns setStatus()'s result. Suggested fix: return early
-   *       only when a recount ran and `$update_on_recount` is false,
-   *       otherwise `return $this->setStatus($name, $count + $change,
-   *       $savenow);`. See the inProcessTimeout() @todo for the case this
-   *       fix uncovers.
+   * @return void A non-counter is left untouched.
    */
   protected function setStatusCount($name, $change, $savenow = true, $update_on_recount = true): void
   {
