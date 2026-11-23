@@ -213,7 +213,7 @@ class CompatYoastSeoTest extends SPIO_IntegrationTestCase {
 	/**
 	 * The module runs its LIKE match against the RELATIVE URL PATH
 	 * (search_urls['base'] / ['file'] — see
-	 * ShortPixel\Replacer\Replacer::getRelativeURLS: both keys hold a
+	 * ShortPixel\Replacer\Classes\Data::getUrls(): both keys hold a
 	 * URL PATH, not a bare filename). This test pins that behavior: a
 	 * row that only mentions the bare filename (no URL path prefix at
 	 * all) is NOT deleted by the module — the LIKE query needs enough

@@ -1391,6 +1391,8 @@ class AjaxController
 		$id = $data['id'];
 		$type = $data['type'];	
 
+		$imageModel = $this->getMediaItem($id, $type);
+		$this->checkImageAccess($imageModel);
 		
 		$newFileName = isset($_POST['newFileName']) ? sanitize_file_name($_POST['newFileName']) : false; 
 
@@ -1416,9 +1418,7 @@ class AjaxController
 		 	$this->send((object) $result_json);
 		}
 
-		$imageModel = $this->getMediaItem($id, $type);
-		$this->checkImageAccess($imageModel);
-		
+	
 		$queueItem = new QueueItem(['imageModel' => $imageModel]);
 
 		$apiController =  $queueItem->getApiController('requestAlt');
