@@ -72,3 +72,10 @@ vendor-tests/bin/phpcs --standard=phpcs-security.xml <file>
   (what, where, suggested fix); a test pinning it is named
   `test_<description>_pinned_for_deferred_fix`. A fixed bug is not mentioned
   at all. See the "Known bugs and @todo" section of `CLAUDE.md`.
+- **Existing tests are read-only by default.** Never change, loosen or delete
+  a test to make a run green. Name the cause of every failing test (code
+  wrong, intended behaviour changed, test wrong). Only a flipped pin or a pure
+  rename may be changed without asking; for anything else stop and report.
+  List every changed test with its reason, keep those changes in their own
+  commit, and run `bin/check-test-changes.sh` before the hand-off. The full
+  rule is "Changing existing tests" in `CLAUDE.md`.

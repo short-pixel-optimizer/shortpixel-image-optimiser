@@ -422,6 +422,9 @@ vendor-tests/bin/phpunit --testsuite model --filter ImageModelTest
 
 The CI configuration lives at `.github/workflows/phpunit.yml`. It:
 
+(`.github/workflows/test-guard.yml` runs `bin/check-test-changes.sh` on the
+same pushes and pull requests; see "Changing existing tests".)
+
 - Runs on every push to `updates` and on pull requests into `updates` or
   `master`; any other branch can be run by hand (Actions → "Run workflow").
   Pull requests whose source branch is `updates` (the release PR into
@@ -709,6 +712,49 @@ PR from `updates` is skipped, stale PR runs are cancelled),
 as a matrix of one job per engine (`visual` rides in the Chromium job,
 `fail-fast: false` so every engine reports its own verdict). Artifacts are
 uploaded per engine.
+
+## Changing existing tests
+
+Existing tests are read-only by default; the full rule, with the closed list
+of valid reasons and of changes that are never a fix, is "Changing existing
+tests" in `CLAUDE.md`. In short:
+
+- A red test is assumed to have found a defect. Name its cause (code wrong,
+  intended behaviour changed, test wrong) before touching an assertion.
+- A flipped pin and a pure rename may be changed directly. Anything else is
+  reported first and decided by the maintainer.
+- Never loosen or delete an assertion, widen an allow-list, raise a timeout or
+  add a skip to get a green run.
+- A removed test names its replacement, or says there is none.
+- A changed test is shown to fail against the old or broken behaviour.
+- Screenshot baselines are refreshed only for an intended UI change, one
+  spec at a time (`bin/test-e2e.sh specs/<name>.spec.ts --project visual
+  --update-snapshots`), and the changed images are reviewed.
+
+The guard:
+
+```bash
+bin/check-test-changes.sh                              # the uncommitted work against HEAD
+bin/check-test-changes.sh --per-commit <base> <head>   # every commit, as CI checks a push
+bin/check-test-changes.sh --range <base> <head>        # one verdict, as CI checks a pull request
+```
+
+It reports deleted or renamed test files, removed or edited tests and
+assertions, added skips and changed snapshots under `tests/`. New tests and
+new assertions pass. It reads the diff, not the meaning: an edited assertion
+is reported even when the edit is a rename, and that is the point, because a
+reported change needs a stated reason.
+
+In CI (`.github/workflows/test-guard.yml`) a pushed commit that trips the
+guard passes only with a line `Tests-Changed: <reason>` in its commit message,
+for example:
+
+```bash
+git commit -m "Flip the pin of a fixed defect" -m "Tests-Changed: the pinned defect is fixed"
+```
+
+A pull request that trips it passes only once a maintainer applies the
+`test-changes-approved` label.
 
 ## Writing new tests
 
