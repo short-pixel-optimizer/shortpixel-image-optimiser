@@ -13,7 +13,9 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
  * Every user-configurable field the plugin exposes is declared in the
  * $model array (inherited from {@see \ShortPixel\Model}) with its
  * sanitisation type, default value, optional max / maxlength constraints,
- * and an "export" flag that controls import/export inclusion.
+ * an "export" flag that controls import/export inclusion, and an optional
+ * "site_only" flag for per-site runtime state that a multisite network
+ * override never applies to (see isSiteScoped()).
  *
  * Settings are lazy-loaded from a single options row ("spio_settings"),
  * read via the magic __get accessor, mutated via __set (which sanitises
@@ -66,28 +68,27 @@ class SettingsModel extends \ShortPixel\Model
         'cloudflareToken' => ['s' => 'string', 'default' => ''],
 				'doBackgroundProcess' => ['s' => 'boolean', 'default' => false], // checkbox
 				'showCustomMedia' => ['s' => 'boolean', 'default' => true], // checkbox
-				'mediaLibraryViewMode' => ['s' => 'int', 'default' => false], // set in installhelper
-				'currentVersion' => ['s' => 'string', 'default' => null, 'export' => false], // last known version of plugin. Used for updating
-				'hasCustomFolders' => ['s' => 'int', 'default' => false], // timestamp used for custom folders
-				'quotaExceeded' => ['s' => 'int', 'default' => 0, 'export' => false], // indicator for quota
+				'mediaLibraryViewMode' => ['s' => 'int', 'default' => false, 'site_only' => true], // set in installhelper
+				'hasCustomFolders' => ['s' => 'int', 'default' => false, 'site_only' => true], // timestamp used for custom folders
+				'quotaExceeded' => ['s' => 'int', 'default' => 0, 'export' => false, 'site_only' => true], // indicator for quota
 				//'httpProto' => ['s' => 'string', 'default' => 'https'], // Less than optimal setting for using http(s) - Legacy!
 				//'downloadProto' => ['s' => 'string', 'default' => 'https'], // Less than optimal setting for using http(s) when Downloading - Legacy!
-				'activationDate' => ['s' => 'int', 'default' => null, 'export' => false], // date of activation
-				'surveyStatus' => ['s' => 'string', 'default' => 'pending', 'export' => false], // pending, answered, dismissed
-				'surveyScore' => ['s' => 'int', 'default' => 0, 'export' => false, 'max' => 10], // 1-10 score given by the user
-				'surveyFeedback' => ['s' => 'string', 'default' => '', 'export' => false, 'maxlength' => 2000], // free text feedback for scores 1-8
-				'surveyAnsweredAt' => ['s' => 'int', 'default' => null, 'export' => false], // timestamp of answer/dismiss
-				'unlistedCounter' => ['s' => 'int', 'default' => 0], // counter to prevent checking unlisted files too much
-				'currentStats' => ['s' => 'array', 'default' => array(), 'export' => false], // whatever the current stats are.
-        'currentVersion' => ['s' => 'string', 'default' => '', 'export' => false],
+				'activationDate' => ['s' => 'int', 'default' => null, 'export' => false, 'site_only' => true], // date of activation
+				'surveyStatus' => ['s' => 'string', 'default' => 'pending', 'export' => false, 'site_only' => true], // pending, answered, dismissed
+				'surveyScore' => ['s' => 'int', 'default' => 0, 'export' => false, 'site_only' => true, 'max' => 10], // 1-10 score given by the user
+				'surveyFeedback' => ['s' => 'string', 'default' => '', 'export' => false, 'site_only' => true, 'maxlength' => 2000], // free text feedback for scores 1-8
+				'surveyAnsweredAt' => ['s' => 'int', 'default' => null, 'export' => false, 'site_only' => true], // timestamp of answer/dismiss
+				'unlistedCounter' => ['s' => 'int', 'default' => 0, 'site_only' => true], // counter to prevent checking unlisted files too much
+				'currentStats' => ['s' => 'array', 'default' => array(), 'export' => false, 'site_only' => true], // whatever the current stats are.
+        'currentVersion' => ['s' => 'string', 'default' => '', 'export' => false, 'site_only' => true],
 				'useCDN' => ['s' => 'boolean', 'default' => false],
 				'cdn_css' => ['s' =>  'boolean', 'default' => false],
 				'cdn_js' => ['s' => 'boolean', 'default' => false],
 				'CDNDomain' => ['s' => 'string', 'default' => 'https://spcdn.shortpixel.ai/spio'],
-        'redirectedSettings' => ['s' => 'int', 'default' => 0],
+        'redirectedSettings' => ['s' => 'int', 'default' => 0, 'site_only' => true],
         'exif' => ['s' => 'int', 'default' => 1],
         'exif_ai' => ['s' => 'int', 'default' => 0],
-        'cdn_purge_version' => ['s' => 'int', 'default' => 1, 'export' => false],
+        'cdn_purge_version' => ['s' => 'int', 'default' => 1, 'export' => false, 'site_only' => true],
         'enable_ai' => ['s' => 'boolean', 'default' => true],
         'autoAI' => ['s' => 'boolean', 'default' => false],
         'autoAIBulk' => ['s' => 'boolean', 'default' => false],
@@ -432,13 +433,49 @@ class SettingsModel extends \ShortPixel\Model
 		}
 
 		/**
+		 * Reports whether a setting is per-site runtime state that the network
+		 * override never applies to.
+		 *
+		 * The plugin writes these fields itself on the site it runs on (the
+		 * installed version, quota state, counters, one-time flags), so they
+		 * are always read from the per-site option. If the override applied,
+		 * a read would return the network value while the write still went
+		 * to the site option, and code that compares and writes (such as the
+		 * version check that runs the install routine) would never settle.
+		 *
+		 * A field is site-scoped when its model entry carries
+		 * `'site_only' => true`. This is independent of the `export` flag,
+		 * which only controls import / export.
+		 *
+		 * @param string $name Setting name.
+		 * @return bool
+		 */
+		public function isSiteScoped($name)
+		{
+			if (false === $this->exists($name))
+			{
+				return false;
+			}
+
+			return (isset($this->model[$name]['site_only']) && true === $this->model[$name]['site_only']);
+		}
+
+		/**
 		 * Returns a network-scope setting value when network override mode is enabled.
+		 *
+		 * Site-scoped fields (see isSiteScoped()) always return null, so the
+		 * per-site value is used for them.
 		 *
 		 * @param string $name Setting name.
 		 * @return mixed|null
 		 */
 		protected function getNetworkSettingValue($name)
 		{
+			if ($this->isSiteScoped($name))
+			{
+				return null;
+			}
+
 			$network_model = $this->getNetworkSettingsModel();
 			if (! is_object($network_model) || ! method_exists($network_model, 'exists'))
 			{

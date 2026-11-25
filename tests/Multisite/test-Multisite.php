@@ -785,6 +785,84 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
+	 * currentVersion is per-site runtime state: with the override enabled it
+	 * must still read the per-site value. If it resolved to the network
+	 * default (''), check_plugin_version() would see a mismatch on every
+	 * admin_init and rerun InstallHelper::activatePlugin() (dbDelta on all
+	 * tables + wp_cache_flush()) on every admin request.
+	 */
+	public function test_network_override_does_not_mask_site_current_version() {
+		$settings                 = \wpSPIO()->settings();
+		$settings->currentVersion = SHORTPIXEL_IMAGE_OPTIMISER_VERSION;
+		$settings->onShutdown();
+
+		update_site_option( 'spio_wpmu', array( 'network_settings_override_enabled' => true ) );
+		$this->resetPluginSingletons();
+
+		$this->assertTrue( \wpSPIO()->settings()->isNetworkOverrideEnabled() );
+		$this->assertSame(
+			SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
+			\wpSPIO()->settings()->currentVersion,
+			'currentVersion must come from the per-site option even with the network override enabled.'
+		);
+	}
+
+	/**
+	 * A site-scoped field stays per-site even when the network option does
+	 * store a value for it, and a write followed by a read round-trips.
+	 */
+	public function test_network_override_never_applies_to_site_scoped_fields() {
+		update_site_option(
+			'spio_wpmu',
+			array(
+				'network_settings_override_enabled' => true,
+				'currentVersion'                    => '0.0.1',
+				'unlistedCounter'                   => 7,
+				'redirectedSettings'                => 0,
+			)
+		);
+		$this->resetPluginSingletons();
+
+		$settings                     = \wpSPIO()->settings();
+		$settings->currentVersion     = '9.9.9';
+		$settings->unlistedCounter    = 3;
+		$settings->redirectedSettings = 2;
+
+		$this->assertSame( '9.9.9', $settings->currentVersion );
+		$this->assertSame( 3, $settings->unlistedCounter );
+		$this->assertSame( 2, $settings->redirectedSettings );
+	}
+
+	/**
+	 * With the override enabled, admin_init must not rerun the install
+	 * routine once the site has recorded the current version.
+	 */
+	public function test_admin_init_does_not_rerun_install_with_network_override() {
+		$settings                 = \wpSPIO()->settings();
+		$settings->currentVersion = SHORTPIXEL_IMAGE_OPTIMISER_VERSION;
+		$settings->onShutdown();
+
+		update_site_option( 'spio_wpmu', array( 'network_settings_override_enabled' => true ) );
+		$this->resetPluginSingletons();
+
+		$dbdelta_calls = 0;
+		$counter = function ( $value ) use ( &$dbdelta_calls ) {
+			++$dbdelta_calls;
+			return $value;
+		};
+		// activatePlugin() is the only caller that reaches dbDelta here; count its queries.
+		add_filter( 'dbdelta_queries', $counter );
+
+		$method = new \ReflectionMethod( \wpSPIO(), 'check_plugin_version' );
+		$method->setAccessible( true );
+		$method->invoke( \wpSPIO() );
+
+		remove_filter( 'dbdelta_queries', $counter );
+
+		$this->assertSame( 0, $dbdelta_calls, 'check_plugin_version() must not call InstallHelper::activatePlugin() when the version is current.' );
+	}
+
+	/**
 	 * The API key lives in the per-site spio_key option (ApiKeyModel), outside
 	 * the SettingsModel schema — the network override must never mask it.
 	 * Pinning this explicitly so a refactor that routes the key through the
