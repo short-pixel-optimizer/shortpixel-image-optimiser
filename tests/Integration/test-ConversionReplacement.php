@@ -429,7 +429,7 @@ class ConversionReplacementTest extends SPIO_IntegrationTestCase {
 		$id = $this->uploadPngForQueuePath( 'fixture-small.png' );
 
 		// Pick a thumbnail URL to embed too (base URL rewriting also
-		// touches thumbnail URLs via getRelativeURLS).
+		// touches thumbnail URLs via Replacer2's Data::getUrls()).
 		$meta          = wp_get_attachment_metadata( $id );
 		$thumbnail_url = null;
 		if ( ! empty( $meta['sizes'] ) ) {

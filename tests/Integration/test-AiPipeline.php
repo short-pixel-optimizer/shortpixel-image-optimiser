@@ -660,19 +660,17 @@ class AiPipelineTest extends SPIO_IntegrationTestCase {
 	 * request, every image's in-content <img alt> must be updated in the
 	 * post that embeds it — not just the first image's post.
 	 *
-	 * If replacer2's Setup::getInstance() were a request-lifetime singleton,
-	 * its Url data would accumulate via addData() while Url::getBaseURL()
-	 * always returns data[0]: every AI item after the first would search
-	 * post_content for the FIRST item's URL, handleReplace()'s filename
-	 * filter would silently discard the found posts, and images 2..n would
-	 * keep alt="" in content forever (the aipostmeta row makes
-	 * isProcessable() false on re-runs). Setup::getInstance() returns a
-	 * FRESH instance per call, so each replaceImageAttributes() run searches
-	 * with its own image's base URL.
+	 * OptimizeAiController::replaceImageAttributes() creates a NEW Replacer2
+	 * for every call, so the LIKE fragment from Setup::getSearchBase() always
+	 * comes from this item's URL. Were the search base of an earlier item
+	 * reused (a Replacer2 or Setup shared for the whole request), every AI
+	 * item after the first would search post_content for the FIRST item's
+	 * URL, handleReplace()'s filename filter would silently discard the found
+	 * posts, and images 2..n would keep alt="" in content forever (the
+	 * aipostmeta row makes isProcessable() false on re-runs).
 	 *
-	 * FLIP-alert: if this fails with only the first post updated, the
-	 * Setup singleton (or equivalent shared Url state) has been
-	 * reintroduced in replacer2.
+	 * FLIP-alert: if this fails with only the first post updated, the search
+	 * state is shared between items again.
 	 */
 	public function test_bulk_ai_updates_in_content_alt_for_every_image_not_just_the_first() {
 		// Three attachments in one request — wp_unique_filename gives them

@@ -1443,8 +1443,9 @@ class ChangeFilenameTest extends SPIO_AjaxTestCase {
 	 * Regression — after a rename, the URL rewrite in post content must
 	 * invalidate the post cache.
 	 *
-	 * Replacer::doReplaceQuery() updates post_content with direct SQL; without
-	 * clean_post_cache() get_post() would keep serving the OLD content from the
+	 * Replacer2's Updater::updateRecord() updates post_content with direct SQL
+	 * and then calls clean_post_cache(); without that call get_post() would
+	 * keep serving the OLD content from the
 	 * object cache — on Redis / Memcached for every later request, so the
 	 * block editor would open old URLs (files already moved) and the next save
 	 * or autosave would write them back. The WP test framework's in-memory cache shows

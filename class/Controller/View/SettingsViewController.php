@@ -228,6 +228,13 @@ class SettingsViewController extends \ShortPixel\ViewController
        *
        * Expected POST field: pluginemail (string — the user's email address).
        *
+       * @todo The sign-up response is read as $body->Status without a check.
+       *       A body that is not JSON, or JSON without a Status field, raises
+       *       a PHP notice (PHP 7.4) or warning (PHP 8) before the "Unexpected
+       *       error" notice is added. Suggested fix: test
+       *       isset($body->Status) first and treat a missing Status as the
+       *       unexpected-error case.
+       *
        * @return void Exits via doRedirect().
        */
 			public function action_request_new_key()
@@ -712,6 +719,13 @@ class SettingsViewController extends \ShortPixel\ViewController
        * handleAjaxSave() which returns a JSON response instead.
        *
        * Assumes $this->postData has already been populated by processPostData().
+       *
+       * @todo $this->postData['compressionType'] is read without a check. A
+       *       form post without that field (action_request_new_key() without
+       *       pluginemail lands here through load()) raises a PHP notice
+       *       (PHP 7.4) or warning (PHP 8); the missing value then counts as
+       *       0, so the queues are reset unless the saved type is lossless.
+       *       Suggested fix: compare only when isset($this->postData['compressionType']).
        *
        * @return void Exits via doRedirect().
        */
