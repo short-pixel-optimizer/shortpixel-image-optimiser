@@ -499,6 +499,15 @@ class FrontendRewriteSafetyTest extends SPIO_IntegrationTestCase {
 	 * attribute ends at the first one and the next opens after the path. The
 	 * rewriter must leave both in place, or the attribute runs on to the
 	 * next quote in the page and the text after it becomes attributes.
+	 *
+	 * The byte-exact comparison is the rule itself. The parser checks ask only
+	 * whether onfocus is an attribute, not for the full attribute list: what
+	 * a parser makes of the path between the two quotes differs between
+	 * libxml versions (older ones skip it, newer ones tokenize it like a
+	 * browser into attributes named after the path segments). Each input is
+	 * parsed with the quote that follows it in a page ($tail), because a
+	 * browser-like tokenizer drops a tag whose last attribute value is never
+	 * closed.
 	 */
 	public function test_quotes_that_delimit_an_attribute_are_kept() {
 		$url  = $this->imageWithWebp();
@@ -506,21 +515,25 @@ class FrontendRewriteSafetyTest extends SPIO_IntegrationTestCase {
 		$webp = substr( $path, 0, -4 ) . '.webp';
 
 		$inputs = array(
-			'double quotes'           => '<abbr title="url(" %s ")>TEXT" onfocus=alert(1) x=">y</abbr>',
-			'single quotes'           => "<abbr title='url(' %s ')>TEXT' onfocus=alert(1) x='>y</abbr>",
-			'no space around the path' => '<abbr title="url("%s")>TEXT" onfocus=alert(1) x=">y</abbr>',
+			'double quotes'            => array( '<abbr title="url(" %s ")>TEXT" onfocus=alert(1) x=">y</abbr>', '">' ),
+			'single quotes'            => array( "<abbr title='url(' %s ')>TEXT' onfocus=alert(1) x='>y</abbr>", "'>" ),
+			'no space around the path' => array( '<abbr title="url("%s")>TEXT" onfocus=alert(1) x=">y</abbr>', '">' ),
 		);
 
-		foreach ( $inputs as $label => $shape ) {
+		foreach ( $inputs as $label => $input ) {
+			list( $shape, $tail ) = $input;
+
 			$html   = sprintf( $shape, $path );
 			$output = $this->inlineStyleRewrite( $html );
 
-			$this->assertSame( 'abbr[title]', $this->structure( $html ), "Precondition ($label)" );
+			$this->assertStringStartsWith( 'abbr[', $this->structure( $html . $tail ), "Precondition: the parser sees the element ($label)" );
+			$this->assertStringNotContainsString( 'onfocus', $this->structure( $html . $tail ), "Precondition: onfocus is text, not an attribute ($label)" );
 			$this->assertSame( sprintf( $shape, $webp ), $output, "Only the URL may change ($label)" );
-			$this->assertSame( 'abbr[title]', $this->structure( $output ), $label );
+			$this->assertStringStartsWith( 'abbr[', $this->structure( $output . $tail ), "The parser still sees the element ($label)" );
+			$this->assertStringNotContainsString( 'onfocus', $this->structure( $output . $tail ), "onfocus is still text, not an attribute ($label)" );
 
 			$control = $this->inlineStyleRewrite( $html, new SPIO_QuoteDroppingPicture() );
-			$this->assertStringContainsString( 'onfocus', $this->structure( $control ), "Control: dropping the quotes turns the text into attributes ($label)" );
+			$this->assertStringContainsString( 'onfocus', $this->structure( $control . $tail ), "Control: dropping the quotes turns the text into attributes ($label)" );
 		}
 	}
 
