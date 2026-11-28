@@ -526,7 +526,7 @@ class CompatBreakdanceTest extends SPIO_IntegrationTestCase {
 		\Breakdance\Data\set_meta( $post_id, '_breakdance_futurelayer_meta', '{"sentinel":"keep-me"}' );
 
 		$reflection = new \ReflectionFunction( 'Breakdance\Data\save_document' );
-		$this->assertSame( 10, $reflection->getNumberOfParameters(), 'Sentinel: this Breakdance version takes the ten-argument save_document() the module calls with false.' );
+		$this->assertSame( 10, $reflection->getNumberOfParameters(), 'Sentinel: this Breakdance version takes the ten-argument save_document(), whose third argument is the future-layer meta.' );
 
 		$module = \ShortPixel\Replacer\Modules\Breakdance::getInstance();
 		$row    = array( 'meta_id' => $this->breakdanceMetaId( $post_id ), 'post_id' => $post_id );
@@ -538,35 +538,30 @@ class CompatBreakdanceTest extends SPIO_IntegrationTestCase {
 
 	/**
 	 * Breakdance 3.0+ only writes `_breakdance_futurelayer_meta` in
-	 * save_document() when a value is passed, so saveContent() passing
-	 * `false` leaves the document's future-layer meta in place.
+	 * save_document() when a value is passed; saveContent() passes the
+	 * stored value back, so the document's future-layer meta stays in place.
 	 */
 	public function test_save_content_keeps_future_layer_meta_on_breakdance_3() {
 		if ( version_compare( __BREAKDANCE_VERSION, '3.0.0', '<' ) ) {
-			$this->markTestSkipped( 'Breakdance ' . __BREAKDANCE_VERSION . ' still overwrites the meta — covered by the pinned test below.' );
+			$this->markTestSkipped( 'Breakdance ' . __BREAKDANCE_VERSION . ' stores the passed meta unconditionally — covered by the test below.' );
 		}
 
 		$this->assertSame( '{"sentinel":"keep-me"}', $this->futureLayerMetaAfterSaveContent(), 'The future-layer meta survives the save.' );
 	}
 
 	/**
-	 * Pins a known defect on Breakdance 2.x: saveContent() passes `false` as
-	 * futureLayerMeta to save_document(), which before 3.0 stores it
-	 * unconditionally, so every replacement wipes the document's
-	 * `_breakdance_futurelayer_meta`. Every PNG→JPG conversion or rename that
-	 * rewrites a Breakdance document goes through saveContent() (see the two
-	 * end-to-end tests above). Runs only when the Breakdance zip in
-	 * tests/partner-plugins/ is a 2.x release.
-	 * @todo In the replacer2 Breakdance module: pass the stored value,
-	 *       \Breakdance\Data\get_meta($post_id, '_breakdance_futurelayer_meta'),
-	 *       instead of false.
-	 * When fixed, this test fails; flip it: the future-layer meta survives.
+	 * Breakdance 2.x stores the futureLayerMeta argument of save_document()
+	 * unconditionally, so saveContent() passes the stored
+	 * `_breakdance_futurelayer_meta` back instead of `false`: a replacement
+	 * that rewrites a Breakdance document (every PNG→JPG conversion or
+	 * rename, see the two end-to-end tests above) keeps that meta. Runs only
+	 * when the Breakdance zip in tests/partner-plugins/ is a 2.x release.
 	 */
-	public function test_save_content_overwrites_future_layer_meta_on_breakdance_2_pinned_for_deferred_fix() {
+	public function test_save_content_keeps_future_layer_meta_on_breakdance_2() {
 		if ( version_compare( __BREAKDANCE_VERSION, '3.0.0', '>=' ) ) {
 			$this->markTestSkipped( 'Breakdance ' . __BREAKDANCE_VERSION . ' keeps the meta itself — covered by the test above.' );
 		}
 
-		$this->assertFalse( $this->futureLayerMetaAfterSaveContent(), 'Pinned: fixed? The future-layer meta survives the save — flip this pin.' );
+		$this->assertSame( '{"sentinel":"keep-me"}', $this->futureLayerMetaAfterSaveContent(), 'The future-layer meta survives the save.' );
 	}
 }
