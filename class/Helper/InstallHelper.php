@@ -62,6 +62,10 @@ class InstallHelper
 		// Fresh install only (no settings stored yet): remove EXIF by default, as the
 		// setting recommends. Not done via the SettingsModel default, because unsaved
 		// settings fall back to the default at read time and existing sites would flip.
+		// @todo On multisite with the network settings override enabled this per-site
+		// value is never read: the site gets the network value, which is the model
+		// default (keep EXIF) when the network option holds no `exif` key. Apply the
+		// fresh-install default to the network option as well.
 		if (false === get_option('spio_settings', false)) {
 			$settings->exif = 0;
 		}

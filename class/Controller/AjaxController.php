@@ -1745,6 +1745,13 @@ class AjaxController
 	 * - `$json->total`         object  Aggregate totals.
 	 * - `$json->status`        bool    true.
 	 *
+	 * @todo On multisite with the network settings override enabled, the
+	 *       settings written here go to the per-site option while every read
+	 *       returns the network value, so the bulk selection is silently
+	 *       ignored. Show these options locked to the network values and
+	 *       skip the write, or mark the bulk keys `site_only` in
+	 *       SettingsModel.
+	 *
 	 * @param \stdClass $json JSON accumulator object.
 	 * @param array     $data Dispatch data array (unused).
 	 * @return \stdClass Updated JSON response object.

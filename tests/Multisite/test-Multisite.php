@@ -863,6 +863,114 @@ class MultisiteTest extends SPIO_IntegrationTestCase {
 	}
 
 	/**
+	 * Pins a known defect: with the network override enabled, the bulk page
+	 * still saves its choices (WebP, AVIF, thumbnails, background mode, AI
+	 * options) to the per-site option, while every read of these settings
+	 * returns the network value. The user's selection is silently ignored:
+	 * here WebP is ticked for the bulk run, the site option records it, and
+	 * the plugin still reads "no WebP" from the network.
+	 * @todo In AjaxController::applyBulkSelection() and the bulk page: with
+	 *       the override enabled, show these options locked to the network
+	 *       values and skip the per-site write, or mark the bulk keys
+	 *       `site_only` in SettingsModel so each site keeps its own choice.
+	 * When fixed, this test fails; flip it: the value the bulk request saves
+	 * and the value the plugin reads are the same (both true when the keys
+	 * become site-scoped; nothing written per site when the options are
+	 * locked).
+	 */
+	public function test_bulk_selection_is_saved_per_site_but_read_from_the_network_pinned_for_deferred_fix() {
+		update_site_option(
+			'spio_wpmu',
+			array(
+				'network_settings_override_enabled' => true,
+				'createWebp'                        => false,
+			)
+		);
+		$this->resetPluginSingletons();
+
+		$this->assertTrue( \wpSPIO()->settings()->isNetworkOverrideEnabled(), 'Sentinel: the override is on.' );
+		$site_before = get_option( 'spio_settings', array() );
+		$this->assertFalse( isset( $site_before['createWebp'] ) && true === $site_before['createWebp'], 'Sentinel: the site option does not hold createWebp=true before the bulk request.' );
+
+		$_POST = array(
+			'mediaActive'       => 'true',
+			'customActive'      => 'false',
+			'webpActive'        => 'true',
+			'avifActive'        => 'false',
+			'aiActive'          => 'false',
+			'backgroundProcess' => 'false',
+		);
+
+		$json         = new \stdClass();
+		$json->media  = new \stdClass();
+		$json->custom = new \stdClass();
+
+		$controller = \ShortPixel\Controller\AjaxController::getInstance();
+		$method     = new ReflectionMethod( $controller, 'applyBulkSelection' );
+		$method->setAccessible( true );
+		try {
+			$result = $method->invoke( $controller, $json, array() );
+		} finally {
+			$_POST = array();
+		}
+		$this->assertTrue( $result->status, 'Sentinel: the bulk selection request succeeded.' );
+
+		// Same request: the bulk run that follows reads the setting here.
+		$this->assertFalse( \wpSPIO()->settings()->createWebp, 'Pinned: fixed? The bulk run reads the WebP choice the user just made — flip this pin.' );
+
+		\wpSPIO()->settings()->onShutdown();
+		$this->resetPluginSingletons();
+
+		// SENTINEL: the selection was written to the per-site option.
+		$site_after = get_option( 'spio_settings' );
+		$this->assertIsArray( $site_after, 'Sentinel: the site option exists after the request.' );
+		$this->assertTrue( $site_after['createWebp'] ?? null, 'Sentinel: the bulk request saved createWebp=true for this site.' );
+
+		// THE PIN: the next page load reads the network value, not the saved one.
+		$this->assertFalse( \wpSPIO()->settings()->createWebp, 'Pinned: fixed? The saved and the read value are the same — flip this pin.' );
+	}
+
+	/**
+	 * Pins a known defect: a fresh install removes EXIF by default
+	 * (InstallHelper::activatePlugin() writes exif=0 when the site has no
+	 * settings yet), but the value goes to the per-site option. With the
+	 * network override enabled the site reads the network value, and a
+	 * network that holds no `exif` key answers the model default (1, keep
+	 * EXIF). A new site of such a network keeps EXIF, unlike a new
+	 * single-site install.
+	 * @todo In InstallHelper::activatePlugin(): apply the fresh-install EXIF
+	 *       default at network level as well (store exif=0 in the network
+	 *       option when it holds no `exif` key yet), so the network settings
+	 *       form and the overridden sites start from "remove EXIF".
+	 * When fixed, this test fails; flip it: the new site reads exif 0.
+	 */
+	public function test_fresh_install_exif_default_is_masked_by_network_override_pinned_for_deferred_fix() {
+		update_site_option( 'spio_wpmu', array( 'network_settings_override_enabled' => true ) );
+
+		$blog_id = (int) self::factory()->blog->create();
+		switch_to_blog( $blog_id );
+		delete_option( 'spio_settings' );
+		$this->resetPluginSingletons();
+
+		$this->assertFalse( get_option( 'spio_settings', false ), 'Sentinel: the new site has no settings yet, so this is a fresh install.' );
+		$this->assertTrue( \wpSPIO()->settings()->isNetworkOverrideEnabled(), 'Sentinel: the override is visible from the new site.' );
+
+		InstallHelper::activatePlugin();
+		\wpSPIO()->settings()->onShutdown();
+		$this->resetPluginSingletons();
+
+		// SENTINEL: the fresh-install default was written for this site.
+		$stored = get_option( 'spio_settings' );
+		$this->assertIsArray( $stored, 'Sentinel: the install stored the site settings.' );
+		$this->assertSame( 0, $stored['exif'] ?? null, 'Sentinel: the fresh install stored exif=0 (remove EXIF) for the site.' );
+
+		// THE PIN: the site reads the network default instead.
+		$this->assertSame( 1, \wpSPIO()->settings()->exif, 'Pinned: fixed? The new site reads exif 0 — flip this pin.' );
+
+		$this->leaveSubsite();
+	}
+
+	/**
 	 * The API key lives in the per-site spio_key option (ApiKeyModel), outside
 	 * the SettingsModel schema — the network override must never mask it.
 	 * Pinning this explicitly so a refactor that routes the key through the
